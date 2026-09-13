@@ -216,7 +216,7 @@ gfx:
 	@echo "Title logo: src/gfx/title_logo_tiles.inc + public/tiles/title/logo.png"
 	# ── Studio splash logo (assets/gallia_belgica_systems.png, 13x5) ──────
 	# Fixed global shade map -> one CGB palette [white, red, blue, black]
-	# rendered by the bank-7 splash body.  LLM-only content (no editor view).
+	# rendered by the bank-2 splash body.  LLM-only content (no editor view).
 	@python3 tools/screen_compiler/splash_logo_compile.py \
 		-o $(GFX_OUT_DIR)/splash_logo_tiles.h
 

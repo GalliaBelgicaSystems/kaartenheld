@@ -127,7 +127,7 @@ Like combat art, these curated PNGs are hand-maintained (no
 - `assets/gallia_belgica_systems.png` (104×40, 13×5 cells) -> the deduped
   `splash_logo_tiles.h` blob + raster map (`make gfx`,
   `tools/screen_compiler/splash_logo_compile.py`), the boot studio splash.
-  Rendered from the bank-7 `ui_splash_logo_render_banked` body with one CGB
+  Rendered from the bank-2 `ui_splash_logo_render_banked` body with one CGB
   palette `[white, red, blue, black]` (the gray anti-aliasing folds into
   black).  LLM-only content: the editor has no splash screen.
 - `assets/equipment_8x8.png` + `assets/symbols_8x8.png` -> icon atlas

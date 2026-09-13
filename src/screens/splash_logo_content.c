@@ -21,7 +21,7 @@
 
 extern uint8_t g_is_cgb;
 
-/* Bank-7 studio splash body for the fixed-bank splash wrapper.  Writes the
+/* Bank-2 studio splash body for the fixed-bank splash wrapper.  Writes the
  * deduped tiles to VRAM at the world BG block (ids 128+, signed 0x8800
  * fetch: AGENTS.md 52.22), stamps the 13x5 map with CGB BG palette 1, and
  * programs that palette to the logo's fixed ramp

@@ -12,7 +12,7 @@ fixed global shade map, dedupes the tiles, and emits:
     const uint8_t g_splash_logo_tiles[<unique>*16] = { ... };
     const uint8_t g_splash_logo_map[65]         = { ... };
 
-The map is raster order (13 wide x 5 tall).  Dedup keeps the bank-7
+The map is raster order (13 wide x 5 tall).  Dedup keeps the bank-2
 content (tiles + renderer) inside the release bank budget.
 
 Usage:
