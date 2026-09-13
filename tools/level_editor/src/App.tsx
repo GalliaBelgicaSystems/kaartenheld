@@ -590,10 +590,35 @@ export const App: React.FC = () => {
           y: Math.min(orig.position.y + 1, level.height - 1)
         }
       };
+      // A deep copy clones properties.actor_id verbatim, which collides
+      // with the original (actor ids are globally unique; validate.py and
+      // the Validate modal both reject duplicates).  Mint a fresh id for
+      // the copy: one past the highest id used in this level or any other
+      // scene on disk.  Unset (0/missing) stays unset -- it cannot collide.
+      // entity_id is the shared enemy *type* and is correctly kept as-is.
+      const origAid = (orig.properties as any)?.actor_id;
+      let dupNote = '';
+      if (typeof origAid === 'number' && Number.isInteger(origAid) && origAid > 0) {
+        let peak = 0;
+        for (const o of level.objects) {
+          const a = (o.properties as any)?.actor_id;
+          if (typeof a === 'number' && Number.isInteger(a) && a > peak) peak = a;
+        }
+        for (const c of crossActorIds) {
+          if (c.id > peak) peak = c.id;
+        }
+        if (peak >= 65535) {
+          (copy.properties as any).actor_id = 0;
+          dupNote = ' (actor_id pool exhausted, reset to unset!)';
+        } else {
+          (copy.properties as any).actor_id = peak + 1;
+          dupNote = ` (actor_id ${peak + 1})`;
+        }
+      }
       const newObjs = [...level.objects, copy];
       pushState({ ...level, objects: newObjs });
       setSelectedEntityIndex(newObjs.length - 1);
-      setNotification({ message: `Duplicated object "${orig.id}"!`, type: 'success' });
+      setNotification({ message: `Duplicated object "${orig.id}"!${dupNote}`, type: 'success' });
     }
   };
 
