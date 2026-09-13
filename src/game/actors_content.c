@@ -524,6 +524,30 @@ static const WorldActorDefinition g_throne_room_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_grassy_forest_actors[] = {
+    {
+        59, ENTITY_ID_SLIME, 10, 9, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_PATROL_CROSS, 11, 10, 5, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 5, 0
+    },
+    {
+        59, ENTITY_ID_SLIME, 14, 12, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_PATROL_CROSS, 10, 10, 5, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 5, 0
+    },
+    {
+        0, ENTITY_ID_DOG, 11, 14, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'V', "VILLAGER", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_MAYOR_INTRO, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 1, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -553,6 +577,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_castle_hall_actors) / sizeof(g_castle_hall_actors[0])) },
     { MAP_THRONE_ROOM,     g_throne_room_actors,
         (uint8_t)(sizeof(g_throne_room_actors) / sizeof(g_throne_room_actors[0])) },
+    { MAP_GRASSY_FOREST,   g_grassy_forest_actors,
+        (uint8_t)(sizeof(g_grassy_forest_actors) / sizeof(g_grassy_forest_actors[0])) },
 };
 
-const uint8_t g_actor_table_count = 14;
+const uint8_t g_actor_table_count = 15;
