@@ -625,7 +625,7 @@
       "properties": {
         "display_name": "",
         "dialogue": "",
-        "overworld_sprite": "interior.villager",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG"
@@ -646,7 +646,7 @@
       "properties": {
         "display_name": "",
         "dialogue": "",
-        "overworld_sprite": "interior.villager",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG"

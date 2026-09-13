@@ -466,7 +466,7 @@
           "INTERACTABLE"
         ],
         "visual": "S",
-        "hp": 11,
+        "hp": 10,
         "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
@@ -497,7 +497,7 @@
         "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "actor_id": 59
+        "actor_id": 60
       }
     },
     {
@@ -508,9 +508,9 @@
         "y": 14
       },
       "properties": {
-        "display_name": "VILLAGER",
-        "dialogue": "DIALOGUE_ID_MAYOR_INTRO",
-        "overworld_sprite": "interior.villager",
+        "display_name": "WILD DOG",
+        "dialogue": "DIALOGUE_ID_DOG_GREETING",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG",
