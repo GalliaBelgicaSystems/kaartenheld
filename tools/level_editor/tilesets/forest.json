@@ -252,7 +252,7 @@
     },
     {
       "id": "forest_floor_with_stuff_walkable_4",
-      "label": "floor with stuff walkable 4",
+      "label": "floor with stuff walkable",
       "gb_constant": "TILE_FOREST_24",
       "walkable": true,
       "color": "#75af5b",
@@ -338,52 +338,12 @@
     {
       "id": "forest_plain_floor_1",
       "label": "plain floor",
-      "gb_constant": "TILE_FOREST_32",
+      "gb_constant": "TILE_FOREST_39",
       "walkable": true,
       "color": "#7bb660",
       "ascii": ".",
       "image_url": "/tiles/forest/forest_plain_floor_1.png",
       "category": "terrain"
-    },
-    {
-      "id": "forest_hero_frame_1_with_green_forest_background",
-      "label": "hero_frame_1 with green forest background",
-      "gb_constant": "TILE_FOREST_33",
-      "walkable": false,
-      "color": "#416033",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_hero_frame_1_with_green_forest_background.png",
-      "category": "npc"
-    },
-    {
-      "id": "forest_hero_frame_2_with_green_forest_background",
-      "label": "hero_frame_2 with green forest background",
-      "gb_constant": "TILE_FOREST_34",
-      "walkable": false,
-      "color": "#416033",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_hero_frame_2_with_green_forest_background.png",
-      "category": "npc"
-    },
-    {
-      "id": "forest_enemy_kobold_frame_1",
-      "label": "enemy kobold frame 1",
-      "gb_constant": "TILE_FOREST_35",
-      "walkable": false,
-      "color": "#728250",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_enemy_kobold_frame_1.png",
-      "category": "enemy"
-    },
-    {
-      "id": "forest_enemy_kobold_frame_2",
-      "label": "enemy kobold frame 2",
-      "gb_constant": "TILE_FOREST_36",
-      "walkable": false,
-      "color": "#728250",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_enemy_kobold_frame_2.png",
-      "category": "enemy"
     },
     {
       "id": "forest_fire_frame_1",
@@ -406,46 +366,6 @@
       "category": "object"
     },
     {
-      "id": "forest_merchant_forest",
-      "label": "merchant-forest",
-      "gb_constant": "TILE_FOREST_39",
-      "walkable": false,
-      "color": "#5f713c",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_merchant_forest.png",
-      "category": "npc"
-    },
-    {
-      "id": "forest_exit_forest",
-      "label": "exit forest",
-      "gb_constant": "TILE_FOREST_40",
-      "walkable": true,
-      "color": "#4b6832",
-      "ascii": ".",
-      "image_url": "/tiles/forest/forest_exit_forest.png",
-      "category": "terrain"
-    },
-    {
-      "id": "forest_enemy_bats_frame_1",
-      "label": "enemy bats frame 1",
-      "gb_constant": "TILE_FOREST_41",
-      "walkable": false,
-      "color": "#699c52",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_enemy_bats_frame_1.png",
-      "category": "enemy"
-    },
-    {
-      "id": "forest_enemy_bats_frame_2",
-      "label": "enemy bats frame 2",
-      "gb_constant": "TILE_FOREST_42",
-      "walkable": false,
-      "color": "#699c52",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_enemy_bats_frame_2.png",
-      "category": "enemy"
-    },
-    {
       "id": "forest_treasure_chest_forest",
       "label": "treasure chest forest",
       "gb_constant": "TILE_FOREST_43",
@@ -454,6 +374,86 @@
       "ascii": "#",
       "glyph": "O",
       "image_url": "/tiles/forest/forest_treasure_chest_forest.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_black_emptyness",
+      "label": "black emptyness",
+      "gb_constant": "TILE_FOREST_32",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_black_emptyness.png",
+      "category": "object"
+    },
+    {
+      "id": "forest_bottom_left_interior_corner",
+      "label": "bottom left interior corner",
+      "gb_constant": "TILE_FOREST_33",
+      "walkable": false,
+      "color": "#476d37",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_bottom_left_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_bottom_right_interior_corner",
+      "label": "bottom right interior corner",
+      "gb_constant": "TILE_FOREST_34",
+      "walkable": false,
+      "color": "#4b7139",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_bottom_right_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_top_right_interior_corner",
+      "label": "top right interior corner",
+      "gb_constant": "TILE_FOREST_35",
+      "walkable": false,
+      "color": "#638a45",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_top_right_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_top_left_interior_corner",
+      "label": "top left interior corner",
+      "gb_constant": "TILE_FOREST_36",
+      "walkable": false,
+      "color": "#618743",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_top_left_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_stairs",
+      "label": "stairs",
+      "gb_constant": "TILE_FOREST_40",
+      "walkable": true,
+      "color": "#4b6832",
+      "ascii": ".",
+      "image_url": "/tiles/forest/forest_stairs.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_plain_floor_2",
+      "label": "plain floor",
+      "gb_constant": "TILE_FOREST_41",
+      "walkable": true,
+      "color": "#7bb660",
+      "ascii": ".",
+      "image_url": "/tiles/forest/forest_plain_floor_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_plain_floor_3",
+      "label": "plain floor",
+      "gb_constant": "TILE_FOREST_42",
+      "walkable": true,
+      "color": "#7bb660",
+      "ascii": ".",
+      "image_url": "/tiles/forest/forest_plain_floor_3.png",
       "category": "terrain"
     }
   ],
@@ -657,31 +657,31 @@
         "x": 0,
         "y": 2,
         "index": 32,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_black_emptyness"
       },
       {
         "x": 1,
         "y": 2,
         "index": 33,
-        "tile": "forest_hero_frame_1_with_green_forest_background"
+        "tile": "forest_bottom_left_interior_corner"
       },
       {
         "x": 2,
         "y": 2,
         "index": 34,
-        "tile": "forest_hero_frame_2_with_green_forest_background"
+        "tile": "forest_bottom_right_interior_corner"
       },
       {
         "x": 3,
         "y": 2,
         "index": 35,
-        "tile": "forest_enemy_kobold_frame_1"
+        "tile": "forest_top_right_interior_corner"
       },
       {
         "x": 4,
         "y": 2,
         "index": 36,
-        "tile": "forest_enemy_kobold_frame_2"
+        "tile": "forest_top_left_interior_corner"
       },
       {
         "x": 5,
@@ -699,26 +699,26 @@
         "x": 7,
         "y": 2,
         "index": 39,
-        "tile": "forest_merchant_forest"
+        "tile": "forest_plain_floor_1"
       },
       {
         "x": 8,
         "y": 2,
         "index": 40,
-        "tile": "forest_exit_forest",
+        "tile": "forest_stairs",
         "exit": true
       },
       {
         "x": 9,
         "y": 2,
         "index": 41,
-        "tile": "forest_enemy_bats_frame_1"
+        "tile": "forest_plain_floor_2"
       },
       {
         "x": 10,
         "y": 2,
         "index": 42,
-        "tile": "forest_enemy_bats_frame_2"
+        "tile": "forest_plain_floor_3"
       },
       {
         "x": 11,

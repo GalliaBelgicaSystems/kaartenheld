@@ -55,7 +55,7 @@
    "type": "tilemap_cell",
    "row": 2,
    "col": 12,
-   "expected": 160
+   "expected": 167
   },
   {
    "type": "screen_row",

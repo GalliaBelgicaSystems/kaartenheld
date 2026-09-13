@@ -95,10 +95,10 @@
     {
       "id": "south_bat",
       "type": "enemy",
-      "overworld_sprite": "desolate_landscape.desolate_landscape_enemy_bats_frame_1",
+      "overworld_sprite": "actors.actors_bats_frame_1",
       "animation_frames": [
-        "desolate_landscape.desolate_landscape_enemy_bats_frame_1",
-        "desolate_landscape.desolate_landscape_enemy_bats_frame_2"
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
       ],
       "position": {
         "x": 14,
