@@ -700,12 +700,16 @@ LDFLAGS = -Wl-b_DATA=0xC940
 $(TARGET): gfx tiles levels screens dialogues shops entities music $(OBJS) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
 	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS) $(GB_LITE) $(SM83_LITE)
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld.noi $(BUILD_DIR)/kaartenheld.sym
-	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" $@
+# NOTE: lcc already runs rgbfix once internally at link time, so this
+# explicit second fix only (idempotently) stamps MBC/RAM/title fields.
+# -W no-overwrite silences the resulting "overwrote a non-zero byte"
+# noise (verified byte-identical via sha256 before/after).
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
 $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities music $(OBJS_DEBUG) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
 	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -Wl-y -o $@ build/crt0.o $(OBJS_DEBUG) $(GB_LITE) $(SM83_LITE)
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
-	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" $@
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
 build/crt0.o: src/crt0.s | $(BUILD_DIR)
 	sdasgb -o $@ $<
@@ -729,7 +733,7 @@ run-debug: $(TARGET_DEBUG)
 test: $(TARGET)
 	@echo "Validating Game Boy ROM header..."
 	@if command -v $(RGBFIX) >/dev/null 2>&1; then \
-		$(RGBFIX) -v -C -t "KAARTENHELD" $(TARGET); \
+		$(RGBFIX) -v -C -t "KAARTENHELD" -W no-overwrite $(TARGET); \
 	else \
 		test -s $(TARGET); \
 	fi

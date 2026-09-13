@@ -317,7 +317,11 @@ WorldMoveResult world_update_actors(World *w)
         g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;
         g_patrol_slot = slot;
+#ifdef DEBUG_BUILD
         g_bk_call_bank = 5;
+#else
+        g_bk_call_bank = 3;
+#endif
         g_bk_call_target = (uint16_t)&world_patrol_slot_banked;
         banked_call_run();
 

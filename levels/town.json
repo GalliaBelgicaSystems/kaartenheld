@@ -429,6 +429,15 @@
       "target_y": 7,
       "direction": "WEST",
       "tile_char": "<"
+    },
+    {
+      "x": 1,
+      "y": 9,
+      "target_scene": "grassy_forest",
+      "target_x": 18,
+      "target_y": 9,
+      "direction": "WEST",
+      "tile_char": ">"
     }
   ],
   "objects": [

@@ -64,6 +64,13 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_DOG_GREETING,
+        "WILD DOG:",
+        2,
+        {"Meow.", "I mean, bark bark."},
+        0
+    },
+    {
         DIALOGUE_ID_GUARD_AFTER_MAYOR,
         "GUARD:",
         2,

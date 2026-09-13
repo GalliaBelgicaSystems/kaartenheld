@@ -252,6 +252,24 @@
       "target_y": 15,
       "direction": "NORTH",
       "tile_char": ">"
+    },
+    {
+      "x": 10,
+      "y": 17,
+      "target_scene": "grassy_forest",
+      "target_x": 10,
+      "target_y": 0,
+      "direction": "SOUTH",
+      "tile_char": ">"
+    },
+    {
+      "x": 11,
+      "y": 17,
+      "target_scene": "grassy_forest",
+      "target_x": 11,
+      "target_y": 0,
+      "direction": "SOUTH",
+      "tile_char": ">"
     }
   ],
   "objects": [
