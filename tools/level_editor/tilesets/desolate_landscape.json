@@ -172,7 +172,7 @@
       "label": "bottom left corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_16",
       "walkable": false,
-      "color": "#484550",
+      "color": "#46434e",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_left_corner_wall.png",
       "category": "wall"
@@ -182,7 +182,7 @@
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_17",
       "walkable": false,
-      "color": "#6b6577",
+      "color": "#645f6f",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_wall_1.png",
       "category": "wall"
@@ -192,7 +192,7 @@
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_18",
       "walkable": false,
-      "color": "#595464",
+      "color": "#534f5e",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_wall_2.png",
       "category": "wall"
@@ -202,7 +202,7 @@
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_19",
       "walkable": false,
-      "color": "#757082",
+      "color": "#716c7d",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_wall_3.png",
       "category": "wall"
@@ -212,7 +212,7 @@
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_20",
       "walkable": false,
-      "color": "#676173",
+      "color": "#605b6b",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_wall_4.png",
       "category": "wall"
@@ -276,7 +276,7 @@
       "label": "bottom right corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_26",
       "walkable": false,
-      "color": "#4c4854",
+      "color": "#494551",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_right_corner_wall.png",
       "category": "wall"
@@ -421,7 +421,7 @@
       "label": "top right corner wall interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_35",
       "walkable": false,
-      "color": "#666072",
+      "color": "#625d6d",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_top_right_corner_wall_interior.png",
       "category": "wall"
@@ -431,7 +431,7 @@
       "label": "top left corner wall interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_36",
       "walkable": false,
-      "color": "#6c6678",
+      "color": "#686373",
       "ascii": "#",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_top_left_corner_wall_interior.png",
       "category": "wall"
