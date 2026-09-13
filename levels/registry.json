@@ -14,7 +14,8 @@
     "south_ridge": 12,
     "castle_entry": 13,
     "castle_hall": 14,
-    "throne_room": 15
+    "throne_room": 15,
+    "grassy_forest": 16
   },
   "_retired": {
     "forest2": 6,
