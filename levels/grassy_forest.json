@@ -25,11 +25,11 @@
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_bottom_left_interior_corner",
-        "forest.forest_top_wall_1",
-        "forest.forest_top_wall_2",
-        "forest.forest_top_wall_1",
-        "forest.forest_top_wall_2",
-        "forest.forest_top_wall_3",
+        "forest.forest_top_right_corner_wall",
+        "forest.forest_black_emptyness",
+        "forest.forest_black_emptyness",
+        "forest.forest_black_emptyness",
+        "forest.forest_top_left_corner_wall",
         "forest.forest_top_right_corner_wall",
         "forest.forest_black_emptyness"
       ],
@@ -47,18 +47,18 @@
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_bottom_left_interior_corner",
+        "forest.forest_top_right_corner_wall",
+        "forest.forest_black_emptyness",
+        "forest.forest_black_emptyness",
+        "forest.forest_left_wall_4",
         "forest.forest_bottom_left_interior_corner",
         "forest.forest_top_right_corner_wall"
       ],
       [
-        "forest.forest_top_left_corner_wall",
-        "forest.forest_top_wall_3",
-        "forest.forest_bottom_right_interior_corner",
+        "forest.forest_black_emptyness",
+        "forest.forest_black_emptyness",
+        "forest.forest_left_wall_2",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_top_left_treetop",
@@ -70,17 +70,17 @@
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_bottom_left_interior_corner",
+        "forest.forest_top_wall_2",
+        "forest.forest_top_wall_1",
+        "forest.forest_bottom_right_interior_corner",
         "forest.forest_plain_floor_1",
         "forest.forest_right_wall_1"
       ],
       [
-        "forest.forest_left_wall_3",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_black_emptyness",
+        "forest.forest_top_left_corner_wall",
+        "forest.forest_bottom_right_interior_corner",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_bottom_left_treetrunk",
@@ -100,8 +100,8 @@
         "forest.forest_right_wall_3"
       ],
       [
-        "forest.forest_left_wall_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_top_left_corner_wall",
+        "forest.forest_bottom_right_interior_corner",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_floor_with_stuff_walkable_3",
@@ -172,9 +172,9 @@
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_top_left_interior_corner",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_top_right_interior_corner",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
@@ -194,9 +194,9 @@
         "forest.forest_plain_floor_1",
         "forest.forest_floor_with_stuff_walkable_1",
         "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
-        "forest.forest_plain_floor_1",
+        "forest.forest_bottom_left_interior_corner",
+        "forest.forest_top_wall_1",
+        "forest.forest_bottom_right_interior_corner",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
         "forest.forest_plain_floor_1",
@@ -416,7 +416,35 @@
       "facing": "DOWN"
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 11,
+      "y": 0,
+      "target_scene": "mountain_pass",
+      "target_x": 11,
+      "target_y": 17,
+      "direction": "NORTH",
+      "tile_char": ">"
+    },
+    {
+      "x": 10,
+      "y": 0,
+      "target_scene": "mountain_pass",
+      "target_x": 10,
+      "target_y": 17,
+      "direction": "NORTH",
+      "tile_char": ">"
+    },
+    {
+      "x": 19,
+      "y": 9,
+      "target_scene": "town",
+      "target_x": 1,
+      "target_y": 9,
+      "direction": "EAST",
+      "tile_char": ">"
+    }
+  ],
   "objects": [
     {
       "id": "obj_6664",
@@ -438,7 +466,7 @@
           "INTERACTABLE"
         ],
         "visual": "S",
-        "hp": 11,
+        "hp": 10,
         "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
@@ -469,7 +497,7 @@
         "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "actor_id": 59
+        "actor_id": 60
       }
     },
     {
@@ -480,9 +508,9 @@
         "y": 14
       },
       "properties": {
-        "display_name": "VILLAGER",
-        "dialogue": "DIALOGUE_ID_MAYOR_INTRO",
-        "overworld_sprite": "interior.villager",
+        "display_name": "WILD DOG",
+        "dialogue": "DIALOGUE_ID_DOG_GREETING",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG",
@@ -493,6 +521,19 @@
         "actors.actors_dog_frame_1",
         "actors.actors_dog_frame_2"
       ]
+    },
+    {
+      "id": "obj_1754",
+      "type": "chest",
+      "position": {
+        "x": 18,
+        "y": 2
+      },
+      "properties": {
+        "item_id": "ITEM_HERB",
+        "gold": 10
+      },
+      "overworld_sprite": "actors.actors_chest_closed"
     }
   ],
   "regions": []

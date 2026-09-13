@@ -6,9 +6,13 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  # Fast gate: lint, both ROMs, memory budget, content checks, generated
+  # assets in sync. The verification jobs below only run if this passes,
+  # then execute concurrently (previously one 50-minute serial step that
+  # timed out: harness + OAM + walkthrough back to back).
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -18,10 +22,10 @@ jobs:
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@v2
 
-      - name: Lint + release + memory budget + harness + OAM + walkthrough
+      - name: Lint + release + memory budget + content checks
         run: |
-          nix develop -c bash -c "make clean && make lint && make test && make memmap && make registry-check && make dialogues-check && make shops-check && make entities-check && make screens-check && make test-harness JOBS=4 && make verify-oam && make verify-walkthrough"
-        timeout-minutes: 50
+          nix develop -c bash -c "make clean && make lint && make test && make memmap && make registry-check && make dialogues-check && make shops-check && make entities-check && make screens-check"
+        timeout-minutes: 25
 
       - name: Generated tile headers in sync with assets
         run: |
@@ -36,3 +40,63 @@ jobs:
             build/kaartenheld_debug.gb
             build/kaartenheld_debug.sym
           if-no-files-found: error
+
+  # Full scenario suite (JOBS=4 per AGENTS.md to avoid runner exhaustion).
+  # Own job so it no longer shares a 50-minute budget with OAM + walkthrough.
+  harness:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Harness scenario suite
+        run: |
+          nix develop -c bash -c "make test-harness JOBS=4"
+        timeout-minutes: 50
+
+  # VBlank-timed sprite checks via the mGBA debugger (SameBoy harness
+  # cannot observe these; see AGENTS.md 52.15).
+  verify-oam:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: OAM fidelity check
+        run: |
+          nix develop -c bash -c "make verify-oam"
+        timeout-minutes: 25
+
+  # Real-content gate: drives the RELEASE ROM headlessly and asserts
+  # canonical gameplay state (docs/verify-walkthrough.md).
+  verify-walkthrough:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Screenshot walkthrough + semantic checks
+        run: |
+          nix develop -c bash -c "make verify-walkthrough"
+        timeout-minutes: 25

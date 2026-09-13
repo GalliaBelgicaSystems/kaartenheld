@@ -1,4 +1,14 @@
+/* Bank split (memory budget): the release ROM's bank 5 is data-full
+ * (world tiles + atlas + scene rows), so the patrol body lives in bank 3
+ * there; the debug ROM's bank 3 is debug-code-full, so it lives in bank 5
+ * there (bank 5 has room in debug: no real scene rows).  Same pattern as
+ * scene_load.c's TEST_LEVELS split.  Keep in sync with the dispatch bank
+ * in world_update_actors() below. */
+#ifdef DEBUG_BUILD
 #pragma bank 5
+#else
+#pragma bank 3
+#endif
 
 #include "world.h"
 #include "actor.h"
