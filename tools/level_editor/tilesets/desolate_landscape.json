@@ -252,7 +252,7 @@
     },
     {
       "id": "desolate_landscape_floor_with_stuff_walkable_4",
-      "label": "floor with stuff walkable 4",
+      "label": "floor with stuff walkable",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_24",
       "walkable": true,
       "color": "#7e798b",
@@ -338,52 +338,12 @@
     {
       "id": "desolate_landscape_plain_floor_1",
       "label": "plain floor",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_32",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_39",
       "walkable": true,
       "color": "#938da1",
       "ascii": ".",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_plain_floor_1.png",
       "category": "terrain"
-    },
-    {
-      "id": "desolate_landscape_hero_frame_1_with_green_forest_background",
-      "label": "hero_frame_1 with green forest background",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_33",
-      "walkable": false,
-      "color": "#4e4a55",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_hero_frame_1_with_green_forest_background.png",
-      "category": "npc"
-    },
-    {
-      "id": "desolate_landscape_hero_frame_2_with_green_forest_background",
-      "label": "hero_frame_2 with green forest background",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_34",
-      "walkable": false,
-      "color": "#4e4a55",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_hero_frame_2_with_green_forest_background.png",
-      "category": "npc"
-    },
-    {
-      "id": "desolate_landscape_enemy_kobold_frame_1",
-      "label": "enemy kobold frame 1",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_35",
-      "walkable": false,
-      "color": "#806a76",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_enemy_kobold_frame_1.png",
-      "category": "enemy"
-    },
-    {
-      "id": "desolate_landscape_enemy_kobold_frame_2",
-      "label": "enemy kobold frame 2",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_36",
-      "walkable": false,
-      "color": "#806a76",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_enemy_kobold_frame_2.png",
-      "category": "enemy"
     },
     {
       "id": "desolate_landscape_fire_frame_1",
@@ -406,18 +366,8 @@
       "category": "object"
     },
     {
-      "id": "desolate_landscape_merchant_desolate_landscape",
-      "label": "merchant-desolate-landscape",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_39",
-      "walkable": false,
-      "color": "#6a5e5b",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_merchant_desolate_landscape.png",
-      "category": "npc"
-    },
-    {
       "id": "desolate_landscape_exit_desolate_landscape",
-      "label": "exit desolate landscape",
+      "label": "exit",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_40",
       "walkable": true,
       "color": "#504c5a",
@@ -426,34 +376,84 @@
       "category": "terrain"
     },
     {
-      "id": "desolate_landscape_enemy_bats_frame_1",
-      "label": "enemy bats frame 1",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_41",
-      "walkable": false,
-      "color": "#7e798a",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_enemy_bats_frame_1.png",
-      "category": "enemy"
-    },
-    {
-      "id": "desolate_landscape_enemy_bats_frame_2",
-      "label": "enemy bats frame 2",
-      "gb_constant": "TILE_DESOLATE_LANDSCAPE_42",
-      "walkable": false,
-      "color": "#7e798a",
-      "ascii": "#",
-      "image_url": "/tiles/desolate_landscape/desolate_landscape_enemy_bats_frame_2.png",
-      "category": "enemy"
-    },
-    {
       "id": "desolate_landscape_treasure_chest_desolate",
-      "label": "treasure chest desolate",
+      "label": "chest",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_43",
       "walkable": false,
       "color": "#89765d",
       "ascii": "#",
       "glyph": "O",
       "image_url": "/tiles/desolate_landscape/desolate_landscape_treasure_chest_desolate.png",
+      "category": "terrain"
+    },
+    {
+      "id": "desolate_landscape_black_emptyness",
+      "label": "black emptyness",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_32",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_black_emptyness.png",
+      "category": "object"
+    },
+    {
+      "id": "desolate_landscape_bottom_left_corner_interior",
+      "label": "bottom left corner interior",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_33",
+      "walkable": false,
+      "color": "#54505c",
+      "ascii": "#",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_left_corner_interior.png",
+      "category": "terrain"
+    },
+    {
+      "id": "desolate_landscape_bottom_right_corner_interior",
+      "label": "bottom right corner interior",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_34",
+      "walkable": false,
+      "color": "#494651",
+      "ascii": "#",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_bottom_right_corner_interior.png",
+      "category": "terrain"
+    },
+    {
+      "id": "desolate_landscape_top_right_corner_wall_interior",
+      "label": "top right corner wall interior",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_35",
+      "walkable": false,
+      "color": "#666072",
+      "ascii": "#",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_top_right_corner_wall_interior.png",
+      "category": "wall"
+    },
+    {
+      "id": "desolate_landscape_top_left_corner_wall_interior",
+      "label": "top left corner wall interior",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_36",
+      "walkable": false,
+      "color": "#6c6678",
+      "ascii": "#",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_top_left_corner_wall_interior.png",
+      "category": "wall"
+    },
+    {
+      "id": "desolate_landscape_plain_floor_2",
+      "label": "plain floor",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_41",
+      "walkable": true,
+      "color": "#938da1",
+      "ascii": ".",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_plain_floor_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "desolate_landscape_plain_floor_3",
+      "label": "plain floor",
+      "gb_constant": "TILE_DESOLATE_LANDSCAPE_42",
+      "walkable": true,
+      "color": "#938da1",
+      "ascii": ".",
+      "image_url": "/tiles/desolate_landscape/desolate_landscape_plain_floor_3.png",
       "category": "terrain"
     }
   ],
@@ -657,31 +657,31 @@
         "x": 0,
         "y": 2,
         "index": 32,
-        "tile": "desolate_landscape_plain_floor_1"
+        "tile": "desolate_landscape_black_emptyness"
       },
       {
         "x": 1,
         "y": 2,
         "index": 33,
-        "tile": "desolate_landscape_hero_frame_1_with_green_forest_background"
+        "tile": "desolate_landscape_bottom_left_corner_interior"
       },
       {
         "x": 2,
         "y": 2,
         "index": 34,
-        "tile": "desolate_landscape_hero_frame_2_with_green_forest_background"
+        "tile": "desolate_landscape_bottom_right_corner_interior"
       },
       {
         "x": 3,
         "y": 2,
         "index": 35,
-        "tile": "desolate_landscape_enemy_kobold_frame_1"
+        "tile": "desolate_landscape_top_right_corner_wall_interior"
       },
       {
         "x": 4,
         "y": 2,
         "index": 36,
-        "tile": "desolate_landscape_enemy_kobold_frame_2"
+        "tile": "desolate_landscape_top_left_corner_wall_interior"
       },
       {
         "x": 5,
@@ -699,7 +699,7 @@
         "x": 7,
         "y": 2,
         "index": 39,
-        "tile": "desolate_landscape_merchant_desolate_landscape"
+        "tile": "desolate_landscape_plain_floor_1"
       },
       {
         "x": 8,
@@ -712,13 +712,13 @@
         "x": 9,
         "y": 2,
         "index": 41,
-        "tile": "desolate_landscape_enemy_bats_frame_1"
+        "tile": "desolate_landscape_plain_floor_2"
       },
       {
         "x": 10,
         "y": 2,
         "index": 42,
-        "tile": "desolate_landscape_enemy_bats_frame_2"
+        "tile": "desolate_landscape_plain_floor_3"
       },
       {
         "x": 11,

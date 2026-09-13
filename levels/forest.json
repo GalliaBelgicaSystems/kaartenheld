@@ -366,10 +366,10 @@
     {
       "id": "forest_bat",
       "type": "enemy",
-      "overworld_sprite": "forest.forest_enemy_bats_frame_1",
+      "overworld_sprite": "actors.actors_bats_frame_1",
       "animation_frames": [
-        "forest.forest_enemy_bats_frame_1",
-        "forest.forest_enemy_bats_frame_2"
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
       ],
       "position": {
         "x": 7,

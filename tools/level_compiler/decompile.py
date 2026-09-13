@@ -66,17 +66,17 @@ CANONICAL_WALL = {
 # below is asserted present in its manifest at startup.
 SPRITE_FRAMES = {
     "desolate_landscape": {
-        "KOBOLD": ["desolate_landscape.desolate_landscape_enemy_kobold_frame_1",
-                   "desolate_landscape.desolate_landscape_enemy_kobold_frame_2"],
-        "BAT": ["desolate_landscape.desolate_landscape_enemy_bats_frame_1",
-                "desolate_landscape.desolate_landscape_enemy_bats_frame_2"],
+        "KOBOLD": ["actors.actors_kobold_frame_1",
+                   "actors.actors_kobold_frame_2"],
+        "BAT": ["actors.actors_bats_frame_1",
+                "actors.actors_bats_frame_2"],
         "CHEST": ["desolate_landscape.desolate_landscape_treasure_chest_desolate"],
     },
     "forest": {
-        "KOBOLD": ["forest.forest_enemy_kobold_frame_1",
-                   "forest.forest_enemy_kobold_frame_2"],
-        "BAT": ["forest.forest_enemy_bats_frame_1",
-                "forest.forest_enemy_bats_frame_2"],
+        "KOBOLD": ["actors.actors_kobold_frame_1",
+                   "actors.actors_kobold_frame_2"],
+        "BAT": ["actors.actors_bats_frame_1",
+                "actors.actors_bats_frame_2"],
         "CHEST": ["forest.forest_treasure_chest_forest"],
     },
     "castle": {
