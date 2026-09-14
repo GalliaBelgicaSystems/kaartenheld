@@ -59,6 +59,26 @@ def patrol_cells(ai, x, y):
     return {(x, y)}
 
 
+# Neighbor edge directions in stable order (matches the engine's
+# N/S/E/W checks and the mirrored-spawn rule).
+EDGE_DIRS = ("north", "south", "east", "west")
+_EDGE_NORMAL = {"north": (0, -1), "south": (0, 1),
+                "west": (-1, 0), "east": (1, 0)}
+_EDGE_BTN = {(0, -1): "up", (0, 1): "down",
+             (-1, 0): "left", (1, 0): "right"}
+
+
+def _edge_cells(scene):
+    """Border cells per direction (corners belong to two edges)."""
+    w, h = scene.width, scene.height
+    return {
+        "north": [(x, 0) for x in range(w)],
+        "south": [(x, h - 1) for x in range(w)],
+        "west": [(0, y) for y in range(h)],
+        "east": [(w - 1, y) for y in range(h)],
+    }
+
+
 class Scene:
     def __init__(self, name, scene_id, level, tileset):
         self.name = name
@@ -68,10 +88,32 @@ class Scene:
         self.height = level["map"]["height"]
         self.grid = derive_collision(level, tileset)
         self.exits = level.get("exits", [])
-        # Exit tiles sit on the map perimeter, which derive_collision
-        # marks as wall — but the ROM triggers them when the player
-        # moves into them, so they are portal nodes for routing.
+        # Point-exit triggers keep their painted art (or compiler-opened
+        # ground); they are portal nodes for routing whether or not the
+        # collision grid marks them.
         self.exit_cells = {(e["x"], e["y"]) for e in self.exits}
+        # Whole-edge links (neighbors): every walkable border cell of a
+        # linked edge is a portal node with a mirrored entry spawn.
+        # Corner cells belong to two edges, but the ROM fires in N/S/W/E
+        # priority order, so a corner is assigned to the first linked
+        # walkable edge in that order (setdefault): planner and ROM can
+        # never disagree on where a corner leads.
+        self.neighbors = level.get("neighbors", {}) or {}
+        self.edge_cells = {}  # (x, y) -> (direction, target_scene)
+        for direction in ("north", "south", "west", "east"):
+            target = (self.neighbors.get(direction) or "").strip()
+            if not target:
+                continue
+            for cell in _edge_cells(self)[direction]:
+                if cell in self.edge_cells:
+                    continue
+                # A point exit on the same cell wins over the edge rule
+                # in the ROM (gate check first), so it is never an edge
+                # portal.
+                if cell in self.exit_cells:
+                    continue
+                if self.grid[cell[1]][cell[0]]:
+                    self.edge_cells[cell] = (direction, target)
         self.hostiles = []      # (x, y, ai)
         self.blocked_actors = set()
         for obj in level.get("objects", []):
@@ -94,9 +136,22 @@ class Scene:
             return False
         if (x, y) in self.exit_cells:
             return True
+        if (x, y) in self.edge_cells:
+            return True
         if not self.grid[y][x]:
             return False
         return True
+
+    def portals_to(self, target_scene_name):
+        """Point exits targeting the scene, in order."""
+        return [e for e in self.exits
+                if e.get("target_scene") == target_scene_name]
+
+    def edge_goals(self, target_scene_name):
+        """(cell, direction) edge portals targeting the scene."""
+        return [(cell, direction)
+                for cell, (direction, target) in self.edge_cells.items()
+                if target == target_scene_name]
 
     def patrol_blocked(self):
         """Union of all hostiles' patrol cells."""
@@ -132,12 +187,20 @@ class Planner:
             self.scenes[name] = Scene(name, pos, level, ts)
 
     def arrival_pos(self, name):
-        """The tile the player lands on when entering scene `name`
-        (any parent exit's target).  None if no exit leads there."""
+        """A reachable tile inside scene `name` (a parent exit's spawn,
+        else the scene's own spawn as a neighbor-entry fallback: route()
+        lands edge crossings exactly and walks from there).  None if the
+        scene has no inbound portal at all."""
         for scene in self.scenes.values():
             for e in scene.exits:
                 if e["target_scene"] == name:
                     return (e["target_x"], e["target_y"])
+        for scene in self.scenes.values():
+            for target in scene.neighbors.values():
+                if (target or "").strip() == name:
+                    level = self.scenes[name].level
+                    spawn = level.get("player", {}).get("spawn", {})
+                    return (spawn.get("x", 2), spawn.get("y", 2))
         return None
 
     def scene_of(self, scene_id):
@@ -186,6 +249,7 @@ class Planner:
         avoid = scene.patrol_blocked() | scene.blocked_actors
         if avoid_exits:
             avoid |= (scene.exit_cells - {(start[0], start[1]), (goal[0], goal[1])})
+            avoid |= (set(scene.edge_cells) - {(start[0], start[1]), (goal[0], goal[1])})
         avoid.discard(start)
         avoid.discard(goal)
         return self._bfs(scene, start, goal, avoid)
@@ -195,22 +259,65 @@ class Planner:
         Returns (path_to_exit_cell, exit).  Other exit gates are avoided
         so the walk cannot accidentally cross a different portal."""
         scene = self.scenes[scene_name]
-        for e in scene.exits:
+        for e in scene.portals_to(target_scene_name):
             goal = (e["x"], e["y"])
             path = self.path(scene_name, start, goal, avoid_exits=True)
-            if path is not None and e.get("target_scene") == target_scene_name:
+            if path is not None:
                 return path, e
         return None, None
 
+    def path_to_link(self, scene_name, start, target_scene_name):
+        """Path to a point exit or a linked edge leading to the target.
+        Returns (path, button, exit_dict, goal_cell, direction) where
+        exit_dict carries at least target_scene (point exits carry the
+        full row), goal_cell is the portal cell, and direction is the
+        linked edge (None for point exits)."""
+        start = (start[0], start[1])
+        path, e = self.path_to_exit(scene_name, start, target_scene_name)
+        if path is not None and path:
+            dx, dy = path[-1]
+            return path, _EDGE_BTN[(dx, dy)], e, (e["x"], e["y"]), None
+        best, best_dir, best_goal = None, None, None
+        scene = self.scenes[scene_name]
+        other = self.scenes[target_scene_name]
+        # Landing inside a hostile patrol halo (or on a blocking actor)
+        # is an ambush, not an arrival: prefer entries outside them.
+        # Two passes so a fully-covered map still routes (loudly, via
+        # battle) instead of failing.
+        halo = other.patrol_blocked() | other.blocked_actors
+        avoid = scene.patrol_blocked() | scene.blocked_actors
+        avoid |= (scene.exit_cells - {(start[0], start[1])})
+        avoid |= (set(scene.edge_cells) - {(start[0], start[1])})
+        avoid.discard(start)
+        for safe_only in (True, False):
+            for goal, direction in scene.edge_goals(target_scene_name):
+                entry = self._mirror_entry(goal, direction,
+                                           target_scene_name)
+                if safe_only and entry in halo:
+                    continue
+                avoid.discard(goal)
+                epath = self._bfs(scene, start, goal, avoid)
+                avoid.add(goal)
+                if epath is not None and (best is None or len(epath) < len(best)):
+                    best, best_dir, best_goal = epath, direction, goal
+            if best is not None:
+                break
+        if best is None or not best:
+            return None, None, None, None, None
+        return best, _EDGE_BTN[_EDGE_NORMAL[best_dir]], \
+            {"target_scene": target_scene_name}, best_goal, best_dir
+
     def _scene_next(self, from_name, to_name):
         """Next hop on the shortest scene-graph path from -> to (BFS over
-        exit adjacency); None if unreachable."""
+        exit + neighbor adjacency); None if unreachable."""
         prev = {from_name: None}
         q = deque([from_name])
         while q:
             cur = q.popleft()
-            for e in self.scenes[cur].exits:
-                nxt = e["target_scene"]
+            nxts = [e["target_scene"] for e in self.scenes[cur].exits]
+            nxts += [t for t in self.scenes[cur].neighbors.values()
+                     if (t or "").strip()]
+            for nxt in nxts:
                 if nxt in prev:
                     continue
                 prev[nxt] = cur
@@ -224,7 +331,9 @@ class Planner:
 
     def route(self, from_scene, start, to_scene, goal):
         """Cross-scene route: list of steps.
-        ("move", dx, dy) | ("exit", direction, exit)."""
+        ("move", dx, dy) | ("exit", direction, exit).  Edge crossings use
+        the same ("exit", ...) step shape with a synthetic exit dict
+        (follow() only needs target_scene)."""
         steps = []
         scene_name = from_scene
         cur = start
@@ -238,22 +347,18 @@ class Planner:
             if next_scene is None:
                 raise ValueError("route: %s cannot reach %s"
                                  % (from_scene, to_scene))
-            found = self.path_to_exit(scene_name, cur, next_scene)
+            found = self.path_to_link(scene_name, cur, next_scene)
             if not found or found[0] is None:
                 raise ValueError("route: no exit path %s:%s -> %s"
                                  % (scene_name, cur, next_scene))
-            path, e = found
-            # The BFS path's final move enters the exit tile — that move
-            # IS the portal crossing, so convert it to an exit step
-            # (press toward the exit, ride the wipe).
+            path, btn, e, portal, direction = found
+            # The BFS path's final move enters the gate/edge cell — that
+            # move IS the portal crossing, so convert it to an exit step
+            # (press toward the portal, ride the wipe).
             moves = path[:-1]
-            ldx, ldy = path[-1]
             steps += [("move", dx, dy) for dx, dy in moves]
-            steps.append(("exit",
-                          {(0, -1): "up", (0, 1): "down",
-                           (-1, 0): "left", (1, 0): "right"}[(ldx, ldy)],
-                          e))
-            cur = (e["target_x"], e["target_y"])
+            steps.append(("exit", btn, e))
+            cur = self._arrival(e, portal, direction, next_scene)
             scene_name = to_scene if e.get("target_scene") == to_scene \
                 else e["target_scene"]
         path = self.path(scene_name, cur, goal, avoid_exits=True)
@@ -262,6 +367,31 @@ class Planner:
                              % (scene_name, cur, goal))
         steps += [("move", dx, dy) for dx, dy in path]
         return steps
+
+    def _arrival(self, e, goal, direction, to_name):
+        """Landing tile after crossing portal e into to_name: explicit
+        spawn for point exits, mirrored entry from the crossed edge cell
+        for linked edges (mirror of edge_banked.c, using the crossed
+        direction — corners belong to two edges, so position alone
+        cannot decide)."""
+        if "target_x" in e:
+            return (e["target_x"], e["target_y"])
+        return self._mirror_entry(goal, direction, to_name)
+
+    def _mirror_entry(self, goal, direction, to_name):
+        """Mirror of the ROM's edge-spawn rule (edge_banked.c): leaving
+        via an edge enters one cell inside the OPPOSITE edge, with the
+        crossing coordinate clamped for size mismatches."""
+        other = self.scenes[to_name]
+        gx, gy = goal
+        w, h = other.width, other.height
+        if direction == "north":
+            return (max(1, min(gx, w - 2)), h - 2)
+        if direction == "south":
+            return (max(1, min(gx, w - 2)), 1)
+        if direction == "west":
+            return (w - 2, max(1, min(gy, h - 2)))
+        return (1, max(1, min(gy, h - 2)))
 
     # ── encounter helpers ────────────────────────────────────────────
     def edge_of(self, scene_name, start, hostile_xy):

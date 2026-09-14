@@ -926,6 +926,36 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       });
     }
 
+    // 6b. Linked-edge indicators (neighbors): a green strip along each
+    // linked border with the target scene name. Exits stay orange squares.
+    if (showExits && !level.isScreen) {
+      const neighbors = level.neighbors || {};
+      const linked: Array<{ direction: string; target: string }> = [];
+      for (const direction of ['north', 'south', 'east', 'west']) {
+        const target = (neighbors as Record<string, string | undefined>)[direction];
+        if (target && target.trim()) linked.push({ direction, target: target.trim() });
+      }
+      for (const { direction, target } of linked) {
+        let x = 0, y = 0, wdt = 0, hgt = 0;
+        if (direction === 'north') { x = 0; y = 0; wdt = level.width; hgt = 1; }
+        else if (direction === 'south') { x = 0; y = level.height - 1; wdt = level.width; hgt = 1; }
+        else if (direction === 'west') { x = 0; y = 0; wdt = 1; hgt = level.height; }
+        else { x = level.width - 1; y = 0; wdt = 1; hgt = level.height; }
+        ctx.fillStyle = 'rgba(46, 204, 113, 0.30)';
+        ctx.fillRect(x * tileSize, y * tileSize, wdt * tileSize, hgt * tileSize);
+        if (tileSize >= 16) {
+          ctx.fillStyle = '#27ae60';
+          ctx.font = `bold ${Math.max(10, Math.floor(tileSize * 0.5))}px Inter, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const cx = (x + wdt / 2) * tileSize;
+          const cy = (y + hgt / 2) * tileSize;
+          const short = target.length > 12 ? target.slice(0, 11) + '…' : target;
+          ctx.fillText(`⇄ ${short}`, cx, cy);
+        }
+      }
+    }
+
     // 6. Render Exits
     if (showExits && level.exits) {
       level.exits.forEach((ex, idx) => {

@@ -8,6 +8,12 @@
     "music": "MUSIC_TOWN",
     "map_id": "MAP_TOWN"
   },
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "",
+    "west": "field"
+  },
   "default_walkable": "village.village_plain_floor_1",
   "layers": {
     "terrain": [
@@ -34,7 +40,7 @@
         "village.village_top_right_corner_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_top_left_roof",
         "village.village_top_middle_roof",
@@ -56,7 +62,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
         "village.village_middle_house",
@@ -78,7 +84,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
         "village.village_middle_house",
@@ -100,7 +106,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -122,7 +128,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_barrel",
         "village.village_plain_floor_1",
@@ -144,29 +150,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
         "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_right_wall"
-      ],
-      [
-        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -188,7 +172,29 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_right_wall"
+      ],
+      [
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -210,7 +216,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_barrel",
         "village.village_plain_floor_1",
@@ -232,7 +238,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -254,7 +260,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_top_left_well",
         "village.village_top_right_well",
@@ -276,7 +282,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_bottom_left_well",
         "village.village_bottom_right_well",
@@ -298,7 +304,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_top_left_roof_2",
         "village.village_top_middle_roof_2",
@@ -320,29 +326,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
         "village.village_plain_floor_1",
-        "village.village_left_house",
-        "village.village_middle_house",
-        "village.village_right_house",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_left_house",
-        "village.village_middle_house",
-        "village.village_right_house",
-        "village.village_plain_floor_1",
-        "village.village_right_wall"
-      ],
-      [
-        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
         "village.village_middle_house",
@@ -364,7 +348,29 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_left_wall",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_left_house",
+        "village.village_middle_house",
+        "village.village_right_house",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_left_house",
+        "village.village_middle_house",
+        "village.village_right_house",
+        "village.village_plain_floor_1",
+        "village.village_right_wall"
+      ],
+      [
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -421,15 +427,6 @@
     }
   },
   "exits": [
-    {
-      "x": 1,
-      "y": 7,
-      "target_scene": "field",
-      "target_x": 17,
-      "target_y": 7,
-      "direction": "WEST",
-      "tile_char": "<"
-    },
     {
       "x": 1,
       "y": 9,

@@ -107,6 +107,9 @@ def emit_ids_header(registry=None):
         num = registry["scenes"][sid]
         lines.append(f"#define MAP_{sid.upper()} {num}")
     lines.append("")
+    lines.append("/* No neighbor on an edge (SceneDefinition neighbor_n/s/e/w). */")
+    lines.append("#define MAP_NONE 0xFF")
+    lines.append("")
     lines.append("/* Real scene table length = max live id + 1.  The table keeps a")
     lines.append(" * hole per retired id (scene_table_order), so this is NOT the live")
     lines.append(" * count: after a delete, ids are sparse and the old len(scenes)")
@@ -187,43 +190,114 @@ def resolve_tiles(level_data, tileset):
     return tile_dict
 
 
+# Whole-edge map links (the "ocean"): neighbors JSON -> {dir: sid or None}.
+# Unknown non-empty targets fail LOUDLY with the human fix (same contract
+# as exit targets) instead of emitting guessed C identifiers.
+NEIGHBOR_DIRS = ("north", "south", "east", "west")
+
+
+def neighbor_targets(level_data, registry=None):
+    """Level neighbors JSON -> {dir: target sid or None}."""
+    registry = registry or load_registry()
+    out = {}
+    raw = level_data.get("neighbors", {}) or {}
+    for d in NEIGHBOR_DIRS:
+        t = (raw.get(d) or "").strip()
+        if not t:
+            out[d] = None
+            continue
+        if t not in registry["scenes"] and not t.startswith("test_"):
+            raise SystemExit(
+                f"ERROR: neighbor '{d}' in '{level_data.get('id')}' targets unknown scene "
+                f"'{t}'. Point it at a registered scene "
+                f"(or save that level in the editor to register it).")
+        out[d] = t
+    return out
+
+
+def neighbor_enums(lvl, registry=None):
+    """(north, south, east, west) C enum names (MAP_* or MAP_NONE)."""
+    registry = registry or load_registry()
+    map_enum, _ = scene_maps(registry)
+    targets = neighbor_targets(lvl, registry)
+    names = []
+    for d in NEIGHBOR_DIRS:
+        t = targets[d]
+        if not t:
+            names.append("MAP_NONE")
+            continue
+        try:
+            names.append(map_enum[t])
+        except KeyError:
+            raise SystemExit(
+                f"ERROR: neighbor '{d}' in '{lvl.get('id')}' targets unknown scene "
+                f"'{t}'. Point it at a registered scene "
+                f"(or save that level in the editor to register it).")
+    return names
+
+
+def cell_tile_info(level_data, tileset, x, y):
+    """Manifest tile dict for the art painted at (x, y), or None when the
+    cell is unpainted (the ROM fills default ground / perimeter wall)."""
+    tile_dict = {t["id"]: t for t in tileset.get("tiles", [])}
+    terrain = level_data.get("layers", {}).get("terrain", [])
+    if not terrain:
+        return None
+    if isinstance(terrain[0], list):
+        if y < len(terrain) and x < len(terrain[y]):
+            return tile_dict.get(terrain[y][x].split(".")[-1])
+        return None
+    for block in terrain:
+        bx = block.get("x", 0)
+        by = block.get("y", 0)
+        if bx <= x < bx + block.get("width", 0) and by <= y < by + block.get("height", 0):
+            return tile_dict.get(block.get("tile", "").split(".")[-1])
+    return None
+
+
 def derive_collision(level_data, tileset):
-    """Derive 2D collision grid (True=walkable, False=blocked)."""
+    """Derive 2D collision grid (True=walkable, False=blocked).
+
+    Mirrors the ROM (scene_load_tiles_banked + world_is_walkable):
+    unpainted interior is default ground (walkable); unpainted perimeter
+    is wall, except unpainted point-exit gates and whole linked edges
+    (neighbors), which compile to open-ground rows; painted cells follow
+    their manifest walkability, so solid art over a gate blocks it (the
+    validator warns loudly about that)."""
     width = level_data["map"]["width"]
     height = level_data["map"]["height"]
+    try:
+        neighbors = neighbor_targets(level_data)
+    except SystemExit:
+        neighbors = {}
+    linked = {d for d, t in neighbors.items() if t}
+    exits = {(e.get("x", -1), e.get("y", -1)) for e in level_data.get("exits", [])}
     grid = [[True for _ in range(width)] for _ in range(height)]
-
-    # Perimeter walls
-    for x in range(width):
-        grid[0][x] = False
-        grid[height - 1][x] = False
     for y in range(height):
-        grid[y][0] = False
-        grid[y][width - 1] = False
-
-    tile_dict = resolve_tiles(level_data, tileset)
-    terrain = level_data.get("layers", {}).get("terrain", [])
-
-    if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
-        for y in range(min(height, len(terrain))):
-            for x in range(min(width, len(terrain[y]))):
-                t_id = terrain[y][x].split(".")[-1]
-                t_info = tile_dict.get(t_id, {})
-                if not t_info.get("walkable", True):
-                    grid[y][x] = False
-    elif isinstance(terrain, list):
-        for block in terrain:
-            bx = block.get("x", 0)
-            by = block.get("y", 0)
-            bw = block.get("width", 0)
-            bh = block.get("height", 0)
-            t_id = block.get("tile", "").split(".")[-1]
-            t_info = tile_dict.get(t_id, {})
-            if not t_info.get("walkable", True):
-                for cy in range(by, min(height, by + bh)):
-                    for cx in range(bx, min(width, bx + bw)):
-                        grid[cy][cx] = False
-
+        for x in range(width):
+            info = cell_tile_info(level_data, tileset, x, y)
+            if (x, y) in exits:
+                # Triggers fire regardless of the art painted under them,
+                # so every gate cell is a portal node for routing.
+                grid[y][x] = True
+                continue
+            on_perimeter = (x == 0 or y == 0 or x == width - 1 or y == height - 1)
+            if not on_perimeter:
+                grid[y][x] = True if info is None else bool(info.get("walkable", True))
+                continue
+            edges = set()
+            if x == 0:
+                edges.add("west")
+            if x == width - 1:
+                edges.add("east")
+            if y == 0:
+                edges.add("north")
+            if y == height - 1:
+                edges.add("south")
+            if info is None:
+                grid[y][x] = any(e in linked for e in edges)
+            else:
+                grid[y][x] = bool(info.get("walkable", True))
     return grid
 
 
@@ -336,6 +410,79 @@ def optimize_terrain(level_data, tileset):
     return blocks_out
 
 
+def level_default_const(lvl, tileset):
+    """The level's default-ground TileType constant (for SceneDefinition
+    and for edge-open rows)."""
+    tile_dict = resolve_tiles(lvl, tileset)
+    default_tile = level_default_tile(lvl, {lvl["map"]["tileset"]: tileset})
+    default_info = tile_dict.get(default_tile.split(".")[-1], {})
+    return map_base_tile_const(
+        default_info.get("gb_constant", "TILE_FLOOR"), default_info)
+
+
+def open_ground_blocks(lvl, tileset, default_const):
+    """Terrain rows that keep triggers and whole linked edges walkable:
+    every UNPAINTED point-exit gate cell and every unpainted cell of a
+    linked border gets default ground. Painted cells (including author
+    walls) are untouched, so they keep precedence. The ROM stays
+    branch-free: it just applies these rows like any other terrain."""
+    try:
+        neighbors = neighbor_targets(lvl)
+    except SystemExit:
+        neighbors = {}
+    linked = {d for d, t in neighbors.items() if t}
+    gates = {(e.get("x", -1), e.get("y", -1)) for e in lvl.get("exits", [])}
+    if not linked and not gates:
+        return []
+    w = lvl["map"]["width"]
+    h = lvl["map"]["height"]
+
+    def edge_cells(direction):
+        if direction == "north":
+            return [(x, 0) for x in range(w)]
+        if direction == "south":
+            return [(x, h - 1) for x in range(w)]
+        if direction == "west":
+            return [(0, y) for y in range(h)]
+        return [(w - 1, y) for y in range(h)]
+
+    out = []
+    covered = set()
+
+    def open_run(cells, comment):
+        run = None
+        for cell in cells + [None]:
+            if (cell is not None and cell not in covered
+                    and cell_tile_info(lvl, tileset, cell[0], cell[1]) is None):
+                if run is None:
+                    run = [cell[0], cell[1], cell[0], cell[1]]
+                else:
+                    run[2] = cell[0]
+                    run[3] = cell[1]
+            elif run is not None:
+                for cx in range(run[0], run[2] + 1):
+                    for cy in range(run[1], run[3] + 1):
+                        covered.add((cx, cy))
+                out.append({
+                    "x": run[0], "y": run[1],
+                    "w": run[2] - run[0] + 1, "h": run[3] - run[1] + 1,
+                    "tile": default_const,
+                    "comment": comment,
+                })
+                run = None
+
+    for gate in sorted(gates):
+        gx, gy = gate
+        if 0 <= gx < w and 0 <= gy < h:
+            open_run([(gx, gy)], "exit gate keeps default ground")
+    for direction in ("north", "south", "east", "west"):
+        if direction not in linked:
+            continue
+        open_run(edge_cells(direction),
+                 "linked %s edge keeps default ground" % direction)
+    return out
+
+
 def emit_exits(levels_by_id, registry=None):
     """
     Build g_all_exits array and compute offsets/counts for each scene.
@@ -412,6 +559,9 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
         tileset_id = lvl["map"]["tileset"]
         tileset = tilesets.get(tileset_id, {})
         blocks = optimize_terrain(lvl, tileset)
+        # Unpainted gates and whole linked edges stay open ground
+        # (compile-time rows, so the ROM fill loop needs no branches).
+        blocks += open_ground_blocks(lvl, tileset, level_default_const(lvl, tileset))
 
         if not blocks:
             scene_terrain_symbols[sid] = "0"
@@ -436,7 +586,7 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
             # only target registered scenes; no save system replays old
             # ids) — belt and braces, not a playable scene.
             scene_defs.append(
-                "    { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR }"
+                "    { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE }"
             )
             continue
         lvl = levels_by_id[sid]
@@ -454,14 +604,11 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
         spawn = lvl.get("player", {}).get("spawn", {})
         spawn_facing = SPAWN_FACING_MAP.get(
             str(spawn.get("facing", "DOWN")).upper(), "DIRECTION_DOWN")
-        default_tile = level_default_tile(lvl, tilesets)
-        tile_dict = resolve_tiles(lvl, tilesets.get(lvl["map"]["tileset"], {}))
-        default_info = tile_dict.get(default_tile.split(".")[-1], {})
-        default_const = map_base_tile_const(
-            default_info.get("gb_constant", "TILE_FLOOR"), default_info)
+        default_const = level_default_const(lvl, tilesets.get(lvl["map"]["tileset"], {}))
+        nbr_n, nbr_s, nbr_e, nbr_w = neighbor_enums(lvl, registry)
 
         scene_defs.append(
-            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const} }}"
+            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const}, {nbr_n + ',':<20s} {nbr_s + ',':<20s} {nbr_e + ',':<20s} {nbr_w} }}"
         )
     output.append(",\n".join(scene_defs))
     output.append("};\n")

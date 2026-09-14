@@ -1086,3 +1086,53 @@ The editor writes it; the compiler and every host tool derive from it.
   engine-wired guard.
 * `make registry-check` locks the contract (versioning, never-reuse,
   registry/file agreement) against a temp root.
+
+# Phase 20 — Invisible exits + whole-edge neighbors (the "ocean")
+
+Placing an exit no longer stamps a staircase/ladder tile. Exits are
+**invisible triggers**: the gate cell keeps whatever terrain art is
+painted under it (doors, elevators, stairs the author paints by hand),
+and stepping onto it teleports via the exit table. Unpainted gate cells
+compile to open-ground rows, so old gates placed on walls keep working;
+painting solid art over a gate blocks it forever (`validate.py` warns).
+
+Whole map borders can link to other maps through `neighbors`:
+
+```json
+"neighbors": { "north": "forest", "south": "south_field",
+               "east": "town", "west": "" }
+```
+
+Stepping onto a non-wall cell of a linked border crosses to the neighbor
+scene with a mirrored entry spawn (one cell inside the opposite edge,
+clamped for size mismatches). Walls stay walls: a wall on a linked edge
+blocks, everything else crosses. A point exit on the same cell wins over
+the edge rule. Links should be reciprocal (walk back); one-sided links
+warn unless a point exit covers the return.
+
+## Contract
+
+* `levels/schema/level.schema.json` gains optional `neighbors`
+  (north/south/east/west scene names, empty = no link).
+* The compiler emits four neighbor bytes per `SceneDefinition` row
+  (`MAP_NONE` = no link) plus open-ground rows for unpainted gates and
+  linked edges, so the ROM fill loop stays branch-free. Unknown targets
+  fail loudly, like exit targets.
+* The ROM resolves a step as point-exit trigger first, then linked-edge
+  crossing, then a normal walk (fixed-bank budget: the edge predicate
+  and mirrored spawn run banked; see AGENTS.md 55.5).
+* The editor paints linked borders with green `⇄ <scene>` strips, edits
+  the four links in the Exits tab, rewires them on rename, and clears
+  them on delete (same as exits). `validate.py` checks targets,
+  reciprocity, and gate art.
+* The walkthrough planner (`tools/walkthrough/route.py`) routes over
+  exits and edges identically; the content sweep visits every level
+  through them.
+* Harness fixtures (`tools/scenarios/fixtures/`) deliberately carry no
+  neighbor links (their frozen terrain would trap mirrored entries);
+  edge coverage lives in the walkthrough, trigger coverage in the
+  harness scenarios.
+
+Supersedes Phase 16's exit-art bullet: gates no longer render
+per-tileset stairs art and the ROM never stamps `TILE_EXIT`; the
+`exit: true` manifest markings remain as decor-tile metadata only.

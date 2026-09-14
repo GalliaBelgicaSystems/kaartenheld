@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EditorLevel, LevelExit, LevelRegion, PlayerSpawn } from './model/Level';
+import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, NEIGHBOR_DIRS, PlayerSpawn, normalizeNeighbors } from './model/Level';
 import { LevelObject, OBJECT_TEMPLATES } from './model/Objects';
 import { EditLayer, LayerPanel } from './LayerPanel';
 import { BUILTIN_TILESETS, TileDefinition } from './model/Tileset';
@@ -33,6 +33,7 @@ interface InspectorProps {
   onAddExit: (exit: LevelExit) => void;
   onUpdateExit: (index: number, exit: LevelExit) => void;
   onDeleteExit: (index: number) => void;
+  onUpdateNeighbors: (neighbors: LevelNeighbors) => void;
   onAddObject: (obj: LevelObject) => void;
   onUpdateObject: (index: number, obj: LevelObject) => void;
   onDeleteObject: (index: number) => void;
@@ -147,6 +148,7 @@ export const Inspector: React.FC<InspectorProps> = ({
   onAddExit,
   onUpdateExit,
   onDeleteExit,
+  onUpdateNeighbors,
   onAddObject,
   onUpdateObject,
   onDeleteObject,
@@ -1542,6 +1544,54 @@ export const Inspector: React.FC<InspectorProps> = ({
               </div>
             )}
             <ExitConnector levelId={level.id} exits={level.exits} />
+            <div className="section-header-row" style={{ marginTop: 12 }}>
+              <h4>Edge neighbors</h4>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>
+              Whole-edge links: stepping onto a non-wall cell of a linked
+              border crosses to that scene (mirrored entry). A point exit
+              on the same cell wins. Paint open ground on the border (or
+              leave it unpainted); walls stay walls.
+            </div>
+            {(() => {
+              const neighbors = normalizeNeighbors(level.neighbors);
+              const opposite: Record<string, string> = {
+                north: 'south', south: 'north', east: 'west', west: 'east',
+              };
+              return (
+                <div>
+                  {NEIGHBOR_DIRS.map((direction) => (
+                    <div className="form-group" key={direction}>
+                      <label style={{ textTransform: 'capitalize' }}>{direction}</label>
+                      <FilterCombo
+                        items={[
+                          { value: '', label: '(no link)' },
+                          ...sceneOptions
+                            .filter((s) => s.id !== level.id)
+                            .map((s) => ({
+                              value: s.id,
+                              label: `${s.name} (${s.id}.json)`,
+                            })),
+                        ]}
+                        value={neighbors[direction] || ''}
+                        onPick={(v) =>
+                          onUpdateNeighbors({ ...neighbors, [direction]: v })
+                        }
+                        staleLabel={(v) => `${v} (unknown — pick a scene below)`}
+                        placeholder="Filter scenes..."
+                      />
+                      {neighbors[direction] ? (
+                        <div className="item-sub">
+                          {sceneOptions.some((s) => s.id === neighbors[direction])
+                            ? `→ ${neighbors[direction]} (set its ${opposite[direction]} back for a return)`
+                            : `⚠️ '${neighbors[direction]}' is not a known scene`}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 

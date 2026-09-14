@@ -49,7 +49,8 @@ typedef enum {
     MOVE_OUTCOME_NONE      = 0,
     MOVE_OUTCOME_NORMAL    = 1,
     MOVE_OUTCOME_EXIT      = 2,
-    MOVE_OUTCOME_ENCOUNTER = 3
+    MOVE_OUTCOME_ENCOUNTER = 3,
+    MOVE_OUTCOME_EDGE      = 4
 } MoveOutcome;
 
 typedef enum {
@@ -391,13 +392,30 @@ typedef struct {
      * map-0 line could poison once and misrender a whole map as generic
      * fallback art.  Runtime only, never persistent. */
     WorldTilesetKind tileset_kind;
+
+    /* Edge-crossing target (MapId) for MOVE_OUTCOME_EDGE moves, staged by
+     * world_try_begin_move and consumed by world_update_move.  Runtime
+     * only, never persistent. */
+    uint8_t move_param;
+    /* Edge-crossing direction (NbrEdge) for MOVE_OUTCOME_EDGE moves: the
+     * commit path must mirror the decide path exactly (corners belong to
+     * two edges), so the direction is staged, never recomputed. */
+    uint8_t move_dir;
 } World;
+
+/* Neighbor edge indices (n,s,e,w), shared by the move decision and the
+ * banked edge-spawn body. */
+typedef enum {
+    NBR_N = 0,
+    NBR_S = 1,
+    NBR_E = 2,
+    NBR_W = 3
+} NbrEdge;
 
 void world_init(World *w, const GameState *state);
 void world_load_map(World *w, MapId map_id, const GameState *state);
 void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
                       const GameState *state);
-bool world_is_walkable(const World *w, uint8_t x, uint8_t y);
 
 /* Overworld camera: keep the player centred in the WORLD_VIEW_W x
  * WORLD_VIEW_H view, clamped at the scene bounds (scenes smaller than the

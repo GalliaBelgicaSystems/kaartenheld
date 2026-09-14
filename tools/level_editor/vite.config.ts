@@ -162,8 +162,8 @@ function levelEditorApiPlugin(): Plugin {
         };
 
         /** Rewrite target_scene old->new (rename) or remove it (delete)
-         *  across every real level file.  Returns the number of exits
-         *  changed. */
+         *  across every real level file, in exits[] AND neighbors{}.
+         *  Returns the number of files changed. */
         const retargetExits = (oldId: string, newId: string | null): number => {
           let changed = 0;
           for (const f of fs.readdirSync(path.join(repoRoot, 'levels'))) {
@@ -172,16 +172,28 @@ function levelEditorApiPlugin(): Plugin {
             let data: any;
             try { data = JSON.parse(fs.readFileSync(abs, 'utf-8')); } catch { continue; }
             if (data.id === oldId) continue;   // the level being renamed/deleted
-            if (!Array.isArray(data.exits)) continue;
             let touched = false;
-            for (const e of data.exits) {
-              if (e && e.target_scene === oldId) {
-                touched = true;
-                if (newId === null) { e.__remove = true; } else { e.target_scene = newId; }
+            if (Array.isArray(data.exits)) {
+              for (const e of data.exits) {
+                if (e && e.target_scene === oldId) {
+                  touched = true;
+                  if (newId === null) { e.__remove = true; } else { e.target_scene = newId; }
+                }
+              }
+              if (touched && newId === null) {
+                data.exits = data.exits.filter((e: any) => !e.__remove);
+              }
+            }
+            const neighbors = (data as any).neighbors;
+            if (neighbors && typeof neighbors === 'object') {
+              for (const dir of ['north', 'south', 'east', 'west']) {
+                if (neighbors[dir] === oldId) {
+                  neighbors[dir] = newId === null ? '' : newId;
+                  touched = true;
+                }
               }
             }
             if (touched) {
-              if (newId === null) data.exits = data.exits.filter((e: any) => !e.__remove);
               writeJsonAtomic(abs, data);
               changed++;
             }

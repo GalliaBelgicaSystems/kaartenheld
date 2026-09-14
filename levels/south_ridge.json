@@ -8,6 +8,12 @@
     "music": "MUSIC_DESOLATE",
     "map_id": "MAP_SOUTH_RIDGE"
   },
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "",
+    "west": "south_field"
+  },
   "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
   "layers": {
     "terrain": [
@@ -164,17 +170,7 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 0,
-      "y": 9,
-      "target_scene": "south_field",
-      "target_x": 17,
-      "target_y": 9,
-      "direction": "WEST",
-      "tile_char": "<"
-    }
-  ],
+  "exits": [],
   "objects": [
     {
       "id": "ridge_kobold",

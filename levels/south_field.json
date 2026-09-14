@@ -8,6 +8,12 @@
     "music": "MUSIC_DESOLATE",
     "map_id": "MAP_SOUTH_FIELD"
   },
+  "neighbors": {
+    "north": "field",
+    "south": "",
+    "east": "south_ridge",
+    "west": ""
+  },
   "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
   "layers": {
     "terrain": [
@@ -34,29 +40,11 @@
   "exits": [
     {
       "x": 12,
-      "y": 0,
-      "target_scene": "field",
-      "target_x": 12,
-      "target_y": 16,
-      "direction": "NORTH",
-      "tile_char": "<"
-    },
-    {
-      "x": 12,
       "y": 11,
       "target_scene": "mountain_pass",
       "target_x": 12,
       "target_y": 10,
       "direction": "SOUTH",
-      "tile_char": ">"
-    },
-    {
-      "x": 19,
-      "y": 9,
-      "target_scene": "south_ridge",
-      "target_x": 2,
-      "target_y": 9,
-      "direction": "EAST",
       "tile_char": ">"
     }
   ],

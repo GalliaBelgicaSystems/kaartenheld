@@ -465,6 +465,59 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     if exits_ok:
         passed.append("Exits valid")
 
+    # 4b. Edge neighbors (whole-edge links). Unknown targets are errors
+    # (the compiler would abort on them); one-sided links only warn
+    # (walk in works, walk back is a wall until the return is set).
+    neighbors_ok = True
+    neighbors = level_data.get("neighbors", {}) or {}
+    if neighbors and not isinstance(neighbors, dict):
+        errors.append("'neighbors' must be an object with north/south/east/west scene names")
+        neighbors_ok = False
+    else:
+        for direction in ("north", "south", "east", "west"):
+            target = (neighbors.get(direction) or "").strip() if isinstance(neighbors, dict) else ""
+            if not target:
+                continue
+            if target not in known_scene_names() and (all_level_ids is None or target not in all_level_ids):
+                errors.append(
+                    f"Neighbor '{direction}' target '{target}' is not a known scene "
+                    f"(point it at a registered scene)")
+                neighbors_ok = False
+    if neighbors_ok:
+        passed.append("Neighbors valid")
+
+    # 4c. Exit-gate art: the trigger never stamps its own tile, so the
+    # painted art underneath must be steppable, or the trigger can never
+    # fire. Unpainted gates compile to open ground automatically.
+    if tileset and isinstance(neighbors, dict):
+        tile_map = {t["id"]: t for t in tileset.get("tiles", [])}
+        layers = level_data.get("layers", {})
+        terrain = layers.get("terrain", [])
+
+        def painted_at(px, py):
+            if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
+                if py < len(terrain) and px < len(terrain[py]):
+                    cell = terrain[py][px]
+                    t_name = cell.split(".")[-1] if "." in cell else cell
+                    return tile_map.get(t_name)
+                return None
+            elif isinstance(terrain, list):
+                for block in terrain:
+                    bx = block.get("x", 0)
+                    by = block.get("y", 0)
+                    if bx <= px < bx + block.get("width", 0) and by <= py < by + block.get("height", 0):
+                        bt = block.get("tile", "")
+                        t_name = bt.split(".")[-1] if "." in bt else bt
+                        return tile_map.get(t_name)
+            return None
+
+        for e_idx, exit_obj in enumerate(exits):
+            art = painted_at(exit_obj.get("x", -1), exit_obj.get("y", -1))
+            if art is not None and not art.get("walkable", True):
+                warnings.append(
+                    f"Exit {e_idx} sits on solid '{art.get('id')}' art: the invisible trigger "
+                    f"can never be stepped on (paint walkable ground or leave it unpainted)")
+
     # 5. Objects Check (full-fidelity actor slots: JSON must be able to
     # roundtrip the C WorldActorDefinition rows -- see decompile.py)
     objects_ok = True
@@ -665,6 +718,32 @@ def main():
                     overall_success = False
                 else:
                     seen_actor_ids[aid] = obj.get("id")
+
+    # Cross-file check: neighbor links should be reciprocal (walk back).
+    # One-sided links still compile (walk in works); warn so the missing
+    # return is a conscious choice, not an oversight.
+    _OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
+    _by_id = {}
+    for _, data in loaded_levels:
+        if isinstance(data, dict) and data.get("id"):
+            _by_id[data["id"]] = data
+    for p, data in loaded_levels:
+        if not isinstance(data, dict):
+            continue
+        for direction in ("north", "south", "east", "west"):
+            target = ((data.get("neighbors", {}) or {}).get(direction) or "").strip()
+            if not target or target not in _by_id:
+                continue
+            back = ((_by_id[target].get("neighbors", {}) or {}).get(_OPPOSITE[direction]) or "").strip()
+            if back != data.get("id"):
+                # A point-exit trigger back counts as a return path (e.g. a
+                # door into a map whose whole edge belongs elsewhere).
+                returns = [e for e in (_by_id[target].get("exits", []) or [])
+                           if e.get("target_scene") == data.get("id")]
+                if returns:
+                    continue
+                print(f"WARNING: {os.path.basename(p)} edge '{direction}' -> '{target}' "
+                      f"has no return link ({target} {_OPPOSITE[direction]} is '{back or 'unset'}')")
 
     for p, data in loaded_levels:
         basename = os.path.basename(p)

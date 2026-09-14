@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { EditorLevel, LevelExit, LevelRegion, createEmptyEditorLevel, levelDataToEditor } from './model/Level';
+import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, createEmptyEditorLevel, levelDataToEditor, normalizeNeighbors } from './model/Level';
 import { LevelObject } from './model/Objects';
 import { Toolbar, ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
@@ -705,6 +705,10 @@ export const App: React.FC = () => {
     setSelectedEntityIndex(null);
   };
 
+  const handleUpdateNeighbors = (neighbors: LevelNeighbors) => {
+    pushState({ ...level, neighbors: { ...normalizeNeighbors(level.neighbors), ...neighbors } });
+  };
+
   // Region Operations
   const handleAddRegion = (region: LevelRegion) => {
     pushState({ ...level, regions: [...level.regions, region] });
@@ -796,6 +800,21 @@ export const App: React.FC = () => {
       }
     });
     if (exitsOk) passed.push('Exits valid');
+
+    // Edge neighbors (mirror of validate.py: unknown targets fail loud).
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const knownIds = new Set(levelItems.filter((l) => l.category === 'levels').map((l) => l.id));
+      let neighborsOk = true;
+      for (const d of ['north', 'south', 'east', 'west'] as const) {
+        const t = (neighbors[d] || '').trim();
+        if (t && !knownIds.has(t)) {
+          errors.push(`Neighbor '${d}' target '${t}' is not a known level`);
+          neighborsOk = false;
+        }
+      }
+      if (neighborsOk) passed.push('Neighbors valid');
+    }
 
     // Objects
     let objectsOk = true;
@@ -951,6 +970,7 @@ export const App: React.FC = () => {
         connections: level.exits.map(
           (e) => `${e.direction?.toLowerCase() || 'exit'} -> ${e.target_scene} (spawn ${e.target_x},${e.target_y})`
         ),
+        neighbors: normalizeNeighbors(level.neighbors),
         regions: level.regions.map((r) => ({
           name: r.id,
           bounds: [r.bounds.x, r.bounds.y, r.bounds.width, r.bounds.height],
@@ -979,6 +999,19 @@ export const App: React.FC = () => {
       });
     } else {
       lines.push('- None');
+    }
+    lines.push('\n## Edge neighbors');
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const linked = (['north', 'south', 'east', 'west'] as const)
+        .filter((d) => (neighbors[d] || '').trim());
+      if (linked.length > 0) {
+        linked.forEach((d) => {
+          lines.push(`- ${d} edge → **${neighbors[d]}** (mirrored entry)`);
+        });
+      } else {
+        lines.push('- None');
+      }
     }
 
     lines.push('\n## Regions & Semantic Context');
@@ -1245,6 +1278,7 @@ export const App: React.FC = () => {
               onAddExit={handleAddExit}
               onUpdateExit={handleUpdateExit}
               onDeleteExit={handleDeleteExit}
+              onUpdateNeighbors={handleUpdateNeighbors}
               onAddObject={handleAddObject}
               onUpdateObject={handleUpdateObject}
               onDeleteObject={handleDeleteObject}

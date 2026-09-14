@@ -8,6 +8,12 @@
     "music": "MUSIC_FOREST",
     "map_id": "MAP_FOREST_DEEP"
   },
+  "neighbors": {
+    "north": "forest_grove",
+    "south": "",
+    "east": "forest_shrine",
+    "west": "forest_glade"
+  },
   "default_walkable": "forest.forest_plain_floor_1",
   "layers": {
     "terrain": [
@@ -220,35 +226,7 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 0,
-      "y": 9,
-      "target_scene": "forest_glade",
-      "target_x": 17,
-      "target_y": 9,
-      "direction": "WEST",
-      "tile_char": "<"
-    },
-    {
-      "x": 19,
-      "y": 9,
-      "target_scene": "forest_shrine",
-      "target_x": 2,
-      "target_y": 9,
-      "direction": "EAST",
-      "tile_char": ">"
-    },
-    {
-      "x": 9,
-      "y": 0,
-      "target_scene": "forest_grove",
-      "target_x": 9,
-      "target_y": 15,
-      "direction": "NORTH",
-      "tile_char": ">"
-    }
-  ],
+  "exits": [],
   "objects": [
     {
       "id": "deep_kobold",

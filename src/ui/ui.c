@@ -586,14 +586,10 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
         glyph = actor->visual;
     } else {
         glyph = ui_get_world_tile_glyph(t);
-        if (t == TILE_EXIT) {
-            WorldTilesetKind ets = world->tileset_kind;
-            uint8_t ex = (ets == WORLD_TILESET_DESOLATE) ? TILESET_EXIT_DESOLATE :
-                         (ets == WORLD_TILESET_FOREST) ? TILESET_EXIT_FOREST :
-                         (ets == WORLD_TILESET_CASTLE) ? TILESET_EXIT_CASTLE :
-                         (ets == WORLD_TILESET_VILLAGE) ? TILESET_EXIT_VILLAGE : 2;
-            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + ex);
-        } else if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
+        /* NOTE: no TILE_EXIT branch. Exit gates are invisible triggers:
+         * the loader never stamps TILE_EXIT anymore, so gate cells render
+         * their underlying terrain art through the ranges below. */
+        if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
             t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_STAIRCASE) {
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_WALL_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
