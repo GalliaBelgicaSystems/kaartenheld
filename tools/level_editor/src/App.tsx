@@ -950,9 +950,14 @@ export const App: React.FC = () => {
     level.objects.forEach((obj) => {
       const props = (obj.properties || {}) as Record<string, unknown>;
       if (!props.entity_id) return;
-      const flags = ((props.flags as string[]) || []);
-      const hostile = obj.type === 'enemy' || flags.includes('HOSTILE');
-      const blocking = flags.includes('BLOCKING');
+      // compile.py's default_actor_flags: explicit `flags` wins (an
+      // explicit [] stays empty), else default by object type.
+      const eff = (props.flags as string[] | undefined)
+        ?? (obj.type === 'enemy'
+          ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+          : ['BLOCKING', 'INTERACTABLE']);
+      const hostile = eff.includes('HOSTILE');
+      const blocking = eff.includes('BLOCKING');
       if (!hostile && !blocking) return;
       const p = obj.position || { x: -1, y: -1 };
       const tileId = level.grid[p.y]?.[p.x];
@@ -969,11 +974,14 @@ export const App: React.FC = () => {
     // actor_load_banked() spawns hostile rows into
     // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
     // g_static_actors (MAX_STATIC_ACTORS=10; src/world/actor.h); rows past
-    // the cap are silently dropped at runtime.  Enemies count as hostile
-    // even when flags are absent (compile.py defaults them HOSTILE).
-    const isHostile = (o: any) =>
-      o.type === 'enemy' ||
-      ((((o.properties || {}).flags as string[]) || []).includes('HOSTILE'));
+    // the cap are silently dropped at runtime.  Flags default by type
+    // (compile.py default_actor_flags) when `flags` is absent.
+    const effectiveFlags = (o: any): string[] =>
+      ((o.properties || {}).flags as string[] | undefined)
+      ?? (o.type === 'enemy'
+        ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+        : ['BLOCKING', 'INTERACTABLE']);
+    const isHostile = (o: any) => effectiveFlags(o).includes('HOSTILE');
     const hostileRows = level.objects
       .filter((o) => (o.properties || {}).entity_id && isHostile(o))
       .map((o) => o.id);

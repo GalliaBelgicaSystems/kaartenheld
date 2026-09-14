@@ -26,8 +26,8 @@ from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
 from collision import (
-    derive_collision, edge_link_report, neighbor_pairing_issues,
-    point_exit_issues,
+    derive_collision, edge_link_report, effective_actor_flags,
+    neighbor_pairing_issues, point_exit_issues,
 )
 
 MAX_WORLD_WIDTH = 40
@@ -590,10 +590,12 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     static_cap = _engine_cap("MAX_STATIC_ACTORS")
     hostile_rows = [o.get("id") for o in objects
                     if (o.get("properties") or {}).get("entity_id")
-                    and "HOSTILE" in ((o.get("properties") or {}).get("flags") or [])]
+                    and "HOSTILE" in effective_actor_flags(
+                        o.get("type"), o.get("properties") or {})]
     static_rows = [o.get("id") for o in objects
                    if (o.get("properties") or {}).get("entity_id")
-                   and "HOSTILE" not in ((o.get("properties") or {}).get("flags") or [])]
+                   and "HOSTILE" not in effective_actor_flags(
+                       o.get("type"), o.get("properties") or {})]
     if hostile_cap and len(hostile_rows) > hostile_cap:
         errors.append(
             f"Level has {len(hostile_rows)} hostile actors but the engine spawns at most "
@@ -619,7 +621,7 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             props = obj.get("properties") or {}
             if not props.get("entity_id"):
                 continue  # decoration object: no engine actor row
-            flags = props.get("flags") or []
+            flags = effective_actor_flags(obj.get("type"), props)
             kind = "hostile" if "HOSTILE" in flags else (
                 "blocking" if "BLOCKING" in flags else None)
             if not kind:

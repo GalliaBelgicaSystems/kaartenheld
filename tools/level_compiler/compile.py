@@ -38,9 +38,10 @@ from scene_registry import (
 # truth; validate.py imports them too, avoiding the compile<->validate
 # cycle).  Re-exported here so decompile.py / route.py imports are stable.
 from collision import (  # noqa: E402,F401
-    NEIGHBOR_DIRS, cell_tile_info, derive_collision, first_plain_tile,
-    level_default_tile, load_level, map_base_tile_const, neighbor_pairing_issues,
-    neighbor_targets, point_exit_issues, resolve_tiles,
+    NEIGHBOR_DIRS, cell_tile_info, default_actor_flags, derive_collision,
+    first_plain_tile, level_default_tile, load_level, map_base_tile_const,
+    neighbor_pairing_issues, neighbor_targets, point_exit_issues,
+    resolve_tiles,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
@@ -704,12 +705,6 @@ from its level JSON object, so the JSON roundtrips the C rows (see
 decompile.py). Table order follows the registry (same helper as the
 scene table); runtime lookup is by map_id, so order is cosmetic but
 deterministic."""
-
-
-def default_actor_flags(otype):
-    if otype == "enemy":
-        return ["HOSTILE", "BLOCKING", "INTERACTABLE"]
-    return ["BLOCKING", "INTERACTABLE"]
 
 
 def default_actor_visual(obj, entity_types=None):

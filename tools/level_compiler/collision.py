@@ -61,6 +61,25 @@ def resolve_tiles(level_data, tileset):
     return tile_dict
 
 
+# ── Actor flags ──────────────────────────────────────────────────────
+# The compiler/ROM split actors into hostile (World.actors / MAX_WORLD_
+# ACTORS) vs static (g_static_actors / MAX_STATIC_ACTORS) by these flags,
+# defaulting by object type when `flags` is absent.  This is the single
+# source: compile.py emits from it and validate.py classifies from it.
+
+def default_actor_flags(otype):
+    if otype == "enemy":
+        return ["HOSTILE", "BLOCKING", "INTERACTABLE"]
+    return ["BLOCKING", "INTERACTABLE"]
+
+
+def effective_actor_flags(otype, props):
+    """Flags as the ROM will see them: explicit `flags` wins (an explicit
+    `[]` stays empty), else the type default.  Matches emit_actor_row."""
+    flags = (props or {}).get("flags")
+    return default_actor_flags(otype) if flags is None else flags
+
+
 def neighbor_targets(level_data, registry=None):
     """Level neighbors JSON -> {dir: target sid or None}."""
     registry = registry or load_registry()
