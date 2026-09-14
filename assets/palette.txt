@@ -62,7 +62,7 @@ slime_combat: #89cc5e
 slime_outline_combat: #5c903a
 boss_spider_bat_combat_body: #000000
 boss_combat_body_light: #565656
-spider_combat_knife_handle: #
+spider_combat_knife_handle: #5a4a3d
 spider_combat_knife_blade_dark: #565656
 spider_combat_knife_blade_light: #8f8f8f
 mimic_combat_body_light: #8d754a
