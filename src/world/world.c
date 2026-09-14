@@ -131,6 +131,41 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
 
     def = scene_definition_for_map(w->map_id);
 
+    /* Invisible point-exit triggers fire regardless of the art painted
+     * under them, so the fixed-side table lookup comes first.  The STEPPED
+     * gate tile stays the move target (a normal one-tile walk); the far
+     * destination is staged separately. */
+    ex = scene_exit_at(def, target_x, target_y);
+    if (ex) {
+        w->move_outcome = MOVE_OUTCOME_EXIT;
+        w->move_param = (uint8_t)ex->target_scene;
+        w->move_target_x = target_x;
+        w->move_target_y = target_y;
+        w->move_exit_x = ex->spawn_x;
+        w->move_exit_y = ex->spawn_y;
+    } else {
+        /* Walkability + whole-edge decide run banked (bank 2 body writes
+         * outcome/param/dir/target straight through the staged World
+         * pointer).  A missing def stages NULL, which the body treats as
+         * no links after resetting the outcome to NONE.  Unwalkable
+         * ground blocks HERE, before actors resolve, so a hostile or
+         * static actor on solid art stays inert -- the legacy
+         * walkability-first gate (AGENTS item: actor checks must not
+         * precede walkability). */
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&world_gate_check_banked;
+        g_bk_ptr_a = (void *)w;
+        g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
+        g_bk_byte_a = target_x;
+        g_bk_byte_b = target_y;
+        banked_call_run();
+        if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            return MOVE_RESULT_BLOCKED;
+        }
+    }
+
+    /* Hostile/static actors resolve only on walkable (or trigger) cells
+     * and win over the exit trigger staged above. */
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
     if (hostile_slot != NO_ACTOR_INDEX) {
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
@@ -143,34 +178,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
             telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,
                            (uint8_t)actor->id, 0);
             return MOVE_RESULT_BLOCKED;
-        }
-        /* Invisible point-exit triggers fire regardless of the art
-         * painted under them.  The STEPPED gate tile stays the move
-         * target so the walk animation is one normal step; the far
-         * destination is staged separately (a spawn 17 tiles away used
-         * to make the sprite slide toward it).  Whole-edge predicates run
-         * banked (bank 2 body writes outcome/param/dir/target straight
-         * through the staged World pointer). A missing def stages NULL,
-         * which the body treats as no links. */
-        ex = scene_exit_at(def, target_x, target_y);
-        if (ex) {
-            w->move_outcome = MOVE_OUTCOME_EXIT;
-            w->move_param = (uint8_t)ex->target_scene;
-            w->move_target_x = target_x;
-            w->move_target_y = target_y;
-            w->move_exit_x = ex->spawn_x;
-            w->move_exit_y = ex->spawn_y;
-        } else {
-            g_bk_call_bank = 2;
-            g_bk_call_target = (uint16_t)&world_gate_check_banked;
-            g_bk_ptr_a = (void *)w;
-            g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
-            g_bk_byte_a = target_x;
-            g_bk_byte_b = target_y;
-            banked_call_run();
-            if (w->move_outcome == MOVE_OUTCOME_NONE) {
-                return MOVE_RESULT_BLOCKED;
-            }
         }
     }
 

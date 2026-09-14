@@ -942,6 +942,29 @@ export const App: React.FC = () => {
     });
     if (objectsOk) passed.push('Objects valid');
 
+    // Actor placement on walkable ground (mirror of validate.py): the
+    // engine resolves hostiles/static actors only after the walkability
+    // check, so an actor on solid art is inert/unreachable.  The editor
+    // grid models painted cells exactly; unpainted perimeter walls are
+    // the one case it cannot see (validator still catches those).
+    level.objects.forEach((obj) => {
+      const props = (obj.properties || {}) as Record<string, unknown>;
+      if (!props.entity_id) return;
+      const flags = ((props.flags as string[]) || []);
+      const hostile = obj.type === 'enemy' || flags.includes('HOSTILE');
+      const blocking = flags.includes('BLOCKING');
+      if (!hostile && !blocking) return;
+      const p = obj.position || { x: -1, y: -1 };
+      const tileId = level.grid[p.y]?.[p.x];
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      if (tDef && !tDef.walkable) {
+        warnings.push(
+          `Object '${obj.id}' (${hostile ? 'hostile' : 'blocking'}) at ` +
+          `(${p.x},${p.y}) is on non-walkable art: the engine cannot engage ` +
+          `or stand on it (move it to walkable ground).`);
+      }
+    });
+
     // Engine actor-slot caps (mirrors tools/level_compiler/validate.py):
     // actor_load_banked() spawns hostile rows into
     // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into

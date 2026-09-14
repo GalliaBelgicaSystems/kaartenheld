@@ -1,0 +1,44 @@
+{
+ "name": "hostile_on_wall_blocked",
+ "test": true,
+ "description": "A HOSTILE actor placed on unwalkable art (wall_slime at (3,1) in TEST_MOUNTAIN_PASS) must NOT be engageable: walkability gates actor resolution, so bumping the wall from (4,1) is blocked and no encounter starts. Regression for the move-order (actor checks before walkability).",
+ "scenario_id": "HOSTILE_ON_WALL_BLOCKED",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_MOUNTAIN_PASS"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 4,
+   "expected_y": 1
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 4,
+   "y": 1,
+   "facing": "LEFT"
+  },
+  "seed": 5010
+ }
+}

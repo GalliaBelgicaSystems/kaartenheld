@@ -25,7 +25,10 @@ from pathlib import Path
 from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
-from collision import edge_link_report, neighbor_pairing_issues, point_exit_issues
+from collision import (
+    derive_collision, edge_link_report, neighbor_pairing_issues,
+    point_exit_issues,
+)
 
 MAX_WORLD_WIDTH = 40
 MAX_WORLD_HEIGHT = 24
@@ -602,6 +605,32 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             f"{static_cap} static rows (MAX_STATIC_ACTORS, src/world/actor.h); extra would be "
             f"silently dropped: {static_rows[static_cap:]}")
         objects_ok = False
+
+    # Actor placement on walkable ground: the engine's move gate resolves
+    # hostile/static actors only after the walkability check, so an actor
+    # on solid art is inert (hostile) or unreachable (blocking).  Warn so
+    # the mapper moves it instead of silently shipping an inert enemy.
+    # Frozen TEST fixtures deliberately place a wall actor to lock the
+    # behavior, so skip the warning for them.
+    _is_test_level = str(level_data.get("id", "")).startswith("test_")
+    if tileset and not _is_test_level:
+        actor_grid = derive_collision(level_data, tileset)
+        for obj in objects:
+            props = obj.get("properties") or {}
+            if not props.get("entity_id"):
+                continue  # decoration object: no engine actor row
+            flags = props.get("flags") or []
+            kind = "hostile" if "HOSTILE" in flags else (
+                "blocking" if "BLOCKING" in flags else None)
+            if not kind:
+                continue
+            px = (obj.get("position") or {}).get("x", -1)
+            py = (obj.get("position") or {}).get("y", -1)
+            if (0 <= px < width and 0 <= py < height and not actor_grid[py][px]):
+                warnings.append(
+                    f"Object '{obj.get('id')}' ({kind}) at ({px},{py}) is on "
+                    f"non-walkable art: the engine cannot engage or stand on it "
+                    f"(move it to walkable ground).")
 
     if objects_ok:
         passed.append("Objects valid")

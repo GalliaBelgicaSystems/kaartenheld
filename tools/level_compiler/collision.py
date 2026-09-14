@@ -172,15 +172,18 @@ def _clamp(v, lo, hi):
 def mirrored_entry(direction, cross, target_w, target_h):
     """Entry (x, y) one cell inside the target's opposite edge for a
     crossing that leaves via `direction` at `cross` (x for N/S, y for
-    E/W).  Python mirror of src/world/edge_banked.c's spawn body."""
+    E/W).  Python mirror of src/world/edge_banked.c's spawn body,
+    including its >= 2 degenerate-dimension guard."""
     w, h = target_w, target_h
+    xhi = (w - 2) if w >= 2 else 0
+    yhi = (h - 2) if h >= 2 else 0
     if direction == "north":
-        return (_clamp(cross, 1, w - 2), h - 2)
+        return (_clamp(cross, 1, xhi), yhi)
     if direction == "south":
-        return (_clamp(cross, 1, w - 2), 1)
+        return (_clamp(cross, 1, xhi), 1)
     if direction == "east":
-        return (1, _clamp(cross, 1, h - 2))
-    return (w - 2, _clamp(cross, 1, h - 2))
+        return (1, _clamp(cross, 1, yhi))
+    return (xhi, _clamp(cross, 1, yhi))
 
 
 def edge_cells(direction, w, h):

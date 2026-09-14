@@ -39,10 +39,13 @@ void world_gate_check_banked(void)
     uint8_t wmax;
 
     /* move_param/dir keep stale values on NORMAL/BLOCKED paths; the
-     * fixed side reads them only for EXIT (staged there) and EDGE. */
-    if (!nbr) return;
+     * fixed side reads them only for EXIT (staged there) and EDGE.
+     * Reset the outcome BEFORE the null-def early return: a stale
+     * NORMAL/EXIT/ENCOUNTER would otherwise let the fixed side commit a
+     * phantom move. */
+    if (!w) return;
     w->move_outcome = MOVE_OUTCOME_NONE;
-    if (!w || !edge_walkable(w, tx, ty)) return;
+    if (!nbr || !edge_walkable(w, tx, ty)) return;
     w->move_outcome = MOVE_OUTCOME_NORMAL;
     w->move_target_x = tx;
     w->move_target_y = ty;

@@ -285,6 +285,32 @@
         "battle": "BATTLE_SLIME_TRIO",
         "ai": "AI_PATROL_CROSS"
       }
+    },
+    {
+      "id": "wall_slime",
+      "type": "enemy",
+      "position": {
+        "x": 3,
+        "y": 1
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 0,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_NONE"
+      }
     }
   ],
   "regions": [

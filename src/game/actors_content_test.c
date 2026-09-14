@@ -107,6 +107,13 @@ static const WorldActorDefinition g_test_mountain_pass_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 5, 0
     },
+    {
+        0, ENTITY_ID_SLIME, 3, 1, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_NONE, 8, 8, 0, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 5, 0
+    },
 };
 
 static const WorldActorDefinition g_test_castle_actors[] = {
