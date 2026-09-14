@@ -12,8 +12,9 @@ additive.
 import io
 import json
 import os
+import sys
 
-from walkthrough.session import Session, LEVELS_DIR
+from walkthrough.session import Session, LEVELS_DIR, REPO
 from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_MOUNTAIN_PASS, SCENE_CASTLE,
                                       SCENE_SOUTH_FIELD, SCENE_FIELD,
@@ -27,9 +28,11 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 14
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY)
-# Re-exported by walkthrough.route, which sets up the level_compiler path
-# and owns the compiler's effective_actor_flags import.
-from walkthrough.route import effective_actor_flags
+# collision lives in tools/level_compiler; set the path here rather than
+# borrowing route.py's namespace, so a future refactor of route.py's import
+# list cannot silently break this module.
+sys.path.insert(0, os.path.join(REPO, "tools", "level_compiler"))
+from collision import effective_actor_flags   # noqa: E402
 
 _BTNS = {(0, -1): "up", (0, 1): "down", (-1, 0): "left", (1, 0): "right"}
 
