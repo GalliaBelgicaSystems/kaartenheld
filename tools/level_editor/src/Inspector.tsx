@@ -9,6 +9,7 @@ import { fetchDialogueList } from './io/dialogue';
 import { fetchShopList } from './io/shops';
 import { fetchEntityTypeList, saveEntityType } from './io/entityTypes';
 import { ExitConnector } from './ExitConnector';
+import { EdgeConnector } from './EdgeConnector';
 import { TutorialEditor } from './TutorialEditor';
 import { fetchUsedActorIds } from './io/saveLevel';
 import { FilterCombo } from './FilterCombo';
@@ -1592,6 +1593,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 </div>
               );
             })()}
+            <EdgeConnector level={level} />
           </div>
         )}
 

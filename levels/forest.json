@@ -32,53 +32,11 @@
         "tile": "forest.forest_top_wall_1"
       },
       {
-        "x": 18,
-        "y": 1,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_corner_wall"
-      },
-      {
         "x": 1,
         "y": 2,
         "width": 1,
         "height": 14,
         "tile": "forest.forest_left_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 2,
-        "width": 1,
-        "height": 7,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 10,
-        "width": 1,
-        "height": 6,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 1,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_corner_wall"
-      },
-      {
-        "x": 2,
-        "y": 16,
-        "width": 16,
-        "height": 1,
-        "tile": "forest.forest_bottom_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_corner_wall"
       },
       {
         "x": 3,

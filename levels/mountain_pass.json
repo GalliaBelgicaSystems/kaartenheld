@@ -33,16 +33,16 @@
       },
       {
         "x": 1,
-        "y": 1,
+        "y": 2,
         "width": 3,
-        "height": 16,
+        "height": 14,
         "tile": "desolate_landscape.desolate_landscape_left_wall_1"
       },
       {
         "x": 16,
-        "y": 1,
+        "y": 2,
         "width": 3,
-        "height": 16,
+        "height": 14,
         "tile": "desolate_landscape.desolate_landscape_right_wall_1"
       },
       {

@@ -114,7 +114,7 @@
     },
     "neighbors": {
       "type": "object",
-      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene with a mirrored entry spawn. A point exit on the same cell wins over the edge rule. Empty string or absent = no link on that edge.",
+      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene with a mirrored entry one cell inside the neighbor's opposite edge. A point exit on the same cell wins over the edge rule. Because the landing cell is inside the neighbor, that entry line must be walkable too or the player is trapped; the compiler refuses to build a pairing that drops the player into a wall. Empty string or absent = no link on that edge.",
       "properties": {
         "north": { "type": "string" },
         "south": { "type": "string" },

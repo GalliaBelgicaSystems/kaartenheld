@@ -34,6 +34,14 @@ from scene_registry import (
     TEST_SCENE_ORDER, REGISTRY_FILENAME, registry_path, is_level_file,
     load_registry, test_scene_ids,
 )
+# Shared collision/neighbor helpers live in collision.py (single source of
+# truth; validate.py imports them too, avoiding the compile<->validate
+# cycle).  Re-exported here so decompile.py / route.py imports are stable.
+from collision import (  # noqa: E402,F401
+    NEIGHBOR_DIRS, cell_tile_info, derive_collision, first_plain_tile,
+    level_default_tile, load_level, map_base_tile_const, neighbor_pairing_issues,
+    neighbor_targets, resolve_tiles,
+)
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
     registry (+ fixed TEST block).  Replaces MAP_ENUM_MAP/SCENE_ENUM_MAP."""
@@ -159,62 +167,6 @@ SPAWN_FACING_MAP = {
 }
 
 
-def load_level(path):
-    """Load and parse level JSON."""
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def first_plain_tile(tileset_id, tileset):
-    """First tile id with 'plain' in the name (manifest order)."""
-    for t in tileset.get("tiles", []):
-        if "plain" in t.get("id", ""):
-            return "%s.%s" % (tileset_id, t["id"])
-    return None
-
-
-def level_default_tile(level_data, tilesets):
-    """The level's ground tile for unpainted cells: the explicit
-    default_walkable field, else the first plain tile in manifest order."""
-    tileset_id = level_data["map"]["tileset"]
-    tileset = tilesets.get(tileset_id, {})
-    explicit = level_data.get("default_walkable", "")
-    if explicit:
-        return explicit
-    return first_plain_tile(tileset_id, tileset) or ""
-
-
-def resolve_tiles(level_data, tileset):
-    """Resolve semantic tile IDs to C constants."""
-    tile_dict = {t["id"]: t for t in tileset.get("tiles", [])}
-    return tile_dict
-
-
-# Whole-edge map links (the "ocean"): neighbors JSON -> {dir: sid or None}.
-# Unknown non-empty targets fail LOUDLY with the human fix (same contract
-# as exit targets) instead of emitting guessed C identifiers.
-NEIGHBOR_DIRS = ("north", "south", "east", "west")
-
-
-def neighbor_targets(level_data, registry=None):
-    """Level neighbors JSON -> {dir: target sid or None}."""
-    registry = registry or load_registry()
-    out = {}
-    raw = level_data.get("neighbors", {}) or {}
-    for d in NEIGHBOR_DIRS:
-        t = (raw.get(d) or "").strip()
-        if not t:
-            out[d] = None
-            continue
-        if t not in registry["scenes"] and not t.startswith("test_"):
-            raise SystemExit(
-                f"ERROR: neighbor '{d}' in '{level_data.get('id')}' targets unknown scene "
-                f"'{t}'. Point it at a registered scene "
-                f"(or save that level in the editor to register it).")
-        out[d] = t
-    return out
-
-
 def neighbor_enums(lvl, registry=None):
     """(north, south, east, west) C enum names (MAP_* or MAP_NONE)."""
     registry = registry or load_registry()
@@ -234,89 +186,6 @@ def neighbor_enums(lvl, registry=None):
                 f"'{t}'. Point it at a registered scene "
                 f"(or save that level in the editor to register it).")
     return names
-
-
-def cell_tile_info(level_data, tileset, x, y):
-    """Manifest tile dict for the art painted at (x, y), or None when the
-    cell is unpainted (the ROM fills default ground / perimeter wall)."""
-    tile_dict = {t["id"]: t for t in tileset.get("tiles", [])}
-    terrain = level_data.get("layers", {}).get("terrain", [])
-    if not terrain:
-        return None
-    if isinstance(terrain[0], list):
-        if y < len(terrain) and x < len(terrain[y]):
-            return tile_dict.get(terrain[y][x].split(".")[-1])
-        return None
-    for block in terrain:
-        bx = block.get("x", 0)
-        by = block.get("y", 0)
-        if bx <= x < bx + block.get("width", 0) and by <= y < by + block.get("height", 0):
-            return tile_dict.get(block.get("tile", "").split(".")[-1])
-    return None
-
-
-def derive_collision(level_data, tileset):
-    """Derive 2D collision grid (True=walkable, False=blocked).
-
-    Mirrors the ROM (scene_load_tiles_banked + world_is_walkable):
-    unpainted interior is default ground (walkable); unpainted perimeter
-    is wall, except unpainted point-exit gates and whole linked edges
-    (neighbors), which compile to open-ground rows; painted cells follow
-    their manifest walkability, so solid art over a gate blocks it (the
-    validator warns loudly about that)."""
-    width = level_data["map"]["width"]
-    height = level_data["map"]["height"]
-    try:
-        neighbors = neighbor_targets(level_data)
-    except SystemExit:
-        neighbors = {}
-    linked = {d for d, t in neighbors.items() if t}
-    exits = {(e.get("x", -1), e.get("y", -1)) for e in level_data.get("exits", [])}
-    grid = [[True for _ in range(width)] for _ in range(height)]
-    for y in range(height):
-        for x in range(width):
-            info = cell_tile_info(level_data, tileset, x, y)
-            if (x, y) in exits:
-                # Triggers fire regardless of the art painted under them,
-                # so every gate cell is a portal node for routing.
-                grid[y][x] = True
-                continue
-            on_perimeter = (x == 0 or y == 0 or x == width - 1 or y == height - 1)
-            if not on_perimeter:
-                grid[y][x] = True if info is None else bool(info.get("walkable", True))
-                continue
-            edges = set()
-            if x == 0:
-                edges.add("west")
-            if x == width - 1:
-                edges.add("east")
-            if y == 0:
-                edges.add("north")
-            if y == height - 1:
-                edges.add("south")
-            if info is None:
-                grid[y][x] = any(e in linked for e in edges)
-            else:
-                grid[y][x] = bool(info.get("walkable", True))
-    return grid
-
-
-def map_base_tile_const(gb_const, t_info):
-    if gb_const in ("TILE_FLOOR", "TILE_WALL", "TILE_EXIT", "TILE_BUILDING",
-                    "TILE_STUMP_TL", "TILE_STUMP_TR", "TILE_STUMP_BL", "TILE_STUMP_BR"):
-        return gb_const
-    if gb_const and gb_const.startswith("TILE_"):
-        return gb_const
-    ascii_char = t_info.get("ascii", "#")
-    if ascii_char == ".":
-        return "TILE_FLOOR"
-    elif ascii_char == "#":
-        return "TILE_WALL"
-    elif ascii_char in (">", "<"):
-        return "TILE_EXIT"
-    elif ascii_char == "B" or ascii_char == "*":
-        return "TILE_BUILDING"
-    return "TILE_FLOOR" if t_info.get("walkable", True) else "TILE_WALL"
 
 
 def optimize_terrain(level_data, tileset):
@@ -692,6 +561,19 @@ def main():
         if has_errors:
             print("\nCompilation aborted due to validation errors.", file=sys.stderr)
             sys.exit(1)
+
+    # Whole-edge links must pair up geometrically (collision.py): a
+    # crossing must always land on walkable ground, and a declared return
+    # must be usable. Abort so a trapping ROM can never be built.
+    pair_errors, pair_warnings = neighbor_pairing_issues(levels_by_id, tilesets)
+    for warn in pair_warnings:
+        print(f"WARNING: {warn}", file=sys.stderr)
+    if pair_errors:
+        for err in pair_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        print("\nCompilation aborted due to broken edge-neighbor pairings.",
+              file=sys.stderr)
+        sys.exit(1)
 
     c_code = emit_c_code(levels_by_id, tilesets,
                          bank=args.bank if args.bank is not None else 5,

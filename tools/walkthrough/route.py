@@ -291,6 +291,8 @@ class Planner:
         avoid.discard(start)
         for safe_only in (True, False):
             for goal, direction in scene.edge_goals(target_scene_name):
+                if not self._entry_ok(goal, direction, target_scene_name):
+                    continue  # trap link: landing cell is not walkable
                 entry = self._mirror_entry(goal, direction,
                                            target_scene_name)
                 if safe_only and entry in halo:
@@ -309,14 +311,16 @@ class Planner:
 
     def _scene_next(self, from_name, to_name):
         """Next hop on the shortest scene-graph path from -> to (BFS over
-        exit + neighbor adjacency); None if unreachable."""
+        exit + neighbor adjacency); None if unreachable.  A neighbor link
+        counts only when at least one crossing has a walkable landing
+        cell, so a trap link is never routed through."""
         prev = {from_name: None}
         q = deque([from_name])
         while q:
             cur = q.popleft()
             nxts = [e["target_scene"] for e in self.scenes[cur].exits]
             nxts += [t for t in self.scenes[cur].neighbors.values()
-                     if (t or "").strip()]
+                     if (t or "").strip() and self._edge_reaches(cur, t.strip())]
             for nxt in nxts:
                 if nxt in prev:
                     continue
@@ -392,6 +396,28 @@ class Planner:
         if direction == "west":
             return (w - 2, max(1, min(gy, h - 2)))
         return (1, max(1, min(gy, h - 2)))
+
+    def _entry_ok(self, goal, direction, to_name):
+        """True when the mirrored landing cell in `to_name` is walkable.
+        Trap links (landing inside a wall) are never routed through; the
+        compiler rejects them, this keeps the planner honest on stale
+        content too."""
+        if to_name not in self.scenes:
+            return False
+        other = self.scenes[to_name]
+        ex, ey = self._mirror_entry(goal, direction, to_name)
+        if not (0 <= ex < other.width and 0 <= ey < other.height):
+            return False
+        return other.walkable(ex, ey)
+
+    def _edge_reaches(self, from_name, target):
+        """True when some linked-edge cell of `from_name` has a walkable
+        landing cell in `target`."""
+        scene = self.scenes[from_name]
+        for cell, (direction, t) in scene.edge_cells.items():
+            if t == target and self._entry_ok(cell, direction, target):
+                return True
+        return False
 
     # ── encounter helpers ────────────────────────────────────────────
     def edge_of(self, scene_name, start, hostile_xy):

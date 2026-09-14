@@ -25,6 +25,7 @@ from pathlib import Path
 from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
+from collision import edge_link_report, neighbor_pairing_issues
 
 MAX_WORLD_WIDTH = 40
 MAX_WORLD_HEIGHT = 24
@@ -637,7 +638,63 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     return is_valid, errors, warnings, passed
 
 
+def neighbor_check_cli():
+    """`validate.py --neighbor-check [override.json]`: JSON edge-pairing
+    report for the editor. Reads all real levels from disk; an optional
+    JSON document ({from_id, data}) from the override file (or stdin)
+    replaces one level (unsaved editor state). Prints {success, links}
+    for the overridden level, else {success, errors, warnings}."""
+    tilesets = load_tilesets()
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    levels_dir = repo_root / "levels"
+    levels_by_id = {}
+    for p in sorted(levels_dir.glob("*.json")):
+        if not is_level_file(p):
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get("id"):
+            levels_by_id[data["id"]] = data
+    override = None
+    if len(sys.argv) >= 3 and sys.argv[2]:
+        try:
+            override = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            override = None
+    if override is None:
+        try:
+            if not sys.stdin.isatty():
+                raw = sys.stdin.read().strip()
+                if raw:
+                    override = json.loads(raw)
+        except (OSError, ValueError):
+            override = None
+    from_id = None
+    if isinstance(override, dict):
+        fid = override.get("from_id")
+        data = override.get("data")
+        if isinstance(fid, str) and isinstance(data, dict):
+            from_id = fid
+            levels_by_id[fid] = data
+    try:
+        if from_id and from_id in levels_by_id:
+            links = edge_link_report(from_id, levels_by_id[from_id],
+                                     levels_by_id, tilesets)
+            print(json.dumps({"success": True, "links": links}))
+        else:
+            errors, warnings = neighbor_pairing_issues(levels_by_id, tilesets)
+            print(json.dumps({"success": True, "errors": errors,
+                              "warnings": warnings}))
+    except SystemExit as exc:
+        print(json.dumps({"success": False, "error": str(exc)}))
+
+
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "--neighbor-check":
+        neighbor_check_cli()
+        return
     if len(sys.argv) >= 2 and sys.argv[1] == "--dialogue-refs":
         errors, warnings = validate_dialogue_refs()
         for w in warnings:
@@ -744,6 +801,17 @@ def main():
                     continue
                 print(f"WARNING: {os.path.basename(p)} edge '{direction}' -> '{target}' "
                       f"has no return link ({target} {_OPPOSITE[direction]} is '{back or 'unset'}')")
+
+    # Cross-file gate: whole-edge links must pair up geometrically so the
+    # player can never land inside a wall or get trapped (collision.py is
+    # the one implementation; compile.py aborts on the same errors).
+    if any(not sid.startswith("test_") for sid in all_level_ids):
+        _pair_errors, _pair_warnings = neighbor_pairing_issues(_by_id, tilesets)
+        for warn in _pair_warnings:
+            print(f"WARNING: {warn}")
+        for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
 
     for p, data in loaded_levels:
         basename = os.path.basename(p)
