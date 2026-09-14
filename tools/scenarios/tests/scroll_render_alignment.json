@@ -60,7 +60,7 @@
   {
    "type": "screen_row",
    "row": 0,
-   "expected": ">###################"
+   "expected": ".###################"
   },
   {
    "type": "screen_row",

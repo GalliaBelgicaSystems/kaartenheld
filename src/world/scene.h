@@ -6,9 +6,12 @@
 #include "world.h"
 #include "audio.h"
 
-/* A generic exit from a scene.  The tile at (gate_x, gate_y) is TILE_EXIT;
- * stepping onto it moves the player to target_scene at (spawn_x, spawn_y).
- * tile_char is the rendered glyph ('>' forward, '<' back, etc.). */
+/* A generic exit from a scene.  The exit is an invisible trigger: it keeps
+ * whatever terrain art is painted at (gate_x, gate_y) and never stamps its
+ * own tile.  Stepping onto it moves the player to target_scene at
+ * (spawn_x, spawn_y).  tile_char is the rendered glyph ('>' forward, '<'
+ * back, etc.) for the semantic buffer.  A trigger on a linked border cell
+ * wins over the neighbors edge rule. */
 typedef struct {
     uint8_t gate_x;
     uint8_t gate_y;
@@ -48,6 +51,14 @@ typedef struct {
     uint8_t spawn_y;
     uint8_t spawn_facing; /* Direction */
     uint8_t default_tile; /* TileType for unpainted cells (default_walkable) */
+    /* Whole-edge map links (the "ocean"): stepping onto a non-wall cell of
+     * a linked border crosses to the neighbor scene with a mirrored entry
+     * spawn.  MAP_NONE (0xFF) = no link on that edge.  Appended at the END
+     * of the struct so existing field offsets never shift. */
+    uint8_t neighbor_n; /* MapId or MAP_NONE */
+    uint8_t neighbor_s; /* MapId or MAP_NONE */
+    uint8_t neighbor_e; /* MapId or MAP_NONE */
+    uint8_t neighbor_w; /* MapId or MAP_NONE */
 } SceneDefinition;
 
 /* Look up a scene definition by its map id.

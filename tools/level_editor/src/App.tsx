@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { EditorLevel, LevelExit, LevelRegion, createEmptyEditorLevel, levelDataToEditor } from './model/Level';
+import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, createEmptyEditorLevel, levelDataToEditor, normalizeNeighbors } from './model/Level';
 import { LevelObject } from './model/Objects';
 import { Toolbar, ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
@@ -705,6 +705,10 @@ export const App: React.FC = () => {
     setSelectedEntityIndex(null);
   };
 
+  const handleUpdateNeighbors = (neighbors: LevelNeighbors) => {
+    pushState({ ...level, neighbors: { ...normalizeNeighbors(level.neighbors), ...neighbors } });
+  };
+
   // Region Operations
   const handleAddRegion = (region: LevelRegion) => {
     pushState({ ...level, regions: [...level.regions, region] });
@@ -796,6 +800,40 @@ export const App: React.FC = () => {
       }
     });
     if (exitsOk) passed.push('Exits valid');
+
+    // Exit visibility: an exit keeps its cell art, so a trigger on plain
+    // ground is invisible in-game (mirror of collision.py is_portal_art).
+    // The validator warns the same; a solid gate is NOT blocked (the
+    // trigger fires before walkability).
+    const PORTAL_KEYWORDS = ['stair', 'door', 'gate', 'portal', 'exit', 'cave', 'warp', 'ladder'];
+    level.exits.forEach((ex, i) => {
+      if (ex.x < 0 || ex.x >= level.width || ex.y < 0 || ex.y >= level.height) return;
+      const tileId = level.grid[ex.y]?.[ex.x] ?? '';
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      const visible = !!tDef && (tDef.category === 'exit'
+        || PORTAL_KEYWORDS.some((k) => tileId.toLowerCase().includes(k)));
+      if (!visible) {
+        warnings.push(
+          `Exit #${i + 1} at (${ex.x},${ex.y}) sits on '${tileId || 'unpainted ground'}', ` +
+          `which does not read as a portal — the trigger is invisible in-game. ` +
+          `Paint the tileset's exit/stairs tile.`);
+      }
+    });
+
+    // Edge neighbors (mirror of validate.py: unknown targets fail loud).
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const knownIds = new Set(levelItems.filter((l) => l.category === 'levels').map((l) => l.id));
+      let neighborsOk = true;
+      for (const d of ['north', 'south', 'east', 'west'] as const) {
+        const t = (neighbors[d] || '').trim();
+        if (t && !knownIds.has(t)) {
+          errors.push(`Neighbor '${d}' target '${t}' is not a known level`);
+          neighborsOk = false;
+        }
+      }
+      if (neighborsOk) passed.push('Neighbors valid');
+    }
 
     // Objects
     let objectsOk = true;
@@ -904,15 +942,46 @@ export const App: React.FC = () => {
     });
     if (objectsOk) passed.push('Objects valid');
 
+    // Actor placement on walkable ground (mirror of validate.py): the
+    // engine resolves hostiles/static actors only after the walkability
+    // check, so an actor on solid art is inert/unreachable.  The editor
+    // grid models painted cells exactly; unpainted perimeter walls are
+    // the one case it cannot see (validator still catches those).
+    level.objects.forEach((obj) => {
+      const props = (obj.properties || {}) as Record<string, unknown>;
+      if (!props.entity_id) return;
+      // compile.py's default_actor_flags: explicit `flags` wins (an
+      // explicit [] stays empty), else default by object type.
+      const eff = (props.flags as string[] | undefined)
+        ?? (obj.type === 'enemy'
+          ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+          : ['BLOCKING', 'INTERACTABLE']);
+      const hostile = eff.includes('HOSTILE');
+      const blocking = eff.includes('BLOCKING');
+      if (!hostile && !blocking) return;
+      const p = obj.position || { x: -1, y: -1 };
+      const tileId = level.grid[p.y]?.[p.x];
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      if (tDef && !tDef.walkable) {
+        warnings.push(
+          `Object '${obj.id}' (${hostile ? 'hostile' : 'blocking'}) at ` +
+          `(${p.x},${p.y}) is on non-walkable art: the engine cannot engage ` +
+          `or stand on it (move it to walkable ground).`);
+      }
+    });
+
     // Engine actor-slot caps (mirrors tools/level_compiler/validate.py):
     // actor_load_banked() spawns hostile rows into
     // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
     // g_static_actors (MAX_STATIC_ACTORS=10; src/world/actor.h); rows past
-    // the cap are silently dropped at runtime.  Enemies count as hostile
-    // even when flags are absent (compile.py defaults them HOSTILE).
-    const isHostile = (o: any) =>
-      o.type === 'enemy' ||
-      ((((o.properties || {}).flags as string[]) || []).includes('HOSTILE'));
+    // the cap are silently dropped at runtime.  Flags default by type
+    // (compile.py default_actor_flags) when `flags` is absent.
+    const effectiveFlags = (o: any): string[] =>
+      ((o.properties || {}).flags as string[] | undefined)
+      ?? (o.type === 'enemy'
+        ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+        : ['BLOCKING', 'INTERACTABLE']);
+    const isHostile = (o: any) => effectiveFlags(o).includes('HOSTILE');
     const hostileRows = level.objects
       .filter((o) => (o.properties || {}).entity_id && isHostile(o))
       .map((o) => o.id);
@@ -951,6 +1020,7 @@ export const App: React.FC = () => {
         connections: level.exits.map(
           (e) => `${e.direction?.toLowerCase() || 'exit'} -> ${e.target_scene} (spawn ${e.target_x},${e.target_y})`
         ),
+        neighbors: normalizeNeighbors(level.neighbors),
         regions: level.regions.map((r) => ({
           name: r.id,
           bounds: [r.bounds.x, r.bounds.y, r.bounds.width, r.bounds.height],
@@ -979,6 +1049,19 @@ export const App: React.FC = () => {
       });
     } else {
       lines.push('- None');
+    }
+    lines.push('\n## Edge neighbors');
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const linked = (['north', 'south', 'east', 'west'] as const)
+        .filter((d) => (neighbors[d] || '').trim());
+      if (linked.length > 0) {
+        linked.forEach((d) => {
+          lines.push(`- ${d} edge → **${neighbors[d]}** (mirrored entry)`);
+        });
+      } else {
+        lines.push('- None');
+      }
     }
 
     lines.push('\n## Regions & Semantic Context');
@@ -1245,6 +1328,7 @@ export const App: React.FC = () => {
               onAddExit={handleAddExit}
               onUpdateExit={handleUpdateExit}
               onDeleteExit={handleDeleteExit}
+              onUpdateNeighbors={handleUpdateNeighbors}
               onAddObject={handleAddObject}
               onUpdateObject={handleUpdateObject}
               onDeleteObject={handleDeleteObject}

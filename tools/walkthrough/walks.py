@@ -12,8 +12,9 @@ additive.
 import io
 import json
 import os
+import sys
 
-from walkthrough.session import Session, LEVELS_DIR
+from walkthrough.session import Session, LEVELS_DIR, REPO
 from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_MOUNTAIN_PASS, SCENE_CASTLE,
                                       SCENE_SOUTH_FIELD, SCENE_FIELD,
@@ -27,6 +28,11 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 14
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY)
+# collision lives in tools/level_compiler; set the path here rather than
+# borrowing route.py's namespace, so a future refactor of route.py's import
+# list cannot silently break this module.
+sys.path.insert(0, os.path.join(REPO, "tools", "level_compiler"))
+from collision import effective_actor_flags   # noqa: E402
 
 _BTNS = {(0, -1): "up", (0, 1): "down", (-1, 0): "left", (1, 0): "right"}
 
@@ -172,7 +178,9 @@ def walk_a(planner, checks, sram_out=None):
     s.shoot("00-boot-field")
 
     # Route into town; capture the camera-scrolled field shot on the way.
-    follow(s, planner, "field", spawn, "town", (2, 7),
+    # Town entry is the field-east mirrored spawn (1,7): one inside the
+    # west edge at the crossed row.
+    follow(s, planner, "field", spawn, "town", (1, 7),
            capture_when=lambda: s.pos()[0] >= 22,
            capture_label="01-field-scrolled")
     s.settle_scene(expected_scene=SCENE_TOWN)
@@ -182,7 +190,7 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("ARRIVED_TOWN flag",
                s.reader.flag(STORY_FLAG_ID_ARRIVED_TOWN), True)
     s.check_eq("scene pos synced", (st["player_x"], st["player_y"]),
-               (2, 7))
+               (1, 7))
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
     s.check("guard dialogue opened",
@@ -369,11 +377,12 @@ def walk_c(planner, checks):
     s = Session(checks, "walk-c")
     field = _level("field")
     spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
-    # Forest arrival = the field's north-exit target (content-coupled).
-    e = next(e for e in field["exits"]
-             if e["target_scene"] == "forest")
-    follow(s, planner, "field", spawn, "forest",
-           (e["target_x"], e["target_y"]))
+    # Forest arrival = the field's north link (content-coupled).
+    assert (field.get("neighbors", {}) or {}).get("north") == "forest", \
+        "walk_c expects field.north == forest"
+    forest = _level("forest")
+    goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
+    follow(s, planner, "field", spawn, "forest", goal)
     s.settle_scene(expected_scene=SCENE_FOREST)
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
@@ -412,11 +421,15 @@ def walk_e(planner, checks):
 
 def _hostile_floor(level):
     """How many UNGATED hostile actors a level declares (0 = hub/empty).
-    Gated spawns (quest_var) are skipped: they may be legitimately absent."""
+    Gated spawns (quest_var) are skipped: they may be legitimately absent.
+    Flags default by object type (collision.effective_actor_flags), so a
+    flagless enemy counts like the ROM's default HOSTILE row."""
     n = 0
     for o in level.get("objects", []):
         p = o.get("properties") or {}
-        if "HOSTILE" not in (p.get("flags") or []):
+        if not p.get("entity_id"):
+            continue  # decoration: compile.py emits no actor row
+        if "HOSTILE" not in effective_actor_flags(o.get("type"), p):
             continue
         if p.get("quest_var"):
             continue
@@ -438,7 +451,7 @@ def walk_sweep(planner, checks):
     the ROM booted the right scene with the right music, and capture
     sweep-<name>.png.  A NEW level added to levels/ is automatically
     swept on the next run; an UNREACHABLE level fails loudly (you can't
-    walk to it — likely a content bug, e.g. no exit points at it).
+    walk to it — likely a content bug, e.g. no portal points at it).
     One session per level: every walk starts coherent at the spawn, so
     a failure isolates to exactly one level."""
     field = _level("field")
@@ -469,8 +482,8 @@ def walk_sweep(planner, checks):
         goal = planner.arrival_pos(name)
         if goal is None:
             s.check("sweep %s reachable" % name, False,
-                    expected="some exit targets it",
-                    actual="unreachable (no exit -> %s)" % name)
+                    expected="some portal (exit/edge) targets it",
+                    actual="unreachable (no portal -> %s)" % name)
             s.close()
             continue
         follow(s, planner, "field", spawn, name, goal)

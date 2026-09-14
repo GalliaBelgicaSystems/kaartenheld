@@ -8,6 +8,12 @@
     "music": "MUSIC_FOREST",
     "map_id": "MAP_FOREST_GLADE"
   },
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "forest_deep",
+    "west": "forest"
+  },
   "default_walkable": "forest.forest_plain_floor_1",
   "layers": {
     "terrain": [
@@ -136,26 +142,7 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 0,
-      "y": 9,
-      "target_scene": "forest",
-      "target_x": 17,
-      "target_y": 9,
-      "direction": "WEST",
-      "tile_char": "<"
-    },
-    {
-      "x": 19,
-      "y": 9,
-      "target_scene": "forest_deep",
-      "target_x": 2,
-      "target_y": 9,
-      "direction": "EAST",
-      "tile_char": ">"
-    }
-  ],
+  "exits": [],
   "objects": [
     {
       "id": "glade_slime",

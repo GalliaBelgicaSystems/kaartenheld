@@ -1,5 +1,4 @@
 #include "world.h"
-#include "tile_walk.h"
 #include "game.h"
 #include "telemetry.h"
 #include "actor.h"
@@ -14,6 +13,10 @@
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
+
+/* Bank-3 movement bodies (src/world/edge_banked.c). */
+void world_gate_check_banked(void);
+void world_edge_spawn_banked(void);
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -36,6 +39,8 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     w->move_state = MOVE_STATE_IDLE;
     w->move_progress = 0;
     w->move_outcome = MOVE_OUTCOME_NONE;
+    w->move_param = MAP_NONE;
+    w->move_dir = NBR_N;
     /* The scene owns its music (SceneDefinition.music): switch to it on
      * every map load so gate crossings boot the right area track. */
     audio_play_music(def ? def->music : MUSIC_OVERWORLD);
@@ -104,27 +109,14 @@ void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
     telemetry_emit(EVENT_MAP_CHANGED, (uint8_t)old_map, (uint8_t)map_id, spawn_x, spawn_y);
 }
 
-bool world_is_walkable(const World *w, uint8_t x, uint8_t y)
-{
-    uint8_t tile;
-    if (!w || x >= w->width || y >= w->height) return false;
-    tile = w->map[y][x];
-    if (tile == TILE_FLOOR || tile == TILE_EXIT) return true;
-    if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) return true;
-    if (tile == TILE_DESOLATE_FLOOR_PLAIN || tile == TILE_DESOLATE_STAIRCASE) return true;
-    /* Desolate-landscape floors come from the generated traits table
-     * (tools/level_compiler/generate_tiles.py from the editor manifest),
-     * so manifest edits can never silently diverge from ROM collision. */
-    if (tile_landscape_walkable(tile)) return true;
-    return false;
-}
-
 WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
                                      const GameState *state)
 {
     uint8_t target_x, target_y;
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
+    const SceneDefinition *def;
+    const SceneExit *ex;
 
     if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
     (void)state;
@@ -137,14 +129,49 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     target_x = (uint8_t)(w->player.position.x + dx);
     target_y = (uint8_t)(w->player.position.y + dy);
 
-    if (!world_is_walkable(w, target_x, target_y)) {
-        return MOVE_RESULT_BLOCKED;
+    def = scene_definition_for_map(w->map_id);
+
+    /* Invisible point-exit triggers fire regardless of the art painted
+     * under them, so the fixed-side table lookup comes first.  The STEPPED
+     * gate tile stays the move target (a normal one-tile walk); the far
+     * destination is staged separately. */
+    ex = scene_exit_at(def, target_x, target_y);
+    if (ex) {
+        w->move_outcome = MOVE_OUTCOME_EXIT;
+        w->move_param = (uint8_t)ex->target_scene;
+        w->move_target_x = target_x;
+        w->move_target_y = target_y;
+        w->move_exit_x = ex->spawn_x;
+        w->move_exit_y = ex->spawn_y;
+    } else {
+        /* Walkability + whole-edge decide run banked (bank 2 body writes
+         * outcome/param/dir/target straight through the staged World
+         * pointer).  A missing def stages NULL, which the body treats as
+         * no links after resetting the outcome to NONE.  Unwalkable
+         * ground blocks HERE, before actors resolve, so a hostile or
+         * static actor on solid art stays inert -- the legacy
+         * walkability-first gate (AGENTS item: actor checks must not
+         * precede walkability). */
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&world_gate_check_banked;
+        g_bk_ptr_a = (void *)w;
+        g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
+        g_bk_byte_a = target_x;
+        g_bk_byte_b = target_y;
+        banked_call_run();
+        if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            return MOVE_RESULT_BLOCKED;
+        }
     }
 
+    /* Hostile/static actors resolve only on walkable (or trigger) cells
+     * and win over the exit trigger staged above. */
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
     if (hostile_slot != NO_ACTOR_INDEX) {
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
         w->encounter_actor_index = hostile_slot;
+        w->move_target_x = target_x;
+        w->move_target_y = target_y;
     } else {
         actor = actor_find_at(w, target_x, target_y);
         if (actor) {
@@ -152,12 +179,8 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
                            (uint8_t)actor->id, 0);
             return MOVE_RESULT_BLOCKED;
         }
-        w->move_outcome = (w->map[target_y][target_x] == TILE_EXIT) ? MOVE_OUTCOME_EXIT
-                                                                    : MOVE_OUTCOME_NORMAL;
     }
 
-    w->move_target_x = target_x;
-    w->move_target_y = target_y;
     w->move_progress = 0;
     w->move_state = MOVE_STATE_MOVING;
     return MOVE_RESULT_MOVED;
@@ -178,18 +201,41 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
         w->move_progress = 0;
         w->move_state = MOVE_STATE_IDLE;
 
-        if (w->move_outcome == MOVE_OUTCOME_EXIT) {
-            /* Generic scene exit: the scene definition owns destination +
-             * spawn.  Like the legacy instant move, the player never commits
-             * PLAYER_MOVED onto the gate; the map changes instead. */
-            const SceneDefinition *def = scene_definition_for_map(w->map_id);
-            const SceneExit *ex = scene_exit_at(def, target_x, target_y);
-            if (ex) {
-                world_change_map(w, scene_id_to_map(ex->target_scene),
-                                 ex->spawn_x, ex->spawn_y, state);
-                return MOVE_RESULT_MAP_CHANGED;
+        if (w->move_outcome == MOVE_OUTCOME_EXIT || w->move_outcome == MOVE_OUTCOME_EDGE) {
+            /* Scene change: point-exit spawns were staged by the decide
+             * path; whole-edge entry spawns run banked (bank 2 body,
+             * fixed-bank budget) from the staged cross-coordinate, edge
+             * dimension and direction. The player never commits
+             * PLAYER_MOVED onto the gate; the map changes. */
+            SceneId target_scene = (SceneId)w->move_param;
+            uint8_t sx = w->move_target_x;
+            uint8_t sy = w->move_target_y;
+            if (w->move_outcome == MOVE_OUTCOME_EDGE) {
+                /* Mirrored entry spawn runs banked (bank 2 body,
+                 * fixed-bank budget): cross-coordinate from the staged
+                 * target, both neighbor dims from a table fetch (the
+                 * predicate body cannot read tables). */
+                const SceneDefinition *nd = scene_definition_for_map((MapId)w->move_param);
+                if (!nd) {
+                    return MOVE_RESULT_BLOCKED;
+                }
+                g_bk_call_bank = 2;
+                g_bk_call_target = (uint16_t)&world_edge_spawn_banked;
+                g_bk_byte_a = (w->move_dir < 2) ? w->move_target_x : w->move_target_y;
+                g_bk_byte_b = nd->width;
+                g_bk_byte_c = nd->height;
+                g_bk_byte_d = w->move_dir;
+                banked_call_run();
+                sx = g_bk_byte_a;
+                sy = g_bk_byte_b;
+            } else {
+                /* Point exit: the explicit destination staged at decide
+                 * time (move_target is the stepped gate tile). */
+                sx = w->move_exit_x;
+                sy = w->move_exit_y;
             }
-            return MOVE_RESULT_BLOCKED;
+            world_change_map(w, scene_id_to_map(target_scene), sx, sy, state);
+            return MOVE_RESULT_MAP_CHANGED;
         } else if (w->move_outcome == MOVE_OUTCOME_ENCOUNTER) {
             /* The player does not occupy the enemy tile; battle starts from
              * the pre-move position (matches the legacy instant behavior).

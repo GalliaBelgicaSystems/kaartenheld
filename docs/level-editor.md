@@ -1086,3 +1086,94 @@ The editor writes it; the compiler and every host tool derive from it.
   engine-wired guard.
 * `make registry-check` locks the contract (versioning, never-reuse,
   registry/file agreement) against a temp root.
+
+# Phase 20 — Invisible exits + whole-edge neighbors (the "ocean")
+
+Placing an exit no longer stamps a staircase/ladder tile. Exits are
+**invisible triggers**: the gate cell keeps whatever terrain art is
+painted under it (doors, elevators, stairs the author paints by hand),
+and stepping onto it teleports via the exit table. The trigger fires
+before terrain walkability, so a solid-looking gate is not blocked — but
+it must actually *look* like a portal, or the player cannot see it.
+`open_ground_blocks` opens unpainted gate cells to default ground, so an
+unpainted exit works but is invisible. `validate.py` (and the editor's
+Validate view) warns when an exit sits on art that does not read as a
+portal (no `category: exit`, no stair/door/gate/portal/exit/cave/warp/
+ladder in the tile id); the shipped gates paint the tileset's stairs/exit
+tile. Point exits are also checked cross-file: the destination
+`target_x/target_y` must be walkable or the build fails (stuck spawn),
+while visibility is a non-fatal warning.
+
+Whole map borders can link to other maps through `neighbors`:
+
+```json
+"neighbors": { "north": "forest", "south": "south_field",
+               "east": "town", "west": "" }
+```
+
+Stepping onto a non-wall cell of a linked border crosses to the neighbor
+scene with a mirrored entry spawn (one cell inside the opposite edge,
+clamped for size mismatches). Walls stay walls: a wall on a linked edge
+blocks, everything else crosses. A point exit on the same cell wins over
+the edge rule. Links should be reciprocal (walk back); one-sided links
+warn unless a point exit covers the return.
+
+### Crossing safety (paired openings, hard compile error)
+
+Because the landing cell is *inside* the neighbour, a border opening only
+works when the matching entry cell in the neighbour is walkable. A link
+therefore needs a corridor on both sides:
+
+* the source's linked border cells (the cells you step onto), and
+* the target's entry line one cell inside the opposite edge (where you
+  land), across the non-corner span.
+
+`open_ground_blocks` opens *unpainted* border cells; the shipped levels
+also carve the target entry lines explicitly so the whole edge is
+traversable (block levels subtract the entry row/column from their wall
+blocks; grid levels get the default floor). This is what stops a mapper
+from digging a wall just inside an opening and trapping the player.
+
+`tools/level_compiler/collision.py` holds the one implementation
+(`mirrored_entry` + `edge_link_report`). It is enforced as a **hard
+compile error** — `compile.py` refuses to build a trapping pairing — and
+surfaced by `validate.py` and the editor's inline Edge-links panel
+(`/api/neighbor-check`). It rejects:
+
+* a walkable crossing whose mirrored landing cell is a wall (player stuck
+  inside a wall);
+* a declared reciprocal return whose edge has no walkable cell (player
+  trapped in the neighbour — e.g. walking into a fully walled map);
+* a reciprocal return that itself lands in a wall.
+
+## Contract
+
+* `levels/schema/level.schema.json` gains optional `neighbors`
+  (north/south/east/west scene names, empty = no link).
+* The compiler emits four neighbor bytes per `SceneDefinition` row
+  (`MAP_NONE` = no link) plus open-ground rows for unpainted gates and
+  linked edges, so the ROM fill loop stays branch-free. Unknown targets
+  fail loudly, like exit targets.
+* The ROM resolves a step as point-exit trigger first, then linked-edge
+  crossing, then a normal walk (fixed-bank budget: the edge predicate
+  and mirrored spawn run banked; see AGENTS.md 55.5).
+* The editor paints linked borders with green `⇄ <scene>` strips, edits
+  the four links in the Exits tab, rewires them on rename, and clears
+  them on delete (same as exits). `validate.py` checks targets,
+  reciprocity, gate art, and crossing safety; the Exits tab's Edge-links
+  panel reports the same per-link status inline (via
+  `/api/neighbor-check`, using the editor's unsaved level data).
+* The walkthrough planner (`tools/walkthrough/route.py`) routes over
+  exits and edges identically, and only across crossings whose landing
+  cell is walkable; the content sweep visits every level through them.
+* `collision.py` is the shared collision/neighbor helper module for the
+  compiler, validator, and planner (single source of truth; avoids the
+  compile↔validate import cycle).
+* Harness fixtures (`tools/scenarios/fixtures/`) carry no neighbor links
+  (frozen fixtures stay decoupled from the corridor geometry); edge
+  coverage lives in the walkthrough, trigger coverage in the harness
+  scenarios.
+
+Supersedes Phase 16's exit-art bullet: gates no longer render
+per-tileset stairs art and the ROM never stamps `TILE_EXIT`; the
+`exit: true` manifest markings remain as decor-tile metadata only.

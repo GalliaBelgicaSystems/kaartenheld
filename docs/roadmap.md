@@ -130,6 +130,14 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
 
 ### LATER
 
+- `ACTOR_FLAG_BLOCKING` (src/world/actor.h) is emitted by the compiler and
+  editor but never read by the ROM: `world_try_begin_move` blocks on any
+  `g_static_actors` entry (`actor_find_at`) regardless of the flag, so a
+  non-hostile compiled actor blocks even without `BLOCKING`.  The
+  walkthrough planner mirrors that actual behavior (every non-hostile
+  compiled actor is avoided) rather than the flag.  Decide later: honor
+  `BLOCKING` in the engine (a gameplay change) or drop it from the flag
+  vocabulary.
 - Dialogue boxes: raise `MAX_DIALOGUE_LINES` beyond 8 for richer NPC /
   signpost text — constraints and deferred checklist in
   `docs/dialogue-boxes.md`.

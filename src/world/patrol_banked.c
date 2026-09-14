@@ -166,9 +166,10 @@ void world_patrol_slot_banked(void)
         blocked = 1;
     } else {
         tile = g_patrol_world->map[target_y][target_x];
-        /* Same generated traits table as world_is_walkable() (the bank-3
-         * body inlines the table instead of calling fixed-bank code, but
-         * both read generated/tiles/tile_traits.h: one source, no sync). */
+        /* Same generated traits table as the bank-2 edge predicate
+         * (edge_walkable in edge_banked.c inlines the table instead of
+         * calling fixed-bank code, but both read generated/tiles
+         * tile traits: one source, no sync). */
         if (tile == TILE_FLOOR || tile == TILE_EXIT) {
             blocked = 0;
         } else if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) {

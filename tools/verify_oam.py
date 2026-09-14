@@ -232,22 +232,37 @@ def verify_hostile_sprites(sess):
 
 
 def verify_exit_art(sess):
-    """Tileset-specific exit art (manifest vram_block exit markings):
-    gate cells render the tileset's exit tile, not the generic gate.
-    town (forest) -> 128+8, south_field (desolate) -> 128+40,
-    castle (reworked 8x2 sheet) -> 128+7 (castle_stairs at index 7).
-    RPG_TILE_BASE_* are all 128."""
-    print("== Exit art (per-tileset gate tiles) ==")
-    cases = (("town_boot.json", (1, 7), 168),
-             ("south_field_boot.json", (12, 0), 168),
-             ("south_field_boot.json", (12, 11), 168),
-             ("castle_boot.json", (12, 11), 135))
+    """Invisible exit gates (manifest vram_block exit markings are decor
+    only now): gate cells render their underlying terrain art — painted
+    art, or the level's default ground for unpainted gates — never the
+    old per-tileset stairs tile (town/south_field 128+40=168, castle
+    128+7=135).  Expected values come from parity_check.expected_grid
+    (the same editor-art mapping the ROM must match)."""
+    print("== Gate art (invisible triggers keep terrain) ==")
+    TOOLS = os.path.dirname(os.path.abspath(__file__))
+    if TOOLS not in sys.path:
+        sys.path.insert(0, TOOLS)
+    from parity_check import expected_grid, load_tilesets
+    tilesets = load_tilesets()
+    old_exit_art = {168, 135}
+    # Boot scenarios stage the frozen TEST fixtures (not levels/), so
+    # expected art comes from the fixture JSONs.
+    cases = (("town_boot.json", "test_town", (1, 7)),
+             ("south_field_boot.json", "test_south_field", (12, 0)),
+             ("south_field_boot.json", "test_south_field", (12, 11)),
+             ("castle_boot.json", "test_castle", (12, 11)))
     mirror = sess.get_symbol("g_tilemap_mirror")
-    for name, (x, y), want in cases:
+    for name, fixture_id, (x, y) in cases:
+        level = json.load(open(os.path.join(
+            TOOLS, "scenarios", "fixtures", "levels",
+            fixture_id + ".json")))
+        grid, _ = expected_grid(level, tilesets)
+        want = grid.get((x, y))
         sess.load_scenario(load_scenario(sess, name))
         sess.step(2)
-        check(f"{name} gate ({x},{y}) renders exit art",
-              want, mirror_at(sess, mirror, x, y))
+        got = mirror_at(sess, mirror, x, y)
+        check(f"{name} gate ({x},{y}) renders terrain, not exit art",
+              True, got == want and got not in old_exit_art)
 
 
 def verify_battle_transition(sess):
@@ -399,6 +414,34 @@ def verify_scene_transition(sess):
           (72, 27), shadow_oam(sess))
 
 
+def verify_portal_step_oam(sess):
+    """Regression (point-exit walk target): a point exit used to stage its
+    FAR destination as the move target, so the 8-frame walk animation slid
+    toward the destination instead of stepping onto the gate.  In the
+    TEST_TOWN fixture the gate (1,7) exits to TEST_FIELD (17,7), so a LEFT
+    step from the spawn (2,7) made the sprite x INCREASE (24 -> 31) into
+    the town.  With the fix the sprite walks left onto the gate column
+    (x=16) and never moves right of its start."""
+    print("== Point-exit step: sprite walks onto the gate ==")
+    initial = load_scenario(sess, "town_gate_step.json")["initial_state"]
+    sess.load_scenario(initial)
+    sess.step(1)
+    start_y, start_x = shadow_oam(sess)
+    check("portal step: start at town spawn (2,7)", (72, 24),
+          (start_y, start_x))
+    sess.press("LEFT")
+    xs = []
+    for _ in range(12):
+        sess.step(1)
+        if sess.snapshot().get("scene") != "TEST_TOWN":
+            break
+        xs.append(shadow_oam(sess)[1])
+    check("portal step: never moves right of the start",
+          True, (not xs) or max(xs) <= start_x)
+    check("portal step: walks left toward the gate",
+          True, bool(xs) and min(xs) <= start_x - 6)
+
+
 def verify_battle_vram_restore(sess):
     """Battle enemy art shares VRAM tiles 128+ with the world tileset, so
     leaving a fight must reload the world tiles: ui_load_tileset's cache
@@ -452,6 +495,7 @@ def main():
                       ("battle steady frame", verify_steady_battle_frame),
                       ("battle VRAM restore", verify_battle_vram_restore),
                       ("scene", verify_scene_transition),
+                      ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("exit art", verify_exit_art)):

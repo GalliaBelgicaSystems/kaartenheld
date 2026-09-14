@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { exec, execSync, spawn } from 'child_process';
 
 // Full ROM toolchain probe, evaluated ONCE at server start (module scope).
@@ -162,8 +163,8 @@ function levelEditorApiPlugin(): Plugin {
         };
 
         /** Rewrite target_scene old->new (rename) or remove it (delete)
-         *  across every real level file.  Returns the number of exits
-         *  changed. */
+         *  across every real level file, in exits[] AND neighbors{}.
+         *  Returns the number of files changed. */
         const retargetExits = (oldId: string, newId: string | null): number => {
           let changed = 0;
           for (const f of fs.readdirSync(path.join(repoRoot, 'levels'))) {
@@ -172,16 +173,28 @@ function levelEditorApiPlugin(): Plugin {
             let data: any;
             try { data = JSON.parse(fs.readFileSync(abs, 'utf-8')); } catch { continue; }
             if (data.id === oldId) continue;   // the level being renamed/deleted
-            if (!Array.isArray(data.exits)) continue;
             let touched = false;
-            for (const e of data.exits) {
-              if (e && e.target_scene === oldId) {
-                touched = true;
-                if (newId === null) { e.__remove = true; } else { e.target_scene = newId; }
+            if (Array.isArray(data.exits)) {
+              for (const e of data.exits) {
+                if (e && e.target_scene === oldId) {
+                  touched = true;
+                  if (newId === null) { e.__remove = true; } else { e.target_scene = newId; }
+                }
+              }
+              if (touched && newId === null) {
+                data.exits = data.exits.filter((e: any) => !e.__remove);
+              }
+            }
+            const neighbors = (data as any).neighbors;
+            if (neighbors && typeof neighbors === 'object') {
+              for (const dir of ['north', 'south', 'east', 'west']) {
+                if (neighbors[dir] === oldId) {
+                  neighbors[dir] = newId === null ? '' : newId;
+                  touched = true;
+                }
               }
             }
             if (touched) {
-              if (newId === null) data.exits = data.exits.filter((e: any) => !e.__remove);
               writeJsonAtomic(abs, data);
               changed++;
             }
@@ -1233,6 +1246,46 @@ function levelEditorApiPlugin(): Plugin {
               }
               sendJson({ success: true, from_exit: exit, to_exit: toExit, created });
             } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
+        // Edge-neighbor pairing check (one source of truth: collision.py
+        // via validate.py --neighbor-check). The editor's current level
+        // data is passed as an override so unsaved links/terrain are
+        // checked; the other levels come from disk.
+        if (req.method === 'POST' && req.url === '/api/neighbor-check') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            let tmpDir: string | null = null;
+            try {
+              const { from_id, data } = JSON.parse(body);
+              if (!isSafeId(from_id)) throw new Error(`invalid from_id '${from_id}'`);
+              tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'kh-nbr-'));
+              const overridePath = path.join(tmpDir, 'override.json');
+              fs.writeFileSync(overridePath, JSON.stringify({ from_id, data }));
+              const cmd = `python3 tools/level_compiler/validate.py --neighbor-check ${JSON.stringify(overridePath)}`;
+              runInToolchain(cmd, ((err: any, stdout: string, stderr: string) => {
+                if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore */ } }
+                if (err) {
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: false, error: (stderr || err.message || '').trim() }));
+                  return;
+                }
+                const line = (stdout || '').split('\n').reverse().find((l) => l.trim().startsWith('{'));
+                if (!line) {
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: false, error: 'neighbor check produced no JSON' }));
+                  return;
+                }
+                sendJson(JSON.parse(line));
+              }) as any);
+            } catch (err: any) {
+              if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* ignore */ } }
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: false, error: err.message }));
             }

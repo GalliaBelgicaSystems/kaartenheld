@@ -60,11 +60,6 @@ void scene_load_tiles_banked(void)
             }
         }
     }
-
-    for (x = 0; x < def->exit_count; x++) {
-        const SceneExit *e = &def->exits[x];
-        w->map[e->gate_y][e->gate_x] = TILE_EXIT;
-    }
 }
 
 /* Banked body of scene_spawn() (see scene.c).  Same bank-5 residency as

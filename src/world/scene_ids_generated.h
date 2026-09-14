@@ -21,6 +21,9 @@
 #define MAP_THRONE_ROOM 15
 #define MAP_GRASSY_FOREST 16
 
+/* No neighbor on an edge (SceneDefinition neighbor_n/s/e/w). */
+#define MAP_NONE 0xFF
+
 /* Real scene table length = max live id + 1.  The table keeps a
  * hole per retired id (scene_table_order), so this is NOT the live
  * count: after a delete, ids are sparse and the old len(scenes)

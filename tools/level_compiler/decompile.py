@@ -384,7 +384,7 @@ def parse_scenes(scenes_text, name_to_value):
     scenes = []
     for row in split_row_groups(scenes_body):
         f = split_fields(row)
-        if len(f) != 12:
+        if len(f) != 16:
             raise DecompileError(f"scene row has {len(f)} fields: {row[:60]!r}")
         m = re.fullmatch(r"&g_all_exits\[(\d+)\]", f[4].strip())
         facing = f[10].strip()
@@ -397,6 +397,9 @@ def parse_scenes(scenes_text, name_to_value):
             if name not in name_to_value:
                 raise DecompileError(f"unknown TileType {name!r}")
             default_tile = name_to_value[name]
+        neighbors = []
+        for raw in f[12:16]:
+            neighbors.append(raw.strip())
         scenes.append({
             "map": f[0].strip(),
             "music": f[1].strip(),
@@ -410,6 +413,7 @@ def parse_scenes(scenes_text, name_to_value):
             "spawn_y": parse_int(f[9]),
             "spawn_facing": FACING_REVERSE[facing],
             "default_tile": default_tile,
+            "neighbors": neighbors,
         })
     terrain = {}
     for m in re.finditer(r"static const SceneTerrainBlock (s_\w+)\[\]", scenes_text):
@@ -636,6 +640,19 @@ def decompile_levels(levels_dir, write):
                 "tile_char": e["tile_char"],
             })
         level["exits"] = new_exits
+
+        # -- neighbors: whole-edge links roundtrip verbatim (MAP_NONE/empty
+        # means no link on that edge).
+        merged_neighbors = {}
+        for direction, token in zip(("north", "south", "east", "west"),
+                                    sc.get("neighbors", [])):
+            if token in ("MAP_NONE", "0xFF", "255"):
+                merged_neighbors[direction] = ""
+            elif token in map_to_sid:
+                merged_neighbors[direction] = map_to_sid[token]
+            else:
+                raise DecompileError(f"{sid}: unknown neighbor map {token!r}")
+        level["neighbors"] = merged_neighbors
 
         # -- actors
         sym = f"g_{sid}_actors"

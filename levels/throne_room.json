@@ -8,6 +8,12 @@
     "music": "MUSIC_DUNGEON",
     "map_id": "MAP_THRONE_ROOM"
   },
+  "neighbors": {
+    "north": "",
+    "south": "castle",
+    "east": "",
+    "west": ""
+  },
   "default_walkable": "castle.castle_plain_floor",
   "layers": {
     "terrain": [
@@ -59,17 +65,7 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 10,
-      "y": 17,
-      "target_scene": "castle",
-      "target_x": 10,
-      "target_y": 2,
-      "direction": "SOUTH",
-      "tile_char": "<"
-    }
-  ],
+  "exits": [],
   "objects": [
     {
       "id": "slime_lord",

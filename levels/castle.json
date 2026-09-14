@@ -1,253 +1,240 @@
 {
- "id": "castle",
- "name": "Ruined Castle",
- "map": {
-  "width": 20,
-  "height": 18,
-  "tileset": "castle",
-  "music": "MUSIC_DUNGEON",
-  "map_id": "MAP_CASTLE"
- },
- "default_walkable": "castle.castle_plain_floor",
- "layers": {
-  "terrain": [
-   {
-    "x": 3,
-    "y": 3,
-    "width": 1,
-    "height": 6,
-    "tile": "castle.castle_left_wall"
-   },
-   {
-    "x": 6,
-    "y": 3,
-    "width": 1,
-    "height": 6,
-    "tile": "castle.castle_right_wall"
-   },
-   {
-    "x": 13,
-    "y": 3,
-    "width": 1,
-    "height": 6,
-    "tile": "castle.castle_left_wall"
-   },
-   {
-    "x": 16,
-    "y": 3,
-    "width": 1,
-    "height": 6,
-    "tile": "castle.castle_right_wall"
-   },
-   {
-    "x": 4,
-    "y": 3,
-    "width": 2,
-    "height": 1,
-    "tile": "castle.castle_top_wall"
-   },
-   {
-    "x": 14,
-    "y": 3,
-    "width": 2,
-    "height": 1,
-    "tile": "castle.castle_top_wall"
-   },
-   {
-    "x": 4,
-    "y": 8,
-    "width": 2,
-    "height": 1,
-    "tile": "castle.castle_bottom_wall"
-   },
-   {
-    "x": 14,
-    "y": 8,
-    "width": 2,
-    "height": 1,
-    "tile": "castle.castle_bottom_wall"
-   },
-   {
-    "x": 9,
-    "y": 6,
-    "width": 1,
-    "height": 1,
-    "tile": "castle.castle_table"
-   },
-   {
-    "x": 9,
-    "y": 9,
-    "width": 1,
-    "height": 1,
-    "tile": "castle.castle_chest"
-   }
+  "id": "castle",
+  "name": "Ruined Castle",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "castle",
+    "music": "MUSIC_DUNGEON",
+    "map_id": "MAP_CASTLE"
+  },
+  "neighbors": {
+    "north": "throne_room",
+    "south": "castle_hall",
+    "east": "",
+    "west": ""
+  },
+  "default_walkable": "castle.castle_plain_floor",
+  "layers": {
+    "terrain": [
+      {
+        "x": 3,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_left_wall"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_right_wall"
+      },
+      {
+        "x": 13,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_left_wall"
+      },
+      {
+        "x": 16,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_right_wall"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 4,
+        "y": 8,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 14,
+        "y": 8,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 9,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_table"
+      },
+      {
+        "x": 9,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_chest"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 10,
+      "y": 10,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [],
+  "objects": [
+    {
+      "id": "castle_bat",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ],
+      "position": {
+        "x": 12,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 5,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      }
+    },
+    {
+      "id": "castle_mimic",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_chest_closed",
+      "animation_frames": [
+        "actors.actors_chest_closed",
+        "actors.actors_chest_mimic"
+      ],
+      "position": {
+        "x": 12,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MIMIC",
+        "enemy_type": "mimic",
+        "display_name": "MIMIC",
+        "actor_id": 10,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "T",
+        "hp": 30,
+        "max_hp": 30,
+        "gold_reward": 0,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_MIMIC",
+        "ai": "AI_NONE",
+        "solo": true
+      }
+    },
+    {
+      "id": "castle_spider",
+      "type": "enemy",
+      "position": {
+        "x": 17,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SPIDER",
+        "enemy_type": "spider",
+        "display_name": "SPIDER",
+        "actor_id": 11,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 15,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SPIDER",
+        "ai": "AI_PATROL_VERT"
+      }
+    },
+    {
+      "id": "castle_kobold",
+      "type": "enemy",
+      "position": {
+        "x": 5,
+        "y": 12
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "display_name": "KOBOLD",
+        "actor_id": 45,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 18,
+        "max_hp": 18,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_KOBOLD",
+        "ai": "AI_CHASE",
+        "enemy_type": "kobold"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "inner_castle",
+      "bounds": {
+        "x": 4,
+        "y": 2,
+        "width": 12,
+        "height": 12
+      },
+      "description": "A ruined inner chamber of the castle; the mimic lurks here.",
+      "gameplay": {
+        "purpose": "combat_exploration",
+        "difficulty": 3
+      }
+    }
   ]
- },
- "player": {
-  "spawn": {
-   "x": 10,
-   "y": 10,
-   "facing": "UP",
-   "animation_frames": [
-    "actors.actors_hero_frame_1",
-    "actors.actors_hero_frame_2"
-   ]
-  }
- },
- "exits": [
-  {
-   "x": 12,
-   "y": 11,
-   "target_scene": "castle_hall",
-   "target_x": 10,
-   "target_y": 2,
-   "direction": "SOUTH",
-   "tile_char": "<"
-  },
-  {
-   "x": 10,
-   "y": 0,
-   "target_scene": "throne_room",
-   "target_x": 10,
-   "target_y": 15,
-   "direction": "NORTH",
-   "tile_char": ">"
-  }
- ],
- "objects": [
-  {
-   "id": "castle_bat",
-   "type": "enemy",
-   "overworld_sprite": "actors.actors_bats_frame_1",
-   "animation_frames": [
-    "actors.actors_bats_frame_1",
-    "actors.actors_bats_frame_2"
-   ],
-   "position": {
-    "x": 12,
-    "y": 7
-   },
-   "properties": {
-    "entity_id": "ENTITY_ID_BAT",
-    "display_name": "BAT",
-    "actor_id": 5,
-    "facing": "DOWN",
-    "flags": [
-     "HOSTILE",
-     "BLOCKING",
-     "INTERACTABLE"
-    ],
-    "visual": "V",
-    "hp": 8,
-    "max_hp": 8,
-    "gold_reward": 8,
-    "reward_currency": "CURRENCY_ID_GOLD",
-    "battle": "BATTLE_BAT",
-    "ai": "AI_PATROL_CIRCLE"
-   }
-  },
-  {
-   "id": "castle_mimic",
-   "type": "enemy",
-   "overworld_sprite": "actors.actors_chest_closed",
-   "animation_frames": [
-    "actors.actors_chest_closed",
-    "actors.actors_chest_mimic"
-   ],
-   "position": {
-    "x": 12,
-    "y": 10
-   },
-   "properties": {
-    "entity_id": "ENTITY_ID_MIMIC",
-    "enemy_type": "mimic",
-    "display_name": "MIMIC",
-    "actor_id": 10,
-    "facing": "DOWN",
-    "flags": [
-     "HOSTILE",
-     "BLOCKING",
-     "INTERACTABLE"
-    ],
-    "visual": "T",
-    "hp": 30,
-    "max_hp": 30,
-    "gold_reward": 0,
-    "reward_currency": "CURRENCY_ID_GOLD",
-    "battle": "BATTLE_MIMIC",
-    "ai": "AI_NONE",
-    "solo": true
-   }
-  },
-  {
-   "id": "castle_spider",
-   "type": "enemy",
-   "position": {
-    "x": 17,
-    "y": 7
-   },
-   "properties": {
-    "entity_id": "ENTITY_ID_SPIDER",
-    "enemy_type": "spider",
-    "display_name": "SPIDER",
-    "actor_id": 11,
-    "facing": "DOWN",
-    "flags": [
-     "HOSTILE",
-     "BLOCKING",
-     "INTERACTABLE"
-    ],
-    "visual": "S",
-    "hp": 16,
-    "max_hp": 16,
-    "gold_reward": 15,
-    "reward_currency": "CURRENCY_ID_GOLD",
-    "battle": "BATTLE_SPIDER",
-    "ai": "AI_PATROL_VERT"
-   }
-  },
-  {
-   "id": "castle_kobold",
-   "type": "enemy",
-   "position": {
-    "x": 5,
-    "y": 12
-   },
-   "properties": {
-    "entity_id": "ENTITY_ID_KOBOLD",
-    "display_name": "KOBOLD",
-    "actor_id": 45,
-    "facing": "DOWN",
-    "flags": [
-     "HOSTILE",
-     "BLOCKING",
-     "INTERACTABLE"
-    ],
-    "visual": "K",
-    "hp": 18,
-    "max_hp": 18,
-    "gold_reward": 8,
-    "reward_currency": "CURRENCY_ID_GOLD",
-    "battle": "BATTLE_KOBOLD",
-    "ai": "AI_CHASE",
-    "enemy_type": "kobold"
-   }
-  }
- ],
- "regions": [
-  {
-   "id": "inner_castle",
-   "bounds": {
-    "x": 4,
-    "y": 2,
-    "width": 12,
-    "height": 12
-   },
-   "description": "A ruined inner chamber of the castle; the mimic lurks here.",
-   "gameplay": {
-    "purpose": "combat_exploration",
-    "difficulty": 3
-   }
-  }
- ]
 }

@@ -11,6 +11,28 @@ export interface LevelExit {
   tile_char?: string;
 }
 
+/** Whole-edge map links (the "ocean"): stepping onto a non-wall cell of
+ *  a linked border crosses to the neighbor scene with a mirrored entry
+ *  spawn. Empty string = no link. A point exit on the same cell wins. */
+export interface LevelNeighbors {
+  north?: string;
+  south?: string;
+  east?: string;
+  west?: string;
+}
+
+export const NEIGHBOR_DIRS = ['north', 'south', 'east', 'west'] as const;
+
+export function normalizeNeighbors(raw: any): LevelNeighbors {
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const out: LevelNeighbors = {};
+  for (const d of NEIGHBOR_DIRS) {
+    const v = src[d];
+    out[d] = typeof v === 'string' ? v : '';
+  }
+  return out;
+}
+
 export interface LevelRegion {
   id: string;
   bounds: {
@@ -90,6 +112,8 @@ export interface EditorLevel {
   terrainDirty: boolean;
   spawn: PlayerSpawn;
   exits: LevelExit[];
+  /** Whole-edge links; absent on screens (levels only). */
+  neighbors?: LevelNeighbors;
   objects: LevelObject[];
   regions: LevelRegion[];
   isScreen?: boolean;
@@ -462,6 +486,7 @@ export function levelDataToEditor(data: any): EditorLevel {
     defaultWalkable: typeof data.default_walkable === 'string' ? data.default_walkable : undefined,
     spawn: data.player?.spawn || { x: Math.floor(w / 2), y: Math.floor(h / 2), facing: 'DOWN' },
     exits: data.exits || [],
+    neighbors: normalizeNeighbors(data.neighbors),
     objects: data.objects || [],
     regions: data.regions || []
   };
@@ -522,6 +547,12 @@ export function editorToLevelData(lvl: EditorLevel): any {
       spawn: lvl.spawn
     },
     exits: lvl.exits,
+    neighbors: {
+      north: lvl.neighbors?.north || '',
+      south: lvl.neighbors?.south || '',
+      east: lvl.neighbors?.east || '',
+      west: lvl.neighbors?.west || '',
+    },
     objects: lvl.objects,
     regions: lvl.regions
   };

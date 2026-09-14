@@ -25,6 +25,10 @@ from pathlib import Path
 from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
+from collision import (
+    derive_collision, edge_link_report, effective_actor_flags,
+    neighbor_pairing_issues, point_exit_issues,
+)
 
 MAX_WORLD_WIDTH = 40
 MAX_WORLD_HEIGHT = 24
@@ -465,6 +469,31 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     if exits_ok:
         passed.append("Exits valid")
 
+    # 4b. Edge neighbors (whole-edge links). Unknown targets are errors
+    # (the compiler would abort on them); one-sided links only warn
+    # (walk in works, walk back is a wall until the return is set).
+    neighbors_ok = True
+    neighbors = level_data.get("neighbors", {}) or {}
+    if neighbors and not isinstance(neighbors, dict):
+        errors.append("'neighbors' must be an object with north/south/east/west scene names")
+        neighbors_ok = False
+    else:
+        for direction in ("north", "south", "east", "west"):
+            target = (neighbors.get(direction) or "").strip() if isinstance(neighbors, dict) else ""
+            if not target:
+                continue
+            if target not in known_scene_names() and (all_level_ids is None or target not in all_level_ids):
+                errors.append(
+                    f"Neighbor '{direction}' target '{target}' is not a known scene "
+                    f"(point it at a registered scene)")
+                neighbors_ok = False
+    if neighbors_ok:
+        passed.append("Neighbors valid")
+
+    # Point-exit visibility + landing walkability are cross-file (the
+    # landing cell lives in the target scene); see collision.py
+    # point_exit_issues(), reported by main() and enforced by compile.py.
+
     # 5. Objects Check (full-fidelity actor slots: JSON must be able to
     # roundtrip the C WorldActorDefinition rows -- see decompile.py)
     objects_ok = True
@@ -561,10 +590,12 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     static_cap = _engine_cap("MAX_STATIC_ACTORS")
     hostile_rows = [o.get("id") for o in objects
                     if (o.get("properties") or {}).get("entity_id")
-                    and "HOSTILE" in ((o.get("properties") or {}).get("flags") or [])]
+                    and "HOSTILE" in effective_actor_flags(
+                        o.get("type"), o.get("properties") or {})]
     static_rows = [o.get("id") for o in objects
                    if (o.get("properties") or {}).get("entity_id")
-                   and "HOSTILE" not in ((o.get("properties") or {}).get("flags") or [])]
+                   and "HOSTILE" not in effective_actor_flags(
+                       o.get("type"), o.get("properties") or {})]
     if hostile_cap and len(hostile_rows) > hostile_cap:
         errors.append(
             f"Level has {len(hostile_rows)} hostile actors but the engine spawns at most "
@@ -577,6 +608,32 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             f"silently dropped: {static_rows[static_cap:]}")
         objects_ok = False
 
+    # Actor placement on walkable ground: the engine's move gate resolves
+    # hostile/static actors only after the walkability check, so an actor
+    # on solid art is inert (hostile) or unreachable (blocking).  Warn so
+    # the mapper moves it instead of silently shipping an inert enemy.
+    # Frozen TEST fixtures deliberately place a wall actor to lock the
+    # behavior, so skip the warning for them.
+    _is_test_level = str(level_data.get("id", "")).startswith("test_")
+    if tileset and not _is_test_level:
+        actor_grid = derive_collision(level_data, tileset)
+        for obj in objects:
+            props = obj.get("properties") or {}
+            if not props.get("entity_id"):
+                continue  # decoration object: no engine actor row
+            flags = effective_actor_flags(obj.get("type"), props)
+            kind = "hostile" if "HOSTILE" in flags else (
+                "blocking" if "BLOCKING" in flags else None)
+            if not kind:
+                continue
+            px = (obj.get("position") or {}).get("x", -1)
+            py = (obj.get("position") or {}).get("y", -1)
+            if (0 <= px < width and 0 <= py < height and not actor_grid[py][px]):
+                warnings.append(
+                    f"Object '{obj.get('id')}' ({kind}) at ({px},{py}) is on "
+                    f"non-walkable art: the engine cannot engage or stand on it "
+                    f"(move it to walkable ground).")
+
     if objects_ok:
         passed.append("Objects valid")
 
@@ -584,7 +641,63 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     return is_valid, errors, warnings, passed
 
 
+def neighbor_check_cli():
+    """`validate.py --neighbor-check [override.json]`: JSON edge-pairing
+    report for the editor. Reads all real levels from disk; an optional
+    JSON document ({from_id, data}) from the override file (or stdin)
+    replaces one level (unsaved editor state). Prints {success, links}
+    for the overridden level, else {success, errors, warnings}."""
+    tilesets = load_tilesets()
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    levels_dir = repo_root / "levels"
+    levels_by_id = {}
+    for p in sorted(levels_dir.glob("*.json")):
+        if not is_level_file(p):
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get("id"):
+            levels_by_id[data["id"]] = data
+    override = None
+    if len(sys.argv) >= 3 and sys.argv[2]:
+        try:
+            override = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            override = None
+    if override is None:
+        try:
+            if not sys.stdin.isatty():
+                raw = sys.stdin.read().strip()
+                if raw:
+                    override = json.loads(raw)
+        except (OSError, ValueError):
+            override = None
+    from_id = None
+    if isinstance(override, dict):
+        fid = override.get("from_id")
+        data = override.get("data")
+        if isinstance(fid, str) and isinstance(data, dict):
+            from_id = fid
+            levels_by_id[fid] = data
+    try:
+        if from_id and from_id in levels_by_id:
+            links = edge_link_report(from_id, levels_by_id[from_id],
+                                     levels_by_id, tilesets)
+            print(json.dumps({"success": True, "links": links}))
+        else:
+            errors, warnings = neighbor_pairing_issues(levels_by_id, tilesets)
+            print(json.dumps({"success": True, "errors": errors,
+                              "warnings": warnings}))
+    except SystemExit as exc:
+        print(json.dumps({"success": False, "error": str(exc)}))
+
+
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "--neighbor-check":
+        neighbor_check_cli()
+        return
     if len(sys.argv) >= 2 and sys.argv[1] == "--dialogue-refs":
         errors, warnings = validate_dialogue_refs()
         for w in warnings:
@@ -665,6 +778,51 @@ def main():
                     overall_success = False
                 else:
                     seen_actor_ids[aid] = obj.get("id")
+
+    # Cross-file check: neighbor links should be reciprocal (walk back).
+    # One-sided links still compile (walk in works); warn so the missing
+    # return is a conscious choice, not an oversight.
+    _OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
+    _by_id = {}
+    for _, data in loaded_levels:
+        if isinstance(data, dict) and data.get("id"):
+            _by_id[data["id"]] = data
+    for p, data in loaded_levels:
+        if not isinstance(data, dict):
+            continue
+        for direction in ("north", "south", "east", "west"):
+            target = ((data.get("neighbors", {}) or {}).get(direction) or "").strip()
+            if not target or target not in _by_id:
+                continue
+            back = ((_by_id[target].get("neighbors", {}) or {}).get(_OPPOSITE[direction]) or "").strip()
+            if back != data.get("id"):
+                # A point-exit trigger back counts as a return path (e.g. a
+                # door into a map whose whole edge belongs elsewhere).
+                returns = [e for e in (_by_id[target].get("exits", []) or [])
+                           if e.get("target_scene") == data.get("id")]
+                if returns:
+                    continue
+                print(f"WARNING: {os.path.basename(p)} edge '{direction}' -> '{target}' "
+                      f"has no return link ({target} {_OPPOSITE[direction]} is '{back or 'unset'}')")
+
+    # Cross-file gate: whole-edge links must pair up geometrically so the
+    # player can never land inside a wall or get trapped (collision.py is
+    # the one implementation; compile.py aborts on the same errors).
+    if any(not sid.startswith("test_") for sid in all_level_ids):
+        _pair_errors, _pair_warnings = neighbor_pairing_issues(_by_id, tilesets)
+        for warn in _pair_warnings:
+            print(f"WARNING: {warn}")
+        for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        # Point exits: landing cell must be walkable (stuck spawn) and the
+        # gate art must read as a portal (invisible triggers).
+        _px_errors, _px_warnings = point_exit_issues(_by_id, tilesets)
+        for warn in _px_warnings:
+            print(f"WARNING: {warn}")
+        for err in _px_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
 
     for p, data in loaded_levels:
         basename = os.path.basename(p)

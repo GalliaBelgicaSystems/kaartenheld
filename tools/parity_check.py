@@ -66,6 +66,7 @@ def level_default_index(level, tilesets):
     raise ValueError("%s: default ground '%s' has no vram index" % (level["id"], dw))
 WALL_FALLBACK_INDEX = {
     "forest": 1,
+    "village": 1,
     "desolate_landscape": 1,
     "castle": 10,
 }
@@ -138,7 +139,13 @@ def expand_terrain(level):
 
 
 def expected_grid(level, tilesets):
-    """Full-map expected VRAM tile indices.  Returns (grid, skipped)."""
+    """Full-map expected VRAM tile indices.  Returns (grid, skipped).
+
+    Mirrors the ROM loader: unpainted interior is default ground;
+    unpainted perimeter is wall, except unpainted point-exit gates and
+    whole linked edges (neighbors), which compile to open-ground rows.
+    Gates never stamp their own art: exit cells render their painted
+    art (or default ground), so they are checked, not skipped."""
     tileset_id = level["map"]["tileset"]
     tileset = tilesets[tileset_id]
     by_id = {t["id"]: t for t in tileset.get("tiles", [])}
@@ -150,6 +157,10 @@ def expected_grid(level, tilesets):
     except ValueError as e:
         fail(str(e))
         return {}, set()
+    neighbors = level.get("neighbors", {}) or {}
+    linked = {d for d in ("north", "south", "east", "west")
+              if (neighbors.get(d) or "").strip()}
+    gates = {(e.get("x", -1), e.get("y", -1)) for e in level.get("exits", [])}
     grid = {}
     for y in range(h):
         for x in range(w):
@@ -157,9 +168,18 @@ def expected_grid(level, tilesets):
             if cell is not None:
                 short = cell.split(".")[-1]
             elif x == 0 or y == 0 or x == w - 1 or y == h - 1:
-                # Engine perimeter rule (borders default to walls); painted
-                # blocks and exits take precedence (handled below/above).
-                grid[(x, y)] = VRAM_BASE + WALL_FALLBACK_INDEX[tileset_id]
+                # Engine perimeter rule (borders default to walls), with
+                # the two ROM exceptions, both compiled to default-ground
+                # rows: unpainted gates and linked edges.
+                if (x, y) in gates:
+                    grid[(x, y)] = default_idx
+                    continue
+                on_linked = ((y == 0 and "north" in linked)
+                             or (y == h - 1 and "south" in linked)
+                             or (x == 0 and "west" in linked)
+                             or (x == w - 1 and "east" in linked))
+                grid[(x, y)] = (default_idx if on_linked
+                                else VRAM_BASE + WALL_FALLBACK_INDEX[tileset_id])
                 continue
             else:
                 grid[(x, y)] = default_idx
@@ -178,9 +198,6 @@ def expected_grid(level, tilesets):
     for obj in level.get("objects", []):
         p = obj.get("position", {})
         skipped.add((p.get("x", -1), p.get("y", -1)))
-    # Exits render exit art, not terrain.
-    for e in level.get("exits", []):
-        skipped.add((e.get("x", -1), e.get("y", -1)))
     return grid, skipped
 
 

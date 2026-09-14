@@ -112,9 +112,20 @@
         }
       }
     },
+    "neighbors": {
+      "type": "object",
+      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene with a mirrored entry one cell inside the neighbor's opposite edge. A point exit on the same cell wins over the edge rule. Because the landing cell is inside the neighbor, that entry line must be walkable too or the player is trapped; the compiler refuses to build a pairing that drops the player into a wall. Empty string or absent = no link on that edge.",
+      "properties": {
+        "north": { "type": "string" },
+        "south": { "type": "string" },
+        "east": { "type": "string" },
+        "west": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "exits": {
       "type": "array",
-      "description": "List of scene transition exits/warps",
+      "description": "List of invisible scene-transition triggers (doors, elevators, stairs you paint yourself). The trigger keeps the terrain art painted underneath and never stamps its own tile. A trigger on a linked border cell wins over the neighbors edge rule.",
       "items": {
         "type": "object",
         "required": ["x", "y", "target_scene", "target_x", "target_y"],

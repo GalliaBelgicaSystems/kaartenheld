@@ -8,6 +8,12 @@
     "music": "MUSIC_FOREST",
     "map_id": "MAP_FOREST"
   },
+  "neighbors": {
+    "north": "",
+    "south": "field",
+    "east": "forest_glade",
+    "west": ""
+  },
   "default_walkable": "forest.forest_plain_floor_1",
   "layers": {
     "terrain": [
@@ -26,53 +32,11 @@
         "tile": "forest.forest_top_wall_1"
       },
       {
-        "x": 18,
-        "y": 1,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_corner_wall"
-      },
-      {
         "x": 1,
         "y": 2,
         "width": 1,
         "height": 14,
         "tile": "forest.forest_left_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 2,
-        "width": 1,
-        "height": 7,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 10,
-        "width": 1,
-        "height": 6,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 1,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_corner_wall"
-      },
-      {
-        "x": 2,
-        "y": 16,
-        "width": 16,
-        "height": 1,
-        "tile": "forest.forest_bottom_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_corner_wall"
       },
       {
         "x": 3,
@@ -311,26 +275,7 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 12,
-      "y": 11,
-      "target_scene": "field",
-      "target_x": 12,
-      "target_y": 1,
-      "direction": "SOUTH",
-      "tile_char": "<"
-    },
-    {
-      "x": 19,
-      "y": 9,
-      "target_scene": "forest_glade",
-      "target_x": 2,
-      "target_y": 9,
-      "direction": "EAST",
-      "tile_char": ">"
-    }
-  ],
+  "exits": [],
   "objects": [
     {
       "id": "forest_slime",
@@ -453,8 +398,8 @@
       "id": "forest_slime2",
       "type": "enemy",
       "position": {
-        "x": 15,
-        "y": 13
+        "x": 14,
+        "y": 12
       },
       "properties": {
         "entity_id": "ENTITY_ID_SLIME",

@@ -151,6 +151,8 @@ def main():
         "_save_op_banked": "SRAM save/load body (bank 3)",
         "_deck_discard_banked": "discard push (bank 3)",
         "_world_px_banked": "pixel interpolation (bank 3)",
+        "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
+        "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
         "_game_render_reset_banked": "render cache reset (bank 3)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
         "_world_on_battle_fled_banked": "battle-fled world update (bank 3)",
