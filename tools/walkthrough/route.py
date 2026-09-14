@@ -22,6 +22,7 @@ from walkthrough.session import LEVELS_DIR, REPO
 sys.path.insert(0, os.path.join(REPO, "tools", "level_compiler"))
 from validate import load_tilesets          # noqa: E402
 from compile import derive_collision, scene_table_order, is_level_file   # noqa: E402
+from collision import effective_actor_flags   # noqa: E402
 
 # Patrol boxes (src/world/actor.h): blocked cells for routing — the
 # walkthrough must not steer through a hostile's patrol path.
@@ -118,13 +119,21 @@ class Scene:
         self.blocked_actors = set()
         for obj in level.get("objects", []):
             props = obj.get("properties", {}) or {}
-            flags = props.get("flags", []) or []
+            if not props.get("entity_id"):
+                continue  # decoration: compile.py emits no actor row
+            # Mirror actor_load_scene_banked: HOSTILE flags spawn into
+            # World.actors (patrol boxes below); every OTHER compiled actor
+            # lands in g_static_actors, which world_try_begin_move blocks on
+            # unconditionally (ACTOR_FLAG_BLOCKING is emitted but never read
+            # by the ROM -- see docs/roadmap.md).  Flags default by type via
+            # the compiler's single source (collision.effective_actor_flags).
+            flags = effective_actor_flags(obj.get("type"), props)
             x = obj["position"]["x"]
             y = obj["position"]["y"]
             if "HOSTILE" in flags:
                 ai_name = props.get("ai", "AI_NONE")
                 self.hostiles.append((x, y, AI_NAMES.get(ai_name, AI_NONE)))
-            elif "BLOCKING" in flags:
+            else:
                 self.blocked_actors.add((x, y))
 
     def walkable(self, x, y, avoid=None):

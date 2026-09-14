@@ -27,6 +27,9 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 14
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY)
+# Re-exported by walkthrough.route, which sets up the level_compiler path
+# and owns the compiler's effective_actor_flags import.
+from walkthrough.route import effective_actor_flags
 
 _BTNS = {(0, -1): "up", (0, 1): "down", (-1, 0): "left", (1, 0): "right"}
 
@@ -415,11 +418,15 @@ def walk_e(planner, checks):
 
 def _hostile_floor(level):
     """How many UNGATED hostile actors a level declares (0 = hub/empty).
-    Gated spawns (quest_var) are skipped: they may be legitimately absent."""
+    Gated spawns (quest_var) are skipped: they may be legitimately absent.
+    Flags default by object type (collision.effective_actor_flags), so a
+    flagless enemy counts like the ROM's default HOSTILE row."""
     n = 0
     for o in level.get("objects", []):
         p = o.get("properties") or {}
-        if "HOSTILE" not in (p.get("flags") or []):
+        if not p.get("entity_id"):
+            continue  # decoration: compile.py emits no actor row
+        if "HOSTILE" not in effective_actor_flags(o.get("type"), p):
             continue
         if p.get("quest_var"):
             continue
