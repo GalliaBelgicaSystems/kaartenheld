@@ -5,9 +5,10 @@ import {
 
 /** Palette preview / assignment.
  *
- *  The engine's CGB ramps are fixed: 8 BG ramps per tileset (from
- *  generated/tiles/<tileset>.json, compiled from tiles_content.c) and 4
- *  OBJ ramps (ui.c) shared by all sprites.  This view renders a tile or
+ *  The engine's CGB ramps are authored in assets/palette.txt (via
+ *  tools/palette_txt.py): 8 BG ramps per tileset (from
+ *  generated/tiles/<tileset>.json, compiled from palette.txt) and 4
+ *  OBJ ramps (ui.c, same source) shared by all sprites.  This view renders a tile or
  *  enemy sprite recolored under any ramp so the author can see how it
  *  reads against the ROM's actual colors.
  *

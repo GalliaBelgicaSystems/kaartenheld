@@ -65,29 +65,34 @@ static const palette_color_t cgb_sprite_palette[4] = {
     RGB8(0, 0, 0)
 };
 
-/* Orange sprite palette for kobolds */
+/* OBJ ramps mirror assets/palette.txt via tools/palette_txt.py
+ * (`make palette-check` enforces parity). Slot 0 white is COMMON white. */
+/* Orange sprite palette: palette.txt SPRITES boss_eyes_scepter_glow ramp
+ * (glow -> COMBAT heart_fire_enemy_eyes -> boss_eyes_scepter). */
 static const palette_color_t cgb_sprite_palette_orange[4] = {
     RGB8(255, 255, 255),
-    RGB8(240, 160, 40),
-    RGB8(200, 90, 10),
-    RGB8(220, 110, 20)
+    RGB8(245, 113, 55),
+    RGB8(195, 78, 27),
+    RGB8(139, 27, 27)
 };
 
 /* Brown sprite palette: kobold bodies (solid ink) and chest wood shading.
+ * Slots 1-3 are palette.txt SPRITES wood_dog / chest_outline / npc.
  * Slots 2-7 otherwise duplicate the grey ramp; slot 2 is repurposed. */
 static const palette_color_t cgb_sprite_palette_brown[4] = {
     RGB8(255, 255, 255),
-    RGB8(196, 138, 72),
-    RGB8(138, 82, 34),
-    RGB8(61, 32, 10)
+    RGB8(141, 117, 74),
+    RGB8(111, 90, 52),
+    RGB8(63, 48, 23)
 };
 
-/* Green sprite palette for slimes */
+/* Green sprite palette for slimes: slots 2-3 are palette.txt SPRITES
+ * slime_light / slime_dark. */
 static const palette_color_t cgb_sprite_palette_green[4] = {
     RGB8(255, 255, 255),
     RGB8(180, 245, 120),
     RGB8(119, 227, 49),
-    RGB8(40, 95, 25)
+    RGB8(92, 144, 58)
 };
 
 /* ── Player sprite ─────────────────────────────────────────────────

@@ -183,7 +183,7 @@ gfx:
 	# ── Castle tileset (assets/castle-tile.png) ─────────
 	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--palette auto --anchor-color "#a99fc0" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
@@ -399,10 +399,15 @@ tiles-check:
 	@python3 tools/level_editor/validate_tilesets.py tools/level_editor/tilesets/*.json
 
 # Palette manifest generation: PNG + tileset JSON -> generated/tiles/<tileset>.json
-# Single source of truth for CGB palettes (web editor + ROM compiler parity).
+# Authored colors live in assets/palette.txt (tools/palette_txt.py is the
+# reader; tools/palette_compiler.py derives FIXED_PALETTES from it).
 # See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py tools/palette_txt.py assets/palette.txt | $(GENERATED_TILES_DIR)
 	@python3 tools/palette_compiler.py
+
+# Palette drift check: palette.txt vs compiler vs ROM vs Makefile anchors.
+palette-check:
+	@python3 tools/palette_check.py
 
 # Tile-trait generation: manifests -> generated/tiles/tile_traits.h
 # (walk/glyph ranges + exit indices consumed by world.c, patrol_banked.c,

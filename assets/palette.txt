@@ -1,3 +1,6 @@
+COMMON
+white: #ffffff
+
 FOREST
 wood_and_dirt: #4a3b1c
 grass: #7bb660

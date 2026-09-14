@@ -786,9 +786,10 @@ function levelEditorApiPlugin(): Plugin {
         }
 
         // ── Palette preview / assignment ──────────────────────────────
-        // BG ramps live in generated/tiles/<tileset>.json (palettes +
-        // per-sheet-tile tile_palettes, produced by palette_compiler.py
-        // from src/game/tiles_content.c).  OBJ ramps live in ui.c.  An
+        // Authored colors live in assets/palette.txt.  BG ramps live in
+        // generated/tiles/<tileset>.json (palettes + per-sheet-tile
+        // tile_palettes, produced by palette_compiler.py from
+        // palette.txt).  OBJ ramps live in ui.c (same source).  An
         // explicit per-tile `palette` (editor's Palette view) overrides
         // the auto-match in palette_compiler.py; enemy/hero `overworld.
         // palette` is already data-driven (battle_compile.py -> ow_palette).
