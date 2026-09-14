@@ -1092,9 +1092,17 @@ The editor writes it; the compiler and every host tool derive from it.
 Placing an exit no longer stamps a staircase/ladder tile. Exits are
 **invisible triggers**: the gate cell keeps whatever terrain art is
 painted under it (doors, elevators, stairs the author paints by hand),
-and stepping onto it teleports via the exit table. Unpainted gate cells
-compile to open-ground rows, so old gates placed on walls keep working;
-painting solid art over a gate blocks it forever (`validate.py` warns).
+and stepping onto it teleports via the exit table. The trigger fires
+before terrain walkability, so a solid-looking gate is not blocked — but
+it must actually *look* like a portal, or the player cannot see it.
+`open_ground_blocks` opens unpainted gate cells to default ground, so an
+unpainted exit works but is invisible. `validate.py` (and the editor's
+Validate view) warns when an exit sits on art that does not read as a
+portal (no `category: exit`, no stair/door/gate/portal/exit/cave/warp/
+ladder in the tile id); the shipped gates paint the tileset's stairs/exit
+tile. Point exits are also checked cross-file: the destination
+`target_x/target_y` must be walkable or the build fails (stuck spawn),
+while visibility is a non-fatal warning.
 
 Whole map borders can link to other maps through `neighbors`:
 

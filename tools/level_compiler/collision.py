@@ -300,3 +300,70 @@ def neighbor_pairing_issues(levels_by_id, tilesets):
             errors.extend(entry["errors"])
             warnings.extend(entry["warnings"])
     return errors, warnings
+
+
+# ── Point-exit triggers ──────────────────────────────────────────────
+# An exit keeps the terrain art painted on its cell; unpainted cells become
+# default ground.  A trigger on plain ground is invisible to the player, so
+# the toolchain warns unless the art reads as a portal.
+
+_PORTAL_KEYWORDS = ("stair", "door", "gate", "portal", "exit", "cave",
+                    "warp", "ladder")
+
+
+def is_portal_art(info):
+    """True when a manifest tile reads as an intentional portal marker."""
+    if info is None:
+        return False
+    if info.get("category") == "exit":
+        return True
+    tid = (info.get("id") or "").lower()
+    return any(k in tid for k in _PORTAL_KEYWORDS)
+
+
+def point_exit_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
+    """Per-exit diagnostics: visibility + landing-cell walkability.
+
+    Returns a list of dicts {index, target, ok, errors, warnings}; every
+    message is fully self-describing (level + coordinates).  Mirrors the
+    engine: a point exit fires before terrain walkability, so a solid gate
+    is not blocked -- but it must look like a portal, and the destination
+    must be walkable or the player spawns stuck."""
+    out = []
+    tset = tilesets.get(lvl["map"]["tileset"], {})
+    for i, e in enumerate(lvl.get("exits", [])):
+        entry = {"index": i, "target": e.get("target_scene"), "ok": True,
+                 "errors": [], "warnings": []}
+        info = cell_tile_info(lvl, tset, e.get("x", -1), e.get("y", -1))
+        if not is_portal_art(info):
+            art = info["id"] if info else "unpainted ground"
+            entry["warnings"].append(
+                f"{name}: exit #{i} at ({e.get('x')},{e.get('y')}) sits on "
+                f"'{art}', which does not read as a portal -- the trigger is "
+                f"invisible in-game. Paint the tileset's exit/stairs tile or "
+                f"remove the exit.")
+        target = e.get("target_scene")
+        if target in levels_by_id:
+            tlvl = levels_by_id[target]
+            g = _grid(target, tlvl, tilesets, grid_cache)
+            tx, ty = e.get("target_x", -1), e.get("target_y", -1)
+            if not (0 <= tx < tlvl["map"]["width"]
+                    and 0 <= ty < tlvl["map"]["height"] and g[ty][tx]):
+                entry["ok"] = False
+                entry["errors"].append(
+                    f"{name}: exit #{i} at ({e.get('x')},{e.get('y')}) -> "
+                    f"'{target}' lands on ({tx},{ty}), which is not walkable "
+                    f"-- the player would spawn stuck.")
+        out.append(entry)
+    return out
+
+
+def point_exit_issues(levels_by_id, tilesets):
+    """(errors, warnings) for every level's point-exit triggers."""
+    errors, warnings = [], []
+    cache = {}
+    for name, lvl in levels_by_id.items():
+        for entry in point_exit_report(name, lvl, levels_by_id, tilesets, cache):
+            errors.extend(entry["errors"])
+            warnings.extend(entry["warnings"])
+    return errors, warnings

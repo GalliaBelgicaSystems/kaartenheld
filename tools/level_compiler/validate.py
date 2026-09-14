@@ -25,7 +25,7 @@ from pathlib import Path
 from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
-from collision import edge_link_report, neighbor_pairing_issues
+from collision import edge_link_report, neighbor_pairing_issues, point_exit_issues
 
 MAX_WORLD_WIDTH = 40
 MAX_WORLD_HEIGHT = 24
@@ -487,37 +487,9 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     if neighbors_ok:
         passed.append("Neighbors valid")
 
-    # 4c. Exit-gate art: the trigger never stamps its own tile, so the
-    # painted art underneath must be steppable, or the trigger can never
-    # fire. Unpainted gates compile to open ground automatically.
-    if tileset and isinstance(neighbors, dict):
-        tile_map = {t["id"]: t for t in tileset.get("tiles", [])}
-        layers = level_data.get("layers", {})
-        terrain = layers.get("terrain", [])
-
-        def painted_at(px, py):
-            if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
-                if py < len(terrain) and px < len(terrain[py]):
-                    cell = terrain[py][px]
-                    t_name = cell.split(".")[-1] if "." in cell else cell
-                    return tile_map.get(t_name)
-                return None
-            elif isinstance(terrain, list):
-                for block in terrain:
-                    bx = block.get("x", 0)
-                    by = block.get("y", 0)
-                    if bx <= px < bx + block.get("width", 0) and by <= py < by + block.get("height", 0):
-                        bt = block.get("tile", "")
-                        t_name = bt.split(".")[-1] if "." in bt else bt
-                        return tile_map.get(t_name)
-            return None
-
-        for e_idx, exit_obj in enumerate(exits):
-            art = painted_at(exit_obj.get("x", -1), exit_obj.get("y", -1))
-            if art is not None and not art.get("walkable", True):
-                warnings.append(
-                    f"Exit {e_idx} sits on solid '{art.get('id')}' art: the invisible trigger "
-                    f"can never be stepped on (paint walkable ground or leave it unpainted)")
+    # Point-exit visibility + landing walkability are cross-file (the
+    # landing cell lives in the target scene); see collision.py
+    # point_exit_issues(), reported by main() and enforced by compile.py.
 
     # 5. Objects Check (full-fidelity actor slots: JSON must be able to
     # roundtrip the C WorldActorDefinition rows -- see decompile.py)
@@ -810,6 +782,14 @@ def main():
         for warn in _pair_warnings:
             print(f"WARNING: {warn}")
         for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        # Point exits: landing cell must be walkable (stuck spawn) and the
+        # gate art must read as a portal (invisible triggers).
+        _px_errors, _px_warnings = point_exit_issues(_by_id, tilesets)
+        for warn in _px_warnings:
+            print(f"WARNING: {warn}")
+        for err in _px_errors:
             print(f"ERROR: {err}")
             overall_success = False
 

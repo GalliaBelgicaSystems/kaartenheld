@@ -40,7 +40,7 @@ from scene_registry import (
 from collision import (  # noqa: E402,F401
     NEIGHBOR_DIRS, cell_tile_info, derive_collision, first_plain_tile,
     level_default_tile, load_level, map_base_tile_const, neighbor_pairing_issues,
-    neighbor_targets, resolve_tiles,
+    neighbor_targets, point_exit_issues, resolve_tiles,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
@@ -572,6 +572,18 @@ def main():
         for err in pair_errors:
             print(f"ERROR: {err}", file=sys.stderr)
         print("\nCompilation aborted due to broken edge-neighbor pairings.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # Point exits: the landing cell must be walkable, or the player spawns
+    # stuck (visibility is a non-fatal warning).
+    px_errors, px_warnings = point_exit_issues(levels_by_id, tilesets)
+    for warn in px_warnings:
+        print(f"WARNING: {warn}", file=sys.stderr)
+    if px_errors:
+        for err in px_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        print("\nCompilation aborted due to invalid point exits.",
               file=sys.stderr)
         sys.exit(1)
 

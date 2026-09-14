@@ -226,6 +226,13 @@
         "width": 1,
         "height": 1,
         "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 12,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_exit_desolate_landscape"
       }
     ]
   },

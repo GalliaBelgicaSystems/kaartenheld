@@ -801,6 +801,25 @@ export const App: React.FC = () => {
     });
     if (exitsOk) passed.push('Exits valid');
 
+    // Exit visibility: an exit keeps its cell art, so a trigger on plain
+    // ground is invisible in-game (mirror of collision.py is_portal_art).
+    // The validator warns the same; a solid gate is NOT blocked (the
+    // trigger fires before walkability).
+    const PORTAL_KEYWORDS = ['stair', 'door', 'gate', 'portal', 'exit', 'cave', 'warp', 'ladder'];
+    level.exits.forEach((ex, i) => {
+      if (ex.x < 0 || ex.x >= level.width || ex.y < 0 || ex.y >= level.height) return;
+      const tileId = level.grid[ex.y]?.[ex.x] ?? '';
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      const visible = !!tDef && (tDef.category === 'exit'
+        || PORTAL_KEYWORDS.some((k) => tileId.toLowerCase().includes(k)));
+      if (!visible) {
+        warnings.push(
+          `Exit #${i + 1} at (${ex.x},${ex.y}) sits on '${tileId || 'unpainted ground'}', ` +
+          `which does not read as a portal — the trigger is invisible in-game. ` +
+          `Paint the tileset's exit/stairs tile.`);
+      }
+    });
+
     // Edge neighbors (mirror of validate.py: unknown targets fail loud).
     {
       const neighbors = normalizeNeighbors(level.neighbors);
