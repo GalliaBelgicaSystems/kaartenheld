@@ -1,0 +1,82 @@
+FOREST
+wood_and_dirt: #4a3b1c
+grass: #7bb660
+tree_leaves_terrain_outline_big_grass: #2a4f1a
+dark_tree_leaves: #1d3e0f
+rocks: #a99fc0
+rocks_outline: #26232e
+void_holes: #000000
+
+DESOLATE
+ground: #938da1
+rocks_stone_light: #a99fc0
+rocks_stone_shadow: #837b96
+tree_item_outlines_cracks: #26232e
+terrain_side : #3f3a4a
+void: #000000
+
+CASTLE
+ground: #a99fc0
+wall_dark: #565656
+wall_light: #828282
+wood_light: #8d754a
+wood_dark: #6f5a34
+gold: #d7a726
+curtain_light: #8b1b1b
+curtain_dark: #621212
+window_frame: #2e2e2e
+
+TOWN
+ground: #b6a27e
+puddle_stone_window: #b6b6b6
+barrel_wood_fence: #8d754a
+fence_light: #79643e
+wood_outlines: #645233
+house_wall: #f1cf91
+house_roof_shade1: #ccaa6c
+house_roof_shade2: #b6a27e
+
+SPRITES
+wood_dog: #8d754a
+slime_light: #77e331
+slime_dark: #5c903a
+character_main_outline_bat: #000000
+enemy: #673c3c
+npc: #3f3017
+npc_beard: #b6b6b6
+mage_cloth: #475ca8
+chest_outline: #6f5a34
+chest_lock: #ac9d23
+spider_boss_light: #565656
+dogtongue_ribbon: #8b1b1b
+boss_eyes_scepter: #8b1b1b
+boss_eyes_scepter_glow: #f57137
+
+COMBAT
+numbers_icons: #755930
+card_background: #dfbd8d
+card_decor: #e3ae63
+card_outline: #b09266
+heart_fire_enemy_eyes: #c34e1b
+slime_combat: #89cc5e
+slime_outline_combat: #5c903a
+boss_spider_bat_combat_body: #000000
+boss_combat_body_light: #565656
+spider_combat_knife_handle: #
+spider_combat_knife_blade_dark: #565656
+spider_combat_knife_blade_light: #8f8f8f
+mimic_combat_body_light: #8d754a
+mimic_combat_body_dark: #6f5a34
+mimic_combat_mouth: #3f3017
+goblin_combat_skin: #844f4f
+goblin_combat_skin_dark_outlines: #4a2727
+bat_combat_inner_wings: #3d3044
+poison_icon: #7136c1
+ice_icon_ring_jewel: #7ae3f3
+
+TITLE
+title_light: #c6baa4
+title_medium: #8d754a
+title_dark: #6f5a34
+galliabelgica_blue: #003cf2
+galliabelgica_red: #b84444
