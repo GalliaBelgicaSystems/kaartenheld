@@ -57,7 +57,7 @@ CHARACTER_STATE_MAX_HP = 2
 # map_changed(bool), player Entity, actors[4], map[24][40], camera_px_x,
 # camera_px_y, scroll_x, scroll_y, move_state, move_target_x,
 # move_target_y, move_progress, move_outcome, tileset_kind, move_param,
-# move_dir.
+# move_dir, move_exit_x, move_exit_y.
 # Entity (src/world/entity.h): position(2), hp, max_hp, active(bool),
 # facing, id = 7 bytes (validated at boot: it is exactly the pattern
 # the old PLAYER_BOOT locate found).
@@ -77,7 +77,7 @@ def _world_actor_runtime_size(name_ptr_size):
 def world_size(name_ptr_size):
     return (5 + ENTITY_SIZE
             + MAX_WORLD_ACTORS * _world_actor_runtime_size(name_ptr_size)
-            + WORLD_WIDTH * WORLD_HEIGHT + 4 + 7 + 1)
+            + WORLD_WIDTH * WORLD_HEIGHT + 4 + 7 + 3)
 
 # const char* size on this toolchain is not pinned down from headers
 # (2-byte near vs 3-byte generic pointer); both candidates are probed
@@ -326,13 +326,14 @@ class StateReader:
 
         The const-char* size (which sets the actor stride) is not a
         separate symbol, so it is resolved from the World tail bytes
-        (tileset_kind, then move_param, move_dir) against the caller's
-        expected kind -- the battle probe cannot be used because
-        g_game.battle is only initialized once a battle starts."""
+        (tileset_kind, then move_param, move_dir, move_exit_x, move_exit_y)
+        against the caller's expected kind -- the battle probe cannot be
+        used because g_game.battle is only initialized once a battle
+        starts."""
         ptr = self._world_ptr_size
         if ptr is None:
             for cand in NAME_PTR_CANDIDATES:
-                if self.rd(self.world + world_size(cand) - 3, 1)[0] == tileset_kind:
+                if self.rd(self.world + world_size(cand) - 5, 1)[0] == tileset_kind:
                     ptr = cand
                     break
             if ptr is None:

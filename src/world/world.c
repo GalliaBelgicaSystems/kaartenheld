@@ -145,16 +145,21 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
             return MOVE_RESULT_BLOCKED;
         }
         /* Invisible point-exit triggers fire regardless of the art
-         * painted under them (explicit spawn staged here). Whole-edge
-         * predicates run banked (bank 2 body writes outcome/param/dir/
-         * target straight through the staged World pointer). A missing
-         * def stages NULL, which the body treats as no links. */
+         * painted under them.  The STEPPED gate tile stays the move
+         * target so the walk animation is one normal step; the far
+         * destination is staged separately (a spawn 17 tiles away used
+         * to make the sprite slide toward it).  Whole-edge predicates run
+         * banked (bank 2 body writes outcome/param/dir/target straight
+         * through the staged World pointer). A missing def stages NULL,
+         * which the body treats as no links. */
         ex = scene_exit_at(def, target_x, target_y);
         if (ex) {
             w->move_outcome = MOVE_OUTCOME_EXIT;
             w->move_param = (uint8_t)ex->target_scene;
-            w->move_target_x = ex->spawn_x;
-            w->move_target_y = ex->spawn_y;
+            w->move_target_x = target_x;
+            w->move_target_y = target_y;
+            w->move_exit_x = ex->spawn_x;
+            w->move_exit_y = ex->spawn_y;
         } else {
             g_bk_call_bank = 2;
             g_bk_call_target = (uint16_t)&world_gate_check_banked;
@@ -216,6 +221,11 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
                 banked_call_run();
                 sx = g_bk_byte_a;
                 sy = g_bk_byte_b;
+            } else {
+                /* Point exit: the explicit destination staged at decide
+                 * time (move_target is the stepped gate tile). */
+                sx = w->move_exit_x;
+                sy = w->move_exit_y;
             }
             world_change_map(w, scene_id_to_map(target_scene), sx, sy, state);
             return MOVE_RESULT_MAP_CHANGED;

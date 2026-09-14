@@ -414,6 +414,34 @@ def verify_scene_transition(sess):
           (72, 27), shadow_oam(sess))
 
 
+def verify_portal_step_oam(sess):
+    """Regression (point-exit walk target): a point exit used to stage its
+    FAR destination as the move target, so the 8-frame walk animation slid
+    toward the destination instead of stepping onto the gate.  In the
+    TEST_TOWN fixture the gate (1,7) exits to TEST_FIELD (17,7), so a LEFT
+    step from the spawn (2,7) made the sprite x INCREASE (24 -> 31) into
+    the town.  With the fix the sprite walks left onto the gate column
+    (x=16) and never moves right of its start."""
+    print("== Point-exit step: sprite walks onto the gate ==")
+    initial = load_scenario(sess, "town_gate_step.json")["initial_state"]
+    sess.load_scenario(initial)
+    sess.step(1)
+    start_y, start_x = shadow_oam(sess)
+    check("portal step: start at town spawn (2,7)", (72, 24),
+          (start_y, start_x))
+    sess.press("LEFT")
+    xs = []
+    for _ in range(12):
+        sess.step(1)
+        if sess.snapshot().get("scene") != "TEST_TOWN":
+            break
+        xs.append(shadow_oam(sess)[1])
+    check("portal step: never moves right of the start",
+          True, (not xs) or max(xs) <= start_x)
+    check("portal step: walks left toward the gate",
+          True, bool(xs) and min(xs) <= start_x - 6)
+
+
 def verify_battle_vram_restore(sess):
     """Battle enemy art shares VRAM tiles 128+ with the world tileset, so
     leaving a fight must reload the world tiles: ui_load_tileset's cache
@@ -467,6 +495,7 @@ def main():
                       ("battle steady frame", verify_steady_battle_frame),
                       ("battle VRAM restore", verify_battle_vram_restore),
                       ("scene", verify_scene_transition),
+                      ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("exit art", verify_exit_art)):

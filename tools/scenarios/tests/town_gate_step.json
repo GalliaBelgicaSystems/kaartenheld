@@ -1,0 +1,44 @@
+{
+ "name": "town_gate_step",
+ "test": true,
+ "description": "Step west onto the Town point-exit trigger at (1,7): the invisible gate teleports the player to TEST_FIELD (17,7). Regression for the point-exit walk target (the animation must step onto the gate, not slide toward the far destination).",
+ "scenario_id": "TOWN_GATE_STEP",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 17,
+   "expected_y": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 2,
+   "y": 7,
+   "facing": "LEFT"
+  },
+  "seed": 5009
+ }
+}

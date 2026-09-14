@@ -401,6 +401,13 @@ typedef struct {
      * commit path must mirror the decide path exactly (corners belong to
      * two edges), so the direction is staged, never recomputed. */
     uint8_t move_dir;
+    /* Point-exit destination, staged by world_try_begin_move on the
+     * MOVE_OUTCOME_EXIT path and consumed at commit.  Kept separate from
+     * move_target_x/y (which stays the STEPPED gate tile so the walk
+     * animation is a normal one-tile step, not a slide toward the far
+     * destination).  Runtime only, never persistent. */
+    uint8_t move_exit_x;
+    uint8_t move_exit_y;
 } World;
 
 /* Neighbor edge indices (n,s,e,w), shared by the move decision and the
