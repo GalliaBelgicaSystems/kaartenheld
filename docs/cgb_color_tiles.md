@@ -173,7 +173,7 @@ Originally, `src/ui/ui_color_banked.c` defined a single `cgb_bg_palettes[8][4]` 
 - **Resolution [DONE]**: We now have dedicated CRAM palette sets in Bank 5 for each world tileset:
   - `cgb_bg_palettes_forest` (Forest, Field, Town) with grass green backdrop (`#7bb660`)
   - `cgb_bg_palettes_desolate` (Mountain Pass, South Field) with slate rock backdrop (`#938da1`)
-  - `cgb_bg_palettes_castle` (Castle Bastion) with light stone backdrop (`#d7d7d7`)
+  - `cgb_bg_palettes_castle` (Castle Bastion) with authored ground backdrop (`#a99fc0`, assets/palette.txt CASTLE ground)
   - `cgb_bg_palettes` (Battle/Status/Card UI) with crisp white backdrop
   These are dynamically reloaded via `ui_set_cram_palette(world->tileset_kind)` during LCD-safe map loads and screen transitions.
 

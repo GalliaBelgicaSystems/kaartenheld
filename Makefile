@@ -163,9 +163,12 @@ gfx:
 	# One transparent-background sprite per enemy type, shared by every
 	# world.  Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
-	# Sheet layout: see tools/compose_enemy_sprites.py.
+	# Sheet layout: see tools/compose_enemy_sprites.py.  The slate anchor
+	# pins the sheet's transparent convention (compose_enemy_sprites.py BG)
+	# to shade 0 = OAM transparent; without it, cells brighter than the bg
+	# (fire flames, mimic gold) render the bg as a solid square.
 	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+		--palette auto --anchor-color "#938da1" --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Desolate landscape (assets/desolate_landscape.png, 16 cols × 3 rows) ──
 	# Full 48-tile world sheet (g_tileset_desolate)
@@ -183,7 +186,7 @@ gfx:
 	# ── Castle tileset (assets/castle-tile.png) ─────────
 	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--palette auto --anchor-color "#a99fc0" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
@@ -399,10 +402,16 @@ tiles-check:
 	@python3 tools/level_editor/validate_tilesets.py tools/level_editor/tilesets/*.json
 
 # Palette manifest generation: PNG + tileset JSON -> generated/tiles/<tileset>.json
-# Single source of truth for CGB palettes (web editor + ROM compiler parity).
+# Authored colors live in assets/palette.txt (tools/palette_txt.py is the
+# reader; tools/palette_compiler.py derives FIXED_PALETTES from it).
 # See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py tools/palette_txt.py assets/palette.txt | $(GENERATED_TILES_DIR)
 	@python3 tools/palette_compiler.py
+	@python3 tools/palette_txt.py --write-doc
+
+# Palette drift check: palette.txt vs compiler vs ROM vs Makefile anchors.
+palette-check:
+	@python3 tools/palette_check.py
 
 # Tile-trait generation: manifests -> generated/tiles/tile_traits.h
 # (walk/glyph ranges + exit indices consumed by world.c, patrol_banked.c,

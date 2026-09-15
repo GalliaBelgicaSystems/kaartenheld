@@ -7,9 +7,10 @@ JSON manifests consumed by both the web editor (WYSIWYG canvas) and the ROM
 compiler (generate_tiles.py -> tile_palette.h).
 
 Unlike the previous k-means approach, this version matches tiles to the
-FIXED hand-tuned palettes defined in src/game/tiles_content.c
-(cgb_bg_palettes_forest, cgb_bg_palettes_desolate, cgb_bg_palettes_castle).
-This ensures the tile_palette.h indices correspond to the actual ROM palettes.
+FIXED palettes derived from assets/palette.txt (via tools/palette_txt.py).
+This ensures the tile_palette.h indices correspond to the actual ROM palettes
+(src/game/tiles_content.c mirrors the same mapping; `make palette-check`
+fails on any drift between the three).
 
 Algorithm:
 1. Load PNG + tileset JSON (tiles with vram_block positions)
@@ -43,6 +44,10 @@ from typing import List, Tuple, Dict, Any, Optional
 from PIL import Image
 import math
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
+                         RAMP_NAMES as _AUTHOR_RAMP_NAMES)
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
 ASSETS_DIR = REPO_ROOT / "assets"
@@ -61,106 +66,31 @@ PNG_MAP = {
     "village": "village-tile.png",
 }
 
-# Fixed CGB palettes from src/game/tiles_content.c (RGB8 format -> 0-255)
-# Each palette: 4 colors, each color is (R, G, B)
+# Fixed CGB palettes, derived from assets/palette.txt via tools/palette_txt.py
+# (RGB8 format -> 0-255). Each palette: 4 colors, each color is (R, G, B).
+# Direct-replacement provenance per slot lives in palette_txt.build_ramps().
+# NOTE: palette 4 is the mauve ROM truth from src/game/tiles_content.c (this
+# file previously carried green-poison values here that disagreed with the
+# ROM; `make palette-check` now forbids that drift).
 FIXED_PALETTES = {
-    "forest": [
-        # Palette 0: gray
-        [(255, 255, 255), (170, 170, 170), (85, 85, 85), (0, 0, 0)],
-        # Palette 1: fire
-        [(255, 255, 224), (255, 140, 40), (220, 50, 20), (100, 10, 0)],
-        # Palette 2: iron/ice
-        [(235, 242, 250), (140, 180, 214), (70, 105, 138), (27, 43, 58)],
-        # Palette 3: field (greens) - UI_COLOR_FIELD
-        [(120, 176, 96), (40, 72, 24), (24, 56, 8), (0, 0, 0)],
-        # Palette 4: poison
-        [(240, 255, 240), (100, 220, 100), (30, 140, 50), (10, 50, 20)],
-        # Palette 5: wood (browns, harmonized Color 0 = grass green) - UI_COLOR_WOOD
-        [(120, 176, 96), (196, 138, 72), (138, 82, 34), (61, 32, 10)],
-        # Palette 6: gold
-        [(255, 252, 224), (255, 215, 0), (200, 140, 8), (90, 58, 0)],
-        # Palette 7: dim
-        [(200, 200, 200), (150, 150, 150), (90, 90, 90), (40, 40, 40)],
-    ],
-    "desolate_landscape": [
-        # Palette 0: gray
-        [(255, 255, 255), (170, 170, 170), (85, 85, 85), (0, 0, 0)],
-        # Palette 1: campfire (fire) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (237, 194, 20), (215, 80, 20), (80, 10, 0)],
-        # Palette 2: iron/ice - harmonized Color 0 = slate rock
-        [(147, 141, 161), (140, 180, 214), (70, 105, 138), (27, 43, 58)],
-        # Palette 3: flora (purples) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (116, 111, 128), (63, 58, 74), (38, 35, 46)],
-        # Palette 4: poison - harmonized Color 0 = slate rock
-        [(147, 141, 161), (100, 220, 100), (30, 140, 50), (10, 50, 20)],
-        # Palette 5: deadwood (browns) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (141, 117, 74), (111, 90, 52), (38, 35, 46)],
-        # Palette 6: gold - harmonized Color 0 = slate rock
-        [(147, 141, 161), (215, 167, 38), (141, 117, 74), (50, 30, 10)],
-        # Palette 7: slate rock - harmonized Color 0 = slate rock
-        [(147, 141, 161), (131, 123, 150), (63, 58, 74), (38, 35, 46)],
-    ],
-    "castle": [
-        # Palette 0: stone (light gray)
-        [(215, 215, 215), (179, 176, 176), (130, 130, 130), (46, 46, 46)],
-        # Palette 1: curtain (red)
-        [(215, 215, 215), (139, 27, 27), (98, 18, 18), (30, 0, 0)],
-        # Palette 2: iron (blues)
-        [(215, 215, 215), (140, 160, 180), (70, 90, 110), (30, 40, 50)],
-        # Palette 3: moss/green
-        [(215, 215, 215), (90, 140, 80), (40, 80, 30), (10, 30, 10)],
-        # Palette 4: poison
-        [(215, 215, 215), (120, 200, 120), (40, 120, 50), (10, 50, 20)],
-        # Palette 5: wood furniture (browns)
-        [(215, 215, 215), (158, 142, 113), (111, 90, 52), (40, 25, 10)],
-        # Palette 6: gold
-        [(215, 215, 215), (215, 167, 38), (162, 146, 113), (60, 40, 10)],
-        # Palette 7: dim shadow
-        [(215, 215, 215), (130, 130, 130), (86, 86, 86), (35, 35, 35)],
-    ],
-    "village": [
-        # Palette 0: gray (stone / stairs / well) - harmonized Color 0 = dirt
-        [(182, 162, 126), (200, 200, 200), (125, 125, 125), (30, 30, 30)],
-        # Palette 1: fire (campfire / torch braziers) - harmonized Color 0 = dirt
-        [(182, 162, 126), (255, 196, 96), (220, 110, 32), (90, 40, 10)],
-        # Palette 2: iron (reserved cool tones) - harmonized Color 0 = dirt
-        [(182, 162, 126), (150, 160, 180), (85, 105, 130), (35, 45, 60)],
-        # Palette 3: dirt floor - UI_COLOR_FIELD (the ground anchor ramp)
-        [(182, 162, 126), (140, 120, 88), (96, 78, 52), (48, 36, 24)],
-        # Palette 4: foliage (hedges / sprouts) - harmonized Color 0 = dirt
-        [(182, 162, 126), (140, 150, 90), (70, 110, 50), (20, 50, 20)],
-        # Palette 5: wood (houses / barrels / merchant) - UI_COLOR_WOOD
-        [(182, 162, 126), (150, 105, 60), (95, 62, 32), (38, 24, 10)],
-        # Palette 6: cream / gold (roof shingles, house walls)
-        [(182, 162, 126), (241, 207, 145), (200, 160, 90), (120, 85, 40)],
-        # Palette 7: dim (soft shading)
-        [(182, 162, 126), (158, 148, 128), (100, 88, 66), (42, 36, 26)],
-    ],
+    "forest": _AUTHOR_RAMPS["forest"],
+    "desolate_landscape": _AUTHOR_RAMPS["desolate_landscape"],
+    "castle": _AUTHOR_RAMPS["castle"],
+    "village": _AUTHOR_RAMPS["village"],
 }
 
-# Scene anchor colors (Color 0 of outdoor palettes)
+# Scene anchor colors (Color 0 of outdoor palettes), from palette.txt.
 ANCHOR_COLORS = {
-    "forest": "#7bb660",           # grass green (RGB: 120, 176, 96)
-    "desolate_landscape": "#938da1",  # slate rock (RGB: 147, 141, 161)
-    "castle": "#d7d7d7",           # light stone (RGB: 215, 215, 215)
-    "village": "#b6a27e",          # dirt floor (RGB: 182, 162, 126)
+    "forest": _AUTHOR_ANCHORS["forest"],
+    "desolate_landscape": _AUTHOR_ANCHORS["desolate_landscape"],
+    "castle": _AUTHOR_ANCHORS["castle"],
+    "village": _AUTHOR_ANCHORS["village"],
 }
 
-# Palette names for documentation in manifest
-PALETTE_NAMES = {
-    "forest": [
-        "gray", "fire", "iron_ice", "field", "poison", "wood", "gold", "dim"
-    ],
-    "desolate_landscape": [
-        "gray", "campfire", "iron_ice", "flora", "poison", "deadwood", "gold", "slate_rock"
-    ],
-    "castle": [
-        "stone", "curtain", "iron", "moss_green", "poison", "wood_furn", "gold", "dim_shadow"
-    ],
-    "village": [
-        "gray", "fire", "iron", "dirt_floor", "foliage", "wood", "cream", "dim"
-    ],
-}
+# Palette names for documentation in manifest (single-sourced from
+# palette_txt so the manifests and assets/palettes.md can never disagree).
+PALETTE_NAMES = {k: list(v) for k, v in _AUTHOR_RAMP_NAMES.items()
+                 if k not in ("base", "obj")}
 
 
 def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
@@ -328,6 +258,12 @@ def write_manifest(tileset_id: str, manifest: Dict[str, Any]) -> Path:
 
 # Per-tileset curated overrides (e.g. animated fire frames)
 TILE_PALETTE_OVERRIDES = {
+    "forest": {
+        28: 5,  # Tree trunk BL: bark (#4a3b1c) must stay on the wood ramp.
+        29: 5,  # Tree trunk BR: auto-match prefers the pixel-exact field
+                # greens (2/3 of the tile), which would render the bark
+                # green-on-green and lose the trunk entirely.
+    },
     "desolate_landscape": {
         32: 7,  # Plain floor (slate rock / grey)
         37: 1,  # Campfire frame 1 (fire)

@@ -81,8 +81,9 @@ extern uint8_t g_is_cgb;
 void ui_actors_sprites_banked(void);
 
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
- * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
- * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
+ * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = slime green
+ * in the battle/UI set (slime battle art + heal cards; the overworld
+ * tileset sets keep field green here), 4 = poison
  * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (poison grey-out
  * and desolate wasteland ground). */
 #define UI_COLOR_NONE   0
