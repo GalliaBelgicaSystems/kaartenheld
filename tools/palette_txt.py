@@ -219,3 +219,238 @@ SECTIONS = load_sections()
 RAMPS = build_ramps(SECTIONS)
 OBJ_RAMPS = build_obj_ramps(SECTIONS)
 ANCHORS = build_anchors(SECTIONS)
+
+# Semantic ramp names per set (also used for palette_compiler manifests).
+RAMP_NAMES = {
+    "base": ["gray", "fire", "iron_ice", "slime", "poison", "wood",
+             "gold", "dim"],
+    "forest": ["gray", "fire", "iron_ice", "field", "poison", "wood",
+               "gold", "dim"],
+    "desolate_landscape": ["gray", "campfire", "iron_ice", "flora",
+                           "poison", "deadwood", "gold", "slate_rock"],
+    "castle": ["stone", "curtain", "iron", "moss_green", "poison",
+               "wood_furn", "gold", "dim_shadow"],
+    "village": ["gray", "fire", "iron", "dirt_floor", "mauve", "wood",
+                "cream", "dim"],
+}
+
+# What each ramp serves (battle/UI set: card colors + combat art slots;
+# overworld sets: terrain roles + UI_COLOR_* indices + NPC overlays).
+RAMP_USES = {
+    "base": ["UI text/backdrop, spider art", "burn cards, kobold art",
+             "sword/freeze cards", "slime art, heal cards",
+             "poison/dagger cards, dialogue paper", "shield cards, mimic art",
+             "bow cards", "grey-out, bat/boss art"],
+    "forest": ["misc gray", "campfire tiles", "iron accents",
+               "canopy + grass (UI_COLOR_FIELD)", "poison accents",
+               "trunks/stumps, merchant NPC (UI_COLOR_WOOD)",
+               "gold accents, mayor NPC", "rocks (UI_COLOR_DIM)"],
+    "desolate_landscape": ["misc gray", "campfire tiles", "iron accents",
+                           "flora accents", "poison accents",
+                           "dead trees (UI_COLOR_WOOD)",
+                           "gold accents, treasure chest",
+                           "slate ground (UI_COLOR_DIM)"],
+    "castle": ["stone floors/walls (UI_COLOR_NONE)", "curtains",
+               "iron accents", "moss accents", "poison accents",
+               "furniture (UI_COLOR_WOOD)", "gold accents, chest",
+               "shading (UI_COLOR_DIM)"],
+    "village": ["stonework (UI_COLOR_NONE)", "braziers/torches",
+                "iron accents", "dirt ground (UI_COLOR_FIELD)",
+                "mauve accents", "houses/barrels, merchant NPC (UI_COLOR_WOOD)",
+                "walls/roofs, mayor NPC", "shading (UI_COLOR_DIM)"],
+}
+
+# Provenance per slot: "palette.txt [SECTION] name" or "LEGACY".
+# Shape must mirror RAMPS exactly (checked by render_doc()).
+_PROV = {
+    "base": [
+        ["[COMMON] white", "LEGACY", "LEGACY", "[FOREST] void_holes"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["[COMMON] white", "[COMBAT] slime_combat",
+         "[COMBAT] slime_outline_combat", "[FOREST] void_holes"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["LEGACY", "[CASTLE] gold", "LEGACY", "LEGACY"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+    ],
+    "forest": [
+        ["[COMMON] white", "LEGACY", "LEGACY", "[FOREST] void_holes"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["[FOREST] grass",
+         "[FOREST] tree_leaves_terrain_outline_big_grass",
+         "[FOREST] dark_tree_leaves", "[FOREST] void_holes"],
+        ["LEGACY", "LEGACY", "LEGACY", "LEGACY"],
+        ["[FOREST] grass", "LEGACY", "LEGACY", "LEGACY"],
+        ["LEGACY", "[CASTLE] gold", "LEGACY", "LEGACY"],
+        ["LEGACY", "LEGACY", "LEGACY", "[FOREST] rocks_outline"],
+    ],
+    "desolate_landscape": [
+        ["[COMMON] white", "LEGACY", "LEGACY", "[FOREST] void_holes"],
+        ["[DESOLATE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[DESOLATE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[DESOLATE] ground", "LEGACY", "[DESOLATE] terrain_side",
+         "[DESOLATE] tree_item_outlines_cracks"],
+        ["[DESOLATE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[DESOLATE] ground", "[CASTLE] wood_light", "[CASTLE] wood_dark",
+         "[DESOLATE] tree_item_outlines_cracks"],
+        ["[DESOLATE] ground", "[CASTLE] gold", "[CASTLE] wood_light",
+         "LEGACY"],
+        ["[DESOLATE] ground", "[DESOLATE] rocks_stone_light",
+         "[DESOLATE] terrain_side",
+         "[DESOLATE] tree_item_outlines_cracks"],
+    ],
+    "castle": [
+        ["[CASTLE] ground", "LEGACY", "[CASTLE] wall_light",
+         "[CASTLE] window_frame"],
+        ["[CASTLE] ground", "[CASTLE] curtain_light",
+         "[CASTLE] curtain_dark", "LEGACY"],
+        ["[CASTLE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[CASTLE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[CASTLE] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[CASTLE] ground", "LEGACY", "[CASTLE] wood_dark", "LEGACY"],
+        ["[CASTLE] ground", "[CASTLE] gold", "LEGACY", "LEGACY"],
+        ["[CASTLE] ground", "[CASTLE] wall_light", "[CASTLE] wall_dark",
+         "LEGACY"],
+    ],
+    "village": [
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+        ["[TOWN] ground", "[TOWN] barrel_wood_fence",
+         "[TOWN] wood_outlines", "LEGACY"],
+        ["[TOWN] ground", "[TOWN] house_wall",
+         "[TOWN] house_roof_shade1", "[TOWN] wood_outlines"],
+        ["[TOWN] ground", "LEGACY", "LEGACY", "LEGACY"],
+    ],
+}
+
+_OBJ_PROV = {
+    "grey": ["[COMMON] white", "LEGACY", "LEGACY", "[FOREST] void_holes"],
+    "orange": ["[COMMON] white", "[SPRITES] boss_eyes_scepter_glow",
+               "[COMBAT] heart_fire_enemy_eyes",
+               "[SPRITES] boss_eyes_scepter"],
+    "brown": ["[COMMON] white", "[SPRITES] wood_dog",
+              "[SPRITES] chest_outline", "[SPRITES] npc"],
+    "green": ["[COMMON] white", "LEGACY", "[SPRITES] slime_light",
+              "[SPRITES] slime_dark"],
+}
+
+_OBJ_USES = {
+    "grey": "player, bats, UI sprites (OBJ 0)",
+    "orange": "town braziers, kobolds (OBJ 1)",
+    "brown": "hero, kobold bodies, chests (OBJ 2)",
+    "green": "overworld slimes (OBJ 3)",
+}
+
+_ANCHOR_PROV = {
+    "forest": "[FOREST] grass",
+    "desolate_landscape": "[DESOLATE] ground",
+    "castle": "[CASTLE] ground",
+    "village": "[TOWN] ground",
+    "title": "[COMMON] white",
+    "npc_tiles": "chroma-key #f1eb03 (compose_npc_tiles.py, not a color)",
+    "enemy_ow": "[DESOLATE] ground (sheet transparent convention)",
+}
+
+
+def _hx(rgb) -> str:
+    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+
+def render_doc() -> str:
+    """Render assets/palettes.md from the canonical tables."""
+    for ts, ramps in RAMPS.items():
+        prov = _PROV.get(ts)
+        if prov is None or len(ramps) != 8 or len(prov) != 8:
+            raise ValueError(f"palette doc: provenance shape wrong for {ts}")
+        for ramp, pr in zip(ramps, prov):
+            if len(ramp) != 4 or len(pr) != 4:
+                raise ValueError(
+                    f"palette doc: slot shape wrong for {ts}")
+    L = []
+    L.append("# Defined palettes (generated — do not edit by hand)")
+    L.append("")
+    L.append("Source of truth: `assets/palette.txt`, read by")
+    L.append("`tools/palette_txt.py`.  Regenerate with `make manifest`")
+    L.append("(the `palette-check` gate fails on drift).  Slots marked")
+    L.append("LEGACY have no authored counterpart and keep their gameplay")
+    L.append("values; every other slot cites its `palette.txt` entry.")
+    L.append("")
+    titles = {
+        "base": "Base — battle / card UI (`cgb_bg_palettes`)",
+        "forest": "Forest / field (`cgb_bg_palettes_forest`)",
+        "desolate_landscape":
+            "Desolate (`cgb_bg_palettes_desolate`)",
+        "castle": "Castle (`cgb_bg_palettes_castle`)",
+        "village": "Village / town (`cgb_bg_palettes_village`)",
+    }
+    for ts in ("base", "forest", "desolate_landscape", "castle",
+               "village"):
+        L.append(f"## {titles[ts]}")
+        L.append("")
+        L.append("| # | Name | S0 | S1 | S2 | S3 | Serves | Provenance |")
+        L.append("|---|------|----|----|----|----|--------|------------|")
+        for i, ramp in enumerate(RAMPS[ts]):
+            hexes = " | ".join(f"`{_hx(c)}`" for c in ramp)
+            prov = ", ".join(p for p in _PROV[ts][i] if p != "LEGACY")
+            L.append(f"| {i} | {RAMP_NAMES[ts][i]} | {hexes} | "
+                     f"{RAMP_USES[ts][i]} | {prov or 'LEGACY'} |")
+        L.append("")
+    L.append("## OBJ sprite ramps (`src/ui/ui.c`, slot 0 = COMMON white)")
+    L.append("")
+    L.append("| Name | S0 | S1 | S2 | S3 | Serves | Provenance |")
+    L.append("|------|----|----|----|----|--------|------------|")
+    for key, ramp in OBJ_RAMPS.items():
+        hexes = " | ".join(f"`{_hx(c)}`" for c in ramp)
+        prov = ", ".join(p for p in _OBJ_PROV[key] if p != "LEGACY")
+        L.append(f"| {key} | {hexes} | {_OBJ_USES[key]} | "
+                 f"{prov or 'LEGACY'} |")
+    L.append("")
+    L.append("## Sheet anchors (`png2gb --anchor-color` → shade 0)")
+    L.append("")
+    L.append("| Sheet | Anchor | Source |")
+    L.append("|-------|--------|--------|")
+    sheet_of = {"forest": "forest-tile", "desolate_landscape": "desolate",
+                "castle": "castle-tile", "village": "village-tile",
+                "title": "title-red", "npc_tiles": "npc_tiles",
+                "enemy_ow": "enemy_sprites"}
+    for key, anchor in ANCHORS.items():
+        L.append(f"| `{sheet_of[key]}` | `{anchor}` | {_ANCHOR_PROV[key]} |")
+    L.append("")
+    return "\n".join(L)
+
+
+DOC_PATH = REPO_ROOT / "assets" / "palettes.md"
+
+
+def main(argv=None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="Render assets/palettes.md")
+    ap.add_argument("--write-doc", action="store_true",
+                    help="write assets/palettes.md")
+    ap.add_argument("--check-doc", action="store_true",
+                    help="fail if assets/palettes.md is stale")
+    args = ap.parse_args(argv)
+    if args.check_doc:
+        want = render_doc() + "\n"
+        got = DOC_PATH.read_text() if DOC_PATH.exists() else ""
+        if got != want:
+            print("palette doc: assets/palettes.md is stale "
+                  "(run make manifest)")
+            return 1
+        print("palette doc: OK")
+        return 0
+    if args.write_doc:
+        DOC_PATH.write_text(render_doc() + "\n")
+        print(f"wrote {DOC_PATH.relative_to(REPO_ROOT)}")
+        return 0
+    ap.print_help()
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -136,11 +136,20 @@ def check_makefile_anchors():
             fail(f"Makefile {short}: anchors {got} vs palette.txt [{anchor}]")
 
 
+def check_doc():
+    from palette_txt import render_doc, DOC_PATH
+    want = render_doc() + "\n"
+    got = DOC_PATH.read_text() if DOC_PATH.exists() else ""
+    if got != want:
+        fail("assets/palettes.md is stale (run make manifest)")
+
+
 def main() -> int:
     check_compiler()
     check_tiles_content()
     check_obj()
     check_makefile_anchors()
+    check_doc()
     # Strictness proof: palette.txt already parsed at import (load_sections);
     # an empty/bare-'#' value would have raised before any check ran.
     if ERRORS:

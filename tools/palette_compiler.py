@@ -45,7 +45,8 @@ from PIL import Image
 import math
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from palette_txt import RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS
+from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
+                         RAMP_NAMES as _AUTHOR_RAMP_NAMES)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
@@ -86,21 +87,10 @@ ANCHOR_COLORS = {
     "village": _AUTHOR_ANCHORS["village"],
 }
 
-# Palette names for documentation in manifest
-PALETTE_NAMES = {
-    "forest": [
-        "gray", "fire", "iron_ice", "field", "poison", "wood", "gold", "dim"
-    ],
-    "desolate_landscape": [
-        "gray", "campfire", "iron_ice", "flora", "poison", "deadwood", "gold", "slate_rock"
-    ],
-    "castle": [
-        "stone", "curtain", "iron", "moss_green", "poison", "wood_furn", "gold", "dim_shadow"
-    ],
-    "village": [
-        "gray", "fire", "iron", "dirt_floor", "foliage", "wood", "cream", "dim"
-    ],
-}
+# Palette names for documentation in manifest (single-sourced from
+# palette_txt so the manifests and assets/palettes.md can never disagree).
+PALETTE_NAMES = {k: list(v) for k, v in _AUTHOR_RAMP_NAMES.items()
+                 if k != "base"}
 
 
 def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:

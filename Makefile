@@ -407,6 +407,7 @@ tiles-check:
 # See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
 manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py tools/palette_txt.py assets/palette.txt | $(GENERATED_TILES_DIR)
 	@python3 tools/palette_compiler.py
+	@python3 tools/palette_txt.py --write-doc
 
 # Palette drift check: palette.txt vs compiler vs ROM vs Makefile anchors.
 palette-check:
