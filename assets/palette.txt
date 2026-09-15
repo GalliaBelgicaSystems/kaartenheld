@@ -1,39 +1,3 @@
-# Artist paletteelo. Full tutorial: assets/palette_tutorial.md.
-# Three parts: COLOR dictionary (this file's named sections), RAMP tables
-# (RAMPS/*: 8 ramps x 4 shades each, composed from dictionary names as
-# SECTION/name), and ANCHORS (which color pins tile shade 0 per sheet).
-# Lines starting with # are comments. Ramps own every CGB color in the
-# game -- there are no hidden hardcoded colors anymore.
-COMMON
-white: #ffffff
-parchment: #f5e6d2
-silver: #aaaaaa
-ash: #555555
-gray_light: #c8c8c8
-gray_mid: #969696
-gray_dark: #5a5a5a
-gray_deep: #282828
-
-GAMEPLAY
-fire_pale: #ffffe0
-fire_light: #ff8c28
-fire_mid: #dc3214
-fire_deep: #640a00
-iron_pale: #ebf2fa
-iron_light: #8cb4d6
-iron_mid: #46698a
-iron_deep: #1b2b3a
-mauve_pale: #faf0fa
-mauve_light: #be8cc8
-mauve_mid: #8c50a0
-mauve_deep: #3c1e50
-wood_light: #c48a48
-wood_mid: #8a5222
-wood_deep: #3d200a
-gold_pale: #fffce0
-gold_mid: #c88c08
-gold_shadow: #5a3a00
-
 FOREST
 wood_and_dirt: #4a3b1c
 grass: #7bb660
@@ -50,14 +14,9 @@ rocks_stone_shadow: #837b96
 tree_item_outlines_cracks: #26232e
 terrain_side : #3f3a4a
 void: #000000
-flame_light: #edc214
-flame_mid: #d75014
-flame_deep: #500a00
-flora_mid: #746f80
-gold_shadow: #321e0a
 
 CASTLE
-ground: #a99fc0
+ground: #d7d7d7
 wall_dark: #565656
 wall_light: #828282
 wood_light: #8d754a
@@ -66,19 +25,6 @@ gold: #d7a726
 curtain_light: #8b1b1b
 curtain_dark: #621212
 window_frame: #2e2e2e
-stone_mid: #b3b0b0
-curtain_deep: #1e0000
-steel_light: #8ca0b4
-steel_mid: #465a6e
-steel_deep: #1e2832
-moss_light: #5a8c50
-moss_mid: #28501e
-moss_deep: #0a1e0a
-timber_light: #9e8e71
-timber_deep: #28190a
-gold_mid: #a29271
-gold_shadow: #3c280a
-shade_deep: #232323
 
 TOWN
 ground: #b6a27e
@@ -87,28 +33,11 @@ barrel_wood_fence: #8d754a
 fence_light: #79643e
 wood_outlines: #645233
 house_wall: #f1cf91
-house_roof_shade1: #ccaa6c
-house_roof_shade2: #b6a27e
-stone_light: #c8c8c8
-stone_mid: #7d7d7d
-stone_deep: #1e1e1e
-ember_light: #ffc460
-ember_mid: #dc6e20
-ember_deep: #5a280a
-steel_light: #96a0b4
-steel_mid: #556982
-steel_deep: #232d3c
-dirt_light: #8c7858
-dirt_mid: #604e34
-dirt_deep: #302418
-wood_deep: #26180a
-shade_light: #9e9480
-shade_mid: #645842
-shade_deep: #2a241a
+house_roof_shade: #ccaa6c
 
 SPRITES
+background: #f1eb03
 wood_dog: #8d754a
-slime_highlight: #b4f578
 slime_light: #77e331
 slime_dark: #5c903a
 character_main_outline_bat: #000000
@@ -124,6 +53,7 @@ boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
 
 COMBAT
+background:#ffffff
 numbers_icons: #755930
 card_background: #dfbd8d
 card_decor: #e3ae63
@@ -146,81 +76,35 @@ poison_icon: #7136c1
 ice_icon_ring_jewel: #7ae3f3
 
 TITLE
+title_bg: #ffffff
 title_light: #c6baa4
 title_medium: #8d754a
 title_dark: #6f5a34
 galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
+galliabelgica_black: #000000
 
-# RAMP tables: every CGB color in the game. One section per set, 8 ramps
-# of 4 shades each (the hardware limit). Each shade is a SECTION/name
-# reference into the dictionary above -- never a raw hex here. Cross-set
-# references are fine (e.g. FOREST gold uses CASTLE/gold).
-RAMPS/BASE
-gray: COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes
-fire: GAMEPLAY/fire_pale, GAMEPLAY/fire_light, GAMEPLAY/fire_mid, GAMEPLAY/fire_deep
-iron_ice: GAMEPLAY/iron_pale, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep
-slime: COMMON/white, COMBAT/slime_combat, COMBAT/slime_outline_combat, FOREST/void_holes
-poison: GAMEPLAY/mauve_pale, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep
-wood: COMMON/parchment, GAMEPLAY/wood_light, GAMEPLAY/wood_mid, GAMEPLAY/wood_deep
-gold: GAMEPLAY/gold_pale, CASTLE/gold, GAMEPLAY/gold_mid, GAMEPLAY/gold_shadow
-dim: COMMON/gray_light, COMMON/gray_mid, COMMON/gray_dark, COMMON/gray_deep
 
-RAMPS/FOREST
-gray: COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes
-fire: GAMEPLAY/fire_pale, GAMEPLAY/fire_light, GAMEPLAY/fire_mid, GAMEPLAY/fire_deep
-iron_ice: GAMEPLAY/iron_pale, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep
 field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes
-poison: GAMEPLAY/mauve_pale, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep
-wood: FOREST/grass, GAMEPLAY/wood_light, GAMEPLAY/wood_mid, GAMEPLAY/wood_deep
-gold: GAMEPLAY/gold_pale, CASTLE/gold, GAMEPLAY/gold_mid, GAMEPLAY/gold_shadow
-dim: COMMON/gray_light, COMMON/gray_mid, COMMON/gray_dark, FOREST/rocks_outline
-
-RAMPS/DESOLATE
-gray: COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes
-campfire: DESOLATE/ground, DESOLATE/flame_light, DESOLATE/flame_mid, DESOLATE/flame_deep
-iron_ice: DESOLATE/ground, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep
-flora: DESOLATE/ground, DESOLATE/flora_mid, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks
-poison: DESOLATE/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep
-deadwood: DESOLATE/ground, CASTLE/wood_light, CASTLE/wood_dark, DESOLATE/tree_item_outlines_cracks
-gold: DESOLATE/ground, CASTLE/gold, CASTLE/wood_light, DESOLATE/gold_shadow
-slate_rock: DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks
-
-RAMPS/CASTLE
-stone: CASTLE/ground, CASTLE/stone_mid, CASTLE/wall_light, CASTLE/window_frame
-curtain: CASTLE/ground, CASTLE/curtain_light, CASTLE/curtain_dark, CASTLE/curtain_deep
-iron: CASTLE/ground, CASTLE/steel_light, CASTLE/steel_mid, CASTLE/steel_deep
-moss_green: CASTLE/ground, CASTLE/moss_light, CASTLE/moss_mid, CASTLE/moss_deep
-poison: CASTLE/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep
-wood_furn: CASTLE/ground, CASTLE/timber_light, CASTLE/wood_dark, CASTLE/timber_deep
-gold: CASTLE/ground, CASTLE/gold, CASTLE/gold_mid, CASTLE/gold_shadow
-dim_shadow: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/shade_deep
-
-RAMPS/VILLAGE
-gray: TOWN/ground, TOWN/stone_light, TOWN/stone_mid, TOWN/stone_deep
-fire: TOWN/ground, TOWN/ember_light, TOWN/ember_mid, TOWN/ember_deep
-iron: TOWN/ground, TOWN/steel_light, TOWN/steel_mid, TOWN/steel_deep
-dirt_floor: TOWN/ground, TOWN/dirt_light, TOWN/dirt_mid, TOWN/dirt_deep
-mauve: TOWN/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep
-wood: TOWN/ground, TOWN/barrel_wood_fence, TOWN/wood_outlines, TOWN/wood_deep
-cream: TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade1, TOWN/wood_outlines
-dim: TOWN/ground, TOWN/shade_light, TOWN/shade_mid, TOWN/shade_deep
-
-RAMPS/OBJ
-grey: COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes
-orange: COMMON/white, SPRITES/boss_eyes_scepter_glow, COMBAT/heart_fire_enemy_eyes, SPRITES/boss_eyes_scepter
-brown: COMMON/white, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
-green: COMMON/white, SPRITES/slime_highlight, SPRITES/slime_light, SPRITES/slime_dark
-
-# ANCHORS: which color pins tile shade 0 per sheet (the sheet background
-# must land on shade 0: transparent for sprites, seamless ground for tiles).
-# Values are SECTION/name references, except npc_tiles: that sheet uses a
-# compositor chroma-key yellow, so it pins a raw hex instead.
-ANCHORS
-forest: FOREST/grass
-desolate_landscape: DESOLATE/ground
-castle: CASTLE/ground
-village: TOWN/ground
-title: COMMON/white
-npc_tiles: #f1eb03
-enemy_ow: DESOLATE/ground
+field2: FOREST/grass, FOREST/rocks, FOREST/wood_and_dirt, FOREST/rocks_outline
+underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadows, DESOLATE/terrain_side
+underworld_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks, DESOLATE/void, DESOLATE/void
+castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
+castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
+castle_room: CASTLE/ground, CASTLE/curtain_light, CASTLE/curtain_dark, CASTLE/curtain_dark
+village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines
+town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
+sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
+even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
+sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
+sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, SPRITES/character_main_outline_bat
+fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline
+fight_standard: COMBAT/background, COMBAT/ice_icon_ring_jewel, COMBAT/slime_combat, COMBAT/slime_outline_combat
+fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
+fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
+fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
+fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
+fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, COMBAT/boss_spider_bat_combat_body
+title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
+title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
