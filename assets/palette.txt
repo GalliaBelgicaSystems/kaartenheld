@@ -1,3 +1,9 @@
+# Palette du jeu — fichier de l'artiste (tuto : assets/palette_tutorial.md).
+# 3 parties : dictionnaire (sections ci-dessous), RAMPs (RAMPS/* : 8 ramps x 4
+# shades, 4 pour OBJ), ANCHORS (fond de chaque sheet). Les lignes # sont des
+# commentaires. Regles : noms de ramp uniques par bloc ; refs en MAJUSCULES
+# (SECTION/nom) ; 8 ramps par bloc (4 pour OBJ) ; shades clair -> sombre.
+
 FOREST
 wood_and_dirt: #4a3b1c
 grass: #7bb660
@@ -12,10 +18,12 @@ ground: #938da1
 rocks_stone_light: #a99fc0
 rocks_stone_shadow: #837b96
 tree_item_outlines_cracks: #26232e
-terrain_side : #3f3a4a
+terrain_side: #3f3a4a
 void: #000000
 
 CASTLE
+# DEV : ground revenu a #d7d7d7 (colle au fond du PNG) ; a suivre cote code
+# (CRAM, ancre Makefile, castle.json sont encore a #a99fc0).
 ground: #d7d7d7
 wall_dark: #565656
 wall_light: #828282
@@ -53,7 +61,7 @@ boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
 
 COMBAT
-background:#ffffff
+background: #ffffff
 numbers_icons: #755930
 card_background: #dfbd8d
 card_decor: #e3ae63
@@ -84,27 +92,68 @@ galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
 galliabelgica_black: #000000
 
+RAMPS/BASE
+fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline
+fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
+fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
+fight_standard: COMBAT/background, COMBAT/ice_icon_ring_jewel, COMBAT/slime_combat, COMBAT/slime_outline_combat
+fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
+fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
+# FLORENT : il manque la ramp or (8 requises) — les cartes arc en ont besoin.
+# Proposition (a valider) : SPRITES/background, SPRITES/chest_lock, COMBAT/numbers_icons, SPRITES/npc
+fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, COMBAT/boss_spider_bat_combat_body
+# FLORENT : boss_spider_bat_combat_body 2x — voulu (un degrade en moins) ou il manque une shade ?
 
+RAMPS/FOREST
+# FLORENT : 6 ramps manquantes ici (8 requises : gray, fire, iron_ice, poison, wood, gold).
+# Le marchand a besoin de wood, le maire de gold — sans elles le fichier reste rouge.
 field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes
 field2: FOREST/grass, FOREST/rocks, FOREST/wood_and_dirt, FOREST/rocks_outline
-underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadows, DESOLATE/terrain_side
+# (field2 place en derniere position = role rochers ; confirmer que c'est bien son usage.)
+
+RAMPS/DESOLATE
+# FLORENT : 6 ramps manquantes (8 requises). Note : aucune couleur de flamme
+# dans DESOLATE — les feux de camp n'ont pas de ramp. Ajouter flame_light/mid/deep + ramp campfire.
+underworld: DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks
+# (typo pluriel corrigee ; 4e shade proposee : tree_item_outlines_cracks — valider.)
 underworld_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks, DESOLATE/void, DESOLATE/void
+# FLORENT : void 2x — voulu ou il manque une shade sombre ?
+
+RAMPS/CASTLE
 castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
-castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
 castle_room: CASTLE/ground, CASTLE/curtain_light, CASTLE/curtain_dark, CASTLE/curtain_dark
+# FLORENT : curtain_dark 2x — voulu ou il manque un bordeaux plus sombre ?
+castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
+# (sert aussi bien l'or que le mobilier ; a verifier en screenshot.)
+# FLORENT : 5 ramps manquantes (8 requises : iron, moss_green, poison, wood_furn, dim_shadow).
+
+RAMPS/VILLAGE
+# FLORENT : 6 ramps manquantes (8 requises) — dont dirt_floor (le sol !) et fire.
+# Ajouter au minimum : dirt_floor (TOWN/ground + 3 terres) et fire (braziers).
 village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines
 town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
-sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+
+RAMPS/OBJ
+# FLORENT : aucune de tes 5 ramps n'est un gris neutre (joueur/chauves-souris/UI).
+# Proposition a valider (noms existants uniquement) :
+# grey: SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
-even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
 sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
-sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, SPRITES/character_main_outline_bat
-fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/ice_icon_ring_jewel, COMBAT/slime_combat, COMBAT/slime_outline_combat
-fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
-fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
-fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
-fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
-fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, COMBAT/boss_spider_bat_combat_body
-title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
-title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+# (shade 1 = beard gris ; slime_highlight n'est plus dans ton dictionnaire — normal ?)
+# FLORENT : even_more_sprites (bleu mage) depasse les 4 slots — gardee de cote :
+# even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
+# Dis-nous si le bleu mage doit remplacer l'une des 4 ci-dessus.
+# FLORENT : title et title_logo n'ont pas de maison (le splash a deja sa palette
+# fixe blanc/rouge/bleu/noir = title_logo). On les laisse de cote sauf avis contraire :
+# title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
+# title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+
+ANCHORS
+forest: FOREST/grass
+desolate_landscape: DESOLATE/ground
+castle: CASTLE/ground
+village: TOWN/ground
+title: TITLE/title_bg
+npc_tiles: SPRITES/background
+enemy_ow: DESOLATE/ground
