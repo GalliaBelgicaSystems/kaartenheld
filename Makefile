@@ -163,9 +163,12 @@ gfx:
 	# One transparent-background sprite per enemy type, shared by every
 	# world.  Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
-	# Sheet layout: see tools/compose_enemy_sprites.py.
+	# Sheet layout: see tools/compose_enemy_sprites.py.  The slate anchor
+	# pins the sheet's transparent convention (compose_enemy_sprites.py BG)
+	# to shade 0 = OAM transparent; without it, cells brighter than the bg
+	# (fire flames, mimic gold) render the bg as a solid square.
 	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+		--palette auto --anchor-color "#938da1" --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Desolate landscape (assets/desolate_landscape.png, 16 cols × 3 rows) ──
 	# Full 48-tile world sheet (g_tileset_desolate)

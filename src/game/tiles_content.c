@@ -17,8 +17,11 @@ const palette_color_t cgb_bg_palettes[8][4] = {
     /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
     /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
     /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field: palette.txt FOREST grass/tree_leaves/dark_tree_leaves */
-    { RGB8(123,182,96),  RGB8(42,79,26),    RGB8(29,62,15),   RGB8(0,0,0)     },
+    /* 3 slime (battle/UI set only): palette.txt COMBAT slime_combat /
+     * slime_outline_combat. Serves slime battle art (art pixels are exactly
+     * these colors) and heal-card spans. Slot 0 white blends into the
+     * UI_COLOR_NONE backdrop. */
+    { RGB8(255,255,255),  RGB8(137,204,94),    RGB8(92,144,58),   RGB8(0,0,0)     },
     /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
     /* 5 wood */     { RGB8(245,230,210), RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
     /* 6 gold: slot 1 is palette.txt CASTLE gold */

@@ -127,6 +127,7 @@ def check_makefile_anchors():
             "assets/castle-tile.png": ANCHORS["castle"],
             "assets/village-tile.png": ANCHORS["village"],
             "assets/npc_tiles.png": ANCHORS["npc_tiles"],
+            "assets/enemy_sprites.png": ANCHORS["enemy_ow"],
             "assets/title-red.png": ANCHORS["title"]}
     for png, anchor in want.items():
         short = png.split("/")[-1]

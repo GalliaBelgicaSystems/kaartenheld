@@ -78,6 +78,8 @@ def build_ramps(sections: Dict[str, Dict[str, RGB]]) -> Dict[str, list]:
     """
     white = _c(sections, "COMMON", "white")
     black = _c(sections, "FOREST", "void_holes")
+    slime_light = _c(sections, "COMBAT", "slime_combat")
+    slime_dark = _c(sections, "COMBAT", "slime_outline_combat")
     grass = _c(sections, "FOREST", "grass")
     tree_big = _c(sections, "FOREST", "tree_leaves_terrain_outline_big_grass")
     tree_dark = _c(sections, "FOREST", "dark_tree_leaves")
@@ -116,7 +118,12 @@ def build_ramps(sections: Dict[str, Dict[str, RGB]]) -> Dict[str, list]:
     ]
     # Base battle/UI set: same as forest but wood slot0 stays beige (no scene
     # anchor in battle context) and dim slot3 stays neutral gray.
+    # Slot 3 is the SLIME ramp, not field: its only consumers are slime
+    # battle art (art_palette 3; art pixels are exactly these authored
+    # colors) and heal-card spans (slime tint reads green, accepted).
+    # Slot 0 white blends into the surrounding UI_COLOR_NONE backdrop.
     base = [list(r) for r in forest]
+    base[3] = [white, slime_light, slime_dark, black]
     base[5][0] = (245, 230, 210)
     base[7][3] = (40, 40, 40)
 
@@ -200,6 +207,11 @@ def build_anchors(sections: Dict[str, Dict[str, RGB]]) -> Dict[str, str]:
     # background is compositor yellow #f1eb03 (tools/compose_npc_tiles.py BG)
     # and the anchor must equal those pixels so they land on shade 0.
     anchors["npc_tiles"] = "#f1eb03"
+    # enemy_ow pins the sheet's documented transparent convention
+    # (tools/compose_enemy_sprites.py BG): without it, cells whose art is
+    # brighter than the slate bg (fire, mimic gold) map the bg to a solid
+    # shade instead of transparent shade 0.
+    anchors["enemy_ow"] = hx("DESOLATE", "ground")
     return anchors
 
 
