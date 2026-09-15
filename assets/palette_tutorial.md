@@ -58,6 +58,36 @@ field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_t
   `OBJ`). The checker rejects anything else with the file and line
   number.
 
+### Shade 0: the background of *its* tiles (not always grass)
+
+Shade 0 must be the color the ramp's tiles sit on — whatever shows
+where the art leaves background pixels. In the forest that is *often*
+grass green, but not by rule:
+
+- `field`, `wood`, `dim` → grass green. Their tiles (ground, trunks,
+  stumps, rocks) sit on grass. A beige background behind a trunk on
+  green ground would draw a visible rectangle (the classic beige-box
+  seam this harmonization exists to kill).
+- `gray`, `fire`, `iron_ice`, `poison`, `gold` → their own light shade
+  (white, pale fire, pale steel…). Their tiles don't blend into grass;
+  they are accents, objects, or UI.
+- Sprites (`RAMPS/OBJ`): shade 0 is **transparent, always**. Its hex
+  never renders; by convention it names the sheet background.
+
+Practical method: open the editor's Palette view, look at which tiles
+use the ramp, and set shade 0 to the color surrounding those tiles in
+game. In doubt on a terrain tile: grass (or the set's ground).
+
+> 🇫🇷 **Pour Florent — faut-il toujours mettre le vert de l'herbe en
+> première shade ?** Non. Mets en shade 0 *le fond sur lequel les
+> tuiles de cette ramp sont posées en jeu*. En forêt c'est souvent
+> l'herbe (sol, troncs, souches, rochers — sinon on voit un rectangle
+> autour du motif), mais les ramps d'accents et d'objets gardent leur
+> propre clair, et sur les sprites la shade 0 est transparente (sa
+> valeur ne s'affiche jamais). Devant un doute : regarde quelles
+> tuiles utilisent la ramp dans la vue Palette de l'éditeur, et prends
+> la couleur qui les entoure en jeu.
+
 ## Hardware in two minutes
 
 - The Game Boy Color stores each channel in **5 bits**, not 8. It keeps
