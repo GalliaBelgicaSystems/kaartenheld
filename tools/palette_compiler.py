@@ -90,7 +90,7 @@ ANCHOR_COLORS = {
 # Palette names for documentation in manifest (single-sourced from
 # palette_txt so the manifests and assets/palettes.md can never disagree).
 PALETTE_NAMES = {k: list(v) for k, v in _AUTHOR_RAMP_NAMES.items()
-                 if k != "base"}
+                 if k not in ("base", "obj")}
 
 
 def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
