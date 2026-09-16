@@ -187,7 +187,7 @@ static const EnemyTypeDef g_enemy_type_spider = {
     CURRENCY_ID_GOLD,
     5,
     1,
-    0,
+    2,
     3,
     2,
     66,
