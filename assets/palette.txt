@@ -129,7 +129,7 @@ even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline
 sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
 sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
 fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/ice_icon, COMBAT/slime_combat, COMBAT/slime_outline_combat
+fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat
 # DEV: slot 1 was ice_icon_ring_jewel (blue slime bodies) — swapped to slime_combat
 # so slime art + heal cards stay green. FLORENT: revert or adjust if the ice tint was intended.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
