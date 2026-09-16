@@ -80,18 +80,22 @@ extern uint8_t g_is_cgb;
  * fixed bank under 0x8000. */
 void ui_actors_sprites_banked(void);
 
-/* Per-tile background palette indices (CGB VRAM bank-1 attributes):
- * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = slime green
- * in the battle/UI set (slime battle art + heal cards; the overworld
- * tileset sets keep field green here), 4 = poison
- * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (poison grey-out
- * and desolate wasteland ground). */
+/* Per-tile background palette indices (CGB VRAM bank-1 attributes) in the
+ * battle/UI set: 0 = card UI (brown ink -- art only, never plain text),
+ * 1 = fire, 2 = iron (steel blue), 3 = slime green (slime battle art +
+ * heal cards; the overworld tileset sets keep field green here),
+ * 4 = poison (purple), 5 = wood (brown), 6 = text (white to black ink --
+ * every plain-text row), 7 = dim (poison grey-out and desolate wasteland
+ * ground).  Gold/bow shares slot 0 (fight_card); slot 6 used to duplicate
+ * it until fight_text gave text its dedicated ramp. */
 #define UI_COLOR_NONE   0
 #define UI_COLOR_FIRE   1
 #define UI_COLOR_IRON   2
 #define UI_COLOR_ICE    2
 #define UI_COLOR_FIELD  3
 #define UI_COLOR_POISON 4
+/* Dedicated black-ink text ramp (fight_text, base slot 6). */
+#define UI_COLOR_TEXT   6
 /* Paper: CRAM slot 4 re-programmed to a white/black document ramp while a
  * dialogue box is open (no world tileset assigns slot 4 to any tile, and
  * the quick screen -- its only other consumer -- cannot be open during a
@@ -99,7 +103,9 @@ void ui_actors_sprites_banked(void);
  * the set's own slot-4 ramp. */
 #define UI_COLOR_PAPER  4
 #define UI_COLOR_WOOD   5
-#define UI_COLOR_GOLD   6
+/* Gold/bow art shares the card-UI ramp (slot 0, same colors the old
+ * slot-6 duplicate rendered). */
+#define UI_COLOR_GOLD   0
 #define UI_COLOR_DIM    7
 
 /* Effect color for a card (status_id = on-hit rider element, is_heal =

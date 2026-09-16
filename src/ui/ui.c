@@ -314,6 +314,14 @@ void ui_clear_screen(void)
 {
     uint8_t x, y;
     volatile uint8_t *v;
+    /* Every menu/title/battle screen paints text on the base (battle/UI)
+     * set's dedicated text ramp (slot 6, black ink).  Menu screens never
+     * reloaded CRAM and inherited whatever world tileset was last active
+     * (magenta canaries, brown ink).  Reload here centrally: battle
+     * re-asserts base anyway and the world redraw overrides with its own
+     * tileset right after, so no path regresses.  Dialogue never clears,
+     * so its world + paper programming is untouched. */
+    ui_set_cram_palette(0);
     VBK_REG = 0;
     for (y = 0; y < 18; y++) {
         v = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5));

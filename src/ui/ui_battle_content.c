@@ -175,7 +175,7 @@ static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette
 static uint8_t battle_status_color(const StatusSlots *slots)
 {
     uint8_t i;
-    if (slots == (const StatusSlots *)0) return UI_COLOR_NONE;
+    if (slots == (const StatusSlots *)0) return UI_COLOR_TEXT;
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_FREEZE) return UI_COLOR_ICE;
     }
@@ -185,7 +185,7 @@ static uint8_t battle_status_color(const StatusSlots *slots)
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_POISON) return UI_COLOR_POISON;
     }
-    return UI_COLOR_NONE;
+    return UI_COLOR_TEXT;
 }
 
 /* ── Card helpers (inlined from card.c — banked code cannot call fixed). ── */
@@ -286,7 +286,7 @@ static void battle_clear_card_box(uint8_t x, uint8_t y)
             dst++;
             buf++;
         }
-        battle_color_span(x, (uint8_t)(top + r), 3, UI_COLOR_NONE);
+        battle_color_span(x, (uint8_t)(top + r), 3, UI_COLOR_TEXT);
     }
 }
 
@@ -527,7 +527,7 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
         }
         /* Drop any previous art tint so blanks match surrounding text. */
         for (cy = 0; cy < h; cy++) {
-            battle_color_span(x, (uint8_t)(art_row + cy), w, UI_COLOR_NONE);
+            battle_color_span(x, (uint8_t)(art_row + cy), w, UI_COLOR_TEXT);
         }
     }
 }
@@ -764,7 +764,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         g_tilemap_mirror[(uint16_t)combo_row * 32 + r] = ui_font_tile_base;
 #endif
     }
-    battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
+    battle_color_span(0, combo_row, 20, UI_COLOR_TEXT);
     battle_draw_text_line(0, combo_row, "COMBO:", 6);
     if (name[0] != '\0') {
         battle_draw_text_line(7, combo_row, " ", 1);
@@ -951,7 +951,7 @@ void ui_draw_battle_timer_banked(void)
     /* Filled span carries the bar palette; the drained tail resets. */
     battle_color_span(0, row, active, g_hud_skin_wram.bar_color);
     if (active < width) {
-        battle_color_span(active, row, (uint8_t)(width - active), UI_COLOR_NONE);
+        battle_color_span(active, row, (uint8_t)(width - active), UI_COLOR_TEXT);
     }
 }
 

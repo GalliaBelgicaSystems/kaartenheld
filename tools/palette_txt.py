@@ -554,8 +554,8 @@ ANCHORS = build_anchors(COLORS, _ANCHORS_RAW)
 RAMP_USES = {
     "base": ["card UI, spider art", "burn cards, kobold art",
              "sword/freeze cards", "slime art, heal cards",
-             "poison cards", "shield cards, mimic art",
-             "bow cards (MISSING)", "boss/bat art"],
+     "poison cards", "shield cards, mimic art",
+              "text (black ink)", "boss/bat art"],
     "forest": ["unused", "forest fires", "unused",
                "field/ground + canopy", "unused",
                "trunks/stumps/merchant (override)", "unused", "rocks"],

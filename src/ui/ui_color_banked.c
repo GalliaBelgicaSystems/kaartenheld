@@ -87,13 +87,17 @@ void ui_draw_font_test_banked(void)
 }
 #endif
 
-/* Reset every BG tilemap attribute byte (0x9800-0x9BFF) to palette 0
- * (grayscale).  The span writers above only ever SET attributes, so without
- * this wipe stale palettes leak across full redraws: overworld tiles at the
- * coordinates of a previous menu/battle span keep their tint, and a menu row
- * that previously held a colored name renders its description text in the
- * old palette.  Called from ui_lcd_off() while the LCD is off, so the
- * per-byte PPU wait inside color_vram_sync_write is skipped. */
+/* Reset every BG tilemap attribute byte (0x9800-0x9BFF) to the dedicated
+ * text ramp (UI_COLOR_TEXT, base slot 6, black ink).  The span writers
+ * above only ever SET attributes, so without this wipe stale palettes
+ * leak across full redraws: overworld tiles at the coordinates of a
+ * previous menu/battle span keep their tint, and a menu row that
+ * previously held a colored name renders its description text in the
+ * old palette.  Defaulting to text (not palette 0 brown-ink card UI)
+ * keeps every unspanned plain-text row black on white.  World cells are
+ * all rewritten per-cell right after, so the overworld is unaffected.
+ * Called from ui_lcd_off() while the LCD is off, so the per-byte PPU
+ * wait inside color_vram_sync_write is skipped. */
 void ui_clear_atts_banked(void)
 {
     uint16_t i;
@@ -103,7 +107,7 @@ void ui_clear_atts_banked(void)
     dst = (volatile uint8_t *)0x9800;
     VBK_REG = 1;
     for (i = 0; i < 1024; i++) {
-        dst[i] = 0;
+        dst[i] = UI_COLOR_TEXT;
     }
     VBK_REG = 0;
 }

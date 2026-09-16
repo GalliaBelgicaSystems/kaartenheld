@@ -39,8 +39,8 @@ void dialogue_screen_render(Game *g)
     if (first_enter) {
         ui_lcd_off();
         /* Always redraw the world, even coming from the overworld: the
-         * lcd_off attribute wipe resets every BG tile to palette 0
-         * (grayscale) and only a full redraw re-applies per-tile palettes.
+         * lcd_off attribute wipe resets every BG tile to the text ramp
+         * and only a full redraw re-applies per-tile palettes.
          * Skipping it here turned the whole screen gray for the dialogue. */
         ui_draw_world_full(w);
         ui_draw_dialogue(d, w->scroll_x, w->scroll_y);

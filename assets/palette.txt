@@ -141,6 +141,7 @@ fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_i
 fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
 fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
 fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED
+fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
 
@@ -156,7 +157,8 @@ SLOTS/BASE
 4: fight_forever
 5: fight_still
 7: fight_final
-# (slot 6 gold/bow missing -- artist to author.)
+6: fight_text
+# (bow/gold shares slot 0 fight_card; see UI_COLOR_GOLD in src/ui/ui.h.)
 
 SLOTS/FOREST
 3: field

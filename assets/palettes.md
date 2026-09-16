@@ -16,7 +16,7 @@ tutorial: `assets/palette_tutorial.md`.
 | 3 | fight_standard | `#ffffff` | `#89cc5e` | `#7ae3f3` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat |
 | 4 | fight_forever | `#ffffff` | `#7136c1` | `#565656` | `#3d3044` | poison cards | COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings |
 | 5 | fight_still | `#ffffff` | `#8d754a` | `#755930` | `#6f5a34` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark |
-| 6 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | bow cards (MISSING) | duplicates `fight_card` (FLORENT: author a real ramp for UI_COLOR_* card/UI spans) |
+| 6 | fight_text | `#ffffff` | `#8f8f8f` | `#565656` | `#000000` | text (black ink) | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body |
 | 7 | fight_final | `#ffffff` | `#3f3017` | `#000000` | `#000000` | boss/bat art | COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED |
 
 ## Forest / field (`cgb_bg_palettes_forest`)
