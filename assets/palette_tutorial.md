@@ -55,9 +55,10 @@ field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_t
 - To add a new color: add `my_pink: #ff9fd0` to a dictionary section,
   then reference it as `SECTION/my_pink` from a ramp.
 - To add a new ramp: append a line anywhere (`my_ramp: A/x, A/y, A/z,
-  A/w`), then give it a slot in the matching `SLOTS/*` table. A ramp
-  with no slot warns and is never shipped — nothing is silently
-  dropped, and nothing shifts.
+  A/w`). Free slots fill automatically (lowest first, existing slots
+  never shift); pin it in the matching `SLOTS/*` table to make the
+  placement deliberate. A ramp with no free slot fails loudly — pick
+  which ship. Nothing is silently dropped.
 - `UNUSED` as a shade repeats the ramp's darkest real shade (handy for
   3-color art). Fully empty slots show magenta in screenshots — that
   means "no ramp here", never ship it.
