@@ -56,7 +56,10 @@ DEFAULT_FLOOR_PALETTES = {
     "forest": 3,
     "desolate_landscape": 7,
     "castle": 0,
-    "village": 3,
+    # Village floor answers the wood ramp: every village slot 0 is dirt,
+    # so plain-dirt tiles render identically, and no dirt-only ramp must
+    # exist for the floor to work (see npc_pals in tiles_content.c).
+    "village": 5,
 }
 
 # Curated per-tile sheet-index overrides (single source; imported by the

@@ -10,10 +10,10 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline |
+| 0 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
 | 1 | fight_more | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
 | 2 | fight_again | `#ffffff` | `#8f8f8f` | `#565656` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle |
-| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#5c903a` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat |
+| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#7ae3f3` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat |
 | 4 | fight_forever | `#ffffff` | `#7136c1` | `#565656` | `#3d3044` | poison cards | COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings |
 | 5 | fight_still | `#ffffff` | `#8d754a` | `#755930` | `#6f5a34` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark |
 | 6 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | bow cards (MISSING) | duplicates `fight_card` (FLORENT: author a real ramp for UI_COLOR_* card/UI spans) |
@@ -65,9 +65,9 @@ tutorial: `assets/palette_tutorial.md`.
 | 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 1 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | braziers | TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base |
 | 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 3 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | dirt ground (MISSING) | duplicates `city` (FLORENT: author a real ramp for npc overlay 0, npc overlay 1, npc overlay 4, npc overlay 5) |
+| 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | dirt ground (MISSING) | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 5 | village | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines |
+| 5 | village | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble |
 | 6 | town | `#b6a27e` | `#f1cf91` | `#b6b6b6` | `#ccaa6c` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade |
 | 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
@@ -75,10 +75,10 @@ tutorial: `assets/palette_tutorial.md`.
 
 | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |------|----|----|----|----|--------|------|
-| grey | `#f1eb03` | `#b6b6b6` | `#565656` | `#000000` | UNUSED slot (no grey ramp shipped) | SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
-| more_sprites | `#f1eb03` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
-| sprites_again | `#f1eb03` | `#673c3c` | `#8b1b1b` | `#3f3017` | kobolds/dogs/hero (OBJ 2) | SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc |
-| sprites | `#f1eb03` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
+| grey | `#ffffff` | `#b6b6b6` | `#565656` | `#000000` | UNUSED slot (no grey ramp shipped) | COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
+| more_sprites | `#ffffff` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
+| sprites_again | `#ffffff` | `#673c3c` | `#8b1b1b` | `#3f3017` | kobolds/dogs/hero (OBJ 2) | COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc |
+| sprites | `#ffffff` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
 

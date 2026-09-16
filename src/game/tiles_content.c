@@ -130,11 +130,12 @@ void ui_load_tileset_banked(void)
          * must match g_actor_npc_tiles (compose_npc_tiles.py LAYOUT):
          * guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
         static const uint8_t npc_slots[6] = { 35, 36, 39, 41, 4, 5 };
-        /* CGB palette per NPC (UI_COLOR_* indices; the auto palette
-         * manifest cannot know these slots are NPC overlays): guard,
-         * wizard and dogs field green (3), merchant wood (5), mayor gold
-         * (6).  Order mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
-        static const uint8_t npc_pals[6] = { 3, 3, 5, 6, 3, 3 };
+        /* CGB palette per NPC overlay slot: guard, wizard, merchant and
+         * dogs answer the wood ramp (5), mayor gold (6). Order mirrors
+         * npc_slots (compose_npc_tiles.py LAYOUT). Guard/wizard/dogs were
+         * field green (3) while slot 3 duped fire; wood browns suit NPC
+         * bodies and keep every overlay on a real ramp. */
+        static const uint8_t npc_pals[6] = { 5, 5, 5, 6, 5, 5 };
         uint8_t s;
         uint8_t j;
         const uint8_t *tile_src;

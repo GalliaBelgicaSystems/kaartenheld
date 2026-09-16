@@ -380,7 +380,7 @@
     },
     {
       "id": "forest_fire_frame_1",
-      "palette": "field_too",
+      "palette": "field_more",
       "label": "fire frame 1",
       "gb_constant": "TILE_FOREST_37",
       "walkable": false,
@@ -391,7 +391,7 @@
     },
     {
       "id": "forest_fire_frame_2",
-      "palette": "field_too",
+      "palette": "field_more",
       "label": "fire frame 2",
       "gb_constant": "TILE_FOREST_38",
       "walkable": false,

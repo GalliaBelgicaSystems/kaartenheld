@@ -247,7 +247,7 @@
     },
     {
       "id": "village_bottom_left_well",
-      "palette": "city",
+      "palette": "village",
       "label": "bottom left well",
       "gb_constant": "TILE_VILLAGE_23",
       "walkable": false,
@@ -258,7 +258,7 @@
     },
     {
       "id": "village_bottom_right_well",
-      "palette": "city",
+      "palette": "village",
       "label": "bottom right well",
       "gb_constant": "TILE_VILLAGE_24",
       "walkable": false,
@@ -412,7 +412,7 @@
     },
     {
       "id": "village_stairs",
-      "palette": "city",
+      "palette": "village",
       "label": "stairs",
       "gb_constant": "TILE_VILLAGE_40",
       "walkable": true,

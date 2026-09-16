@@ -11,6 +11,10 @@
 # 4. SLOTS/* and ANCHORS are dev-owned — leave them alone.
 # 5. After every edit: make palette-check (red = read the error, it says
 #    exactly what to fix), then make screenshots to check with your eyes.
+COMMON
+white: #ffffff
+# (DEV-restored: every sprite slot 0 + doc references point here.)
+
 FOREST
 tree_ladder_and_dirt: #4a3b1c
 grass: #7bb660
@@ -121,17 +125,17 @@ castle_room: CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_
 village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
 town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
 city: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
-sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+sprites: COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
 # DEV-seeded grey (FLORENT: rename/replace freely) — bats + spiders need it.
-grey: SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
-even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
-sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
-sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
+grey: COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+more_sprites: COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
+even_more_sprites: COMMON/white, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
+sprites_again: COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
+sprites_still: COMMON/white, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
 fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat
-# DEV: slot 1 was ice_icon_ring_jewel (blue slime bodies) — swapped to slime_combat
-# so slime art + heal cards stay green. FLORENT: revert or adjust if the ice tint was intended.
+# FLORENT's call: green bodies + frost-blue shading on slimes (and heal cards).
+# Note: slot 2 ice is brighter than slot 1 slime — order here is intent, not brightness.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
 fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
 fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
@@ -171,7 +175,8 @@ SLOTS/CASTLE
 0: castle
 1: castle_room
 6: castle_hall
-# (slot 5 wood_furn missing -- chair/table overrides point here.)
+# (slots 2-5,7 free: no tile, art, UI or sprite points here. Chairs render
+# under castle_hall browns; nothing needs a wood_furn ramp.)
 
 SLOTS/VILLAGE
 5: village
