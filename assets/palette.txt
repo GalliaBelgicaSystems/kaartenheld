@@ -51,7 +51,7 @@ ground: #b6a27e
 puddle_stone_window: #b6b6b6
 barrel_wood_fence: #8d754a
 fence_light: #79643e
-wood_outlines: #645233
+wood_outlines_rubble: #645233
 house_wall: #f1cf91
 house_roof_shade: #ccaa6c
 fire_dark: #d7a726
@@ -79,7 +79,7 @@ COMBAT
 background: #ffffff
 numbers_icons: #755930
 card_background: #dfbd8d
-card_decor: #e3ae63
+card_gold: #e3ae63
 card_outline: #b09266
 heart_fire_enemy_eyes: #c34e1b
 slime_combat: #89cc5e
@@ -96,7 +96,7 @@ goblin_combat_skin: #844f4f
 goblin_combat_skin_dark_outlines: #4a2727
 bat_combat_inner_wings: #3d3044
 poison_icon: #7136c1
-ice_icon_ring_jewel: #7ae3f3
+ice_icon: #7ae3f3
 
 TITLE
 title_bg: #ffffff
@@ -118,7 +118,7 @@ Underworld_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUS
 castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
 castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
 castle_room: CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_dark
-village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines
+village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
 town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
 city: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
 sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
@@ -128,8 +128,8 @@ more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_
 even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
 sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
 sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
-fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat
+fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
+fight_standard: COMBAT/background, COMBAT/ice_icon, COMBAT/slime_combat, COMBAT/slime_outline_combat
 # DEV: slot 1 was ice_icon_ring_jewel (blue slime bodies) — swapped to slime_combat
 # so slime art + heal cards stay green. FLORENT: revert or adjust if the ice tint was intended.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
