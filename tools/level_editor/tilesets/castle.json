@@ -158,7 +158,7 @@
       "label": "plain floor",
       "gb_constant": "TILE_CASTLE_15",
       "walkable": true,
-      "color": "#a99fc0",
+      "color": "#d7d7d7",
       "ascii": ".",
       "image_url": "/tiles/castle/castle_plain_floor.png",
       "category": "terrain"
