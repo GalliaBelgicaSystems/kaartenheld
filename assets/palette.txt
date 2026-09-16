@@ -11,10 +11,6 @@
 # 4. SLOTS/* and ANCHORS are dev-owned — leave them alone.
 # 5. After every edit: make palette-check (red = read the error, it says
 #    exactly what to fix), then make screenshots to check with your eyes.
-COMMON
-white: #ffffff
-# (DEV-restored: every sprite slot 0 + doc references point here.)
-
 FOREST
 tree_ladder_and_dirt: #4a3b1c
 grass: #7bb660
@@ -112,10 +108,12 @@ galliabelgica_red: #b84444
 galliabelgica_black: #000000
 
 
-field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes
-field_again: FOREST/grass, FOREST/rocks, FOREST/tree_ladder_and_dirt, FOREST/rocks_outline_fire_base
-field_more: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, UNUSED
-field_too: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, UNUSED
+field1: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes
+field2: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/tree_ladder_and_dirt
+field3: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tree_ladder_and_dirt
+field4: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt
+field5: FOREST/grass, FOREST/rocks, FOREST/rocks_outline_fire_base, UNUSED
+field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base
 underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side
 underworld_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED
 Underworld_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED
@@ -125,24 +123,22 @@ castle_room: CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_
 village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
 town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
 city: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
-sprites: COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
 # DEV-seeded grey (FLORENT: rename/replace freely) — bats + spiders need it.
-grey: COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-more_sprites: COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
-even_more_sprites: COMMON/white, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
-sprites_again: COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog
-sprites_still: COMMON/white, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
+grey: SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
+even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
+sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
+sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
 fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat
-# Slime bodies + darker-green outline (heal cards follow to full green).
-# Slot 2 was frost-blue ice (FLORENT's call) but png2gb lands every slime
-# outline pixel on shade 2, so outlines rendered blue -- see docs.
+fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat
+# DEV: slot 1 was ice_icon_ring_jewel (blue slime bodies) — swapped to slime_combat
+# so slime art + heal cards stay green. FLORENT: revert or adjust if the ice tint was intended.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
 fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
 fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
 fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
 fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED
-fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
 
@@ -158,8 +154,7 @@ SLOTS/BASE
 4: fight_forever
 5: fight_still
 7: fight_final
-6: fight_text
-# (bow/gold shares slot 0 fight_card; see UI_COLOR_GOLD in src/ui/ui.h.)
+# (slot 6 gold/bow missing -- artist to author.)
 
 SLOTS/FOREST
 3: field
@@ -178,8 +173,7 @@ SLOTS/CASTLE
 0: castle
 1: castle_room
 6: castle_hall
-# (slots 2-5,7 free: no tile, art, UI or sprite points here. Chairs render
-# under castle_hall browns; nothing needs a wood_furn ramp.)
+# (slot 5 wood_furn missing -- chair/table overrides point here.)
 
 SLOTS/VILLAGE
 5: village
