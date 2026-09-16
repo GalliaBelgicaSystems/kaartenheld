@@ -54,14 +54,14 @@ uint8_t ui_font_tile_base;
 
 
 
-/* Player-sprite ramp (OBJ 0): dups more_sprites until the artist ships
- * a grey ramp (bat/spider ow_palette points here). Shade 0 is transparent
- * on hardware regardless of the programmed value. */
+/* Player-sprite ramp (OBJ 0): DEV-seeded grey (bat/spider ow_palette
+ * points here). Shade 0 is transparent on hardware regardless of the
+ * programmed value. */
 static const palette_color_t cgb_sprite_palette[4] = {
     RGB8(241, 235, 3),
-    RGB8(172, 157, 35),
-    RGB8(245, 113, 55),
-    RGB8(141, 117, 74)
+    RGB8(182, 182, 182),
+    RGB8(86, 86, 86),
+    RGB8(0, 0, 0)
 };
 
 /* OBJ ramps resolve from assets/palette.txt via tools/palette_txt.py

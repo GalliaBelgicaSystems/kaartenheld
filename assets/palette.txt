@@ -109,6 +109,8 @@ village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlin
 town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
 city: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
 sprites: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
+# DEV-seeded grey (FLORENT: rename/replace freely) — bats + spiders need it.
+grey: SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 more_sprites: SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
 even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
 sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
@@ -165,7 +167,7 @@ SLOTS/VILLAGE
 # (slot 3 dirt_floor missing -- floor default points here.)
 
 SLOTS/OBJ
+0: grey
 1: more_sprites
 2: sprites_again
 3: sprites
-# (slot 0 grey missing -- bat/spider ow_palette points here.)

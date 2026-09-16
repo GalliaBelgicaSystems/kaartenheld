@@ -75,7 +75,7 @@ tutorial: `assets/palette_tutorial.md`.
 
 | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |------|----|----|----|----|--------|------|
-| more_sprites | `#f1eb03` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | duplicates `more_sprites` (FLORENT: author a real ramp for ow sprite bat, ow sprite spider) |
+| grey | `#f1eb03` | `#b6b6b6` | `#565656` | `#000000` | UNUSED slot (no grey ramp shipped) | SPRITES/background, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | more_sprites | `#f1eb03` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
 | sprites_again | `#f1eb03` | `#673c3c` | `#8b1b1b` | `#3f3017` | kobolds/dogs/hero (OBJ 2) | SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc |
 | sprites | `#f1eb03` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
