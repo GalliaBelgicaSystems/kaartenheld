@@ -1,39 +1,18 @@
 #!/usr/bin/env python3
-"""palette_compiler.py -- Match tileset tiles to fixed CGB palettes.
+"""palette_compiler.py -- Tileset tiles to named CGB palette slots.
 
 Single source of truth for CGB background palette assignments. Consumes
-tileset JSON (tools/level_editor/tilesets/*.json) and PNG assets, outputs
-JSON manifests consumed by both the web editor (WYSIWYG canvas) and the ROM
-compiler (generate_tiles.py -> tile_palette.h).
+tileset JSON (tools/level_editor/tilesets/*.json, every tile carries an
+explicit `"palette": "<rampname>"`) and PNG assets, outputs JSON manifests
+consumed by both the web editor (WYSIWYG canvas) and the ROM compiler
+(generate_tiles.py -> tile_palette.h).
 
-Unlike the previous k-means approach, this version matches tiles to the
-FIXED palettes derived from assets/palette.txt (via tools/palette_txt.py).
-This ensures the tile_palette.h indices correspond to the actual ROM palettes
-(src/game/tiles_content.c mirrors the same mapping; `make palette-check`
-fails on any drift between the three).
+Ramp names resolve through the SLOTS tables (tools/palette_txt.py) to
+positional hardware slots, so tile_palette.h indices correspond to the
+generated ROM palettes. `make palette-check` fails on any drift.
 
-Algorithm:
-1. Load PNG + tileset JSON (tiles with vram_block positions)
-2. Extract average/characteristic color for each 8x8 tile
-3. For each tileset, use the fixed 8-palette definition (from tiles_content.c)
-4. Match each tile to the best-fitting fixed palette (by color distance)
-5. Output manifest: generated/tiles/<tileset>.json
-
-Manifest format:
-{
-  "tileset": "forest",
-  "anchor_color": "#7bb660",
-  "palettes": [
-    ["#ffffff", "#aaaaaa", "#555555", "#000000"],  // palette 0: gray
-    ["#ffffe0", "#ff8c28", "#dc3214", "#640a00"],  // palette 1: fire
-    ...
-  ],
-  "tile_palettes": [0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 5, 5, 3, 3, ...]
-}
-
-Each entry in palettes is [color0, color1, color2, color3] matching the
-fixed ROM palette. tile_palettes maps sheet index (0..N-1) to fixed
-palette index (0..7).
+`--suggest` mode keeps the old color-distance matcher as a proposal tool
+for new art: it prints the nearest ramp per tile but writes nothing.
 """
 
 import sys
@@ -47,9 +26,7 @@ import math
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
                          RAMP_NAMES as _AUTHOR_RAMP_NAMES,
-                         REAL_SLOTS as _AUTHOR_REAL_SLOTS,
-                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR,
-                         TILE_PALETTE_OVERRIDES as _AUTHOR_OVERRIDES)
+                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
@@ -270,19 +247,23 @@ def write_manifest(tileset_id: str, manifest: Dict[str, Any]) -> Path:
     return out_path
 
 
-# Per-tileset curated overrides (single-sourced from palette_txt; the
-# checker validates every value against the slotmap).
-TILE_PALETTE_OVERRIDES = {k: dict(v)
-                          for k, v in _AUTHOR_OVERRIDES.items()}
+def _slot_of(setkey: str, rampname: str, where: str) -> int:
+    """Resolve a ramp name to its hardware slot (seeded + auto-assigned)."""
+    from palette_txt import FULL_SLOTMAP as _SM
+    for slot, name in sorted(_SM.get(setkey, {}).items()):
+        if name == rampname:
+            return slot
+    raise ValueError(
+        f"{where}: ramp '{rampname}' has no slot in SLOTS/{setkey.upper()} "
+        f"(assign it there or fix the name)")
 
 
 def process_tileset(tileset_id: str) -> Dict[str, Any]:
-    """Process a single tileset: load JSON+PNG, match to fixed palettes, output manifest."""
+    """Process a single tileset: explicit per-tile ramp names to slots."""
     print(f"Processing {tileset_id}...")
 
     # Load inputs
     tileset_json = load_tileset_json(tileset_id)
-    img = load_png(tileset_id)
 
     # Get sheet dimensions from vram_block
     vram_block = tileset_json.get("vram_block", {})
@@ -290,47 +271,35 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
     if not tiles:
         raise ValueError(f"No vram_block.tiles in {tileset_id}.json")
 
-    max_x = max(t.get("x", 0) for t in tiles)
-    max_y = max(t.get("y", 0) for t in tiles)
-    tiles_x = max_x + 1
-    tiles_y = max_y + 1
-
-    print(f"  Sheet: {tiles_x}x{tiles_y} = {tiles_x * tiles_y} tiles")
-
-    # Extract unique colors per tile
-    tile_colors_list = extract_tile_colors(img, tiles_x, tiles_y)
-    print(f"  Extracted colors from {len(tile_colors_list)} tiles")
-
     # Get fixed palettes for this tileset
     palettes = FIXED_PALETTES[tileset_id]
     anchor_hex = ANCHOR_COLORS[tileset_id]
     anchor_rgb = tuple(int(anchor_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
     print(f"  Anchor color: {anchor_hex} -> RGB{anchor_rgb}")
 
-    overrides = TILE_PALETTE_OVERRIDES.get(tileset_id, {})
+    setkey = SETKEY_OF_TILESET.get(tileset_id, tileset_id)
     sheet_ids = get_sheet_order_from_vram_block(tileset_json)
     tiles_by_id = {t.get("id"): t for t in tileset_json.get("tiles", [])}
 
-    # Match each tile to best fixed palette.  An explicit per-tile
-    # "palette" in the tileset JSON (set by the editor's Palette view)
-    # wins; otherwise the index override; otherwise auto-match.
+    # Every vram tile names its ramp explicitly ("palette" in the tileset
+    # JSON, set by the editor's Palette view). Names resolve through the
+    # slotmap to positional hardware slots.
     tile_palettes = []
-    for i, tile_colors in enumerate(tile_colors_list):
+    for i in range(len(tiles)):
         tid = sheet_ids[i] if i < len(sheet_ids) else None
-        explicit = tiles_by_id.get(tid, {}).get("palette") if tid else None
-        if explicit is not None:
-            pal_idx = int(explicit)
-            if not (0 <= pal_idx <= 7):
-                raise ValueError(
-                    f"{tileset_id}: tile {tid} palette {pal_idx} out of 0-7")
-        elif i in overrides:
-            pal_idx = overrides[i]
-        else:
-            usable = _AUTHOR_REAL_SLOTS.get(
-                SETKEY_OF_TILESET.get(tileset_id, tileset_id),
-                list(range(len(palettes))))
-            pal_idx = match_tile_to_palette(tile_colors, palettes,
-                                            anchor_rgb, tileset_id, usable)
+        rampname = tiles_by_id.get(tid, {}).get("palette") if tid else None
+        if rampname is None:
+            raise ValueError(
+                f"{tileset_id}: tile {tid} (sheet {i}) has no explicit "
+                f"\"palette\" ramp name — assign one in "
+                f"tools/level_editor/tilesets/{tileset_id}.json (or run "
+                f"palette_compiler.py --suggest for a proposal)")
+        if isinstance(rampname, int) or str(rampname).isdigit():
+            raise ValueError(
+                f"{tileset_id}: tile {tid} palette {rampname!r} is numeric "
+                f"— use a ramp name (see SLOTS/{setkey.upper()})")
+        pal_idx = _slot_of(setkey, rampname,
+                           f"{tileset_id}: tile {tid}")
         tile_palettes.append(pal_idx)
 
     print(f"  Tile palette assignments: {tile_palettes}")
@@ -347,6 +316,30 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
     return manifest
 
 
+def suggest_tileset(tileset_id: str) -> None:
+    """Proposal tool for new art: nearest ramp per tile (writes nothing)."""
+    from palette_txt import REAL_SLOTS as _REAL
+    tileset_json = load_tileset_json(tileset_id)
+    img = load_png(tileset_id)
+    vram_block = tileset_json.get("vram_block", {})
+    tiles = vram_block.get("tiles", [])
+    max_x = max(t.get("x", 0) for t in tiles)
+    max_y = max(t.get("y", 0) for t in tiles)
+    tile_colors_list = extract_tile_colors(img, max_x + 1, max_y + 1)
+    palettes = FIXED_PALETTES[tileset_id]
+    anchor_hex = ANCHOR_COLORS[tileset_id]
+    anchor_rgb = tuple(int(anchor_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+    setkey = SETKEY_OF_TILESET.get(tileset_id, tileset_id)
+    usable = _REAL.get(setkey, list(range(len(palettes))))
+    names = PALETTE_NAMES[tileset_id]
+    sheet_ids = get_sheet_order_from_vram_block(tileset_json)
+    for i, tile_colors in enumerate(tile_colors_list):
+        idx = match_tile_to_palette(tile_colors, palettes, anchor_rgb,
+                                    tileset_id, usable)
+        print(f"  sheet {i} ({sheet_ids[i] if i < len(sheet_ids) else '?'}): "
+              f"suggest {names[idx]} (slot {idx})")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -354,6 +347,8 @@ def main():
                         help="Tileset IDs to process (default: all)")
     parser.add_argument("--out-dir", type=Path, default=GENERATED_DIR,
                         help="Output directory for manifests")
+    parser.add_argument("--suggest", action="store_true",
+                        help="print nearest-ramp proposals, write nothing")
     args = parser.parse_args()
 
     for ts_id in args.tilesets:
@@ -361,12 +356,27 @@ def main():
             print(f"Unknown tileset: {ts_id} (no fixed palettes defined)", file=sys.stderr)
             sys.exit(1)
         try:
-            process_tileset(ts_id)
+            if args.suggest:
+                suggest_tileset(ts_id)
+            else:
+                process_tileset(ts_id)
         except Exception as e:
             print(f"Error processing {ts_id}: {e}", file=sys.stderr)
             import traceback
             traceback.print_exc()
             sys.exit(1)
+
+    if not args.suggest:
+        # OBJ ramp catalog for the level editor (index/name/colors).
+        from palette_txt import OBJ_BY_SLOT, _NAMES as _OBJ_NAMES
+        obj = {"ramps": [
+            {"index": i, "name": _OBJ_NAMES["obj"][i],
+             "colors": [rgb_to_hex(c) for c in OBJ_BY_SLOT[i]]}
+            for i in range(len(OBJ_BY_SLOT))]}
+        GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+        (GENERATED_DIR / "obj_ramps.json").write_text(
+            json.dumps(obj, indent=2))
+        print("  Wrote manifest: %s" % (GENERATED_DIR / "obj_ramps.json"))
 
     print("Done.")
 

@@ -271,21 +271,28 @@ def _resolve(colors, ref: str, where: str,
 def hard_consumers() -> Dict[str, Dict[int, List[str]]]:
     """Explicit engine index consumers: {set: {slot: [descriptions]}}.
 
-    Derived from code/data (not opinion): floor defaults + tile overrides
-    (above), village npc_pals (tiles_content.c), combat-art palettes,
-    enemy ow_palettes (+hero), and the UI base set (all 8).
+    Derived from content (not opinion): explicit tile ramps (tileset
+    JSONs), village npc_pals (tiles_content.c), combat-art palettes,
+    enemy/hero ow_palettes, and the UI base set (all 8). All ramp
+    references are names resolved through the slotmap (seeded + auto).
     """
     import json as _json
     import re as _re
     out: Dict[str, Dict[int, List[str]]] = {s: {} for s in
                                             list(RAMP_SETS) + ["obj"]}
-    for ts, idx in DEFAULT_FLOOR_PALETTES.items():
-        if ts in out:
-            out[ts].setdefault(idx, []).append("floor default")
-    for ts, table in TILE_PALETTE_OVERRIDES.items():
-        if ts in out:
-            for tile, idx in table.items():
-                out[ts].setdefault(idx, []).append(f"tile override {tile}")
+    # Tiles name their ramps explicitly (matcher dead in build path);
+    # floor defaults + tile overrides survive only in --suggest.
+    # Name -> slot across seeded + auto-assigned slotmaps.
+    _slot_of_name = {}
+    for _set, _sm in FULL_SLOTMAP.items():
+        for _slot, _rname in sorted(_sm.items()):
+            _slot_of_name.setdefault(_set, {}).setdefault(_rname, _slot)
+
+    def _slot(_set, _name, _where):
+        try:
+            return _slot_of_name[_set][_name]
+        except KeyError:
+            raise ValueError(f"{_where}: ramp '{_name}' has no slot")
     src = (REPO_ROOT / "src" / "game" / "tiles_content.c").read_text()
     m = _re.search(r"npc_pals\[6\]\s*=\s*\{([^}]*)\}", src)
     if m:
@@ -307,28 +314,36 @@ def hard_consumers() -> Dict[str, Dict[int, List[str]]]:
         for t in tiles:
             if isinstance(t, dict) and t.get("palette") is not None:
                 try:
-                    pal = int(t["palette"])
-                except (ValueError, TypeError):
+                    pal = _slot(key, t["palette"], f.stem)
+                except ValueError:
                     continue
                 out[key].setdefault(pal, []).append(
                     f"editor tile {t.get('id', '?')}")
     art_dir = REPO_ROOT / "screens" / "combat_art"
     for f in sorted(art_dir.glob("*.json")):
         try:
-            pal = _json.loads(f.read_text())["palette"]
-            out["base"].setdefault(int(pal), []).append(
+            pal = _slot("base", _json.loads(f.read_text())["palette"],
+                        f.stem)
+            out["base"].setdefault(pal, []).append(
                 f"battle art {f.stem}")
         except (KeyError, ValueError):
             pass
     ety_dir = REPO_ROOT / "screens" / "enemy_types"
     for f in sorted(ety_dir.glob("*.json")):
         try:
-            pal = _json.loads(f.read_text())["overworld"]["palette"]
+            pal = _slot("obj", _json.loads(f.read_text())["overworld"]
+                        ["palette"], f.stem)
             out["obj"].setdefault(int(pal), []).append(
                 f"ow sprite {f.stem}")
         except (KeyError, ValueError, TypeError):
             pass
-    out["obj"].setdefault(2, []).append("hero ow sprite")
+    try:
+        _hp = _slot("obj", _json.loads(
+            (REPO_ROOT / "screens" / "hero.json").read_text())
+            ["overworld"]["palette"], "hero")
+        out["obj"].setdefault(int(_hp), []).append("hero ow sprite")
+    except (KeyError, ValueError, TypeError):
+        pass
     for i in range(8):
         out["base"].setdefault(i, []).append("UI_COLOR_* card/UI spans")
     return out
@@ -339,21 +354,63 @@ COLORS, _RAMPS_RAW, _SLOTMAP, _ANCHORS_RAW, LOAD_ERRORS, LOAD_WARNINGS = \
 SECTIONS = COLORS
 
 
+def _place_slots():
+    """Seeded slotmap plus auto-assignments (exhaustive name -> slot).
+
+    Returns (full, unmapped, errors, warnings). Unmapped ramps warn;
+    a full set errors naming every leftover ramp.
+    """
+    full, unmapped, errors, warnings = {}, {}, [], []
+    for setkey in list(RAMP_SETS) + ["obj"]:
+        entries = [n for n, _, _ in _RAMPS_RAW.get(setkey, [])]
+        sm = dict(_SLOTMAP.get(setkey, {}))
+        nslots = 4 if setkey == "obj" else 8
+        placed = {r for r in sm.values() if r in entries}
+        for rname in entries:
+            if rname not in placed:
+                free = [s for s in range(nslots) if s not in sm]
+                if not free:
+                    continue
+                sm[free[0]] = rname
+                placed.add(rname)
+                warnings.append(
+                    f"ramp '{rname}' ({setkey}) auto-assigned to slot "
+                    f"{free[0]}: pin it in SLOTS/{setkey.upper()} to "
+                    f"make the placement deliberate")
+        left = [r for r in entries if r not in placed]
+        for r in left:
+            unmapped.setdefault(setkey, []).append(r)
+        if left and not [s for s in range(nslots) if s not in sm]:
+            errors.append(
+                f"set '{setkey}' is full (hardware fits {nslots}): "
+                f"{', '.join(left)} have no slot — pick which "
+                f"{nslots} ship (FLORENT)")
+        full[setkey] = sm
+    return full, unmapped, errors, warnings
+
+
+FULL_SLOTMAP, _UNMAPPED_AUTO, _PLACE_ERRORS, _PLACE_WARNINGS = \
+    _place_slots()
+LOAD_ERRORS.extend(_PLACE_ERRORS)
+LOAD_WARNINGS.extend(_PLACE_WARNINGS)
+
+
 def _build_tables():
-    errors = list(LOAD_ERRORS)
-    warnings = list(LOAD_WARNINGS)
+    # Fresh lists: placement messages already live in LOAD_ERRORS /
+    # LOAD_WARNINGS; doubling them here prints everything twice.
+    errors: list = []
+    warnings: list = []
     tables: Dict[str, list] = {}
     names: Dict[str, list] = {}
     real: Dict[str, list] = {}
     dups: Dict[str, dict] = {}
-    unmapped: Dict[str, list] = {}
     by_name: Dict[str, Dict[str, Tuple[List[str], int]]] = {}
     for setkey, entries in _RAMPS_RAW.items():
         by_name[setkey] = {n: (refs, ln) for n, refs, ln in entries}
     consumers = hard_consumers()
     for setkey in list(RAMP_SETS) + ["obj"]:
         entries = by_name.get(setkey, {})
-        sm = _SLOTMAP.get(setkey, {})
+        sm = FULL_SLOTMAP.get(setkey, {})
         nslots = 4 if setkey == "obj" else 8
         # Validate slotmap: refs exist and sit in this set.
         for slot, rname in sorted(sm.items()):
@@ -363,32 +420,6 @@ def _build_tables():
                     f"in this set (rename, move, or fix the slotmap)")
         if len(sm) != len(set(sm.values())):
             errors.append(f"SLOTS/{setkey}: two slots share a ramp")
-        placed = {rname for _, rname in
-                  [(s, r) for s, r in sm.items() if r in entries]}
-        # Auto-assign unmapped ramps to free slots (lowest first): adding
-        # art never shifts existing slots. A full set keeps every extra
-        # ramp unmapped (one error per set names them all).
-        auto = dict(sm)
-        overflow = []
-        for rname in entries:
-            if rname not in placed:
-                free = [s for s in range(nslots) if s not in auto]
-                if not free:
-                    overflow.append(rname)
-                    unmapped.setdefault(setkey, []).append(rname)
-                    continue
-                auto[free[0]] = rname
-                placed.add(rname)
-                warnings.append(
-                    f"ramp '{rname}' ({setkey}) auto-assigned to slot "
-                    f"{free[0]}: pin it in SLOTS/{setkey.upper()} to "
-                    f"make the placement deliberate")
-        if overflow:
-            errors.append(
-                f"set '{setkey}' is full (hardware fits {nslots}): "
-                f"{', '.join(overflow)} have no slot — pick which "
-                f"{nslots} ship (FLORENT)")
-        sm = auto
         # Resolve every ramp first (mapped or not) so bad refs always
         # surface; UNUSED fills with the ramp's own darkest real shade.
         solved: Dict[str, list] = {}
@@ -472,7 +503,10 @@ def _build_tables():
                 f"slot {slot} ({setkey}): ramp has unresolvable refs — "
                 f"renders magenta until fixed")
             tables[setkey][slot] = [MAGENTA] * 4
-    return tables, names, real, dups, unmapped, errors, warnings
+    # Unmapped reporting is owned by _place_slots; mirror it so the
+    # UNMAPPED export stays complete.
+    return tables, names, real, dups, dict(_UNMAPPED_AUTO), errors, \
+        warnings
 
 
 def _hx(rgb) -> str:
@@ -481,6 +515,8 @@ def _hx(rgb) -> str:
 
 _TABLES, _NAMES, REAL_SLOTS, DUPLICATES, UNMAPPED, BUILD_ERRORS, \
     BUILD_WARNINGS = _build_tables()
+# _place_slots() already computed the exhaustive map; _build_tables()
+# only validates against it.
 RAMPS = {s: _TABLES[s] for s in RAMP_SETS}
 # OBJ keeps ramp names aligned with the ui.c OBJ order.
 OBJ_RAMPS = {}
@@ -645,10 +681,8 @@ def emit_c_tables(out_dir) -> list:
     from pathlib import Path as _P
     out = _P(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    syms = {"base": "cgb_bg_palettes", "forest": "cgb_bg_palettes_forest",
-            "desolate_landscape": "cgb_bg_palettes_desolate",
-            "castle": "cgb_bg_palettes_castle",
-            "village": "cgb_bg_palettes_village"}
+    syms = {s: ("cgb_bg_palettes" if s == "base" else
+                   f"cgb_bg_palettes_{s}") for s in RAMP_SETS}
     lines = ["/* Generated by tools/palette_txt.py --write-tables.",
              " * Battle/UI + overworld CGB BG sets. Do not edit by hand. */"]
     for setkey in RAMP_SETS:

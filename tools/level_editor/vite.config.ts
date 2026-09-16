@@ -795,23 +795,13 @@ function levelEditorApiPlugin(): Plugin {
         // palette` is already data-driven (battle_compile.py -> ow_palette).
         const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village'];
         const parseObjPalettes = () => {
-          const uiC = fs.readFileSync(path.join(repoRoot, 'src', 'ui', 'ui.c'), 'utf-8');
-          const specs: Array<[string, string]> = [
-            ['cgb_sprite_palette', 'grey'],
-            ['cgb_sprite_palette_orange', 'orange'],
-            ['cgb_sprite_palette_brown', 'brown'],
-            ['cgb_sprite_palette_green', 'green'],
-          ];
-          const out: Array<{ index: number; name: string; colors: string[] }> = [];
-          for (const [sym, name] of specs) {
-            const m = uiC.match(new RegExp(sym + '\\s*\\[4\\]\\s*=\\s*\\{([\\s\\S]*?)\\}'));
-            if (!m) continue;
-            const colors = Array.from(m[1].matchAll(/RGB8\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/g))
-              .map((mm) => '#' + [mm[1], mm[2], mm[3]]
-                .map((v) => parseInt(v, 10).toString(16).padStart(2, '0')).join(''));
-            out.push({ index: out.length, name, colors });
-          }
-          return out;
+          // OBJ ramp catalog, generated from assets/palette.txt by
+          // palette_compiler.py (names are slotmap names, not ui.c symbols).
+          try {
+            const doc = readJsonFile(path.join('generated', 'tiles', 'obj_ramps.json'));
+            if (Array.isArray(doc.ramps)) return doc.ramps;
+          } catch { /* fall through to empty */ }
+          return [];
         };
         const readTilesetManifest = (tileset: string) => {
           if (!TILESETS.includes(tileset)) throw new Error(`unknown tileset '${tileset}'`);
@@ -826,10 +816,11 @@ function levelEditorApiPlugin(): Plugin {
             .sort((a: any, b: any) => ((a.y * (maxX + 1) + a.x) - (b.y * (maxX + 1) + b.x)))
             .map((v: any, i: number) => {
               const t = byId[v.tile] || {};
+              const ramp = (manifest.palettes || [])[pal[i]];
               return {
                 id: v.tile, label: t.label || v.tile,
                 image_url: t.image_url || null,
-                palette: typeof pal[i] === 'number' ? pal[i] : 0,
+                palette: (ramp && ramp.name) || '',
               };
             });
           return { manifest, ts, tiles };
@@ -872,26 +863,28 @@ function levelEditorApiPlugin(): Plugin {
           req.on('end', () => {
             try {
               const { kind, tileset, id, palette } = JSON.parse(body);
-              const p = Number(palette);
-              if (!Number.isInteger(p) || p < 0 || p > 7) {
-                throw new Error(`palette ${palette} out of 0-7`);
+              if (typeof palette !== 'string' || !/^[A-Za-z0-9_]+$/.test(palette)) {
+                throw new Error(`palette '${palette}' is not a ramp name`);
               }
+              const p = palette;
               if (kind === 'tile') {
                 if (!TILESETS.includes(tileset)) throw new Error(`unknown tileset '${tileset}'`);
+                const { manifest } = readTilesetManifest(tileset);
+                const names = new Set(((manifest && manifest.palettes) || []).map((r: any) => r.name));
+                if (!names.has(p)) throw new Error(`unknown ramp '${p}' for ${tileset} (see assets/palettes.md)`);
                 const rel = path.join('tools', 'level_editor', 'tilesets', `${tileset}.json`);
                 const ts = readJsonFile(rel);
                 const tile = (ts.tiles || []).find((t: any) => t.id === id);
                 if (!tile) throw new Error(`unknown tile '${id}' in ${tileset}`);
                 tile.palette = p;
                 writeJsonAtomic(path.join(repoRoot, rel), ts);
-              } else if (kind === 'enemy') {
-                if (!isSafeId(id)) throw new Error(`invalid enemy id '${id}'`);
-                const rel = path.join('screens', 'enemy_types', `${id}.json`);
-                const d = readJsonFile(rel);
-                d.overworld = { ...(d.overworld || {}), palette: p };
-                writeJsonAtomic(path.join(repoRoot, rel), d);
-              } else if (kind === 'hero') {
-                const rel = path.join('screens', 'hero.json');
+              } else if (kind === 'enemy' || kind === 'hero') {
+                if (kind === 'enemy' && !isSafeId(id)) throw new Error(`invalid enemy id '${id}'`);
+                const known = new Set(parseObjPalettes().map((r) => r.name));
+                if (!known.has(p)) throw new Error(`unknown OBJ ramp '${p}' (see assets/palettes.md)`);
+                const rel = kind === 'enemy'
+                  ? path.join('screens', 'enemy_types', `${id}.json`)
+                  : path.join('screens', 'hero.json');
                 const d = readJsonFile(rel);
                 d.overworld = { ...(d.overworld || {}), palette: p };
                 writeJsonAtomic(path.join(repoRoot, rel), d);

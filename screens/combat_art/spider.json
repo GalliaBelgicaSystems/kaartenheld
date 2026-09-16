@@ -5,7 +5,7 @@
   "order": 5,
   "width": 3,
   "height": 2,
-  "palette": 2,
+  "palette": "fight_again",
   "frame0": [
     "combat_top_left_spider", "combat_top_middle_spider", "combat_top_right_spider",
     "combat_bottom_left_spider", "combat_bottom_middle_spider", "combat_bottom_right_spider"

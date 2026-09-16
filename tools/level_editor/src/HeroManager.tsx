@@ -11,7 +11,7 @@ interface HeroDraft {
   start_hp: number;
   start_gold: number;
   starter_deck: string[];
-  overworld: { cells: string[]; palette: number } | null;
+  overworld: { cells: string[]; palette: string } | null;
 }
 
 const owTiles = (BUILTIN_TILESETS.hero?.tiles || []).filter((t) => t.category === 'hero');
@@ -48,7 +48,7 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
     setHero((prev) => {
       const cells = ((prev && prev.overworld && prev.overworld.cells) || []).slice();
       cells[idx] = id;
-      const newHero = { ...prev!, overworld: { cells: cells.slice(0, 2), palette: prev?.overworld?.palette || 0 } };
+      const newHero = { ...prev!, overworld: { cells: cells.slice(0, 2), palette: prev?.overworld?.palette || '' } };
       setDirty(true);
       return newHero;
     });
@@ -59,7 +59,7 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
     setHero((prev) => {
       const cells = ((prev && prev.overworld && prev.overworld.cells) || []).slice(0, n);
       while (cells.length < n) cells.push((prev && prev.overworld && prev.overworld.cells[0]) || (owTiles[0] && owTiles[0].id) || '');
-      return { ...prev!, overworld: { cells: cells.slice(), palette: prev?.overworld?.palette || 0 } };
+      return { ...prev!, overworld: { cells: cells.slice(), palette: prev?.overworld?.palette || '' } };
     });
     setDirty(true);
   };
@@ -98,11 +98,11 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
             (max 2)
           </div>
           <div style={{ marginTop: 6, fontSize: 13 }}>
-            <label>Palette:{' '}
-              <input type="number" min={0} max={7} style={{ width: 50 }}
-                value={hero?.overworld?.palette || 0}
+            <label>Palette (OBJ ramp name, e.g. sprites_again):{' '}
+              <input type="text" style={{ width: 130 }} placeholder="sprites_again"
+                value={hero?.overworld?.palette || ''}
                 onChange={(e) => {
-                  const palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0));
+                  const palette = e.target.value.trim();
                   setHero((prev) => ({ ...prev!, overworld: { ...prev!.overworld!, palette } }));
                   setDirty(true);
                 }} />

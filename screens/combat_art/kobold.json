@@ -5,7 +5,7 @@
   "order": 4,
   "width": 3,
   "height": 2,
-  "palette": 1,
+  "palette": "fight_more",
   "frame0": [
     "combat_top_left_kobold", "combat_top_middle_kobold", "combat_top_right_kobold",
     "combat_bottom_left_kobold", "combat_bottom_middle_kobold", "combat_bottom_right_kobold"

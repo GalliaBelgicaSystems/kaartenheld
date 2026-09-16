@@ -20,6 +20,6 @@
   ],
   "overworld": {
     "cells": ["hero_f0", "hero_f1"],
-    "palette": 2
+    "palette": "sprites_again"
   }
 }

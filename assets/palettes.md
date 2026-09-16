@@ -65,7 +65,7 @@ tutorial: `assets/palette_tutorial.md`.
 | 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 1 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | braziers | TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base |
 | 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 3 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | dirt ground (MISSING) | duplicates `city` (FLORENT: author a real ramp for floor default, npc overlay 0, npc overlay 1, npc overlay 4, npc overlay 5) |
+| 3 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | dirt ground (MISSING) | duplicates `city` (FLORENT: author a real ramp for npc overlay 0, npc overlay 1, npc overlay 4, npc overlay 5) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | village | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines |
 | 6 | town | `#b6a27e` | `#f1cf91` | `#b6b6b6` | `#ccaa6c` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade |

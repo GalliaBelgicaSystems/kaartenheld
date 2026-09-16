@@ -17,29 +17,23 @@
 /* Backward compatibility alias */
 #define cgb_bg_palettes_overworld cgb_bg_palettes_forest
 
+#include "tileset_tables.inc"
+
 void ui_load_cram_banked(void)
 {
     uint8_t p, c;
+    uint8_t kind;
     const uint8_t *pal_data;
     if (!g_is_cgb) return;
-    switch (g_bk_byte_a) {
-        case WORLD_TILESET_DESOLATE:
-            pal_data = (const uint8_t *)cgb_bg_palettes_desolate;
-            break;
-        case WORLD_TILESET_CASTLE:
-            pal_data = (const uint8_t *)cgb_bg_palettes_castle;
-            break;
-        case WORLD_TILESET_VILLAGE:
-            pal_data = (const uint8_t *)cgb_bg_palettes_village;
-            break;
-        case WORLD_TILESET_FOREST:
-        case 1: /* Legacy overworld mode */
-            pal_data = (const uint8_t *)cgb_bg_palettes_forest;
-            break;
-        case 0: /* Battle / UI mode */
-        default:
-            pal_data = (const uint8_t *)cgb_bg_palettes;
-            break;
+    kind = g_bk_byte_a;
+    if (kind == 0) {
+        /* Battle / UI mode */
+        pal_data = (const uint8_t *)cgb_bg_palettes;
+    } else {
+        /* Tileset id (legacy mode 1 shares the forest row); unmapped
+         * ids fall back to forest inside the generated table. */
+        if (kind > 15) kind = WORLD_TILESET_FOREST;
+        pal_data = (const uint8_t *)s_cram_set[kind];
     }
     for (p = 0; p < 8; p++) {
         const uint8_t *ramp = pal_data + ((uint16_t)p << 3);
@@ -57,7 +51,7 @@ const uint8_t g_tileset_forest[768] = {
 #include "gfx/rpg_forest_world_tiles.inc"
 };
 
-const uint8_t g_tileset_desolate[768] = {
+const uint8_t g_tileset_desolate_landscape[768] = {
     /* 48 desolate landscape tiles (768 bytes): All wall, floor, rock, tree, and prop tiles */
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
@@ -109,33 +103,12 @@ void ui_load_tileset_banked(void)
     uint16_t n;
     volatile uint8_t *dst;
 
-    switch (tileset) {
-        case WORLD_TILESET_FOREST:
-            src = g_tileset_forest;
-            pal_src = g_tile_pal_forest;
-            tile_count = 48;
-            break;
-        case WORLD_TILESET_DESOLATE:
-            src = g_tileset_desolate;
-            pal_src = g_tile_pal_desolate;
-            tile_count = 48;
-            break;
-        case WORLD_TILESET_CASTLE:
-            src = g_tileset_castle;
-            pal_src = g_tile_pal_castle;
-            tile_count = 16;
-            break;
-        case WORLD_TILESET_VILLAGE:
-            src = g_tileset_village;
-            pal_src = g_tile_pal_village;
-            tile_count = 48;
-            break;
-        default:
-            src = g_tileset_forest;
-            pal_src = g_tile_pal_forest;
-            tile_count = 48;
-            break;
-    }
+    /* Table-driven (generated/tiles/tileset_tables.inc): unmapped ids
+     * use the forest row, matching the old default branch. */
+    if (tileset > 15) tileset = WORLD_TILESET_FOREST;
+    src = s_tile_data[tileset];
+    pal_src = s_tile_pal[tileset];
+    tile_count = s_tile_count[tileset];
 
     VBK_REG = 0;
     dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));

@@ -97,8 +97,11 @@ export const PaletteManager: React.FC = () => {
   const [status, setStatus] = useState('');
   const [selTile, setSelTile] = useState<string>('');
   const [selEnemy, setSelEnemy] = useState<string>('');
-  const [ramp, setRamp] = useState<number>(0);
-  const [objRamp, setObjRamp] = useState<number>(0);
+  const [ramp, setRamp] = useState<string>('');
+  const [objRamp, setObjRamp] = useState<string>('');
+
+  const bgByName = (name: string) => data?.bg.find((r) => r.name === name);
+  const objByName = (name: string) => data?.obj.find((r) => r.name === name);
 
   useEffect(() => {
     fetchPalettes(tileset)
@@ -109,22 +112,22 @@ export const PaletteManager: React.FC = () => {
   const tile = data?.tiles.find((t) => t.id === selTile) || null;
   const enemy = data?.enemies.find((e) => e.id === selEnemy) || null;
 
-  const assignTile = async (i: number) => {
+  const assignTile = async (name: string) => {
     if (!tile) return;
     try {
-      await assignPalette('tile', tile.id, i, tileset);
-      setData({ ...data!, tiles: data!.tiles.map((t) => t.id === tile.id ? { ...t, palette: i } : t) });
-      setRamp(i);
-      setStatus(`tile ${tile.id} -> palette ${i}. Recompile to apply.`);
+      await assignPalette('tile', tile.id, name, tileset);
+      setData({ ...data!, tiles: data!.tiles.map((t) => t.id === tile.id ? { ...t, palette: name } : t) });
+      setRamp(name);
+      setStatus(`tile ${tile.id} -> ramp ${name}. Recompile to apply.`);
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
-  const assignEnemy = async (i: number) => {
+  const assignEnemy = async (name: string) => {
     if (!enemy) return;
     try {
-      await assignPalette('enemy', enemy.id, i);
-      setData({ ...data!, enemies: data!.enemies.map((e) => e.id === enemy.id ? { ...e, palette: i } : e) });
-      setObjRamp(i);
-      setStatus(`enemy ${enemy.id} -> OBJ palette ${i}. Recompile to apply.`);
+      await assignPalette('enemy', enemy.id, name);
+      setData({ ...data!, enemies: data!.enemies.map((e) => e.id === enemy.id ? { ...e, palette: name } : e) });
+      setObjRamp(name);
+      setStatus(`enemy ${enemy.id} -> OBJ ramp ${name}. Recompile to apply.`);
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
 
@@ -140,10 +143,11 @@ export const PaletteManager: React.FC = () => {
             {t}
           </button>
         ))}
-        <div style={{ fontSize: 11, color: '#555', marginTop: 8, lineHeight: 1.4 }}>
-          BG ramps come from the ROM's tiles_content.c; OBJ ramps from ui.c.
-          Assign writes the current palette into the content JSON.
-        </div>
+          <div style={{ fontSize: 11, color: '#555', marginTop: 8, lineHeight: 1.4 }}>
+            BG ramps come from assets/palette.txt (SLOTS tables pin them to
+            hardware slots); OBJ ramps likewise. Assign writes the ramp name
+            into the content JSON.
+          </div>
       </div>
 
       {data && (
@@ -151,7 +155,7 @@ export const PaletteManager: React.FC = () => {
           <h3 style={{ margin: '0 0 6px' }}>Background palettes ({tileset})</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {data.bg.map((r) => (
-              <Swatches key={r.index} ramp={r} active={r.index === ramp} onClick={() => setRamp(r.index)} />
+              <Swatches key={r.name} ramp={r} active={r.name === ramp} onClick={() => setRamp(r.name)} />
             ))}
           </div>
 
@@ -160,11 +164,11 @@ export const PaletteManager: React.FC = () => {
               <b>{tile.label}</b> <code style={{ fontSize: 11 }}>{tile.id}</code>
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                 {data.bg.map((r) => (
-                  <div key={r.index} style={{ textAlign: 'center' }}>
+                  <div key={r.name} style={{ textAlign: 'center' }}>
                     <Recolored src={tile.image_url || ''} colors={r.colors} size={48} title={r.name} />
                     <div style={{ fontSize: 10 }}>{r.index} {r.name}</div>
-                    <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
-                      {tile.palette === r.index ? '✓' : 'assign'}
+                    <button className="btn btn-sm" onClick={() => assignTile(r.name)}>
+                      {tile.palette === r.name ? '✓' : 'assign'}
                     </button>
                   </div>
                 ))}
@@ -175,10 +179,10 @@ export const PaletteManager: React.FC = () => {
           <div style={{ marginTop: 12, fontWeight: 600 }}>Tiles (click to preview/assign)</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
             {data.tiles.filter((t) => t.image_url).map((t) => (
-              <button key={t.id} onClick={() => setSelTile(t.id)} title={`${t.label} — palette ${t.palette}`}
+              <button key={t.id} onClick={() => setSelTile(t.id)} title={`${t.label} — ramp ${t.palette}`}
                 style={{ padding: 2, border: t.id === selTile ? '2px solid #1a7' : '1px solid #bbb',
                          background: t.id === selTile ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored src={t.image_url!} colors={data.bg[t.palette]?.colors || data.bg[0].colors} size={32} />
+                <Recolored src={t.image_url!} colors={bgByName(t.palette)?.colors || data.bg[0].colors} size={32} />
               </button>
             ))}
           </div>
@@ -186,7 +190,7 @@ export const PaletteManager: React.FC = () => {
           <h3 style={{ margin: '16px 0 6px' }}>Object palettes (all sprites)</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {data.obj.map((r) => (
-              <Swatches key={r.index} ramp={r} active={r.index === objRamp} onClick={() => setObjRamp(r.index)}
+              <Swatches key={r.name} ramp={r} active={r.name === objRamp} onClick={() => setObjRamp(r.name)}
                 label={`OBJ ${r.index}`} />
             ))}
           </div>
@@ -199,11 +203,11 @@ export const PaletteManager: React.FC = () => {
               <b>{enemy.label}</b> <code style={{ fontSize: 11 }}>{enemy.id}</code>
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                 {data.obj.map((r) => (
-                  <div key={r.index} style={{ textAlign: 'center' }}>
+                  <div key={r.name} style={{ textAlign: 'center' }}>
                     <Recolored src={enemy.image_url} colors={r.colors} size={48} title={r.name} />
                     <div style={{ fontSize: 10 }}>OBJ {r.index} {r.name}</div>
-                    <button className="btn btn-sm" onClick={() => assignEnemy(r.index)}>
-                      {enemy.palette === r.index ? '✓' : 'assign'}
+                    <button className="btn btn-sm" onClick={() => assignEnemy(r.name)}>
+                      {enemy.palette === r.name ? '✓' : 'assign'}
                     </button>
                   </div>
                 ))}
@@ -217,7 +221,7 @@ export const PaletteManager: React.FC = () => {
               <button key={e.id} onClick={() => setSelEnemy(e.id)} title={`${e.label} — OBJ ${e.palette}`}
                 style={{ padding: 2, border: e.id === selEnemy ? '2px solid #1a7' : '1px solid #bbb',
                          background: e.id === selEnemy ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored src={e.image_url} colors={data.obj[e.palette]?.colors || data.obj[0].colors} size={40} />
+                <Recolored src={e.image_url} colors={objByName(e.palette)?.colors || data.obj[0].colors} size={40} />
               </button>
             ))}
           </div>

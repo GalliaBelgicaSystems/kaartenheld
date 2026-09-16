@@ -18,7 +18,8 @@ interface OwDraft {
   width: number;
   height: number;
   cells: string[];
-  palette: number;
+  /** OBJ ramp name (SLOTS/OBJ in assets/palette.txt). */
+  palette: string;
 }
 
 export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: string }> = ({ onOpenComposer, initialId }) => {
@@ -54,7 +55,7 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
         width: o.width || 1,
         height: o.height || 1,
         cells: (o.cells || []).slice(),
-        palette: o.palette || 0,
+        palette: o.palette || '',
       } : null);
       setDirty(false);
       setStatus('');
@@ -103,7 +104,7 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
     setOw((prev) => {
       const cells = ((prev && prev.cells) || []).slice();
       cells[idx] = id;
-      return { ...(prev || { width: 1, height: 1, palette: 0 }), cells };
+      return { ...(prev || { width: 1, height: 1, palette: '' }), cells };
     });
     setDirty(true);
   };
@@ -115,7 +116,7 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
     w = Math.max(1, Math.min(2, w));
     h = Math.max(1, Math.min(2, h));
     setOw((prev) => {
-      const p = prev || { width: 1, height: 1, cells: [] as string[], palette: 0 };
+      const p = prev || { width: 1, height: 1, cells: [] as string[], palette: '' };
       const ow = p.width * p.height;
       const nw = w * h;
       const out: string[] = [];
@@ -133,7 +134,7 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
   const setFrames = (n: number) => {
     n = Math.max(1, Math.min(2, n));
     setOw((prev) => {
-      const p = prev || { width: 1, height: 1, cells: [] as string[], palette: 0 };
+      const p = prev || { width: 1, height: 1, cells: [] as string[], palette: '' };
       const per = p.width * p.height;
       const target = per * n;
       const cells = (p.cells || []).slice(0, target);
@@ -221,18 +222,18 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
               </span>
             </div>
             <div style={{ marginTop: 6, fontSize: 13 }}>
-              <label>Palette:{' '}
-                <input type="number" min={0} max={7} style={{ width: 50 }}
-                  value={(ow && ow.palette) || 0}
+              <label>Palette (OBJ ramp name, e.g. grey, more_sprites, sprites_again, sprites):{' '}
+                <input type="text" style={{ width: 130 }} placeholder="sprites_again"
+                  value={(ow && ow.palette) || ''}
                   onChange={(e) => {
-                    const palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0));
+                    const palette = e.target.value.trim();
                     setOw((prev) => ({ ...(prev || { width: 1, height: 1, cells: [] as string[] }), palette }));
                     setDirty(true);
                   }} />
               </label>
             </div>
             {!ow && (
-              <button style={{ marginTop: 8 }} onClick={() => { setOw({ width: 1, height: 1, cells: [owTiles[0] ? owTiles[0].id : ''], palette: 0 }); setDirty(true); }}>
+              <button style={{ marginTop: 8 }} onClick={() => { setOw({ width: 1, height: 1, cells: [owTiles[0] ? owTiles[0].id : ''], palette: '' }); setDirty(true); }}>
                 Add shared sprite
               </button>
             )}

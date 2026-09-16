@@ -18,7 +18,7 @@ function blankSet(id: string, order: number): CombatArtSet {
   const cells: Array<string | null> = new Array(3 * 2).fill(null);
   return {
     $schema: '../schema/combat_art.schema.json',
-    id, label: id, order, width: 3, height: 2, palette: 0,
+    id, label: id, order, width: 3, height: 2, palette: '',
     frame0: cells.slice(),
   };
 }
@@ -265,8 +265,9 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
                     <label>Label: <input value={set.label} onChange={(e) => mutate((s) => { s.label = e.target.value; return s; })} /></label>
                   </div>
                   <div style={{ marginTop: 4 }}>
-                    <label>Palette: <input type="number" min={0} max={7} value={set.palette}
-                      onChange={(e) => mutate((s) => { s.palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0)); return s; })} style={{ width: 50 }} /></label>
+                    <label>Palette (base ramp name, e.g. fight_card, fight_standard): <input type="text" style={{ width: 130 }} placeholder="fight_card"
+                      value={set.palette}
+                      onChange={(e) => mutate((s) => { s.palette = e.target.value.trim(); return s; })} /></label>
                   </div>
                   <div style={{ marginTop: 4, fontSize: 13 }}>Order: {set.order} (stable, do not renumber)</div>
                   {problems.map((p) => <div key={p} style={{ color: '#a00', fontSize: 13 }}>{p}</div>)}

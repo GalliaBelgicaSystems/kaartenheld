@@ -10,14 +10,16 @@ export interface PaletteTile {
   id: string;
   label: string;
   image_url: string | null;
-  palette: number;
+  /** Ramp name (SLOTS tables in assets/palette.txt), never an index. */
+  palette: string;
 }
 
 export interface PaletteEnemy {
   id: string;
   label: string;
   image_url: string;
-  palette: number;
+  /** OBJ ramp name. */
+  palette: string;
 }
 
 export interface PaletteData {
@@ -26,7 +28,7 @@ export interface PaletteData {
   obj: Ramp[];
   tiles: PaletteTile[];
   enemies: PaletteEnemy[];
-  hero: { palette: number };
+  hero: { palette: string };
 }
 
 export async function fetchPalettes(tileset: string): Promise<PaletteData> {
@@ -40,7 +42,7 @@ export async function fetchPalettes(tileset: string): Promise<PaletteData> {
 export async function assignPalette(
   kind: 'tile' | 'enemy' | 'hero',
   id: string,
-  palette: number,
+  palette: string,
   tileset?: string,
 ): Promise<void> {
   const res = await fetch('/api/assign-palette', {

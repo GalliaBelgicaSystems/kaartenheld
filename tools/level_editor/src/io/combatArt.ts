@@ -13,7 +13,8 @@ export interface CombatArtSet {
   order: number;
   width: number;
   height: number;
-  palette: number;
+  /** Base ramp name (SLOTS/BASE in assets/palette.txt). */
+  palette: string;
   frame0: Array<string | null>;
   frame1?: Array<string | null>;
 }

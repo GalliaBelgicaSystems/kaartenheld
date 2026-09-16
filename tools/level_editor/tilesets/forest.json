@@ -5,6 +5,7 @@
   "tiles": [
     {
       "id": "forest_top_left_corner_wall",
+      "palette": "field",
       "label": "top left corner wall",
       "gb_constant": "TILE_FOREST_00",
       "walkable": false,
@@ -15,6 +16,7 @@
     },
     {
       "id": "forest_top_wall_1",
+      "palette": "field",
       "label": "top wall",
       "gb_constant": "TILE_FOREST_01",
       "walkable": false,
@@ -25,6 +27,7 @@
     },
     {
       "id": "forest_top_wall_2",
+      "palette": "field",
       "label": "top wall",
       "gb_constant": "TILE_FOREST_02",
       "walkable": false,
@@ -35,6 +38,7 @@
     },
     {
       "id": "forest_top_wall_3",
+      "palette": "field",
       "label": "top wall",
       "gb_constant": "TILE_FOREST_03",
       "walkable": false,
@@ -45,6 +49,7 @@
     },
     {
       "id": "forest_top_wall_4",
+      "palette": "field",
       "label": "top wall",
       "gb_constant": "TILE_FOREST_04",
       "walkable": false,
@@ -55,6 +60,7 @@
     },
     {
       "id": "forest_top_right_corner_wall",
+      "palette": "field",
       "label": "top right corner wall",
       "gb_constant": "TILE_FOREST_05",
       "walkable": false,
@@ -65,6 +71,7 @@
     },
     {
       "id": "forest_right_wall_1",
+      "palette": "field",
       "label": "right wall",
       "gb_constant": "TILE_FOREST_06",
       "walkable": false,
@@ -75,6 +82,7 @@
     },
     {
       "id": "forest_right_wall_2",
+      "palette": "field",
       "label": "right wall",
       "gb_constant": "TILE_FOREST_07",
       "walkable": false,
@@ -85,6 +93,7 @@
     },
     {
       "id": "forest_right_wall_3",
+      "palette": "field",
       "label": "right wall",
       "gb_constant": "TILE_FOREST_08",
       "walkable": false,
@@ -95,6 +104,7 @@
     },
     {
       "id": "forest_left_wall_1",
+      "palette": "field",
       "label": "left wall",
       "gb_constant": "TILE_FOREST_09",
       "walkable": false,
@@ -105,6 +115,7 @@
     },
     {
       "id": "forest_left_wall_2",
+      "palette": "field",
       "label": "left wall",
       "gb_constant": "TILE_FOREST_10",
       "walkable": false,
@@ -115,6 +126,7 @@
     },
     {
       "id": "forest_left_wall_3",
+      "palette": "field",
       "label": "left wall",
       "gb_constant": "TILE_FOREST_11",
       "walkable": false,
@@ -125,6 +137,7 @@
     },
     {
       "id": "forest_top_left_treetop",
+      "palette": "field",
       "label": "top left treetop",
       "gb_constant": "TILE_FOREST_12",
       "walkable": false,
@@ -136,6 +149,7 @@
     },
     {
       "id": "forest_top_right_tree_top",
+      "palette": "field",
       "label": "top right tree top",
       "gb_constant": "TILE_FOREST_13",
       "walkable": false,
@@ -147,6 +161,7 @@
     },
     {
       "id": "forest_top_left_tree_stump",
+      "palette": "field_too",
       "label": "top left tree stump",
       "gb_constant": "TILE_FOREST_14",
       "walkable": false,
@@ -158,6 +173,7 @@
     },
     {
       "id": "forest_top_right_tree_stump",
+      "palette": "field_too",
       "label": "top right tree stump",
       "gb_constant": "TILE_FOREST_15",
       "walkable": false,
@@ -169,6 +185,7 @@
     },
     {
       "id": "forest_bottom_left_corner_wall",
+      "palette": "field",
       "label": "bottom left corner wall",
       "gb_constant": "TILE_FOREST_16",
       "walkable": false,
@@ -179,6 +196,7 @@
     },
     {
       "id": "forest_bottom_wall_1",
+      "palette": "field",
       "label": "bottom wall",
       "gb_constant": "TILE_FOREST_17",
       "walkable": false,
@@ -189,6 +207,7 @@
     },
     {
       "id": "forest_bottom_wall_2",
+      "palette": "field",
       "label": "bottom wall",
       "gb_constant": "TILE_FOREST_18",
       "walkable": false,
@@ -199,6 +218,7 @@
     },
     {
       "id": "forest_bottom_wall_3",
+      "palette": "field",
       "label": "bottom wall",
       "gb_constant": "TILE_FOREST_19",
       "walkable": false,
@@ -209,6 +229,7 @@
     },
     {
       "id": "forest_bottom_wall_4",
+      "palette": "field",
       "label": "bottom wall",
       "gb_constant": "TILE_FOREST_20",
       "walkable": false,
@@ -219,6 +240,7 @@
     },
     {
       "id": "forest_floor_with_stuff_walkable_1",
+      "palette": "field_again",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_FOREST_21",
       "walkable": true,
@@ -230,6 +252,7 @@
     },
     {
       "id": "forest_floor_with_stuff_walkable_2",
+      "palette": "field_again",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_FOREST_22",
       "walkable": true,
@@ -241,6 +264,7 @@
     },
     {
       "id": "forest_floor_with_stuff_walkable_3",
+      "palette": "field",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_FOREST_23",
       "walkable": true,
@@ -252,6 +276,7 @@
     },
     {
       "id": "forest_floor_with_stuff_walkable_4",
+      "palette": "field",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_FOREST_24",
       "walkable": true,
@@ -263,6 +288,7 @@
     },
     {
       "id": "forest_right_wall_4",
+      "palette": "field",
       "label": "right wall",
       "gb_constant": "TILE_FOREST_25",
       "walkable": false,
@@ -273,6 +299,7 @@
     },
     {
       "id": "forest_bottom_right_corner_wall",
+      "palette": "field",
       "label": "bottom right corner wall",
       "gb_constant": "TILE_FOREST_26",
       "walkable": false,
@@ -283,6 +310,7 @@
     },
     {
       "id": "forest_left_wall_4",
+      "palette": "field",
       "label": "left wall",
       "gb_constant": "TILE_FOREST_27",
       "walkable": false,
@@ -293,6 +321,7 @@
     },
     {
       "id": "forest_bottom_left_treetrunk",
+      "palette": "field_too",
       "label": "bottom left treetrunk",
       "gb_constant": "TILE_FOREST_28",
       "walkable": false,
@@ -304,6 +333,7 @@
     },
     {
       "id": "forest_bottom_right_tree_trunk",
+      "palette": "field_too",
       "label": "bottom right tree trunk",
       "gb_constant": "TILE_FOREST_29",
       "walkable": false,
@@ -315,6 +345,7 @@
     },
     {
       "id": "forest_bottom_left_tree_stump",
+      "palette": "field_too",
       "label": "bottom left tree stump",
       "gb_constant": "TILE_FOREST_30",
       "walkable": false,
@@ -326,6 +357,7 @@
     },
     {
       "id": "forest_bottom_right_tree_stump",
+      "palette": "field_too",
       "label": "bottom right tree stump",
       "gb_constant": "TILE_FOREST_31",
       "walkable": false,
@@ -337,6 +369,7 @@
     },
     {
       "id": "forest_plain_floor_1",
+      "palette": "field",
       "label": "plain floor",
       "gb_constant": "TILE_FOREST_39",
       "walkable": true,
@@ -347,6 +380,7 @@
     },
     {
       "id": "forest_fire_frame_1",
+      "palette": "field_too",
       "label": "fire frame 1",
       "gb_constant": "TILE_FOREST_37",
       "walkable": false,
@@ -357,6 +391,7 @@
     },
     {
       "id": "forest_fire_frame_2",
+      "palette": "field_too",
       "label": "fire frame 2",
       "gb_constant": "TILE_FOREST_38",
       "walkable": false,
@@ -367,6 +402,7 @@
     },
     {
       "id": "forest_treasure_chest_forest",
+      "palette": "field_too",
       "label": "treasure chest forest",
       "gb_constant": "TILE_FOREST_43",
       "walkable": false,
@@ -378,6 +414,7 @@
     },
     {
       "id": "forest_black_emptyness",
+      "palette": "field",
       "label": "black emptyness",
       "gb_constant": "TILE_FOREST_32",
       "walkable": false,
@@ -388,6 +425,7 @@
     },
     {
       "id": "forest_bottom_left_interior_corner",
+      "palette": "field",
       "label": "bottom left interior corner",
       "gb_constant": "TILE_FOREST_33",
       "walkable": false,
@@ -398,6 +436,7 @@
     },
     {
       "id": "forest_bottom_right_interior_corner",
+      "palette": "field",
       "label": "bottom right interior corner",
       "gb_constant": "TILE_FOREST_34",
       "walkable": false,
@@ -408,6 +447,7 @@
     },
     {
       "id": "forest_top_right_interior_corner",
+      "palette": "field",
       "label": "top right interior corner",
       "gb_constant": "TILE_FOREST_35",
       "walkable": false,
@@ -418,6 +458,7 @@
     },
     {
       "id": "forest_top_left_interior_corner",
+      "palette": "field",
       "label": "top left interior corner",
       "gb_constant": "TILE_FOREST_36",
       "walkable": false,
@@ -428,6 +469,7 @@
     },
     {
       "id": "forest_stairs",
+      "palette": "field",
       "label": "stairs",
       "gb_constant": "TILE_FOREST_40",
       "walkable": true,
@@ -438,6 +480,7 @@
     },
     {
       "id": "forest_plain_floor_2",
+      "palette": "field",
       "label": "plain floor",
       "gb_constant": "TILE_FOREST_41",
       "walkable": true,
@@ -448,6 +491,7 @@
     },
     {
       "id": "forest_plain_floor_3",
+      "palette": "field",
       "label": "plain floor",
       "gb_constant": "TILE_FOREST_42",
       "walkable": true,
