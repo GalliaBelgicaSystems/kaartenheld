@@ -111,7 +111,7 @@ lint: gfx tiles $(SRCS)
 # which the Nix dev shell provides.
 GFX_OUT_DIR = $(SRC_DIR)/gfx
 
-gfx:
+gfx: manifest
 	@mkdir -p $(GFX_OUT_DIR)
 	# Shared composed sheets (battle art, overworld enemies, hero): the
 	# gfx rules below read these; compose them deterministically from the
@@ -124,25 +124,34 @@ gfx:
 	@python3 tools/png2gb.py assets/intrepid.png --name intrepid_font_tiles \
 		--raw -o $(GFX_OUT_DIR)/intrepid_font_tiles.inc
 	# ── Forest tileset (assets/forest-tile.png, 16 cols × 3 rows) ────────
+	# Indexed sheet ("indexed": true in tilesets/forest.json): per-tile
+	# shades come from generated/tiles/forest_shades.json (exact PLTE
+	# values, no luminance guessing). The sidecar is emitted by
+	# make manifest, which gfx now depends on.
 	# Full 48-tile world sheet (g_tileset_forest)
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
 		--palette auto --anchor-color "#7bb660" \
+		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
 	# Floor tile: col 0, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_floor \
 		--palette auto --anchor-color "#7bb660" --tile-coords "0,2" \
+		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_floor.inc
 	# Treetop tile: col 12, row 0
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_tree \
 		--palette auto --anchor-color "#7bb660" --tile-coords "12,0" \
+		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_tree.inc
 	# Exit tile: col 8, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_exit \
 		--palette auto --anchor-color "#7bb660" --tile-coords "8,2" \
+		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_exit.inc
 	# Stump tiles TL,TR,BL,BR + mini (BR repeated): cols 14-15, rows 0-1
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
 		--palette auto --anchor-color "#7bb660" --tile-coords "14,0 15,0 14,1 15,1 15,1" \
+		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × 8 rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0

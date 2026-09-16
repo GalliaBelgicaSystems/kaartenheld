@@ -75,6 +75,9 @@ Under `--palette auto`, `png2gb.py` does the following for each 8×8 tile:
 > [!WARNING]
 > **Loss of Color Information**: `png2gb.py` completely discards the actual RGB hues. It does not output any palette definitions or indicate which CGB palette a tile belongs to. The beige-box seam bug described in [§3.1](#31-the-background-color-0-mismatch-the-beige-box-bug) is a direct consequence.
 
+### Step 2b: Indexed sheets bypass the sorter (no luminance guessing)
+Sheets marked `"indexed": true` in `tools/level_editor/tilesets/<set>.json` (forest is the first) skip steps 2–3 above. `make manifest` emits `generated/tiles/<set>_shades.json` — per tile, every used color mapped to its position in the tile's ramp — and the `Makefile` gfx rules pass it via `png2gb.py --shade-map`. Shades resolve by **exact value** (pixel → sheet PLTE → ramp position); any pixel outside its ramp, any tile with >4 colors, or any anchor not mapping to shade 0 fails the build naming tile + color. The artist contract for indexed sheets: indexed PNG, exact ramp hexes, ≤4 values per tile, paint to the ramp order in `assets/palettes.md`.
+
 ### Step 3: Level Editing and Compilation
 - The web level editor places `forest_top_left_treetop` at `(3, 3)` and `forest_bottom_left_treetrunk` at `(3, 4)`.
 - `tools/level_compiler/compile.py` compiles `levels/forest.json` into `SceneTerrainBlock` entries in `src/game/scenes_content.c`:

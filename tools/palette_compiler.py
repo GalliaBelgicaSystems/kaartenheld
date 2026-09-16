@@ -304,6 +304,39 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
 
     print(f"  Tile palette assignments: {tile_palettes}")
 
+    # Indexed sheets ("indexed": true in the tileset JSON): emit the strict
+    # shade sidecar consumed by png2gb.py --shade-map, and validate every
+    # tile's pixels against its slot colors up front (exact hex match, no
+    # luminance guessing). Anything off-ramp fails here with tile + color.
+    if tileset_json.get("indexed"):
+        img = load_png(tileset_id)
+        px = img.load()
+        sidecar = {}
+        for entry in tiles:
+            tx, ty = entry.get("x", 0), entry.get("y", 0)
+            idx = entry.get("index")
+            slot = tile_palettes[idx] if idx is not None and idx < len(tile_palettes) else None
+            if slot is None:
+                raise ValueError(f"{tileset_id}: vram entry {entry} has no slot")
+            ramp = [rgb_to_hex(c) for c in palettes[slot]]
+            used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
+                           for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
+            outside = [c for c in used if c not in ramp]
+            if outside:
+                raise ValueError(
+                    f"{tileset_id}: tile {entry.get('tile')} at ({tx},{ty}) uses "
+                    f"{', '.join(outside)}, outside its {PALETTE_NAMES[tileset_id][slot]} "
+                    f"ramp {ramp} -- repaint the pixels or repoint the tile's "
+                    f"\"palette\" in tools/level_editor/tilesets/{tileset_id}.json")
+            if len(used) > 4:
+                raise ValueError(
+                    f"{tileset_id}: tile {entry.get('tile')} at ({tx},{ty}) uses "
+                    f"{len(used)} colors {used} -- Game Boy tiles hold 4 max")
+            sidecar[f"{tx},{ty}"] = {c: ramp.index(c) for c in used}
+        sidecar_path = GENERATED_DIR / f"{tileset_id}_shades.json"
+        sidecar_path.write_text(json.dumps(sidecar, indent=2))
+        print(f"  Wrote shade sidecar: {sidecar_path} ({len(sidecar)} tiles)")
+
     # Generate manifest
     manifest = generate_manifest(
         tileset_id, anchor_rgb, palettes, tile_palettes, PALETTE_NAMES[tileset_id]

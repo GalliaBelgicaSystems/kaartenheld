@@ -36,7 +36,7 @@
    "type": "tilemap_attr",
    "col": 3,
    "row": 4,
-   "expected": 5
+   "expected": 2
   }
  ],
  "initial_state": {

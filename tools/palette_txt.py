@@ -66,9 +66,9 @@ DEFAULT_FLOOR_PALETTES = {
 # matcher). Values are hardware slot indices validated against the slotmap.
 TILE_PALETTE_OVERRIDES = {
     "forest": {
-        28: 5,  # Tree trunk BL: bark must stay on the wood ramp.
-        29: 5,  # Tree trunk BR: auto-match prefers field greens and
-                # would render the bark green-on-green.
+        28: 2,  # Tree trunk BL: bark + moss on the field4 ramp (indexed
+                # sheet: exact PLTE match, no auto-match involved).
+        29: 2,  # Tree trunk BR: same as BL.
     },
     "desolate_landscape": {
         32: 7,  # Plain floor (slate rock / grey)

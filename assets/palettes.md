@@ -23,9 +23,9 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | field1 | `#7bb660` | `#2a4f1a` | `#4a3b1c` | `#000000` | unused | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes (auto-assigned) |
+| 0 | field1 | `#7bb660` | `#2a4f1a` | `#4a3b1c` | `#000000` | unused | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes |
 | 1 | field6 | `#7bb660` | `#edc214` | `#d7a726` | `#26232e` | forest fires | FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base |
-| 2 | field4 | `#7bb660` | `#937b4a` | `#2a4f1a` | `#4a3b1c` | unused | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt (auto-assigned) |
+| 2 | field4 | `#7bb660` | `#937b4a` | `#2a4f1a` | `#4a3b1c` | unused | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt |
 | 3 | field2 | `#7bb660` | `#2a4f1a` | `#1d3e0f` | `#4a3b1c` | field/ground + canopy | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/tree_ladder_and_dirt |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | field3 | `#7bb660` | `#937b4a` | `#614e27` | `#4a3b1c` | trunks/stumps/merchant (override) | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tree_ladder_and_dirt |

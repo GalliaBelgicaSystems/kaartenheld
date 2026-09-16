@@ -168,10 +168,12 @@ SLOTS/BASE
 # (bow/gold shares slot 0 fight_card; see UI_COLOR_GOLD in src/ui/ui.h.)
 
 SLOTS/FOREST
+0: field1
 3: field2
 1: field6
 7: field5
 5: field3
+2: field4
 # (field3 carries stump browns as wood -- verify trunks/merchant on
 # screenshots; rename to wood if it sticks.)
 
