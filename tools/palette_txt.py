@@ -1,23 +1,31 @@
 #!/usr/bin/env python3
 """palette_txt.py -- Single source of truth for authored colors.
 
-`assets/palette.txt` is artist-owned and holds three things (tutorial:
-`assets/palette_tutorial.md`):
+`assets/palette.txt` is artist-owned (tutorial:
+`assets/palette_tutorial.md`) and holds:
 
 1. COLOR dictionary (named sections): `name: #hex` entries.
-2. RAMP tables (`RAMPS/<set>`): 8 ramps x 4 shades each (4 for OBJ),
-   composed from dictionary references as `SECTION/name`.
-3. ANCHORS: `sheet: SECTION/name` (or a raw `#hex` chroma-key).
+2. RAMP lines: `name: SECTION/ref, ... (4 refs)` — bare or under
+   `RAMPS/<SET>` headers. `UNUSED` is a valid ref meaning "repeat the
+   ramp's own darkest shade".
+3. `SLOTS/<SET>` slotmap (dev-seeded): `slot: rampname` pins ramp names
+   to hardware indices. Tiles, art, UI and OBJ code consume fixed
+   indices, so file order never matters — only the slotmap does.
+4. `ANCHORS` (optional): `sheet: SECTION/name` (or raw `#hex`
+   chroma-key). Absent -> previous defaults + notice.
 
-This module parses the file, resolves every reference, and exposes the
-canonical tables. There are no hardcoded colors left in the pipeline:
-a slot changes if and only if its dictionary hex (or its reference)
-changes in palette.txt.
+The pipeline adapts to whatever the artist provides: inferred sets
+(majority ref section), flexible counts (1..8 BG, 1..4 OBJ), padded
+slots (magenta BG canary / neutral grey OBJ), duplicated placeholders
+for consumed-but-missing slots (fail loudly, render plausibly).
+Over-count (>8/>4) and unresolvable refs fail; nothing is ever
+silently truncated or dropped (unmapped ramps warn).
 
 Consumers:
-  tools/palette_compiler.py  FIXED_PALETTES / ANCHOR_COLORS / RAMP_NAMES
-  tools/palette_check.py     drift check vs tiles_content.c / ui.c /
-                             Makefile / assets/palettes.md
+  tools/palette_compiler.py  FIXED_PALETTES / ANCHOR_COLORS / RAMP_NAMES /
+                             REAL_SLOTS (matcher skips padded slots)
+  tools/palette_check.py     hard-consumer validation, LOAD_ERRORS,
+                             assets/palettes.md freshness
   assets/palettes.md         generated semantic tables (make manifest)
 """
 
@@ -29,13 +37,44 @@ PALETTE_TXT = REPO_ROOT / "assets" / "palette.txt"
 DOC_PATH = REPO_ROOT / "assets" / "palettes.md"
 
 RGB = Tuple[int, int, int]
-# Ramp sets required by the engine (RAMPS/<SET> sections in palette.txt).
+# Engine ramp sets (SLOTS/<SET> + inference targets).
 RAMP_SETS = ("base", "forest", "desolate_landscape", "castle", "village")
 # Short file headers the artist may use (RAMPS/DESOLATE, ...).
 SET_ALIASES = {"desolate": "desolate_landscape"}
-# Sheet keys required in the ANCHORS section.
+# Sheet keys for anchors.
 ANCHOR_KEYS = ("forest", "desolate_landscape", "castle", "village", "title",
                "npc_tiles", "enemy_ow")
+# Ref section -> inferred set (TITLE has no engine set: reported).
+INFER_SET = {"COMMON": None, "GAMEPLAY": None, "FOREST": "forest",
+             "DESOLATE": "desolate_landscape", "CASTLE": "castle",
+             "TOWN": "village", "SPRITES": "obj", "COMBAT": "base",
+             "TITLE": "title"}
+
+# Anchor-only tiles fall back to these slots (single source; the matcher
+# in palette_compiler.py imports them).
+DEFAULT_FLOOR_PALETTES = {
+    "forest": 3,
+    "desolate_landscape": 7,
+    "castle": 0,
+    "village": 3,
+}
+
+# Curated per-tile sheet-index overrides (single source; imported by the
+# matcher). Values are hardware slot indices validated against the slotmap.
+TILE_PALETTE_OVERRIDES = {
+    "forest": {
+        28: 5,  # Tree trunk BL: bark must stay on the wood ramp.
+        29: 5,  # Tree trunk BR: auto-match prefers field greens and
+                # would render the bark green-on-green.
+    },
+    "desolate_landscape": {
+        32: 7,  # Plain floor (slate rock / grey)
+        37: 1,  # Campfire frame 1 (fire)
+        38: 1,  # Campfire frame 2 (fire)
+    },
+}
+MAGENTA: RGB = (255, 0, 255)
+OBJ_PAD: RGB = (170, 170, 170)  # dev fallback grey (documented, never art)
 
 
 def _hex_to_rgb(h: str, where: str) -> RGB:
@@ -49,7 +88,6 @@ def _hex_to_rgb(h: str, where: str) -> RGB:
 
 
 def _parse_ref(ref: str, where: str) -> Tuple[str, str]:
-    """Split a `SECTION/name` reference (exactly one '/')."""
     parts = ref.split("/")
     if len(parts) != 2 or not parts[0].strip() or not parts[1].strip():
         raise ValueError(
@@ -57,18 +95,32 @@ def _parse_ref(ref: str, where: str) -> Tuple[str, str]:
     return parts[0].strip(), parts[1].strip()
 
 
-def load_palette(path: Path = PALETTE_TXT):
-    """Parse palette.txt -> (colors, ramps, anchors).
+def _is_ramp_value(value: str) -> bool:
+    parts = [r.strip() for r in value.split(",")]
+    return (len(parts) == 4 and all(
+        p == "UNUSED" or "/" in p for p in parts))
 
-    colors: {SECTION: {name: (r,g,b)}}
-    ramps:  {setkey: [(rampname, [ref, ref, ref, ref])]} in file order
-    anchors: {sheetkey: ref-or-#hex}
-    Lines starting with '#' are comments. Fails loudly on any malformed
-    line, unresolvable reference, or missing required set/key.
+
+def load_palette(path: Path = PALETTE_TXT):
+    """Parse palette.txt.
+
+    Returns (colors, ramp_entries, slotmap, anchors, errors, warnings).
+    colors: {SECTION: {name: rgb}}.
+    ramp_entries: [(setkey|None, rampname, [refs], lineno)] in file order
+      (None = inferred homeless like TITLE).
+    slotmap: {setkey: {slot: rampname}}.
+    anchors: {sheetkey: ref-or-#hex}.
+    errors: fatal-by-checker list (bad refs, ties, slotmap problems).
+    warnings: non-fatal list (unmapped ramps, homeless ramps, defaults).
+    Structural violations (slot range, dup slots, >8 ramps) raise.
     """
     colors: Dict[str, Dict[str, RGB]] = {}
-    ramps: Dict[str, List[Tuple[str, List[str]]]] = {}
+    pending: List[Tuple[str, List[str], int]] = []
+    headed: Dict[str, List[Tuple[str, List[str], int]]] = {}
+    slotmap: Dict[str, Dict[int, str]] = {}
     anchors: Dict[str, str] = {}
+    errors: List[str] = []
+    warnings: List[str] = []
     seen = set()
     current = ""
     for lineno, raw in enumerate(path.read_text().splitlines(), 1):
@@ -82,12 +134,16 @@ def load_palette(path: Path = PALETTE_TXT):
                 raise ValueError(f"{where}: duplicate section '{current}'")
             seen.add(current)
             if current.startswith("RAMPS/"):
-                setkey = current[len("RAMPS/"):].lower()
-                setkey = SET_ALIASES.get(setkey, setkey)
-                if setkey in ramps:
+                setkey = SET_ALIASES.get(current[len("RAMPS/"):].lower(),
+                                         current[len("RAMPS/"):].lower())
+                headed.setdefault(setkey, [])
+            elif current.startswith("SLOTS/"):
+                setkey = SET_ALIASES.get(current[len("SLOTS/"):].lower(),
+                                         current[len("SLOTS/"):].lower())
+                if setkey in slotmap:
                     raise ValueError(
-                        f"{where}: duplicate ramp set '{setkey}'")
-                ramps[setkey] = []
+                        f"{where}: duplicate slotmap '{setkey}'")
+                slotmap[setkey] = {}
             elif current == "ANCHORS":
                 pass
             else:
@@ -100,20 +156,30 @@ def load_palette(path: Path = PALETTE_TXT):
         value = value.strip()
         if not name or not value:
             raise ValueError(f"{where}: malformed entry: '{raw}'")
-        if current.startswith("RAMPS/"):
+        if current.startswith("SLOTS/"):
+            setkey = SET_ALIASES.get(current[len("SLOTS/"):].lower(),
+                                     current[len("SLOTS/"):].lower())
+            try:
+                slot = int(name)
+            except ValueError:
+                raise ValueError(
+                    f"{where}: slotmap key '{name}' is not a slot number")
+            maxslot = 3 if setkey == "obj" else 7
+            if not (0 <= slot <= maxslot):
+                raise ValueError(
+                    f"{where}: slot {slot} out of 0..{maxslot} for {setkey}")
+            if slot in slotmap[setkey]:
+                raise ValueError(
+                    f"{where}: duplicate slot {slot} in SLOTS/{setkey}")
+            slotmap[setkey][slot] = value
+        elif current.startswith("RAMPS/"):
             setkey = SET_ALIASES.get(current[len("RAMPS/"):].lower(),
                                      current[len("RAMPS/"):].lower())
             refs = [r.strip() for r in value.split(",")]
             if len(refs) != 4 or any(not r for r in refs):
                 raise ValueError(
-                    f"{where}: ramp '{name}' needs exactly 4 "
-                    f"SECTION/name refs, got {len(refs)}")
-            for r in refs:
-                _parse_ref(r, where)
-            if any(n == name for n, _ in ramps[setkey]):
-                raise ValueError(
-                    f"{where}: duplicate ramp '{name}' in '{current}'")
-            ramps[setkey].append((name, refs))
+                    f"{where}: ramp '{name}' needs exactly 4 refs")
+            headed[setkey].append((name, refs, lineno))
         elif current == "ANCHORS":
             if value.startswith("#"):
                 _hex_to_rgb(value, where)
@@ -122,6 +188,9 @@ def load_palette(path: Path = PALETTE_TXT):
             if name in anchors:
                 raise ValueError(f"{where}: duplicate anchor '{name}'")
             anchors[name] = value
+        elif _is_ramp_value(value):
+            refs = [r.strip() for r in value.split(",")]
+            pending.append((name, refs, lineno))
         else:
             rgb = _hex_to_rgb(value, where)
             if name in colors[current]:
@@ -129,130 +198,332 @@ def load_palette(path: Path = PALETTE_TXT):
                     f"{where}: duplicate '{name}' in [{current}]")
             colors[current][name] = rgb
 
-    for setkey in list(RAMP_SETS) + ["obj"]:
-        if setkey not in ramps:
-            raise ValueError(f"{path}: missing RAMPS/{setkey.upper()} section")
-        want = 4 if setkey == "obj" else 8
-        if len(ramps[setkey]) != want:
-            raise ValueError(
-                f"{path}: RAMPS/{setkey.upper()} has "
-                f"{len(ramps[setkey])} ramps (hardware needs {want})")
+    # Infer sets for bare ramp lines (majority ref section, UNUSED skipped).
+    inferred: Dict[str, List[Tuple[str, List[str], int]]] = {}
+    for name, refs, lineno in pending:
+        votes: Dict[str, int] = {}
+        for r in refs:
+            if r == "UNUSED":
+                continue
+            sec, _ = _parse_ref(r, f"{path}:{lineno}")
+            votes[sec] = votes.get(sec, 0) + 1
+        if not votes:
+            errors.append(f"{path}:{lineno}: ramp '{name}' has no "
+                          f"resolvable refs (all UNUSED)")
+            continue
+        top = max(votes.values())
+        winners = [s for s, n in votes.items() if n == top]
+        if len(winners) != 1 or winners[0] not in INFER_SET:
+            errors.append(f"{path}:{lineno}: ramp '{name}' is ambiguous "
+                          f"({', '.join(sorted(votes))}) — move it under an "
+                          f"explicit RAMPS/<SET> header")
+            continue
+        target = INFER_SET[winners[0]]
+        if target == "title" or target is None:
+            warnings.append(f"ramp '{name}' infers to [{winners[0]}]: no "
+                            f"engine home (splash palette is fixed) — kept "
+                            f"for documentation")
+            continue
+        inferred.setdefault(target, []).append((name, refs, lineno))
+    for setkey, entries in headed.items():
+        inferred.setdefault(setkey, []).extend(entries)
+    for setkey, entries in inferred.items():
+        seen_names = set()
+        for n, _, ln in entries:
+            if n in seen_names:
+                raise ValueError(
+                    f"{path}:{ln}: duplicate ramp '{n}' in set '{setkey}'")
+            seen_names.add(n)
+        # Over-count never raises: the slotmap places at most hardware
+        # slots and every unmapped ramp warns (never silently dropped).
+
+    if not anchors:
+        warnings.append("no ANCHORS section: using previous defaults "
+                        "(forest FOREST/grass, desolate DESOLATE/ground, "
+                        "castle CASTLE/ground, village TOWN/ground, title "
+                        "TITLE/title_bg, npc SPRITES/background, enemy "
+                        "DESOLATE/ground)")
+        anchors = {"forest": "FOREST/grass",
+                   "desolate_landscape": "DESOLATE/ground",
+                   "castle": "CASTLE/ground",
+                   "village": "TOWN/ground",
+                   "title": "TITLE/title_bg",
+                   "npc_tiles": "SPRITES/background",
+                   "enemy_ow": "DESOLATE/ground"}
     for key in ANCHOR_KEYS:
         if key not in anchors:
             raise ValueError(f"{path}: missing ANCHORS entry '{key}'")
-    return colors, ramps, anchors
+    return colors, inferred, slotmap, anchors, errors, warnings
 
 
-def _resolve(colors, ref: str, where: str) -> RGB:
-    section, name = _parse_ref(ref, where)
+def _resolve(colors, ref: str, where: str,
+             errors: List[str]) -> RGB | None:
+    if ref == "UNUSED":
+        return None
     try:
+        section, name = _parse_ref(ref, where)
         return colors[section][name]
-    except KeyError:
-        raise KeyError(f"{where}: reference '{ref}' is not defined "
-                       f"(want [{section}] '{name}' in palette.txt)")
+    except (KeyError, ValueError) as e:
+        errors.append(f"{where}: unresolvable reference '{ref}' ({e})")
+        return None
 
 
-def build_ramps(colors, ramps) -> Dict[str, list]:
-    """Resolve every ramp reference to RGB tuples: {set: [8x4 rgb]}."""
-    out: Dict[str, list] = {}
-    for setkey in list(RAMP_SETS) + ["obj"]:
-        out[setkey] = [[_resolve(colors, r, f"RAMPS/{setkey}")
-                        for r in refs]
-                       for _, refs in ramps[setkey]]
+def hard_consumers() -> Dict[str, Dict[int, List[str]]]:
+    """Explicit engine index consumers: {set: {slot: [descriptions]}}.
+
+    Derived from code/data (not opinion): floor defaults + tile overrides
+    (above), village npc_pals (tiles_content.c), combat-art palettes,
+    enemy ow_palettes (+hero), and the UI base set (all 8).
+    """
+    import json as _json
+    import re as _re
+    out: Dict[str, Dict[int, List[str]]] = {s: {} for s in
+                                            list(RAMP_SETS) + ["obj"]}
+    for ts, idx in DEFAULT_FLOOR_PALETTES.items():
+        if ts in out:
+            out[ts].setdefault(idx, []).append("floor default")
+    for ts, table in TILE_PALETTE_OVERRIDES.items():
+        if ts in out:
+            for tile, idx in table.items():
+                out[ts].setdefault(idx, []).append(f"tile override {tile}")
+    src = (REPO_ROOT / "src" / "game" / "tiles_content.c").read_text()
+    m = _re.search(r"npc_pals\[6\]\s*=\s*\{([^}]*)\}", src)
+    if m:
+        for i, v in enumerate(_re.findall(r"\d+", m.group(1))):
+            out["village"].setdefault(int(v), []).append(
+                f"npc overlay {i}")
+    ts_dir = REPO_ROOT / "tools" / "level_editor" / "tilesets"
+    ts_key = {"forest": "forest", "castle": "castle",
+              "desolate_landscape": "desolate_landscape",
+              "village": "village"}
+    for f in sorted(ts_dir.glob("*.json")):
+        key = ts_key.get(f.stem)
+        if key is None:
+            continue
+        try:
+            tiles = _json.loads(f.read_text()).get("tiles", [])
+        except ValueError:
+            continue
+        for t in tiles:
+            if isinstance(t, dict) and t.get("palette") is not None:
+                try:
+                    pal = int(t["palette"])
+                except (ValueError, TypeError):
+                    continue
+                out[key].setdefault(pal, []).append(
+                    f"editor tile {t.get('id', '?')}")
+    art_dir = REPO_ROOT / "screens" / "combat_art"
+    for f in sorted(art_dir.glob("*.json")):
+        try:
+            pal = _json.loads(f.read_text())["palette"]
+            out["base"].setdefault(int(pal), []).append(
+                f"battle art {f.stem}")
+        except (KeyError, ValueError):
+            pass
+    ety_dir = REPO_ROOT / "screens" / "enemy_types"
+    for f in sorted(ety_dir.glob("*.json")):
+        try:
+            pal = _json.loads(f.read_text())["overworld"]["palette"]
+            out["obj"].setdefault(int(pal), []).append(
+                f"ow sprite {f.stem}")
+        except (KeyError, ValueError, TypeError):
+            pass
+    out["obj"].setdefault(2, []).append("hero ow sprite")
+    for i in range(8):
+        out["base"].setdefault(i, []).append("UI_COLOR_* card/UI spans")
     return out
 
 
-def build_anchors(colors, anchors) -> Dict[str, str]:
-    """Resolve anchors to '#rrggbb' (raw-hex chroma-keys pass through)."""
-    out: Dict[str, str] = {}
-    for key in ANCHOR_KEYS:
-        value = anchors[key]
-        if value.startswith("#"):
-            out[key] = value.lower()
-        else:
-            r, g, b = _resolve(colors, value, "ANCHORS")
-            out[key] = f"#{r:02x}{g:02x}{b:02x}"
-    return out
-
-
-def unreferenced(colors, ramps, anchors) -> Dict[str, List[str]]:
-    """Dictionary names no ramp/anchor references (artist visibility)."""
-    used = set()
-    for entries in ramps.values():
-        for _, refs in entries:
-            used.update(_parse_ref(r, "ramps")[0:2] for r in refs)
-    for value in anchors.values():
-        if not value.startswith("#"):
-            used.add(_parse_ref(value, "anchors")[0:2])
-    # Tuples compare (section, name) against used (section, name) pairs.
-    out: Dict[str, List[str]] = {}
-    for section, names in colors.items():
-        spare = sorted(n for n in names
-                       if (section, n) not in
-                       {(s, m) for s, m in used})
-        if spare:
-            out[section] = spare
-    return out
-
-
-COLORS, _RAMPS_RAW, _ANCHORS_RAW = load_palette()
+COLORS, _RAMPS_RAW, _SLOTMAP, _ANCHORS_RAW, LOAD_ERRORS, LOAD_WARNINGS = \
+    load_palette()
 SECTIONS = COLORS
-RAMPS = build_ramps(COLORS, _RAMPS_RAW)
-# OBJ set keeps ramp names aligned with the ui.c OBJ order.
-OBJ_RAMPS = {name: ramp for (name, _), ramp in
-             zip(_RAMPS_RAW["obj"], RAMPS.pop("obj"))}
-ANCHORS = build_anchors(COLORS, _ANCHORS_RAW)
-RAMP_NAMES = {s: [n for n, _ in _RAMPS_RAW[s]] for s in RAMP_SETS}
 
-# What each ramp serves (engine-side docs for the generated tables).
-RAMP_USES = {
-    "base": ["UI text/backdrop, spider art", "burn cards, kobold art",
-             "sword/freeze cards", "slime art, heal cards",
-             "poison/dagger cards, dialogue paper", "shield cards, mimic art",
-             "bow cards", "grey-out, bat/boss art"],
-    "forest": ["misc gray", "campfire tiles", "iron accents",
-               "canopy + grass (UI_COLOR_FIELD)", "poison accents",
-               "trunks/stumps, merchant NPC (UI_COLOR_WOOD)",
-               "gold accents, mayor NPC", "rocks (UI_COLOR_DIM)"],
-    "desolate_landscape": ["misc gray", "campfire tiles", "iron accents",
-                           "flora accents", "poison accents",
-                           "dead trees (UI_COLOR_WOOD)",
-                           "gold accents, treasure chest",
-                           "slate ground (UI_COLOR_DIM)"],
-    "castle": ["stone floors/walls (UI_COLOR_NONE)", "curtains",
-               "iron accents", "moss accents", "poison accents",
-               "furniture (UI_COLOR_WOOD)", "gold accents, chest",
-               "shading (UI_COLOR_DIM)"],
-    "village": ["stonework (UI_COLOR_NONE)", "braziers/torches",
-                "iron accents", "dirt ground (UI_COLOR_FIELD)",
-                "mauve accents", "houses/barrels, merchant NPC (UI_COLOR_WOOD)",
-                "walls/roofs, mayor NPC", "shading (UI_COLOR_DIM)"],
-}
 
-_OBJ_USES = {
-    "grey": "player, bats, UI sprites (OBJ 0)",
-    "orange": "town braziers, kobolds (OBJ 1)",
-    "brown": "hero, kobold bodies, chests (OBJ 2)",
-    "green": "overworld slimes (OBJ 3)",
-}
+def _build_tables():
+    errors = list(LOAD_ERRORS)
+    warnings = list(LOAD_WARNINGS)
+    tables: Dict[str, list] = {}
+    names: Dict[str, list] = {}
+    real: Dict[str, list] = {}
+    dups: Dict[str, dict] = {}
+    unmapped: Dict[str, list] = {}
+    by_name: Dict[str, Dict[str, Tuple[List[str], int]]] = {}
+    for setkey, entries in _RAMPS_RAW.items():
+        by_name[setkey] = {n: (refs, ln) for n, refs, ln in entries}
+    consumers = hard_consumers()
+    for setkey in list(RAMP_SETS) + ["obj"]:
+        entries = by_name.get(setkey, {})
+        sm = _SLOTMAP.get(setkey, {})
+        nslots = 4 if setkey == "obj" else 8
+        # Validate slotmap: refs exist and sit in this set.
+        for slot, rname in sorted(sm.items()):
+            if rname not in entries:
+                errors.append(
+                    f"SLOTS/{setkey} slot {slot}: ramp '{rname}' is not "
+                    f"in this set (rename, move, or fix the slotmap)")
+        if len(sm) != len(set(sm.values())):
+            errors.append(f"SLOTS/{setkey}: two slots share a ramp")
+        placed = {rname for _, rname in
+                  [(s, r) for s, r in sm.items() if r in entries]}
+        for rname in entries:
+            if rname not in placed:
+                warnings.append(
+                    f"ramp '{rname}' ({setkey}) has no slot: assign it in "
+                    f"SLOTS/{setkey.upper()} or delete it (never shipped)")
+                unmapped.setdefault(setkey, []).append(rname)
+        # Resolve every ramp first (mapped or not) so bad refs always
+        # surface; UNUSED fills with the ramp's own darkest real shade.
+        solved: Dict[str, list] = {}
+        for rname, (refs, ln) in entries.items():
+            vals = []
+            ok = True
+            for r in refs:
+                if r == "UNUSED":
+                    vals.append(None)
+                    continue
+                v = _resolve(COLORS, r, f"{PALETTE_TXT}:{ln}", errors)
+                vals.append(v)
+                if v is None:
+                    ok = False
+            if not ok:
+                continue
+            shades = [v for v in vals if v is not None]
+            if not shades:
+                errors.append(
+                    f"ramp '{rname}' ({setkey}) is all UNUSED — author "
+                    f"at least one real shade")
+                continue
+            # Darkest by luminance (tuple order is meaningless for
+            # color: white would wrongly win every max()).
+            dark = min(shades,
+                       key=lambda c: 0.299 * c[0] + 0.587 * c[1]
+                       + 0.114 * c[2])
+            solved[rname] = [v if v is not None else dark for v in vals]
+        # Placed ramps resolve through the slotmap; broken ones magenta.
+        resolved: Dict[int, list] = {}
+        broken = set()
+        for slot, rname in sorted(sm.items()):
+            if rname not in entries:
+                continue
+            if rname not in solved:
+                broken.add(slot)
+                continue
+            resolved[slot] = solved[rname]
+        # Missing consumed slots duplicate the smallest real slot (loud).
+        cand = sorted(resolved)
+        for slot in sorted(consumers.get(setkey, {})):
+            if slot not in resolved and slot < nslots:
+                if not cand:
+                    errors.append(
+                        f"slot {slot} ({setkey}) consumed by "
+                        f"{', '.join(consumers[setkey][slot])} but no "
+                        f"ramp is mapped — author one in SLOTS/{setkey.upper()}")
+                    continue
+                src = cand[0]
+                resolved[slot] = list(resolved[src])
+                srcname = next(r for s, r in sm.items() if s == src)
+                dups.setdefault(setkey, {})[slot] = (srcname, consumers[
+                    setkey][slot])
+        # Pad the rest (magenta BG canary / neutral grey OBJ).
+        full, nms, rl = [], [], []
+        slot_names = dict(sm)
+        for slot, (srcname, _) in dups.get(setkey, {}).items():
+            slot_names.setdefault(slot, srcname)
+        for slot in range(nslots):
+            if slot in resolved:
+                full.append(resolved[slot])
+                nms.append(slot_names[slot])
+                # Only truly-mapped slots are matchable; duplicated
+                # placeholders serve their hard consumers alone.
+                if slot in sm:
+                    rl.append(slot)
+            else:
+                if setkey == "obj":
+                    # Dev fallback grey (documented); real OBJ slots always
+                    # come from the artist file.
+                    full.append([(255, 255, 255), (170, 170, 170),
+                                 (85, 85, 85), (0, 0, 0)])
+                else:
+                    full.append([MAGENTA] * 4)
+                nms.append("unused")
+        tables[setkey] = full
+        names[setkey] = nms
+        real[setkey] = rl
+        for slot in sorted(broken):
+            errors.append(
+                f"slot {slot} ({setkey}): ramp has unresolvable refs — "
+                f"renders magenta until fixed")
+            tables[setkey][slot] = [MAGENTA] * 4
+    return tables, names, real, dups, unmapped, errors, warnings
 
 
 def _hx(rgb) -> str:
     return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
 
-def _prov_refs(setkey: str, idx: int) -> str:
-    return ", ".join(_RAMPS_RAW[setkey][idx][1])
+_TABLES, _NAMES, REAL_SLOTS, DUPLICATES, UNMAPPED, BUILD_ERRORS, \
+    BUILD_WARNINGS = _build_tables()
+RAMPS = {s: _TABLES[s] for s in RAMP_SETS}
+# OBJ keeps ramp names aligned with the ui.c OBJ order.
+OBJ_RAMPS = {}
+for _slot, _rname in enumerate(_NAMES["obj"]):
+    OBJ_RAMPS[_rname] = _TABLES["obj"][_slot]
+# Positional OBJ tables (ui.c programs OAM slots 0..3 in fixed order).
+OBJ_BY_SLOT = list(_TABLES["obj"])
+RAMP_NAMES = {s: list(_NAMES[s]) for s in RAMP_SETS}
+
+
+def build_anchors(colors, anchors) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for key in ANCHOR_KEYS:
+        value = anchors[key]
+        if value.startswith("#"):
+            out[key] = value.lower()
+        else:
+            section, name = _parse_ref(value, "ANCHORS")
+            try:
+                r, g, b = colors[section][name]
+            except KeyError:
+                LOAD_ERRORS.append(
+                    f"ANCHORS '{key}': reference '{value}' is not defined")
+                continue
+            out[key] = f"#{r:02x}{g:02x}{b:02x}"
+    return out
+
+
+ANCHORS = build_anchors(COLORS, _ANCHORS_RAW)
+
+# What each slot serves (engine-side docs for the generated tables).
+RAMP_USES = {
+    "base": ["card UI, spider art", "burn cards, kobold art",
+             "sword/freeze cards", "slime art, heal cards",
+             "poison cards", "shield cards, mimic art",
+             "bow cards (MISSING)", "boss/bat art"],
+    "forest": ["unused", "forest fires", "unused",
+               "field/ground + canopy", "unused",
+               "trunks/stumps/merchant (override)", "unused", "rocks"],
+    "desolate_landscape": ["unused", "campfire (MISSING)", "unused",
+                           "unused", "unused", "unused",
+                           "chest (MISSING)", "slate ground"],
+    "castle": ["stone", "curtains", "unused", "unused", "unused",
+               "furniture (MISSING)", "gold/chest", "unused"],
+    "village": ["unused", "braziers", "unused", "dirt ground (MISSING)",
+                "unused", "houses/merchant", "walls/mayor", "unused"],
+}
+
+_OBJ_USES = {
+    "grey": "UNUSED slot (no grey ramp shipped)",
+    "more_sprites": "town braziers (OBJ 1)",
+    "sprites_again": "kobolds/dogs/hero (OBJ 2)",
+    "sprites": "overworld slimes (OBJ 3)",
+    "unused": "UNUSED slot",
+    "even_more_sprites": "UNMAPPED (mage blue, no slot)",
+    "sprites_still": "UNMAPPED (no slot)",
+}
 
 
 def render_doc() -> str:
     """Render assets/palettes.md from the canonical tables."""
-    for setkey in list(RAMP_SETS) + ["obj"]:
-        entries = _RAMPS_RAW[setkey]
-        want = 4 if setkey == "obj" else 8
-        if len(entries) != want or any(len(r) != 4 for _, r in entries):
-            raise ValueError(
-                f"palette doc: ramp shape wrong for {setkey}")
     L = []
     L.append("# Defined palettes (generated — do not edit by hand)")
     L.append("")
@@ -277,18 +548,20 @@ def render_doc() -> str:
         L.append("|---|------|----|----|----|----|--------|------|")
         for i, ramp in enumerate(RAMPS[ts]):
             hexes = " | ".join(f"`{_hx(c)}`" for c in ramp)
+            refs = _slot_refs(ts, i)
+            uses = RAMP_USES[ts][i] if i < len(RAMP_USES[ts]) else ""
             L.append(f"| {i} | {RAMP_NAMES[ts][i]} | {hexes} | "
-                     f"{RAMP_USES[ts][i]} | {_prov_refs(ts, i)} |")
+                     f"{uses} | {refs} |")
         L.append("")
-    L.append("## OBJ sprite ramps (`src/ui/ui.c`, slot 0 = COMMON white)")
+    L.append("## OBJ sprite ramps (`src/ui/ui.c`)")
     L.append("")
     L.append("| Name | S0 | S1 | S2 | S3 | Serves | Refs |")
     L.append("|------|----|----|----|----|--------|------|")
-    for i, key in enumerate(k for k, _ in _RAMPS_RAW["obj"]):
-        ramp = OBJ_RAMPS[key]
+    for i, key in enumerate(_NAMES["obj"]):
+        ramp = _TABLES["obj"][i]
         hexes = " | ".join(f"`{_hx(c)}`" for c in ramp)
-        L.append(f"| {key} | {hexes} | {_OBJ_USES[key]} | "
-                 f"{_prov_refs('obj', i)} |")
+        L.append(f"| {key} | {hexes} | {_OBJ_USES.get(key, '')} | "
+                 f"{_slot_refs('obj', i)} |")
     L.append("")
     L.append("## Sheet anchors (`png2gb --anchor-color` → shade 0)")
     L.append("")
@@ -307,6 +580,44 @@ def render_doc() -> str:
     return "\n".join(L)
 
 
+def _slot_refs(setkey: str, slot: int) -> str:
+    if setkey in DUPLICATES and slot in DUPLICATES[setkey]:
+        src, consumers = DUPLICATES[setkey][slot]
+        return (f"duplicates `{src}` (FLORENT: author a real ramp for "
+                f"{', '.join(consumers)})")
+    sm = _SLOTMAP.get(setkey, {})
+    if slot in sm:
+        rname = sm[slot]
+        for n, refs, _ in _RAMPS_RAW.get(setkey, []):
+            if n == rname:
+                return ", ".join(refs)
+        return rname
+    return "UNUSED slot (magenta canary)" if setkey != "obj" \
+        else "UNUSED slot (grey fallback)"
+
+
+def unreferenced(colors, ramps_raw, anchors_raw) -> Dict[str, List[str]]:
+    """Dictionary names no ramp/anchor references (artist visibility)."""
+    used = set()
+    for entries in ramps_raw.values():
+        for _, refs, _ in entries:
+            for r in refs:
+                if r == "UNUSED":
+                    continue
+                used.add(_parse_ref(r, "ramps"))
+    for value in anchors_raw.values():
+        if not value.startswith("#"):
+            used.add(_parse_ref(value, "anchors"))
+    out: Dict[str, List[str]] = {}
+    for section, names in colors.items():
+        spare = sorted(n for n in names
+                       if (section, n) not in
+                       {(s, m) for s, m in used})
+        if spare:
+            out[section] = spare
+    return out
+
+
 def main(argv=None) -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Render assets/palettes.md")
@@ -323,6 +634,10 @@ def main(argv=None) -> int:
             print("palette: every dictionary name is referenced")
         for section, names in spare.items():
             print(f"[{section}] unused: {', '.join(names)}")
+        if UNMAPPED:
+            print("unmapped ramps (no slot, never shipped):")
+            for setkey, names in UNMAPPED.items():
+                print(f"  {setkey}: {', '.join(names)}")
         return 0
     if args.check_doc:
         want = render_doc() + "\n"

@@ -4,14 +4,21 @@
 Single contract: assets/palette.txt (via tools/palette_txt.py) is the source
 of truth. This check asserts:
 
-1. palette.txt parses strictly (no empty/bare-'#' values, no duplicates).
+1. palette.txt parses (bad refs / ties / slotmap problems fail loudly).
 2. tools/palette_compiler.py FIXED_PALETTES / ANCHOR_COLORS equal the
    palette_txt RAMPS / ANCHORS (i.e. the compiler was not hand-edited
    past the source).
 3. src/game/tiles_content.c cgb_bg_palettes* RGB8() values equal the
    palette_txt RAMPS (base/forest/desolate_landscape/castle/village).
-4. src/ui/ui.c cgb_sprite_palette* RGB8() values equal palette_txt OBJ_RAMPS.
+4. src/ui/ui.c OAM 0..3 ramps equal palette_txt OBJ tables positionally.
 5. Makefile gfx --anchor-color flags equal palette_txt ANCHORS.
+6. Every hard index consumer (floor defaults, tile overrides, npc
+   overlays, battle-art palettes, ow palettes, UI base set) resolves to
+   a REAL ramp -- consumed-but-missing slots fail naming the consumer;
+   duplicated placeholders are reported.
+7. assets/palettes.md is freshly generated.
+
+Messages are French-first (the artist reads these failures).
 
 Usage:
     python3 tools/palette_check.py
@@ -26,7 +33,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 import palette_txt
-from palette_txt import SECTIONS, RAMPS, OBJ_RAMPS, ANCHORS
+from palette_txt import (SECTIONS, RAMPS, OBJ_BY_SLOT, ANCHORS,
+                         REAL_SLOTS, DUPLICATES, UNMAPPED, LOAD_ERRORS,
+                         LOAD_WARNINGS, BUILD_ERRORS, BUILD_WARNINGS,
+                         hard_consumers)
 
 ERRORS: list = []
 
@@ -34,6 +44,10 @@ ERRORS: list = []
 def fail(msg: str):
     ERRORS.append(msg)
     print(f"palette-check FAIL: {msg}")
+
+
+def info(msg: str):
+    print(f"palette-check info: {msg}")
 
 
 def check_compiler():
@@ -94,20 +108,18 @@ def check_tiles_content():
 
 
 def check_obj():
-    arrays = _parse_c_arrays(
-        REPO_ROOT / "src" / "ui" / "ui.c",
-        ["cgb_sprite_palette", "cgb_sprite_palette_orange",
-         "cgb_sprite_palette_brown", "cgb_sprite_palette_green"])
-    want = {"cgb_sprite_palette": OBJ_RAMPS["grey"],
-            "cgb_sprite_palette_orange": OBJ_RAMPS["orange"],
-            "cgb_sprite_palette_brown": OBJ_RAMPS["brown"],
-            "cgb_sprite_palette_green": OBJ_RAMPS["green"]}
-    for sym, expected in want.items():
+    # ui.c programs OAM slots 0..3 in fixed symbol order; compare
+    # positionally against the resolved OBJ tables.
+    syms = ["cgb_sprite_palette", "cgb_sprite_palette_orange",
+            "cgb_sprite_palette_brown", "cgb_sprite_palette_green"]
+    arrays = _parse_c_arrays(REPO_ROOT / "src" / "ui" / "ui.c", syms)
+    for i, sym in enumerate(syms):
         got = arrays.get(sym)
-        if got is None:
+        expected = OBJ_BY_SLOT[i] if i < len(OBJ_BY_SLOT) else None
+        if got is None or expected is None:
             continue
         if [tuple(c) for c in got] != [tuple(c) for c in expected]:
-            fail(f"ui.c {sym}: ROM {got} vs palette.txt {expected}")
+            fail(f"ui.c {sym} (OBJ {i}): ROM {got} vs palette.txt {expected}")
 
 
 def check_makefile_anchors():
@@ -144,14 +156,42 @@ def check_doc():
         fail("assets/palettes.md is stale (run make manifest)")
 
 
+def check_load():
+    for e in LOAD_ERRORS + BUILD_ERRORS:
+        fail(f"palette.txt: {e} — voir assets/palette_tutorial.md")
+    for w in LOAD_WARNINGS + BUILD_WARNINGS:
+        info(w)
+    for setkey, names in UNMAPPED.items():
+        info(f"rampes sans slot ({setkey}, jamais affichees) : "
+             f"{', '.join(names)} — les assigner dans SLOTS/"
+             f"{setkey.upper()} ou les supprimer")
+
+
+def check_consumers():
+    consumers = hard_consumers()
+    for setkey, slots in consumers.items():
+        real = set(REAL_SLOTS.get(setkey, []))
+        for slot, descs in sorted(slots.items()):
+            if slot not in real:
+                fail(f"slot {slot} ({setkey}) consomme par "
+                     f"{', '.join(descs)} mais sans vraie ramp "
+                     f"(FLORENT : en ecrire une / l'assigner dans SLOTS/"
+                     f"{setkey.upper()})")
+    for setkey, dups in DUPLICATES.items():
+        for slot, (src, descs) in sorted(dups.items()):
+            info(f"slot {slot} ({setkey}) duplique `{src}` pour "
+                 f"{', '.join(descs)} — visuel plausible, vraie ramp "
+                 f"attendee (FLORENT)")
+
+
 def main() -> int:
+    check_load()
+    check_consumers()
     check_compiler()
     check_tiles_content()
     check_obj()
     check_makefile_anchors()
     check_doc()
-    # Strictness proof: palette.txt already parsed at import (load_sections);
-    # an empty/bare-'#' value would have raised before any check ran.
     if ERRORS:
         print(f"palette-check: {len(ERRORS)} problem(s)")
         return 1

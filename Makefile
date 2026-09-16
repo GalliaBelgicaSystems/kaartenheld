@@ -186,7 +186,7 @@ gfx:
 	# ── Castle tileset (assets/castle-tile.png) ─────────
 	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#a99fc0" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).

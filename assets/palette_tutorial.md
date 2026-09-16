@@ -4,20 +4,23 @@ You own every color in the game. All of it lives in one file:
 `assets/palette.txt`. Nothing is hardcoded anywhere else — if a color on
 screen doesn't come from this file, that's a bug, report it.
 
-## The file has three parts
+## The file has four parts
 
-1. **Color dictionary** (`COMMON`, `GAMEPLAY`, `FOREST`, `DESOLATE`,
-   `CASTLE`, `TOWN`, `SPRITES`, `COMBAT`, `TITLE`): named colors,
-   `name: #hex`. Some document art pixels (most of `COMBAT`/`TITLE`);
-   the ones ramps actually use are listed in `RAMPS/*` below.
-2. **Ramp tables** (`RAMPS/BASE`, `RAMPS/FOREST`, `RAMPS/DESOLATE`,
-   `RAMPS/CASTLE`, `RAMPS/VILLAGE`, `RAMPS/OBJ`): the colors the Game Boy
-   really displays. Each set has 8 ramps of 4 shades (OBJ has 4 ramps) —
-   that 8×4 limit is hardware, it cannot change.
-3. **Anchors** (`ANCHORS`): which color each art sheet treats as its
-   background (details in §5).
+1. **Color dictionary** (named `SECTION`s): colors, `name: #hex`. Some
+   document art pixels (most of `COMBAT`/`TITLE`); the ones ramps
+   actually use are referenced from part 2.
+2. **Ramp lines** (`name: SECTION/ref, ...` × 4): your ramps, in free
+   order, with free names (unique per set). The set is inferred from
+   the refs' sections (`FOREST/…` → forest). `UNUSED` repeats the
+   ramp's darkest shade.
+3. **Slotmap** (`SLOTS/*`, dev-seeded): `slot: rampname` pins each ramp
+   to its hardware index. File order never matters — only this table
+   does. Don't reorder its lines; to move a ramp, change its number.
+4. **Anchors** (`ANCHORS`, optional): which color each art sheet treats
+   as its background (details in §5). Absent = previous defaults apply.
 
-Lines starting with `#` are comments.
+Lines starting with `#` are comments. The hardware fits 8 ramps per
+set (4 for `OBJ`); fewer is fine (empty slots pad), more fails loudly.
 
 ## Quick start: change a color
 
@@ -51,12 +54,15 @@ field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_t
   one edit updates every ramp that references it).
 - To add a new color: add `my_pink: #ff9fd0` to a dictionary section,
   then reference it as `SECTION/my_pink` from a ramp.
-- **Do not reorder ramps.** The file order is the ramp index (0–7) and
-  tiles/art point at ramps by index. Edit contents freely; renaming a
-  ramp only relabels the editor view, but moving one repaints tiles.
-- Every set needs exactly 8 ramps of exactly 4 shades (4 ramps for
-  `OBJ`). The checker rejects anything else with the file and line
-  number.
+- To add a new ramp: append a line anywhere (`my_ramp: A/x, A/y, A/z,
+  A/w`), then give it a slot in the matching `SLOTS/*` table. A ramp
+  with no slot warns and is never shipped — nothing is silently
+  dropped, and nothing shifts.
+- `UNUSED` as a shade repeats the ramp's darkest real shade (handy for
+  3-color art). Fully empty slots show magenta in screenshots — that
+  means "no ramp here", never ship it.
+- Renaming a ramp only relabels views, but the `SLOTS/*` line must use
+  the new name too (the checker tells you when they disagree).
 
 ### Shade 0: the background of *its* tiles (not always grass)
 
@@ -145,8 +151,11 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
 
 ## Guardrails (the checker enforces all of these)
 
-- Exactly 8 ramps × 4 refs per set (4 ramps for OBJ).
-- Every `SECTION/name` must exist; every anchor key must be present.
+- 1–8 ramps per set (1–4 for `OBJ`); 4 refs each; names unique per set.
+- Every `SECTION/name` must exist; every `SLOTS/*` line must name a
+  ramp of its set at a free slot in range.
+- Slots consumed by tiles/art/UI/sprites must hold real ramps — the
+  error names the consumer (in French). Unconsumed gaps pad magenta.
 - `assets/palettes.md` must be freshly generated (`make manifest`).
 - The same checks run on every push. A red palette check means the
   committed tables disagree with the file — never force it green by

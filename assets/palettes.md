@@ -10,75 +10,75 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | gray | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UI text/backdrop, spider art | COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes |
-| 1 | fire | `#ffffe0` | `#ff8c28` | `#dc3214` | `#640a00` | burn cards, kobold art | GAMEPLAY/fire_pale, GAMEPLAY/fire_light, GAMEPLAY/fire_mid, GAMEPLAY/fire_deep |
-| 2 | iron_ice | `#ebf2fa` | `#8cb4d6` | `#46698a` | `#1b2b3a` | sword/freeze cards | GAMEPLAY/iron_pale, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep |
-| 3 | slime | `#ffffff` | `#89cc5e` | `#5c903a` | `#000000` | slime art, heal cards | COMMON/white, COMBAT/slime_combat, COMBAT/slime_outline_combat, FOREST/void_holes |
-| 4 | poison | `#faf0fa` | `#be8cc8` | `#8c50a0` | `#3c1e50` | poison/dagger cards, dialogue paper | GAMEPLAY/mauve_pale, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep |
-| 5 | wood | `#f5e6d2` | `#c48a48` | `#8a5222` | `#3d200a` | shield cards, mimic art | COMMON/parchment, GAMEPLAY/wood_light, GAMEPLAY/wood_mid, GAMEPLAY/wood_deep |
-| 6 | gold | `#fffce0` | `#d7a726` | `#c88c08` | `#5a3a00` | bow cards | GAMEPLAY/gold_pale, CASTLE/gold, GAMEPLAY/gold_mid, GAMEPLAY/gold_shadow |
-| 7 | dim | `#c8c8c8` | `#969696` | `#5a5a5a` | `#282828` | grey-out, bat/boss art | COMMON/gray_light, COMMON/gray_mid, COMMON/gray_dark, COMMON/gray_deep |
+| 0 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline |
+| 1 | fight_more | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
+| 2 | fight_again | `#ffffff` | `#8f8f8f` | `#565656` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle |
+| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#5c903a` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat |
+| 4 | fight_forever | `#ffffff` | `#7136c1` | `#565656` | `#3d3044` | poison cards | COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings |
+| 5 | fight_still | `#ffffff` | `#8d754a` | `#755930` | `#6f5a34` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark |
+| 6 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | bow cards (MISSING) | duplicates `fight_card` (FLORENT: author a real ramp for UI_COLOR_* card/UI spans) |
+| 7 | fight_final | `#ffffff` | `#3f3017` | `#000000` | `#000000` | boss/bat art | COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED |
 
 ## Forest / field (`cgb_bg_palettes_forest`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | gray | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | misc gray | COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes |
-| 1 | fire | `#ffffe0` | `#ff8c28` | `#dc3214` | `#640a00` | campfire tiles | GAMEPLAY/fire_pale, GAMEPLAY/fire_light, GAMEPLAY/fire_mid, GAMEPLAY/fire_deep |
-| 2 | iron_ice | `#ebf2fa` | `#8cb4d6` | `#46698a` | `#1b2b3a` | iron accents | GAMEPLAY/iron_pale, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep |
-| 3 | field | `#7bb660` | `#2a4f1a` | `#1d3e0f` | `#000000` | canopy + grass (UI_COLOR_FIELD) | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes |
-| 4 | poison | `#faf0fa` | `#be8cc8` | `#8c50a0` | `#3c1e50` | poison accents | GAMEPLAY/mauve_pale, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep |
-| 5 | wood | `#7bb660` | `#c48a48` | `#8a5222` | `#3d200a` | trunks/stumps, merchant NPC (UI_COLOR_WOOD) | FOREST/grass, GAMEPLAY/wood_light, GAMEPLAY/wood_mid, GAMEPLAY/wood_deep |
-| 6 | gold | `#fffce0` | `#d7a726` | `#c88c08` | `#5a3a00` | gold accents, mayor NPC | GAMEPLAY/gold_pale, CASTLE/gold, GAMEPLAY/gold_mid, GAMEPLAY/gold_shadow |
-| 7 | dim | `#c8c8c8` | `#969696` | `#5a5a5a` | `#26232e` | rocks (UI_COLOR_DIM) | COMMON/gray_light, COMMON/gray_mid, COMMON/gray_dark, FOREST/rocks_outline |
+| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 1 | field_more | `#7bb660` | `#edc214` | `#d7a726` | `#7bb660` | forest fires | FOREST/grass, FOREST/fire_light, FOREST/fire_dark, UNUSED |
+| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 3 | field | `#7bb660` | `#2a4f1a` | `#1d3e0f` | `#000000` | field/ground + canopy | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes |
+| 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 5 | field_too | `#7bb660` | `#937b4a` | `#614e27` | `#614e27` | trunks/stumps/merchant (override) | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, UNUSED |
+| 6 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 7 | field_again | `#7bb660` | `#a99fc0` | `#4a3b1c` | `#26232e` | rocks | FOREST/grass, FOREST/rocks, FOREST/tree_ladder_and_dirt, FOREST/rocks_outline_fire_base |
 
 ## Desolate (`cgb_bg_palettes_desolate`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | gray | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | misc gray | COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes |
-| 1 | campfire | `#938da1` | `#edc214` | `#d75014` | `#500a00` | campfire tiles | DESOLATE/ground, DESOLATE/flame_light, DESOLATE/flame_mid, DESOLATE/flame_deep |
-| 2 | iron_ice | `#938da1` | `#8cb4d6` | `#46698a` | `#1b2b3a` | iron accents | DESOLATE/ground, GAMEPLAY/iron_light, GAMEPLAY/iron_mid, GAMEPLAY/iron_deep |
-| 3 | flora | `#938da1` | `#746f80` | `#3f3a4a` | `#26232e` | flora accents | DESOLATE/ground, DESOLATE/flora_mid, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks |
-| 4 | poison | `#938da1` | `#be8cc8` | `#8c50a0` | `#3c1e50` | poison accents | DESOLATE/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep |
-| 5 | deadwood | `#938da1` | `#8d754a` | `#6f5a34` | `#26232e` | dead trees (UI_COLOR_WOOD) | DESOLATE/ground, CASTLE/wood_light, CASTLE/wood_dark, DESOLATE/tree_item_outlines_cracks |
-| 6 | gold | `#938da1` | `#d7a726` | `#8d754a` | `#321e0a` | gold accents, treasure chest | DESOLATE/ground, CASTLE/gold, CASTLE/wood_light, DESOLATE/gold_shadow |
-| 7 | slate_rock | `#938da1` | `#837b96` | `#3f3a4a` | `#26232e` | slate ground (UI_COLOR_DIM) | DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks |
+| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 1 | Underworld_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire (MISSING) | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
+| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 6 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | chest (MISSING) | UNUSED slot (magenta canary) |
+| 7 | underworld | `#938da1` | `#a99fc0` | `#837b96` | `#3f3a4a` | slate ground | DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side |
 
 ## Castle (`cgb_bg_palettes_castle`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | stone | `#a99fc0` | `#b3b0b0` | `#828282` | `#2e2e2e` | stone floors/walls (UI_COLOR_NONE) | CASTLE/ground, CASTLE/stone_mid, CASTLE/wall_light, CASTLE/window_frame |
-| 1 | curtain | `#a99fc0` | `#8b1b1b` | `#621212` | `#1e0000` | curtains | CASTLE/ground, CASTLE/curtain_light, CASTLE/curtain_dark, CASTLE/curtain_deep |
-| 2 | iron | `#a99fc0` | `#8ca0b4` | `#465a6e` | `#1e2832` | iron accents | CASTLE/ground, CASTLE/steel_light, CASTLE/steel_mid, CASTLE/steel_deep |
-| 3 | moss_green | `#a99fc0` | `#5a8c50` | `#28501e` | `#0a1e0a` | moss accents | CASTLE/ground, CASTLE/moss_light, CASTLE/moss_mid, CASTLE/moss_deep |
-| 4 | poison | `#a99fc0` | `#be8cc8` | `#8c50a0` | `#3c1e50` | poison accents | CASTLE/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep |
-| 5 | wood_furn | `#a99fc0` | `#9e8e71` | `#6f5a34` | `#28190a` | furniture (UI_COLOR_WOOD) | CASTLE/ground, CASTLE/timber_light, CASTLE/wood_dark, CASTLE/timber_deep |
-| 6 | gold | `#a99fc0` | `#d7a726` | `#a29271` | `#3c280a` | gold accents, chest | CASTLE/ground, CASTLE/gold, CASTLE/gold_mid, CASTLE/gold_shadow |
-| 7 | dim_shadow | `#a99fc0` | `#828282` | `#565656` | `#232323` | shading (UI_COLOR_DIM) | CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/shade_deep |
+| 0 | castle | `#d7d7d7` | `#828282` | `#565656` | `#2e2e2e` | stone | CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame |
+| 1 | castle_room | `#d7d7d7` | `#b3b0b0` | `#8b1b1b` | `#621212` | curtains | CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_dark |
+| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | furniture (MISSING) | UNUSED slot (magenta canary) |
+| 6 | castle_hall | `#d7d7d7` | `#d7a726` | `#8d754a` | `#6f5a34` | gold/chest | CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark |
+| 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
 ## Village / town (`cgb_bg_palettes_village`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | gray | `#b6a27e` | `#c8c8c8` | `#7d7d7d` | `#1e1e1e` | stonework (UI_COLOR_NONE) | TOWN/ground, TOWN/stone_light, TOWN/stone_mid, TOWN/stone_deep |
-| 1 | fire | `#b6a27e` | `#ffc460` | `#dc6e20` | `#5a280a` | braziers/torches | TOWN/ground, TOWN/ember_light, TOWN/ember_mid, TOWN/ember_deep |
-| 2 | iron | `#b6a27e` | `#96a0b4` | `#556982` | `#232d3c` | iron accents | TOWN/ground, TOWN/steel_light, TOWN/steel_mid, TOWN/steel_deep |
-| 3 | dirt_floor | `#b6a27e` | `#8c7858` | `#604e34` | `#302418` | dirt ground (UI_COLOR_FIELD) | TOWN/ground, TOWN/dirt_light, TOWN/dirt_mid, TOWN/dirt_deep |
-| 4 | mauve | `#b6a27e` | `#be8cc8` | `#8c50a0` | `#3c1e50` | mauve accents | TOWN/ground, GAMEPLAY/mauve_light, GAMEPLAY/mauve_mid, GAMEPLAY/mauve_deep |
-| 5 | wood | `#b6a27e` | `#8d754a` | `#645233` | `#26180a` | houses/barrels, merchant NPC (UI_COLOR_WOOD) | TOWN/ground, TOWN/barrel_wood_fence, TOWN/wood_outlines, TOWN/wood_deep |
-| 6 | cream | `#b6a27e` | `#f1cf91` | `#ccaa6c` | `#645233` | walls/roofs, mayor NPC | TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade1, TOWN/wood_outlines |
-| 7 | dim | `#b6a27e` | `#9e9480` | `#645842` | `#2a241a` | shading (UI_COLOR_DIM) | TOWN/ground, TOWN/shade_light, TOWN/shade_mid, TOWN/shade_deep |
+| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 1 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | braziers | TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base |
+| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 3 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | dirt ground (MISSING) | duplicates `city` (FLORENT: author a real ramp for floor default, npc overlay 0, npc overlay 1, npc overlay 4, npc overlay 5) |
+| 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 5 | village | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines |
+| 6 | town | `#b6a27e` | `#f1cf91` | `#b6b6b6` | `#ccaa6c` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade |
+| 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
-## OBJ sprite ramps (`src/ui/ui.c`, slot 0 = COMMON white)
+## OBJ sprite ramps (`src/ui/ui.c`)
 
 | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |------|----|----|----|----|--------|------|
-| grey | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | player, bats, UI sprites (OBJ 0) | COMMON/white, COMMON/silver, COMMON/ash, FOREST/void_holes |
-| orange | `#ffffff` | `#f57137` | `#c34e1b` | `#8b1b1b` | town braziers, kobolds (OBJ 1) | COMMON/white, SPRITES/boss_eyes_scepter_glow, COMBAT/heart_fire_enemy_eyes, SPRITES/boss_eyes_scepter |
-| brown | `#ffffff` | `#8d754a` | `#6f5a34` | `#3f3017` | hero, kobold bodies, chests (OBJ 2) | COMMON/white, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc |
-| green | `#ffffff` | `#b4f578` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | COMMON/white, SPRITES/slime_highlight, SPRITES/slime_light, SPRITES/slime_dark |
+| more_sprites | `#f1eb03` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | duplicates `more_sprites` (FLORENT: author a real ramp for ow sprite bat, ow sprite spider) |
+| more_sprites | `#f1eb03` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | SPRITES/background, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
+| sprites_again | `#f1eb03` | `#673c3c` | `#8b1b1b` | `#3f3017` | kobolds/dogs/hero (OBJ 2) | SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc |
+| sprites | `#f1eb03` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
 
@@ -86,9 +86,9 @@ tutorial: `assets/palette_tutorial.md`.
 |-------|--------|-----|
 | `forest-tile` | `#7bb660` | FOREST/grass |
 | `desolate` | `#938da1` | DESOLATE/ground |
-| `castle-tile` | `#a99fc0` | CASTLE/ground |
+| `castle-tile` | `#d7d7d7` | CASTLE/ground |
 | `village-tile` | `#b6a27e` | TOWN/ground |
-| `title-red` | `#ffffff` | COMMON/white |
-| `npc_tiles` | `#f1eb03` | chroma-key, not a palette color |
+| `title-red` | `#ffffff` | TITLE/title_bg |
+| `npc_tiles` | `#f1eb03` | SPRITES/background |
 | `enemy_sprites` | `#938da1` | DESOLATE/ground |
 

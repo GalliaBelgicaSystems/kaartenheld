@@ -10,82 +10,68 @@
 #include "gfx/rpg_tile_lookup.h"
 
 /* 8 CGB BG palettes, 4 colors each in RGB555 format.
- * Authored colors come from assets/palette.txt via tools/palette_txt.py
- * (`make palette-check` enforces parity); slots without an authored
- * counterpart keep their legacy gameplay values. */
+ * Every value is resolved from assets/palette.txt via tools/palette_txt.py
+ * (`make palette-check` enforces parity). Names in comments are the
+ * palette.txt ramp names pinned by SLOTS/*; `unused` slots hold a magenta
+ * canary, `dup X` slots duplicate a real ramp until the artist authors a
+ * real one (both fail loudly in palette-check when consumed). */
 const palette_color_t cgb_bg_palettes[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 slime (battle/UI set only): palette.txt COMBAT slime_combat /
-     * slime_outline_combat. Serves slime battle art (art pixels are exactly
-     * these colors) and heal-card spans. Slot 0 white blends into the
-     * UI_COLOR_NONE backdrop. */
-    { RGB8(255,255,255),  RGB8(137,204,94),    RGB8(92,144,58),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(245,230,210), RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold: slot 1 is palette.txt CASTLE gold */
-    { RGB8(255,252,224), RGB8(215,167,38),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim */      { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(40,40,40)   }
+    /* 0 fight_card */ { RGB8(255,255,255), RGB8(223,189,141), RGB8(227,174,99), RGB8(176,146,102) },
+    /* 1 fight_more */ { RGB8(255,255,255), RGB8(195,78,27), RGB8(132,79,79), RGB8(74,39,39) },
+    /* 2 fight_again */ { RGB8(255,255,255), RGB8(143,143,143), RGB8(86,86,86), RGB8(90,74,61) },
+    /* 3 fight_standard (DEV: slot 1 was ice blue -> slime green; FLORENT: revert if ice intended) */ { RGB8(255,255,255), RGB8(137,204,94), RGB8(92,144,58), RGB8(92,144,58) },
+    /* 4 fight_forever */ { RGB8(255,255,255), RGB8(113,54,193), RGB8(86,86,86), RGB8(61,48,68) },
+    /* 5 fight_still */ { RGB8(255,255,255), RGB8(141,117,74), RGB8(117,89,48), RGB8(111,90,52) },
+    /* 6 dup fight_card (gold/bow MISSING) */ { RGB8(255,255,255), RGB8(223,189,141), RGB8(227,174,99), RGB8(176,146,102) },
+    /* 7 fight_final */ { RGB8(255,255,255), RGB8(63,48,23), RGB8(0,0,0), RGB8(0,0,0) },
 };
 
-/* Forest / Field overworld palette set: Palette 5 (wood) Color 0 is
- * harmonized to palette.txt FOREST grass (RGB8(123,182,96)), eliminating
- * rectangular beige seams around tree trunks and stumps while preserving
- * wood details. */
+/* Forest / Field overworld palette set. */
 const palette_color_t cgb_bg_palettes_forest[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field: palette.txt FOREST grass/tree_leaves/dark_tree_leaves */
-    { RGB8(123,182,96),  RGB8(42,79,26),    RGB8(29,62,15),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(123,182,96),  RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold: slot 1 is palette.txt CASTLE gold */
-    { RGB8(255,252,224), RGB8(215,167,38),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim: slot 3 is palette.txt FOREST rocks_outline */
-    { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(38,35,46)   }
+    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 1 field_more (UNUSED slot 3 repeats grass, darkest by luminance) */ { RGB8(123,182,96), RGB8(237,194,20), RGB8(215,167,38), RGB8(123,182,96) },
+    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 3 field */ { RGB8(123,182,96), RGB8(42,79,26), RGB8(29,62,15), RGB8(0,0,0) },
+    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 5 field_too (stump browns as wood) */ { RGB8(123,182,96), RGB8(147,123,74), RGB8(97,78,39), RGB8(97,78,39) },
+    /* 6 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 7 field_again (rocks) */ { RGB8(123,182,96), RGB8(169,159,192), RGB8(74,59,28), RGB8(38,35,46) },
 };
 
-/* Desolate landscape palette set: Anchor color 0 is slate rock (#938da1
- * -> RGB8(147,141,161)) across outdoor nature palettes. */
+/* Desolate landscape palette set. */
 const palette_color_t cgb_bg_palettes_desolate[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 campfire */ { RGB8(147,141,161), RGB8(237,194,20),  RGB8(215,80,20), RGB8(80,10,0)   },
-    /* 2 iron/ice */ { RGB8(147,141,161), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 flora */    { RGB8(147,141,161), RGB8(116,111,128), RGB8(63,58,74),  RGB8(38,35,46)  },
-    /* 4 poison/mauve */{ RGB8(147,141,161), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 deadwood */ { RGB8(147,141,161), RGB8(141,117,74),  RGB8(111,90,52), RGB8(38,35,46)  },
-    /* 6 gold */     { RGB8(147,141,161), RGB8(215,167,38),  RGB8(141,117,74),RGB8(50,30,10)  },
-    /* 7 slate rock*/{ RGB8(147,141,161), RGB8(131,123,150), RGB8(63,58,74),  RGB8(38,35,46)  }
+    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 1 Underworld_light (campfire; UNUSED slot 3 repeats ground) */ { RGB8(147,141,161), RGB8(237,194,20), RGB8(215,167,38), RGB8(147,141,161) },
+    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 3 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 5 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 6 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 7 underworld (slate rock) */ { RGB8(147,141,161), RGB8(169,159,192), RGB8(131,123,150), RGB8(63,58,74) },
 };
 
-/* Castle palette set: Anchor color 0 is palette.txt CASTLE ground (#a99fc0 ->
- * RGB8(169,159,192)) across indoor stone and furniture palettes. */
+/* Castle palette set. */
 const palette_color_t cgb_bg_palettes_castle[8][4] = {
-    /* 0 stone */    { RGB8(169,159,192), RGB8(179,176,176), RGB8(130,130,130),RGB8(46,46,46)  },
-    /* 1 curtain */  { RGB8(169,159,192), RGB8(139,27,27),   RGB8(98,18,18),  RGB8(30,0,0)    },
-    /* 2 iron */     { RGB8(169,159,192), RGB8(140,160,180), RGB8(70,90,110), RGB8(30,40,50)  },
-    /* 3 moss/green*/{ RGB8(169,159,192), RGB8(90,140,80),   RGB8(40,80,30),  RGB8(10,30,10)  },
-    /* 4 poison/mauve */{ RGB8(169,159,192), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood furn */{ RGB8(169,159,192), RGB8(158,142,113), RGB8(111,90,52), RGB8(40,25,10)  },
-    /* 6 gold */     { RGB8(169,159,192), RGB8(215,167,38),  RGB8(162,146,113),RGB8(60,40,10) },
-    /* 7 dim shadow*/{ RGB8(169,159,192), RGB8(130,130,130), RGB8(86,86,86),  RGB8(35,35,35)  }
+    /* 0 castle (stone) */ { RGB8(215,215,215), RGB8(130,130,130), RGB8(86,86,86), RGB8(46,46,46) },
+    /* 1 castle_room (curtains) */ { RGB8(215,215,215), RGB8(179,176,176), RGB8(139,27,27), RGB8(98,18,18) },
+    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 3 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 5 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 6 castle_hall (gold) */ { RGB8(215,215,215), RGB8(215,167,38), RGB8(141,117,74), RGB8(111,90,52) },
+    /* 7 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
 };
 
-/* Village palette set: Anchor color 0 is dirt (#b6a27e -> RGB8(182,162,126))
- * across outdoor nature palettes. */
+/* Village palette set. */
 const palette_color_t cgb_bg_palettes_village[8][4] = {
-    /* 0 gray */     { RGB8(182,162,126), RGB8(200,200,200), RGB8(125,125,125),RGB8(30,30,30)  },
-    /* 1 fire */     { RGB8(182,162,126), RGB8(255,196,96),  RGB8(220,110,32), RGB8(90,40,10)  },
-    /* 2 iron */     { RGB8(182,162,126), RGB8(150,160,180), RGB8(85,105,130), RGB8(35,45,60)  },
-    /* 3 dirt floor */{ RGB8(182,162,126), RGB8(140,120,88),  RGB8(96,78,52),  RGB8(48,36,24)  },
-    /* 4 poison/mauve */{ RGB8(182,162,126), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood: slots 1-2 are palette.txt TOWN barrel_wood_fence/wood_outlines */
-    { RGB8(182,162,126), RGB8(141,117,74),  RGB8(100,82,51),   RGB8(38,24,10)  },
-    /* 6 cream: slots 1-3 are palette.txt TOWN house_wall/roof_shade1/wood_outlines */
-    { RGB8(182,162,126), RGB8(241,207,145), RGB8(204,170,108), RGB8(100,82,51) },
-    /* 7 dim */      { RGB8(182,162,126), RGB8(158,148,128), RGB8(100,88,66),  RGB8(42,36,26)  }
+    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 1 city (braziers) */ { RGB8(182,162,126), RGB8(237,194,20), RGB8(215,167,38), RGB8(38,35,46) },
+    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 3 dup city (dirt_floor MISSING) */ { RGB8(182,162,126), RGB8(237,194,20), RGB8(215,167,38), RGB8(38,35,46) },
+    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
+    /* 5 village (wood) */ { RGB8(182,162,126), RGB8(141,117,74), RGB8(121,100,62), RGB8(100,82,51) },
+    /* 6 town (cream) */ { RGB8(182,162,126), RGB8(241,207,145), RGB8(182,182,182), RGB8(204,170,108) },
+    /* 7 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
 };
 
 /* Backward compatibility alias */

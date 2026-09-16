@@ -54,43 +54,41 @@ uint8_t ui_font_tile_base;
 
 
 
-/* Player-sprite ramp: entry 3 is the ink color (hero outlines, ASCII
- * actor glyphs) and stays black, matching the tileset art and the DMG
- * OBP0=0xE4 mapping.  Floors are mid-tone dirt/grass, so black ink keeps
- * full 4-shade contrast (AGENTS.md 38.2) without washing out. */
+/* Player-sprite ramp (OBJ 0): dups more_sprites until the artist ships
+ * a grey ramp (bat/spider ow_palette points here). Shade 0 is transparent
+ * on hardware regardless of the programmed value. */
 static const palette_color_t cgb_sprite_palette[4] = {
-    RGB8(255, 255, 255),
-    RGB8(170, 170, 170),
-    RGB8(85, 85, 85),
-    RGB8(0, 0, 0)
-};
-
-/* OBJ ramps mirror assets/palette.txt via tools/palette_txt.py
- * (`make palette-check` enforces parity). Slot 0 white is COMMON white. */
-/* Orange sprite palette: palette.txt SPRITES boss_eyes_scepter_glow ramp
- * (glow -> COMBAT heart_fire_enemy_eyes -> boss_eyes_scepter). */
-static const palette_color_t cgb_sprite_palette_orange[4] = {
-    RGB8(255, 255, 255),
+    RGB8(241, 235, 3),
+    RGB8(172, 157, 35),
     RGB8(245, 113, 55),
-    RGB8(195, 78, 27),
-    RGB8(139, 27, 27)
+    RGB8(141, 117, 74)
 };
 
-/* Brown sprite palette: kobold bodies (solid ink) and chest wood shading.
- * Slots 1-3 are palette.txt SPRITES wood_dog / chest_outline / npc.
+/* OBJ ramps resolve from assets/palette.txt via tools/palette_txt.py
+ * (`make palette-check` enforces parity). OAM slots 0..3 map to the
+ * SLOTS/OBJ ramps positionally; slot 0 shade 0 is always transparent.
+ * Slot 0 dups more_sprites (no grey ramp shipped yet). */
+/* Orange sprite palette: artist more_sprites ramp. */
+static const palette_color_t cgb_sprite_palette_orange[4] = {
+    RGB8(241, 235, 3),
+    RGB8(172, 157, 35),
+    RGB8(245, 113, 55),
+    RGB8(141, 117, 74)
+};
+
+/* Brown sprite palette: artist sprites_again ramp (kobolds/dogs/hero).
  * Slots 2-7 otherwise duplicate the grey ramp; slot 2 is repurposed. */
 static const palette_color_t cgb_sprite_palette_brown[4] = {
-    RGB8(255, 255, 255),
-    RGB8(141, 117, 74),
-    RGB8(111, 90, 52),
+    RGB8(241, 235, 3),
+    RGB8(103, 60, 60),
+    RGB8(139, 27, 27),
     RGB8(63, 48, 23)
 };
 
-/* Green sprite palette for slimes: slots 2-3 are palette.txt SPRITES
- * slime_light / slime_dark. */
+/* Green sprite palette: artist sprites ramp (overworld slimes). */
 static const palette_color_t cgb_sprite_palette_green[4] = {
-    RGB8(255, 255, 255),
-    RGB8(180, 245, 120),
+    RGB8(241, 235, 3),
+    RGB8(182, 182, 182),
     RGB8(119, 227, 49),
     RGB8(92, 144, 58)
 };

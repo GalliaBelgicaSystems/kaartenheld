@@ -46,7 +46,10 @@ import math
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
-                         RAMP_NAMES as _AUTHOR_RAMP_NAMES)
+                         RAMP_NAMES as _AUTHOR_RAMP_NAMES,
+                         REAL_SLOTS as _AUTHOR_REAL_SLOTS,
+                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR,
+                         TILE_PALETTE_OVERRIDES as _AUTHOR_OVERRIDES)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
@@ -162,11 +165,16 @@ def is_green(rgb: Tuple[int, int, int]) -> bool:
     return g > r and g > b and g > 40
 
 
-DEFAULT_FLOOR_PALETTES = {
-    "forest": 3,              # field (greens) - UI_COLOR_FIELD
-    "desolate_landscape": 7,  # slate rock - UI_COLOR_DIM
-    "castle": 0,              # stone (light gray) - UI_COLOR_NONE
-    "village": 3,             # dirt floor - UI_COLOR_FIELD
+# Anchor-only tiles fall back to these slots (single-sourced from
+# palette_txt; the checker validates them against the slotmap).
+DEFAULT_FLOOR_PALETTES = dict(_AUTHOR_FLOOR)
+
+
+SETKEY_OF_TILESET = {
+    "forest": "forest",
+    "castle": "castle",
+    "desolate_landscape": "desolate_landscape",
+    "village": "village",
 }
 
 
@@ -174,19 +182,24 @@ def match_tile_to_palette(
     tile_colors: List[Tuple[int, int, int]],
     palettes: List[List[Tuple[int, int, int]]],
     anchor_rgb: Tuple[int, int, int],
-    tileset_id: str = ""
+    tileset_id: str = "",
+    usable: List[int] | None = None,
 ) -> int:
     """
     Match a tile's color set to the best fixed palette.
 
     For each unique color in the tile, find the closest color in each fixed
     palette (including anchor at index 0). The palette with the lowest total
-    distance wins.
+    distance wins. Only `usable` slot indices are considered (padded magenta
+    slots are unmatchable); the returned index is still the positional
+    hardware slot.
 
     Special case for forest/desolate: tiles with both green (anchor-like)
     and brown colors should prefer the wood palette (index 5) which has
     harmonized Color 0 = anchor + brown foreground colors.
     """
+    if usable is None:
+        usable = list(range(len(palettes)))
     floor_palette_idx = DEFAULT_FLOOR_PALETTES.get(tileset_id, 0)
 
     # If tile only contains the scene's anchor backdrop color, assign floor palette directly
@@ -200,10 +213,11 @@ def match_tile_to_palette(
     # For forest/desolate, wood palette is index 5
     wood_palette_idx = 5 if tileset_id in ("forest", "desolate_landscape") else -1
 
-    best_palette = 0
+    best_palette = usable[0] if usable else 0
     best_total_dist = float('inf')
 
-    for pal_idx, palette in enumerate(palettes):
+    for pal_idx in usable:
+        palette = palettes[pal_idx]
         total_dist = 0.0
         for tile_color in tile_colors:
             # Find closest color in this palette
@@ -256,20 +270,10 @@ def write_manifest(tileset_id: str, manifest: Dict[str, Any]) -> Path:
     return out_path
 
 
-# Per-tileset curated overrides (e.g. animated fire frames)
-TILE_PALETTE_OVERRIDES = {
-    "forest": {
-        28: 5,  # Tree trunk BL: bark (#4a3b1c) must stay on the wood ramp.
-        29: 5,  # Tree trunk BR: auto-match prefers the pixel-exact field
-                # greens (2/3 of the tile), which would render the bark
-                # green-on-green and lose the trunk entirely.
-    },
-    "desolate_landscape": {
-        32: 7,  # Plain floor (slate rock / grey)
-        37: 1,  # Campfire frame 1 (fire)
-        38: 1,  # Campfire frame 2 (fire)
-    },
-}
+# Per-tileset curated overrides (single-sourced from palette_txt; the
+# checker validates every value against the slotmap).
+TILE_PALETTE_OVERRIDES = {k: dict(v)
+                          for k, v in _AUTHOR_OVERRIDES.items()}
 
 
 def process_tileset(tileset_id: str) -> Dict[str, Any]:
@@ -322,7 +326,11 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
         elif i in overrides:
             pal_idx = overrides[i]
         else:
-            pal_idx = match_tile_to_palette(tile_colors, palettes, anchor_rgb, tileset_id)
+            usable = _AUTHOR_REAL_SLOTS.get(
+                SETKEY_OF_TILESET.get(tileset_id, tileset_id),
+                list(range(len(palettes))))
+            pal_idx = match_tile_to_palette(tile_colors, palettes,
+                                            anchor_rgb, tileset_id, usable)
         tile_palettes.append(pal_idx)
 
     print(f"  Tile palette assignments: {tile_palettes}")

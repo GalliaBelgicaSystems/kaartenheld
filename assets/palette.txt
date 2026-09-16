@@ -99,7 +99,7 @@ field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_t
 field_again: FOREST/grass, FOREST/rocks, FOREST/tree_ladder_and_dirt, FOREST/rocks_outline_fire_base
 field_more: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, UNUSED
 field_too: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, UNUSED
-underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadows, DESOLATE/terrain_side
+underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side
 underworld_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED
 Underworld_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED
 castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
@@ -114,7 +114,9 @@ even_more_sprites: SPRITES/background, SPRITES/mage_cloth, SPRITES/chest_outline
 sprites_again: SPRITES/background, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
 sprites_still: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
 fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_decor, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/ice_icon_ring_jewel, COMBAT/slime_combat, COMBAT/slime_outline_combat
+fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat
+# DEV: slot 1 was ice_icon_ring_jewel (blue slime bodies) — swapped to slime_combat
+# so slime art + heal cards stay green. FLORENT: revert or adjust if the ice tint was intended.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
 fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
 fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
@@ -122,3 +124,48 @@ fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_li
 fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+
+# DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
+# consume fixed indices -- see tools/palette_txt.py hard_consumers()).
+# Artist: don't reorder these lines; to move a ramp, change its number.
+# Unmapped ramps warn; unmapped slots pad. Missing CONSUMED slots fail.
+SLOTS/BASE
+0: fight_card
+1: fight_more
+2: fight_again
+3: fight_standard
+4: fight_forever
+5: fight_still
+7: fight_final
+# (slot 6 gold/bow missing -- artist to author.)
+
+SLOTS/FOREST
+3: field
+1: field_more
+7: field_again
+5: field_too
+# (field_too carries stump browns as wood -- verify trunks/merchant on
+# screenshots; rename to wood if it sticks.)
+
+SLOTS/DESOLATE
+7: underworld
+1: Underworld_light
+# (slot 6 gold missing -- chest override points here.)
+
+SLOTS/CASTLE
+0: castle
+1: castle_room
+6: castle_hall
+# (slot 5 wood_furn missing -- chair/table overrides point here.)
+
+SLOTS/VILLAGE
+5: village
+6: town
+1: city
+# (slot 3 dirt_floor missing -- floor default points here.)
+
+SLOTS/OBJ
+1: more_sprites
+2: sprites_again
+3: sprites
+# (slot 0 grey missing -- bat/spider ow_palette points here.)
