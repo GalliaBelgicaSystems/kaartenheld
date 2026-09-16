@@ -12,7 +12,7 @@
 /* 8 CGB BG palettes, 4 colors each in RGB555 format.
  * Every value is resolved from assets/palette.txt via tools/palette_txt.py
  * (`make palette-check` enforces parity). Names in comments are the
- * palette.txt ramp names pinned by SLOTS/*; `unused` slots hold a magenta
+ * palette.txt ramp names pinned by the SLOTS tables; `unused` slots hold a magenta
  * canary, `dup X` slots duplicate a real ramp until the artist authors a
  * real one (both fail loudly in palette-check when consumed). */
 const palette_color_t cgb_bg_palettes[8][4] = {
