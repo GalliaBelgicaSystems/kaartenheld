@@ -167,7 +167,7 @@ def capture_overworld():
         s.settle_scene(expected_scene=W.SCENE_FOREST)
         s.tick(20)
 
-        # Wander east to the Lost Amulet chest and stop facing it.
+        # Wander east to the Lost Amulet and stop facing it.
         chest = next(o for o in W._level("forest")["objects"]
                      if (o.get("properties") or {}).get("entity_id")
                      == "ENTITY_ID_AMULET")

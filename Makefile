@@ -144,13 +144,6 @@ gfx:
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
 		--palette auto --anchor-color "#7bb660" --tile-coords "14,0 15,0 14,1 15,1 15,1" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
-	# Chest sprite tile from forest-tile.png (tile 11,2 "treasure chest
-	# forest").  Anchor the forest-floor green to shade 0 = OAM transparent;
-	# without it the gold highlight (brightest color) grabs shade 0 and the
-	# green background lands on shade 1, rendering as an opaque tan box.
-	@python3 tools/png2gb.py assets/forest-tile.png --name forest_chest_sprite_tile \
-		--palette auto --anchor-color "#7bb660" --tile-coords "11,2" \
-		-o $(GFX_OUT_DIR)/forest_chest_sprite_tile.h
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × 8 rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets

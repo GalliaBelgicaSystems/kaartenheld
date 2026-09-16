@@ -23,14 +23,14 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 1 | field_more | `#7bb660` | `#edc214` | `#d7a726` | `#7bb660` | forest fires | FOREST/grass, FOREST/fire_light, FOREST/fire_dark, UNUSED |
-| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 3 | field | `#7bb660` | `#2a4f1a` | `#1d3e0f` | `#000000` | field/ground + canopy | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/void_holes |
+| 0 | field1 | `#7bb660` | `#2a4f1a` | `#4a3b1c` | `#000000` | unused | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes (auto-assigned) |
+| 1 | field6 | `#7bb660` | `#edc214` | `#d7a726` | `#26232e` | forest fires | FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base |
+| 2 | field4 | `#7bb660` | `#937b4a` | `#2a4f1a` | `#4a3b1c` | unused | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt (auto-assigned) |
+| 3 | field2 | `#7bb660` | `#2a4f1a` | `#1d3e0f` | `#4a3b1c` | field/ground + canopy | FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/tree_ladder_and_dirt |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 5 | field_too | `#7bb660` | `#937b4a` | `#614e27` | `#614e27` | trunks/stumps/merchant (override) | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, UNUSED |
+| 5 | field3 | `#7bb660` | `#937b4a` | `#614e27` | `#4a3b1c` | trunks/stumps/merchant (override) | FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tree_ladder_and_dirt |
 | 6 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 7 | field_again | `#7bb660` | `#a99fc0` | `#4a3b1c` | `#26232e` | rocks | FOREST/grass, FOREST/rocks, FOREST/tree_ladder_and_dirt, FOREST/rocks_outline_fire_base |
+| 7 | field5 | `#7bb660` | `#a99fc0` | `#26232e` | `#26232e` | rocks | FOREST/grass, FOREST/rocks, FOREST/rocks_outline_fire_base, UNUSED |
 
 ## Desolate (`cgb_bg_palettes_desolate`)
 

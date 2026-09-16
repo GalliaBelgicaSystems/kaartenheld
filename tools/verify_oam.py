@@ -159,20 +159,21 @@ def verify_hostile_sprites(sess):
     check("forest treetrunk (3, 4) has wood trunk palette (5)",
           5, mirror_at(sess, attr_mirror, 3, 4))
 
-    print("== Chest pickup sprite (forest amulet as OAM, no BG glyph) ==")
+    print("== Debris pickup tile (forest amulet as background art, no OAM) ==")
     forest_amulet = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest_amulet)
     sess.step(2)
-    # Amulet is static index 0 -> OAM entry 1 + MAX_WORLD_ACTORS (4).
-    chest = shadow_oam_slot_tile(sess, 5)
-    check("forest amulet renders as chest OAM tile (94|95)",
-          1, (94 <= chest <= 95))
-    # The background cell underneath must be plain forest floor
-    # (VRAM tile 128 + 39, the level's default_walkable), not the '?'
-    # ASCII glyph: glyph suppression for OAM-rendered statics.
+    # Amulet is SPRITE_KIND_TILE: static index 0 -> OAM entry 1 +
+    # MAX_WORLD_ACTORS (4); TILE-kind statics own no sprite, so the slot
+    # stays hidden (y = 0).
+    check("forest amulet owns no OAM entry (slot hidden)",
+          0, sess._memread(0xC000 + 4 * 5))
+    # The background cell itself shows the debris floor art
+    # (VRAM tile 128 + 21 = TILE_FOREST_21,
+    # forest_floor_with_stuff_walkable_1), not the '?' ASCII glyph.
     mirror = sess.get_symbol("g_tilemap_mirror")
-    check("amulet background cell is floor, not '?'",
-          167, mirror_at(sess, mirror, 16, 10))
+    check("amulet background cell is debris floor, not '?'",
+          149, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")
     south = load_scenario(sess, "south_field_boot.json")

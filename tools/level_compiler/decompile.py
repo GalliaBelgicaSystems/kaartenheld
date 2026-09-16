@@ -77,7 +77,7 @@ SPRITE_FRAMES = {
                    "actors.actors_kobold_frame_2"],
         "BAT": ["actors.actors_bats_frame_1",
                 "actors.actors_bats_frame_2"],
-        "CHEST": ["forest.forest_treasure_chest_forest"],
+        "CHEST": ["forest.forest_floor_with_stuff_walkable_1"],
     },
     "castle": {
         "KOBOLD": ["castle.castle_enemy_kobold_frame_1",

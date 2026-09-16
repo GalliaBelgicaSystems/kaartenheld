@@ -103,7 +103,7 @@ TILESETS = {
         "FOREST_EXIT":                   (8, 2),
         "FOREST_BAT_01":                 (9, 2),
         "FOREST_BAT_02":                 (10, 2),
-        "FOREST_CHEST":                  (11, 2),
+        "FOREST_FLOOR_6":                (11, 2),
         "FOREST_FLOOR_2":                (12, 2),
         "FOREST_FLOOR_3":                (13, 2),
         "FOREST_FLOOR_4":                (14, 2),
