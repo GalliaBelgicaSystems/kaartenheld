@@ -1,3 +1,16 @@
+# GAME PALETTE — read this first (full tutorial: assets/palette_tutorial.md).
+# 1. Dictionary: named colors below (SECTION + name). To recolor something,
+#    edit the #hex here — everything referencing it follows automatically.
+# 2. Ramps: lines like "name: A/a, A/b, A/c, A/d" = 4 shades of light,
+#    LIGHTEST first. Shade 0 is the background (transparent on sprites).
+#    Always write SECTION/name, never a raw #hex.
+# 3. Ramp lines can sit in any order: the SLOTS tables at the bottom of
+#    this file decide which ramp paints which slot. Append new ramps at
+#    the end of a block (keeps history clean), then ask dev for a slot
+#    number — or leave the line unassigned and the checker will ask.
+# 4. SLOTS/* and ANCHORS are dev-owned — leave them alone.
+# 5. After every edit: make palette-check (red = read the error, it says
+#    exactly what to fix), then make screenshots to check with your eyes.
 FOREST
 tree_ladder_and_dirt: #4a3b1c
 grass: #7bb660

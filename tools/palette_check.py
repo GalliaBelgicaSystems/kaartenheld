@@ -87,39 +87,28 @@ def _parse_c_arrays(path: Path, symbols: list) -> dict:
     return out
 
 
-def check_tiles_content():
-    arrays = _parse_c_arrays(
-        REPO_ROOT / "src" / "game" / "tiles_content.c",
-        ["cgb_bg_palettes", "cgb_bg_palettes_forest",
-         "cgb_bg_palettes_desolate", "cgb_bg_palettes_castle",
-         "cgb_bg_palettes_village"])
-    want = {"cgb_bg_palettes": RAMPS["base"],
-            "cgb_bg_palettes_forest": RAMPS["forest"],
-            "cgb_bg_palettes_desolate": RAMPS["desolate_landscape"],
-            "cgb_bg_palettes_castle": RAMPS["castle"],
-            "cgb_bg_palettes_village": RAMPS["village"]}
-    for sym, expected in want.items():
-        got = arrays.get(sym)
-        if got is None:
-            continue
-        for i, (g, e) in enumerate(zip(got, expected)):
-            if [tuple(c) for c in g] != [tuple(c) for c in e]:
-                fail(f"tiles_content.c {sym} ramp {i}: ROM {g} vs palette.txt {e}")
-
-
-def check_obj():
-    # ui.c programs OAM slots 0..3 in fixed symbol order; compare
-    # positionally against the resolved OBJ tables.
-    syms = ["cgb_sprite_palette", "cgb_sprite_palette_orange",
-            "cgb_sprite_palette_brown", "cgb_sprite_palette_green"]
-    arrays = _parse_c_arrays(REPO_ROOT / "src" / "ui" / "ui.c", syms)
-    for i, sym in enumerate(syms):
-        got = arrays.get(sym)
-        expected = OBJ_BY_SLOT[i] if i < len(OBJ_BY_SLOT) else None
-        if got is None or expected is None:
-            continue
-        if [tuple(c) for c in got] != [tuple(c) for c in expected]:
-            fail(f"ui.c {sym} (OBJ {i}): ROM {got} vs palette.txt {expected}")
+def check_tables_fresh():
+    # ROM tables are #included generated files: verify the committed
+    # generated tables match a fresh emit (hand edits belong in
+    # palette.txt, never in generated/tiles/cram_tables.h).
+    import tempfile
+    from palette_txt import emit_c_tables
+    with tempfile.TemporaryDirectory() as tmp:
+        fresh = {p.name: p.read_text()
+                 for p in emit_c_tables(tmp)}
+    gen_dir = REPO_ROOT / "generated" / "tiles"
+    for name, want in fresh.items():
+        got = (gen_dir / name).read_text() if (gen_dir / name).exists() \
+            else ""
+        if got != want:
+            fail(f"generated/tiles/{name} is stale (run make manifest)")
+    # The ROM must include (not duplicate) the generated tables.
+    tiles = (REPO_ROOT / "src" / "game" / "tiles_content.c").read_text()
+    if '#include "cram_tables.h"' not in tiles:
+        fail("tiles_content.c must #include cram_tables.h (no hand arrays)")
+    ui = (REPO_ROOT / "src" / "ui" / "ui.c").read_text()
+    if '#include "obj_tables.h"' not in ui:
+        fail("ui.c must #include obj_tables.h (no hand arrays)")
 
 
 def check_makefile_anchors():
@@ -188,8 +177,7 @@ def main() -> int:
     check_load()
     check_consumers()
     check_compiler()
-    check_tiles_content()
-    check_obj()
+    check_tables_fresh()
     check_makefile_anchors()
     check_doc()
     if ERRORS:

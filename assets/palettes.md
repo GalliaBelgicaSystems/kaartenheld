@@ -36,8 +36,8 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 1 | Underworld_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire (MISSING) | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
+| 0 | underworld_dark | `#938da1` | `#26232e` | `#000000` | `#000000` | dark ground (auto) | DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED (auto-assigned) |
+| 1 | Underworld_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
 | 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |

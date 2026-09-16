@@ -9,70 +9,10 @@
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
 
-/* 8 CGB BG palettes, 4 colors each in RGB555 format.
- * Every value is resolved from assets/palette.txt via tools/palette_txt.py
- * (`make palette-check` enforces parity). Names in comments are the
- * palette.txt ramp names pinned by the SLOTS tables; `unused` slots hold a magenta
- * canary, `dup X` slots duplicate a real ramp until the artist authors a
- * real one (both fail loudly in palette-check when consumed). */
-const palette_color_t cgb_bg_palettes[8][4] = {
-    /* 0 fight_card */ { RGB8(255,255,255), RGB8(223,189,141), RGB8(227,174,99), RGB8(176,146,102) },
-    /* 1 fight_more */ { RGB8(255,255,255), RGB8(195,78,27), RGB8(132,79,79), RGB8(74,39,39) },
-    /* 2 fight_again */ { RGB8(255,255,255), RGB8(143,143,143), RGB8(86,86,86), RGB8(90,74,61) },
-    /* 3 fight_standard (DEV: slot 1 was ice blue -> slime green; FLORENT: revert if ice intended) */ { RGB8(255,255,255), RGB8(137,204,94), RGB8(92,144,58), RGB8(92,144,58) },
-    /* 4 fight_forever */ { RGB8(255,255,255), RGB8(113,54,193), RGB8(86,86,86), RGB8(61,48,68) },
-    /* 5 fight_still */ { RGB8(255,255,255), RGB8(141,117,74), RGB8(117,89,48), RGB8(111,90,52) },
-    /* 6 dup fight_card (gold/bow MISSING) */ { RGB8(255,255,255), RGB8(223,189,141), RGB8(227,174,99), RGB8(176,146,102) },
-    /* 7 fight_final */ { RGB8(255,255,255), RGB8(63,48,23), RGB8(0,0,0), RGB8(0,0,0) },
-};
-
-/* Forest / Field overworld palette set. */
-const palette_color_t cgb_bg_palettes_forest[8][4] = {
-    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 1 field_more (UNUSED slot 3 repeats grass, darkest by luminance) */ { RGB8(123,182,96), RGB8(237,194,20), RGB8(215,167,38), RGB8(123,182,96) },
-    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 3 field */ { RGB8(123,182,96), RGB8(42,79,26), RGB8(29,62,15), RGB8(0,0,0) },
-    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 5 field_too (stump browns as wood) */ { RGB8(123,182,96), RGB8(147,123,74), RGB8(97,78,39), RGB8(97,78,39) },
-    /* 6 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 7 field_again (rocks) */ { RGB8(123,182,96), RGB8(169,159,192), RGB8(74,59,28), RGB8(38,35,46) },
-};
-
-/* Desolate landscape palette set. */
-const palette_color_t cgb_bg_palettes_desolate[8][4] = {
-    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 1 Underworld_light (campfire; UNUSED slot 3 repeats ground) */ { RGB8(147,141,161), RGB8(237,194,20), RGB8(215,167,38), RGB8(147,141,161) },
-    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 3 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 5 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 6 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 7 underworld (slate rock) */ { RGB8(147,141,161), RGB8(169,159,192), RGB8(131,123,150), RGB8(63,58,74) },
-};
-
-/* Castle palette set. */
-const palette_color_t cgb_bg_palettes_castle[8][4] = {
-    /* 0 castle (stone) */ { RGB8(215,215,215), RGB8(130,130,130), RGB8(86,86,86), RGB8(46,46,46) },
-    /* 1 castle_room (curtains) */ { RGB8(215,215,215), RGB8(179,176,176), RGB8(139,27,27), RGB8(98,18,18) },
-    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 3 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 5 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 6 castle_hall (gold) */ { RGB8(215,215,215), RGB8(215,167,38), RGB8(141,117,74), RGB8(111,90,52) },
-    /* 7 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-};
-
-/* Village palette set. */
-const palette_color_t cgb_bg_palettes_village[8][4] = {
-    /* 0 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 1 city (braziers) */ { RGB8(182,162,126), RGB8(237,194,20), RGB8(215,167,38), RGB8(38,35,46) },
-    /* 2 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 3 dup city (dirt_floor MISSING) */ { RGB8(182,162,126), RGB8(237,194,20), RGB8(215,167,38), RGB8(38,35,46) },
-    /* 4 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-    /* 5 village (wood) */ { RGB8(182,162,126), RGB8(141,117,74), RGB8(121,100,62), RGB8(100,82,51) },
-    /* 6 town (cream) */ { RGB8(182,162,126), RGB8(241,207,145), RGB8(182,182,182), RGB8(204,170,108) },
-    /* 7 unused */ { RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255), RGB8(255,0,255) },
-};
+/* CGB BG palettes (battle/UI + overworld sets), generated from
+ * assets/palette.txt -- see generated/tiles/cram_tables.h. Do not edit
+ * color values here; edit the artist file and run make manifest. */
+#include "cram_tables.h"
 
 /* Backward compatibility alias */
 #define cgb_bg_palettes_overworld cgb_bg_palettes_forest
