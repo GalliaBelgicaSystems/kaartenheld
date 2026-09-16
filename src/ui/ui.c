@@ -61,8 +61,8 @@ uint8_t ui_font_tile_base;
 
 /* OBJ ramps resolve from assets/palette.txt via tools/palette_txt.py
  * (`make palette-check` enforces parity). OAM slots 0..3 map to the
- * SLOTS/OBJ ramps positionally; slot 0 shade 0 is always transparent.
- * Slot 0 dups more_sprites (no grey ramp shipped yet). */
+ * SLOTS/OBJ ramps positionally (grey, more_sprites, sprites_again,
+ * sprites); slot 0 shade 0 is always transparent. */
 
 
 /* ── Player sprite ─────────────────────────────────────────────────
@@ -178,7 +178,8 @@ void ui_init(void)
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_orange)[p];
     }
-    /* OBJ palette 2 is brown wood (kobolds, chests); 3 is green (slimes); 4-7 stay grey. */
+    /* OBJ palette 2 (sprites_again: dogs/kobolds/mimic) is brown body +
+     * red tongue; 3 is green (slimes); 4-7 stay grey. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }

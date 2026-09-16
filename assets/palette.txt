@@ -130,12 +130,13 @@ sprites: COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dar
 grey: COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 more_sprites: COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
 even_more_sprites: COMMON/white, SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
-sprites_again: COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc
+sprites_again: COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog
 sprites_still: COMMON/white, SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
 fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat
-# FLORENT's call: green bodies + frost-blue shading on slimes (and heal cards).
-# Note: slot 2 ice is brighter than slot 1 slime — order here is intent, not brightness.
+fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat
+# Slime bodies + darker-green outline (heal cards follow to full green).
+# Slot 2 was frost-blue ice (FLORENT's call) but png2gb lands every slime
+# outline pixel on shade 2, so outlines rendered blue -- see docs.
 fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
 fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
 fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines

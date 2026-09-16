@@ -13,7 +13,7 @@ tutorial: `assets/palette_tutorial.md`.
 | 0 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
 | 1 | fight_more | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
 | 2 | fight_again | `#ffffff` | `#8f8f8f` | `#565656` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle |
-| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#7ae3f3` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/ice_icon, COMBAT/slime_outline_combat |
+| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#5c903a` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat |
 | 4 | fight_forever | `#ffffff` | `#7136c1` | `#565656` | `#3d3044` | poison cards | COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings |
 | 5 | fight_still | `#ffffff` | `#8d754a` | `#755930` | `#6f5a34` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark |
 | 6 | fight_text | `#ffffff` | `#8f8f8f` | `#565656` | `#000000` | text (black ink) | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body |
@@ -77,7 +77,7 @@ tutorial: `assets/palette_tutorial.md`.
 |------|----|----|----|----|--------|------|
 | grey | `#ffffff` | `#b6b6b6` | `#565656` | `#000000` | UNUSED slot (no grey ramp shipped) | COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | more_sprites | `#ffffff` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
-| sprites_again | `#ffffff` | `#673c3c` | `#8b1b1b` | `#3f3017` | kobolds/dogs/hero (OBJ 2) | COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/npc |
+| sprites_again | `#ffffff` | `#673c3c` | `#8b1b1b` | `#8d754a` | kobolds/dogs/hero (OBJ 2) | COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog |
 | sprites | `#ffffff` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
