@@ -121,9 +121,9 @@ field3: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tr
 field4: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt
 field5: FOREST/grass, FOREST/rocks, FOREST/rocks_outline_fire_base, UNUSED
 field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base
-underworld: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side
-underworld_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED
-Underworld_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED
+desolate: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side
+desolate_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED
+desolate_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED
 castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
 castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
 castle_room: CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_dark
@@ -181,8 +181,8 @@ SLOTS/FOREST
 # screenshots; rename to wood if it sticks.)
 
 SLOTS/DESOLATE
-7: underworld
-1: Underworld_light
+7: desolate
+1: desolate_light
 # (slot 6 gold missing -- chest override points here.)
 
 SLOTS/CASTLE

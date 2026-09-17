@@ -36,14 +36,14 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | underworld_dark | `#938da1` | `#26232e` | `#000000` | `#000000` | dark ground (auto) | DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED (auto-assigned) |
-| 1 | Underworld_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
+| 0 | desolate_dark | `#938da1` | `#26232e` | `#000000` | `#000000` | dark ground (auto) | DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED (auto-assigned) |
+| 1 | desolate_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
 | 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 6 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | chest (MISSING) | UNUSED slot (magenta canary) |
-| 7 | underworld | `#938da1` | `#a99fc0` | `#837b96` | `#3f3a4a` | slate ground | DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side |
+| 7 | desolate | `#938da1` | `#a99fc0` | `#837b96` | `#3f3a4a` | slate ground | DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side |
 
 ## Castle (`cgb_bg_palettes_castle`)
 

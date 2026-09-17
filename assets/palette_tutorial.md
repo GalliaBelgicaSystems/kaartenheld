@@ -155,8 +155,8 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
 - **FOREST**: `field2` = grass + canopy, `field1` = grass + void black
   (walls), `field3` = stumps/trunks wood, `field4` = stump/green blend
   (mossy trunks), `field5` = rocks, `field6` = fire.
-- **DESOLATE**: `underworld` = ground, `underworld_dark` = dark accents,
-  `Underworld_light` = flames.
+- **DESOLATE**: `desolate` = ground, `desolate_dark` = dark accents,
+  `desolate_light` = flames.
 - **CASTLE**: `castle` = floors/walls, `castle_room` = stairs/curtains,
   `castle_hall` = gold/wood hall.
 - **VILLAGE**: `village` = dirt/wood ground, `town` = walls/roofs,
