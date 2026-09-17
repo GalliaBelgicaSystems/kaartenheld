@@ -99,14 +99,23 @@ Overworld enemy sprites are 8x8 (or NxM grid) tiles loaded into Game Boy sprite 
 
 ---
 
-## 3. Combat & Battle Enemy Art (BG)
+## 3. Combat & Battle Enemy Art (OAM small enemies, BG boss)
 
-Battle enemy art appears on the battle background layer (4x pixel art, up to 32x32 or 3x3 tiles).
+Small battle enemies render as hardware sprites (each with its own OBJ
+palette — mixed parties need no shared BG slot); the solo boss keeps the
+background stamp. Art is 8x8 tiles, max 3 wide × 2 tall per enemy
+(scanline budget: 3 enemies × 3 + caret must stay ≤ 10 sprites/line).
 
 ### Step-by-Step:
 1. **Curate Tiles**:
    - Add 8x8 component tiles to `tools/level_editor/public/tiles/combat/<name>.png`.
-2. **Register in Tileset**:
+   - One 4-color ramp per enemy: every tile's pixels must fit it exactly
+     (the build has no luminance fallback here — a shared shade must be
+     the same color in every tile using it; spider art is pending this).
+2. **Combat-art JSON** (`screens/combat_art/<enemy>.json`):
+   - `"oam": true` + `"obj_palette": "<SLOTS/OBJ ramp>"` for OAM enemies;
+     omit both for BG-stamped (boss).
+3. **Register in Tileset**:
    - Add entries to `tools/level_editor/tilesets/combat.json`.
 3. **Add to Battle Sheet**:
    - In `tools/compose_battle_sprites.py`, add tile names to `LAYOUT`.

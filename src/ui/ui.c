@@ -177,9 +177,11 @@ void ui_init(void)
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_orange)[p];
     }
-    /* OBJ palette 2 (sprites_again: dogs/kobolds/mimic) is brown body +
-     * red tongue; 3 is green (slimes); 4 is battle-slime greens (OAM
-     * battle pilot); 5-7 stay grey. */
+    /* OBJ palettes program positionally from generated/tiles/obj_tables.h:
+     * 0 sprites (bats/spiders), 1 sprites5 (dogs/kobolds/mimics/fire/boss),
+     * 2 sprites8 (hero), 3 sprites11 (slimes), 4 battle_slime, 5 battle_bat,
+     * 6 battle_kobold, 7 battle_mimic (OAM battle enemies).
+     * Shade 0 is transparent on hardware. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }
@@ -189,8 +191,14 @@ void ui_init(void)
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_obj4)[p];
     }
-    for (p = 40; p < 64; p++) {
-        OCPD_REG = ((const uint8_t *)cgb_sprite_palette)[p & 7];
+    for (p = 0; p < 8; p++) {
+        OCPD_REG = ((const uint8_t *)cgb_sprite_palette_obj5)[p];
+    }
+    for (p = 0; p < 8; p++) {
+        OCPD_REG = ((const uint8_t *)cgb_sprite_palette_obj6)[p];
+    }
+    for (p = 0; p < 8; p++) {
+        OCPD_REG = ((const uint8_t *)cgb_sprite_palette_obj7)[p];
     }
 
     SHOW_BKG;

@@ -5,7 +5,7 @@
   "order": 2,
   "width": 3,
   "height": 3,
-  "palette": "fight_final",
+  "palette": "fightboss",
   "frame0": [
     "combat_top_left_boss", "combat_top_middle_boss", "combat_top_right_boss",
     "combat_left_middle_boss", "combat_middle_center_boss", "combat_middle_right_boss",

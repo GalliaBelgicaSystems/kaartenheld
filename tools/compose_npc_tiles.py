@@ -1,6 +1,6 @@
 """Compose assets/npc_tiles.png (village NPC map-art mini sheet).
 
-The shared actors tileset (assets/actor-sprites.png) now owns the NPC
+The shared actors tileset (assets/sprites.png) now owns the NPC
 art; the village sheet's NPC cells were blanked when the art moved
 (assets/tilesets.md "Actors tileset").  The ROM's village VRAM block is
 compiled from village-tile.png, so ui_load_tileset_banked() overlays
@@ -10,7 +10,7 @@ src/game/tiles_content.c, g_actor_npc_tiles).
 Layout order = g_actor_npc_tiles order = the npc_slots[] table in
 tiles_content.c.  Deterministic: rerunning reproduces the sheet
 byte-identically.  The chroma-key yellow (241,235,3) -- the actor
-sheet's transparent-background convention (actor-tileset-description
+sheet's transparent-background convention (sprites-tileset-description
 CSV) -- is the composite background; the Makefile png2gb rule anchors
 it to shade 0, matching how the old village sheet encoded art colors.
 """

@@ -2,10 +2,11 @@
   "id": "desolate_landscape",
   "label": "Desolate Landscape",
   "gb_tileset_kind": "WORLD_TILESET_DESOLATE",
+  "indexed": true,
   "tiles": [
     {
       "id": "desolate_landscape_top_left_corner_wall",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top left corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_00",
       "walkable": false,
@@ -16,7 +17,7 @@
     },
     {
       "id": "desolate_landscape_top_wall_1",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_01",
       "walkable": false,
@@ -27,7 +28,7 @@
     },
     {
       "id": "desolate_landscape_top_wall_2",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_02",
       "walkable": false,
@@ -38,7 +39,7 @@
     },
     {
       "id": "desolate_landscape_top_wall_3",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_03",
       "walkable": false,
@@ -49,7 +50,7 @@
     },
     {
       "id": "desolate_landscape_top_wall_4",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_04",
       "walkable": false,
@@ -60,7 +61,7 @@
     },
     {
       "id": "desolate_landscape_top_right_corner_wall",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top right corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_05",
       "walkable": false,
@@ -71,7 +72,7 @@
     },
     {
       "id": "desolate_landscape_right_wall_1",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_06",
       "walkable": false,
@@ -82,7 +83,7 @@
     },
     {
       "id": "desolate_landscape_right_wall_2",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_07",
       "walkable": false,
@@ -93,7 +94,7 @@
     },
     {
       "id": "desolate_landscape_right_wall_3",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_08",
       "walkable": false,
@@ -104,7 +105,7 @@
     },
     {
       "id": "desolate_landscape_left_wall_1",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "left wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_09",
       "walkable": false,
@@ -115,7 +116,7 @@
     },
     {
       "id": "desolate_landscape_left_wall_2",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "left wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_10",
       "walkable": false,
@@ -126,7 +127,7 @@
     },
     {
       "id": "desolate_landscape_left_wall_3",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "left wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_11",
       "walkable": false,
@@ -137,7 +138,7 @@
     },
     {
       "id": "desolate_landscape_top_left_treetop",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top left treetop",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_12",
       "walkable": false,
@@ -149,7 +150,7 @@
     },
     {
       "id": "desolate_landscape_top_right_tree_top",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top right tree top",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_13",
       "walkable": false,
@@ -161,7 +162,7 @@
     },
     {
       "id": "desolate_landscape_top_left_rock",
-      "palette": "desolate",
+      "palette": "desolate2",
       "label": "top left rock",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_14",
       "walkable": false,
@@ -173,7 +174,7 @@
     },
     {
       "id": "desolate_landscape_top_right_rock",
-      "palette": "desolate_dark",
+      "palette": "desolate2",
       "label": "top right rock",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_15",
       "walkable": false,
@@ -185,7 +186,7 @@
     },
     {
       "id": "desolate_landscape_bottom_left_corner_wall",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom left corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_16",
       "walkable": false,
@@ -196,7 +197,7 @@
     },
     {
       "id": "desolate_landscape_bottom_wall_1",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_17",
       "walkable": false,
@@ -207,7 +208,7 @@
     },
     {
       "id": "desolate_landscape_bottom_wall_2",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_18",
       "walkable": false,
@@ -218,7 +219,7 @@
     },
     {
       "id": "desolate_landscape_bottom_wall_3",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_19",
       "walkable": false,
@@ -229,7 +230,7 @@
     },
     {
       "id": "desolate_landscape_bottom_wall_4",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_20",
       "walkable": false,
@@ -240,7 +241,7 @@
     },
     {
       "id": "desolate_landscape_floor_with_stuff_walkable_1",
-      "palette": "desolate_dark",
+      "palette": "desolate2",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_21",
       "walkable": true,
@@ -252,7 +253,7 @@
     },
     {
       "id": "desolate_landscape_floor_with_stuff_walkable_2",
-      "palette": "desolate",
+      "palette": "desolate2",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_22",
       "walkable": true,
@@ -264,7 +265,7 @@
     },
     {
       "id": "desolate_landscape_floor_with_stuff_walkable_3",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_23",
       "walkable": true,
@@ -276,7 +277,7 @@
     },
     {
       "id": "desolate_landscape_floor_with_stuff_walkable_4",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "floor with stuff walkable",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_24",
       "walkable": true,
@@ -288,7 +289,7 @@
     },
     {
       "id": "desolate_landscape_right_wall_4",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_25",
       "walkable": false,
@@ -299,7 +300,7 @@
     },
     {
       "id": "desolate_landscape_bottom_right_corner_wall",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom right corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_26",
       "walkable": false,
@@ -310,7 +311,7 @@
     },
     {
       "id": "desolate_landscape_left_wall_4",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "left wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_27",
       "walkable": false,
@@ -321,7 +322,7 @@
     },
     {
       "id": "desolate_landscape_bottom_left_treetrunk",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom left treetrunk",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_28",
       "walkable": false,
@@ -333,7 +334,7 @@
     },
     {
       "id": "desolate_landscape_bottom_right_tree_trunk",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom right tree trunk",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_29",
       "walkable": false,
@@ -345,7 +346,7 @@
     },
     {
       "id": "desolate_landscape_bottom_left_rock",
-      "palette": "desolate",
+      "palette": "desolate2",
       "label": "bottom left rock",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_30",
       "walkable": false,
@@ -357,7 +358,7 @@
     },
     {
       "id": "desolate_landscape_bottom_right_rock",
-      "palette": "desolate",
+      "palette": "desolate2",
       "label": "bottom right rock",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_31",
       "walkable": false,
@@ -369,7 +370,7 @@
     },
     {
       "id": "desolate_landscape_plain_floor_1",
-      "palette": "desolate",
+      "palette": "desolate1",
       "label": "plain floor",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_39",
       "walkable": true,
@@ -380,7 +381,7 @@
     },
     {
       "id": "desolate_landscape_fire_frame_1",
-      "palette": "desolate_light",
+      "palette": "desolate3",
       "label": "fire frame 1",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_37",
       "walkable": false,
@@ -391,7 +392,7 @@
     },
     {
       "id": "desolate_landscape_fire_frame_2",
-      "palette": "desolate_light",
+      "palette": "desolate3",
       "label": "fire frame 2",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_38",
       "walkable": false,
@@ -402,7 +403,7 @@
     },
     {
       "id": "desolate_landscape_exit_desolate_landscape",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "exit",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_40",
       "walkable": true,
@@ -413,7 +414,7 @@
     },
     {
       "id": "desolate_landscape_treasure_chest_desolate",
-      "palette": "desolate_light",
+      "palette": "desolate1",
       "label": "chest",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_43",
       "walkable": false,
@@ -425,7 +426,7 @@
     },
     {
       "id": "desolate_landscape_black_emptyness",
-      "palette": "desolate",
+      "palette": "desolate1",
       "label": "black emptyness",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_32",
       "walkable": false,
@@ -436,7 +437,7 @@
     },
     {
       "id": "desolate_landscape_bottom_left_corner_interior",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom left corner interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_33",
       "walkable": false,
@@ -447,7 +448,7 @@
     },
     {
       "id": "desolate_landscape_bottom_right_corner_interior",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "bottom right corner interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_34",
       "walkable": false,
@@ -458,7 +459,7 @@
     },
     {
       "id": "desolate_landscape_top_right_corner_wall_interior",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top right corner wall interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_35",
       "walkable": false,
@@ -469,7 +470,7 @@
     },
     {
       "id": "desolate_landscape_top_left_corner_wall_interior",
-      "palette": "desolate_dark",
+      "palette": "desolate1",
       "label": "top left corner wall interior",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_36",
       "walkable": false,
@@ -480,7 +481,7 @@
     },
     {
       "id": "desolate_landscape_plain_floor_2",
-      "palette": "desolate",
+      "palette": "desolate1",
       "label": "plain floor",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_41",
       "walkable": true,
@@ -491,7 +492,7 @@
     },
     {
       "id": "desolate_landscape_plain_floor_3",
-      "palette": "desolate",
+      "palette": "desolate1",
       "label": "plain floor",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_42",
       "walkable": true,

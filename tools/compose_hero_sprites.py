@@ -22,7 +22,7 @@ for _y, _row in enumerate(LAYOUT):
 
 
 def main():
-    ref = Image.open('assets/desolate_landscape.png')
+    ref = Image.open('assets/desolate-tile.png')
     sheet = Image.new('P', (16, 8))
     sheet.putpalette(ref.getpalette())
     # OAM transparent background: the curated hero tiles use this light

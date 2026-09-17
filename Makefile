@@ -172,14 +172,17 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
 		--palette auto --anchor-color "#938da1" --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
-	# ── Desolate landscape (assets/desolate_landscape.png, 16 cols × 3 rows) ──
+	# ── Desolate landscape (assets/desolate-tile.png, 16 cols × 3 rows) ──
+	# Indexed sheet: shades from generated/tiles/desolate_landscape_shades.json.
 	# Full 48-tile world sheet (g_tileset_desolate)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_world_tiles \
+	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
 		--palette auto --anchor-color "#938da1" \
+		--shade-map generated/tiles/desolate_landscape_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
 	# 41-tile subset for scene terrain lookup (rows 0–2, cols 0–8 on row 2)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_tiles \
+	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_tiles \
 		--palette auto --anchor-color "#938da1" --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
+		--shade-map generated/tiles/desolate_landscape_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_tiles.inc
 	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
@@ -190,10 +193,12 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
 		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
+	# Indexed sheet: shades from generated/tiles/village_shades.json.
 	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
 		--palette auto --anchor-color "#b6a27e" \
+		--shade-map generated/tiles/village_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
 	# NPC map art (compose from the curated actors tileset; see
 	# tools/compose_npc_tiles.py).  The village sheet's NPC cells are blank
@@ -362,7 +367,7 @@ extract-tiles:
 		--output-dir tools/level_editor/public/tiles/forest \
 		--output-json tools/level_editor/tilesets/forest.json
 	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/desolate_landscape.png --csv assets/desolate_landscape-description.csv \
+		--sheet assets/desolate-tile.png --csv assets/desolate-description.csv \
 		--tileset-id desolate_landscape --label "Desolate Landscape" \
 		--gb-tileset-kind WORLD_TILESET_DESOLATE \
 		--output-dir tools/level_editor/public/tiles/desolate_landscape \
@@ -380,7 +385,7 @@ extract-tiles:
 		--output-dir tools/level_editor/public/tiles/village \
 		--output-json tools/level_editor/tilesets/village.json
 	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/actor-sprites.png --csv assets/actor-tileset-description.csv \
+		--sheet assets/sprites.png --csv assets/sprites-tileset-description.csv \
 		--tileset-id actors --label "Actors (Shared)" \
 		--gb-tileset-kind WORLD_TILESET_ACTORS \
 		--output-dir tools/level_editor/public/tiles/actors \

@@ -370,7 +370,7 @@ different terms.
   its Appendix) and the copyright/attribution notices are kept.
 - **Art, music, and other assets** are **not** covered by the EUPL and remain
   under their own terms. In particular the assets credited to Florent Bérault
-  (e.g. `desolate_landscape.png`, `assets/music/Battle BGM.uge`,
+  (e.g. `desolate-tile.png`, `assets/music/Battle BGM.uge`,
   `assets/music/desolate_landscape.uge`) are offered to the public under
   **CC BY-NC-ND 4.0** (attribution, **non-commercial**, **no derivatives**); the
   imported tilesets follow their source pages, and the combat art is original

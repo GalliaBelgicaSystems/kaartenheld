@@ -149,21 +149,24 @@ pixels. Don't "fix" it to a pretty color or every NPC gets a yellow box.
 
 Resolved hexes: `assets/palettes.md` (generated, always current).
 
-- **BASE** (battles + cards): `fight_standard` = slime enemies *and*
-  heal cards (they share — both stay green); `fight_more/fight_again/
-  fight_still/fight_forever/fight_final` = card/enemy art by set;
-  `fight_text` = black-ink text; `fight_card` = card UI + gold.
+- **BASE** (battles + cards): `fight1` = card UI base; `fightslime/
+  fightspider/fightmimic/fightgoblin/fightboss` = enemy art (each shares
+  its slot with the matching card color: FIELD/IRON/WOOD/FIRE/DIM);
+  `fight5` = poison cards + paper; `fight_text` = black-ink text.
 - **FOREST**: `field2` = grass + canopy, `field1` = grass + void black
   (walls), `field3` = stumps/trunks wood, `field4` = stump/green blend
   (mossy trunks), `field5` = rocks, `field6` = fire.
-- **DESOLATE**: `desolate` = ground, `desolate_dark` = dark accents,
-  `desolate_light` = flames.
-- **CASTLE**: `castle` = floors/walls, `castle_room` = stairs/curtains,
-  `castle_hall` = gold/wood hall.
-- **VILLAGE**: `village` = dirt/wood ground, `town` = walls/roofs,
-  `city` = fire accents.
-- **OBJ** (sprites): `grey` = bats + spiders, `more_sprites` = chests/boss
-  glow/dogs, `sprites_again` = dogs/tongues, `sprites` = slimes + NPCs.
+- **DESOLATE**: `desolate1` = ground/floor default, `desolate2` = rocks,
+  `desolate3` = flames.
+- **CASTLE**: `castle4` = walls/floor default, `castle3` = curtains/room,
+  `castle2` = gold hall, `castle1` = stairs (spare).
+- **VILLAGE**: `town1` = dirt/wood ground + NPC wood, `town2` = walls,
+  `town3` = fire, `town4` = grey stone, `town5` = wells, `town6` =
+  barrel, `town7` = house walls.
+- **OBJ** (sprites): `sprites` = bats/spiders, `sprites5` = dogs/kobolds/
+  mimics/fire/boss wood-gold family, `sprites8` = hero, `sprites11` =
+  slimes, `battle_slime`/`battle_bat`/`battle_kobold`/`battle_mimic`
+  (slots 4-7) = OAM battle enemies, one palette per enemy.
 
 ## Guardrails (the checker enforces all of these)
 

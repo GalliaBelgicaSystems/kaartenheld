@@ -5,7 +5,7 @@
   "tiles": [
     {
       "id": "castle_top_left_corner_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "top left corner wall",
       "gb_constant": "TILE_CASTLE_00",
       "walkable": false,
@@ -16,7 +16,7 @@
     },
     {
       "id": "castle_top_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "top wall",
       "gb_constant": "TILE_CASTLE_01",
       "walkable": false,
@@ -27,7 +27,7 @@
     },
     {
       "id": "castle_top_right_corner_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "top right corner wall",
       "gb_constant": "TILE_CASTLE_02",
       "walkable": false,
@@ -38,7 +38,7 @@
     },
     {
       "id": "castle_left_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "left wall",
       "gb_constant": "TILE_CASTLE_03",
       "walkable": false,
@@ -49,7 +49,7 @@
     },
     {
       "id": "castle_right_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "right wall",
       "gb_constant": "TILE_CASTLE_04",
       "walkable": false,
@@ -60,7 +60,7 @@
     },
     {
       "id": "castle_window",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "window",
       "gb_constant": "TILE_CASTLE_05",
       "walkable": false,
@@ -71,7 +71,7 @@
     },
     {
       "id": "castle_curtain",
-      "palette": "castle_room",
+      "palette": "castle3",
       "label": "curtain",
       "gb_constant": "TILE_CASTLE_06",
       "walkable": false,
@@ -82,7 +82,7 @@
     },
     {
       "id": "castle_stairs",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "stairs",
       "gb_constant": "TILE_CASTLE_07",
       "walkable": true,
@@ -93,7 +93,7 @@
     },
     {
       "id": "castle_bottom_left_corren_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "bottom left corren wall",
       "gb_constant": "TILE_CASTLE_08",
       "walkable": false,
@@ -104,7 +104,7 @@
     },
     {
       "id": "castle_bottom_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "bottom wall",
       "gb_constant": "TILE_CASTLE_09",
       "walkable": false,
@@ -115,7 +115,7 @@
     },
     {
       "id": "castle_bottom_right_corner_wall",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "bottom right corner wall",
       "gb_constant": "TILE_CASTLE_10",
       "walkable": false,
@@ -126,7 +126,7 @@
     },
     {
       "id": "castle_chair_facing_left",
-      "palette": "castle_hall",
+      "palette": "castle2",
       "label": "chair facing left",
       "gb_constant": "TILE_CASTLE_11",
       "walkable": false,
@@ -137,7 +137,7 @@
     },
     {
       "id": "castle_table",
-      "palette": "castle_hall",
+      "palette": "castle2",
       "label": "table",
       "gb_constant": "TILE_CASTLE_12",
       "walkable": false,
@@ -148,7 +148,7 @@
     },
     {
       "id": "castle_chair_facing_riht",
-      "palette": "castle_hall",
+      "palette": "castle2",
       "label": "chair facing riht",
       "gb_constant": "TILE_CASTLE_13",
       "walkable": false,
@@ -159,7 +159,7 @@
     },
     {
       "id": "castle_chest",
-      "palette": "castle_hall",
+      "palette": "castle4",
       "label": "chest",
       "gb_constant": "TILE_CASTLE_14",
       "walkable": false,
@@ -170,7 +170,7 @@
     },
     {
       "id": "castle_plain_floor",
-      "palette": "castle",
+      "palette": "castle4",
       "label": "plain floor",
       "gb_constant": "TILE_CASTLE_15",
       "walkable": true,

@@ -205,9 +205,12 @@ def load_shade_map(path, asset):
 def strict_tile_shade_map(img, tile_x, tile_y, cell_map, asset, anchor_color=None):
     """Exact shade map for one tile from the sidecar (no luminance sort).
 
-    Every pixel's color must be listed; the anchor (when present in the
-    tile) must map to shade 0. Anything else is a hard error naming the
-    tile and the offending color."""
+    Every pixel's color must be listed; anything else is a hard error
+    naming the tile and the offending color. The sidecar (generated from
+    the tile's ramp order) is authoritative -- entry 0 is whatever the
+    ramp puts first (ground for floor ramps, rock for rock ramps), so no
+    anchor assumption is validated here. (On OAM sheets shade 0 stays
+    transparent by hardware, whatever color it names.)"""
     px = img.load()
     ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
     unique = {px[ox + col, oy + row] for row in range(TILE_SIZE) for col in range(TILE_SIZE)}
@@ -220,10 +223,6 @@ def strict_tile_shade_map(img, tile_x, tile_y, cell_map, asset, anchor_color=Non
                 f"which is not in its ramp -- repaint the pixel or repoint the tile's "
                 f"\"palette\" in tools/level_editor/tilesets/*.json")
         shade_map[color] = cell_map[color]
-    if anchor_color is not None and anchor_color in shade_map and shade_map[anchor_color] != 0:
-        raise Png2GbError(
-            asset, "anchor-mismatch",
-            f"tile ({tile_x},{tile_y}): anchor maps to shade {shade_map[anchor_color]}, want 0")
     return shade_map
 
 

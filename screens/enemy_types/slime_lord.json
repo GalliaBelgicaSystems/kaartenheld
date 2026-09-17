@@ -8,7 +8,7 @@
     "width": 2,
     "height": 2,
     "cells": ["boss_ow_tl", "boss_ow_tr", "boss_ow_bl", "boss_ow_br"],
-    "palette": "more_sprites"
+    "palette": "sprites5"
   },
   "name": "L.of Slimes",
   "hp": 50,

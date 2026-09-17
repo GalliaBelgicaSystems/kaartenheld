@@ -42,7 +42,7 @@ TILESETS = ["forest", "castle", "desolate_landscape", "village"]
 PNG_MAP = {
     "forest": "forest-tile.png",
     "castle": "castle-tile.png",
-    "desolate_landscape": "desolate_landscape.png",
+    "desolate_landscape": "desolate-tile.png",
     "village": "village-tile.png",
 }
 

@@ -10,14 +10,14 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | fight_card | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
-| 1 | fight_more | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
-| 2 | fight_again | `#ffffff` | `#8f8f8f` | `#565656` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle |
-| 3 | fight_standard | `#ffffff` | `#89cc5e` | `#5c903a` | `#5c903a` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat |
-| 4 | fight_forever | `#ffffff` | `#7136c1` | `#565656` | `#3d3044` | poison cards | COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings |
-| 5 | fight_still | `#ffffff` | `#8d754a` | `#755930` | `#6f5a34` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark |
+| 0 | fight1 | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
+| 1 | fightgoblin | `#ffffff` | `#844f4f` | `#4a2727` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED |
+| 2 | fightspider | `#ffffff` | `#8f8f8f` | `#c34e1b` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/heart_fire_enemy_eyes, COMBAT/spider_combat_knife_handle |
+| 3 | fightslime | `#ffffff` | `#89cc5e` | `#5c903a` | `#000000` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body |
+| 4 | fight5 | `#ffffff` | `#dfbd8d` | `#b09266` | `#7136c1` | poison cards | COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon |
+| 5 | fightmimic | `#ffffff` | `#8d754a` | `#6f5a34` | `#3f3017` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth |
 | 6 | fight_text | `#ffffff` | `#8f8f8f` | `#565656` | `#000000` | text (black ink) | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body |
-| 7 | fight_final | `#ffffff` | `#3f3017` | `#000000` | `#000000` | boss/bat art | COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED |
+| 7 | fightboss | `#ffffff` | `#8d754a` | `#565656` | `#000000` | boss/bat art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body |
 
 ## Forest / field (`cgb_bg_palettes_forest`)
 
@@ -36,53 +36,53 @@ tutorial: `assets/palette_tutorial.md`.
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | desolate_dark | `#938da1` | `#26232e` | `#000000` | `#000000` | dark ground (auto) | DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED (auto-assigned) |
-| 1 | desolate_light | `#938da1` | `#edc214` | `#d7a726` | `#938da1` | campfire | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED |
+| 0 | desolate2 | `#a99fc0` | `#938da1` | `#837b96` | `#26232e` | dark ground (auto) | DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base |
+| 1 | desolate3 | `#938da1` | `#edc214` | `#d7a726` | `#26232e` | campfire | DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base |
 | 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 6 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | chest (MISSING) | UNUSED slot (magenta canary) |
-| 7 | desolate | `#938da1` | `#a99fc0` | `#837b96` | `#3f3a4a` | slate ground | DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side |
+| 7 | desolate1 | `#938da1` | `#3f3a4a` | `#26232e` | `#000000` | slate ground | DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void |
 
 ## Castle (`cgb_bg_palettes_castle`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | castle | `#d7d7d7` | `#828282` | `#565656` | `#2e2e2e` | stone | CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame |
-| 1 | castle_room | `#d7d7d7` | `#b3b0b0` | `#8b1b1b` | `#621212` | curtains | CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_dark |
-| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 0 | castle4 | `#d7d7d7` | `#828282` | `#565656` | `#2e2e2e` | stone | CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame |
+| 1 | castle3 | `#d7d7d7` | `#d7a726` | `#8b1b1b` | `#621212` | curtains | CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark |
+| 2 | castle1 | `#d7d7d7` | `#b3b0b0` | `#828282` | `#565656` | unused | CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark |
 | 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | furniture (MISSING) | UNUSED slot (magenta canary) |
-| 6 | castle_hall | `#d7d7d7` | `#d7a726` | `#8d754a` | `#6f5a34` | gold/chest | CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark |
+| 6 | castle2 | `#d7d7d7` | `#d7a726` | `#8d754a` | `#8d754a` | gold/chest | CASTLE/ground, CASTLE/gold, CASTLE/wood_light, UNUSED |
 | 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
 ## Village / town (`cgb_bg_palettes_village`)
 
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
-| 0 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 1 | city | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | braziers | TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base |
-| 2 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | dirt ground (MISSING) | UNUSED slot (magenta canary) |
-| 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
-| 5 | village | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble |
-| 6 | town | `#b6a27e` | `#f1cf91` | `#b6b6b6` | `#ccaa6c` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade |
+| 0 | town4 | `#b6a27e` | `#b6b6b6` | `#939393` | `#000000` | unused | TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/holes |
+| 1 | town3 | `#b6a27e` | `#edc214` | `#d7a726` | `#26232e` | braziers | TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base |
+| 2 | town5 | `#b6a27e` | `#b6b6b6` | `#939393` | `#645233` | unused | TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubble |
+| 3 | town6 | `#b6a27e` | `#b6b6b6` | `#8d754a` | `#645233` | dirt ground (MISSING) | TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble |
+| 4 | town7 | `#f1cf91` | `#645233` | `#000000` | `#000000` | unused | TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED |
+| 5 | town1 | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble |
+| 6 | town2 | `#b6a27e` | `#f1cf91` | `#ccaa6c` | `#645233` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble |
 | 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
 ## OBJ sprite ramps (`src/ui/ui.c`)
 
 | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |------|----|----|----|----|--------|------|
-| grey | `#ffffff` | `#b6b6b6` | `#565656` | `#000000` | UNUSED slot (no grey ramp shipped) | COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
-| more_sprites | `#ffffff` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
-| sprites_again | `#ffffff` | `#673c3c` | `#8b1b1b` | `#8d754a` | kobolds/dogs/hero (OBJ 2) | COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog |
-| sprites | `#ffffff` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
+| sprites | `#f1eb03` | `#673c3c` | `#565656` | `#000000` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
+| sprites5 | `#f1eb03` | `#ac9d23` | `#8d754a` | `#6f5a34` |  | SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline |
+| sprites8 | `#f1eb03` | `#b6b6b6` | `#8b1b1b` | `#3f3017` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc |
+| sprites11 | `#f1eb03` | `#b6b6b6` | `#77e331` | `#5c903a` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
 | battle_slime | `#f1eb03` | `#89cc5e` | `#5c903a` | `#5c903a` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/battle_slime_edge |
-| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
-| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
-| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
+| battle_bat | `#f1eb03` | `#c34e1b` | `#3d3044` | `#000000` |  | SPRITES/background, SPRITES/battle_bat_heart, SPRITES/battle_bat_wings, SPRITES/character_main_outline_bat |
+| battle_kobold | `#f1eb03` | `#4a2727` | `#844f4f` | `#4a2727` |  | SPRITES/background, UNUSED, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark |
+| battle_mimic | `#f1eb03` | `#8d754a` | `#6f5a34` | `#3f3017` |  | SPRITES/background, SPRITES/battle_mimic_light, SPRITES/battle_mimic_dark, SPRITES/battle_mimic_mouth |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
 

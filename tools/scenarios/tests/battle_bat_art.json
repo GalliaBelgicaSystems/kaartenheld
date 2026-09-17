@@ -1,7 +1,7 @@
 {
  "name": "battle_bat_art",
  "test": true,
- "description": "Bat trio battle renders the bat combat art (3x1 wings-spread frame0 at the art base, second row holding the blank/white padding cells of the folded frame) under the HP line -- pins the bat wiring end to end.  Parked on the bat's first patrol leg so the circle walk bumps the hero.  The art cells pin the folded-wings frame (frame index 1 at capture timing; the spread-wings frame renders at even (timer>>4) parity).",
+ "description": "Bat trio battle renders the bat combat art as OAM sprites (3x2, OBJ palette 5) under the HP line -- pins the bat wiring end to end. Parked on the bat's first patrol leg so the circle walk bumps the hero. Frame index 1 (folded wings) at capture timing.",
  "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
@@ -28,28 +28,45 @@
    "contains": "8/ 8   8/ 8   8/ 8"
   },
   {
-   "type": "tilemap_cell",
-   "row": 3,
-   "col": 1,
+   "type": "oam_tile",
+   "slot": 1,
    "expected": 134
   },
   {
-   "type": "tilemap_cell",
-   "row": 3,
-   "col": 2,
-   "expected": 135
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 3,
-   "col": 3,
+   "type": "oam_tile",
+   "slot": 3,
    "expected": 136
   },
   {
-   "type": "tilemap_cell",
-   "row": 4,
-   "col": 1,
+   "type": "oam_tile",
+   "slot": 4,
    "expected": 137
+  },
+  {
+   "type": "oam_tile",
+   "slot": 6,
+   "expected": 139
+  },
+  {
+   "type": "oam_prop",
+   "slot": 1,
+   "expected": 5
+  },
+  {
+   "type": "oam_y",
+   "slot": 1,
+   "expected": 40
+  },
+  {
+   "type": "oam_x",
+   "slot": 1,
+   "expected": 16
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 1,
+   "expected": 0
   }
  ],
  "initial_state": {

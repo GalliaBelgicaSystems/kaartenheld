@@ -124,7 +124,7 @@ def check_makefile_anchors():
         if a and current_png:
             found.setdefault(current_png, []).append(a.group(1).lower())
     want = {"assets/forest-tile.png": ANCHORS["forest"],
-            "assets/desolate_landscape.png": ANCHORS["desolate_landscape"],
+            "assets/desolate-tile.png": ANCHORS["desolate_landscape"],
             "assets/castle-tile.png": ANCHORS["castle"],
             "assets/village-tile.png": ANCHORS["village"],
             "assets/npc_tiles.png": ANCHORS["npc_tiles"],

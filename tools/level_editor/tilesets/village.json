@@ -2,10 +2,11 @@
   "id": "village",
   "label": "Oakhaven Village",
   "gb_tileset_kind": "WORLD_TILESET_VILLAGE",
+  "indexed": true,
   "tiles": [
     {
       "id": "village_top_left_corner_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "top left corner wall",
       "gb_constant": "TILE_VILLAGE_00",
       "walkable": false,
@@ -16,7 +17,7 @@
     },
     {
       "id": "village_top_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "top wall",
       "gb_constant": "TILE_VILLAGE_01",
       "walkable": false,
@@ -27,7 +28,7 @@
     },
     {
       "id": "village_top_right_corner_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "top right corner wall",
       "gb_constant": "TILE_VILLAGE_02",
       "walkable": false,
@@ -38,7 +39,7 @@
     },
     {
       "id": "village_right_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "right wall",
       "gb_constant": "TILE_VILLAGE_03",
       "walkable": false,
@@ -49,7 +50,7 @@
     },
     {
       "id": "village_dog_frame_1",
-      "palette": "city",
+      "palette": "town1",
       "label": "dog frame 1",
       "gb_constant": "TILE_VILLAGE_04",
       "walkable": false,
@@ -60,7 +61,7 @@
     },
     {
       "id": "village_dog_frame_2",
-      "palette": "city",
+      "palette": "town1",
       "label": "dog frame 2",
       "gb_constant": "TILE_VILLAGE_05",
       "walkable": false,
@@ -71,7 +72,7 @@
     },
     {
       "id": "village_plain_floor_1",
-      "palette": "city",
+      "palette": "town1",
       "label": "plain floor",
       "gb_constant": "TILE_VILLAGE_06",
       "walkable": true,
@@ -82,7 +83,7 @@
     },
     {
       "id": "village_top_left_well",
-      "palette": "village",
+      "palette": "town5",
       "label": "top left well",
       "gb_constant": "TILE_VILLAGE_07",
       "walkable": false,
@@ -93,7 +94,7 @@
     },
     {
       "id": "village_top_right_well",
-      "palette": "village",
+      "palette": "town5",
       "label": "top right well",
       "gb_constant": "TILE_VILLAGE_08",
       "walkable": false,
@@ -104,7 +105,7 @@
     },
     {
       "id": "village_top_left_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "top left roof",
       "gb_constant": "TILE_VILLAGE_10",
       "walkable": false,
@@ -115,7 +116,7 @@
     },
     {
       "id": "village_top_middle_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "top middle roof",
       "gb_constant": "TILE_VILLAGE_11",
       "walkable": false,
@@ -126,7 +127,7 @@
     },
     {
       "id": "village_top_right_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "top right roof",
       "gb_constant": "TILE_VILLAGE_12",
       "walkable": false,
@@ -137,7 +138,7 @@
     },
     {
       "id": "village_top_left_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "top left roof 2",
       "gb_constant": "TILE_VILLAGE_13",
       "walkable": false,
@@ -148,7 +149,7 @@
     },
     {
       "id": "village_top_middle_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "top middle roof 2",
       "gb_constant": "TILE_VILLAGE_14",
       "walkable": false,
@@ -159,7 +160,7 @@
     },
     {
       "id": "village_top_right_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "top right roof 2",
       "gb_constant": "TILE_VILLAGE_15",
       "walkable": false,
@@ -170,7 +171,7 @@
     },
     {
       "id": "village_bottom_left_corner_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "bottom left corner wall",
       "gb_constant": "TILE_VILLAGE_16",
       "walkable": false,
@@ -181,7 +182,7 @@
     },
     {
       "id": "village_bottom_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "bottom wall",
       "gb_constant": "TILE_VILLAGE_17",
       "walkable": false,
@@ -192,7 +193,7 @@
     },
     {
       "id": "village_bottom_right_corner_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "bottom right corner wall",
       "gb_constant": "TILE_VILLAGE_18",
       "walkable": false,
@@ -203,7 +204,7 @@
     },
     {
       "id": "village_left_wall",
-      "palette": "village",
+      "palette": "town1",
       "label": "left wall",
       "gb_constant": "TILE_VILLAGE_19",
       "walkable": false,
@@ -214,7 +215,7 @@
     },
     {
       "id": "village_floor_with_stuff_on_it",
-      "palette": "village",
+      "palette": "town1",
       "label": "floor with stuff on it",
       "gb_constant": "TILE_VILLAGE_20",
       "walkable": true,
@@ -225,7 +226,7 @@
     },
     {
       "id": "village_floor_with_puddle_on_it",
-      "palette": "town",
+      "palette": "town4",
       "label": "floor with puddle on it",
       "gb_constant": "TILE_VILLAGE_21",
       "walkable": true,
@@ -236,7 +237,7 @@
     },
     {
       "id": "village_barrel",
-      "palette": "village",
+      "palette": "town6",
       "label": "barrel",
       "gb_constant": "TILE_VILLAGE_22",
       "walkable": false,
@@ -247,7 +248,7 @@
     },
     {
       "id": "village_bottom_left_well",
-      "palette": "village",
+      "palette": "town4",
       "label": "bottom left well",
       "gb_constant": "TILE_VILLAGE_23",
       "walkable": false,
@@ -258,7 +259,7 @@
     },
     {
       "id": "village_bottom_right_well",
-      "palette": "village",
+      "palette": "town4",
       "label": "bottom right well",
       "gb_constant": "TILE_VILLAGE_24",
       "walkable": false,
@@ -269,7 +270,7 @@
     },
     {
       "id": "village_bottom_left_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom left roof",
       "gb_constant": "TILE_VILLAGE_26",
       "walkable": false,
@@ -280,7 +281,7 @@
     },
     {
       "id": "village_bottom_middle_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom middle roof",
       "gb_constant": "TILE_VILLAGE_27",
       "walkable": false,
@@ -291,7 +292,7 @@
     },
     {
       "id": "village_bottom_right_roof",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom right roof",
       "gb_constant": "TILE_VILLAGE_28",
       "walkable": false,
@@ -302,7 +303,7 @@
     },
     {
       "id": "village_bottom_left_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom left roof 2",
       "gb_constant": "TILE_VILLAGE_29",
       "walkable": false,
@@ -313,7 +314,7 @@
     },
     {
       "id": "village_bottom_middle_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom middle roof 2",
       "gb_constant": "TILE_VILLAGE_30",
       "walkable": false,
@@ -324,7 +325,7 @@
     },
     {
       "id": "village_bottom_right_roof_2",
-      "palette": "village",
+      "palette": "town2",
       "label": "bottom right roof 2",
       "gb_constant": "TILE_VILLAGE_31",
       "walkable": false,
@@ -335,7 +336,7 @@
     },
     {
       "id": "village_hero_frame_1",
-      "palette": "city",
+      "palette": "town1",
       "label": "hero frame 1",
       "gb_constant": "TILE_VILLAGE_33",
       "walkable": false,
@@ -346,7 +347,7 @@
     },
     {
       "id": "village_hero_frame_2",
-      "palette": "city",
+      "palette": "town1",
       "label": "hero frame 2",
       "gb_constant": "TILE_VILLAGE_34",
       "walkable": false,
@@ -357,7 +358,7 @@
     },
     {
       "id": "village_guard",
-      "palette": "city",
+      "palette": "town1",
       "label": "guard",
       "gb_constant": "TILE_VILLAGE_35",
       "walkable": true,
@@ -368,7 +369,7 @@
     },
     {
       "id": "village_save_wizard",
-      "palette": "city",
+      "palette": "town1",
       "label": "save wizard",
       "gb_constant": "TILE_VILLAGE_36",
       "walkable": true,
@@ -379,7 +380,7 @@
     },
     {
       "id": "village_fire_frame_1",
-      "palette": "city",
+      "palette": "town3",
       "label": "fire frame 1",
       "gb_constant": "TILE_VILLAGE_37",
       "walkable": false,
@@ -390,7 +391,7 @@
     },
     {
       "id": "village_fire_frame_2",
-      "palette": "city",
+      "palette": "town3",
       "label": "fire frame 2",
       "gb_constant": "TILE_VILLAGE_38",
       "walkable": false,
@@ -401,7 +402,7 @@
     },
     {
       "id": "village_merchant",
-      "palette": "city",
+      "palette": "town1",
       "label": "merchant",
       "gb_constant": "TILE_VILLAGE_39",
       "walkable": true,
@@ -412,7 +413,7 @@
     },
     {
       "id": "village_stairs",
-      "palette": "village",
+      "palette": "town3",
       "label": "stairs",
       "gb_constant": "TILE_VILLAGE_40",
       "walkable": true,
@@ -423,7 +424,7 @@
     },
     {
       "id": "village_mayor",
-      "palette": "city",
+      "palette": "town1",
       "label": "mayor",
       "gb_constant": "TILE_VILLAGE_41",
       "walkable": true,
@@ -434,7 +435,7 @@
     },
     {
       "id": "village_left_house",
-      "palette": "village",
+      "palette": "town2",
       "label": "left house",
       "gb_constant": "TILE_VILLAGE_42",
       "walkable": false,
@@ -445,7 +446,7 @@
     },
     {
       "id": "village_middle_house",
-      "palette": "village",
+      "palette": "town7",
       "label": "middle house",
       "gb_constant": "TILE_VILLAGE_43",
       "walkable": false,
@@ -456,7 +457,7 @@
     },
     {
       "id": "village_right_house",
-      "palette": "village",
+      "palette": "town2",
       "label": "right house",
       "gb_constant": "TILE_VILLAGE_44",
       "walkable": false,

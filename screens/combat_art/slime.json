@@ -5,7 +5,7 @@
   "order": 0,
   "width": 3,
   "height": 2,
-  "palette": "fight_standard",
+  "palette": "fightslime",
   "oam": true,
   "obj_palette": "battle_slime",
   "frame0": [

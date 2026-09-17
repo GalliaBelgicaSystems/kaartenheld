@@ -42,7 +42,7 @@ PRESERVED = {TONGUE_RED: TONGUE_INDEX, DARK_WOOD: DARK_WOOD_INDEX}
 
 
 def main():
-    ref = Image.open('assets/desolate_landscape.png')
+    ref = Image.open('assets/desolate-tile.png')
     sheet = Image.new('P', (32, len(LAYOUT) * 8))
     pal = list(ref.getpalette())
     # Exact tongue red (SPRITES/dogtongue_ribbon): the desolate reference
