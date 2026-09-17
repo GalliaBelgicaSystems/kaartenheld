@@ -1,23 +1,3 @@
-# GAME PALETTE — read this first (full tutorial: assets/palette_tutorial.md).
-# 1. Dictionary: named colors below (SECTION + name). To recolor something,
-#    edit the #hex here — everything referencing it follows automatically.
-#    World art must use these exact hexes: indexed sheets resolve pixels
-#    by value, so a blended/off hex never renders (build fails instead).
-# 2. Ramps: lines like "name: A/a, A/b, A/c, A/d" = 4 shades of light,
-#    LIGHTEST first. Shade 0 is the background (transparent on sprites).
-#    Always write SECTION/name, never a raw #hex. Paint indexed tiles in
-#    ramp order (index 0 = shade 0); the sorter is gone, order is yours.
-# 3. Ramp lines can sit in any order: the SLOTS tables at the bottom of
-#    this file decide which ramp paints which slot. Append new ramps at
-#    the end of a block (keeps history clean), then ask dev for a slot
-#    number — or leave the line unassigned and the checker will ask.
-# 4. SLOTS/* and ANCHORS are dev-owned — leave them alone.
-# 5. After every edit: make palette-check (red = read the error, it says
-#    exactly what to fix), then make screenshots to check with your eyes.
-COMMON
-white: #ffffff
-# (DEV-restored: every sprite slot 0 + doc references point here.)
-
 FOREST
 tree_ladder_and_dirt: #4a3b1c
 grass: #7bb660
@@ -55,8 +35,9 @@ stairs: #b3b0b0
 
 TOWN
 ground: #b6a27e
-puddle_stone_window: #b6b6b6
+puddle_stone: #b6b6b6
 barrel_wood_fence: #8d754a
+stone_dark: #939393
 fence_light: #79643e
 wood_outlines_rubble: #645233
 house_wall: #f1cf91
@@ -64,6 +45,7 @@ house_roof_shade: #ccaa6c
 fire_dark: #d7a726
 fire_light: #edc214
 fire_base: #26232e
+holes: #000000
 
 SPRITES
 background: #f1eb03
@@ -78,9 +60,9 @@ mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
 spider_boss_light: #565656
-dogtongue_ribbon: #8b1b1b
 boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
+merchant_coin: #8f591f
 
 COMBAT
 background: #ffffff
@@ -104,6 +86,7 @@ goblin_combat_skin_dark_outlines: #4a2727
 bat_combat_inner_wings: #3d3044
 poison_icon: #7136c1
 ice_icon: #7ae3f3
+eyes_glow: #f57137
 
 TITLE
 title_bg: #ffffff
@@ -121,84 +104,46 @@ field3: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tr
 field4: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt
 field5: FOREST/grass, FOREST/rocks, FOREST/rocks_outline_fire_base, UNUSED
 field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base
-desolate: DESOLATE/ground, DESOLATE/rocks_stone_light, DESOLATE/rocks_stone_shadow, DESOLATE/terrain_side
-desolate_dark: DESOLATE/ground, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void, UNUSED
-desolate_light: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, UNUSED
-castle: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
-castle_hall: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, CASTLE/wood_dark
-castle_room: CASTLE/ground, CASTLE/stairs, CASTLE/curtain_light, CASTLE/curtain_dark
-village: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
-town: TOWN/ground, TOWN/house_wall, TOWN/puddle_stone_window, TOWN/house_roof_shade
-city: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
-sprites: COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
-# DEV-seeded grey (FLORENT: rename/replace freely) — bats + spiders need it.
-grey: COMMON/white, SPRITES/npc_beard, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-more_sprites: COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog
-# (DEV-parked 2026-09-16: OBJ hardware fits 4 ramps; this one is consumed by
-# no enemy/hero type, so parked not deleted -- FLORENT can revive it by
-# saying which pinned ramp it replaces.)
-# even_more_sprites: SPRITES/mage_cloth, SPRITES/chest_outline, SPRITES/spider_boss_light
-sprites_again: COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog
-# (DEV-parked 2026-09-16: same as even_more_sprites above -- no consumers.)
-# sprites_still: SPRITES/boss_eyes_scepter, SPRITES/character_main_outline_bat, UNUSED
-fight_card: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
-fight_standard: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/slime_outline_combat
-# Slime bodies + darker-green outline (heal cards follow to full green).
-# Slot 2 was frost-blue ice (FLORENT's call) but png2gb lands every slime
-# outline pixel on shade 2, so outlines rendered blue -- see docs.
-fight_again: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_blade_dark, COMBAT/spider_combat_knife_handle
-fight_still: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/numbers_icons, COMBAT/mimic_combat_body_dark
-fight_more: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
-fight_forever: COMBAT/background, COMBAT/poison_icon, COMBAT/boss_combat_body_light, COMBAT/bat_combat_inner_wings
-fight_final: COMBAT/background, COMBAT/mimic_combat_mouth, COMBAT/boss_spider_bat_combat_body, UNUSED
-fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+desolate1: DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void
+desolate2: DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base
+desolate3: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base
+castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark,
+castle2: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, UNUSED
+castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
+castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
+town1: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
+town2: TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble
+town3: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
+town4: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/holes
+town5: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubble
+town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble
+town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
+sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites3: SPRITES/background, SPRITES/boss_eyes_scepter_glow, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites4: SPRITES/background, SPRITES/wood_dog, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
+sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
+sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
+sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
+sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
+sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
+fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
+fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
+fight4: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes
+fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
+fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
+fight7: COMBAT/card_background, COMBAT/ice_icon, COMBAT/numbers_icons, UNUSED
+fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
+fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
+fightmimic: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth
+fightspider: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/heart_fire_enemy_eyes, COMBAT/spider_combat_knife_handle
+fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
-
-# DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
-# consume fixed indices -- see tools/palette_txt.py hard_consumers()).
-# Artist: don't reorder these lines; to move a ramp, change its number.
-# Unmapped ramps warn; unmapped slots pad. Missing CONSUMED slots fail.
-SLOTS/BASE
-0: fight_card
-1: fight_more
-2: fight_again
-3: fight_standard
-4: fight_forever
-5: fight_still
-7: fight_final
-6: fight_text
-# (bow/gold shares slot 0 fight_card; see UI_COLOR_GOLD in src/ui/ui.h.)
-
-SLOTS/FOREST
-0: field1
-3: field2
-1: field6
-7: field5
-5: field3
-2: field4
-# (field3 carries stump browns as wood -- verify trunks/merchant on
-# screenshots; rename to wood if it sticks.)
-
-SLOTS/DESOLATE
-7: desolate
-1: desolate_light
-# (slot 6 gold missing -- chest override points here.)
-
-SLOTS/CASTLE
-0: castle
-1: castle_room
-6: castle_hall
-# (slot 5 wood_furn missing -- chair/table overrides point here.)
-
-SLOTS/VILLAGE
-5: village
-6: town
-1: city
-# (slot 3 dirt_floor missing -- floor default points here.)
-
-SLOTS/OBJ
-0: grey
-1: more_sprites
-2: sprites_again
-3: sprites
