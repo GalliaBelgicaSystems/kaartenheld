@@ -11,7 +11,7 @@ tutorial: `assets/palette_tutorial.md`.
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
 | 0 | fight1 | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
-| 1 | fightgoblin | `#ffffff` | `#844f4f` | `#4a2727` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED |
+| 1 | fightgoblin | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
 | 2 | fightspider | `#ffffff` | `#8f8f8f` | `#5a4a3d` | `#000000` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body |
 | 3 | fightslime | `#ffffff` | `#89cc5e` | `#5c903a` | `#000000` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body |
 | 4 | fight5 | `#ffffff` | `#dfbd8d` | `#b09266` | `#7136c1` | poison cards | COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon |

@@ -2,6 +2,7 @@
   "id": "castle",
   "label": "Castle & Bastion",
   "gb_tileset_kind": "WORLD_TILESET_CASTLE",
+  "indexed": true,
   "tiles": [
     {
       "id": "castle_top_left_corner_wall",

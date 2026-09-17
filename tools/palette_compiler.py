@@ -26,7 +26,8 @@ import math
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
                          RAMP_NAMES as _AUTHOR_RAMP_NAMES,
-                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR)
+                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR,
+                         FULL_SLOTMAP as _FULL_SLOTMAP)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
@@ -311,28 +312,54 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
     if tileset_json.get("indexed"):
         img = load_png(tileset_id)
         px = img.load()
+        max_x = img.size[0] // TILE_SIZE
+        max_y = img.size[1] // TILE_SIZE
+        vram_by_coord = {(e.get("x", 0), e.get("y", 0)): e.get("tile")
+                         for e in tiles}
         sidecar = {}
-        for entry in tiles:
-            tx, ty = entry.get("x", 0), entry.get("y", 0)
-            idx = entry.get("index")
-            slot = tile_palettes[idx] if idx is not None and idx < len(tile_palettes) else None
-            if slot is None:
-                raise ValueError(f"{tileset_id}: vram entry {entry} has no slot")
-            ramp = [rgb_to_hex(c) for c in palettes[slot]]
-            used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
-                           for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
-            outside = [c for c in used if c not in ramp]
-            if outside:
-                raise ValueError(
-                    f"{tileset_id}: tile {entry.get('tile')} at ({tx},{ty}) uses "
-                    f"{', '.join(outside)}, outside its {PALETTE_NAMES[tileset_id][slot]} "
-                    f"ramp {ramp} -- repaint the pixels or repoint the tile's "
-                    f"\"palette\" in tools/level_editor/tilesets/{tileset_id}.json")
-            if len(used) > 4:
-                raise ValueError(
-                    f"{tileset_id}: tile {entry.get('tile')} at ({tx},{ty}) uses "
-                    f"{len(used)} colors {used} -- Game Boy tiles hold 4 max")
-            sidecar[f"{tx},{ty}"] = {c: ramp.index(c) for c in used}
+        for ty in range(max_y):
+            for tx in range(max_x):
+                tid = vram_by_coord.get((tx, ty))
+                if tid is not None:
+                    rampname = tiles_by_id.get(tid, {}).get("palette")
+                    if rampname is None:
+                        raise ValueError(
+                            f"{tileset_id}: tile {tid} has no explicit "
+                            f"\"palette\" ramp name")
+                    slot = _slot_of(setkey, rampname,
+                                    f"{tileset_id}: tile {tid}")
+                else:
+                    # Spare cell outside vram_block (in ROM but unnamed):
+                    # encode with the first fitting ramp, deterministically.
+                    used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
+                                   for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
+                    slot = None
+                    for s in sorted(_FULL_SLOTMAP.get(setkey, {})):
+                        if all(c in [rgb_to_hex(c) for c in palettes[s]] for c in used):
+                            slot = s
+                            break
+                    if slot is None:
+                        raise ValueError(
+                            f"{tileset_id}: spare cell ({tx},{ty}) uses "
+                            f"{used}, fitting no {setkey} ramp -- repaint "
+                            f"or extend vram_block")
+                    print(f"  spare cell ({tx},{ty}) encoded with "
+                          f"{PALETTE_NAMES[tileset_id][slot]} (not in vram)")
+                ramp = [rgb_to_hex(c) for c in palettes[slot]]
+                used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
+                               for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
+                outside = [c for c in used if c not in ramp]
+                if outside:
+                    raise ValueError(
+                        f"{tileset_id}: tile {tid or 'spare'} at ({tx},{ty}) uses "
+                        f"{', '.join(outside)}, outside its {PALETTE_NAMES[tileset_id][slot]} "
+                        f"ramp {ramp} -- repaint the pixels or repoint the tile's "
+                        f"\"palette\" in tools/level_editor/tilesets/{tileset_id}.json")
+                if len(used) > 4:
+                    raise ValueError(
+                        f"{tileset_id}: tile {tid or 'spare'} at ({tx},{ty}) uses "
+                        f"{len(used)} colors {used} -- Game Boy tiles hold 4 max")
+                sidecar[f"{tx},{ty}"] = {c: ramp.index(c) for c in used}
         sidecar_path = GENERATED_DIR / f"{tileset_id}_shades.json"
         sidecar_path.write_text(json.dumps(sidecar, indent=2))
         print(f"  Wrote shade sidecar: {sidecar_path} ({len(sidecar)} tiles)")
@@ -347,6 +374,46 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
     print(f"  Wrote manifest: {out_path}")
 
     return manifest
+
+
+def fit_check_tileset(tileset_id: str) -> int:
+    """Exact-fit reporter: for every vram-mapped tile, list the set ramps
+    whose colors are a superset of the tile's pixels (or NONE -- the tile
+    needs repainting or a new ramp). Writes nothing; returns misfit count.
+    This is the anti-guesswork gate: every tile that ships indexed must
+    fit its assigned ramp exactly (see also the indexed strict check in
+    process_tileset)."""
+    from palette_txt import REAL_SLOTS as _REAL
+    tileset_json = load_tileset_json(tileset_id)
+    img = load_png(tileset_id)
+    vram_block = tileset_json.get("vram_block", {})
+    tiles = vram_block.get("tiles", [])
+    max_x = max(t.get("x", 0) for t in tiles)
+    max_y = max(t.get("y", 0) for t in tiles)
+    tile_colors_list = extract_tile_colors(img, max_x + 1, max_y + 1)
+    palettes = FIXED_PALETTES[tileset_id]
+    names = PALETTE_NAMES[tileset_id]
+    setkey = SETKEY_OF_TILESET.get(tileset_id, tileset_id)
+    usable = _REAL.get(setkey, list(range(len(palettes))))
+    sheet_ids = get_sheet_order_from_vram_block(tileset_json)
+    tiles_by_id = {t.get("id"): t for t in tileset_json.get("tiles", [])}
+    misfits = 0
+    for i, tile_colors in enumerate(tile_colors_list):
+        hexes = {rgb_to_hex(c) for c in tile_colors}
+        fits = [names[s] for s in usable
+                if hexes <= set([rgb_to_hex(c) for c in palettes[s]])]
+        tid = sheet_ids[i] if i < len(sheet_ids) else "?@%d" % i
+        current = tiles_by_id.get(tid, {}).get("palette")
+        if not fits:
+            misfits += 1
+            print(f"  sheet {i} ({tid}, now {current}): fits NO ramp -- "
+                  f"repaint into {sorted(hexes)} or add a ramp")
+        elif current not in fits:
+            misfits += 1
+            print(f"  sheet {i} ({tid}, now {current}): fits {fits}")
+    if misfits == 0:
+        print(f"  {tileset_id}: all {len(tile_colors_list)} tiles exact-fit")
+    return misfits
 
 
 def suggest_tileset(tileset_id: str) -> None:
@@ -382,7 +449,30 @@ def main():
                         help="Output directory for manifests")
     parser.add_argument("--suggest", action="store_true",
                         help="print nearest-ramp proposals, write nothing")
+    parser.add_argument("--fit-check", action="store_true",
+                        help="exact-fit report per tile (ramp it fits, or "
+                             "NONE with its colors); exits non-zero on any "
+                             "misfit. Writes nothing.")
     args = parser.parse_args()
+
+    if args.fit_check:
+        bad = 0
+        for ts_id in args.tilesets:
+            if ts_id not in FIXED_PALETTES:
+                print(f"Unknown tileset: {ts_id} (no fixed palettes defined)", file=sys.stderr)
+                sys.exit(1)
+            try:
+                bad += fit_check_tileset(ts_id)
+            except Exception as e:
+                print(f"Error processing {ts_id}: {e}", file=sys.stderr)
+                import traceback
+                traceback.print_exc()
+                sys.exit(1)
+        if bad:
+            print(f"fit-check: {bad} misfit tile(s)", file=sys.stderr)
+            sys.exit(1)
+        print("fit-check: all tiles exact-fit")
+        return
 
     for ts_id in args.tilesets:
         if ts_id not in FIXED_PALETTES:
