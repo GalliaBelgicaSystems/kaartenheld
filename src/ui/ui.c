@@ -178,10 +178,10 @@ void ui_init(void)
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_orange)[p];
     }
     /* OBJ palettes program positionally from generated/tiles/obj_tables.h:
-     * 0 sprites (bats/spiders), 1 sprites5 (dogs/kobolds/mimics/fire/boss),
-     * 2 sprites8 (hero), 3 sprites11 (slimes), 4 battle_slime, 5 battle_bat,
-     * 6 battle_kobold, 7 battle_mimic (OAM battle enemies).
-     * Shade 0 is transparent on hardware. */
+     * 0 sprites (bats/spiders), 1 sprites5 (dogs/kobolds/mimics/fire/boss
+     * + OAM kobolds), 2 sprites8 (hero), 3 sprites11 (slimes),
+     * 4 battle_slime, 5 sprites2 (OAM bats), 6 sprites6 (OAM mimics);
+     * 7 grey pad. Shade 0 is transparent on hardware. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }

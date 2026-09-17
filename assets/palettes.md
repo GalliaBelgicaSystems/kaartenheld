@@ -12,7 +12,7 @@ tutorial: `assets/palette_tutorial.md`.
 |---|------|----|----|----|----|--------|------|
 | 0 | fight1 | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
 | 1 | fightgoblin | `#ffffff` | `#844f4f` | `#4a2727` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED |
-| 2 | fightspider | `#ffffff` | `#8f8f8f` | `#c34e1b` | `#5a4a3d` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/heart_fire_enemy_eyes, COMBAT/spider_combat_knife_handle |
+| 2 | fightspider | `#ffffff` | `#8f8f8f` | `#5a4a3d` | `#000000` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body |
 | 3 | fightslime | `#ffffff` | `#89cc5e` | `#5c903a` | `#000000` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body |
 | 4 | fight5 | `#ffffff` | `#dfbd8d` | `#b09266` | `#7136c1` | poison cards | COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon |
 | 5 | fightmimic | `#ffffff` | `#8d754a` | `#6f5a34` | `#3f3017` | shield cards, mimic art | COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth |
@@ -55,7 +55,7 @@ tutorial: `assets/palette_tutorial.md`.
 | 3 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 4 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 | 5 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | furniture (MISSING) | UNUSED slot (magenta canary) |
-| 6 | castle2 | `#d7d7d7` | `#d7a726` | `#8d754a` | `#8d754a` | gold/chest | CASTLE/ground, CASTLE/gold, CASTLE/wood_light, UNUSED |
+| 6 | castle2 | `#d7d7d7` | `#8d754a` | `#6f5a34` | `#6f5a34` | gold/chest | CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED |
 | 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
 
 ## Village / town (`cgb_bg_palettes_village`)
@@ -78,11 +78,11 @@ tutorial: `assets/palette_tutorial.md`.
 | sprites | `#f1eb03` | `#673c3c` | `#565656` | `#000000` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | sprites5 | `#f1eb03` | `#ac9d23` | `#8d754a` | `#6f5a34` |  | SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline |
 | sprites8 | `#f1eb03` | `#b6b6b6` | `#8b1b1b` | `#3f3017` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc |
-| sprites11 | `#f1eb03` | `#b6b6b6` | `#77e331` | `#5c903a` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
-| battle_slime | `#f1eb03` | `#89cc5e` | `#5c903a` | `#5c903a` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/battle_slime_edge |
-| battle_bat | `#f1eb03` | `#c34e1b` | `#3d3044` | `#000000` |  | SPRITES/background, SPRITES/battle_bat_heart, SPRITES/battle_bat_wings, SPRITES/character_main_outline_bat |
-| battle_kobold | `#f1eb03` | `#4a2727` | `#844f4f` | `#4a2727` |  | SPRITES/background, UNUSED, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark |
-| battle_mimic | `#f1eb03` | `#8d754a` | `#6f5a34` | `#3f3017` |  | SPRITES/background, SPRITES/battle_mimic_light, SPRITES/battle_mimic_dark, SPRITES/battle_mimic_mouth |
+| sprites11 | `#f1eb03` | `#77e331` | `#5c903a` | `#5c903a` |  | SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED |
+| battle_slime | `#f1eb03` | `#77e331` | `#5c903a` | `#5c903a` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, SPRITES/slime_dark |
+| sprites2 | `#f1eb03` | `#8b1b1b` | `#565656` | `#000000` |  | SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
+| sprites6 | `#f1eb03` | `#8d754a` | `#6f5a34` | `#3f3017` |  | SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc |
+| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
 

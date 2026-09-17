@@ -45,7 +45,7 @@
   {
    "type": "oam_prop",
    "slot": 1,
-   "expected": 6
+   "expected": 1
   },
   {
    "type": "oam_y",

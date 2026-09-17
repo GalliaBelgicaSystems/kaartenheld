@@ -1,12 +1,13 @@
-#pragma bank 3
+#pragma bank 7
 
 #include "save.h"
 #include <gb/gb.h>
 #include "banked.h"
 
 /* ── Banked SRAM save/load bodies (src/rpg/save.c dispatchers) ──────
- * Runs from ROM bank 3 via the WRAM banked-call trampoline so the
- * checksum/copy loops do not consume the fixed-bank budget.  Pure
+ * Runs from ROM bank 7 via the WRAM banked-call trampoline so the
+ * checksum/copy loops consume neither the fixed-bank budget nor bank 3
+ * (which the battle OAM renderer fills to the brim).  Pure
  * WRAM/SRAM byte access: ENABLE_RAM/DISABLE_RAM expand to plain rRAMG
  * register stores (no calls), so this is self-contained per the banked
  * ABI (AGENTS.md 52.11.1).

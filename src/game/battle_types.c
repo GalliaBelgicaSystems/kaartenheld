@@ -111,7 +111,7 @@ static const EnemyTypeDef g_enemy_type_kobold = {
     2,
     1,
     1,
-    6
+    1
 };
 
 static const EnemyTypeDef g_enemy_type_mimic = {
@@ -136,7 +136,7 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     2,
     1,
     1,
-    7
+    6
 };
 
 static const EnemyTypeDef g_enemy_type_slime = {
