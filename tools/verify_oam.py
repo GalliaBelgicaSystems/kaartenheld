@@ -103,6 +103,11 @@ def shadow_oam_slot_tile(sess, slot):
     return sess._memread(0xC000 + 4 * slot + 2)
 
 
+def shadow_oam_slot_prop(sess, slot):
+    """Attr byte of shadow OAM entry `slot` (bits 0-2: CGB palette)."""
+    return sess._memread(0xC000 + 4 * slot + 3)
+
+
 def mirror_at(sess, mirror_addr, x, y):
     """g_tilemap_mirror byte for tilemap cell (x, y).  DEBUG-only mirror of
     the 0x9800 ring (32 x 32), asserted because mGBA cannot read VRAM."""
@@ -189,6 +194,27 @@ def verify_hostile_sprites(sess):
           1, (106 <= slime <= 107))
     check("south_field bat renders as shared bat OAM tile (100|101)",
           1, (100 <= bat <= 101))
+
+    print("== OAM battle enemies (slime trio as sprites, blank BG zone) ==")
+    blime = load_scenario(sess, "battle_slime_sprite.json")
+    sess.load_scenario(blime)
+    sess.step(2)
+    # Enemy slot 0 -> shadow OAM entries 1..6 (3x2 art). Frame base is
+    # timer-dependent, so assert frame-0/frame-1 membership (128|134),
+    # OBJ palette 4, and centered position (ax=1: x=16, row 3: y=40).
+    # The BG footprint must be blank (space tile 0), not stamped art.
+    btile = shadow_oam_slot_tile(sess, 1)
+    check("battle slime OAM entry 1 art tile (128|134)",
+          1, (btile == 128 or btile == 134))
+    check("battle slime OAM OBJ palette 4",
+          4, shadow_oam_slot_prop(sess, 1))
+    check("battle slime OAM y (row 3)",
+          40, sess._memread(0xC000 + 4 * 1))
+    check("battle slime OAM x (col 1)",
+          16, sess._memread(0xC000 + 4 * 1 + 1))
+    bmirror = sess.get_symbol("g_tilemap_mirror")
+    check("battle slime BG zone blank, not stamped",
+          0, mirror_at(sess, bmirror, 1, 3))
 
     print("== Boss sprite rendering (castle: bat + mimic + spider + 2x2 boss OAM sprite) ==")
     boss = load_scenario(sess, "boss_appears.json")

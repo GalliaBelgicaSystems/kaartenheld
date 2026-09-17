@@ -104,6 +104,15 @@ extern uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_objpal[MAX_BATTLE_ENEMIES];
+
+/* OAM layout for OAM-rendered battle enemies (shadow OAM entries, slot 0
+ * is the hidden player): enemy slot k owns 6 entries for up to 3x2 art
+ * tiles (w*h cells, row-major). Covered by ui_sprite_begin_transition()
+ * on every screen change, so battle sprites never leak to other screens. */
+#define BATTLE_OAM_BASE            1u
+#define BATTLE_OAM_TILES_PER_ENEMY 6u
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM

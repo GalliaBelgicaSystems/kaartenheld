@@ -63,6 +63,10 @@ spider_boss_light: #565656
 boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
 merchant_coin: #8f591f
+# Battle-OAM mirrors of the combat slime hues (same values, SPRITES-home
+# so the ramp infers to the OBJ set; entry 0 is transparent on hardware).
+battle_slime_body: #89cc5e
+battle_slime_edge: #5c903a
 
 COMBAT
 background: #ffffff
@@ -107,7 +111,7 @@ field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_
 desolate1: DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void
 desolate2: DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base
 desolate3: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base
-castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark,
+castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
 castle2: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, UNUSED
 castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
 castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
@@ -129,6 +133,9 @@ sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRI
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
 sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+# Battle-OAM slime: fight_standard hues, transparent slot 0. Pilot ramp
+# for OAM battle enemies (small only; boss stays BG-stamped).
+battle_slime: SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/battle_slime_edge
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
 fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
@@ -145,5 +152,77 @@ fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat
 fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# DEV-restored black-ink text ramp (engine UI: dialogue paper, blanks,
+# menus). The artist rewrite dropped it; UI_COLOR_TEXT (slot 6) requires it.
+fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# DEV-parked: unreferenced background spares (no combat set or UI role
+# points here yet). Parked as comments, not deleted -- revive by pinning
+# in SLOTS/BASE when a card type or boss phase needs them.
+# fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
+# fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
+# fight4: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes
+# fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
+# fight7: COMBAT/card_background, COMBAT/ice_icon, COMBAT/numbers_icons, UNUSED
+# fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+
+# DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
+# consume fixed indices -- see tools/palette_txt.py hard_consumers()).
+# Artist: don't reorder these lines; to move a ramp, change its number.
+# Unmapped ramps warn; unmapped slots pad. Missing CONSUMED slots fail.
+# BASE: fight*numero = background/UI (card base, statuses, paper, text),
+# fight*nom = enemy art (slime/spider/mimic share with their card color).
+SLOTS/BASE
+0: fight1
+1: fightgoblin
+2: fightspider
+3: fightslime
+4: fight5
+5: fightmimic
+6: fight_text
+7: fightboss
+# (bow/gold shares slot 0 fight1; see UI_COLOR_GOLD in src/ui/ui.h.)
+
+SLOTS/FOREST
+0: field1
+3: field2
+1: field6
+7: field5
+5: field3
+2: field4
+# (field3 carries stump browns as wood -- verify trunks/merchant on
+# screenshots; rename to wood if it sticks.)
+
+SLOTS/DESOLATE
+7: desolate1
+1: desolate3
+0: desolate2
+# (desolate1 is the ground-first floor default; desolate3 fire accents.)
+
+SLOTS/CASTLE
+0: castle4
+1: castle3
+6: castle2
+2: castle1
+# (castle4 walls/floor default; castle3 curtains/room; castle2 gold hall;
+# castle1 stairs.)
+
+SLOTS/VILLAGE
+5: town1
+6: town2
+1: town3
+0: town4
+# (town1 ground/wood floor default + NPC wood; town2 walls; town3 fire;
+# town4 grey stone. town5-7 auto-assign when a tile points at them.)
+
+SLOTS/OBJ
+0: sprites
+1: sprites5
+2: sprites10
+3: sprites11
+4: battle_slime
+# (OBJ battle slots 4+; overworld enemy mapping follows in the tileset
+# rewire commit.)

@@ -34,6 +34,8 @@ static const EnemyTypeDef g_enemy_type_bat = {
     1,
     1,
     2,
+    0,
+    0,
     0
 };
 
@@ -57,7 +59,9 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     1,
     2,
-    2
+    2,
+    0,
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_fire = {
@@ -80,7 +84,9 @@ static const EnemyTypeDef g_enemy_type_fire = {
     1,
     1,
     2,
-    1
+    1,
+    0,
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_kobold = {
@@ -103,7 +109,9 @@ static const EnemyTypeDef g_enemy_type_kobold = {
     1,
     1,
     2,
-    2
+    2,
+    0,
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_mimic = {
@@ -126,7 +134,9 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     1,
     1,
     2,
-    2
+    2,
+    0,
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_slime = {
@@ -149,7 +159,9 @@ static const EnemyTypeDef g_enemy_type_slime = {
     1,
     1,
     2,
-    3
+    3,
+    1,
+    4
 };
 
 static const EnemyTypeDef g_enemy_type_slime_lord = {
@@ -172,7 +184,9 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     2,
     1,
-    1
+    1,
+    0,
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_spider = {
@@ -195,6 +209,8 @@ static const EnemyTypeDef g_enemy_type_spider = {
     1,
     1,
     2,
+    0,
+    0,
     0
 };
 

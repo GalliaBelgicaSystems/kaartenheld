@@ -532,6 +532,18 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         elif art_id is not None:
             print("WARNING: %s: sprite.art '%s' has no combat art set" % (et_id, art_id))
         art_frames = sprite.get('frames', 0) if art_index != 0xFF else 0
+        art_oam = 0
+        art_obj_palette = 0
+        if art_id in art_sets:
+            art_oam = 1 if art_sets[art_id].get('oam') else 0
+            if art_oam:
+                if 'obj_palette' not in art_sets[art_id]:
+                    print("ERROR: %s: combat art set is oam but has no obj_palette" % art_id,
+                          file=sys.stderr)
+                    sys.exit(1)
+                art_obj_palette = resolve_palette(art_sets[art_id]['obj_palette'],
+                                                  'obj',
+                                                  '%s: combat art obj_palette' % art_id)
         lines.append("static const EnemyTypeDef g_enemy_type_%s = {" % et['id'])
         lines.append('    %s,' % c_escape(et['id']))
         lines.append('    %s,' % c_escape(et['label']))
@@ -552,7 +564,9 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         lines.append('    %d,' % ow_w)
         lines.append('    %d,' % ow_h)
         lines.append('    %d,' % ow_frames)
-        lines.append('    %d' % ow_palette)
+        lines.append('    %d,' % ow_palette)
+        lines.append('    %d,' % art_oam)
+        lines.append('    %d' % art_obj_palette)
         lines.append("};")
         lines.append("")
 

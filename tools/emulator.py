@@ -1075,6 +1075,13 @@ class EmulatorSession:
         addr = self.get_symbol("g_tilemap_attr_mirror")
         return [self._memread(addr + i) for i in range(32 * 32)]
 
+    def get_shadow_oam(self):
+        """Read shadow OAM (40 entries x 4 bytes: y, x, tile, prop) from
+        WRAM 0xC000. Written by the renderers, DMA'd at VBlank: the
+        authoritative sprite state for OAM assertions (oam_tile/oam_prop/
+        oam_x/oam_y), covering overworld actors and OAM battle enemies."""
+        return [self._memread(0xC000 + i) for i in range(40 * 4)]
+
     def get_sfx_state(self):
         """Read the SFX trigger log: (total count, last SFX id).
         Per-trigger SFX telemetry would flood the 32-entry gameplay ring

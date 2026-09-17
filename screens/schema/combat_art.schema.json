@@ -11,6 +11,14 @@
     "width": { "type": "integer", "minimum": 1, "maximum": 6 },
     "height": { "type": "integer", "minimum": 1, "maximum": 4 },
     "palette": { "type": "integer", "minimum": 0 },
+    "oam": {
+      "type": "boolean",
+      "description": "Render this set as OAM sprites instead of the BG stamp (small enemies only; boss stays BG). Requires obj_palette."
+    },
+    "obj_palette": {
+      "type": "string",
+      "description": "OBJ ramp name (SLOTS/OBJ) for OAM sets; transparent slot 0."
+    },
     "frame0": {
       "type": "array",
       "items": { "type": ["string", "null"] }

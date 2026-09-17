@@ -64,6 +64,8 @@ typedef struct EnemyTypeDef {
     uint8_t ow_h;  // overworld sprite height in tiles (1 = single-tile sprite, 2 = 2x2 grid)
     uint8_t ow_frames;  // overworld animation frames (cells / (ow_w*ow_h), 0 when ow_tile is 0xFF)
     uint8_t ow_palette;  // CGB OAM palette index
+    uint8_t art_oam;  // combat art renders as OAM sprites (small enemies; boss stays BG-stamped)
+    uint8_t art_obj_palette;  // CGB OAM palette index for OAM art (SLOTS/OBJ)
 } EnemyTypeDef;
 
 /* WRAM cache for the active battle screen's HUD layout.

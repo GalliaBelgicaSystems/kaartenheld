@@ -20,7 +20,8 @@ screen doesn't come from this file, that's a bug, report it.
    as its background (details in §5). Absent = previous defaults apply.
 
 Lines starting with `#` are comments. The hardware fits 8 ramps per
-set (4 for `OBJ`); fewer is fine (empty slots pad), more fails loudly.
+set (BG and OBJ alike; OBJ 0–3 serve the overworld, 4+ battle sprites);
+fewer is fine (empty slots pad), more fails loudly.
 
 ## Quick start: change a color
 
@@ -166,7 +167,7 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
 
 ## Guardrails (the checker enforces all of these)
 
-- 1–8 ramps per set (1–4 for `OBJ`); 4 refs each; names unique per set.
+- 1–8 ramps per set; 4 refs each; names unique per set.
 - Every `SECTION/name` must exist; every `SLOTS/*` line must name a
   ramp of its set at a free slot in range.
 - Slots consumed by tiles/art/UI/sprites must hold real ramps — the

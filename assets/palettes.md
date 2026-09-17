@@ -79,6 +79,10 @@ tutorial: `assets/palette_tutorial.md`.
 | more_sprites | `#ffffff` | `#ac9d23` | `#f57137` | `#8d754a` | town braziers (OBJ 1) | COMMON/white, SPRITES/chest_lock, SPRITES/boss_eyes_scepter_glow, SPRITES/wood_dog |
 | sprites_again | `#ffffff` | `#673c3c` | `#8b1b1b` | `#8d754a` | kobolds/dogs/hero (OBJ 2) | COMMON/white, SPRITES/enemy, SPRITES/dogtongue_ribbon, SPRITES/wood_dog |
 | sprites | `#ffffff` | `#b6b6b6` | `#77e331` | `#5c903a` | overworld slimes (OBJ 3) | COMMON/white, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark |
+| battle_slime | `#f1eb03` | `#89cc5e` | `#5c903a` | `#5c903a` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/battle_slime_edge |
+| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
+| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
+| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
 
 ## Sheet anchors (`png2gb --anchor-color` → shade 0)
 

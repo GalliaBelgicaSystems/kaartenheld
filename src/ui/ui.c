@@ -178,14 +178,18 @@ void ui_init(void)
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_orange)[p];
     }
     /* OBJ palette 2 (sprites_again: dogs/kobolds/mimic) is brown body +
-     * red tongue; 3 is green (slimes); 4-7 stay grey. */
+     * red tongue; 3 is green (slimes); 4 is battle-slime greens (OAM
+     * battle pilot); 5-7 stay grey. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_green)[p];
     }
-    for (p = 32; p < 64; p++) {
+    for (p = 0; p < 8; p++) {
+        OCPD_REG = ((const uint8_t *)cgb_sprite_palette_obj4)[p];
+    }
+    for (p = 40; p < 64; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette)[p & 7];
     }
 

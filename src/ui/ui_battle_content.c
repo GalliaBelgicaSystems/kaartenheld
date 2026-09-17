@@ -532,9 +532,92 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     }
 }
 
-static void battle_draw_enemy_columns(const volatile Battle *battle)
+/* OAM battle enemies (pilot: slime combat art). OAM pattern ids fetch
+ * from 0x8000+id*16, so the bank-4 loader's VRAM bases (128+...) double
+ * as OAM tile ids -- the same bytes render through both paths, no
+ * pattern duplication. Writes land in shadow_OAM (DMA'd at VBlank by
+ * main.c), so no extra timing machinery is needed. Enemy slot k owns
+ * BATTLE_OAM_TILES_PER_ENEMY entries from BATTLE_OAM_BASE + k*6 (3x2 art
+ * max; wider/taller art keeps the BG stamp). The BG footprint is cleared
+ * by the existing blank path first, so shade-0-transparent art floats
+ * over the zone background. */
+static void battle_hide_enemy_oam(uint8_t slot)
 {
-    uint8_t k, x;
+    uint8_t entry;
+    uint8_t n;
+    /* slot*6 without multiply (SDCC 8-bit * lands in fixed _CODE,
+     * AGENTS.md 52.18): entry = 1 + 2*slot + 4*slot. */
+    entry = (uint8_t)(BATTLE_OAM_BASE + (uint8_t)((uint8_t)(slot << 1) + (uint8_t)(slot << 2)));
+    for (n = 0; n < BATTLE_OAM_TILES_PER_ENEMY; n++) {
+        shadow_OAM[entry].y = 0;
+        entry++;
+    }
+}
+
+static void battle_draw_enemy_oam(uint8_t x, uint8_t slot,
+                                  const volatile Battle *battle, uint8_t blank)
+{
+    uint8_t w;
+    uint8_t h;
+    uint8_t base;
+    uint8_t frames;
+    uint8_t pal;
+    uint8_t art_row;
+    uint8_t ax;
+    uint8_t entry;
+    uint8_t frame;
+    uint8_t ftiles;
+    uint8_t cx;
+    uint8_t cy;
+    uint8_t t;
+    uint8_t n;
+    uint8_t ticks;
+    if (slot >= MAX_BATTLE_ENEMIES) return;
+    if (blank || g_battle_enemy_art[slot] == 0xFF) {
+        battle_hide_enemy_oam(slot);
+        return;
+    }
+    w = g_battle_enemy_art_w[slot];
+    h = g_battle_enemy_art_h[slot];
+    if (w == 0 || w > 3 || h == 0 || h > 2) {
+        battle_hide_enemy_oam(slot);
+        return;
+    }
+    ticks = battle->timer_ticks;
+    frame = 0;
+    frames = g_battle_enemy_art_frames[slot];
+    if (frames > 1) frame = (uint8_t)((ticks >> 4) & 1);
+    base = g_battle_enemy_art_base[slot];
+    ftiles = 0;
+    for (cy = 0; cy < h; cy++) ftiles = (uint8_t)(ftiles + w);
+    t = base;
+    if (frame) t = (uint8_t)(t + ftiles);
+    pal = (uint8_t)(g_battle_enemy_art_objpal[slot] & 0x07);
+    art_row = g_battle_hud.enemy_sprite_row;
+    ax = battle_enemy_art_x(x, slot);
+    entry = (uint8_t)(BATTLE_OAM_BASE + (uint8_t)((uint8_t)(slot << 1) + (uint8_t)(slot << 2)));
+    n = 0;
+    for (cy = 0; cy < h; cy++) {
+        for (cx = 0; cx < w; cx++) {
+            shadow_OAM[entry].y = (uint8_t)((uint8_t)((uint8_t)(art_row + cy) << 3) + 16);
+            shadow_OAM[entry].x = (uint8_t)((uint8_t)((uint8_t)(ax + cx) << 3) + 8);
+            shadow_OAM[entry].tile = t;
+            shadow_OAM[entry].prop = pal;
+            t++;
+            entry++;
+            n++;
+        }
+    }
+    /* Hide the unused tail of this slot's 6-entry window (narrower art
+     * must not leave stale sprites from a wider predecessor). */
+    for (; n < BATTLE_OAM_TILES_PER_ENEMY; n++) {
+        shadow_OAM[entry].y = 0;
+        entry++;
+    }
+}
+
+static void battle_draw_enemy_columns(const volatile Battle *battle)
+{    uint8_t k, x;
     const Combatant *e;
     bool blink_name = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND) &&
                       (((battle->timer_ticks >> 4) & 1) == 0);
@@ -548,8 +631,17 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
         x = g_battle_hud.enemy_positions[k][0];
         if (k < battle->enemy_count && battle->enemies[k].hp != 0) {
             e = &battle->enemies[k];
-            battle_draw_enemy_art(x, k, battle,
-                                  (uint8_t)(blink_name && k == battle->attacking_enemy_idx));
+            if (g_battle_enemy_art_oam[k]) {
+                /* OAM enemy: clear the BG footprint (transparent art
+                 * floats over the zone background), then place sprites.
+                 * Telegraph blink hides the sprites for the blink. */
+                battle_draw_enemy_art(x, k, battle, 1);
+                battle_draw_enemy_oam(x, k, battle,
+                                      (uint8_t)(blink_name && k == battle->attacking_enemy_idx));
+            } else {
+                battle_draw_enemy_art(x, k, battle,
+                                      (uint8_t)(blink_name && k == battle->attacking_enemy_idx));
+            }
             battle_draw_num2(x, hp_row, e->hp);
             battle_put_char((uint8_t)(x + 2), hp_row, '/');
             battle_draw_num2((uint8_t)(x + 3), hp_row, e->max_hp);
@@ -570,6 +662,7 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
         } else {
             battle_draw_text_line(x, hp_row, NULL, 6);
             battle_draw_enemy_art(x, k, battle, 1);
+            if (g_battle_enemy_art_oam[k]) battle_hide_enemy_oam(k);
         }
         battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, NULL, 3);
     }

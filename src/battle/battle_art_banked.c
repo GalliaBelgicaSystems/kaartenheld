@@ -42,6 +42,8 @@ void battle_art_load_banked(void)
     uint8_t art_index = 0xFF;
     uint8_t art_frames = 0;
     uint8_t art_palette = 0;
+    uint8_t art_oam = 0;
+    uint8_t art_obj_palette = 0;
     uint8_t art_w = 3;
     uint8_t art_h = 2;
     uint16_t art_offset = 0;
@@ -74,6 +76,8 @@ void battle_art_load_banked(void)
                 art_index = t->art_index;
                 art_frames = t->art_frames;
                 art_palette = t->art_palette;
+                art_oam = t->art_oam;
+                art_obj_palette = t->art_obj_palette;
                 art_w = t->art_w;
                 art_h = t->art_h;
                 art_offset = t->art_offset;
@@ -91,6 +95,8 @@ void battle_art_load_banked(void)
         g_battle_enemy_art[k] = art_index;
         g_battle_enemy_art_frames[k] = art_frames;
         g_battle_enemy_art_pal[k] = art_palette;
+        g_battle_enemy_art_oam[k] = art_oam;
+        g_battle_enemy_art_objpal[k] = art_obj_palette;
         g_battle_enemy_art_w[k] = art_w;
         g_battle_enemy_art_h[k] = art_h;
         g_battle_enemy_art_base[k] = 0;
@@ -121,6 +127,8 @@ void battle_art_load_banked(void)
         g_battle_enemy_art[k] = 0xFF;
         g_battle_enemy_art_frames[k] = 0;
         g_battle_enemy_art_pal[k] = 0;
+        g_battle_enemy_art_oam[k] = 0;
+        g_battle_enemy_art_objpal[k] = 0;
         g_battle_enemy_art_w[k] = 3;
         g_battle_enemy_art_h[k] = 2;
         g_battle_enemy_art_base[k] = 0;
