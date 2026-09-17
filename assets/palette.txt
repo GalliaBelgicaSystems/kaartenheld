@@ -63,19 +63,6 @@ spider_boss_light: #565656
 boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
 merchant_coin: #8f591f
-# Battle-OAM mirrors of the combat slime hues (same values, SPRITES-home
-# so the ramp infers to the OBJ set; entry 0 is transparent on hardware).
-battle_slime_body: #89cc5e
-battle_slime_edge: #5c903a
-# Battle-OAM mirrors for bat/kobold/mimic (per-tile shade consistency
-# verified against battle_sprites.png; entry 0 transparent on hardware).
-battle_bat_heart: #c34e1b
-battle_bat_wings: #3d3044
-battle_kobold_skin: #844f4f
-battle_kobold_dark: #4a2727
-battle_mimic_light: #8d754a
-battle_mimic_dark: #6f5a34
-battle_mimic_mouth: #3f3017
 
 COMBAT
 background: #ffffff
@@ -120,8 +107,8 @@ field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_
 desolate1: DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void
 desolate2: DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base
 desolate3: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base
-castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
-castle2: CASTLE/ground, CASTLE/gold, CASTLE/wood_light, UNUSED
+castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark,
+castle2: CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED
 castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
 castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
 town1: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
@@ -132,104 +119,31 @@ town5: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubbl
 town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble
 town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
 sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites3: SPRITES/background, SPRITES/boss_eyes_scepter_glow, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites4: SPRITES/background, SPRITES/wood_dog, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
+sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
+sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
 sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
-sprites11: SPRITES/background, SPRITES/npc_beard, SPRITES/slime_light, SPRITES/slime_dark
-# DEV-parked: unreferenced sprite spares. Parked as comments, not deleted
-# -- revive by pinning in SLOTS/OBJ when a new enemy family needs one.
-# sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-# sprites3: SPRITES/background, SPRITES/boss_eyes_scepter_glow, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-# sprites4: SPRITES/background, SPRITES/wood_dog, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-# sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
-# sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
-# sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
-# sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
-# Battle-OAM slime: fight_standard hues, transparent slot 0. Pilot ramp
-# for OAM battle enemies (small only; boss stays BG-stamped).
-battle_slime: SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/battle_slime_edge
-# OAM ramps for bat/kobold/mimic (slots 5-7). Spider stays BG-stamped on
-# fightspider until its art fits one ramp (per-tile shade conflict).
-battle_bat: SPRITES/background, SPRITES/battle_bat_heart, SPRITES/battle_bat_wings, SPRITES/character_main_outline_bat
-battle_kobold: SPRITES/background, UNUSED, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark
-battle_mimic: SPRITES/background, SPRITES/battle_mimic_light, SPRITES/battle_mimic_dark, SPRITES/battle_mimic_mouth
+sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
+sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
+fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
+fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
+fight4: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes
 fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
+fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
+fight7: COMBAT/card_background, COMBAT/ice_icon, COMBAT/numbers_icons, UNUSED
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
 fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
 fightmimic: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth
-fightspider: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/heart_fire_enemy_eyes, COMBAT/spider_combat_knife_handle
+fightspider: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body
 fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
-# DEV-restored black-ink text ramp (engine UI: dialogue paper, blanks,
-# menus). The artist rewrite dropped it; UI_COLOR_TEXT (slot 6) requires it.
-fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
-# DEV-parked: unreferenced background spares + fightbat (bat art shares
-# fightmimic until its art refresh; see combat_art/bat.json). Parked as
-# comments, not deleted -- revive by pinning in SLOTS/BASE.
-# fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
+fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
-
-# DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
-# consume fixed indices -- see tools/palette_txt.py hard_consumers()).
-# Artist: don't reorder these lines; to move a ramp, change its number.
-# Unmapped ramps warn; unmapped slots pad. Missing CONSUMED slots fail.
-# BASE: fight*numero = background/UI (card base, statuses, paper, text),
-# fight*nom = enemy art (slime/spider/mimic share with their card color).
-SLOTS/BASE
-0: fight1
-1: fightgoblin
-2: fightspider
-3: fightslime
-4: fight5
-5: fightmimic
-6: fight_text
-7: fightboss
-# (bow/gold shares slot 0 fight1; see UI_COLOR_GOLD in src/ui/ui.h.)
-
-SLOTS/FOREST
-0: field1
-3: field2
-1: field6
-7: field5
-5: field3
-2: field4
-# (field3 carries stump browns as wood -- verify trunks/merchant on
-# screenshots; rename to wood if it sticks.)
-
-SLOTS/DESOLATE
-7: desolate1
-1: desolate3
-0: desolate2
-# (desolate1 is the ground-first floor default; desolate3 fire accents.)
-
-SLOTS/CASTLE
-0: castle4
-1: castle3
-6: castle2
-2: castle1
-# (castle4 walls/floor default; castle3 curtains/room; castle2 gold hall;
-# castle1 stairs.)
-
-SLOTS/VILLAGE
-5: town1
-6: town2
-1: town3
-0: town4
-2: town5
-3: town6
-4: town7
-# (town1 ground/wood floor default + NPC wood; town2 walls; town3 fire;
-# town4 grey stone; town5 wells; town6 barrel; town7 house walls.)
-
-SLOTS/OBJ
-0: sprites
-1: sprites5
-2: sprites8
-3: sprites11
-4: battle_slime
-5: battle_bat
-6: battle_kobold
-7: battle_mimic
-# (0: bats/spiders grey+black; 1: dogs/kobolds/mimics/fire/boss wood-gold
-# family; 2: hero; 3: slimes; 4-7: OAM battle enemies. Unmapped sprites*
-# ramps are parked below -- pin one if a new enemy family needs it.)
