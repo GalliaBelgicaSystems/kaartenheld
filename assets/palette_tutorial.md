@@ -108,16 +108,29 @@ game. In doubt on a terrain tile: grass (or the set's ground).
 
 ## How art pixels become shades (read this before debugging colors)
 
-The build converts each art tile to shade indices 0–3 in two steps:
-
-1. **Anchor pinning.** The sheet's `ANCHORS` color is forced to shade 0.
-   Forest tiles pin grass green, so grass pixels become transparent
-   background / seamless ground.
-2. **Brightness order.** Remaining colors sort brightest→darkest onto the
-   leftover shades.
+On indexed sheets (forest first, others as they migrate): **your pixels
+pick the shade directly**. Paint each tile with palette indices 0–3 in
+your image editor, following the ramp's order (`assets/palettes.md`
+forest table is your swatch card). The build maps pixel value → exact
+color → that color's position in the tile's ramp. No sorting, no
+guessing — what you paint is what ships. Rules: indexed PNG, exact
+ramp hexes only (eyedropper, never blend), ≤4 values per tile, and the
+background (grass on terrain, yellow/transparency on sprites) as
+index 0. Anything off-spec fails the build naming the tile and color.
 
 Then the ramp paints the shades. So a ramp is only half the story —
 the *art pixels* decide which shade each pixel gets.
+
+### Legacy path (sheets not yet migrated)
+On non-indexed sheets the build still converts each tile in two steps:
+
+1. **Anchor pinning.** The sheet's `ANCHORS` color is forced to shade 0.
+2. **Brightness order.** Remaining colors sort brightest→darkest onto the
+   leftover shades. This is the old guesswork: two colors close in
+   brightness but in the opposite order from the ramp render swapped
+   (it turned treetop browns green once). If a legacy sheet shows
+   swapped colors, the fix is migrating it to indexed, not repainting
+   around the sorter.
 
 True story: the town braziers once rendered as solid orange squares.
 The flame art was brighter than the sheet background, so the flame took
@@ -135,20 +148,21 @@ pixels. Don't "fix" it to a pretty color or every NPC gets a yellow box.
 
 Resolved hexes: `assets/palettes.md` (generated, always current).
 
-- **BASE** (battles + cards): `slime` = slime enemies *and* heal cards
-  (they share — both stay green); `fire/iron_ice/wood/gold` = card
-  colors by weapon; `poison` doubles as the dialogue paper during
-  conversations; `dim` = grey-out + bat/boss art; `gray` = UI text.
-- **FOREST**: `field` = grass + canopy, `wood` = trunks/stumps/merchant,
-  `gold` = accents + mayor, `dim` = rocks.
-- **DESOLATE**: `slate_rock` = ground, `deadwood` = trees,
-  `campfire` = flames, `gold` = accents + chest.
-- **CASTLE**: `stone` = floors/walls, `curtain`, `wood_furn` =
-  furniture, `gold` = accents + chest.
-- **VILLAGE**: `dirt_floor` = ground, `wood` = houses/barrels/merchant,
-  `cream` = walls/roofs/mayor, `fire` = braziers/torches.
-- **OBJ** (sprites): `grey` = player/bats, `orange` = braziers/kobolds,
-  `brown` = hero/chests, `green` = overworld slimes.
+- **BASE** (battles + cards): `fight_standard` = slime enemies *and*
+  heal cards (they share — both stay green); `fight_more/fight_again/
+  fight_still/fight_forever/fight_final` = card/enemy art by set;
+  `fight_text` = black-ink text; `fight_card` = card UI + gold.
+- **FOREST**: `field2` = grass + canopy, `field1` = grass + void black
+  (walls), `field3` = stumps/trunks wood, `field4` = stump/green blend
+  (mossy trunks), `field5` = rocks, `field6` = fire.
+- **DESOLATE**: `underworld` = ground, `underworld_dark` = dark accents,
+  `Underworld_light` = flames.
+- **CASTLE**: `castle` = floors/walls, `castle_room` = stairs/curtains,
+  `castle_hall` = gold/wood hall.
+- **VILLAGE**: `village` = dirt/wood ground, `town` = walls/roofs,
+  `city` = fire accents.
+- **OBJ** (sprites): `grey` = bats + spiders, `more_sprites` = chests/boss
+  glow/dogs, `sprites_again` = dogs/tongues, `sprites` = slimes + NPCs.
 
 ## Guardrails (the checker enforces all of these)
 
@@ -170,8 +184,8 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
   `assets/palettes.md`, or split it: add a second dictionary color.
 - *"Two shades look identical in screenshots."* 5-bit rounding (§3).
   Spread the channels.
-- *"My sprite has a solid box around it."* Anchor story (§5): the sheet
-  background must be the darkest-or-anchored color in every tile, or be
-  pinned in `ANCHORS`.
+- *"My sprite has a solid box around it."* Background must be index 0
+  in every tile (indexed sheets), or the darkest-or-anchored color /
+  pinned in `ANCHORS` (legacy sheets) — see the brazier story above.
 - *"palette-check fails on a ramp count."* You added/removed a line in a
   `RAMPS/*` section. Restore 8 (4 for OBJ).

@@ -62,20 +62,6 @@ DEFAULT_FLOOR_PALETTES = {
     "village": 5,
 }
 
-# Curated per-tile sheet-index overrides (single source; imported by the
-# matcher). Values are hardware slot indices validated against the slotmap.
-TILE_PALETTE_OVERRIDES = {
-    "forest": {
-        28: 2,  # Tree trunk BL: bark + moss on the field4 ramp (indexed
-                # sheet: exact PLTE match, no auto-match involved).
-        29: 2,  # Tree trunk BR: same as BL.
-    },
-    "desolate_landscape": {
-        32: 7,  # Plain floor (slate rock / grey)
-        37: 1,  # Campfire frame 1 (fire)
-        38: 1,  # Campfire frame 2 (fire)
-    },
-}
 MAGENTA: RGB = (255, 0, 255)
 OBJ_PAD: RGB = (170, 170, 170)  # dev fallback grey (documented, never art)
 

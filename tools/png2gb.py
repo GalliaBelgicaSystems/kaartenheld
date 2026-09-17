@@ -298,6 +298,13 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
     img, tiles_x, tiles_y = load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=is_auto)
     shade_map = None if is_auto else build_shade_map(img, str(path), palette_name=palette_name)
     sidecar = load_shade_map(shade_map_path, str(path)) if shade_map_path else None
+    if sidecar is None and is_auto:
+        # Legacy path: shades by anchor + luminance sort. Migrated sheets
+        # pass --shade-map (exact values); this fallback stays only until
+        # every sheet ships indexed, then it gets deleted.
+        print(f"png2gb: WARNING: {path}: legacy luminance shade path (no --shade-map); "
+              f"migrate the sheet to indexed + generated/tiles/<set>_shades.json",
+              file=sys.stderr)
 
     def tile_map(tx, ty):
         if sidecar is not None and (tx, ty) in sidecar:

@@ -49,7 +49,7 @@ Tile index in BG tilemap                Attribute byte (palette 0..7)           
 ```
 
 ### Step 1: Source Art (`assets/forest-tile.png`)
-`assets/forest-tile.png` is an indexed 128×24 pixel PNG (16 columns × 3 rows of 8×8 tiles) containing 16 global colors.
+`assets/forest-tile.png` is an indexed 128×24 pixel PNG (16 columns × 3 rows of 8×8 tiles) carrying the sheet PLTE (exact art colors).
 A 2×2 tree consists of:
 - **Top-left treetop** `TILE_FOREST_12` (col 12, row 0): 3 shades of green (`#1d3e0f`, `#2a4f1a`, `#7bb660`).
 - **Top-right treetop** `TILE_FOREST_13` (col 13, row 0): 3 greens + 1 brown (`#4a3b1c`).
@@ -62,7 +62,7 @@ The build rule in `Makefile` runs:
 python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
     --palette auto --raw -o src/gfx/rpg_forest_world_tiles.inc
 ```
-Under `--palette auto`, `png2gb.py` does the following for each 8×8 tile:
+Under `--palette auto` **without** `--shade-map` (legacy path, still used by sheets not yet migrated to indexed), `png2gb.py` does the following for each 8×8 tile — brightness-sorted guessing that swapped similar colors (treetop browns rendered green and vice versa). Indexed sheets skip all of this; see Step 2b.
 1. Gathers up to 4 unique RGB colors in that tile.
 2. Sorts the colors by luminance: `colors = sorted(..., key=lum, reverse=True)`.
 3. Assigns shade indices — but **not** always `0, 1, 2, 3`. The mapping depends on how many unique colors the tile has:
@@ -285,6 +285,12 @@ To design the solution properly, we must adhere to the physical capabilities of 
 > 1. Color matching the anchor is **strictly pinned to index 0**.
 > 2. The remaining ≤ 3 distinct colors in the 8×8 tile are sorted by luminance and assigned to indices following the existing shade-skipping logic (e.g. 2 remaining colors → `{2, 3}`, not `{1, 2}`).
 > 3. If a tile does not contain the anchor color (e.g. solid wall), index 0 is still filled with the scene's harmonized backdrop in CRAM, ensuring zero border clash.
+>
+> **Superseded for indexed sheets**: with `png2gb.py --shade-map`
+> (forest), sorting is gone entirely — every pixel resolves by exact
+> value against its ramp, and anything off-ramp fails the build. The
+> anchor rule above still applies (anchor must map to shade 0), but
+> nothing is ever ordered by brightness.
 
 ### Pillar 2: Multi-Hue Palettes for Complex 8×8 Tiles [DONE]
 A CGB palette does not have to be a single monochromatic ramp.

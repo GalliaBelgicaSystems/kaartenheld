@@ -128,8 +128,12 @@ Background maps (Forest, Castle, Village, Desolate Landscape, etc.) use backgrou
 
 ### Step-by-Step:
 1. **Source Asset & Description**:
-   - Place source image in `assets/<tileset>-tile.png` (grid of 8x8 tiles).
-   - Place corresponding metadata in `assets/<tileset>-tileset-description.csv` with `row, col, name, walkable, palette`.
+    - Place source image in `assets/<tileset>-tile.png` (grid of 8x8 tiles).
+      World sheets are **indexed PNGs**: exact ramp hexes only, ≤4 values
+      per tile, background as index 0 (forest is migrated; new sheets
+      ship indexed from day one).
+    - Place corresponding metadata in `assets/<tileset>-tileset-description.csv` with `row, col, name, walkable, palette`.
+    - Flag the sheet `"indexed": true` in `tools/level_editor/tilesets/<tileset>.json` once its art meets the contract above.
 2. **Extract to Editor**:
    - Run tile extraction or update `tools/level_compiler/extract_tiles.py`:
      ```bash
@@ -141,7 +145,10 @@ Background maps (Forest, Castle, Village, Desolate Landscape, etc.) use backgrou
    - Run `make atlas` (generates `assets/atlas.json`, `docs/assets_atlas.md`, and C headers in `src/gfx/asset_atlas_*`).
    - Verify with `make atlas-check`.
 4. **Compile to ROM Tiles**:
-   - In `Makefile`, define `png2gb` rules to compile tiles into `src/gfx/rpg_<tileset>_world_tiles.inc`.
+    - Run `make manifest` first: besides the palette manifests it emits
+      `generated/tiles/<tileset>_shades.json` (per-tile exact shade maps)
+      and strict-validates every tile's pixels against its ramp.
+    - In `Makefile`, define `png2gb` rules to compile tiles into `src/gfx/rpg_<tileset>_world_tiles.inc`, passing `--shade-map generated/tiles/<tileset>_shades.json` for indexed sheets (exact values, no luminance guessing; off-ramp pixels fail loudly).
    - Update `tools/level_compiler/compile.py` to map level JSON tiles into C structures in `src/game/scenes_content.c`.
 5. **Palette Assignment**:
    - Background tiles on Game Boy Color require palette attributes (0–7). Ensure palettes are mapped in `tools/level_compiler/palette_compiler.py` and `src/game/tiles_content.c`.
