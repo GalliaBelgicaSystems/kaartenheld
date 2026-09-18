@@ -107,7 +107,7 @@ field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_
 desolate1: DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void
 desolate2: DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base
 desolate3: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base
-castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark,
+castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
 castle2: CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED
 castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
 castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame

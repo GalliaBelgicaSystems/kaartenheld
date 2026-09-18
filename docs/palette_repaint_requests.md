@@ -12,43 +12,42 @@
  people). Max 4 colors per tile. Dev re-checks everything with one
  command after your pass.
 
- One dev-side change needs your eyes: the boss overworld bottom-right
- tile had 6 stray brown pixels along its left edge (seam bleed from the
- neighboring tile). Dev snapped them to gray `#565656` — confirm, or
- repaint that edge yourself.
+ Your red unification landed cleanly (dev synced the 4 curated copies
+ that still carried the old orange: bat eyes, spider eye, fire flame,
+ HP heart — 58 px total). Scepter restored untouched (see below).
+
+ Boss scepter (`assets/sprites.png` row 2, col 12 + overworld
+ `boss_ow_br.png`, 6 brown `#8d754a` pixels): dev briefly grayed it by
+ mistake and has reverted it byte-identical. The brown is intent and
+ stays. It fits no existing list, and only one free sprite slot
+ exists — dev's option is a new entry there (contested, see tie) or
+ leaving it failing with a certificate. No repaint is offered for it.
 
 ## `assets/combat-tile.png` (16 columns x 5 rows)
 
  | Tile (row,col) | What's wrong | Allowed colors (first = background) |
  |---|---|---|
- | Bat, all 6: row 3, cols 1-6 | wings `#3d3044` (58 px) + red eyes `#c34e1b` (2 px, top-middle tile) | own new entry `f1eb03, c34e1b, 3d3044, 000000` — exact fit, zero repaint, IF the bat wins the free-slot tie (see solver results). Otherwise wings → gray `#565656`, eyes → red `#8b1b1b` of the shared sprite list |
- | Boss middle two: row 3, cols 10-11 | red details `#8b1b1b` (8 px) live in no list | `ffffff, 8d754a, 565656, 000000` — repaint the 8 red pixels into one of these four (or tell dev: per-tile palettes could keep the red at game-code cost) |
- | Spider, all 6: row 4, cols 7-12 — background stays transparent | 5 colors across the set: blade `#8f8f8f`, handle `#5a4a3d`, black, orange eye `#c34e1b` | a sprite entry of its own — but the only free slot is contested (see tie below), so the eye must join an existing color regardless. Tell dev when done; he flips the spider from background stamp to sprite and the zone background will show through behind it |
- | Kobold top-left (row 4, col 1), top-middle (row 4, col 2), bottom-middle (row 4, col 5) | white eyes `#ffffff` (7 px) | dev adds white to kobold's unused spare entry — solver proved no tile uses it, so nothing on screen changes. No repaint needed unless you'd rather paint the eyes brown: `844f4f` |
- | Mimic top-middle (row 4, col 14) | white eyes `#ffffff` (2 px), and its list is full with no spare entry | repaint the 2 pixels brown (`8d754a`/`6f5a34`/`3f3017`) — no way to keep white, proven |
- | Sword icon (row 1, col 1) | outline `#755930` | `ffffff, dfbd8d, e3ae63, b09266` |
- | Shield icon (row 1, col 3) | outline `#755930` | `ffffff, 8d754a, 6f5a34, 3f3017` |
- | Bow icon (row 1, col 2) | outline `#755930` | `ffffff, 8f8f8f, 565656, 000000` |
- | Dagger icon (row 5, col 7) | outline `#755930` | `ffffff, dfbd8d, b09266, 7136c1` |
- | Ring icon (row 5, col 8) | outline `#755930`, gem `#7ae3f3` | `ffffff, 89cc5e, 5c903a, 000000` |
- | Fire icon (row 2, col 1) | card back `#b09266, #dfbd8d` around the flame | `ffffff, c34e1b, 844f4f, 4a2727` |
- | Ice icon (row 3, col 16) | ice blue `#7ae3f3` | `ffffff, dfbd8d, e3ae63, b09266` — no ice blue exists in any list; pick from the list or tell dev |
- | AP icon (row 2, col 4), deck icon (row 2, col 5), arrow up (row 2, col 2), arrow counters (row 5, cols 9-12), nine (row 5, col 14) | outline `#755930` | `ffffff, dfbd8d, e3ae63, b09266` |
-
-  The brown outline `#755930` appears in no list anywhere — every icon
-  using it needs re-outlining in its tile's colors. Note: the lists
-  above assume each icon keeps its own slot (option A in the solver
-  results); today icons inherit their card's box color, under which no
-  repaint can ever match — the design choice comes first, paint second.
+ | Boss left-middle (row 3, col 10) | fits `fightboss2` (`ffffff, 8b1b1b, 565656, 000000`) exactly — no paint | dev assigns it a slot (none free today; needs the spider-flip chain or a new slot decision) |
+ | Boss middle-center (row 3, col 11) | red `#8b1b1b` + brown `#8d754a` together fit no list (5 colors set-wide) | repaint red→brown/gray, or tell dev: per-tile palettes could keep the red at game-code cost |
+ | Spider, all 6: row 4, cols 7-12 — background stays transparent | blade `#8f8f8f`, handle `#5a4a3d`, black; eye now red (synced, no action) | own new entry — but the only free slot is contested (see tie). Tell dev when the eye color is final; he flips the spider from background stamp to sprite and the zone background will show through behind it |
+ | Kobold eyes (row 4, cols 1, 2, 5) | white `#ffffff` (7 px); its list was deleted from the file by accident — dev restores it, then adds white to the unused spare entry (proven: no tile uses it, nothing on screen changes) | no repaint unless you'd rather paint the eyes brown: `844f4f` |
+ | Mimic top-middle (row 4, col 14) | white eyes `#ffffff` (2 px); teeth verified brown, no action there | repaint the 2 pixels brown (`8d754a`/`6f5a34`/`3f3017`) — no way to keep white, proven |
+ | Sword (row 1, col 1), shield (row 1, col 3), bow (row 1, col 2), dagger (row 5, col 7), arrows (row 5, cols 9-12), nine (row 5, col 14) | brown `#755930` — fits `fight2` (`dfbd8d, e3ae63, b09266, 755930`) exactly, zero repaint | dev assigns it a slot (needs the spider-flip chain — see below) |
+ | Deck (row 2, col 5), arrow up (row 2, col 2), AP (row 2, col 4) | white backgrounds; rest fits `fight2` | repaint white→card-tan `#dfbd8d` (few px each), then same `fight2` slot as above |
+ | Ring (row 5, col 8) | fits `fight7` (`dfbd8d, 7ae3f3, 755930`) exactly, zero repaint | dev assigns it a slot (none free today) |
+ | Fire (row 2, col 1) | flame now red (synced); card back `#b09266, #dfbd8d` around it fit no red list | repaint back/outline into `fightgoblin` hues, or tell dev |
+ | Ice (row 3, col 16) | fits `fight6` (`ffffff, dfbd8d, b09266, 7ae3f3`) exactly, zero repaint | dev assigns it a slot (none free today) |
+ | HP heart (row 2, col 3) | heart now red (synced); fits `fight3` (`ffffff, b09266, 8b1b1b, 755930`) exactly, zero repaint | dev assigns it a slot (none free today) |
+ | Select arrow (marker row) | single brown pixel art `#755930` | repaint into `fight1` brown `b09266` (1 color) |
 
 ## `assets/sprites.png` (12 columns x 3 rows)
 
  Village people are drawn in sprite colors but shown through village
- palettes, so they need repainting into tans/browns:
+ palettes:
 
  | Tile (row,col) | What's wrong | Allowed colors (first = background) |
  |---|---|---|
- | Guard (row 2, col 1) | dark outline `#3f3017` — GOOD NEWS, see solver results below: no repaint needed, dev wires a new entry for it | `b6a27e, 3f3017` (new entry, exact fit) |
+ | Guard (row 2, col 1) | dark outline `#3f3017` — no repaint needed, dev wires a new entry for it | `b6a27e, 3f3017` (new entry, exact fit) |
  | Wizard (row 2, col 2) | outline `#3f3017`, robe `#475ca8`, beard `#b6b6b6` | `b6a27e, 8d754a, 79643e, 645233` |
  | Merchant (row 2, col 3) | outline `#3f3017`, coin `#8f591f` | `b6a27e, 8d754a, 79643e, 645233` |
  | Mayor (row 2, col 4) | outline `#3f3017`, red `#8b1b1b`, beard `#b6b6b6` | `b6a27e, f1cf91, ccaa6c, 645233` |
@@ -61,51 +60,37 @@
  | `dog_f0.png`, `dog_f1.png` | body `#645233`, accent `#8b1b1b` (51 px) | own new entry `f1eb03, 645233, 8b1b1b` — exact fit, zero repaint, IF the dog wins the free-slot tie (see solver results). Otherwise body → town brown |
  | `fire_f0.png`, `fire_f1.png` | `#26232e, #d7a726, #edc214` (48 px) | own new entry `f1eb03, edc214, d7a726, 26232e` — exact fit, zero repaint, IF the fire wins the tie. Otherwise flames → golds/browns of an existing list |
 
+## Curated-only slime frames (dev question, no paint asked)
+
+ `combat_top/left/middle/right_slime_2.png` hold live animation art
+ (fits `fightslime` exactly, used in battle) but their master cells
+ (`combat-tile.png` row 2, cols 14-16) are blank — in both the old and
+ the new master, so nothing was deleted. Either paint that art into
+ the master blanks or confirm curated-only is fine; dev changes nothing
+ either way.
+
 ## Solver results (plain language)
 
  Dev ran a program (`tools/optimize_palettes.py`) that tries EVERY
  possible way to hand out the 16 color slots (8 background + 8 sprite)
- to every tile, exactly, with zero art changes. It proves what fits
- and what can't — nothing below is a guess.
+ to every tile, exactly, with zero art changes. (Re-run blocked until
+ the palette file parses again — deltas below are hand-derived from
+ its last exact run plus the verified fits above.)
 
- **Fits with zero art change (nothing for Florent to do):**
- slime (battle + overworld), bat/spider/kobold/hero overworld, mimic
- and boss overworld, kobold battle (dev adds white to an unused spare
- entry — its other tiles don't use that entry, so nothing on screen
- changes), guard villager (dev adds one new village entry with its
- exact 2 colors), HP heart and poison icons (already fit their slots).
+ **Needs no paint (ramps exist, dev assigns slots as they free up):**
+ brown family + deck/arrow/AP (after their white→tan) → `fight2`;
+ ring → `fight7`; ice → `fight6`; HP → `fight3`; guard → new village
+ entry; kobold eyes → restored spare entry; bat wings+eyes (done).
+ Boss left-middle → `fightboss2`.
 
- **Needs repainting (proven — no slot on earth holds these as-is):**
- mimic eyes (2 px), boss red details (8 px), spider eye (2 px),
- overworld dog body+accent (51 px) or fire flames (48 px) or battle
- bat wings+eyes (60 px) — see tie below, wizard / merchant / mayor /
- dog villagers, card icons except HP heart and poison (see card note).
+ **Still needs paint (proven — no slot holds these as-is):**
+ mimic eyes (2 px), boss middle-center red+brown (8 px), spider
+ blade/handle (unless it takes the free slot — see tie), dog (51 px)
+ or fire (48 px), wizard / merchant / mayor / dog villagers, fire
+ back/outline, select arrow.
 
- **The one tie the math can't break:** a single free sprite slot is
- claimed by three tiles that each fit it exactly: battle bat wings,
- overworld dog, overworld fire. Only one fits; the other two get
- repainted. Dev recommends the bat (leftover repaints: 99 px vs 108
- vs 111), but it's your call — all three are zero-change for the
- winner.
-
- **Ideas the solver checked and rejected:** turning villagers into
- sprites (needs game-code surgery, still leaves 3 villagers homeless,
- and breaks kobold's free fix — worse on every axis); per-tile battle
- palettes for the boss reds (possible with game-code cost, parked
- unless you prefer code over 8 repainted pixels); kicking any color
- out of a used slot (rejected — that's someone else's look).
-
- **Card icons need a design choice, not just paint:** each icon sits
- on cards whose whole-box color changes (red sword, green ring...),
- but one icon tile can only ever match ONE slot. Three honest
- options: (A) frames always use their brown slot and only the insides
- get tinted — needs a small game-code change, keeps the tinted-card
- look; (B) redraw all icons as black-on-white ink (exact in every
- slot, but cards lose their tinted frames); (C) leave icons on the
- old approximate mapping while everything else goes exact. Dev
- recommends A. HP heart and poison need nothing under any option.
-
- **Dev-side proposals waiting on your approval (no art touched):**
- new `battle_bat` sprite entry (if bat wins the tie), white added to
- kobold's spare entry, new guard village entry, and the matching
- one-line JSON assignments. Nothing here changes a single art pixel.
+ **The tie is now two-way plus spider:** bat resolved via gray repaint,
+ so the free sprite slot goes to dog, fire, or spider-eyeless (which
+ also unlocks the whole brown family via the spider flip). Math
+ favors spider (unlocks most), then dog (48 px leftover) over fire
+ (51 px) — your call.
