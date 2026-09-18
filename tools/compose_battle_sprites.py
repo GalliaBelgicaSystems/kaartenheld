@@ -4,13 +4,15 @@ Reads the CSV-slug editor PNGs (tools/level_editor/public/tiles/combat/,
 sliced fresh from assets/combat-tile.png via import_tileset.py --tileset-id
 combat), and lays out 3 cols x N rows of 8x8 cells:
 
-  row 0: slime top_*       row 6: boss head_*
-  row 1: slime bottom_*    row 7: boss torso_*
-  row 2: slime anim_*      row 8: mimic top_*
-  row 3: bat top_*         row 9: mimic bottom_*
-  row 4: bat bottom_*      row 10: blank
-  row 5: boss horns_*      row 11-12: kobold top_*/bottom_*
-                           row 13-14: spider top_*/bottom_*
+  row 0: slime top_*       row 5: boss head_*
+  row 1: slime bottom_*    row 6: boss torso_*
+  row 2: bat top_*         row 7: mimic top_*
+  row 3: bat bottom_*      row 8: mimic bottom_*
+  row 4: boss horns_*      row 9: blank
+  row 10-11: kobold top_*/bottom_*
+  row 12-13: spider top_*/bottom_*
+
+(Slime anim frame removed per artist: single-frame slime holds frame 0.)
 
 The boss glow-eyes cells (combat_*_boss_2) are intentionally excluded:
 they use 5 colors, over the 4-color 2bpp tile budget (make gfx fails).
@@ -41,7 +43,6 @@ ART_DIR = REPO_ROOT / 'screens' / 'combat_art'
 LAYOUT = [
     ['combat_top_left_slime', 'combat_top_middle_slime', 'combat_top_right_slime'],
     ['combat_bottom_left_slime', 'combat_bottom_middle_slime', 'combat_bottom_right_slime'],
-    ['combat_top_left_slime_2', 'combat_top_middle_slime_2', 'combat_top_right_slime_2'],
     ['combat_top_left_bat', 'combat_top_middle_bat', 'combat_top_right_bat'],
     ['combat_bottom_left_bat', 'combat_bottom_middle_bat', 'combat_bottom_right_bat'],
     ['combat_top_left_boss', 'combat_top_middle_boss', 'combat_top_right_boss'],
@@ -49,11 +50,11 @@ LAYOUT = [
     ['combat_bottom_left_boss', 'combat_bottom_middle_boss', 'combat_bottom_right_boss'],
     ['combat_top_left_mimic', 'combat_top_middle_mimic', 'combat_top_right_mimic'],
     ['combat_bottom_left_mimic', 'combat_bottom_middle_mimic', 'combat_bottom_right_mimic'],
+    [None, None, None],
     ['combat_top_left_kobold', 'combat_top_middle_kobold', 'combat_top_right_kobold'],
     ['combat_bottom_left_kobold', 'combat_bottom_middle_kobold', 'combat_bottom_right_kobold'],
     ['combat_top_left_spider', 'combat_top_middle_spider', 'combat_top_right_spider'],
     ['combat_bottom_left_spider', 'combat_bottom_middle_spider', 'combat_bottom_right_spider'],
-    [None, None, None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for combat-art
@@ -66,9 +67,9 @@ for _y, _row in enumerate(LAYOUT):
         if _name is not None:
             TILE_COORDS[_name] = (_x, _y)
 
-# The all-white cell (last row) pads partial art referenced as null in
-# combat-art JSONs.  (0,10) was stale from before the kobold/spider rows.
-BLANK_COORD = (0, 14)
+# The all-white cell (row 9) pads partial art referenced as null in
+# combat-art JSONs.
+BLANK_COORD = (0, 9)
 
 # Sheet backgrounds: OAM yellow (transparent on hardware) vs BG white.
 OAM_BG = (241, 235, 3)

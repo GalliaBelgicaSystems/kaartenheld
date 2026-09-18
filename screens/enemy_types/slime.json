@@ -3,7 +3,7 @@
   "id": "slime",
   "label": "Slime",
   "category": "minion",
-  "sprite": { "art": "slime", "frames": 2 },
+  "sprite": { "art": "slime", "frames": 1 },
   "overworld": { "cells": ["slime_f0", "slime_f1"], "palette": "sprites11" },
   "name": "SLIME",
   "hp": 10,

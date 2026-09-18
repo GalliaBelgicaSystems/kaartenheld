@@ -150,7 +150,7 @@ static const EnemyTypeDef g_enemy_type_slime = {
     5,
     CURRENCY_ID_GOLD,
     0,
-    2,
+    1,
     3,
     3,
     2,

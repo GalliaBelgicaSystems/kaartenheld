@@ -13,18 +13,17 @@
    fits its shared list exactly.
  - Boss scepter restored byte-identical after dev grayed it by mistake —
    brown is intent, untouched since.
- - Master↔curated sync proven across all combat cells (only the 3
-   slime-anim frames below are curated-only).
+  - Master↔curated sync proven across all combat cells.
+  - Slime anim frames removed per artist (files, frame, composer row,
+    catalog) — slime renders static, tables regenerated.
  - World sheets (forest/castle/desert/village, 171 tiles) pass exactly —
    nothing to do there, they are not listed.
  - Dev-side palette surgery landed: `fight_text` restored, per-battle
    values section added, slot-map rebuilt, spares registry, debug
    markers, dog + guard wired — `palette-check` is green.
 
- **Blocked, not paint (dev needs your answer first):**
- - Title direction (pink PNG vs tan/brown lists).
- - Slime anim frames: live art, blank master cells — paint into master
-   or confirm curated-only.
+  **Blocked, not paint (dev needs your answer first):**
+  - Title direction (pink PNG vs tan/brown lists).
 
  **How to read the tables:** open the PNG, find the tile by row/column
  (rows top to bottom, columns left to right, both from 1 — so "row 3,
@@ -71,14 +70,14 @@
  | `fire_f0.png`, `fire_f1.png` | `#26232e, #d7a726, #edc214` (48 px) | no free slot left; stays failing with certificate unless you repaint it yourself |
  | `boss_ow_br.png` scepter (master `sprites.png` row 2, col 12), 6 brown `#8d754a` px | intent, stays; whole 2x2 boss uses 5 colors — no single list can hold it and overworld lists are one-per-enemy | no repaint offered; stays failing with certificate unless you repaint it yourself |
 
-## Curated-only slime frames (dev question, no paint asked)
+## Slime anim frames (removed per artist — no action)
 
- `combat_top/left/middle/right_slime_2.png` hold live animation art
- (fits `fightslime` exactly, used in battle) but their master cells
- (`combat-tile.png` row 2, cols 14-16) are blank — in both the old and
- the new master, so nothing was deleted. Either paint that art into
- the master blanks or confirm curated-only is fine; dev changes nothing
- either way.
+ `combat_top/left/middle/right_slime_2.png`, `slime.json` frame1,
+ the composer row and the tileset catalog entries are deleted;
+ `enemy_types` frames counter is 1 and slime renders static (holds
+ frame 0; overworld `slime_f0/f1` untouched). Battle tables
+ regenerated — later sets' offsets shifted deterministically,
+ covered by the harness battle scenarios on the next green build.
 
 ## Solver results (plain language)
 
