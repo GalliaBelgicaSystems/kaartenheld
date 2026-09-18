@@ -1,29 +1,37 @@
-# Tiles that need repainting
+# Tiles that need repainting — where we stand
 
- Florent — the game can only show exact colors from a fixed list per
- tile (the Game Boy holds 8 background palettes + 8 sprite palettes,
- all full, so no new colors can be added). A few tiles still use colors
- outside their list. Everything below is: open the PNG, find the tile
- by row/column (rows 1-5 top to bottom, columns left to right, both
- starting at 1 — so "row 3, col 1" is the first tile of the third
- row), repaint the named pixels using ONLY the listed hex codes
- (eyedropper them in), keep the background as-is (white for battle
- art, yellow `#f1eb03` for sprites, tan `#b6a27e` for village
- people). Max 4 colors per tile. Dev re-checks everything with one
- command after your pass.
+ The Game Boy shows tile art through fixed color lists (8 background +
+ 8 sprite palettes). Every tile below is checked pixel-by-pixel against
+ its list by `tools/emit_sheet_sidecars.py` — that check is currently
+ RED, and this file is the complete list of why, who owns each item,
+ and what "done" looks like.
 
- Your red unification landed cleanly (dev synced the 4 curated copies
- that still carried the old orange: bat eyes, spider eye, fire flame,
- HP heart — 58 px total). Scepter restored untouched (see below).
+ **Already done, verified:**
+ - Your orange→red unification is fully in (master + all curated copies
+   in sync — bat eyes, spider eye, fire flame, HP heart).
+ - Bat wings repainted gray (58 px, master + curated in sync) — bat now
+   fits its list exactly.
+ - Boss scepter restored byte-identical after dev grayed it by mistake —
+   brown is intent, untouched since.
+ - Master↔curated sync proven across all combat cells (only the 3
+   slime-anim frames below are curated-only).
+ - World sheets (forest/castle/desert/village, 171 tiles) pass exactly —
+   nothing to do there, they are not listed.
 
- Boss scepter (`assets/sprites.png` row 2, col 12 + overworld
- `boss_ow_br.png`, 6 brown `#8d754a` pixels): dev briefly grayed it by
- mistake and has reverted it byte-identical. The brown is intent and
- stays. The whole 2x2 boss uses 5 colors, which no single 4-color list
- can hold — and overworld palettes are one-per-enemy, so the scepter
- cell can't take a slot of its own either. No repaint is offered for
- it; it stays failing with a certificate unless you repaint it
- yourself.
+ **Blocked, not paint (dev needs your answers first):**
+ - Palette restores (`fight_text`, slime/kobold lists), slot-map rebuild
+   (16 + 11 defined lists into 8 + 8 hardware slots), title direction —
+   nothing validates end-to-end until these land, so counts below are
+   per-cell verified facts, not gate output.
+ - Slime anim frames: live art, blank master cells — paint into master
+   or confirm curated-only.
+
+ **How to read the tables:** open the PNG, find the tile by row/column
+ (rows top to bottom, columns left to right, both from 1 — so "row 3,
+ col 1" is the first tile of the third row). Repaint only the named
+ pixels, eyedropping ONLY the listed hex codes. Keep backgrounds as-is
+ (white battle art, yellow `#f1eb03` sprites, tan `#b6a27e` villagers).
+ Max 4 colors per tile.
 
 ## `assets/combat-tile.png` (16 columns x 5 rows)
 
@@ -61,6 +69,7 @@
  |---|---|---|
  | `dog_f0.png`, `dog_f1.png` | body `#645233`, accent `#8b1b1b` (51 px) | own new entry `f1eb03, 645233, 8b1b1b` — exact fit, zero repaint, IF the dog wins the free-slot tie (see solver results). Otherwise body → gray `#565656` (shares bat+boss slot, verified to fit) |
  | `fire_f0.png`, `fire_f1.png` | `#26232e, #d7a726, #edc214` (48 px) | own new entry `f1eb03, edc214, d7a726, 26232e` — exact fit, zero repaint, IF the fire wins the tie. Otherwise flames → mimic golds/browns (shares mimic slot, verified to fit) |
+ | `boss_ow_br.png` scepter (master `sprites.png` row 2, col 12), 6 brown `#8d754a` px | intent, stays; whole 2x2 boss uses 5 colors — no single list can hold it and overworld lists are one-per-enemy | no repaint offered; stays failing with certificate unless you repaint it yourself |
 
 ## Curated-only slime frames (dev question, no paint asked)
 
