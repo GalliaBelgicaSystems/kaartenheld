@@ -4,7 +4,7 @@
   "label": "Mimic",
   "category": "elite",
   "sprite": { "art": "mimic", "frames": 1 },
-  "overworld": { "cells": ["mimic_f0", "mimic_f1"], "palette": 2 },
+  "overworld": { "cells": ["mimic_f0", "mimic_f1"], "palette": "sprites5" },
   "name": "MIMIC",
   "hp": 30,
   "max_hp": 30,

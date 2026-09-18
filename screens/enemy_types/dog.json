@@ -4,7 +4,7 @@
   "label": "Dog",
   "category": "minion",
   "sprite": null,
-  "overworld": { "cells": ["dog_f0", "dog_f1"], "palette": 2 },
+  "overworld": { "cells": ["dog_f0", "dog_f1"], "palette": "sprites12" },
   "name": "DOG",
   "hp": 1,
   "max_hp": 1,

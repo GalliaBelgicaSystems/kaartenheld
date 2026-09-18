@@ -2,9 +2,11 @@
   "id": "castle",
   "label": "Castle & Bastion",
   "gb_tileset_kind": "WORLD_TILESET_CASTLE",
+  "indexed": true,
   "tiles": [
     {
       "id": "castle_top_left_corner_wall",
+      "palette": "castle4",
       "label": "top left corner wall",
       "gb_constant": "TILE_CASTLE_00",
       "walkable": false,
@@ -15,6 +17,7 @@
     },
     {
       "id": "castle_top_wall",
+      "palette": "castle4",
       "label": "top wall",
       "gb_constant": "TILE_CASTLE_01",
       "walkable": false,
@@ -25,6 +28,7 @@
     },
     {
       "id": "castle_top_right_corner_wall",
+      "palette": "castle4",
       "label": "top right corner wall",
       "gb_constant": "TILE_CASTLE_02",
       "walkable": false,
@@ -35,6 +39,7 @@
     },
     {
       "id": "castle_left_wall",
+      "palette": "castle4",
       "label": "left wall",
       "gb_constant": "TILE_CASTLE_03",
       "walkable": false,
@@ -45,6 +50,7 @@
     },
     {
       "id": "castle_right_wall",
+      "palette": "castle4",
       "label": "right wall",
       "gb_constant": "TILE_CASTLE_04",
       "walkable": false,
@@ -55,6 +61,7 @@
     },
     {
       "id": "castle_window",
+      "palette": "castle4",
       "label": "window",
       "gb_constant": "TILE_CASTLE_05",
       "walkable": false,
@@ -65,6 +72,7 @@
     },
     {
       "id": "castle_curtain",
+      "palette": "castle3",
       "label": "curtain",
       "gb_constant": "TILE_CASTLE_06",
       "walkable": false,
@@ -75,6 +83,7 @@
     },
     {
       "id": "castle_stairs",
+      "palette": "castle4",
       "label": "stairs",
       "gb_constant": "TILE_CASTLE_07",
       "walkable": true,
@@ -85,6 +94,7 @@
     },
     {
       "id": "castle_bottom_left_corren_wall",
+      "palette": "castle4",
       "label": "bottom left corren wall",
       "gb_constant": "TILE_CASTLE_08",
       "walkable": false,
@@ -95,6 +105,7 @@
     },
     {
       "id": "castle_bottom_wall",
+      "palette": "castle4",
       "label": "bottom wall",
       "gb_constant": "TILE_CASTLE_09",
       "walkable": false,
@@ -105,6 +116,7 @@
     },
     {
       "id": "castle_bottom_right_corner_wall",
+      "palette": "castle4",
       "label": "bottom right corner wall",
       "gb_constant": "TILE_CASTLE_10",
       "walkable": false,
@@ -115,6 +127,7 @@
     },
     {
       "id": "castle_chair_facing_left",
+      "palette": "castle2",
       "label": "chair facing left",
       "gb_constant": "TILE_CASTLE_11",
       "walkable": false,
@@ -125,6 +138,7 @@
     },
     {
       "id": "castle_table",
+      "palette": "castle2",
       "label": "table",
       "gb_constant": "TILE_CASTLE_12",
       "walkable": false,
@@ -135,6 +149,7 @@
     },
     {
       "id": "castle_chair_facing_riht",
+      "palette": "castle2",
       "label": "chair facing riht",
       "gb_constant": "TILE_CASTLE_13",
       "walkable": false,
@@ -145,6 +160,7 @@
     },
     {
       "id": "castle_chest",
+      "palette": "castle4",
       "label": "chest",
       "gb_constant": "TILE_CASTLE_14",
       "walkable": false,
@@ -155,12 +171,35 @@
     },
     {
       "id": "castle_plain_floor",
+      "palette": "castle4",
       "label": "plain floor",
       "gb_constant": "TILE_CASTLE_15",
       "walkable": true,
       "color": "#d7d7d7",
       "ascii": ".",
       "image_url": "/tiles/castle/castle_plain_floor.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_plain_floor_2",
+      "palette": "castle4",
+      "label": "plain floor",
+      "gb_constant": "TILE_CASTLE_16",
+      "walkable": true,
+      "color": "#d7d7d7",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_plain_floor_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_exit",
+      "palette": "castle4",
+      "label": "exit",
+      "gb_constant": "TILE_CASTLE_17",
+      "walkable": true,
+      "color": "#565656",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_exit.png",
       "category": "terrain"
     }
   ],
@@ -264,6 +303,72 @@
         "y": 1,
         "index": 15,
         "tile": "castle_plain_floor"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "index": 16,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "index": 17,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "index": 18,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "index": 19,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "index": 20,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "index": 21,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "index": 22,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "index": 23,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "index": 24,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "index": 25,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "index": 26,
+        "tile": "castle_exit"
       }
     ]
   }
