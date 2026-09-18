@@ -63,6 +63,12 @@ spider_boss_light: #565656
 boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
 merchant_coin: #8f591f
+# Battle-OAM mirrors (same values as the combat hues, SPRITES-home so the
+# ramps infer to the OBJ set; entry 0 is transparent on hardware).
+battle_slime_body: #89cc5e
+battle_slime_edge: #5c903a
+battle_kobold_skin: #844f4f
+battle_kobold_dark: #4a2727
 
 COMBAT
 background: #ffffff
@@ -90,9 +96,9 @@ eyes_glow: #f57137
 
 TITLE
 title_bg: #ffffff
-title_light: #c6baa4
-title_medium: #8d754a
-title_dark: #6f5a34
+title_light: #e4b4b4
+title_medium: #ca6a6a
+title_dark: #8b1b1b
 galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
 galliabelgica_black: #000000
@@ -131,8 +137,10 @@ sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
 # sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
 # sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 # sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
-# Battle-OAM slime (sprite greens; entry 0 transparent on hardware).
-battle_slime: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, SPRITES/slime_dark
+# Battle-OAM slime (combat hues, transparent slot 0).
+battle_slime: SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/character_main_outline_bat
+# Battle-OAM kobold (combat hues; kobold art never touches shade 1).
+battle_kobold: SPRITES/background, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark, SPRITES/battle_kobold_dark
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
@@ -155,7 +163,7 @@ fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/bo
 # fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 # fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
-title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+title_logo: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 
 # DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
 # consume fixed indices -- see tools/palette_txt.py hard_consumers()).
@@ -209,5 +217,6 @@ SLOTS/OBJ
 4: battle_slime
 5: sprites2
 6: sprites6
+7: battle_kobold
 # (0: bats/spiders; 1: dogs/kobolds/mimics/fire/boss; 2: hero; 3: slimes;
-# 4: OAM slimes; 5: OAM bats; 6: OAM mimics.)
+# 4: OAM slimes; 5: OAM bats; 6: OAM mimics; 7: OAM kobolds.)

@@ -12,7 +12,7 @@
 /* Hero overworld sprite data (shared, type-owned) */
 const uint8_t g_hero_ow_tile = 100;
 const uint8_t g_hero_ow_frames = 2;
-const uint8_t g_hero_ow_palette = 2;
+const uint8_t g_hero_ow_palette = 0;
 
 static const EnemyTypeDef g_enemy_type_bat = {
     "bat",
@@ -109,9 +109,9 @@ static const EnemyTypeDef g_enemy_type_kobold = {
     1,
     1,
     2,
+    0,
     1,
-    1,
-    1
+    7
 };
 
 static const EnemyTypeDef g_enemy_type_mimic = {
@@ -184,7 +184,7 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     2,
     1,
-    1,
+    5,
     0,
     0
 };

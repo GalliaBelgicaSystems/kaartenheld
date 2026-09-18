@@ -51,18 +51,6 @@ INFER_SET = {"COMMON": None, "GAMEPLAY": None, "FOREST": "forest",
              "TOWN": "village", "SPRITES": "obj", "COMBAT": "base",
              "TITLE": "title"}
 
-# Anchor-only tiles fall back to these slots (single source; the matcher
-# in palette_compiler.py imports them).
-DEFAULT_FLOOR_PALETTES = {
-    "forest": 3,
-    "desolate_landscape": 7,
-    "castle": 0,
-    # Village floor answers the wood ramp: every village slot 0 is dirt,
-    # so plain-dirt tiles render identically, and no dirt-only ramp must
-    # exist for the floor to work (see npc_pals in tiles_content.c).
-    "village": 5,
-}
-
 MAGENTA: RGB = (255, 0, 255)
 OBJ_PAD: RGB = (170, 170, 170)  # dev fallback grey (documented, never art)
 
@@ -209,11 +197,15 @@ def load_palette(path: Path = PALETTE_TXT):
                           f"explicit RAMPS/<SET> header")
             continue
         target = INFER_SET[winners[0]]
-        if target == "title" or target is None:
+        if target is None:
             warnings.append(f"ramp '{name}' infers to [{winners[0]}]: no "
                             f"engine home (splash palette is fixed) — kept "
                             f"for documentation")
             continue
+        if target == "title":
+            warnings.append(f"ramp '{name}' infers to [TITLE]: no slot home "
+                            f"(title art resolves via --strict-ramp) — kept "
+                            f"for documentation")
         inferred.setdefault(target, []).append((name, refs, lineno))
     for setkey, entries in headed.items():
         inferred.setdefault(setkey, []).extend(entries)
@@ -270,8 +262,8 @@ def hard_consumers() -> Dict[str, Dict[int, List[str]]]:
     import re as _re
     out: Dict[str, Dict[int, List[str]]] = {s: {} for s in
                                             list(RAMP_SETS) + ["obj"]}
-    # Tiles name their ramps explicitly (matcher dead in build path);
-    # floor defaults + tile overrides survive only in --suggest.
+    # Tiles name their ramps explicitly; floor defaults are validated
+    # against the slotmap like everything else. No guessing anywhere.
     # Name -> slot across seeded + auto-assigned slotmaps.
     _slot_of_name = {}
     for _set, _sm in FULL_SLOTMAP.items():
@@ -521,6 +513,30 @@ for _slot, _rname in enumerate(_NAMES["obj"]):
 # overworld, 4+ battle).
 OBJ_BY_SLOT = list(_TABLES["obj"])
 RAMP_NAMES = {s: list(_NAMES[s]) for s in RAMP_SETS}
+# Title ramps have no slot home (title art resolves via --strict-ramp),
+# but they resolve exactly like other ramps: UNUSED fills with the ramp's
+# own darkest real shade (same rule as _build_tables).
+TITLE_RAMPS = {}
+for _n, _refs, _ln in _RAMPS_RAW.get("title", []):
+    _vals, _ok = [], True
+    for _r in _refs:
+        if _r == "UNUSED":
+            _vals.append(None)
+            continue
+        _v = _resolve(COLORS, _r, f"{PALETTE_TXT}:{_ln}", [])
+        if _v is None:
+            _ok = False
+            break
+        _vals.append(_v)
+    if not _ok:
+        raise ValueError(f"{PALETTE_TXT}:{_ln}: title ramp '{_n}' has "
+                         f"unresolvable refs")
+    _shades = [v for v in _vals if v is not None]
+    if not _shades:
+        raise ValueError(f"{PALETTE_TXT}:{_ln}: title ramp '{_n}' is all UNUSED")
+    _dark = min(_shades,
+                key=lambda c: 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2])
+    TITLE_RAMPS[_n] = [v if v is not None else _dark for v in _vals]
 
 
 def build_anchors(colors, anchors) -> Dict[str, str]:
@@ -614,7 +630,14 @@ def render_doc() -> str:
         L.append(f"| {key} | {hexes} | {_OBJ_USES.get(key, '')} | "
                  f"{_slot_refs('obj', i)} |")
     L.append("")
-    L.append("## Sheet anchors (`png2gb --anchor-color` → shade 0)")
+    L.append("## Sheet background convention (index 0 of the tile's ramp → shade 0)")
+    L.append("")
+    L.append("No tool pins a color to shade 0 by guessing: every tile encodes")
+    L.append("through its explicitly assigned ramp (tileset JSON `palette`,")
+    L.append("combat-art `palette`/`obj_palette`, enemy `overworld.palette`),")
+    L.append("and entry 0 of that ramp is shade 0. Sheet background cells use")
+    L.append("the ramp's entry-0 color (`ANCHORS` below records the convention")
+    L.append("per sheet for the artist). Off-ramp pixels fail loudly.")
     L.append("")
     L.append("| Sheet | Anchor | Ref |")
     L.append("|-------|--------|-----|")

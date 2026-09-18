@@ -504,7 +504,7 @@
   ],
   "vram_block": {
     "palette": "auto",
-    "source_sheet": "assets/desolate_landscape.png",
+    "source_sheet": "assets/desolate-tile.png",
     "tiles": [
       {
         "x": 0,

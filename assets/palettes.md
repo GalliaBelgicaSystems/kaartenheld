@@ -79,12 +79,19 @@ tutorial: `assets/palette_tutorial.md`.
 | sprites5 | `#f1eb03` | `#ac9d23` | `#8d754a` | `#6f5a34` |  | SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline |
 | sprites8 | `#f1eb03` | `#b6b6b6` | `#8b1b1b` | `#3f3017` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc |
 | sprites11 | `#f1eb03` | `#77e331` | `#5c903a` | `#5c903a` |  | SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED |
-| battle_slime | `#f1eb03` | `#77e331` | `#5c903a` | `#5c903a` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, SPRITES/slime_dark |
+| battle_slime | `#f1eb03` | `#89cc5e` | `#5c903a` | `#000000` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/character_main_outline_bat |
 | sprites2 | `#f1eb03` | `#8b1b1b` | `#565656` | `#000000` |  | SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | sprites6 | `#f1eb03` | `#8d754a` | `#6f5a34` | `#3f3017` |  | SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc |
-| unused | `#ffffff` | `#aaaaaa` | `#555555` | `#000000` | UNUSED slot | UNUSED slot (grey fallback) |
+| battle_kobold | `#f1eb03` | `#844f4f` | `#4a2727` | `#4a2727` |  | SPRITES/background, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark, SPRITES/battle_kobold_dark |
 
-## Sheet anchors (`png2gb --anchor-color` → shade 0)
+## Sheet background convention (index 0 of the tile's ramp → shade 0)
+
+No tool pins a color to shade 0 by guessing: every tile encodes
+through its explicitly assigned ramp (tileset JSON `palette`,
+combat-art `palette`/`obj_palette`, enemy `overworld.palette`),
+and entry 0 of that ramp is shade 0. Sheet background cells use
+the ramp's entry-0 color (`ANCHORS` below records the convention
+per sheet for the artist). Off-ramp pixels fail loudly.
 
 | Sheet | Anchor | Ref |
 |-------|--------|-----|

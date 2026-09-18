@@ -9,15 +9,23 @@ src/game/tiles_content.c, g_actor_npc_tiles).
 
 Layout order = g_actor_npc_tiles order = the npc_slots[] table in
 tiles_content.c.  Deterministic: rerunning reproduces the sheet
-byte-identically.  The chroma-key yellow (241,235,3) -- the actor
-sheet's transparent-background convention (sprites-tileset-description
-CSV) -- is the composite background; the Makefile png2gb rule anchors
-it to shade 0, matching how the old village sheet encoded art colors.
+byte-identically.
+
+Exactness: curated art is copied byte-identically (RGBA transparency is
+flattened onto TOWN/ground tan -- entry 0 of the town overlay ramps).
+NO quantization, NO color snapping: any pixel outside the overlay
+ramp fails loudly later at sidecar validation
+(tools/emit_sheet_sidecars.py), naming the cell and the offending
+color. Repaint the pixel; do not adjust the tool.
 """
+from pathlib import Path
 from PIL import Image
 
-PUB = 'tools/level_editor/public/tiles/actors'
-BG = (241, 235, 3)
+REPO_ROOT = Path(__file__).resolve().parent.parent
+PUB = REPO_ROOT / 'tools' / 'level_editor' / 'public' / 'tiles' / 'actors'
+
+# TOWN/ground: entry 0 of the village overlay ramps (town1/town2).
+BG = (182, 162, 126)
 
 # Order matters: mirrors tiles_content.c g_actor_npc_tiles / npc_slots.
 LAYOUT = [
@@ -31,15 +39,16 @@ LAYOUT = [
 
 
 def main():
-    ref = Image.open('assets/village-tile.png')
-    sheet = Image.new('P', (len(LAYOUT) * 8, 8))
-    sheet.putpalette(ref.getpalette())
+    sheet = Image.new('RGB', (len(LAYOUT) * 8, 8), BG)
     for x, name in enumerate(LAYOUT):
-        im = Image.open('%s/%s.png' % (PUB, name)).convert('RGBA')
+        im = Image.open(PUB / ('%s.png' % name)).convert('RGBA')
+        if im.size != (8, 8):
+            raise ValueError(
+                'npc sheet source %s.png is %dx%d, want 8x8 -- '
+                'resampling would invent colors' % (name, im.size[0], im.size[1]))
         im = Image.alpha_composite(Image.new('RGBA', im.size, BG + (255,)), im)
-        im = im.convert('RGB').quantize(palette=ref, dither=Image.Dither.NONE)
-        sheet.paste(im, (x * 8, 0))
-    sheet.save('assets/npc_tiles.png')
+        sheet.paste(im.convert('RGB'), (x * 8, 0))
+    sheet.save(REPO_ROOT / 'assets' / 'npc_tiles.png')
     print('wrote assets/npc_tiles.png')
 
 

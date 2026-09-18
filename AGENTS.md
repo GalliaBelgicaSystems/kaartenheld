@@ -1667,15 +1667,15 @@ make run
 is only necessary when the ROM's C (or headers, or generated `.inc` tile data)
 changed in a way that could affect gameplay.  Changes confined to the host-side
 level editor — `tools/level_editor/**` (TypeScript, JSON tileset definitions,
-extracted `public/tiles/**` PNGs), `tools/asset_atlas.py`, JSON compilation, or
+extracted `public/tiles/**` PNGs), JSON compilation, or
 `tools/level_editor/extract_tiles.py` — do **not** exercise the ROM:
 `make test-harness` adds no signal and can take many minutes, so skip it.
 
 For host-side-only work the proportional validation is:
 
 * the TypeScript/JSON changes build (`npm run build` in `tools/level_editor/`);
-* any source asset / coordinate mapping is consistent (`make atlas`, and where
-  relevant `python3 tools/asset_atlas.py --check`);
+* any source asset / coordinate mapping is consistent (`make manifest` green,
+  `make gfx` byte-identical on rerun);
 * if new tileset definitions were added, verify they load in the editor.
 
 If a change *also* regenerates ROM-included tile data (a `make gfx` output such
@@ -2318,10 +2318,10 @@ VRAM 117/127, color, row, width; drawn by the bank-3
 fixed `_HOME` bank is hard against 0x8000, AGENTS.md 52.18).  The
 hp/ap/deck icon tile DATA comes from the combat tileset
 (`combat_hp_icon`/`combat_ap_icon`/`combat_deck_icon` via the card-frames
-sheet, loaded by the bank-3 `ui_card_tiles_load_banked` at boot),
-overwriting the atlas data at VRAM 113/114/116 (ids unchanged;
+sheet, loaded by the bank-3 `ui_card_tiles_load_banked` at boot --
+the sole writer of the VRAM 104-116 icon block;
 UI_TILE_DECK 116 keeps the combat deck art on the battle HUD deck
-counter; the QUEST tab markers are font glyphs
+counter; gold prices use the font glyph `G`, never a tile; the QUEST tab markers are font glyphs
 '!' active / '*' complete, never a tile -- the 8x8 deck art read
 poorly there).  Dialogue boxes stamp the **paper palette** (CRAM slot 4,
 re-programmed to a pure white/black document ramp by `ui_draw_dialogue`)
@@ -2534,7 +2534,7 @@ it back, so the BG runs in **signed tile addressing** for the whole game:
 Consequence: any tile-data write to an id < 128 must target
 `0x9000 + id*16`.  Writers that do this correctly:
 
-* GBDK `set_bkg_data` (font 0-95, atlas icons 104-116) -- bank/mode aware.
+* GBDK `set_bkg_data` (font 0-95) -- bank/mode aware.
 * World tileset / enemy-art / NPC overlays (ids >= 128 at raw
   `0x8000 + id*16` = the same physical block both addressing modes use
   for ids >= 128).
@@ -2542,14 +2542,14 @@ Consequence: any tile-data write to an id < 128 must target
 The bug class: `ui_card_tiles_load_banked` (card frames 118-126, bar
 117/127, HUD icons 113/114/116) originally wrote raw `0x8000 + id*16`.
 The data landed in the sprite-only block the BG never fetches, so the
-combat icons never appeared (the atlas heart/bolt/deck at the signed
+combat icons never appeared (stale VRAM contents at the signed
 locations kept rendering) and the card "frames" were unwritten flat
 tiles.  **No harness assert can catch this**: scenarios assert tilemap
 ids, never tile data; the mirror tracks ids only.  Regression tools:
 
 * mGBA write watchpoint on the FETCHED address (e.g. `watch/w 0x9710`
-  for tile 113): expect the atlas write first, then the loader's
-  overwrite.  Watchpoints on 0x8000-block addresses silently validate
+  for tile 113): expect the loader's write there.
+  Watchpoints on 0x8000-block addresses silently validate
   the wrong block.
 * Visual: `make screenshots` -- the hp/ap/deck cells must show the
   2-shade combat glyphs and the hand cards must show bordered frames.

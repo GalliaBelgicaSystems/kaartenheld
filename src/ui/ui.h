@@ -13,19 +13,20 @@ extern uint8_t ui_font_tile_base;
  * writes; DMG = 0. */
 extern uint8_t g_is_cgb;
 
-/* Weapon, element & UI icon tile indices (VRAM Block 1, 0x8800) */
+/* Weapon, element & UI icon tile indices (VRAM Block 1, 0x8800).
+ * Tile DATA comes from the combat tileset via the card-frames sheet
+ * (assets/card_frames.png, make gfx); gold prices use the font glyph 'G'.
+ * VRAM 109/115 are unreferenced spares. */
 #define UI_TILE_CARD_SWORD       104u
 #define UI_TILE_CARD_SHIELD      105u
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
-#define UI_TILE_CARD_AMULET      109u
 #define UI_TILE_CARD_ELEM_FIRE   110u
 #define UI_TILE_CARD_ELEM_ICE    111u
 #define UI_TILE_CARD_ELEM_POISON 112u
 #define UI_TILE_HEART            113u
 #define UI_TILE_BOLT             114u
-#define UI_TILE_COIN             115u
 #define UI_TILE_DECK             116u
 /* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
  * sheet row 3, loaded explicitly at these ids by ui_init).  Together with

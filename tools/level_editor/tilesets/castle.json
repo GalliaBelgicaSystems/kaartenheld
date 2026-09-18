@@ -179,6 +179,28 @@
       "ascii": ".",
       "image_url": "/tiles/castle/castle_plain_floor.png",
       "category": "terrain"
+    },
+    {
+      "id": "castle_plain_floor_2",
+      "palette": "castle4",
+      "label": "plain floor",
+      "gb_constant": "TILE_CASTLE_16",
+      "walkable": true,
+      "color": "#d7d7d7",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_plain_floor_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_exit",
+      "palette": "castle4",
+      "label": "exit",
+      "gb_constant": "TILE_CASTLE_17",
+      "walkable": true,
+      "color": "#565656",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_exit.png",
+      "category": "terrain"
     }
   ],
   "vram_block": {
@@ -281,6 +303,72 @@
         "y": 1,
         "index": 15,
         "tile": "castle_plain_floor"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "index": 16,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "index": 17,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "index": 18,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "index": 19,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "index": 20,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "index": 21,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "index": 22,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "index": 23,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "index": 24,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "index": 25,
+        "tile": "castle_plain_floor_2"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "index": 26,
+        "tile": "castle_exit"
       }
     ]
   }

@@ -148,6 +148,16 @@ typedef enum {
     TILE_CASTLE_13 = 69,
     TILE_CASTLE_14 = 70,
     TILE_CASTLE_15 = 71,
+    /* Spare sheet cells wired for exact palette coverage (all plain
+     * ground repeats + the CSV-named exit art at sheet (8,2)). No map
+     * uses them; the ui.c castle range intentionally still ends at
+     * TILE_CASTLE_15 (slots 16+ do not hold these cells' art under the
+     * current scan-order ROM layout). Values fill the reserved 72-82 gap.
+     * The castle scan-vs-vram order question is logged in the artist
+     * handoff (docs/palette_repaint_requests.md) -- reconcile it before
+     * addressing these ids from maps. */
+    TILE_CASTLE_16 = 72,
+    TILE_CASTLE_17 = 73,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).

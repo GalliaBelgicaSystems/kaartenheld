@@ -12,11 +12,20 @@ png2gb converts the sheet to src/gfx/card_frame_tiles.h; the ROM loads all
 HUD icons, select arrow, status icons, weapon icons -- VRAM block 1, battle enemy art
 starts at 128) and the bank-3 renderer stamps 3x4 card boxes from them.
 
+Exactness: curated art is copied byte-identically (RGBA transparency is
+flattened onto white, entry 0 of the card ramps). NO quantization, NO
+color snapping, NO resampling: sources must be 8x8; anything else fails
+loudly. Off-ramp pixels fail later at sidecar validation
+(tools/emit_sheet_sidecars.py), naming the cell and the offending color.
+Repaint the pixel; do not adjust the tool.
+
 Deterministic: rerunning reproduces the sheet byte-identically.
 """
+from pathlib import Path
 from PIL import Image
 
-PUB = 'tools/level_editor/public/tiles/combat'
+REPO_ROOT = Path(__file__).resolve().parent.parent
+PUB = REPO_ROOT / 'tools' / 'level_editor' / 'public' / 'tiles' / 'combat'
 LAYOUT = [
     ['combat_top_left_card_corner', 'combat_top_middle_card', 'combat_top_right_card_corner'],
     ['combat_left_card_side', 'combat_center_card', 'combat_right_card_side'],
@@ -25,8 +34,7 @@ LAYOUT = [
     # icons from the combat tileset (combat-tileset-description.csv):
     # hp / ap / deck, the up-arrow select icon (replaces the '^'
     # caret on the battle marker/target rows), and the fire / ice /
-    # poison status tiles (element riders; overwrite the atlas art the
-    # atlas loop loads at 110/111/112).  VRAM: frames at
+    # poison status tiles (element riders).  VRAM: frames at
     # UI_TILE_CARD_FRAME_BASE (118-126), filled at UI_TIMER_FILLED (117),
     # empty at 127, HUD icons overwrite the atlas data at 113/114/116,
     # arrow at UI_TILE_SELECT_ARROW (96), status at 110/111/112.
@@ -46,17 +54,25 @@ LAYOUT = [
     ['combat_3_arrows_left', 'combat_nine_icon', None],
 ]
 
+# Sheet background (white): entry 0 of the card ramps.
+BG = (255, 255, 255)
+
 
 def main():
     rows = len(LAYOUT)
-    sheet = Image.new('RGB', (24, rows * 8), (255, 255, 255))
+    sheet = Image.new('RGB', (24, rows * 8), BG)
     for y, row in enumerate(LAYOUT):
         for x, name in enumerate(row):
             if name is None:
                 continue
-            im = Image.open('%s/%s.png' % (PUB, name)).convert('RGB')
-            sheet.paste(im.resize((8, 8), Image.NEAREST), (x * 8, y * 8))
-    sheet.save('assets/card_frames.png')
+            im = Image.open(PUB / ('%s.png' % name)).convert('RGBA')
+            if im.size != (8, 8):
+                raise ValueError(
+                    'card sheet source %s.png is %dx%d, want 8x8 -- '
+                    'resampling would invent colors' % (name, im.size[0], im.size[1]))
+            im = Image.alpha_composite(Image.new('RGBA', im.size, BG + (255,)), im)
+            sheet.paste(im.convert('RGB'), (x * 8, y * 8))
+    sheet.save(REPO_ROOT / 'assets' / 'card_frames.png')
     print('wrote assets/card_frames.png')
 
 

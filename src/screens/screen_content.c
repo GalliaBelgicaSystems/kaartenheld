@@ -280,9 +280,8 @@ void shop_content_render(void)
     sc_format_uint(s_sc_gold, s_sc_str);
     sc_draw_text(8, 3, s_sc_str, 10);
 
-    s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)3 << 5) + 0);
-    VBK_REG = 0;
-    sc_vram_sync_write(s_sc_dst, UI_TILE_COIN);
+    /* Gold marker is the font glyph 'G' (no icon tile). */
+    sc_put_char(0, 3, 'G');
     sc_color_span(0, 3, 1, UI_COLOR_GOLD);
 
     if (!s_sc_shop_def) {
@@ -333,10 +332,8 @@ void shop_content_render(void)
         }
         sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
         sc_draw_text(12, s_sc_y, s_sc_str, 4);
+        /* Price marker is the font glyph 'G' (no icon tile). */
         sc_put_char(16, s_sc_y, 'G');
-        s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 16);
-        VBK_REG = 0;
-        sc_vram_sync_write(s_sc_dst, UI_TILE_COIN);
         sc_color_span(16, s_sc_y, 1, UI_COLOR_GOLD);
     }
 

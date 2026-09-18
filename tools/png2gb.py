@@ -52,10 +52,6 @@ class Png2GbError(Exception):
         super().__init__(f"{asset}: [{rule}] {detail}")
 
 
-def lum(c):
-    return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
-
-
 def load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=False):
     """Load a PNG and validate it against the GB tile constraints.
     Returns (PIL.Image in RGB, tiles_x, tiles_y)."""
@@ -119,59 +115,6 @@ def build_shade_map(img, asset, palette_name="canonical"):
     return shade_map
 
 
-def _assign_remaining_shades(colors):
-    """Assign shade indices to a list of colors (already sorted brightest-first),
-    using the existing contrast-maximising skip pattern:
-      1 color  -> {0}
-      2 colors -> {0, 3}
-      3 colors -> {0, 2, 3}
-      4 colors -> {0, 1, 2, 3}
-    """
-    n = len(colors)
-    if n <= 1:
-        return {colors[0]: 0}
-    elif n == 2:
-        return {colors[0]: 0, colors[1]: 3}
-    elif n == 3:
-        return {colors[0]: 0, colors[1]: 2, colors[2]: 3}
-    else:
-        return {colors[0]: 0, colors[1]: 1, colors[2]: 2, colors[3]: 3}
-
-
-def get_tile_shade_map(img, tile_x, tile_y, anchor_color=None):
-    """Build a {RGB_tuple: shade_index} map for one 8x8 tile.
-
-    If anchor_color is set (an RGB tuple), that color is pinned to index 0
-    regardless of luminance. Remaining colors are sorted by luminance
-    (brightest first) and assigned to the remaining indices using the
-    contrast-maximising skip pattern (e.g. 1 remaining -> {3},
-    2 remaining -> {2, 3}, 3 remaining -> {1, 2, 3}).
-    """
-    px = img.load()
-    ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
-    unique = {px[ox + col, oy + row] for row in range(TILE_SIZE) for col in range(TILE_SIZE)}
-
-    if anchor_color is not None and anchor_color in unique:
-        # Pin anchor to index 0; sort and assign remaining colors
-        rest = sorted([c for c in unique if c != anchor_color], key=lum, reverse=True)
-        shade_map = {anchor_color: 0}
-        n = len(rest)
-        if n == 1:
-            shade_map[rest[0]] = 3
-        elif n == 2:
-            shade_map[rest[0]] = 2
-            shade_map[rest[1]] = 3
-        elif n == 3:
-            shade_map[rest[0]] = 1
-            shade_map[rest[1]] = 2
-            shade_map[rest[2]] = 3
-        return shade_map
-
-    # Default: sort all colors by luminance (brightest = index 0)
-    colors = sorted(list(unique), key=lum, reverse=True)
-    return _assign_remaining_shades(colors)
-
-
 def load_shade_map(path, asset):
     """Load a strict per-tile shade sidecar: {"tx,ty": {"#hex": shade}}.
 
@@ -202,7 +145,7 @@ def load_shade_map(path, asset):
     return out
 
 
-def strict_tile_shade_map(img, tile_x, tile_y, cell_map, asset, anchor_color=None):
+def strict_tile_shade_map(img, tile_x, tile_y, cell_map, asset):
     """Exact shade map for one tile from the sidecar (no luminance sort).
 
     Every pixel's color must be listed; anything else is a hard error
@@ -226,11 +169,30 @@ def strict_tile_shade_map(img, tile_x, tile_y, cell_map, asset, anchor_color=Non
     return shade_map
 
 
-def encode_tile(img, tile_x, tile_y, shade_map, anchor_color=None):
+def strict_ramp_shade_map(img, tile_x, tile_y, ramp, asset):
+    """Exact shade map for one tile against a single ordered ramp
+    (--strict-ramp). Every pixel must equal a ramp entry; anything else
+    is a hard error naming tile + color. No sorting of any kind."""
+    ramp_hex = ["#%02x%02x%02x" % c for c in ramp]
+    px = img.load()
+    ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
+    unique = {px[ox + col, oy + row] for row in range(TILE_SIZE) for col in range(TILE_SIZE)}
+    shade_map = {}
+    for color in unique:
+        hexcol = "#%02x%02x%02x" % color
+        if hexcol not in ramp_hex:
+            raise Png2GbError(
+                asset, "off-ramp-pixel",
+                f"tile ({tile_x},{tile_y}) uses {hexcol}, "
+                f"which is not in its ramp {ramp_hex} -- repaint the pixel")
+        shade_map[color] = ramp_hex.index(hexcol)
+    return shade_map
+
+
+def encode_tile(img, tile_x, tile_y, shade_map):
     """Encode one 8x8 tile block starting at (tile_x*8, tile_y*8) into
-    16 bytes of GB 2bpp tile data."""
-    if shade_map is None:
-        shade_map = get_tile_shade_map(img, tile_x, tile_y, anchor_color=anchor_color)
+    16 bytes of GB 2bpp tile data. shade_map is required (exact mapping);
+    there is no guessing fallback."""
     px = img.load()
     out = bytearray()
     ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
@@ -291,29 +253,58 @@ def parse_hex_color(s):
     return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
+def resolve_strict_ramp(spec, asset):
+    """Resolve a --strict-ramp SET/ramp reference to an ordered [RGB x4] list.
+
+    Single-ramp sheets (e.g. title/title_logo) encode every tile against
+    this one ramp; any pixel outside it is a hard error. No luminance
+    sorting happens at any point."""
+    try:
+        from palette_txt import RAMPS, RAMP_NAMES, TITLE_RAMPS
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from palette_txt import RAMPS, RAMP_NAMES, TITLE_RAMPS
+    try:
+        setkey, name = spec.split("/", 1)
+    except ValueError:
+        raise Png2GbError(asset, "strict-ramp",
+                          f"bad spec {spec!r} (want SET/ramp, e.g. title/title_logo)")
+    if setkey == "title":
+        if name not in TITLE_RAMPS:
+            raise Png2GbError(asset, "strict-ramp",
+                              f"unknown title ramp {name!r}")
+        return TITLE_RAMPS[name]
+    if setkey not in RAMPS or name not in RAMP_NAMES.get(setkey, []):
+        raise Png2GbError(asset, "strict-ramp",
+                          f"unknown ramp {spec!r}")
+    return RAMPS[setkey][RAMP_NAMES[setkey].index(name)]
+
+
 def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=False,
-            anchor_color=None, shade_map_path=None):
+            shade_map_path=None, strict_ramp=None):
     is_auto = (palette_name == "auto")
     img, tiles_x, tiles_y = load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=is_auto)
     shade_map = None if is_auto else build_shade_map(img, str(path), palette_name=palette_name)
     sidecar = load_shade_map(shade_map_path, str(path)) if shade_map_path else None
-    if sidecar is None and is_auto:
-        # Legacy path: shades by anchor + luminance sort. Migrated sheets
-        # pass --shade-map (exact values); this fallback stays only until
-        # every sheet ships indexed, then it gets deleted.
-        print(f"png2gb: WARNING: {path}: legacy luminance shade path (no --shade-map); "
-              f"migrate the sheet to indexed + generated/tiles/<set>_shades.json",
-              file=sys.stderr)
+    ramp = resolve_strict_ramp(strict_ramp, str(path)) if strict_ramp else None
+    if is_auto and sidecar is None and ramp is None:
+        raise Png2GbError(
+            str(path), "shade-map",
+            "--palette auto requires --shade-map <sidecar.json> or "
+            "--strict-ramp SET/ramp: shade indices are never guessed. "
+            "Generate the sidecar via make manifest (tilesets) or the "
+            "relevant *_compile.py, or author it explicitly.")
 
     def tile_map(tx, ty):
-        if sidecar is not None and (tx, ty) in sidecar:
-            return strict_tile_shade_map(img, tx, ty, sidecar[(tx, ty)], str(path),
-                                         anchor_color=anchor_color)
         if sidecar is not None:
-            raise Png2GbError(str(path), "shade-map",
-                              f"tile ({tx},{ty}) has no sidecar entry -- add it to "
-                              f"generated/tiles/<set>_shades.json via make manifest")
-        return None if is_auto else shade_map
+            if (tx, ty) not in sidecar:
+                raise Png2GbError(str(path), "shade-map",
+                                  f"tile ({tx},{ty}) has no sidecar entry -- add it to "
+                                  f"generated/tiles/<set>_shades.json via make manifest")
+            return strict_tile_shade_map(img, tx, ty, sidecar[(tx, ty)], str(path))
+        if ramp is not None:
+            return strict_ramp_shade_map(img, tx, ty, ramp, str(path))
+        return shade_map
 
     all_bytes = bytearray()
     if tile_coords:
@@ -324,16 +315,14 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
         for tx, ty in coords_list:
             explicit = tile_map(tx, ty)
             all_bytes += encode_tile(img, tx, ty,
-                                     explicit if explicit is not None else shade_map,
-                                     anchor_color=anchor_color)
+                                     explicit if explicit is not None else shade_map)
         tile_count = len(coords_list)
     else:
         for ty in range(tiles_y):
             for tx in range(tiles_x):
                 explicit = tile_map(tx, ty)
                 all_bytes += encode_tile(img, tx, ty,
-                                         explicit if explicit is not None else shade_map,
-                                         anchor_color=anchor_color)
+                                         explicit if explicit is not None else shade_map)
         tile_count = tiles_x * tiles_y
 
     return all_bytes, tile_count, format_c_array(name, all_bytes, tile_count, raw_inc=raw_inc)
@@ -343,31 +332,18 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("png", type=Path, help="source PNG")
     ap.add_argument("--name", default="tile_data", help="C array name")
-    ap.add_argument("--palette", default="canonical", choices=["canonical", "gb_green", "auto"], help="palette mapping")
-    ap.add_argument("--anchor-color", default=None, metavar="HEX",
-                     help="pin this hex color (e.g. '#7bb660') to shade index 0 "
-                          "in every tile (requires --palette auto). Used to enforce "
-                          "harmonized CGB Color 0 across a tileset.")
+    ap.add_argument("--palette", default="canonical", choices=["canonical", "gb_green", "auto"], help="palette mapping (canonical/gb_green are exact named palettes; auto requires --shade-map or --strict-ramp -- shades are never guessed)")
     ap.add_argument("--tile-coords", default=None, help="space-separated x,y tile coordinates (e.g. '1,2 8,1 8,2 0,5')")
     ap.add_argument("--shade-map", default=None, metavar="JSON",
                      help="strict per-tile shade sidecar {\"tx,ty\": {\"#hex\": shade}} "
                           "(generated/tiles/<set>_shades.json via make manifest). "
-                          "Covered tiles resolve colors by exact value -- no luminance "
-                          "guessing; uncovered tiles fail loudly.")
+                          "Covered tiles resolve colors by exact value; uncovered tiles fail loudly.")
+    ap.add_argument("--strict-ramp", default=None, metavar="SET/ramp",
+                     help="strict single-ramp mode (e.g. title/title_logo): every tile "
+                          "must use only that ramp's colors; anything else fails loudly.")
     ap.add_argument("--raw", action="store_true", help="output raw comma-separated byte lines suitable for #include inside an array initializer")
     ap.add_argument("-o", "--out", type=Path, help="write generated C snippet here (default: stdout)")
     args = ap.parse_args()
-
-    anchor_color = None
-    if args.anchor_color:
-        if args.palette != "auto":
-            print("png2gb: --anchor-color requires --palette auto", file=sys.stderr)
-            sys.exit(1)
-        try:
-            anchor_color = parse_hex_color(args.anchor_color)
-        except ValueError as e:
-            print(f"png2gb: --anchor-color: {e}", file=sys.stderr)
-            sys.exit(1)
 
     try:
         all_bytes, tile_count, c_src = convert(
@@ -375,8 +351,8 @@ def main():
             palette_name=args.palette,
             tile_coords=args.tile_coords,
             raw_inc=args.raw,
-            anchor_color=anchor_color,
-            shade_map_path=args.shade_map
+            shade_map_path=args.shade_map,
+            strict_ramp=args.strict_ramp
         )
     except Png2GbError as e:
         print(f"png2gb: {e.asset}: [{e.rule}] {e.detail}", file=sys.stderr)

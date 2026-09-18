@@ -84,7 +84,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -130,69 +130,70 @@ gfx: manifest
 	# make manifest, which gfx now depends on.
 	# Full 48-tile world sheet (g_tileset_forest)
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
-		--palette auto --anchor-color "#7bb660" \
+		--palette auto \
 		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
 	# Floor tile: col 0, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_floor \
-		--palette auto --anchor-color "#7bb660" --tile-coords "0,2" \
+		--palette auto --tile-coords "0,2" \
 		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_floor.inc
 	# Treetop tile: col 12, row 0
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_tree \
-		--palette auto --anchor-color "#7bb660" --tile-coords "12,0" \
+		--palette auto --tile-coords "12,0" \
 		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_tree.inc
 	# Exit tile: col 8, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_exit \
-		--palette auto --anchor-color "#7bb660" --tile-coords "8,2" \
+		--palette auto --tile-coords "8,2" \
 		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_exit.inc
 	# Stump tiles TL,TR,BL,BR + mini (BR repeated): cols 14-15, rows 0-1
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
-		--palette auto --anchor-color "#7bb660" --tile-coords "14,0 15,0 14,1 15,1 15,1" \
+		--palette auto --tile-coords "14,0 15,0 14,1 15,1 15,1" \
 		--shade-map generated/tiles/forest_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × 8 rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets
 	# into battle_types.c, so the loader needs no fixed set size.
-	# Sheet layout: see tools/compose_battle_sprites.py.
+	# Sheet layout: see tools/compose_battle_sprites.py.  Per-tile shades
+	# come from generated/tiles/combat_shades.json (exact set-ramp values,
+	# emitted by battle_compile.py alongside the C tables).
 	@python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
+		--palette auto --shade-map generated/tiles/combat_shades.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
 		-o $(GFX_OUT_DIR)/battle_enemy_art.h
 	# ── Shared overworld enemy sprites (assets/enemy_sprites.png) ──
 	# One transparent-background sprite per enemy type, shared by every
 	# world.  Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
-	# Sheet layout: see tools/compose_enemy_sprites.py.  The slate anchor
-	# pins the sheet's transparent convention (compose_enemy_sprites.py BG)
-	# to shade 0 = OAM transparent; without it, cells brighter than the bg
-	# (fire flames, mimic gold) render the bg as a solid square.
+	# Sheet layout: see tools/compose_battle_sprites.py.  The sheet BG is
+	# per-cell (white for BG-stamped sets, SPRITES yellow for OAM sets);
+	# shade 0 stays transparent on hardware for OAM cells.
 	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--palette auto --anchor-color "#938da1" --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+		--palette auto --shade-map generated/tiles/enemy_ow_shades.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png, 16 cols × 3 rows) ──
 	# Indexed sheet: shades from generated/tiles/desolate_landscape_shades.json.
 	# Full 48-tile world sheet (g_tileset_desolate)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
-		--palette auto --anchor-color "#938da1" \
+		--palette auto \
 		--shade-map generated/tiles/desolate_landscape_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
 	# 41-tile subset for scene terrain lookup (rows 0–2, cols 0–8 on row 2)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_tiles \
-		--palette auto --anchor-color "#938da1" --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
+		--palette auto --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
 		--shade-map generated/tiles/desolate_landscape_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_tiles.inc
 	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
-		--palette auto \
+		--palette auto --shade-map generated/tiles/hero_ow_shades.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
 	# ── Castle tileset (assets/castle-tile.png) ─────────
 	# Indexed sheet: shades from generated/tiles/castle_shades.json.
 	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#d7d7d7" \
+		--palette auto \
 		--shade-map generated/tiles/castle_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
@@ -200,7 +201,7 @@ gfx: manifest
 	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
-		--palette auto --anchor-color "#b6a27e" \
+		--palette auto \
 		--shade-map generated/tiles/village_shades.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
 	# NPC map art (compose from the curated actors tileset; see
@@ -211,18 +212,21 @@ gfx: manifest
 	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 8 rows) ──
 	# 9 border/background tiles for the boxed battle-hand cards (TL TM TR /
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
+	# Per-tile shades from generated/tiles/card_frames_shades.json (exact
+	# slot-ramp values, emitted by compose_card_frames.py alongside the sheet).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
-		--palette auto -o $(GFX_OUT_DIR)/card_frame_tiles.h
+		--palette auto --shade-map generated/tiles/card_frames_shades.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
 	@python3 tools/png2gb.py assets/npc_tiles.png --name rpg_actor_npc_tiles \
-		--palette auto --anchor-color "#f1eb03" --raw \
+		--palette auto --shade-map generated/tiles/npc_shades.json --raw \
 		-o $(GFX_OUT_DIR)/rpg_actor_npc_tiles.inc
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
 	# previews the exact same image, so a copy is published under
 	# public/tiles/title/ (mirrors the ROM 1:1; the CI drift diff covers it).
+	# Single-ramp sheet: every pixel must be a title_logo color, exactly.
 	@python3 tools/png2gb.py assets/title-red.png --name title_logo_tiles \
-		--palette auto --anchor-color "#ffffff" --raw \
+		--palette auto --strict-ramp title/title_logo --raw \
 		-o $(GFX_OUT_DIR)/title_logo_tiles.inc
 	@mkdir -p tools/level_editor/public/tiles/title
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
@@ -235,14 +239,6 @@ gfx: manifest
 
 
 
-# Regenerate the asset atlas (docs/assets_atlas.md + src/gfx/asset_atlas.h
-# + the banked .inc data).  Deterministic: rerunning produces byte-identical
-# output.  See docs/assets_atlas.md and tools/asset_atlas.py.
-atlas:
-	@python3 tools/asset_atlas.py
-
-# Drift check: Makefile gfx --tile-coords must match the atlas registry, and
-# the generated artifacts must be in sync with the current source assets.
 # Level compiler targets (docs/level-editor.md)
 LEVEL ?= forest
 level:
@@ -404,9 +400,6 @@ editor:
 	@echo "Starting Game Boy RPG Level Editor..."
 	@cd tools/level_editor && npm install --no-audit --no-fund && npm run dev
 
-atlas-check:
-	@python3 tools/asset_atlas.py --check
-
 # Tileset manifest check: vram_block composition, exit marking, sheet bounds.
 tiles-check:
 	@python3 tools/level_editor/validate_tilesets.py tools/level_editor/tilesets/*.json
@@ -417,6 +410,7 @@ tiles-check:
 # See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
 manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py tools/palette_txt.py assets/palette.txt | $(GENERATED_TILES_DIR)
 	@python3 tools/palette_compiler.py
+	@python3 tools/emit_sheet_sidecars.py
 	@python3 tools/palette_txt.py --write-doc
 	@python3 tools/palette_txt.py --write-tables "$(GENERATED_TILES_DIR)"
 

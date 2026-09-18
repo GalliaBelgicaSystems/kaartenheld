@@ -10,9 +10,7 @@ consumed by both the web editor (WYSIWYG canvas) and the ROM compiler
 Ramp names resolve through the SLOTS tables (tools/palette_txt.py) to
 positional hardware slots, so tile_palette.h indices correspond to the
 generated ROM palettes. `make palette-check` fails on any drift.
-
-`--suggest` mode keeps the old color-distance matcher as a proposal tool
-for new art: it prints the nearest ramp per tile but writes nothing.
+Ramp assignment is always explicit (no color-distance guessing anywhere).
 """
 
 import sys
@@ -21,12 +19,10 @@ import argparse
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Optional
 from PIL import Image
-import math
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from palette_txt import (RAMPS as _AUTHOR_RAMPS, ANCHORS as _AUTHOR_ANCHORS,
                          RAMP_NAMES as _AUTHOR_RAMP_NAMES,
-                         DEFAULT_FLOOR_PALETTES as _AUTHOR_FLOOR,
                          FULL_SLOTMAP as _FULL_SLOTMAP)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -79,11 +75,6 @@ def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
     return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
 
 
-def color_distance(c1: Tuple[int, int, int], c2: Tuple[int, int, int]) -> float:
-    """Euclidean distance in RGB space."""
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(c1, c2)))
-
-
 def load_tileset_json(tileset_id: str) -> Dict[str, Any]:
     """Load tileset JSON from tools/level_editor/tilesets/."""
     path = TILESETS_DIR / f"{tileset_id}.json"
@@ -127,94 +118,12 @@ def get_sheet_order_from_vram_block(tileset_json: Dict[str, Any]) -> List[str]:
     return [t["tile"] for t in sorted_tiles if "tile" in t]
 
 
-def is_brown(rgb: Tuple[int, int, int]) -> bool:
-    """Check if a color is brown-ish (wood/bark tones)."""
-    r, g, b = rgb
-    # Brown: R > G > B, with moderate saturation
-    # Typical brown range: R 60-200, G 40-140, B 10-80
-    return (r > g > b and
-            r > 60 and g > 30 and b < 100 and
-            (r - g) > 10 and (g - b) > 10)
-
-
-def is_green(rgb: Tuple[int, int, int]) -> bool:
-    """Check if a color is green-ish (foliage/grass)."""
-    r, g, b = rgb
-    return g > r and g > b and g > 40
-
-
-# Anchor-only tiles fall back to these slots (single-sourced from
-# palette_txt; the checker validates them against the slotmap).
-DEFAULT_FLOOR_PALETTES = dict(_AUTHOR_FLOOR)
-
-
 SETKEY_OF_TILESET = {
     "forest": "forest",
     "castle": "castle",
     "desolate_landscape": "desolate_landscape",
     "village": "village",
 }
-
-
-def match_tile_to_palette(
-    tile_colors: List[Tuple[int, int, int]],
-    palettes: List[List[Tuple[int, int, int]]],
-    anchor_rgb: Tuple[int, int, int],
-    tileset_id: str = "",
-    usable: List[int] | None = None,
-) -> int:
-    """
-    Match a tile's color set to the best fixed palette.
-
-    For each unique color in the tile, find the closest color in each fixed
-    palette (including anchor at index 0). The palette with the lowest total
-    distance wins. Only `usable` slot indices are considered (padded magenta
-    slots are unmatchable); the returned index is still the positional
-    hardware slot.
-
-    Special case for forest/desolate: tiles with both green (anchor-like)
-    and brown colors should prefer the wood palette (index 5) which has
-    harmonized Color 0 = anchor + brown foreground colors.
-    """
-    if usable is None:
-        usable = list(range(len(palettes)))
-    floor_palette_idx = DEFAULT_FLOOR_PALETTES.get(tileset_id, 0)
-
-    # If tile only contains the scene's anchor backdrop color, assign floor palette directly
-    if tile_colors and all(color_distance(c, anchor_rgb) < 5.0 for c in tile_colors):
-        return floor_palette_idx
-
-    # Detect if tile has both green and brown colors
-    has_green = any(is_green(c) for c in tile_colors)
-    has_brown = any(is_brown(c) for c in tile_colors)
-
-    # For forest/desolate, wood palette is index 5
-    wood_palette_idx = 5 if tileset_id in ("forest", "desolate_landscape") else -1
-
-    best_palette = usable[0] if usable else 0
-    best_total_dist = float('inf')
-
-    for pal_idx in usable:
-        palette = palettes[pal_idx]
-        total_dist = 0.0
-        for tile_color in tile_colors:
-            # Find closest color in this palette
-            min_dist = min(color_distance(tile_color, pal_color) for pal_color in palette)
-            total_dist += min_dist
-
-        # Normalize by number of tile colors
-        avg_dist = total_dist / len(tile_colors) if tile_colors else float('inf')
-
-        # Boost wood palette for mixed green/brown tiles (harmonized Color 0 case)
-        if has_green and has_brown and pal_idx == wood_palette_idx:
-            avg_dist *= 0.5  # Strong preference for wood palette
-
-        # Prefer floor palette when distances tie
-        if avg_dist < best_total_dist or (abs(avg_dist - best_total_dist) < 1e-4 and pal_idx == floor_palette_idx):
-            best_total_dist = avg_dist
-            best_palette = pal_idx
-
-    return best_palette
 
 
 def generate_manifest(
@@ -293,8 +202,7 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
             raise ValueError(
                 f"{tileset_id}: tile {tid} (sheet {i}) has no explicit "
                 f"\"palette\" ramp name — assign one in "
-                f"tools/level_editor/tilesets/{tileset_id}.json (or run "
-                f"palette_compiler.py --suggest for a proposal)")
+                f"tools/level_editor/tilesets/{tileset_id}.json")
         if isinstance(rampname, int) or str(rampname).isdigit():
             raise ValueError(
                 f"{tileset_id}: tile {tid} palette {rampname!r} is numeric "
@@ -329,22 +237,16 @@ def process_tileset(tileset_id: str) -> Dict[str, Any]:
                     slot = _slot_of(setkey, rampname,
                                     f"{tileset_id}: tile {tid}")
                 else:
-                    # Spare cell outside vram_block (in ROM but unnamed):
-                    # encode with the first fitting ramp, deterministically.
+                    # Spare cell outside vram_block: no guessing. Every ROM
+                    # cell must be covered by vram_block with an explicit
+                    # "palette" ramp name -- extend vram_block.
                     used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
                                    for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
-                    slot = None
-                    for s in sorted(_FULL_SLOTMAP.get(setkey, {})):
-                        if all(c in [rgb_to_hex(c) for c in palettes[s]] for c in used):
-                            slot = s
-                            break
-                    if slot is None:
-                        raise ValueError(
-                            f"{tileset_id}: spare cell ({tx},{ty}) uses "
-                            f"{used}, fitting no {setkey} ramp -- repaint "
-                            f"or extend vram_block")
-                    print(f"  spare cell ({tx},{ty}) encoded with "
-                          f"{PALETTE_NAMES[tileset_id][slot]} (not in vram)")
+                    raise ValueError(
+                        f"{tileset_id}: spare cell ({tx},{ty}) uses "
+                        f"{used} but is outside vram_block -- add it to "
+                        f"vram_block in tools/level_editor/tilesets/{tileset_id}.json "
+                        f"with an explicit \"palette\" ramp name")
                 ramp = [rgb_to_hex(c) for c in palettes[slot]]
                 used = sorted({"#%02x%02x%02x" % px[tx * TILE_SIZE + x, ty * TILE_SIZE + y]
                                for y in range(TILE_SIZE) for x in range(TILE_SIZE)})
@@ -416,30 +318,6 @@ def fit_check_tileset(tileset_id: str) -> int:
     return misfits
 
 
-def suggest_tileset(tileset_id: str) -> None:
-    """Proposal tool for new art: nearest ramp per tile (writes nothing)."""
-    from palette_txt import REAL_SLOTS as _REAL
-    tileset_json = load_tileset_json(tileset_id)
-    img = load_png(tileset_id)
-    vram_block = tileset_json.get("vram_block", {})
-    tiles = vram_block.get("tiles", [])
-    max_x = max(t.get("x", 0) for t in tiles)
-    max_y = max(t.get("y", 0) for t in tiles)
-    tile_colors_list = extract_tile_colors(img, max_x + 1, max_y + 1)
-    palettes = FIXED_PALETTES[tileset_id]
-    anchor_hex = ANCHOR_COLORS[tileset_id]
-    anchor_rgb = tuple(int(anchor_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-    setkey = SETKEY_OF_TILESET.get(tileset_id, tileset_id)
-    usable = _REAL.get(setkey, list(range(len(palettes))))
-    names = PALETTE_NAMES[tileset_id]
-    sheet_ids = get_sheet_order_from_vram_block(tileset_json)
-    for i, tile_colors in enumerate(tile_colors_list):
-        idx = match_tile_to_palette(tile_colors, palettes, anchor_rgb,
-                                    tileset_id, usable)
-        print(f"  sheet {i} ({sheet_ids[i] if i < len(sheet_ids) else '?'}): "
-              f"suggest {names[idx]} (slot {idx})")
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -447,8 +325,6 @@ def main():
                         help="Tileset IDs to process (default: all)")
     parser.add_argument("--out-dir", type=Path, default=GENERATED_DIR,
                         help="Output directory for manifests")
-    parser.add_argument("--suggest", action="store_true",
-                        help="print nearest-ramp proposals, write nothing")
     parser.add_argument("--fit-check", action="store_true",
                         help="exact-fit report per tile (ramp it fits, or "
                              "NONE with its colors); exits non-zero on any "
@@ -479,9 +355,6 @@ def main():
             print(f"Unknown tileset: {ts_id} (no fixed palettes defined)", file=sys.stderr)
             sys.exit(1)
         try:
-            if args.suggest:
-                suggest_tileset(ts_id)
-            else:
                 process_tileset(ts_id)
         except Exception as e:
             print(f"Error processing {ts_id}: {e}", file=sys.stderr)
@@ -489,17 +362,16 @@ def main():
             traceback.print_exc()
             sys.exit(1)
 
-    if not args.suggest:
-        # OBJ ramp catalog for the level editor (index/name/colors).
-        from palette_txt import OBJ_BY_SLOT, _NAMES as _OBJ_NAMES
-        obj = {"ramps": [
-            {"index": i, "name": _OBJ_NAMES["obj"][i],
-             "colors": [rgb_to_hex(c) for c in OBJ_BY_SLOT[i]]}
-            for i in range(len(OBJ_BY_SLOT))]}
-        GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-        (GENERATED_DIR / "obj_ramps.json").write_text(
-            json.dumps(obj, indent=2))
-        print("  Wrote manifest: %s" % (GENERATED_DIR / "obj_ramps.json"))
+    # OBJ ramp catalog for the level editor (index/name/colors).
+    from palette_txt import OBJ_BY_SLOT, _NAMES as _OBJ_NAMES
+    obj = {"ramps": [
+        {"index": i, "name": _OBJ_NAMES["obj"][i],
+         "colors": [rgb_to_hex(c) for c in OBJ_BY_SLOT[i]]}
+        for i in range(len(OBJ_BY_SLOT))]}
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+    (GENERATED_DIR / "obj_ramps.json").write_text(
+        json.dumps(obj, indent=2))
+    print("  Wrote manifest: %s" % (GENERATED_DIR / "obj_ramps.json"))
 
     print("Done.")
 

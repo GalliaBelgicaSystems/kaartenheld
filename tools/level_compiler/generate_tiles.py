@@ -232,42 +232,6 @@ def emit_glyph(ranges, exit_idx, const_by_value):
     return "\n".join(out) + "\n"
 
 
-# Glyph -> CGB palette index mapping (must match src/ui/ui.h UI_COLOR_*).
-# This replicates the existing ui_cell_palette() heuristic as data.
-GLYPH_PALETTE = {
-    'T': 3,   # UI_COLOR_FIELD  (forest canopy)
-    't': 5,   # UI_COLOR_WOOD   (tree trunk)
-    's': 5,   # UI_COLOR_WOOD   (stump)
-    'R': 7,   # UI_COLOR_DIM    (rock)
-    '*': 0,   # UI_COLOR_NONE   (campfire / object -- default for now)
-    'O': 0,   # UI_COLOR_NONE   (chest)
-    '>': 0,   # UI_COLOR_NONE   (exit)
-}
-
-# Kind-specific overrides: floor/terrain glyphs get scene-appropriate palettes.
-KIND_FLOOR_PALETTE = {
-    "forest":              3,  # UI_COLOR_FIELD
-    "desolate_landscape":  7,  # UI_COLOR_DIM
-    "castle":              0,  # UI_COLOR_NONE (stone floor)
-}
-
-# Per-tile sheet-index overrides for specific object/accent tiles
-TILE_PALETTE_OVERRIDES = {
-    "castle": {
-        6: 1,   # Curtain (red)
-        12: 5,  # Chair (wood)
-        13: 5,  # Table (wood)
-        14: 5,  # Chair (wood)
-        15: 6,  # Chest (gold)
-    },
-    "desolate_landscape": {
-        37: 1,  # Campfire frame 1 (fire)
-        38: 1,  # Campfire frame 2 (fire)
-        43: 6,  # Treasure chest (gold)
-    },
-}
-
-
 def emit_palette(entries, tilesets, const_by_value):
     """Per-tileset palette index arrays: tile_palette.h.
 
@@ -279,9 +243,10 @@ def emit_palette(entries, tilesets, const_by_value):
 
     Palette indices are sourced from palette compiler manifests
     (generated/tiles/<tileset>.json) for web editor / ROM parity.
-    Falls back to glyph-based heuristic if manifest is missing.
+    A missing manifest is a hard error (no heuristic fallback exists).
     """
-    # Group entries by tileset (for fallback heuristic)
+    # Group entries by tileset (sheet index + glyph per tile; glyphs are
+    # carried for documentation only, palette comes from the manifest).
     kind_tiles = {}  # kind_id -> [(sheet_idx, glyph)]
     for ts_id, ts in sorted(tilesets.items()):
         if not ts.get("vram_block"):
@@ -315,64 +280,22 @@ def emit_palette(entries, tilesets, const_by_value):
     kind_id_map = {"forest": "FOREST", "desolate_landscape": "DESOLATE",
                    "castle": "CASTLE", "village": "VILLAGE"}
 
-    # Glyph -> palette fallback (kept for transition / missing manifests)
-    GLYPH_PALETTE = {
-        'T': 3,   # UI_COLOR_FIELD  (forest canopy)
-        't': 5,   # UI_COLOR_WOOD   (tree trunk)
-        's': 5,   # UI_COLOR_WOOD   (stump)
-        'R': 7,   # UI_COLOR_DIM    (rock)
-        '*': 0,   # UI_COLOR_NONE   (campfire / object)
-        'O': 0,   # UI_COLOR_NONE   (chest)
-        '>': 0,   # UI_COLOR_NONE   (exit)
-    }
-    KIND_FLOOR_PALETTE = {
-        "forest":              3,  # UI_COLOR_FIELD
-        "desolate_landscape":  7,  # UI_COLOR_DIM
-        "castle":              0,  # UI_COLOR_NONE (stone floor)
-    }
-    TILE_PALETTE_OVERRIDES = {
-        "castle": {
-            6: 1,   # Curtain (red)
-            12: 5,  # Chair (wood)
-            13: 5,  # Table (wood)
-            14: 5,  # Chair (wood)
-            15: 6,  # Chest (gold)
-        },
-        "desolate_landscape": {
-            32: 7,  # Plain floor (slate rock / grey)
-            37: 1,  # Campfire frame 1 (fire)
-            38: 1,  # Campfire frame 2 (fire)
-            43: 6,  # Treasure chest (gold)
-        },
-    }
-
     for ts_id in ("forest", "desolate_landscape", "castle", "village"):
         kind = kind_id_map.get(ts_id, ts_id.upper())
         tiles = kind_tiles.get(ts_id, [])
         if not tiles:
             continue
 
-        # Try to load manifest
+        # Manifests are required: palette indices come only from
+        # generated/tiles/<tileset>.json (make manifest). No glyph
+        # fallback exists anymore -- a missing manifest fails loudly.
         manifest = load_palette_manifest(ts_id)
-        if manifest and "tile_palettes" in manifest:
-            pal_values = manifest["tile_palettes"]
-            source = "manifest"
-        else:
-            # Fallback to glyph-based heuristic
-            floor_pal = KIND_FLOOR_PALETTE.get(ts_id, 0)
-            overrides = TILE_PALETTE_OVERRIDES.get(ts_id, {})
-            pal_values = []
-            for idx, glyph in tiles:
-                if idx in overrides:
-                    pal = overrides[idx]
-                elif glyph in ('.', ','):
-                    pal = floor_pal
-                elif glyph in GLYPH_PALETTE:
-                    pal = GLYPH_PALETTE[glyph]
-                else:
-                    pal = 0  # UI_COLOR_NONE
-                pal_values.append(pal)
-            source = "heuristic"
+        if not (manifest and "tile_palettes" in manifest):
+            raise ValueError(
+                f"{ts_id}: missing generated/tiles/{ts_id}.json manifest "
+                f"(run make manifest) -- no heuristic fallback exists")
+        pal_values = manifest["tile_palettes"]
+        source = "manifest"
 
         arr_name = f"g_tile_pal_{ts_id}"
         out.append(f"/* {kind} tileset: {len(pal_values)} tiles (source: {source}) */")

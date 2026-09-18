@@ -11,12 +11,11 @@ of truth. This check asserts:
 3. src/game/tiles_content.c cgb_bg_palettes* RGB8() values equal the
    palette_txt RAMPS (base/forest/desolate_landscape/castle/village).
 4. src/ui/ui.c OAM 0..3 ramps equal palette_txt OBJ tables positionally.
-5. Makefile gfx --anchor-color flags equal palette_txt ANCHORS.
-6. Every hard index consumer (floor defaults, tile overrides, npc
+5. Every hard index consumer (tile overrides, npc
    overlays, battle-art palettes, ow palettes, UI base set) resolves to
    a REAL ramp -- consumed-but-missing slots fail naming the consumer;
    duplicated placeholders are reported.
-7. assets/palettes.md is freshly generated.
+6. assets/palettes.md is freshly generated.
 
 Messages are French-first (the artist reads these failures).
 
@@ -111,32 +110,6 @@ def check_tables_fresh():
         fail("ui.c must #include obj_tables.h (no hand arrays)")
 
 
-def check_makefile_anchors():
-    text = (REPO_ROOT / "Makefile").read_text()
-    # Map each png2gb invocation's source PNG to its --anchor-color.
-    current_png = None
-    found: dict = {}
-    for line in text.splitlines():
-        m = re.search(r"png2gb\.py\s+(\S+\.png)", line)
-        if m:
-            current_png = m.group(1).split("/")[-1]
-        a = re.search(r"--anchor-color\s+\"(#[0-9a-fA-F]{6})\"", line)
-        if a and current_png:
-            found.setdefault(current_png, []).append(a.group(1).lower())
-    want = {"assets/forest-tile.png": ANCHORS["forest"],
-            "assets/desolate-tile.png": ANCHORS["desolate_landscape"],
-            "assets/castle-tile.png": ANCHORS["castle"],
-            "assets/village-tile.png": ANCHORS["village"],
-            "assets/npc_tiles.png": ANCHORS["npc_tiles"],
-            "assets/enemy_sprites.png": ANCHORS["enemy_ow"],
-            "assets/title-red.png": ANCHORS["title"]}
-    for png, anchor in want.items():
-        short = png.split("/")[-1]
-        got = sorted(set(found.get(short, [])))
-        if got != [anchor.lower()]:
-            fail(f"Makefile {short}: anchors {got} vs palette.txt [{anchor}]")
-
-
 def check_doc():
     from palette_txt import render_doc, DOC_PATH
     want = render_doc() + "\n"
@@ -178,13 +151,12 @@ def main() -> int:
     check_consumers()
     check_compiler()
     check_tables_fresh()
-    check_makefile_anchors()
     check_doc()
     if ERRORS:
         print(f"palette-check: {len(ERRORS)} problem(s)")
         return 1
     print("palette-check: OK "
-          f"({len(SECTIONS)} sections; BG+OBJ+anchors match palette.txt)")
+          f"({len(SECTIONS)} sections; BG+OBJ match palette.txt)")
     return 0
 
 

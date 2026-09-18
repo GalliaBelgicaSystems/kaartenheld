@@ -600,15 +600,13 @@ ICON_TILES = {
     # Icon names are the slugified combat-tileset description entries
     # (assets/combat-tileset-description.csv -> public/tiles/combat slugs).
     # Every slug here must exist as tools/level_editor/public/tiles/combat/
-    # <slug>.png (checked on every invocation) EXCEPT 'amulet', which is an
-    # atlas-only icon with no combat-tileset entry.
+    # <slug>.png (checked on every invocation).
     # NOTE: VRAM tile DATA for the weapon icons (sword/shield/bow/dagger/
     # ring) and the element status tiles comes from the combat tileset via
-    # the card-frames sheet (the banked loader overwrites the atlas data
-    # the atlas loop loads at 104-108 and 110/111/112).
+    # the card-frames sheet (the banked loader writes 104-108 and 110/111/112).
     'combat_sword_icon': 104, 'combat_shield_icon': 105,
     'combat_bow_icon': 106, 'combat_dagger_icon': 107,
-    'combat_ring_icon': 108, 'amulet': 109,
+    'combat_ring_icon': 108,
     'combat_fire_status': 110, 'combat_ice_status': 111,
     'combat_poison_status': 112,
     'combat_hp_icon': 113, 'combat_ap_icon': 114,
@@ -656,11 +654,10 @@ DEFAULT_HUD = {
 }
 
 
-# Icon slugs with no tools/level_editor/public/tiles/combat PNG: the
-# atlas-only amulet (no combat-tileset CSV entry).  Everything else in
-# ICON_TILES must have a tileset-extracted PNG or the editor previews and
-# the ROM data have drifted apart.
-ICON_PNG_EXCEPTIONS = {'amulet'}
+# Icon slugs with no tools/level_editor/public/tiles/combat PNG: none.
+# Every ICON_TILES entry must have a tileset-extracted PNG or the editor
+# previews and the ROM data have drifted apart.
+ICON_PNG_EXCEPTIONS = set()
 
 TILES_PNG_DIR = "tools/level_editor/public/tiles/combat"
 

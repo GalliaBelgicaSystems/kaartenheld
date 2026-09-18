@@ -70,27 +70,10 @@ uint8_t ui_font_tile_base;
  * assets/hero_sprites.png (make gfx); see docs/graphics.md. */
 #include "gfx/hero_desolate_sprite_tile.h"
 #include "gfx/rpg_tile_lookup.h"
-#include "gfx/asset_atlas.h"
 #include "game_ids.h"
 #include "banked.h"
 
 #define PLAYER_SPRITE_NUM 0
-
-static const uint16_t s_card_icon_uids[13] = {
-    29,  /* ASSET_EQUIP_C04_R03: Iron Sword (UI_TILE_CARD_SWORD) */
-    64,  /* ASSET_EQUIP_C19_R05: Shield 6th row rightmost (UI_TILE_CARD_SHIELD) */
-    138, /* ASSET_EQUIP_C07_R11: Bow (UI_TILE_CARD_BOW) */
-    9,   /* ASSET_EQUIP_C07_R02: Dagger first weapon row (UI_TILE_CARD_DAGGER) */
-    354, /* ASSET_SYM_C05_R04: Solitaire Diamond Ring (UI_TILE_CARD_RING) */
-    149, /* ASSET_EQUIP_C07_R12: Amulet (UI_TILE_CARD_AMULET) */
-    479, /* ASSET_SYM_C23_R16: Flame Spire (UI_TILE_CARD_ELEM_FIRE) */
-    351, /* ASSET_SYM_C13_R09: Snowflake Star (UI_TILE_CARD_ELEM_ICE) */
-    21,  /* ASSET_EQUIP_C25_R02: Toxic Vial (UI_TILE_CARD_ELEM_POISON) */
-    210, /* ASSET_SYM_C30_R02: Heart (UI_TILE_HEART) */
-    463, /* ASSET_SYM_C23_R15: Lightning Bolt (UI_TILE_BOLT) */
-    53,  /* ASSET_EQUIP_C25_R04: Gold Coin (UI_TILE_COIN) */
-    134  /* ASSET_EQUIP_C28_R10: Card Deck (UI_TILE_DECK) */
-};
 
 /* ASCII semantic char per TileType (0..3): '.', '#', '>', 'B'.  The
  * overworld renders these via the console font (ui_font_tile_base + (ch -
@@ -123,13 +106,6 @@ void ui_init(void)
         set_sprite_data(p, 8, (const uint8_t *)g_ui_screen_buf);
     }
     ui_font_tile_base = 0;
-
-    /* Load weapon, element & UI icon tiles from Bank 6 into VRAM Block 1 (tiles 104..116) */
-    for (p = 0; p < 13; p++) {
-        banked_copy(ASSET_ATLAS_BANK_ICONS, g_ui_screen_buf,
-                    g_asset_icon_tiles + (s_card_icon_uids[p] << 4), 16);
-        set_bkg_data((uint8_t)(UI_TILE_CARD_SWORD + p), 1, (const uint8_t *)g_ui_screen_buf);
-    }
 
     /* Battle UI tiles (card frames, timer-bar segments, HUD hp/ap/deck
      * icons, select arrow, status tiles, weapon icons) stream from Bank 3
@@ -178,10 +154,11 @@ void ui_init(void)
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_orange)[p];
     }
     /* OBJ palettes program positionally from generated/tiles/obj_tables.h:
-     * 0 sprites (bats/spiders), 1 sprites5 (dogs/kobolds/mimics/fire/boss
-     * + OAM kobolds), 2 sprites8 (hero), 3 sprites11 (slimes),
-     * 4 battle_slime, 5 sprites2 (OAM bats), 6 sprites6 (OAM mimics);
-     * 7 grey pad. Shade 0 is transparent on hardware. */
+     * 0 sprites (bats/spiders/kobolds/hero overworld), 1 sprites5
+     * (dogs/mimics/fire overworld), 2 sprites8 (spare, no consumer),
+     * 3 sprites11 (slimes overworld), 4 battle_slime, 5 sprites2
+     * (boss overworld + OAM bats), 6 sprites6 (OAM mimics),
+     * 7 battle_kobold. Shade 0 is transparent on hardware. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }
@@ -532,25 +509,18 @@ if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_47) ||
  * anchored semantic g_ui_screen_buf (harness get_screen_buf) is filled for
  * visible cells.  Written directly -- not through set_bkg_tiles -- to avoid
  * pulling the GBDK .set_xy_* helpers into the non-bankable _HOME area. */
-/* CGB palette for a world cell, from its glyph vocabulary entry
- * (docs/glyphs.md) and tileset kind.  Dedicated small-frame helper: the
- * per-cell path avalanches on inline branches, so the decision lives here
- * (2 params, early returns) and ui_draw_world_cell only pays one call.
- * Tree canopy shares field-green, trunks/stumps take wood brown, rocks dim
- * gray, walkable ground takes its tileset's ground color; everything else
- * palette 0 (map changes and power-on attribute garbage stay invisible). */
+/* CGB palette for a world cell: world tiles (ids 128+) carry their
+ * palette in g_active_tile_palette[] (programmed by ui_load_tileset_banked
+ * from the level compiler's per-tile manifest, with NPC overlay slots
+ * patched in tiles_content.c).  Font/ASCII cells fall back to palette 0
+ * (map changes and power-on attribute garbage stay invisible). */
 static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
 {
     if (tile_idx >= 128 && (uint8_t)(tile_idx - 128) < 48) {
         return g_active_tile_palette[(uint8_t)(tile_idx - 128)];
     }
-    if (glyph == 'T') return UI_COLOR_FIELD;
-    if (glyph == 't' || glyph == 's') return UI_COLOR_WOOD;
-    if (glyph == 'R') return UI_COLOR_DIM;
-    if (glyph == '.' || glyph == ',') {
-        if (kind == WORLD_TILESET_FOREST) return UI_COLOR_FIELD;
-        if (kind == WORLD_TILESET_DESOLATE) return UI_COLOR_DIM;
-    }
+    (void)glyph;
+    (void)kind;
     return UI_COLOR_NONE;
 }
 
@@ -611,11 +581,8 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
 #endif
 
     /* CGB ground color (Game Boy Color first; DMG ignores attributes and
-     * keeps grayscale): palette follows the glyph vocabulary
-     * (docs/glyphs.md).  A dedicated small-frame helper (not inline
-     * branches): this cell path avalanches on added locals/branches
-     * (measured +180B for a flat chain), while a 2-param helper compiles
-     * tight. */
+     * keeps grayscale): world tiles carry their palette from the level
+     * compiler manifest (ui_cell_palette reads g_active_tile_palette). */
     {
         uint8_t pal = ui_cell_palette(tile_idx, (uint8_t)glyph, (uint8_t)world->tileset_kind);
         VBK_REG = 1;
