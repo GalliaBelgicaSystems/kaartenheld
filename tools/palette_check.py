@@ -125,8 +125,8 @@ def check_load():
         info(w)
     for setkey, names in UNMAPPED.items():
         info(f"rampes sans slot ({setkey}, jamais affichees) : "
-             f"{', '.join(names)} — les assigner dans SLOTS/"
-             f"{setkey.upper()} ou les supprimer")
+             f"{', '.join(names)} — les assigner dans "
+             f"tools/palette_slots.json ou les supprimer")
 
 
 def check_consumers():
@@ -137,8 +137,8 @@ def check_consumers():
             if slot not in real:
                 fail(f"slot {slot} ({setkey}) consomme par "
                      f"{', '.join(descs)} mais sans vraie ramp "
-                     f"(FLORENT : en ecrire une / l'assigner dans SLOTS/"
-                     f"{setkey.upper()})")
+                     f"(FLORENT : en ecrire une / l'assigner dans "
+                     f"tools/palette_slots.json)")
     for setkey, dups in DUPLICATES.items():
         for slot, (src, descs) in sorted(dups.items()):
             info(f"slot {slot} ({setkey}) duplique `{src}` pour "

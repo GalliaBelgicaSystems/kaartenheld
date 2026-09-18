@@ -13,9 +13,10 @@ screen doesn't come from this file, that's a bug, report it.
    order, with free names (unique per set). The set is inferred from
    the refs' sections (`FOREST/…` → forest). `UNUSED` repeats the
    ramp's darkest shade.
-3. **Slotmap** (`SLOTS/*`, dev-seeded): `slot: rampname` pins each ramp
-   to its hardware index. File order never matters — only this table
-   does. Don't reorder its lines; to move a ramp, change its number.
+3. **Slotmap** (`tools/palette_slots.json`, dev-owned, not this
+   file): `slot: rampname` pins each ramp to its hardware index. Ask
+   dev when a new ramp needs a slot; unmapped ramps go on the spares
+   list in the same file.
 4. **Anchors** (`ANCHORS`, optional): which color each art sheet treats
    as its background (details in §5). Absent = previous defaults apply.
 
@@ -56,15 +57,16 @@ field: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_t
 - To add a new color: add `my_pink: #ff9fd0` to a dictionary section,
   then reference it as `SECTION/my_pink` from a ramp.
 - To add a new ramp: append a line anywhere (`my_ramp: A/x, A/y, A/z,
-  A/w`). Free slots fill automatically (lowest first, existing slots
-  never shift); pin it in the matching `SLOTS/*` table to make the
-  placement deliberate. A ramp with no free slot fails loudly — pick
+  A/w`). Then ask dev to pin it in `tools/palette_slots.json` (slot
+  assignments are dev-owned; free slots fill automatically, existing
+  slots never shift). A ramp with no free slot fails loudly — pick
   which ship. Nothing is silently dropped.
 - `UNUSED` as a shade repeats the ramp's darkest real shade (handy for
   3-color art). Fully empty slots show magenta in screenshots — that
   means "no ramp here", never ship it.
-- Renaming a ramp only relabels views, but the `SLOTS/*` line must use
-  the new name too (the checker tells you when they disagree).
+- Renaming a ramp only relabels views, but dev must update the
+  `tools/palette_slots.json` line to use the new name too (the checker
+  tells you when they disagree).
 
 ### Shade 0: the background of *its* tiles (not always grass)
 
@@ -171,8 +173,8 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
 ## Guardrails (the checker enforces all of these)
 
 - 1–8 ramps per set; 4 refs each; names unique per set.
-- Every `SECTION/name` must exist; every `SLOTS/*` line must name a
-  ramp of its set at a free slot in range.
+- Every `SECTION/name` must exist; slots and spares live in
+  `tools/palette_slots.json` (dev-owned).
 - Slots consumed by tiles/art/UI/sprites must hold real ramps — the
   error names the consumer (in French). Unconsumed gaps pad magenta.
 - `assets/palettes.md` must be freshly generated (`make manifest`).

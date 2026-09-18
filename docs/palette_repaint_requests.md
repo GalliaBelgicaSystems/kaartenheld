@@ -34,6 +34,9 @@
  currently-failing cells, which render as darkest-shade boxes in dev
  builds so missing art is visible in screenshots; CI ignores the list
  and fails loudly.)
+ File contract: edit only `assets/palette.txt` colors and ramp rows —
+ slots, spares and markers live in dev-owned `tools/palette_slots.json`
+ and can't be broken from here.
 
 ## `assets/combat-tile.png` (16 columns x 5 rows)
 

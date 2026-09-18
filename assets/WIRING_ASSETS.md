@@ -113,7 +113,7 @@ background stamp. Art is 8x8 tiles, max 3 wide × 2 tall per enemy
      (the build has no luminance fallback here — a shared shade must be
      the same color in every tile using it; spider art is pending this).
 2. **Combat-art JSON** (`screens/combat_art/<enemy>.json`):
-   - `"oam": true` + `"obj_palette": "<SLOTS/OBJ ramp>"` for OAM enemies;
+   - `"oam": true` + `"obj_palette": "<sprite ramp name>"` for OAM enemies (slot mapping lives in `tools/palette_slots.json`);
      omit both for BG-stamped (boss).
 3. **Register in Tileset**:
    - Add entries to `tools/level_editor/tilesets/combat.json`.

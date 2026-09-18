@@ -1,6 +1,7 @@
 # Defined palettes (generated — do not edit by hand)
 
-Source of truth: `assets/palette.txt`, read by
+Source of truth: `assets/palette.txt` (colors + ramps) and
+`tools/palette_slots.json` (dev-owned slotmap), read by
 `tools/palette_txt.py`.  Regenerate with `make manifest`
 (the `palette-check` gate fails on drift).  Every shade
 cites the `palette.txt` reference it resolves from; artist

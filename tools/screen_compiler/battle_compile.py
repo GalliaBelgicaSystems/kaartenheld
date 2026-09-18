@@ -83,13 +83,14 @@ def resolve_palette(value, setkey, where):
     if isinstance(value, int) or str(value).isdigit():
         raise ValueError(
             f"{where}: palette {value!r} is numeric — use a ramp name "
-            f"(SLOTS/{setkey.upper()} in assets/palette.txt)")
+            f"(slots in tools/palette_slots.json)")
     table = _PAL_SLOTS.get(setkey, {})
     for slot, name in sorted(table.items()):
         if name == value:
             return slot
     raise ValueError(
-        f"{where}: ramp '{value}' has no slot in SLOTS/{setkey.upper()}")
+        f"{where}: ramp '{value}' has no slot "
+        f"(tools/palette_slots.json)")
 
 
 def resolve_obj_palette(value, where):

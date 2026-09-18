@@ -85,6 +85,26 @@ def _is_ramp_value(value: str) -> bool:
         p == "UNUSED" or "/" in p for p in parts))
 
 
+def _load_slotmap_json():
+    """Dev-owned hardware slotmap (tools/palette_slots.json): slot
+    assignments + spare lists. Required; fails loudly when missing or
+    malformed. Returns (slots, spares) with raw string keys."""
+    import json as _json
+    _path = REPO_ROOT / "tools" / "palette_slots.json"
+    try:
+        _data = _json.loads(_path.read_text())
+    except (OSError, ValueError) as e:
+        raise ValueError(f"cannot load tools/palette_slots.json: {e}")
+    if not isinstance(_data, dict):
+        raise ValueError("tools/palette_slots.json: want an object")
+    _slots = _data.get("slots")
+    _spares = _data.get("spares")
+    if not isinstance(_slots, dict) or not isinstance(_spares, dict):
+        raise ValueError(
+            "tools/palette_slots.json: want 'slots' and 'spares' objects")
+    return _slots, _spares
+
+
 def load_palette(path: Path = PALETTE_TXT):
     """Parse palette.txt.
 
@@ -103,6 +123,33 @@ def load_palette(path: Path = PALETTE_TXT):
     headed: Dict[str, List[Tuple[str, List[str], int]]] = {}
     slotmap: Dict[str, Dict[int, str]] = {}
     spares: Dict[str, List[str]] = {}
+    _slotmap_json, _spares_json = _load_slotmap_json()
+    for _rawset, _entries in _slotmap_json.items():
+        _set = SET_ALIASES.get(_rawset.lower(), _rawset.lower())
+        slotmap[_set] = {}
+        for _slotname, _rname in _entries.items():
+            if _slotname.startswith("_"):
+                continue
+            try:
+                _slot = int(_slotname)
+            except ValueError:
+                raise ValueError(
+                    f"tools/palette_slots.json: slotmap key "
+                    f"'{_slotname}' is not a slot number")
+            if not (0 <= _slot <= 7):
+                raise ValueError(
+                    f"tools/palette_slots.json: slot {_slot} out of "
+                    f"0..7 for {_set}")
+            if _slot in slotmap[_set]:
+                raise ValueError(
+                    f"tools/palette_slots.json: duplicate slot {_slot} "
+                    f"in {_set}")
+            slotmap[_set][_slot] = _rname
+    for _rawset, _names in _spares_json.items():
+        if _rawset.startswith("_"):
+            continue
+        _set = SET_ALIASES.get(_rawset.lower(), _rawset.lower())
+        spares[_set] = list(_names)
     anchors: Dict[str, str] = {}
     errors: List[str] = []
     warnings: List[str] = []
@@ -118,21 +165,16 @@ def load_palette(path: Path = PALETTE_TXT):
             if current in seen:
                 raise ValueError(f"{where}: duplicate section '{current}'")
             seen.add(current)
-            if current.startswith("SPARES/"):
-                setkey = SET_ALIASES.get(current[len("SPARES/"):].lower(),
-                                         current[len("SPARES/"):].lower())
-                spares.setdefault(setkey, [])
             if current.startswith("RAMPS/"):
                 setkey = SET_ALIASES.get(current[len("RAMPS/"):].lower(),
                                          current[len("RAMPS/"):].lower())
                 headed.setdefault(setkey, [])
-            elif current.startswith("SLOTS/"):
-                setkey = SET_ALIASES.get(current[len("SLOTS/"):].lower(),
-                                         current[len("SLOTS/"):].lower())
-                if setkey in slotmap:
-                    raise ValueError(
-                        f"{where}: duplicate slotmap '{setkey}'")
-                slotmap[setkey] = {}
+            elif current.startswith("SLOTS/") or current.startswith("SPARES/"):
+                raise ValueError(
+                    f"{where}: '{current.strip()}' lives in "
+                    f"tools/palette_slots.json now (dev-owned slotmap) -- "
+                    f"remove it from {path.name}, which holds colors and "
+                    f"ramp rows only")
             elif current == "ANCHORS":
                 pass
             else:
@@ -145,34 +187,7 @@ def load_palette(path: Path = PALETTE_TXT):
         value = value.strip()
         if not name or not value:
             raise ValueError(f"{where}: malformed entry: '{raw}'")
-        if current.startswith("SPARES/"):
-            setkey = SET_ALIASES.get(current[len("SPARES/"):].lower(),
-                                     current[len("SPARES/"):].lower())
-            if value != "spare":
-                raise ValueError(
-                    f"{where}: spare entry '{name}' wants 'spare', "
-                    f"got '{value}'")
-            if name in spares[setkey]:
-                raise ValueError(
-                    f"{where}: duplicate spare '{name}' in SPARES/{setkey}")
-            spares[setkey].append(name)
-        elif current.startswith("SLOTS/"):
-            setkey = SET_ALIASES.get(current[len("SLOTS/"):].lower(),
-                                     current[len("SLOTS/"):].lower())
-            try:
-                slot = int(name)
-            except ValueError:
-                raise ValueError(
-                    f"{where}: slotmap key '{name}' is not a slot number")
-            maxslot = 7
-            if not (0 <= slot <= maxslot):
-                raise ValueError(
-                    f"{where}: slot {slot} out of 0..{maxslot} for {setkey}")
-            if slot in slotmap[setkey]:
-                raise ValueError(
-                    f"{where}: duplicate slot {slot} in SLOTS/{setkey}")
-            slotmap[setkey][slot] = value
-        elif current.startswith("RAMPS/"):
+        if current.startswith("RAMPS/"):
             setkey = SET_ALIASES.get(current[len("RAMPS/"):].lower(),
                                      current[len("RAMPS/"):].lower())
             refs = [r.strip() for r in value.split(",")]
@@ -389,7 +404,7 @@ def _place_slots():
                 placed.add(rname)
                 warnings.append(
                     f"ramp '{rname}' ({setkey}) auto-assigned to slot "
-                    f"{free[0]}: pin it in SLOTS/{setkey.upper()} to "
+                    f"{free[0]}: pin it in tools/palette_slots.json to "
                     f"make the placement deliberate")
         left = [r for r in entries
                 if r not in placed and r not in SPARE_RAMPS.get(setkey, [])]
@@ -431,10 +446,12 @@ def _build_tables():
         for slot, rname in sorted(sm.items()):
             if rname not in entries:
                 errors.append(
-                    f"SLOTS/{setkey} slot {slot}: ramp '{rname}' is not "
-                    f"in this set (rename, move, or fix the slotmap)")
+                    f"tools/palette_slots.json {setkey} slot {slot}: ramp "
+                    f"'{rname}' is not in this set (rename, move, or fix "
+                    f"the slotmap)")
         if len(sm) != len(set(sm.values())):
-            errors.append(f"SLOTS/{setkey}: two slots share a ramp")
+            errors.append(f"tools/palette_slots.json {setkey}: two slots "
+                          f"share a ramp")
         # Resolve every ramp first (mapped or not) so bad refs always
         # surface; UNUSED fills with the ramp's own darkest real shade.
         solved: Dict[str, list] = {}
@@ -481,7 +498,8 @@ def _build_tables():
                     errors.append(
                         f"slot {slot} ({setkey}) consumed by "
                         f"{', '.join(consumers[setkey][slot])} but no "
-                        f"ramp is mapped — author one in SLOTS/{setkey.upper()}")
+                        f"ramp is mapped — author one in "
+                        f"tools/palette_slots.json")
                     continue
                 src = cand[0]
                 resolved[slot] = list(resolved[src])
@@ -656,7 +674,8 @@ def render_doc() -> str:
     L = []
     L.append("# Defined palettes (generated — do not edit by hand)")
     L.append("")
-    L.append("Source of truth: `assets/palette.txt`, read by")
+    L.append("Source of truth: `assets/palette.txt` (colors + ramps) and")
+    L.append("`tools/palette_slots.json` (dev-owned slotmap), read by")
     L.append("`tools/palette_txt.py`.  Regenerate with `make manifest`")
     L.append("(the `palette-check` gate fails on drift).  Every shade")
     L.append("cites the `palette.txt` reference it resolves from; artist")
