@@ -148,14 +148,14 @@ typedef enum {
     TILE_CASTLE_13 = 69,
     TILE_CASTLE_14 = 70,
     TILE_CASTLE_15 = 71,
-    /* Spare sheet cells wired for exact palette coverage (all plain
+    /* Spare sheet cells wired for exact palette coverage (plain
      * ground repeats + the CSV-named exit art at sheet (8,2)). No map
      * uses them; the ui.c castle range intentionally still ends at
-     * TILE_CASTLE_15 (slots 16+ do not hold these cells' art under the
-     * current scan-order ROM layout). Values fill the reserved 72-82 gap.
-     * The castle scan-vs-vram order question is logged in the artist
-     * handoff (docs/palette_repaint_requests.md) -- reconcile it before
-     * addressing these ids from maps. */
+     * TILE_CASTLE_15: slots 16+ do not hold these cells' art because the
+     * ROM block compiles in sheet-scan order while vram_block is 8-wide,
+     * so TILE_CASTLE_08+ may already address shifted art -- reconcile
+     * that order before addressing these ids from maps. Values fill the
+     * reserved 72-82 gap. */
     TILE_CASTLE_16 = 72,
     TILE_CASTLE_17 = 73,
 
