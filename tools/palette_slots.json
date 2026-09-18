@@ -1,7 +1,51 @@
 {
-  "_doc": "DEV-OWNED hardware slotmap (the artist file assets/palette.txt holds colors + ramp rows only). Ramp name -> hardware slot; tiles, art, UI and OBJ code consume fixed indices (see tools/palette_txt.py hard_consumers()). To move a ramp, change its number (never reorder blindly). Unmapped ramps must be listed under spares (never silently dropped, never auto-assigned into a live slot).",
-  "slots": {
-    "BASE": {
+  "_doc": "DEV-OWNED hardware slotmap. palette.txt owns colors + ramp rows (artist); this file owns ramp -> slot numbers (dev). Slot semantics follow UI_COLOR_* in src/ui/ui.h and never move: 0 NONE/gray, 1 FIRE, 2 IRON, 3 FIELD/ground, 4 POISON/accent, 5 WOOD, 6 GOLD/light, 7 DIM/dark. Ramps ARE movable: to change what a slot shows, rename here. Aliases (one ramp in two slots) are honest duplicates of real artist colors. Ramps defined in palette.txt but absent here have no hardware slot and are reported, never invented.",
+  "sets": {
+    "forest": {
+      "0": "field1",
+      "1": "field6",
+      "2": "field2",
+      "3": "field1",
+      "4": "field2",
+      "5": "field3",
+      "6": "field4",
+      "7": "field5",
+      "_why": "3/0 ground=field1 (27 tiles); 1 fire=field6; 2/4 dark-green=field2; 5/6 stump-wood=field3/field4; 7 rocks=field5"
+    },
+    "desolate_landscape": {
+      "0": "desolate2",
+      "1": "desolate3",
+      "2": "desolate2",
+      "3": "desolate1",
+      "4": "desolate1",
+      "5": "desolate2",
+      "6": "desolate1",
+      "7": "desolate1",
+      "_why": "7/3/4/6 ground=desolate1 (36 tiles, floor slot 7); 1 fire=desolate3; 0/2/5 rocks=desolate2"
+    },
+    "castle": {
+      "0": "castle4",
+      "1": "castle3",
+      "2": "castle1",
+      "3": "castle4",
+      "4": "castle1",
+      "5": "castle2",
+      "6": "castle3",
+      "7": "castle4",
+      "_why": "0/3/7 stone-ground=castle4 (14 tiles, floor slot 0); 1/6 curtain-gold=castle3; 5 wood=castle2; 2/4 stairs=castle1 (0 tiles, real colors)"
+    },
+    "village": {
+      "0": "town4",
+      "1": "town3",
+      "2": "town5",
+      "3": "town6",
+      "4": "town7",
+      "5": "town1",
+      "6": "town2",
+      "7": "town8",
+      "_why": "5 ground-fence=town1 (18 tiles, merchant NPC); 6 houses=town2 (14 tiles, mayor NPC); 3 fence=town6 (guard/wizard/dog NPC); 1 fire=town3; 0/2 stone=town4/town5; 4 house-wall=town7; 7 guard-overlay=town8"
+    },
+    "base": {
       "0": "fight1",
       "1": "fightgoblin",
       "2": "fightspider",
@@ -10,50 +54,20 @@
       "5": "fightmimic",
       "6": "fight_text",
       "7": "fightboss",
-      "_note": "bow/gold shares slot 0 fight1; see UI_COLOR_GOLD in src/ui/ui.h."
+      "_why": "5 battle-art ramps (slime/goblin/mimic/spider/boss BG stamps) + fight1 cards/icons + fight_text UI paper + fight5 poison icon. Unslotted: fight2/3/4/6/7, fightbat, fightboss2/3/4."
     },
-    "FOREST": {
-      "0": "field1",
-      "3": "field2",
-      "1": "field6",
-      "7": "field5",
-      "5": "field3",
-      "2": "field4"
-    },
-    "DESOLATE": {
-      "7": "desolate1",
-      "1": "desolate3",
-      "0": "desolate2"
-    },
-    "CASTLE": {
-      "0": "castle4",
-      "1": "castle3",
-      "6": "castle2",
-      "2": "castle1"
-    },
-    "VILLAGE": {
-      "5": "town1",
-      "6": "town2",
-      "1": "town3",
-      "0": "town4",
-      "2": "town5",
-      "3": "town6",
-      "4": "town7",
-      "7": "town8"
-    },
-    "OBJ": {
+    "obj": {
       "0": "sprites",
       "1": "sprites5",
       "2": "sprites12",
       "3": "sprites11",
-      "5": "sprites2",
-      "6": "sprites6",
-      "_note": "0: bats/spiders/kobolds/hero OW; 1: fire/mimic OW; 2: dog OW; 3: slime OW; 5: boss OW + OAM bats; 6: OAM mimics. Slots 4/7 unmapped by design: battle-time scratch, programmed per battle entry (red pads at boot mark them scratch -- never art). Battle OAM values live in RAMPS/BATTLE, programmed per battle entry -- never static slots."
+      "4": "sprites2",
+      "_why": "0 shared OW (hero/bat/kobold/spider); 1 fire/mimic OW; 2 dog OW; 3 slime OW; 4 boss OW. Slots 5-7 stay grey (as before). Unslotted: sprites3/4/6-10, battle_* (battle OAM is future work; battle art encodes with the BG fight* ramp)."
+    },
+    "title": {
+      "0": "title",
+      "1": "title_logo",
+      "_why": "Title logo encodes with title_logo; the title screen programs the ramp directly (title_content.c). Slot 1 matches the logo image palette."
     }
-  },
-  "spares": {
-    "_doc": "Deliberate spares: defined ramps with no hardware slot (board is full). The checker reports them as spare by design instead of failing on unmapped ramps. Promote to slots when a slot frees (e.g. spider flip frees BASE 2 for fight2).",
-    "BASE": ["fight2", "fight3", "fight4", "fight6", "fight7", "fightbat", "fightboss2", "fightboss3", "fightboss4", "debug_missing"],
-    "OBJ": ["sprites3", "sprites4", "sprites7", "sprites8", "sprites9", "sprites10", "debug_missing_obj"]
   }
 }

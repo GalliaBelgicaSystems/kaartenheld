@@ -12,7 +12,7 @@
 /* Hero overworld sprite data (shared, type-owned) */
 const uint8_t g_hero_ow_tile = 100;
 const uint8_t g_hero_ow_frames = 2;
-const uint8_t g_hero_ow_palette = 2;
+const uint8_t g_hero_ow_palette = 0;
 
 static const EnemyTypeDef g_enemy_type_bat = {
     "bat",
@@ -26,7 +26,7 @@ static const EnemyTypeDef g_enemy_type_bat = {
     CURRENCY_ID_GOLD,
     1,
     2,
-    7,
+    5,
     3,
     2,
     12,
@@ -103,7 +103,7 @@ static const EnemyTypeDef g_enemy_type_kobold = {
     1,
     1,
     2,
-    2
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_mimic = {
@@ -126,7 +126,7 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     1,
     1,
     2,
-    2
+    1
 };
 
 static const EnemyTypeDef g_enemy_type_slime = {
@@ -140,7 +140,7 @@ static const EnemyTypeDef g_enemy_type_slime = {
     5,
     CURRENCY_ID_GOLD,
     0,
-    2,
+    1,
     3,
     3,
     2,
@@ -172,7 +172,7 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     2,
     1,
-    1
+    4
 };
 
 static const EnemyTypeDef g_enemy_type_spider = {
@@ -187,7 +187,7 @@ static const EnemyTypeDef g_enemy_type_spider = {
     CURRENCY_ID_GOLD,
     5,
     1,
-    0,
+    2,
     3,
     2,
     66,

@@ -50,13 +50,13 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 8,
-   "expected": 140
+   "expected": 134
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 15,
-   "expected": 152
+   "expected": 140
   },
   {
    "type": "event_occurred",

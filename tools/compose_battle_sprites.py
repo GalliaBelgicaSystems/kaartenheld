@@ -4,13 +4,15 @@ Reads the CSV-slug editor PNGs (tools/level_editor/public/tiles/combat/,
 sliced fresh from assets/combat-tile.png via import_tileset.py --tileset-id
 combat), downscales NEAREST to 8x8, and lays out 3 cols x N rows of cells:
 
-  row 0: slime top_*       row 6: boss head_*
-  row 1: slime bottom_*    row 7: boss torso_*
-  row 2: slime anim_*      row 8: mimic top_*
-  row 3: bat top_*         row 9: mimic bottom_*
-  row 4: bat bottom_*      row 10: blank
-  row 5: boss horns_*      row 11-12: kobold top_*/bottom_*
-                           row 13-14: spider top_*/bottom_*
+  row 0: slime top_*       row 6: boss torso_*
+  row 1: slime bottom_*    row 7: mimic top_*
+  row 2: bat top_*         row 8: mimic bottom_*
+  row 3: bat bottom_*      row 9-10: kobold top_*/bottom_*
+  row 4: boss horns_*      row 11-12: spider top_*/bottom_*
+  row 5: boss head_*       row 13: blank
+
+The slime second anim frame was removed by the artist (single-frame
+slime); its curated PNGs are gone, so no row is reserved for it.
 
 The boss glow-eyes cells (combat_*_boss_2) are intentionally excluded:
 they use 5 colors, over the 4-color 2bpp tile budget (make gfx fails).
@@ -25,7 +27,6 @@ PUB = 'tools/level_editor/public/tiles/combat'
 LAYOUT = [
     ['combat_top_left_slime', 'combat_top_middle_slime', 'combat_top_right_slime'],
     ['combat_bottom_left_slime', 'combat_bottom_middle_slime', 'combat_bottom_right_slime'],
-    ['combat_top_left_slime_2', 'combat_top_middle_slime_2', 'combat_top_right_slime_2'],
     ['combat_top_left_bat', 'combat_top_middle_bat', 'combat_top_right_bat'],
     ['combat_bottom_left_bat', 'combat_bottom_middle_bat', 'combat_bottom_right_bat'],
     ['combat_top_left_boss', 'combat_top_middle_boss', 'combat_top_right_boss'],
@@ -50,8 +51,8 @@ for _y, _row in enumerate(LAYOUT):
         if _name is not None:
             TILE_COORDS[_name] = (_x, _y)
 
-# The all-white cell (row 10) pads partial art (bat is 3x1 per frame).
-BLANK_COORD = (0, 10)
+# The all-white cell (last row) pads partial art sets.
+BLANK_COORD = (0, len(LAYOUT) - 1)
 
 
 def main():

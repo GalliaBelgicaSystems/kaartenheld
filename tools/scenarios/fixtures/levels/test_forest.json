@@ -290,6 +290,13 @@
         "width": 1,
         "height": 1,
         "tile": "forest.forest_bottom_right_tree_stump"
+      },
+      {
+        "x": 16,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_floor_with_stuff_walkable_1"
       }
     ]
   },
@@ -408,10 +415,6 @@
     {
       "id": "amulet_pickup",
       "type": "item",
-      "overworld_sprite": "forest.forest_treasure_chest_forest",
-      "animation_frames": [
-        "forest.forest_treasure_chest_forest"
-      ],
       "position": {
         "x": 16,
         "y": 10

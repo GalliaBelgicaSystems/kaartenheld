@@ -8,6 +8,9 @@ Deterministic: rerunning reproduces the sheet byte-identically.
 from PIL import Image
 
 PUB = 'tools/level_editor/public/tiles/hero'
+
+# OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
+OAM_KEY = (241, 235, 3)
 LAYOUT = [
     ['hero_f0', 'hero_f1'],
 ]
@@ -22,21 +25,16 @@ for _y, _row in enumerate(LAYOUT):
 
 
 def main():
-    ref = Image.open('assets/desolate_landscape.png')
-    sheet = Image.new('P', (16, 8))
-    sheet.putpalette(ref.getpalette())
-    # OAM transparent background: the curated hero tiles use this light
-    # gray as their background, which the per-tile auto shade map
-    # in png2gb maps to shade 0 = OAM transparent.
-    BG = (147, 141, 161)
+    # RGB sheet, byte-exact curated colors; transparency -> OAM chroma-key.
+    # No quantization: off-ramp pixels are reported, not hidden.
+    sheet = Image.new('RGB', (16, 8), OAM_KEY)
     for y, row in enumerate(LAYOUT):
         for x, name in enumerate(row):
             if name is None:
                 continue
             im = Image.open('%s/%s.png' % (PUB, name)).convert('RGBA')
-            im = Image.alpha_composite(Image.new('RGBA', im.size, BG + (255,)), im)
-            im = im.convert('RGB').quantize(palette=ref, dither=Image.Dither.NONE)
-            sheet.paste(im, (x * 8, y * 8))
+            im = Image.alpha_composite(Image.new('RGBA', im.size, OAM_KEY + (255,)), im)
+            sheet.paste(im.convert('RGB'), (x * 8, y * 8))
     sheet.save('assets/hero_sprites.png')
     print('wrote assets/hero_sprites.png')
 

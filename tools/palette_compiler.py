@@ -1,430 +1,411 @@
 #!/usr/bin/env python3
-"""palette_compiler.py -- Match tileset tiles to fixed CGB palettes.
+"""palette_compiler.py -- Ramps win. Resolve artist ramps to hardware slots.
 
-Single source of truth for CGB background palette assignments. Consumes
-tileset JSON (tools/level_editor/tilesets/*.json) and PNG assets, outputs
-JSON manifests consumed by both the web editor (WYSIWYG canvas) and the ROM
-compiler (generate_tiles.py -> tile_palette.h).
+Inputs (single sources of truth):
+  assets/palette.txt                        artist colors + ramp rows
+  tools/palette_slots.json                  dev ramp -> slot numbers
+  tools/level_editor/tilesets/*.json        per-tile ramp tags (world)
+  screens/combat_art/*.json                 per-set BG ramp (battle art)
+  screens/enemy_types/*.json, hero.json     per-enemy OW ramp (sprites)
 
-Unlike the previous k-means approach, this version matches tiles to the
-FIXED hand-tuned palettes defined in src/game/tiles_content.c
-(cgb_bg_palettes_forest, cgb_bg_palettes_desolate, cgb_bg_palettes_castle).
-This ensures the tile_palette.h indices correspond to the actual ROM palettes.
+Rule: every tile is ALWAYS colored with an EXISTING artist ramp, even if
+wrong. The declared ramp (tag) wins when present; otherwise the nearest
+slotted ramp in the sheet's set wins. The build stays green. Wrongness is
+reported in generated/tiles/ramp_mismatches.json (the artist todo list).
 
-Algorithm:
-1. Load PNG + tileset JSON (tiles with vram_block positions)
-2. Extract average/characteristic color for each 8x8 tile
-3. For each tileset, use the fixed 8-palette definition (from tiles_content.c)
-4. Match each tile to the best-fitting fixed palette (by color distance)
-5. Output manifest: generated/tiles/<tileset>.json
+There is no approximation, no quantization to invented colors, no
+luminance guessing, no anchor pinning: pixels map to shades of the chosen
+ramp only, by exact match or nearest shade within that ramp.
 
-Manifest format:
-{
-  "tileset": "forest",
-  "anchor_color": "#7bb660",
-  "palettes": [
-    ["#ffffff", "#aaaaaa", "#555555", "#000000"],  // palette 0: gray
-    ["#ffffe0", "#ff8c28", "#dc3214", "#640a00"],  // palette 1: fire
-    ...
-  ],
-  "tile_palettes": [0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 5, 5, 3, 3, ...]
-}
-
-Each entry in palettes is [color0, color1, color2, color3] matching the
-fixed ROM palette. tile_palettes maps sheet index (0..N-1) to fixed
-palette index (0..7).
+Outputs (all under generated/tiles/, regenerable, uncommitted):
+  <world>.json        {palettes[{index,name,colors}], tile_ids[id|null...],
+                       tile_palettes[slot...], tile_ramps[ramp...]} in VRAM-slot
+                       order (editor + tile_palette.h)
+  base|obj|title.json {slots: {i: {ramp, colors}}} (battle_compile + editor)
+  cgb_palettes.inc    C definitions: 5 BG tables + NPC display slots (tiles_content.c)
+  cgb_obj_palettes.inc C definition: 5 OBJ ramps (ui.c)
+  shades/<sheet>.json per-cell ordered ramp hexes (png2gb --shade-map)
+  ramp_mismatches.json non-exact tiles (sheet, cell, declared, used, off-colors)
 """
 
 import sys
 import json
-import argparse
 from pathlib import Path
-from typing import List, Tuple, Dict, Any, Optional
-from PIL import Image
-import math
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "tools"))
+from palette_parse import parse_palette
+
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
 ASSETS_DIR = REPO_ROOT / "assets"
 GENERATED_DIR = REPO_ROOT / "generated" / "tiles"
+SHADES_DIR = GENERATED_DIR / "shades"
 
 TILE_SIZE = 8
 
-# Tilesets to process
-TILESETS = ["forest", "castle", "desolate_landscape", "village"]
-
-# PNG mapping
-PNG_MAP = {
-    "forest": "forest-tile.png",
-    "castle": "castle-tile.png",
-    "desolate_landscape": "desolate_landscape.png",
-    "village": "village-tile.png",
+# Sheet inventory: key -> (png file, palette set).
+SHEETS = {
+    "forest": ("forest-tile.png", "forest"),
+    "desolate_landscape": ("desolate-tile.png", "desolate_landscape"),
+    "castle": ("castle-tile.png", "castle"),
+    "village": ("village-tile.png", "village"),
+    "battle": ("battle_sprites.png", "base"),
+    "enemy_ow": ("enemy_sprites.png", "obj"),
+    "hero_ow": ("hero_sprites.png", "obj"),
+    "npc": ("npc_tiles.png", "village"),
+    "card_frames": ("card_frames.png", "base"),
+    "title": ("title-red.png", "title"),
 }
 
-# Fixed CGB palettes from src/game/tiles_content.c (RGB8 format -> 0-255)
-# Each palette: 4 colors, each color is (R, G, B)
-FIXED_PALETTES = {
-    "forest": [
-        # Palette 0: gray
-        [(255, 255, 255), (170, 170, 170), (85, 85, 85), (0, 0, 0)],
-        # Palette 1: fire
-        [(255, 255, 224), (255, 140, 40), (220, 50, 20), (100, 10, 0)],
-        # Palette 2: iron/ice
-        [(235, 242, 250), (140, 180, 214), (70, 105, 138), (27, 43, 58)],
-        # Palette 3: field (greens) - UI_COLOR_FIELD
-        [(120, 176, 96), (40, 72, 24), (24, 56, 8), (0, 0, 0)],
-        # Palette 4: poison
-        [(240, 255, 240), (100, 220, 100), (30, 140, 50), (10, 50, 20)],
-        # Palette 5: wood (browns, harmonized Color 0 = grass green) - UI_COLOR_WOOD
-        [(120, 176, 96), (196, 138, 72), (138, 82, 34), (61, 32, 10)],
-        # Palette 6: gold
-        [(255, 252, 224), (255, 215, 0), (200, 140, 8), (90, 58, 0)],
-        # Palette 7: dim
-        [(200, 200, 200), (150, 150, 150), (90, 90, 90), (40, 40, 40)],
-    ],
-    "desolate_landscape": [
-        # Palette 0: gray
-        [(255, 255, 255), (170, 170, 170), (85, 85, 85), (0, 0, 0)],
-        # Palette 1: campfire (fire) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (237, 194, 20), (215, 80, 20), (80, 10, 0)],
-        # Palette 2: iron/ice - harmonized Color 0 = slate rock
-        [(147, 141, 161), (140, 180, 214), (70, 105, 138), (27, 43, 58)],
-        # Palette 3: flora (purples) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (116, 111, 128), (63, 58, 74), (38, 35, 46)],
-        # Palette 4: poison - harmonized Color 0 = slate rock
-        [(147, 141, 161), (100, 220, 100), (30, 140, 50), (10, 50, 20)],
-        # Palette 5: deadwood (browns) - harmonized Color 0 = slate rock
-        [(147, 141, 161), (141, 117, 74), (111, 90, 52), (38, 35, 46)],
-        # Palette 6: gold - harmonized Color 0 = slate rock
-        [(147, 141, 161), (215, 167, 38), (141, 117, 74), (50, 30, 10)],
-        # Palette 7: slate rock - harmonized Color 0 = slate rock
-        [(147, 141, 161), (131, 123, 150), (63, 58, 74), (38, 35, 46)],
-    ],
-    "castle": [
-        # Palette 0: stone (light gray)
-        [(215, 215, 215), (179, 176, 176), (130, 130, 130), (46, 46, 46)],
-        # Palette 1: curtain (red)
-        [(215, 215, 215), (139, 27, 27), (98, 18, 18), (30, 0, 0)],
-        # Palette 2: iron (blues)
-        [(215, 215, 215), (140, 160, 180), (70, 90, 110), (30, 40, 50)],
-        # Palette 3: moss/green
-        [(215, 215, 215), (90, 140, 80), (40, 80, 30), (10, 30, 10)],
-        # Palette 4: poison
-        [(215, 215, 215), (120, 200, 120), (40, 120, 50), (10, 50, 20)],
-        # Palette 5: wood furniture (browns)
-        [(215, 215, 215), (158, 142, 113), (111, 90, 52), (40, 25, 10)],
-        # Palette 6: gold
-        [(215, 215, 215), (215, 167, 38), (162, 146, 113), (60, 40, 10)],
-        # Palette 7: dim shadow
-        [(215, 215, 215), (130, 130, 130), (86, 86, 86), (35, 35, 35)],
-    ],
-    "village": [
-        # Palette 0: gray (stone / stairs / well) - harmonized Color 0 = dirt
-        [(182, 162, 126), (200, 200, 200), (125, 125, 125), (30, 30, 30)],
-        # Palette 1: fire (campfire / torch braziers) - harmonized Color 0 = dirt
-        [(182, 162, 126), (255, 196, 96), (220, 110, 32), (90, 40, 10)],
-        # Palette 2: iron (reserved cool tones) - harmonized Color 0 = dirt
-        [(182, 162, 126), (150, 160, 180), (85, 105, 130), (35, 45, 60)],
-        # Palette 3: dirt floor - UI_COLOR_FIELD (the ground anchor ramp)
-        [(182, 162, 126), (140, 120, 88), (96, 78, 52), (48, 36, 24)],
-        # Palette 4: foliage (hedges / sprouts) - harmonized Color 0 = dirt
-        [(182, 162, 126), (140, 150, 90), (70, 110, 50), (20, 50, 20)],
-        # Palette 5: wood (houses / barrels / merchant) - UI_COLOR_WOOD
-        [(182, 162, 126), (150, 105, 60), (95, 62, 32), (38, 24, 10)],
-        # Palette 6: cream / gold (roof shingles, house walls)
-        [(182, 162, 126), (241, 207, 145), (200, 160, 90), (120, 85, 40)],
-        # Palette 7: dim (soft shading)
-        [(182, 162, 126), (158, 148, 128), (100, 88, 66), (42, 36, 26)],
-    ],
-}
-
-# Scene anchor colors (Color 0 of outdoor palettes)
-ANCHOR_COLORS = {
-    "forest": "#7bb660",           # grass green (RGB: 120, 176, 96)
-    "desolate_landscape": "#938da1",  # slate rock (RGB: 147, 141, 161)
-    "castle": "#d7d7d7",           # light stone (RGB: 215, 215, 215)
-    "village": "#b6a27e",          # dirt floor (RGB: 182, 162, 126)
-}
-
-# Palette names for documentation in manifest
-PALETTE_NAMES = {
-    "forest": [
-        "gray", "fire", "iron_ice", "field", "poison", "wood", "gold", "dim"
-    ],
-    "desolate_landscape": [
-        "gray", "campfire", "iron_ice", "flora", "poison", "deadwood", "gold", "slate_rock"
-    ],
-    "castle": [
-        "stone", "curtain", "iron", "moss_green", "poison", "wood_furn", "gold", "dim_shadow"
-    ],
-    "village": [
-        "gray", "fire", "iron", "dirt_floor", "foliage", "wood", "cream", "dim"
-    ],
-}
+# npc_tiles.png cell order (compose_npc_tiles.LAYOUT) -> BG display slot.
+# Guard, wizard and dogs render with the FIELD-ish slot, merchant with
+# WOOD, mayor with GOLD. The generated cgb_palettes.inc carries these
+# numbers to C; this list is the single source.
+NPC_DISPLAY_SLOTS = [3, 3, 5, 6, 3, 3]
 
 
-def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
-    """Convert (R, G, B) to '#RRGGBB'."""
-    return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+def _hex(rgb):
+    return "#%02x%02x%02x" % rgb
 
 
-def color_distance(c1: Tuple[int, int, int], c2: Tuple[int, int, int]) -> float:
-    """Euclidean distance in RGB space."""
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(c1, c2)))
+def _dist2(a, b):
+    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
 
 
-def load_tileset_json(tileset_id: str) -> Dict[str, Any]:
-    """Load tileset JSON from tools/level_editor/tilesets/."""
-    path = TILESETS_DIR / f"{tileset_id}.json"
-    if not path.exists():
-        raise FileNotFoundError(f"Tileset JSON not found: {path}")
-    return json.loads(path.read_text())
+def load_slotmap():
+    """Returns {set: {slot: ramp}}. Shape errors fail loudly."""
+    data = json.loads((REPO_ROOT / "tools" / "palette_slots.json").read_text())
+    sets = data.get("sets")
+    if not isinstance(sets, dict) or not sets:
+        raise ValueError("palette_slots.json: want non-empty 'sets' object")
+    out = {}
+    for setname, slots in sets.items():
+        if not isinstance(slots, dict):
+            raise ValueError(f"palette_slots.json: set '{setname}' wants an object")
+        norm = {}
+        for k, v in slots.items():
+            if k.startswith("_"):
+                continue
+            try:
+                slot = int(k)
+            except ValueError:
+                raise ValueError(f"palette_slots.json: set '{setname}': bad slot '{k}'")
+            if not (0 <= slot <= 7):
+                raise ValueError(f"palette_slots.json: set '{setname}': slot {slot} out of 0-7")
+            if slot in norm:
+                raise ValueError(f"palette_slots.json: set '{setname}': duplicate slot {slot}")
+            norm[slot] = v
+        out[setname] = norm
+    return out
 
 
-def load_png(tileset_id: str) -> Image.Image:
-    """Load PNG from assets/."""
-    png_name = PNG_MAP[tileset_id]
-    path = ASSETS_DIR / png_name
-    if not path.exists():
-        raise FileNotFoundError(f"PNG not found: {path}")
-    img = Image.open(path).convert("RGB")
-    return img
-
-
-def get_tile_unique_colors(img: Image.Image, tx: int, ty: int) -> List[Tuple[int, int, int]]:
-    """Get all unique RGB colors in a tile."""
+def sheet_cells(png_path):
+    """Returns {coord: [rgb...]} unique colors per 8x8 cell."""
+    from PIL import Image
+    img = Image.open(png_path).convert("RGB")
+    w, h = img.size
+    if w % TILE_SIZE or h % TILE_SIZE:
+        raise ValueError(f"{png_path}: {w}x{h} not a multiple of 8x8")
     px = img.load()
-    ox, oy = tx * TILE_SIZE, ty * TILE_SIZE
-    unique = {px[ox + x, oy + y] for y in range(TILE_SIZE) for x in range(TILE_SIZE)}
-    return list(unique)
-
-
-def extract_tile_colors(img: Image.Image, tiles_x: int, tiles_y: int) -> List[List[Tuple[int, int, int]]]:
-    """Extract unique colors for each tile in sheet order."""
-    tile_colors = []
-    for ty in range(tiles_y):
-        for tx in range(tiles_x):
-            tile_colors.append(get_tile_unique_colors(img, tx, ty))
-    return tile_colors
-
-
-def get_sheet_order_from_vram_block(tileset_json: Dict[str, Any]) -> List[str]:
-    """Extract tile IDs in sheet order from vram_block.tiles[]."""
-    vram_block = tileset_json.get("vram_block", {})
-    tiles = vram_block.get("tiles", [])
-    sorted_tiles = sorted(tiles, key=lambda t: t.get("index", 0))
-    return [t["tile"] for t in sorted_tiles if "tile" in t]
-
-
-def is_brown(rgb: Tuple[int, int, int]) -> bool:
-    """Check if a color is brown-ish (wood/bark tones)."""
-    r, g, b = rgb
-    # Brown: R > G > B, with moderate saturation
-    # Typical brown range: R 60-200, G 40-140, B 10-80
-    return (r > g > b and
-            r > 60 and g > 30 and b < 100 and
-            (r - g) > 10 and (g - b) > 10)
-
-
-def is_green(rgb: Tuple[int, int, int]) -> bool:
-    """Check if a color is green-ish (foliage/grass)."""
-    r, g, b = rgb
-    return g > r and g > b and g > 40
-
-
-DEFAULT_FLOOR_PALETTES = {
-    "forest": 3,              # field (greens) - UI_COLOR_FIELD
-    "desolate_landscape": 7,  # slate rock - UI_COLOR_DIM
-    "castle": 0,              # stone (light gray) - UI_COLOR_NONE
-    "village": 3,             # dirt floor - UI_COLOR_FIELD
-}
-
-
-def match_tile_to_palette(
-    tile_colors: List[Tuple[int, int, int]],
-    palettes: List[List[Tuple[int, int, int]]],
-    anchor_rgb: Tuple[int, int, int],
-    tileset_id: str = ""
-) -> int:
-    """
-    Match a tile's color set to the best fixed palette.
-
-    For each unique color in the tile, find the closest color in each fixed
-    palette (including anchor at index 0). The palette with the lowest total
-    distance wins.
-
-    Special case for forest/desolate: tiles with both green (anchor-like)
-    and brown colors should prefer the wood palette (index 5) which has
-    harmonized Color 0 = anchor + brown foreground colors.
-    """
-    floor_palette_idx = DEFAULT_FLOOR_PALETTES.get(tileset_id, 0)
-
-    # If tile only contains the scene's anchor backdrop color, assign floor palette directly
-    if tile_colors and all(color_distance(c, anchor_rgb) < 5.0 for c in tile_colors):
-        return floor_palette_idx
-
-    # Detect if tile has both green and brown colors
-    has_green = any(is_green(c) for c in tile_colors)
-    has_brown = any(is_brown(c) for c in tile_colors)
-
-    # For forest/desolate, wood palette is index 5
-    wood_palette_idx = 5 if tileset_id in ("forest", "desolate_landscape") else -1
-
-    best_palette = 0
-    best_total_dist = float('inf')
-
-    for pal_idx, palette in enumerate(palettes):
-        total_dist = 0.0
-        for tile_color in tile_colors:
-            # Find closest color in this palette
-            min_dist = min(color_distance(tile_color, pal_color) for pal_color in palette)
-            total_dist += min_dist
-
-        # Normalize by number of tile colors
-        avg_dist = total_dist / len(tile_colors) if tile_colors else float('inf')
-
-        # Boost wood palette for mixed green/brown tiles (harmonized Color 0 case)
-        if has_green and has_brown and pal_idx == wood_palette_idx:
-            avg_dist *= 0.5  # Strong preference for wood palette
-
-        # Prefer floor palette when distances tie
-        if avg_dist < best_total_dist or (abs(avg_dist - best_total_dist) < 1e-4 and pal_idx == floor_palette_idx):
-            best_total_dist = avg_dist
-            best_palette = pal_idx
-
-    return best_palette
-
-
-def generate_manifest(
-    tileset_id: str,
-    anchor_rgb: Tuple[int, int, int],
-    palettes: List[List[Tuple[int, int, int]]],
-    tile_palettes: List[int],
-    palette_names: List[str]
-) -> Dict[str, Any]:
-    """Generate the JSON manifest structure."""
-    return {
-        "tileset": tileset_id,
-        "anchor_color": rgb_to_hex(anchor_rgb),
-        "palettes": [
-            {
-                "index": i,
-                "name": palette_names[i] if i < len(palette_names) else f"palette_{i}",
-                "colors": [rgb_to_hex(c) for c in pal]
-            }
-            for i, pal in enumerate(palettes)
-        ],
-        "tile_palettes": tile_palettes,
-    }
-
-
-def write_manifest(tileset_id: str, manifest: Dict[str, Any]) -> Path:
-    """Write manifest to generated/tiles/<tileset>.json."""
-    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = GENERATED_DIR / f"{tileset_id}.json"
-    out_path.write_text(json.dumps(manifest, indent=2))
-    return out_path
-
-
-# Per-tileset curated overrides (e.g. animated fire frames)
-TILE_PALETTE_OVERRIDES = {
-    "desolate_landscape": {
-        32: 7,  # Plain floor (slate rock / grey)
-        37: 1,  # Campfire frame 1 (fire)
-        38: 1,  # Campfire frame 2 (fire)
-    },
-}
-
-
-def process_tileset(tileset_id: str) -> Dict[str, Any]:
-    """Process a single tileset: load JSON+PNG, match to fixed palettes, output manifest."""
-    print(f"Processing {tileset_id}...")
-
-    # Load inputs
-    tileset_json = load_tileset_json(tileset_id)
-    img = load_png(tileset_id)
-
-    # Get sheet dimensions from vram_block
-    vram_block = tileset_json.get("vram_block", {})
-    tiles = vram_block.get("tiles", [])
-    if not tiles:
-        raise ValueError(f"No vram_block.tiles in {tileset_id}.json")
-
-    max_x = max(t.get("x", 0) for t in tiles)
-    max_y = max(t.get("y", 0) for t in tiles)
-    tiles_x = max_x + 1
-    tiles_y = max_y + 1
-
-    print(f"  Sheet: {tiles_x}x{tiles_y} = {tiles_x * tiles_y} tiles")
-
-    # Extract unique colors per tile
-    tile_colors_list = extract_tile_colors(img, tiles_x, tiles_y)
-    print(f"  Extracted colors from {len(tile_colors_list)} tiles")
-
-    # Get fixed palettes for this tileset
-    palettes = FIXED_PALETTES[tileset_id]
-    anchor_hex = ANCHOR_COLORS[tileset_id]
-    anchor_rgb = tuple(int(anchor_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-    print(f"  Anchor color: {anchor_hex} -> RGB{anchor_rgb}")
-
-    overrides = TILE_PALETTE_OVERRIDES.get(tileset_id, {})
-    sheet_ids = get_sheet_order_from_vram_block(tileset_json)
-    tiles_by_id = {t.get("id"): t for t in tileset_json.get("tiles", [])}
-
-    # Match each tile to best fixed palette.  An explicit per-tile
-    # "palette" in the tileset JSON (set by the editor's Palette view)
-    # wins; otherwise the index override; otherwise auto-match.
-    tile_palettes = []
-    for i, tile_colors in enumerate(tile_colors_list):
-        tid = sheet_ids[i] if i < len(sheet_ids) else None
-        explicit = tiles_by_id.get(tid, {}).get("palette") if tid else None
-        if explicit is not None:
-            pal_idx = int(explicit)
-            if not (0 <= pal_idx <= 7):
-                raise ValueError(
-                    f"{tileset_id}: tile {tid} palette {pal_idx} out of 0-7")
-        elif i in overrides:
-            pal_idx = overrides[i]
-        else:
-            pal_idx = match_tile_to_palette(tile_colors, palettes, anchor_rgb, tileset_id)
-        tile_palettes.append(pal_idx)
-
-    print(f"  Tile palette assignments: {tile_palettes}")
-
-    # Generate manifest
-    manifest = generate_manifest(
-        tileset_id, anchor_rgb, palettes, tile_palettes, PALETTE_NAMES[tileset_id]
-    )
-
-    # Write output
-    out_path = write_manifest(tileset_id, manifest)
-    print(f"  Wrote manifest: {out_path}")
-
-    return manifest
+    cells = {}
+    for ty in range(h // TILE_SIZE):
+        for tx in range(w // TILE_SIZE):
+            ox, oy = tx * TILE_SIZE, ty * TILE_SIZE
+            cells[(tx, ty)] = list({px[ox + x, oy + y]
+                                    for y in range(TILE_SIZE)
+                                    for x in range(TILE_SIZE)})
+    return cells
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--tilesets", nargs="+", default=TILESETS,
-                        help="Tileset IDs to process (default: all)")
-    parser.add_argument("--out-dir", type=Path, default=GENERATED_DIR,
-                        help="Output directory for manifests")
-    args = parser.parse_args()
+    import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
+    _, ramps = parse_palette()
+    slotmap = load_slotmap()
 
-    for ts_id in args.tilesets:
-        if ts_id not in FIXED_PALETTES:
-            print(f"Unknown tileset: {ts_id} (no fixed palettes defined)", file=sys.stderr)
-            sys.exit(1)
-        try:
-            process_tileset(ts_id)
-        except Exception as e:
-            print(f"Error processing {ts_id}: {e}", file=sys.stderr)
-            import traceback
-            traceback.print_exc()
-            sys.exit(1)
+    for setname, slots in slotmap.items():
+        for slot, ramp in slots.items():
+            if ramp not in ramps:
+                raise ValueError(
+                    f"palette_slots.json: set '{setname}' slot {slot}: unknown ramp '{ramp}'")
+    tables = {s: {i: ramps[r] for i, r in slots.items()} for s, slots in slotmap.items()}
 
-    print("Done.")
+    # World tileset tags: {tileset: ({tileid: ramp}, {tileid: coord})}.
+    world_sets = ["forest", "castle", "desolate_landscape", "village"]
+    tags = {}
+    for ts in world_sets:
+        ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
+        table, coords = {}, {}
+        for t in ts_data.get("tiles", []):
+            ramp = t.get("palette")
+            if ramp is not None:
+                if ramp not in ramps:
+                    raise ValueError(
+                        f"tilesets/{ts}.json: tile '{t.get('id')}': unknown ramp '{ramp}'")
+                table[t.get("id")] = ramp
+        for v in (ts_data.get("vram_block") or {}).get("tiles", []):
+            if "tile" in v:
+                coords[v["tile"]] = (v["x"], v["y"])
+        tags[ts] = (ts_data, table, coords)
+
+    # Battle art: {cellname: BG ramp}.
+    from compose_battle_sprites import TILE_COORDS as BATTLE_CELLS
+    from compose_enemy_sprites import TILE_COORDS as ENEMY_CELLS
+    from compose_hero_sprites import TILE_COORDS as HERO_CELLS
+    from compose_npc_tiles import LAYOUT as NPC_LAYOUT
+    from compose_card_frames import LAYOUT as CARD_LAYOUT
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
+    from battle_compile import SKIN_COLORS, DEFAULT_SKIN, DEFAULT_HUD
+    battle_declared = {}
+    for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
+        data = json.loads(path.read_text())
+        pal = data.get("palette")
+        if pal not in ramps:
+            raise ValueError(f"combat_art/{path.name}: unknown palette ramp '{pal}'")
+        obj = data.get("obj_palette")
+        if obj is not None and obj not in ramps:
+            raise ValueError(f"combat_art/{path.name}: unknown obj_palette ramp '{obj}'")
+        cells = list(data.get("frame0", []))
+        f1 = data.get("frame1")
+        cells += f1 if f1 is not None else data.get("frame0", [])
+        for name in cells:
+            if name is not None:
+                battle_declared[name] = pal
+
+    # Enemy/hero overworld: {cellname: ramp or None}.
+    ow_declared = {}
+    for path in sorted((REPO_ROOT / "screens" / "enemy_types").glob("*.json")):
+        data = json.loads(path.read_text())
+        ow = data.get("overworld") or {}
+        pal = ow.get("palette", 0)
+        ramp = pal if isinstance(pal, str) else None
+        if ramp is not None and ramp not in ramps:
+            raise ValueError(f"enemy_types/{path.name}: unknown ow ramp '{ramp}'")
+        for cell in ow.get("cells", []):
+            ow_declared[cell] = ramp
+    hero_data = json.loads((REPO_ROOT / "screens" / "hero.json").read_text())
+    hero_pal = (hero_data.get("overworld") or {}).get("palette", 0)
+    hero_ramp = hero_pal if isinstance(hero_pal, str) else None
+    if hero_ramp is not None and hero_ramp not in ramps:
+        raise ValueError(f"hero.json: unknown ow ramp '{hero_ramp}'")
+
+    GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+    SHADES_DIR.mkdir(parents=True, exist_ok=True)
+    mismatches = []
+
+    def compile_sheet(key, declared):
+        """Color every cell of a sheet with an existing ramp.
+
+        declared: {coord: ramp} or a single ramp name for all cells.
+        Returns {coord: used_ramp}. Non-exact cells go to mismatches.
+        """
+        fname, setname = SHEETS[key]
+        if setname not in tables:
+            raise ValueError(f"sheet '{key}': unknown set '{setname}'")
+        slots = tables[setname]
+        slot_names = slotmap[setname]
+        cand = []
+        for i in sorted(slot_names):
+            if slot_names[i] not in [c[0] for c in cand]:
+                cand.append((slot_names[i], slots[i]))
+        cells = sheet_cells(ASSETS_DIR / fname)
+        if isinstance(declared, str):
+            declared = {c: declared for c in cells}
+        used, shades = {}, {}
+        for coord in sorted(cells):
+            pixel_colors = cells[coord]
+            want = declared.get(coord)
+            if want is not None and want not in [r for r, _ in cand]:
+                mismatches.append({"sheet": key, "tile": list(coord),
+                                   "declared": want, "used_ramp": None,
+                                   "reason": f"tagged ramp has no slot in set '{setname}'; winner used instead",
+                                   "off_colors": []})
+                want = None
+            if want is None:
+                best, best_cost = None, None
+                for name, quad in cand:
+                    cost = sum(min(_dist2(c, s) for s in quad) for c in pixel_colors)
+                    if best_cost is None or cost < best_cost:
+                        best, best_cost = name, cost
+                ramp = best
+                quad = ramps[ramp]
+                off = sorted(_hex(c) for c in pixel_colors if c not in quad)
+                mismatches.append({"sheet": key, "tile": list(coord),
+                                   "declared": None, "used_ramp": ramp,
+                                   "reason": "no tag: nearest slotted ramp wins",
+                                   "off_colors": off})
+            else:
+                ramp = want
+                quad = ramps[ramp]
+                off = sorted(_hex(c) for c in pixel_colors if c not in quad)
+                if off:
+                    mismatches.append({"sheet": key, "tile": list(coord),
+                                       "declared": want, "used_ramp": ramp,
+                                       "reason": "tagged ramp stands; off-ramp pixels use nearest shade",
+                                       "off_colors": off})
+            used[coord] = ramp
+            shades["%d,%d" % coord] = [_hex(c) for c in ramps[ramp]]
+        (SHADES_DIR / f"{key}.json").write_text(json.dumps(
+            {"sheet": key, "png": fname, "set": setname, "tiles": shades}, indent=1))
+        return used
+
+    world_used = {}
+    world_vram = {}
+    for ts in world_sets:
+        _, table, _ = tags[ts]
+        ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
+        vram_id = {(v["x"], v["y"]): v["tile"]
+                   for v in (ts_data.get("vram_block") or {}).get("tiles", []) if "tile" in v}
+        world_vram[ts] = vram_id
+        declared = {c: table[tid] for c, tid in vram_id.items() if tid in table}
+        world_used[ts] = compile_sheet(ts, declared)
+
+    battle_used = compile_sheet(
+        "battle", {BATTLE_CELLS[n]: r for n, r in battle_declared.items() if n in BATTLE_CELLS})
+    compile_sheet(
+        "enemy_ow", {ENEMY_CELLS[n]: r for n, r in ow_declared.items()
+                     if r is not None and n in ENEMY_CELLS})
+    compile_sheet(
+        "hero_ow", {HERO_CELLS[n]: hero_ramp for n in
+                    (hero_data.get("overworld") or {}).get("cells", []) if n in HERO_CELLS})
+    compile_sheet(
+        "npc", {(x, 0): slotmap["village"][NPC_DISPLAY_SLOTS[x]] for x in range(len(NPC_LAYOUT))})
+    def slot_ramp(setname, slot):
+        ramp = slotmap[setname][slot]
+        return ramp
+
+    def skin_slot(color_name):
+        if color_name not in SKIN_COLORS:
+            raise ValueError(f"skin color '{color_name}' is not a UI slot name")
+        return SKIN_COLORS[color_name]
+
+    # Card-frame sheet: every icon encodes with the ramp of the slot that
+    # displays it (skins name UI slots; battle UI stamps those slots).
+    # Shared frame borders + select arrow encode with the canonical card
+    # ramp fight1 (cards tint per type at stamp time, by engine design).
+    skin_path = REPO_ROOT / "screens" / "cards_skin.json"
+    skin = json.loads(skin_path.read_text()) if skin_path.exists() else DEFAULT_SKIN
+    hud_path = REPO_ROOT / "screens" / "battle_hud.json"
+    hud = json.loads(hud_path.read_text()) if hud_path.exists() else DEFAULT_HUD
+    card_cells = {}
+    for _y, _row in enumerate(CARD_LAYOUT):
+        for _x, _name in enumerate(_row):
+            if _name is not None:
+                card_cells[_name] = (_x, _y)
+    card_declared = {}
+    for tkey, tdef in (skin.get("types") or {}).items():
+        slot = skin_slot(tdef["color"])
+        if tdef["icon"] in card_cells:
+            card_declared[card_cells[tdef["icon"]]] = slot_ramp("base", slot)
+        for uname in tdef.get("uses_icons", []) + [tdef.get("uses_power_icon")]:
+            if uname in card_cells:
+                card_declared[card_cells[uname]] = slot_ramp("base", slot)
+    for ekey, edef in (skin.get("elements") or {}).items():
+        slot = skin_slot(edef["color"])
+        if edef["icon"] in card_cells:
+            card_declared[card_cells[edef["icon"]]] = slot_ramp("base", slot)
+    for hkey in ("hp", "ap", "deck"):
+        hdef = hud.get(hkey) or {}
+        if hdef.get("icon") in card_cells:
+            card_declared[card_cells[hdef["icon"]]] = slot_ramp("base", skin_slot(hdef["color"]))
+    bar = hud.get("bar") or {}
+    for bkey in ("filled", "empty"):
+        if bar.get(bkey) in card_cells:
+            card_declared[card_cells[bar[bkey]]] = slot_ramp("base", skin_slot(bar["color"]))
+    for _name, _coord in card_cells.items():
+        card_declared.setdefault(_coord, "fight1")
+
+    compile_sheet("card_frames", card_declared)
+    compile_sheet("title", "title_logo")
+
+    # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*
+    # by VRAM slot). Forest/village/desolate pack vram index == scan
+    # position; castle packs 8-wide against a 9-wide sheet, so its 16
+    # slots follow vram-index order, not scan order (encoding matches:
+    # see the castle gfx rule's --tile-coords).
+    from PIL import Image as _Image
+    set_of_ts = {"forest": "forest", "castle": "castle",
+                 "desolate_landscape": "desolate_landscape", "village": "village"}
+    for ts in world_sets:
+        setname = set_of_ts[ts]
+        fname, _ = SHEETS[ts]
+        w, h = _Image.open(ASSETS_DIR / fname).size
+        w //= TILE_SIZE
+        vram_id = world_vram[ts]
+        if ts == "castle":
+            ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
+            ordered = sorted(((v["x"], v["y"]), v["tile"])
+                             for v in (ts_data.get("vram_block") or {}).get("tiles", [])
+                             if "tile" in v and v.get("index", 99) < 16)
+            cells = [c for c, _ in ordered]
+            ids = [t for _, t in ordered]
+        else:
+            ids = []
+            cells = []
+            n = {"forest": 48, "desolate_landscape": 48, "village": 48}[ts]
+            for i in range(n):
+                coord = (i % w, i // w)
+                cells.append(coord)
+                ids.append(vram_id.get(coord))
+        slot_of_ramp = {}
+        for i, r in sorted(slotmap[setname].items()):
+            slot_of_ramp.setdefault(r, i)
+        tile_ramps = [world_used[ts][c] for c in cells]
+        tile_slots = [slot_of_ramp[r] for r in tile_ramps]
+        palettes = [{"index": i, "name": slotmap[setname][i],
+                     "colors": [_hex(c) for c in tables[setname][i]]}
+                    for i in sorted(slotmap[setname])]
+        (GENERATED_DIR / f"{ts}.json").write_text(json.dumps(
+            {"tileset": ts, "palettes": palettes, "tile_ids": ids,
+             "tile_palettes": tile_slots, "tile_ramps": tile_ramps}, indent=1))
+
+    # Set manifests for battle_compile + the editor.
+    for setname in ("base", "obj", "title"):
+        (GENERATED_DIR / f"{setname}.json").write_text(json.dumps(
+            {"set": setname,
+             "slots": {str(i): {"ramp": slotmap[setname][i],
+                                "colors": [_hex(c) for c in tables[setname][i]]}
+                       for i in sorted(slotmap[setname])}}, indent=1))
+
+    # C includes.
+    def c_ramp(quad):
+        return "{ %s }" % ", ".join("RGB8(%d,%d,%d)" % c for c in quad)
+
+    names = {"base": "cgb_bg_palettes", "forest": "cgb_bg_palettes_forest",
+             "desolate_landscape": "cgb_bg_palettes_desolate",
+             "castle": "cgb_bg_palettes_castle", "village": "cgb_bg_palettes_village"}
+    out = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */", ""]
+    for setname in ("base", "forest", "desolate_landscape", "castle", "village"):
+        out.append(f"const palette_color_t {names[setname]}[8][4] = {{")
+        for i in sorted(slotmap[setname]):
+            out.append(f"    /* {i} {slotmap[setname][i]} */ {c_ramp(tables[setname][i])},")
+        out.append("};")
+        out.append("")
+    out.append("/* Village NPC overlay display slots (compose_npc_tiles.LAYOUT order). */")
+    out.append("static const uint8_t g_npc_display_pals[6] = {%s};"
+               % ", ".join(str(s) for s in NPC_DISPLAY_SLOTS))
+    out.append("")
+    (GENERATED_DIR / "cgb_palettes.inc").write_text("\n".join(out))
+
+    out = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */",
+           "/* Overworld OBJ ramps (slots 0-4, verbatim artist colors);", " * slots 5-7 stay neutral grey. */", ""]
+    out.append("static const palette_color_t cgb_obj_palettes[8][4] = {")
+    for i in sorted(slotmap["obj"]):
+        out.append(f"    /* {i} {slotmap['obj'][i]} */ {c_ramp(tables['obj'][i])},")
+    for i in (5, 6, 7):
+        out.append(f"    /* {i} grey (unassigned) */ {c_ramp([(255, 255, 255), (170, 170, 170), (85, 85, 85), (0, 0, 0)])},")
+    out.append("};")
+    out.append("")
+    (GENERATED_DIR / "cgb_obj_palettes.inc").write_text("\n".join(out))
+
+    real = [m for m in mismatches if m["off_colors"] or m["used_ramp"] is None]
+    (GENERATED_DIR / "ramp_mismatches.json").write_text(json.dumps(real, indent=1))
+
+    slotted = {r for slots in slotmap.values() for r in slots.values()}
+    spare = sorted(set(ramps) - slotted)
+    print(f"palette_compiler: {len(ramps)} ramps, {len(slotted)} slotted, "
+          f"{len(real)} reported tiles")
+    if spare:
+        print(f"  unslotted (no hardware slot, info only): {', '.join(spare)}")
 
 
 if __name__ == "__main__":

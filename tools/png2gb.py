@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """png2gb.py -- PNG -> Game Boy 2bpp tile data converter.
 
-Implements the pipeline stage specified in docs/graphics.md:
+Two modes, no guessing in either:
 
-    PNG source assets
-          |  tools/png2gb.py
-    validation (dimensions, 8x8 tile alignment, palette limits, sprite
-                size, unsupported colors, duplicate tiles, tile counts)
-          |
-    GB-native data (tileset bytes, tilemaps, OAM sprite defs, palettes)
+1. --shade-map <json>: per-tile ordered shade lists from
+   generated/tiles/shades/<sheet>.json (palette_compiler decides the ramp
+   per tile; ramps always win there). Each pixel maps to its exact shade
+   index, else the nearest shade WITHIN that tile's ramp. A tile missing
+   from the map is a hard pipeline error. This is the mode every CGB art
+   rule uses.
 
-Supports canonical DMG grayscale, classic GB green, and custom 4-shade palettes,
-with optional extraction of specific tile coordinate lists.
+2. --palette canonical|gb_green: strict byte-exact match against a fixed
+   4-shade palette (font art). Any off-palette pixel fails loudly.
+
+There is no luminance sorting, no anchor pinning, no color-distance
+matching across palettes, no quantization. Those lived here before and
+are gone: ramp choice belongs to palette_compiler, which reports it.
 """
 
 import sys
@@ -23,7 +27,6 @@ try:
 except ImportError:
     sys.exit("png2gb.py: requires Pillow (`pip install Pillow`)")
 
-MAX_COLORS = 4
 TILE_SIZE = 8
 
 PALETTES = {
@@ -51,131 +54,79 @@ class Png2GbError(Exception):
         super().__init__(f"{asset}: [{rule}] {detail}")
 
 
-def lum(c):
-    return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
-
-
-def load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=False):
-    """Load a PNG and validate it against the GB tile constraints.
-    Returns (PIL.Image in RGB, tiles_x, tiles_y)."""
+def load_image(path):
+    """Load a PNG, validate 8x8 tile alignment. Returns (img, tx, ty)."""
     asset = str(path)
     try:
-        img = Image.open(path)
+        img = Image.open(path).convert("RGB")
     except Exception as e:
         raise Png2GbError(asset, "unreadable", str(e))
-
-    img = img.convert("RGB")
     w, h = img.size
-
     if w % TILE_SIZE != 0 or h % TILE_SIZE != 0:
         raise Png2GbError(
             asset, "tile-alignment",
             f"{w}x{h} is not a multiple of {TILE_SIZE}x{TILE_SIZE} "
             f"(GB tiles are {TILE_SIZE}x{TILE_SIZE} pixels)"
         )
-
-    if allow_per_tile:
-        # Validate that each 8x8 tile has at most 4 colors
-        px = img.load()
-        tiles_x, tiles_y = w // TILE_SIZE, h // TILE_SIZE
-        for ty in range(tiles_y):
-            for tx in range(tiles_x):
-                ox, oy = tx * TILE_SIZE, ty * TILE_SIZE
-                t_cols = {px[ox + x, oy + y] for y in range(TILE_SIZE) for x in range(TILE_SIZE)}
-                if len(t_cols) > 4:
-                    raise Png2GbError(
-                        asset, "palette-limit",
-                        f"tile ({tx},{ty}) uses {len(t_cols)} colors; max is 4 (2bpp)"
-                    )
-        return img, tiles_x, tiles_y
-
-    colors = img.getcolors(maxcolors=256)
-    if colors is None or len(colors) > max_colors:
-        n = "more than 256" if colors is None else str(len(colors))
-        raise Png2GbError(
-            asset, "palette-limit",
-            f"image uses {n} distinct colors; GB tiles support at most "
-            f"{max_colors} (2bpp)"
-        )
-
     return img, w // TILE_SIZE, h // TILE_SIZE
 
 
-def build_shade_map(img, asset, palette_name="canonical"):
-    """Map each distinct color in the image to its exact GB shade index (0-3)
-    against the requested 4-shade palette. Fails strictly on any off-palette pixel."""
-    palette = PALETTES.get(palette_name, PALETTES["canonical"])
-    colors = [c for _, c in img.getcolors(maxcolors=256)]
-    shade_map = {}
-    for color in colors:
-        if color in palette:
-            shade_map[color] = palette.index(color)
-        else:
-            raise Png2GbError(
-                asset, "unsupported-color",
-                f"RGB{color} is not in the {palette_name} palette {palette}"
-            )
-    return shade_map
+def parse_hex(s):
+    s = s.lstrip('#')
+    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
 
 
-def _assign_remaining_shades(colors):
-    """Assign shade indices to a list of colors (already sorted brightest-first),
-    using the existing contrast-maximising skip pattern:
-      1 color  -> {0}
-      2 colors -> {0, 3}
-      3 colors -> {0, 2, 3}
-      4 colors -> {0, 1, 2, 3}
+def load_shade_map(path, asset):
+    """Load a palette_compiler shades file: {"tiles": {"x,y": [hex x4]}}."""
+    import json
+    try:
+        data = json.loads(Path(path).read_text())
+    except Exception as e:
+        raise Png2GbError(asset, "shade-map-unreadable", f"{path}: {e}")
+    tiles = data.get("tiles")
+    if not isinstance(tiles, dict):
+        raise Png2GbError(asset, "shade-map-malformed", f"{path}: want 'tiles' object")
+    out = {}
+    for key, hexes in tiles.items():
+        try:
+            tx, ty = (int(v) for v in key.split(","))
+            shades = tuple(parse_hex(h) for h in hexes)
+        except Exception:
+            raise Png2GbError(asset, "shade-map-malformed", f"{path}: bad entry '{key}'")
+        if len(shades) != 4:
+            raise Png2GbError(asset, "shade-map-malformed",
+                              f"{path}: tile '{key}' wants 4 shades, got {len(shades)}")
+        out[(tx, ty)] = shades
+    return out
+
+
+def nearest_shade(color, shades):
+    """Map a pixel to a shade index.
+
+    shades as an ORDERED 4-tuple/list: position is the shade index;
+    exact match wins, else nearest within the ramp (ramps-win encoding).
+    shades as a DICT {color: index}: exact table lookup, missing pixel
+    is a loud error (fixed art like the splash logo).
     """
-    n = len(colors)
-    if n <= 1:
-        return {colors[0]: 0}
-    elif n == 2:
-        return {colors[0]: 0, colors[1]: 3}
-    elif n == 3:
-        return {colors[0]: 0, colors[1]: 2, colors[2]: 3}
-    else:
-        return {colors[0]: 0, colors[1]: 1, colors[2]: 2, colors[3]: 3}
+    if isinstance(shades, dict):
+        try:
+            return shades[color]
+        except KeyError:
+            raise Png2GbError("", "unsupported-color",
+                              f"pixel RGB{color} not in the fixed shade table")
+    for i, s in enumerate(shades):
+        if color == s:
+            return i
+    best, best_d = 0, None
+    for i, s in enumerate(shades):
+        d = (color[0] - s[0]) ** 2 + (color[1] - s[1]) ** 2 + (color[2] - s[2]) ** 2
+        if best_d is None or d < best_d:
+            best, best_d = i, d
+    return best
 
 
-def get_tile_shade_map(img, tile_x, tile_y, anchor_color=None):
-    """Build a {RGB_tuple: shade_index} map for one 8x8 tile.
-
-    If anchor_color is set (an RGB tuple), that color is pinned to index 0
-    regardless of luminance. Remaining colors are sorted by luminance
-    (brightest first) and assigned to the remaining indices using the
-    contrast-maximising skip pattern (e.g. 1 remaining -> {3},
-    2 remaining -> {2, 3}, 3 remaining -> {1, 2, 3}).
-    """
-    px = img.load()
-    ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
-    unique = {px[ox + col, oy + row] for row in range(TILE_SIZE) for col in range(TILE_SIZE)}
-
-    if anchor_color is not None and anchor_color in unique:
-        # Pin anchor to index 0; sort and assign remaining colors
-        rest = sorted([c for c in unique if c != anchor_color], key=lum, reverse=True)
-        shade_map = {anchor_color: 0}
-        n = len(rest)
-        if n == 1:
-            shade_map[rest[0]] = 3
-        elif n == 2:
-            shade_map[rest[0]] = 2
-            shade_map[rest[1]] = 3
-        elif n == 3:
-            shade_map[rest[0]] = 1
-            shade_map[rest[1]] = 2
-            shade_map[rest[2]] = 3
-        return shade_map
-
-    # Default: sort all colors by luminance (brightest = index 0)
-    colors = sorted(list(unique), key=lum, reverse=True)
-    return _assign_remaining_shades(colors)
-
-
-def encode_tile(img, tile_x, tile_y, shade_map, anchor_color=None):
-    """Encode one 8x8 tile block starting at (tile_x*8, tile_y*8) into
-    16 bytes of GB 2bpp tile data."""
-    if shade_map is None:
-        shade_map = get_tile_shade_map(img, tile_x, tile_y, anchor_color=anchor_color)
+def encode_tile(img, tile_x, tile_y, shades):
+    """Encode one 8x8 tile block into 16 bytes of GB 2bpp tile data."""
     px = img.load()
     out = bytearray()
     ox, oy = tile_x * TILE_SIZE, tile_y * TILE_SIZE
@@ -183,7 +134,7 @@ def encode_tile(img, tile_x, tile_y, shade_map, anchor_color=None):
         lo = 0
         hi = 0
         for col in range(TILE_SIZE):
-            shade = shade_map[px[ox + col, oy + row]]
+            shade = nearest_shade(px[ox + col, oy + row], shades)
             bit_pos = 7 - col
             if shade & 0b01:
                 lo |= (1 << bit_pos)
@@ -228,34 +179,57 @@ def format_c_array(name, all_tile_bytes, tile_count, raw_inc=False):
     return "\n".join(lines)
 
 
-def parse_hex_color(s):
-    """Parse a hex color string like '#7bb660' or '7bb660' into an RGB tuple."""
-    s = s.lstrip('#')
-    if len(s) != 6:
-        raise ValueError(f"expected 6-digit hex color, got '{s}'")
-    return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
-
-
 def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=False,
-            anchor_color=None):
-    is_auto = (palette_name == "auto")
-    img, tiles_x, tiles_y = load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=is_auto)
-    shade_map = None if is_auto else build_shade_map(img, str(path), palette_name=palette_name)
+            shade_map=None):
+    img, tiles_x, tiles_y = load_image(path)
+    asset = str(path)
 
-    all_bytes = bytearray()
+    if shade_map is not None:
+        per_tile = load_shade_map(shade_map, asset)
+    else:
+        palette = PALETTES.get(palette_name)
+        if palette is None:
+            raise Png2GbError(asset, "unknown-palette", palette_name)
+        colors = img.getcolors(maxcolors=256) or []
+        if len(colors) > 4:
+            raise Png2GbError(asset, "palette-limit",
+                              f"image uses {len(colors)} distinct colors; max is 4 (2bpp)")
+        per_tile = None
+
+    def shades_for(tx, ty):
+        if per_tile is not None:
+            try:
+                return per_tile[(tx, ty)]
+            except KeyError:
+                raise Png2GbError(asset, "shade-map-missing",
+                                  f"tile ({tx},{ty}) has no entry in {shade_map} "
+                                  f"(palette_compiler must cover every encoded tile)")
+        shades = PALETTES[palette_name]
+        px = img.load()
+        ox, oy = tx * TILE_SIZE, ty * TILE_SIZE
+        for row in range(TILE_SIZE):
+            for col in range(TILE_SIZE):
+                if px[ox + col, oy + row] not in shades:
+                    raise Png2GbError(asset, "unsupported-color",
+                                      f"tile ({tx},{ty}) pixel RGB{px[ox + col, oy + row]} "
+                                      f"not in the {palette_name} palette")
+        return shades
+
     if tile_coords:
         coords_list = []
         for item in tile_coords.strip().split():
             parts = item.split(",")
             coords_list.append((int(parts[0]), int(parts[1])))
-        for tx, ty in coords_list:
-            all_bytes += encode_tile(img, tx, ty, shade_map, anchor_color=anchor_color)
-        tile_count = len(coords_list)
     else:
-        for ty in range(tiles_y):
-            for tx in range(tiles_x):
-                all_bytes += encode_tile(img, tx, ty, shade_map, anchor_color=anchor_color)
-        tile_count = tiles_x * tiles_y
+        coords_list = [(tx, ty) for ty in range(tiles_y) for tx in range(tiles_x)]
+
+    all_bytes = bytearray()
+    for tx, ty in coords_list:
+        if not (0 <= tx < tiles_x and 0 <= ty < tiles_y):
+            raise Png2GbError(asset, "tile-coords",
+                              f"tile ({tx},{ty}) outside sheet {tiles_x}x{tiles_y}")
+        all_bytes += encode_tile(img, tx, ty, shades_for(tx, ty))
+    tile_count = len(coords_list)
 
     return all_bytes, tile_count, format_c_array(name, all_bytes, tile_count, raw_inc=raw_inc)
 
@@ -264,26 +238,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("png", type=Path, help="source PNG")
     ap.add_argument("--name", default="tile_data", help="C array name")
-    ap.add_argument("--palette", default="canonical", choices=["canonical", "gb_green", "auto"], help="palette mapping")
-    ap.add_argument("--anchor-color", default=None, metavar="HEX",
-                     help="pin this hex color (e.g. '#7bb660') to shade index 0 "
-                          "in every tile (requires --palette auto). Used to enforce "
-                          "harmonized CGB Color 0 across a tileset.")
+    ap.add_argument("--palette", default="canonical", choices=["canonical", "gb_green"],
+                    help="strict fixed palette (default: canonical)")
+    ap.add_argument("--shade-map", default=None, metavar="JSON",
+                    help="palette_compiler shades file; every encoded tile "
+                         "must have an entry (CGB art mode)")
     ap.add_argument("--tile-coords", default=None, help="space-separated x,y tile coordinates (e.g. '1,2 8,1 8,2 0,5')")
     ap.add_argument("--raw", action="store_true", help="output raw comma-separated byte lines suitable for #include inside an array initializer")
     ap.add_argument("-o", "--out", type=Path, help="write generated C snippet here (default: stdout)")
     args = ap.parse_args()
-
-    anchor_color = None
-    if args.anchor_color:
-        if args.palette != "auto":
-            print("png2gb: --anchor-color requires --palette auto", file=sys.stderr)
-            sys.exit(1)
-        try:
-            anchor_color = parse_hex_color(args.anchor_color)
-        except ValueError as e:
-            print(f"png2gb: --anchor-color: {e}", file=sys.stderr)
-            sys.exit(1)
 
     try:
         all_bytes, tile_count, c_src = convert(
@@ -291,7 +254,7 @@ def main():
             palette_name=args.palette,
             tile_coords=args.tile_coords,
             raw_inc=args.raw,
-            anchor_color=anchor_color
+            shade_map=args.shade_map,
         )
     except Png2GbError as e:
         print(f"png2gb: {e.asset}: [{e.rule}] {e.detail}", file=sys.stderr)

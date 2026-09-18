@@ -294,36 +294,6 @@
       "category": "enemy"
     },
     {
-      "id": "combat_top_middle_slime_2",
-      "label": "top middle slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SLIME_2",
-      "walkable": false,
-      "color": "#9dcf7c",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_middle_slime_2.png",
-      "category": "enemy"
-    },
-    {
-      "id": "combat_top_left_slime_2",
-      "label": "top left slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_LEFT_SLIME_2",
-      "walkable": false,
-      "color": "#b7d8a2",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_left_slime_2.png",
-      "category": "enemy"
-    },
-    {
-      "id": "combat_top_right_slime_2",
-      "label": "top right slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SLIME_2",
-      "walkable": false,
-      "color": "#b8d8a4",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_right_slime_2.png",
-      "category": "enemy"
-    },
-    {
       "id": "combat_top_left_bat",
       "label": "top left bat",
       "gb_constant": "TILE_COMBAT_TOP_LEFT_BAT",

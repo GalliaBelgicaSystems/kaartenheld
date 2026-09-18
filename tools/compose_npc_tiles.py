@@ -31,14 +31,14 @@ LAYOUT = [
 
 
 def main():
-    ref = Image.open('assets/village-tile.png')
-    sheet = Image.new('P', (len(LAYOUT) * 8, 8))
-    sheet.putpalette(ref.getpalette())
+    # RGB sheet, byte-exact curated colors; transparency -> chroma-key
+    # yellow (the actor sheet's transparent-background convention). No
+    # quantization: off-ramp pixels are reported, not hidden.
+    sheet = Image.new('RGB', (len(LAYOUT) * 8, 8), BG)
     for x, name in enumerate(LAYOUT):
         im = Image.open('%s/%s.png' % (PUB, name)).convert('RGBA')
         im = Image.alpha_composite(Image.new('RGBA', im.size, BG + (255,)), im)
-        im = im.convert('RGB').quantize(palette=ref, dither=Image.Dither.NONE)
-        sheet.paste(im, (x * 8, 0))
+        sheet.paste(im.convert('RGB'), (x * 8, 0))
     sheet.save('assets/npc_tiles.png')
     print('wrote assets/npc_tiles.png')
 

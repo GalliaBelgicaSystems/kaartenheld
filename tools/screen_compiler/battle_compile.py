@@ -36,6 +36,64 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 DEFAULT_OUT_DIR = str(REPO_ROOT / "src" / "game")
 
+# Ramp-name -> hardware slot resolution (generated/tiles/base.json +
+# obj.json from palette_compiler). Content JSONs name artist ramps
+# ("fightslime", "sprites"); the ROM needs slot ints. Unknown names fail
+# loudly; plain ints pass through range-checked (legacy).
+_ramp_slots = None  # ({ramp: base_slot}, {ramp: obj_slot})
+
+
+def _load_ramp_slots():
+    global _ramp_slots
+    if _ramp_slots is None:
+        try:
+            base = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())["slots"]
+            obj = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())["slots"]
+        except (OSError, ValueError, KeyError) as e:
+            raise SystemExit(f"ERROR: ramp manifests missing (run make manifest first): {e}")
+        _ramp_slots = (
+            {v["ramp"]: int(k) for k, v in base.items()},
+            {v["ramp"]: int(k) for k, v in obj.items()},
+        )
+    return _ramp_slots
+
+
+def resolve_base_palette(pal, where):
+    """Artist ramp name (or int) -> base/BG hardware slot."""
+    if isinstance(pal, str):
+        base, _ = _load_ramp_slots()
+        if pal not in base:
+            raise SystemExit(f"ERROR: {where}: unknown base ramp '{pal}'")
+        return base[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def resolve_obj_palette(pal, where):
+    """Artist ramp name (or int) -> OBJ hardware slot."""
+    if isinstance(pal, str):
+        _, obj = _load_ramp_slots()
+        if pal not in obj:
+            raise SystemExit(f"ERROR: {where}: unknown OBJ ramp '{pal}'")
+        return obj[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def check_obj_palette_name(name, where):
+    """obj_palette names ride along for future battle-OAM work; they must
+    still name a real artist ramp (palette.txt), never a typo."""
+    if name is None:
+        return
+    from palette_parse import parse_palette
+    _, ramps = parse_palette()
+    if name not in ramps:
+        raise SystemExit(f"ERROR: {where}: unknown obj_palette ramp '{name}'")
+
 # Combat-art sets (screens/combat_art/*.json) replace the old hardcoded
 # ART_SETS table: each set names curated sheet tiles per frame plus its
 # dimensions and CGB palette.  Tile names resolve through
@@ -98,6 +156,10 @@ def load_combat_art():
                     print("WARNING: %s: unknown combat tile '%s'" % (path.name, name))
         if sid in sets:
             print("WARNING: %s: duplicate combat art id '%s'" % (path.name, sid))
+        if data.get('oam') and not data.get('obj_palette'):
+            print("WARNING: %s: oam set without obj_palette ramp" % path.name)
+        if data.get('obj_palette'):
+            check_obj_palette_name(data.get('obj_palette'), "%s obj_palette" % path.name)
         sets[sid] = data
     order = sorted(sets.keys(), key=lambda k: sets[k].get('order', 0))
     seen_orders = [sets[k].get('order', 0) for k in order]
@@ -401,7 +463,7 @@ def ow_blob_layout(enemy_types, hero_json=None):
                 if name not in HERO_TILE_COORDS:
                     print("WARNING: hero: unknown overworld tile '%s'" % name)
             pal = hero_json['overworld'].get('palette', 0)
-            if not (0 <= pal <= 7):
+            if isinstance(pal, int) and not (0 <= pal <= 7):
                 print("WARNING: hero: overworld.palette %s out of 0-7" % pal)
             offsets['hero'] = at
             cells.extend(names)
@@ -424,7 +486,7 @@ def ow_blob_layout(enemy_types, hero_json=None):
             if name not in ENEMY_TILE_COORDS:
                 print("WARNING: %s: unknown overworld tile '%s'" % (et_id, name))
         pal = ow.get('palette', 0)
-        if not (0 <= pal <= 7):
+        if isinstance(pal, int) and not (0 <= pal <= 7):
             print("WARNING: %s: overworld.palette %s out of 0-7" % (et_id, pal))
         offsets[et_id] = at
         cells.extend(names)
@@ -461,7 +523,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
             pal = hero_json['overworld'].get('palette', 0)
             lines.append("const uint8_t g_hero_ow_tile = %d;" % ENEMY_OW_BASE)
             lines.append("const uint8_t g_hero_ow_frames = %d;" % len(hero_ow.get('cells', [])))
-            lines.append("const uint8_t g_hero_ow_palette = %d;" % hero_json['overworld'].get('palette', 0))
+            lines.append("const uint8_t g_hero_ow_palette = %d;"
+                         % resolve_obj_palette(pal, "hero overworld.palette"))
         else:
             lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
             lines.append("const uint8_t g_hero_ow_frames = 0;")
@@ -487,7 +550,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
             ow_h = ow.get('height', 1) or 1
             cells = ow.get('cells', [])
             ow_frames = (len(cells) // (ow_w * ow_h)) if (ow_w * ow_h) else 0
-            ow_palette = ow.get('palette', 0)
+            ow_palette = resolve_obj_palette(ow.get('palette', 0),
+                                             "%s overworld.palette" % et_id)
         else:
             ow_tile = 0xFF
             ow_w = 0
@@ -504,7 +568,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         art_offset = 0
         if art_id in art_sets:
             art_index = art_order.index(art_id)
-            art_palette = art_sets[art_id]['palette']
+            art_palette = resolve_base_palette(art_sets[art_id]['palette'],
+                                               "%s combat art palette" % art_id)
             art_w = art_sets[art_id]['width']
             art_h = art_sets[art_id]['height']
             art_offset = art_offsets[art_id]
@@ -1018,7 +1083,7 @@ def main(args=None):
                     if name not in HERO_TILE_COORDS:
                         print("WARNING: hero.json: unknown overworld tile '%s'" % name)
                 pal = ow.get('palette', 0)
-                if not (0 <= pal <= 7):
+                if isinstance(pal, int) and not (0 <= pal <= 7):
                     print("WARNING: hero.json: overworld.palette %s out of 0-7" % pal)
         else:
             print("WARNING: screens/hero.json not found")

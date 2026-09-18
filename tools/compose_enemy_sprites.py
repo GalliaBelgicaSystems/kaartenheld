@@ -10,6 +10,9 @@ Deterministic: rerunning reproduces the sheet byte-identically.
 from PIL import Image
 
 PUB = 'tools/level_editor/public/tiles/enemies'
+
+# OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
+OAM_KEY = (241, 235, 3)
 LAYOUT = [
     ['slime_f0', 'slime_f1', 'bat_f0', 'bat_f1'],
     ['boss_ow_tl', 'boss_ow_tr', 'boss_ow_bl', 'boss_ow_br'],
@@ -33,25 +36,18 @@ for _y, _row in enumerate(LAYOUT):
 
 
 def main():
-    ref = Image.open('assets/desolate_landscape.png')
-    sheet = Image.new('P', (32, len(LAYOUT) * 8))
-    sheet.putpalette(ref.getpalette())
-    # OAM transparent background: the curated enemy tiles use this light
-    # gray as their (opaque) background, which the per-tile auto shade map
-    # in png2gb maps to shade 0 = OAM transparent.  RGBA source tiles with
-    # real alpha are composited onto it so transparent pixels keep the
-    # sheet convention instead of snapping to black on convert('RGB').
-    BG = (147, 141, 161)
+    # RGB sheet, byte-exact curated colors. Transparent pixels become the
+    # OAM chroma-key yellow (241,235,3) = shade 0 of every OBJ ramp, which
+    # OAM renders transparent. No quantization, no palette snapping: any
+    # off-ramp opaque pixel is reported by palette_compiler, not hidden here.
+    sheet = Image.new('RGB', (32, len(LAYOUT) * 8), OAM_KEY)
     for y, row in enumerate(LAYOUT):
         for x, name in enumerate(row):
             if name is None:
                 continue
-            # Quantize to the reference palette (no dither): curated PNGs
-            # may be P, RGB, or RGBA; colors snap to the sheet ramps.
             im = Image.open('%s/%s.png' % (PUB, name)).convert('RGBA')
-            im = Image.alpha_composite(Image.new('RGBA', im.size, BG + (255,)), im)
-            im = im.convert('RGB').quantize(palette=ref, dither=Image.Dither.NONE)
-            sheet.paste(im, (x * 8, y * 8))
+            im = Image.alpha_composite(Image.new('RGBA', im.size, OAM_KEY + (255,)), im)
+            sheet.paste(im.convert('RGB'), (x * 8, y * 8))
     sheet.save('assets/enemy_sprites.png')
     print('wrote assets/enemy_sprites.png')
 

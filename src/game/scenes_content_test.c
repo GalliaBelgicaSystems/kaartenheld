@@ -167,6 +167,7 @@ static const SceneTerrainBlock s_test_forest_terrain[] = {
     { 6, 14, 1, 1, TILE_FOREST_15 },
     { 5, 15, 1, 1, TILE_FOREST_30 },
     { 6, 15, 1, 1, TILE_FOREST_31 },
+    { 16, 10, 1, 1, TILE_FOREST_21 },
     { 12, 11, 1, 1, TILE_FOREST_39 },
     { 0, 0, 0, 0, 0 }
 };

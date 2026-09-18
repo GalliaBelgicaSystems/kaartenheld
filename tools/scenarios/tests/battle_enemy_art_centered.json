@@ -1,7 +1,7 @@
 {
  "name": "battle_enemy_art_centered",
  "test": true,
- "description": "Enemy battle art is centered on the 6-column name slot: the 3-wide slime art stamps at slot_x+1 (not left-aligned at slot_x), rows 3-4 (art rows), frame 1 tiles at the 60-frame mark (deterministic timer frame). Catches a regression to left-aligned art or a caret/art centering drift.",
+ "description": "Enemy battle art is centered on the 6-column name slot: the 3-wide slime art stamps at slot_x+1 (not left-aligned at slot_x), rows 3-4 (art rows). The slime is single-frame art (artist removed frame 2), so frame 0 tiles show at any timer parity. Catches a regression to left-aligned art or a caret/art centering drift.",
  "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
@@ -22,31 +22,31 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 1,
-   "expected": 134
+   "expected": 128
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 2,
-   "expected": 135
+   "expected": 129
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 3,
-   "expected": 136
+   "expected": 130
   },
   {
    "type": "tilemap_cell",
    "row": 4,
    "col": 1,
-   "expected": 137
+   "expected": 131
   },
   {
    "type": "tilemap_cell",
    "row": 4,
    "col": 3,
-   "expected": 139
+   "expected": 133
   }
  ],
  "initial_state": {

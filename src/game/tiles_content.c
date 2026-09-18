@@ -9,70 +9,10 @@
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
 
-/* 8 CGB BG palettes, 4 colors each in RGB555 format. */
-const palette_color_t cgb_bg_palettes[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field */    { RGB8(120,176,96),  RGB8(40,72,24),    RGB8(24,56,8),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(245,230,210), RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold */     { RGB8(255,252,224), RGB8(255,215,0),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim */      { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(40,40,40)   }
-};
-
-/* Forest / Field overworld palette set: Palette 5 (wood) Color 0 is
- * harmonized to grass green (RGB8(120,176,96)), eliminating rectangular
- * beige seams around tree trunks and stumps while preserving wood details. */
-const palette_color_t cgb_bg_palettes_forest[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field */    { RGB8(120,176,96),  RGB8(40,72,24),    RGB8(24,56,8),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(120,176,96),  RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold */     { RGB8(255,252,224), RGB8(255,215,0),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim */      { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(40,40,40)   }
-};
-
-/* Desolate landscape palette set: Anchor color 0 is slate rock (#938da1
- * -> RGB8(147,141,161)) across outdoor nature palettes. */
-const palette_color_t cgb_bg_palettes_desolate[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 campfire */ { RGB8(147,141,161), RGB8(237,194,20),  RGB8(215,80,20), RGB8(80,10,0)   },
-    /* 2 iron/ice */ { RGB8(147,141,161), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 flora */    { RGB8(147,141,161), RGB8(116,111,128), RGB8(63,58,74),  RGB8(38,35,46)  },
-    /* 4 poison/mauve */{ RGB8(147,141,161), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 deadwood */ { RGB8(147,141,161), RGB8(141,117,74),  RGB8(111,90,52), RGB8(38,35,46)  },
-    /* 6 gold */     { RGB8(147,141,161), RGB8(215,167,38),  RGB8(141,117,74),RGB8(50,30,10)  },
-    /* 7 slate rock*/{ RGB8(147,141,161), RGB8(131,123,150), RGB8(63,58,74),  RGB8(38,35,46)  }
-};
-
-/* Castle palette set: Anchor color 0 is light stone (#d7d7d7 ->
- * RGB8(215,215,215)) across indoor stone and furniture palettes. */
-const palette_color_t cgb_bg_palettes_castle[8][4] = {
-    /* 0 stone */    { RGB8(215,215,215), RGB8(179,176,176), RGB8(130,130,130),RGB8(46,46,46)  },
-    /* 1 curtain */  { RGB8(215,215,215), RGB8(139,27,27),   RGB8(98,18,18),  RGB8(30,0,0)    },
-    /* 2 iron */     { RGB8(215,215,215), RGB8(140,160,180), RGB8(70,90,110), RGB8(30,40,50)  },
-    /* 3 moss/green*/{ RGB8(215,215,215), RGB8(90,140,80),   RGB8(40,80,30),  RGB8(10,30,10)  },
-    /* 4 poison/mauve */{ RGB8(215,215,215), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood furn */{ RGB8(215,215,215), RGB8(158,142,113), RGB8(111,90,52), RGB8(40,25,10)  },
-    /* 6 gold */     { RGB8(215,215,215), RGB8(215,167,38),  RGB8(162,146,113),RGB8(60,40,10) },
-    /* 7 dim shadow*/{ RGB8(215,215,215), RGB8(130,130,130), RGB8(86,86,86),  RGB8(35,35,35)  }
-};
-
-/* Village palette set: Anchor color 0 is dirt (#b6a27e -> RGB8(182,162,126))
- * across outdoor nature palettes. */
-const palette_color_t cgb_bg_palettes_village[8][4] = {
-    /* 0 gray */     { RGB8(182,162,126), RGB8(200,200,200), RGB8(125,125,125),RGB8(30,30,30)  },
-    /* 1 fire */     { RGB8(182,162,126), RGB8(255,196,96),  RGB8(220,110,32), RGB8(90,40,10)  },
-    /* 2 iron */     { RGB8(182,162,126), RGB8(150,160,180), RGB8(85,105,130), RGB8(35,45,60)  },
-    /* 3 dirt floor */{ RGB8(182,162,126), RGB8(140,120,88),  RGB8(96,78,52),  RGB8(48,36,24)  },
-    /* 4 poison/mauve */{ RGB8(182,162,126), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(182,162,126), RGB8(150,105,60),  RGB8(95,62,32),   RGB8(38,24,10)  },
-    /* 6 cream */    { RGB8(182,162,126), RGB8(241,207,145), RGB8(200,160,90), RGB8(120,85,40) },
-    /* 7 dim */      { RGB8(182,162,126), RGB8(158,148,128), RGB8(100,88,66),  RGB8(42,36,26)  }
-};
+/* CGB palette tables + NPC display slots, generated from assets/palette.txt
+ * + tools/palette_slots.json by tools/palette_compiler.py (make manifest).
+ * Artist ramps win: these bytes are verbatim artist colors per slot. */
+#include "cgb_palettes.inc"
 
 /* Backward compatibility alias */
 #define cgb_bg_palettes_overworld cgb_bg_palettes_forest
@@ -122,8 +62,8 @@ const uint8_t g_tileset_desolate[768] = {
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
 
-const uint8_t g_tileset_castle[432] = {
-    /* 27 castle tiles (432 bytes) */
+const uint8_t g_tileset_castle[256] = {
+    /* 16 castle tiles (256 bytes), VRAM-slot order (see palette_compiler) */
 #include "gfx/rpg_castle_tiles.inc"
 };
 
@@ -217,11 +157,9 @@ void ui_load_tileset_banked(void)
          * must match g_actor_npc_tiles (compose_npc_tiles.py LAYOUT):
          * guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
         static const uint8_t npc_slots[6] = { 35, 36, 39, 41, 4, 5 };
-        /* CGB palette per NPC (UI_COLOR_* indices; the auto palette
-         * manifest cannot know these slots are NPC overlays): guard,
-         * wizard and dogs field green (3), merchant wood (5), mayor gold
-         * (6).  Order mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
-        static const uint8_t npc_pals[6] = { 3, 3, 5, 6, 3, 3 };
+        /* CGB palette per NPC, generated (g_npc_display_pals): guard,
+         * wizard and dogs field-ish, merchant wood, mayor gold. Order
+         * mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
         uint8_t s;
         uint8_t j;
         const uint8_t *tile_src;
@@ -234,7 +172,7 @@ void ui_load_tileset_banked(void)
             for (j = 0; j < 16; j++) {
                 tile_dst[j] = tile_src[j];
             }
-            g_active_tile_palette[npc_slots[s]] = npc_pals[s];
+            g_active_tile_palette[npc_slots[s]] = g_npc_display_pals[s];
         }
     }
 }

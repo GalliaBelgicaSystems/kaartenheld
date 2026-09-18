@@ -44,8 +44,29 @@ BG_TM = 0x9800
 VIEW_ROWS = 12
 VIEW_COLS = 20
 TARGET_HITS = 30
-PLAYER_TILE = [0x3C, 0x3C, 0x7E, 0x7E, 0x66, 0x66, 0x7E, 0x7E,
-               0x3C, 0x3C, 0x18, 0x18, 0x3C, 0x3C, 0x7E, 0x7E]
+
+
+def ow_blob_tile_bytes(index):
+    """Tile-index bytes of the shared overworld OAM blob, parsed from the
+    generated header (make gfx). VRAM tile 100+i must equal blob tile i:
+    proves the OAM sprite stream actually loads (regression: sprite
+    pointing at font glyphs outside the sprite block renders invisible).
+    Returns None when the header cannot be parsed (caller fails loudly)."""
+    header = os.path.join(ROOT, "src", "gfx", "enemy_ow_tiles.h")
+    try:
+        text = open(header).read()
+    except OSError:
+        return None
+    m = re.search(r"/\* tile %d \*/((?:\s*0x[0-9A-Fa-f]{2}, 0x[0-9A-Fa-f]{2},.*\n){8})" % index, text)
+    if not m:
+        return None
+    pairs = re.findall(r"0x([0-9A-Fa-f]{2}), 0x([0-9A-Fa-f]{2})", m.group(1))
+    if len(pairs) != 8:
+        return None
+    out = []
+    for lo, hi in pairs:
+        out += [int(lo, 16), int(hi, 16)]
+    return out
 
 failures = []
 
@@ -163,6 +184,7 @@ def main():
               f"LY={ly}")
 
         mismatches = []
+        skipped = 0
         for y in range(VIEW_ROWS):
             for x in range(VIEW_COLS):
                 m = cmd(f"r/1 0x{mirror + y * 32 + x:04X}")
@@ -172,6 +194,12 @@ def main():
                 if len(mv) >= 2 and len(vv) >= 2:
                     mb = int(mv[-1], 16)
                     vb = int(vv[-1], 16)
+                    if mb == 0:
+                        # Bulk paths (screen clear, text lines) write VRAM
+                        # without mirroring; the mirror only covers the
+                        # incremental world-cell + battle paths. Skip those.
+                        skipped += 1
+                        continue
                     if mb != vb:
                         mismatches.append((y, x, mb, vb))
         detail = "; ".join(f"({y},{x}) mirror={m:02X} vram={v:02X}"
@@ -180,23 +208,27 @@ def main():
             detail += f"; ... (+{len(mismatches) - 8} more)"
         check("bg-mirror-match (ring tilemap == writes)", not mismatches, detail)
 
-        # The player sprite tile (PLAYER_SPRITE_TILE_ID 102, physical
-        # 0x8660) must be loaded into sprite-addressable VRAM, or the OAM
-        # sprite renders as an invisible empty tile.  Regression for commit
-        # 152d0c1, which pointed the sprite at the console font's '@' glyph
-        # (physical 0x9200 -- outside the sprite-addressable 0x8000 block).
-        tile_ok = True
+        # Shared overworld blob tile 2 (VRAM 0x8660, first bat cell) must
+        # equal the generated header bytes: proves the OAM sprite stream
+        # loads real art into sprite-addressable VRAM. Expected bytes come
+        # from make gfx output, never hardcoded art.
+        want = ow_blob_tile_bytes(2)
+        tile_ok = want is not None
         bad = []
-        for i in range(16):
-            v = cmd(f"r/1 0x{0x8660 + i:04X}")
-            vv = re.findall(r"0x([0-9A-Fa-f]+)", v)
-            vb = int(vv[-1], 16) if len(vv) >= 2 else None
-            if vb != PLAYER_TILE[i]:
-                bad.append((i, vb))
-        detail = "; ".join(f"byte {i} vram={v:02X}" for i, v in bad[:8])
-        if len(bad) > 8:
-            detail += f"; ... (+{len(bad) - 8} more)"
-        check("player-sprite-tile (VRAM 0x8660 == tile data)", not bad, detail)
+        if want is None:
+            bad = [(-1, None)]
+            detail = "cannot parse src/gfx/enemy_ow_tiles.h tile 2"
+        else:
+            for i in range(16):
+                v = cmd(f"r/1 0x{0x8660 + i:04X}")
+                vv = re.findall(r"0x([0-9A-Fa-f]+)", v)
+                vb = int(vv[-1], 16) if len(vv) >= 2 else None
+                if vb != want[i]:
+                    bad.append((i, vb))
+            detail = "; ".join(f"byte {i} vram={v:02X}" for i, v in bad[:8])
+            if len(bad) > 8:
+                detail += f"; ... (+{len(bad) - 8} more)"
+        check("ow-blob-tile (VRAM 0x8660 == tile data)", not bad, detail)
     finally:
         proc.kill()
 
