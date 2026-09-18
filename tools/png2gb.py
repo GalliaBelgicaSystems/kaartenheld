@@ -16,6 +16,13 @@ Two modes, no guessing in either:
 There is no luminance sorting, no anchor pinning, no color-distance
 matching across palettes, no quantization. Those lived here before and
 are gone: ramp choice belongs to palette_compiler, which reports it.
+
+OBJ sheets: a shade map may carry "transparent_shade0": true (the
+palette_compiler sets it for the `obj` palette set). OAM color index 0
+is transparent, so an OFF-ramp pixel must never take the nearest-shade
+fallback into index 0 -- that would punch a hole in the sprite. Such
+pixels fall back to the nearest of shades 1-3 instead. Exact matches
+(the real background key) still map to index 0.
 """
 
 import sys
@@ -77,7 +84,10 @@ def parse_hex(s):
 
 
 def load_shade_map(path, asset):
-    """Load a palette_compiler shades file: {"tiles": {"x,y": [hex x4]}}."""
+    """Load a palette_compiler shades file: {"tiles": {"x,y": [hex x4]}}.
+
+    Returns ({(tx, ty): 4 shades}, transparent_shade0).
+    """
     import json
     try:
         data = json.loads(Path(path).read_text())
@@ -86,6 +96,7 @@ def load_shade_map(path, asset):
     tiles = data.get("tiles")
     if not isinstance(tiles, dict):
         raise Png2GbError(asset, "shade-map-malformed", f"{path}: want 'tiles' object")
+    transparent0 = bool(data.get("transparent_shade0", False))
     out = {}
     for key, hexes in tiles.items():
         try:
@@ -97,14 +108,17 @@ def load_shade_map(path, asset):
             raise Png2GbError(asset, "shade-map-malformed",
                               f"{path}: tile '{key}' wants 4 shades, got {len(shades)}")
         out[(tx, ty)] = shades
-    return out
+    return out, transparent0
 
 
-def nearest_shade(color, shades):
+def nearest_shade(color, shades, transparent0=False):
     """Map a pixel to a shade index.
 
     shades as an ORDERED 4-tuple/list: position is the shade index;
     exact match wins, else nearest within the ramp (ramps-win encoding).
+    With transparent0 (OBJ sheets) the nearest-shade fallback only
+    considers shades 1-3: index 0 is transparent and is reserved for
+    pixels that exactly match the ramp's shade 0.
     shades as a DICT {color: index}: exact table lookup, missing pixel
     is a loud error (fixed art like the splash logo).
     """
@@ -119,13 +133,15 @@ def nearest_shade(color, shades):
             return i
     best, best_d = 0, None
     for i, s in enumerate(shades):
+        if transparent0 and i == 0:
+            continue
         d = (color[0] - s[0]) ** 2 + (color[1] - s[1]) ** 2 + (color[2] - s[2]) ** 2
         if best_d is None or d < best_d:
             best, best_d = i, d
     return best
 
 
-def encode_tile(img, tile_x, tile_y, shades):
+def encode_tile(img, tile_x, tile_y, shades, transparent0=False):
     """Encode one 8x8 tile block into 16 bytes of GB 2bpp tile data."""
     px = img.load()
     out = bytearray()
@@ -134,7 +150,7 @@ def encode_tile(img, tile_x, tile_y, shades):
         lo = 0
         hi = 0
         for col in range(TILE_SIZE):
-            shade = nearest_shade(px[ox + col, oy + row], shades)
+            shade = nearest_shade(px[ox + col, oy + row], shades, transparent0)
             bit_pos = 7 - col
             if shade & 0b01:
                 lo |= (1 << bit_pos)
@@ -184,8 +200,9 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
     img, tiles_x, tiles_y = load_image(path)
     asset = str(path)
 
+    transparent0 = False
     if shade_map is not None:
-        per_tile = load_shade_map(shade_map, asset)
+        per_tile, transparent0 = load_shade_map(shade_map, asset)
     else:
         palette = PALETTES.get(palette_name)
         if palette is None:
@@ -228,7 +245,7 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
         if not (0 <= tx < tiles_x and 0 <= ty < tiles_y):
             raise Png2GbError(asset, "tile-coords",
                               f"tile ({tx},{ty}) outside sheet {tiles_x}x{tiles_y}")
-        all_bytes += encode_tile(img, tx, ty, shades_for(tx, ty))
+        all_bytes += encode_tile(img, tx, ty, shades_for(tx, ty), transparent0)
     tile_count = len(coords_list)
 
     return all_bytes, tile_count, format_c_array(name, all_bytes, tile_count, raw_inc=raw_inc)

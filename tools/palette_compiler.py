@@ -244,8 +244,11 @@ def main():
                                        "off_colors": off})
             used[coord] = ramp
             shades["%d,%d" % coord] = [_hex(c) for c in ramps[ramp]]
+        # OBJ sheets: OAM color index 0 is transparent, so png2gb must not
+        # let an off-ramp pixel fall back into shade 0 (see png2gb.py).
         (SHADES_DIR / f"{key}.json").write_text(json.dumps(
-            {"sheet": key, "png": fname, "set": setname, "tiles": shades}, indent=1))
+            {"sheet": key, "png": fname, "set": setname,
+             "transparent_shade0": setname == "obj", "tiles": shades}, indent=1))
         return used
 
     world_used = {}
@@ -333,11 +336,14 @@ def main():
         vram_id = world_vram[ts]
         if ts == "castle":
             ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
-            ordered = sorted(((v["x"], v["y"]), v["tile"])
+            # Sort by vram `index` (NOT by (x, y): that is column-major and
+            # scrambles slots 1..14 against the row-major --tile-coords
+            # the castle gfx rule encodes with).
+            ordered = sorted((v["index"], (v["x"], v["y"]), v["tile"])
                              for v in (ts_data.get("vram_block") or {}).get("tiles", [])
                              if "tile" in v and v.get("index", 99) < 16)
-            cells = [c for c, _ in ordered]
-            ids = [t for _, t in ordered]
+            cells = [c for _, c, _ in ordered]
+            ids = [t for _, _, t in ordered]
         else:
             ids = []
             cells = []
@@ -404,10 +410,6 @@ def main():
 
     slotted = {r for slots in slotmap.values() for r in slots.values()}
     spare = sorted(set(ramps) - slotted)
-    print(f"palette_compiler: {len(ramps)} ramps, {len(slotted)} slotted, "
-          f"{len(real)} reported tiles")
-    if spare:
-        print(f"  unslotted (no hardware slot, info only): {', '.join(spare)}")
     print(f"palette_compiler: {len(ramps)} ramps, {len(slotted)} slotted, "
           f"{len(real)} reported tiles")
     if spare:

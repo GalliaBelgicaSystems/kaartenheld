@@ -403,6 +403,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_card_frames.py
 	@python3 tools/compose_npc_tiles.py
 	@python3 tools/palette_compiler.py
+	@python3 tools/verify_palette_manifest.py
 
 # Mismatch report: tiles whose pixels don't exactly fit their ramp.
 # Always exits green (ramps win); the JSON is the artist todo list.

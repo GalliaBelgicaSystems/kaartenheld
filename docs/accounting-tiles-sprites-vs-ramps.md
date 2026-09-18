@@ -13,7 +13,7 @@
 | forest | field1 | field6 | field2 | field1 | field2 | field3 | field4 | field5 |
 | desolate_landscape | desolate2 | desolate3 | desolate2 | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
-| village | town4 | town3 | town5 | town6 | town7 | town1 | town2 | town8 |
+| village | town4 | town3 | town5 | town6 | town8 | town1 | town2 | town7 |
 | base | fight1 | fightgoblin | fightspider | fightslime | fight5 | fightmimic | fight_text | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | – | – | – |
 | title | title | title_logo | – | – | – | – | – | – |
@@ -57,7 +57,7 @@
 | town4 (0) | village_bottom_left_well, village_bottom_right_well, village_floor_with_puddle_on_it |
 | town5 (2) | village_top_left_well, village_top_right_well |
 | town6 (3) | village_barrel |
-| town7 (4) | village_middle_house |
+| town7 (7) | village_middle_house |
 
 ## Battle sprites (BG stamp via `art_palette`)
 
