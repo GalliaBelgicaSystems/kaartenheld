@@ -5,6 +5,12 @@ on:
     branches: [master]
   pull_request:
 
+# Waiver system (tools/known_bad.json) applies to local iteration builds
+# (ROM + screenshots with darkest-shade placeholders). CI stays strict:
+# waivers ignored, any known-bad cell fails loudly instead of rendering.
+env:
+  KAARTENHELD_STRICT: "1"
+
 jobs:
   # Fast gate: lint, both ROMs, memory budget, content checks, generated
   # assets in sync. The verification jobs below only run if this passes,

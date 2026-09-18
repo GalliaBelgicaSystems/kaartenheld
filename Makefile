@@ -409,6 +409,9 @@ tiles-check:
 # reader; tools/palette_compiler.py derives FIXED_PALETTES from it).
 # See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
 manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py tools/palette_txt.py assets/palette.txt | $(GENERATED_TILES_DIR)
+	# Drop stale bytecode: rapid edit->build cycles can serve a cached
+	# composer/layout module and silently validate the wrong sheet.
+	@find tools -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null; true
 	@python3 tools/palette_compiler.py
 	@python3 tools/emit_sheet_sidecars.py
 	@python3 tools/palette_txt.py --write-doc

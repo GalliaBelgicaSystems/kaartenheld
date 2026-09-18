@@ -30,7 +30,10 @@
  col 1" is the first tile of the third row). Repaint only the named
  pixels, eyedropping ONLY the listed hex codes. Keep backgrounds as-is
  (white battle art, yellow `#f1eb03` sprites, tan `#b6a27e` villagers).
- Max 4 colors per tile.
+ Max 4 colors per tile. (Dev note: `tools/known_bad.json` lists the
+ currently-failing cells, which render as darkest-shade boxes in dev
+ builds so missing art is visible in screenshots; CI ignores the list
+ and fails loudly.)
 
 ## `assets/combat-tile.png` (16 columns x 5 rows)
 

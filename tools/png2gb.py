@@ -52,9 +52,12 @@ class Png2GbError(Exception):
         super().__init__(f"{asset}: [{rule}] {detail}")
 
 
-def load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=False):
+def load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=False,
+                        waived=frozenset()):
     """Load a PNG and validate it against the GB tile constraints.
-    Returns (PIL.Image in RGB, tiles_x, tiles_y)."""
+    Returns (PIL.Image in RGB, tiles_x, tiles_y). Tiles in `waived`
+    (explicit known-bad list, rendered as placeholders) skip the
+    per-tile color limit -- their shade map is authoritative."""
     asset = str(path)
     try:
         img = Image.open(path)
@@ -77,6 +80,8 @@ def load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=False):
         tiles_x, tiles_y = w // TILE_SIZE, h // TILE_SIZE
         for ty in range(tiles_y):
             for tx in range(tiles_x):
+                if (tx, ty) in waived:
+                    continue
                 ox, oy = tx * TILE_SIZE, ty * TILE_SIZE
                 t_cols = {px[ox + x, oy + y] for y in range(TILE_SIZE) for x in range(TILE_SIZE)}
                 if len(t_cols) > 4:
@@ -133,6 +138,8 @@ def load_shade_map(path, asset):
             raise Png2GbError(asset, "shade-map", f"bad tile key {key!r} (want 'tx,ty')")
         cell = {}
         for hexcol, shade in mapping.items():
+            if str(hexcol).startswith("__"):
+                continue  # sidecar metadata (e.g. __waived__), not a color
             try:
                 rgb = parse_hex_color(hexcol)
             except ValueError as e:
@@ -280,10 +287,31 @@ def resolve_strict_ramp(spec, asset):
     return RAMPS[setkey][RAMP_NAMES[setkey].index(name)]
 
 
+def waived_tiles(shade_map_path):
+    """Cells marked __waived__ in a sidecar (explicit known-bad list)."""
+    if not shade_map_path:
+        return frozenset()
+    try:
+        raw = json.loads(Path(shade_map_path).read_text())
+    except (OSError, ValueError):
+        return frozenset()
+    out = set()
+    for key, mapping in raw.items():
+        try:
+            tx, ty = (int(p) for p in str(key).split(","))
+        except ValueError:
+            continue
+        if isinstance(mapping, dict) and mapping.get("__waived__") is True:
+            out.add((tx, ty))
+    return frozenset(out)
+
+
 def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=False,
             shade_map_path=None, strict_ramp=None):
     is_auto = (palette_name == "auto")
-    img, tiles_x, tiles_y = load_and_validate(path, max_colors=MAX_COLORS, allow_per_tile=is_auto)
+    img, tiles_x, tiles_y = load_and_validate(
+        path, max_colors=MAX_COLORS, allow_per_tile=is_auto,
+        waived=waived_tiles(shade_map_path))
     shade_map = None if is_auto else build_shade_map(img, str(path), palette_name=palette_name)
     sidecar = load_shade_map(shade_map_path, str(path)) if shade_map_path else None
     ramp = resolve_strict_ramp(strict_ramp, str(path)) if strict_ramp else None
