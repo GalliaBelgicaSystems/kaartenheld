@@ -62,7 +62,10 @@
       "2": "sprites12",
       "3": "sprites11",
       "4": "sprites2",
-      "_why": "0 shared OW (hero/bat/kobold/spider); 1 fire/mimic OW; 2 dog OW; 3 slime OW; 4 boss OW. Slots 5-7 stay grey (as before). Unslotted: sprites3/4/6-10, battle_* (battle OAM is future work; battle art encodes with the BG fight* ramp)."
+      "5": "sprites7",
+      "6": "sprites9",
+      "7": "sprites8",
+      "_why": "0 shared OW (hero/bat/kobold/spider); 1 fire/mimic OW; 2 dog OW; 3 slime OW; 4 boss OW; 5 wizard (sprites7 exact); 6 merchant (sprites9 exact); 7 mayor (sprites8 exact) + guard (monochrome npc outline, shares 7). Unslotted: sprites3/4/6/10, battle_* (battle OAM is future work; battle art encodes with the BG fight* ramp)."
     },
     "title": {
       "0": "title",

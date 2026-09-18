@@ -193,9 +193,6 @@ gfx: manifest
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
-	@python3 tools/png2gb.py assets/npc_tiles.png --name rpg_actor_npc_tiles \
-		--shade-map generated/tiles/shades/npc.json --raw \
-		-o $(GFX_OUT_DIR)/rpg_actor_npc_tiles.inc
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
@@ -401,7 +398,6 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
 	@python3 tools/compose_card_frames.py
-	@python3 tools/compose_npc_tiles.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 

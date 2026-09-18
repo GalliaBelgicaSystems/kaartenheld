@@ -15,7 +15,7 @@
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town8 | town1 | town2 | town7 |
 | base | fight1 | fightgoblin | fightspider | fightslime | fight5 | fightmimic | fight_text | fightboss |
-| obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | – | – | – |
+| obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
 
 ## World tiles
@@ -81,21 +81,18 @@ OAM obj ramps are declared content for future battle-OAM work; the ROM currently
 | fire | fire_f0, fire_f1 | sprites5 (1) | ≈ #26232e, #d7a726, #edc214 |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
+| npc_guard | npc_guard | sprites8 (7) | ✓ |
+| npc_mayor | npc_mayor | sprites8 (7) | ✓ |
+| npc_merchant | npc_merchant | sprites9 (6) | ✓ |
+| npc_wizard | npc_wizard | sprites7 (5) | ✓ |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
 | slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ≈ #8d754a |
 | spider | spider_f0, spider_f1 | sprites (0) | ✓ |
 | hero | hero_f0, hero_f1 | sprites (0) | ✓ |
 
-## NPC overlay (`npc_tiles.png`, fixed display slots)
-
-| cell | npc | display slot → ramp | fit |
-|---|---|---|---|
-| 0 | guard | 3 → town6 | ≈ #3f3017, #f1eb03 |
-| 1 | wizard | 3 → town6 | ≈ #3f3017, #475ca8, #f1eb03 |
-| 2 | merchant | 5 → town1 | ≈ #3f3017, #8f591f, #f1eb03 |
-| 3 | mayor | 6 → town2 | ≈ #3f3017, #8b1b1b, #b6b6b6, #f1eb03 |
-| 4 | dog frame 1 | 3 → town6 | ≈ #8b1b1b, #f1eb03 |
-| 5 | dog frame 2 | 3 → town6 | ≈ #8b1b1b, #f1eb03 |
+Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites
+with exact OBJ ramps (see Overworld sprites above); the old BG
+overlay is deleted.
 
 ## Card frames + icons (`card_frames.png`, skin display slots)
 
@@ -164,12 +161,6 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 | enemy_ow | [2, 4] | sprites5 | #26232e, #d7a726, #edc214 |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
 | enemy_ow | [3, 4] | sprites5 | #26232e, #d7a726, #edc214 |
-| npc | [0, 0] | town6 | #3f3017, #f1eb03 |
-| npc | [1, 0] | town6 | #3f3017, #475ca8, #f1eb03 |
-| npc | [2, 0] | town1 | #3f3017, #8f591f, #f1eb03 |
-| npc | [3, 0] | town2 | #3f3017, #8b1b1b, #b6b6b6, #f1eb03 |
-| npc | [4, 0] | town6 | #8b1b1b, #f1eb03 |
-| npc | [5, 0] | town6 | #8b1b1b, #f1eb03 |
 | card_frames | [0, 3] | fightmimic | #b09266, #e3ae63 |
 | card_frames | [0, 4] | fight_text | #755930, #b09266 |
 | card_frames | [0, 5] | fightgoblin | #8b1b1b, #b09266, #dfbd8d |
@@ -189,4 +180,4 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 | card_frames | [2, 6] | fight_text | #755930, #dfbd8d |
 | card_frames | [2, 8] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
 
-Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight2, fight3, fight4, fight6, fight7, fightbat, fightboss2, fightboss3, fightboss4, sprites10, sprites3, sprites4, sprites6, sprites7, sprites8, sprites9.
+Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight2, fight3, fight4, fight6, fight7, fightbat, fightboss2, fightboss3, fightboss4, sprites10, sprites3, sprites4, sprites6.

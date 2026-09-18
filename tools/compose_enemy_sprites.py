@@ -11,6 +11,18 @@ from PIL import Image
 
 PUB = 'tools/level_editor/public/tiles/enemies'
 
+# Town NPC portraits live in the actors tileset, not enemies/: guard,
+# wizard, merchant, mayor render as OAM sprites (SPRITE_KIND_ENEMY path)
+# with their exact OBJ ramps. NAME_TO_FILE maps blob cell names to the
+# curated actor PNGs; everything else loads from PUB.
+ACTORS_PUB = 'tools/level_editor/public/tiles/actors'
+NPC_FILES = {
+    'npc_guard': 'actors_guard',
+    'npc_wizard': 'actors_wizard',
+    'npc_merchant': 'actors_merchant',
+    'npc_mayor': 'actors_mayor',
+}
+
 # OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
 OAM_KEY = (241, 235, 3)
 LAYOUT = [
@@ -23,6 +35,10 @@ LAYOUT = [
     # --ow-coords).  Rendered by static (non-hostile) actors through the
     # SPRITE_KIND_ENEMY path (sprite_tile_for reads g_enemy_types).
     ['dog_f0', 'dog_f1', 'fire_f0', 'fire_f1'],
+    # Town NPC portraits (mayor, guard, merchant, wizard): static OAM
+    # townsfolk with exact OBJ ramps (sprites7/8/9).  Appended last so no
+    # existing blob offset moves.
+    ['npc_guard', 'npc_mayor', 'npc_merchant', 'npc_wizard'],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy
@@ -45,7 +61,11 @@ def main():
         for x, name in enumerate(row):
             if name is None:
                 continue
-            im = Image.open('%s/%s.png' % (PUB, name)).convert('RGBA')
+            if name in NPC_FILES:
+                src = '%s/%s.png' % (ACTORS_PUB, NPC_FILES[name])
+            else:
+                src = '%s/%s.png' % (PUB, name)
+            im = Image.open(src).convert('RGBA')
             im = Image.alpha_composite(Image.new('RGBA', im.size, OAM_KEY + (255,)), im)
             sheet.paste(im.convert('RGB'), (x * 8, y * 8))
     sheet.save('assets/enemy_sprites.png')

@@ -103,6 +103,12 @@ def shadow_oam_slot_tile(sess, slot):
     return sess._memread(0xC000 + 4 * slot + 2)
 
 
+def shadow_oam_slot_pal(sess, slot):
+    """CGB OBJ palette of shadow OAM entry `slot` (attr bits 0-2)."""
+    attr = sess._memread(0xC000 + 4 * slot + 3)
+    return attr & 0x07 if attr is not None else None
+
+
 def mirror_at(sess, mirror_addr, x, y):
     """g_tilemap_mirror byte for tilemap cell (x, y).  DEBUG-only mirror of
     the 0x9800 ring (32 x 32), asserted because mGBA cannot read VRAM."""
@@ -136,6 +142,29 @@ def wait_vblank(sess, tries=3):
         if ly is not None and ly >= 144:
             return True
     return False
+
+
+def verify_npc_sprites(sess):
+    """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
+    overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
+    (sprites9).  Blob offsets append-only: guard 118, mayor 119,
+    merchant 120.  Order-insensitive set match over entries 1-4 (spawn
+    order may vary; ASCII shopkeeper takes no OAM entry)."""
+    print("== Town NPC OAM sprites ==")
+    sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
+    sess.step(2)
+    found = set()
+    # Entries 1-4 are reserved hostile slots (hidden when empty); static
+    # actors start at entry 5, so scan wide and match order-insensitively.
+    for slot in range(1, 13):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    for label, tile, pal in (("mayor", 119, 7), ("guard", 118, 7),
+                             ("merchant", 120, 6)):
+        check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
+              True, (tile, pal) in found)
 
 
 def verify_hostile_sprites(sess):
@@ -500,6 +529,7 @@ def main():
                       ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
+                      ("npc sprites", verify_npc_sprites),
                       ("exit art", verify_exit_art)):
         sess = EmulatorSession(rom_path=ROM)
         try:

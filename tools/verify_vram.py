@@ -57,7 +57,7 @@ def ow_blob_tile_bytes(index):
         text = open(header).read()
     except OSError:
         return None
-    m = re.search(r"/\* tile %d \*/((?:\s*0x[0-9A-Fa-f]{2}, 0x[0-9A-Fa-f]{2},.*\n){8})" % index, text)
+    m = re.search(r"/\* tile %d \*/((?:\s*0x[0-9A-Fa-f]{2}, 0x[0-9A-Fa-f]{2},?.*\n){8})" % index, text)
     if not m:
         return None
     pairs = re.findall(r"0x([0-9A-Fa-f]{2}), 0x([0-9A-Fa-f]{2})", m.group(1))
@@ -208,27 +208,33 @@ def main():
             detail += f"; ... (+{len(mismatches) - 8} more)"
         check("bg-mirror-match (ring tilemap == writes)", not mismatches, detail)
 
-        # Shared overworld blob tile 2 (VRAM 0x8660, first bat cell) must
-        # equal the generated header bytes: proves the OAM sprite stream
-        # loads real art into sprite-addressable VRAM. Expected bytes come
-        # from make gfx output, never hardcoded art.
-        want = ow_blob_tile_bytes(2)
-        tile_ok = want is not None
-        bad = []
-        if want is None:
-            bad = [(-1, None)]
-            detail = "cannot parse src/gfx/enemy_ow_tiles.h tile 2"
-        else:
-            for i in range(16):
-                v = cmd(f"r/1 0x{0x8660 + i:04X}")
-                vv = re.findall(r"0x([0-9A-Fa-f]+)", v)
-                vb = int(vv[-1], 16) if len(vv) >= 2 else None
-                if vb != want[i]:
-                    bad.append((i, vb))
-            detail = "; ".join(f"byte {i} vram={v:02X}" for i, v in bad[:8])
-            if len(bad) > 8:
-                detail += f"; ... (+{len(bad) - 8} more)"
-        check("ow-blob-tile (VRAM 0x8660 == tile data)", not bad, detail)
+        # Shared overworld blob tiles must equal the generated header bytes:
+        # proves the OAM sprite stream loads real art into sprite-addressable
+        # VRAM. Expected bytes come from make gfx output, never hardcoded art.
+        # Blob order (battle_compile --ow-coords): bat 0, kobold 2, mimic 4,
+        # slime 6, boss 8, spider 12, dog 14, fire 16, NPC guard 18, mayor 19,
+        # merchant 20, wizard 21 (append-only; pinned prefix never moves).
+        for blob_idx, vram_base, label in (
+                (2, 0x8660, "bat"), (18, 0x8760, "npc_guard"),
+                (19, 0x8770, "npc_mayor"), (20, 0x8780, "npc_merchant"),
+                (21, 0x8790, "npc_wizard")):
+            want = ow_blob_tile_bytes(blob_idx)
+            bad = []
+            if want is None:
+                bad = [(-1, None)]
+                detail = f"cannot parse src/gfx/enemy_ow_tiles.h tile {blob_idx}"
+            else:
+                for i in range(16):
+                    v = cmd(f"r/1 0x{vram_base + i:04X}")
+                    vv = re.findall(r"0x([0-9A-Fa-f]+)", v)
+                    vb = int(vv[-1], 16) if len(vv) >= 2 else None
+                    if vb != want[i]:
+                        bad.append((i, vb))
+                detail = "; ".join(f"byte {i} vram={v:02X}" for i, v in bad[:8])
+                if len(bad) > 8:
+                    detail += f"; ... (+{len(bad) - 8} more)"
+            check(f"ow-blob-tile {label} (VRAM {vram_base:#x} == tile data)",
+                  not bad, detail)
     finally:
         proc.kill()
 

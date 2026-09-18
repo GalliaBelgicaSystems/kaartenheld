@@ -73,17 +73,6 @@ const uint8_t g_tileset_village[768] = {
 #include "gfx/rpg_village_world_tiles.inc"
 };
 
-/* NPC map art, sourced from the shared actors tileset (assets/
- * actor-sprites.png via tools/compose_npc_tiles.py).  The village
- * sheet's NPC cells were blanked when the art moved to the actors
- * tileset (assets/tilesets.md); ui_load_tileset_banked() overlays these
- * tiles into the village VRAM block slots the maps still reference.
- * Order mirrors compose_npc_tiles.py LAYOUT and the npc_slots[] table
- * below: guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
-const uint8_t g_actor_npc_tiles[96] = {
-#include "gfx/rpg_actor_npc_tiles.inc"
-};
-
 const uint8_t g_intrepid_font_tiles[1536] = {
 #include "gfx/intrepid_font_tiles.inc"
 };
@@ -150,31 +139,9 @@ void ui_load_tileset_banked(void)
         g_active_tile_palette[i] = 0;
     }
 
-    if (tileset == WORLD_TILESET_VILLAGE) {
-        /* NPC map art moved to the shared actors tileset, so the village
-         * sheet's NPC cells are blank.  Overlay the actor-sourced tiles
-         * into the village block slots the maps reference.  Slot order
-         * must match g_actor_npc_tiles (compose_npc_tiles.py LAYOUT):
-         * guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
-        static const uint8_t npc_slots[6] = { 35, 36, 39, 41, 4, 5 };
-        /* CGB palette per NPC, generated (g_npc_display_pals): guard,
-         * wizard and dogs field-ish, merchant wood, mayor gold. Order
-         * mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
-        uint8_t s;
-        uint8_t j;
-        const uint8_t *tile_src;
-        volatile uint8_t *tile_dst;
-
-        for (s = 0; s < 6; s++) {
-            tile_src = &g_actor_npc_tiles[(uint16_t)s << 4];
-            tile_dst = (volatile uint8_t *)(
-                0x8000u + ((uint16_t)(RPG_TILE_BASE_WORLD + npc_slots[s]) << 4));
-            for (j = 0; j < 16; j++) {
-                tile_dst[j] = tile_src[j];
-            }
-            g_active_tile_palette[npc_slots[s]] = g_npc_display_pals[s];
-        }
-    }
+    /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites
+     * with exact OBJ ramps (screens/enemy_types/npc_*.json): no overlay.
+     * The village sheet's old NPC cells are plain ground. */
 }
 
 #ifdef DEBUG_BUILD

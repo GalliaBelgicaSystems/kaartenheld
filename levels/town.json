@@ -93,9 +93,9 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_merchant",
         "village.village_plain_floor_1",
-        "village.village_merchant",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -138,28 +138,6 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_mayor",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_right_wall"
-      ],
-      [
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -204,7 +182,29 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_guard",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_right_wall"
+      ],
+      [
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -244,7 +244,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_save_wizard",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -459,7 +459,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_mayor"
       }
     },
     {
@@ -483,7 +484,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
       }
     },
     {
@@ -531,7 +533,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
       }
     },
     {
@@ -555,7 +558,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_wizard"
       }
     },
     {

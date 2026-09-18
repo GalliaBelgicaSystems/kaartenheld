@@ -129,6 +129,98 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     1
 };
 
+static const EnemyTypeDef g_enemy_type_npc_guard = {
+    "npc_guard",
+    "Guard OW",
+    0,
+    "GUARD",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    118,
+    1,
+    1,
+    1,
+    7
+};
+
+static const EnemyTypeDef g_enemy_type_npc_mayor = {
+    "npc_mayor",
+    "Mayor OW",
+    0,
+    "MAYOR",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    119,
+    1,
+    1,
+    1,
+    7
+};
+
+static const EnemyTypeDef g_enemy_type_npc_merchant = {
+    "npc_merchant",
+    "Merchant OW",
+    0,
+    "MERCHANT",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    120,
+    1,
+    1,
+    1,
+    6
+};
+
+static const EnemyTypeDef g_enemy_type_npc_wizard = {
+    "npc_wizard",
+    "Wizard OW",
+    0,
+    "WIZARD",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    121,
+    1,
+    1,
+    1,
+    5
+};
+
 static const EnemyTypeDef g_enemy_type_slime = {
     "slime",
     "Slime",
@@ -198,16 +290,20 @@ static const EnemyTypeDef g_enemy_type_spider = {
     0
 };
 
-const EnemyTypeDef* const g_enemy_types[8] = {
+const EnemyTypeDef* const g_enemy_types[12] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
     &g_enemy_type_fire,
     &g_enemy_type_kobold,
     &g_enemy_type_mimic,
+    &g_enemy_type_npc_guard,
+    &g_enemy_type_npc_mayor,
+    &g_enemy_type_npc_merchant,
+    &g_enemy_type_npc_wizard,
     &g_enemy_type_slime,
     &g_enemy_type_slime_lord,
     &g_enemy_type_spider,
 };
-const uint8_t g_enemy_type_count = 8;
+const uint8_t g_enemy_type_count = 12;
 
-const uint8_t g_enemy_ow_tile_count = 18;
+const uint8_t g_enemy_ow_tile_count = 22;
