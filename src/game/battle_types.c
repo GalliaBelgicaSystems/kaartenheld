@@ -60,29 +60,6 @@ static const EnemyTypeDef g_enemy_type_dog = {
     2
 };
 
-static const EnemyTypeDef g_enemy_type_fire = {
-    "fire",
-    "Fire",
-    0,
-    "FIRE",
-    1,
-    1,
-    "BATTLE_NONE",
-    0,
-    CURRENCY_ID_GOLD,
-    255,
-    0,
-    0,
-    0,
-    0,
-    0,
-    116,
-    1,
-    1,
-    2,
-    1
-};
-
 static const EnemyTypeDef g_enemy_type_kobold = {
     "kobold",
     "Kobold",
@@ -145,7 +122,7 @@ static const EnemyTypeDef g_enemy_type_npc_guard = {
     0,
     0,
     0,
-    118,
+    116,
     1,
     1,
     1,
@@ -168,7 +145,7 @@ static const EnemyTypeDef g_enemy_type_npc_mayor = {
     0,
     0,
     0,
-    119,
+    117,
     1,
     1,
     1,
@@ -191,7 +168,7 @@ static const EnemyTypeDef g_enemy_type_npc_merchant = {
     0,
     0,
     0,
-    120,
+    118,
     1,
     1,
     1,
@@ -214,7 +191,7 @@ static const EnemyTypeDef g_enemy_type_npc_wizard = {
     0,
     0,
     0,
-    121,
+    119,
     1,
     1,
     1,
@@ -290,10 +267,9 @@ static const EnemyTypeDef g_enemy_type_spider = {
     0
 };
 
-const EnemyTypeDef* const g_enemy_types[12] = {
+const EnemyTypeDef* const g_enemy_types[11] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
-    &g_enemy_type_fire,
     &g_enemy_type_kobold,
     &g_enemy_type_mimic,
     &g_enemy_type_npc_guard,
@@ -304,6 +280,6 @@ const EnemyTypeDef* const g_enemy_types[12] = {
     &g_enemy_type_slime_lord,
     &g_enemy_type_spider,
 };
-const uint8_t g_enemy_type_count = 12;
+const uint8_t g_enemy_type_count = 11;
 
-const uint8_t g_enemy_ow_tile_count = 22;
+const uint8_t g_enemy_ow_tile_count = 20;

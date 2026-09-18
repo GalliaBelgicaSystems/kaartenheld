@@ -30,11 +30,13 @@ LAYOUT = [
     ['boss_ow_tl', 'boss_ow_tr', 'boss_ow_bl', 'boss_ow_br'],
     ['kobold_f0', 'kobold_f1', 'spider_f0', 'spider_f1'],
     ['kobold_idle', 'mimic_f0', 'mimic_f1', None],
-    # Friendly "real NPC" art (dogs, fires): appends at the end — blob
+    # Friendly "real NPC" art (dogs): appends at the end — blob
     # offsets of earlier rows must never renumber (battle_compile.py
     # --ow-coords).  Rendered by static (non-hostile) actors through the
     # SPRITE_KIND_ENEMY path (sprite_tile_for reads g_enemy_types).
-    ['dog_f0', 'dog_f1', 'fire_f0', 'fire_f1'],
+    # Fires are background tiles (animated fire_frame pairs, see
+    # anim_pairs.h), never OAM sprites.
+    ['dog_f0', 'dog_f1', None, None],
     # Town NPC portraits (mayor, guard, merchant, wizard): static OAM
     # townsfolk with exact OBJ ramps (sprites7/8/9).  Appended last so no
     # existing blob offset moves.

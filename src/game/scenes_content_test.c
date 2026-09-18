@@ -225,6 +225,7 @@ static const SceneTerrainBlock s_test_castle_terrain[] = {
 
 static const SceneTerrainBlock s_test_south_field_terrain[] = {
     { 5, 5, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 17, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_37 },
     { 12, 0, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 12, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 0, 0, 0, 0, 0 }

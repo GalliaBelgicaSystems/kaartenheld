@@ -86,7 +86,9 @@ def parse_hex(s):
 def load_shade_map(path, asset):
     """Load a palette_compiler shades file: {"tiles": {"x,y": [hex x4]}}.
 
-    Returns ({(tx, ty): 4 shades}, transparent_shade0).
+    Returns ({(tx, ty): 4 shades}, transparent_shade0, {(tx, ty)}).
+    transparent_cells lists individual tiles whose shade 0 is OAM
+    transparency (battle OAM art on a mixed sheet).
     """
     import json
     try:
@@ -97,6 +99,14 @@ def load_shade_map(path, asset):
     if not isinstance(tiles, dict):
         raise Png2GbError(asset, "shade-map-malformed", f"{path}: want 'tiles' object")
     transparent0 = bool(data.get("transparent_shade0", False))
+    tcells = set()
+    for key in data.get("transparent_cells", []):
+        try:
+            tx, ty = (int(v) for v in key.split(","))
+            tcells.add((tx, ty))
+        except Exception:
+            raise Png2GbError(asset, "shade-map-malformed",
+                              f"{path}: bad transparent_cells entry '{key}'")
     out = {}
     for key, hexes in tiles.items():
         try:
@@ -108,7 +118,7 @@ def load_shade_map(path, asset):
             raise Png2GbError(asset, "shade-map-malformed",
                               f"{path}: tile '{key}' wants 4 shades, got {len(shades)}")
         out[(tx, ty)] = shades
-    return out, transparent0
+    return out, transparent0, tcells
 
 
 def nearest_shade(color, shades, transparent0=False):
@@ -201,8 +211,9 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
     asset = str(path)
 
     transparent0 = False
+    transparent_cells = set()
     if shade_map is not None:
-        per_tile, transparent0 = load_shade_map(shade_map, asset)
+        per_tile, transparent0, transparent_cells = load_shade_map(shade_map, asset)
     else:
         palette = PALETTES.get(palette_name)
         if palette is None:
@@ -245,7 +256,8 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
         if not (0 <= tx < tiles_x and 0 <= ty < tiles_y):
             raise Png2GbError(asset, "tile-coords",
                               f"tile ({tx},{ty}) outside sheet {tiles_x}x{tiles_y}")
-        all_bytes += encode_tile(img, tx, ty, shades_for(tx, ty), transparent0)
+        all_bytes += encode_tile(img, tx, ty, shades_for(tx, ty),
+                                   transparent0 or (tx, ty) in transparent_cells)
     tile_count = len(coords_list)
 
     return all_bytes, tile_count, format_c_array(name, all_bytes, tile_count, raw_inc=raw_inc)

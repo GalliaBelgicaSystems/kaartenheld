@@ -147,8 +147,8 @@ def wait_vblank(sess, tries=3):
 def verify_npc_sprites(sess):
     """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
     overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
-    (sprites9).  Blob offsets append-only: guard 118, mayor 119,
-    merchant 120.  Order-insensitive set match over entries 1-4 (spawn
+    (sprites9).  Blob offsets append-only: guard 116, mayor 117,
+    merchant 118.  Order-insensitive set match over entries 1-12 (spawn
     order may vary; ASCII shopkeeper takes no OAM entry)."""
     print("== Town NPC OAM sprites ==")
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
@@ -161,8 +161,8 @@ def verify_npc_sprites(sess):
         pal = shadow_oam_slot_pal(sess, slot)
         if tile is not None and pal is not None:
             found.add((tile, pal))
-    for label, tile, pal in (("mayor", 119, 7), ("guard", 118, 7),
-                             ("merchant", 120, 6)):
+    for label, tile, pal in (("mayor", 117, 7), ("guard", 116, 7),
+                             ("merchant", 118, 6)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
 
@@ -396,6 +396,19 @@ def verify_dialogue_transition(sess):
     sess._cmd("frame", timeout=5.0)
     check("dialogue entry: world redrawn behind the box",
           full_addr, sess._read_pc())
+    # Disarm the redraw breakpoint before engaging: a mid-frame pause can
+    # swallow the A-press edge (the press registers, or not, depending on
+    # where the pause lands -- parity-dependent, AGENTS.md 52.17).  With
+    # only the frame-entry breakpoint armed, a fresh press after a reset
+    # frame is a deterministic edge; if the first press already started
+    # the dialogue, the second press merely advances a line (still active).
+    import re as _re
+    _m = _re.search(r"breakpoint (\d+)", brk.decode("utf-8", "ignore"))
+    if _m:
+        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
+    sess.step(1)
+    sess.press("A")
+    sess.step(1)
     # Continue past the redraw breakpoint to the next frame entry: the
     # redraw (tilemap + CGB attrs + palettes) has now fully executed.
     sess._cmd("c", timeout=10.0)

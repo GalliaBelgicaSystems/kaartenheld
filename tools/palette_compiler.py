@@ -139,7 +139,12 @@ def main():
                 coords[v["tile"]] = (v["x"], v["y"])
         tags[ts] = (ts_data, table, coords)
 
-    # Battle art: {cellname: BG ramp}.
+    # Battle art: {cellname: encoding ramp}. OAM-flagged sets (battle
+    # enemies are sprites, per Florent's model) encode with their OBJ ramp;
+    # BG-stamped sets (boss, spider) encode with their fight ramp. The ROM
+    # programs the matching CRAM side per path, so encoding and display
+    # always agree; a mismatch row means OUR assignment is suspect, never
+    # the artist's pixels (artist is always right).
     from compose_battle_sprites import TILE_COORDS as BATTLE_CELLS
     from compose_enemy_sprites import TILE_COORDS as ENEMY_CELLS
     from compose_hero_sprites import TILE_COORDS as HERO_CELLS
@@ -147,6 +152,7 @@ def main():
     sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
     from battle_compile import SKIN_COLORS, DEFAULT_SKIN, DEFAULT_HUD
     battle_declared = {}
+    battle_oam_names = set()
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
         pal = data.get("palette")
@@ -155,12 +161,17 @@ def main():
         obj = data.get("obj_palette")
         if obj is not None and obj not in ramps:
             raise ValueError(f"combat_art/{path.name}: unknown obj_palette ramp '{obj}'")
+        enc = obj if data.get("oam") and obj else pal
+        if data.get("oam") and not obj:
+            raise ValueError(f"combat_art/{path.name}: oam set needs obj_palette")
         cells = list(data.get("frame0", []))
         f1 = data.get("frame1")
         cells += f1 if f1 is not None else data.get("frame0", [])
         for name in cells:
             if name is not None:
-                battle_declared[name] = pal
+                battle_declared[name] = enc
+                if data.get("oam"):
+                    battle_oam_names.add(name)
 
     # Enemy/hero overworld: {cellname: ramp or None}.
     ow_declared = {}
@@ -183,10 +194,16 @@ def main():
     SHADES_DIR.mkdir(parents=True, exist_ok=True)
     mismatches = []
 
-    def compile_sheet(key, declared):
+    def compile_sheet(key, declared, require_slot=True, transparent=()):
         """Color every cell of a sheet with an existing ramp.
 
         declared: {coord: ramp} or a single ramp name for all cells.
+        require_slot: declared ramps must hold a hardware slot in the
+        sheet's set (world sheets: manifest slot mapping needs it).
+        Battle art skips it (BG sets resolve via battle_compile, OAM sets
+        program per battle; encoding only needs a known ramp).
+        transparent: coords whose shade-0 is OAM transparency (off-ramp
+        pixels must not fall back into index 0 there).
         Returns {coord: used_ramp}. Non-exact cells go to mismatches.
         """
         fname, setname = SHEETS[key]
@@ -202,10 +219,13 @@ def main():
         if isinstance(declared, str):
             declared = {c: declared for c in cells}
         used, shades = {}, {}
+        t0_cells = []
         for coord in sorted(cells):
             pixel_colors = cells[coord]
             want = declared.get(coord)
-            if want is not None and want not in [r for r, _ in cand]:
+            if want is not None and want not in ramps:
+                raise ValueError(f"sheet '{key}' tile {coord}: unknown ramp '{want}'")
+            if require_slot and want is not None and want not in [r for r, _ in cand]:
                 mismatches.append({"sheet": key, "tile": list(coord),
                                    "declared": want, "used_ramp": None,
                                    "reason": f"tagged ramp has no slot in set '{setname}'; winner used instead",
@@ -235,11 +255,15 @@ def main():
                                        "off_colors": off})
             used[coord] = ramp
             shades["%d,%d" % coord] = [_hex(c) for c in ramps[ramp]]
+            if coord in transparent:
+                t0_cells.append("%d,%d" % coord)
         # OBJ sheets: OAM color index 0 is transparent, so png2gb must not
         # let an off-ramp pixel fall back into shade 0 (see png2gb.py).
         (SHADES_DIR / f"{key}.json").write_text(json.dumps(
             {"sheet": key, "png": fname, "set": setname,
-             "transparent_shade0": setname == "obj", "tiles": shades}, indent=1))
+             "transparent_shade0": setname == "obj",
+             "transparent_cells": sorted(t0_cells),
+             "tiles": shades}, indent=1))
         return used
 
     world_used = {}
@@ -254,7 +278,9 @@ def main():
         world_used[ts] = compile_sheet(ts, declared)
 
     battle_used = compile_sheet(
-        "battle", {BATTLE_CELLS[n]: r for n, r in battle_declared.items() if n in BATTLE_CELLS})
+        "battle", {BATTLE_CELLS[n]: r for n, r in battle_declared.items() if n in BATTLE_CELLS},
+        require_slot=False,
+        transparent={BATTLE_CELLS[n] for n in battle_oam_names if n in BATTLE_CELLS})
     compile_sheet(
         "enemy_ow", {ENEMY_CELLS[n]: r for n, r in ow_declared.items()
                      if r is not None and n in ENEMY_CELLS})

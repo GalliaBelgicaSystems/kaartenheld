@@ -132,6 +132,7 @@
         "village.village_plain_floor_1",
         "village.village_barrel",
         "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -141,8 +142,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -286,7 +286,7 @@
         "village.village_plain_floor_1",
         "village.village_bottom_left_well",
         "village.village_bottom_right_well",
-        "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -561,69 +561,6 @@
         "ai": "AI_NONE",
         "enemy_type": "npc_wizard"
       }
-    },
-    {
-      "id": "village_fire",
-      "type": "npc",
-      "position": {
-        "x": 4,
-        "y": 5
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
-    },
-    {
-      "id": "village_fire_copy",
-      "type": "npc",
-      "position": {
-        "x": 4,
-        "y": 12
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
-    },
-    {
-      "id": "village_fire_copy_copy",
-      "type": "npc",
-      "position": {
-        "x": 14,
-        "y": 5
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
     },
     {
       "id": "village_dog",

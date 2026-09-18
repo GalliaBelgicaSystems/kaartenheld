@@ -615,14 +615,6 @@ void ui_draw_actors_sprites(const World *world)
     shadow_OAM[PLAYER_SPRITE_NUM].tile = (uint8_t)(HERO_DESOLATE_SPRITE_TILE_ID + anim_step);
     shadow_OAM[PLAYER_SPRITE_NUM].prop = 0;
 
-    if (world->map_id == MAP_SOUTH_FIELD) {
-        /* Animate campfire tile at (17, 11) in background tilemap */
-        ((volatile uint8_t *)0x9800)[(11 & 31) * 32 + (17 & 31)] = (uint8_t)(RPG_TILE_BASE_DESOLATE + 37 + anim_step);
-#ifdef DEBUG_BUILD
-        g_tilemap_mirror[(11 & 31) * 32 + (17 & 31)] = (uint8_t)(RPG_TILE_BASE_DESOLATE + 37 + anim_step);
-#endif
-    }
-
     /* Resolve every non-boss actor's OAM tile/prop/position in one banked
      * pass (bank 3) so the data-driven SPRITE_KIND_* switch and the shadow
      * OAM writes do not bloat the fixed bank (AGENTS.md §52.18 / §55.5).

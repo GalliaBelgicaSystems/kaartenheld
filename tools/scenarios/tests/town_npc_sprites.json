@@ -1,7 +1,7 @@
 {
  "name": "town_npc_sprites",
  "test": true,
- "description": "Town NPCs (mayor, guard, merchant) render as OAM sprites with exact OBJ ramps (screens/enemy_types/npc_*.json); wizard art loads in the OAM blob (verified in verify-vram: MAX_WORLD_ACTORS caps spawns at 4). All NPC map cells are plain floor (no overlay art, no stray tiles). Dogs render as shared OAM sprites.",
+ "description": "Town NPCs (mayor, guard, merchant) render as OAM sprites with exact OBJ ramps (screens/enemy_types/npc_*.json); wizard art loads in the OAM blob (verified in verify-vram: the debug snapshot carries 4 actors max, so wizard presence is unassertable here though it spawns and renders in-game). All NPC map cells are plain floor (no overlay art, no stray tiles). Dogs render as shared OAM sprites.",
  "scenario_id": "MAYOR_DIALOGUE",
  "actions": [],
  "assertions": [

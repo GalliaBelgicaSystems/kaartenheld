@@ -63,10 +63,10 @@
 
 | set | size | BG ramp (slot) | fit | OAM obj ramp |
 |---|---|---|---|---|
-| bat | 3×2 | fightmimic (5) | ≈ #000000, #565656, #8b1b1b | oam, sprites2 |
+| bat | 3×2 | fightmimic (5) | ✓ | oam, sprites2 |
 | boss | 3×3 | fightboss (7) | ≈ #8b1b1b | – |
 | kobold | 3×2 | fightgoblin (1) | ≈ #000000 | oam, battle_kobold |
-| mimic | 3×2 | fightmimic (5) | ≈ #000000 | oam, sprites6 |
+| mimic | 3×2 | fightmimic (5) | ≈ #000000, #ffffff | oam, sprites6 |
 | slime | 3×2 | fightslime (3) | ✓ | oam, battle_slime |
 | spider | 3×2 | fightspider (2) | ≈ #8b1b1b | – |
 
@@ -78,7 +78,6 @@ OAM obj ramps are declared content for future battle-OAM work; the ROM currently
 |---|---|---|---|
 | bat | bat_f0, bat_f1 | sprites (0) | ✓ |
 | dog | dog_f0, dog_f1 | sprites12 (2) | ✓ |
-| fire | fire_f0, fire_f1 | sprites5 (1) | ≈ #26232e, #d7a726, #edc214 |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
@@ -137,30 +136,22 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| battle | [0, 2] | fightmimic | #000000, #565656 |
-| battle | [0, 3] | fightmimic | #000000, #565656 |
 | battle | [0, 5] | fightboss | #8b1b1b |
-| battle | [0, 7] | fightmimic | #000000 |
-| battle | [0, 8] | fightmimic | #000000 |
-| battle | [0, 9] | fightgoblin | #000000 |
-| battle | [0, 10] | fightgoblin | #000000 |
-| battle | [1, 2] | fightmimic | #000000, #565656, #8b1b1b |
-| battle | [1, 3] | fightmimic | #000000, #565656 |
+| battle | [0, 7] | sprites6 | #000000 |
+| battle | [0, 8] | sprites6 | #000000 |
+| battle | [0, 9] | battle_kobold | #000000 |
+| battle | [0, 10] | battle_kobold | #000000 |
 | battle | [1, 5] | fightboss | #8b1b1b |
-| battle | [1, 7] | fightmimic | #000000 |
-| battle | [1, 8] | fightmimic | #000000 |
-| battle | [1, 9] | fightgoblin | #000000 |
-| battle | [1, 10] | fightgoblin | #000000 |
+| battle | [1, 7] | sprites6 | #000000, #ffffff |
+| battle | [1, 8] | sprites6 | #000000 |
+| battle | [1, 9] | battle_kobold | #000000 |
+| battle | [1, 10] | battle_kobold | #000000 |
 | battle | [1, 11] | fightspider | #8b1b1b |
-| battle | [2, 2] | fightmimic | #000000, #565656 |
-| battle | [2, 3] | fightmimic | #000000, #565656 |
-| battle | [2, 7] | fightmimic | #000000 |
-| battle | [2, 8] | fightmimic | #000000 |
-| battle | [2, 9] | fightgoblin | #000000 |
-| battle | [2, 10] | fightgoblin | #000000 |
-| enemy_ow | [2, 4] | sprites5 | #26232e, #d7a726, #edc214 |
+| battle | [2, 7] | sprites6 | #000000 |
+| battle | [2, 8] | sprites6 | #000000 |
+| battle | [2, 9] | battle_kobold | #000000 |
+| battle | [2, 10] | battle_kobold | #000000 |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
-| enemy_ow | [3, 4] | sprites5 | #26232e, #d7a726, #edc214 |
 | card_frames | [0, 3] | fightmimic | #b09266, #e3ae63 |
 | card_frames | [0, 4] | fight_text | #755930, #b09266 |
 | card_frames | [0, 5] | fightgoblin | #8b1b1b, #b09266, #dfbd8d |
