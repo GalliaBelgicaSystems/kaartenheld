@@ -21,7 +21,7 @@
  |---|---|---|
  | Bat, all 6: (0,2),(1,2),(2,2),(3,2),(4,2),(5,2) | wings `#3d3044`, one tile has red eyes `#c34e1b` | `f1eb03, 8b1b1b, 565656, 000000` — e.g. gray wings, black outlines, red eyes |
  | Boss middle two: (9,2),(10,2) | red details `#8b1b1b` | `ffffff, 8d754a, 565656, 000000` |
- | Spider top-middle: (7,3) | orange eye `#c34e1b` | `ffffff, 8f8f8f, 5a4a3d, 000000` |
+ | Spider, all 6: (6,3),(7,3),(8,3),(9,3),(10,3),(11,3) — background stays transparent | 5 colors across the set: blade `#8f8f8f`, handle `#5a4a3d`, black, orange eye `#c34e1b` | sprite palette, slot 2 is free — but a sprite palette holds 4 colors max, so the eye must join an existing color (e.g. black or blade gray). Tell dev when done; he flips the spider from background stamp to sprite and the zone background will show through behind it |
  | Kobold top-left (0,3), top-middle (1,3), bottom-middle (4,3) | white eyes `#ffffff` | `f1eb03, 844f4f, 4a2727, 4a2727` — no white in the list. Either repaint the eyes brown, or tell dev and he will swap the duplicated dark entry for white |
  | Mimic top-middle (13,3) | white eyes `#ffffff` (2 px) | `f1eb03, 8d754a, 6f5a34, 3f3017` — same choice: repaint eyes or tell dev |
  | Sword icon (0,0) | outline `#755930` | `ffffff, dfbd8d, e3ae63, b09266` |
