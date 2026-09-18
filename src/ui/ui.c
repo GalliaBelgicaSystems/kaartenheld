@@ -155,10 +155,12 @@ void ui_init(void)
     }
     /* OBJ palettes program positionally from generated/tiles/obj_tables.h:
      * 0 sprites (bats/spiders/kobolds/hero overworld), 1 sprites5
-     * (dogs/mimics/fire overworld), 2 sprites8 (spare, no consumer),
-     * 3 sprites11 (slimes overworld), 4 battle_slime, 5 sprites2
-     * (boss overworld + OAM bats), 6 sprites6 (OAM mimics),
-     * 7 battle_kobold. Shade 0 is transparent on hardware. */
+     * (fire/mimic overworld), 2 sprites12 (dog overworld),
+     * 3 sprites11 (slimes overworld), 4/7 battle-time scratch (red pads:
+     * programmed per battle entry, never art), 5 sprites2 (boss
+     * overworld + OAM bats), 6 sprites6 (OAM mimics). Battle OAM values
+     * live in RAMPS/BATTLE (see battle_art_banked.c). Shade 0 is
+     * transparent on hardware. */
     for (p = 0; p < 8; p++) {
         OCPD_REG = ((const uint8_t *)cgb_sprite_palette_brown)[p];
     }

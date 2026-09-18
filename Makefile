@@ -413,6 +413,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/emit_sheet_sidecars.py
 	@python3 tools/palette_txt.py --write-doc
 	@python3 tools/palette_txt.py --write-tables "$(GENERATED_TILES_DIR)"
+	@python3 tools/palette_txt.py --write-battle-tables "$(GENERATED_TILES_DIR)"
 
 # Palette drift check: palette.txt vs compiler vs ROM vs Makefile anchors.
 palette-check:

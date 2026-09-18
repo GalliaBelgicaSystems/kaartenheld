@@ -7,6 +7,7 @@
 #include "world/world.h"
 #include "ui/ui.h"
 #include "banked.h"
+#include "battle/battle.h"
 #include "gfx/rpg_tile_lookup.h"
 
 /* CGB BG palettes (battle/UI + overworld sets), generated from
@@ -130,12 +131,11 @@ void ui_load_tileset_banked(void)
          * must match g_actor_npc_tiles (compose_npc_tiles.py LAYOUT):
          * guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
         static const uint8_t npc_slots[6] = { 35, 36, 39, 41, 4, 5 };
-        /* CGB palette per NPC overlay slot: guard, wizard, merchant and
-         * dogs answer the wood ramp (5), mayor gold (6). Order mirrors
-         * npc_slots (compose_npc_tiles.py LAYOUT). Guard/wizard/dogs were
-         * field green (3) while slot 3 duped fire; wood browns suit NPC
-         * bodies and keep every overlay on a real ramp. */
-        static const uint8_t npc_pals[6] = { 5, 5, 5, 6, 5, 5 };
+        /* CGB palette per NPC overlay slot: guard answers its exact
+         * town8 ramp (7); wizard, merchant, dogs stay wood (5) and mayor
+         * gold (6) until their art fits a list (see palette handoff).
+         * Order mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
+        static const uint8_t npc_pals[6] = { 7, 5, 5, 6, 5, 5 };
         uint8_t s;
         uint8_t j;
         const uint8_t *tile_src;
@@ -150,6 +150,17 @@ void ui_load_tileset_banked(void)
             }
             g_active_tile_palette[npc_slots[s]] = npc_pals[s];
         }
+    }
+
+    /* Battle-time OBJ restore (see battle.h): reprogram the boot values
+     * saved at battle entry. Flag-gated no-op on ordinary map loads;
+     * CRAM-safe anytime (no VRAM timing involved). */
+    if (g_battle_obj_saved) {
+        OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH_BASE << 3));
+        for (i = 0; i < BATTLE_OBJ_SAVE_N; i++) {
+            OCPD_REG = g_battle_obj_save[i];
+        }
+        g_battle_obj_saved = 0;
     }
 }
 

@@ -32,6 +32,11 @@ uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
  * the BG stamp. Pilot: slime art sets oam/obj_palette. */
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_objpal[MAX_BATTLE_ENEMIES];
+/* Battle-time OBJ scratch save (see battle.h): boot values of OBJ
+ * palettes 4..6, captured on first battle entry, restored by
+ * ui_load_tileset_banked() on every tileset (re)load. */
+uint8_t g_battle_obj_save[BATTLE_OBJ_SAVE_N];
+uint8_t g_battle_obj_saved;
 
 /* Active battle screen layout (see battle_data.h): uninitialized WRAM
  * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()

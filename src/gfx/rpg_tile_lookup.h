@@ -13,7 +13,7 @@ extern const uint8_t g_tileset_village[768];
 extern const uint8_t g_intrepid_font_tiles[1536];
 extern const uint8_t g_tile_pal_forest[48];
 extern const uint8_t g_tile_pal_desolate_landscape[48];
-extern const uint8_t g_tile_pal_castle[16];
+extern const uint8_t g_tile_pal_castle[27];
 extern const uint8_t g_tile_pal_village[48];
 
 static inline uint8_t rpg_lookup_tile_id(uint8_t tileset_kind, char glyph)

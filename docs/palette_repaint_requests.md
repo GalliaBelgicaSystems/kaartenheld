@@ -10,19 +10,19 @@
  - Your orange→red unification is fully in (master + all curated copies
    in sync — bat eyes, spider eye, fire flame, HP heart).
  - Bat wings repainted gray (58 px, master + curated in sync) — bat now
-   fits its list exactly.
+   fits its shared list exactly.
  - Boss scepter restored byte-identical after dev grayed it by mistake —
    brown is intent, untouched since.
  - Master↔curated sync proven across all combat cells (only the 3
    slime-anim frames below are curated-only).
  - World sheets (forest/castle/desert/village, 171 tiles) pass exactly —
    nothing to do there, they are not listed.
+ - Dev-side palette surgery landed: `fight_text` restored, per-battle
+   values section added, slot-map rebuilt, spares registry, debug
+   markers, dog + guard wired — `palette-check` is green.
 
- **Blocked, not paint (dev needs your answers first):**
- - Palette restores (`fight_text`, slime/kobold lists), slot-map rebuild
-   (16 + 11 defined lists into 8 + 8 hardware slots), title direction —
-   nothing validates end-to-end until these land, so counts below are
-   per-cell verified facts, not gate output.
+ **Blocked, not paint (dev needs your answer first):**
+ - Title direction (pink PNG vs tan/brown lists).
  - Slime anim frames: live art, blank master cells — paint into master
    or confirm curated-only.
 
@@ -40,7 +40,7 @@
  | Boss left-middle (row 3, col 10) | fits `fightboss2` (`ffffff, 8b1b1b, 565656, 000000`) exactly — no paint | dev assigns it a slot AND teaches the stamper per-tile palettes (the whole boss shares one palette today), or it stays on `fightboss` approximation |
  | Boss middle-center (row 3, col 11) | red `#8b1b1b` + brown `#8d754a` together fit no list (5 colors set-wide with the rest) | repaint red→brown/gray, or same per-tile code as above |
  | Spider, all 6: row 4, cols 7-12 — background stays transparent | eyeless body `{yellow, blade `#8f8f8f`, handle `#5a4a3d`, black}` fits its own new entry exactly; red eye (2 px, synced) must join black/gray | eye fix is paint (2 px); then dev flips the spider to sprite (own entry, see tie) and the zone background shows through |
- | Kobold eyes (row 4, cols 1, 2, 5) | white `#ffffff` (7 px); its list was removed from the file — dev restores it (waiting your palette answers), then adds white to the unused spare entry (proven: no tile uses it, nothing on screen changes) | no repaint unless you'd rather paint the eyes brown: `844f4f` |
+ | Kobold eyes (row 4, cols 1, 2, 5) | white `#ffffff` (7 px) | dev programs them per battle entry from their own values (no slot needed, nothing on screen changes). No repaint |
  | Mimic top-middle (row 4, col 14) | white eyes `#ffffff` (2 px); teeth verified brown, no action there | repaint the 2 pixels brown (`8d754a`/`6f5a34`/`3f3017`) — no way to keep white, proven |
  | Sword (row 1, col 1), shield (row 1, col 3), bow (row 1, col 2), dagger (row 5, col 7), arrows (row 5, cols 9-12), nine (row 5, col 14) | brown `#755930` — fits `fight2` (`dfbd8d, e3ae63, b09266, 755930`) exactly, zero repaint | dev assigns it a slot (needs the spider flip to free one — see below) |
  | Deck (row 2, col 5), arrow up (row 2, col 2), AP (row 2, col 4) | white backgrounds; rest fits `fight2` | repaint white→card-tan `#dfbd8d` (few px each), then same `fight2` slot as above |
@@ -67,8 +67,8 @@
 
  | File | What's wrong | Allowed colors (first = background) |
  |---|---|---|
- | `dog_f0.png`, `dog_f1.png` | body `#645233`, accent `#8b1b1b` (51 px) | own new entry `f1eb03, 645233, 8b1b1b` — exact fit, zero repaint, IF the dog wins the free-slot tie (see solver results). Otherwise body → gray `#565656` (shares bat+boss slot, verified to fit) |
- | `fire_f0.png`, `fire_f1.png` | `#26232e, #d7a726, #edc214` (48 px) | own new entry `f1eb03, edc214, d7a726, 26232e` — exact fit, zero repaint, IF the fire wins the tie. Otherwise flames → mimic golds/browns (shares mimic slot, verified to fit) |
+ | `dog_f0.png`, `dog_f1.png` | body `#645233`, accent `#8b1b1b` (51 px) | takes sprite slot 2 (exact fit, zero repaint — decided: strictly fewer leftovers than fire) |
+ | `fire_f0.png`, `fire_f1.png` | `#26232e, #d7a726, #edc214` (48 px) | no free slot left; stays failing with certificate unless you repaint it yourself |
  | `boss_ow_br.png` scepter (master `sprites.png` row 2, col 12), 6 brown `#8d754a` px | intent, stays; whole 2x2 boss uses 5 colors — no single list can hold it and overworld lists are one-per-enemy | no repaint offered; stays failing with certificate unless you repaint it yourself |
 
 ## Curated-only slime frames (dev question, no paint asked)
@@ -84,34 +84,32 @@
 
  Dev ran a program (`tools/optimize_palettes.py`) that tries EVERY
  possible way to hand out the 16 color slots (8 background + 8 sprite)
- to every tile, exactly, with zero art changes. (Re-run blocked until
- the palette file parses again — deltas below are hand-derived from
- its last exact run plus the verified fits above.)
+ to every tile, exactly, with zero art changes. Battle sprites ride
+ per-battle programming (their own values, no static slots); everything
+ else takes static slots. `palette-check` is green on the mapping.
 
-  **Needs no paint (ramps exist, dev assigns slots as they free up):**
-  brown family + deck/arrow/AP (after their white→tan) → `fight2`;
-  ring → `fight7`; ice → `fight6`; HP → `fight3`; guard → new village
-  entry; kobold eyes → restored spare entry; bat wings+eyes (done,
-  gray + red now exact in its shared list). Boss left-middle →
-  `fightboss2` (needs per-tile code too — the whole boss shares one
-  list today).
+  **Needs no paint (wired or waiting on dev-side steps):**
+  slime + kobold battle (own per-battle values, white ordered
+  non-transparent); bat (shared gray list, done); guard (new village
+  entry, wired); dog (takes sprite slot 2, wired); brown family +
+  deck/arrow/AP (after their white→tan) → `fight2` (waits on spider
+  flip freeing background slot 2 + bow/AP remaps); ring → `fight7`,
+  ice → `fight6`, HP → `fight3` (ramps exist, no free background
+  slots — see below); boss left-middle → `fightboss2` (needs a slot
+  and per-tile code).
 
   **Still needs paint (proven — no slot holds these as-is):**
   mimic eyes (2 px), boss middle-center red+brown (8 px), spider eye
-  (2 px into black/gray), dog (51 px) or fire (48 px) — see tie,
-  wizard / merchant / mayor / dog villagers, fire back/outline,
-  select arrow.
+  (2 px into black/gray), fire flames (48 px), wizard / merchant /
+  mayor / dog villagers, fire back/outline, select arrow.
 
-  **The free-sprite-slot tie (three-way):** dog-own-entry, fire-own-
-  entry, and spider-eyeless-own-entry each fit exactly and only one
-  slot exists. Leftover repaint math: spider wins → dog 51 + fire 48
-  get painted (99 px); dog wins → spider ~150 (full rework into shared
-  hues) + fire 48; fire wins → spider ~150 + dog 51. Spider also
-  unlocks the brown family (its flip frees the background slot
-  `fight2` needs). Your call — math favors spider, then dog.
-  The boss scepter is NOT in this tie (5 colors can't take any slot;
-  separate entry above).
+  **Decided, not tied:** dog takes sprite slot 2 (strict optimum —
+  fire would evict dog's exact entry for one fewer placed tile).
+  Per-tile palettes (all three kinds) and villager-to-sprite ideas
+  were checked and dropped: no free slots for their extra values,
+  worse on every axis.
 
   **Blocked on dev-side answers (not paint, in your court):**
-  palette restores, slot-map rebuild, title direction — then dev
-  re-runs the solver gate and the counts above get re-proven.
+  title direction. Everything else structural is built (battle-time
+  loader + restore, per-battle values, slot-map, spares registry,
+  debug markers).

@@ -8,6 +8,8 @@
 #include "content.h"
 #include "gfx/battle_enemy_art.h"
 #include <gb/gb.h>
+#include <gb/cgb.h>
+#include "battle_obj_tables.h"
 
 /* Battle art loader (ROM bank 4).  Runs once per battle entry from
  * ui_draw_battle_full() (LCD-off window) via the WRAM trampoline with
@@ -34,6 +36,23 @@
 #define BATTLE_ART_VRAM_TILES 128u
 #define BATTLE_ART_MAX_W 6u
 #define BATTLE_ART_MAX_H 4u
+
+/* Program scratch OBJ slots 4..6 with one RAMPS/BATTLE row (bank-local
+ * generated table) for OAM participants sharing this battle's row.
+ * Idempotent: same values every call within a battle. Runs LCD-off. */
+static void program_battle_obj_palettes(uint8_t index)
+{
+    const uint8_t *pal;
+    uint8_t i, s;
+    if (index >= BATTLE_OBJ_COUNT) return;
+    pal = (const uint8_t *)battle_obj_by_index[index];
+    for (s = 0; s < 3; s++) {
+        OCPS_REG = (uint8_t)(0x80 | ((uint8_t)(BATTLE_OBJ_SCRATCH_BASE + s) << 3));
+        for (i = 0; i < 8; i++) {
+            OCPD_REG = pal[i];
+        }
+    }
+}
 
 void battle_art_load_banked(void)
 {
@@ -89,6 +108,26 @@ void battle_art_load_banked(void)
     if (art_h == 0 || art_h > BATTLE_ART_MAX_H) art_h = 2;
     if (art_frames == 0 || art_frames > 2) art_frames = 1;
 
+    /* Battle-time OBJ values (RAMPS/BATTLE table, slotless): OAM art
+     * whose obj palette carries ART_OBJ_BATTLE_FLAG renders through
+     * scratch OBJ slots 4+k, programmed here (LCD-off window) from the
+     * generated battle_obj_tables.h rows and restored on overworld
+     * return by ui_load_tileset_banked(). Static obj palettes (bats)
+     * need nothing. Save is flag-guarded: mid-battle full redraws
+     * re-run this loader and must reprogram, never re-save clobbered
+     * CRAM (see battle.h invariant). */
+    if (art_oam && (art_obj_palette & ART_OBJ_BATTLE_FLAG)) {
+        if (!g_battle_obj_saved) {
+            OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH_BASE << 3));
+            for (i = 0; i < BATTLE_OBJ_SAVE_N; i++) {
+                g_battle_obj_save[i] = OCPD_REG;
+            }
+            g_battle_obj_saved = 1;
+        }
+        program_battle_obj_palettes(
+            (uint8_t)(art_obj_palette & (uint8_t)~ART_OBJ_BATTLE_FLAG));
+    }
+
     VBK_REG = 0;
     base = BATTLE_ART_VRAM_BASE;
     for (k = 0; k < b->enemy_count && k < MAX_BATTLE_ENEMIES; k++) {
@@ -96,7 +135,13 @@ void battle_art_load_banked(void)
         g_battle_enemy_art_frames[k] = art_frames;
         g_battle_enemy_art_pal[k] = art_palette;
         g_battle_enemy_art_oam[k] = art_oam;
-        g_battle_enemy_art_objpal[k] = art_obj_palette;
+        /* Battle-time values render through scratch slots 4+k;
+         * static palettes pass through untouched. */
+        if (art_oam && (art_obj_palette & ART_OBJ_BATTLE_FLAG)) {
+            g_battle_enemy_art_objpal[k] = (uint8_t)(BATTLE_OBJ_SCRATCH_BASE + k);
+        } else {
+            g_battle_enemy_art_objpal[k] = art_obj_palette;
+        }
         g_battle_enemy_art_w[k] = art_w;
         g_battle_enemy_art_h[k] = art_h;
         g_battle_enemy_art_base[k] = 0;

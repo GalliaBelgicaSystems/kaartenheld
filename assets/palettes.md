@@ -11,7 +11,7 @@ tutorial: `assets/palette_tutorial.md`.
 | # | Name | S0 | S1 | S2 | S3 | Serves | Refs |
 |---|------|----|----|----|----|--------|------|
 | 0 | fight1 | `#ffffff` | `#dfbd8d` | `#e3ae63` | `#b09266` | card UI, spider art | COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline |
-| 1 | fightgoblin | `#ffffff` | `#c34e1b` | `#844f4f` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines |
+| 1 | fightgoblin | `#ffffff` | `#844f4f` | `#4a2727` | `#4a2727` | burn cards, kobold art | COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED |
 | 2 | fightspider | `#ffffff` | `#8f8f8f` | `#5a4a3d` | `#000000` | sword/freeze cards | COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body |
 | 3 | fightslime | `#ffffff` | `#89cc5e` | `#5c903a` | `#000000` | slime art, heal cards | COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body |
 | 4 | fight5 | `#ffffff` | `#dfbd8d` | `#b09266` | `#7136c1` | poison cards | COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon |
@@ -69,7 +69,7 @@ tutorial: `assets/palette_tutorial.md`.
 | 4 | town7 | `#f1cf91` | `#645233` | `#000000` | `#000000` | unused | TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED |
 | 5 | town1 | `#b6a27e` | `#8d754a` | `#79643e` | `#645233` | houses/merchant | TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble |
 | 6 | town2 | `#b6a27e` | `#f1cf91` | `#ccaa6c` | `#645233` | walls/mayor | TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble |
-| 7 | unused | `#ff00ff` | `#ff00ff` | `#ff00ff` | `#ff00ff` | unused | UNUSED slot (magenta canary) |
+| 7 | town8 | `#b6a27e` | `#3f3017` | `#3f3017` | `#3f3017` | unused | TOWN/ground, SPRITES/npc, UNUSED, UNUSED |
 
 ## OBJ sprite ramps (`src/ui/ui.c`)
 
@@ -77,12 +77,12 @@ tutorial: `assets/palette_tutorial.md`.
 |------|----|----|----|----|--------|------|
 | sprites | `#f1eb03` | `#673c3c` | `#565656` | `#000000` | overworld slimes (OBJ 3) | SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | sprites5 | `#f1eb03` | `#ac9d23` | `#8d754a` | `#6f5a34` |  | SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline |
-| sprites8 | `#f1eb03` | `#b6b6b6` | `#8b1b1b` | `#3f3017` |  | SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc |
+| sprites12 | `#f1eb03` | `#645233` | `#8b1b1b` | `#8b1b1b` |  | SPRITES/background, TOWN/wood_outlines_rubble, SPRITES/boss_eyes_scepter, UNUSED |
 | sprites11 | `#f1eb03` | `#77e331` | `#5c903a` | `#5c903a` |  | SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED |
-| battle_slime | `#f1eb03` | `#89cc5e` | `#5c903a` | `#000000` | battle slimes OAM pilot (OBJ 4) | SPRITES/background, SPRITES/battle_slime_body, SPRITES/battle_slime_edge, SPRITES/character_main_outline_bat |
+| unused | `#ff0000` | `#ff0000` | `#ff0000` | `#ff0000` | UNUSED slot | UNUSED slot (grey fallback) |
 | sprites2 | `#f1eb03` | `#8b1b1b` | `#565656` | `#000000` |  | SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat |
 | sprites6 | `#f1eb03` | `#8d754a` | `#6f5a34` | `#3f3017` |  | SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc |
-| battle_kobold | `#f1eb03` | `#844f4f` | `#4a2727` | `#4a2727` |  | SPRITES/background, SPRITES/battle_kobold_skin, SPRITES/battle_kobold_dark, SPRITES/battle_kobold_dark |
+| unused | `#ff0000` | `#ff0000` | `#ff0000` | `#ff0000` | UNUSED slot | UNUSED slot (grey fallback) |
 
 ## Sheet background convention (index 0 of the tile's ramp → shade 0)
 

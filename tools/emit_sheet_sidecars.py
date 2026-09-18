@@ -43,6 +43,7 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
 
 from palette_txt import RAMPS, RAMP_NAMES, OBJ_BY_SLOT, _NAMES  # noqa: E402
+from palette_txt import BATTLE_RAMPS  # noqa: E402
 
 import compose_battle_sprites  # noqa: E402
 import compose_enemy_sprites  # noqa: E402
@@ -73,6 +74,13 @@ def obj_ramp(name):
                 for c in OBJ_BY_SLOT[_NAMES["obj"].index(name)]]
     except ValueError:
         return None
+
+
+def battle_ramp(name):
+    """RAMPS/BATTLE values (battle-time programming, slotless)."""
+    if name not in BATTLE_RAMPS:
+        return None
+    return ["#%02x%02x%02x" % c for c in BATTLE_RAMPS[name]]
 
 
 def village_ramp(name):
@@ -123,8 +131,12 @@ def combat_assignments():
         data = json.loads(path.read_text())
         sid = data.get("id", path.stem)
         if data.get("oam"):
-            ramp = obj_ramp(data["obj_palette"])
             rampname = data["obj_palette"]
+            # Battle-time values first (programmed per battle entry),
+            # static OBJ slots as fallback (e.g. shared bat slot).
+            ramp = battle_ramp(rampname)
+            if ramp is None:
+                ramp = obj_ramp(rampname)
         else:
             ramp = base_ramp(data["palette"])
             rampname = data["palette"]

@@ -47,6 +47,32 @@ from compose_battle_sprites import TILE_COORDS, BLANK_COORD
 from compose_enemy_sprites import TILE_COORDS as ENEMY_TILE_COORDS
 from compose_hero_sprites import TILE_COORDS as HERO_TILE_COORDS
 from palette_txt import FULL_SLOTMAP as _PAL_SLOTS
+from palette_txt import BATTLE_RAMPS as _BATTLE_RAMPS
+
+# Battle-time OBJ value flag: single source of truth is
+# ART_OBJ_BATTLE_FLAG in src/battle/battle_data.h (hard failure here
+# if it ever goes missing, so the C and Python sides cannot drift).
+def _art_obj_battle_flag():
+    import re as _re
+    _path = REPO_ROOT / "src" / "battle" / "battle_data.h"
+    _m = _re.search(r"#define\s+ART_OBJ_BATTLE_FLAG\s+(0x[0-9a-fA-F]+|\d+)",
+                    _path.read_text())
+    if not _m:
+        print("battle_compile: ART_OBJ_BATTLE_FLAG missing from "
+              "src/battle/battle_data.h", file=sys.stderr)
+        sys.exit(1)
+    return int(_m.group(1), 0)
+
+
+ART_OBJ_BATTLE_FLAG = _art_obj_battle_flag()
+
+
+def battle_obj_index(name):
+    """Index of a RAMPS/BATTLE ramp (sorted order)."""
+    names = sorted(_BATTLE_RAMPS)
+    if name not in names:
+        raise ValueError(f"unknown battle ramp '{name}'")
+    return names.index(name)
 
 
 def resolve_palette(value, setkey, where):
@@ -64,6 +90,17 @@ def resolve_palette(value, setkey, where):
             return slot
     raise ValueError(
         f"{where}: ramp '{value}' has no slot in SLOTS/{setkey.upper()}")
+
+
+def resolve_obj_palette(value, where):
+    """Resolve a battle-OAM obj palette: RAMPS/BATTLE entries yield the
+    flagged battle-time index, static OBJ ramps yield the slot."""
+    if isinstance(value, int) or str(value).isdigit():
+        raise ValueError(
+            f"{where}: palette {value!r} is numeric — use a ramp name")
+    if value in _BATTLE_RAMPS:
+        return ART_OBJ_BATTLE_FLAG | battle_obj_index(value)
+    return resolve_palette(value, "obj", where)
 
 # Shared overworld enemy OAM base (must match ENEMY_OW_BASE in src/ui/ui.h).
 # Blob: concatenated per-enemy frames in pinned order (see OW_ORDER_PINNED
@@ -541,9 +578,9 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
                     print("ERROR: %s: combat art set is oam but has no obj_palette" % art_id,
                           file=sys.stderr)
                     sys.exit(1)
-                art_obj_palette = resolve_palette(art_sets[art_id]['obj_palette'],
-                                                  'obj',
-                                                  '%s: combat art obj_palette' % art_id)
+                art_obj_palette = resolve_obj_palette(
+                    art_sets[art_id]['obj_palette'],
+                    '%s: combat art obj_palette' % art_id)
         lines.append("static const EnemyTypeDef g_enemy_type_%s = {" % et['id'])
         lines.append('    %s,' % c_escape(et['id']))
         lines.append('    %s,' % c_escape(et['label']))

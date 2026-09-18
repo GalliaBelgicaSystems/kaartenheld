@@ -114,6 +114,19 @@ extern uint8_t g_battle_enemy_art_objpal[MAX_BATTLE_ENEMIES];
 #define BATTLE_OAM_BASE            1u
 #define BATTLE_OAM_TILES_PER_ENEMY 6u
 
+/* Battle-time OBJ scratch (programmed per battle entry, restored on
+ * overworld return): enemy slot k renders through OBJ palette 4+k.
+ * The loader saves the boot values on first entry (flag-guarded: the
+ * loader re-runs on mid-battle full redraws, which must reprogram but
+ * never re-save clobbered CRAM); ui_load_tileset_banked() restores on
+ * every tileset (re)load. Invariant: nothing outside battle entry and
+ * the tileset loader touches OBJ 4..6 (player + overworld actors use
+ * 0..3 and 5; verified by grep for OCPS/OCPD writers). */
+#define BATTLE_OBJ_SCRATCH_BASE    4u
+#define BATTLE_OBJ_SAVE_N          24u
+extern uint8_t g_battle_obj_save[BATTLE_OBJ_SAVE_N];
+extern uint8_t g_battle_obj_saved;
+
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
  * (freeze/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */

@@ -43,6 +43,7 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
 
 from palette_txt import RAMPS, RAMP_NAMES, OBJ_BY_SLOT, _NAMES, FULL_SLOTMAP  # noqa: E402
+from palette_txt import BATTLE_RAMPS  # noqa: E402
 
 import compose_battle_sprites  # noqa: E402
 import compose_enemy_sprites  # noqa: E402
@@ -171,9 +172,9 @@ def current_slots():
 FROZEN = {("base", s) for s in range(8)}
 # Consumer-free slots (verified: zero declared consumers in JSONs).
 FREE_SLOTS = [("obj", 2), ("village", 7)]
-# Slots allowing dead-entry fills (declared consumer exists, dead
-# entries verified via sidecar shade usage): kobold battle eyes.
-FILLABLE = {("obj", 7)}
+# Dead-entry fills (verified unused AND color-duplicated elsewhere in
+# the ramp): currently none live (kobold moved to battle-time values).
+FILLABLE = set()
 
 
 def slot_entry_usage(groups, slots):
@@ -364,8 +365,7 @@ def report_solution(label, family, slots, best, entry0, show_ramps=False):
 def main():
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--variants", action="store_true")
-    args = ap.parse_args()
+    ap.parse_args()
 
     groups = census()
     slots = current_slots()
@@ -386,49 +386,46 @@ def main():
                sorted(s for (sk, s) in FROZEN if sk == setkey)))
     print()
 
-    obj_fam = {n: g for n, g in groups.items() if g["kind"] == "obj"}
+    obj_all = {n: g for n, g in groups.items() if g["kind"] == "obj"}
+    # Battle-time pool: groups whose declared ramp lives in RAMPS/BATTLE
+    # are programmed per battle entry (no static slot consumed). Placed
+    # iff the union fits 4 (mimic/spider unions are 5 pre-fix: honest
+    # unplaced with certificates).
+    battle_fam = {n: g for n, g in obj_all.items()
+                  if g["declared"] in BATTLE_RAMPS}
+    obj_fam = {n: g for n, g in obj_all.items()
+               if g["declared"] not in BATTLE_RAMPS}
     base_fam = {n: g for n, g in groups.items() if g["kind"] == "bg:base"}
     vil_fam = {n: g for n, g in groups.items() if g["kind"] == "bg:village"}
     obj_slots = {k: v for k, v in slots.items() if k[0] == "obj"}
     base_slots = {k: v for k, v in slots.items() if k[0] == "base"}
     vil_slots = {k: v for k, v in slots.items() if k[0] == "village"}
 
-    free_obj = [("obj", 2)]  # sprites8: mapped, zero consumers
+    print("== BATTLE-TIME (per-battle programming, no static slots) ==")
+    for n in sorted(battle_fam):
+        need = needed_colors(battle_fam[n])
+        vals = BATTLE_RAMPS[battle_fam[n]["declared"]]
+        ok = need <= set("#%02x%02x%02x" % c for c in vals)
+        print("    %-18s union=%d %s" %
+              (n, len(need), "EXACT" if ok else "UNPLACED (union fits no 4-color row)"))
+    print()
+
+    free_obj = [("obj", 2)]  # reassignable: sole consumer is dog-OW
     free_vil = [("village", 7)] if ("village", 7) not in slots else []
 
     b1 = solve_family(obj_fam, obj_slots, free_obj)
-    report_solution("OBJ (ow + battle OAM)", obj_fam, obj_slots, b1,
+    report_solution("OBJ static (ow)", obj_fam, obj_slots, b1,
                     YELLOW, show_ramps=True)
-    # Slot-2 tie enumeration: exactly one claimant can take the free
-    # slot; report every optimum so the choice is explicit, not buried.
-    contenders = ["battle:bat", "ow:dog", "ow:fire"]
-    have = {n for n in contenders if n in obj_fam}
-    if len(have) > 1:
-        print("-- slot-2 tie variants (each EXACT within its pin) --")
-        for n in sorted(have):
-            bt = solve_family(obj_fam, obj_slots, free_obj,
-                              forced={n: ("obj", 2)})
-            report_solution("OBJ pin %s -> slot 2" % n, obj_fam,
-                            obj_slots, bt, YELLOW, show_ramps=True)
+    # NOTE: no tie remains. Dog@2-keep is the unique optimum (8 placed);
+    # fire@2-new would evict dog's exact ramp for 7 placed. Mayor-as-OAM
+    # needs the same slot 2 plus actor-pipeline code. The `forced`
+    # parameter stays for manual what-if runs.
     b2 = solve_family(base_fam, base_slots, [])
     report_solution("BASE (battle BG art)", base_fam, base_slots, b2,
                     "#ffffff", show_ramps=True)
     b3 = solve_family(vil_fam, vil_slots, free_vil)
     report_solution("VILLAGE (npc overlays)", vil_fam, vil_slots, b3,
                     "#b6a27e", show_ramps=True)
-
-    if args.variants:
-        print("== variant: NPC as OAM sprites (actor-pipeline change) ==")
-        oam_npc = {}
-        for n, g in vil_fam.items():
-            oam_npc[n] = {"kind": "obj",
-                          "opaque": set(g["opaque"]),
-                          "cells": g["cells"], "oam": True, "declared": None}
-        fam = dict(obj_fam)
-        fam.update(oam_npc)
-        bv = solve_family(fam, obj_slots, free_obj)
-        report_solution("OBJ + npc-oam", fam, obj_slots, bv, YELLOW,
-                        show_ramps=True)
 
     card_evidence()
 

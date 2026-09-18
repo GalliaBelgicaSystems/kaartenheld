@@ -90,9 +90,9 @@ eyes_glow: #f57137
 
 TITLE
 title_bg: #ffffff
-title_light: #c6baa4
-title_medium: #8d754a
-title_dark: #6f5a34
+title_light: #e4b4b4
+title_medium: #ca6a6a
+title_dark: #8b1b1b
 galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
 galliabelgica_black: #000000
@@ -129,6 +129,9 @@ sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRI
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
 sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+# Dog overworld home (OBJ slot 2): exact 3-color fit, zero art change.
+# Cross-section refs name artist hues only, no new colors.
+sprites12: SPRITES/background, TOWN/wood_outlines_rubble, SPRITES/boss_eyes_scepter, UNUSED
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
 fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
@@ -145,5 +148,122 @@ fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat
 fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# DEV-restored black-ink text ramp (engine UI: dialogue paper, blanks,
+# menus). UI_COLOR_TEXT (slot 6) requires it.
+fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
-title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+title_logo: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
+
+# Battle-time OBJ values (programmed per battle entry, restored on
+# exit -- see battle_art_banked.c). Slotless by design (like TITLE):
+# the loader reads them by name, never through SLOTS/OBJ. Entry 0 is
+# always transparent yellow; order after it is luminance-descending
+# for DMG grayscale. Values use artist hues only, no new colors.
+RAMPS/BATTLE
+battle_slime: SPRITES/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+battle_kobold: SPRITES/background, COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
+battle_spider: SPRITES/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body
+
+# Guard overlay home would tie TOWN/SPRITES inference as a bare line,
+# so it rides an explicit header (same mechanism, no guessing).
+RAMPS/VILLAGE
+town8: TOWN/ground, SPRITES/npc, UNUSED, UNUSED
+
+# DEV slotmap: ramp name -> hardware slot (tiles, art, UI and OBJ code
+# consume fixed indices -- see tools/palette_txt.py hard_consumers()).
+# Artist: don't reorder these lines; to move a ramp, change its number.
+# Unmapped ramps must be listed under SPARES/ below (never silently
+# dropped, never auto-assigned into a live slot).
+# BASE: fight*numero = background/UI, fight*nom = enemy art.
+SLOTS/BASE
+0: fight1
+1: fightgoblin
+2: fightspider
+3: fightslime
+4: fight5
+5: fightmimic
+6: fight_text
+7: fightboss
+# (bow/gold shares slot 0 fight1; see UI_COLOR_GOLD in src/ui/ui.h.)
+
+SLOTS/FOREST
+0: field1
+3: field2
+1: field6
+7: field5
+5: field3
+2: field4
+
+SLOTS/DESOLATE
+7: desolate1
+1: desolate3
+0: desolate2
+
+SLOTS/CASTLE
+0: castle4
+1: castle3
+6: castle2
+2: castle1
+
+SLOTS/VILLAGE
+5: town1
+6: town2
+1: town3
+0: town4
+2: town5
+3: town6
+4: town7
+7: town8
+
+SLOTS/OBJ
+0: sprites
+1: sprites5
+2: sprites12
+3: sprites11
+5: sprites2
+6: sprites6
+# (0: bats/spiders/kobolds/hero OW; 1: fire/mimic OW + dog until slot 2
+# lands (same hues keep rendering); 2: dog OW; 3: slime OW;
+# 5: boss OW + OAM bats; 6: OAM mimics. Slots 4/7 unmapped by design:
+# battle-time scratch, programmed per battle entry (red pads at boot
+# mark them scratch -- never art). Battle OAM values live
+# in RAMPS/BATTLE, programmed per battle entry -- never static slots.)
+
+# Deliberate spares: defined ramps with no hardware slot (board is
+# full). Listed explicitly so the checker reports them as spare by
+# design instead of failing on unmapped ramps. Promote to SLOTS when
+# a slot frees (e.g. spider flip frees BASE 2 for fight2).
+SPARES/BASE
+fight2: spare
+fight3: spare
+fight4: spare
+fight6: spare
+fight7: spare
+fightbat: spare
+fightboss2: spare
+fightboss3: spare
+fightboss4: spare
+debug_missing: spare
+
+SPARES/OBJ
+sprites3: spare
+sprites4: spare
+sprites7: spare
+sprites8: spare
+sprites9: spare
+sprites10: spare
+debug_missing_obj: spare
+
+# Debug colors (dev-owned): hot, ugly, unmistakable. Pink = missing
+# background slot, red = missing sprite slot in any capture.
+DEBUG
+debug_white: #ffffff
+debug_magenta: #ff00ff
+debug_red: #ff0000
+debug_black: #000000
+
+RAMPS/BASE
+debug_missing: DEBUG/debug_white, DEBUG/debug_magenta, DEBUG/debug_red, DEBUG/debug_black
+
+RAMPS/OBJ
+debug_missing_obj: SPRITES/background, DEBUG/debug_magenta, DEBUG/debug_red, DEBUG/debug_black

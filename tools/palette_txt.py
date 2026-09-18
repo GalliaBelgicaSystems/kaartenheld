@@ -52,7 +52,13 @@ INFER_SET = {"COMMON": None, "GAMEPLAY": None, "FOREST": "forest",
              "TITLE": "title"}
 
 MAGENTA: RGB = (255, 0, 255)
-OBJ_PAD: RGB = (170, 170, 170)  # dev fallback grey (documented, never art)
+# Pads render ONLY for unmapped slots (missing art wiring): BG shows
+# magenta, OBJ shows pure red (deliberately distinct so a screenshot
+# tells which kind of slot is missing: pink = background, red =
+# sprite). Never legitimately rendered -- any red sprite or pink tile
+# in a capture IS the bug report. CGB-only signal (degrades to grays
+# on DMG). Do not "fix" these into plausible colors.
+OBJ_PAD: RGB = (255, 0, 0)
 
 
 def _hex_to_rgb(h: str, where: str) -> RGB:
@@ -96,6 +102,7 @@ def load_palette(path: Path = PALETTE_TXT):
     pending: List[Tuple[str, List[str], int]] = []
     headed: Dict[str, List[Tuple[str, List[str], int]]] = {}
     slotmap: Dict[str, Dict[int, str]] = {}
+    spares: Dict[str, List[str]] = {}
     anchors: Dict[str, str] = {}
     errors: List[str] = []
     warnings: List[str] = []
@@ -111,6 +118,10 @@ def load_palette(path: Path = PALETTE_TXT):
             if current in seen:
                 raise ValueError(f"{where}: duplicate section '{current}'")
             seen.add(current)
+            if current.startswith("SPARES/"):
+                setkey = SET_ALIASES.get(current[len("SPARES/"):].lower(),
+                                         current[len("SPARES/"):].lower())
+                spares.setdefault(setkey, [])
             if current.startswith("RAMPS/"):
                 setkey = SET_ALIASES.get(current[len("RAMPS/"):].lower(),
                                          current[len("RAMPS/"):].lower())
@@ -134,7 +145,18 @@ def load_palette(path: Path = PALETTE_TXT):
         value = value.strip()
         if not name or not value:
             raise ValueError(f"{where}: malformed entry: '{raw}'")
-        if current.startswith("SLOTS/"):
+        if current.startswith("SPARES/"):
+            setkey = SET_ALIASES.get(current[len("SPARES/"):].lower(),
+                                     current[len("SPARES/"):].lower())
+            if value != "spare":
+                raise ValueError(
+                    f"{where}: spare entry '{name}' wants 'spare', "
+                    f"got '{value}'")
+            if name in spares[setkey]:
+                raise ValueError(
+                    f"{where}: duplicate spare '{name}' in SPARES/{setkey}")
+            spares[setkey].append(name)
+        elif current.startswith("SLOTS/"):
             setkey = SET_ALIASES.get(current[len("SLOTS/"):].lower(),
                                      current[len("SLOTS/"):].lower())
             try:
@@ -235,7 +257,7 @@ def load_palette(path: Path = PALETTE_TXT):
     for key in ANCHOR_KEYS:
         if key not in anchors:
             raise ValueError(f"{path}: missing ANCHORS entry '{key}'")
-    return colors, inferred, slotmap, anchors, errors, warnings
+    return colors, inferred, slotmap, anchors, errors, warnings, spares
 
 
 def _resolve(colors, ref: str, where: str,
@@ -331,8 +353,8 @@ def hard_consumers() -> Dict[str, Dict[int, List[str]]]:
     return out
 
 
-COLORS, _RAMPS_RAW, _SLOTMAP, _ANCHORS_RAW, LOAD_ERRORS, LOAD_WARNINGS = \
-    load_palette()
+COLORS, _RAMPS_RAW, _SLOTMAP, _ANCHORS_RAW, LOAD_ERRORS, LOAD_WARNINGS, \
+    SPARE_RAMPS = load_palette()
 SECTIONS = COLORS
 
 
@@ -345,11 +367,21 @@ def _place_slots():
     full, unmapped, errors, warnings = {}, {}, [], []
     for setkey in list(RAMP_SETS) + ["obj"]:
         entries = [n for n, _, _ in _RAMPS_RAW.get(setkey, [])]
+        spare = SPARE_RAMPS.get(setkey, [])
+        for s in spare:
+            if s not in entries:
+                errors.append(
+                    f"SPARES/{setkey.upper()} lists '{s}', which is not "
+                    f"a defined {setkey} ramp (typo, or remove the line)")
+            else:
+                warnings.append(
+                    f"ramp '{s}' ({setkey}) is spare by design (no slot)")
         sm = dict(_SLOTMAP.get(setkey, {}))
         nslots = 8
         placed = {r for r in sm.values() if r in entries}
+        spare_here = SPARE_RAMPS.get(setkey, [])
         for rname in entries:
-            if rname not in placed:
+            if rname not in placed and rname not in spare_here:
                 free = [s for s in range(nslots) if s not in sm]
                 if not free:
                     continue
@@ -359,7 +391,8 @@ def _place_slots():
                     f"ramp '{rname}' ({setkey}) auto-assigned to slot "
                     f"{free[0]}: pin it in SLOTS/{setkey.upper()} to "
                     f"make the placement deliberate")
-        left = [r for r in entries if r not in placed]
+        left = [r for r in entries
+                if r not in placed and r not in SPARE_RAMPS.get(setkey, [])]
         for r in left:
             unmapped.setdefault(setkey, []).append(r)
         if left and not [s for s in range(nslots) if s not in sm]:
@@ -455,7 +488,7 @@ def _build_tables():
                 srcname = next(r for s, r in sm.items() if s == src)
                 dups.setdefault(setkey, {})[slot] = (srcname, consumers[
                     setkey][slot])
-        # Pad the rest (magenta BG canary / neutral grey OBJ). Battle
+        # Pad the rest (magenta BG canary / red OBJ canary). Battle
         # OBJ ramps may pin slots past the overworld 4 (e.g. slot 4+);
         # those ship too -- only truly-mapped slots are matchable.
         full, nms, rl = [], [], []
@@ -475,10 +508,9 @@ def _build_tables():
                     rl.append(slot)
             else:
                 if setkey == "obj":
-                    # Dev fallback grey (documented); real OBJ slots always
-                    # come from the artist file.
-                    full.append([(255, 255, 255), (170, 170, 170),
-                                 (85, 85, 85), (0, 0, 0)])
+                    # Unmapped OBJ slots blaze red (see OBJ_PAD): a red
+                    # sprite in any capture is a missing palette, never art.
+                    full.append([OBJ_PAD] * 4)
                 else:
                     full.append([MAGENTA] * 4)
                 nms.append("unused")
@@ -537,6 +569,36 @@ for _n, _refs, _ln in _RAMPS_RAW.get("title", []):
     _dark = min(_shades,
                 key=lambda c: 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2])
     TITLE_RAMPS[_n] = [v if v is not None else _dark for v in _vals]
+
+# Battle-time OBJ values (programmed per battle entry, restored on
+# exit). Slotless like TITLE: the battle loader reads them by ramp
+# name, never through SLOTS/OBJ. Entry 0 must be SPRITES/background
+# (transparent); order after it is file order (DMG-sensible by
+# authoring convention: luminance-descending).
+BATTLE_RAMPS = {}
+for _n, _refs, _ln in _RAMPS_RAW.get("battle", []):
+    _vals, _ok = [], True
+    for _r in _refs:
+        if _r == "UNUSED":
+            _vals.append(None)
+            continue
+        _v = _resolve(COLORS, _r, f"{PALETTE_TXT}:{_ln}", [])
+        if _v is None:
+            _ok = False
+            break
+        _vals.append(_v)
+    if not _ok:
+        raise ValueError(f"{PALETTE_TXT}:{_ln}: battle ramp '{_n}' has "
+                         f"unresolvable refs")
+    if _vals[0] != COLORS["SPRITES"]["background"]:
+        raise ValueError(f"{PALETTE_TXT}:{_ln}: battle ramp '{_n}' entry 0 "
+                         f"must be SPRITES/background (transparent)")
+    _shades = [v for v in _vals if v is not None]
+    if not _shades:
+        raise ValueError(f"{PALETTE_TXT}:{_ln}: battle ramp '{_n}' is all UNUSED")
+    _dark = min(_shades,
+                key=lambda c: 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2])
+    BATTLE_RAMPS[_n] = [v if v is not None else _dark for v in _vals]
 
 
 def build_anchors(colors, anchors) -> Dict[str, str]:
@@ -735,6 +797,48 @@ def emit_c_tables(out_dir) -> list:
     return [bg_path, obj_path]
 
 
+def emit_battle_tables(out_dir) -> list:
+    """Emit battle-time OBJ values (bank-4 loader includes this).
+
+    One static row per RAMPS/BATTLE ramp, read by name (never by slot).
+    Deterministic: identical inputs produce byte-identical outputs.
+    """
+    from pathlib import Path as _P
+    out = _P(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    lines = ["/* Generated by tools/palette_txt.py --write-battle-tables.",
+             " * Battle-time OBJ values: programmed per battle entry into",
+             " * scratch slots, restored on exit. Read by ramp NAME via",
+             " * battle_obj_index() (battle_compile.py emits the index per",
+             " * enemy type). Do not edit by hand. */"]
+    lines.append("#ifndef BATTLE_OBJ_TABLES_H")
+    lines.append("#define BATTLE_OBJ_TABLES_H")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    for name in sorted(BATTLE_RAMPS):
+        ramp = BATTLE_RAMPS[name]
+        lines.append("/* BATTLE %s: %s */" %
+                     (name, ", ".join(_hx(c) for c in ramp)))
+        lines.append("static const palette_color_t battle_obj_%s[4] = { %s };" %
+                     (name, ", ".join("RGB8(%d,%d,%d)" % tuple(c)
+                                      for c in ramp)))
+    lines.append("")
+    lines.append("/* Index table in the same sorted order (battle_compile.py")
+    lines.append(" * emits the same indices; both derive per build, no drift). */")
+    lines.append("static const palette_color_t *const battle_obj_by_index[] = {")
+    for name in sorted(BATTLE_RAMPS):
+        lines.append("    battle_obj_%s," % name)
+    lines.append("};")
+    lines.append("")
+    lines.append("#define BATTLE_OBJ_COUNT %d" % len(BATTLE_RAMPS))
+    lines.append("")
+    lines.append("#endif /* BATTLE_OBJ_TABLES_H */")
+    path = out / "battle_obj_tables.h"
+    path.write_text("\n".join(lines) + "\n")
+    return [path]
+
+
 def main(argv=None) -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Render assets/palettes.md")
@@ -745,7 +849,9 @@ def main(argv=None) -> int:
     ap.add_argument("--unused", action="store_true",
                     help="list dictionary names no ramp/anchor references")
     ap.add_argument("--write-tables", metavar="DIR",
-                    help="emit generated C tables into DIR")
+                      help="emit generated C tables into DIR")
+    ap.add_argument("--write-battle-tables", metavar="DIR",
+                    help="emit battle-time OBJ tables into DIR")
     args = ap.parse_args(argv)
     if args.unused:
         spare = unreferenced(COLORS, _RAMPS_RAW, _ANCHORS_RAW)
@@ -773,6 +879,10 @@ def main(argv=None) -> int:
         return 0
     if args.write_tables:
         for p in emit_c_tables(args.write_tables):
+            print(f"wrote {p}")
+        return 0
+    if args.write_battle_tables:
+        for p in emit_battle_tables(args.write_battle_tables):
             print(f"wrote {p}")
         return 0
     ap.print_help()

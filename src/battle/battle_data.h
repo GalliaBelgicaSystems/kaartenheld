@@ -68,6 +68,13 @@ typedef struct EnemyTypeDef {
     uint8_t art_obj_palette;  // CGB OAM palette index for OAM art (SLOTS/OBJ)
 } EnemyTypeDef;
 
+/* art_obj_palette with this bit set is an index into the RAMPS/BATTLE
+ * values table (battle_obj_tables.h, programmed per battle entry into
+ * scratch OBJ slots 4..6) instead of a static SLOTS/OBJ slot. Single
+ * source of truth: battle_compile.py reads this value back with a
+ * regex (hard failure if missing) so the two sides cannot drift. */
+#define ART_OBJ_BATTLE_FLAG 0x80
+
 /* WRAM cache for the active battle screen's HUD layout.
  * Staged from the bank-4 BattleScreenDef by game_battle_hud_load()
  * at every battle entry; read by the bank-3 renderer.
