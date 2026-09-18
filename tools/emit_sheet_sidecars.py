@@ -60,18 +60,27 @@ def fail(msg):
 
 
 def base_ramp(name):
-    return ["#%02x%02x%02x" % c
-            for c in RAMPS["base"][RAMP_NAMES["base"].index(name)]]
+    try:
+        return ["#%02x%02x%02x" % c
+                for c in RAMPS["base"][RAMP_NAMES["base"].index(name)]]
+    except ValueError:
+        return None
 
 
 def obj_ramp(name):
-    return ["#%02x%02x%02x" % c
-            for c in OBJ_BY_SLOT[_NAMES["obj"].index(name)]]
+    try:
+        return ["#%02x%02x%02x" % c
+                for c in OBJ_BY_SLOT[_NAMES["obj"].index(name)]]
+    except ValueError:
+        return None
 
 
 def village_ramp(name):
-    return ["#%02x%02x%02x" % c
-            for c in RAMPS["village"][RAMP_NAMES["village"].index(name)]]
+    try:
+        return ["#%02x%02x%02x" % c
+                for c in RAMPS["village"][RAMP_NAMES["village"].index(name)]]
+    except ValueError:
+        return None
 
 
 def cell_used(img, tx, ty):
@@ -110,13 +119,19 @@ def combat_assignments():
     """Cell coord -> (ramp, set id) for the battle sheet."""
     out = {}
     art_dir = REPO_ROOT / "screens" / "combat_art"
-    for path in sorted(art_dir.glob("*.json")):
+    for path in sorted(art_dir.glob('*.json')):
         data = json.loads(path.read_text())
         sid = data.get("id", path.stem)
         if data.get("oam"):
             ramp = obj_ramp(data["obj_palette"])
+            rampname = data["obj_palette"]
         else:
             ramp = base_ramp(data["palette"])
+            rampname = data["palette"]
+        if ramp is None:
+            fail("combat_art %s: ramp '%s' is not defined in "
+                 "assets/palette.txt (restore pending?)" % (sid, rampname))
+            continue
         for frame in ("frame0", "frame1"):
             for cell in data.get(frame) or []:
                 if cell is None:
@@ -155,6 +170,10 @@ def ow_assignments():
         data = json.loads(path.read_text())
         ow = data.get("overworld", {})
         ramp = obj_ramp(ow.get("palette"))
+        if ramp is None:
+            fail("enemy %s: ramp '%s' is not defined in "
+                 "assets/palette.txt (restore pending?)" % (data.get("id"), ow.get("palette")))
+            continue
         for cell in ow.get("cells", []):
             if cell not in compose_enemy_sprites.TILE_COORDS:
                 fail("enemy %s: unknown overworld tile '%s'"
@@ -193,6 +212,11 @@ def emit_hero_ow():
     hero = json.loads((REPO_ROOT / "screens" / "hero.json").read_text())
     ow = hero.get("overworld", {})
     ramp = obj_ramp(ow.get("palette"))
+    if ramp is None:
+        fail("hero.json: ramp '%s' is not defined in assets/palette.txt "
+             "(restore pending?)" % ow.get("palette"))
+        write_sidecar("hero_ow_shades.json", {})
+        return
     sidecar = {}
     for cell in ow.get("cells", []):
         if cell not in compose_hero_sprites.TILE_COORDS:
@@ -256,6 +280,10 @@ def emit_card_frames():
         if coord not in names:
             continue
         ramp = base_ramp(rampname)
+        if ramp is None:
+            fail("card_frames.png icon %s: ramp '%s' is not defined in "
+                 "assets/palette.txt (restore pending?)" % (names[coord], rampname))
+            continue
         tx, ty = coord
         m = check_cell("card_frames.png", tx, ty, ramp,
                        "icon %s" % names[coord])
