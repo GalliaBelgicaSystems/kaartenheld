@@ -27,7 +27,7 @@ This guide explains how to add and wire new assets into the engine, the level ed
 | **Overworld Enemy** | `assets/actor-sprites.png` or custom PNG | `tools/level_editor/public/tiles/enemies/` | `tools/compose_enemy_sprites.py` | `src/gfx/enemy_ow_tiles.h`, `src/game/battle_types.c` |
 | **Battle Art** | `assets/combat-tile.png` | `tools/level_editor/public/tiles/combat/` | `tools/compose_battle_sprites.py` | `src/gfx/battle_enemy_art.h`, `src/game/battle_types.c` |
 | **World Tiles** | `assets/*-tile.png` | `tools/level_editor/public/tiles/<tileset>/` | `extract_tiles.py` / `png2gb.py` | `src/gfx/rpg_*_world_tiles.inc`, `src/game/scenes_content.c` |
-| **Icons** | `assets/equipment_8x8.png`, `symbols_8x8.png` | N/A (atlas lookup) | `tools/asset_atlas.py` | `src/gfx/asset_atlas_*.inc`, `assets/atlas.json` |
+| **Icons** | `assets/combat-tile.png` | `tools/level_editor/public/tiles/combat/` | `tools/compose_card_frames.py` | `src/gfx/card_frame_tiles.h` (VRAM 96–127) |
 | **Music** | `assets/music/*.uge` | N/A | `uge2source` | `src/music/*.c`, `build/*/music/*.o` |
 | **SFX** | `assets/sfx/*.uge` | N/A | SFX tables | `src/sfx/sfx_tables.c`, `src/sfx/sfx_index.c` |
 
@@ -99,14 +99,23 @@ Overworld enemy sprites are 8x8 (or NxM grid) tiles loaded into Game Boy sprite 
 
 ---
 
-## 3. Combat & Battle Enemy Art (BG)
+## 3. Combat & Battle Enemy Art (OAM small enemies, BG boss)
 
-Battle enemy art appears on the battle background layer (4x pixel art, up to 32x32 or 3x3 tiles).
+Small battle enemies render as hardware sprites (each with its own OBJ
+palette — mixed parties need no shared BG slot); the solo boss keeps the
+background stamp. Art is 8x8 tiles, max 3 wide × 2 tall per enemy
+(scanline budget: 3 enemies × 3 + caret must stay ≤ 10 sprites/line).
 
 ### Step-by-Step:
 1. **Curate Tiles**:
    - Add 8x8 component tiles to `tools/level_editor/public/tiles/combat/<name>.png`.
-2. **Register in Tileset**:
+   - One 4-color ramp per enemy: every tile's pixels must fit it exactly
+     (the build has no luminance fallback here — a shared shade must be
+     the same color in every tile using it; spider art is pending this).
+2. **Combat-art JSON** (`screens/combat_art/<enemy>.json`):
+   - `"oam": true` + `"obj_palette": "<sprite ramp name>"` for OAM enemies (slot mapping lives in `tools/palette_slots.json`);
+     omit both for BG-stamped (boss).
+3. **Register in Tileset**:
    - Add entries to `tools/level_editor/tilesets/combat.json`.
 3. **Add to Battle Sheet**:
    - In `tools/compose_battle_sprites.py`, add tile names to `LAYOUT`.
@@ -128,20 +137,23 @@ Background maps (Forest, Castle, Village, Desolate Landscape, etc.) use backgrou
 
 ### Step-by-Step:
 1. **Source Asset & Description**:
-   - Place source image in `assets/<tileset>-tile.png` (grid of 8x8 tiles).
-   - Place corresponding metadata in `assets/<tileset>-tileset-description.csv` with `row, col, name, walkable, palette`.
+    - Place source image in `assets/<tileset>-tile.png` (grid of 8x8 tiles).
+      World sheets are **indexed PNGs**: exact ramp hexes only, ≤4 values
+      per tile, background as index 0 (forest is migrated; new sheets
+      ship indexed from day one).
+    - Place corresponding metadata in `assets/<tileset>-tileset-description.csv` with `row, col, name, walkable, palette`.
+    - Flag the sheet `"indexed": true` in `tools/level_editor/tilesets/<tileset>.json` once its art meets the contract above.
 2. **Extract to Editor**:
    - Run tile extraction or update `tools/level_compiler/extract_tiles.py`:
      ```bash
      make extract-tiles
      ```
-   - This writes `tools/level_editor/public/tiles/<tileset>/*.png` and generates `tools/level_editor/tilesets/<tileset>.json`.
-3. **Register in Asset Atlas**:
-   - Add the sheet definition to `SOURCES` in `tools/asset_atlas.py`.
-   - Run `make atlas` (generates `assets/atlas.json`, `docs/assets_atlas.md`, and C headers in `src/gfx/asset_atlas_*`).
-   - Verify with `make atlas-check`.
-4. **Compile to ROM Tiles**:
-   - In `Makefile`, define `png2gb` rules to compile tiles into `src/gfx/rpg_<tileset>_world_tiles.inc`.
+    - This writes `tools/level_editor/public/tiles/<tileset>/*.png` and generates `tools/level_editor/tilesets/<tileset>.json`.
+3. **Compile to ROM Tiles**:
+    - Run `make manifest` first: besides the palette manifests it emits
+      `generated/tiles/<tileset>_shades.json` (per-tile exact shade maps)
+      and strict-validates every tile's pixels against its ramp.
+    - In `Makefile`, define `png2gb` rules to compile tiles into `src/gfx/rpg_<tileset>_world_tiles.inc`, passing `--shade-map generated/tiles/<tileset>_shades.json` for indexed sheets (exact values, no luminance guessing; off-ramp pixels fail loudly).
    - Update `tools/level_compiler/compile.py` to map level JSON tiles into C structures in `src/game/scenes_content.c`.
 5. **Palette Assignment**:
    - Background tiles on Game Boy Color require palette attributes (0–7). Ensure palettes are mapped in `tools/level_compiler/palette_compiler.py` and `src/game/tiles_content.c`.
@@ -164,27 +176,22 @@ Sound and music use the [hUGETracker](https://nickfa.ro/huge-tracker) engine (ba
 
 ---
 
-## 6. Icons & Symbols (Asset Atlas)
+## 6. Icons (combat sheet) & gold glyph
 
-Small 8x8 UI icons (cards, items, status icons) come from `assets/equipment_8x8.png` and `assets/symbols_8x8.png` (9px stride, 1px border).
-
-1. Reference icons by coordinate ID (e.g., `ASSET_EQUIP_C00_R00`, `ASSET_SYM_C05_R02`).
-2. Run `make atlas` to re-extract icons, compute CGB palettes, and update:
-   - `src/gfx/asset_atlas_entries.inc`
-   - `src/gfx/asset_atlas_icons.inc`
-   - `src/gfx/asset_atlas_icon_palettes.inc`
-3. In code, look up icon properties via `asset_atlas_get(id, &entry)`.
-
----
+Small 8x8 UI icons (weapons, HUD hp/ap/deck, status riders, select arrow,
+arrow counters) come from `assets/combat-tile.png` via
+`tools/level_editor/public/tiles/combat/` and `tools/compose_card_frames.py`
+into `src/gfx/card_frame_tiles.h` (VRAM 96–127). Every icon cell's pixels
+must fit its slot ramp exactly (see `tools/emit_sheet_sidecars.py`);
+off-ramp pixels fail loudly. Gold prices use the font glyph `G`, not a tile.
 
 ## 7. Validation & Verification Checklist
 
 Whenever new assets are wired or modified, perform this validation sequence:
 
 ```bash
-# 1. Compile graphics & asset atlas
+# 1. Compile graphics
 make gfx
-make atlas-check
 
 # 2. Check parity between Level Editor JSON and ROM
 python3 tools/parity_check.py

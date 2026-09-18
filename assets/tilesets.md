@@ -20,8 +20,12 @@ tools/level_editor/tilesets/<id>.json        (tile defs; SOURCE OF TRUTH
                                               overwrite hand fields)
     |  tools/compose_*.py  (packs curated PNGs into a ROM source sheet)
     v
-assets/<composed>.png
-    |  make gfx  (png2gb --tile-coords from a compiler --*-coords query)
+assets/<composed>.png  (+ generated/tiles/<id>_shades.json from
+    |                    make manifest: per-tile exact shade maps +
+    |                    strict pixel-vs-ramp validation for indexed sheets)
+    |  make gfx  (png2gb --tile-coords from a compiler --*-coords query;
+    |             indexed sheets add --shade-map so shades resolve by
+    |             exact value, never by luminance sort)
     v
 src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
 ```
@@ -109,9 +113,12 @@ Like combat art, these curated PNGs are hand-maintained (no
   `assets/village-tile.png`, `assets/desolate_landscape.png` (+ CSVs).
 - Curated via `make extract-tiles` -> `public/tiles/<id>/` +
   `tilesets/<id>.json` (palettes via `palette_compiler.py`,
-  `generated/tiles/`; atlas registry via `tools/asset_atlas.py`).
+  `generated/tiles/`).
 - ROM: `make gfx` `png2gb` direct-sheet rules (`rpg_*_world_tiles.inc`)
-  plus single-tile extracts (floor/tree/exit/stairs/chest).
+  plus single-tile extracts (floor/tree/exit/stumps).
+  Migrated sheets (`"indexed": true`, forest first) encode via
+  `--shade-map` exact values; the rest still use the legacy
+  luminance sort until their art ships indexed.
 - `assets/desolate_landscape.png` triple duty: world sheet + reference
   palette for enemy-sheet quantization + `hero_desolate_sprite_tile`.
 
@@ -130,8 +137,8 @@ Like combat art, these curated PNGs are hand-maintained (no
   Rendered from the bank-2 `ui_splash_logo_render_banked` body with one CGB
   palette `[white, red, blue, black]` (the gray anti-aliasing folds into
   black).  LLM-only content: the editor has no splash screen.
-- `assets/equipment_8x8.png` + `assets/symbols_8x8.png` -> icon atlas
-  (`tools/asset_atlas.py`, 9px stride).
+- UI icons come from the combat sheet (`compose_card_frames.py` ->
+  `card_frame_tiles.h`); gold prices use the font glyph `G`.
 - `assets/music/*.uge` -> hUGETracker soundtrack, ROM bank 6.
   `assets/sfx/*.uge` -> transcribed SFX tables, ROM bank 7.
 - Reference/mockups only (never build inputs): `battle_screen_mockup.jpg`,

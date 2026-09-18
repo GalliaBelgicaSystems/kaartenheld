@@ -1,0 +1,59 @@
+{
+  "_doc": "DEV-OWNED hardware slotmap (the artist file assets/palette.txt holds colors + ramp rows only). Ramp name -> hardware slot; tiles, art, UI and OBJ code consume fixed indices (see tools/palette_txt.py hard_consumers()). To move a ramp, change its number (never reorder blindly). Unmapped ramps must be listed under spares (never silently dropped, never auto-assigned into a live slot).",
+  "slots": {
+    "BASE": {
+      "0": "fight1",
+      "1": "fightgoblin",
+      "2": "fightspider",
+      "3": "fightslime",
+      "4": "fight5",
+      "5": "fightmimic",
+      "6": "fight_text",
+      "7": "fightboss",
+      "_note": "bow/gold shares slot 0 fight1; see UI_COLOR_GOLD in src/ui/ui.h."
+    },
+    "FOREST": {
+      "0": "field1",
+      "3": "field2",
+      "1": "field6",
+      "7": "field5",
+      "5": "field3",
+      "2": "field4"
+    },
+    "DESOLATE": {
+      "7": "desolate1",
+      "1": "desolate3",
+      "0": "desolate2"
+    },
+    "CASTLE": {
+      "0": "castle4",
+      "1": "castle3",
+      "6": "castle2",
+      "2": "castle1"
+    },
+    "VILLAGE": {
+      "5": "town1",
+      "6": "town2",
+      "1": "town3",
+      "0": "town4",
+      "2": "town5",
+      "3": "town6",
+      "4": "town7",
+      "7": "town8"
+    },
+    "OBJ": {
+      "0": "sprites",
+      "1": "sprites5",
+      "2": "sprites12",
+      "3": "sprites11",
+      "5": "sprites2",
+      "6": "sprites6",
+      "_note": "0: bats/spiders/kobolds/hero OW; 1: fire/mimic OW; 2: dog OW; 3: slime OW; 5: boss OW + OAM bats; 6: OAM mimics. Slots 4/7 unmapped by design: battle-time scratch, programmed per battle entry (red pads at boot mark them scratch -- never art). Battle OAM values live in RAMPS/BATTLE, programmed per battle entry -- never static slots."
+    }
+  },
+  "spares": {
+    "_doc": "Deliberate spares: defined ramps with no hardware slot (board is full). The checker reports them as spare by design instead of failing on unmapped ramps. Promote to slots when a slot frees (e.g. spider flip frees BASE 2 for fight2).",
+    "BASE": ["fight2", "fight3", "fight4", "fight6", "fight7", "fightbat", "fightboss2", "fightboss3", "fightboss4", "debug_missing"],
+    "OBJ": ["sprites3", "sprites4", "sprites7", "sprites8", "sprites9", "sprites10", "debug_missing_obj"]
+  }
+}

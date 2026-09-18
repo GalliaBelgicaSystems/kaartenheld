@@ -1,22 +1,28 @@
 FOREST
-wood_and_dirt: #4a3b1c
+tree_ladder_and_dirt: #4a3b1c
 grass: #7bb660
 tree_leaves_terrain_outline_big_grass: #2a4f1a
 dark_tree_leaves: #1d3e0f
 rocks: #a99fc0
-rocks_outline: #26232e
+rocks_outline_fire_base: #26232e
 void_holes: #000000
+fire_dark: #d7a726
+fire_light: #edc214
+tree_stump_light: #937b4a
+tree_stump_dark: #614e27
 
 DESOLATE
 ground: #938da1
 rocks_stone_light: #a99fc0
 rocks_stone_shadow: #837b96
-tree_item_outlines_cracks: #26232e
+tree_item_outlines_cracks_fire_base: #26232e
 terrain_side : #3f3a4a
 void: #000000
+fire_dark: #d7a726
+fire_light: #edc214
 
 CASTLE
-ground: #a99fc0
+ground: #d7d7d7
 wall_dark: #565656
 wall_light: #828282
 wood_light: #8d754a
@@ -25,18 +31,24 @@ gold: #d7a726
 curtain_light: #8b1b1b
 curtain_dark: #621212
 window_frame: #2e2e2e
+stairs: #b3b0b0
 
 TOWN
 ground: #b6a27e
-puddle_stone_window: #b6b6b6
+puddle_stone: #b6b6b6
 barrel_wood_fence: #8d754a
+stone_dark: #939393
 fence_light: #79643e
-wood_outlines: #645233
+wood_outlines_rubble: #645233
 house_wall: #f1cf91
-house_roof_shade1: #ccaa6c
-house_roof_shade2: #b6a27e
+house_roof_shade: #ccaa6c
+fire_dark: #d7a726
+fire_light: #edc214
+fire_base: #26232e
+holes: #000000
 
 SPRITES
+background: #f1eb03
 wood_dog: #8d754a
 slime_light: #77e331
 slime_dark: #5c903a
@@ -48,16 +60,17 @@ mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
 spider_boss_light: #565656
-dogtongue_ribbon: #8b1b1b
 boss_eyes_scepter: #8b1b1b
 boss_eyes_scepter_glow: #f57137
+merchant_coin: #8f591f
 
 COMBAT
+background: #ffffff
 numbers_icons: #755930
 card_background: #dfbd8d
-card_decor: #e3ae63
+card_gold: #e3ae63
 card_outline: #b09266
-heart_fire_enemy_eyes: #c34e1b
+heart_fire_enemy_eyes: #8b1b1b
 slime_combat: #89cc5e
 slime_outline_combat: #5c903a
 boss_spider_bat_combat_body: #000000
@@ -72,11 +85,100 @@ goblin_combat_skin: #844f4f
 goblin_combat_skin_dark_outlines: #4a2727
 bat_combat_inner_wings: #3d3044
 poison_icon: #7136c1
-ice_icon_ring_jewel: #7ae3f3
+ice_icon: #7ae3f3
+eyes_glow: #f57137
 
 TITLE
-title_light: #c6baa4
-title_medium: #8d754a
-title_dark: #6f5a34
+title_bg: #ffffff
+title_light: #e4b4b4
+title_medium: #ca6a6a
+title_dark: #8b1b1b
 galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
+galliabelgica_black: #000000
+
+
+field1: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes
+field2: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/tree_ladder_and_dirt
+field3: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tree_ladder_and_dirt
+field4: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt
+field5: FOREST/grass, FOREST/rocks, FOREST/rocks_outline_fire_base, UNUSED
+field6: FOREST/grass, FOREST/fire_light, FOREST/fire_dark, FOREST/rocks_outline_fire_base
+desolate1: DESOLATE/ground, DESOLATE/terrain_side, DESOLATE/tree_item_outlines_cracks_fire_base, DESOLATE/void
+desolate2: DESOLATE/rocks_stone_light, DESOLATE/ground, DESOLATE/rocks_stone_shadow, DESOLATE/tree_item_outlines_cracks_fire_base
+desolate3: DESOLATE/ground, DESOLATE/fire_light, DESOLATE/fire_dark, DESOLATE/tree_item_outlines_cracks_fire_base
+castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
+castle2: CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED
+castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
+castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
+town1: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
+town2: TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble
+town3: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
+town4: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/holes
+town5: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubble
+town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble
+town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
+sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites3: SPRITES/background, SPRITES/boss_eyes_scepter_glow, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites4: SPRITES/background, SPRITES/wood_dog, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
+sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
+sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
+sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
+sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
+sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
+sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+# Dog overworld home (OBJ slot 2): exact 3-color fit, zero art change.
+# Cross-section refs name artist hues only, no new colors.
+sprites12: SPRITES/background, TOWN/wood_outlines_rubble, SPRITES/boss_eyes_scepter, UNUSED
+fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
+fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
+fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
+fight4: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes
+fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
+fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
+fight7: COMBAT/card_background, COMBAT/ice_icon, COMBAT/numbers_icons, UNUSED
+fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
+fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
+fightmimic: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth
+fightspider: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body
+fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+# DEV-restored black-ink text ramp (engine UI: dialogue paper, blanks,
+# menus). UI_COLOR_TEXT (slot 6) requires it.
+fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
+title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
+title_logo: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
+
+# Battle-time OBJ values (programmed per battle entry, restored on
+# exit -- see battle_art_banked.c). Slotless by design (like TITLE):
+# the loader reads them by name, never through SLOTS/OBJ. Entry 0 is
+# always transparent yellow; order after it is luminance-descending
+# for DMG grayscale. Values use artist hues only, no new colors.
+RAMPS/BATTLE
+battle_slime: SPRITES/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+battle_kobold: SPRITES/background, COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
+battle_spider: SPRITES/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body
+
+# Guard overlay home would tie TOWN/SPRITES inference as a bare line,
+# so it rides an explicit header (same mechanism, no guessing).
+RAMPS/VILLAGE
+town8: TOWN/ground, SPRITES/npc, UNUSED, UNUSED
+
+# Debug colors (dev-owned): hot, ugly, unmistakable. Pink = missing
+# background slot, red = missing sprite slot in any capture.
+DEBUG
+debug_white: #ffffff
+debug_magenta: #ff00ff
+debug_red: #ff0000
+debug_black: #000000
+
+RAMPS/BASE
+debug_missing: DEBUG/debug_white, DEBUG/debug_magenta, DEBUG/debug_red, DEBUG/debug_black
+
+RAMPS/OBJ
+debug_missing_obj: SPRITES/background, DEBUG/debug_magenta, DEBUG/debug_red, DEBUG/debug_black
