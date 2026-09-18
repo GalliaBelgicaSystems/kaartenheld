@@ -3,6 +3,9 @@
 You own every color in the game. All of it lives in one file:
 `assets/palette.txt`. Nothing is hardcoded anywhere else — if a color on
 screen doesn't come from this file, that's a bug, report it.
+Hardware slot assignments live in dev-owned
+`tools/palette_slots.json` — never add `SLOTS/` or `SPARES/` sections
+here; the checker rejects them loudly and points at the dev file.
 
 ## The file has four parts
 
@@ -182,6 +185,23 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
   committed tables disagree with the file — never force it green by
   editing generated files; fix `palette.txt` and regenerate.
 
+## Operating rhythm (both sides)
+
+1. Paint/edit art → dev runs the shade gate
+   (`tools/emit_sheet_sidecars.py`): green, or per-cell failures naming
+   file + tile + color. Removing a cell from `tools/known_bad.json`
+   re-arms its gate.
+2. `make manifest` → `palette-check` → `battle --check` must all pass;
+   then `make gfx`, ROM link, `make memmap`, screenshots.
+3. Screenshots are the shared review surface: dark boxes / pink / red
+   mean pending wiring (see Troubleshooting), never approved art.
+4. CI runs everything strict (`KAARTENHELD_STRICT=1` — waivers
+   ignored); local builds may waive for iteration.
+5. Failing classes and owners: bad pixels → artist repaints;
+   missing ramp → artist defines it; no free slot → dev picks
+   (solver proves fit) or artist repaints into a live list;
+   restores/tables/code → dev.
+
 ## Troubleshooting
 
 - *"I changed a hex and half the game changed color."* That color is
@@ -193,5 +213,12 @@ Resolved hexes: `assets/palettes.md` (generated, always current).
 - *"My sprite has a solid box around it."* Background must be index 0
   in every tile (indexed sheets), or the darkest-or-anchored color /
   pinned in `ANCHORS` (legacy sheets) — see the brazier story above.
-- *"palette-check fails on a ramp count."* You added/removed a line in a
-  `RAMPS/*` section. Restore 8 (4 for OBJ).
+- *"palette-check fails on a ramp count."* Ramps beyond the 8 mapped
+  slots must be listed as spares (dev does this in
+  `tools/palette_slots.json`) — or deleted if truly abandoned.
+- *"Screenshots show dark boxes / pink tiles / red sprites."* Dark
+  boxes = art listed in dev-owned `tools/known_bad.json` (pending
+  repaints, rendered darkest-shade so they're visible). Pink
+  background tiles = a background slot with no ramp; red sprites = a
+  sprite slot with no ramp. All three are dev-side wiring states, not
+  broken art — report which frame and move on.
