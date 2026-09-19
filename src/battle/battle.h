@@ -131,6 +131,13 @@ extern char g_battle_anim_target_name[12];
  * (LCD-off window). */
 void battle_art_load_banked(void);
 
+/* Banked battle-OAM pass (src/battle/battle_oam_banked.c, ROM bank 5):
+ * g_bk_ptr_a = Battle*.  Draws/hides per-slot OAM strides from the same
+ * WRAM caches the BG stamper uses.  Dispatched from the fixed-bank
+ * ui_update_battle wrapper right after the bank-3 render (sequential
+ * trampoline calls, never nested). */
+void battle_oam_draw_banked(void);
+
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
                   uint8_t enemy_hp, uint8_t enemy_max_hp,

@@ -832,6 +832,13 @@ void ui_update_battle(const Battle *battle)
     g_bk_call_target = (uint16_t)&ui_update_battle_banked;
     g_bk_ptr_a = (void *)battle;
     banked_call_run();
+    /* Battle enemy OAM (Florent's model) lives in ROM bank 5 (bank 3 was
+     * full in the release layout). Sequential trampoline calls, never
+     * nested: the bank-3 render above returned before this dispatch. */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&battle_oam_draw_banked;
+    g_bk_ptr_a = (void *)battle;
+    banked_call_run();
 }
 
 /* Shop item codes indexed by BattleCardType (src/battle/card.h).  The shop

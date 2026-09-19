@@ -435,67 +435,8 @@ static uint8_t battle_enemy_art_x(uint8_t x, uint8_t slot)
     return (uint8_t)(x + ((6 - w) >> 1));
 }
 
-/* OAM entries for battle sprites (Florent's model). Slots 1-26 are the
- * overworld region (hidden by ui_sprite_begin_transition on entry, so no
- * stale art survives); battle enemies take fixed strides below. */
-#define BATTLE_OAM_BASE 1u
-#define BATTLE_OAM_STRIDE 6u
-
-static void battle_draw_enemy_oam(uint8_t x, uint8_t slot,
-                                  const volatile Battle *battle)
-{
-    uint8_t frame = 0;
-    uint8_t base;
-    uint8_t cx, cy;
-    uint8_t w, h, ftiles, t, n, e0;
-    uint8_t art_row = g_battle_hud.enemy_sprite_row;
-    volatile uint8_t *e;
-
-    if (slot >= MAX_BATTLE_ENEMIES) return;
-    w = g_battle_enemy_art_w[slot];
-    h = g_battle_enemy_art_h[slot];
-    if (w == 0 || w > 6) w = 3;
-    if (h == 0 || h > 4) h = 2;
-    /* x arrives already centered (battle_draw_enemy_art centers before
-     * dispatching): never recenter here. */
-    /* Fixed stride without multiply (§52.18: 8-bit * pulls mult routines
-     * into fixed _CODE): slot 0/1/2 -> entries 1/7/13. */
-    e0 = BATTLE_OAM_BASE;
-    if (slot >= 1) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
-    if (slot >= 2) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
-    if (g_battle_enemy_art[slot] != 0xFF) {
-        if (g_battle_enemy_art_frames[slot] > 1) {
-            frame = (uint8_t)((battle->timer_ticks >> 4) & 1);
-        }
-        base = g_battle_enemy_art_base[slot];
-        ftiles = 0;
-        for (cx = 0; cx < h; cx++) ftiles = (uint8_t)(ftiles + w);
-        t = base;
-        if (frame) t = (uint8_t)(t + ftiles);
-        /* Same running tile order as the BG stamp; OAM ids fetch the same
-         * bytes (sprites always read the 0x8000 block, AGENTS.md 52.22). */
-        n = 0;
-        for (cy = 0; cy < h; cy++) {
-            for (cx = 0; cx < w; cx++) {
-                e = (volatile uint8_t *)(0xC000u + ((uint16_t)(e0 + n) << 2));
-                e[0] = 40;
-                e[1] = (uint8_t)(((x + cx) << 3) + 8);
-                e[2] = t;
-                e[3] = BATTLE_OBJ_SCRATCH;
-                t++;
-                n++;
-                if (n >= BATTLE_OAM_STRIDE) break;
-            }
-            if (n >= BATTLE_OAM_STRIDE) break;
-        }
-        /* Hide any unused stride entries (all current OAM sets are
-         * exactly 3x2, so this only fires on corrupt caches). */
-        for (; n < BATTLE_OAM_STRIDE; n++) {
-            e = (volatile uint8_t *)(0xC000u + ((uint16_t)(e0 + n) << 2));
-            e[0] = 0;
-        }
-    }
-}
+/* Battle enemy OAM lives in src/battle/battle_oam_banked.c (ROM bank 5):
+ * bank 3 was full in the release layout. */
 
 static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
                                   const volatile Battle *battle, uint8_t blank)
@@ -504,7 +445,6 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     uint8_t base;
     uint8_t cx, cy;
     uint8_t w, h, ftiles, t;
-    uint8_t oam_drawn = 0;
     volatile uint8_t *dst;
     /* Staged screen row (WRAM copy of the active BattleScreenDef). */
     uint8_t art_row = g_battle_hud.enemy_sprite_row;
@@ -522,12 +462,11 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
 
     if (!blank && slot < MAX_BATTLE_ENEMIES &&
         g_battle_enemy_art[slot] != 0xFF) {
-        /* OAM battle art (Florent's model): sprites via the scratch OBJ
-         * slot; the BG footprint below is blanked by falling through.
-         * Boss + spider stay BG-stamped on the classic path. */
+        /* OAM battle art (Florent's model) is drawn by the bank-5 pass
+         * (battle_oam_draw_banked, dispatched from ui_update_battle right
+         * after this render); the BG footprint below always blanks. Boss
+         * + spider stay BG-stamped on the classic path. */
         if (g_battle_enemy_art_oam[slot]) {
-            battle_draw_enemy_oam(x, slot, battle);
-            oam_drawn = 1;
             blank = 1;
         }
     }
@@ -586,23 +525,11 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
                 buf++;
             }
         }
-        /* Drop any previous art tint so blanks match surrounding text. */
+        /* Drop any previous art tint so blanks match surrounding text.
+         * OAM strides hide in the bank-5 pass (battle_oam_draw_banked),
+         * which owns all battle-sprite visibility. */
         for (cy = 0; cy < h; cy++) {
             battle_color_span(x, (uint8_t)(art_row + cy), w, UI_COLOR_NONE);
-        }
-        /* OAM art leaves no BG trace (footprint already blank above), but
-         * its sprite stride must hide when the enemy is actually gone
-         * (dead/absent/blink) -- never right after drawing it above. */
-        if (slot < MAX_BATTLE_ENEMIES && !oam_drawn && g_battle_enemy_art_oam[slot]) {
-            uint8_t n;
-            uint8_t e0 = BATTLE_OAM_BASE;
-            if (slot >= 1) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
-            if (slot >= 2) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
-            for (n = 0; n < BATTLE_OAM_STRIDE; n++) {
-                volatile uint8_t *e = (volatile uint8_t *)(0xC000u +
-                    ((uint16_t)(e0 + n) << 2));
-                e[0] = 0;
-            }
         }
     }
 }
