@@ -107,9 +107,9 @@ static const SceneTerrainBlock s_test_town_terrain[] = {
     { 3, 11, 1, 1, TILE_VILLAGE_08 },
     { 2, 12, 1, 1, TILE_VILLAGE_23 },
     { 3, 12, 1, 1, TILE_VILLAGE_24 },
-    { 3, 4, 1, 1, TILE_VILLAGE_04 },
-    { 16, 5, 1, 1, TILE_VILLAGE_04 },
-    { 4, 10, 1, 1, TILE_VILLAGE_04 },
+    { 3, 4, 1, 1, TILE_VILLAGE_06 },
+    { 16, 5, 1, 1, TILE_VILLAGE_06 },
+    { 4, 10, 1, 1, TILE_VILLAGE_06 },
     { 2, 5, 1, 1, TILE_VILLAGE_22 },
     { 15, 4, 1, 1, TILE_VILLAGE_22 },
     { 2, 9, 1, 1, TILE_VILLAGE_22 },
@@ -117,11 +117,11 @@ static const SceneTerrainBlock s_test_town_terrain[] = {
     { 4, 5, 1, 1, TILE_VILLAGE_37 },
     { 17, 5, 1, 1, TILE_VILLAGE_37 },
     { 4, 9, 1, 1, TILE_VILLAGE_37 },
-    { 10, 5, 1, 1, TILE_VILLAGE_41 },
-    { 10, 8, 1, 1, TILE_VILLAGE_35 },
-    { 9, 3, 1, 1, TILE_VILLAGE_39 },
-    { 11, 3, 1, 1, TILE_VILLAGE_39 },
-    { 6, 10, 1, 1, TILE_VILLAGE_36 },
+    { 10, 5, 1, 1, TILE_VILLAGE_06 },
+    { 10, 8, 1, 1, TILE_VILLAGE_06 },
+    { 9, 3, 1, 1, TILE_VILLAGE_06 },
+    { 11, 3, 1, 1, TILE_VILLAGE_06 },
+    { 6, 10, 1, 1, TILE_VILLAGE_06 },
     { 1, 7, 1, 1, TILE_VILLAGE_06 },
     { 0, 0, 0, 0, 0 }
 };
@@ -167,6 +167,7 @@ static const SceneTerrainBlock s_test_forest_terrain[] = {
     { 6, 14, 1, 1, TILE_FOREST_15 },
     { 5, 15, 1, 1, TILE_FOREST_30 },
     { 6, 15, 1, 1, TILE_FOREST_31 },
+    { 16, 10, 1, 1, TILE_FOREST_21 },
     { 12, 11, 1, 1, TILE_FOREST_39 },
     { 0, 0, 0, 0, 0 }
 };
@@ -224,6 +225,7 @@ static const SceneTerrainBlock s_test_castle_terrain[] = {
 
 static const SceneTerrainBlock s_test_south_field_terrain[] = {
     { 5, 5, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 17, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_37 },
     { 12, 0, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 12, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 0, 0, 0, 0, 0 }

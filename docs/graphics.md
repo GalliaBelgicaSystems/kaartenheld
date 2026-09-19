@@ -13,34 +13,32 @@ battle, inventory, equipment, boss — different presentation.
 ## Pipeline
 
 ```text
-PNG source assets
-      ↓  tools/png2gb.py
-validation (dimensions, 8x8 tile alignment, palette limits, sprite size,
-            unsupported colors, duplicate tiles, tile counts)
+assets/palette.txt (artist colors + ramps)
+  + tools/palette_slots.json (dev ramp -> slot)
+  + content ramp tags (tilesets/*.json, screens/*.json)
+      ↓  make manifest (tools/palette_compiler.py)
+generated/tiles/ (slot tables, per-cell shade maps, C includes, mismatch report)
+      ↓  make gfx (tools/png2gb.py --shade-map)
+GB-native data (tileset bytes; per-tile palette attributes in tile_palette.h)
       ↓
-GB-native data (tileset bytes, tilemaps, OAM sprite defs, palettes)
-      ↓
-ROM (banked const tables)
+ROM (banked const tables; CRAM programmed per scene at entry)
 ```
 
-`tools/png2gb.py` must produce actionable errors (which asset, which rule
-violated) rather than silently emitting broken graphics.
+`tools/png2gb.py` has two modes, no guessing in either: `--shade-map`
+(per-tile ordered ramp shades from the compiler; off-ramp pixels take
+the nearest shade of the tile's ramp and are reported) and strict
+`--palette canonical|gb_green` (font art; any off-palette pixel fails).
+`tools/palette_compiler.py` must produce actionable output (which sheet,
+which tile, which ramp, which colors) rather than silently emitting
+wrong graphics.
 
 ## Status
 
-Implemented:
-
-* `tools/png2gb.py` — PNG → GB 2bpp tileset (tile-alignment, palette-limit,
-  unsupported-color validation; exact canonical-shade matching, no lossy
-  snapping).  Single-image → tileset only; tilemap/OAM/dedup are TODO.
-* `make gfx` — regenerates `src/gfx/*.h` from `assets/*.png`
-  (deterministic output; a CI step fails if the committed headers drift from
-  the source assets).
-* `assets/player_demo.png` → `src/gfx/player_sprite_tile.h`, included by
-  `src/ui/ui.c` (byte-identical to the previously hand-authored tile).
-
-TODO: tilemaps, OAM sprite definitions, duplicate-tile dedup, and the
-renderer rewiring below.
+Implemented: everything above (`make manifest`, `make palette-check`,
+`make gfx`, `make tiles`), per-scene CRAM loading
+(`ui_load_cram_banked`), OAM sprite engine, CGB palettes with DMG
+fallback. See `assets/WIRING_ASSETS.md` for the asset wiring guide and
+`assets/palette_tutorial.md` for the artist contract.
 
 ## Renderer requirements (DMG + CGB)
 

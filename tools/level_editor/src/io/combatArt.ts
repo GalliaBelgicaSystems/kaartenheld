@@ -70,7 +70,7 @@ export const COMBAT_BRUSH_NAMES: string[] = [
   'combat_bottom_left_card_corner', 'combat_bottom_middle_card', 'combat_bottom_right_card_corner',
   'combat_center_card',
   'combat_one_icon', 'combat_two_icon', 'combat_three_icon', 'combat_four_icon',
-  'combat_poison_status', 'combat_fire_status', 'combat_ice_status',
+  'combat_top_right_poison_card', 'combat_top_right_fire_card', 'combat_top_right_ice_card',
   'combat_arrow_pointing_up', 'combat_hp_icon', 'combat_ap_icon',
   'combat_deck_icon', 'combat_hero_icon',
   'combat_top_left_kobold', 'combat_top_middle_kobold', 'combat_top_right_kobold',

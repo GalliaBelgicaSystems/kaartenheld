@@ -104,6 +104,19 @@ extern uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+/* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
+ * Staged by the loader from g_battle_art_obj; read by the stamper. */
+extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+
+/* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
+ * engage clones of one type). Programmed at battle entry, restored with
+ * the NPC ramps on overworld return. BG slot 7 (boss) is a different
+ * palette bank and unaffected. */
+#define BATTLE_OBJ_SCRATCH 7
+
+/* Per-art-set OBJ ramp data (generated battle_obj_tables.c, fixed bank). */
+extern const uint8_t g_battle_art_obj[];
+extern const uint8_t g_battle_obj_ramps[];
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
@@ -117,6 +130,13 @@ extern char g_battle_anim_target_name[12];
  * above.  Dispatched once per battle entry from ui_draw_battle_full()
  * (LCD-off window). */
 void battle_art_load_banked(void);
+
+/* Banked battle-OAM pass (src/battle/battle_oam_banked.c, ROM bank 5):
+ * g_bk_ptr_a = Battle*.  Draws/hides per-slot OAM strides from the same
+ * WRAM caches the BG stamper uses.  Dispatched from the fixed-bank
+ * ui_update_battle wrapper right after the bank-3 render (sequential
+ * trampoline calls, never nested). */
+void battle_oam_draw_banked(void);
 
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,

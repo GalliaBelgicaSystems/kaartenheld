@@ -30,6 +30,13 @@
         "width": 1,
         "height": 1,
         "tile": "desolate_landscape.desolate_landscape_exit_desolate_landscape"
+      },
+      {
+        "x": 17,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_fire_frame_1"
       }
     ]
   },
@@ -116,23 +123,6 @@
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_BAT",
         "ai": "AI_PATROL_CIRCLE"
-      }
-    },
-    {
-      "id": "south_campfire",
-      "type": "npc",
-      "overworld_sprite": "desolate_landscape.desolate_landscape_fire_frame_1",
-      "animation_frames": [
-        "desolate_landscape.desolate_landscape_fire_frame_1",
-        "desolate_landscape.desolate_landscape_fire_frame_2"
-      ],
-      "position": {
-        "x": 17,
-        "y": 11
-      },
-      "properties": {
-        "display_name": "CAMPFIRE",
-        "dialogue": "A crackling fire warms the desolate wasteland."
       }
     },
     {

@@ -31,7 +31,7 @@ export interface CardSkin {
 export const CARD_ICON_NAMES: string[] = [
   'combat_sword_icon', 'combat_shield_icon', 'combat_bow_icon',
   'combat_dagger_icon', 'combat_ring_icon', 'amulet',
-  'combat_fire_status', 'combat_ice_status', 'combat_poison_status',
+  'combat_top_right_fire_card', 'combat_top_right_ice_card', 'combat_top_right_poison_card',
 ];
 
 /** CGB BG palette names (UI_COLOR_* 0-7). */
@@ -60,9 +60,9 @@ export const CARD_ICON_URL: Record<string, string | null> = {
   combat_bow_icon: '/tiles/combat/combat_bow_icon.png',
   combat_dagger_icon: '/tiles/combat/combat_dagger_icon.png',
   combat_ring_icon: '/tiles/combat/combat_ring_icon.png',
-  combat_fire_status: '/tiles/combat/combat_fire_status.png',
-  combat_ice_status: '/tiles/combat/combat_ice_status.png',
-  combat_poison_status: '/tiles/combat/combat_poison_status.png',
+  combat_top_right_fire_card: '/tiles/combat/combat_top_right_fire_card.png',
+  combat_top_right_ice_card: '/tiles/combat/combat_top_right_ice_card.png',
+  combat_top_right_poison_card: '/tiles/combat/combat_top_right_poison_card.png',
   combat_hp_icon: '/tiles/combat/combat_hp_icon.png',
   combat_ap_icon: '/tiles/combat/combat_ap_icon.png',
   combat_deck_icon: '/tiles/combat/combat_deck_icon.png',

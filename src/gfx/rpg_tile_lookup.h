@@ -8,7 +8,7 @@
 
 extern const uint8_t g_tileset_forest[768];
 extern const uint8_t g_tileset_desolate[768];
-extern const uint8_t g_tileset_castle[432];
+extern const uint8_t g_tileset_castle[256];
 extern const uint8_t g_tileset_village[768];
 extern const uint8_t g_intrepid_font_tiles[1536];
 extern const uint8_t g_tile_pal_forest[48];

@@ -75,7 +75,7 @@ export const HUD_ICON_NAMES: string[] = [
   'combat_hp_icon', 'combat_ap_icon', 'combat_deck_icon',
   'combat_sword_icon', 'combat_shield_icon', 'combat_bow_icon',
   'combat_dagger_icon', 'combat_ring_icon', 'amulet',
-  'combat_fire_status', 'combat_ice_status', 'combat_poison_status',
+  'combat_top_right_fire_card', 'combat_top_right_ice_card', 'combat_top_right_poison_card',
 ];
 
 /** Timer-bar segment tile choices (any compiled HUD/card icon tile plus

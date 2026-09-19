@@ -1,7 +1,7 @@
 {
  "name": "town_npc_sprites",
  "test": true,
- "description": "Town NPCs (mayor, guard, merchants, dogs, wizard) render their map-art tiles with correct CGB palette attributes. The village sheet's NPC cells were blanked when art moved to the actors tileset; tiles_content.c overlays actor-sourced tiles into the VRAM slots the map references.",
+ "description": "Town NPCs (mayor, guard, merchant) render as OAM sprites with exact OBJ ramps (screens/enemy_types/npc_*.json); wizard art loads in the OAM blob (verified in verify-vram: the debug snapshot carries 4 actors max, so wizard presence is unassertable here though it spawns and renders in-game). All NPC map cells are plain floor (no overlay art, no stray tiles). Dogs render as shared OAM sprites.",
  "scenario_id": "MAYOR_DIALOGUE",
  "actions": [],
  "assertions": [
@@ -10,34 +10,52 @@
    "expected": "OVERWORLD"
   },
   {
+   "type": "actor_at",
+   "entity": "MAYOR",
+   "x": 10,
+   "y": 5
+  },
+  {
+   "type": "actor_at",
+   "entity": "GUARD",
+   "x": 10,
+   "y": 8
+  },
+  {
+   "type": "actor_at",
+   "entity": "MERCHANT",
+   "x": 11,
+   "y": 3
+  },
+  {
    "type": "tilemap_cell",
    "row": 5,
    "col": 10,
-   "expected": 169
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 5,
    "col": 10,
-   "expected": 6
+   "expected": 5
   },
   {
    "type": "tilemap_cell",
    "row": 8,
    "col": 10,
-   "expected": 163
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 8,
    "col": 10,
-   "expected": 3
+   "expected": 5
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 9,
-   "expected": 167
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
@@ -49,7 +67,7 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 11,
-   "expected": 167
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
@@ -61,49 +79,49 @@
    "type": "tilemap_cell",
    "row": 4,
    "col": 3,
-   "expected": 132
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 4,
    "col": 3,
-   "expected": 3
+   "expected": 5
   },
   {
    "type": "tilemap_cell",
    "row": 5,
    "col": 16,
-   "expected": 132
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 5,
    "col": 16,
-   "expected": 3
+   "expected": 5
   },
   {
    "type": "tilemap_cell",
    "row": 10,
    "col": 4,
-   "expected": 132
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 10,
    "col": 4,
-   "expected": 3
+   "expected": 5
   },
   {
    "type": "tilemap_cell",
    "row": 10,
    "col": 6,
-   "expected": 164
+   "expected": 134
   },
   {
    "type": "tilemap_attr",
    "row": 10,
    "col": 6,
-   "expected": 3
+   "expected": 5
   }
  ],
  "initial_state": {

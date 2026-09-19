@@ -84,7 +84,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -111,105 +111,95 @@ lint: gfx tiles $(SRCS)
 # which the Nix dev shell provides.
 GFX_OUT_DIR = $(SRC_DIR)/gfx
 
-gfx:
+gfx: manifest
 	@mkdir -p $(GFX_OUT_DIR)
-	# Shared composed sheets (battle art, overworld enemies, hero): the
-	# gfx rules below read these; compose them deterministically from the
-	# curated public/tiles/ PNGs so a clean checkout always has them.
-	@python3 tools/compose_battle_sprites.py
-	@python3 tools/compose_enemy_sprites.py
-	@python3 tools/compose_hero_sprites.py
-	@python3 tools/compose_card_frames.py
 	# ── Intrepid font ─────────────────────────────────────────────────────
 	@python3 tools/png2gb.py assets/intrepid.png --name intrepid_font_tiles \
 		--raw -o $(GFX_OUT_DIR)/intrepid_font_tiles.inc
 	# ── Forest tileset (assets/forest-tile.png, 16 cols × 3 rows) ────────
+	# Shade maps come from generated/tiles/shades/*.json (palette_compiler:
+	# exact artist ramps per tile, no luminance guessing). Every rule below
+	# takes --shade-map; off-ramp pixels use the nearest shade of the
+	# tile's ramp and are listed in generated/tiles/ramp_mismatches.json.
 	# Full 48-tile world sheet (g_tileset_forest)
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
-		--palette auto --anchor-color "#7bb660" \
+		--shade-map generated/tiles/shades/forest.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
 	# Floor tile: col 0, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_floor \
-		--palette auto --anchor-color "#7bb660" --tile-coords "0,2" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "0,2" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_floor.inc
 	# Treetop tile: col 12, row 0
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_tree \
-		--palette auto --anchor-color "#7bb660" --tile-coords "12,0" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "12,0" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_tree.inc
 	# Exit tile: col 8, row 2
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_exit \
-		--palette auto --anchor-color "#7bb660" --tile-coords "8,2" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "8,2" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_exit.inc
 	# Stump tiles TL,TR,BL,BR + mini (BR repeated): cols 14-15, rows 0-1
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
-		--palette auto --anchor-color "#7bb660" --tile-coords "14,0 15,0 14,1 15,1 15,1" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "14,0 15,0 14,1 15,1 15,1" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
 	# Chest sprite tile from forest-tile.png (tile 11,2 "treasure chest
-	# forest").  Anchor the forest-floor green to shade 0 = OAM transparent;
-	# without it the gold highlight (brightest color) grabs shade 0 and the
-	# green background lands on shade 1, rendering as an opaque tan box.
+	# forest"). Shade 0 of its ramp is the transparent key, matching the
+	# sheet encoding, so no anchor flag is needed.
 	@python3 tools/png2gb.py assets/forest-tile.png --name forest_chest_sprite_tile \
-		--palette auto --anchor-color "#7bb660" --tile-coords "11,2" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "11,2" \
 		-o $(GFX_OUT_DIR)/forest_chest_sprite_tile.h
-	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × 8 rows) ────
+	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets
 	# into battle_types.c, so the loader needs no fixed set size.
 	# Sheet layout: see tools/compose_battle_sprites.py.
 	@python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
+		--shade-map generated/tiles/shades/battle.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
 		-o $(GFX_OUT_DIR)/battle_enemy_art.h
 	# ── Shared overworld enemy sprites (assets/enemy_sprites.png) ──
 	# One transparent-background sprite per enemy type, shared by every
-	# world.  Cell order comes from screens/enemy_types overworld.cells
+	# world. Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
 	# Sheet layout: see tools/compose_enemy_sprites.py.
 	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
-	# ── Desolate landscape (assets/desolate_landscape.png, 16 cols × 3 rows) ──
-	# Full 48-tile world sheet (g_tileset_desolate)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_world_tiles \
-		--palette auto --anchor-color "#938da1" \
+	# ── Desolate landscape (assets/desolate-tile.png) ──
+	# Full world sheet (g_tileset_desolate)
+	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
+		--shade-map generated/tiles/shades/desolate_landscape.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
 	# 41-tile subset for scene terrain lookup (rows 0–2, cols 0–8 on row 2)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_tiles \
-		--palette auto --anchor-color "#938da1" --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
+	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_tiles \
+		--shade-map generated/tiles/shades/desolate_landscape.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_tiles.inc
 	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
-		--palette auto \
+		--shade-map generated/tiles/shades/hero_ow.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-	# ── Castle tileset (assets/castle-tile.png) ─────────
-	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
+	# ── Castle tileset (assets/castle-tile.png, 9 cols × 3 rows) ─────────
+	# The sheet packs 9-wide but VRAM slots pack 8-wide (vram_block index
+	# order), so bytes AND palette entries follow vram-index order via
+	# --tile-coords (slots 0-15; see palette_compiler). Sized by the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
-	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
+	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
-		--palette auto --anchor-color "#b6a27e" \
+		--shade-map generated/tiles/shades/village.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
-	# NPC map art (compose from the curated actors tileset; see
-	# tools/compose_npc_tiles.py).  The village sheet's NPC cells are blank
-	# since the art moved to the shared actors tileset; tiles_content.c
-	# overlays these into the village VRAM block after the sheet copy.
-	@python3 tools/compose_npc_tiles.py
-	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 8 rows) ──
+	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 10 rows) ──
 	# 9 border/background tiles for the boxed battle-hand cards (TL TM TR /
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
-		--palette auto -o $(GFX_OUT_DIR)/card_frame_tiles.h
-	@python3 tools/png2gb.py assets/npc_tiles.png --name rpg_actor_npc_tiles \
-		--palette auto --anchor-color "#f1eb03" --raw \
-		-o $(GFX_OUT_DIR)/rpg_actor_npc_tiles.inc
+		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
 	# previews the exact same image, so a copy is published under
 	# public/tiles/title/ (mirrors the ROM 1:1; the CI drift diff covers it).
 	@python3 tools/png2gb.py assets/title-red.png --name title_logo_tiles \
-		--palette auto --anchor-color "#ffffff" --raw \
+		--shade-map generated/tiles/shades/title.json --raw \
 		-o $(GFX_OUT_DIR)/title_logo_tiles.inc
 	@mkdir -p tools/level_editor/public/tiles/title
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
@@ -284,7 +274,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,card_skin}.c + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,card_skin}.c + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
@@ -398,11 +388,23 @@ atlas-check:
 tiles-check:
 	@python3 tools/level_editor/validate_tilesets.py tools/level_editor/tilesets/*.json
 
-# Palette manifest generation: PNG + tileset JSON -> generated/tiles/<tileset>.json
-# Single source of truth for CGB palettes (web editor + ROM compiler parity).
-# See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py | $(GENERATED_TILES_DIR)
+# Palette manifest generation: curated PNGs -> composed sheets ->
+# generated/tiles/*.json + shades + C palette includes + mismatch report.
+# Ramps always win (every tile gets an existing artist ramp); wrongness is
+# reported in generated/tiles/ramp_mismatches.json, never a build failure.
+# See tools/palette_compiler.py.
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json | $(GENERATED_TILES_DIR)
+	@python3 tools/compose_battle_sprites.py
+	@python3 tools/compose_enemy_sprites.py
+	@python3 tools/compose_hero_sprites.py
+	@python3 tools/compose_card_frames.py
 	@python3 tools/palette_compiler.py
+	@python3 tools/verify_palette_manifest.py
+
+# Mismatch report: tiles whose pixels don't exactly fit their ramp.
+# Always exits green (ramps win); the JSON is the artist todo list.
+palette-check: manifest
+	@python3 -c "import json; m=json.load(open('generated/tiles/ramp_mismatches.json')); print('palette-check: %d reported tiles (see generated/tiles/ramp_mismatches.json)' % len(m)); [print('  %-14s %-7s declared=%-12s used=%-12s off=%s' % (r['sheet'], str(r['tile']), r['declared'], r['used_ramp'], ','.join(r['off_colors']))) for r in m]"
 
 # Tile-trait generation: manifests -> generated/tiles/tile_traits.h
 # (walk/glyph ranges + exit indices consumed by world.c, patrol_banked.c,
@@ -411,9 +413,10 @@ GENERATED_TILES_DIR = generated/tiles
 GENERATED_TILE_WALK = $(GENERATED_TILES_DIR)/tile_walk.h
 GENERATED_TILE_GLYPH = $(GENERATED_TILES_DIR)/tile_glyph.h
 GENERATED_TILE_PALETTE = $(GENERATED_TILES_DIR)/tile_palette.h
-tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE)
+GENERATED_TILE_ANIM = $(GENERATED_TILES_DIR)/anim_pairs.h
+tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM)
 
-$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
+$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
 	python3 tools/level_compiler/generate_tiles.py --out "$(GENERATED_TILES_DIR)"
 
 $(GENERATED_TILES_DIR):
@@ -423,6 +426,7 @@ $(GENERATED_TILES_DIR):
 $(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o: $(GENERATED_TILE_WALK)
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
+$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GENERATED_TILE_ANIM)
 
 # Header-dependency safety net (AGENTS.md 52.2): the compile rules track
 # only .c -> .o mtimes, so an object compiled against an older struct

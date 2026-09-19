@@ -36,6 +36,64 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 DEFAULT_OUT_DIR = str(REPO_ROOT / "src" / "game")
 
+# Ramp-name -> hardware slot resolution (generated/tiles/base.json +
+# obj.json from palette_compiler). Content JSONs name artist ramps
+# ("fightslime", "sprites"); the ROM needs slot ints. Unknown names fail
+# loudly; plain ints pass through range-checked (legacy).
+_ramp_slots = None  # ({ramp: base_slot}, {ramp: obj_slot})
+
+
+def _load_ramp_slots():
+    global _ramp_slots
+    if _ramp_slots is None:
+        try:
+            base = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())["slots"]
+            obj = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())["slots"]
+        except (OSError, ValueError, KeyError) as e:
+            raise SystemExit(f"ERROR: ramp manifests missing (run make manifest first): {e}")
+        _ramp_slots = (
+            {v["ramp"]: int(k) for k, v in base.items()},
+            {v["ramp"]: int(k) for k, v in obj.items()},
+        )
+    return _ramp_slots
+
+
+def resolve_base_palette(pal, where):
+    """Artist ramp name (or int) -> base/BG hardware slot."""
+    if isinstance(pal, str):
+        base, _ = _load_ramp_slots()
+        if pal not in base:
+            raise SystemExit(f"ERROR: {where}: unknown base ramp '{pal}'")
+        return base[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def resolve_obj_palette(pal, where):
+    """Artist ramp name (or int) -> OBJ hardware slot."""
+    if isinstance(pal, str):
+        _, obj = _load_ramp_slots()
+        if pal not in obj:
+            raise SystemExit(f"ERROR: {where}: unknown OBJ ramp '{pal}'")
+        return obj[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def check_obj_palette_name(name, where):
+    """obj_palette names ride along for future battle-OAM work; they must
+    still name a real artist ramp (palette.txt), never a typo."""
+    if name is None:
+        return
+    from palette_parse import parse_palette
+    _, ramps = parse_palette()
+    if name not in ramps:
+        raise SystemExit(f"ERROR: {where}: unknown obj_palette ramp '{name}'")
+
 # Combat-art sets (screens/combat_art/*.json) replace the old hardcoded
 # ART_SETS table: each set names curated sheet tiles per frame plus its
 # dimensions and CGB palette.  Tile names resolve through
@@ -98,6 +156,10 @@ def load_combat_art():
                     print("WARNING: %s: unknown combat tile '%s'" % (path.name, name))
         if sid in sets:
             print("WARNING: %s: duplicate combat art id '%s'" % (path.name, sid))
+        if data.get('oam') and not data.get('obj_palette'):
+            print("WARNING: %s: oam set without obj_palette ramp" % path.name)
+        if data.get('obj_palette'):
+            check_obj_palette_name(data.get('obj_palette'), "%s obj_palette" % path.name)
         sets[sid] = data
     order = sorted(sets.keys(), key=lambda k: sets[k].get('order', 0))
     seen_orders = [sets[k].get('order', 0) for k in order]
@@ -401,7 +463,7 @@ def ow_blob_layout(enemy_types, hero_json=None):
                 if name not in HERO_TILE_COORDS:
                     print("WARNING: hero: unknown overworld tile '%s'" % name)
             pal = hero_json['overworld'].get('palette', 0)
-            if not (0 <= pal <= 7):
+            if isinstance(pal, int) and not (0 <= pal <= 7):
                 print("WARNING: hero: overworld.palette %s out of 0-7" % pal)
             offsets['hero'] = at
             cells.extend(names)
@@ -424,7 +486,7 @@ def ow_blob_layout(enemy_types, hero_json=None):
             if name not in ENEMY_TILE_COORDS:
                 print("WARNING: %s: unknown overworld tile '%s'" % (et_id, name))
         pal = ow.get('palette', 0)
-        if not (0 <= pal <= 7):
+        if isinstance(pal, int) and not (0 <= pal <= 7):
             print("WARNING: %s: overworld.palette %s out of 0-7" % (et_id, pal))
         offsets[et_id] = at
         cells.extend(names)
@@ -461,7 +523,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
             pal = hero_json['overworld'].get('palette', 0)
             lines.append("const uint8_t g_hero_ow_tile = %d;" % ENEMY_OW_BASE)
             lines.append("const uint8_t g_hero_ow_frames = %d;" % len(hero_ow.get('cells', [])))
-            lines.append("const uint8_t g_hero_ow_palette = %d;" % hero_json['overworld'].get('palette', 0))
+            lines.append("const uint8_t g_hero_ow_palette = %d;"
+                         % resolve_obj_palette(pal, "hero overworld.palette"))
         else:
             lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
             lines.append("const uint8_t g_hero_ow_frames = 0;")
@@ -487,7 +550,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
             ow_h = ow.get('height', 1) or 1
             cells = ow.get('cells', [])
             ow_frames = (len(cells) // (ow_w * ow_h)) if (ow_w * ow_h) else 0
-            ow_palette = ow.get('palette', 0)
+            ow_palette = resolve_obj_palette(ow.get('palette', 0),
+                                             "%s overworld.palette" % et_id)
         else:
             ow_tile = 0xFF
             ow_w = 0
@@ -504,7 +568,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         art_offset = 0
         if art_id in art_sets:
             art_index = art_order.index(art_id)
-            art_palette = art_sets[art_id]['palette']
+            art_palette = resolve_base_palette(art_sets[art_id]['palette'],
+                                               "%s combat art palette" % art_id)
             art_w = art_sets[art_id]['width']
             art_h = art_sets[art_id]['height']
             art_offset = art_offsets[art_id]
@@ -554,6 +619,53 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     return "\n".join(lines)
 
 
+def build_battle_obj_output(art_sets, art_order):
+    """Generate C code for OAM battle-art OBJ ramps (Florent's model).
+
+    Fixed bank (no #pragma: 39 bytes the bank-4 loader reads directly --
+    fixed ROM is always mapped, so no staging or trampoline is needed and
+    bank 4, which overflows otherwise, stays untouched). Raw RGB555 byte
+    pairs (CGB order, low first), matching RGB8() semantics.
+    """
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    _obj_order = []
+    for _sid in art_order:
+        _oramp = (art_sets[_sid] or {}).get("obj_palette")
+        if _oramp and _oramp not in _obj_order:
+            if _oramp not in _ramps:
+                raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj ramp '{_oramp}'")
+            _obj_order.append(_oramp)
+
+    def _rgb555(rgb):
+        v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
+        return v & 0xFF, (v >> 8) & 0xFF
+
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/combat_art/ and re-run.")
+    lines.append(" * Fixed bank (no pragma): read by the bank-4 art loader.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    lines.append("/* OBJ ramps for OAM battle art. Indexed by g_battle_art_obj. */")
+    lines.append("const uint8_t g_battle_obj_ramps[] = {")
+    for _oramp in _obj_order:
+        _pairs = ", ".join("0x%02X, 0x%02X" % _rgb555(c) for c in _ramps[_oramp])
+        lines.append(f"    /* {_oramp} */ {_pairs},")
+    lines.append("};")
+    lines.append("/* Per art set (art_order): OBJ ramp index, or 0xFF = BG stamp. */")
+    lines.append("const uint8_t g_battle_art_obj[] = {%s};" %
+                 ", ".join("0x%02X" % (_obj_order.index((art_sets[_sid] or {}).get("obj_palette"))
+                                       if (art_sets[_sid] or {}).get("obj_palette") else 0xFF)
+                           for _sid in art_order))
+    lines.append("")
+
+    return "\n".join(lines)
+
+
 # Battle hand-card skin (screens/cards_skin.json): per BattleCardType
 # weapon icon tile + CGB palette, per element status icon tile + palette,
 # and the card box geometry.  Icon names resolve to the fixed VRAM icon
@@ -574,8 +686,8 @@ ICON_TILES = {
     'combat_sword_icon': 104, 'combat_shield_icon': 105,
     'combat_bow_icon': 106, 'combat_dagger_icon': 107,
     'combat_ring_icon': 108, 'amulet': 109,
-    'combat_fire_status': 110, 'combat_ice_status': 111,
-    'combat_poison_status': 112,
+    'combat_top_right_fire_card': 110, 'combat_top_right_ice_card': 111,
+    'combat_top_right_poison_card': 112,
     'combat_hp_icon': 113, 'combat_ap_icon': 114,
     'combat_deck_icon': 116,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
@@ -585,7 +697,7 @@ ICON_TILES = {
     # slots 98-102, nothing else ever writes them.
     'combat_0_arrows_left': 98, 'combat_1_arrow_left': 99,
     'combat_2_arrows_left': 100, 'combat_3_arrows_left': 101,
-    'combat_nine_icon': 102,
+    'combat_nine_icon': 102, 'combat_4_arrows_left': 97,
 }
 SKIN_COLORS = {'none': 0, 'fire': 1, 'iron': 2, 'field': 3, 'poison': 4,
                'wood': 5, 'gold': 6, 'dim': 7}
@@ -605,9 +717,9 @@ DEFAULT_SKIN = {
         'dagger': {'icon': 'combat_dagger_icon', 'color': 'poison'},
     },
     'elements': {
-        'fire':   {'icon': 'combat_fire_status',   'color': 'fire'},
-        'ice':    {'icon': 'combat_ice_status',    'color': 'iron'},
-        'poison': {'icon': 'combat_poison_status', 'color': 'poison'},
+        'fire':   {'icon': 'combat_top_right_fire_card',   'color': 'fire'},
+        'ice':    {'icon': 'combat_top_right_ice_card',    'color': 'iron'},
+        'poison': {'icon': 'combat_top_right_poison_card', 'color': 'poison'},
     },
 }
 
@@ -1018,7 +1130,7 @@ def main(args=None):
                     if name not in HERO_TILE_COORDS:
                         print("WARNING: hero.json: unknown overworld tile '%s'" % name)
                 pal = ow.get('palette', 0)
-                if not (0 <= pal <= 7):
+                if isinstance(pal, int) and not (0 <= pal <= 7):
                     print("WARNING: hero.json: overworld.palette %s out of 0-7" % pal)
         else:
             print("WARNING: screens/hero.json not found")
@@ -1083,9 +1195,12 @@ def main(args=None):
     hud_skin_output = build_battle_hud_output(hud)
     if hud_skin_output is None:
         return 1
+    battle_obj_output = build_battle_obj_output(art_sets, art_order)
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
+    # Write battle_obj_tables.c (fixed bank OBJ ramps for OAM battle art)
+    battle_obj_path = output_dir / "battle_obj_tables.c"
     # Write battle_types.c
     battle_types_path = output_dir / "battle_types.c"
     # Write hero_content.c (data-driven starter deck)
@@ -1097,6 +1212,7 @@ def main(args=None):
 
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
+                            (battle_obj_path, battle_obj_output),
                             (battle_types_path, enemy_types_output),
                             (hero_content_path, hero_output),
                             (card_skin_path, card_skin_output),
@@ -1108,14 +1224,18 @@ def main(args=None):
             if committed is None or committed != fresh:
                 print("DRIFT: fresh compile differs from %s" % path, file=sys.stderr)
                 return 1
-        print("battle compile --check OK: %s, %s, %s, %s and %s match fresh output"
-              % (battle_screens_path, battle_types_path, hero_content_path,
-                 card_skin_path, hud_skin_path))
+        print("battle compile --check OK: %s, %s, %s, %s, %s and %s match fresh output"
+              % (battle_obj_path, battle_screens_path, battle_types_path,
+                 hero_content_path, card_skin_path, hud_skin_path))
         return 0
 
     with open(battle_screens_path, "w") as f:
         f.write(battle_screens_output)
     print("Wrote %s" % battle_screens_path)
+
+    with open(battle_obj_path, "w") as f:
+        f.write(battle_obj_output)
+    print("Wrote %s" % battle_obj_path)
 
     with open(battle_types_path, "w") as f:
         f.write(enemy_types_output)

@@ -794,21 +794,14 @@ function levelEditorApiPlugin(): Plugin {
         // palette` is already data-driven (battle_compile.py -> ow_palette).
         const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village'];
         const parseObjPalettes = () => {
-          const uiC = fs.readFileSync(path.join(repoRoot, 'src', 'ui', 'ui.c'), 'utf-8');
-          const specs: Array<[string, string]> = [
-            ['cgb_sprite_palette', 'grey'],
-            ['cgb_sprite_palette_orange', 'orange'],
-            ['cgb_sprite_palette_brown', 'brown'],
-            ['cgb_sprite_palette_green', 'green'],
-          ];
+          // OBJ ramps live in generated/tiles/obj.json (palette_compiler:
+          // slots 0-4 artist ramps, 5-7 grey). Same file battle_compile
+          // resolves content ramp names against.
+          const manifest = readJsonFile(path.join('generated', 'tiles', 'obj.json'));
           const out: Array<{ index: number; name: string; colors: string[] }> = [];
-          for (const [sym, name] of specs) {
-            const m = uiC.match(new RegExp(sym + '\\s*\\[4\\]\\s*=\\s*\\{([\\s\\S]*?)\\}'));
-            if (!m) continue;
-            const colors = Array.from(m[1].matchAll(/RGB8\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/g))
-              .map((mm) => '#' + [mm[1], mm[2], mm[3]]
-                .map((v) => parseInt(v, 10).toString(16).padStart(2, '0')).join(''));
-            out.push({ index: out.length, name, colors });
+          const slots = (manifest && manifest.slots) || {};
+          for (const key of Object.keys(slots).sort((a, b) => Number(a) - Number(b))) {
+            out.push({ index: Number(key), name: slots[key].ramp, colors: slots[key].colors });
           }
           return out;
         };
@@ -821,14 +814,18 @@ function levelEditorApiPlugin(): Plugin {
           const byId: Record<string, any> = {};
           for (const t of ts.tiles || []) byId[t.id] = t;
           const pal = manifest.tile_palettes || [];
+          const ids = manifest.tile_ids || [];
+          const slotOfId: Record<string, number> = {};
+          for (let k = 0; k < ids.length; k++) slotOfId[ids[k]] = pal[k];
           const tiles = [...vb]
             .sort((a: any, b: any) => ((a.y * (maxX + 1) + a.x) - (b.y * (maxX + 1) + b.x)))
             .map((v: any, i: number) => {
               const t = byId[v.tile] || {};
+              const slot = slotOfId[v.tile];
               return {
                 id: v.tile, label: t.label || v.tile,
                 image_url: t.image_url || null,
-                palette: typeof pal[i] === 'number' ? pal[i] : 0,
+                palette: typeof slot === 'number' ? slot : 0,
               };
             });
           return { manifest, ts, tiles };
@@ -839,24 +836,34 @@ function levelEditorApiPlugin(): Plugin {
             const u = new URL(req.url || '', 'http://localhost');
             const tileset = u.searchParams.get('tileset') || 'forest';
             const { manifest, tiles } = readTilesetManifest(tileset);
+            // Content files name artist ramps; the editor UI works in
+            // hardware slots, so resolve names -> slots for display (the
+            // reverse of /api/assign-palette below).
+            const objManifest = readJsonFile(path.join('generated', 'tiles', 'obj.json'));
+            const objSlotOf: Record<string, number> = {};
+            for (const key of Object.keys((objManifest && objManifest.slots) || {})) {
+              objSlotOf[objManifest.slots[key].ramp] = Number(key);
+            }
             const enemies = fs.readdirSync(path.join(repoRoot, 'screens', 'enemy_types'))
               .filter((f) => f.endsWith('.json'))
               .map((f) => {
                 const d = readJsonFile(path.join('screens', 'enemy_types', f));
                 const id = d.id || f.replace(/\.json$/, '');
+                const pal = (d.overworld && d.overworld.palette) || 0;
                 return { id, label: d.label || id,
                          image_url: `/tiles/enemies/${id}.png`,
-                         palette: (d.overworld && d.overworld.palette) || 0 };
+                         palette: typeof pal === 'string' ? (objSlotOf[pal] ?? 0) : pal };
               })
               .sort((a, b) => a.id.localeCompare(b.id));
             const hero = readJsonFile(path.join('screens', 'hero.json'));
+            const heroPal = (hero.overworld && hero.overworld.palette) || 0;
             sendJson({
               success: true, tileset,
               bg: manifest.palettes || [],
               obj: parseObjPalettes(),
               tiles,
               enemies,
-              hero: { palette: (hero.overworld && hero.overworld.palette) || 0 },
+              hero: { palette: typeof heroPal === 'string' ? (objSlotOf[heroPal] ?? 0) : heroPal },
             });
           } catch (err: any) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -875,24 +882,36 @@ function levelEditorApiPlugin(): Plugin {
               if (!Number.isInteger(p) || p < 0 || p > 7) {
                 throw new Error(`palette ${palette} out of 0-7`);
               }
+              // The editor assigns hardware slots; content files store
+              // artist ramp names, so resolve slot -> ramp here.
+              const rampOfSlot = (manifestPath: string) => {
+                const m = readJsonFile(manifestPath);
+                const entry = m.slots
+                  ? m.slots[String(p)]
+                  : (m.palettes || []).find((e: any) => e.index === p);
+                if (!entry) throw new Error(`no ramp at slot ${p} in ${manifestPath}`);
+                return entry.ramp || entry.name;
+              };
               if (kind === 'tile') {
                 if (!TILESETS.includes(tileset)) throw new Error(`unknown tileset '${tileset}'`);
                 const rel = path.join('tools', 'level_editor', 'tilesets', `${tileset}.json`);
                 const ts = readJsonFile(rel);
                 const tile = (ts.tiles || []).find((t: any) => t.id === id);
                 if (!tile) throw new Error(`unknown tile '${id}' in ${tileset}`);
-                tile.palette = p;
+                tile.palette = rampOfSlot(path.join('generated', 'tiles', `${tileset}.json`));
                 writeJsonAtomic(path.join(repoRoot, rel), ts);
               } else if (kind === 'enemy') {
                 if (!isSafeId(id)) throw new Error(`invalid enemy id '${id}'`);
                 const rel = path.join('screens', 'enemy_types', `${id}.json`);
                 const d = readJsonFile(rel);
-                d.overworld = { ...(d.overworld || {}), palette: p };
+                d.overworld = { ...(d.overworld || {}),
+                                palette: rampOfSlot(path.join('generated', 'tiles', 'obj.json')) };
                 writeJsonAtomic(path.join(repoRoot, rel), d);
               } else if (kind === 'hero') {
                 const rel = path.join('screens', 'hero.json');
                 const d = readJsonFile(rel);
-                d.overworld = { ...(d.overworld || {}), palette: p };
+                d.overworld = { ...(d.overworld || {}),
+                                palette: rampOfSlot(path.join('generated', 'tiles', 'obj.json')) };
                 writeJsonAtomic(path.join(repoRoot, rel), d);
               } else {
                 throw new Error(`unknown kind '${kind}'`);

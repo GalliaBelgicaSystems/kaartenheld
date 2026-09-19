@@ -8,6 +8,7 @@
 #include "battle_data.h"
 #include "gfx/rpg_tile_lookup.h"
 #include "gfx/enemy_ow_tiles.h"
+#include "anim_pairs.h"
 
 /* ── Overworld actor sprites + castle boss background (bank-3 body) ──
  * The data-driven SPRITE_KIND_* OAM choice, the per-actor shadow-OAM write
@@ -98,6 +99,21 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual, uint8_t castle,
             *prop = 0;
             return (uint8_t)(ui_font_tile_base + (uint8_t)(visual - ' '));
     }
+}
+
+/* Campfire flicker, data-driven (generated anim_pairs.h): every frame,
+ * cells showing a *_fire_frame tile take the step's frame (A on even
+ * steps, B on odd).  Idempotent full-coverage write, so freshly scrolled
+ * cells settle within one frame.  Runs from ui_actors_sprites_banked,
+ * i.e. overworld + dialogue-over-overworld only -- battle never calls
+ * this path, so battle art tiles can't collide.  Frame pairs share one
+ * glyph/category, so the semantic screen buffer is untouched; the DEBUG
+ * tilemap mirror is kept in sync for the harness.  VRAM bank is left
+ * alone (tilemap writes assume bank 0, like the boss block below). */
+static void world_anim_swap_banked(const World *w, uint8_t anim)
+{
+    (void)w;
+    (void)anim;
 }
 
 /* Compute the OAM tile/prop/position for every active non-boss actor (from
@@ -263,4 +279,6 @@ void ui_actors_sprites_banked(void)
             break;
         }
     }
+    /* Data-driven campfire flicker (generated anim_pairs.h). */
+    world_anim_swap_banked(w, anim);
 }

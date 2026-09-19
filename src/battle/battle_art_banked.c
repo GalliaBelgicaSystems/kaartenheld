@@ -50,6 +50,7 @@ void battle_art_load_banked(void)
     uint8_t match;
     uint16_t n;
     uint8_t cost;
+    uint8_t oi;
     const uint8_t *src;
     volatile uint8_t *dst;
 
@@ -85,12 +86,29 @@ void battle_art_load_banked(void)
     if (art_h == 0 || art_h > BATTLE_ART_MAX_H) art_h = 2;
     if (art_frames == 0 || art_frames > 2) art_frames = 1;
 
+    /* OAM battle art (Florent's model: enemies are sprites, boss stays
+     * BG): program the battle's single OBJ ramp (clones share it) into
+     * the scratch slot, LCD-off window. Ramp bytes are flat (8/set);
+     * offset by shift, never multiply (§52.18). art_index comes from
+     * generated content (0xFF or a valid set: same trust as below). */
+    oi = 0xFF;
+    if (art_index != 0xFF)
+        oi = g_battle_art_obj[art_index];
+    if (oi != 0xFF) {
+        const uint8_t *pal = &g_battle_obj_ramps[(uint16_t)oi << 3];
+        OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH << 3));
+        for (i = 0; i < 8; i++) {
+            OCPD_REG = pal[i];
+        }
+    }
+
     VBK_REG = 0;
     base = BATTLE_ART_VRAM_BASE;
     for (k = 0; k < b->enemy_count && k < MAX_BATTLE_ENEMIES; k++) {
         g_battle_enemy_art[k] = art_index;
         g_battle_enemy_art_frames[k] = art_frames;
         g_battle_enemy_art_pal[k] = art_palette;
+        g_battle_enemy_art_oam[k] = (uint8_t)(oi != 0xFF);
         g_battle_enemy_art_w[k] = art_w;
         g_battle_enemy_art_h[k] = art_h;
         g_battle_enemy_art_base[k] = 0;
@@ -121,6 +139,7 @@ void battle_art_load_banked(void)
         g_battle_enemy_art[k] = 0xFF;
         g_battle_enemy_art_frames[k] = 0;
         g_battle_enemy_art_pal[k] = 0;
+        g_battle_enemy_art_oam[k] = 0;
         g_battle_enemy_art_w[k] = 3;
         g_battle_enemy_art_h[k] = 2;
         g_battle_enemy_art_base[k] = 0;

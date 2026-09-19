@@ -609,9 +609,9 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           dagger: { icon: 'combat_dagger_icon', color: 'poison' },
         },
         elements: {
-          fire: { icon: 'combat_fire_status', color: 'fire' },
-          ice: { icon: 'combat_ice_status', color: 'iron' },
-          poison: { icon: 'combat_poison_status', color: 'poison' },
+          fire: { icon: 'combat_top_right_fire_card', color: 'fire' },
+          ice: { icon: 'combat_top_right_ice_card', color: 'iron' },
+          poison: { icon: 'combat_top_right_poison_card', color: 'poison' },
         },
       };
       const skin = cardSkin || skinFallback;

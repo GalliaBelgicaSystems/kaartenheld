@@ -27,6 +27,8 @@ uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+/* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
+uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
 
 /* Active battle screen layout (see battle_data.h): uninitialized WRAM
  * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()

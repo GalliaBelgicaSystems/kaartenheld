@@ -1,7 +1,7 @@
 {
  "name": "battle_kobold_art",
  "test": true,
- "description": "Kobold battle renders the new 3x2 kobold combat art (fire palette, single frame) under the HP line.  The forest kobold (4,10) uses AI_CHASE: parked adjacent, it steps into the hero and starts the encounter.",
+ "description": "Kobold battle renders 3x2 OAM art (BG footprint blank); HP line and wiring pinned.",
  "scenario_id": "FOREST_BOOT",
  "actions": [
   {
@@ -36,19 +36,19 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 1,
-   "expected": 128
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 2,
-   "expected": 129
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 4,
    "col": 1,
-   "expected": 131
+   "expected": 0
   }
  ],
  "initial_state": {

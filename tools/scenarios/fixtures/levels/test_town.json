@@ -296,21 +296,21 @@
         "y": 4,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 16,
         "y": 5,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 4,
         "y": 10,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 2,
@@ -366,35 +366,35 @@
         "y": 5,
         "width": 1,
         "height": 1,
-        "tile": "village.village_mayor"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 10,
         "y": 8,
         "width": 1,
         "height": 1,
-        "tile": "village.village_guard"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 9,
         "y": 3,
         "width": 1,
         "height": 1,
-        "tile": "village.village_merchant"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 11,
         "y": 3,
         "width": 1,
         "height": 1,
-        "tile": "village.village_merchant"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 6,
         "y": 10,
         "width": 1,
         "height": 1,
-        "tile": "village.village_save_wizard"
+        "tile": "village.village_plain_floor_1"
       }
     ]
   },
@@ -442,7 +442,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_mayor"
       }
     },
     {
@@ -466,7 +467,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
       }
     },
     {
@@ -514,7 +516,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
       }
     },
     {
@@ -538,7 +541,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_wizard"
       }
     }
   ],

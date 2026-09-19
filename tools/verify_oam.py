@@ -103,6 +103,12 @@ def shadow_oam_slot_tile(sess, slot):
     return sess._memread(0xC000 + 4 * slot + 2)
 
 
+def shadow_oam_slot_pal(sess, slot):
+    """CGB OBJ palette of shadow OAM entry `slot` (attr bits 0-2)."""
+    attr = sess._memread(0xC000 + 4 * slot + 3)
+    return attr & 0x07 if attr is not None else None
+
+
 def mirror_at(sess, mirror_addr, x, y):
     """g_tilemap_mirror byte for tilemap cell (x, y).  DEBUG-only mirror of
     the 0x9800 ring (32 x 32), asserted because mGBA cannot read VRAM."""
@@ -138,6 +144,77 @@ def wait_vblank(sess, tries=3):
     return False
 
 
+def verify_battle_spider_oam(sess):
+    """Spider trio renders as OAM (BG footprint blank): walk into the
+    castle spider like castle_spider_encounter (the patrol bump needs a
+    bounded wait), then set-match entries 1-18 for blob tiles + scratch
+    OBJ palette 7. Spider costs 6 like slime: bases 128/134/140."""
+    print("== Battle spider OAM (walk-in trio) ==")
+    sess.load_scenario(load_scenario(sess, "castle_spider_encounter.json"))
+    sess.step(1)
+    sess.press("LEFT")
+    sess.step(10)
+    sess.press("LEFT")
+    for _ in range(10):
+        sess.step(30)
+        if sess.snapshot().get("game_state") == "BATTLE":
+            break
+    check("spider walk-in reaches battle", "BATTLE",
+          sess.snapshot().get("game_state"))
+    found = set()
+    for slot in range(1, 19):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    want = {(128 + t, 7) for t in range(18)}
+    check("spider trio renders as OAM tiles 128-145 with OBJ palette 7",
+          True, want <= found)
+
+
+def verify_battle_oam(sess):
+    """Battle enemies render as OAM sprites (Florent's model), not BG
+    stamps: slime trio occupies shadow entries 1-18 (stride 6 per slot)
+    with blob tiles + scratch OBJ palette 7. Order-insensitive set match
+    (stride bases shift with art cost). Boss stays a BG stamp (covered by
+    the BG art scenarios + VRAM restore checks, not here)."""
+    print("== Battle enemy OAM sprites (slime trio) ==")
+    sess.load_scenario(load_scenario(sess, "battle_slime_sprite.json"))
+    sess.step(2)
+    found = set()
+    for slot in range(1, 19):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    want = {(128 + t, 7) for t in range(18)}
+    check("slime trio renders as OAM tiles 128-145 with OBJ palette 7",
+          True, want <= found)
+
+
+def verify_npc_sprites(sess):
+    """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
+    overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
+    (sprites9).  Blob offsets append-only: guard 116, mayor 117,
+    merchant 118.  Order-insensitive set match over entries 1-12 (spawn
+    order may vary; ASCII shopkeeper takes no OAM entry)."""
+    print("== Town NPC OAM sprites ==")
+    sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
+    sess.step(2)
+    found = set()
+    # Entries 1-4 are reserved hostile slots (hidden when empty); static
+    # actors start at entry 5, so scan wide and match order-insensitively.
+    for slot in range(1, 13):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    for label, tile, pal in (("mayor", 117, 7), ("guard", 116, 7),
+                             ("merchant", 118, 6)):
+        check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
+              True, (tile, pal) in found)
+
+
 def verify_hostile_sprites(sess):
     """Regression net for the Chunk-2 data-driven overworld sprite pipeline
     (SPRITE_KIND_* decoded in the bank-3 pass): hostile actors must render
@@ -154,10 +231,10 @@ def verify_hostile_sprites(sess):
     check("forest player renders as hero OAM tile (98|99)",
           1, (98 <= shadow_sprite_tile(sess) <= 99))
     attr_mirror = sess.get_symbol("g_tilemap_attr_mirror")
-    check("forest treetop (3, 3) has field canopy palette (3)",
-          3, mirror_at(sess, attr_mirror, 3, 3))
-    check("forest treetrunk (3, 4) has wood trunk palette (5)",
-          5, mirror_at(sess, attr_mirror, 3, 4))
+    check("forest treetop (3, 3) has field2 canopy palette (2)",
+          2, mirror_at(sess, attr_mirror, 3, 3))
+    check("forest treetrunk (3, 4) has field4 trunk palette (6)",
+          6, mirror_at(sess, attr_mirror, 3, 4))
 
     print("== Chest pickup sprite (forest amulet as OAM, no BG glyph) ==")
     forest_amulet = load_scenario(sess, "forest_boot.json")
@@ -167,12 +244,14 @@ def verify_hostile_sprites(sess):
     chest = shadow_oam_slot_tile(sess, 5)
     check("forest amulet renders as chest OAM tile (94|95)",
           1, (94 <= chest <= 95))
-    # The background cell underneath must be plain forest floor
-    # (VRAM tile 128 + 39, the level's default_walkable), not the '?'
-    # ASCII glyph: glyph suppression for OAM-rendered statics.
+    # The background cell underneath must be the floor tile the level
+    # places at the amulet spot (TILE_FOREST_21 =
+    # forest_floor_with_stuff_walkable_1, VRAM tile 128 + 21 -- the chest
+    # itself renders as OAM since the forest-chest tile was removed),
+    # not the '?' ASCII glyph: glyph suppression for OAM-rendered statics.
     mirror = sess.get_symbol("g_tilemap_mirror")
     check("amulet background cell is floor, not '?'",
-          167, mirror_at(sess, mirror, 16, 10))
+          149, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")
     south = load_scenario(sess, "south_field_boot.json")
@@ -365,6 +444,19 @@ def verify_dialogue_transition(sess):
     sess._cmd("frame", timeout=5.0)
     check("dialogue entry: world redrawn behind the box",
           full_addr, sess._read_pc())
+    # Disarm the redraw breakpoint before engaging: while armed, press()'s
+    # internal step pauses mid-frame and the A edge never engages (proven
+    # by matrix probe: armed=never, clean=always). mGBA prints
+    # "Added breakpoint #N" (note the hash). A reset frame first (edge
+    # discipline, AGENTS.md 52.10); if the first press already started
+    # the dialogue, this one merely advances a line (still active).
+    import re as _re
+    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
+    if _m:
+        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
+    sess.step(1)
+    sess.press("A")
+    sess.step(1)
     # Continue past the redraw breakpoint to the next frame entry: the
     # redraw (tilemap + CGB attrs + palettes) has now fully executed.
     sess._cmd("c", timeout=10.0)
@@ -498,6 +590,9 @@ def main():
                       ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
+                      ("npc sprites", verify_npc_sprites),
+                      ("battle sprites", verify_battle_oam),
+                      ("battle spider", verify_battle_spider_oam),
                       ("exit art", verify_exit_art)):
         sess = EmulatorSession(rom_path=ROM)
         try:

@@ -21,6 +21,6 @@ const CardSkinDef g_card_skin = {
     { 0, 4, 1, 2 },
     /* uses_type (0xFF = none), uses_tile: uses 0..4, uses_power_tile */
     2,
-    { 98, 99, 100, 101, 101 },
+    { 98, 99, 100, 101, 97 },
     102
 };
