@@ -45,11 +45,13 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
  * g_ui_screen_buf was still updated, and the put_char skip-guard then
  * never re-wrote the cell (battle hand cards stuck at "SW0" on real
  * boot; the SameBoy harness runs with the LCD off/vsync skipped and could
- * not see it).  di/ei keeps the 256 Hz timer ISR (AGENTS.md 35) from
- * eclipsing the wait->store window (the Pan Docs interrupt caveat); IE is
- * clear under the harness, so ei() is a no-op there.  Unconditionally
- * re-enabling IME via ei is safe because interrupts are always active during
- * normal play and stubbed under the harness. */
+ * not see it).  NOTE: do NOT wrap the wait->store window in di/ei here
+ * (unlike ui_vram_sync_write): the battle redraw issues dozens of these
+ * stores per frame and a di/ei-guarded battle helper hangs the PyBoy
+ * walkthrough (guest spins inside pb.tick(); mGBA is unaffected, but
+ * make screenshots / verify-walkthrough gate on PyBoy).  The residual
+ * ISR-eclipse race is accepted; cleared boxes are re-asserted by the
+ * EMPTY early-out in battle_draw_battle_hand instead. */
 static void battle_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
     if (LCDC_REG & 0x80) {
@@ -808,7 +810,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
     uint8_t mark_row  = g_battle_hud.card_cursor_row;
     /* Staged card-skin geometry (WRAM mirror). */
     uint8_t bh = g_card_skin_wram.box_h;
-    uint8_t top, r;
+    uint8_t top, r, drow_empty;
 
     if (bh < 3 || bh > 5) bh = 4;
     top = (uint8_t)(cards_row - (bh - 1));
@@ -838,6 +840,29 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         uint8_t is_heal = (cring != 0) || (ctype == BATTLE_CARD_TYPE_HEAL) || (ceffect == CARD_EFFECT_HEAL_HP);
         cuses = battle->hand[i].uses_remaining;
         battle_draw_card_at(col, cards_row, ctype, cvalue, cuses, is_heal, cstat);
+        /* EMPTY slots stay fully blank: stale status/ring/effect fields are
+         * left on the discarded Card (see battle_resolve_hand_discard), so
+         * painting icon/rider palettes from them would leave a tinted
+         * rectangle in the middle of the cleared box until the refill. */
+        if (ctype == BATTLE_CARD_TYPE_EMPTY) {
+            drow_empty = (uint8_t)(top + bh - 2);
+            for (r = 0; r < bh; r++) {
+                battle_color_span(col, (uint8_t)(top + r), 3, UI_COLOR_NONE);
+            }
+            battle_color_span((uint8_t)(col + 1), (uint8_t)(top + 1), 1, UI_COLOR_NONE);
+            if (drow_empty != (uint8_t)(top + 1)) {
+                battle_color_span((uint8_t)(col + 1), drow_empty, 1, UI_COLOR_NONE);
+            }
+            if (i == cur) {
+                battle_put_tile((uint8_t)(col + 1), mark_row, '^',
+                                UI_TILE_SELECT_ARROW);
+                battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
+            } else {
+                battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
+                battle_color_span((uint8_t)(col + 1), mark_row, 1, 0);
+            }
+            continue;
+        }
         /* No card tints (Florent's model): boxes stay paper, type and
          * element read from the stamped icons. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
