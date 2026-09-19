@@ -68,7 +68,7 @@
 | kobold | 3×2 | fightgoblin (1) | ✓ | oam, battle_kobold |
 | mimic | 3×2 | fightmimic (5) | ✓ | oam, sprites6 |
 | slime | 3×2 | fightslime (3) | ✓ | oam, battle_slime |
-| spider | 3×2 | fightspider (2) | ≈ #8b1b1b | – |
+| spider | 3×2 | fightspider (2) | ≈ #8b1b1b | oam, battle_spider |
 
 OAM obj ramps are declared content for future battle-OAM work; the ROM currently stamps every set as BG with its BG ramp.
 
@@ -139,7 +139,7 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 |---|---|---|---|
 | battle | [0, 5] | fightboss | #8b1b1b |
 | battle | [1, 5] | fightboss | #8b1b1b |
-| battle | [1, 11] | fightspider | #8b1b1b |
+| battle | [1, 11] | battle_spider | #8b1b1b |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
 | card_frames | [0, 3] | fightmimic | #b09266, #e3ae63 |
 | card_frames | [0, 4] | fight_text | #755930, #b09266 |

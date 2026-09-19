@@ -144,6 +144,34 @@ def wait_vblank(sess, tries=3):
     return False
 
 
+def verify_battle_spider_oam(sess):
+    """Spider trio renders as OAM (BG footprint blank): walk into the
+    castle spider like castle_spider_encounter (the patrol bump needs a
+    bounded wait), then set-match entries 1-18 for blob tiles + scratch
+    OBJ palette 7. Spider costs 6 like slime: bases 128/134/140."""
+    print("== Battle spider OAM (walk-in trio) ==")
+    sess.load_scenario(load_scenario(sess, "castle_spider_encounter.json"))
+    sess.step(1)
+    sess.press("LEFT")
+    sess.step(10)
+    sess.press("LEFT")
+    for _ in range(10):
+        sess.step(30)
+        if sess.snapshot().get("game_state") == "BATTLE":
+            break
+    check("spider walk-in reaches battle", "BATTLE",
+          sess.snapshot().get("game_state"))
+    found = set()
+    for slot in range(1, 19):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    want = {(128 + t, 7) for t in range(18)}
+    check("spider trio renders as OAM tiles 128-145 with OBJ palette 7",
+          True, want <= found)
+
+
 def verify_battle_oam(sess):
     """Battle enemies render as OAM sprites (Florent's model), not BG
     stamps: slime trio occupies shadow entries 1-18 (stride 6 per slot)
@@ -564,6 +592,7 @@ def main():
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
                       ("battle sprites", verify_battle_oam),
+                      ("battle spider", verify_battle_spider_oam),
                       ("exit art", verify_exit_art)):
         sess = EmulatorSession(rom_path=ROM)
         try:

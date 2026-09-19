@@ -1,7 +1,7 @@
 {
  "name": "castle_spider_encounter",
  "test": true,
- "description": "Walking into the castle spider (17,7) starts a BATTLE_SPIDER trio (16/16 x3) with the new 3x2 spider art and the TARGET SPIDER banner.  Approach from the east ((16,7) is the boss-room wall); the spider patrols its lane vertically, so the hero ends on the lane and waits for the patrol bump if the first step missed.",
+ "description": "Walking into the castle spider (17,7) starts a BATTLE_SPIDER trio (16/16 x3) rendering OAM art (BG footprint blank) and the TARGET SPIDER banner.  Approach from the east ((16,7) is the boss-room wall); the spider patrols its lane vertically, so the hero ends on the lane and waits for the patrol bump if the first step missed.",
  "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
@@ -58,13 +58,13 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 1,
-   "expected": 128
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 2,
-   "expected": 129
+   "expected": 0
   }
  ],
  "initial_state": {
