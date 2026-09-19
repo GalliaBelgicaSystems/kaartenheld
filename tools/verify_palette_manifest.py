@@ -69,56 +69,27 @@ def check_card_frames(errors):
     """Check 6: encode ramp == display ramp per card_frames.png cell, and
     every pixel color exists in the display ramp.
 
-    The display slot per sheet icon mirrors the runtime paint mapping in
-    src/ui/ui_battle_content.c: frame borders on slot 0 (paper), the
-    select arrow on slot 3 (field), HUD hp/ap/deck icons + timer bar on
-    their hud-skin slots, weapon/uses icons on their type's weapon_color
-    slot, status tiles on their elem_color slot. Returns the number of
-    sheet cells checked.
+    Reads the generated display mapping (generated/tiles/card_display_slots.json,
+    emitted by palette_compiler.card_display_slots) -- the same source the
+    encoder and the accounting doc use -- so this check cannot drift from
+    them.  The runtime paints those slots per src/ui/ui_battle_content.c.
+    Returns the number of sheet cells checked.
     """
-    sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
-    from battle_compile import SKIN_COLORS
     from compose_card_frames import LAYOUT
     from palette_compiler import sheet_cells
 
     try:
+        display = json.loads((GEN / "card_display_slots.json").read_text())
         shades = json.loads((GEN / "shades" / "card_frames.json").read_text())["tiles"]
         base = json.loads((GEN / "base.json").read_text())["slots"]
     except (OSError, ValueError, KeyError) as e:
         errors.append(f"card_frames: cannot load generated manifest inputs ({e}); run `make manifest`")
         return 0
-    try:
-        skin = json.loads((REPO_ROOT / "screens" / "cards_skin.json").read_text())
-        hud = json.loads((REPO_ROOT / "screens" / "battle_hud.json").read_text())
-    except (OSError, ValueError) as e:
-        errors.append(f"card_frames: cannot load skins ({e})")
-        return 0
-    try:
-        disp = {}
-        for row in LAYOUT[:3]:
-            for name in row:
-                if name is not None:
-                    disp[name] = 0
-        bar = hud.get("bar") or {}
-        bar_slot = SKIN_COLORS[bar["color"]]
-        for key in ("filled", "empty"):
-            disp[bar[key]] = bar_slot
-        for key in ("hp", "ap", "deck"):
-            hdef = hud.get(key) or {}
-            disp[hdef["icon"]] = SKIN_COLORS[hdef["color"]]
-        disp["combat_arrow_pointing_up"] = 3
-        for tkey, tdef in (skin.get("types") or {}).items():
-            s = SKIN_COLORS[tdef["color"]]
-            disp[tdef["icon"]] = s
-            for uname in tdef.get("uses_icons", []) + [tdef.get("uses_power_icon")]:
-                if uname is not None:
-                    disp[uname] = s
-        for ekey, edef in (skin.get("elements") or {}).items():
-            disp[edef["icon"]] = SKIN_COLORS[edef["color"]]
-    except (KeyError, TypeError) as e:
-        errors.append(f"card_frames: skin references unknown icon/color ({e})")
-        return 0
-
+    names = {}
+    for y, row in enumerate(LAYOUT):
+        for x, name in enumerate(row):
+            if name is not None:
+                names["%d,%d" % (x, y)] = name
     slot_colors = {int(i): v["colors"] for i, v in base.items()}
     try:
         cells = sheet_cells(ASSETS / "card_frames.png")
@@ -127,34 +98,33 @@ def check_card_frames(errors):
         return 0
 
     n = 0
-    for y, row in enumerate(LAYOUT):
-        for x, name in enumerate(row):
-            if name is None or name not in disp:
-                continue
-            n += 1
-            slot = disp[name]
-            if slot not in slot_colors:
-                errors.append(
-                    f"card_frames: cell ({x},{y}) '{name}' displays on slot {slot}, "
-                    f"which has no ramp in set 'base' (tools/palette_slots.json)")
-                continue
-            want = list(slot_colors[slot])
-            got = shades.get("%d,%d" % (x, y))
-            if got is None:
-                errors.append(f"card_frames: cell ({x},{y}) '{name}' has no shade-map entry; run `make manifest`")
-                continue
-            if list(got) != want:
-                errors.append(
-                    f"card_frames: cell ({x},{y}) '{name}' is encoded with {got} but "
-                    f"displays on slot {slot} ({want}); point the skin color at the "
-                    f"display slot so encode == display")
-            pix = sorted("#%02x%02x%02x" % tuple(c) for c in cells.get((x, y), []))
-            off = [c for c in pix if c not in want]
-            if off:
-                errors.append(
-                    f"card_frames: cell ({x},{y}) '{name}' has pixel colors {off} absent "
-                    f"from display slot {slot} ({want}); repaint the cell into the "
-                    f"display ramp or rebind the slot")
+    for key in sorted(display):
+        n += 1
+        slot = display[key]
+        name = names.get(key, "?")
+        x, y = (int(v) for v in key.split(","))
+        if slot not in slot_colors:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' displays on slot {slot}, "
+                f"which has no ramp in set 'base' (tools/palette_slots.json)")
+            continue
+        want = list(slot_colors[slot])
+        got = shades.get(key)
+        if got is None:
+            errors.append(f"card_frames: cell ({x},{y}) '{name}' has no shade-map entry; run `make manifest`")
+            continue
+        if list(got) != want:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' is encoded with {got} but "
+                f"displays on slot {slot} ({want}); point the skin color at the "
+                f"display slot so encode == display")
+        pix = sorted("#%02x%02x%02x" % tuple(c) for c in cells.get((x, y), []))
+        off = [c for c in pix if c not in want]
+        if off:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' has pixel colors {off} absent "
+                f"from display slot {slot} ({want}); repaint the cell into the "
+                f"display ramp or rebind the slot")
     return n
 
 
