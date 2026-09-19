@@ -104,6 +104,19 @@ extern uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+/* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
+ * Staged by the loader from g_battle_art_obj; read by the stamper. */
+extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+
+/* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
+ * engage clones of one type). Programmed at battle entry, restored with
+ * the NPC ramps on overworld return. BG slot 7 (boss) is a different
+ * palette bank and unaffected. */
+#define BATTLE_OBJ_SCRATCH 7
+
+/* Per-art-set OBJ ramp data (generated battle_obj_tables.c, fixed bank). */
+extern const uint8_t g_battle_art_obj[];
+extern const uint8_t g_battle_obj_ramps[];
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM

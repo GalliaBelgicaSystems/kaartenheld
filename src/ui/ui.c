@@ -463,6 +463,17 @@ void ui_load_tileset(uint8_t tileset)
     g_bk_call_target = (uint16_t)&ui_load_tileset_banked;
     g_bk_byte_a = tileset;
     banked_call_run();
+
+    /* Battles program the scratch OBJ slot for OAM enemy art; restore
+     * the NPC ramps (slots 5-7) on every tileset load so town sprites
+     * keep exact colors after a fight. Idempotent back in fixed bank. */
+    if (g_is_cgb) {
+        uint8_t q;
+        OCPS_REG = (uint8_t)(0x80 | (5 << 3));
+        for (q = 0; q < 24; q++) {
+            OCPD_REG = ((const uint8_t *)cgb_obj_palettes)[40 + q];
+        }
+    }
 }
 
 /* Drop the VRAM tileset cache so the next overworld redraw reloads tile

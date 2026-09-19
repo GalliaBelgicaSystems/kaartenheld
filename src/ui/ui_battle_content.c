@@ -132,19 +132,13 @@ static void battle_draw_num2(uint8_t x, uint8_t y, uint8_t val)
     battle_put_char((uint8_t)(x + 1), y, (char)('0' + val));
 }
 
-/* Material and effect color for a battle card (loot-reveal overlay):
- * Wood (Shield) = Brown, Iron (Sword) = Steel Blue, Mythril (Bow) = Gold,
- * Heal = Field Green, Fire = Red-Orange, Poison = Mauve. */
+/* Loot-reveal row color: paper default (no tints; the stamped elem +
+ * weapon icons carry type and element). */
 static uint8_t battle_card_color(uint8_t type, uint8_t status_id, uint8_t is_heal)
 {
-    if (status_id == STATUS_BURN) return UI_COLOR_FIRE;
-    if (status_id == STATUS_POISON) return UI_COLOR_POISON;
-    if (status_id == STATUS_FREEZE) return UI_COLOR_ICE;
-    if (type == BATTLE_CARD_TYPE_SHIELD) return UI_COLOR_WOOD;
-    if (type == BATTLE_CARD_TYPE_HEAL || is_heal) return UI_COLOR_FIELD;
-    if (type == BATTLE_CARD_TYPE_SWORD) return UI_COLOR_IRON;
-    if (type == BATTLE_CARD_TYPE_BOW) return UI_COLOR_GOLD;
-    if (type == BATTLE_CARD_TYPE_DAGGER) return UI_COLOR_POISON;
+    (void)type;
+    (void)status_id;
+    (void)is_heal;
     return UI_COLOR_NONE;
 }
 
@@ -232,31 +226,16 @@ static void battle_card_icon_tiles(uint8_t status_id, uint8_t type,
     *tile_wpn = battle_card_weapon_tile(type, is_heal);
 }
 
-/* Material color for a card without an element rider (per-type mapping
- * from the skin; daggers default to the poison mauve). */
-static uint8_t battle_card_weapon_tint(uint8_t type, uint8_t is_heal)
-{
-    uint8_t t = type;
-    if (t > 4) t = 0;
-    if (is_heal) t = BATTLE_CARD_TYPE_HEAL;
-    return g_card_skin_wram.weapon_color[t];
-}
-
-/* Box tint for a hand card (skin-driven).  The tint is element-driven:
- * heal cards use the skin's heal palette (field green), fire rider
- * reddish, ice rider blueish, poison rider mauve; cards without a rider
- * keep their per-type material color.  Poison grey-out (status.h):
- * greyed player cards render dim. */
+/* Box color for a hand card: always the paper default (Florent's model:
+ * no card tints; type and element read from the weapon/power/rider icons).
+ * Poison grey-out still forces UI_COLOR_DIM at the call site. */
 static uint8_t battle_card_box_color(uint8_t type, uint8_t status_id,
                                      uint8_t is_heal)
 {
-    uint8_t st = status_id;
-    if (type == BATTLE_CARD_TYPE_HEAL || is_heal) {
-        return g_card_skin_wram.weapon_color[BATTLE_CARD_TYPE_HEAL];
-    }
-    if (st > 3) st = 0;
-    if (st != 0) return g_card_skin_wram.elem_color[st];
-    return battle_card_weapon_tint(type, is_heal);
+    (void)type;
+    (void)status_id;
+    (void)is_heal;
+    return UI_COLOR_NONE;
 }
 
 /* Unconditionally blank one card slot's box footprint (3 x box_h rows)
@@ -291,9 +270,11 @@ static void battle_clear_card_box(uint8_t x, uint8_t y)
 }
 
 static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t value,
-                                uint8_t uses, uint8_t is_heal)
+                                uint8_t uses, uint8_t is_heal, uint8_t status)
 {
     uint8_t tile_wpn;
+    uint8_t tile_elem;
+    uint8_t st;
     const char *code;
     volatile uint8_t *dst;
     /* Staged skin snapshot (WRAM mirror; read each field once, §52.19
@@ -318,6 +299,10 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     code = battle_card_type_code(type);
 
     tile_wpn = battle_card_weapon_tile(type, is_heal);
+    /* Rider icon inset top-right (mockup layout): element status tile
+     * replaces the TR frame corner when the card carries a rider. */
+    st = (status > 3) ? 0 : status;
+    tile_elem = g_card_skin_wram.elem_tile[st];
     /* Finite-use cards of the skin's arrow-counter type draw the
      * remaining-uses glyph (0..3, clamped) on the floor row; unlimited
      * cards keep the frame center. */
@@ -334,14 +319,16 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     for (r = 0; r < bh; r++) {
         dst = (volatile uint8_t *)(0x9800 + ((uint16_t)(top + r) << 5) + x);
         if (r == 0) {
-            /* Top border: TL TM TR */
+            /* Top border: TL TM TR, rider icon inset over TR corner. Its
+             * palette span is applied by the caller after the box spans. */
             battle_vram_sync_write(&dst[0], frame);
             battle_vram_sync_write(&dst[1], (uint8_t)(frame + 1));
-            battle_vram_sync_write(&dst[2], (uint8_t)(frame + 2));
+            battle_vram_sync_write(&dst[2], tile_elem ? tile_elem : (uint8_t)(frame + 2));
 #ifdef DEBUG_BUILD
             g_tilemap_mirror[(top + r) * 32 + x] = frame;
             g_tilemap_mirror[(top + r) * 32 + x + 1] = (uint8_t)(frame + 1);
-            g_tilemap_mirror[(top + r) * 32 + x + 2] = (uint8_t)(frame + 2);
+            g_tilemap_mirror[(top + r) * 32 + x + 2] =
+                tile_elem ? tile_elem : (uint8_t)(frame + 2);
 #endif
         } else if (r == (uint8_t)(bh - 1)) {
             /* Bottom border: BL BM BR — EXCEPT for the arrow-counter
@@ -403,8 +390,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
 #endif
         }
     }
-    /* Element riders are shown by the card's tint (battle_card_box_color),
-     * not a floating icon. */
+    /* Element riders show as inset status icons (mockup layout), not tint. */
 
     /* Semantic screen buffer keeps the type code + the digit that the
      * row represents (arrow-counter cards show their remaining uses;
@@ -449,6 +435,68 @@ static uint8_t battle_enemy_art_x(uint8_t x, uint8_t slot)
     return (uint8_t)(x + ((6 - w) >> 1));
 }
 
+/* OAM entries for battle sprites (Florent's model). Slots 1-26 are the
+ * overworld region (hidden by ui_sprite_begin_transition on entry, so no
+ * stale art survives); battle enemies take fixed strides below. */
+#define BATTLE_OAM_BASE 1u
+#define BATTLE_OAM_STRIDE 6u
+
+static void battle_draw_enemy_oam(uint8_t x, uint8_t slot,
+                                  const volatile Battle *battle)
+{
+    uint8_t frame = 0;
+    uint8_t base;
+    uint8_t cx, cy;
+    uint8_t w, h, ftiles, t, n, e0;
+    uint8_t art_row = g_battle_hud.enemy_sprite_row;
+    volatile uint8_t *e;
+
+    if (slot >= MAX_BATTLE_ENEMIES) return;
+    w = g_battle_enemy_art_w[slot];
+    h = g_battle_enemy_art_h[slot];
+    if (w == 0 || w > 6) w = 3;
+    if (h == 0 || h > 4) h = 2;
+    /* x arrives already centered (battle_draw_enemy_art centers before
+     * dispatching): never recenter here. */
+    /* Fixed stride without multiply (§52.18: 8-bit * pulls mult routines
+     * into fixed _CODE): slot 0/1/2 -> entries 1/7/13. */
+    e0 = BATTLE_OAM_BASE;
+    if (slot >= 1) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
+    if (slot >= 2) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
+    if (g_battle_enemy_art[slot] != 0xFF) {
+        if (g_battle_enemy_art_frames[slot] > 1) {
+            frame = (uint8_t)((battle->timer_ticks >> 4) & 1);
+        }
+        base = g_battle_enemy_art_base[slot];
+        ftiles = 0;
+        for (cx = 0; cx < h; cx++) ftiles = (uint8_t)(ftiles + w);
+        t = base;
+        if (frame) t = (uint8_t)(t + ftiles);
+        /* Same running tile order as the BG stamp; OAM ids fetch the same
+         * bytes (sprites always read the 0x8000 block, AGENTS.md 52.22). */
+        n = 0;
+        for (cy = 0; cy < h; cy++) {
+            for (cx = 0; cx < w; cx++) {
+                e = (volatile uint8_t *)(0xC000u + ((uint16_t)(e0 + n) << 2));
+                e[0] = 40;
+                e[1] = (uint8_t)(((x + cx) << 3) + 8);
+                e[2] = t;
+                e[3] = BATTLE_OBJ_SCRATCH;
+                t++;
+                n++;
+                if (n >= BATTLE_OAM_STRIDE) break;
+            }
+            if (n >= BATTLE_OAM_STRIDE) break;
+        }
+        /* Hide any unused stride entries (all current OAM sets are
+         * exactly 3x2, so this only fires on corrupt caches). */
+        for (; n < BATTLE_OAM_STRIDE; n++) {
+            e = (volatile uint8_t *)(0xC000u + ((uint16_t)(e0 + n) << 2));
+            e[0] = 0;
+        }
+    }
+}
+
 static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
                                   const volatile Battle *battle, uint8_t blank)
 {
@@ -456,6 +504,7 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     uint8_t base;
     uint8_t cx, cy;
     uint8_t w, h, ftiles, t;
+    uint8_t oam_drawn = 0;
     volatile uint8_t *dst;
     /* Staged screen row (WRAM copy of the active BattleScreenDef). */
     uint8_t art_row = g_battle_hud.enemy_sprite_row;
@@ -470,6 +519,18 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     /* Center the art footprint on the name slot (blank path clears the
      * same centered footprint it stamps). */
     x = battle_enemy_art_x(x, slot);
+
+    if (!blank && slot < MAX_BATTLE_ENEMIES &&
+        g_battle_enemy_art[slot] != 0xFF) {
+        /* OAM battle art (Florent's model): sprites via the scratch OBJ
+         * slot; the BG footprint below is blanked by falling through.
+         * Boss + spider stay BG-stamped on the classic path. */
+        if (g_battle_enemy_art_oam[slot]) {
+            battle_draw_enemy_oam(x, slot, battle);
+            oam_drawn = 1;
+            blank = 1;
+        }
+    }
 
     if (!blank && slot < MAX_BATTLE_ENEMIES &&
         g_battle_enemy_art[slot] != 0xFF) {
@@ -528,6 +589,20 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
         /* Drop any previous art tint so blanks match surrounding text. */
         for (cy = 0; cy < h; cy++) {
             battle_color_span(x, (uint8_t)(art_row + cy), w, UI_COLOR_NONE);
+        }
+        /* OAM art leaves no BG trace (footprint already blank above), but
+         * its sprite stride must hide when the enemy is actually gone
+         * (dead/absent/blink) -- never right after drawing it above. */
+        if (slot < MAX_BATTLE_ENEMIES && !oam_drawn && g_battle_enemy_art_oam[slot]) {
+            uint8_t n;
+            uint8_t e0 = BATTLE_OAM_BASE;
+            if (slot >= 1) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
+            if (slot >= 2) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
+            for (n = 0; n < BATTLE_OAM_STRIDE; n++) {
+                volatile uint8_t *e = (volatile uint8_t *)(0xC000u +
+                    ((uint16_t)(e0 + n) << 2));
+                e[0] = 0;
+            }
         }
     }
 }
@@ -823,12 +898,12 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         uint8_t is_heal = (cring != 0) || (ctype == BATTLE_CARD_TYPE_HEAL) || (ceffect == CARD_EFFECT_HEAL_HP);
         cuses = battle->hand[i].uses_remaining;
-        battle_draw_card_at(col, cards_row, ctype, cvalue, cuses, is_heal);
-        /* Tint the whole card by element (heal green, fire reddish, ice
-         * blueish, poison mauve); material color for riderless cards.
-         * Poison grey-out (status.h): greyed player cards render dim.
-         * Finite-use cards of the arrow-counter type grey out too once
-         * their uses are spent (matches the unplayable nav rule). */
+        battle_draw_card_at(col, cards_row, ctype, cvalue, cuses, is_heal, cstat);
+        /* No card tints (Florent's model): boxes stay paper, type and
+         * element read from the stamped icons. Poison grey-out
+         * (status.h): greyed player cards render dim. Finite-use cards
+         * of the arrow-counter type grey out too once their uses are
+         * spent (matches the unplayable nav rule). */
         ccolor = battle_card_box_color(ctype, cstat, is_heal);
         if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
             (ctype == g_card_skin_wram.uses_type && cuses == 0)) {
@@ -836,6 +911,16 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         for (r = 0; r < bh; r++) {
             battle_color_span(col, (uint8_t)(top + r), 3, ccolor);
+        }
+        /* Rider icon palette (mockup layout): the inset TR cell takes
+         * the rider's own slot; the box spans above painted paper. */
+        {
+            uint8_t rst = cstat > 3 ? 0 : cstat;
+            uint8_t relem = g_card_skin_wram.elem_tile[rst];
+            if (relem) {
+                battle_color_span((uint8_t)(col + 2), top, 1,
+                                  g_card_skin_wram.elem_color[rst]);
+            }
         }
         if (i == cur) {
             battle_put_tile((uint8_t)(col + 1), mark_row, '^',
@@ -878,7 +963,7 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the select arrow is
  * tile 14 (VRAM 96), status tiles are 15-17 (VRAM 110/111/112 --
  * overwrite the atlas Flame Spire / Snowflake Star / Toxic Vial). */
-static const uint8_t s_card_tile_vram_ids[30] = {
+static const uint8_t s_card_tile_vram_ids[31] = {
     118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
     117, 127,                                     /* bar filled, empty */
     113, 114, 116,                                /* HUD: hp, ap, deck */
@@ -893,6 +978,7 @@ static const uint8_t s_card_tile_vram_ids[30] = {
      * 98-103 (their same-numbered OAM ids live in the 0x8000 sprite
      * block — a different physical address, AGENTS.md 52.22). */
     98, 99, 100, 101, 102, 103,                   /* arrows 0, 1, 2, 3, nine, blank */
+    97,                                           /* arrows 4 (appended cell) */
 };
 
 void ui_card_tiles_load_banked(void)
@@ -901,7 +987,7 @@ void ui_card_tiles_load_banked(void)
     volatile uint8_t *dst;
     const uint8_t *src;
 
-    for (i = 0; i < 30; i++) {
+    for (i = 0; i < 31; i++) {
         /* Signed BG tile addressing (LCDC.4 = 0, set in ui_init and never
          * restored): BG tile ids < 128 are fetched by the PPU from
          * 0x9000 + id*16, NOT from the sprite-addressable 0x8000 block.

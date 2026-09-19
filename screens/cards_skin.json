@@ -7,7 +7,7 @@
   "sword":  { "icon": "combat_sword_icon",  "color": "iron"   },
   "shield": { "icon": "combat_shield_icon", "color": "wood"   },
   "bow":    { "icon": "combat_bow_icon",    "color": "gold",
-              "uses_icons": ["combat_3_arrows_left", "combat_3_arrows_left",
+              "uses_icons": ["combat_4_arrows_left", "combat_3_arrows_left",
                              "combat_2_arrows_left", "combat_1_arrow_left",
                              "combat_0_arrows_left"],
               "uses_power_icon": "combat_nine_icon" },
@@ -15,8 +15,8 @@
   "dagger": { "icon": "combat_dagger_icon",   "color": "poison" }
  },
  "elements": {
-  "fire":   { "icon": "combat_fire_status",   "color": "fire"   },
-  "ice":    { "icon": "combat_ice_status",    "color": "iron"   },
-  "poison": { "icon": "combat_poison_status", "color": "poison" }
+  "fire":   { "icon": "combat_top_right_fire_card",   "color": "fire"   },
+  "ice":    { "icon": "combat_top_right_ice_card",    "color": "iron"   },
+  "poison": { "icon": "combat_top_right_poison_card", "color": "poison" }
  }
 }

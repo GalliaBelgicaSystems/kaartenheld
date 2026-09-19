@@ -18,11 +18,14 @@ matching across palettes, no quantization. Those lived here before and
 are gone: ramp choice belongs to palette_compiler, which reports it.
 
 OBJ sheets: a shade map may carry "transparent_shade0": true (the
-palette_compiler sets it for the `obj` palette set). OAM color index 0
-is transparent, so an OFF-ramp pixel must never take the nearest-shade
-fallback into index 0 -- that would punch a hole in the sprite. Such
-pixels fall back to the nearest of shades 1-3 instead. Exact matches
-(the real background key) still map to index 0.
+palette_compiler sets it for the `obj` palette set) plus per-cell
+"transparent_cells" (battle OAM art on a mixed sheet). OAM color index 0
+is transparent: an OFF-ramp pixel must never take the nearest-shade
+fallback into index 0 -- that would punch a hole in the sprite -- with
+one exception: pure white on such a cell is sheet background, so it maps
+straight to index 0 (the RGB-sheet twin of the alpha-to-yellow
+compositor step). Such pixels fall back to the nearest of shades 1-3
+instead. Exact matches (the real background key) still map to index 0.
 """
 
 import sys
@@ -126,9 +129,12 @@ def nearest_shade(color, shades, transparent0=False):
 
     shades as an ORDERED 4-tuple/list: position is the shade index;
     exact match wins, else nearest within the ramp (ramps-win encoding).
-    With transparent0 (OBJ sheets) the nearest-shade fallback only
-    considers shades 1-3: index 0 is transparent and is reserved for
-    pixels that exactly match the ramp's shade 0.
+    With transparent0 (OAM cells) two extra rules hold: pure white that
+    is NOT in the ramp is sheet background, so it maps straight to
+    shade 0 (the OAM transparent key -- same convention as the
+    alpha-to-yellow compositor step, for RGB sheets with white bg);
+    any other off-ramp pixel falls back to the nearest of shades 1-3
+    (index 0 stays reserved for exact background-key matches).
     shades as a DICT {color: index}: exact table lookup, missing pixel
     is a loud error (fixed art like the splash logo).
     """
@@ -141,6 +147,8 @@ def nearest_shade(color, shades, transparent0=False):
     for i, s in enumerate(shades):
         if color == s:
             return i
+    if transparent0 and color == (255, 255, 255):
+        return 0
     best, best_d = 0, None
     for i, s in enumerate(shades):
         if transparent0 and i == 0:

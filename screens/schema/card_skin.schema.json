@@ -68,7 +68,7 @@
       "properties": {
         "icon": {
           "type": "string",
-          "enum": ["combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_fire_status", "combat_ice_status", "combat_poison_status"],
+          "enum": ["combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_top_right_fire_card", "combat_top_right_ice_card", "combat_top_right_poison_card"],
           "description": "Which VRAM icon tile represents this type/element. Names are the slugified combat-tileset description entries (assets/combat-tileset-description.csv); dagger/ring/amulet have no CSV entry (atlas-only) and keep plain names."
         },
         "color": {

@@ -144,6 +144,26 @@ def wait_vblank(sess, tries=3):
     return False
 
 
+def verify_battle_oam(sess):
+    """Battle enemies render as OAM sprites (Florent's model), not BG
+    stamps: slime trio occupies shadow entries 1-18 (stride 6 per slot)
+    with blob tiles + scratch OBJ palette 7. Order-insensitive set match
+    (stride bases shift with art cost). Boss stays a BG stamp (covered by
+    the BG art scenarios + VRAM restore checks, not here)."""
+    print("== Battle enemy OAM sprites (slime trio) ==")
+    sess.load_scenario(load_scenario(sess, "battle_slime_sprite.json"))
+    sess.step(2)
+    found = set()
+    for slot in range(1, 19):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile is not None and pal is not None:
+            found.add((tile, pal))
+    want = {(128 + t, 7) for t in range(18)}
+    check("slime trio renders as OAM tiles 128-145 with OBJ palette 7",
+          True, want <= found)
+
+
 def verify_npc_sprites(sess):
     """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
     overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
@@ -396,14 +416,14 @@ def verify_dialogue_transition(sess):
     sess._cmd("frame", timeout=5.0)
     check("dialogue entry: world redrawn behind the box",
           full_addr, sess._read_pc())
-    # Disarm the redraw breakpoint before engaging: a mid-frame pause can
-    # swallow the A-press edge (the press registers, or not, depending on
-    # where the pause lands -- parity-dependent, AGENTS.md 52.17).  With
-    # only the frame-entry breakpoint armed, a fresh press after a reset
-    # frame is a deterministic edge; if the first press already started
-    # the dialogue, the second press merely advances a line (still active).
+    # Disarm the redraw breakpoint before engaging: while armed, press()'s
+    # internal step pauses mid-frame and the A edge never engages (proven
+    # by matrix probe: armed=never, clean=always). mGBA prints
+    # "Added breakpoint #N" (note the hash). A reset frame first (edge
+    # discipline, AGENTS.md 52.10); if the first press already started
+    # the dialogue, this one merely advances a line (still active).
     import re as _re
-    _m = _re.search(r"breakpoint (\d+)", brk.decode("utf-8", "ignore"))
+    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
     if _m:
         sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
     sess.step(1)
@@ -543,6 +563,7 @@ def main():
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
+                      ("battle sprites", verify_battle_oam),
                       ("exit art", verify_exit_art)):
         sess = EmulatorSession(rom_path=ROM)
         try:

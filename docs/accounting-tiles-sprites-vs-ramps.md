@@ -63,10 +63,10 @@
 
 | set | size | BG ramp (slot) | fit | OAM obj ramp |
 |---|---|---|---|---|
-| bat | 3×2 | fightmimic (5) | ✓ | oam, sprites2 |
+| bat | 3×2 | fightmimic (5) | ✓ | oam, fightbat |
 | boss | 3×3 | fightboss (7) | ≈ #8b1b1b | – |
-| kobold | 3×2 | fightgoblin (1) | ≈ #000000 | oam, battle_kobold |
-| mimic | 3×2 | fightmimic (5) | ≈ #000000, #ffffff | oam, sprites6 |
+| kobold | 3×2 | fightgoblin (1) | ✓ | oam, battle_kobold |
+| mimic | 3×2 | fightmimic (5) | ✓ | oam, sprites6 |
 | slime | 3×2 | fightslime (3) | ✓ | oam, battle_slime |
 | spider | 3×2 | fightspider (2) | ≈ #8b1b1b | – |
 
@@ -112,9 +112,9 @@ overlay is deleted.
 | (0,4) | combat_ap_icon | 6 → fight_text | ≈ #755930, #b09266 |
 | (1,4) | combat_deck_icon | 2 → fightspider | ≈ #755930 |
 | (2,4) | combat_arrow_pointing_up | 0 → fight1 | ≈ #755930 |
-| (0,5) | combat_fire_status | 1 → fightgoblin | ≈ #8b1b1b, #b09266, #dfbd8d |
-| (1,5) | combat_ice_status | 2 → fightspider | ≈ #7ae3f3, #b09266, #dfbd8d |
-| (2,5) | combat_poison_status | 4 → fight5 | ✓ |
+| (0,5) | combat_top_right_fire_card | 1 → fightgoblin | ≈ #8b1b1b, #b09266, #dfbd8d |
+| (1,5) | combat_top_right_ice_card | 2 → fightspider | ≈ #7ae3f3, #b09266, #dfbd8d |
+| (2,5) | combat_top_right_poison_card | 4 → fight5 | ✓ |
 | (0,6) | combat_sword_icon | 2 → fightspider | ≈ #755930, #dfbd8d |
 | (1,6) | combat_shield_icon | 5 → fightmimic | ≈ #755930, #dfbd8d |
 | (2,6) | combat_bow_icon | 6 → fight_text | ≈ #755930, #dfbd8d |
@@ -125,6 +125,7 @@ overlay is deleted.
 | (2,8) | combat_2_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
 | (0,9) | combat_3_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
 | (1,9) | combat_nine_icon | 6 → fight_text | ≈ #755930, #dfbd8d |
+| (0,10) | combat_4_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
 
 Frame borders + select arrow share `fight1` (slot 0): cards tint per type at stamp time by engine design.
 
@@ -137,20 +138,8 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
 | battle | [0, 5] | fightboss | #8b1b1b |
-| battle | [0, 7] | sprites6 | #000000 |
-| battle | [0, 8] | sprites6 | #000000 |
-| battle | [0, 9] | battle_kobold | #000000 |
-| battle | [0, 10] | battle_kobold | #000000 |
 | battle | [1, 5] | fightboss | #8b1b1b |
-| battle | [1, 7] | sprites6 | #000000, #ffffff |
-| battle | [1, 8] | sprites6 | #000000 |
-| battle | [1, 9] | battle_kobold | #000000 |
-| battle | [1, 10] | battle_kobold | #000000 |
 | battle | [1, 11] | fightspider | #8b1b1b |
-| battle | [2, 7] | sprites6 | #000000 |
-| battle | [2, 8] | sprites6 | #000000 |
-| battle | [2, 9] | battle_kobold | #000000 |
-| battle | [2, 10] | battle_kobold | #000000 |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
 | card_frames | [0, 3] | fightmimic | #b09266, #e3ae63 |
 | card_frames | [0, 4] | fight_text | #755930, #b09266 |
@@ -159,6 +148,7 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 | card_frames | [0, 7] | fight5 | #755930 |
 | card_frames | [0, 8] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
 | card_frames | [0, 9] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
+| card_frames | [0, 10] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
 | card_frames | [1, 3] | fightmimic | #b09266 |
 | card_frames | [1, 4] | fightspider | #755930 |
 | card_frames | [1, 5] | fightspider | #7ae3f3, #b09266, #dfbd8d |

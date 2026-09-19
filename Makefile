@@ -274,7 +274,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,card_skin}.c + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,card_skin}.c + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check

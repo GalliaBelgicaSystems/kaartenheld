@@ -1,7 +1,7 @@
 {
  "name": "battle_bat_art",
  "test": true,
- "description": "Bat trio battle renders the bat combat art (3x1 wings-spread frame0 at the art base, second row holding the blank/white padding cells of the folded frame) under the HP line -- pins the bat wiring end to end.  Parked on the bat's first patrol leg so the circle walk bumps the hero.  The art cells pin the folded-wings frame (frame index 1 at capture timing; the spread-wings frame renders at even (timer>>4) parity).",
+ "description": "Bat trio battle: enemies render as OAM sprites with the bat OBJ ramp (BG footprint blank); HP lines and wiring pinned.",
  "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
@@ -31,25 +31,25 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 1,
-   "expected": 134
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 2,
-   "expected": 135
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 3,
-   "expected": 136
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 4,
    "col": 1,
-   "expected": 137
+   "expected": 0
   }
  ],
  "initial_state": {

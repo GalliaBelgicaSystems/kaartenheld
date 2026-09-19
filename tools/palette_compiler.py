@@ -203,7 +203,8 @@ def main():
         Battle art skips it (BG sets resolve via battle_compile, OAM sets
         program per battle; encoding only needs a known ramp).
         transparent: coords whose shade-0 is OAM transparency (off-ramp
-        pixels must not fall back into index 0 there).
+        pixels must not fall back into index 0 there; pure white there is
+        sheet background and maps straight to 0, so it is NOT reported).
         Returns {coord: used_ramp}. Non-exact cells go to mismatches.
         """
         fname, setname = SHEETS[key]
@@ -223,6 +224,10 @@ def main():
         for coord in sorted(cells):
             pixel_colors = cells[coord]
             want = declared.get(coord)
+            # OAM transparency cells (plus whole obj sheets): pure white
+            # is sheet background mapping straight to shade 0, never a
+            # repaint todo.
+            t0 = coord in transparent or setname == "obj"
             if want is not None and want not in ramps:
                 raise ValueError(f"sheet '{key}' tile {coord}: unknown ramp '{want}'")
             if require_slot and want is not None and want not in [r for r, _ in cand]:
@@ -239,7 +244,8 @@ def main():
                         best, best_cost = name, cost
                 ramp = best
                 quad = ramps[ramp]
-                off = sorted(_hex(c) for c in pixel_colors if c not in quad)
+                off = sorted(_hex(c) for c in pixel_colors
+                             if c not in quad and not (t0 and c == (255, 255, 255)))
                 mismatches.append({"sheet": key, "tile": list(coord),
                                    "declared": None, "used_ramp": ramp,
                                    "reason": "no tag: nearest slotted ramp wins",
@@ -247,7 +253,8 @@ def main():
             else:
                 ramp = want
                 quad = ramps[ramp]
-                off = sorted(_hex(c) for c in pixel_colors if c not in quad)
+                off = sorted(_hex(c) for c in pixel_colors
+                             if c not in quad and not (t0 and c == (255, 255, 255)))
                 if off:
                     mismatches.append({"sheet": key, "tile": list(coord),
                                        "declared": want, "used_ramp": ramp,

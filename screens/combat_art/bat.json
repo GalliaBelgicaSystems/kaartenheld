@@ -7,7 +7,7 @@
   "height": 2,
   "palette": "fightmimic",
   "oam": true,
-  "obj_palette": "sprites2",
+  "obj_palette": "fightbat",
   "frame0": [
     "combat_top_left_bat",
     "combat_top_middle_bat",
