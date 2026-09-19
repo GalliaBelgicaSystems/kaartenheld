@@ -367,10 +367,13 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     }
     *(s_ic_dst + 1) = s_ic_tile_wpn;
 
-    IC_COLOR_SPAN(2, y, 8,
-                  ui_color_card(s_ic_def->battle_type, s_ic_def->status_id,
-                                (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                (s_ic_def->effect == CARD_EFFECT_HEAL_HP)));
+    IC_COLOR_SPAN(3, y, 1, UI_COLOR_WOOD);
+    if (s_ic_def->status_id == STATUS_BURN)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_FIRE);
+    else if (s_ic_def->status_id == STATUS_POISON)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_POISON);
+    else if (s_ic_def->status_id == STATUS_FREEZE)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_ICE);
 
     s_ic_in_deck = ic_deck_count(&g->state.cards.deck, s_ic_id);
     s_ic_code[0] = (char)('0' + s_ic_in_deck);
@@ -515,10 +518,13 @@ static void ic_draw_card_detail_page(Game *g)
     }
     *(s_ic_dst + 1) = s_ic_tile_wpn;
 
-    IC_COLOR_SPAN(0, s_ic_y, 11,
-                  ui_color_card(s_ic_def->battle_type, s_ic_def->status_id,
-                                (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                (s_ic_def->effect == CARD_EFFECT_HEAL_HP)));
+    IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
+    if (s_ic_def->status_id == STATUS_BURN)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_FIRE);
+    else if (s_ic_def->status_id == STATUS_POISON)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_POISON);
+    else if (s_ic_def->status_id == STATUS_FREEZE)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_ICE);
     s_ic_y += 2;
     IC_DRAW_TEXT(0, s_ic_y, "TYPE", 4);
     IC_DRAW_TEXT(6, s_ic_y, ic_card_type_name(s_ic_def->type), 3);

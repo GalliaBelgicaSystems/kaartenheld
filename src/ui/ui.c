@@ -814,6 +814,13 @@ void ui_draw_battle_full(const Battle *battle)
     g_bk_call_target = (uint16_t)&battle_art_load_banked;
     g_bk_ptr_a = (void *)battle;
     banked_call_run();
+    /* Second OBJ scratch slot (spider eye): separate bank-5 body, same
+     * LCD-off window, sequential trampoline calls (never nested). Reads
+     * the loader-cached art caches; no-ops for sets without an alt ramp. */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&battle_alt_load_banked;
+    g_bk_ptr_a = (void *)battle;
+    banked_call_run();
     ui_update_battle(battle);
     /* The timer bar is otherwise only redrawn on a tile-boundary change
      * (battle_screen.c), so draw it here once at a full count on entry;

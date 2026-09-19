@@ -114,9 +114,24 @@ extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
  * palette bank and unaffected. */
 #define BATTLE_OBJ_SCRATCH 7
 
+/* Second scratch OBJ slot for per-cell OAM alt palettes (spider eye:
+ * one cell rides its own artist ramp instead of a repaint).  Programmed
+ * at battle entry only when the battle's art set names an alt ramp;
+ * OBJ slots 0-6 hold stale overworld ramps during battle and are all
+ * restored with the NPC ramps on overworld return (ui.c), so borrowing
+ * slot 6 is free. */
+#define BATTLE_OBJ_SCRATCH2 6
+
 /* Per-art-set OBJ ramp data (generated battle_obj_tables.c, fixed bank). */
 extern const uint8_t g_battle_art_obj[];
 extern const uint8_t g_battle_obj_ramps[];
+/* Per-art-set alt OBJ ramp index (0xFF = none) + frame-relative cell
+ * bitmask drawn with it.  No new WRAM: the bank-5 alt loader caches the
+ * mask in g_battle_enemy_art_pal[k] for OAM slots (whose BG palette is
+ * unused -- the stamper blanks OAM footprints), read by the bank-5 OAM
+ * pass for per-entry slot selection. */
+extern const uint8_t g_battle_art_obj_alt[];
+extern const uint8_t g_battle_art_alt_mask[];
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
@@ -137,6 +152,16 @@ void battle_art_load_banked(void);
  * ui_update_battle wrapper right after the bank-3 render (sequential
  * trampoline calls, never nested). */
 void battle_oam_draw_banked(void);
+
+/* Banked alt-scratch loader (same bank-5 file, separate entry point):
+ * programs BATTLE_OBJ_SCRATCH2 when the battle's art set names an alt
+ * ramp and caches the alt-cell mask in g_battle_enemy_art_pal[k] for OAM
+ * slots.  Reads the art set from the loader-cached g_battle_enemy_art[0]
+ * (clone encounters share one row) plus the fixed alt tables -- no new
+ * WRAM, no cross-bank reads.  Dispatched once per battle entry from
+ * ui_draw_battle_full() (LCD-off window) right after battle_art_load_banked
+ * (sequential trampoline calls, never nested). */
+void battle_alt_load_banked(void);
 
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
