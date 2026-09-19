@@ -449,19 +449,25 @@ def _check_hostiles(s, name, level):
     """Sweep hostile-spawn assert with an explicit mirror-mismatch path.
 
     world_hostile_count returns -1 when NEITHER const-char* stride
-    candidate makes the World tail byte match the expected tileset kind
-    — a systematic ROM/.sym/reader mismatch (stale .sym, mixed tree
-    state, rebuild race), never timing jitter.  Report that loudly
-    instead of a bare "-1" so triage checks build/ first (see
+    candidate makes the World tail byte match the expected tileset kind.
+    Boot anchors passing first proves g_game/.sym and the
+    GameState/World-head layout are fine, so a uniform -1 is NOT a
+    ROM/.sym mismatch — the suspects are: levels/ edited after the ROM
+    was built (the expected kind comes from the working-tree level
+    JSON, including the silent default for unknown tileset names), or
+    World-tail struct drift (reader mirror vs src/world/world.h).
+    Report observed-vs-expected on the spot (see
     docs/verify-walkthrough.md §4.2)."""
-    got = s.reader.world_hostile_count(_tileset_kind(level))
+    kind = _tileset_kind(level)
+    got = s.reader.world_hostile_count(kind)
     if got == -1:
+        seen = s.reader.world_tail_candidates()
         s.check("sweep %s hostiles" % name, False,
-                expected="world mirror match (World tail tileset byte)",
-                actual="MISMATCH: ROM/.sym inconsistent with "
-                       "state_reader.py mirror — check build/ matches "
-                       "sources (stale .sym? mixed tree state?), "
-                       "not a content failure")
+                expected="World tail tileset byte %d" % kind,
+                actual="tail bytes %s; suspects: levels/ edited after "
+                       "the ROM was built (git diff HEAD -- levels/), "
+                       "World-tail struct drift (mirror vs world.h), "
+                       "or unknown tileset name (default kind 2)" % seen)
         return
     s.check("sweep %s hostiles" % name, got >= 1,
             expected=">=1 of %d spawned" % _hostile_floor(level),

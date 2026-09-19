@@ -83,15 +83,16 @@ def prune():
 
 
 def preflight():
-    """ROM/.sym coherence gate (triage for uniform world-mirror -1s).
+    """ROM/sym/levels coherence gate (triage for uniform world-mirror -1s).
 
-    world_hostile_count returns -1 only on a systematic ROM/.sym/reader
-    mismatch (stale .sym, mixed tree state, rebuild race) — never jitter.
-    Fail fast on the detectable mix (a .sym older than its .noi was not
-    produced by the same link) and report whether the pair under test
-    matches HEAD, so a failure can be attributed before reading results.
-    A dirty build/ pair is INFORMATIONAL only: `make verify-walkthrough`
-    rebuilds from working sources by design."""
+    A uniform world_hostile_count -1 with passing boot anchors is NOT a
+    ROM/.sym mismatch — the expected tileset kind comes from the
+    working-tree levels/, so levels/ edited after the ROM was built (or
+    World-tail struct drift) are the suspects (docs/verify-walkthrough.md
+    §4.2).  Report whether the inputs under test match HEAD so a failure
+    can be attributed before reading results.  Dirty state is
+    INFORMATIONAL only: `make verify-walkthrough` rebuilds from working
+    sources by design."""
     sym = os.path.splitext(ROM)[0] + ".sym"
     if not os.path.isfile(sym):
         print("error: release .sym not found — build it first (make "
@@ -102,25 +103,35 @@ def preflight():
     # again, so the .gb is routinely newer than both — comparing against
     # the .gb would false-positive on every healthy tree).  A .sym older
     # than the .noi predates the latest link: swapped-in or interrupted.
+    # The .noi is untracked, so a fresh clone has none and the tripwire
+    # is inactive there — say so instead of silently skipping.
     noi = os.path.splitext(ROM)[0] + ".noi"
-    if (os.path.isfile(noi)
-            and os.path.getmtime(sym) < os.path.getmtime(noi)):
+    if not os.path.isfile(noi):
+        print("note: no %s (fresh clone?) — stale-.sym tripwire "
+              "inactive" % noi)
+    elif os.path.getmtime(sym) < os.path.getmtime(noi):
         print("error: %s is OLDER than %s — stale .sym from another "
               "tree state or an interrupted build; `make clean && make "
               "release` and re-run (see docs/verify-walkthrough.md "
               "§4.2)" % (sym, noi), file=sys.stderr)
         return 1
     try:
-        dirty = subprocess.run(
-            ["git", "diff", "--quiet", "HEAD", "--", ROM, sym],
-            cwd=REPO).returncode != 0
+        # git diff --quiet: 0 = clean, 1 = differences, >1 = error
+        # (not a repo, no git).  Only 1 means dirty; anything else is
+        # "unknown", never a false dirty report.
+        rc = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", ROM, sym,
+             os.path.join(REPO, "levels")],
+            cwd=REPO).returncode
+        dirty = True if rc == 1 else False if rc == 0 else None
     except OSError:
         dirty = None
     if dirty is True:
-        print("note: build/kaartenheld.gb + .sym differ from HEAD — "
-              "testing the working tree, not the committed ROM")
+        print("note: build/kaartenheld.gb + .sym and/or levels/ differ "
+              "from HEAD — testing the working tree, not the committed "
+              "inputs")
     elif dirty is False:
-        print("note: build/kaartenheld.gb + .sym match HEAD")
+        print("note: build/kaartenheld.gb + .sym and levels/ match HEAD")
     return 0
 
 

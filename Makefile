@@ -1,5 +1,11 @@
 # Makefile for Game Boy ROM development with GBDK-4 and RGBDS
 
+# Delete a target when its recipe fails: the link rules fail loudly on
+# rgblink bank-overflow warnings (AGENTS.md 52.18) AFTER the linker has
+# already written the ROM, so without this the corrupt .gb survives and
+# the next make reports "up to date" and exits 0 on top of it.
+.DELETE_ON_ERROR:
+
 CC = lcc
 RGBFIX = rgbfix
 
