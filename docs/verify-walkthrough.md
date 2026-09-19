@@ -158,6 +158,26 @@ tools/walkthrough/
   a plain energy budget under scripted play; selection therefore keys
   off `combo_count`, not energy.
 
+## 4.2 Triage: uniform world-mirror -1s
+
+* `world_hostile_count` returns -1 only when NEITHER const-char*
+  stride candidate makes the World tail byte match the expected
+  tileset kind — a systematic ROM/.sym/reader mismatch, never timing
+  jitter. Uniform -1 across every level therefore means the ROM under
+  test does not match the reader's layout: a `.sym` from another tree
+  state, a rebuild racing the run, or mixed `build/` artifacts.
+* The script now fails fast when `build/kaartenheld.sym` is older
+  than `build/kaartenheld.noi` (both pure link-time products — the
+  .gb is routinely newer than both because rgbfix stamps it after
+  make_sym.py and again under `make test`, so the .gb mtime cannot
+  be used), and prints whether the pair matches HEAD before running
+  (dirty pair = testing the working tree, which is expected under
+  `make verify-walkthrough`; it only attributes).
+* Recipe: `git diff --quiet HEAD -- build/kaartenheld.gb
+  build/kaartenheld.sym` (clean?), then `python3
+  tools/capture_walkthrough.py` directly against the committed ROM —
+  no `make` in between, so no rebuild can race the read.
+
 ## 5. Decisions (user-confirmed)
 
 * Gating: required on push (like verify-oam).

@@ -14,6 +14,7 @@ detail per check, AGENTS.md §46 style).
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -81,10 +82,54 @@ def prune():
               % (len(removed), ", ".join(removed)))
 
 
+def preflight():
+    """ROM/.sym coherence gate (triage for uniform world-mirror -1s).
+
+    world_hostile_count returns -1 only on a systematic ROM/.sym/reader
+    mismatch (stale .sym, mixed tree state, rebuild race) — never jitter.
+    Fail fast on the detectable mix (a .sym older than its .noi was not
+    produced by the same link) and report whether the pair under test
+    matches HEAD, so a failure can be attributed before reading results.
+    A dirty build/ pair is INFORMATIONAL only: `make verify-walkthrough`
+    rebuilds from working sources by design."""
+    sym = os.path.splitext(ROM)[0] + ".sym"
+    if not os.path.isfile(sym):
+        print("error: release .sym not found — build it first (make "
+              "release)", file=sys.stderr)
+        return 1
+    # Stale-.sym tripwire: .sym and .noi are both pure link-time products
+    # (rgbfix stamps the .gb AFTER make_sym.py, and `make test` stamps it
+    # again, so the .gb is routinely newer than both — comparing against
+    # the .gb would false-positive on every healthy tree).  A .sym older
+    # than the .noi predates the latest link: swapped-in or interrupted.
+    noi = os.path.splitext(ROM)[0] + ".noi"
+    if (os.path.isfile(noi)
+            and os.path.getmtime(sym) < os.path.getmtime(noi)):
+        print("error: %s is OLDER than %s — stale .sym from another "
+              "tree state or an interrupted build; `make clean && make "
+              "release` and re-run (see docs/verify-walkthrough.md "
+              "§4.2)" % (sym, noi), file=sys.stderr)
+        return 1
+    try:
+        dirty = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", ROM, sym],
+            cwd=REPO).returncode != 0
+    except OSError:
+        dirty = None
+    if dirty is True:
+        print("note: build/kaartenheld.gb + .sym differ from HEAD — "
+              "testing the working tree, not the committed ROM")
+    elif dirty is False:
+        print("note: build/kaartenheld.gb + .sym match HEAD")
+    return 0
+
+
 def run(clean=False):
     if not os.path.isfile(ROM):
         print("error: release ROM not found — build it first (make "
               "release)", file=sys.stderr)
+        return 1
+    if preflight():
         return 1
 
     os.makedirs(OUT, exist_ok=True)

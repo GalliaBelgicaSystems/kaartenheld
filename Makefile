@@ -703,7 +703,12 @@ $(GB_LITE) $(SM83_LITE) &: $(OBJS) $(OBJS_DEBUG) | $(BUILD_DIR)
 LDFLAGS = -Wl-b_DATA=0xC940
 
 $(TARGET): gfx tiles levels screens dialogues shops entities music $(OBJS) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
-	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS) $(GB_LITE) $(SM83_LITE)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-release.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-release.log; test $$rc -eq 0
+# Fixed-bank overflow is silent: rgblink warns ("Possible overflow ...
+# bank 1 -> 2" / "spans into the next") but still overwrites the start of
+# the next bank (AGENTS.md 52.18).  Fail loudly instead (see also
+# tools/check_banked_copies.sh, wired into `make lint`).
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-release.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-release.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld.noi $(BUILD_DIR)/kaartenheld.sym
 # NOTE: lcc already runs rgbfix once internally at link time, so this
 # explicit second fix only (idempotently) stamps MBC/RAM/title fields.
@@ -712,7 +717,8 @@ $(TARGET): gfx tiles levels screens dialogues shops entities music $(OBJS) build
 	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
 $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities music $(OBJS_DEBUG) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
-	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -Wl-y -o $@ build/crt0.o $(OBJS_DEBUG) $(GB_LITE) $(SM83_LITE)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -Wl-y -o $@ build/crt0.o $(OBJS_DEBUG) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-debug.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-debug.log; test $$rc -eq 0
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-debug.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-debug.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
 	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 

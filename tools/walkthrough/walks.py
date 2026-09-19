@@ -445,6 +445,29 @@ def _tileset_kind(level):
     return _TILESET_KIND.get(level["map"].get("tileset"), 2)
 
 
+def _check_hostiles(s, name, level):
+    """Sweep hostile-spawn assert with an explicit mirror-mismatch path.
+
+    world_hostile_count returns -1 when NEITHER const-char* stride
+    candidate makes the World tail byte match the expected tileset kind
+    — a systematic ROM/.sym/reader mismatch (stale .sym, mixed tree
+    state, rebuild race), never timing jitter.  Report that loudly
+    instead of a bare "-1" so triage checks build/ first (see
+    docs/verify-walkthrough.md §4.2)."""
+    got = s.reader.world_hostile_count(_tileset_kind(level))
+    if got == -1:
+        s.check("sweep %s hostiles" % name, False,
+                expected="world mirror match (World tail tileset byte)",
+                actual="MISMATCH: ROM/.sym inconsistent with "
+                       "state_reader.py mirror — check build/ matches "
+                       "sources (stale .sym? mixed tree state?), "
+                       "not a content failure")
+        return
+    s.check("sweep %s hostiles" % name, got >= 1,
+            expected=">=1 of %d spawned" % _hostile_floor(level),
+            actual=str(got))
+
+
 def walk_sweep(planner, checks):
     """Sweep every level the editor can produce: for each level reachable
     from the field spawn, boot a fresh session, BFS-route there, assert
@@ -472,10 +495,7 @@ def walk_sweep(planner, checks):
             s.check_eq("sweep %s music" % name,
                        s.reader.music_track(), want_music)
             if _hostile_floor(scene.level):
-                got = s.reader.world_hostile_count(_tileset_kind(scene.level))
-                s.check("sweep %s hostiles" % name, got >= 1,
-                        expected=">=1 of %d spawned" % _hostile_floor(scene.level),
-                        actual=str(got))
+                _check_hostiles(s, name, scene.level)
             s.shoot("sweep-%s" % name)
             s.close()
             continue
@@ -493,10 +513,7 @@ def walk_sweep(planner, checks):
         s.check_eq("sweep %s music" % name, s.reader.music_track(),
                    want_music)
         if _hostile_floor(scene.level):
-            got = s.reader.world_hostile_count(_tileset_kind(scene.level))
-            s.check("sweep %s hostiles" % name, got >= 1,
-                    expected=">=1 of %d spawned" % _hostile_floor(scene.level),
-                    actual=str(got))
+            _check_hostiles(s, name, scene.level)
         s.shoot("sweep-%s" % name)
         s.close()
 

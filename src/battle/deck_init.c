@@ -73,7 +73,7 @@ void deck_init_default_banked(void)
 }
 
 /* deck_reshuffle_banked and its card_copy/swap helpers used to live here;
- * they moved to deck_banked.c (ROM bank 3) when bank 2 ran out of room
- * for the reshuffle's remainder fold.  This file keeps only the starter
- * deck unpacker, which must stay in bank 2 (it reads the bank-2 card
- * catalog directly). */
+ * they moved to deck_shuffle_banked.c (ROM bank 7): bank 2 ran out of room
+ * for the reshuffle's remainder fold and bank 3 overflows in the release
+ * build.  This file keeps only the starter deck unpacker, which must stay
+ * in bank 2 (it reads the bank-2 card catalog directly). */

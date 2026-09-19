@@ -7,9 +7,9 @@
  * staged Deck (ptr_a) and card (ptr_b); field-wise copy only -- struct
  * assignment lowers to __memcpy in the fixed bank (AGENTS.md 52.11.1).
  *
- * deck_reshuffle_banked used to live here too; it moved to
- * deck_shuffle_banked.c (ROM bank 7) when this bank overflowed in the
- * release build. */
+ * (deck_reshuffle_banked never lived here: it moved from deck_init.c
+ * straight to deck_shuffle_banked.c (ROM bank 7) -- bank 2 ran out of
+ * room and this bank overflows in the release build.) */
 
 void deck_discard_banked(void)
 {
