@@ -104,6 +104,7 @@ lint: gfx tiles $(SRCS)
 			echo "=== $$f ==="; echo "$$out" | grep "warning"; ok=0; \
 		fi; \
 	done; \
+	CC="$(CC)" INCLUDES="$(INCLUDES)" sh tools/check_banked_copies.sh || ok=0; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).
