@@ -49,6 +49,7 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
 static bool nav_hand_playable(const Battle *b, uint8_t hand_idx)
 {
     uint8_t available;
+    if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_EMPTY) return false;
     if (b->hand[hand_idx].uses_remaining == 0) return false;
     if ((s_grey_mask[0] & (uint8_t)(1u << hand_idx)) != 0) return false;
     available = b->energy - nav_combo_reserved_cost(b);
