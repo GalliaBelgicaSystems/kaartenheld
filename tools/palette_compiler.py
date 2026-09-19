@@ -30,6 +30,7 @@ Outputs (all under generated/tiles/, regenerable, uncommitted):
 
 import sys
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -109,6 +110,86 @@ def sheet_cells(png_path):
     return cells
 
 
+def ui_color_slot(name):
+    """Resolve a UI_COLOR_* macro in src/ui/ui.h to its integer slot,
+    following alias #defines (UI_COLOR_ARROW -> UI_COLOR_FIELD -> 3).
+    Returns None if the macro is missing or non-numeric.
+
+    Single source for engine constants the host mapping must match: the
+    runtime uses the same macro (UI_COLOR_ARROW in ui_battle_content.c),
+    so encode and display cannot drift."""
+    try:
+        text = (REPO_ROOT / "src" / "ui" / "ui.h").read_text()
+    except OSError:
+        return None
+    defines = dict(re.findall(r"#define\s+(UI_COLOR_\w+)\s+(\w+)", text))
+    val = defines.get(name)
+    seen = set()
+    while val is not None and val in defines and val not in seen:
+        seen.add(val)
+        val = defines[val]
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def card_display_slots(skin, hud):
+    """{cell coord -> UI_COLOR_* display slot} for every non-empty
+    card_frames.png cell.
+
+    SINGLE SOURCE OF TRUTH for the card display mapping: the encode ramp
+    (this file's compile_sheet), the accounting doc (write_accounting)
+    and verify_palette_manifest's encode==display check all read the
+    generated/tiles/card_display_slots.json emitted from this function.
+    The runtime paints these slots per src/ui/ui_battle_content.c.
+
+    Defaults: frame borders / unlisted cells -> slot 0 (paper); the
+    select-arrow cell -> UI_COLOR_ARROW from ui.h (the same engine
+    constant the two runtime paint sites use); type + uses icons -> the
+    type's color; element icons -> the element color; HUD icons + timer
+    bar -> their hud-skin colors.
+    """
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
+    from compose_card_frames import LAYOUT
+    from battle_compile import SKIN_COLORS, DEFAULT_SKIN, DEFAULT_HUD
+
+    def skin_slot(name):
+        if name not in SKIN_COLORS:
+            raise ValueError(f"skin color '{name}' is not a UI slot name")
+        return SKIN_COLORS[name]
+
+    coord_of = {}
+    for y, row in enumerate(LAYOUT):
+        for x, name in enumerate(row):
+            if name is not None:
+                coord_of[name] = (x, y)
+
+    slots = {coord: 0 for coord in coord_of.values()}
+    arrow_slot = ui_color_slot("UI_COLOR_ARROW")
+    if arrow_slot is not None and "combat_arrow_pointing_up" in coord_of:
+        slots[coord_of["combat_arrow_pointing_up"]] = arrow_slot
+    for tdef in (skin.get("types") or {}).values():
+        s = skin_slot(tdef["color"])
+        names = [tdef["icon"]] + list(tdef.get("uses_icons", []))
+        names.append(tdef.get("uses_power_icon"))
+        for name in names:
+            if name is not None and name in coord_of:
+                slots[coord_of[name]] = s
+    for edef in (skin.get("elements") or {}).values():
+        if edef["icon"] in coord_of:
+            slots[coord_of[edef["icon"]]] = skin_slot(edef["color"])
+    for key in ("hp", "ap", "deck"):
+        hdef = hud.get(key) or {}
+        if hdef.get("icon") in coord_of:
+            slots[coord_of[hdef["icon"]]] = skin_slot(hdef["color"])
+    bar = hud.get("bar") or {}
+    for key in ("filled", "empty"):
+        if bar.get(key) in coord_of:
+            slots[coord_of[bar[key]]] = skin_slot(bar["color"])
+    return slots
+
+
 def main():
     import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
     _, ramps = parse_palette()
@@ -139,18 +220,17 @@ def main():
                 coords[v["tile"]] = (v["x"], v["y"])
         tags[ts] = (ts_data, table, coords)
 
-    # Battle art: {cellname: encoding ramp}. OAM-flagged sets (battle
-    # enemies are sprites, per Florent's model) encode with their OBJ ramp;
-    # BG-stamped sets (boss, spider) encode with their fight ramp. The ROM
+    # Battle art: {cellname: encoding ramp}. OAM-flagged sets (every battle
+    # enemy except the boss, per Florent's model) encode with their OBJ ramp;
+    # the sole BG-stamped set (boss) encodes with its fight ramp. The ROM
     # programs the matching CRAM side per path, so encoding and display
     # always agree; a mismatch row means OUR assignment is suspect, never
     # the artist's pixels (artist is always right).
     from compose_battle_sprites import TILE_COORDS as BATTLE_CELLS
     from compose_enemy_sprites import TILE_COORDS as ENEMY_CELLS
     from compose_hero_sprites import TILE_COORDS as HERO_CELLS
-    from compose_card_frames import LAYOUT as CARD_LAYOUT
     sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
-    from battle_compile import SKIN_COLORS, DEFAULT_SKIN, DEFAULT_HUD
+    from battle_compile import DEFAULT_SKIN, DEFAULT_HUD
     battle_declared = {}
     battle_oam_names = set()
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
@@ -298,46 +378,19 @@ def main():
         ramp = slotmap[setname][slot]
         return ramp
 
-    def skin_slot(color_name):
-        if color_name not in SKIN_COLORS:
-            raise ValueError(f"skin color '{color_name}' is not a UI slot name")
-        return SKIN_COLORS[color_name]
-
     # Card-frame sheet: every icon encodes with the ramp of the slot that
-    # displays it (skins name UI slots; battle UI stamps those slots).
-    # Shared frame borders + select arrow encode with the canonical card
-    # ramp fight1 (cards tint per type at stamp time, by engine design).
+    # displays it.  One shared mapping (card_display_slots) is emitted to
+    # generated/tiles/card_display_slots.json and consumed by the
+    # accounting doc + verify_palette_manifest, so encode, doc and runtime
+    # cannot drift apart.
     skin_path = REPO_ROOT / "screens" / "cards_skin.json"
     skin = json.loads(skin_path.read_text()) if skin_path.exists() else DEFAULT_SKIN
     hud_path = REPO_ROOT / "screens" / "battle_hud.json"
     hud = json.loads(hud_path.read_text()) if hud_path.exists() else DEFAULT_HUD
-    card_cells = {}
-    for _y, _row in enumerate(CARD_LAYOUT):
-        for _x, _name in enumerate(_row):
-            if _name is not None:
-                card_cells[_name] = (_x, _y)
-    card_declared = {}
-    for tkey, tdef in (skin.get("types") or {}).items():
-        slot = skin_slot(tdef["color"])
-        if tdef["icon"] in card_cells:
-            card_declared[card_cells[tdef["icon"]]] = slot_ramp("base", slot)
-        for uname in tdef.get("uses_icons", []) + [tdef.get("uses_power_icon")]:
-            if uname in card_cells:
-                card_declared[card_cells[uname]] = slot_ramp("base", slot)
-    for ekey, edef in (skin.get("elements") or {}).items():
-        slot = skin_slot(edef["color"])
-        if edef["icon"] in card_cells:
-            card_declared[card_cells[edef["icon"]]] = slot_ramp("base", slot)
-    for hkey in ("hp", "ap", "deck"):
-        hdef = hud.get(hkey) or {}
-        if hdef.get("icon") in card_cells:
-            card_declared[card_cells[hdef["icon"]]] = slot_ramp("base", skin_slot(hdef["color"]))
-    bar = hud.get("bar") or {}
-    for bkey in ("filled", "empty"):
-        if bar.get(bkey) in card_cells:
-            card_declared[card_cells[bar[bkey]]] = slot_ramp("base", skin_slot(bar["color"]))
-    for _name, _coord in card_cells.items():
-        card_declared.setdefault(_coord, "fight1")
+    display_slots = card_display_slots(skin, hud)
+    (GENERATED_DIR / "card_display_slots.json").write_text(json.dumps(
+        {"%d,%d" % c: s for c, s in sorted(display_slots.items())}, indent=1))
+    card_declared = {c: slot_ramp("base", s) for c, s in display_slots.items()}
 
     compile_sheet("card_frames", card_declared)
     compile_sheet("title", "title_logo")
@@ -442,7 +495,6 @@ def write_accounting():
     from compose_enemy_sprites import TILE_COORDS as ENEMY_CELLS
     from compose_hero_sprites import TILE_COORDS as HERO_CELLS
     from compose_card_frames import LAYOUT as CARD_LAYOUT
-    from battle_compile import SKIN_COLORS, DEFAULT_SKIN, DEFAULT_HUD
 
     _, ramps = parse_palette()
     slotmap = load_slotmap()
@@ -450,6 +502,19 @@ def write_accounting():
     for setname, slots in slotmap.items():
         for i, r in sorted(slots.items()):
             slot_of.setdefault((setname, r), i)
+
+    # Battle OAM ramps are programmed into one scratch OBJ slot at battle
+    # entry (BATTLE_OBJ_SCRATCH, src/battle/battle.h), not through the
+    # overworld `obj` slot map.  Read it so the battle table cannot print a
+    # stale overworld slot number for a colliding ramp name.
+    scratch = "scratch"
+    try:
+        m = re.search(r"#define\s+BATTLE_OBJ_SCRATCH\s+(\d+)",
+                      (REPO_ROOT / "src" / "battle" / "battle.h").read_text())
+        if m:
+            scratch = int(m.group(1))
+    except OSError:
+        pass
 
     mis = json.loads((GENERATED_DIR / "ramp_mismatches.json").read_text())
     fit = {}
@@ -471,10 +536,14 @@ def write_accounting():
              "DO NOT EDIT DIRECTLY.")
     L.append(">")
     L.append("> Rule: every tile is colored with an existing artist ramp "
-             "(ramps win). ✓ = exact fit, ≈ = nearest-shade fallback "
-             "(repaint todo, see Repaint list).")
-    L.append("> Slot meanings (`UI_COLOR_*`, `src/ui/ui.h`, never move): "
-             "0 NONE, 1 FIRE, 2 IRON, 3 FIELD, 4 POISON, 5 WOOD, 6 GOLD, 7 DIM.")
+             "(ramps win). ✓ = every pixel exists in the encode ramp; ≈ = "
+             "nearest-shade fallback (repaint todo, see Repaint list).")
+    L.append("> ✓ only asserts the pixels fit the ramp -- it does NOT assert "
+             "the result is legible or artifact-free (e.g. the dim grey-out of "
+             "spent/poisoned cards, or the low-contrast ice status label).")
+    L.append("> Battle BG slots (`base` set, `tools/palette_slots.json`): "
+             + ", ".join("%d %s" % (i, slotmap["base"][i])
+                         for i in sorted(slotmap["base"])) + ".")
     L.append("> Artist sets: `sprites*` = RPG overworld, `fight1`–`fight7` = "
              "battle background, `fight`+enemy = battle sprites.")
     L.append("")
@@ -531,16 +600,22 @@ def write_accounting():
             L.append("† = tile id has no vram_block cell on this sheet.")
             L.append("")
 
-    L.append("## Battle sprites (BG stamp via `art_palette`)")
+    L.append("## Battle sprites (display ramp + draw path)")
     L.append("")
-    L.append("| set | size | BG ramp (slot) | fit | OAM obj ramp |")
+    L.append("| set | size | path | display ramp (slot) | fit |")
     L.append("|---|---|---|---|---|")
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
         sid = data.get("id", path.stem)
         w, h = data.get("width", 0), data.get("height", 0)
-        pal = data.get("palette")
-        slot = slot_of.get(("base", pal), "?")
+        if data.get("oam"):
+            pathstr = "OAM"
+            ramp = data.get("obj_palette")
+            slot = scratch
+        else:
+            pathstr = "BG stamp"
+            ramp = data.get("palette")
+            slot = slot_of.get(("base", ramp), "?")
         cells = list(data.get("frame0", []))
         f1 = data.get("frame1")
         cells += f1 if f1 is not None else data.get("frame0", [])
@@ -554,13 +629,13 @@ def write_accounting():
                 bad = True
                 off.update(o)
         fitcol = "✓" if not bad else "≈ " + ", ".join(sorted(off))
-        obj = data.get("obj_palette") or "–"
-        oam = "oam, " if data.get("oam") else ""
-        L.append(f"| {sid} | {w}×{h} | {pal} ({slot}) | "
-                 f"{fitcol} | {oam}{obj} |")
+        L.append(f"| {sid} | {w}×{h} | {pathstr} | {ramp} ({slot}) | {fitcol} |")
     L.append("")
-    L.append("OAM obj ramps are declared content for future battle-OAM work; "
-             "the ROM currently stamps every set as BG with its BG ramp.")
+    L.append("`fit` is measured against the display ramp (the OBJ ramp for OAM "
+             "sets, the BG ramp for the boss).  Every OAM ramp is programmed "
+             "into the single battle OBJ scratch slot (%s) at entry "
+             "(BATTLE_OBJ_SCRATCH), so the slot column shows %s, not the "
+             "overworld `obj` slot map." % (scratch, scratch))
     L.append("")
 
     L.append("## Overworld sprites (OAM)")
@@ -607,41 +682,36 @@ def write_accounting():
     L.append("")
     L.append("| cell (x,y) | art | display slot → ramp | fit |")
     L.append("|---|---|---|---|")
-    skin_path = REPO_ROOT / "screens" / "cards_skin.json"
-    skin = json.loads(skin_path.read_text()) if skin_path.exists() else DEFAULT_SKIN
-    hud_path = REPO_ROOT / "screens" / "battle_hud.json"
-    hud = json.loads(hud_path.read_text()) if hud_path.exists() else DEFAULT_HUD
-    cell_slot = {}
-    for tkey, tdef in (skin.get("types") or {}).items():
-        s = SKIN_COLORS[tdef["color"]]
-        cell_slot[tdef["icon"]] = s
-        for uname in tdef.get("uses_icons", []) + [tdef.get("uses_power_icon")]:
-            cell_slot[uname] = s
-    for ekey, edef in (skin.get("elements") or {}).items():
-        cell_slot[edef["icon"]] = SKIN_COLORS[edef["color"]]
-    for hkey in ("hp", "ap", "deck"):
-        hdef = hud.get(hkey) or {}
-        if hdef.get("icon"):
-            cell_slot[hdef["icon"]] = SKIN_COLORS[hdef["color"]]
-    bar = hud.get("bar") or {}
-    for bkey in ("filled", "empty"):
-        if bar.get(bkey):
-            cell_slot[bar[bkey]] = SKIN_COLORS[bar["color"]]
+    display_slots = json.loads(
+        (GENERATED_DIR / "card_display_slots.json").read_text())
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
+    from battle_compile import SKIN_COLORS
+    skin = json.loads((REPO_ROOT / "screens" / "cards_skin.json").read_text())
+    type_slots = sorted({SKIN_COLORS[t["color"]]
+                         for t in (skin.get("types") or {}).values()})
+    frame_slot = display_slots.get("0,0", 0)
+    arrow_slot = 0
+    for _y, _row in enumerate(CARD_LAYOUT):
+        for _x, _name in enumerate(_row):
+            if _name == "combat_arrow_pointing_up":
+                arrow_slot = display_slots.get("%d,%d" % (_x, _y), 0)
     for _y, _row in enumerate(CARD_LAYOUT):
         for _x, _name in enumerate(_row):
             if _name is None:
                 continue
-            if _name in cell_slot:
-                slot = cell_slot[_name]
-                ramp = slotmap["base"][slot]
-            else:
-                slot, ramp = 0, "fight1"
+            slot = display_slots.get("%d,%d" % (_x, _y), 0)
+            ramp = slotmap["base"][slot]
             mark, off = flag("card_frames", (_x, _y))
             fitcol = "✓" if mark == "✓" else f"{mark} " + ", ".join(off)
             L.append(f"| ({_x},{_y}) | {_name} | {slot} → {ramp} | {fitcol} |")
     L.append("")
-    L.append("Frame borders + select arrow share `fight1` (slot 0): cards "
-             "tint per type at stamp time by engine design.")
+    L.append("Frame borders use slot %d (%s); the select arrow slot %d (%s).  "
+             "Weapon + uses icons and the power digit use the type's "
+             "`weapon_color` slot(s) %s; the box is paper and the DIM grey-out "
+             "override applies to the icon/digit cells too."
+             % (frame_slot, slotmap["base"][frame_slot],
+                arrow_slot, slotmap["base"][arrow_slot],
+                ", ".join("%d %s" % (s, slotmap["base"][s]) for s in type_slots)))
     L.append("")
 
     L.append("## Title")

@@ -568,8 +568,15 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         art_offset = 0
         if art_id in art_sets:
             art_index = art_order.index(art_id)
-            art_palette = resolve_base_palette(art_sets[art_id]['palette'],
-                                               "%s combat art palette" % art_id)
+            # OAM sets (every battle enemy except the boss) draw through
+            # the OBJ ramp and blank their BG footprint, so the declared
+            # BG `palette` is vestigial and need not hold a hardware slot.
+            # Only BG-stamped sets (the boss) resolve art_palette.
+            if art_sets[art_id].get('oam'):
+                art_palette = 0
+            else:
+                art_palette = resolve_base_palette(art_sets[art_id]['palette'],
+                                                   "%s combat art palette" % art_id)
             art_w = art_sets[art_id]['width']
             art_h = art_sets[art_id]['height']
             art_offset = art_offsets[art_id]

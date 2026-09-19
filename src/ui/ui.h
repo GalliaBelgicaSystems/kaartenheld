@@ -101,6 +101,16 @@ void ui_actors_sprites_banked(void);
 #define UI_COLOR_GOLD   6
 #define UI_COLOR_DIM    7
 
+/* Select-arrow cell (enemy target caret + card cursor marker).  The arrow
+ * tile is brown on white, which only the field ramp fits.  Single source
+ * for the two battle render sites AND the host palette compiler
+ * (tools/palette_compiler.py reads this define for the card display
+ * mapping), so encode and display cannot drift.  Kept as an engine
+ * constant rather than a HUD-skin field: growing a battle WRAM struct
+ * shifts BSS and flips an SDCC layout-sensitive miscompile (AGENTS.md
+ * 52.19), which broke the game_over_quit sentinel. */
+#define UI_COLOR_ARROW  UI_COLOR_FIELD
+
 /* Effect color for a card (status_id = on-hit rider element, is_heal =
  * ring/heal role).  Returns a UI_COLOR_* palette index.  status_id uses
  * the STATUS_* enum values (STATUS_POISON=1, STATUS_BURN=2, STATUS_FREEZE=3)

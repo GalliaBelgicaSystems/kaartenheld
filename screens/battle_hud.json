@@ -3,7 +3,7 @@
  "id": "battle_hud",
  "label": "Battle HUD Skin",
  "hp": { "icon": "combat_hp_icon", "color": "fire" },
- "ap": { "icon": "combat_ap_icon", "color": "gold" },
- "deck": { "icon": "combat_deck_icon", "color": "iron" },
- "bar": { "filled": "combat_timer_bar_filled", "empty": "combat_timer_bar_empty", "color": "wood", "row": 17, "width": 20 }
+ "ap": { "icon": "combat_ap_icon", "color": "field" },
+ "deck": { "icon": "combat_deck_icon", "color": "field" },
+ "bar": { "filled": "combat_timer_bar_filled", "empty": "combat_timer_bar_empty", "color": "none", "row": 17, "width": 20 }
 }

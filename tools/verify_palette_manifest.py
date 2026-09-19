@@ -23,6 +23,16 @@ Checks, per world tileset (forest, desolate_landscape, castle, village):
      open, so any world tile on slot 4 would flip to paper colors
      (src/ui/ui.h, AGENTS.md 52.11).
 
+Plus the battle card/icon check:
+
+  6. Every card_frames.png cell is encoded with the ramp of the slot the
+     runtime paints it on (encode == display: skins name UI slots and the
+     hand/HUD renderer stamps those slots per src/ui/ui_battle_content.c),
+     and every pixel color in the cell exists in that display ramp
+     (a pixel absent from the display ramp renders in a wrong shade even
+     when the encode ramp matches, e.g. white pixels on a white-less
+     fight2 box, or brown pixels on a brown-less fight5 dagger).
+
 Exits non-zero with an actionable message per violation.
 """
 
@@ -53,6 +63,69 @@ def declared_lengths():
     text = LOOKUP_H.read_text()
     return {m.group(1): int(m.group(2))
             for m in re.finditer(r"g_tile_pal_(\w+)\[(\d+)\]", text)}
+
+
+def check_card_frames(errors):
+    """Check 6: encode ramp == display ramp per card_frames.png cell, and
+    every pixel color exists in the display ramp.
+
+    Reads the generated display mapping (generated/tiles/card_display_slots.json,
+    emitted by palette_compiler.card_display_slots) -- the same source the
+    encoder and the accounting doc use -- so this check cannot drift from
+    them.  The runtime paints those slots per src/ui/ui_battle_content.c.
+    Returns the number of sheet cells checked.
+    """
+    from compose_card_frames import LAYOUT
+    from palette_compiler import sheet_cells
+
+    try:
+        display = json.loads((GEN / "card_display_slots.json").read_text())
+        shades = json.loads((GEN / "shades" / "card_frames.json").read_text())["tiles"]
+        base = json.loads((GEN / "base.json").read_text())["slots"]
+    except (OSError, ValueError, KeyError) as e:
+        errors.append(f"card_frames: cannot load generated manifest inputs ({e}); run `make manifest`")
+        return 0
+    names = {}
+    for y, row in enumerate(LAYOUT):
+        for x, name in enumerate(row):
+            if name is not None:
+                names["%d,%d" % (x, y)] = name
+    slot_colors = {int(i): v["colors"] for i, v in base.items()}
+    try:
+        cells = sheet_cells(ASSETS / "card_frames.png")
+    except (OSError, ValueError) as e:
+        errors.append(f"card_frames: cannot read sheet pixels ({e})")
+        return 0
+
+    n = 0
+    for key in sorted(display):
+        n += 1
+        slot = display[key]
+        name = names.get(key, "?")
+        x, y = (int(v) for v in key.split(","))
+        if slot not in slot_colors:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' displays on slot {slot}, "
+                f"which has no ramp in set 'base' (tools/palette_slots.json)")
+            continue
+        want = list(slot_colors[slot])
+        got = shades.get(key)
+        if got is None:
+            errors.append(f"card_frames: cell ({x},{y}) '{name}' has no shade-map entry; run `make manifest`")
+            continue
+        if list(got) != want:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' is encoded with {got} but "
+                f"displays on slot {slot} ({want}); point the skin color at the "
+                f"display slot so encode == display")
+        pix = sorted("#%02x%02x%02x" % tuple(c) for c in cells.get((x, y), []))
+        off = [c for c in pix if c not in want]
+        if off:
+            errors.append(
+                f"card_frames: cell ({x},{y}) '{name}' has pixel colors {off} absent "
+                f"from display slot {slot} ({want}); repaint the cell into the "
+                f"display ramp or rebind the slot")
+    return n
 
 
 def main():
@@ -125,7 +198,13 @@ def main():
         for e in errors:
             print("  - " + e, file=sys.stderr)
         return 1
-    print(f"verify_palette_manifest: OK ({len(WORLD)} tilesets, {total} VRAM slots)")
+    card_n = check_card_frames(errors)
+    if errors:
+        print("verify_palette_manifest: FAILED", file=sys.stderr)
+        for e in errors:
+            print("  - " + e, file=sys.stderr)
+        return 1
+    print(f"verify_palette_manifest: OK ({len(WORLD)} tilesets, {total} VRAM slots, {card_n} card cells)")
     return 0
 
 
