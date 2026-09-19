@@ -19,6 +19,15 @@
       "type": "string",
       "description": "OBJ ramp name (SLOTS/OBJ) for OAM sets; transparent slot 0."
     },
+    "obj_alt_palette": {
+      "type": "string",
+      "description": "Optional second OBJ ramp for OAM sets with one off-ramp cell (spider eye): programmed into BATTLE_OBJ_SCRATCH2 at battle entry. Requires obj_alt_cells."
+    },
+    "obj_alt_cells": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "description": "Frame0-relative cell indices (row-major) drawn with obj_alt_palette. Mask is uint8, so width*height must be <= 8."
+    },
     "frame0": {
       "type": "array",
       "items": { "type": ["string", "null"] }

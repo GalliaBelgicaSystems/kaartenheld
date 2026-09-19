@@ -300,9 +300,14 @@ void shop_content_render(void)
         s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         if (s_sc_card_def) {
-            if (s_sc_card_def->status_id == 1 /* STATUS_BURN */) s_sc_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-            else if (s_sc_card_def->status_id == 2 /* STATUS_POISON */) s_sc_tile_elem = UI_TILE_CARD_ELEM_POISON;
-            else if (s_sc_card_def->status_id == 3 /* STATUS_FREEZE */) s_sc_tile_elem = UI_TILE_CARD_ELEM_ICE;
+            /* Icon tiles mirror the battle hand (screens/cards_skin.json):
+             * element icon + weapon icon.  The old code compared raw
+             * status numbers with BURN/POISON swapped (1 is POISON,
+             * 2 is BURN per rpg/status.h), so fire/poison shop icons
+             * were exchanged; named constants fix that too. */
+            if (s_sc_card_def->status_id == STATUS_BURN) s_sc_tile_elem = UI_TILE_CARD_ELEM_FIRE;
+            else if (s_sc_card_def->status_id == STATUS_POISON) s_sc_tile_elem = UI_TILE_CARD_ELEM_POISON;
+            else if (s_sc_card_def->status_id == STATUS_FREEZE) s_sc_tile_elem = UI_TILE_CARD_ELEM_ICE;
             else s_sc_tile_elem = 0;
 
             if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
@@ -324,10 +329,20 @@ void shop_content_render(void)
             sc_vram_sync_write(s_sc_dst, s_sc_tile_elem);
             sc_vram_sync_write(s_sc_dst + 1, s_sc_tile_wpn);
 
-            sc_color_span(1, s_sc_y, 6,
-                          ui_color_card(s_sc_card_def->battle_type, s_sc_card_def->status_id,
-                                        (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                        (s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)));
+            /* Icon palettes mirror the battle-hand display slots
+             * (generated card_display_slots.json: weapons all WOOD/5,
+             * fire 1, ice 2, poison 4): the element cell takes its
+             * element slot, the weapon cell WOOD.  Code/price text
+             * stays on the default paper slot.  Bank-2 bodies cannot
+             * read the bank-4 skin const, so the skin mapping is
+             * mirrored here -- keep in sync with cards_skin.json. */
+            if (s_sc_card_def->status_id == STATUS_BURN)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_FIRE);
+            else if (s_sc_card_def->status_id == STATUS_POISON)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
+            else if (s_sc_card_def->status_id == STATUS_FREEZE)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
+            sc_color_span(2, s_sc_y, 1, UI_COLOR_WOOD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }

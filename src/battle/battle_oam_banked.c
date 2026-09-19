@@ -1,6 +1,7 @@
 #pragma bank 5
 
 #include <stdint.h>
+#include <gb/gb.h>
 #include "battle.h"
 #include "battle_data.h"
 #include "banked.h"
@@ -43,6 +44,7 @@ void battle_oam_draw_banked(void)
         uint8_t x, w, h;
         uint8_t live;
         uint8_t blink;
+        uint8_t alt;
         w = g_battle_enemy_art_w[k];
         h = g_battle_enemy_art_h[k];
         if (w == 0 || w > 6) w = 3;
@@ -51,6 +53,10 @@ void battle_oam_draw_banked(void)
                          battle->enemies[k].hp != 0 &&
                          g_battle_enemy_art[k] != 0xFF &&
                          g_battle_enemy_art_oam[k]);
+        /* Alt-cell mask rides in g_battle_enemy_art_pal[k] for OAM slots
+         * (loader-cached; BG palette is unused there). Bit n selects
+         * scratch slot 2 for that sprite cell (spider eye). */
+        alt = g_battle_enemy_art_pal[k];
         blink = (uint8_t)(battle->phase == BATTLE_PHASE_PLAYER_DEFEND &&
                           (((battle->timer_ticks >> 4) & 1) == 0 &&
                            k == battle->attacking_enemy_idx));
@@ -93,7 +99,10 @@ void battle_oam_draw_banked(void)
                     e[0] = (uint8_t)(((art_row + cy) << 3) + 16);
                     e[1] = (uint8_t)(((x + cx) << 3) + 8);
                     e[2] = t;
-                    e[3] = BATTLE_OBJ_SCRATCH;
+                    if ((uint8_t)(alt & (uint8_t)(1u << n)) != 0)
+                        e[3] = BATTLE_OBJ_SCRATCH2;
+                    else
+                        e[3] = BATTLE_OBJ_SCRATCH;
                     t++;
                     n++;
                     if (n >= BATTLE_OAM_STRIDE) break;
@@ -105,6 +114,40 @@ void battle_oam_draw_banked(void)
                     ((uint16_t)(e0 + n) << 2));
                 e[0] = 0;
             }
+        }
+    }
+}
+
+/* Second OBJ scratch slot loader (separate bank-5 entry point; see
+ * battle.h).  Programs BATTLE_OBJ_SCRATCH2 when the battle's art set
+ * names an alt ramp (spider eye) and caches the alt-cell mask in
+ * g_battle_enemy_art_pal[k] for OAM slots (their BG palette is unused).
+ * The art set comes from the loader-cached g_battle_enemy_art[0]
+ * (clone encounters share one row; 0xFF = text fallback) plus the
+ * fixed alt tables -- no new WRAM, no cross-bank reads. */
+void battle_alt_load_banked(void)
+{
+    uint8_t ai = g_battle_enemy_art[0];
+    uint8_t oi2 = 0xFF;
+    uint8_t m = 0;
+    uint8_t k;
+    uint8_t i;
+    const uint8_t *pal;
+
+    if (ai != 0xFF) {
+        oi2 = g_battle_art_obj_alt[ai];
+        m = g_battle_art_alt_mask[ai];
+    }
+    if (oi2 != 0xFF) {
+        pal = &g_battle_obj_ramps[(uint16_t)oi2 << 3];
+        OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH2 << 3));
+        for (i = 0; i < 8; i++) {
+            OCPD_REG = pal[i];
+        }
+    }
+    for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
+        if (g_battle_enemy_art_oam[k]) {
+            g_battle_enemy_art_pal[k] = m;
         }
     }
 }

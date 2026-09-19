@@ -147,8 +147,11 @@ def wait_vblank(sess, tries=3):
 def verify_battle_spider_oam(sess):
     """Spider trio renders as OAM (BG footprint blank): walk into the
     castle spider like castle_spider_encounter (the patrol bump needs a
-    bounded wait), then set-match entries 1-18 for blob tiles + scratch
-    OBJ palette 7. Spider costs 6 like slime: bases 128/134/140."""
+    bounded wait), then set-match entries 1-18 for blob tiles.  The eye
+    cell (frame-relative index 1 of each 6-tile stride: tiles 129/135/141)
+    rides the fightbat alt ramp in scratch OBJ palette 6
+    (BATTLE_OBJ_SCRATCH2, screens/combat_art/spider.json obj_alt_cells);
+    every other spider cell uses scratch palette 7."""
     print("== Battle spider OAM (walk-in trio) ==")
     sess.load_scenario(load_scenario(sess, "castle_spider_encounter.json"))
     sess.step(1)
@@ -167,9 +170,12 @@ def verify_battle_spider_oam(sess):
         pal = shadow_oam_slot_pal(sess, slot)
         if tile is not None and pal is not None:
             found.add((tile, pal))
-    want = {(128 + t, 7) for t in range(18)}
-    check("spider trio renders as OAM tiles 128-145 with OBJ palette 7",
-          True, want <= found)
+    eye = {(128 + 6 * s + 1, 6) for s in range(3)}
+    rest = {(128 + t, 7) for t in range(18) if t % 6 != 1}
+    check("spider eye cells render on alt OBJ palette 6",
+          True, eye <= found)
+    check("spider non-eye cells render on OBJ palette 7",
+          True, rest <= found)
 
 
 def verify_battle_oam(sess):

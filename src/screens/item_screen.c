@@ -454,6 +454,12 @@ void item_screen_render(Game *g)
             menu_draw_frame("QUESTS");
         else
             menu_draw_frame("CARDS");
+        /* UI-mode CRAM (base set): card icons are encoded with the battle
+         * display ramps (card_display_slots.json); the world tileset's
+         * CRAM would show wrong colors.  Overworld/battle full redraws
+         * restore their own CRAM on exit.  No-op when opened from battle
+         * (already base). */
+        ui_set_cram_palette(0);
         ui_draw_text_line(0, 2, "CARDS QUEST", 11);
         ui_draw_text_line((uint8_t)(g->item_menu_tab * 6), 3, "^", 1);
 

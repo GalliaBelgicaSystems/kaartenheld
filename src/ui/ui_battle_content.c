@@ -171,15 +171,20 @@ static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette
 }
 
 /* Name color for a combatant by its active statuses (status effects):
- * priority FREEZE (blue) > BURN (red) > POISON (purple), matching the
- * battle-card element colors.  Reads s_battle_status (WRAM) directly --
- * banked code may not call the fixed-bank status_slots() helper. */
+ * priority FREEZE > BURN (red) > POISON (purple).  Reads s_battle_status
+ * (WRAM) directly -- banked code may not call the fixed-bank status_slots()
+ * helper.
+ *
+ * Text-only mapping (the HERO label): FREEZE paints FIELD brown, NOT the
+ * ICE slot -- ICE ink (#7ae3f3 on white, ~1.5:1) is illegible as text.
+ * The ice identity still reads from the ICE-slot rider icon; BURN/POISON
+ * inks (red/purple) stay legible on paper. */
 static uint8_t battle_status_color(const StatusSlots *slots)
 {
     uint8_t i;
     if (slots == (const StatusSlots *)0) return UI_COLOR_NONE;
     for (i = 0; i < slots->count; i++) {
-        if (slots->slot[i].id == STATUS_FREEZE) return UI_COLOR_ICE;
+        if (slots->slot[i].id == STATUS_FREEZE) return UI_COLOR_FIELD;
     }
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_BURN) return UI_COLOR_FIRE;
@@ -851,23 +856,19 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         for (r = 0; r < bh; r++) {
             battle_color_span(col, (uint8_t)(top + r), 3, ccolor);
         }
-        /* Icon/digit cells carry the weapon slot (encode ramp ==
-         * display ramp): weapon-icon row (top+1) and power/digit row
-         * (top+bh-2), plus the floor uses-glyph on limited cards.
-         * The DIM grey-out override wins here too, or greyed cards
-         * would stop greying once the box stays paper. */
+        /* Icon/digit cells stay on the weapon slot (encode ramp ==
+         * display ramp) even when greyed: painting them DIM (slot 7
+         * fightboss, which carries white) decodes the white-less fight2
+         * bytes as white patches.  The DIM box + marker already
+         * communicate the grey-out; the icons keep their type colors. */
         {
             uint8_t wt;
             uint8_t icell;
-            uint8_t greyed;
             uint8_t drow;
 
             wt = is_heal ? BATTLE_CARD_TYPE_HEAL : (uint8_t)(ctype < 5 ? ctype : 0);
             icell = g_card_skin_wram.weapon_color[wt];
-            greyed = (uint8_t)(((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
-                (ctype == g_card_skin_wram.uses_type && cuses == 0)) ? 1 : 0);
             drow = (uint8_t)(top + bh - 2);
-            if (greyed) icell = UI_COLOR_DIM;
             battle_color_span((uint8_t)(col + 1), (uint8_t)(top + 1), 1, icell);
             if (drow != (uint8_t)(top + 1)) {
                 battle_color_span((uint8_t)(col + 1), drow, 1, icell);

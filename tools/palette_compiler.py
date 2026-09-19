@@ -253,6 +253,43 @@ def main():
                 if data.get("oam"):
                     battle_oam_names.add(name)
 
+    # Per-cell OBJ alt slots (combat_art obj_alt_palette/obj_alt_cells,
+    # e.g. the spider eye): those cells encode AND display with the alt
+    # artist ramp (second OBJ scratch slot at runtime), so they are
+    # declared with it here.  The alt cell must fit the alt ramp EXACTLY
+    # (no nearest fallback across slots); a violation fails loudly.
+    battle_cells = sheet_cells(ASSETS_DIR / SHEETS["battle"][0])
+    for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
+        data = json.loads(path.read_text())
+        alt = data.get("obj_alt_palette")
+        alt_cells = data.get("obj_alt_cells") or []
+        if alt is None:
+            continue
+        if alt not in ramps:
+            raise ValueError(f"combat_art/{path.name}: unknown obj_alt_palette ramp '{alt}'")
+        if not data.get("oam"):
+            raise ValueError(f"combat_art/{path.name}: obj_alt_palette needs oam")
+        frame0 = list(data.get("frame0", []))
+        w, h = data.get("width", 0), data.get("height", 0)
+        if w * h > 8:
+            raise ValueError(f"combat_art/{path.name}: obj_alt_cells needs width*height<=8")
+        for idx in alt_cells:
+            if not isinstance(idx, int) or not (0 <= idx < len(frame0)):
+                raise ValueError(f"combat_art/{path.name}: obj_alt_cells entry {idx!r} out of frame0")
+            name = frame0[idx]
+            if name is None or name not in BATTLE_CELLS:
+                raise ValueError(f"combat_art/{path.name}: obj_alt cell {idx} has no sheet coord")
+            battle_declared[name] = alt
+            battle_oam_names.add(name)
+            coord = BATTLE_CELLS[name]
+            pix = battle_cells.get(coord, [])
+            bad = sorted(_hex(c) for c in pix if c not in ramps[alt])
+            if bad:
+                raise ValueError(
+                    f"combat_art/{path.name}: obj_alt cell {idx} ({name}) "
+                    f"has colors {bad} outside alt ramp '{alt}'; "
+                    f"repaint the cell or drop the alt assignment")
+
     # Enemy/hero overworld: {cellname: ramp or None}.
     ow_declared = {}
     for path in sorted((REPO_ROOT / "screens" / "enemy_types").glob("*.json")):
@@ -515,6 +552,14 @@ def write_accounting():
             scratch = int(m.group(1))
     except OSError:
         pass
+    scratch2 = "scratch2"
+    try:
+        m2 = re.search(r"#define\s+BATTLE_OBJ_SCRATCH2\s+(\d+)",
+                       (REPO_ROOT / "src" / "battle" / "battle.h").read_text())
+        if m2:
+            scratch2 = int(m2.group(1))
+    except OSError:
+        pass
 
     mis = json.loads((GENERATED_DIR / "ramp_mismatches.json").read_text())
     fit = {}
@@ -612,6 +657,11 @@ def write_accounting():
             pathstr = "OAM"
             ramp = data.get("obj_palette")
             slot = scratch
+            alt = data.get("obj_alt_palette")
+            if alt is not None:
+                cells_alt = ",".join(str(c) for c in (data.get("obj_alt_cells") or []))
+                ramp = "%s+%s[%s]" % (ramp, alt, cells_alt)
+                slot = "%s+%s" % (scratch, scratch2)
         else:
             pathstr = "BG stamp"
             ramp = data.get("palette")
@@ -635,7 +685,10 @@ def write_accounting():
              "sets, the BG ramp for the boss).  Every OAM ramp is programmed "
              "into the single battle OBJ scratch slot (%s) at entry "
              "(BATTLE_OBJ_SCRATCH), so the slot column shows %s, not the "
-             "overworld `obj` slot map." % (scratch, scratch))
+             "overworld `obj` slot map.  Sets with a second ramp "
+             "(spider eye) program it into scratch slot %s "
+             "(BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; "
+             "their `fit` covers both ramps." % (scratch, scratch, scratch2))
     L.append("")
 
     L.append("## Overworld sprites (OAM)")

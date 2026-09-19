@@ -69,9 +69,9 @@
 | kobold | 3×2 | OAM | battle_kobold (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
 | slime | 3×2 | OAM | battle_slime (7) | ✓ |
-| spider | 3×2 | OAM | battle_spider (7) | ≈ #8b1b1b |
+| spider | 3×2 | OAM | battle_spider+fightbat[1] (7+6) | ✓ |
 
-`fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.
+`fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.  Sets with a second ramp (spider eye) program it into scratch slot 6 (BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; their `fit` covers both ramps.
 
 ## Overworld sprites (OAM)
 
@@ -140,7 +140,6 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 |---|---|---|---|
 | battle | [0, 5] | fightboss | #8b1b1b |
 | battle | [1, 5] | fightboss | #8b1b1b |
-| battle | [1, 11] | battle_spider | #8b1b1b |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
 
 Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.

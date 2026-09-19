@@ -16,3 +16,11 @@ const uint8_t g_battle_obj_ramps[] = {
 };
 /* Per art set (art_order): OBJ ramp index, or 0xFF = BG stamp. */
 const uint8_t g_battle_art_obj[] = {0x00, 0x01, 0xFF, 0x02, 0x03, 0x04};
+/* Per art set (art_order): second OBJ ramp index for off-ramp
+ * cells (spider eye), or 0xFF = none.  Programmed into
+ * BATTLE_OBJ_SCRATCH2 at battle entry (bank-5 alt loader). */
+const uint8_t g_battle_art_obj_alt[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
+/* Per art set (art_order): frame-relative cell bitmask drawn
+ * with the alt ramp (uint8: width*height must be <= 8). */
+const uint8_t g_battle_art_alt_mask[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x02};
+

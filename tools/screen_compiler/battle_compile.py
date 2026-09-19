@@ -160,6 +160,24 @@ def load_combat_art():
             print("WARNING: %s: oam set without obj_palette ramp" % path.name)
         if data.get('obj_palette'):
             check_obj_palette_name(data.get('obj_palette'), "%s obj_palette" % path.name)
+        # Second OBJ scratch slot (spider eye): one off-ramp cell rides an
+        # existing artist ramp in BATTLE_OBJ_SCRATCH2 instead of a repaint.
+        alt = data.get('obj_alt_palette')
+        alt_cells = data.get('obj_alt_cells')
+        if alt is not None or alt_cells is not None:
+            if not data.get('oam'):
+                print("WARNING: %s: obj_alt_palette needs oam" % path.name)
+            if alt is None or not isinstance(alt_cells, list):
+                print("WARNING: %s: obj_alt_palette and obj_alt_cells must come as a pair" % path.name)
+            else:
+                check_obj_palette_name(alt, "%s obj_alt_palette" % path.name)
+                if w * h > 8:
+                    print("WARNING: %s: obj_alt_cells needs width*height<=8 (uint8 mask), have %d"
+                          % (path.name, w * h))
+                for _c in alt_cells:
+                    if not isinstance(_c, int) or not (0 <= _c < w * h):
+                        print("WARNING: %s: obj_alt_cells entry %r out of 0..%d"
+                              % (path.name, _c, w * h - 1))
         sets[sid] = data
     order = sorted(sets.keys(), key=lambda k: sets[k].get('order', 0))
     seen_orders = [sets[k].get('order', 0) for k in order]
@@ -643,6 +661,11 @@ def build_battle_obj_output(art_sets, art_order):
             if _oramp not in _ramps:
                 raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj ramp '{_oramp}'")
             _obj_order.append(_oramp)
+        _alt = (art_sets[_sid] or {}).get("obj_alt_palette")
+        if _alt and _alt not in _obj_order:
+            if _alt not in _ramps:
+                raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj_alt ramp '{_alt}'")
+            _obj_order.append(_alt)
 
     def _rgb555(rgb):
         v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
@@ -668,6 +691,25 @@ def build_battle_obj_output(art_sets, art_order):
                  ", ".join("0x%02X" % (_obj_order.index((art_sets[_sid] or {}).get("obj_palette"))
                                        if (art_sets[_sid] or {}).get("obj_palette") else 0xFF)
                            for _sid in art_order))
+    lines.append("/* Per art set (art_order): second OBJ ramp index for off-ramp")
+    lines.append(" * cells (spider eye), or 0xFF = none.  Programmed into")
+    lines.append(" * BATTLE_OBJ_SCRATCH2 at battle entry (bank-5 alt loader). */")
+    lines.append("const uint8_t g_battle_art_obj_alt[] = {%s};" %
+                 ", ".join("0x%02X" % (_obj_order.index((art_sets[_sid] or {}).get("obj_alt_palette"))
+                                       if (art_sets[_sid] or {}).get("obj_alt_palette") else 0xFF)
+                           for _sid in art_order))
+    lines.append("/* Per art set (art_order): frame-relative cell bitmask drawn")
+    lines.append(" * with the alt ramp (uint8: width*height must be <= 8). */")
+    _masks = []
+    for _sid in art_order:
+        _cells = (art_sets[_sid] or {}).get("obj_alt_cells") or []
+        _m = 0
+        for _c in _cells:
+            if isinstance(_c, int) and 0 <= _c < 8:
+                _m |= (1 << _c)
+        _masks.append("0x%02X" % _m)
+    lines.append("const uint8_t g_battle_art_alt_mask[] = {%s};" % ", ".join(_masks))
+    lines.append("")
     lines.append("")
 
     return "\n".join(lines)
