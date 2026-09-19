@@ -4,7 +4,7 @@
 >
 > Rule: every tile is colored with an existing artist ramp (ramps win). ✓ = every pixel exists in the encode ramp; ≈ = nearest-shade fallback (repaint todo, see Repaint list).
 > ✓ only asserts the pixels fit the ramp -- it does NOT assert the result is legible or artifact-free (e.g. the dim grey-out of spent/poisoned cards, or the low-contrast ice status label).
-> Battle BG slot roles (`base` set, `tools/palette_slots.json`): 0 paper/frames, 1 fire, 2 ice, 3 field, 4 poison, 5 wood/icons, 6 text, 7 dim (grey-out).
+> Battle BG slots (`base` set, `tools/palette_slots.json`): 0 fight1, 1 fight4, 2 fight6, 3 fight3, 4 fight5, 5 fight2, 6 fight_text, 7 fightboss.
 > Artist sets: `sprites*` = RPG overworld, `fight1`–`fight7` = battle background, `fight`+enemy = battle sprites.
 
 ## Slot map
@@ -64,14 +64,14 @@
 
 | set | size | path | display ramp (slot) | fit |
 |---|---|---|---|---|
-| bat | 3×2 | OAM | fightbat (–) | ✓ |
+| bat | 3×2 | OAM | fightbat (7) | ✓ |
 | boss | 3×3 | BG stamp | fightboss (7) | ≈ #8b1b1b |
-| kobold | 3×2 | OAM | battle_kobold (–) | ✓ |
-| mimic | 3×2 | OAM | sprites6 (–) | ✓ |
-| slime | 3×2 | OAM | battle_slime (–) | ✓ |
-| spider | 3×2 | OAM | battle_spider (–) | ≈ #8b1b1b |
+| kobold | 3×2 | OAM | battle_kobold (7) | ✓ |
+| mimic | 3×2 | OAM | sprites6 (7) | ✓ |
+| slime | 3×2 | OAM | battle_slime (7) | ✓ |
+| spider | 3×2 | OAM | battle_spider (7) | ≈ #8b1b1b |
 
-`fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  OAM display ramps (`battle_*`, `fightbat`, `sprites6`) are slotless by design -- the loader programs them into the battle OBJ scratch slot at entry, not through the `obj` slot map.
+`fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.
 
 ## Overworld sprites (OAM)
 
@@ -128,7 +128,7 @@ overlay is deleted.
 | (1,9) | combat_nine_icon | 5 → fight2 | ✓ |
 | (0,10) | combat_4_arrows_left | 5 → fight2 | ✓ |
 
-Frame borders stay on slot 0 (paper); the select arrow is slot 3 (field).  Weapon + uses icons and the power digit share the type's `weapon_color` slot (5 = fight2 for every type); the box is paper and the DIM grey-out override applies to the icon/digit cells too.
+Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + uses icons and the power digit use the type's `weapon_color` slot(s) 5 fight2; the box is paper and the DIM grey-out override applies to the icon/digit cells too.
 
 ## Title
 

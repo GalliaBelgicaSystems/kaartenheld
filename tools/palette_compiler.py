@@ -30,6 +30,7 @@ Outputs (all under generated/tiles/, regenerable, uncommitted):
 
 import sys
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -109,6 +110,30 @@ def sheet_cells(png_path):
     return cells
 
 
+def ui_color_slot(name):
+    """Resolve a UI_COLOR_* macro in src/ui/ui.h to its integer slot,
+    following alias #defines (UI_COLOR_ARROW -> UI_COLOR_FIELD -> 3).
+    Returns None if the macro is missing or non-numeric.
+
+    Single source for engine constants the host mapping must match: the
+    runtime uses the same macro (UI_COLOR_ARROW in ui_battle_content.c),
+    so encode and display cannot drift."""
+    try:
+        text = (REPO_ROOT / "src" / "ui" / "ui.h").read_text()
+    except OSError:
+        return None
+    defines = dict(re.findall(r"#define\s+(UI_COLOR_\w+)\s+(\w+)", text))
+    val = defines.get(name)
+    seen = set()
+    while val is not None and val in defines and val not in seen:
+        seen.add(val)
+        val = defines[val]
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def card_display_slots(skin, hud):
     """{cell coord -> UI_COLOR_* display slot} for every non-empty
     card_frames.png cell.
@@ -120,10 +145,10 @@ def card_display_slots(skin, hud):
     The runtime paints these slots per src/ui/ui_battle_content.c.
 
     Defaults: frame borders / unlisted cells -> slot 0 (paper); the
-    select arrow (brown #755930 on white) -> slot 3 (field, where the
-    runtime paints the enemy caret + card cursor); type + uses icons ->
-    the type's color; element icons -> the element color; HUD icons +
-    timer bar -> their hud-skin colors.
+    select-arrow cell -> UI_COLOR_ARROW from ui.h (the same engine
+    constant the two runtime paint sites use); type + uses icons -> the
+    type's color; element icons -> the element color; HUD icons + timer
+    bar -> their hud-skin colors.
     """
     sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
     from compose_card_frames import LAYOUT
@@ -141,8 +166,9 @@ def card_display_slots(skin, hud):
                 coord_of[name] = (x, y)
 
     slots = {coord: 0 for coord in coord_of.values()}
-    if "combat_arrow_pointing_up" in coord_of:
-        slots[coord_of["combat_arrow_pointing_up"]] = 3
+    arrow_slot = ui_color_slot("UI_COLOR_ARROW")
+    if arrow_slot is not None and "combat_arrow_pointing_up" in coord_of:
+        slots[coord_of["combat_arrow_pointing_up"]] = arrow_slot
     for tdef in (skin.get("types") or {}).values():
         s = skin_slot(tdef["color"])
         names = [tdef["icon"]] + list(tdef.get("uses_icons", []))
@@ -477,6 +503,19 @@ def write_accounting():
         for i, r in sorted(slots.items()):
             slot_of.setdefault((setname, r), i)
 
+    # Battle OAM ramps are programmed into one scratch OBJ slot at battle
+    # entry (BATTLE_OBJ_SCRATCH, src/battle/battle.h), not through the
+    # overworld `obj` slot map.  Read it so the battle table cannot print a
+    # stale overworld slot number for a colliding ramp name.
+    scratch = "scratch"
+    try:
+        m = re.search(r"#define\s+BATTLE_OBJ_SCRATCH\s+(\d+)",
+                      (REPO_ROOT / "src" / "battle" / "battle.h").read_text())
+        if m:
+            scratch = int(m.group(1))
+    except OSError:
+        pass
+
     mis = json.loads((GENERATED_DIR / "ramp_mismatches.json").read_text())
     fit = {}
     for m in mis:
@@ -502,9 +541,9 @@ def write_accounting():
     L.append("> ✓ only asserts the pixels fit the ramp -- it does NOT assert "
              "the result is legible or artifact-free (e.g. the dim grey-out of "
              "spent/poisoned cards, or the low-contrast ice status label).")
-    L.append("> Battle BG slot roles (`base` set, `tools/palette_slots.json`): "
-             "0 paper/frames, 1 fire, 2 ice, 3 field, 4 poison, 5 wood/icons, "
-             "6 text, 7 dim (grey-out).")
+    L.append("> Battle BG slots (`base` set, `tools/palette_slots.json`): "
+             + ", ".join("%d %s" % (i, slotmap["base"][i])
+                         for i in sorted(slotmap["base"])) + ".")
     L.append("> Artist sets: `sprites*` = RPG overworld, `fight1`–`fight7` = "
              "battle background, `fight`+enemy = battle sprites.")
     L.append("")
@@ -572,7 +611,7 @@ def write_accounting():
         if data.get("oam"):
             pathstr = "OAM"
             ramp = data.get("obj_palette")
-            slot = slot_of.get(("obj", ramp), "–")
+            slot = scratch
         else:
             pathstr = "BG stamp"
             ramp = data.get("palette")
@@ -593,10 +632,10 @@ def write_accounting():
         L.append(f"| {sid} | {w}×{h} | {pathstr} | {ramp} ({slot}) | {fitcol} |")
     L.append("")
     L.append("`fit` is measured against the display ramp (the OBJ ramp for OAM "
-             "sets, the BG ramp for the boss).  OAM display ramps (`battle_*`, "
-             "`fightbat`, `sprites6`) are slotless by design -- the loader "
-             "programs them into the battle OBJ scratch slot at entry, not "
-             "through the `obj` slot map.")
+             "sets, the BG ramp for the boss).  Every OAM ramp is programmed "
+             "into the single battle OBJ scratch slot (%s) at entry "
+             "(BATTLE_OBJ_SCRATCH), so the slot column shows %s, not the "
+             "overworld `obj` slot map." % (scratch, scratch))
     L.append("")
 
     L.append("## Overworld sprites (OAM)")
@@ -645,6 +684,17 @@ def write_accounting():
     L.append("|---|---|---|---|")
     display_slots = json.loads(
         (GENERATED_DIR / "card_display_slots.json").read_text())
+    sys.path.insert(0, str(REPO_ROOT / "tools" / "screen_compiler"))
+    from battle_compile import SKIN_COLORS
+    skin = json.loads((REPO_ROOT / "screens" / "cards_skin.json").read_text())
+    type_slots = sorted({SKIN_COLORS[t["color"]]
+                         for t in (skin.get("types") or {}).values()})
+    frame_slot = display_slots.get("0,0", 0)
+    arrow_slot = 0
+    for _y, _row in enumerate(CARD_LAYOUT):
+        for _x, _name in enumerate(_row):
+            if _name == "combat_arrow_pointing_up":
+                arrow_slot = display_slots.get("%d,%d" % (_x, _y), 0)
     for _y, _row in enumerate(CARD_LAYOUT):
         for _x, _name in enumerate(_row):
             if _name is None:
@@ -655,10 +705,13 @@ def write_accounting():
             fitcol = "✓" if mark == "✓" else f"{mark} " + ", ".join(off)
             L.append(f"| ({_x},{_y}) | {_name} | {slot} → {ramp} | {fitcol} |")
     L.append("")
-    L.append("Frame borders stay on slot 0 (paper); the select arrow is slot 3 "
-             "(field).  Weapon + uses icons and the power digit share the type's "
-             "`weapon_color` slot (5 = fight2 for every type); the box is paper "
-             "and the DIM grey-out override applies to the icon/digit cells too.")
+    L.append("Frame borders use slot %d (%s); the select arrow slot %d (%s).  "
+             "Weapon + uses icons and the power digit use the type's "
+             "`weapon_color` slot(s) %s; the box is paper and the DIM grey-out "
+             "override applies to the icon/digit cells too."
+             % (frame_slot, slotmap["base"][frame_slot],
+                arrow_slot, slotmap["base"][arrow_slot],
+                ", ".join("%d %s" % (s, slotmap["base"][s]) for s in type_slots)))
     L.append("")
 
     L.append("## Title")

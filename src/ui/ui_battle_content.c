@@ -30,6 +30,9 @@ extern CardDefinition g_card_scratch;
  * (screen_change() zeroes SCX/SCY), so the harness can assert stamped
  * art tiles via tilemap_cell. */
 extern uint8_t g_tilemap_mirror[32 * 32];
+/* WRAM attribute mirror (ui.c): the harness asserts battle CGB palette
+ * bytes via tilemap_attr.  battle_color_span keeps it in sync. */
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 #endif
 
 /* VRAM is accessible in PPU Modes 0-2 and writes are IGNORED in Mode 3
@@ -148,6 +151,7 @@ static uint8_t battle_card_color(uint8_t type, uint8_t status_id, uint8_t is_hea
 static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
 {
     uint8_t i;
+    uint8_t v;
     volatile uint8_t *dst;
 
     if (!g_is_cgb) return;
@@ -157,7 +161,11 @@ static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     VBK_REG = 1;
     for (i = 0; i < len; i++) {
-        battle_vram_sync_write(&dst[i], (uint8_t)(palette & 0x07));
+        v = (uint8_t)(palette & 0x07);
+        battle_vram_sync_write(&dst[i], v);
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[(y & 31) * 32 + ((x + i) & 31)] = v;
+#endif
     }
     VBK_REG = 0;
 }
@@ -567,10 +575,10 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
                 battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, "   ", 3);
                 battle_put_tile((uint8_t)(battle_enemy_art_x(x, k) + 1), cur_row,
                                 '^', UI_TILE_SELECT_ARROW);
-                /* Arrow tile (brown on white) is encoded for the field
-                 * slot (fight3); paint its cell to match. */
+                /* Arrow tile is brown on white; UI_COLOR_ARROW (the field
+                 * slot) is its single-source palette (ui.h). */
                 battle_color_span((uint8_t)(battle_enemy_art_x(x, k) + 1), cur_row, 1,
-                                  UI_COLOR_FIELD);
+                                  UI_COLOR_ARROW);
                 continue;
             }
         } else {
@@ -881,8 +889,8 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         if (i == cur) {
             battle_put_tile((uint8_t)(col + 1), mark_row, '^',
                             UI_TILE_SELECT_ARROW);
-            /* Arrow tile is encoded for the field slot (fight3). */
-            battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_FIELD);
+            /* Arrow tile palette: single-sourced in ui.h (UI_COLOR_ARROW). */
+            battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
         } else {
             battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
             battle_color_span((uint8_t)(col + 1), mark_row, 1,

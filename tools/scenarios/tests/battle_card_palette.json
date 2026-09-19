@@ -1,0 +1,74 @@
+{
+ "name": "battle_card_palette",
+ "test": true,
+ "description": "Battle CGB palette bytes (g_tilemap_attr_mirror): card frame cells carry the paper slot (0), the weapon and digit cells the type weapon slot (5=fight2), the enemy target caret the HUD arrow slot (3=field), and the timer bar the bar slot (0). End-to-end encode==display check for the card/HUD display mapping (the JSON manifest check is host-side only).",
+ "scenario_id": "BATTLE_BOOT",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7003,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 11,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 12,
+   "col": 1,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 13,
+   "col": 1,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 5,
+   "col": 2,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 17,
+   "col": 0,
+   "expected": 0
+  }
+ ]
+}
