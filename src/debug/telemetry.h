@@ -152,6 +152,9 @@ typedef enum {
     EVENT_VARIABLE_SET,
     EVENT_CARD_ADDED_TO_DECK,
     EVENT_CARD_REMOVED_FROM_DECK,
+    /* Persistent lifecycle (state.c game_world_set_actor_state):
+     * d0 = ActorId lo, d1 = ActorId hi, d2 = ActorStateId, d3 = 0.
+     * Patrol movement uses EVENT_ACTOR_MOVED (different schema). */
     EVENT_ACTOR_STATE_CHANGE,
     EVENT_SCRIPT_TRIGGERED,
     /* d0 = HP restored; d1 = cause: 0 = heal card, 1 = ring resolving
@@ -202,7 +205,12 @@ typedef enum {
     EVENT_CARDS_GREYED,
     /* Cleared after POISON_GREY_TURNS: d0 = actor slot, d1/d2 = the
      * previously-greyed pool positions. */
-    EVENT_CARDS_UNGREYED
+    EVENT_CARDS_UNGREYED,
+    /* Patrol step commit (world.c): d0 = EntityId, d1 = x, d2 = y,
+     * d3 = facing.  Split out of EVENT_ACTOR_STATE_CHANGE, which carries
+     * a different schema (actor_id_lo/hi + lifecycle state) — one event
+     * id must mean one payload shape. */
+    EVENT_ACTOR_MOVED
 } GameEventType;
 
 typedef struct {

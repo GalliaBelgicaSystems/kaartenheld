@@ -98,12 +98,17 @@ uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
     return HAND_NONE;
 }
 
+/* Decode-range guards (mirror of combo.c's pack guards): fail the build
+ * if the packed fields ever outgrow the staging byte. */
+static const int g_combo_unpack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
+static const int g_combo_unpack_effect_ok[(CARD_EFFECT_HEAL_HP <= 127) ? 1 : 0];
+
 void combo_resolve_banked(void)
 {
     const Card *cards = (const Card *)g_bk_ptr_a;
     uint8_t count = g_bk_byte_a;
-    uint8_t phase = (uint8_t)(g_bk_byte_b & 0x01);
-    uint8_t effect = (uint8_t)(g_bk_byte_b >> 1);
+    uint8_t phase = COMBO_UNPACK_PHASE(g_bk_byte_b);
+    uint8_t effect = COMBO_UNPACK_EFFECT(g_bk_byte_b);
     ComboResult *out_result = (ComboResult *)g_bk_ptr_b;
     uint8_t i, eff_count = 0;
     uint8_t sum = 0;

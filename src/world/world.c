@@ -372,7 +372,9 @@ WorldMoveResult world_update_actors(World *w)
         banked_call_run();
 
         if (g_patrol_outcome == 1) {
-            telemetry_emit(EVENT_ACTOR_STATE_CHANGE, g_patrol_evt[0],
+            /* Step commit: movement schema (entity, x, y, facing) — NOT
+             * the lifecycle schema of EVENT_ACTOR_STATE_CHANGE. */
+            telemetry_emit(EVENT_ACTOR_MOVED, g_patrol_evt[0],
                            g_patrol_evt[1], g_patrol_evt[2], g_patrol_evt[3]);
         } else if (g_patrol_outcome == 2) {
             telemetry_emit(EVENT_ACTOR_COLLISION, g_patrol_evt[0],
