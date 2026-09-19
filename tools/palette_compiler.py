@@ -139,9 +139,9 @@ def main():
                 coords[v["tile"]] = (v["x"], v["y"])
         tags[ts] = (ts_data, table, coords)
 
-    # Battle art: {cellname: encoding ramp}. OAM-flagged sets (battle
-    # enemies are sprites, per Florent's model) encode with their OBJ ramp;
-    # BG-stamped sets (boss, spider) encode with their fight ramp. The ROM
+    # Battle art: {cellname: encoding ramp}. OAM-flagged sets (every battle
+    # enemy except the boss, per Florent's model) encode with their OBJ ramp;
+    # the sole BG-stamped set (boss) encodes with its fight ramp. The ROM
     # programs the matching CRAM side per path, so encoding and display
     # always agree; a mismatch row means OUR assignment is suspect, never
     # the artist's pixels (artist is always right).
@@ -338,6 +338,10 @@ def main():
             card_declared[card_cells[bar[bkey]]] = slot_ramp("base", skin_slot(bar["color"]))
     for _name, _coord in card_cells.items():
         card_declared.setdefault(_coord, "fight1")
+    # Select-arrow tile (brown #755930 on white) fits fight3 (slot 3): the
+    # runtime paints the enemy caret and the card cursor with the field slot.
+    if "combat_arrow_pointing_up" in card_cells:
+        card_declared[card_cells["combat_arrow_pointing_up"]] = slot_ramp("base", 3)
 
     compile_sheet("card_frames", card_declared)
     compile_sheet("title", "title_logo")
@@ -559,8 +563,8 @@ def write_accounting():
         L.append(f"| {sid} | {w}×{h} | {pal} ({slot}) | "
                  f"{fitcol} | {oam}{obj} |")
     L.append("")
-    L.append("OAM obj ramps are declared content for future battle-OAM work; "
-             "the ROM currently stamps every set as BG with its BG ramp.")
+    L.append("OAM obj ramps are the live display ramps for every battle enemy "
+             "except the boss; the boss alone is stamped as BG with its BG ramp.")
     L.append("")
 
     L.append("## Overworld sprites (OAM)")

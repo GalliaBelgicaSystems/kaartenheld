@@ -14,7 +14,7 @@
 | desolate_landscape | desolate2 | desolate3 | desolate2 | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town8 | town1 | town2 | town7 |
-| base | fight1 | fightgoblin | fightspider | fightslime | fight5 | fightmimic | fight_text | fightboss |
+| base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fight_text | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
 
@@ -63,14 +63,14 @@
 
 | set | size | BG ramp (slot) | fit | OAM obj ramp |
 |---|---|---|---|---|
-| bat | 3×2 | fightmimic (5) | ✓ | oam, fightbat |
+| bat | 3×2 | fightmimic (?) | ✓ | oam, fightbat |
 | boss | 3×3 | fightboss (7) | ≈ #8b1b1b | – |
-| kobold | 3×2 | fightgoblin (1) | ✓ | oam, battle_kobold |
-| mimic | 3×2 | fightmimic (5) | ✓ | oam, sprites6 |
-| slime | 3×2 | fightslime (3) | ✓ | oam, battle_slime |
-| spider | 3×2 | fightspider (2) | ≈ #8b1b1b | oam, battle_spider |
+| kobold | 3×2 | fightgoblin (?) | ✓ | oam, battle_kobold |
+| mimic | 3×2 | fightmimic (?) | ✓ | oam, sprites6 |
+| slime | 3×2 | fightslime (?) | ✓ | oam, battle_slime |
+| spider | 3×2 | fightspider (?) | ≈ #8b1b1b | oam, battle_spider |
 
-OAM obj ramps are declared content for future battle-OAM work; the ROM currently stamps every set as BG with its BG ramp.
+OAM obj ramps are the live display ramps for every battle enemy except the boss; the boss alone is stamped as BG with its BG ramp.
 
 ## Overworld sprites (OAM)
 
@@ -106,26 +106,26 @@ overlay is deleted.
 | (0,2) | combat_bottom_left_card_corner | 0 → fight1 | ✓ |
 | (1,2) | combat_bottom_middle_card | 0 → fight1 | ✓ |
 | (2,2) | combat_bottom_right_card_corner | 0 → fight1 | ✓ |
-| (0,3) | combat_timer_bar_filled | 5 → fightmimic | ≈ #b09266, #e3ae63 |
-| (1,3) | combat_timer_bar_empty | 5 → fightmimic | ≈ #b09266 |
-| (2,3) | combat_hp_icon | 1 → fightgoblin | ≈ #8b1b1b |
-| (0,4) | combat_ap_icon | 6 → fight_text | ≈ #755930, #b09266 |
-| (1,4) | combat_deck_icon | 2 → fightspider | ≈ #755930 |
-| (2,4) | combat_arrow_pointing_up | 0 → fight1 | ≈ #755930 |
-| (0,5) | combat_top_right_fire_card | 1 → fightgoblin | ≈ #8b1b1b, #b09266, #dfbd8d |
-| (1,5) | combat_top_right_ice_card | 2 → fightspider | ≈ #7ae3f3, #b09266, #dfbd8d |
+| (0,3) | combat_timer_bar_filled | 0 → fight1 | ✓ |
+| (1,3) | combat_timer_bar_empty | 0 → fight1 | ✓ |
+| (2,3) | combat_hp_icon | 1 → fight4 | ✓ |
+| (0,4) | combat_ap_icon | 3 → fight3 | ✓ |
+| (1,4) | combat_deck_icon | 3 → fight3 | ✓ |
+| (2,4) | combat_arrow_pointing_up | 0 → fight1 | ✓ |
+| (0,5) | combat_top_right_fire_card | 1 → fight4 | ✓ |
+| (1,5) | combat_top_right_ice_card | 2 → fight6 | ✓ |
 | (2,5) | combat_top_right_poison_card | 4 → fight5 | ✓ |
-| (0,6) | combat_sword_icon | 2 → fightspider | ≈ #755930, #dfbd8d |
-| (1,6) | combat_shield_icon | 5 → fightmimic | ≈ #755930, #dfbd8d |
-| (2,6) | combat_bow_icon | 6 → fight_text | ≈ #755930, #dfbd8d |
-| (0,7) | combat_dagger_icon | 4 → fight5 | ≈ #755930 |
-| (1,7) | combat_ring_icon | 3 → fightslime | ≈ #755930, #7ae3f3, #dfbd8d |
-| (0,8) | combat_0_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
-| (1,8) | combat_1_arrow_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
-| (2,8) | combat_2_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
-| (0,9) | combat_3_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
-| (1,9) | combat_nine_icon | 6 → fight_text | ≈ #755930, #dfbd8d |
-| (0,10) | combat_4_arrows_left | 6 → fight_text | ≈ #755930, #b09266, #dfbd8d, #e3ae63 |
+| (0,6) | combat_sword_icon | 5 → fight2 | ✓ |
+| (1,6) | combat_shield_icon | 5 → fight2 | ✓ |
+| (2,6) | combat_bow_icon | 5 → fight2 | ✓ |
+| (0,7) | combat_dagger_icon | 5 → fight2 | ✓ |
+| (1,7) | combat_ring_icon | 5 → fight2 | ✓ |
+| (0,8) | combat_0_arrows_left | 5 → fight2 | ✓ |
+| (1,8) | combat_1_arrow_left | 5 → fight2 | ✓ |
+| (2,8) | combat_2_arrows_left | 5 → fight2 | ✓ |
+| (0,9) | combat_3_arrows_left | 5 → fight2 | ✓ |
+| (1,9) | combat_nine_icon | 5 → fight2 | ✓ |
+| (0,10) | combat_4_arrows_left | 5 → fight2 | ✓ |
 
 Frame borders + select arrow share `fight1` (slot 0): cards tint per type at stamp time by engine design.
 
@@ -141,24 +141,5 @@ Frame borders + select arrow share `fight1` (slot 0): cards tint per type at sta
 | battle | [1, 5] | fightboss | #8b1b1b |
 | battle | [1, 11] | battle_spider | #8b1b1b |
 | enemy_ow | [3, 1] | sprites2 | #8d754a |
-| card_frames | [0, 3] | fightmimic | #b09266, #e3ae63 |
-| card_frames | [0, 4] | fight_text | #755930, #b09266 |
-| card_frames | [0, 5] | fightgoblin | #8b1b1b, #b09266, #dfbd8d |
-| card_frames | [0, 6] | fightspider | #755930, #dfbd8d |
-| card_frames | [0, 7] | fight5 | #755930 |
-| card_frames | [0, 8] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
-| card_frames | [0, 9] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
-| card_frames | [0, 10] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
-| card_frames | [1, 3] | fightmimic | #b09266 |
-| card_frames | [1, 4] | fightspider | #755930 |
-| card_frames | [1, 5] | fightspider | #7ae3f3, #b09266, #dfbd8d |
-| card_frames | [1, 6] | fightmimic | #755930, #dfbd8d |
-| card_frames | [1, 7] | fightslime | #755930, #7ae3f3, #dfbd8d |
-| card_frames | [1, 8] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
-| card_frames | [1, 9] | fight_text | #755930, #dfbd8d |
-| card_frames | [2, 3] | fightgoblin | #8b1b1b |
-| card_frames | [2, 4] | fight1 | #755930 |
-| card_frames | [2, 6] | fight_text | #755930, #dfbd8d |
-| card_frames | [2, 8] | fight_text | #755930, #b09266, #dfbd8d, #e3ae63 |
 
-Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight2, fight3, fight4, fight6, fight7, fightbat, fightboss2, fightboss3, fightboss4, sprites10, sprites3, sprites4, sprites6.
+Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.

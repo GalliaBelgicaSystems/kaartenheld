@@ -4,15 +4,15 @@
  "label": "Battle Hand-Card Skin",
  "box": { "w": 3, "h": 4 },
  "types": {
-  "sword":  { "icon": "combat_sword_icon",  "color": "iron"   },
+  "sword":  { "icon": "combat_sword_icon",  "color": "wood"   },
   "shield": { "icon": "combat_shield_icon", "color": "wood"   },
-  "bow":    { "icon": "combat_bow_icon",    "color": "gold",
+  "bow":    { "icon": "combat_bow_icon",    "color": "wood",
               "uses_icons": ["combat_4_arrows_left", "combat_3_arrows_left",
                              "combat_2_arrows_left", "combat_1_arrow_left",
                              "combat_0_arrows_left"],
               "uses_power_icon": "combat_nine_icon" },
-  "heal":   { "icon": "combat_ring_icon",     "color": "field"  },
-  "dagger": { "icon": "combat_dagger_icon",   "color": "poison" }
+  "heal":   { "icon": "combat_ring_icon",     "color": "wood"   },
+  "dagger": { "icon": "combat_dagger_icon",   "color": "wood" }
  },
  "elements": {
   "fire":   { "icon": "combat_top_right_fire_card",   "color": "fire"   },

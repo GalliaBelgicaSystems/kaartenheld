@@ -464,8 +464,8 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
         g_battle_enemy_art[slot] != 0xFF) {
         /* OAM battle art (Florent's model) is drawn by the bank-5 pass
          * (battle_oam_draw_banked, dispatched from ui_update_battle right
-         * after this render); the BG footprint below always blanks. Boss
-         * + spider stay BG-stamped on the classic path. */
+         * after this render); the BG footprint below always blanks. The
+         * boss alone stays BG-stamped on the classic path. */
         if (g_battle_enemy_art_oam[slot]) {
             blank = 1;
         }
@@ -567,6 +567,10 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
                 battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, "   ", 3);
                 battle_put_tile((uint8_t)(battle_enemy_art_x(x, k) + 1), cur_row,
                                 '^', UI_TILE_SELECT_ARROW);
+                /* Arrow tile (brown on white) is encoded for the field
+                 * slot (fight3); paint its cell to match. */
+                battle_color_span((uint8_t)(battle_enemy_art_x(x, k) + 1), cur_row, 1,
+                                  UI_COLOR_FIELD);
                 continue;
             }
         } else {
@@ -839,6 +843,31 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         for (r = 0; r < bh; r++) {
             battle_color_span(col, (uint8_t)(top + r), 3, ccolor);
         }
+        /* Icon/digit cells carry the weapon slot (encode ramp ==
+         * display ramp): weapon-icon row (top+1) and power/digit row
+         * (top+bh-2), plus the floor uses-glyph on limited cards.
+         * The DIM grey-out override wins here too, or greyed cards
+         * would stop greying once the box stays paper. */
+        {
+            uint8_t wt;
+            uint8_t icell;
+            uint8_t greyed;
+            uint8_t drow;
+
+            wt = is_heal ? BATTLE_CARD_TYPE_HEAL : (uint8_t)(ctype < 5 ? ctype : 0);
+            icell = g_card_skin_wram.weapon_color[wt];
+            greyed = (uint8_t)(((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
+                (ctype == g_card_skin_wram.uses_type && cuses == 0)) ? 1 : 0);
+            drow = (uint8_t)(top + bh - 2);
+            if (greyed) icell = UI_COLOR_DIM;
+            battle_color_span((uint8_t)(col + 1), (uint8_t)(top + 1), 1, icell);
+            if (drow != (uint8_t)(top + 1)) {
+                battle_color_span((uint8_t)(col + 1), drow, 1, icell);
+            }
+            if (cuses != 0xFF && ctype == g_card_skin_wram.uses_type) {
+                battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
+            }
+        }
         /* Rider icon palette (mockup layout): the inset TR cell takes
          * the rider's own slot; the box spans above painted paper. */
         {
@@ -852,7 +881,8 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         if (i == cur) {
             battle_put_tile((uint8_t)(col + 1), mark_row, '^',
                             UI_TILE_SELECT_ARROW);
-            battle_color_span((uint8_t)(col + 1), mark_row, 1, 0);
+            /* Arrow tile is encoded for the field slot (fight3). */
+            battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_FIELD);
         } else {
             battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
             battle_color_span((uint8_t)(col + 1), mark_row, 1,
