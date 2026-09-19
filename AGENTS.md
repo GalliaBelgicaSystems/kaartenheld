@@ -2888,7 +2888,8 @@ a location", per-quest hints, repeatable quests) are logged in
 Every quest/event/item/actor state transition must remain visible to the
 harness: `SCRIPT_TRIGGERED` (events), `VARIABLE_SET` (quest/variable state),
 `ITEM_ADDED`/`ITEM_REMOVED`, `CURRENCY_ADDED`/`CURRENCY_SPENT`,
-`ACTOR_STATE_CHANGE`, plus the semantic snapshot.  A content change that makes
+`ACTOR_STATE_CHANGE` (persistent lifecycle), `ACTOR_MOVED` (patrol steps),
+plus the semantic snapshot.  A content change that makes
 a gameplay outcome invisible to `make test-harness` is incomplete.
 
 ## 55.5 Memory budget

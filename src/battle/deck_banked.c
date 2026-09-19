@@ -5,7 +5,11 @@
 
 /* Banked body of deck_discard() (src/battle/deck.c).  Pure WRAM writes:
  * staged Deck (ptr_a) and card (ptr_b); field-wise copy only -- struct
- * assignment lowers to __memcpy in the fixed bank (AGENTS.md 52.11.1). */
+ * assignment lowers to __memcpy in the fixed bank (AGENTS.md 52.11.1).
+ *
+ * deck_reshuffle_banked used to live here too; it moved to
+ * deck_shuffle_banked.c (ROM bank 7) when this bank overflowed in the
+ * release build. */
 
 void deck_discard_banked(void)
 {

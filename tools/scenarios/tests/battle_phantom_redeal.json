@@ -1,7 +1,7 @@
 {
   "name": "battle_phantom_redeal",
   "test": true,
-  "description": "Mid-refill-shortfall guard (battle_turn_draw atomicity): a 6-card deck deals an opening 5-card hand (pile 1), then one 2-card combo leaves 2 slots open with only 1 card remaining and 2 in discard. The refill must reshuffle immediately (EVENT_DECK_RESHUFFLED x1, discard redealt to 0) instead of dealing 1 real + 1 phantom sword and suppressing the shuffle. On the pre-fix ROM no reshuffle fires here and the phantom later bakes into the redealt pile.",
+  "description": "Mid-refill-shortfall guard (battle_turn_draw atomicity + lossless reshuffle): a 6-card deck deals an opening 5-card hand (pile 1), then one 2-card combo leaves 2 slots open with only 1 card remaining and 2 in discard. The refill must reshuffle immediately (EVENT_DECK_RESHUFFLED x1, discard redealt to 0) instead of dealing 1 real + 1 phantom sword and suppressing the shuffle, and the reshuffle must preserve the 1 undrawn leftover (pile 3, redeal 2, draw_remaining 1) instead of deleting it. On the pre-fix ROM no reshuffle fires here and the phantom later bakes into the redealt pile.",
   "actions": [
     {
       "type": "wait",
@@ -67,7 +67,7 @@
     },
     {
       "type": "battle_draw_remaining",
-      "expected": 0
+      "expected": 1
     }
   ],
   "initial_state": {

@@ -31,7 +31,7 @@ void deck_draw(Deck *d, Card *out_card);
  * and reset the draw index.  No-op when the discard pile is empty. */
 void deck_reshuffle(Deck *d);
 
-/* Banked no-arg body (ROM bank 2) dispatched by deck_reshuffle(). */
+/* Banked no-arg body (ROM bank 7) dispatched by deck_reshuffle(). */
 void deck_reshuffle_banked(void);
 
 /* Add a card to the discard pile (card staged through a pointer so the

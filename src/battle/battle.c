@@ -353,15 +353,16 @@ static void battle_resolve_hand_discard(Battle *b)
  *
  * The decision is atomic: a partial pile plus a non-empty discard deals
  * NOTHING and reports dry so the caller reshuffles first.  Dealing partial
- * reals would mix pre/post-shuffle cards, and reaching deck_draw() with a
- * dry pile would mint phantom swords (deck.c) that get discarded and baked
- * into the redealt pile permanently.
+ * real cards would mix pre/post-shuffle cards, and reaching deck_draw()
+ * with a dry pile would mint phantom swords (deck.c) that get discarded
+ * and baked into the redealt pile permanently.
  *
  * No per-iteration dry check is needed: with DECK_MIN_CARDS >=
- * BATTLE_HAND_SIZE (statically asserted below), cards are conserved
- * (pile + hand + discard == count), so an empty discard pile implies the
- * pile covers every open slot.  The only dry-pile loop entry is the
- * fully-dry case handled by the early return above. */
+ * BATTLE_HAND_SIZE (statically asserted above), cards are conserved
+ * (pile + hand + discard == count; the reshuffle preserves the undrawn
+ * remainder), so an empty discard pile implies the pile covers every open
+ * slot.  The only dry-pile loop entry is the fully-dry case handled by
+ * the early return above. */
 static bool battle_turn_draw(Battle *b)
 {
     uint8_t i, need = 0;

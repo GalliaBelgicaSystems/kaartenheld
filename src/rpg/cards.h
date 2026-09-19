@@ -28,7 +28,11 @@ typedef enum {
     CARD_EFFECT_NONE          = 0,
     CARD_EFFECT_DAMAGE_TARGET = 1,
     CARD_EFFECT_BLOCK_DAMAGE   = 2,
-    CARD_EFFECT_HEAL_HP        = 3
+    CARD_EFFECT_HEAL_HP        = 3,
+    /* Sentinel: one past the last valid effect, never a real effect.
+     * Range guards (e.g. the combo staging pack) must test against this,
+     * not against the current last enumerator. */
+    CARD_EFFECT_COUNT          = 4
 } CardEffectType;
 
 /* Static card definition.  Registered at boot via card_register_defs().

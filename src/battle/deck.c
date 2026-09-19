@@ -39,11 +39,13 @@ void deck_draw(Deck *d, Card *out_card)
     *out_card = d->cards[d->draw_idx++];
 }
 
-/* Banked dispatch: the Fisher-Yates body lives in ROM bank 2
- * (src/battle/deck_init.c) to keep the fixed-bank _CODE budget small. */
+/* Banked dispatch: the Fisher-Yates body lives in ROM bank 7
+ * (src/battle/deck_shuffle_banked.c) to keep the fixed-bank _CODE budget
+ * small.  Bank 7 has room in both builds; banks 2 and 3 do not fit the
+ * remainder-preserving reshuffle. */
 void deck_reshuffle(Deck *d)
 {
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&deck_reshuffle_banked;
     g_bk_ptr_a = (void *)d;
     banked_call_run();
