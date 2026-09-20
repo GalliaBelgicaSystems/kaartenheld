@@ -10,13 +10,15 @@ combat), downscales NEAREST to 8x8, and lays out 3 cols x N rows of cells:
   row 3: bat bottom_*      row 9-10: kobold top_*/bottom_*
   row 4: boss horns_*      row 11-12: spider top_*/bottom_*
   row 5: boss head_*       row 13: blank
+  row 6: boss torso_*
 
 The slime second anim frame was removed by the artist (single-frame
 slime); its curated PNGs are gone, so no row is reserved for it.
 
-The boss glow-eyes cells (combat_*_boss_2) are intentionally excluded:
-they use 5 colors, over the 4-color 2bpp tile budget (make gfx fails).
-They ship when the art is reduced to 4 colors.
+The boss glow-eyes cells (combat_*_boss_2) stay editor-only: the glow
+is an OAM overlay over the BG stamp (boss.json glow block), so no
+sheet row is needed -- the overlay reuses the stamp's own tile ids
+and flips OBJ palettes instead of tile frames.
 
 Deterministic: rerunning reproduces the sheet byte-identically.
 """

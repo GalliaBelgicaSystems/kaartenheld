@@ -671,8 +671,18 @@ void battle_update(Battle *b)
         }
         if (vb->timer_ticks > 0) {
             vb->timer_ticks--;
-            if (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && ((vb->timer_ticks & 15) == 0 || (vb->timer_ticks & 15) == 15)) {
-                vb->dirty |= BATTLE_DIRTY_BLINK;
+            /* Multi-frame enemy art (boss glow-eyes) rides the battle
+             * clock, but the stamper only runs on ENEMIES -- otherwise
+             * set on target change, which a solo boss never triggers.
+             * Re-stamp at the clock edge where the art bit flips (== 15
+             * going down) in both player phases, keeping the existing
+             * == 0 edge in DEFEND for the blink cadence (fused into one
+             * condition at zero net size: the fixed bank sits ~16 B
+             * under 0x8000, AGENTS.md 52.18). BLINK in SELECT is
+             * harmless: its only consumer redraws the enemy columns
+             * (ui_battle_content.c). */
+            if ((vb->timer_ticks & 15) == 15 || (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
+                vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {
             battle_execute_combo(b);

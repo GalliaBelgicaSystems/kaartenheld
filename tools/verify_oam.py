@@ -316,6 +316,63 @@ def verify_hostile_sprites(sess):
           0, (135 == corner or 136 == corner or 144 == corner or 145 == corner))
 
 
+def verify_boss_glow_overlay(sess):
+    """Boss eye-glow overlay (BG stamp + OAM eye sprites): the stamp alone
+    cannot show the red/orange eyes (one 4-shade BG palette for a 6-colour
+    set), so the two eye cells (frame0 indices 3,4) redraw as OAM sprites
+    over the stamp, flipping OBJ palettes 6 (unlit, fightboss2) and 7
+    (lit, fightboss3) on the battle clock. The harness cannot see this:
+    SameBoy OAM reads are blind to sprite rendering and CRAM is not
+    inspectable, so this execution check is the gate (AGENTS.md 52.15).
+
+    Expects entries 4,5 (solo slot stride base 1 + cells 3,4) at the
+    stamp-aligned pixels carrying the stamp's own tile ids (base 128 ->
+    131,132), with the palette bit seen on BOTH 6 and 7 across flips.
+    Negative tests: on a ROM without the overlay the entries stay hidden
+    (y == 0); in a slime-trio battle no entry carries a boss tile on
+    palette 6 (proves boss-specificity, no leak into other battles)."""
+    print("== Boss glow overlay (eye sprites over BG stamp) ==")
+    sess.load_scenario(load_scenario(sess, "boss_battle_ending.json"))
+    for _ in range(10):
+        sess.step(30)
+        if sess.snapshot().get("game_state") == "BATTLE":
+            break
+    check("boss glow: reached battle", "BATTLE",
+          sess.snapshot().get("game_state"))
+
+    def eye_state(slot):
+        base = 0xC000 + 4 * slot
+        return (sess._memread(base), sess._memread(base + 1),
+                sess._memread(base + 2), sess._memread(base + 3))
+
+    seen = set()
+    tiles_ok = False
+    for _ in range(40):
+        sess.step(2)
+        states = (eye_state(4), eye_state(5))
+        if states == ((48, 80, 131, states[0][3]),
+                      (48, 88, 132, states[1][3])):
+            tiles_ok = True
+        for y, _x, _t, attr in states:
+            if y == 48 and attr is not None:
+                seen.add(attr & 0x07)
+    check("boss glow: eye sprites at stamp cells (entries 4,5 = tiles 131,132 at (48,80)/(48,88))",
+          True, tiles_ok)
+    check("boss glow: palette flips 6 (unlit) <-> 7 (lit)",
+          True, {6, 7} <= seen)
+
+    # No leak: a slime-trio battle must never show boss tiles on palette 6.
+    sess.load_scenario(load_scenario(sess, "battle_slime_sprite.json"))
+    sess.step(2)
+    leak = False
+    for slot in range(1, 19):
+        tile = shadow_oam_slot_tile(sess, slot)
+        pal = shadow_oam_slot_pal(sess, slot)
+        if tile in (131, 132) and pal == 6:
+            leak = True
+    check("boss glow: no overlay leak into slime battle", False, leak)
+
+
 def verify_exit_art(sess):
     """Invisible exit gates (manifest vram_block exit markings are decor
     only now): gate cells render their underlying terrain art — painted
@@ -597,9 +654,10 @@ def main():
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
-                      ("battle sprites", verify_battle_oam),
-                      ("battle spider", verify_battle_spider_oam),
-                      ("exit art", verify_exit_art)):
+                       ("battle sprites", verify_battle_oam),
+                       ("battle spider", verify_battle_spider_oam),
+                       ("boss glow overlay", verify_boss_glow_overlay),
+                       ("exit art", verify_exit_art)):
         sess = EmulatorSession(rom_path=ROM)
         try:
             sess.connect()

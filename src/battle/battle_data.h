@@ -169,4 +169,18 @@ extern const uint8_t g_enemy_type_count;
 /* Shared overworld enemy OAM blob size in tiles (for the ui_init stream). */
 extern const uint8_t g_enemy_ow_tile_count;
 
+/* Eye-glow overlay descriptors (the glow block in screens/combat_art,
+ * compiled by battle_compile.py; bank 5 with their only reader). Per art set
+ * (art_order): overlay eye-cell bitmask (0x00 = none), plus unlit/lit ramp
+ * indices into the file-local g_battle_glow_ramps below (0xFF = none).
+ * The bank-5 sprite pass draws the masked stamp cells as OAM sprites over
+ * the BG stamp, flipping the sprite palette between unlit/lit on the clock.
+ * Ramp bytes ride along (deduped) instead of indexing the fixed-bank
+ * g_battle_obj_ramps: banked code cannot read across banks, and the fixed
+ * bank sits ~16 B under 0x8000. */
+extern const uint8_t g_battle_glow_ramps[];
+extern const uint8_t g_battle_art_glow_mask[];
+extern const uint8_t g_battle_art_glow_unlit[];
+extern const uint8_t g_battle_art_glow_lit[];
+
 #endif /* BATTLE_DATA_H */

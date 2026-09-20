@@ -31,6 +31,7 @@ generated/tiles/shades/*.json --png2gb--> src/gfx/*.inc/.h --> ROM banks
 |---|---|---|---|
 | World tiles | `assets/*-tile.png`, tags in `tilesets/<set>.json` (`"palette"` field) | per-tile tag | tag's ramp |
 | Battle enemy art | `public/tiles/combat/` → `battle_sprites.png`, `screens/combat_art/*.json` | set `"palette"` | that ramp |
+| Boss eye-glow overlay | same stamp tiles, `screens/combat_art/boss.json` `glow` block | `unlit`/`lit` OBJ ramps | those ramps (bank-5 table + sprite pass; both must match the set ramp except index 1) |
 | Overworld sprites | `public/tiles/enemies|hero/` → `enemy_sprites.png` / `hero_sprites.png`, `screens/enemy_types/*.json` + `hero.json` | per-enemy `"palette"` | that ramp |
 | NPC overlay | `public/tiles/actors/` → `npc_tiles.png` | overlay display slot | slot's ramp |
 | Card frames + icons | `public/tiles/combat/` → `card_frames.png`, `screens/cards_skin.json` + `battle_hud.json` | skin display slot | slot's ramp |
@@ -62,6 +63,9 @@ every `make manifest`: `docs/accounting-tiles-sprites-vs-ramps.md`.
 1. Paint with exact `palette.txt` hexes (≤4 per 8×8 tile).
 2. Add the curated PNG under `public/tiles/<set>/`, register it in
    `tilesets/<set>.json` (world: `"palette": "<ramp>"`) or the
-   corresponding `screens/` JSON (battle/enemy/skin).
+   corresponding `screens/` JSON (battle/enemy/skin). Exception: Boss
+   tiles are derived, never hand-added — edit the source sheet
+   (`assets/combat-tile.png` / `assets/sprites.png` + CSV) and run
+   `make reload-boss-tiles`.
 3. Run the commands above. New tiles appear in `ramp_mismatches.json`
    until their pixels fit their ramp exactly.

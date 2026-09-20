@@ -48,7 +48,7 @@
       "label": "Boss overworld top-left",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_TL",
       "walkable": false,
-      "color": "#8e44ad",
+      "color": "#110b0b",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_tl.png",
       "category": "enemy"
@@ -58,7 +58,7 @@
       "label": "Boss overworld top-right",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_TR",
       "walkable": false,
-      "color": "#8e44ad",
+      "color": "#1e0a0a",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_tr.png",
       "category": "enemy"
@@ -68,7 +68,7 @@
       "label": "Boss overworld bottom-left",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_BL",
       "walkable": false,
-      "color": "#8e44ad",
+      "color": "#111111",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_bl.png",
       "category": "enemy"
@@ -78,7 +78,7 @@
       "label": "Boss overworld bottom-right",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_BR",
       "walkable": false,
-      "color": "#8e44ad",
+      "color": "#0e0e0e",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_br.png",
       "category": "enemy"

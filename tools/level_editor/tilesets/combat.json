@@ -368,7 +368,7 @@
       "label": "bottom middle boss",
       "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_BOSS",
       "walkable": false,
-      "color": "#191816",
+      "color": "#171615",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_middle_boss.png",
       "category": "enemy"
@@ -398,7 +398,7 @@
       "label": "middle center boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS",
       "walkable": false,
-      "color": "#190e0c",
+      "color": "#100707",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss.png",
       "category": "enemy"
@@ -408,7 +408,7 @@
       "label": "middle right boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS",
       "walkable": false,
-      "color": "#99948a",
+      "color": "#9b958a",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_right_boss.png",
       "category": "enemy"
@@ -648,7 +648,7 @@
       "label": "left middle boss 2",
       "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS_2",
       "walkable": false,
-      "color": "#38302c",
+      "color": "#716b68",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_left_middle_boss_2.png",
       "category": "enemy"
@@ -658,7 +658,7 @@
       "label": "middle center boss 2",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS_2",
       "walkable": false,
-      "color": "#453628",
+      "color": "#180e09",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss_2.png",
       "category": "enemy"
@@ -668,7 +668,7 @@
       "label": "middle right boss 2",
       "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS_2",
       "walkable": false,
-      "color": "#aeaeac",
+      "color": "#9b958a",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_right_boss_2.png",
       "category": "enemy"
