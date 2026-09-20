@@ -102,7 +102,10 @@ debug: $(TARGET_DEBUG)
 # build: sdcc's --use-stdout pipeline corrupts the .asm stream when warnings
 # are enabled (they leak into stdout).  Compiling with -S surfaces the same
 # warnings without invoking the assembler.
-lint: gfx tiles $(SRCS)
+# sfx is a prerequisite: the banked sfx_step.c includes the transcribed
+# generated/sfx/sfx_tables.h, which does not exist on a fresh clone
+# (generated/ is untracked) -- without it the ABI guard below fails.
+lint: gfx tiles sfx $(SRCS)
 	@ok=1; \
 	for f in $(SRCS); do \
 		out=$$($(CC) -S -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
