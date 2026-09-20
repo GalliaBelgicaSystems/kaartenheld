@@ -1,0 +1,183 @@
+{
+  "name": "battle_discard_ring",
+  "test": true,
+  "description": "Ring-flag conservation across the discard step (pins deck_discard_banked; sibling battle_reshuffle_ring pins the fold and copy-back): a 6-card deck [SW SW SW SW R R] attacks with a sword (T1), defends with the pristine pile ring plus a sword (T2, ring-gated overblock heal in all versions), then defends with both refill-redealt slots (T3). The T2 refill reshuffles the T2-played ring back into the hand, so T3's combo contains a discard-cycled ring exactly when the redeal covers it. The wounded hero (20/30) overblocks the trio incoming a second time only through the ring-gated defense path (HEALED d1=2, twice total). If the discard step drops the flag, the cycled ring defends as a ringless card and the second heal never fires.",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 2,
+      "hp": 60
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    },
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_count",
+      "event": "HEALED",
+      "count": 2
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 1,
+      "value": 2
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 20,
+        "max_hp": 30
+      }
+    },
+    "seed": 5003,
+    "start_battle": true,
+    "deck": {
+      "IRON_SWORD": 4,
+      "WOOD_RING": 2
+    }
+  }
+}
