@@ -51,6 +51,7 @@ export const SHEET_TILE_NAMES: string[] = [
   'combat_bottom_left_boss', 'combat_bottom_middle_boss', 'combat_bottom_right_boss',
   'combat_top_left_mimic', 'combat_top_middle_mimic', 'combat_top_right_mimic',
   'combat_bottom_left_mimic', 'combat_bottom_middle_mimic', 'combat_bottom_right_mimic',
+  'combat_left_middle_boss_2', 'combat_middle_center_boss_2', 'combat_middle_right_boss_2',
 ];
 
 /** Every combat tile (tools/level_editor/public/tiles/combat/*.png)

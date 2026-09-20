@@ -232,7 +232,7 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     50,
     CURRENCY_ID_GOLD,
     2,
-    1,
+    2,
     7,
     3,
     3,

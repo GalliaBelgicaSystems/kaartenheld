@@ -1,0 +1,109 @@
+{
+ "name": "boss_glow_frame1",
+ "test": true,
+ "description": "Lord-of-Slimes battle flips to the glow-eyes frame (same footprint, VRAM base +9 = 137) sixteen battle-clock ticks later: together with boss_glow_frame0 this proves the eyes blink while idle.",
+ "scenario_id": "CASTLE_BOOT",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 46
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "music_track",
+   "expected": "BOSS"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 9,
+   "expected": 137
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 10,
+   "expected": 138
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 11,
+   "expected": 139
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 9,
+   "expected": 140
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 10,
+   "expected": 141
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 11,
+   "expected": 142
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 5,
+   "col": 9,
+   "expected": 143
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 5,
+   "col": 10,
+   "expected": 144
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 5,
+   "col": 11,
+   "expected": 145
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true,
+  "world": {
+   "BAT_CASTLE": "DEFEATED"
+  },
+  "deck": {
+   "FIRE_SWORD": 20
+  }
+ }
+}

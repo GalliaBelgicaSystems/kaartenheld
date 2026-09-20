@@ -65,7 +65,7 @@
 | set | size | path | display ramp (slot) | fit |
 |---|---|---|---|---|
 | bat | 3×2 | OAM | fightbat (7) | ✓ |
-| boss | 3×3 | BG stamp | fightboss (7) | ≈ #8b1b1b |
+| boss | 3×3 | BG stamp | fightboss (7) | ≈ #8b1b1b, #f57137 |
 | kobold | 3×2 | OAM | battle_kobold (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
 | slime | 3×2 | OAM | battle_slime (7) | ✓ |
@@ -139,6 +139,8 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
 | battle | [0, 5] | fightboss | #8b1b1b |
+| battle | [0, 14] | fightboss | #f57137 |
 | battle | [1, 5] | fightboss | #8b1b1b |
+| battle | [1, 14] | fightboss | #f57137 |
 
 Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.

@@ -3,7 +3,7 @@
   "id": "slime_lord",
   "label": "Lord of Slimes",
   "category": "boss",
-  "sprite": { "art": "boss", "frames": 1 },
+  "sprite": { "art": "boss", "frames": 2 },
   "overworld": {
     "width": 2,
     "height": 2,
