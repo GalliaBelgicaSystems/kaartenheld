@@ -30,11 +30,12 @@ static void card_copy_banked(Card *dst, const Card *src)
     dst->effect = src->effect;
     dst->status_id = src->status_id;
     dst->status_chance = src->status_chance;
+    dst->ring = src->ring;
 }
 
 static void card_swap_banked(Card *a, Card *b)
 {
-    /* Swap via three field-wise copies through a stack temp: 21 direct
+    /* Swap via three field-wise copies through a stack temp: 24 direct
      * field assignments blow up to ~300 instructions under SDCC's
      * far-struct spilling.  The temp is an 8-byte stack local (well under
      * the harness SP budget, AGENTS.md 52.14), deliberately NOT a function

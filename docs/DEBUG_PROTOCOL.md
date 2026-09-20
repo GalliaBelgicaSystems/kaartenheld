@@ -1086,6 +1086,8 @@ COLLISION
 ACTOR_COLLISION
 ACTOR_INTERACTION
 ACTOR_COMBAT_START
+ACTOR_STATE_CHANGE
+ACTOR_MOVED
 
 ENCOUNTER_STARTED
 BATTLE_STARTED
@@ -1127,6 +1129,10 @@ Observe actors with:
 ACTOR_COLLISION      actor collided with the player (id, x, y)
 ACTOR_INTERACTION    actor engaged by the player (id, interaction)
 ACTOR_COMBAT_START   hostile actor engagement started combat (id)
+ACTOR_STATE_CHANGE   persistent actor lifecycle changed (actor id lo, id hi, new state)
+ACTOR_MOVED          patrol step committed (entity id, x, y, facing); split
+                     from ACTOR_STATE_CHANGE so one event id means one
+                     payload shape
 ```
 
 The SNAPSHOT `actors` section lists the active scene's actors with their

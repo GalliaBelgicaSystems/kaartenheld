@@ -359,10 +359,10 @@ static void battle_resolve_hand_discard(Battle *b)
  *
  * No per-iteration dry check is needed: with DECK_MIN_CARDS >=
  * BATTLE_HAND_SIZE (statically asserted above), cards are conserved
- * (pile + hand + discard == count; the reshuffle preserves the undrawn
- * remainder), so an empty discard pile implies the pile covers every open
- * slot.  The only dry-pile loop entry is the fully-dry case handled by
- * the early return above. */
+ * (pile + hand + discard == total deck size; the reshuffle preserves
+ * the undrawn remainder), so an empty discard pile implies the pile
+ * covers every open slot.  The only dry-pile loop entry is the fully-dry
+ * case handled by the early return above. */
 static bool battle_turn_draw(Battle *b)
 {
     uint8_t i, need = 0;
