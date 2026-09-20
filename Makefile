@@ -800,7 +800,8 @@ screenshots: $(TARGET)
 	@python3 tools/capture_walkthrough.py
 
 # README GIFs (host-side, never CI-gated): boot splash+title, a kobold
-# battle, and the Field -> Forest overworld walk.  Committed under
+# battle, the Field -> Forest overworld walk, and the Lord of Slimes boss
+# battle (glowing-eyes blink).  Committed under
 # screenshots/ (the walkthrough --clean prune only removes *.png, so these
 # survive).
 gifs: $(TARGET)

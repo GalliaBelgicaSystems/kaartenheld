@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """README GIF captures (host-side, never CI-gated).
 
-Produces three headless PyBoy recordings of the RELEASE ROM, assembled to GIF
+Produces four headless PyBoy recordings of the RELEASE ROM, assembled to GIF
 with Pillow:
 
   screenshots/boot.gif       Gallia Belgica splash -> Kaartenheld title
   screenshots/battle.gif     kobold trio: TWO PAIR combo selection + attack
   screenshots/overworld.gif  Field -> forest gate -> wander to the chest
+  screenshots/boss.gif       Lord of Slimes: glowing eyes blink in battle
 
 Regenerate with `make gifs`.  The frames are a visual aid only; the semantic
 gate is `make verify-walkthrough` (docs/verify-walkthrough.md).
@@ -25,12 +26,20 @@ from walkthrough.session import Session, ROM  # noqa: E402
 from walkthrough.route import Planner  # noqa: E402
 from walkthrough.state_reader import SymTable, BT_SWORD, BT_SHIELD  # noqa: E402
 from walkthrough import walks as W  # noqa: E402
+from walkthrough.state_reader import OFF_VARIABLES  # noqa: E402
 
 SCALE = 3
 OUT = os.path.join(REPO, "screenshots")
 BOOT_GIF = os.path.join(OUT, "boot.gif")
 BATTLE_GIF = os.path.join(OUT, "battle.gif")
 OVERWORLD_GIF = os.path.join(OUT, "overworld.gif")
+BOSS_GIF = os.path.join(OUT, "boss.gif")
+
+# Quest variable id for the Monster Hunt (src/game/game_ids.h:
+# VARIABLE_ID_QUEST_MONSTER_HUNT = 3); 2 = COMPLETE, which spawns the
+# Lord of Slimes in the throne room (levels/throne_room.json quest_var).
+QUEST_MONSTER_HUNT = 3
+QUEST_COMPLETE = 2
 
 # Release-ROM screen ids (src/screens/screen.h).
 SCREEN_TITLE = 9
@@ -181,9 +190,72 @@ def capture_overworld():
     return frames
 
 
+def capture_boss():
+    """Lord of Slimes: walk to the castle, stage the completed Monster
+    Hunt (memory write, bow-shot precedent -- the quest chain itself is
+    covered by scenarios), enter the throne room so the boss spawns, and
+    record ~3 s of idle battle: the eye-glow overlay blinks red/orange
+    every 16 battle-clock ticks."""
+    checks = []
+    planner = Planner()
+    s = Session(checks, "gif-boss")
+    try:
+        field = W._level("field")
+        spawn = (field["player"]["spawn"]["x"],
+                 field["player"]["spawn"]["y"])
+        # Castle via the walk-E route, stopping at the interior arrival
+        # tile (NOT the throne portal edge: stepping onto it would cross
+        # before the quest flag is staged and the boss would not spawn).
+        castle_arrival = planner.arrival_pos("castle") or spawn
+        W.follow(s, planner, "field", spawn, "castle", castle_arrival)
+        # Stage the completed quest BEFORE entering: the boss spawns on
+        # throne-room entry only when QUEST_MONSTER_HUNT == COMPLETE.
+        r = s.reader
+        var_addr = r.state + OFF_VARIABLES + 2 * (QUEST_MONSTER_HUNT - 1)
+        s.pb.memory[var_addr] = QUEST_COMPLETE
+        s.pb.memory[var_addr + 1] = 0
+        s.check("quest staged COMPLETE", r.variable(QUEST_MONSTER_HUNT)
+                == QUEST_COMPLETE,
+                expected=str(QUEST_COMPLETE),
+                actual=str(r.variable(QUEST_MONSTER_HUNT)))
+        # Cross into the throne room and stop south of the boss at (10,7).
+        W.follow(s, planner, "castle", s.pos(), "throne_room", (10, 8))
+        throne_id = planner.scenes["throne_room"].scene_id
+        s.settle_scene(expected_scene=throne_id)
+        if not s.text_has("DECK:"):
+            s.check("boss engaged",
+                    s.press_until("up", lambda: s.text_has("DECK:"),
+                                  tries=10, settle=24, label="bump boss"),
+                    expected="DECK:", actual="none")
+        s.wait_for(lambda: s.text_has("TARGET ")
+                   or s.text_has("PLAYER TURN"), ticks=300)
+        s.tick(40)
+
+        frames = []
+
+        def cap_tick(n=1):
+            for _ in range(n):
+                s.pb.tick()
+                frames.append(s.pb.screen.image.copy())
+
+        s.tick = cap_tick
+        # Idle battle: no input, so neither side acts; the timer drains
+        # and the eyes blink (~11 flips in 180 ticks).
+        s.tick(180)
+    finally:
+        s.close()
+    bad = [c for c in checks if not c[2]]
+    for label, name, _ok, expected, actual in bad:
+        print("  [%s] %s\n      expected: %s\n      actual:   %s"
+              % (label, name, expected, actual))
+    if bad:
+        raise SystemExit("boss capture checks failed")
+    return frames
+
+
 def main():
     ap = argparse.ArgumentParser(description="README GIF captures")
-    ap.add_argument("--only", choices=["boot", "battle", "overworld"],
+    ap.add_argument("--only", choices=["boot", "battle", "overworld", "boss"],
                     default=None)
     args = ap.parse_args()
 
@@ -195,6 +267,9 @@ def main():
         # Smooth 30 fps for the camera scroll: record every frame, keep
         # every 2nd, 33 ms each.
         save_gif(capture_overworld(), OVERWORLD_GIF, duration=33, keep=2)
+    if args.only in (None, "boss"):
+        # ~3 s idle boss battle at 20 fps (every 3rd tick, 50 ms each).
+        save_gif(capture_boss(), BOSS_GIF, duration=50, keep=3)
     return 0
 
 
