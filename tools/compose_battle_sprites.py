@@ -10,15 +10,15 @@ combat), downscales NEAREST to 8x8, and lays out 3 cols x N rows of cells:
   row 3: bat bottom_*      row 9-10: kobold top_*/bottom_*
   row 4: boss horns_*      row 11-12: spider top_*/bottom_*
   row 5: boss head_*       row 13: blank
-  row 6: boss torso_*      row 14: boss glow-eyes head_* (frame1)
+  row 6: boss torso_*
 
 The slime second anim frame was removed by the artist (single-frame
 slime); its curated PNGs are gone, so no row is reserved for it.
 
-The boss glow-eyes cells (combat_*_boss_2) are the animation frame
-(boss.json frame1, slime_lord frames: 2): 4/3/3 colors each, inside the
-2bpp budget. Orange #f57137 is off-ramp for fightboss (nearest-shade
-fallback, informational mismatch rows).
+The boss glow-eyes cells (combat_*_boss_2) stay editor-only: the glow
+is an OAM overlay over the BG stamp (boss.json glow block), so no
+sheet row is needed -- the overlay reuses the stamp's own tile ids
+and flips OBJ palettes instead of tile frames.
 
 Deterministic: rerunning reproduces the sheet byte-identically.
 """
@@ -41,10 +41,6 @@ LAYOUT = [
     ['combat_top_left_spider', 'combat_top_middle_spider', 'combat_top_right_spider'],
     ['combat_bottom_left_spider', 'combat_bottom_middle_spider', 'combat_bottom_right_spider'],
     [None, None, None],
-    # Boss glow-eyes animation row (frame1 head cells; top/bottom rows are
-    # shared with frame0). Appended at the END: existing sheet coords never
-    # shift, so every other set's blob offset is untouched.
-    ['combat_left_middle_boss_2', 'combat_middle_center_boss_2', 'combat_middle_right_boss_2'],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for combat-art

@@ -19,8 +19,9 @@
  * nothing else writes OAM during battle).  Tiles are the same VRAM ids
  * the BG stamp would use (sprites fetch the 0x8000 block, AGENTS.md
  * 52.22); prop is the per-battle scratch OBJ slot programmed at entry.
- * Boss stays a BG stamp (3x3 exceeds the stride) and never reaches here
- * (its oam flag is 0). */
+ * The boss stays a BG stamp (3x3 exceeds the stride) and never reaches
+ * the stride loop (its oam flag is 0); its eye-glow overlay draws in the
+ * second loop below from the same caches. */
 
 /* OAM entries for battle sprites. Slots 1-26 are the overworld region
  * (hidden by ui_sprite_begin_transition on entry, so no stale art
@@ -116,15 +117,71 @@ void battle_oam_draw_banked(void)
             }
         }
     }
+    /* Eye-glow overlay (BG-stamped glow sets, e.g. boss): the masked
+     * stamp cells redrawn as OAM sprites over the stamp, flipping the
+     * sprite palette between unlit/lit on the battle clock. Separate
+     * loop on purpose: the stride loop above hides every non-OAM slot
+     * (zeroing these entries too), so the overlay draws after it with
+     * its own gates (same hp/blink conditions as the BG blank paths).
+     * Entry addressing mirrors the cell index (e0 + n); cells beyond
+     * one stride are rejected by the compiler. No multiply/div/mod
+     * anywhere (AGENTS.md 52.18): running counters only. */
+    for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
+        uint8_t gi, gm, gx, gw, gh, gart_row, ge0, gn, gcx, gcy, gt, gprop;
+        volatile uint8_t *ge;
+        if (k >= battle->enemy_count) break;
+        if (battle->enemies[k].hp == 0) continue;
+        gi = g_battle_enemy_art[k];
+        if (gi == 0xFF) continue;
+        gm = g_battle_art_glow_mask[gi];
+        if (gm == 0) continue;
+        /* Same hide predicate as the BG defend blink (ui_battle_content):
+         * the overlay vanishes wherever the stamp does. */
+        if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND &&
+            (((battle->timer_ticks >> 4) & 1) == 0 &&
+             k == battle->attacking_enemy_idx)) continue;
+        gw = g_battle_enemy_art_w[k];
+        gh = g_battle_enemy_art_h[k];
+        if (gw == 0 || gw > 6) gw = 3;
+        if (gh == 0 || gh > 4) gh = 2;
+        gx = battle_oam_x(g_battle_hud.enemy_positions[k][0], gw);
+        gart_row = g_battle_hud.enemy_sprite_row;
+        ge0 = BATTLE_OAM_BASE;
+        if (k >= 1) ge0 = (uint8_t)(ge0 + BATTLE_OAM_STRIDE);
+        if (k >= 2) ge0 = (uint8_t)(ge0 + BATTLE_OAM_STRIDE);
+        gprop = (uint8_t)(((battle->timer_ticks >> 4) & 1) ?
+                          BATTLE_OBJ_SCRATCH : BATTLE_OBJ_SCRATCH2);
+        gt = g_battle_enemy_art_base[k];
+        gn = 0;
+        for (gcy = 0; gcy < gh; gcy++) {
+            for (gcx = 0; gcx < gw; gcx++) {
+                if ((uint8_t)(gm & (uint8_t)(1u << gn)) != 0 &&
+                    gn < BATTLE_OAM_STRIDE) {
+                    ge = (volatile uint8_t *)(0xC000u +
+                        ((uint16_t)(ge0 + gn) << 2));
+                    ge[0] = (uint8_t)(((gart_row + gcy) << 3) + 16);
+                    ge[1] = (uint8_t)(((gx + gcx) << 3) + 8);
+                    ge[2] = gt;
+                    ge[3] = gprop;
+                }
+                gt++;
+                gn++;
+            }
+        }
+    }
 }
 
 /* Second OBJ scratch slot loader (separate bank-5 entry point; see
  * battle.h).  Programs BATTLE_OBJ_SCRATCH2 when the battle's art set
  * names an alt ramp (spider eye) and caches the alt-cell mask in
  * g_battle_enemy_art_pal[k] for OAM slots (their BG palette is unused).
- * The art set comes from the loader-cached g_battle_enemy_art[0]
- * (clone encounters share one row; 0xFF = text fallback) plus the
- * fixed alt tables -- no new WRAM, no cross-bank reads. */
+ * Then programs the eye-glow overlay slots when the set names glow
+ * ramps (boss): BATTLE_OBJ_SCRATCH2 = unlit, BATTLE_OBJ_SCRATCH = lit.
+ * Glow sets are solo-only (max_enemies 1 screens), so a battle never
+ * mixes glow with an alt set; this runs after the alt block and wins
+ * ties deterministically.  The art set comes from the loader-cached
+ * g_battle_enemy_art[0] (clone encounters share one row; 0xFF = text
+ * fallback) plus the fixed tables -- no new WRAM, no cross-bank reads. */
 void battle_alt_load_banked(void)
 {
     uint8_t ai = g_battle_enemy_art[0];
@@ -143,6 +200,28 @@ void battle_alt_load_banked(void)
         OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH2 << 3));
         for (i = 0; i < 8; i++) {
             OCPD_REG = pal[i];
+        }
+    }
+    /* Eye-glow overlay slots (boss): the overlay sprites reuse the
+     * stamp's tile bytes, so both ramps match the stamp ramp everywhere
+     * except index 1 (compiler-enforced) -- only the blink pixel remaps.
+     * Ramp bytes come from the bank-5 glow table (same bank: always
+     * mapped). Programmed here in the entry LCD-off window, never
+     * per-frame. */
+    if (ai != 0xFF && g_battle_art_glow_mask[ai] != 0) {
+        uint8_t gu = g_battle_art_glow_unlit[ai];
+        uint8_t gl = g_battle_art_glow_lit[ai];
+        if (gu != 0xFF && gl != 0xFF) {
+            pal = &g_battle_glow_ramps[(uint16_t)gu << 3];
+            OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH2 << 3));
+            for (i = 0; i < 8; i++) {
+                OCPD_REG = pal[i];
+            }
+            pal = &g_battle_glow_ramps[(uint16_t)gl << 3];
+            OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH << 3));
+            for (i = 0; i < 8; i++) {
+                OCPD_REG = pal[i];
+            }
         }
     }
     for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {

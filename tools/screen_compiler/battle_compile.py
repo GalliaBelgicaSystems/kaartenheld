@@ -84,6 +84,32 @@ def resolve_obj_palette(pal, where):
     return pal
 
 
+def check_glow_ramp_structure(where, stamp_ramp, unlit_ramp, lit_ramp):
+    """Fail loudly unless both glow ramps match the set's stamp ramp at
+    indices 0/2/3 and differ only at index 1. The overlay reuses the
+    stamp's tile bytes through an OBJ palette, so index 1 is the ONLY
+    shade that remaps (the blink pixel); any other difference would
+    recolor the whole face under the overlay."""
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    for _name in (stamp_ramp, unlit_ramp, lit_ramp):
+        if _name not in _ramps:
+            raise SystemExit(f"ERROR: {where}: unknown glow ramp '{_name}'")
+    _s, _u, _l = _ramps[stamp_ramp], _ramps[unlit_ramp], _ramps[lit_ramp]
+    for _i in (0, 2, 3):
+        if _u[_i] != _s[_i] or _l[_i] != _s[_i]:
+            raise SystemExit(
+                f"ERROR: {where}: glow ramps must match '{stamp_ramp}' "
+                f"at index {_i} (unlit={_u[_i]} lit={_l[_i]} stamp={_s[_i]}); "
+                f"only index 1 may differ")
+    if _u[1] == _s[1] or _l[1] == _s[1]:
+        raise SystemExit(f"ERROR: {where}: glow ramps must differ from "
+                         f"'{stamp_ramp}' at index 1 (nothing would blink)")
+    if _u[1] == _l[1]:
+        raise SystemExit(f"ERROR: {where}: glow unlit/lit must differ at "
+                         f"index 1 (nothing would blink)")
+
+
 def check_obj_palette_name(name, where):
     """obj_palette names ride along for future battle-OAM work; they must
     still name a real artist ramp (palette.txt), never a typo."""
@@ -178,6 +204,37 @@ def load_combat_art():
                     if not isinstance(_c, int) or not (0 <= _c < w * h):
                         print("WARNING: %s: obj_alt_cells entry %r out of 0..%d"
                               % (path.name, _c, w * h - 1))
+        # Eye-glow overlay (BG-stamped sets only): frame0-relative cells
+        # redrawn as OAM sprites over the stamp, flipping between two OBJ
+        # palettes on the battle clock. Every cell index must fit one OAM
+        # stride per enemy slot (< 6): higher cells would clobber the next
+        # slot's entries. Both ramps must match the set palette at indices
+        # 0/2/3 and differ only at index 1 (the blink pixel): the overlay
+        # reuses the stamp's tile bytes, so only index 1 remaps -- anything
+        # else would recolor the face.
+        glow = data.get('glow')
+        if glow is not None:
+            if data.get('oam'):
+                print("WARNING: %s: glow is for BG-stamped sets, not oam" % path.name)
+            gcells = glow.get('cells')
+            gunlit, glit = glow.get('unlit'), glow.get('lit')
+            if not isinstance(gcells, list) or not gcells:
+                print("WARNING: %s: glow.cells must be a non-empty list" % path.name)
+            else:
+                for _c in gcells:
+                    if not isinstance(_c, int) or not (0 <= _c < w * h):
+                        print("WARNING: %s: glow cell %r out of 0..%d"
+                              % (path.name, _c, w * h - 1))
+                    elif _c >= 6:
+                        print("WARNING: %s: glow cell %r needs index < 6 (one OAM stride per slot)"
+                              % (path.name, _c))
+            if gunlit is None or glit is None:
+                print("WARNING: %s: glow needs unlit and lit ramps" % path.name)
+            else:
+                check_obj_palette_name(gunlit, "%s glow.unlit" % path.name)
+                check_obj_palette_name(glit, "%s glow.lit" % path.name)
+                check_glow_ramp_structure(path.name, data.get('palette'),
+                                          gunlit, glit)
         sets[sid] = data
     order = sorted(sets.keys(), key=lambda k: sets[k].get('order', 0))
     seen_orders = [sets[k].get('order', 0) for k in order]
@@ -666,6 +723,7 @@ def build_battle_obj_output(art_sets, art_order):
             if _alt not in _ramps:
                 raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj_alt ramp '{_alt}'")
             _obj_order.append(_alt)
+    # NOTE: eye-glow ramps do NOT join this table (see build_battle_glow_output).
 
     def _rgb555(rgb):
         v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
@@ -709,6 +767,78 @@ def build_battle_obj_output(art_sets, art_order):
                 _m |= (1 << _c)
         _masks.append("0x%02X" % _m)
     lines.append("const uint8_t g_battle_art_alt_mask[] = {%s};" % ", ".join(_masks))
+    lines.append("")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def build_battle_glow_output(art_sets, art_order):
+    """Generate C code for eye-glow overlay descriptors (BG-stamped sets).
+
+    Bank 5 (lives with its only reader, battle_oam_banked.c -- same bank,
+    no staging or trampoline; the fixed bank, ~16 B under 0x8000, and
+    bank 4, which overflows otherwise, stay untouched). Per art set
+    (art_order): the overlay eye-cell bitmask (0x00 = none), plus the
+    unlit/lit ramp indices into the file-local g_battle_glow_ramps table
+    below (0xFF = none). The ramp bytes ride along (deduped, append-only)
+    instead of indexing the fixed-bank g_battle_obj_ramps: banked code
+    cannot read across banks (AGENTS.md banked.h), and growing the fixed
+    table would erase the last headroom. Both tables come from one script
+    run off the same palette.txt, pinned by --check.
+    """
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    _glow_order = []
+    for _sid in art_order:
+        _glow = (art_sets[_sid] or {}).get("glow") or {}
+        for _key in ("unlit", "lit"):
+            _gramp = _glow.get(_key)
+            if _gramp and _gramp not in _glow_order:
+                _glow_order.append(_gramp)
+
+    def _rgb555(rgb):
+        v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
+        return v & 0xFF, (v >> 8) & 0xFF
+
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/combat_art/ and re-run.")
+    lines.append(" * Bank 5: read by the bank-5 battle OAM pass.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#pragma bank 5")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    lines.append("/* Eye-glow ramp bytes (CGB order, low first). Indexed by")
+    lines.append(" * g_battle_art_glow_unlit/lit below. */")
+    lines.append("const uint8_t g_battle_glow_ramps[] = {")
+    for _gramp in _glow_order:
+        _pairs = ", ".join("0x%02X, 0x%02X" % _rgb555(c) for c in _ramps[_gramp])
+        lines.append(f"    /* {_gramp} */ {_pairs},")
+    lines.append("};")
+    lines.append("/* Per art set (art_order): overlay eye-cell bitmask")
+    lines.append(" * (frame0-relative row-major indices, all < 6: one OAM")
+    lines.append(" * stride per enemy slot). */")
+    _masks = []
+    for _sid in art_order:
+        _glow = (art_sets[_sid] or {}).get("glow") or {}
+        _m = 0
+        for _c in _glow.get("cells") or []:
+            if isinstance(_c, int) and 0 <= _c < 6:
+                _m |= (1 << _c)
+        _masks.append("0x%02X" % _m)
+    lines.append("const uint8_t g_battle_art_glow_mask[] = {%s};" % ", ".join(_masks))
+    lines.append("/* Per art set (art_order): unlit/lit ramp indices into")
+    lines.append(" * g_battle_glow_ramps above (0xFF = no overlay). Programmed")
+    lines.append(" * into the battle scratch OBJ slots at battle entry. */")
+    for _key in ("unlit", "lit"):
+        lines.append("const uint8_t g_battle_art_glow_%s[] = {%s};" %
+                     (_key, ", ".join("0x%02X" % (_glow_order.index(((art_sets[_sid] or {}).get("glow") or {}).get(_key))
+                                                                 if ((art_sets[_sid] or {}).get("glow") or {}).get(_key) else 0xFF)
+                                                 for _sid in art_order)))
     lines.append("")
     lines.append("")
 
@@ -1245,11 +1375,14 @@ def main(args=None):
     if hud_skin_output is None:
         return 1
     battle_obj_output = build_battle_obj_output(art_sets, art_order)
+    battle_glow_output = build_battle_glow_output(art_sets, art_order)
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
     # Write battle_obj_tables.c (fixed bank OBJ ramps for OAM battle art)
     battle_obj_path = output_dir / "battle_obj_tables.c"
+    # Write battle_glow_content.c (bank-5 eye-glow overlay descriptors)
+    battle_glow_path = output_dir / "battle_glow_content.c"
     # Write battle_types.c
     battle_types_path = output_dir / "battle_types.c"
     # Write hero_content.c (data-driven starter deck)
@@ -1262,6 +1395,7 @@ def main(args=None):
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
                             (battle_obj_path, battle_obj_output),
+                            (battle_glow_path, battle_glow_output),
                             (battle_types_path, enemy_types_output),
                             (hero_content_path, hero_output),
                             (card_skin_path, card_skin_output),
@@ -1273,8 +1407,8 @@ def main(args=None):
             if committed is None or committed != fresh:
                 print("DRIFT: fresh compile differs from %s" % path, file=sys.stderr)
                 return 1
-        print("battle compile --check OK: %s, %s, %s, %s, %s and %s match fresh output"
-              % (battle_obj_path, battle_screens_path, battle_types_path,
+        print("battle compile --check OK: %s, %s, %s, %s, %s, %s and %s match fresh output"
+              % (battle_obj_path, battle_glow_path, battle_screens_path, battle_types_path,
                  hero_content_path, card_skin_path, hud_skin_path))
         return 0
 
@@ -1285,6 +1419,10 @@ def main(args=None):
     with open(battle_obj_path, "w") as f:
         f.write(battle_obj_output)
     print("Wrote %s" % battle_obj_path)
+
+    with open(battle_glow_path, "w") as f:
+        f.write(battle_glow_output)
+    print("Wrote %s" % battle_glow_path)
 
     with open(battle_types_path, "w") as f:
         f.write(enemy_types_output)

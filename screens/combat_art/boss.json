@@ -11,9 +11,9 @@
     "combat_left_middle_boss", "combat_middle_center_boss", "combat_middle_right_boss",
     "combat_bottom_left_boss", "combat_bottom_middle_boss", "combat_bottom_right_boss"
   ],
-  "frame1": [
-    "combat_top_left_boss", "combat_top_middle_boss", "combat_top_right_boss",
-    "combat_left_middle_boss_2", "combat_middle_center_boss_2", "combat_middle_right_boss_2",
-    "combat_bottom_left_boss", "combat_bottom_middle_boss", "combat_bottom_right_boss"
-  ]
+  "glow": {
+    "cells": [3, 4],
+    "unlit": "fightboss2",
+    "lit": "fightboss3"
+  }
 }

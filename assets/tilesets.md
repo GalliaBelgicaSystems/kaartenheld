@@ -43,7 +43,14 @@ src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
 - Editor defs: `tools/level_editor/tilesets/combat.json`.
 - Compose: `tools/compose_battle_sprites.py` LAYOUT (3 cols x N rows) ->
   `assets/battle_sprites.png`. Only names in the LAYOUT resolve to sheet
-  cells for the ROM.
+  cells for the ROM. The boss glow-eyes `_2` cells stay editor-only: the
+  glow is an OAM overlay over the BG stamp (the `glow` block in
+  `screens/combat_art/boss.json`: eye-cell mask + unlit/lit OBJ ramps),
+  reusing the stamp's tile ids and flipping sprite palettes on the battle
+  clock -- no sheet row, no extra VRAM. The overlay reuses stamp bytes,
+  so both glow ramps must match the set ramp everywhere except index 1
+  (compiler-enforced in `battle_compile.py`); the palette report stays
+  silent.
 - ROM: `src/gfx/battle_enemy_art.h` (only tiles referenced by a combat-art
   set are extracted, via `battle_compile.py --gfx-coords`; blob offsets in
   `battle_types.c`). Battle BG art, variable WxH per set (boss is 3x3).

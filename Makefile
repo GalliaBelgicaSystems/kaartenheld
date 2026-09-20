@@ -284,7 +284,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,card_skin}.c + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,battle_glow_content,card_skin}.c + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
@@ -345,7 +345,7 @@ src/game/entity_ids_generated.h: $(wildcard screens/enemy_types/*.json) $(wildca
 src/game/title_data.c: screens/title.json
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-src/game/battle_screens.c src/game/battle_types.c src/game/card_skin.c: $(wildcard screens/battle/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
+src/game/battle_screens.c src/game/battle_types.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 
 # Extract tile images from source PNGs for the web editor (import_tileset.py)

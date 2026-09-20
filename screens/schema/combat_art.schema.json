@@ -28,6 +28,19 @@
       "items": { "type": "integer", "minimum": 0 },
       "description": "Frame0-relative cell indices (row-major) drawn with obj_alt_palette. Mask is uint8, so width*height must be <= 8."
     },
+    "glow": {
+      "type": "object",
+      "description": "Eye-glow overlay for BG-stamped sets: these frame0-relative cells (row-major) are redrawn as OAM sprites over the stamp, flipping between two OBJ palettes on the battle clock. Both ramps must match the set palette at indices 0/2/3 and differ only at index 1 (the blink pixel), so only that shade remaps. Every cell index must be < 6 (one OAM stride per enemy slot).",
+      "required": ["cells", "unlit", "lit"],
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 5 }
+        },
+        "unlit": { "type": "string" },
+        "lit": { "type": "string" }
+      }
+    },
     "frame0": {
       "type": "array",
       "items": { "type": ["string", "null"] }
