@@ -228,7 +228,7 @@
       "label": "boss bottom left corner",
       "gb_constant": "TILE_ACTORS_BOSS_BOTTOM_LEFT_CORNER",
       "walkable": false,
-      "color": "#141414",
+      "color": "#111111",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_bottom_left_corner.png",
       "category": "enemy"
@@ -238,7 +238,7 @@
       "label": "boss bottom right corner",
       "gb_constant": "TILE_ACTORS_BOSS_BOTTOM_RIGHT_CORNER",
       "walkable": false,
-      "color": "#1d1a15",
+      "color": "#0e0e0e",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_bottom_right_corner.png",
       "category": "enemy"
@@ -328,7 +328,7 @@
       "label": "boss bottom left corner 2",
       "gb_constant": "TILE_ACTORS_BOSS_BOTTOM_LEFT_CORNER_2",
       "walkable": false,
-      "color": "#141414",
+      "color": "#111111",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_bottom_left_corner_2.png",
       "category": "enemy"
@@ -338,7 +338,7 @@
       "label": "boss bottom right corner 2",
       "gb_constant": "TILE_ACTORS_BOSS_BOTTOM_RIGHT_CORNER_2",
       "walkable": false,
-      "color": "#1d1a15",
+      "color": "#0e0e0e",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_bottom_right_corner_2.png",
       "category": "enemy"

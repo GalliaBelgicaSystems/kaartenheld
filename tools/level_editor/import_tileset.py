@@ -16,15 +16,11 @@ Usage (inside nix develop for Pillow):
       --output-dir tools/level_editor/public/tiles/forest \
       --output-json tools/level_editor/tilesets/forest.json
 
-For actors tileset (12x2 grid with transparency):
-    python3 tools/level_editor/import_tileset.py \
-      --sheet assets/actor-sprites.png \
-      --csv assets/actor-tileset-description.csv \
-      --tileset-id actors \
-      --label "Actors (Shared)" \
-      --gb-tileset-kind WORLD_TILESET_ACTORS \
-      --output-dir tools/level_editor/public/tiles/actors \
-      --output-json tools/level_editor/tilesets/actors.json
+NOTE: world tilesets only (forest, desolate_landscape, castle, village).
+The actors sheet (assets/actor-sprites.png) was removed; the actors tileset
+is curated-source now and its boss cells reload from assets/sprites.png via
+tools/level_editor/reload_boss_tiles.py. Combat/enemy tilesets were never
+covered by this importer (hand-curated, same reload script).
 """
 import argparse
 import csv

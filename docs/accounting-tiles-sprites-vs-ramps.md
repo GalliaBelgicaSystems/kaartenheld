@@ -86,7 +86,7 @@
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
 | npc_wizard | npc_wizard | sprites7 (5) | ✓ |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
-| slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ≈ #8d754a |
+| slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ✓ |
 | spider | spider_f0, spider_f1 | sprites (0) | ✓ |
 | hero | hero_f0, hero_f1 | sprites (0) | ✓ |
 
@@ -140,6 +140,5 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 |---|---|---|---|
 | battle | [0, 5] | fightboss | #8b1b1b |
 | battle | [1, 5] | fightboss | #8b1b1b |
-| enemy_ow | [3, 1] | sprites2 | #8d754a |
 
 Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.

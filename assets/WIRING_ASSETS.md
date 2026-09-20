@@ -62,6 +62,9 @@ every `make manifest`: `docs/accounting-tiles-sprites-vs-ramps.md`.
 1. Paint with exact `palette.txt` hexes (≤4 per 8×8 tile).
 2. Add the curated PNG under `public/tiles/<set>/`, register it in
    `tilesets/<set>.json` (world: `"palette": "<ramp>"`) or the
-   corresponding `screens/` JSON (battle/enemy/skin).
+   corresponding `screens/` JSON (battle/enemy/skin). Exception: Boss
+   tiles are derived, never hand-added — edit the source sheet
+   (`assets/combat-tile.png` / `assets/sprites.png` + CSV) and run
+   `make reload-boss-tiles`.
 3. Run the commands above. New tiles appear in `ramp_mismatches.json`
    until their pixels fit their ramp exactly.

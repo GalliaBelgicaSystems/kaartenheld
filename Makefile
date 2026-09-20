@@ -90,7 +90,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -374,12 +374,21 @@ extract-tiles:
 		--gb-tileset-kind WORLD_TILESET_VILLAGE \
 		--output-dir tools/level_editor/public/tiles/village \
 		--output-json tools/level_editor/tilesets/village.json
-	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/actor-sprites.png --csv assets/actor-tileset-description.csv \
-		--tileset-id actors --label "Actors (Shared)" \
-		--gb-tileset-kind WORLD_TILESET_ACTORS \
-		--output-dir tools/level_editor/public/tiles/actors \
-		--output-json tools/level_editor/tilesets/actors.json
+# NOTE: no actors stanza: assets/actor-sprites.png was removed (commit
+# "removed unneeded actors"); the actors tileset is curated-source now and
+# its boss cells reload from assets/sprites.png via reload-boss-tiles below.
+
+# Deterministic Boss-tile reload: source sheets + CSVs -> curated editor
+# PNGs + color swatches (tools/level_editor/reload_boss_tiles.py). Reruns
+# are byte-identical; --check fails loudly on drift (no hand edits to the
+# reloaded PNGs). Covers all 12 combat Boss cells (9 live + 3 glow-eyes
+# editor-only) and all 8 OW Boss cells (actors tileset) + 4 enemies aliases
+# (boss_ow_*, the slime-lord OW sprite).
+reload-boss-tiles:
+	@python3 tools/level_editor/reload_boss_tiles.py
+
+reload-boss-tiles-check:
+	@python3 tools/level_editor/reload_boss_tiles.py --check
 
 # NOTE: extract-tiles is intentionally NOT a dependency here.
 # The tileset JSON files (tools/level_editor/tilesets/*.json) are the sole

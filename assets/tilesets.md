@@ -31,12 +31,15 @@ src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
 
 ## Combat tileset (battle art)
 
-- Source: `assets/combat-tile.png` (128x32, 16 cols x 4 rows = 64 tiles)
+- Source: `assets/combat-tile.png` (128x40, 16 cols x 5 rows = 80 tiles)
   + `assets/combat-tileset-description.csv` (canonical tile names; rows
   cover icons/cards, slime, bat/boss, kobold/spider).
-- Curated: `tools/level_editor/public/tiles/combat/*.png` — hand-curated,
-  NOT produced by `make extract-tiles`. Enemy art is 32x32 (4x pixel art);
-  HUD/cards/icons are 8x8. Boss = 9 tiles (horns/head/torso rows).
+- Curated: `tools/level_editor/public/tiles/combat/*.png` (8x8) — DERIVED,
+  not hand-maintained: Boss cells reload via `make reload-boss-tiles`
+  (`tools/level_editor/reload_boss_tiles.py`), never by hand-editing the
+  PNGs. Boss = 9 live tiles (horns/head/torso rows) + 3 glow-eyes variants
+  (editor-only: 5 colors, over the 2bpp budget, excluded from the ROM
+  LAYOUT).
 - Editor defs: `tools/level_editor/tilesets/combat.json`.
 - Compose: `tools/compose_battle_sprites.py` LAYOUT (3 cols x N rows) ->
   `assets/battle_sprites.png`. Only names in the LAYOUT resolve to sheet
@@ -53,18 +56,23 @@ src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
 
 - Curated: `tools/level_editor/public/tiles/actors/*.png` (8x8, real
   transparency → chroma-key yellow on compose) +
-  `tools/level_editor/tilesets/actors.json`, via `make extract-tiles`
-  (the old `assets/actor-sprites.png` source sheet is gone; the curated
-  PNGs are the source now).
+  `tools/level_editor/tilesets/actors.json`. No `make extract-tiles` entry
+  (`assets/actor-sprites.png` was removed; `assets/sprites.png` is the
+  canonical OW sheet). Boss cells (`actors_boss_*`, incl. the `_2` set)
+  reload via `make reload-boss-tiles`, never by hand.
 - NPC map art: `compose_npc_tiles.py` -> `assets/npc_tiles.png` (village
   overlay slots; per-cell display-slot ramps, see palette_compiler).
 
 ## Enemies sheet (shared overworld enemy sprites) — the overworld picker
 
-Like combat art, these curated PNGs are hand-maintained (no
-`make extract-tiles` entry): `tools/level_editor/public/tiles/enemies/*.png`
+Like combat art, these curated PNGs have no `make extract-tiles` entry —
+but they are DERIVED, not hand-maintained:
+`tools/level_editor/public/tiles/enemies/*.png`
 (8x8, transparent background that maps to OAM shade 0) +
-`tools/level_editor/tilesets/enemies.json`.
+`tools/level_editor/tilesets/enemies.json`. Source: `assets/sprites.png` +
+`sprites-tileset-description.csv`; Boss cells (`boss_ow_*`, the slime-lord
+OW sprite) reload via `make reload-boss-tiles` (explicit alias map in the
+script: sheet slug `boss_top_left_corner` → `boss_ow_tl`, etc.).
 
 - Curated: `tools/level_editor/public/tiles/enemies/*.png` (8x8,
   transparent background that maps to OAM shade 0) +
