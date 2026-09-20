@@ -11,7 +11,7 @@
     },
     "default_walkable": {
       "type": "string",
-      "description": "Ground tile for every cell the terrain layer leaves unpainted (tileset.tile_id format, e.g. forest.forest_plain_floor_1). Declared once per level; the editor fill, the compiler expansion, the ROM fallback rendering, and the parity gate all use this one field. When absent, tools fall back to the first tile with 'plain' in the manifest order."
+      "description": "Ground tile for every cell the terrain layer leaves unpainted (tileset.tile_id format, e.g. forest.forest_plain_floor_2). Declared once per level; the editor fill, the compiler expansion, the ROM fallback rendering, and the parity gate all use this one field. When absent, tools fall back to the first tile with 'plain' in the manifest order."
     },
     "name": {
       "type": "string",

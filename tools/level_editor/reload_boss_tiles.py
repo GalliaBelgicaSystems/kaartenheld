@@ -78,11 +78,34 @@ OW_MAP = [
     (9, 2, "actors_boss_bottom_right_corner_2", None),
 ]
 
+# (col, row, actors tile id). Element-rider status icons (OAM HUD): the
+# combat_top_right_*_card BG tiles are gone; these sprites.png cells are
+# the replacement (battle top-right OAM, one per selected-card element).
+RIDER_MAP = [
+    (3, 2, "actors_rider_fire"),
+    (4, 2, "actors_rider_ice"),
+    (5, 2, "actors_rider_poison"),
+]
+
+# (col, row, combat tile id). Card-cursor arrows: the single
+# combat_arrow_pointing_up split into light (unselected cursor) and dark
+# (cursor sitting on an already-selected card).
+ARROW_MAP = [
+    (1, 1, "combat_arrow_pointing_up_dark"),
+    (15, 4, "combat_arrow_pointing_up_light"),
+]
+
 # Curated tile id -> (tileset json path, png dir).
 TILESET_OF = {}
 for _tid in [t for _, _, t in COMBAT_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in ARROW_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in RIDER_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
+                        "tools/level_editor/public/tiles/actors")
 for _, _, _aid, _eid in OW_MAP:
     TILESET_OF[_aid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
@@ -137,6 +160,16 @@ def main():
         jobs.append((sprites_img, col, row, aid))
         if eid is not None:
             jobs.append((sprites_img, col, row, eid))
+    for col, row, tid in RIDER_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "actors_" + slugify(label) == tid, \
+            "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in ARROW_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
 
     # Load each touched manifest once.
     manifests = {}

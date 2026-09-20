@@ -14,7 +14,7 @@
     "east": "",
     "west": ""
   },
-  "default_walkable": "forest.forest_plain_floor_1",
+  "default_walkable": "forest.forest_plain_floor_2",
   "layers": {
     "terrain": [
       {

@@ -512,7 +512,7 @@ def build_battle_screens_output(battle_screens, enemy_types):
     return "\n".join(lines)
 
 
-def ow_blob_layout(enemy_types, hero_json=None):
+def ow_blob_layout(enemy_types, hero_json=None, rider_types=None):
     """Shared overworld blob layout: returns (offsets, cells) where offsets
     maps id -> blob tile offset and cells is the ordered tile-name
     list (hero first, then the pinned prefix OW_ORDER_PINNED, then any
@@ -546,10 +546,22 @@ def ow_blob_layout(enemy_types, hero_json=None):
     
     # Enemies in pinned-prefix order, then any unlisted ids sorted:
     # new content appends at the tail and can never shift pinned tiles.
-    et_ids = ([i for i in OW_ORDER_PINNED if i in enemy_types] +
-              sorted(i for i in enemy_types.keys() if i not in OW_ORDER_PINNED))
+    # Rider HUD icons (screens/rider_icons.json: battle top-right OAM, not
+    # enemies, never spawned) append AFTER every enemy under their cell
+    # names (not sorted among them: "rider_*" would otherwise wedge before
+    # "slime_*" and renumber the blob) so their offsets stay computed,
+    # never hand-written, and enemy offsets never move.
+    merged = dict(enemy_types)
+    _rider_ids = []
+    if rider_types:
+        for _rid, _rramp in sorted(rider_types.items()):
+            merged[_rid] = {"overworld": {"cells": [_rid], "palette": _rramp}}
+            _rider_ids.append(_rid)
+    et_ids = ([i for i in OW_ORDER_PINNED if i in merged] +
+              sorted(i for i in merged.keys() if i not in OW_ORDER_PINNED
+                     and i not in _rider_ids) + _rider_ids)
     for et_id in et_ids:
-        ow = (enemy_types[et_id].get('overworld') or None)
+        ow = (merged[et_id].get('overworld') or None)
         if ow is None:
             continue
         names = ow.get('cells', [])
@@ -573,7 +585,8 @@ def ow_blob_layout(enemy_types, hero_json=None):
     return offsets, cells
 
 
-def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json=None):
+def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json=None,
+                           rider_types=None):
     """Generate C code for enemy type definitions + hero data."""
     lines = []
 
@@ -693,11 +706,89 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     # Enemies only: the hero overworld sprite is loaded separately via
     # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob, so the blob
     # and g_enemy_ow_tile_count must not include hero cells (they would
-    # shift every enemy ow_tile offset in battle_types.c by 2).
-    _ow_enemy = len(_ow_cells) if _ow_cells is not None else 0
+    # shift every enemy ow_tile offset in battle_types.c by 2).  Rider HUD
+    # icons ride the same stream at the blob tail, so the count DOES
+    # include them (enemy ow_tile values are rider-free and unaffected:
+    # riders append after every enemy).
+    _ow_all, _ow_all_cells = ow_blob_layout(enemy_types, None, rider_types)
+    if _ow_all is None:
+        return None
+    _ow_enemy = len(_ow_all_cells) if _ow_all_cells is not None else 0
     lines.append("const uint8_t g_enemy_ow_tile_count = %d;" % _ow_enemy)
     lines.append("")
 
+    return "\n".join(lines)
+
+
+def load_rider_types():
+    """Load + validate screens/rider_icons.json (battle top-right OAM HUD).
+
+    Returns {cell: ramp} or None on error.  Cells must exist on the enemy
+    sheet (compose_enemy_sprites.TILE_COORDS); ramps must be real artist
+    ramps (palette.txt).  Slotted-ness resolves later via
+    resolve_obj_palette (unknown slot = loud compile error)."""
+    from palette_parse import parse_palette as _parse_palette
+    path = REPO_ROOT / "screens" / "rider_icons.json"
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        sys.stderr.write("ERROR: missing %s\n" % path)
+        return None
+    cells = data.get("cells") or {}
+    if sorted(cells.keys()) != ["rider_fire", "rider_ice", "rider_poison"]:
+        sys.stderr.write("ERROR: rider_icons.cells must hold exactly rider_fire/ice/poison\n")
+        return None
+    _, _ramps = _parse_palette()
+    for _cell, _ramp in cells.items():
+        if _cell not in ENEMY_TILE_COORDS:
+            sys.stderr.write("ERROR: rider_icons cell '%s' not on the enemy sheet\n" % _cell)
+            return None
+        if _ramp not in _ramps:
+            sys.stderr.write("ERROR: rider_icons.%s unknown ramp '%s'\n" % (_cell, _ramp))
+            return None
+    return cells
+
+
+def build_rider_output(enemy_types, rider_types):
+    """Generate src/game/rider_tiles_generated.h: battle top-right OAM HUD.
+
+    Selected-card element riders (STATUS_POISON/BURN/FREEZE) render as OAM
+    sprites, not BG tiles.  Their VRAM ids are blob offsets computed by
+    ow_blob_layout (append-only, never hand-written); their OBJ slots come
+    from the rider_icons.json ramp (slotted OBJ ramps only, resolved here
+    so a typo fails the compile, not the battle).  Compile-time constants:
+    zero ROM/RAM cost, no cross-bank reads, no staging.
+    """
+    if not rider_types:
+        sys.stderr.write("ERROR: missing rider HUD declaration\n")
+        return None
+    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, None, rider_types)
+    if ow_offsets is None:
+        return None
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py --all.")
+    lines.append(" * Do not edit directly -- edit screens/rider_icons.json and re-run.")
+    lines.append(" * Battle top-right OAM HUD: VRAM tile ids + OBJ palette slots")
+    lines.append(" * for the selected-card element riders.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#ifndef RIDER_TILES_GENERATED_H")
+    lines.append("#define RIDER_TILES_GENERATED_H")
+    lines.append("")
+    for _rid, _elem in (("rider_fire", "BURN"), ("rider_ice", "FREEZE"),
+                        ("rider_poison", "POISON")):
+        _ramp = rider_types.get(_rid)
+        if _ramp is None or _rid not in ow_offsets:
+            sys.stderr.write("ERROR: rider_icons.json missing '%s'\n" % _rid)
+            return None
+        _slot = resolve_obj_palette(_ramp, "rider_icons.%s" % _rid)
+        lines.append("#define RIDER_TILE_%s %d" % (_elem, ENEMY_OW_BASE + ow_offsets[_rid]))
+        lines.append("#define RIDER_OBJ_%s %d" % (_elem, _slot))
+    lines.append("")
+    lines.append("#endif /* RIDER_TILES_GENERATED_H */")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -846,10 +937,11 @@ def build_battle_glow_output(art_sets, art_order):
 
 
 # Battle hand-card skin (screens/cards_skin.json): per BattleCardType
-# weapon icon tile + CGB palette, per element status icon tile + palette,
-# and the card box geometry.  Icon names resolve to the fixed VRAM icon
-# tiles ui_init loads (ui.h UI_TILE_CARD_*: 104-112); colors to UI_COLOR_*
-# palette indices.  The generated const g_card_skin (bank 4, card_skin.c)
+# weapon icon tile + CGB palette, and the card box geometry.  Icon names
+# resolve to the fixed VRAM icon tiles ui_init loads (ui.h UI_TILE_CARD_*: 104-109); colors to UI_COLOR_*
+# palette indices.  Element riders are OAM sprites now (screens/enemy_types
+# rider_*, programmed at battle entry), not BG tiles: the skin carries no
+# element section.  The generated const g_card_skin (bank 4, card_skin.c)
 # is staged into the WRAM mirror g_card_skin_wram by
 # battle_hud_load_banked() at battle entry.
 ICON_TILES = {
@@ -859,14 +951,12 @@ ICON_TILES = {
     # <slug>.png (checked on every invocation) EXCEPT 'amulet', which is an
     # atlas-only icon with no combat-tileset entry.
     # NOTE: VRAM tile DATA for the weapon icons (sword/shield/bow/dagger/
-    # ring) and the element status tiles comes from the combat tileset via
+    # ring) comes from the combat tileset via
     # the card-frames sheet (the banked loader overwrites the atlas data
-    # the atlas loop loads at 104-108 and 110/111/112).
+    # the atlas loop loads at 104-108).
     'combat_sword_icon': 104, 'combat_shield_icon': 105,
     'combat_bow_icon': 106, 'combat_dagger_icon': 107,
     'combat_ring_icon': 108, 'amulet': 109,
-    'combat_top_right_fire_card': 110, 'combat_top_right_ice_card': 111,
-    'combat_top_right_poison_card': 112,
     'combat_hp_icon': 113, 'combat_ap_icon': 114,
     'combat_deck_icon': 116,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
@@ -882,9 +972,6 @@ SKIN_COLORS = {'none': 0, 'fire': 1, 'iron': 2, 'field': 3, 'poison': 4,
                'wood': 5, 'gold': 6, 'dim': 7}
 # BattleCardType order (src/battle/card.h): SWORD SHIELD BOW HEAL DAGGER.
 SKIN_TYPE_KEYS = ['sword', 'shield', 'bow', 'heal', 'dagger']
-# StatusId order (src/rpg/status.h): NONE POISON BURN FREEZE; none has no
-# JSON entry (the icon cell stays blank).
-SKIN_ELEM_KEYS = [None, 'poison', 'fire', 'ice']
 
 DEFAULT_SKIN = {
     'box': {'w': 3, 'h': 4},
@@ -893,12 +980,7 @@ DEFAULT_SKIN = {
         'shield': {'icon': 'combat_shield_icon', 'color': 'wood'},
         'bow':    {'icon': 'combat_bow_icon',    'color': 'gold'},
         'heal':   {'icon': 'combat_ring_icon',   'color': 'field'},
-        'dagger': {'icon': 'combat_dagger_icon', 'color': 'poison'},
-    },
-    'elements': {
-        'fire':   {'icon': 'combat_top_right_fire_card',   'color': 'fire'},
-        'ice':    {'icon': 'combat_top_right_ice_card',    'color': 'iron'},
-        'poison': {'icon': 'combat_top_right_poison_card', 'color': 'poison'},
+    'dagger':   {'icon': 'combat_dagger_icon',   'color': 'poison'},
     },
 }
 
@@ -970,22 +1052,6 @@ def load_card_skin():
             sys.stderr.write("ERROR: cards_skin.types.%s color '%s' not in %s\n"
                              % (key, entry.get('color'), sorted(SKIN_COLORS)))
             return None
-    elements = skin.get('elements') or {}
-    for key in SKIN_ELEM_KEYS:
-        if key is None:
-            continue
-        entry = elements.get(key)
-        if not entry:
-            sys.stderr.write("ERROR: cards_skin.elements missing '%s'\n" % key)
-            return None
-        if entry.get('icon') not in ICON_TILES:
-            sys.stderr.write("ERROR: cards_skin.elements.%s icon '%s' not in %s\n"
-                             % (key, entry.get('icon'), sorted(ICON_TILES)))
-            return None
-        if entry.get('color') not in SKIN_COLORS:
-            sys.stderr.write("ERROR: cards_skin.elements.%s color '%s' not in %s\n"
-                             % (key, entry.get('color'), sorted(SKIN_COLORS)))
-            return None
     return skin
 
 
@@ -1012,12 +1078,6 @@ def build_card_skin_output(skin):
     lines.append("    { %s }," % ", ".join(str(ICON_TILES[skin['types'][k]['icon']]) for k in SKIN_TYPE_KEYS))
     lines.append("    /* weapon_color: %s */" % " ".join(SKIN_TYPE_KEYS))
     lines.append("    { %s }," % ", ".join(str(SKIN_COLORS[skin['types'][k]['color']]) for k in SKIN_TYPE_KEYS))
-    lines.append("    /* elem_tile: none poison fire ice (none = blank font tile;")
-    lines.append("     * JSON 'fire' = STATUS_BURN, 'ice' = STATUS_FREEZE) */")
-    lines.append("    { 0, %s }," % ", ".join(str(ICON_TILES[skin['elements'][k]['icon']]) for k in SKIN_ELEM_KEYS if k))
-    lines.append("    /* elem_color: none %s */" % " ".join(
-        k for k in SKIN_ELEM_KEYS if k))
-    lines.append("    { 0, %s }," % ", ".join(str(SKIN_COLORS[skin['elements'][k]['color']]) for k in SKIN_ELEM_KEYS if k))
     # Limited-use arrow counters: at most one card type carries them
     # (the bow); uses_tile is indexed by remaining uses 0..4 (clamped),
     # uses_power_tile is the power-row glyph for that type.
@@ -1346,8 +1406,12 @@ def main(args=None):
         # hero cells here would shift every enemy OAM offset by the hero's
         # tile count and break the ow_tile values in battle_types.c (which
         # are computed hero-excluded by ow_blob_layout).  The blob order
-        # must match battle_types.c exactly: sorted enemy-id order.
-        _offsets, names = ow_blob_layout(enemy_types, hero_json)
+        # must match battle_types.c exactly: sorted enemy-id order, riders
+        # appended at the tail (same tail rule as ow_blob_layout).
+        _rider_types = load_rider_types()
+        if _rider_types is None:
+            return 1
+        _offsets, names = ow_blob_layout(enemy_types, hero_json, _rider_types)
         if names is None:
             return 1
         coords = []
@@ -1364,7 +1428,11 @@ def main(args=None):
 
 # Generate outputs
     battle_screens_output = build_battle_screens_output(battle_screens, {})
-    enemy_types_output = build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json)
+    rider_types = load_rider_types()
+    if rider_types is None:
+        return 1
+    enemy_types_output = build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json,
+                                                  rider_types)
     if enemy_types_output is None:
         return 1
     hero_output = build_hero_output(hero_json)
@@ -1376,6 +1444,9 @@ def main(args=None):
         return 1
     battle_obj_output = build_battle_obj_output(art_sets, art_order)
     battle_glow_output = build_battle_glow_output(art_sets, art_order)
+    rider_output = build_rider_output(enemy_types, rider_types)
+    if rider_output is None:
+        return 1
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
@@ -1391,6 +1462,8 @@ def main(args=None):
     card_skin_path = output_dir / "card_skin.c"
     # Write hud_skin.c (battle HUD skin)
     hud_skin_path = output_dir / "hud_skin.c"
+    # Write rider_tiles_generated.h (battle top-right OAM rider HUD)
+    rider_path = output_dir / "rider_tiles_generated.h"
 
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
@@ -1399,7 +1472,8 @@ def main(args=None):
                             (battle_types_path, enemy_types_output),
                             (hero_content_path, hero_output),
                             (card_skin_path, card_skin_output),
-                            (hud_skin_path, hud_skin_output)):
+                            (hud_skin_path, hud_skin_output),
+                            (rider_path, rider_output)):
             try:
                 committed = path.read_text(encoding="utf-8")
             except FileNotFoundError:
@@ -1439,6 +1513,10 @@ def main(args=None):
     with open(hud_skin_path, "w") as f:
         f.write(hud_skin_output)
     print("Wrote %s" % hud_skin_path)
+
+    with open(rider_path, "w") as f:
+        f.write(rider_output)
+    print("Wrote %s" % rider_path)
 
     return 0
 

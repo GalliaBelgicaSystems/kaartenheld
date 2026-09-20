@@ -368,17 +368,6 @@
       "category": "nature"
     },
     {
-      "id": "forest_plain_floor_1",
-      "palette": "field2",
-      "label": "plain floor",
-      "gb_constant": "TILE_FOREST_39",
-      "walkable": true,
-      "color": "#7bb660",
-      "ascii": ".",
-      "image_url": "/tiles/forest/forest_plain_floor_1.png",
-      "category": "terrain"
-    },
-    {
       "id": "forest_fire_frame_1",
       "palette": "field6",
       "label": "fire frame 1",
@@ -486,6 +475,17 @@
       "color": "#7bb660",
       "ascii": ".",
       "image_url": "/tiles/forest/forest_plain_floor_3.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_postsign",
+      "palette": "field1",
+      "label": "postsign",
+      "gb_constant": "TILE_FOREST_39",
+      "walkable": false,
+      "color": "#4b552a",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_postsign.png",
       "category": "terrain"
     }
   ],
@@ -731,7 +731,7 @@
         "x": 7,
         "y": 2,
         "index": 39,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_postsign"
       },
       {
         "x": 8,
@@ -756,31 +756,31 @@
         "x": 11,
         "y": 2,
         "index": 43,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_plain_floor_2"
       },
       {
         "x": 12,
         "y": 2,
         "index": 44,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_plain_floor_2"
       },
       {
         "x": 13,
         "y": 2,
         "index": 45,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_plain_floor_2"
       },
       {
         "x": 14,
         "y": 2,
         "index": 46,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_plain_floor_2"
       },
       {
         "x": 15,
         "y": 2,
         "index": 47,
-        "tile": "forest_plain_floor_1"
+        "tile": "forest_plain_floor_2"
       }
     ]
   },

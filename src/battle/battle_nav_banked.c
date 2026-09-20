@@ -119,7 +119,6 @@ static void nav_target_move(Battle *b, int8_t dir)
 
 static void nav_card_select(Battle *b)
 {
-    uint8_t step, next_pos;
     if (b->phase != BATTLE_PHASE_PLAYER_SELECT && b->phase != BATTLE_PHASE_PLAYER_DEFEND) {
         return;
     }
@@ -156,16 +155,9 @@ static void nav_card_select(Battle *b)
          * (not on rejections like NO ENERGY / a duplicate). */
         g_bk_byte_c = 1;
 
-        next_pos = b->cursor_pos;
-        for (step = 1; step < BATTLE_HAND_SIZE; step++) {
-            next_pos++;
-            if (next_pos >= BATTLE_HAND_SIZE) next_pos = 0;
-            if (!nav_is_card_selected(b, next_pos) &&
-                nav_hand_playable(b, next_pos)) {
-                b->cursor_pos = next_pos;
-                break;
-            }
-        }
+        /* The cursor stays on the selected card (no auto-advance right):
+         * the marker row shows the dark arrow there, and the 1-5 digit
+         * appears once the player moves away. */
     }
 }
 

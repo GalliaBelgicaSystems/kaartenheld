@@ -2,10 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "screens/schema/card_skin.schema.json",
   "title": "Battle Hand-Card Skin",
-  "description": "Semantic source of truth for how cards render in the battle hand: card box geometry, per battle-card-type weapon icon + CGB palette, per element-status icon + palette. The JSON->C compiler emits the const g_card_skin (bank 4) that is staged into WRAM at battle entry. Icons resolve to the fixed VRAM icon tiles ui_init loads (UI_TILE_CARD_* 104-112); colors to UI_COLOR_* palette indices.",
+  "description": "Semantic source of truth for how cards render in the battle hand: card box geometry, per battle-card-type weapon icon + CGB palette. Element riders are OAM sprites (screens/enemy_types rider_*), not skin icons. The JSON->C compiler emits the const g_card_skin (bank 4) that is staged into WRAM at battle entry. Icons resolve to the fixed VRAM icon tiles ui_init loads (UI_TILE_CARD_* 104-109); colors to UI_COLOR_* palette indices.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "label", "box", "types", "elements"],
+  "required": ["id", "label", "box", "types"],
   "properties": {
     "id": {
       "type": "string",
@@ -31,7 +31,7 @@
           "type": "integer",
           "minimum": 3,
           "maximum": 5,
-          "description": "Card box height in tiles (rows). The first interior row carries the weapon icon, the last interior row the power digit; the element-status icon floats one row above the top-right corner. cards_row (battle screen hud_layout) is the BOTTOM row; the box occupies cards_row-h+1 .. cards_row."
+          "description": "Card box height in tiles (rows). The first interior row carries the weapon icon, the last interior row the power digit; selected-card element riders show as OAM sprites at the battle top-right. cards_row (battle screen hud_layout) is the BOTTOM row; the box occupies cards_row-h+1 .. cards_row."
         }
       }
     },
@@ -47,17 +47,6 @@
         "heal":   { "$ref": "#/definitions/typeSkin" },
         "dagger": { "$ref": "#/definitions/typeSkin" }
       }
-    },
-    "elements": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["fire", "ice", "poison"],
-      "description": "Per element-status rider (JSON 'fire' = STATUS_BURN, 'ice' = STATUS_FREEZE, 'poison' = STATUS_POISON). Cards with no rider show a blank status cell.",
-      "properties": {
-        "fire":   { "$ref": "#/definitions/typeSkin" },
-        "ice":    { "$ref": "#/definitions/typeSkin" },
-        "poison": { "$ref": "#/definitions/typeSkin" }
-      }
     }
   },
   "definitions": {
@@ -68,7 +57,7 @@
       "properties": {
         "icon": {
           "type": "string",
-          "enum": ["combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_top_right_fire_card", "combat_top_right_ice_card", "combat_top_right_poison_card"],
+          "enum": ["combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet"],
           "description": "Which VRAM icon tile represents this type/element. Names are the slugified combat-tileset description entries (assets/combat-tileset-description.csv); dagger/ring/amulet have no CSV entry (atlas-only) and keep plain names."
         },
         "color": {

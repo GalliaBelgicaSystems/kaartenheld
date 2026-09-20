@@ -78,9 +78,9 @@ static const uint16_t s_card_icon_uids[13] = {
     9,   /* ASSET_EQUIP_C07_R02: Dagger first weapon row (UI_TILE_CARD_DAGGER) */
     354, /* ASSET_SYM_C05_R04: Solitaire Diamond Ring (UI_TILE_CARD_RING) */
     149, /* ASSET_EQUIP_C07_R12: Amulet (UI_TILE_CARD_AMULET) */
-    479, /* ASSET_SYM_C23_R16: Flame Spire (UI_TILE_CARD_ELEM_FIRE) */
-    351, /* ASSET_SYM_C13_R09: Snowflake Star (UI_TILE_CARD_ELEM_ICE) */
-    21,  /* ASSET_EQUIP_C25_R02: Toxic Vial (UI_TILE_CARD_ELEM_POISON) */
+    479, /* ASSET_SYM_C23_R16: Flame Spire (VRAM 110: stale atlas icon, never referenced) */
+    351, /* ASSET_SYM_C13_R09: Snowflake Star (VRAM 111: stale atlas icon, never referenced) */
+    21,  /* ASSET_EQUIP_C25_R02: Toxic Vial (VRAM 112: stale atlas icon, never referenced) */
     210, /* ASSET_SYM_C30_R02: Heart (UI_TILE_HEART) */
     463, /* ASSET_SYM_C23_R15: Lightning Bolt (UI_TILE_BOLT) */
     53,  /* ASSET_EQUIP_C25_R04: Gold Coin (UI_TILE_COIN) */
@@ -127,14 +127,14 @@ void ui_init(void)
     }
 
     /* Battle UI tiles (card frames, timer-bar segments, HUD hp/ap/deck
-     * icons, select arrow, status tiles, weapon icons) stream from Bank 3
+     * icons, light/dark select arrows, weapon icons) stream from Bank 3
      * (generated card_frame_tiles.h, make gfx) through the banked loader
      * -- the fixed bank stays lean (AGENTS.md 52.18).  VRAM (signed BG
      * block, 0x9000-based: AGENTS.md 52.22): frames 118-126, bar 117/127,
      * HUD icons overwrite the atlas data at 113/114/116 (sheet tiles
-     * 11-13), select arrow at 96 (sheet tile 14), status at 110/111/112
-     * (sheet tiles 15-17), weapons overwrite the atlas data at 104-108
-     * (sheet tiles 18-22), spare blank at 97 (sheet tile 23).  Runs with
+     * 11-13), light arrow at 96 (sheet tile 14), dark arrow at 110
+     * (sheet tile 15), weapons overwrite the atlas data at 104-108
+     * (sheet tiles 16-20), spare blank at 97.  Runs with
      * the LCD still off. */
     g_bk_call_bank = 3;
     g_bk_call_target = (uint16_t)&ui_card_tiles_load_banked;
@@ -841,7 +841,9 @@ void ui_update_battle(const Battle *battle)
     banked_call_run();
     /* Battle enemy OAM (Florent's model) lives in ROM bank 5 (bank 3 was
      * full in the release layout). Sequential trampoline calls, never
-     * nested: the bank-3 render above returned before this dispatch. */
+     * nested: the bank-3 render above returned before this dispatch.
+     * (Selected-card riders draw inside the bank-3 render itself --
+     * a third dispatch would overflow the debug fixed bank.) */
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&battle_oam_draw_banked;
     g_bk_ptr_a = (void *)battle;

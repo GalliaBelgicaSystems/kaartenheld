@@ -75,6 +75,24 @@ static void battle_put_char(uint8_t x, uint8_t y, char ch)
     }
 }
 
+/* Forced variant for the hand marker row: the light/dark arrows share
+ * the same '^' buffer char, so the skip-guard in battle_put_tile would
+ * swallow a 96<->110 tile change when the selection state flips under a
+ * stationary cursor.  Marker redraws only run on DIRTY_HAND, never per
+ * frame, so the unconditional write costs nothing. */
+static void battle_put_marker_tile(uint8_t x, uint8_t y, uint8_t tile)
+{
+    if (y < 18 && x < 20) {
+        volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        VBK_REG = 0;
+        battle_vram_sync_write(dst, tile);
+        g_ui_screen_buf[y][x] = '^';
+#ifdef DEBUG_BUILD
+        g_tilemap_mirror[y * 32 + x] = tile;
+#endif
+    }
+}
+
 /* Put a non-font tile (e.g. the select-arrow icon) with the same
  * skip-guard as battle_put_char: the semantic screen buffer keeps a
  * representative ASCII char ('^' for the selection carets) so harness
@@ -87,6 +105,9 @@ static void battle_put_tile(uint8_t x, uint8_t y, char buf_char, uint8_t tile)
             VBK_REG = 0;
             battle_vram_sync_write(dst, tile);
             g_ui_screen_buf[y][x] = buf_char;
+#ifdef DEBUG_BUILD
+            g_tilemap_mirror[y * 32 + x] = tile;
+#endif
         }
     }
 }
@@ -217,9 +238,7 @@ static const char *battle_card_type_code(uint8_t type)
     return (type < 5) ? (codes + (type * 3)) : (codes + 15);
 }
 
-/* Weapon icon tile for a hand card (skin-driven per-type mapping).
- * Element riders no longer draw a floating status icon, so the hand
- * renderer needs only the weapon tile. */
+/* Weapon icon tile for a hand card (skin-driven per-type mapping). */
 static uint8_t battle_card_weapon_tile(uint8_t type, uint8_t is_heal)
 {
     uint8_t t = type;
@@ -228,16 +247,15 @@ static uint8_t battle_card_weapon_tile(uint8_t type, uint8_t is_heal)
     return g_card_skin_wram.weapon_tile[t];
 }
 
-/* Loot-reveal icon pair: elem status tile + weapon tile.
- * StatusId (blank font tile when the card carries no on-hit rider).
- * is_heal (ring joker / heal effect) forces the HEAL type's weapon icon.
- * tile_elem is 0 (blank font tile) when the card carries no rider. */
+/* Loot-reveal icon: weapon tile only.  Element riders are OAM sprites
+ * (battle top-right HUD), never BG tiles, so there is no elem tile here.
+ * is_heal (ring joker / heal effect) forces the HEAL type's weapon icon. */
 static void battle_card_icon_tiles(uint8_t status_id, uint8_t type,
                                    uint8_t is_heal, uint8_t *tile_elem,
                                    uint8_t *tile_wpn)
 {
-    *tile_elem = g_card_skin_wram.elem_tile[
-        (status_id > 3) ? 0 : status_id];
+    (void)status_id;
+    *tile_elem = 0;
     *tile_wpn = battle_card_weapon_tile(type, is_heal);
 }
 
@@ -288,8 +306,6 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                                 uint8_t uses, uint8_t is_heal, uint8_t status)
 {
     uint8_t tile_wpn;
-    uint8_t tile_elem;
-    uint8_t st;
     const char *code;
     volatile uint8_t *dst;
     /* Staged skin snapshot (WRAM mirror; read each field once, §52.19
@@ -314,10 +330,9 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     code = battle_card_type_code(type);
 
     tile_wpn = battle_card_weapon_tile(type, is_heal);
-    /* Rider icon inset top-right (mockup layout): element status tile
-     * replaces the TR frame corner when the card carries a rider. */
-    st = (status > 3) ? 0 : status;
-    tile_elem = g_card_skin_wram.elem_tile[st];
+    /* Rider icons are OAM sprites (battle top-right HUD): the top border
+     * always stamps the plain TR frame corner. */
+    (void)status;
     /* Finite-use cards of the skin's arrow-counter type draw the
      * remaining-uses glyph (0..3, clamped) on the floor row; unlimited
      * cards keep the frame center. */
@@ -334,16 +349,14 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     for (r = 0; r < bh; r++) {
         dst = (volatile uint8_t *)(0x9800 + ((uint16_t)(top + r) << 5) + x);
         if (r == 0) {
-            /* Top border: TL TM TR, rider icon inset over TR corner. Its
-             * palette span is applied by the caller after the box spans. */
+            /* Top border: TL TM TR (plain corners; riders are OAM). */
             battle_vram_sync_write(&dst[0], frame);
             battle_vram_sync_write(&dst[1], (uint8_t)(frame + 1));
-            battle_vram_sync_write(&dst[2], tile_elem ? tile_elem : (uint8_t)(frame + 2));
+            battle_vram_sync_write(&dst[2], (uint8_t)(frame + 2));
 #ifdef DEBUG_BUILD
             g_tilemap_mirror[(top + r) * 32 + x] = frame;
             g_tilemap_mirror[(top + r) * 32 + x + 1] = (uint8_t)(frame + 1);
-            g_tilemap_mirror[(top + r) * 32 + x + 2] =
-                tile_elem ? tile_elem : (uint8_t)(frame + 2);
+            g_tilemap_mirror[(top + r) * 32 + x + 2] = (uint8_t)(frame + 2);
 #endif
         } else if (r == (uint8_t)(bh - 1)) {
             /* Bottom border: BL BM BR — EXCEPT for the arrow-counter
@@ -859,17 +872,25 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
                 battle_color_span((uint8_t)(col + 1), drow_empty, 1, UI_COLOR_NONE);
             }
             if (i == cur) {
-                battle_put_tile((uint8_t)(col + 1), mark_row, '^',
-                                UI_TILE_SELECT_ARROW);
+                /* Cursor stays where it is after a select (no auto-advance):
+                 * light arrow on a plain card, dark arrow on a card already
+                 * in the combo.  Moving away reveals the 1-5 digit below. */
+                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                                       UI_TILE_SELECT_ARROW);
                 battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
             } else {
                 battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
                 battle_color_span((uint8_t)(col + 1), mark_row, 1, 0);
+#ifdef DEBUG_BUILD
+                g_tilemap_mirror[mark_row * 32 + (col + 1)] =
+                    (uint8_t)(ui_font_tile_base + (uint8_t)(s_sel_marker - ' '));
+#endif
             }
             continue;
         }
-        /* No card tints (Florent's model): boxes stay paper, type and
-         * element read from the stamped icons. Poison grey-out
+        /* No card tints (Florent's model): boxes stay paper, type reads
+         * from the stamped weapon icon, element from the top-right OAM
+         * rider HUD. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
          * of the arrow-counter type grey out too once their uses are
          * spent (matches the unplayable nav rule). */
@@ -902,25 +923,27 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
                 battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
             }
         }
-        /* Rider icon palette (mockup layout): the inset TR cell takes
-         * the rider's own slot; the box spans above painted paper. */
-        {
-            uint8_t rst = cstat > 3 ? 0 : cstat;
-            uint8_t relem = g_card_skin_wram.elem_tile[rst];
-            if (relem) {
-                battle_color_span((uint8_t)(col + 2), top, 1,
-                                  g_card_skin_wram.elem_color[rst]);
-            }
-        }
+        /* No rider BG spans: riders are OAM sprites (top-right HUD). */
         if (i == cur) {
-            battle_put_tile((uint8_t)(col + 1), mark_row, '^',
-                            UI_TILE_SELECT_ARROW);
+            if (s_sel_marker != ' ') {
+                /* Cursor on an already-selected card: dark arrow stays on
+                 * the card (no auto-advance after select). */
+                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                                       UI_TILE_SELECT_ARROW_DARK);
+            } else {
+                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                                       UI_TILE_SELECT_ARROW);
+            }
             /* Arrow tile palette: single-sourced in ui.h (UI_COLOR_ARROW). */
             battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
         } else {
             battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
             battle_color_span((uint8_t)(col + 1), mark_row, 1,
                               (s_sel_marker != ' ') ? ccolor : 0);
+#ifdef DEBUG_BUILD
+            g_tilemap_mirror[mark_row * 32 + (col + 1)] =
+                (uint8_t)(ui_font_tile_base + (uint8_t)(s_sel_marker - ' '));
+#endif
         }
     }
 }
@@ -941,25 +964,25 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
 /* Battle UI tile loader (bank-3 body behind the fixed-bank
  * ui_card_tiles_load() wrapper, dispatched once from ui_init with the LCD
  * off): streams the card frame tiles, the turn-timer bar segments, the
- * HUD hp/ap/deck icons, the select arrow and the fire/ice/poison status
- * tiles from THIS bank's generated card_frame_tiles.h into VRAM block 1.  Reads its own bank-local data
+ * HUD hp/ap/deck icons and the light/dark select arrows from THIS bank's
+ * generated card_frame_tiles.h into VRAM block 1.  Reads its own bank-local data
  * directly (no banked_copy, which would restore the home bank mid-body --
  * banked.h ABI) and writes VRAM at the SIGNED BG tile addresses
  * (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
  * AGENTS.md 52.22).  VRAM: frames 118-126, bar filled 117 / empty 127,
  * HUD icons overwrite the atlas data at 113 (hp/heart), 114 (ap/bolt)
- * and 116 (deck), select arrow at 96, status tiles at 110/111/112. */
+ * and 116 (deck), light arrow at 96, dark arrow at 110 (overwrites the
+ * atlas Flame Spire; 111/112 keep stale atlas icons, never referenced). */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
- * HUD icons are tiles 11-13 (VRAM 113/114/116), the select arrow is
- * tile 14 (VRAM 96), status tiles are 15-17 (VRAM 110/111/112 --
- * overwrite the atlas Flame Spire / Snowflake Star / Toxic Vial). */
+ * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
+ * is tile 14 (VRAM 96), the dark select arrow is tile 15 (VRAM 110). */
 static const uint8_t s_card_tile_vram_ids[31] = {
     118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
     117, 127,                                     /* bar filled, empty */
     113, 114, 116,                                /* HUD: hp, ap, deck */
-    96,                                           /* select arrow */
-    110, 111, 112,                                /* status: fire, ice, poison */
+    96,                                           /* light select arrow */
+    110, 111, 112,                                /* dark arrow + 2 blanks (grid cells 15-17) */
     104, 105, 106, 107, 108,                      /* weapons: sword, shield, bow, dagger, ring */
     97,                                           /* spare blank (unused scratch) */
     /* Limited-use arrow counters (bow floor row): uses 0/1/2/3, power
@@ -1250,4 +1273,9 @@ void ui_update_battle_banked(void)
                 (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
         }
     }
+    /* Selected-card rider OAM (same bank, plain call -- no dispatch).
+     * Unconditional like the bank-5 enemy pass in ui_update_battle: the
+     * combo reset on resolve clears the icons, and debug-action injection
+     * is always followed by dirty-setting input before any assert reads. */
+    battle_rider_draw(battle);
 }

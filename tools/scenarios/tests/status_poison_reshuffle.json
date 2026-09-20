@@ -331,7 +331,7 @@
    "type": "event_arg",
    "event": "STATUS_APPLIED",
    "index": 1,
-   "value": 5
+   "value": 2
   },
   {
    "type": "event_occurred",

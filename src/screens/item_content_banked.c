@@ -332,15 +332,10 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     else
         IC_DRAW_TEXT(0, y, " ", 1);
 
-    if (s_ic_def->status_id == STATUS_BURN) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-    } else if (s_ic_def->status_id == STATUS_POISON) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_POISON;
-    } else if (s_ic_def->status_id == STATUS_FREEZE) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_ICE;
-    } else {
-        s_ic_tile_elem = 0;
-    }
+    /* Element riders are OAM sprites on the battle screen only: the
+     * list cell stays blank and the element reads from the color span
+     * below (FIRE/POISON/ICE slots). */
+    s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;
@@ -483,15 +478,10 @@ static void ic_draw_card_detail_page(Game *g)
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
 
-    if (s_ic_def->status_id == STATUS_BURN) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-    } else if (s_ic_def->status_id == STATUS_POISON) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_POISON;
-    } else if (s_ic_def->status_id == STATUS_FREEZE) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_ICE;
-    } else {
-        s_ic_tile_elem = 0;
-    }
+    /* Element riders are OAM sprites on the battle screen only: the
+     * detail cell stays blank and the element reads from the color span
+     * below (FIRE/POISON/ICE slots). */
+    s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;

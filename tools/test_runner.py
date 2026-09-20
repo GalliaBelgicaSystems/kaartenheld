@@ -33,6 +33,7 @@ VALID_ASSERTION_TYPES = {
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
+    "oam_tile",
     "sfx_count", "sfx_last"
 }
 
@@ -317,6 +318,16 @@ def run_scenario(scenario):
         tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
         has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
         sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        # OAM HUD assertions (battle top-right rider sprites) must pre-read
+        # before disconnect: evaluation runs after the session closes.
+        has_oam_assert = any(a.get("type") == "oam_tile" for a in scenario.get("assertions", []))
+        oam_entries = {}
+        if has_oam_assert:
+            for a in scenario.get("assertions", []):
+                if a.get("type") == "oam_tile":
+                    entry = a.get("entry", 0)
+                    if entry not in oam_entries:
+                        oam_entries[entry] = session.get_oam_entry(entry)
 
         # Check if any assertion needs logical screen buffer
         has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
@@ -445,6 +456,13 @@ def run_scenario(scenario):
             actual = tilemap_attr_mirror[idx] if tilemap_attr_mirror is not None else None
             passed = (actual == int(expected))
             actual = f"tilemap_attr[{world_col},{world_row}]={actual}"
+
+        elif a_type == "oam_tile":
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[2] if oam is not None and oam[2] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].tile={actual}"
 
         elif a_type == "sfx_count":
             actual = sfx_count

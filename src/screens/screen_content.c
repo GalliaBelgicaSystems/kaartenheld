@@ -301,14 +301,10 @@ void shop_content_render(void)
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         if (s_sc_card_def) {
             /* Icon tiles mirror the battle hand (screens/cards_skin.json):
-             * element icon + weapon icon.  The old code compared raw
-             * status numbers with BURN/POISON swapped (1 is POISON,
-             * 2 is BURN per rpg/status.h), so fire/poison shop icons
-             * were exchanged; named constants fix that too. */
-            if (s_sc_card_def->status_id == STATUS_BURN) s_sc_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-            else if (s_sc_card_def->status_id == STATUS_POISON) s_sc_tile_elem = UI_TILE_CARD_ELEM_POISON;
-            else if (s_sc_card_def->status_id == STATUS_FREEZE) s_sc_tile_elem = UI_TILE_CARD_ELEM_ICE;
-            else s_sc_tile_elem = 0;
+             * weapon icon only.  Element riders are OAM sprites on the
+             * battle screen: the element cell stays blank and the element
+             * reads from the color span below (FIRE/POISON/ICE slots). */
+            s_sc_tile_elem = 0;
 
             if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
                 s_sc_tile_wpn = UI_TILE_CARD_RING;
