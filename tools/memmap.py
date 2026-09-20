@@ -158,7 +158,7 @@ def main():
         "_world_on_battle_fled_banked": "battle-fled world update (bank 3)",
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
-        "_deck_reshuffle_banked": "discard reshuffle (bank 2)",
+        "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
         "_ui_format_int_banked": "int formatter (bank 2)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",

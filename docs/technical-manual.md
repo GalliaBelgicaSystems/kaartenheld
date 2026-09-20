@@ -472,12 +472,14 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
 
 ### 6.7 Deck exhaustion — the reshuffle turn
 
-When both the draw pile **and** the hand are empty at the start of your
-round, the game consumes your action that cycle to **reshuffle** the
-discard pile back into the draw pile and re-deal; the enemy still attacks
-that round (`deck.md Phase 10`).  The draw pile otherwise never auto-
-refills from the discard (a draw from a dry pile would hand you a phantom
-`SW2` safety card, but the reshuffle turn is designed to prevent it).
+When the draw pile cannot cover every open hand slot at the start of
+your round — fully dry, or short with cards already discarded — the game
+consumes your action that cycle to **reshuffle** the discard pile back
+into the draw pile and re-deal; the enemy still attacks that round
+(`deck.md Phase 10`).  A short pile never deals a partial refill: the
+reshuffle happens first instead of minting phantom `SW2` safety cards for
+the shortfall.  The draw pile otherwise never auto-refills from the
+discard.
 
 ### 6.8 Victory, defeat, flee
 

@@ -1,0 +1,122 @@
+{
+  "name": "battle_reshuffle_ring",
+  "test": true,
+  "description": "Ring-flag conservation across discard + reshuffle (card_copy_banked / deck_discard_banked must carry Card.ring): a 6-card deck [SW SW SW SW R R] plays two swords on attack (no ring involved), then defends with the redealt ring plus a sword. The wounded hero (20/30) overblocks the trio incoming, which restores HP only through the ring-gated defense path (HEALED d1=2). Pre-fix every cycled card comes back ringless: the ringless heal card contributes no shield value, so the overblock heal never fires.",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 2,
+      "hp": 60
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    },
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 1,
+      "value": 2
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 20,
+        "max_hp": 30
+      }
+    },
+    "seed": 5002,
+    "start_battle": true,
+    "deck": {
+      "IRON_SWORD": 4,
+      "WOOD_RING": 2
+    }
+  }
+}

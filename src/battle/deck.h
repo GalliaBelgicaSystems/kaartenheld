@@ -27,11 +27,14 @@ void deck_init_default_banked(void);
  * turn, see battle.c). */
 void deck_draw(Deck *d, Card *out_card);
 
-/* Move the discard pile back into the draw pile (Fisher-Yates via rng_next)
- * and reset the draw index.  No-op when the discard pile is empty. */
+/* Fold the undrawn remainder cards[draw_idx..count) into the discard pile,
+ * then move the combined pile back into the draw pile (Fisher-Yates via
+ * rng_next) and reset the draw index.  The fold makes the refill lossless:
+ * a mid-refill reshuffle preserves the leftover instead of deleting it.
+ * No-op when the discard pile is empty. */
 void deck_reshuffle(Deck *d);
 
-/* Banked no-arg body (ROM bank 2) dispatched by deck_reshuffle(). */
+/* Banked no-arg body (ROM bank 7) dispatched by deck_reshuffle(). */
 void deck_reshuffle_banked(void);
 
 /* Add a card to the discard pile (card staged through a pointer so the

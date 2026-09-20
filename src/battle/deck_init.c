@@ -72,75 +72,8 @@ void deck_init_default_banked(void)
     }
 }
 
-/* Field-wise card copy/swap helpers.  The banked body MUST NOT use struct
- * assignment: SDCC lowers Card-sized copies to __memcpy, which links into
- * the switchable home bank 1 -- unreachable while bank 2 is mapped
- * (AGENTS.md 52.11.1). */
-static void card_copy_banked(Card *dst, const Card *src)
-{
-    dst->type = src->type;
-    dst->value = src->value;
-    dst->uses_remaining = src->uses_remaining;
-    dst->cost = src->cost;
-    dst->effect = src->effect;
-    dst->status_id = src->status_id;
-    dst->status_chance = src->status_chance;
-}
-
-static void card_swap_banked(Card *a, Card *b)
-{
-    Card t;
-    t.type = a->type;
-    t.value = a->value;
-    t.uses_remaining = a->uses_remaining;
-    t.cost = a->cost;
-    t.effect = a->effect;
-    t.status_id = a->status_id;
-    t.status_chance = a->status_chance;
-    a->type = b->type;
-    a->value = b->value;
-    a->uses_remaining = b->uses_remaining;
-    a->cost = b->cost;
-    a->effect = b->effect;
-    a->status_id = b->status_id;
-    a->status_chance = b->status_chance;
-    b->type = t.type;
-    b->value = t.value;
-    b->uses_remaining = t.uses_remaining;
-    b->cost = t.cost;
-    b->effect = t.effect;
-    b->status_id = t.status_id;
-    b->status_chance = t.status_chance;
-}
-
-/* Banked body of deck_reshuffle() (see deck.c).  Self-contained: reads only
- * the staged Deck pointer (ptr_a) and its own bank-local data, and advances
- * the shared RNG stream via an inlined xorshift on g_rng_state (banked code
- * must not call fixed-bank functions; see AGENTS.md 52.11.1).  The step
- * must stay byte-identical to rng_next(). */
-void deck_reshuffle_banked(void)
-{
-    Deck *d = (Deck *)g_bk_ptr_a;
-    uint8_t i, j;
-
-    if (!d || d->discard_count == 0) return;
-
-    for (i = 0; i < d->discard_count; i++) {
-        card_copy_banked(&d->cards[i], &d->discard[i]);
-    }
-    d->count = d->discard_count;
-    d->discard_count = 0;
-    d->draw_idx = 0;
-
-    /* Fisher-Yates: rejection-sample j in [0, i] (mask 0x1F covers
-     * MAX_DECK_SIZE - 1). */
-    for (i = (uint8_t)(d->count - 1); i > 0; i--) {
-        do {
-            g_rng_state ^= g_rng_state << 7;
-            g_rng_state ^= g_rng_state >> 9;
-            g_rng_state ^= g_rng_state << 8;
-            j = (uint8_t)(g_rng_state & 0x1F);
-        } while (j > i);
-        card_swap_banked(&d->cards[i], &d->cards[j]);
-    }
-}
+/* deck_reshuffle_banked and its card_copy/swap helpers used to live here;
+ * they moved to deck_shuffle_banked.c (ROM bank 7): bank 2 ran out of room
+ * for the reshuffle's remainder fold and bank 3 overflows in the release
+ * build.  This file keeps only the starter deck unpacker, which must stay
+ * in bank 2 (it reads the bank-2 card catalog directly). */

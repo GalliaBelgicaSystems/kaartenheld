@@ -347,6 +347,18 @@ class StateReader:
                 n += 1
         return n
 
+    def world_tail_candidates(self):
+        """Observed World-tail byte per const-char* stride candidate.
+
+        Returns {ptr_size: byte} read at world + world_size(ptr) - 5 for
+        each candidate, without resolving or caching anything — so a
+        mismatch report can show observed-vs-expected on the spot instead
+        of a bare -1 (see _check_hostiles in walks.py)."""
+        out = {}
+        for cand in NAME_PTR_CANDIDATES:
+            out[cand] = self.rd(self.world + world_size(cand) - 5, 1)[0]
+        return out
+
     def battle_player_hp(self):
         return self.rd(self._resolve_battle_base()
                        + BATTLE_PLAYER_HP, 1)[0]

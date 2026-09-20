@@ -1337,6 +1337,8 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * The driver assembly (`lib/hUGEDriver/src/hUGEDriver.asm` via `tools/rgb2sdas.py -b 6`) and all converted track data (`#pragma bank 6`, six songs) live in **ROM Bank 6**.  The driver reads song bytes through the mapped ROM window, so songs cannot live anywhere else.
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
   * Bank 6 is full (16224/16384 B): the transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 7`) live in **ROM Bank 7** alongside the icon table.  The timer ISR selects bank 7 around `sfx_step_tick()` and bank 6 around `hUGE_dosound()`; muting targets bank 6 (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
+  * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
   * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.
   * `huge_music_play_banked(song, bank)` records the song's bank in `s_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
@@ -2450,8 +2452,10 @@ boundary; whether it hung flipped with unrelated code-size changes.
 Rules:
 
 * After ANY new fixed-bank code, run `make memmap` (it fails on violation)
-  AND grep the link step for `Possible overflow` — the build itself does not
-  fail on the warning.
+  AND check the link step for `Possible overflow` — the Makefile link
+  rules fail loudly on the warning (they delete the corrupt target via
+  `.DELETE_ON_ERROR`, so the next make re-links instead of reporting
+  "up to date").
 * Keep fat logic out of the fixed bank by structure, not by trimming: pure
   arithmetic (rolls, encodes) belongs in a bank-2 body behind one thin
   staging wrapper (see `src/game/loot_drop_banked.c` + `game_loot_drop()`),
@@ -2888,7 +2892,8 @@ a location", per-quest hints, repeatable quests) are logged in
 Every quest/event/item/actor state transition must remain visible to the
 harness: `SCRIPT_TRIGGERED` (events), `VARIABLE_SET` (quest/variable state),
 `ITEM_ADDED`/`ITEM_REMOVED`, `CURRENCY_ADDED`/`CURRENCY_SPENT`,
-`ACTOR_STATE_CHANGE`, plus the semantic snapshot.  A content change that makes
+`ACTOR_STATE_CHANGE` (persistent lifecycle), `ACTOR_MOVED` (patrol steps),
+plus the semantic snapshot.  A content change that makes
 a gameplay outcome invisible to `make test-harness` is incomplete.
 
 ## 55.5 Memory budget

@@ -1,0 +1,93 @@
+{
+  "name": "battle_phantom_redeal",
+  "test": true,
+  "description": "Mid-refill-shortfall guard (battle_turn_draw atomicity + lossless reshuffle): a 6-card deck deals an opening 5-card hand (pile 1), then one 2-card combo leaves 2 slots open with only 1 card remaining and 2 in discard. The refill must reshuffle immediately (EVENT_DECK_RESHUFFLED x1, discard redealt to 0) instead of dealing 1 real + 1 phantom sword and suppressing the shuffle, and the reshuffle must preserve the 1 undrawn leftover (pile 3, redeal 2, draw_remaining 1) instead of deleting it. On the pre-fix ROM no reshuffle fires here and the phantom later bakes into the redealt pile.",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 2,
+      "hp": 60
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 150
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DECK_RESHUFFLED"
+    },
+    {
+      "type": "event_count",
+      "event": "DECK_RESHUFFLED",
+      "count": 1
+    },
+    {
+      "type": "battle_discard_count",
+      "expected": 0
+    },
+    {
+      "type": "battle_draw_remaining",
+      "expected": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 30,
+        "max_hp": 30
+      }
+    },
+    "seed": 5002,
+    "start_battle": true,
+    "deck": {
+      "IRON_SWORD": 4,
+      "FIRE_SWORD": 2
+    }
+  }
+}

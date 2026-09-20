@@ -22,5 +22,6 @@ void deck_discard_banked(void)
     slot->effect = c->effect;
     slot->status_id = c->status_id;
     slot->status_chance = c->status_chance;
+    slot->ring = c->ring;
 }
 

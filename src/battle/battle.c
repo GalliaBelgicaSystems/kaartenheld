@@ -347,9 +347,22 @@ static void battle_resolve_hand_discard(Battle *b)
 }
 
 /* Refill empty hand slots from the draw pile at a decision-phase start.
- * Returns false when the pile is dry while slots remain open AND the
+ * Returns false when the pile cannot cover every open slot AND the
  * discard pile can feed a reshuffle — the caller then runs the reshuffle
- * turn (reshuffle + re-deal + skip the player's action). */
+ * turn (reshuffle + re-deal + skip the player's action).
+ *
+ * The decision is atomic: a partial pile plus a non-empty discard deals
+ * NOTHING and reports dry so the caller reshuffles first.  Dealing partial
+ * real cards would mix pre/post-shuffle cards, and reaching deck_draw()
+ * with a dry pile would mint phantom swords (deck.c) that get discarded
+ * and baked into the redealt pile permanently.
+ *
+ * No per-iteration dry check is needed: with DECK_MIN_CARDS >=
+ * BATTLE_HAND_SIZE (statically asserted above), cards are conserved
+ * (pile + hand + discard == total deck size; the reshuffle preserves
+ * the undrawn remainder), so an empty discard pile implies the pile
+ * covers every open slot.  The only dry-pile loop entry is the fully-dry
+ * case handled by the early return above. */
 static bool battle_turn_draw(Battle *b)
 {
     uint8_t i, need = 0;
@@ -359,6 +372,13 @@ static bool battle_turn_draw(Battle *b)
     if (need == 0) return true;
     if (b->deck.draw_idx >= b->deck.count) {
         return (b->deck.discard_count == 0);
+    }
+    /* Partial cover plus a non-empty discard: deal nothing so the caller
+     * reshuffles first (see header comment).  Additive form keeps the
+     * 8-bit compare cheap (draw_idx + need cannot wrap: both are tiny). */
+    if (b->deck.discard_count != 0 &&
+        (uint8_t)(b->deck.draw_idx + need) > b->deck.count) {
+        return false;
     }
     for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
         if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) {
