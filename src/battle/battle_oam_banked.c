@@ -151,6 +151,11 @@ void battle_oam_draw_banked(void)
         if (k >= 2) ge0 = (uint8_t)(ge0 + BATTLE_OAM_STRIDE);
         gprop = (uint8_t)(((battle->timer_ticks >> 4) & 1) ?
                           BATTLE_OBJ_SCRATCH : BATTLE_OBJ_SCRATCH2);
+        /* Per-cell recompute (not running pointers): SDCC keeps the
+         * indexed form in registers, while a carried volatile pointer
+         * plus extra row/cell locals cost ~68 B more in bank 5
+         * (measured). No multiply/div/mod anywhere (AGENTS.md 52.18):
+         * shifts and adds only. */
         gt = g_battle_enemy_art_base[k];
         gn = 0;
         for (gcy = 0; gcy < gh; gcy++) {

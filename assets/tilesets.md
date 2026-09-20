@@ -49,8 +49,11 @@ src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
   reusing the stamp's tile ids and flipping sprite palettes on the battle
   clock -- no sheet row, no extra VRAM. The overlay reuses stamp bytes,
   so both glow ramps must match the set ramp everywhere except index 1
-  (compiler-enforced in `battle_compile.py`); the palette report stays
-  silent.
+  (`battle_compile.py` structural check); the eye cells are declared with
+  the unlit ramp in `palette_compiler.py` so the artist's exact pixels
+  stay silent in the palette report, and each `<base>_2` reference PNG
+  must equal its cell with red recoloured to orange only (shape check).
+  The palette report stays silent.
 - ROM: `src/gfx/battle_enemy_art.h` (only tiles referenced by a combat-art
   set are extracted, via `battle_compile.py --gfx-coords`; blob offsets in
   `battle_types.c`). Battle BG art, variable WxH per set (boss is 3x3).

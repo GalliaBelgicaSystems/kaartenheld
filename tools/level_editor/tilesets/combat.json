@@ -388,7 +388,7 @@
       "label": "left middle boss",
       "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS",
       "walkable": false,
-      "color": "#6c6b69",
+      "color": "#6c6767",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_left_middle_boss.png",
       "category": "enemy"
@@ -398,7 +398,7 @@
       "label": "middle center boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS",
       "walkable": false,
-      "color": "#100e0b",
+      "color": "#100707",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss.png",
       "category": "enemy"

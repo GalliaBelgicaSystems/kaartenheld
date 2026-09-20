@@ -290,6 +290,50 @@ def main():
                     f"has colors {bad} outside alt ramp '{alt}'; "
                     f"repaint the cell or drop the alt assignment")
 
+    # Eye-glow overlay cells (combat_art glow block, e.g. boss eyes):
+    # declared with the UNLIT ramp so exact-fit pixels stay silent in the
+    # report. The overlay reuses the stamp's tile bytes through the
+    # unlit/lit OBJ palettes (same shade indices, only index 1 remaps),
+    # so this encoding equals the stamp encoding; battle_compile.py
+    # enforces the ramp structure (shared 0/2/3). Deliberately NOT added
+    # to battle_oam_names: these stay opaque stamp cells (no OAM
+    # transparency handling applies to them).
+    # Plus the glow-reference shape check: each <base>_2 curated PNG must
+    # equal its unlit cell with red recoloured to orange ONLY (the
+    # overlay assumes shape identity across the blink).
+    from PIL import Image as _GlowImage
+    _GLOW_RED = (139, 27, 27)      # COMBAT/heart_fire_enemy_eyes
+    _GLOW_ORANGE = (245, 113, 55)  # COMBAT/eyes_glow
+    _GLOW_PUB = REPO_ROOT / "tools" / "level_editor" / "public" / "tiles" / "combat"
+    for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
+        data = json.loads(path.read_text())
+        glow = data.get("glow")
+        if glow is None:
+            continue
+        gunlit = glow.get("unlit")
+        if gunlit not in ramps:
+            raise ValueError(f"combat_art/{path.name}: unknown glow.unlit ramp '{gunlit}'")
+        frame0 = list(data.get("frame0", []))
+        for idx in glow.get("cells") or []:
+            if not isinstance(idx, int) or not (0 <= idx < len(frame0)):
+                raise ValueError(f"combat_art/{path.name}: glow cell {idx!r} out of frame0")
+            name = frame0[idx]
+            if name is None or name not in BATTLE_CELLS:
+                raise ValueError(f"combat_art/{path.name}: glow cell {idx} has no sheet coord")
+            battle_declared[name] = gunlit
+            base_im = _GlowImage.open(_GLOW_PUB / (name + ".png")).convert("RGB")
+            ref_im = _GlowImage.open(_GLOW_PUB / (name + "_2.png")).convert("RGB")
+            if base_im.size != (8, 8) or ref_im.size != (8, 8):
+                raise ValueError(f"combat_art/{path.name}: glow cell {idx} ({name}) PNGs must be 8x8")
+            base_px = list(base_im.getdata())
+            ref_px = list(ref_im.getdata())
+            bad = [i for i, (a, b) in enumerate(zip(base_px, ref_px))
+                   if a != b and not (a == _GLOW_RED and b == _GLOW_ORANGE)]
+            if bad or base_px == ref_px:
+                raise ValueError(
+                    f"combat_art/{path.name}: glow cell {idx} ({name}_2) must equal "
+                    f"{name} with red recoloured to orange ONLY")
+
     # Enemy/hero overworld: {cellname: ramp or None}.
     ow_declared = {}
     for path in sorted((REPO_ROOT / "screens" / "enemy_types").glob("*.json")):
