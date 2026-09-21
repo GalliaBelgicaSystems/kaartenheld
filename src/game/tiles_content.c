@@ -78,7 +78,7 @@ const uint8_t g_intrepid_font_tiles[1536] = {
 };
 
 #ifdef DEBUG_BUILD
-/* Title logo (assets/title-red.png, 16x3 tiles, make gfx).  Kept in bank 5
+/* Title logo (assets/title-brun.png, 16x3 tiles, make gfx).  Kept in bank 5
  * for the harness build (its layout is regression-pinned: moving it out
  * flips a layout-sensitive SDCC miscompile in the dialogue path,
  * AGENTS.md 52.19).  The release build places it in bank 4 instead, where

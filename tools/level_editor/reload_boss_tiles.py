@@ -95,6 +95,16 @@ ARROW_MAP = [
     (15, 4, "combat_arrow_pointing_up_light"),
 ]
 
+# (col, row, enemies tile id). Town dogs: sheet truth (tan art) refreshes
+# the curated public PNGs the enemy sheet composes.  The ring icon cell
+# (7,4) is DELIBERATELY absent: its sheet art is under artist review
+# (green gem vs counters), so the ROM keeps shipping the curated file
+# until the sheet settles -- adding it here would silently recolor ROM art.
+DOG_MAP = [
+    (4, 1, "dog_f0"),
+    (5, 1, "dog_f1"),
+]
+
 # Curated tile id -> (tileset json path, png dir).
 TILESET_OF = {}
 for _tid in [t for _, _, t in COMBAT_MAP]:
@@ -106,6 +116,9 @@ for _tid in [t for _, _, t in ARROW_MAP]:
 for _tid in [t for _, _, t in RIDER_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
+for _tid in [t for _, _, t in DOG_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/enemies.json",
+                        "tools/level_editor/public/tiles/enemies")
 for _, _, _aid, _eid in OW_MAP:
     TILESET_OF[_aid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
@@ -164,6 +177,11 @@ def main():
         label = sprites_csv[row][col].strip()
         assert "actors_" + slugify(label) == tid, \
             "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in DOG_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "dog" in slugify(label), \
+            "sprites (%d,%d) label %r is not a dog cell" % (col, row, label)
         jobs.append((sprites_img, col, row, tid))
     for col, row, tid in ARROW_MAP:
         label = combat_csv[row][col].strip()

@@ -4,7 +4,7 @@
 >
 > Rule: every tile is colored with an existing artist ramp (ramps win). ✓ = every pixel exists in the encode ramp; ≈ = nearest-shade fallback (repaint todo, see Repaint list).
 > ✓ only asserts the pixels fit the ramp -- it does NOT assert the result is legible or artifact-free (e.g. the dim grey-out of spent/poisoned cards, or the low-contrast ice status label).
-> Battle BG slots (`base` set, `tools/palette_slots.json`): 0 fight1, 1 fight4, 2 fight6, 3 fight3, 4 fight5, 5 fight2, 6 fight_text, 7 fightboss.
+> Battle BG slots (`base` set, `tools/palette_slots.json`): 0 fight1, 1 fight4, 2 fight6, 3 fight3, 4 fight5, 5 fight2, 6 fightspider, 7 fightboss.
 > Artist sets: `sprites*` = RPG overworld, `fight1`–`fight7` = battle background, `fight`+enemy = battle sprites.
 
 ## Slot map
@@ -15,7 +15,7 @@
 | desolate_landscape | desolate2 | desolate3 | desolate2 | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town4 | town1 | town2 | town7 |
-| base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fight_text | fightboss |
+| base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fightspider | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
 
@@ -66,10 +66,10 @@
 |---|---|---|---|---|
 | bat | 3×2 | OAM | fightbat (7) | ✓ |
 | boss | 3×3 | BG stamp | fightboss (7) | ✓ |
-| kobold | 3×2 | OAM | battle_kobold (7) | ✓ |
+| kobold | 3×2 | OAM | fightgoblin (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
-| slime | 3×2 | OAM | battle_slime (7) | ✓ |
-| spider | 3×2 | OAM | battle_spider+fightbat[1] (7+6) | ✓ |
+| slime | 3×2 | OAM | fightslime (7) | ✓ |
+| spider | 3×2 | OAM | fightspider+fightbat[1] (7+6) | ✓ |
 
 `fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.  Sets with a second ramp (spider eye) program it into scratch slot 6 (BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; their `fit` covers both ramps.
 
@@ -78,7 +78,7 @@
 | sprite | cells | ramp (slot) | fit |
 |---|---|---|---|
 | bat | bat_f0, bat_f1 | sprites (0) | ✓ |
-| dog | dog_f0, dog_f1 | sprites12 (2) | ≈ #645233, #8b1b1b |
+| dog | dog_f0, dog_f1 | sprites9 (6) | ≈ #8b1b1b |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
@@ -130,61 +130,13 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 ## Title
 
-`title-red.png` → **title_logo** (slot 1, programmed directly by the title screen): ✓ exact.
+`title-brun.png` → **title** (slot 1 programmed with the same browns directly by the title screen): exact by construction (see mismatch report).
 
 ## Repaint list (nearest-shade fallbacks)
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| enemy_ow | [0, 4] | sprites12 | #645233, #8b1b1b |
-| enemy_ow | [1, 4] | sprites12 | #645233, #8b1b1b |
-| title | [0, 0] | title_logo | #8b1b1b, #ca6a6a |
-| title | [0, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [0, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [1, 0] | title_logo | #8b1b1b, #ca6a6a |
-| title | [1, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [1, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [2, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [2, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [2, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [3, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [3, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [3, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [4, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [4, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [4, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [5, 0] | title_logo | #8b1b1b, #ca6a6a |
-| title | [5, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [5, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [6, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [6, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [6, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [7, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [7, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [7, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [8, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [8, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [8, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [9, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [9, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [9, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [10, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [10, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [10, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [11, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [11, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [11, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [12, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [12, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [12, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [13, 0] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [13, 1] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [13, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [14, 0] | title_logo | #8b1b1b, #ca6a6a |
-| title | [14, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [14, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
-| title | [15, 0] | title_logo | #8b1b1b, #ca6a6a |
-| title | [15, 1] | title_logo | #8b1b1b, #ca6a6a |
-| title | [15, 2] | title_logo | #8b1b1b, #ca6a6a, #e4b4b4 |
+| enemy_ow | [0, 4] | sprites9 | #8b1b1b |
+| enemy_ow | [1, 4] | sprites9 | #8b1b1b |
 
-Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.
+Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.

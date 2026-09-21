@@ -7,7 +7,7 @@
   "height": 2,
   "palette": "fightspider",
   "oam": true,
-  "obj_palette": "battle_spider",
+  "obj_palette": "fightspider",
   "obj_alt_palette": "fightbat",
   "obj_alt_cells": [1],
   "frame0": [

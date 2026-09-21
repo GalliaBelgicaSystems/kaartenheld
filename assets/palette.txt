@@ -61,7 +61,6 @@ chest_outline: #6f5a34
 chest_lock: #ac9d23
 spider_boss_light: #565656
 boss_eyes_scepter: #8b1b1b
-boss_eyes_scepter_glow: #f57137
 merchant_coin: #8f591f
 poison_icon: #7136c1
 ice_icon: #7ae3f3
@@ -86,6 +85,8 @@ goblin_combat_skin: #844f4f
 goblin_combat_skin_dark_outlines: #4a2727
 bat_combat_inner_wings: #3d3044
 eyes_glow: #f57137
+ice_icon: #7ae3f3
+poison_icon: #7136c1
 
 TITLE
 title_bg: #ffffff
@@ -119,8 +120,6 @@ town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outline
 town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
 sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-sprites3: SPRITES/background, SPRITES/boss_eyes_scepter_glow, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
-sprites4: SPRITES/background, SPRITES/wood_dog, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
 sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
 sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
@@ -132,7 +131,9 @@ sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/pois
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
 fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
-fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/heart_fire_enemy_eyes, COMBAT/poison_icon
+fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/poison_icon, COMBAT/heart_fire_enemy_eyes
+fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
+fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
@@ -142,6 +143,5 @@ fightspider: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/s
 fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
-fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black

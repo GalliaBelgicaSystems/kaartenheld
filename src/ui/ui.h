@@ -160,7 +160,7 @@ void ui_set_cram_palette(uint8_t overworld);
 void ui_load_cram_banked(void);
 void ui_load_tileset_banked(void);
 /* Title-logo loader (build-dependent bank: 5 debug / 2 release): streams the
- * 48 logo tiles (assets/title-red.png,
+ * 48 logo tiles (assets/title-brun.png,
  * make gfx) into the world BG block (ids 128-175).  Runs in the title
  * screen's LCD-off full redraw; AGENTS.md 52.22 signed 0x8800 fetch. */
 void ui_title_logo_load_banked(void);

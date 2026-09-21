@@ -441,7 +441,7 @@ export const Inspector: React.FC<InspectorProps> = ({
               />
             </div>
 
-            {/* Title Logo Bitmap (assets/title-red.png via make gfx) */}
+            {/* Title Logo Bitmap (assets/title-brun.png via make gfx) */}
             <div className="form-group" style={{ background: 'rgba(30, 41, 59, 0.4)', padding: 8, borderRadius: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label style={{ fontWeight: 600 }}>🏆 Title Logo Bitmap</label>
@@ -547,7 +547,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 </div>
               </div>
               <div style={{ fontSize: 10, color: '#94a3b8' }}>
-                Tiles from <code>assets/title-red.png</code> via <code>make gfx</code>
+                Tiles from <code>assets/title-brun.png</code> via <code>make gfx</code>
                 (editor copies <code>public/tiles/title/logo.png</code>).
               </div>
             </div>

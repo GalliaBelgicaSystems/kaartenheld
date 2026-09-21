@@ -54,7 +54,7 @@ SHEETS = {
     "enemy_ow": ("enemy_sprites.png", "obj"),
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
-    "title": ("title-red.png", "title"),
+    "title": ("title-brun.png", "title"),
 }
 
 def _hex(rgb):
@@ -483,7 +483,7 @@ def main():
     card_declared = {c: slot_ramp("base", s) for c, s in display_slots.items()}
 
     compile_sheet("card_frames", card_declared)
-    compile_sheet("title", "title_logo")
+    compile_sheet("title", "title")
 
     # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*
     # by VRAM slot). Forest/village/desolate pack vram index == scan
@@ -823,8 +823,8 @@ def write_accounting():
 
     L.append("## Title")
     L.append("")
-    L.append("`title-red.png` → **title_logo** (slot 1, programmed directly "
-             "by the title screen): ✓ exact.")
+    L.append("`title-brun.png` → **title** (slot 1 programmed with the same browns "
+             "directly by the title screen): exact by construction (see mismatch report).")
     L.append("")
 
     L.append("## Repaint list (nearest-shade fallbacks)")

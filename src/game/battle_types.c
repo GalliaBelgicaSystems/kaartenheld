@@ -57,7 +57,7 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     1,
     2,
-    2
+    6
 };
 
 static const EnemyTypeDef g_enemy_type_kobold = {

@@ -52,9 +52,9 @@
       "3": "fight3",
       "4": "fight5",
       "5": "fight2",
-      "6": "fight_text",
+      "6": "fightspider",
       "7": "fightboss",
-      "_why": "0 frames/timer-bar=fight1; 1 fire=fight4 (HP heart, fire badge); 2 ice=fight6 (ice badge + ice label; iron sword/deck moved to slot 3/5); 3 field=fight3 (AP, deck icons: white+outline+brown cells); 4 poison=fight5; 5 wood=fight2 (weapon icons, arrow counters, digits: brown on tan); 6 text=fight_text; 7 dim=fightboss (grey-out). Unslotted: fight7 (ring gem repainted into fight2), fightgoblin/fightspider/fightslime/fightmimic (BG-stamp ramps unused: all non-boss enemies are OAM), fightbat, fightboss2/3/4."
+      "_why": "0 frames/timer-bar=fight1; 1 fire=fight4 (HP heart red, burn text red); 2 ice=fight6 (freeze text blue); 3 field=fight3 (AP, deck icons: white+outline+brown cells); 4 poison=fight5 (poison text purple); 5 wood=fight2 (weapon icons incl. green-gem ring, arrow counters, digits: brown on tan); 6 text=fightspider (menu/coin text black-on-white; knife-grey echoes old text ramp); 7 dim=fightboss (grey-out). Unslotted: fightgoblin/fightspider/fightmimic/fightslime (battle sheet encoding via combat_art obj_palettes), fightbat, fightboss2/3."
     },
     "obj": {
       "0": "sprites",
@@ -65,7 +65,7 @@
       "5": "sprites7",
       "6": "sprites9",
       "7": "sprites8",
-      "_why": "0 shared OW (hero/bat/kobold/spider); 1 fire/mimic OW; 2 dog OW; 3 slime OW; 4 boss OW; 5 wizard (sprites7 exact); 6 merchant (sprites9 exact); 7 mayor (sprites8 exact) + guard (monochrome npc outline, shares 7). Unslotted: sprites3/4/6/10; battle_* ramps drive battle OAM art (screens/combat_art obj_palette), slotless by design."
+      "_why": "0 shared OW (hero/bat/kobold/spider); 1 mimic OW (sprites5 exact); 2 selected-card rider ice/poison (sprites12 exact); 3 slime OW; 4 boss OW + rider fire (sprites2 exact for both; slot 4 is never reprogrammed by battle); 5 wizard (sprites7 exact); 6 merchant + dog OW (sprites9 exact for merchant, tan-exact for dogs with red collar nearest-matched); 7 mayor+guard (sprites8 exact; restored with NPC ramps on overworld return). Unslotted: sprites10 (dog-exact, no free OBJ slot) plus battle OAM art (combat_art obj_palettes, slotless by design)."
     },
     "title": {
       "0": "title",
