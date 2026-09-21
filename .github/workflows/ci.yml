@@ -24,7 +24,7 @@ jobs:
 
       - name: Lint + release + memory budget + content checks
         run: |
-          nix develop -c bash -c "make clean && make lint && make test && make memmap && make registry-check && make dialogues-check && make shops-check && make entities-check && make screens-check"
+          nix develop -c bash -c "make clean && make lint && make test && make memmap && make registry-check && make dialogues-check && make shops-check && make entities-check && make screens-check && make ramp-check"
         timeout-minutes: 25
 
       - name: Generated tile headers in sync with assets

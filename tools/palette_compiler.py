@@ -576,17 +576,12 @@ def main():
         print(f"  unslotted (no hardware slot, info only): {', '.join(spare)}")
 
 
-def write_ramp_export():
-    """Export assets/palette_ramps.json: machine-readable ramp guide.
+def render_ramp_export():
+    """Render the assets/palette_ramps.json text (no side effects).
 
-    Sits alongside assets/palette.txt so an AI agent (or the level-editor
-    browser preview) knows how to properly apply ramps without hand-parsing
-    the artist file: every ramp's 4 colors + SECTION/name refs, the
-    dev-owned hardware slotmap, and the application rules mirroring
-    compile_sheet/png2gb.nearest_shade. Deterministic (sorted keys, no
-    timestamps): rerunning reproduces the file byte-identically. Also
-    published to tools/level_editor/public/palette_ramps.json so the
-    editor fetches it at /palette_ramps.json with no dev-API change.
+    Split out of write_ramp_export so tools/verify_ramp_tags.py can render
+    in-memory and diff against the committed file (freshness gate) without
+    running the full manifest pipeline.
     """
     from palette_parse import parse_palette_refs
     _, ramps = parse_palette()
@@ -634,7 +629,22 @@ def write_ramp_export():
             "report": "generated/tiles/ramp_mismatches.json",
         },
     }
-    text = json.dumps(doc, indent=1) + "\n"
+    return json.dumps(doc, indent=1) + "\n"
+
+
+def write_ramp_export():
+    """Export assets/palette_ramps.json: machine-readable ramp guide.
+
+    Sits alongside assets/palette.txt so an AI agent (or the level-editor
+    browser preview) knows how to properly apply ramps without hand-parsing
+    the artist file: every ramp's 4 colors + SECTION/name refs, the
+    dev-owned hardware slotmap, and the application rules mirroring
+    compile_sheet/png2gb.nearest_shade. Deterministic (sorted keys, no
+    timestamps): rerunning reproduces the file byte-identically. Also
+    published to tools/level_editor/public/palette_ramps.json so the
+    editor fetches it at /palette_ramps.json with no dev-API change.
+    """
+    text = render_ramp_export()
     (REPO_ROOT / "assets" / "palette_ramps.json").write_text(text)
     pub = REPO_ROOT / "tools" / "level_editor" / "public" / "palette_ramps.json"
     pub.parent.mkdir(parents=True, exist_ok=True)
