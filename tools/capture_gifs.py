@@ -158,9 +158,11 @@ def capture_overworld():
         field = W._level("field")
         sp = field["player"]["spawn"]
         spawn = (sp["x"], sp["y"])
-        e = next(e for e in field["exits"]
-                 if e["target_scene"] == "forest")
-        goal = (e["target_x"], e["target_y"])
+        # Whole-edge neighbor links (no point exits since the neighbor
+        # migration): goal is the forest arrival, as in Walk C.
+        forest = W._level("forest")
+        goal = (forest["player"]["spawn"]["x"],
+                forest["player"]["spawn"]["y"])
 
         frames = []
 
