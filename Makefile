@@ -203,16 +203,16 @@ gfx: manifest
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
-	# ── Title logo (assets/title-brun.png, 16 cols × 3 rows) ──────────────
+	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
 	# previews the exact same image, so a copy is published under
 	# public/tiles/title/ (mirrors the ROM 1:1; the CI drift diff covers it).
-	@python3 tools/png2gb.py assets/title-brun.png --name title_logo_tiles \
+	@python3 tools/png2gb.py assets/title-red.png --name title_logo_tiles \
 		--shade-map generated/tiles/shades/title.json --raw \
 		-o $(GFX_OUT_DIR)/title_logo_tiles.inc
 	@mkdir -p tools/level_editor/public/tiles/title
-	@cp assets/title-brun.png tools/level_editor/public/tiles/title/logo.png
+	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
 	@echo "Title logo: src/gfx/title_logo_tiles.inc + public/tiles/title/logo.png"
 	# ── Studio splash logo (assets/gallia_belgica_systems.png, 13x5) ──────
 	# Fixed global shade map -> one CGB palette [white, red, blue, black]

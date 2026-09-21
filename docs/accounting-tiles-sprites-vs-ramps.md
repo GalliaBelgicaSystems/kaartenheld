@@ -130,7 +130,7 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 ## Title
 
-`title-brun.png` → **title** (slot 1 programmed with the same browns directly by the title screen): exact by construction (see mismatch report).
+`title-red.png` → **title** (slot 1 programmed with the same reds directly by the title screen): exact by construction (see mismatch report).
 
 ## Repaint list (nearest-shade fallbacks)
 

@@ -90,9 +90,9 @@ poison_icon: #7136c1
 
 TITLE
 title_bg: #ffffff
-title_light: #c6baa4
-title_medium: #8d754a
-title_dark: #6f5a34
+title_light: #e4b4b4
+title_medium: #ca6a6a
+title_dark: #8b1b1b
 galliabelgica_blue: #003cf2
 galliabelgica_red: #b84444
 galliabelgica_black: #000000

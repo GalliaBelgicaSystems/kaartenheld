@@ -54,7 +54,7 @@ SHEETS = {
     "enemy_ow": ("enemy_sprites.png", "obj"),
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
-    "title": ("title-brun.png", "title"),
+    "title": ("title-red.png", "title"),
 }
 
 def _hex(rgb):
@@ -823,7 +823,7 @@ def write_accounting():
 
     L.append("## Title")
     L.append("")
-    L.append("`title-brun.png` → **title** (slot 1 programmed with the same browns "
+    L.append("`title-red.png` → **title** (slot 1 programmed with the same reds "
              "directly by the title screen): exact by construction (see mismatch report).")
     L.append("")
 

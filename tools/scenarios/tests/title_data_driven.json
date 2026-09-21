@@ -1,7 +1,7 @@
 {
  "name": "title_data_driven",
  "test": true,
- "description": "Title screen renders the bitmap KAARTENHELD logo (tile bytes from assets/title-brun.png) with its BATTLE DEMO subtitle and the centered PRESS START prompt. The semantic screen buffer still exposes the logo identity; the title credits are disabled (the studio credit lives on the boot splash instead).",
+ "description": "Title screen renders the bitmap KAARTENHELD logo (tile bytes from assets/title-red.png) with its BATTLE DEMO subtitle and the centered PRESS START prompt. The semantic screen buffer still exposes the logo identity; the title credits are disabled (the studio credit lives on the boot splash instead).",
  "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",

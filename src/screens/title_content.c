@@ -105,16 +105,16 @@ static void title_draw_logo(void)
     }
 }
 
-/* CGB BG palette ramp for the bitmap logo (title-brun.png): white, light
- * tan, mid brown, dark brown -- must match the `title` ramp in
+/* CGB BG palette ramp for the bitmap logo (title-red.png): white, light
+ * pink, red, dark red -- must match the `title` ramp in
  * assets/palette.txt (the sheet encodes against it).  Slot
  * g_title_logo_image_palette (1) is rewritten here each title redraw;
  * other screens reload CRAM on entry. */
 static void title_program_logo_palette(void)
 {
     static const palette_color_t ramp[4] = {
-        RGB8(255, 255, 255), RGB8(198, 186, 164),
-        RGB8(141, 117, 74), RGB8(111, 90, 52)
+        RGB8(255, 255, 255), RGB8(228, 180, 180),
+        RGB8(202, 106, 106), RGB8(139, 27, 27)
     };
     const uint8_t *bytes = (const uint8_t *)ramp;
     uint8_t i;

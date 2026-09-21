@@ -196,7 +196,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   }, []);
   // Title-screen authentic preview assets: the intrepid font tiles (96,
   // 16 cols x 6 rows; char tile index = charCode - 32) and the bitmap title
-  // logo (public copy of assets/title-brun.png, published by `make gfx`).
+  // logo (public copy of assets/title-red.png, published by `make gfx`).
   useEffect(() => {
     const imgs = new Map<number, HTMLImageElement>();
     let done = 0;
@@ -296,7 +296,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
     // ── TITLE SCREEN AUTHENTIC RENDERER ──
     // Mirrors the ROM 1:1: white GB background, the bitmap logo
-    // (assets/title-brun.png, drawn at its tile position), and all text
+    // (assets/title-red.png, drawn at its tile position), and all text
     // using the intrepid font tiles at the exact ROM rows/columns.  The
     // "Objects" toggle picks the ROM's two title states: menu (caret on
     // NEW GAME, post-START) when on, PRESS START prompt when off.
