@@ -118,35 +118,49 @@ export const PaletteManager: React.FC = () => {
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
 
+  const pickTileset = (t: string) => {
+    setTileset(t);
+    setSelTile('');
+    setSelEnemy('');
+    setEditRamp(null);
+    setEditPreview(null);
+  };
+
   return (
-    <div style={{ display: 'flex', gap: 16, padding: 16, height: '100%', overflow: 'auto', background: '#f4efe4', color: '#222' }}>
-      <div style={{ minWidth: 150 }}>
-        <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Tileset</div>
-        {TILESETS.map((t) => (
-          <button key={t} onClick={() => { setTileset(t); setSelTile(''); setSelEnemy(''); setEditRamp(null); setEditPreview(null); }}
-            style={{ display: 'block', width: '100%', textAlign: 'left', padding: 3,
-                     background: 'none', border: 'none', cursor: 'pointer',
-                     fontWeight: t === tileset ? 'bold' : 'normal' }}>
-            {t}
-          </button>
-        ))}
-        <div style={{ fontSize: 11, color: '#555', marginTop: 8, lineHeight: 1.4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', padding: 16, height: '100%', overflow: 'auto', background: '#f4efe4', color: '#222' }}>
+      <div style={{
+        display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+        padding: '8px 12px', marginBottom: 12, background: '#fff',
+        border: '1px solid #ccc', borderRadius: 6,
+      }}>
+        <span style={{ fontWeight: 'bold' }}>Tileset</span>
+        <select
+          className="select-input"
+          value={tileset}
+          onChange={(e) => pickTileset(e.target.value)}
+          title="Pick the tileset whose ramps and tiles to preview"
+        >
+          {TILESETS.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        <span style={{ fontSize: 11, color: '#555', lineHeight: 1.4 }}>
           BG ramps come from generated/tiles/&lt;tileset&gt;.json; OBJ ramps
           from generated/tiles/obj.json. Assign writes into the content JSON;
           the ✎ button edits ramp colors in palette.txt (full manifest
           refresh on save).
-        </div>
+        </span>
         {!data && status && (
-          <div style={{ fontSize: 12, color: '#a00', marginTop: 8, lineHeight: 1.4 }}>
+          <span style={{ fontSize: 12, color: '#a00', lineHeight: 1.4 }}>
             {status}
-          </div>
+          </span>
         )}
       </div>
 
       {data && (
-        <div style={{ flex: 1, minWidth: 380 }}>
-          <h3 style={{ margin: '0 0 6px' }}>Background palettes ({tileset})</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div style={{ width: '100%', maxWidth: 1100, margin: '0 auto' }}>
+          <h3 style={{ margin: '0 0 6px', textAlign: 'center' }}>Background palettes ({tileset})</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
             {data.bg.map((r) => (
               <div key={r.index} style={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
                 <Swatches ramp={r} active={r.index === ramp} onClick={() => setRamp(r.index)} />
@@ -179,7 +193,7 @@ export const PaletteManager: React.FC = () => {
           {tile && (
             <div style={{ marginTop: 10, padding: 8, border: '1px solid #999' }}>
               <b>{tile.label}</b> <code style={{ fontSize: 11 }}>{tile.id}</code>
-              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                 {data.bg.map((r) => (
                   <div key={r.index} style={{ textAlign: 'center' }}>
                     <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
@@ -193,8 +207,8 @@ export const PaletteManager: React.FC = () => {
             </div>
           )}
 
-          <div style={{ marginTop: 12, fontWeight: 600 }}>Tiles (click to preview/assign)</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+          <div style={{ marginTop: 12, fontWeight: 600, textAlign: 'center' }}>Tiles (click to preview/assign)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, justifyContent: 'center' }}>
             {data.tiles.filter((t) => t.image_url).map((t) => (
               <button key={t.id} onClick={() => setSelTile(t.id)} title={`${t.label} — palette ${t.palette}`}
                 style={{ padding: 2, border: t.id === selTile ? '2px solid #1a7' : '1px solid #bbb',
@@ -211,8 +225,8 @@ export const PaletteManager: React.FC = () => {
             ))}
           </div>
 
-          <h3 style={{ margin: '16px 0 6px' }}>Object palettes (all sprites)</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <h3 style={{ margin: '16px 0 6px', textAlign: 'center' }}>Object palettes (all sprites)</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
             {data.obj.map((r) => (
               <div key={r.index} style={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
                 <Swatches ramp={r} active={r.index === objRamp} onClick={() => setObjRamp(r.index)}
@@ -251,7 +265,7 @@ export const PaletteManager: React.FC = () => {
           {enemy && (
             <div style={{ marginTop: 8, padding: 8, border: '1px solid #999' }}>
               <b>{enemy.label}</b> <code style={{ fontSize: 11 }}>{enemy.id}</code>
-              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                 {data.obj.map((r) => (
                   <div key={r.index} style={{ textAlign: 'center' }}>
                     <Recolored src={enemy.image_url} colors={bgColors(r)} size={48} title={r.name} transparent0 />
@@ -265,8 +279,8 @@ export const PaletteManager: React.FC = () => {
             </div>
           )}
 
-          <div style={{ marginTop: 12, fontWeight: 600 }}>Enemies (click to preview/assign)</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+          <div style={{ marginTop: 12, fontWeight: 600, textAlign: 'center' }}>Enemies (click to preview/assign)</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, justifyContent: 'center' }}>
             {data.enemies.map((e) => (
               <button key={e.id} onClick={() => setSelEnemy(e.id)} title={`${e.label} — OBJ ${e.palette}`}
                 style={{ padding: 2, border: e.id === selEnemy ? '2px solid #1a7' : '1px solid #bbb',
@@ -284,7 +298,7 @@ export const PaletteManager: React.FC = () => {
             ))}
           </div>
 
-          {status && <div style={{ marginTop: 10, fontSize: 12, color: '#555' }}>{status}</div>}
+          {status && <div style={{ marginTop: 10, fontSize: 12, color: '#555', textAlign: 'center' }}>{status}</div>}
         </div>
       )}
     </div>
