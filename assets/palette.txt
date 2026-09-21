@@ -132,6 +132,7 @@ sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/pois
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
 fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
+fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/heart_fire_enemy_eyes, COMBAT/poison_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
