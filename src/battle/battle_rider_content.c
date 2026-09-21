@@ -3,20 +3,27 @@
 #include <stdint.h>
 #include <gb/gb.h>
 #include "battle.h"
+#include "battle_data.h"
 #include "banked.h"
 #include "rpg/status.h"
+#include "rpg/cards.h"
 #include "rider_tiles_generated.h"
 
-/* Selected-card element riders (top-right OAM HUD, bank-3 local).
- * One sprite per element present anywhere in the pending combo (deduped:
- * at most fire/ice/poison, so three fixed entries).  Row 0 cols 17-19
- * (banner-row margins the banner text never reaches).  Tiles/slots are
- * compile-time constants (rider_tiles_generated.h: blob offsets +
- * slotted OBJ ramps): no staging, no cross-bank reads, no new WRAM.
- * Hidden (y = 0, tile cleared for deterministic harness reads) when the
- * element is absent; the combo reset on resolve clears them.  Entries
- * 19-21: the enemy strides own 1-18 and nothing else writes OAM during
- * battle.  No multiply/div/mod (AGENTS.md 52.18): running counters only.
+/* Per-card element riders (bank-3 local).  Every hand card carrying a
+ * rider (STATUS_POISON/BURN/FREEZE) shows its icon as an OAM sprite inset
+ * over its own top-right frame corner -- from the moment the card is
+ * dealt, whether selected or not.  Hand slot i owns OAM entry 19+i
+ * (entries 19-23: the enemy strides own 1-18 and nothing else writes OAM
+ * during battle).  Tiles/slots are compile-time constants
+ * (rider_tiles_generated.h: blob offsets + slotted OBJ ramps): no
+ * staging, no cross-bank reads, no new WRAM.  Riderless/empty slots are
+ * hidden (y = 0, tile cleared for deterministic harness reads).  No
+ * multiply/div/mod (AGENTS.md 52.18): shifts and adds only.
+ *
+ * Loot reveal (msg_id 4) clears the hand boxes, so the hand loop would
+ * paint stale riders over it: in loot mode entries 20-23 hide and entry
+ * 19 carries the revealed card's rider (if any) over the row-11 icon
+ * cell, mirroring the BG layout in ui_update_battle_banked below.
  *
  * Called directly (plain C call, no trampoline dispatch) from
  * ui_update_battle_banked() at the end of every battle render -- same
@@ -27,37 +34,85 @@
  * make room here (its dispatch retargeted, same size). */
 void battle_rider_draw(const volatile Battle *battle)
 {
-    uint8_t rk, hi, st;
-    uint8_t seen_burn = 0;
-    uint8_t seen_freeze = 0;
-    uint8_t seen_poison = 0;
+    uint8_t cards_row = g_battle_hud.cards_row;
+    uint8_t bh = g_card_skin_wram.box_h;
+    uint8_t top;
+    uint8_t i;
+    uint8_t ctype, cstat;
+    uint8_t tile, slot;
+    uint8_t col;
+    uint8_t len, block, lx;
     volatile uint8_t *re;
 
     if (!battle) return;
-    for (rk = 0; rk < battle->combo_count; rk++) {
-        hi = battle->selected_indices[rk];
-        if (hi >= BATTLE_HAND_SIZE) continue;
-        st = battle->hand[hi].status_id;
-        if (st == STATUS_BURN) seen_burn = 1;
-        else if (st == STATUS_FREEZE) seen_freeze = 1;
-        else if (st == STATUS_POISON) seen_poison = 1;
+    if (bh < 3 || bh > 5) bh = 4;
+    top = (uint8_t)(cards_row - (bh - 1));
+
+    if (battle->msg_id == 4) {
+        /* Loot reveal: hand zone cleared; show only the revealed card's
+         * rider over the row-11 elem cell (same x math as the BG row). */
+        for (i = 1; i < BATTLE_HAND_SIZE; i++) {
+            re = (volatile uint8_t *)(0xC000u + ((uint16_t)(19 + i) << 2));
+            re[0] = 0;
+            re[2] = 0;
+        }
+        tile = 0;
+        slot = 0;
+        cstat = g_card_scratch.status_id;
+        if (cstat == STATUS_BURN) {
+            tile = RIDER_TILE_BURN;
+            slot = RIDER_OBJ_BURN;
+        } else if (cstat == STATUS_FREEZE) {
+            tile = RIDER_TILE_FREEZE;
+            slot = RIDER_OBJ_FREEZE;
+        } else if (cstat == STATUS_POISON) {
+            tile = RIDER_TILE_POISON;
+            slot = RIDER_OBJ_POISON;
+        }
+        re = (volatile uint8_t *)(0xC000u + ((uint16_t)19 << 2));
+        if (tile) {
+            len = 0;
+            while (len < 20 && g_card_scratch.name[len]) len++;
+            block = (uint8_t)(3 + len);
+            lx = (uint8_t)((20 - block) / 2);
+            re[0] = (uint8_t)((11 << 3) + 16);
+            re[1] = (uint8_t)((lx << 3) + 8);
+            re[2] = tile;
+            re[3] = slot;
+        } else {
+            re[0] = 0;
+            re[2] = 0;
+        }
+        return;
     }
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)19 << 2));
-    if (seen_burn) {
-        re[0] = 16; re[1] = 144; re[2] = RIDER_TILE_BURN; re[3] = RIDER_OBJ_BURN;
-    } else {
-        re[0] = 0; re[2] = 0;
-    }
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)20 << 2));
-    if (seen_freeze) {
-        re[0] = 16; re[1] = 152; re[2] = RIDER_TILE_FREEZE; re[3] = RIDER_OBJ_FREEZE;
-    } else {
-        re[0] = 0; re[2] = 0;
-    }
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)21 << 2));
-    if (seen_poison) {
-        re[0] = 16; re[1] = 160; re[2] = RIDER_TILE_POISON; re[3] = RIDER_OBJ_POISON;
-    } else {
-        re[0] = 0; re[2] = 0;
+
+    for (i = 0; i < BATTLE_HAND_SIZE; i++) {
+        ctype = battle->hand[i].type;
+        cstat = battle->hand[i].status_id;
+        tile = 0;
+        slot = 0;
+        if (ctype != BATTLE_CARD_TYPE_EMPTY) {
+            if (cstat == STATUS_BURN) {
+                tile = RIDER_TILE_BURN;
+                slot = RIDER_OBJ_BURN;
+            } else if (cstat == STATUS_FREEZE) {
+                tile = RIDER_TILE_FREEZE;
+                slot = RIDER_OBJ_FREEZE;
+            } else if (cstat == STATUS_POISON) {
+                tile = RIDER_TILE_POISON;
+                slot = RIDER_OBJ_POISON;
+            }
+        }
+        col = (uint8_t)(i << 2);
+        re = (volatile uint8_t *)(0xC000u + ((uint16_t)(19 + i) << 2));
+        if (tile) {
+            re[0] = (uint8_t)((top << 3) + 16);
+            re[1] = (uint8_t)(((col + 2) << 3) + 8);
+            re[2] = tile;
+            re[3] = slot;
+        } else {
+            re[0] = 0;
+            re[2] = 0;
+        }
     }
 }

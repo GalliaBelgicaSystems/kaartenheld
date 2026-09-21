@@ -299,7 +299,11 @@ void battle_defend_resolve(Battle *b)
 {
     if (!b) return;
     audio_play_sfx(SFX_BLOCK);
-    g_bk_call_bank = 3;
+#ifdef DEBUG_BUILD
+    g_bk_call_bank = 5;
+#else
+    g_bk_call_bank = 4;
+#endif
     g_bk_call_target = (uint16_t)&battle_defend_resolve_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();

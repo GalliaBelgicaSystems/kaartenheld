@@ -248,7 +248,7 @@ static uint8_t battle_card_weapon_tile(uint8_t type, uint8_t is_heal)
 }
 
 /* Loot-reveal icon: weapon tile only.  Element riders are OAM sprites
- * (battle top-right HUD), never BG tiles, so there is no elem tile here.
+ * (battle per-card OAM icons), never BG tiles, so there is no elem tile here.
  * is_heal (ring joker / heal effect) forces the HEAL type's weapon icon. */
 static void battle_card_icon_tiles(uint8_t status_id, uint8_t type,
                                    uint8_t is_heal, uint8_t *tile_elem,
@@ -330,8 +330,9 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     code = battle_card_type_code(type);
 
     tile_wpn = battle_card_weapon_tile(type, is_heal);
-    /* Rider icons are OAM sprites (battle top-right HUD): the top border
-     * always stamps the plain TR frame corner. */
+    /* Rider icons are OAM sprites over each card's own top-right corner
+     * (see battle_rider_content.c): the top border always stamps the
+     * plain TR frame corner. */
     (void)status;
     /* Finite-use cards of the skin's arrow-counter type draw the
      * remaining-uses glyph (0..3, clamped) on the floor row; unlimited
@@ -889,7 +890,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             continue;
         }
         /* No card tints (Florent's model): boxes stay paper, type reads
-         * from the stamped weapon icon, element from the top-right OAM
+         * from the stamped weapon icon, element from the per-card OAM
          * rider HUD. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
          * of the arrow-counter type grey out too once their uses are
@@ -923,7 +924,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
                 battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
             }
         }
-        /* No rider BG spans: riders are OAM sprites (top-right HUD). */
+        /* No rider BG spans: riders are per-card OAM sprites. */
         if (i == cur) {
             if (s_sel_marker != ' ') {
                 /* Cursor on an already-selected card: dark arrow stays on
@@ -1273,9 +1274,10 @@ void ui_update_battle_banked(void)
                 (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
         }
     }
-    /* Selected-card rider OAM (same bank, plain call -- no dispatch).
-     * Unconditional like the bank-5 enemy pass in ui_update_battle: the
-     * combo reset on resolve clears the icons, and debug-action injection
-     * is always followed by dirty-setting input before any assert reads. */
+    /* Per-card rider icons (same bank, plain call -- no dispatch).
+     * Unconditional like the bank-5 enemy pass in ui_update_battle: icons
+     * track live hand contents (discard/refill clears them naturally),
+     * and debug-action injection is always followed by dirty-setting
+     * input before any assert reads. */
     battle_rider_draw(battle);
 }

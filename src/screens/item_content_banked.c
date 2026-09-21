@@ -7,6 +7,7 @@
 #include "screen.h"
 #include "rpg/cards.h"
 #include "rpg/status.h"
+#include "rider_tiles_generated.h"
 #include "rpg/loot.h"
 #include "rpg/deck.h"
 #include "quest.h"
@@ -80,6 +81,53 @@ static volatile uint8_t *s_ic_dst;
 static char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
+
+/* Rider OAM for the item screen (entries 1-5): icon over a card's elem
+ * cell for cards carrying a rider, hidden otherwise.  Transition-hide
+ * covers screen changes; the render dispatch below sweeps entries
+ * first so quest/picker/emptied rows never go stale.  Same bank (2),
+ * WRAM shadow OAM only; rider tiles/palettes are boot-resident and
+ * item screens never reprogram OBJ slots. */
+static void ic_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
+{
+    *tile = 0;
+    *slot = 0;
+    if (status == STATUS_BURN) {
+        *tile = RIDER_TILE_BURN;
+        *slot = RIDER_OBJ_BURN;
+    } else if (status == STATUS_FREEZE) {
+        *tile = RIDER_TILE_FREEZE;
+        *slot = RIDER_OBJ_FREEZE;
+    } else if (status == STATUS_POISON) {
+        *tile = RIDER_TILE_POISON;
+        *slot = RIDER_OBJ_POISON;
+    }
+}
+
+static void ic_rider_hide(uint8_t entry)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = 0;
+    re[2] = 0;
+}
+
+static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
+{
+    uint8_t tile, slot;
+    volatile uint8_t *re;
+    ic_rider_tile(status, &tile, &slot);
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    if (tile) {
+        re[0] = (uint8_t)((y << 3) + 16);
+        re[1] = (uint8_t)((x << 3) + 8);
+        re[2] = tile;
+        re[3] = slot;
+    } else {
+        re[0] = 0;
+        re[2] = 0;
+    }
+}
 
 static uint8_t s_ic_arg_x;
 static uint8_t s_ic_arg_y;
@@ -332,9 +380,9 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     else
         IC_DRAW_TEXT(0, y, " ", 1);
 
-    /* Element riders are OAM sprites on the battle screen only: the
-     * list cell stays blank and the element reads from the color span
-     * below (FIRE/POISON/ICE slots). */
+    /* Element rider OAM is painted per row by the list loop below (over
+     * the col-2 elem cell): the cell itself stays blank and the element
+     * also reads from the color span below (FIRE/POISON/ICE slots). */
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -394,6 +442,8 @@ static void ic_draw_cards_list(Game *g)
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
+        ic_rider_show((uint8_t)(1 + s_ic_lst_pos), 2, s_ic_y,
+                      s_ic_def ? s_ic_def->status_id : 0);
         s_ic_y = (uint8_t)(s_ic_y + 2);
     }
 
@@ -478,9 +528,13 @@ static void ic_draw_card_detail_page(Game *g)
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
 
-    /* Element riders are OAM sprites on the battle screen only: the
-     * detail cell stays blank and the element reads from the color span
-     * below (FIRE/POISON/ICE slots). */
+    /* Detail-page rider over the col-0 elem cell (entry 1; the list is
+     * not drawn in detail mode, and the dispatch sweep hid the rest). */
+    ic_rider_show(1, 0, 5, s_ic_def->status_id);
+
+    /* Detail-page rider OAM is painted above (over the col-0 elem cell):
+     * the cell itself stays blank and the element also reads from the
+     * color span below (FIRE/POISON/ICE slots). */
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -561,7 +615,14 @@ static void ic_draw_picker(Game *g)
 void item_screen_render_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
+    uint8_t e;
     if (!g) return;
+
+    /* Sweep rider entries first: quest/picker/emptied rows leave nothing
+     * behind, and list/detail set exactly what they show below. */
+    for (e = 1; e <= VISIBLE_CARDS; e++) {
+        ic_rider_hide(e);
+    }
 
     if (g->item_menu_tab == TAB_QUEST) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL)

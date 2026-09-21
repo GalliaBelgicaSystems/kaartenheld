@@ -218,6 +218,11 @@
    "type": "screen_row",
    "row": 12,
    "contains": "WOOD POISON DAGGER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 19,
+   "expected": 122
   }
  ]
 }

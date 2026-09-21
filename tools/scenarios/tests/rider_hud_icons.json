@@ -1,7 +1,7 @@
 {
  "name": "rider_hud_icons",
  "test": true,
- "description": "Selecting cards with fire/freeze riders shows their OAM icons at the battle top-right (entries 19/20); unselected elements stay hidden",
+ "description": "Cards carrying fire/freeze riders show their OAM icons inset over their own top-right corners (entries 19/20) from the moment they are dealt, with no selection; a riderless card shows nothing (entry 21 hidden)",
  "actions": [
   {
    "type": "wait",
@@ -45,23 +45,7 @@
   },
   {
    "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 6
-  },
-  {
-   "type": "press",
    "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 6
-  },
-  {
-   "type": "press",
-   "button": "A"
   },
   {
    "type": "wait",

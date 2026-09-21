@@ -58,6 +58,11 @@
    "type": "screen_row",
    "row": 13,
    "contains": "OWN"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
   }
  ],
  "initial_state": {
