@@ -132,11 +132,7 @@ sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/pois
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
 fight3: COMBAT/background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes, COMBAT/numbers_icons
-fight4: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/heart_fire_enemy_eyes
-fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, SPRITES/poison_icon
-fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, SPRITES/ice_icon
-fight_text: COMBAT/background, COMBAT/spider_combat_knife_blade_light, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
-fight7: COMBAT/card_background, SPRITES/ice_icon, COMBAT/numbers_icons, UNUSED
+fight7: COMBAT/card_background, COMBAT/ice_icon, COMBAT/numbers_icons, UNUSED
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
 fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
@@ -146,8 +142,5 @@ fightboss: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/boss_combat
 fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 fightboss4: COMBAT/eyes_glow, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
-battle_slime: SPRITES/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
-battle_kobold: SPRITES/background, COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines
-battle_spider: SPRITES/background, COMBAT/spider_combat_knife_blade_light, COMBAT/spider_combat_knife_handle, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
