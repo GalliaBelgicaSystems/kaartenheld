@@ -54,3 +54,34 @@ export async function assignPalette(
 }
 
 export const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village'];
+
+export interface PaletteColorEdit {
+  section: string;
+  name: string;
+  hex: string;
+}
+
+export interface PaletteRepoint {
+  ramp: string;
+  position: number;
+  ref: string;
+}
+
+/** Author a ramp: rewrite color definitions and/or ramp-row refs in
+ *  assets/palette.txt (line-preserving), then refresh the full manifest
+ *  (export, shades, mismatch report). Writes happen only on explicit
+ *  client Save, never per color-picker drag tick. */
+export async function savePalette(
+  colorEdits: PaletteColorEdit[],
+  rampRepoints: PaletteRepoint[],
+): Promise<{ log: string }> {
+  const res = await fetch('/api/save-palette', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ colorEdits, rampRepoints }),
+  });
+  if (!res.ok) throw new Error(`save-palette returned ${res.status}`);
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'save-palette failed');
+  return { log: body.log || '' };
+}

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
 } from './io/palettes';
-import { recoloredDataUrl as romRecoloredDataUrl } from './io/romRecolor';
+import { RampGuide, fetchRampGuide, recoloredDataUrl as romRecoloredDataUrl } from './io/romRecolor';
+import { RampEditor } from './RampEditor';
 
 /** Palette preview / assignment.
  *
@@ -61,12 +62,39 @@ export const PaletteManager: React.FC = () => {
   const [selEnemy, setSelEnemy] = useState<string>('');
   const [ramp, setRamp] = useState<number>(0);
   const [objRamp, setObjRamp] = useState<number>(0);
+  // Ramp authoring: the static export (committed, always present) backs the
+  // editor panel; editPreview carries live drag colors (no writes).
+  const [guide, setGuide] = useState<RampGuide | null>(null);
+  const [editRamp, setEditRamp] = useState<string | null>(null);
+  const [editPreview, setEditPreview] = useState<{ ramp: string; colors: string[] } | null>(null);
 
   useEffect(() => {
     fetchPalettes(tileset)
       .then((d) => { setData(d); setStatus(''); })
-      .catch((e) => setStatus(`load failed: ${e.message}`));
+      .catch((e) => setStatus(
+        `load failed: ${e.message}. Run \`make manifest\` once, then restart the editor via \`make editor\`.`));
   }, [tileset]);
+  useEffect(() => {
+    fetchRampGuide().then(setGuide).catch(() => setGuide(null));
+  }, []);
+
+  const reloadAll = async () => {
+    try {
+      setData(await fetchPalettes(tileset));
+    } catch (e: any) {
+      setStatus(`reload failed: ${e.message}`);
+    }
+    try {
+      setGuide(await fetchRampGuide());
+    } catch {
+      // Static export is best-effort; palettes data is authoritative.
+    }
+  };
+
+  // Preview-aware ramp colors: the edited ramp renders its candidate
+  // colors everywhere while the editor panel is open.
+  const bgColors = (r: Ramp): string[] =>
+    editPreview && editPreview.ramp === r.name ? editPreview.colors : r.colors;
 
   const tile = data?.tiles.find((t) => t.id === selTile) || null;
   const enemy = data?.enemies.find((e) => e.id === selEnemy) || null;
@@ -95,7 +123,7 @@ export const PaletteManager: React.FC = () => {
       <div style={{ minWidth: 150 }}>
         <div style={{ fontWeight: 'bold', marginBottom: 4 }}>Tileset</div>
         {TILESETS.map((t) => (
-          <button key={t} onClick={() => { setTileset(t); setSelTile(''); setSelEnemy(''); }}
+          <button key={t} onClick={() => { setTileset(t); setSelTile(''); setSelEnemy(''); setEditRamp(null); setEditPreview(null); }}
             style={{ display: 'block', width: '100%', textAlign: 'left', padding: 3,
                      background: 'none', border: 'none', cursor: 'pointer',
                      fontWeight: t === tileset ? 'bold' : 'normal' }}>
@@ -103,9 +131,16 @@ export const PaletteManager: React.FC = () => {
           </button>
         ))}
         <div style={{ fontSize: 11, color: '#555', marginTop: 8, lineHeight: 1.4 }}>
-          BG ramps come from the ROM's tiles_content.c; OBJ ramps from ui.c.
-          Assign writes the current palette into the content JSON.
+          BG ramps come from generated/tiles/&lt;tileset&gt;.json; OBJ ramps
+          from generated/tiles/obj.json. Assign writes into the content JSON;
+          the ✎ button edits ramp colors in palette.txt (full manifest
+          refresh on save).
         </div>
+        {!data && status && (
+          <div style={{ fontSize: 12, color: '#a00', marginTop: 8, lineHeight: 1.4 }}>
+            {status}
+          </div>
+        )}
       </div>
 
       {data && (
@@ -113,9 +148,33 @@ export const PaletteManager: React.FC = () => {
           <h3 style={{ margin: '0 0 6px' }}>Background palettes ({tileset})</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {data.bg.map((r) => (
-              <Swatches key={r.index} ramp={r} active={r.index === ramp} onClick={() => setRamp(r.index)} />
+              <div key={r.index} style={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
+                <Swatches ramp={r} active={r.index === ramp} onClick={() => setRamp(r.index)} />
+                <button
+                  className="btn btn-sm"
+                  title={`Edit ramp ${r.name} (color picker writes palette.txt)`}
+                  onClick={() => { setEditRamp(r.name); }}
+                  style={{ cursor: 'pointer' }}
+                >✎</button>
+              </div>
             ))}
           </div>
+
+          {guide && editRamp && data.bg.some((r) => r.name === editRamp) && (
+            <RampEditor
+              rampName={editRamp}
+              guide={guide}
+              data={data}
+              onPreview={setEditPreview}
+              onClose={() => { setEditRamp(null); setEditPreview(null); }}
+              onSaved={(summary) => {
+                setStatus(summary);
+                setEditRamp(null);
+                setEditPreview(null);
+                reloadAll();
+              }}
+            />
+          )}
 
           {tile && (
             <div style={{ marginTop: 10, padding: 8, border: '1px solid #999' }}>
@@ -123,7 +182,7 @@ export const PaletteManager: React.FC = () => {
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                 {data.bg.map((r) => (
                   <div key={r.index} style={{ textAlign: 'center' }}>
-                    <Recolored src={tile.image_url || ''} colors={r.colors} size={48} title={r.name} />
+                    <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
                     <div style={{ fontSize: 10 }}>{r.index} {r.name}</div>
                     <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
                       {tile.palette === r.index ? '✓' : 'assign'}
@@ -140,7 +199,14 @@ export const PaletteManager: React.FC = () => {
               <button key={t.id} onClick={() => setSelTile(t.id)} title={`${t.label} — palette ${t.palette}`}
                 style={{ padding: 2, border: t.id === selTile ? '2px solid #1a7' : '1px solid #bbb',
                          background: t.id === selTile ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored src={t.image_url!} colors={data.bg[t.palette]?.colors || data.bg[0].colors} size={32} />
+                <Recolored
+                  src={t.image_url!}
+                  colors={(() => {
+                    const r = data.bg[t.palette] || data.bg[0];
+                    return r ? bgColors(r) : data.bg[0].colors;
+                  })()}
+                  size={32}
+                />
               </button>
             ))}
           </div>
@@ -148,10 +214,34 @@ export const PaletteManager: React.FC = () => {
           <h3 style={{ margin: '16px 0 6px' }}>Object palettes (all sprites)</h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {data.obj.map((r) => (
-              <Swatches key={r.index} ramp={r} active={r.index === objRamp} onClick={() => setObjRamp(r.index)}
-                label={`OBJ ${r.index}`} />
+              <div key={r.index} style={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
+                <Swatches ramp={r} active={r.index === objRamp} onClick={() => setObjRamp(r.index)}
+                  label={`OBJ ${r.index}`} />
+                <button
+                  className="btn btn-sm"
+                  title={`Edit ramp ${r.name} (color picker writes palette.txt)`}
+                  onClick={() => { setEditRamp(r.name); }}
+                  style={{ cursor: 'pointer' }}
+                >✎</button>
+              </div>
             ))}
           </div>
+
+          {guide && editRamp && !data.bg.some((r) => r.name === editRamp) && (
+            <RampEditor
+              rampName={editRamp}
+              guide={guide}
+              data={data}
+              onPreview={setEditPreview}
+              onClose={() => { setEditRamp(null); setEditPreview(null); }}
+              onSaved={(summary) => {
+                setStatus(summary);
+                setEditRamp(null);
+                setEditPreview(null);
+                reloadAll();
+              }}
+            />
+          )}
           <div style={{ fontSize: 11, color: '#777', marginTop: 4 }}>
             OBJ ramps come from generated/tiles/obj.json (palette_compiler).
             Recoloring uses the exact pipeline mapping (exact match, else
@@ -164,7 +254,7 @@ export const PaletteManager: React.FC = () => {
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                 {data.obj.map((r) => (
                   <div key={r.index} style={{ textAlign: 'center' }}>
-                    <Recolored src={enemy.image_url} colors={r.colors} size={48} title={r.name} transparent0 />
+                    <Recolored src={enemy.image_url} colors={bgColors(r)} size={48} title={r.name} transparent0 />
                     <div style={{ fontSize: 10 }}>OBJ {r.index} {r.name}</div>
                     <button className="btn btn-sm" onClick={() => assignEnemy(r.index)}>
                       {enemy.palette === r.index ? '✓' : 'assign'}
@@ -181,7 +271,15 @@ export const PaletteManager: React.FC = () => {
               <button key={e.id} onClick={() => setSelEnemy(e.id)} title={`${e.label} — OBJ ${e.palette}`}
                 style={{ padding: 2, border: e.id === selEnemy ? '2px solid #1a7' : '1px solid #bbb',
                          background: e.id === selEnemy ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored src={e.image_url} colors={data.obj[e.palette]?.colors || data.obj[0].colors} size={40} transparent0 />
+                <Recolored
+                  src={e.image_url}
+                  colors={(() => {
+                    const r = data.obj[e.palette] || data.obj[0];
+                    return r ? bgColors(r) : data.obj[0].colors;
+                  })()}
+                  size={40}
+                  transparent0
+                />
               </button>
             ))}
           </div>

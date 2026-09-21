@@ -925,6 +925,150 @@ function levelEditorApiPlugin(): Plugin {
           return;
         }
 
+        // Ramp authoring (assets/palette.txt, the artist source of truth).
+        // Edits color definitions and/or ramp-row refs with a line-preserving
+        // rewrite (comments, order, blank lines untouched), then runs the
+        // full palette_compiler.py so the export, shades, manifests and
+        // mismatch report stay mutually consistent. The export is NEVER
+        // written directly (ramp-check freshness arbitrates).
+        // Body: { colorEdits: [{section, name, hex}],
+        //         rampRepoints: [{ramp, position 0-3, ref: "SECTION/name"}] }
+        // Writes happen only on explicit client Save, never per drag tick.
+        if (req.method === 'POST' && req.url === '/api/save-palette') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const parsed = JSON.parse(body);
+              const colorEdits = parsed.colorEdits || [];
+              const rampRepoints = parsed.rampRepoints || [];
+              if ((!Array.isArray(colorEdits) || colorEdits.length === 0) &&
+                  (!Array.isArray(rampRepoints) || rampRepoints.length === 0)) {
+                throw new Error('nothing to save: want colorEdits and/or rampRepoints');
+              }
+              const NAME_RE = /^[A-Za-z0-9_]+$/;
+              const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+              const REF_RE = /^[A-Za-z0-9_]+\/[A-Za-z0-9_]+$/;
+              for (const e of colorEdits) {
+                if (!e || !NAME_RE.test(e.section || '') || !NAME_RE.test(e.name || '')) {
+                  throw new Error(`bad color edit target '${e && e.section}/${e && e.name}'`);
+                }
+                if (!HEX_RE.test(e.hex || '')) {
+                  throw new Error(`bad hex '${e && e.hex}' (want #rrggbb)`);
+                }
+              }
+              for (const r of rampRepoints) {
+                if (!r || !NAME_RE.test(r.ramp || '')) {
+                  throw new Error(`bad repoint ramp '${r && r.ramp}'`);
+                }
+                if (!Number.isInteger(r.position) || r.position < 0 || r.position > 3) {
+                  throw new Error(`bad repoint position '${r && r.position}' (want 0-3)`);
+                }
+                if (!REF_RE.test(r.ref || '')) {
+                  throw new Error(`bad repoint ref '${r && r.ref}' (want SECTION/name)`);
+                }
+              }
+              // No duplicate targets (ambiguous otherwise).
+              const seenColor = new Set<string>();
+              for (const e of colorEdits) {
+                const k = `${e.section}/${e.name}`;
+                if (seenColor.has(k)) throw new Error(`duplicate color edit for '${k}'`);
+                seenColor.add(k);
+              }
+              const seenPos = new Set<string>();
+              for (const r of rampRepoints) {
+                const k = `${r.ramp}:${r.position}`;
+                if (seenPos.has(k)) throw new Error(`duplicate repoint for '${k}'`);
+                seenPos.add(k);
+              }
+
+              // Minimal palette.txt model (mirrors palette_parse.py): color
+              // definitions live under SECTION headers, ramp rows carry 4
+              // refs (UNUSED already expanded on read like the parser does).
+              const abs = path.join(repoRoot, 'assets', 'palette.txt');
+              const raw = fs.readFileSync(abs, 'utf-8');
+              const lines = raw.split('\n');
+              const colorLine = new Map<string, number>();
+              const rampRow = new Map<string, { line: number; prefix: string; refs: string[] }>();
+              let section: string | null = null;
+              lines.forEach((line, i) => {
+                const s = line.trim();
+                if (!s || s.startsWith('#')) return;
+                if (!s.includes(':')) { section = s; return; }
+                const colon = line.indexOf(':');
+                const name = line.slice(0, colon).trim();
+                const value = line.slice(colon + 1).trim();
+                if (!name) throw new Error(`palette.txt:${i + 1}: empty name`);
+                if (value.startsWith('#') && !value.includes(',')) {
+                  if (section === null) throw new Error(`palette.txt:${i + 1}: color outside any section`);
+                  colorLine.set(`${section}/${name}`, i);
+                } else if (value.includes(',')) {
+                  const refs = value.split(',').map((r) => r.trim());
+                  if (refs.length !== 4) throw new Error(`palette.txt:${i + 1}: ramp '${name}' wants 4 refs`);
+                  // Expand UNUSED to the previous ref (mirrors palette_parse:
+                  // UNUSED repeats the previous shade, so repeating its ref
+                  // is equivalent for position-based replacement).
+                  const resolved: string[] = [];
+                  for (const r of refs) {
+                    if (r === 'UNUSED') {
+                      if (resolved.length === 0) {
+                        throw new Error(`palette.txt:${i + 1}: ramp '${name}': UNUSED in first position`);
+                      }
+                      resolved.push(resolved[resolved.length - 1]);
+                    } else {
+                      resolved.push(r);
+                    }
+                  }
+                  rampRow.set(name, { line: i, prefix: line.slice(0, colon), refs: resolved });
+                } else {
+                  throw new Error(`palette.txt:${i + 1}: cannot parse line`);
+                }
+              });
+
+              // Two-phase: plan every edit, write only if ALL resolve.
+              const planned: Array<{ line: number; text: string }> = [];
+              for (const e of colorEdits) {
+                const idx = colorLine.get(`${e.section}/${e.name}`);
+                if (idx === undefined) throw new Error(`unknown color '${e.section}/${e.name}'`);
+                const line = lines[idx];
+                const hash = line.indexOf('#');
+                if (hash < 0) throw new Error(`palette.txt:${idx + 1}: color line has no hex`);
+                planned.push({ line: idx, text: line.slice(0, hash) + e.hex.toLowerCase() + line.slice(hash + 7) });
+              }
+              for (const r of rampRepoints) {
+                const row = rampRow.get(r.ramp);
+                if (!row) throw new Error(`unknown ramp '${r.ramp}'`);
+                const [sec, nm] = r.ref.split('/');
+                if (!colorLine.has(`${sec}/${nm}`)) throw new Error(`unknown color ref '${r.ref}'`);
+                const refs = [...row.refs];
+                refs[r.position] = r.ref;
+                planned.push({ line: row.line, text: `${row.prefix}: ${refs.join(', ')}` });
+              }
+              for (const p of planned) lines[p.line] = p.text;
+              const tmp = `${abs}.tmp`;
+              fs.writeFileSync(tmp, lines.join('\n'), 'utf-8');
+              fs.renameSync(tmp, abs);
+
+              runInToolchain('python3 tools/palette_compiler.py', (err: any, stdout: string, stderr: string) => {
+                if (err) {
+                  const combined = [stderr, stdout, err.message].filter(Boolean).join('\n\n');
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({
+                    success: false,
+                    error: `palette.txt saved but manifest refresh failed (revert via git if needed): ${combined}`,
+                  }));
+                  return;
+                }
+                sendJson({ success: true, log: stdout });
+              });
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
         // Hero definition (screens/hero.json): single read + save for the
         // hero manager (art, stats, starter deck).  The client sends and
         // receives the hero object directly (not wrapped).
