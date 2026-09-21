@@ -2,73 +2,36 @@ import React, { useEffect, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
 } from './io/palettes';
+import { recoloredDataUrl as romRecoloredDataUrl } from './io/romRecolor';
 
 /** Palette preview / assignment.
  *
  *  The engine's CGB ramps are fixed: 8 BG ramps per tileset (from
- *  generated/tiles/<tileset>.json, compiled from tiles_content.c) and 4
- *  OBJ ramps (ui.c) shared by all sprites.  This view renders a tile or
- *  enemy sprite recolored under any ramp so the author can see how it
- *  reads against the ROM's actual colors.
+ *  generated/tiles/<tileset>.json, compiled from tiles_content.c) and 8
+ *  OBJ ramps (generated/tiles/obj.json) shared by all sprites.  This view
+ *  renders a tile or enemy sprite recolored under any ramp with the exact
+ *  pipeline mapping (png2gb.nearest_shade: exact match wins, else nearest
+ *  shade within the ramp), so the author sees what the ROM will render.
  *
  *  BG assignment writes an explicit `palette` into the tileset JSON
  *  (palette_compiler.py honors it); enemy/hero assignment writes
  *  `overworld.palette` (already data-driven).  Recompile to apply.
- */
+  */
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const h = hex.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-};
-const lum = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
-
-/** Recolor an image by mapping its (<=4) opaque colors to a ramp, ordered
- *  darkest->lightest, so the result reads like the ROM's 4-shade art.
- *  Falls back to the original image if it has more than 4 opaque colors
- *  (anti-aliased art) — the preview is then approximate. */
-function recoloredDataUrl(img: HTMLImageElement, colors: string[]): string {
-  const c = document.createElement('canvas');
-  c.width = img.naturalWidth;
-  c.height = img.naturalHeight;
-  const ctx = c.getContext('2d');
-  if (!ctx) return img.src;
-  ctx.drawImage(img, 0, 0);
-  const data = ctx.getImageData(0, 0, c.width, c.height);
-  const px = data.data;
-  const seen = new Map<string, [number, number, number]>();
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i + 3] < 128) continue;
-    const key = `${px[i]},${px[i + 1]},${px[i + 2]}`;
-    if (!seen.has(key)) seen.set(key, [px[i], px[i + 1], px[i + 2]]);
-  }
-  if (seen.size === 0 || seen.size > 4) return img.src;
-  const order = [...seen.entries()]
-    .sort((a, b) => lum(...b[1]) - lum(...a[1]))   // lightest first = shade 0
-    .map((e) => e[1]);
-  const ramp = colors.map(hexToRgb);
-  const map = new Map<string, [number, number, number]>();
-  order.forEach((rgb, i) => map.set(`${rgb[0]},${rgb[1]},${rgb[2]}`, ramp[i] || rgb));
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i + 3] < 128) continue;
-    const key = `${px[i]},${px[i + 1]},${px[i + 2]}`;
-    const t = map.get(key);
-    if (t) { px[i] = t[0]; px[i + 1] = t[1]; px[i + 2] = t[2]; }
-  }
-  ctx.putImageData(data, 0, 0);
-  return c.toDataURL();
-}
-
-const Recolored: React.FC<{ src: string; colors: string[]; size: number; title?: string }> =
-  ({ src, colors, size, title }) => {
+const Recolored: React.FC<{
+  src: string; colors: string[]; size: number; title?: string;
+  transparent0?: boolean;
+}> =
+  ({ src, colors, size, title, transparent0 }) => {
     const [out, setOut] = useState<string>(src);
     useEffect(() => {
       let alive = true;
       const img = new Image();
-      img.onload = () => { if (alive) setOut(recoloredDataUrl(img, colors)); };
+      img.onload = () => { if (alive) setOut(romRecoloredDataUrl(img, colors, !!transparent0)); };
       img.src = src;
       return () => { alive = false; };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [src, colors.join(',')]);
+    }, [src, colors.join(','), transparent0]);
     return (
       <img src={out} title={title} width={size} height={size}
            style={{ imageRendering: 'pixelated', background: 'transparent' }} />
@@ -190,7 +153,9 @@ export const PaletteManager: React.FC = () => {
             ))}
           </div>
           <div style={{ fontSize: 11, color: '#777', marginTop: 4 }}>
-            OBJ 4-7 fall back to the grey ramp in ui.c.
+            OBJ ramps come from generated/tiles/obj.json (palette_compiler).
+            Recoloring uses the exact pipeline mapping (exact match, else
+            nearest shade in the ramp; white is the transparent key).
           </div>
 
           {enemy && (
@@ -199,7 +164,7 @@ export const PaletteManager: React.FC = () => {
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
                 {data.obj.map((r) => (
                   <div key={r.index} style={{ textAlign: 'center' }}>
-                    <Recolored src={enemy.image_url} colors={r.colors} size={48} title={r.name} />
+                    <Recolored src={enemy.image_url} colors={r.colors} size={48} title={r.name} transparent0 />
                     <div style={{ fontSize: 10 }}>OBJ {r.index} {r.name}</div>
                     <button className="btn btn-sm" onClick={() => assignEnemy(r.index)}>
                       {enemy.palette === r.index ? '✓' : 'assign'}
@@ -216,7 +181,7 @@ export const PaletteManager: React.FC = () => {
               <button key={e.id} onClick={() => setSelEnemy(e.id)} title={`${e.label} — OBJ ${e.palette}`}
                 style={{ padding: 2, border: e.id === selEnemy ? '2px solid #1a7' : '1px solid #bbb',
                          background: e.id === selEnemy ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored src={e.image_url} colors={data.obj[e.palette]?.colors || data.obj[0].colors} size={40} />
+                <Recolored src={e.image_url} colors={data.obj[e.palette]?.colors || data.obj[0].colors} size={40} transparent0 />
               </button>
             ))}
           </div>

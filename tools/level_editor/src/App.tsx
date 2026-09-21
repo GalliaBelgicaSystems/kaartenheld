@@ -72,6 +72,9 @@ export const App: React.FC = () => {
 
   // View Options
   const [zoom, setZoom] = useState<number>(1);
+  // Preview fidelity: raw artist PNGs vs the pipeline-exact ROM recolor.
+  // ROM is the default so ramp mistakes are visible before Compile ROM.
+  const [fidelity, setFidelity] = useState<'raw' | 'rom'>('rom');
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [showCollision, setShowCollision] = useState<boolean>(false);
   const [showTerrain, setShowTerrain] = useState<boolean>(true);
@@ -1159,6 +1162,8 @@ export const App: React.FC = () => {
           onToggleGrid={() => setShowGrid(!showGrid)}
           showCollision={showCollision}
           onToggleCollision={() => setShowCollision(!showCollision)}
+          fidelity={fidelity}
+          onFidelityChange={setFidelity}
           onSave={handleSaveToServer}
           onDownload={() => downloadLevelJson(level)}
           onCompileRom={handleCompileRom}
@@ -1253,6 +1258,7 @@ export const App: React.FC = () => {
               // stored block form (pinned to the old tileset) is stale.
               onSelectTileset={(ts) => pushState({ ...level, tileset: ts, terrainDirty: true })}
               onSelectTile={setSelectedTileId}
+              fidelity={fidelity}
             />
           </aside>
 
@@ -1264,6 +1270,7 @@ export const App: React.FC = () => {
               activeLayer={activeLayer}
               selectedTileId={selectedTileId}
               zoom={zoom}
+              fidelity={fidelity}
               showGrid={showGrid}
               showCollision={showCollision}
               showTerrain={showTerrain}

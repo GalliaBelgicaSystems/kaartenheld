@@ -1,0 +1,871 @@
+{
+ "_doc": "Machine-readable ramp guide generated from assets/palette.txt + tools/palette_slots.json by tools/palette_compiler.py (`make manifest`). DO NOT EDIT DIRECTLY. Rules: a tile/sprite is ALWAYS colored with an existing ramp; the declared tag wins; pixels map by exact match else nearest shade WITHIN that ramp (see png2gb.nearest_shade); obj/OAM sheets map pure white to shade 0 (sheet background) and other off-ramp pixels to the nearest of shades 1-3; wrongness is reported in generated/tiles/ramp_mismatches.json, never a build failure.",
+ "ramps": {
+  "castle1": {
+   "colors": [
+    "#d7d7d7",
+    "#b3b0b0",
+    "#828282",
+    "#565656"
+   ],
+   "refs": [
+    "CASTLE/ground",
+    "CASTLE/stairs",
+    "CASTLE/wall_light",
+    "CASTLE/wall_dark"
+   ],
+   "slots": [
+    "castle:2",
+    "castle:4"
+   ]
+  },
+  "castle2": {
+   "colors": [
+    "#d7d7d7",
+    "#8d754a",
+    "#6f5a34",
+    "#6f5a34"
+   ],
+   "refs": [
+    "CASTLE/ground",
+    "CASTLE/wood_light",
+    "CASTLE/wood_dark",
+    "CASTLE/wood_dark"
+   ],
+   "slots": [
+    "castle:5"
+   ]
+  },
+  "castle3": {
+   "colors": [
+    "#d7d7d7",
+    "#d7a726",
+    "#8b1b1b",
+    "#621212"
+   ],
+   "refs": [
+    "CASTLE/ground",
+    "CASTLE/gold",
+    "CASTLE/curtain_light",
+    "CASTLE/curtain_dark"
+   ],
+   "slots": [
+    "castle:1",
+    "castle:6"
+   ]
+  },
+  "castle4": {
+   "colors": [
+    "#d7d7d7",
+    "#828282",
+    "#565656",
+    "#2e2e2e"
+   ],
+   "refs": [
+    "CASTLE/ground",
+    "CASTLE/wall_light",
+    "CASTLE/wall_dark",
+    "CASTLE/window_frame"
+   ],
+   "slots": [
+    "castle:0",
+    "castle:3",
+    "castle:7"
+   ]
+  },
+  "desolate1": {
+   "colors": [
+    "#938da1",
+    "#3f3a4a",
+    "#26232e",
+    "#000000"
+   ],
+   "refs": [
+    "DESOLATE/ground",
+    "DESOLATE/terrain_side",
+    "DESOLATE/tree_item_outlines_cracks_fire_base",
+    "DESOLATE/void"
+   ],
+   "slots": [
+    "desolate_landscape:3",
+    "desolate_landscape:4",
+    "desolate_landscape:6",
+    "desolate_landscape:7"
+   ]
+  },
+  "desolate2": {
+   "colors": [
+    "#a99fc0",
+    "#938da1",
+    "#837b96",
+    "#26232e"
+   ],
+   "refs": [
+    "DESOLATE/rocks_stone_light",
+    "DESOLATE/ground",
+    "DESOLATE/rocks_stone_shadow",
+    "DESOLATE/tree_item_outlines_cracks_fire_base"
+   ],
+   "slots": [
+    "desolate_landscape:0",
+    "desolate_landscape:2",
+    "desolate_landscape:5"
+   ]
+  },
+  "desolate3": {
+   "colors": [
+    "#938da1",
+    "#edc214",
+    "#d7a726",
+    "#26232e"
+   ],
+   "refs": [
+    "DESOLATE/ground",
+    "DESOLATE/fire_light",
+    "DESOLATE/fire_dark",
+    "DESOLATE/tree_item_outlines_cracks_fire_base"
+   ],
+   "slots": [
+    "desolate_landscape:1"
+   ]
+  },
+  "field1": {
+   "colors": [
+    "#7bb660",
+    "#2a4f1a",
+    "#4a3b1c",
+    "#000000"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/tree_leaves_terrain_outline_big_grass",
+    "FOREST/tree_ladder_and_dirt",
+    "FOREST/void_holes"
+   ],
+   "slots": [
+    "forest:0",
+    "forest:3"
+   ]
+  },
+  "field2": {
+   "colors": [
+    "#7bb660",
+    "#2a4f1a",
+    "#1d3e0f",
+    "#4a3b1c"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/tree_leaves_terrain_outline_big_grass",
+    "FOREST/dark_tree_leaves",
+    "FOREST/tree_ladder_and_dirt"
+   ],
+   "slots": [
+    "forest:2",
+    "forest:4"
+   ]
+  },
+  "field3": {
+   "colors": [
+    "#7bb660",
+    "#937b4a",
+    "#614e27",
+    "#4a3b1c"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/tree_stump_light",
+    "FOREST/tree_stump_dark",
+    "FOREST/tree_ladder_and_dirt"
+   ],
+   "slots": [
+    "forest:5"
+   ]
+  },
+  "field4": {
+   "colors": [
+    "#7bb660",
+    "#937b4a",
+    "#2a4f1a",
+    "#4a3b1c"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/tree_stump_light",
+    "FOREST/tree_leaves_terrain_outline_big_grass",
+    "FOREST/tree_ladder_and_dirt"
+   ],
+   "slots": [
+    "forest:6"
+   ]
+  },
+  "field5": {
+   "colors": [
+    "#7bb660",
+    "#a99fc0",
+    "#26232e",
+    "#26232e"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/rocks",
+    "FOREST/rocks_outline_fire_base",
+    "FOREST/rocks_outline_fire_base"
+   ],
+   "slots": [
+    "forest:7"
+   ]
+  },
+  "field6": {
+   "colors": [
+    "#7bb660",
+    "#edc214",
+    "#d7a726",
+    "#26232e"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/fire_light",
+    "FOREST/fire_dark",
+    "FOREST/rocks_outline_fire_base"
+   ],
+   "slots": [
+    "forest:1"
+   ]
+  },
+  "fight1": {
+   "colors": [
+    "#ffffff",
+    "#dfbd8d",
+    "#e3ae63",
+    "#b09266"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/card_background",
+    "COMBAT/card_gold",
+    "COMBAT/card_outline"
+   ],
+   "slots": [
+    "base:0"
+   ]
+  },
+  "fight2": {
+   "colors": [
+    "#dfbd8d",
+    "#e3ae63",
+    "#b09266",
+    "#755930"
+   ],
+   "refs": [
+    "COMBAT/card_background",
+    "COMBAT/card_gold",
+    "COMBAT/card_outline",
+    "COMBAT/numbers_icons"
+   ],
+   "slots": [
+    "base:5"
+   ]
+  },
+  "fight3": {
+   "colors": [
+    "#ffffff",
+    "#b09266",
+    "#8b1b1b",
+    "#755930"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/card_outline",
+    "COMBAT/heart_fire_enemy_eyes",
+    "COMBAT/numbers_icons"
+   ],
+   "slots": [
+    "base:3"
+   ]
+  },
+  "fight4": {
+   "colors": [
+    "#ffffff",
+    "#7ae3f3",
+    "#7136c1",
+    "#8b1b1b"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/ice_icon",
+    "COMBAT/poison_icon",
+    "COMBAT/heart_fire_enemy_eyes"
+   ],
+   "slots": [
+    "base:1"
+   ]
+  },
+  "fight5": {
+   "colors": [
+    "#ffffff",
+    "#dfbd8d",
+    "#b09266",
+    "#7136c1"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/card_background",
+    "COMBAT/card_outline",
+    "COMBAT/poison_icon"
+   ],
+   "slots": [
+    "base:4"
+   ]
+  },
+  "fight6": {
+   "colors": [
+    "#ffffff",
+    "#dfbd8d",
+    "#b09266",
+    "#7ae3f3"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/card_background",
+    "COMBAT/card_outline",
+    "COMBAT/ice_icon"
+   ],
+   "slots": [
+    "base:2"
+   ]
+  },
+  "fight7": {
+   "colors": [
+    "#dfbd8d",
+    "#89cc5e",
+    "#755930",
+    "#755930"
+   ],
+   "refs": [
+    "COMBAT/card_background",
+    "COMBAT/slime_combat",
+    "COMBAT/numbers_icons",
+    "COMBAT/numbers_icons"
+   ],
+   "slots": []
+  },
+  "fightbat": {
+   "colors": [
+    "#ffffff",
+    "#3d3044",
+    "#8b1b1b",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/bat_combat_inner_wings",
+    "COMBAT/heart_fire_enemy_eyes",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
+  "fightboss": {
+   "colors": [
+    "#ffffff",
+    "#8d754a",
+    "#565656",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/mimic_combat_body_light",
+    "COMBAT/boss_combat_body_light",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": [
+    "base:7"
+   ]
+  },
+  "fightboss2": {
+   "colors": [
+    "#ffffff",
+    "#8b1b1b",
+    "#565656",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/heart_fire_enemy_eyes",
+    "COMBAT/boss_combat_body_light",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
+  "fightboss3": {
+   "colors": [
+    "#ffffff",
+    "#f57137",
+    "#565656",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/eyes_glow",
+    "COMBAT/boss_combat_body_light",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
+  "fightgoblin": {
+   "colors": [
+    "#ffffff",
+    "#844f4f",
+    "#4a2727",
+    "#4a2727"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/goblin_combat_skin",
+    "COMBAT/goblin_combat_skin_dark_outlines",
+    "COMBAT/goblin_combat_skin_dark_outlines"
+   ],
+   "slots": []
+  },
+  "fightmimic": {
+   "colors": [
+    "#ffffff",
+    "#8d754a",
+    "#6f5a34",
+    "#3f3017"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/mimic_combat_body_light",
+    "COMBAT/mimic_combat_body_dark",
+    "COMBAT/mimic_combat_mouth"
+   ],
+   "slots": []
+  },
+  "fightslime": {
+   "colors": [
+    "#ffffff",
+    "#89cc5e",
+    "#5c903a",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_combat",
+    "COMBAT/slime_outline_combat",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
+  "fightspider": {
+   "colors": [
+    "#ffffff",
+    "#8f8f8f",
+    "#5a4a3d",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/spider_combat_knife_blade_light",
+    "COMBAT/spider_combat_knife_handle",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": [
+    "base:6"
+   ]
+  },
+  "sprites": {
+   "colors": [
+    "#f1eb03",
+    "#673c3c",
+    "#565656",
+    "#000000"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/enemy",
+    "SPRITES/spider_boss_light",
+    "SPRITES/character_main_outline_bat"
+   ],
+   "slots": [
+    "obj:0"
+   ]
+  },
+  "sprites10": {
+   "colors": [
+    "#f1eb03",
+    "#8d754a",
+    "#8b1b1b",
+    "#8b1b1b"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/wood_dog",
+    "SPRITES/boss_eyes_scepter",
+    "SPRITES/boss_eyes_scepter"
+   ],
+   "slots": []
+  },
+  "sprites11": {
+   "colors": [
+    "#f1eb03",
+    "#77e331",
+    "#5c903a",
+    "#5c903a"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/slime_light",
+    "SPRITES/slime_dark",
+    "SPRITES/slime_dark"
+   ],
+   "slots": [
+    "obj:3"
+   ]
+  },
+  "sprites12": {
+   "colors": [
+    "#f1eb03",
+    "#b6b6b6",
+    "#7ae3f3",
+    "#7136c1"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/npc_beard",
+    "SPRITES/ice_icon",
+    "SPRITES/poison_icon"
+   ],
+   "slots": [
+    "obj:2"
+   ]
+  },
+  "sprites2": {
+   "colors": [
+    "#f1eb03",
+    "#8b1b1b",
+    "#565656",
+    "#000000"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/boss_eyes_scepter",
+    "SPRITES/spider_boss_light",
+    "SPRITES/character_main_outline_bat"
+   ],
+   "slots": [
+    "obj:4"
+   ]
+  },
+  "sprites5": {
+   "colors": [
+    "#f1eb03",
+    "#ac9d23",
+    "#8d754a",
+    "#6f5a34"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/chest_lock",
+    "SPRITES/wood_dog",
+    "SPRITES/chest_outline"
+   ],
+   "slots": [
+    "obj:1"
+   ]
+  },
+  "sprites6": {
+   "colors": [
+    "#f1eb03",
+    "#8d754a",
+    "#6f5a34",
+    "#3f3017"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/wood_dog",
+    "SPRITES/chest_outline",
+    "SPRITES/npc"
+   ],
+   "slots": []
+  },
+  "sprites7": {
+   "colors": [
+    "#f1eb03",
+    "#b6b6b6",
+    "#475ca8",
+    "#3f3017"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/npc_beard",
+    "SPRITES/mage_cloth",
+    "SPRITES/npc"
+   ],
+   "slots": [
+    "obj:5"
+   ]
+  },
+  "sprites8": {
+   "colors": [
+    "#f1eb03",
+    "#b6b6b6",
+    "#8b1b1b",
+    "#3f3017"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/npc_beard",
+    "SPRITES/boss_eyes_scepter",
+    "SPRITES/npc"
+   ],
+   "slots": [
+    "obj:7"
+   ]
+  },
+  "sprites9": {
+   "colors": [
+    "#f1eb03",
+    "#8d754a",
+    "#8f591f",
+    "#3f3017"
+   ],
+   "refs": [
+    "SPRITES/background",
+    "SPRITES/wood_dog",
+    "SPRITES/merchant_coin",
+    "SPRITES/npc"
+   ],
+   "slots": [
+    "obj:6"
+   ]
+  },
+  "title": {
+   "colors": [
+    "#ffffff",
+    "#e4b4b4",
+    "#ca6a6a",
+    "#8b1b1b"
+   ],
+   "refs": [
+    "TITLE/title_bg",
+    "TITLE/title_light",
+    "TITLE/title_medium",
+    "TITLE/title_dark"
+   ],
+   "slots": [
+    "title:0"
+   ]
+  },
+  "title_logo": {
+   "colors": [
+    "#ffffff",
+    "#b84444",
+    "#003cf2",
+    "#000000"
+   ],
+   "refs": [
+    "TITLE/title_bg",
+    "TITLE/galliabelgica_red",
+    "TITLE/galliabelgica_blue",
+    "TITLE/galliabelgica_black"
+   ],
+   "slots": [
+    "title:1"
+   ]
+  },
+  "town1": {
+   "colors": [
+    "#b6a27e",
+    "#8d754a",
+    "#79643e",
+    "#645233"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/barrel_wood_fence",
+    "TOWN/fence_light",
+    "TOWN/wood_outlines_rubble"
+   ],
+   "slots": [
+    "village:5"
+   ]
+  },
+  "town2": {
+   "colors": [
+    "#b6a27e",
+    "#f1cf91",
+    "#ccaa6c",
+    "#645233"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/house_wall",
+    "TOWN/house_roof_shade",
+    "TOWN/wood_outlines_rubble"
+   ],
+   "slots": [
+    "village:6"
+   ]
+  },
+  "town3": {
+   "colors": [
+    "#b6a27e",
+    "#edc214",
+    "#d7a726",
+    "#26232e"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/fire_light",
+    "TOWN/fire_dark",
+    "TOWN/fire_base"
+   ],
+   "slots": [
+    "village:1"
+   ]
+  },
+  "town4": {
+   "colors": [
+    "#b6a27e",
+    "#b6b6b6",
+    "#939393",
+    "#000000"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/puddle_stone",
+    "TOWN/stone_dark",
+    "TOWN/holes"
+   ],
+   "slots": [
+    "village:0",
+    "village:4"
+   ]
+  },
+  "town5": {
+   "colors": [
+    "#b6a27e",
+    "#b6b6b6",
+    "#939393",
+    "#645233"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/puddle_stone",
+    "TOWN/stone_dark",
+    "TOWN/wood_outlines_rubble"
+   ],
+   "slots": [
+    "village:2"
+   ]
+  },
+  "town6": {
+   "colors": [
+    "#b6a27e",
+    "#b6b6b6",
+    "#8d754a",
+    "#645233"
+   ],
+   "refs": [
+    "TOWN/ground",
+    "TOWN/puddle_stone",
+    "TOWN/barrel_wood_fence",
+    "TOWN/wood_outlines_rubble"
+   ],
+   "slots": [
+    "village:3"
+   ]
+  },
+  "town7": {
+   "colors": [
+    "#f1cf91",
+    "#645233",
+    "#000000",
+    "#000000"
+   ],
+   "refs": [
+    "TOWN/house_wall",
+    "TOWN/wood_outlines_rubble",
+    "TOWN/holes",
+    "TOWN/holes"
+   ],
+   "slots": [
+    "village:7"
+   ]
+  }
+ },
+ "slots": {
+  "base": {
+   "0": "fight1",
+   "1": "fight4",
+   "2": "fight6",
+   "3": "fight3",
+   "4": "fight5",
+   "5": "fight2",
+   "6": "fightspider",
+   "7": "fightboss"
+  },
+  "castle": {
+   "0": "castle4",
+   "1": "castle3",
+   "2": "castle1",
+   "3": "castle4",
+   "4": "castle1",
+   "5": "castle2",
+   "6": "castle3",
+   "7": "castle4"
+  },
+  "desolate_landscape": {
+   "0": "desolate2",
+   "1": "desolate3",
+   "2": "desolate2",
+   "3": "desolate1",
+   "4": "desolate1",
+   "5": "desolate2",
+   "6": "desolate1",
+   "7": "desolate1"
+  },
+  "forest": {
+   "0": "field1",
+   "1": "field6",
+   "2": "field2",
+   "3": "field1",
+   "4": "field2",
+   "5": "field3",
+   "6": "field4",
+   "7": "field5"
+  },
+  "obj": {
+   "0": "sprites",
+   "1": "sprites5",
+   "2": "sprites12",
+   "3": "sprites11",
+   "4": "sprites2",
+   "5": "sprites7",
+   "6": "sprites9",
+   "7": "sprites8"
+  },
+  "title": {
+   "0": "title",
+   "1": "title_logo"
+  },
+  "village": {
+   "0": "town4",
+   "1": "town3",
+   "2": "town5",
+   "3": "town6",
+   "4": "town4",
+   "5": "town1",
+   "6": "town2",
+   "7": "town7"
+  }
+ },
+ "rules": {
+  "world_tile": "tools/level_editor/tilesets/<set>.json tile.palette = ramp name; must hold a hardware slot in that set or the nearest slotted ramp wins (mismatch row).",
+  "overworld_sprite": "screens/enemy_types/*.json overworld.palette = ramp name (or obj slot int); screens/hero.json overworld.palette same.",
+  "battle": "screens/combat_art/*.json palette = BG-stamp ramp; oam sets encode+display with obj_palette in scratch OBJ slot BATTLE_OBJ_SCRATCH (battle.h); obj_alt_palette cells use the second scratch slot.",
+  "mapping": "exact pixel match wins, else nearest shade within the chosen ramp (Euclidean RGB); transparent_shade0: white -> shade 0, other off-ramp -> nearest of shades 1-3.",
+  "report": "generated/tiles/ramp_mismatches.json"
+ }
+}

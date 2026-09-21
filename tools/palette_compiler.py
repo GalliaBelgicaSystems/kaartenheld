@@ -566,6 +566,7 @@ def main():
     (GENERATED_DIR / "ramp_mismatches.json").write_text(json.dumps(real, indent=1))
 
     write_accounting()
+    write_ramp_export()
 
     slotted = {r for slots in slotmap.values() for r in slots.values()}
     spare = sorted(set(ramps) - slotted)
@@ -573,6 +574,71 @@ def main():
           f"{len(real)} reported tiles")
     if spare:
         print(f"  unslotted (no hardware slot, info only): {', '.join(spare)}")
+
+
+def write_ramp_export():
+    """Export assets/palette_ramps.json: machine-readable ramp guide.
+
+    Sits alongside assets/palette.txt so an AI agent (or the level-editor
+    browser preview) knows how to properly apply ramps without hand-parsing
+    the artist file: every ramp's 4 colors + SECTION/name refs, the
+    dev-owned hardware slotmap, and the application rules mirroring
+    compile_sheet/png2gb.nearest_shade. Deterministic (sorted keys, no
+    timestamps): rerunning reproduces the file byte-identically. Also
+    published to tools/level_editor/public/palette_ramps.json so the
+    editor fetches it at /palette_ramps.json with no dev-API change.
+    """
+    from palette_parse import parse_palette_refs
+    _, ramps = parse_palette()
+    refs = parse_palette_refs()
+    slotmap = load_slotmap()
+    ramp_obj = {}
+    for name in sorted(ramps):
+        ramp_obj[name] = {
+            "colors": [_hex(c) for c in ramps[name]],
+            "refs": refs.get(name, []),
+            "slots": sorted(
+                f"{setname}:{slot}"
+                for setname, slots in slotmap.items()
+                for slot, ramp in slots.items() if ramp == name),
+        }
+    slots_obj = {
+        setname: {str(slot): ramp for slot, ramp in sorted(slots.items())}
+        for setname, slots in sorted(slotmap.items())}
+    doc = {
+        "_doc": ("Machine-readable ramp guide generated from assets/palette.txt "
+                 "+ tools/palette_slots.json by tools/palette_compiler.py "
+                 "(`make manifest`). DO NOT EDIT DIRECTLY. Rules: a tile/sprite "
+                 "is ALWAYS colored with an existing ramp; the declared tag wins; "
+                 "pixels map by exact match else nearest shade WITHIN that ramp "
+                 "(see png2gb.nearest_shade); obj/OAM sheets map pure white to "
+                 "shade 0 (sheet background) and other off-ramp pixels to the "
+                 "nearest of shades 1-3; wrongness is reported in "
+                 "generated/tiles/ramp_mismatches.json, never a build failure."),
+        "ramps": ramp_obj,
+        "slots": slots_obj,
+        "rules": {
+            "world_tile": ("tools/level_editor/tilesets/<set>.json tile.palette "
+                           "= ramp name; must hold a hardware slot in that set "
+                           "or the nearest slotted ramp wins (mismatch row)."),
+            "overworld_sprite": ("screens/enemy_types/*.json overworld.palette "
+                                 "= ramp name (or obj slot int); screens/hero.json "
+                                 "overworld.palette same."),
+            "battle": ("screens/combat_art/*.json palette = BG-stamp ramp; "
+                       "oam sets encode+display with obj_palette in scratch OBJ "
+                       "slot BATTLE_OBJ_SCRATCH (battle.h); obj_alt_palette cells "
+                       "use the second scratch slot."),
+            "mapping": ("exact pixel match wins, else nearest shade within the "
+                        "chosen ramp (Euclidean RGB); transparent_shade0: white "
+                        "-> shade 0, other off-ramp -> nearest of shades 1-3."),
+            "report": "generated/tiles/ramp_mismatches.json",
+        },
+    }
+    text = json.dumps(doc, indent=1) + "\n"
+    (REPO_ROOT / "assets" / "palette_ramps.json").write_text(text)
+    pub = REPO_ROOT / "tools" / "level_editor" / "public" / "palette_ramps.json"
+    pub.parent.mkdir(parents=True, exist_ok=True)
+    pub.write_text(text)
 
 
 def write_accounting():

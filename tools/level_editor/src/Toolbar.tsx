@@ -17,6 +17,8 @@ interface ToolbarProps {
   onToggleGrid: () => void;
   showCollision: boolean;
   onToggleCollision: () => void;
+  fidelity?: 'raw' | 'rom';
+  onFidelityChange?: (f: 'raw' | 'rom') => void;
   onSave: () => void;
   onDownload: () => void;
   onCompileRom: () => void;
@@ -47,6 +49,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onToggleGrid,
   showCollision,
   onToggleCollision,
+  fidelity = 'raw',
+  onFidelityChange,
   onSave,
   onDownload,
   onCompileRom,
@@ -241,6 +245,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         >
           Collision {showCollision ? '✓' : '✗'}
         </button>
+        {onFidelityChange && (
+          <button
+            className={`btn-toggle ${fidelity === 'rom' ? 'active' : ''}`}
+            onClick={() => onFidelityChange(fidelity === 'rom' ? 'raw' : 'rom')}
+            title="Preview fidelity: Raw artist PNGs vs pipeline-exact ROM recolor (exact match, else nearest shade in the tile's ramp). ROM catches ramp mistakes before Compile ROM."
+          >
+            {fidelity === 'rom' ? '🎨 ROM-exact' : '🎨 Raw art'}
+          </button>
+        )}
       </div>
 
       <div className="divider" />

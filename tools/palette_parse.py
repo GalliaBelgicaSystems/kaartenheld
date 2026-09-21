@@ -97,6 +97,48 @@ def parse_palette(path=PALETTE_TXT):
     return colors, ramps
 
 
+def parse_palette_refs(path=PALETTE_TXT):
+    """Parse palette.txt ramp rows into {ramp: [SECTION/name x4]} refs.
+
+    UNUSED entries are expanded to the previous ref (mirroring
+    parse_palette's shade expansion) so an agent can see exactly which
+    artist color each shade position resolves to.
+    """
+    refs = {}
+    section = None
+    try:
+        lines = Path(path).read_text().splitlines()
+    except OSError as e:
+        raise ValueError(f"cannot read {path}: {e}")
+    for lineno, raw in enumerate(lines, 1):
+        where = f"{path}:{lineno}"
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" not in line:
+            section = line
+            continue
+        name, _, value = line.partition(":")
+        name = name.strip()
+        value = value.strip()
+        if value.startswith("#") and "," not in value:
+            continue
+        if "," in value:
+            parts = [r.strip() for r in value.split(",")]
+            if len(parts) != 4:
+                raise ValueError(f"{where}: ramp '{name}' wants 4 refs, got {len(parts)}")
+            resolved = []
+            for ref in parts:
+                if ref == "UNUSED":
+                    if not resolved:
+                        raise ValueError(f"{where}: ramp '{name}': UNUSED in first position")
+                    resolved.append(resolved[-1])
+                    continue
+                resolved.append(ref)
+            refs[name] = resolved
+    return refs
+
+
 def main():
     import json
     colors, ramps = parse_palette()
