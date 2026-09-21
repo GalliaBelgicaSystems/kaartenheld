@@ -23,16 +23,17 @@ LAYOUT = [
     ['combat_bottom_left_card_corner', 'combat_bottom_middle_card', 'combat_bottom_right_card_corner'],
     # Turn-timer bar segments (HUD skin): filled / empty, then the HUD
     # icons from the combat tileset (combat-tileset-description.csv):
-    # hp / ap / deck, the up-arrow select icon (replaces the '^'
-    # caret on the battle marker/target rows), and the fire / ice /
-    # poison status tiles (element riders; overwrite the atlas art the
-    # atlas loop loads at 110/111/112).  VRAM: frames at
+    # hp / ap / deck, the light/dark up-arrow select icons (light = cursor,
+    # dark = cursor on an already-selected card; both replace the '^'
+    # caret on the battle marker/target rows).
+    # VRAM: frames at
     # UI_TILE_CARD_FRAME_BASE (118-126), filled at UI_TIMER_FILLED (117),
     # empty at 127, HUD icons overwrite the atlas data at 113/114/116,
-    # arrow at UI_TILE_SELECT_ARROW (96), status at 110/111/112.
+    # light arrow at UI_TILE_SELECT_ARROW (96), dark arrow at
+    # UI_TILE_SELECT_ARROW_DARK (110, overwrites the atlas Flame Spire).
     ['combat_timer_bar_filled', 'combat_timer_bar_empty', 'combat_hp_icon'],
-    ['combat_ap_icon', 'combat_deck_icon', 'combat_arrow_pointing_up'],
-    ['combat_top_right_fire_card', 'combat_top_right_ice_card', 'combat_top_right_poison_card'],
+    ['combat_ap_icon', 'combat_deck_icon', 'combat_arrow_pointing_up_light'],
+    ['combat_arrow_pointing_up_dark', None, None],
     # Card weapon icons (skin weapon_tile VRAM ids 104-108): sword,
     # shield, bow, dagger, ring.  The 6th cell stays blank (None); the
     # loader maps it to the unused VRAM 97 scratch tile.

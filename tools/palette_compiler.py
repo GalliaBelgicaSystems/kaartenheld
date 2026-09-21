@@ -167,8 +167,10 @@ def card_display_slots(skin, hud):
 
     slots = {coord: 0 for coord in coord_of.values()}
     arrow_slot = ui_color_slot("UI_COLOR_ARROW")
-    if arrow_slot is not None and "combat_arrow_pointing_up" in coord_of:
-        slots[coord_of["combat_arrow_pointing_up"]] = arrow_slot
+    for _arrow in ("combat_arrow_pointing_up_light",
+                   "combat_arrow_pointing_up_dark"):
+        if arrow_slot is not None and _arrow in coord_of:
+            slots[coord_of[_arrow]] = arrow_slot
     for tdef in (skin.get("types") or {}).values():
         s = skin_slot(tdef["color"])
         names = [tdef["icon"]] + list(tdef.get("uses_icons", []))
@@ -350,6 +352,13 @@ def main():
     hero_ramp = hero_pal if isinstance(hero_pal, str) else None
     if hero_ramp is not None and hero_ramp not in ramps:
         raise ValueError(f"hero.json: unknown ow ramp '{hero_ramp}'")
+    # Battle top-right OAM rider HUD (screens/rider_icons.json): explicit
+    # per-cell OBJ ramps, same declaration channel as enemy overworld cells.
+    rider_data = json.loads((REPO_ROOT / "screens" / "rider_icons.json").read_text())
+    for cell, ramp in (rider_data.get("cells") or {}).items():
+        if ramp not in ramps:
+            raise ValueError(f"rider_icons.json: unknown ramp '{ramp}'")
+        ow_declared[cell] = ramp
 
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     SHADES_DIR.mkdir(parents=True, exist_ok=True)
@@ -474,7 +483,7 @@ def main():
     card_declared = {c: slot_ramp("base", s) for c, s in display_slots.items()}
 
     compile_sheet("card_frames", card_declared)
-    compile_sheet("title", "title_logo")
+    compile_sheet("title", "title")
 
     # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*
     # by VRAM slot). Forest/village/desolate pack vram index == scan
@@ -790,7 +799,8 @@ def write_accounting():
     arrow_slot = 0
     for _y, _row in enumerate(CARD_LAYOUT):
         for _x, _name in enumerate(_row):
-            if _name == "combat_arrow_pointing_up":
+            if _name in ("combat_arrow_pointing_up_light",
+                         "combat_arrow_pointing_up_dark"):
                 arrow_slot = display_slots.get("%d,%d" % (_x, _y), 0)
     for _y, _row in enumerate(CARD_LAYOUT):
         for _x, _name in enumerate(_row):
@@ -813,8 +823,8 @@ def write_accounting():
 
     L.append("## Title")
     L.append("")
-    L.append("`title-red.png` → **title_logo** (slot 1, programmed directly "
-             "by the title screen): ✓ exact.")
+    L.append("`title-red.png` → **title** (slot 1 programmed with the same reds "
+             "directly by the title screen): exact by construction (see mismatch report).")
     L.append("")
 
     L.append("## Repaint list (nearest-shade fallbacks)")

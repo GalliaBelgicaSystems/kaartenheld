@@ -4,7 +4,7 @@
 >
 > Rule: every tile is colored with an existing artist ramp (ramps win). ✓ = every pixel exists in the encode ramp; ≈ = nearest-shade fallback (repaint todo, see Repaint list).
 > ✓ only asserts the pixels fit the ramp -- it does NOT assert the result is legible or artifact-free (e.g. the dim grey-out of spent/poisoned cards, or the low-contrast ice status label).
-> Battle BG slots (`base` set, `tools/palette_slots.json`): 0 fight1, 1 fight4, 2 fight6, 3 fight3, 4 fight5, 5 fight2, 6 fight_text, 7 fightboss.
+> Battle BG slots (`base` set, `tools/palette_slots.json`): 0 fight1, 1 fight4, 2 fight6, 3 fight3, 4 fight5, 5 fight2, 6 fightspider, 7 fightboss.
 > Artist sets: `sprites*` = RPG overworld, `fight1`–`fight7` = battle background, `fight`+enemy = battle sprites.
 
 ## Slot map
@@ -14,8 +14,8 @@
 | forest | field1 | field6 | field2 | field1 | field2 | field3 | field4 | field5 |
 | desolate_landscape | desolate2 | desolate3 | desolate2 | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
-| village | town4 | town3 | town5 | town6 | town8 | town1 | town2 | town7 |
-| base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fight_text | fightboss |
+| village | town4 | town3 | town5 | town6 | town4 | town1 | town2 | town7 |
+| base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fightspider | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
 
@@ -25,8 +25,8 @@
 
 | ramp (slot) | tiles |
 |---|---|
-| field1 (0) | forest_black_emptyness, forest_bottom_left_corner_wall, forest_bottom_left_interior_corner, forest_bottom_right_corner_wall, forest_bottom_right_interior_corner, forest_bottom_wall_1, forest_bottom_wall_2, forest_bottom_wall_3, forest_bottom_wall_4, forest_floor_with_stuff_walkable_2, forest_left_wall_1, forest_left_wall_2, forest_left_wall_3, forest_left_wall_4, forest_right_wall_1, forest_right_wall_2, forest_right_wall_3, forest_right_wall_4, forest_stairs, forest_top_left_corner_wall, forest_top_left_interior_corner, forest_top_right_corner_wall, forest_top_right_interior_corner, forest_top_wall_1, forest_top_wall_2, forest_top_wall_3, forest_top_wall_4 |
-| field2 (2) | forest_floor_with_stuff_walkable_3, forest_floor_with_stuff_walkable_4, forest_plain_floor_1, forest_plain_floor_2, forest_plain_floor_3, forest_top_left_treetop, forest_top_right_tree_top |
+| field1 (0) | forest_black_emptyness, forest_bottom_left_corner_wall, forest_bottom_left_interior_corner, forest_bottom_right_corner_wall, forest_bottom_right_interior_corner, forest_bottom_wall_1, forest_bottom_wall_2, forest_bottom_wall_3, forest_bottom_wall_4, forest_floor_with_stuff_walkable_2, forest_left_wall_1, forest_left_wall_2, forest_left_wall_3, forest_left_wall_4, forest_postsign, forest_right_wall_1, forest_right_wall_2, forest_right_wall_3, forest_right_wall_4, forest_stairs, forest_top_left_corner_wall, forest_top_left_interior_corner, forest_top_right_corner_wall, forest_top_right_interior_corner, forest_top_wall_1, forest_top_wall_2, forest_top_wall_3, forest_top_wall_4 |
+| field2 (2) | forest_floor_with_stuff_walkable_3, forest_floor_with_stuff_walkable_4, forest_plain_floor_2, forest_plain_floor_3, forest_top_left_treetop, forest_top_right_tree_top |
 | field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_top_left_tree_stump |
 | field4 (6) | forest_bottom_left_treetrunk, forest_bottom_right_tree_trunk, forest_top_right_tree_stump |
 | field5 (7) | forest_floor_with_stuff_walkable_1 |
@@ -66,10 +66,10 @@
 |---|---|---|---|---|
 | bat | 3×2 | OAM | fightbat (7) | ✓ |
 | boss | 3×3 | BG stamp | fightboss (7) | ✓ |
-| kobold | 3×2 | OAM | battle_kobold (7) | ✓ |
+| kobold | 3×2 | OAM | fightgoblin (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
-| slime | 3×2 | OAM | battle_slime (7) | ✓ |
-| spider | 3×2 | OAM | battle_spider+fightbat[1] (7+6) | ✓ |
+| slime | 3×2 | OAM | fightslime (7) | ✓ |
+| spider | 3×2 | OAM | fightspider+fightbat[1] (7+6) | ✓ |
 
 `fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.  Sets with a second ramp (spider eye) program it into scratch slot 6 (BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; their `fit` covers both ramps.
 
@@ -78,7 +78,7 @@
 | sprite | cells | ramp (slot) | fit |
 |---|---|---|---|
 | bat | bat_f0, bat_f1 | sprites (0) | ✓ |
-| dog | dog_f0, dog_f1 | sprites12 (2) | ✓ |
+| dog | dog_f0, dog_f1 | sprites9 (6) | ≈ #8b1b1b |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
@@ -112,10 +112,8 @@ overlay is deleted.
 | (2,3) | combat_hp_icon | 1 → fight4 | ✓ |
 | (0,4) | combat_ap_icon | 3 → fight3 | ✓ |
 | (1,4) | combat_deck_icon | 3 → fight3 | ✓ |
-| (2,4) | combat_arrow_pointing_up | 3 → fight3 | ✓ |
-| (0,5) | combat_top_right_fire_card | 1 → fight4 | ✓ |
-| (1,5) | combat_top_right_ice_card | 2 → fight6 | ✓ |
-| (2,5) | combat_top_right_poison_card | 4 → fight5 | ✓ |
+| (2,4) | combat_arrow_pointing_up_light | 3 → fight3 | ✓ |
+| (0,5) | combat_arrow_pointing_up_dark | 3 → fight3 | ✓ |
 | (0,6) | combat_sword_icon | 5 → fight2 | ✓ |
 | (1,6) | combat_shield_icon | 5 → fight2 | ✓ |
 | (2,6) | combat_bow_icon | 5 → fight2 | ✓ |
@@ -132,11 +130,13 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 ## Title
 
-`title-red.png` → **title_logo** (slot 1, programmed directly by the title screen): ✓ exact.
+`title-red.png` → **title** (slot 1 programmed with the same reds directly by the title screen): exact by construction (see mismatch report).
 
 ## Repaint list (nearest-shade fallbacks)
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
+| enemy_ow | [0, 4] | sprites9 | #8b1b1b |
+| enemy_ow | [1, 4] | sprites9 | #8b1b1b |
 
-Unslotted ramps (parsed, no hardware slot, info only): battle_kobold, battle_slime, battle_spider, debug_missing, debug_missing_obj, fight7, fightbat, fightboss2, fightboss3, fightboss4, fightgoblin, fightmimic, fightslime, fightspider, sprites10, sprites3, sprites4, sprites6.
+Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.

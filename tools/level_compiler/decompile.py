@@ -52,7 +52,7 @@ WORLD_H = CREPO / "src" / "world" / "world.h"
 # Collapsed tiles roundtrip through per-tileset canonical art ids (all carry
 # committed images, so the editor renders decompiled output faithfully).
 CANONICAL_FLOOR = {
-    "forest": "forest_plain_floor_1",
+    "forest": "forest_plain_floor_2",
     "desolate_landscape": "desolate_landscape_plain_floor_1",
     "castle": "castle_plain_floor",
 }

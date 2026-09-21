@@ -13,16 +13,14 @@ extern uint8_t ui_font_tile_base;
  * writes; DMG = 0. */
 extern uint8_t g_is_cgb;
 
-/* Weapon, element & UI icon tile indices (VRAM Block 1, 0x8800) */
+/* Weapon & UI icon tile indices (VRAM Block 1, 0x8800).  Element riders
+ * are OAM sprites (rider_tiles_generated.h), never BG tiles. */
 #define UI_TILE_CARD_SWORD       104u
 #define UI_TILE_CARD_SHIELD      105u
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
 #define UI_TILE_CARD_AMULET      109u
-#define UI_TILE_CARD_ELEM_FIRE   110u
-#define UI_TILE_CARD_ELEM_ICE    111u
-#define UI_TILE_CARD_ELEM_POISON 112u
 #define UI_TILE_HEART            113u
 #define UI_TILE_BOLT             114u
 #define UI_TILE_COIN             115u
@@ -33,11 +31,15 @@ extern uint8_t g_is_cgb;
  * icon block (104-116) and the world / battle-art blocks (128+). */
 #define UI_TILE_TIMER_FILLED     117u
 #define UI_TILE_TIMER_EMPTY      127u
-/* Up-arrow select icon (combat tileset "arrow pointing up", card_frames
- * sheet tile 14): replaces the '^' font caret on the battle marker /
- * target rows.  BG tile ids 96-103 are the only free block-1 slots
- * (font 0-95, atlas 104-116); the BG never referenced them before. */
+/* Up-arrow select icons (combat tileset "arrow pointing up light/dark",
+ * card_frames sheet tiles 14/15): the light arrow is the cursor on a plain
+ * card (and the enemy-target caret); the dark arrow stays on a card that is
+ * already in the combo (no auto-advance after select).  Both replace the
+ * '^' font caret on the battle marker / target rows.  BG tile ids 96-103
+ * are the only free block-1 slots (font 0-95, atlas 104-116); the BG never
+ * referenced them before. */
 #define UI_TILE_SELECT_ARROW     96u
+#define UI_TILE_SELECT_ARROW_DARK 110u
 /* Battle hand-card frame tiles (VRAM Block 1, 0x8800): 9 tiles in frame
  * order TL TM TR / L C R / BL BM BR (generated card_frame_tiles.h from
  * assets/card_frames.png).  Sits between the icon block (104-116) and the

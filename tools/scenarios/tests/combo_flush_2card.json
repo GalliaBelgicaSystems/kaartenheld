@@ -77,7 +77,7 @@
   },
   {
    "type": "press",
-   "button": "A"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
@@ -93,7 +93,39 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
    "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
   },
   {
    "type": "wait",

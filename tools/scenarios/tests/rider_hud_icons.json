@@ -1,0 +1,86 @@
+{
+ "name": "rider_hud_icons",
+ "test": true,
+ "description": "Cards carrying fire/freeze riders show their OAM icons inset over their own top-right corners (entries 19/20) from the moment they are dealt, with no selection; a riderless card shows nothing (entry 21 hidden)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 0,
+   "status": 2,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 1,
+   "status": 3,
+   "chance": 255
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 19,
+   "expected": 120
+  },
+  {
+   "type": "oam_tile",
+   "entry": 20,
+   "expected": 121
+  },
+  {
+   "type": "oam_tile",
+   "entry": 21,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
+}

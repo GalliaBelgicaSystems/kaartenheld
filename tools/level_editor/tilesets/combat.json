@@ -154,33 +154,23 @@
       "category": "terrain"
     },
     {
-      "id": "combat_top_right_poison_card",
-      "label": "top right poison card",
-      "gb_constant": "TILE_COMBAT_TOP_RIGHT_POISON_CARD",
-      "walkable": false,
-      "color": "#b68e94",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_right_poison_card.png",
-      "category": "terrain"
-    },
-    {
-      "id": "combat_top_right_fire_card",
-      "label": "top right fire card",
-      "gb_constant": "TILE_COMBAT_TOP_RIGHT_FIRE_CARD",
-      "walkable": false,
-      "color": "#ca8959",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_right_fire_card.png",
-      "category": "object"
-    },
-    {
-      "id": "combat_arrow_pointing_up",
-      "label": "arrow pointing up",
-      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP",
+      "id": "combat_arrow_pointing_up_dark",
+      "label": "arrow pointing up dark",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_DARK",
       "walkable": false,
       "color": "#c9beae",
       "ascii": "#",
-      "image_url": "/tiles/combat/combat_arrow_pointing_up.png",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_dark.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_arrow_pointing_up_light",
+      "label": "arrow pointing up light",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_LIGHT",
+      "walkable": false,
+      "color": "#e0d4c3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_light.png",
       "category": "terrain"
     },
     {
@@ -442,16 +432,6 @@
       "ascii": "#",
       "image_url": "/tiles/combat/combat_top_right_boss.png",
       "category": "enemy"
-    },
-    {
-      "id": "combat_top_right_ice_card",
-      "label": "top right ice card",
-      "gb_constant": "TILE_COMBAT_TOP_RIGHT_ICE_CARD",
-      "walkable": false,
-      "color": "#b8c5af",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_right_ice_card.png",
-      "category": "terrain"
     },
     {
       "id": "combat_top_left_kobold",

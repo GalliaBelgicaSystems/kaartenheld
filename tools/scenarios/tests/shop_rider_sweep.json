@@ -1,0 +1,84 @@
+{
+ "name": "shop_rider_sweep",
+ "test": true,
+ "description": "Shop stock carries no riders, so all ten shop rider OAM entries stay hidden: no phantom icons leak onto riderless rows",
+ "scenario_id": "ACTOR_SHOPKEEPER",
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 2,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 4,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 5,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 7,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 8,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 9,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 10,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 4,
+   "facing": "UP"
+  },
+  "seed": 6001,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
+}

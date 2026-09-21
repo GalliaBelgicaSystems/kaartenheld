@@ -153,6 +153,13 @@ void battle_art_load_banked(void);
  * trampoline calls, never nested). */
 void battle_oam_draw_banked(void);
 
+/* Bank-3 rider-HUD helper (src/battle/battle_rider_content.c): draws /
+ * hides one OAM rider icon per hand slot (entry 19+i) inset over that
+ * card's own top-right frame corner whenever the card carries a rider.
+ * Called directly (plain C call) from ui_update_battle_banked(), same
+ * bank, every battle render. */
+void battle_rider_draw(const volatile Battle *battle);
+
 /* Banked alt-scratch loader (same bank-5 file, separate entry point):
  * programs BATTLE_OBJ_SCRATCH2 when the battle's art set names an alt
  * ramp and caches the alt-cell mask in g_battle_enemy_art_pal[k] for OAM

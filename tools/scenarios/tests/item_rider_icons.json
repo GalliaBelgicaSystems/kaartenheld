@@ -1,0 +1,66 @@
+{
+ "name": "item_rider_icons",
+ "test": true,
+ "description": "Item CARDS list shows rider OAM sprites over each rider card's elem cell (FIRE SWORD burn row 10 -> entry 3 tile 120, POISON DAGGER row 12 -> entry 4 tile 122); riderless rows stay hidden",
+ "scenario_id": "NEW_GAME",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "F SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "P DA"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 2,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 120
+  },
+  {
+   "type": "oam_tile",
+   "entry": 4,
+   "expected": 122
+  },
+  {
+   "type": "oam_tile",
+   "entry": 5,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
+}

@@ -73,11 +73,11 @@
   },
   {
    "type": "press",
-   "button": "A"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
-   "frames": 10
+   "frames": 6
   },
   {
    "type": "press",
@@ -89,11 +89,43 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {
    "type": "wait",
    "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
   },
   {
    "type": "press",

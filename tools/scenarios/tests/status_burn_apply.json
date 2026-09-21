@@ -6,7 +6,7 @@
  "actions": [
   {
    "type": "wait",
-   "frames": 5
+   "frames": 30
   },
   {
    "type": "set_hand_card",
@@ -75,6 +75,10 @@
    "chance": 255
   },
   {
+   "type": "wait",
+   "frames": 30
+  },
+  {
    "type": "press",
    "button": "A"
   },
@@ -85,18 +89,6 @@
   {
    "type": "press",
    "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 70
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
   },
   {
    "type": "wait",

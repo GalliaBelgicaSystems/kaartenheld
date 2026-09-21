@@ -115,8 +115,9 @@ typedef struct BattleHudCache {
 extern BattleHudCache g_battle_hud;
 
 /* Battle hand-card skin (screens/cards_skin.json via battle_compile.py):
- * per battle-card-type weapon icon tile + CGB palette, per element-status
- * icon tile + palette, and the card box geometry.  The generated const
+ * per battle-card-type weapon icon tile + CGB palette, and the card box
+ * geometry.  Element riders are OAM sprites now (rider_tiles_generated.h),
+ * not skin tiles.  The generated const
  * lives in bank 4 (battle_types.c); battle_hud_load_banked() stages it
  * into this WRAM mirror at battle entry, and the bank-3 renderer reads
  * only the mirror (banked code must not call across banks). */
@@ -125,8 +126,6 @@ typedef struct CardSkinDef {
     uint8_t box_h;             /* card box height in tiles (4: top..bottom rows) */
     uint8_t weapon_tile[5];    /* BATTLE_CARD_TYPE 0..4 -> VRAM weapon icon tile */
     uint8_t weapon_color[5];   /* per-type box/icon CGB palette (UI_COLOR_*) */
-    uint8_t elem_tile[4];      /* status 0=NONE(blank) 1=POISON 2=BURN 3=FREEZE -> icon tile */
-    uint8_t elem_color[4];     /* status icon CGB palette */
     uint8_t uses_type;         /* BATTLE_CARD_TYPE whose finite-use cards draw
                                   the arrow counter on the floor row; 0xFF = none */
     uint8_t uses_tile[5];      /* remaining uses 0..4 (clamped) -> arrow icon tile */

@@ -76,11 +76,11 @@
   },
   {
    "type": "press",
-   "button": "A"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
-   "frames": 8
+   "frames": 6
   },
   {
    "type": "press",
@@ -89,6 +89,30 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
   },
   {
    "type": "press",

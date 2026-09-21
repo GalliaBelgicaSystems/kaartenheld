@@ -4,6 +4,26 @@
   "gb_tileset_kind": "WORLD_TILESET_ENEMIES",
   "tiles": [
     {
+      "id": "dog_f0",
+      "label": "Dog frame 0",
+      "gb_constant": "TILE_ENEMIES_DOG_F0",
+      "walkable": false,
+      "color": "#8c7147",
+      "ascii": "D",
+      "image_url": "/tiles/enemies/dog_f0.png",
+      "category": "npc"
+    },
+    {
+      "id": "dog_f1",
+      "label": "Dog frame 1",
+      "gb_constant": "TILE_ENEMIES_DOG_F1",
+      "walkable": false,
+      "color": "#8c6d46",
+      "ascii": "D",
+      "image_url": "/tiles/enemies/dog_f1.png",
+      "category": "npc"
+    },
+    {
       "id": "slime_f0",
       "label": "Slime frame 0",
       "gb_constant": "TILE_ENEMIES_SLIME_F0",

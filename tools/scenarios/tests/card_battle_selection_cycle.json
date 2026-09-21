@@ -47,6 +47,14 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {

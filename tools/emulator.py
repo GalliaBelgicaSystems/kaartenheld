@@ -1076,6 +1076,15 @@ class EmulatorSession:
         addr = self.get_symbol("g_tilemap_attr_mirror")
         return [self._memread(addr + i) for i in range(32 * 32)]
 
+    def get_oam_entry(self, entry):
+        """Read one shadow-OAM entry (WRAM 0xC000, 4 bytes: y, x, tile, prop).
+        Used for OAM HUD assertions (battle top-right rider sprites); the
+        SameBoy harness cannot observe VBlank-timed rendering, but OAM entry
+        bytes are deterministic WRAM state (AGENTS.md 52.15: riders are set
+        by the bank-5 OAM pass, not by a VBlank-timed reveal)."""
+        base = 0xC000 + (entry & 0xFF) * 4
+        return tuple(self._memread(base + i) for i in range(4))
+
     def get_sfx_state(self):
         """Read the SFX trigger log: (total count, last SFX id).
         Per-trigger SFX telemetry would flood the 32-entry gameplay ring

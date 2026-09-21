@@ -2564,6 +2564,35 @@ per the LCDC.4 mode -- a memory dump and the rendered frame can
 legitimately disagree without either being wrong.  Never treat a PyBoy
 VRAM read as proof of BG visibility.
 
+## 52.23 Repurposing a tileset cell silently remaps every level that names it
+
+Sheet cells are addressed POSITIONALLY (`TILE_<SET>_<nn>` == sheet index)
+while levels reference tiles by NAME.  If new art takes over a cell whose
+old def is the level default ground (e.g. forest cell 39,
+`forest_plain_floor_1`), the merge tool keeps the positional constant and
+every floor rect in every level keeps compiling to the same index -- now
+rendering the NEW art.  Worse, if the new def is solid, the GENERATED
+`tile_walk.h` (rebuilt from the manifest on every build, gitignored so
+`git status` stays clean) flips that index to non-walkable and the whole
+map goes solid: movement, patrols and encounters die, while town maps
+(different tileset) keep working, which misdirects the diagnosis at
+`edge_walkable` / input / BSS layout for hours.
+
+Rules:
+
+* Never repurpose a cell whose def is referenced by levels (check
+  `grep -rl <tile_id> levels/ tools/scenarios/fixtures/levels/` and the
+  `default_walkable` fields) without migrating those references to a live
+  duplicate first.  The migration is mechanical (`sed` across both trees;
+  keep the TEST fixtures in lockstep -- §42.1 notwithstanding, a renamed
+  ground tile is a deliberate fixture change).
+* After any tileset merge, regenerate and eyeball
+  `generated/tiles/tile_walk.h`: a default-ground index must stay
+  walkable; a new solid prop must own an index outside every kWalk range.
+* `scenes_content*.c` staying byte-identical across such a change is
+  EXPECTED (same positional constants) and proves nothing about runtime
+  behavior -- the walk table is the other half of the contract.
+
 ---
 
 # 53. State Ownership

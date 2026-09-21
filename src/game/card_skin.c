@@ -14,11 +14,6 @@ const CardSkinDef g_card_skin = {
     { 104, 105, 106, 108, 107 },
     /* weapon_color: sword shield bow heal dagger */
     { 5, 5, 5, 5, 5 },
-    /* elem_tile: none poison fire ice (none = blank font tile;
-     * JSON 'fire' = STATUS_BURN, 'ice' = STATUS_FREEZE) */
-    { 0, 112, 110, 111 },
-    /* elem_color: none poison fire ice */
-    { 0, 4, 1, 2 },
     /* uses_type (0xFF = none), uses_tile: uses 0..4, uses_power_tile */
     2,
     { 98, 99, 100, 101, 97 },

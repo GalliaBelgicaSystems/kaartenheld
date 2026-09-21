@@ -23,6 +23,15 @@ NPC_FILES = {
     'npc_mayor': 'actors_mayor',
 }
 
+# Selected-card element riders (battle top-right OAM HUD): curated from
+# assets/sprites.png via reload_boss_tiles.py RIDER_MAP, same as the NPC
+# portraits above. Appended last so no existing blob offset moves.
+RIDER_FILES = {
+    'rider_fire': 'actors_rider_fire',
+    'rider_ice': 'actors_rider_ice',
+    'rider_poison': 'actors_rider_poison',
+}
+
 # OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
 OAM_KEY = (241, 235, 3)
 LAYOUT = [
@@ -41,6 +50,10 @@ LAYOUT = [
     # townsfolk with exact OBJ ramps (sprites7/8/9).  Appended last so no
     # existing blob offset moves.
     ['npc_guard', 'npc_mayor', 'npc_merchant', 'npc_wizard'],
+    # Selected-card element riders (battle top-right OAM HUD, owned by
+    # screens/enemy_types/rider_*.json with sprites13/14 OBJ ramps).
+    # Appended last so no existing blob offset moves.
+    ['rider_fire', 'rider_ice', 'rider_poison', None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy
@@ -65,6 +78,8 @@ def main():
                 continue
             if name in NPC_FILES:
                 src = '%s/%s.png' % (ACTORS_PUB, NPC_FILES[name])
+            elif name in RIDER_FILES:
+                src = '%s/%s.png' % (ACTORS_PUB, RIDER_FILES[name])
             else:
                 src = '%s/%s.png' % (PUB, name)
             im = Image.open(src).convert('RGBA')

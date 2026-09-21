@@ -57,7 +57,7 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     1,
     2,
-    2
+    6
 };
 
 static const EnemyTypeDef g_enemy_type_kobold = {
@@ -282,4 +282,4 @@ const EnemyTypeDef* const g_enemy_types[11] = {
 };
 const uint8_t g_enemy_type_count = 11;
 
-const uint8_t g_enemy_ow_tile_count = 20;
+const uint8_t g_enemy_ow_tile_count = 23;

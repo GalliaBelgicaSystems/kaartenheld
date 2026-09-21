@@ -274,6 +274,36 @@
       "category": "enemy"
     },
     {
+      "id": "actors_rider_fire",
+      "label": "rider fire",
+      "gb_constant": "TILE_ACTORS_RIDER_FIRE",
+      "walkable": false,
+      "color": "#8b1b1b",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_rider_fire.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_rider_ice",
+      "label": "rider ice",
+      "gb_constant": "TILE_ACTORS_RIDER_ICE",
+      "walkable": false,
+      "color": "#86dae6",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_rider_ice.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_rider_poison",
+      "label": "rider poison",
+      "gb_constant": "TILE_ACTORS_RIDER_POISON",
+      "walkable": false,
+      "color": "#7136c1",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_rider_poison.png",
+      "category": "object"
+    },
+    {
       "id": "actors_black_emptyness_1",
       "label": "empty",
       "gb_constant": "TILE_ACTORS_BLACK_EMPTYNESS",
