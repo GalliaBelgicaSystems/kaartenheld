@@ -276,7 +276,10 @@ function levelEditorApiPlugin(): Plugin {
         // Tileset.ts remain as the fallback for built bundles served
         // without this dev API.
         const sendJson = (obj: unknown) => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
+          // no-store: content files change under the running server
+          // (palette saves rewrite manifests); heuristic browser caching
+          // of these GETs would show pre-save state after view switches.
+          res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
           res.end(JSON.stringify(obj));
         };
         const readJsonFile = (rel: string) => {

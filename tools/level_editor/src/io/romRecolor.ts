@@ -33,7 +33,9 @@ let guidePromise: Promise<RampGuide> | null = null;
 export async function fetchRampGuide(): Promise<RampGuide> {
   if (guideCache) return guideCache;
   if (!guidePromise) {
-    guidePromise = fetch('/palette_ramps.json').then(async (res) => {
+    // no-store: palette saves rewrite this file; a heuristically cached
+    // copy would show pre-save ramps after returning to the level view.
+    guidePromise = fetch('/palette_ramps.json', { cache: 'no-store' }).then(async (res) => {
       if (!res.ok) throw new Error(`palette_ramps.json returned ${res.status}`);
       const body = (await res.json()) as RampGuide;
       if (!body.ramps) throw new Error('palette_ramps.json: want ramps');
@@ -45,6 +47,14 @@ export async function fetchRampGuide(): Promise<RampGuide> {
     });
   }
   return guidePromise;
+}
+
+/** Re-fetch the guide, bypassing the in-memory cache. Use after a
+ *  palette save so the new ramp colors propagate without a page reload. */
+export async function refreshRampGuide(): Promise<RampGuide> {
+  guideCache = null;
+  guidePromise = null;
+  return fetchRampGuide();
 }
 
 export function rampColors(guide: RampGuide | null, name: string): string[] | null {
@@ -136,6 +146,12 @@ export function cachedRecolorKey(src: string, colors: string[], transparent0: bo
 
 export function getCachedRecolor(src: string, colors: string[], transparent0: boolean): string | undefined {
   return urlCache.get(cachedRecolorKey(src, colors, transparent0));
+}
+
+/** Drop all cached recolors. Call when the palette generation changes
+ *  (a palette.txt save redefines ramp colors, so old entries are stale). */
+export function clearRecolorCache(): void {
+  urlCache.clear();
 }
 
 export function setCachedRecolor(src: string, colors: string[], transparent0: boolean, url: string): void {

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
 } from './io/palettes';
-import { RampGuide, fetchRampGuide, recoloredImage } from './io/romRecolor';
+import { RampGuide, fetchRampGuide, refreshRampGuide, clearRecolorCache, recoloredImage } from './io/romRecolor';
 import { RampEditor } from './RampEditor';
 
 /** Palette preview / assignment.
@@ -70,7 +70,9 @@ const Swatches: React.FC<{ ramp: Ramp; active: boolean; onClick: () => void; lab
     </button>
   );
 
-export const PaletteManager: React.FC = () => {
+export const PaletteManager: React.FC<{ onPaletteSaved?: () => void }> = ({
+  onPaletteSaved,
+}) => {
   const [tileset, setTileset] = useState<string>('forest');
   const [data, setData] = useState<PaletteData | null>(null);
   const [status, setStatus] = useState('');
@@ -101,7 +103,8 @@ export const PaletteManager: React.FC = () => {
       setStatus(`reload failed: ${e.message}`);
     }
     try {
-      setGuide(await fetchRampGuide());
+      // Bypass the in-memory guide cache: the save rewrote the export.
+      setGuide(await refreshRampGuide());
     } catch {
       // Static export is best-effort; palettes data is authoritative.
     }
@@ -126,6 +129,7 @@ export const PaletteManager: React.FC = () => {
       setData({ ...data!, tiles: data!.tiles.map((t) => t.id === tile.id ? { ...t, palette: i } : t) });
       setRamp(i);
       setStatus(`tile ${tile.id} -> palette ${i}. Recompile to apply.`);
+      if (onPaletteSaved) onPaletteSaved();
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
   const assignEnemy = async (i: number) => {
@@ -135,6 +139,7 @@ export const PaletteManager: React.FC = () => {
       setData({ ...data!, enemies: data!.enemies.map((e) => e.id === enemy.id ? { ...e, palette: i } : e) });
       setObjRamp(i);
       setStatus(`enemy ${enemy.id} -> OBJ palette ${i}. Recompile to apply.`);
+      if (onPaletteSaved) onPaletteSaved();
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
 
@@ -208,6 +213,10 @@ export const PaletteManager: React.FC = () => {
                 setStatus(summary);
                 setEditRamp(null);
                 setEditPreview(null);
+                // Ramp colors changed: drop cached recolors and push the new
+                // generation to the level views (map canvas, tile picker).
+                clearRecolorCache();
+                if (onPaletteSaved) onPaletteSaved();
                 reloadAll();
               }}
             />
@@ -303,6 +312,10 @@ export const PaletteManager: React.FC = () => {
                 setStatus(summary);
                 setEditRamp(null);
                 setEditPreview(null);
+                // Ramp colors changed: drop cached recolors and push the new
+                // generation to the level views (map canvas, tile picker).
+                clearRecolorCache();
+                if (onPaletteSaved) onPaletteSaved();
                 reloadAll();
               }}
             />

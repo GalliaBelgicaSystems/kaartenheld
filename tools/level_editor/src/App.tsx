@@ -75,6 +75,11 @@ export const App: React.FC = () => {
   // Preview fidelity: raw artist PNGs vs the pipeline-exact ROM recolor.
   // ROM is the default so ramp mistakes are visible before Compile ROM.
   const [fidelity, setFidelity] = useState<'raw' | 'rom'>('rom');
+  // Palette generation: bumped on every palette save/assign so the level
+  // views (map canvas, tile picker) refetch manifests and drop cached
+  // recolors immediately, even without a view remount.
+  const [paletteVersion, setPaletteVersion] = useState<number>(0);
+  const bumpPaletteVersion = useCallback(() => setPaletteVersion((v) => v + 1), []);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [showCollision, setShowCollision] = useState<boolean>(false);
   const [showTerrain, setShowTerrain] = useState<boolean>(true);
@@ -1244,7 +1249,7 @@ export const App: React.FC = () => {
           ) : shopView ? (
             <ShopManager key="shops" />
           ) : paletteView ? (
-            <PaletteManager key="palettes" />
+            <PaletteManager key="palettes" onPaletteSaved={bumpPaletteVersion} />
           ) : dialogueView !== null ? (
             <DialogueManager key="dialogues" initialId={dialogueView || undefined} />
           ) : (
@@ -1259,6 +1264,7 @@ export const App: React.FC = () => {
               onSelectTileset={(ts) => pushState({ ...level, tileset: ts, terrainDirty: true })}
               onSelectTile={setSelectedTileId}
               fidelity={fidelity}
+              paletteVersion={paletteVersion}
             />
           </aside>
 
@@ -1271,6 +1277,7 @@ export const App: React.FC = () => {
               selectedTileId={selectedTileId}
               zoom={zoom}
               fidelity={fidelity}
+              paletteVersion={paletteVersion}
               showGrid={showGrid}
               showCollision={showCollision}
               showTerrain={showTerrain}

@@ -6,7 +6,7 @@ import { SHEET_TILE_NAMES, COMBAT_TILE_URL, fetchCombatArtList, fetchCombatArtSe
 import { CardSkin, CARD_COLOR_HEX, fetchCardSkin } from './io/cardSkin';
 import { BattleHud, fetchBattleHud } from './io/battleHud';
 import { PaletteData, fetchPalettes } from './io/palettes';
-import { cachedRecolorKey, recoloredImage } from './io/romRecolor';
+import { cachedRecolorKey, clearRecolorCache, recoloredImage } from './io/romRecolor';
 import type { Fidelity } from './TilesetPalette';
 import { ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
@@ -40,6 +40,9 @@ interface MapCanvasProps {
   /** Preview fidelity: raw artist PNGs, or the pipeline-exact ROM recolor
    *  (exact pixel match, else nearest shade in the tile's/sprite's ramp). */
   fidelity?: Fidelity;
+  /** Palette generation: bumped on every palette save/assign so manifests
+   *  are refetched and cached recolors dropped immediately. */
+  paletteVersion?: number;
 }
 
 const TILE_SIZE = 24; // Base pixel size per tile
@@ -101,6 +104,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   onClonePatternCaptured,
   onStampPattern,
   fidelity = 'raw',
+  paletteVersion = 0,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -289,10 +293,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const [romTick, setRomTick] = useState<number>(0);
   useEffect(() => {
     if (fidelity !== 'rom') return;
+    // A palette save redefines ramp colors: drop every cached recolor
+    // (module cache + shared engine cache) and refetch manifests, so the
+    // map reflects the save immediately without a view remount.
+    romImgCache.clear();
+    romImgPending.clear();
+    clearRecolorCache();
     setPalData(null);
     fetchPalettes(level.tileset).then(setPalData).catch(() => setPalData(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level.tileset, fidelity]);
+  }, [level.tileset, fidelity, paletteVersion]);
 
   const tileRomColors = useMemo(() => {
     const m = new Map<string, string[]>();

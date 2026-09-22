@@ -12,6 +12,9 @@ interface TilesetPaletteProps {
   onSelectTile: (tileId: string) => void;
   categoryFilter?: 'enemy' | 'npc' | 'terrain' | 'ui' | 'object' | 'all';
   fidelity?: Fidelity;
+  /** Palette generation: bumped on every palette save/assign so manifests
+   *  are refetched immediately. */
+  paletteVersion?: number;
 }
 
 /** One picker thumbnail: raw artist PNG, or the pipeline-exact ROM recolor
@@ -55,6 +58,7 @@ export const TilesetPalette: React.FC<TilesetPaletteProps> = ({
   onSelectTile,
   categoryFilter = 'all',
   fidelity = 'raw',
+  paletteVersion = 0,
 }) => {
   const currentTileset: TilesetDefinition = BUILTIN_TILESETS[tilesetId] || BUILTIN_TILESETS.forest;
   if (!BUILTIN_TILESETS[tilesetId]) {
@@ -67,7 +71,7 @@ export const TilesetPalette: React.FC<TilesetPaletteProps> = ({
   useEffect(() => {
     setPalData(null);
     fetchPalettes(tilesetId).then(setPalData).catch(() => setPalData(null));
-  }, [tilesetId]);
+  }, [tilesetId, paletteVersion]);
   const slotOf = new Map<string, number>();
   (palData?.tiles || []).forEach((t) => slotOf.set(t.id, t.palette));
   const rampOf = (tileId: string): { slot: number; colors: string[]; name: string } | null => {

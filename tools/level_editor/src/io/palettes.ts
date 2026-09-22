@@ -35,7 +35,9 @@ export interface PaletteData {
 }
 
 export async function fetchPalettes(tileset: string): Promise<PaletteData> {
-  const res = await fetch(`/api/palettes?tileset=${encodeURIComponent(tileset)}`);
+  // no-store: palette saves rewrite the manifests; a heuristically cached
+  // copy would show pre-save ramps after returning to the level view.
+  const res = await fetch(`/api/palettes?tileset=${encodeURIComponent(tileset)}`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`palettes returned ${res.status}`);
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'palettes failed');
