@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
+  PaletteFreshness, fetchPaletteFreshness,
 } from './io/palettes';
 import { RampGuide, fetchRampGuide, refreshRampGuide, clearRecolorCache, recoloredImage } from './io/romRecolor';
 import { RampEditor } from './RampEditor';
@@ -101,6 +102,14 @@ export const PaletteManager: React.FC<{
   useEffect(() => {
     fetchRampGuide().then(setGuide).catch(() => setGuide(null));
   }, []);
+  // Manifest freshness: hand edits outside the editor (palette.txt,
+  // content JSON, art PNGs) invalidate the preview rendered from
+  // generated/. Refreshed on mount and after every save/reload.
+  const [freshness, setFreshness] = useState<PaletteFreshness | null>(null);
+  const refreshFreshness = () => {
+    fetchPaletteFreshness().then(setFreshness).catch(() => setFreshness(null));
+  };
+  useEffect(() => { refreshFreshness(); }, []);
   // Deep-link consume: open the requested ramp editor once (the keyed
   // RampEditor below gets a fresh working copy for it).
   useEffect(() => {
@@ -123,6 +132,7 @@ export const PaletteManager: React.FC<{
     } catch {
       // Static export is best-effort; palettes data is authoritative.
     }
+    refreshFreshness();
   };
 
   // Preview-aware ramp colors: the edited ramp renders its candidate
@@ -190,6 +200,18 @@ export const PaletteManager: React.FC<{
           the ✎ button edits ramp colors in palette.txt (full manifest
           refresh on save).
         </span>
+        {freshness && !freshness.fresh && (
+          <span
+            style={{ fontSize: 12, color: '#a00', lineHeight: 1.4 }}
+            title={freshness.state === 'missing'
+              ? `missing products: ${(freshness.missing || []).join(', ')}`
+              : 'a source changed after the last manifest run'}
+          >
+            {freshness.state === 'missing'
+              ? '⚠ manifests missing — run `make manifest`'
+              : '⚠ sources changed — run `make manifest` to refresh the preview'}
+          </span>
+        )}
         {!data && status && (
           <span style={{ fontSize: 12, color: '#a00', lineHeight: 1.4 }}>
             {status}
@@ -255,13 +277,18 @@ export const PaletteManager: React.FC<{
                 <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {data.bg.map((r) => (
                     <div key={r.index} style={{ textAlign: 'center' }}>
-                      <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
-                      <div style={{ fontSize: 10 }}>{r.index} {r.name}</div>
-                      {!isSprites && (
-                        <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
-                          {tile.palette === r.index ? '✓' : 'assign'}
-                        </button>
-                      )}
+                    <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
+                    <div style={{ fontSize: 10 }}>{r.index} {r.name}{r.reserved ? ' (reserved)' : ''}</div>
+                    {!isSprites && !r.reserved && (
+                      <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
+                        {tile.palette === r.index ? '✓' : 'assign'}
+                      </button>
+                    )}
+                    {!isSprites && r.reserved && (
+                      <div style={{ fontSize: 10, color: '#a00' }} title={r.reservedReason || 'hardware-reserved slot'}>
+                        reserved
+                      </div>
+                    )}
                     </div>
                   ))}
                 </div>

@@ -4,6 +4,10 @@ export interface Ramp {
   index: number;
   name: string;
   colors: string[];
+  /** Hardware-reserved slot (world tilesets: slot 4 = UI_COLOR_PAPER,
+   *  reprogrammed by dialogue boxes). Assignment is refused. */
+  reserved?: boolean;
+  reservedReason?: string;
 }
 
 export interface PaletteTile {
@@ -61,6 +65,23 @@ export async function assignPalette(
 }
 
 export const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village', 'sprites'];
+
+export interface PaletteFreshness {
+  fresh: boolean;
+  state: 'fresh' | 'stale' | 'missing';
+  missing?: string[];
+}
+
+/** Are the manifests the preview renders from newer than every source
+ *  that feeds palette_compiler.py? Hand edits outside the editor show up
+ *  here; our own saves refresh server-side. */
+export async function fetchPaletteFreshness(): Promise<PaletteFreshness> {
+  const res = await fetch('/api/palette-freshness', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`freshness returned ${res.status}`);
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'freshness failed');
+  return { fresh: !!body.fresh, state: body.state || 'fresh', missing: body.missing };
+}
 
 export interface PaletteColorEdit {
   section: string;

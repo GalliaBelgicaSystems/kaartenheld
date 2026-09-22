@@ -122,8 +122,14 @@ def check_combat_tags(exp):
             entry = ramps.get(pal)
             if entry is None:
                 findings.append(f"combat_art/{sid}: palette '{pal}' is not a known ramp")
-            elif not data.get("oam") and not any(
-                    s.startswith("base:") for s in entry.get("slots", [])):
+            elif data.get("oam"):
+                # battle_compile.py: OAM sets draw through the OBJ ramp and
+                # blank their BG footprint (art_palette = 0), so the
+                # declared BG palette is vestigial dead weight.
+                findings.append(f"combat_art/{sid}: oam set's BG palette '{pal}' is "
+                                f"ignored by the encoder (display uses obj_palette "
+                                f"'{data.get('obj_palette')}'); consider removing it")
+            elif not any(s.startswith("base:") for s in entry.get("slots", [])):
                 findings.append(f"combat_art/{sid}: BG-stamp palette '{pal}' holds no "
                                 f"base slot (slots: "
                                 f"{','.join(entry.get('slots', [])) or 'NONE'})")

@@ -795,7 +795,13 @@ function levelEditorApiPlugin(): Plugin {
         // explicit per-tile `palette` (editor's Palette view) overrides
         // the auto-match in palette_compiler.py; enemy/hero `overworld.
         // palette` is already data-driven (battle_compile.py -> ow_palette).
+        // Slot 4 of every WORLD tileset is hardware-reserved (UI_COLOR_PAPER
+        // in src/ui/ui.h: ui_draw_dialogue re-programs it at runtime), so
+        // no world tile may be assigned to it (mirrors PAPER_SLOT in
+        // tools/verify_palette_manifest.py).  OBJ slots are all usable.
         const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village', 'sprites'];
+        const PAPER_SLOT = 4;
+        const PAPER_REASON = 'slot 4 = UI_COLOR_PAPER, reprogrammed by dialogue boxes at runtime';
         // Sprite art lives per sheet cell, not per enemy type: enemy_ow
         // cells at public/tiles/enemies/<cell>.png, hero cells at
         // public/tiles/hero/<cell>.png. Town NPC portraits live in the
@@ -922,7 +928,9 @@ function levelEditorApiPlugin(): Plugin {
             const { manifest, tiles } = readTilesetManifest(tileset);
             sendJson({
               success: true, tileset,
-              bg: manifest.palettes || [],
+              bg: (manifest.palettes || []).map((p: any) => (p.index === PAPER_SLOT
+                ? { ...p, reserved: true, reservedReason: PAPER_REASON }
+                : p)),
               obj: parseObjPalettes(),
               tiles,
               enemies,
@@ -963,6 +971,10 @@ function levelEditorApiPlugin(): Plugin {
                     + `sprite ramps are owned by enemy types (use kind 'enemy')`);
                 }
                 if (!TILESETS.includes(tileset)) throw new Error(`unknown tileset '${tileset}'`);
+                if (p === PAPER_SLOT) {
+                  throw new Error(`palette slot ${p} is hardware-reserved (${PAPER_REASON}); `
+                    + `pick another slot`);
+                }
                 const rel = path.join('tools', 'level_editor', 'tilesets', `${tileset}.json`);
                 const ts = readJsonFile(rel);
                 const tile = (ts.tiles || []).find((t: any) => t.id === id);
@@ -1104,14 +1116,36 @@ function levelEditorApiPlugin(): Plugin {
                 if (hash < 0) throw new Error(`palette.txt:${idx + 1}: color line has no hex`);
                 planned.push({ line: idx, text: line.slice(0, hash) + e.hex.toLowerCase() + line.slice(hash + 7) });
               }
+              // Grouped per ramp: separate planned entries for one line
+              // would overwrite each other (last wins, earlier lost).
+              const repointsByRamp = new Map<string, Map<number, string>>();
               for (const r of rampRepoints) {
                 const row = rampRow.get(r.ramp);
                 if (!row) throw new Error(`unknown ramp '${r.ramp}'`);
                 const [sec, nm] = r.ref.split('/');
                 if (!colorLine.has(`${sec}/${nm}`)) throw new Error(`unknown color ref '${r.ref}'`);
-                const refs = [...row.refs];
-                refs[r.position] = r.ref;
-                planned.push({ line: row.line, text: `${row.prefix}: ${refs.join(', ')}` });
+                if (!repointsByRamp.has(r.ramp)) repointsByRamp.set(r.ramp, new Map());
+                repointsByRamp.get(r.ramp)!.set(r.position, r.ref);
+              }
+              for (const [ramp, posMap] of repointsByRamp) {
+                const row = rampRow.get(ramp)!;
+                const finalRefs = row.refs.map((v, i) => posMap.has(i) ? posMap.get(i)! : v);
+                // Canonicalize repeats to UNUSED (the file's own convention:
+                // a repeated ref is always spelled UNUSED). This keeps
+                // reverts byte-stable across saves: reverting to the
+                // repeated value restores the keyword even though the
+                // previous save spelled it out. A repinned neighbor keeps
+                // its effective color instead of silently following.
+                // (Position 0 can never match: prev starts empty and refs
+                // are validated SECTION/name strings.)
+                const out: string[] = [];
+                let prev = '';
+                for (let i = 0; i < 4; i++) {
+                  if (finalRefs[i] === prev) out.push('UNUSED');
+                  else out.push(finalRefs[i]);
+                  prev = finalRefs[i];
+                }
+                planned.push({ line: row.line, text: `${row.prefix}: ${out.join(', ')}` });
               }
               for (const p of planned) lines[p.line] = p.text;
               const tmp = `${abs}.tmp`;
@@ -1135,6 +1169,69 @@ function levelEditorApiPlugin(): Plugin {
               res.end(JSON.stringify({ success: false, error: err.message }));
             }
           });
+          return;
+        }
+
+        // Manifest freshness for the palette UI: are generated/tiles/*
+        // (+ both palette_ramps.json copies) newer than every source that
+        // feeds palette_compiler.py? Hand edits (palette.txt, content JSON,
+        // art PNGs) invalidate the preview the editor renders from the
+        // manifests. Our own saves refresh the manifest server-side, so a
+        // stale result here always means an out-of-band change.
+        if (req.method === 'GET' && (req.url || '').startsWith('/api/palette-freshness')) {
+          try {
+            const mtime = (rel: string): number | null => {
+              try {
+                return fs.statSync(path.join(repoRoot, rel)).mtimeMs;
+              } catch {
+                return null;
+              }
+            };
+            const sources = [
+              'assets/palette.txt',
+              'tools/palette_slots.json',
+              ...fs.readdirSync(path.join(repoRoot, 'tools', 'level_editor', 'tilesets'))
+                .filter((f) => f.endsWith('.json')).map((f) => path.join('tools', 'level_editor', 'tilesets', f)),
+              ...fs.readdirSync(path.join(repoRoot, 'screens', 'enemy_types'))
+                .filter((f) => f.endsWith('.json')).map((f) => path.join('screens', 'enemy_types', f)),
+              'screens/hero.json',
+              'screens/cards_skin.json',
+              'screens/battle_hud.json',
+              ...fs.readdirSync(path.join(repoRoot, 'screens', 'combat_art'))
+                .filter((f) => f.endsWith('.json')).map((f) => path.join('screens', 'combat_art', f)),
+            ];
+            const products = [
+              'assets/palette_ramps.json',
+              'tools/level_editor/public/palette_ramps.json',
+              ...['forest', 'castle', 'desolate_landscape', 'village', 'base', 'obj', 'title']
+                .map((s) => path.join('generated', 'tiles', `${s}.json`)),
+            ];
+            const missing = products.filter((p) => mtime(p) === null);
+            if (missing.length > 0) {
+              sendJson({ success: true, fresh: false, state: 'missing', missing });
+              return;
+            }
+            let maxSource = 0;
+            for (const s of sources) {
+              const m = mtime(s);
+              if (m !== null && m > maxSource) maxSource = m;
+            }
+            let minProduct = Infinity;
+            for (const p of products) {
+              const m = mtime(p);
+              if (m !== null && m < minProduct) minProduct = m;
+            }
+            sendJson({
+              success: true,
+              fresh: minProduct >= maxSource,
+              state: minProduct >= maxSource ? 'fresh' : 'stale',
+              sourceMtime: maxSource,
+              productMtime: minProduct,
+            });
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: err.message }));
+          }
           return;
         }
 
