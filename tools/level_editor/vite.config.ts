@@ -792,7 +792,34 @@ function levelEditorApiPlugin(): Plugin {
         // explicit per-tile `palette` (editor's Palette view) overrides
         // the auto-match in palette_compiler.py; enemy/hero `overworld.
         // palette` is already data-driven (battle_compile.py -> ow_palette).
-        const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village'];
+        const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village', 'sprites'];
+        // Sprite art lives per sheet cell, not per enemy type: enemy_ow
+        // cells at public/tiles/enemies/<cell>.png, hero cells at
+        // public/tiles/hero/<cell>.png. Town NPC portraits live in the
+        // actors tileset (tools/compose_enemy_sprites.py NPC_FILES:
+        // npc_guard -> actors_guard, i.e. actors_<suffix>). Probe the
+        // filesystem so new cells resolve without a code change; null
+        // means the client renders a named placeholder (visible gap).
+        const spriteImageFor = (cell: string, hero = false): string | null => {
+          const pub = (...parts: string[]) =>
+            path.join(repoRoot, 'tools', 'level_editor', 'public', ...parts);
+          if (fs.existsSync(pub('tiles', hero ? 'hero' : 'enemies', `${cell}.png`))) {
+            return `/tiles/${hero ? 'hero' : 'enemies'}/${cell}.png`;
+          }
+          const npc = cell.match(/^npc_(.*)$/);
+          if (npc && fs.existsSync(pub('tiles', 'actors', `actors_${npc[1]}.png`))) {
+            return `/tiles/actors/actors_${npc[1]}.png`;
+          }
+          return null;
+        };
+        const objSlotOfRamps = () => {
+          const objManifest = readJsonFile(path.join('generated', 'tiles', 'obj.json'));
+          const m: Record<string, number> = {};
+          for (const key of Object.keys((objManifest && objManifest.slots) || {})) {
+            m[objManifest.slots[key].ramp] = Number(key);
+          }
+          return m;
+        };
         const parseObjPalettes = () => {
           // OBJ ramps live in generated/tiles/obj.json (palette_compiler:
           // slots 0-4 artist ramps, 5-7 grey). Same file battle_compile
@@ -835,35 +862,70 @@ function levelEditorApiPlugin(): Plugin {
           try {
             const u = new URL(req.url || '', 'http://localhost');
             const tileset = u.searchParams.get('tileset') || 'forest';
-            const { manifest, tiles } = readTilesetManifest(tileset);
             // Content files name artist ramps; the editor UI works in
             // hardware slots, so resolve names -> slots for display (the
             // reverse of /api/assign-palette below).
-            const objManifest = readJsonFile(path.join('generated', 'tiles', 'obj.json'));
-            const objSlotOf: Record<string, number> = {};
-            for (const key of Object.keys((objManifest && objManifest.slots) || {})) {
-              objSlotOf[objManifest.slots[key].ramp] = Number(key);
-            }
+            const objSlotOf: Record<string, number> = objSlotOfRamps();
+            const readEnemyType = (f: string) => {
+              const d = readJsonFile(path.join('screens', 'enemy_types', f));
+              const id = d.id || f.replace(/\.json$/, '');
+              const ow = d.overworld || {};
+              const cells: string[] = ow.cells || [];
+              const pal = ow.palette || 0;
+              return { id, label: d.label || id, cells,
+                       ramp: typeof pal === 'string' ? pal : null,
+                       image_url: cells.length > 0 ? spriteImageFor(cells[0]) : null,
+                       palette: typeof pal === 'string' ? (objSlotOf[pal] ?? 0) : pal };
+            };
             const enemies = fs.readdirSync(path.join(repoRoot, 'screens', 'enemy_types'))
               .filter((f) => f.endsWith('.json'))
-              .map((f) => {
-                const d = readJsonFile(path.join('screens', 'enemy_types', f));
-                const id = d.id || f.replace(/\.json$/, '');
-                const pal = (d.overworld && d.overworld.palette) || 0;
-                return { id, label: d.label || id,
-                         image_url: `/tiles/enemies/${id}.png`,
-                         palette: typeof pal === 'string' ? (objSlotOf[pal] ?? 0) : pal };
-              })
+              .map(readEnemyType)
               .sort((a, b) => a.id.localeCompare(b.id));
             const hero = readJsonFile(path.join('screens', 'hero.json'));
-            const heroPal = (hero.overworld && hero.overworld.palette) || 0;
+            const heroOw = hero.overworld || {};
+            const heroCells: string[] = heroOw.cells || [];
+            const heroPal = heroOw.palette || 0;
+            const heroRamp = typeof heroPal === 'string' ? heroPal : null;
+            if (tileset === 'sprites') {
+              // Pseudo-tileset: every pipeline sprite sheet cell
+              // (enemy_ow + hero_ow) with its OBJ ramp, so the sprite
+              // sheets are browsable like the world tilesets. Per-cell
+              // assignment does not exist (enemy types own their palette;
+              // use the Enemies section below), so assign stays disabled.
+              const tiles: Array<{ id: string; label: string; image_url: string | null; palette: number }> = [];
+              for (const e of enemies) {
+                const slot = typeof (e as any).palette === 'number' ? (e as any).palette : 0;
+                for (const cell of e.cells) {
+                  tiles.push({ id: cell, label: `${e.label} · ${cell}`,
+                               image_url: spriteImageFor(cell), palette: slot });
+                }
+              }
+              const heroSlot = typeof heroPal === 'string' ? (objSlotOf[heroPal] ?? 0) : heroPal;
+              for (const cell of heroCells) {
+                tiles.push({ id: cell, label: `Hero · ${cell}`,
+                             image_url: spriteImageFor(cell, true), palette: heroSlot });
+              }
+              sendJson({
+                success: true, tileset,
+                bg: parseObjPalettes(),
+                obj: parseObjPalettes(),
+                tiles,
+                enemies,
+                hero: { palette: heroSlot, ramp: heroRamp,
+                        image_url: heroCells.length > 0 ? spriteImageFor(heroCells[0], true) : null },
+              });
+              return;
+            }
+            const { manifest, tiles } = readTilesetManifest(tileset);
             sendJson({
               success: true, tileset,
               bg: manifest.palettes || [],
               obj: parseObjPalettes(),
               tiles,
               enemies,
-              hero: { palette: typeof heroPal === 'string' ? (objSlotOf[heroPal] ?? 0) : heroPal },
+              hero: { palette: typeof heroPal === 'string' ? (objSlotOf[heroPal] ?? 0) : heroPal,
+                      ramp: heroRamp,
+                      image_url: heroCells.length > 0 ? spriteImageFor(heroCells[0], true) : null },
             });
           } catch (err: any) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -893,6 +955,10 @@ function levelEditorApiPlugin(): Plugin {
                 return entry.ramp || entry.name;
               };
               if (kind === 'tile') {
+                if (tileset === 'sprites') {
+                  throw new Error(`tileset 'sprites' has no per-cell assignment: `
+                    + `sprite ramps are owned by enemy types (use kind 'enemy')`);
+                }
                 if (!TILESETS.includes(tileset)) throw new Error(`unknown tileset '${tileset}'`);
                 const rel = path.join('tools', 'level_editor', 'tilesets', `${tileset}.json`);
                 const ts = readJsonFile(rel);

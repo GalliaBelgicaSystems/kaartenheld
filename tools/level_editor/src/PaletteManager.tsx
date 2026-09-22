@@ -98,6 +98,10 @@ export const PaletteManager: React.FC = () => {
 
   const tile = data?.tiles.find((t) => t.id === selTile) || null;
   const enemy = data?.enemies.find((e) => e.id === selEnemy) || null;
+  // 'sprites' is a pseudo-tileset: every pipeline sprite-sheet cell
+  // (enemy_ow + hero_ow) with its OBJ ramp. Per-cell assignment does not
+  // exist there (enemy types own their palette), so assign stays hidden.
+  const isSprites = tileset === 'sprites';
 
   const assignTile = async (i: number) => {
     if (!tile) return;
@@ -159,7 +163,9 @@ export const PaletteManager: React.FC = () => {
 
       {data && (
         <div style={{ width: '100%', maxWidth: 1100, margin: '0 auto' }}>
-          <h3 style={{ margin: '0 0 6px', textAlign: 'center' }}>Background palettes ({tileset})</h3>
+          <h3 style={{ margin: '0 0 6px', textAlign: 'center' }}>
+            {isSprites ? 'Sprite palettes (OBJ ramps — enemy_ow + hero_ow)' : `Background palettes (${tileset})`}
+          </h3>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
             {data.bg.map((r) => (
               <div key={r.index} style={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
@@ -193,34 +199,61 @@ export const PaletteManager: React.FC = () => {
           {tile && (
             <div style={{ marginTop: 10, padding: 8, border: '1px solid #999' }}>
               <b>{tile.label}</b> <code style={{ fontSize: 11 }}>{tile.id}</code>
-              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {data.bg.map((r) => (
-                  <div key={r.index} style={{ textAlign: 'center' }}>
-                    <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
-                    <div style={{ fontSize: 10 }}>{r.index} {r.name}</div>
-                    <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
-                      {tile.palette === r.index ? '✓' : 'assign'}
-                    </button>
-                  </div>
-                ))}
-              </div>
+              {!tile.image_url && (
+                <div style={{ fontSize: 11, color: '#a00', marginTop: 4 }}>
+                  No preview PNG for this cell — the sheet still encodes it for the ROM.
+                </div>
+              )}
+              {isSprites && (
+                <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>
+                  Per-cell assignment does not exist for sprites — ramps are owned
+                  by enemy types (see Enemies below).
+                </div>
+              )}
+              {tile.image_url && (
+                <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {data.bg.map((r) => (
+                    <div key={r.index} style={{ textAlign: 'center' }}>
+                      <Recolored src={tile.image_url || ''} colors={bgColors(r)} size={48} title={r.name} />
+                      <div style={{ fontSize: 10 }}>{r.index} {r.name}</div>
+                      {!isSprites && (
+                        <button className="btn btn-sm" onClick={() => assignTile(r.index)}>
+                          {tile.palette === r.index ? '✓' : 'assign'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          <div style={{ marginTop: 12, fontWeight: 600, textAlign: 'center' }}>Tiles (click to preview/assign)</div>
+          <div style={{ marginTop: 12, fontWeight: 600, textAlign: 'center' }}>
+            {isSprites ? 'Sprite cells (click to preview under every ramp)' : 'Tiles (click to preview/assign)'}
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, justifyContent: 'center' }}>
-            {data.tiles.filter((t) => t.image_url).map((t) => (
+            {data.tiles.map((t) => (
               <button key={t.id} onClick={() => setSelTile(t.id)} title={`${t.label} — palette ${t.palette}`}
                 style={{ padding: 2, border: t.id === selTile ? '2px solid #1a7' : '1px solid #bbb',
                          background: t.id === selTile ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored
-                  src={t.image_url!}
-                  colors={(() => {
-                    const r = data.bg[t.palette] || data.bg[0];
-                    return r ? bgColors(r) : data.bg[0].colors;
-                  })()}
-                  size={32}
-                />
+                {t.image_url ? (
+                  <Recolored
+                    src={t.image_url}
+                    colors={(() => {
+                      const r = data.bg[t.palette] || data.bg[0];
+                      return r ? bgColors(r) : data.bg[0].colors;
+                    })()}
+                    size={32}
+                  />
+                ) : (
+                  <div title={`${t.id} — no preview PNG`} style={{
+                    width: 32, height: 32, border: '1px dashed #999', color: '#999',
+                    fontSize: 9, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', textAlign: 'center', lineHeight: 1.1,
+                  }}>
+                    no png
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -265,35 +298,59 @@ export const PaletteManager: React.FC = () => {
           {enemy && (
             <div style={{ marginTop: 8, padding: 8, border: '1px solid #999' }}>
               <b>{enemy.label}</b> <code style={{ fontSize: 11 }}>{enemy.id}</code>
-              <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {data.obj.map((r) => (
-                  <div key={r.index} style={{ textAlign: 'center' }}>
-                    <Recolored src={enemy.image_url} colors={bgColors(r)} size={48} title={r.name} transparent0 />
-                    <div style={{ fontSize: 10 }}>OBJ {r.index} {r.name}</div>
-                    <button className="btn btn-sm" onClick={() => assignEnemy(r.index)}>
-                      {enemy.palette === r.index ? '✓' : 'assign'}
-                    </button>
+              {enemy.ramp && (
+                <span style={{ fontSize: 11, color: '#555' }}> — ramp {enemy.ramp}, cells: {enemy.cells.join(', ') || 'none'}</span>
+              )}
+              {!enemy.image_url && (
+                <div style={{ fontSize: 11, color: '#a00', marginTop: 4 }}>
+                  No preview PNG for this enemy type.
+                </div>
+              )}
+              {(() => {
+                const src = enemy.image_url;
+                return src && (
+                  <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {data.obj.map((r) => (
+                      <div key={r.index} style={{ textAlign: 'center' }}>
+                        <Recolored src={src} colors={bgColors(r)} size={48} title={r.name} transparent0 />
+                      <div style={{ fontSize: 10 }}>OBJ {r.index} {r.name}</div>
+                      <button className="btn btn-sm" onClick={() => assignEnemy(r.index)}>
+                        {enemy.palette === r.index ? '✓' : 'assign'}
+                      </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
           )}
 
           <div style={{ marginTop: 12, fontWeight: 600, textAlign: 'center' }}>Enemies (click to preview/assign)</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, justifyContent: 'center' }}>
             {data.enemies.map((e) => (
-              <button key={e.id} onClick={() => setSelEnemy(e.id)} title={`${e.label} — OBJ ${e.palette}`}
+              <button key={e.id} onClick={() => setSelEnemy(e.id)}
+                title={`${e.label} — OBJ ${e.palette}${e.ramp ? ` ${e.ramp}` : ''}${e.cells.length > 0 ? ` — ${e.cells.join(', ')}` : ''}`}
                 style={{ padding: 2, border: e.id === selEnemy ? '2px solid #1a7' : '1px solid #bbb',
                          background: e.id === selEnemy ? '#e8f5ee' : '#fff', cursor: 'pointer' }}>
-                <Recolored
-                  src={e.image_url}
-                  colors={(() => {
-                    const r = data.obj[e.palette] || data.obj[0];
-                    return r ? bgColors(r) : data.obj[0].colors;
-                  })()}
-                  size={40}
-                  transparent0
-                />
+                {e.image_url ? (
+                  <Recolored
+                    src={e.image_url}
+                    colors={(() => {
+                      const r = data.obj[e.palette] || data.obj[0];
+                      return r ? bgColors(r) : data.obj[0].colors;
+                    })()}
+                    size={40}
+                    transparent0
+                  />
+                ) : (
+                  <div title={`${e.id} — no preview PNG`} style={{
+                    width: 40, height: 40, border: '1px dashed #999', color: '#999',
+                    fontSize: 9, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', textAlign: 'center', lineHeight: 1.1,
+                  }}>
+                    no png
+                  </div>
+                )}
               </button>
             ))}
           </div>

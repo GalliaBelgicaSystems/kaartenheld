@@ -16,7 +16,12 @@ export interface PaletteTile {
 export interface PaletteEnemy {
   id: string;
   label: string;
-  image_url: string;
+  /** First overworld cell preview (cell PNG, or the actors portrait for
+   *  npc_* types); null when no preview file exists. */
+  image_url: string | null;
+  cells: string[];
+  /** Declared ramp name (null when stored as a bare OBJ slot int). */
+  ramp: string | null;
   palette: number;
 }
 
@@ -26,7 +31,7 @@ export interface PaletteData {
   obj: Ramp[];
   tiles: PaletteTile[];
   enemies: PaletteEnemy[];
-  hero: { palette: number };
+  hero: { palette: number; ramp: string | null; image_url: string | null };
 }
 
 export async function fetchPalettes(tileset: string): Promise<PaletteData> {
@@ -53,7 +58,7 @@ export async function assignPalette(
   if (!body.success) throw new Error(body.error || 'assign failed');
 }
 
-export const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village'];
+export const TILESETS = ['forest', 'castle', 'desolate_landscape', 'village', 'sprites'];
 
 export interface PaletteColorEdit {
   section: string;
