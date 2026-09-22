@@ -5,7 +5,7 @@ import {
   fetchCombatArtList, fetchCombatArtSet, saveCombatArtSet,
   fetchEnemyTypeList, fetchEnemyType, saveEnemyType,
 } from './io/combatArt';
-import { RampSelect } from './RampSelect';
+import { RampSelect, firstSlottedRamp } from './RampSelect';
 import { RampGuide, fetchRampGuide } from './io/romRecolor';
 
 /** Battle-art studio: combat-art meta-tile composer + per-enemy combat
@@ -16,13 +16,14 @@ import { RampGuide, fetchRampGuide } from './io/romRecolor';
 
 const cellPx = 30;
 
-function blankSet(id: string, order: number): CombatArtSet {
+function blankSet(id: string, order: number, defaultPalette: string): CombatArtSet {
   const cells: Array<string | null> = new Array(3 * 2).fill(null);
+  // palette: 0 was never valid (the pipeline requires a ramp name and
+  // raises on anything else); the caller passes the first base-slotted
+  // ramp from the guide so a ramp rename can't silently break creation.
   return {
     $schema: '../schema/combat_art.schema.json',
-    // palette: 0 was never valid (the pipeline requires a ramp name and
-    // raises on anything else); default to a base-slotted ramp.
-    id, label: id, order, width: 3, height: 2, palette: 'fightboss',
+    id, label: id, order, width: 3, height: 2, palette: defaultPalette,
     frame0: cells.slice(),
   };
 }
@@ -151,7 +152,9 @@ export const CombatArtStudio: React.FC<{
     if (!id || !/^[A-Za-z0-9_]+$/.test(id)) return;
     if (sets.some((s) => s.id === id)) { setStatus(`id '${id}' already exists`); return; }
     const order = sets.reduce((m, s) => Math.max(m, s.order), -1) + 1;
-    const fresh = blankSet(id, order);
+    // Guide-derived default (falls back to 'fightboss' offline, exactly
+    // the previous behavior).
+    const fresh = blankSet(id, order, firstSlottedRamp(guide, 'base') || 'fightboss');
     saveCombatArtSet(fresh).then(() => {
       fetchCombatArtList().then((items) => { setSets(items); setActiveId(id); });
       setStatus(`created '${id}' at order ${order} (appended: blob offsets stay stable)`);

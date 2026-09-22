@@ -3,6 +3,26 @@ import { RampGuide, fetchRampGuide } from './io/romRecolor';
 
 export type RampSetFilter = 'obj' | 'base' | 'all';
 
+/** First ramp (lowest slot) holding a slot in the given set, or null.
+ *  Used for valid-by-construction defaults (e.g. new combat-art sets)
+ *  instead of a hardcoded ramp name that a rename could silently break. */
+export function firstSlottedRamp(
+  guide: RampGuide | null,
+  setName: 'obj' | 'base' | 'title',
+): string | null {
+  if (!guide) return null;
+  let best: { slot: number; name: string } | null = null;
+  for (const [name, e] of Object.entries(guide.ramps)) {
+    for (const s of e.slots || []) {
+      const [set, slot] = s.split(':');
+      if (set !== setName) continue;
+      const n = Number(slot);
+      if (!best || n < best.slot) best = { slot: n, name };
+    }
+  }
+  return best ? best.name : null;
+}
+
 /** Resolve a stored palette value (ramp name, or a legacy OBJ slot int)
  *  to a ramp name. Returns null when it names nothing known. */
 export function resolveRampName(
