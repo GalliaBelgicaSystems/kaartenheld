@@ -1201,13 +1201,19 @@ opt-in per exit, never forced.
 ## Contract
 
 * `levels/schema/level.schema.json` gains optional exit `tunnel`
-  (lowercase letter-first id, same shape as scene ids).
+  (lowercase letter-first id, same shape as scene ids, enforced by a
+  `"pattern"` so JSON-schema-aware tools catch bad ids early; the
+  Python/TS checks remain the hard gate).
 * `tools/level_compiler/collision.py` owns the pairing check
   (`tunnel_report`/`tunnel_issues`, mirroring `edge_link_report`): each
   id must have exactly two mouths in different levels, mutual targets,
   and spawn-tracks-gate landings. Violations are a **hard compile
   error** (`compile.py` aborts) and a `validate.py` error — a dangling
   mouth strands the player with no way back, so it can never ship.
+  The editor's `tunnelStatus()` mirrors these invariants; the shared
+  corpus (`tools/level_compiler/tests/tunnel_parity_cases.json` +
+  `test_tunnel_parity.py` and `tools/level_editor/tests/tunnel_parity.mjs`)
+  guards both sides from drifting.
 * `decompile.py` preserves `tunnel` ids across the JSON ⇄ C roundtrip
   (the C rows cannot hold them); a retargeted mouth loses its id and
   fails loudly at the next compile instead of silently unlinking.
@@ -1217,7 +1223,13 @@ opt-in per exit, never forced.
     Make tunnel / Unlink;
   - every save syncs partner mouths (target back at the saver, landing
     on the saver's gate) and removes orphaned rows of deleted mouths
-    (reported in the save notification, never silent);
+    (reported in the save notification, never silent), reading the
+    levels directory once per save;
+  - “Make tunnel” adopts an existing return coordinate-aware: with
+    several untunneled returns to the source level only the one already
+    landing on the new mouth's gate is adopted, otherwise a fresh
+    partner is created (a mouth carrying a different tunnel id is never
+    absorbed);
   - unlinking keeps both rows as independent one-way exits; deleting a
     mouth removes its partner on save (with confirm);
   - tunnel mouths render teal ⇄ on the canvas vs orange one-ways.

@@ -1450,11 +1450,22 @@ function levelEditorApiPlugin(): Plugin {
         const levelFiles = () =>
           fs.readdirSync(path.join(repoRoot, 'levels'))
             .filter((f) => f.endsWith('.json') && f !== 'registry.json');
-        const tunnelTakenOnDisk = (tunnel: string): boolean => {
+        // Single-scan snapshot of every level file (skips unreadable; the
+        // compiler gate flags real problems loudly).  Shared by the tunnel
+        // helpers below so one request does one readdir+parse pass instead
+        // of one scan per candidate / per phase.
+        const readAllLevels = (): Array<{ file: string; data: any }> => {
+          const out: Array<{ file: string; data: any }> = [];
           for (const f of levelFiles()) {
-            let data: any;
-            try { data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8')); }
-            catch { continue; }
+            try {
+              out.push({ file: f, data: JSON.parse(fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8')) });
+            } catch { continue; }
+          }
+          return out;
+        };
+        const tunnelTakenOnDisk = (tunnel: string, preloaded?: Array<{ file: string; data: any }>): boolean => {
+          const snapshot = preloaded || readAllLevels();
+          for (const { data } of snapshot) {
             for (const e of data.exits || []) {
               if (e && e.tunnel === tunnel) return true;
             }
@@ -1465,12 +1476,42 @@ function levelEditorApiPlugin(): Plugin {
         const newTunnelId = (fromId: string, toId: string): string => {
           const [a, b] = [fromId, toId].sort();
           const base = `tunnel_${a}_${b}`;
+          const snapshot = readAllLevels();
+          const taken = new Set<string>();
+          for (const { data } of snapshot) {
+            for (const e of data.exits || []) {
+              if (e && typeof e.tunnel === 'string' && e.tunnel) taken.add(e.tunnel);
+            }
+          }
           let cand = base, n = 2;
-          while (tunnelTakenOnDisk(cand)) cand = `${base}_${n++}`;
+          while (taken.has(cand)) cand = `${base}_${n++}`;
           return cand;
         };
+        // Coordinate-aware tunnel partner lookup: prefer the exact
+        // tunnel-id match; otherwise pick among untunneled returns to
+        // `fromId` — single candidate wins, multiple candidates resolve by
+        // spawn-tracks-gate coordinate (mouth landing == return gate), and
+        // ambiguity returns null so the caller creates a fresh partner
+        // instead of absorbing an unrelated passage.  Never adopts a mouth
+        // carrying a different tunnel id.
+        const findTunnelPartner = (toExits: any[], tunnelId: string, fromId: string, mouth: any): any | null => {
+          const byTunnel = (toExits || []).find((e: any) => e && e.tunnel === tunnelId);
+          if (byTunnel) return byTunnel;
+          const candidates = (toExits || []).filter((e: any) =>
+            e && e.target_scene === fromId && !(typeof e.tunnel === 'string' && e.tunnel));
+          if (candidates.length === 1) return candidates[0];
+          if (candidates.length > 1 && mouth) {
+            const aligned = candidates.find((e: any) => e.x === mouth.target_x && e.y === mouth.target_y);
+            if (aligned) return aligned;
+            return null;
+          }
+          return candidates[0] || null;
+        };
         // Per-tunnel pairing status over a levels map (disk + overrides).
-        // Mirrors tools/level_compiler/collision.py tunnel_report().
+        // Mirrors tools/level_compiler/collision.py tunnel_report():
+        // same invariants (count == 2, different levels, mutual targets,
+        // spawn-tracks-gate).  Keep both in sync; the parity corpus in
+        // tools/level_compiler/tests/test_tunnel_parity.py guards drift.
         const tunnelStatus = (tunnel: string, levels: Record<string, any>) => {
           const ends: Array<{ level: string; index: number; exit: any }> = [];
           for (const name of Object.keys(levels).sort()) {
@@ -1541,22 +1582,19 @@ function levelEditorApiPlugin(): Plugin {
           // (count 1, outside the saved level) is removed.  Lone ends IN
           // the saved level are left alone — the author may be
           // mid-authoring, and the compiler flags them loudly.
+          // One snapshot serves both the count and the sweep (taken after
+          // the partner writes above, so it sees the fresh pairs).
+          const snapshot = readAllLevels();
           const counts = new Map<string, number>();
-          for (const f of levelFiles()) {
-            let data: any;
-            try { data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8')); }
-            catch { continue; }
+          for (const { data } of snapshot) {
             for (const x of data.exits || []) {
               if (x && typeof x.tunnel === 'string' && x.tunnel) {
                 counts.set(x.tunnel, (counts.get(x.tunnel) || 0) + 1);
               }
             }
           }
-          for (const f of levelFiles()) {
+          for (const { file: f, data } of snapshot) {
             if (f === `${savedId}.json`) continue;
-            let data: any;
-            try { data = JSON.parse(fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8')); }
-            catch { continue; }
             const before = (data.exits || []).length;
             data.exits = (data.exits || []).filter((x: any) => {
               if (x && typeof x.tunnel === 'string' && x.tunnel &&
@@ -1677,16 +1715,28 @@ function levelEditorApiPlugin(): Plugin {
               const list = Array.isArray(exits) ? exits : [];
               // Disk levels with the from-level overridden by the editor's
               // (possibly unsaved) exits, so tunnel status reflects what a
-              // save would produce.
+              // save would produce.  One snapshot serves the levels map and
+              // the suggested-tunnel allocation below.
+              const snapshot = readAllLevels();
               const levels: Record<string, any> = {};
-              for (const f of levelFiles()) {
-                try {
-                  const data = JSON.parse(
-                    fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8'));
-                  if (data && data.id) levels[data.id] = data;
-                } catch { /* skip unreadable */ }
+              for (const { data } of snapshot) {
+                if (data && data.id) levels[data.id] = data;
               }
               levels[from_id] = { ...(levels[from_id] || {}), exits: list };
+              const taken = new Set<string>();
+              for (const { data } of snapshot) {
+                for (const e of data.exits || []) {
+                  if (e && typeof e.tunnel === 'string' && e.tunnel) taken.add(e.tunnel);
+                }
+              }
+              const freshTunnelId = (fromId: string, toId: string): string => {
+                const [fa, fb] = [fromId, toId].sort();
+                const base = `tunnel_${fa}_${fb}`;
+                let cand = base, n = 2;
+                while (taken.has(cand)) cand = `${base}_${n++}`;
+                taken.add(cand);
+                return cand;
+              };
               const items = list.map((ex: any, i: number) => {
                 const tunnel = (ex && typeof ex.tunnel === 'string' && ex.tunnel)
                   ? ex.tunnel : null;
@@ -1707,7 +1757,7 @@ function levelEditorApiPlugin(): Plugin {
                   return { index: i, target: ex.target_scene, has_return: !!ret,
                            return_exit: ret, proposal: ret ? null : proposeReturn(from_id, ex),
                            error: null, tunnel, tunnel_ok, tunnel_error,
-                           suggested_tunnel: tunnel || newTunnelId(from_id, ex.target_scene) };
+                           suggested_tunnel: tunnel || freshTunnelId(from_id, ex.target_scene) };
                 } catch (e: any) {
                   return { index: i, target: ex?.target_scene || '?', has_return: false,
                            return_exit: null, proposal: null, error: e.message,
@@ -1750,9 +1800,12 @@ function levelEditorApiPlugin(): Plugin {
                 exit.tunnel = tunnelId;
                 // This mouth lands on the partner gate: adopt the existing
                 // return's gate when present, else the fresh proposal's.
+                // Coordinate-aware: with several untunneled returns to
+                // from_id, only the one already landing on this mouth's
+                // gate is adopted; ambiguity creates a fresh partner
+                // instead of absorbing an unrelated passage.
                 const toPeek = readLevel(toId);
-                const legacy = (toPeek.exits || []).find((e: any) =>
-                  e && (e.tunnel === tunnelId || e.target_scene === from_id));
+                const legacy = findTunnelPartner(toPeek.exits || [], tunnelId, from_id, exit);
                 if (legacy) {
                   exit.target_x = legacy.x;
                   exit.target_y = legacy.y;
@@ -1770,7 +1823,7 @@ function levelEditorApiPlugin(): Plugin {
               const to = readLevel(toId);
               to.exits = to.exits || [];
               let toExit = tunnelId
-                ? to.exits.find((e: any) => e && e.tunnel === tunnelId) || findReturn(to, from_id)
+                ? findTunnelPartner(to.exits, tunnelId, from_id, exit)
                 : findReturn(to, from_id);
               let created = false;
               if (!toExit) {
@@ -1810,11 +1863,8 @@ function levelEditorApiPlugin(): Plugin {
               const { tunnel } = JSON.parse(body);
               if (!tunnelIdValid(tunnel)) throw new Error(`invalid tunnel id '${tunnel}'`);
               let clearedFiles = 0, clearedExits = 0;
-              for (const f of levelFiles()) {
+              for (const { file: f, data } of readAllLevels()) {
                 const abs = path.join(repoRoot, 'levels', f);
-                let data: any;
-                try { data = JSON.parse(fs.readFileSync(abs, 'utf-8')); }
-                catch { continue; }
                 let touched = false;
                 for (const e of data.exits || []) {
                   if (e && e.tunnel === tunnel) {

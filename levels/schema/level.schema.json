@@ -137,7 +137,7 @@
           "target_y": { "type": "integer" },
           "direction": { "type": "string" },
           "tile_char": { "type": "string" },
-          "tunnel": { "type": "string", "description": "Two-way tunnel id linking this exit to exactly one return exit in the target scene (same id on both mouths, mutual targets, each landing on the other's gate). Absent = one-way exit." }
+          "tunnel": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Two-way tunnel id linking this exit to exactly one return exit in the target scene (same id on both mouths, mutual targets, each landing on the other's gate). Absent = one-way exit." }
         }
       }
     },

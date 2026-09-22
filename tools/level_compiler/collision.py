@@ -430,10 +430,16 @@ def tunnel_report(levels_by_id):
 
     Returns a list of dicts {tunnel, ok, errors, warnings}; every
     message is fully self-describing (levels + coordinates).  Used by
-    the compiler gate, the validator, and the editor's /api/exit-status."""
+    the compiler gate, the validator, and the editor's /api/exit-status.
+
+    Contract mirror: tools/level_editor/vite.config.ts tunnelStatus()
+    checks the same invariants (count == 2, different levels, mutual
+    targets, spawn-tracks-gate).  Keep both in sync; the parity corpus
+    in tools/level_compiler/tests/test_tunnel_parity.py guards drift."""
     out = []
-    for tunnel in sorted(collect_tunnels(levels_by_id)):
-        ends = collect_tunnels(levels_by_id)[tunnel]
+    tunnels = collect_tunnels(levels_by_id)
+    for tunnel in sorted(tunnels):
+        ends = tunnels[tunnel]
         entry = {"tunnel": tunnel, "ok": True, "errors": [], "warnings": []}
         if len(ends) == 1:
             name, i, e = ends[0]
