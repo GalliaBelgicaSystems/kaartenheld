@@ -1473,10 +1473,10 @@ function levelEditorApiPlugin(): Plugin {
           return false;
         };
         // Deterministic fresh id for a from->to pair; suffixed on collision.
-        const newTunnelId = (fromId: string, toId: string): string => {
+        const newTunnelId = (fromId: string, toId: string, preloaded?: Array<{ file: string; data: any }>): string => {
           const [a, b] = [fromId, toId].sort();
           const base = `tunnel_${a}_${b}`;
-          const snapshot = readAllLevels();
+          const snapshot = preloaded || readAllLevels();
           const taken = new Set<string>();
           for (const { data } of snapshot) {
             for (const e of data.exits || []) {
@@ -1794,9 +1794,10 @@ function levelEditorApiPlugin(): Plugin {
               a.exits = a.exits || [];
               let tunnelId: string | null = null;
               if (as_tunnel) {
+                const snap = readAllLevels();
                 tunnelId = (typeof tunnel === 'string' && tunnel && tunnelIdValid(tunnel) &&
-                            !tunnelTakenOnDisk(tunnel))
-                  ? tunnel : newTunnelId(from_id, toId);
+                            !tunnelTakenOnDisk(tunnel, snap))
+                  ? tunnel : newTunnelId(from_id, toId, snap);
                 exit.tunnel = tunnelId;
                 // This mouth lands on the partner gate: adopt the existing
                 // return's gate when present, else the fresh proposal's.
