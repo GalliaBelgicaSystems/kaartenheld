@@ -120,6 +120,20 @@ export const App: React.FC = () => {
   const [shopView, setShopView] = useState<boolean>(false);
   // Palette view: preview/assign the engine CGB ramps to tiles + enemies.
   const [paletteView, setPaletteView] = useState<boolean>(false);
+  // Deep link: a ramp editor pre-opened in the Palettes view, requested
+  // by the ✎ jump in enemy/hero/combat views. Consumed once by
+  // PaletteManager, then cleared.
+  const [paletteEditRequest, setPaletteEditRequest] = useState<string | null>(null);
+  const openPaletteEditor = useCallback((ramp: string) => {
+    setShowCombatArt(false);
+    setEnemyView(null);
+    setHeroView(false);
+    setCardView(false);
+    setDialogueView(null);
+    setShopView(false);
+    setPaletteEditRequest(ramp);
+    setPaletteView(true);
+  }, []);
   // Battle view (screens/battle_hud.json + battle/<id>.json layout +
   // cards_skin.json) — the whole battle-time view, editable from here.
   const [cardView, setCardView] = useState<boolean>(false);
@@ -1237,19 +1251,28 @@ export const App: React.FC = () => {
             <HeroManager
               key="hero"
               onOpenComposer={() => setShowCombatArt(true)}
+              onEditRamp={openPaletteEditor}
+              onChanged={bumpPaletteVersion}
             />
           ) : enemyView ? (
             <EnemyManager
               key={enemyView}
               initialId={enemyView}
               onOpenComposer={() => setShowCombatArt(true)}
+              onEditRamp={openPaletteEditor}
+              onChanged={bumpPaletteVersion}
             />
           ) : cardView ? (
             <BattleManager key="cards" />
           ) : shopView ? (
             <ShopManager key="shops" />
           ) : paletteView ? (
-            <PaletteManager key="palettes" onPaletteSaved={bumpPaletteVersion} />
+            <PaletteManager
+              key="palettes"
+              onPaletteSaved={bumpPaletteVersion}
+              editRequest={paletteEditRequest}
+              onEditRequestConsumed={() => setPaletteEditRequest(null)}
+            />
           ) : dialogueView !== null ? (
             <DialogueManager key="dialogues" initialId={dialogueView || undefined} />
           ) : (
@@ -1477,7 +1500,10 @@ export const App: React.FC = () => {
         />
       )}
       {showCombatArt && (
-        <CombatArtStudio onClose={() => setShowCombatArt(false)} />
+        <CombatArtStudio
+          onClose={() => setShowCombatArt(false)}
+          onEditRamp={openPaletteEditor}
+        />
       )}
     </div>
   );

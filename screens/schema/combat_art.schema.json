@@ -10,7 +10,7 @@
     "order": { "type": "integer", "minimum": 0 },
     "width": { "type": "integer", "minimum": 1, "maximum": 6 },
     "height": { "type": "integer", "minimum": 1, "maximum": 4 },
-    "palette": { "type": "integer", "minimum": 0 },
+    "palette": { "type": "string", "description": "BG-stamp ramp name from assets/palette.txt (must hold a base slot). OAM sets encode with obj_palette instead." },
     "oam": {
       "type": "boolean",
       "description": "Render this set as OAM sprites instead of the BG stamp (small enemies only; boss stays BG). Requires obj_palette."

@@ -6,6 +6,7 @@ import {
 } from './io/combatArt';
 import { BUILTIN_TILESETS } from './model/Tileset';
 import { BATTLE_IDS, AI_IDS } from './model/Objects';
+import { RampSelect } from './RampSelect';
 
 /** Enemies view (art-only): one record per enemy type.  The level view
  *  owns placement; this view owns looks.  Per type it edits the shared
@@ -18,10 +19,19 @@ interface OwDraft {
   width: number;
   height: number;
   cells: string[];
-  palette: number;
+  /** OBJ ramp name (files normalize here on edit); a legacy bare OBJ
+   *  slot int still loads and displays via the slotmap. */
+  palette: string | number;
 }
 
-export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: string }> = ({ onOpenComposer, initialId }) => {
+export const EnemyManager: React.FC<{
+  onOpenComposer: () => void;
+  initialId?: string;
+  /** Jump into the Palettes view with a ramp editor pre-opened. */
+  onEditRamp?: (rampName: string) => void;
+  /** A save changed an overworld palette: level views should refresh. */
+  onChanged?: () => void;
+}> = ({ onOpenComposer, initialId, onEditRamp, onChanged }) => {
   const [enemies, setEnemies] = useState<EnemyTypeListItem[]>([]);
   const [sets, setSets] = useState<CombatArtListItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
@@ -54,7 +64,7 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
         width: o.width || 1,
         height: o.height || 1,
         cells: (o.cells || []).slice(),
-        palette: o.palette || 0,
+        palette: o.palette ?? 0,
       } : null);
       setDirty(false);
       setStatus('');
@@ -73,10 +83,12 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
       } else {
         delete data.overworld;
       }
+      const prevPal = full && full.overworld ? full.overworld.palette : undefined;
       await saveEnemyType(activeId, data);
       setFull(data);
       setDirty(false);
       setStatus(`saved screens/enemy_types/${activeId}.json — run make screens + make gfx to recompile`);
+      if (onChanged && ow && ow.palette !== prevPal) onChanged();
       fetchEnemyTypeList().then(setEnemies).catch(() => undefined);
     } catch (e: any) {
       setStatus(`save failed: ${e.message}`);
@@ -221,14 +233,18 @@ export const EnemyManager: React.FC<{ onOpenComposer: () => void; initialId?: st
               </span>
             </div>
             <div style={{ marginTop: 6, fontSize: 13 }}>
-              <label>Palette:{' '}
-                <input type="number" min={0} max={7} style={{ width: 50 }}
-                  value={(ow && ow.palette) || 0}
-                  onChange={(e) => {
-                    const palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0));
-                    setOw((prev) => ({ ...(prev || { width: 1, height: 1, cells: [] as string[] }), palette }));
+              <label>Palette (OBJ ramp):{' '}
+                <RampSelect
+                  value={(ow && ow.palette) ?? 0}
+                  filter="obj"
+                  disabled={!ow}
+                  title={ow ? undefined : 'Add a shared sprite first'}
+                  onPick={(ramp) => {
+                    setOw((prev) => ({ ...(prev || { width: 1, height: 1, cells: [] as string[] }), palette: ramp }));
                     setDirty(true);
-                  }} />
+                  }}
+                  onEditRamp={onEditRamp}
+                />
               </label>
             </div>
             {!ow && (

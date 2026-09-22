@@ -70,8 +70,14 @@ const Swatches: React.FC<{ ramp: Ramp; active: boolean; onClick: () => void; lab
     </button>
   );
 
-export const PaletteManager: React.FC<{ onPaletteSaved?: () => void }> = ({
-  onPaletteSaved,
+export const PaletteManager: React.FC<{
+  onPaletteSaved?: () => void;
+  /** Deep link: pre-open the ramp editor once, then consume. Set by the
+   *  ✎ jump in enemy/hero/combat views via App. */
+  editRequest?: string | null;
+  onEditRequestConsumed?: () => void;
+}> = ({
+  onPaletteSaved, editRequest, onEditRequestConsumed,
 }) => {
   const [tileset, setTileset] = useState<string>('forest');
   const [data, setData] = useState<PaletteData | null>(null);
@@ -95,6 +101,15 @@ export const PaletteManager: React.FC<{ onPaletteSaved?: () => void }> = ({
   useEffect(() => {
     fetchRampGuide().then(setGuide).catch(() => setGuide(null));
   }, []);
+  // Deep-link consume: open the requested ramp editor once (the keyed
+  // RampEditor below gets a fresh working copy for it).
+  useEffect(() => {
+    if (editRequest) {
+      setEditRamp(editRequest);
+      if (onEditRequestConsumed) onEditRequestConsumed();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRequest]);
 
   const reloadAll = async () => {
     try {
