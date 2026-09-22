@@ -1177,3 +1177,51 @@ surfaced by `validate.py` and the editor's inline Edge-links panel
 Supersedes Phase 16's exit-art bullet: gates no longer render
 per-tileset stairs art and the ROM never stamps `TILE_EXIT`; the
 `exit: true` manifest markings remain as decor-tile metadata only.
+
+# Phase 21 — Two-way tunnels (linked exit pairs)
+
+Point exits are one-way rows: going back needs a second exit in the
+target scene. A **tunnel** is that return pair made first-class: two
+exits sharing one `tunnel` id, one in each of two levels, with mutual
+targets and each landing on the other's gate (spawn-tracks-gate). The
+ROM format is unchanged — two plain `SceneExit` rows — so there is no
+engine, bank, or memmap impact; the id lives only in JSON + tooling.
+
+```json
+"exits": [
+  { "x": 12, "y": 11, "target_scene": "south_field",
+    "target_x": 12, "target_y": 11, "direction": "SOUTH",
+    "tile_char": "<", "tunnel": "tunnel_mountain_pass_south_field" }
+]
+```
+
+No `tunnel` field = one-way exit, exactly as before. Tunnels are
+opt-in per exit, never forced.
+
+## Contract
+
+* `levels/schema/level.schema.json` gains optional exit `tunnel`
+  (lowercase letter-first id, same shape as scene ids).
+* `tools/level_compiler/collision.py` owns the pairing check
+  (`tunnel_report`/`tunnel_issues`, mirroring `edge_link_report`): each
+  id must have exactly two mouths in different levels, mutual targets,
+  and spawn-tracks-gate landings. Violations are a **hard compile
+  error** (`compile.py` aborts) and a `validate.py` error — a dangling
+  mouth strands the player with no way back, so it can never ship.
+* `decompile.py` preserves `tunnel` ids across the JSON ⇄ C roundtrip
+  (the C rows cannot hold them); a retargeted mouth loses its id and
+  fails loudly at the next compile instead of silently unlinking.
+* The editor keeps pairs in sync with **full auto-sync**:
+  - the Exits tab's “Return exits & tunnels” panel shows 🔗 paired /
+    ⚠ broken per exit, with one-click Create / Create tunnel /
+    Make tunnel / Unlink;
+  - every save syncs partner mouths (target back at the saver, landing
+    on the saver's gate) and removes orphaned rows of deleted mouths
+    (reported in the save notification, never silent);
+  - unlinking keeps both rows as independent one-way exits; deleting a
+    mouth removes its partner on save (with confirm);
+  - tunnel mouths render teal ⇄ on the canvas vs orange one-ways.
+* Rename/delete rewire preserves tunnel ids (rename) and clears
+  partners of deleted levels (delete), same as exits.
+* Whole-edge `neighbors` links are out of scope — tunnels cover point
+  exits only.

@@ -5,8 +5,8 @@
 
 const SceneExit g_all_exits[] = {
     {  1,  9, 18,  9, SCENE_GRASSY_FOREST, '>' },
-    { 12, 11, 12, 12, SCENE_SOUTH_FIELD,   '<' },
-    { 12, 11, 12, 10, SCENE_MOUNTAIN_PASS, '>' }
+    { 12, 11, 12, 11, SCENE_SOUTH_FIELD,   '<' },
+    { 12, 11, 12, 11, SCENE_MOUNTAIN_PASS, '>' }
 };
 
 static const SceneTerrainBlock s_field_terrain[] = {

@@ -41,7 +41,7 @@ from collision import (  # noqa: E402,F401
     NEIGHBOR_DIRS, cell_tile_info, default_actor_flags, derive_collision,
     first_plain_tile, level_default_tile, load_level, map_base_tile_const,
     neighbor_pairing_issues, neighbor_targets, point_exit_issues,
-    resolve_tiles,
+    resolve_tiles, tunnel_id_valid, tunnel_issues,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
@@ -573,6 +573,19 @@ def main():
         for err in pair_errors:
             print(f"ERROR: {err}", file=sys.stderr)
         print("\nCompilation aborted due to broken edge-neighbor pairings.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # Tunnels (linked exit pairs): exactly two mutual mouths per id with
+    # spawn-tracks-gate landings. Abort so a half-linked tunnel can never
+    # ship (a dangling mouth strands the player with no way back).
+    tun_errors, tun_warnings = tunnel_issues(levels_by_id)
+    for warn in tun_warnings:
+        print(f"WARNING: {warn}", file=sys.stderr)
+    if tun_errors:
+        for err in tun_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        print("\nCompilation aborted due to broken tunnel pairings.",
               file=sys.stderr)
         sys.exit(1)
 

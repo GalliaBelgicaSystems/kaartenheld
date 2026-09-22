@@ -27,7 +27,8 @@ from scene_registry import (
 )
 from collision import (
     derive_collision, edge_link_report, effective_actor_flags,
-    neighbor_pairing_issues, point_exit_issues,
+    neighbor_pairing_issues, point_exit_issues, tunnel_id_valid,
+    tunnel_issues,
 )
 
 MAX_WORLD_WIDTH = 40
@@ -466,6 +467,14 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         if target not in known_scene_names() and (all_level_ids is None or target not in all_level_ids):
             warnings.append(f"Exit {e_idx} target '{target}' is not in known scenes list")
 
+        tunnel = exit_obj.get("tunnel", "")
+        if tunnel and not tunnel_id_valid(tunnel):
+            errors.append(
+                f"Exit {e_idx} tunnel id '{tunnel}' is invalid (want "
+                f"lowercase letters, digits and underscores, starting with "
+                f"a letter, e.g. 'tunnel_town_field')")
+            exits_ok = False
+
     if exits_ok:
         passed.append("Exits valid")
 
@@ -813,6 +822,14 @@ def main():
         for warn in _pair_warnings:
             print(f"WARNING: {warn}")
         for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        # Tunnels: linked exit pairs must have exactly two mutual mouths
+        # with spawn-tracks-gate landings (same gate as compile.py).
+        _tun_errors, _tun_warnings = tunnel_issues(_by_id)
+        for warn in _tun_warnings:
+            print(f"WARNING: {warn}")
+        for err in _tun_errors:
             print(f"ERROR: {err}")
             overall_success = False
         # Point exits: landing cell must be walkable (stuck spawn) and the

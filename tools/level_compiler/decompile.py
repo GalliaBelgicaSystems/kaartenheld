@@ -632,13 +632,21 @@ def decompile_levels(levels_dir, write):
                 if old is None:
                     warnings.append(f"{sid}: new exit at ({e['gate_x']},{e['gate_y']})->"
                                     f"{target}; direction '{direction}' synthesized")
-            new_exits.append({
+            # Tunnels live only in the JSON (the C rows cannot hold them):
+            # keep the author's tunnel id when the mouth matches, so a
+            # decompile roundtrip never silently unlinks a pair.  A
+            # retargeted mouth matches nothing and loses its id loudly at
+            # the next compile (dangling-tunnel error), never silently.
+            new_exit = {
                 "x": e["gate_x"], "y": e["gate_y"],
                 "target_scene": target,
                 "target_x": e["spawn_x"], "target_y": e["spawn_y"],
                 "direction": direction,
                 "tile_char": e["tile_char"],
-            })
+            }
+            if old is not None and old.get("tunnel"):
+                new_exit["tunnel"] = old["tunnel"]
+            new_exits.append(new_exit)
         level["exits"] = new_exits
 
         # -- neighbors: whole-edge links roundtrip verbatim (MAP_NONE/empty

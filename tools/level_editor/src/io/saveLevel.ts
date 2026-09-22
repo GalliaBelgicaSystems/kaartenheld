@@ -8,7 +8,8 @@ export function serializeLevelJson(level: EditorLevel): string {
 export async function saveLevelToServer(
   level: EditorLevel,
   previousId?: string | null
-): Promise<{ success: boolean; path?: string; scene_id?: number; error?: string }> {
+): Promise<{ success: boolean; path?: string; scene_id?: number; error?: string;
+             tunnels_synced?: number; tunnels_removed?: string[]; tunnel_error?: string | null }> {
   try {
     const data = editorToLevelData(level);
     const category = level.isScreen ? 'screens' : 'levels';
