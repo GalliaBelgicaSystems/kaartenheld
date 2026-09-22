@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PaletteData, savePalette } from './io/palettes';
 import { RampGuide } from './io/romRecolor';
 
@@ -62,13 +62,38 @@ export const RampEditor: React.FC<RampEditorProps> = ({
     data.enemies.filter((e) => objNameOf(e.palette) === ramp).map((e) => e.id);
 
   // Live drag preview (no writes): candidate colors flow into the tile
-  // strips while the panel is open.
+  // strips while the panel is open. Commits are rAF-throttled (trailing
+  // edge): a fast color-wheel drag costs at most one preview generation
+  // per frame and the final value always lands. Deliberately NO per-tick
+  // cleanup-null: clearing on every tick flashed every strip back to the
+  // original colors and kicked off throwaway recolors that starved the
+  // real ones (the "sometimes not updating" drag bug). Preview clears
+  // only via onClose/revert/save paths in the parent. Invalid mid-typing
+  // hex keeps the last preview instead of flashing.
   const previewKey = hexes.join(',');
+  const pendingRef = useRef<{ ramp: string; colors: string[] } | null>(null);
+  const rafRef = useRef<number>(0);
   useEffect(() => {
     if (hexes.length === 4 && hexes.every((h) => HEX_RE.test(h))) {
-      onPreview({ ramp: rampName, colors: hexes.map((h) => h.toLowerCase()) });
+      pendingRef.current = { ramp: rampName, colors: hexes.map((h) => h.toLowerCase()) };
+    } else {
+      pendingRef.current = null;
     }
-    return () => onPreview(null);
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        const p = pendingRef.current;
+        pendingRef.current = null;
+        if (p) onPreview(p);
+      });
+    }
+    return () => {
+      // Cancel the pending frame on tick (rescheduled above with the
+      // latest values) and on unmount (parent already cleared preview on
+      // every path that unmounts this panel).
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey, rampName]);
 

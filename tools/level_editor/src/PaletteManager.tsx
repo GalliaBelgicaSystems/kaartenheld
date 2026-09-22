@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
 } from './io/palettes';
-import { RampGuide, fetchRampGuide, recoloredDataUrl as romRecoloredDataUrl } from './io/romRecolor';
+import { RampGuide, fetchRampGuide, recoloredImage } from './io/romRecolor';
 import { RampEditor } from './RampEditor';
 
 /** Palette preview / assignment.
@@ -19,20 +19,36 @@ import { RampEditor } from './RampEditor';
  *  `overworld.palette` (already data-driven).  Recompile to apply.
   */
 
+/** Thumbnail with pipeline-exact recolor. Shows the current image until
+ *  the new recolor resolves (no flash-to-raw), reuses the shared
+ *  (src, ramp) cache so wheel drags over seen hues are instant, and drops
+ *  out-of-order resolutions via a generation counter (a slow older
+ *  generation must never overwrite a newer one mid-drag). */
 const Recolored: React.FC<{
   src: string; colors: string[]; size: number; title?: string;
   transparent0?: boolean;
 }> =
   ({ src, colors, size, title, transparent0 }) => {
     const [out, setOut] = useState<string>(src);
+    const genRef = useRef(0);
+    const prevSrcRef = useRef(src);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const key = colors.join(',');
     useEffect(() => {
-      let alive = true;
-      const img = new Image();
-      img.onload = () => { if (alive) setOut(romRecoloredDataUrl(img, colors, !!transparent0)); };
-      img.src = src;
-      return () => { alive = false; };
+      const gen = ++genRef.current;
+      if (prevSrcRef.current !== src) {
+        prevSrcRef.current = src;
+        setOut(src);
+      }
+      let cancelled = false;
+      recoloredImage(src, colors, !!transparent0).then((img) => {
+        if (cancelled || gen !== genRef.current) return;
+        const url = img.src;
+        setOut((prev) => (prev === url ? prev : url));
+      }).catch(() => undefined);
+      return () => { cancelled = true; };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [src, colors.join(','), transparent0]);
+    }, [src, key, transparent0]);
     return (
       <img src={out} title={title} width={size} height={size}
            style={{ imageRendering: 'pixelated', background: 'transparent' }} />
@@ -182,6 +198,7 @@ export const PaletteManager: React.FC = () => {
 
           {guide && editRamp && data.bg.some((r) => r.name === editRamp) && (
             <RampEditor
+              key={editRamp}
               rampName={editRamp}
               guide={guide}
               data={data}
@@ -276,6 +293,7 @@ export const PaletteManager: React.FC = () => {
 
           {guide && editRamp && !data.bg.some((r) => r.name === editRamp) && (
             <RampEditor
+              key={editRamp}
               rampName={editRamp}
               guide={guide}
               data={data}
