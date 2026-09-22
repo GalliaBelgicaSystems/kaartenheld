@@ -53,10 +53,11 @@
           }
         },
         "palette": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 7,
-          "description": "CGB OAM palette index."
+          "anyOf": [
+            { "type": "string", "description": "OBJ ramp name from assets/palette.txt (preferred; the editor writes names)." },
+            { "type": "integer", "minimum": 0, "maximum": 7 }
+          ],
+          "description": "CGB OAM palette: an OBJ ramp name (preferred) or a legacy hardware slot index."
         }
       },
       "additionalProperties": false

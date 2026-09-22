@@ -7,6 +7,7 @@
   "additionalProperties": false,
   "required": ["id", "label", "category", "sprite", "name", "hp", "max_hp", "battle_id", "gold_reward", "reward_currency"],
   "properties": {
+    "id": {
       "type": "string",
       "pattern": "^[a-z_]+$",
       "description": "Unique identifier for this enemy type (lowercase, underscores only)."
@@ -63,10 +64,11 @@
           "description": "Compose-layout tile names (tools/compose_enemy_sprites.py LAYOUT); width*height*frames entries, frame-major (frame0's width*height cells, then frame1's, ...)."
         },
         "palette": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 7,
-          "description": "CGB OAM palette index."
+          "anyOf": [
+            { "type": "string", "description": "OBJ ramp name from assets/palette.txt (preferred; the editor writes names)." },
+            { "type": "integer", "minimum": 0, "maximum": 7 }
+          ],
+          "description": "CGB OAM palette: an OBJ ramp name (preferred) or a legacy hardware slot index."
         }
       },
       "required": ["cells", "palette"],

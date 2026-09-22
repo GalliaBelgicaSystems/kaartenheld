@@ -13,7 +13,18 @@ export interface CombatArtSet {
   order: number;
   width: number;
   height: number;
-  palette: number;
+  /** BG-stamp ramp name (must hold a base slot). OAM sets encode with
+   *  obj_palette instead; this field stays present but unused by them. */
+  palette: string;
+  /** OAM path flag. OAM sets REQUIRE obj_palette. */
+  oam?: boolean;
+  /** OBJ ramp name for OAM sets (slotless by design: programmed into the
+   *  battle scratch slot at entry). */
+  obj_palette?: string;
+  /** Optional second OBJ ramp for one off-ramp cell (spider eye). */
+  obj_alt_palette?: string;
+  /** Frame-relative cell indices using obj_alt_palette. */
+  obj_alt_cells?: number[];
   frame0: Array<string | null>;
   frame1?: Array<string | null>;
 }

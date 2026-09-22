@@ -1,0 +1,29 @@
+{
+ "_doc": "Allowlisted ramp fallbacks (nearest-shade encoding of off-ramp pixels). Generated entries that MUST stay failing-free: any generated/tiles/ramp_mismatches.json entry not listed here fails `make ramp-check`. To allow a new deliberate fallback, add its entry and commit. Regenerate candidates with: python3 -c (see tools/verify_ramp_tags.py mismatch_key). DO NOT hand-edit entries to match; repaint the art instead.",
+ "allow": [
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    0,
+    4
+   ],
+   "declared": "sprites9",
+   "used_ramp": "sprites9",
+   "off_colors": [
+    "#8b1b1b"
+   ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    1,
+    4
+   ],
+   "declared": "sprites9",
+   "used_ramp": "sprites9",
+   "off_colors": [
+    "#8b1b1b"
+   ]
+  }
+ ]
+}

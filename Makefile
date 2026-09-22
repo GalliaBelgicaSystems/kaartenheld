@@ -90,7 +90,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -421,9 +421,22 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/verify_palette_manifest.py
 
 # Mismatch report: tiles whose pixels don't exactly fit their ramp.
-# Always exits green (ramps win); the JSON is the artist todo list.
+# Always exits green (ramps win); the JSON is the artist todo list. Also
+# prints the advisory ramp-tag validity findings (unknown / wrong-set tags;
+# see tools/verify_ramp_tags.py) -- advisory only, never fails.
 palette-check: manifest
 	@python3 -c "import json; m=json.load(open('generated/tiles/ramp_mismatches.json')); print('palette-check: %d reported tiles (see generated/tiles/ramp_mismatches.json)' % len(m)); [print('  %-14s %-7s declared=%-12s used=%-12s off=%s' % (r['sheet'], str(r['tile']), r['declared'], r['used_ramp'], ','.join(r['off_colors']))) for r in m]"
+	@python3 tools/verify_ramp_tags.py
+
+# Ramp-tag strict gate: every VRAM-block world tile carries an explicit
+# palette tag, the committed palette_ramps.json export (+ public copy) is
+# fresh, and every current mismatch is allowlisted (no new silent
+# fallbacks). Fails loudly; wired into CI. Deliberately NOT a manifest
+# prerequisite: it must check the committed tree as-is (regenerating first
+# would make the freshness check vacuous). Requires a prior `make manifest`
+# for generated/tiles/ramp_mismatches.json.
+ramp-check:
+	@python3 tools/verify_ramp_tags.py --strict
 
 # Tile-trait generation: manifests -> generated/tiles/tile_traits.h
 # (walk/glyph ranges + exit indices consumed by world.c, patrol_banked.c,

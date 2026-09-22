@@ -5,6 +5,9 @@ import { BUILTIN_TILESETS, TileDefinition, TilesetDefinition } from './model/Til
 import { SHEET_TILE_NAMES, COMBAT_TILE_URL, fetchCombatArtList, fetchCombatArtSet, fetchEnemyTypeList, fetchEnemyType } from './io/combatArt';
 import { CardSkin, CARD_COLOR_HEX, fetchCardSkin } from './io/cardSkin';
 import { BattleHud, fetchBattleHud } from './io/battleHud';
+import { PaletteData, fetchPalettes } from './io/palettes';
+import { cachedRecolorKey, clearRecolorCache, recoloredImage } from './io/romRecolor';
+import type { Fidelity } from './TilesetPalette';
 import { ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
 
@@ -34,9 +37,20 @@ interface MapCanvasProps {
   clonePattern?: string[][] | null;
   onClonePatternCaptured?: (pattern: string[][]) => void;
   onStampPattern?: (startX: number, startY: number, pattern: string[][]) => void;
+  /** Preview fidelity: raw artist PNGs, or the pipeline-exact ROM recolor
+   *  (exact pixel match, else nearest shade in the tile's/sprite's ramp). */
+  fidelity?: Fidelity;
+  /** Palette generation: bumped on every palette save/assign so manifests
+   *  are refetched and cached recolors dropped immediately. */
+  paletteVersion?: number;
 }
 
 const TILE_SIZE = 24; // Base pixel size per tile
+
+/* Module-wide ROM-recolor image cache: keyed by (src, ramp, transparency),
+ * shared across MapCanvas mounts so switching levels never re-recolors. */
+const romImgCache = new Map<string, HTMLImageElement>();
+const romImgPending = new Set<string>();
 
 /* Draw ROM-accurate title text with the intrepid font tiles.  The ROM maps
  * char `ch` to tile `ch - ' '` (ui_font_tile_base = 0), so the 96 tile PNGs
@@ -89,6 +103,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   clonePattern,
   onClonePatternCaptured,
   onStampPattern,
+  fidelity = 'raw',
+  paletteVersion = 0,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -265,6 +281,103 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     fetchCardSkin().then(setCardSkin).catch(() => undefined);
     fetchBattleHud().then(setHudSkin).catch(() => undefined);
   }, []);
+
+  /* ── ROM-exact preview (fidelity === 'rom') ──────────────────────────
+   *  Assigned ramps come from the manifest via the dev API
+   *  (/api/palettes); every pixel maps through the exact pipeline rule
+   *  (io/romRecolor, a port of png2gb.nearest_shade).  Offline or missing
+   *  data falls back to raw art — never a guessed recolor.  Recolored
+   *  images are cached module-wide per (src, ramp); each completion bumps
+   *  romTick so the canvas redraws with the finished image. */
+  const [palData, setPalData] = useState<PaletteData | null>(null);
+  const [romTick, setRomTick] = useState<number>(0);
+  useEffect(() => {
+    if (fidelity !== 'rom') return;
+    // A palette save redefines ramp colors: drop every cached recolor
+    // (module cache + shared engine cache) and refetch manifests, so the
+    // map reflects the save immediately without a view remount.
+    romImgCache.clear();
+    romImgPending.clear();
+    clearRecolorCache();
+    setPalData(null);
+    fetchPalettes(level.tileset).then(setPalData).catch(() => setPalData(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level.tileset, fidelity, paletteVersion]);
+
+  const tileRomColors = useMemo(() => {
+    const m = new Map<string, string[]>();
+    if (!palData) return m;
+    const slotColors = new Map<number, string[]>();
+    palData.bg.forEach((r) => slotColors.set(r.index, r.colors));
+    palData.tiles.forEach((t) => {
+      const c = slotColors.get(t.palette);
+      if (c) m.set(t.id, c);
+    });
+    return m;
+  }, [palData]);
+
+  const objRomColors = useMemo(() => {
+    const m = new Map<string, string[]>();
+    if (!palData) return m;
+    const slotColors = new Map<number, string[]>();
+    palData.obj.forEach((r) => slotColors.set(r.index, r.colors));
+    palData.enemies.forEach((e) => {
+      const c = slotColors.get(e.palette);
+      if (!c) return;
+      m.set(e.id.toUpperCase(), c);
+      const suffix = e.id.toUpperCase().split('_').pop()!;
+      if (!m.has(suffix)) m.set(suffix, c);
+      if (e.label) {
+        const lab = e.label.toUpperCase();
+        if (!m.has(lab)) m.set(lab, c);
+      }
+    });
+    return m;
+  }, [palData]);
+
+  const heroRomColors = useMemo(() => {
+    if (!palData) return null;
+    return palData.obj.find((r) => r.index === palData.hero.palette)?.colors || null;
+  }, [palData]);
+
+  const romImageFor = useCallback((src: string | undefined, colors: string[] | null, transparent0: boolean): HTMLImageElement | null => {
+    if (fidelity !== 'rom' || !src || !colors) return null;
+    const key = cachedRecolorKey(src, colors, transparent0);
+    const hit = romImgCache.get(key);
+    if (hit && hit.complete && hit.naturalWidth > 0) return hit;
+    if (!romImgPending.has(key)) {
+      romImgPending.add(key);
+      recoloredImage(src, colors, transparent0).then((img) => {
+        romImgCache.set(key, img);
+        romImgPending.delete(key);
+        setRomTick((t) => t + 1);
+      }).catch(() => { romImgPending.delete(key); });
+    }
+    return null;
+  }, [fidelity]);
+
+  /* Raw tile image, or its ROM-exact recolor when loaded. */
+  const terrainImg = useCallback((tileId: string): HTMLImageElement | null => {
+    const raw = tileImages.get(`${level.tileset}.${tileId}`) || null;
+    if (!raw) return null;
+    return romImageFor(raw.src, tileRomColors.get(tileId) || null, false) || raw;
+  }, [tileImages, level.tileset, tileRomColors, romImageFor]);
+
+  /* OBJ ramp colors for a placed object, via its enemy-type/entity id. */
+  const enemyColorsForObj = useCallback((obj: LevelObject): string[] | null => {
+    const props = ((obj as unknown as { properties?: Record<string, unknown> }).properties) || {};
+    const explicit = typeof props.enemy_type === 'string' ? props.enemy_type.toUpperCase() : '';
+    const entRaw = typeof props.entity_id === 'string' ? props.entity_id : '';
+    const conv = entRaw.startsWith('ENTITY_ID_')
+      ? entRaw.slice('ENTITY_ID_'.length).toUpperCase()
+      : entRaw.toUpperCase();
+    const battle = typeof (obj as unknown as { battle_name?: unknown }).battle_name === 'string'
+      ? ((obj as unknown as { battle_name: string }).battle_name.toUpperCase()) : '';
+    for (const k of [explicit, conv, battle]) {
+      if (k && objRomColors.has(k)) return objRomColors.get(k)!;
+    }
+    return null;
+  }, [objRomColors]);
 
   // Convert mouse pixel coordinates to tile coordinates
   const getTileCoords = (e: React.MouseEvent<HTMLCanvasElement>): { x: number; y: number } | null => {
@@ -731,7 +844,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           const py = y * tileSize;
 
           // Draw tile image if loaded, fallback to colored rect
-          const img = tileImages.get(`${level.tileset}.${tileId}`);
+          // (ROM fidelity: the pipeline-exact recolor when ready).
+          const img = terrainImg(tileId);
           if (img && img.complete && img.naturalWidth > 0) {
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(img, px, py, tileSize, tileSize);
@@ -758,7 +872,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const rh = Math.abs(dragStartTile.y - hoverTile.y) + 1;
 
       const tDef = tileMap.get(selectedTileId);
-      const img = tileImages.get(`${level.tileset}.${selectedTileId}`);
+      const img = terrainImg(selectedTileId);
       ctx.globalAlpha = 0.6;
       if (img && img.complete && img.naturalWidth > 0) {
         ctx.imageSmoothingEnabled = false;
@@ -822,7 +936,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           const ty = sy + py;
           if (tx >= level.width || ty >= level.height) continue;
 
-          const img = tileImages.get(`${level.tileset}.${tId}`);
+          const img = terrainImg(tId);
           const tDef = tileMap.get(tId);
           if (img && img.complete && img.naturalWidth > 0) {
             ctx.drawImage(img, tx * tileSize, ty * tileSize, tileSize, tileSize);
@@ -1013,7 +1127,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
               spriteId = obj.overworld_sprite;
             }
 
-            const spriteImg = spriteId ? tileImages.get(spriteId) : null;
+            const rawSprite = spriteId ? tileImages.get(spriteId) : null;
+            const spriteImg = (rawSprite
+              ? romImageFor(rawSprite.src, enemyColorsForObj(obj), true)
+              : null) || rawSprite;
             if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
               ctx.drawImage(spriteImg, px + 4, py + 4, objW - 8, objH - 8);
             }
@@ -1067,10 +1184,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 const base = frameIdx * per;
                 const cw = (gw > 1 || gh > 1) ? tileSize : objW / Math.max(1, gw);
                 const chh = (gw > 1 || gh > 1) ? tileSize : objH / Math.max(1, gh);
+                const owColors = key ? objRomColors.get(key) || null : null;
                 for (let gy = 0; gy < gh; gy++) {
                   for (let gx = 0; gx < gw; gx++) {
                     const cell = cells[base + gy * gw + gx];
-                    const img = cell ? owImgs.get(cell) : undefined;
+                    const rawCell = cell ? owImgs.get(cell) : undefined;
+                    const img = (rawCell && owColors
+                      ? romImageFor(rawCell.src, owColors, true)
+                      : null) || rawCell;
                     if (img && img.complete && img.naturalWidth > 0) {
                       ctx.imageSmoothingEnabled = false;
                       ctx.drawImage(img, px + gx * cw, py + gy * chh, cw, chh);
@@ -1088,7 +1209,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
               spriteId = obj.overworld_sprite;
             }
 
-            const spriteImg = spriteId ? tileImages.get(spriteId) : null;
+            const rawSpriteImg = spriteId ? tileImages.get(spriteId) : null;
+            const spriteImg = (rawSpriteImg
+              ? romImageFor(rawSpriteImg.src, enemyColorsForObj(obj), true)
+              : null) || rawSpriteImg;
             if (spriteImg && spriteImg.complete && spriteImg.naturalWidth > 0) {
               ctx.imageSmoothingEnabled = false;
               ctx.drawImage(spriteImg, px + 2, py + 2, tileSize - 4, tileSize - 4);
@@ -1125,7 +1249,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
           const frameKey = sp.animation_frames[animTick % sp.animation_frames.length];
           heroSpriteId = frameKey;
         }
-        const heroImg = heroSpriteId ? tileImages.get(heroSpriteId) : null;
+        const heroRaw = heroSpriteId ? tileImages.get(heroSpriteId) : null;
+        const heroImg = (heroRaw && heroRomColors
+          ? romImageFor(heroRaw.src, heroRomColors, true)
+          : null) || heroRaw;
         if (heroImg && heroImg.complete && heroImg.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(heroImg, px + 2, py + 2, tileSize - 4, tileSize - 4);
@@ -1176,6 +1303,13 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     hudSkin,
     titleFontImgs,
     titleLogoImg,
+    fidelity,
+    romTick,
+    terrainImg,
+    romImageFor,
+    enemyColorsForObj,
+    objRomColors,
+    heroRomColors,
   ]);
 
   useEffect(() => {
