@@ -14,7 +14,7 @@
     "east": "",
     "west": ""
   },
-  "default_walkable": "castle.castle_plain_floor",
+  "default_walkable": "castle.castle_floor_with_debris",
   "layers": {
     "terrain": [
       {

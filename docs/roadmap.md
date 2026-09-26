@@ -1451,6 +1451,24 @@ needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
 (`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
 SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
 
+Castle art drop (same branch, Sep 2026): 9 new tiles (throne 2x2, floor
+debris, rugs, chandeliers) merged via `merge_tileset.py`, then hand-fixed
+— lessons for the next drop: (1) the merge never writes vram `(x,y)` and
+assigns defs by 9-wide sheet position, but castle slots pack 8-wide, so
+everything from slot 8 was shifted garbage (throne_TR at slot 8 pushed
+seven defs down one); always re-derive slots from the gfx `--tile-coords`
+list. (2) Evicted defs keep stale `gb_constant`s → duplicate constants
+(7 collisions here); delete or renumber them. (3) A CSV quoting artifact
+minted junk def `castle_plain_floor_3` (cell art == base floor). (4) New
+defs arrive untagged/wrong-tagged — tag from measured pixels (thrones
+browns→castle2, rugs/chandeliers red-gold→castle3, debris gray→castle4),
+never from the misaligned mismatch report. (5) The artist painted over
+`plain_floor` (296 refs) and `chest` (3 refs): migrated to debris/table
+(blocking preserved) after verifying no sprite-field refs. CI
+`ramp-check --strict` back to green with zero repaints and zero new
+allowlist entries. `make parity` fails identically with and without this
+work (pre-existing, non-gating, not CI-run).
+
 Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
 updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)
 change full-frame (new interior — expected). Five others
