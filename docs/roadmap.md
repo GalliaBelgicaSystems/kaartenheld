@@ -1432,3 +1432,18 @@ Follow-up options for `village_area`/`desolate_field`: paged scene tables
 (`terrain_bank` + WRAM staging in `scene_load_tiles_banked`, transition
 time only) or author-side detail diet (~30 blocks/level at current density).
 
+Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
+updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)
+change full-frame (new interior — expected). Five others
+(`01-field-scrolled`, `11-battle-aftermath`, `sweep-forest_deep`,
+`sweep-forest_shrine`, `sweep-grassy_forest`, `sweep-throne_room`) differ
+by 29–54 px (same palettes — sprite-phase scale). Bisect: fossil
+`optimize_terrain` reproduces the committed bytes for those five, so the
+elision's bank-5 shrinkage deterministically shifts sprite phases in
+unrelated walks — all semantic gates stay green (harness 205/205,
+verify-oam, walkthrough 823/823), tilemaps are provably identical
+(pre-fill), and no engine C changed, but SOMETHING layout-coupled exists
+(uninitialized read or OOB-write victim shift — the §52.19 family).
+Prescription: mGBA watchpoint hunt next time this area is touched; do NOT
+treat byte-identical screenshots as proof of no behavioral coupling.
+
