@@ -1392,3 +1392,43 @@ Memory note (two waves):
    spawns ≥1 hostile, so that regression cannot recur.
    Current release headroom: bank 2 ≈2.1 KB, bank 4 ≈1.1 KB, bank 5 ≈138 B.
 
+## 12. new-levels merge (tunnels branch, Sep 2026)
+
+`origin/new-levels` (one commit on a stale base: `castle_entry` redesign,
+new `village_area` 17 + `desolate_field` 18) was cherry-picked onto
+`tunnels` (linear history). Conflict in `castle_entry.json` resolved:
+tunnels `neighbors` + enemies kept, new terrain/name/spawn taken, invalid
+`castle.forest_plain_floor_1` (287 cells) fixed to `castle.castle_plain_floor`,
+south gate opened at x=9,10, desolate `actor_id` 60→64 collision minted.
+
+Bank-5 findings (release link is ground truth, `build/kaartenheld.map`
+`l__CODE_5`): base headroom was 144 B; the two new levels add ~1576 B
+(149+139 terrain blocks — dense single-cell detail vs 20–66 for existing
+levels). No lossless fit exists: all other bank-5 residents are immovable
+(asset/atlas/tiles/oam/scene-load, smallest mover exceeds every headroom)
+and a merge post-pass saves 0 blocks (greedy output already maximal).
+
+Landed instead:
+1. Compiler elides interior default-ground blocks (`optimize_terrain`
+   generalizes the dead `TILE_FLOOR` fossil to each level's own
+   `level_default_const`, with a perimeter guard — ROM pre-fills interior
+   default, perimeter pre-fills WALL, open rows appended after are
+   untouched). -131 blocks / -655 B permanently, marginally faster loads.
+2. `compile.py` emits NULL+0 actor tables for object-less scenes (SDCC
+   rejects `{}`) — `village_area` exposed it.
+3. `castle_entry` redesign only. Release bank 5 headroom 144 B → 384 B.
+   `village_area`/`desolate_field` stay on `origin/new-levels` (intact)
+   until the world bank grows.
+
+Tunnel sweep after merge: zero point↔point one-way pairs (only the
+pre-existing `tunnel_mountain_pass_south_field` + lone
+`town→grassy_forest`, whose return is an edge — out of scope, tunnels
+cover point exits only). No conversions made.
+
+Recorded wiring for the follow-up (verified geometrically, reverted for
+budget): `town.east ↔ village_area.west` reciprocal edge pair, gate
+y=8,9 (town (19,8),(19,9) wall→floor; village (0,8),(0,9) already open).
+Follow-up options for `village_area`/`desolate_field`: paged scene tables
+(`terrain_bank` + WRAM staging in `scene_load_tiles_banked`, transition
+time only) or author-side detail diet (~30 blocks/level at current density).
+

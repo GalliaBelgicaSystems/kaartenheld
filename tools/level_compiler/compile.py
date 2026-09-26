@@ -197,6 +197,22 @@ def optimize_terrain(level_data, tileset):
     tile_dict = resolve_tiles(level_data, tileset)
     terrain = level_data.get("layers", {}).get("terrain", [])
     blocks_out = []
+    # The ROM pre-fills every interior cell with the level's default ground
+    # (scene_load_tiles_banked) and applies these rows on top, so cells
+    # already showing the default need no row. The perimeter pre-fills to
+    # TILE_WALL instead, so default cells touching the border must stay
+    # explicit (open_ground_blocks, appended after, only covers unpainted
+    # gates/linked edges — never painted cells).
+    default_const = level_default_const(level_data, tileset)
+    width = level_data["map"]["width"]
+    height = level_data["map"]["height"]
+
+    def is_redundant(tile_const, x, y, w=1, h=1):
+        return (
+            tile_const == default_const
+            and x > 0 and y > 0
+            and x + w <= width - 1 and y + h <= height - 1
+        )
 
     if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], dict):
         # Already formatted as block rects
@@ -204,8 +220,7 @@ def optimize_terrain(level_data, tileset):
             t_id = b.get("tile", "").split(".")[-1]
             t_info = tile_dict.get(t_id, {})
             gb_const = map_base_tile_const(t_info.get("gb_constant", "TILE_WALL"), t_info)
-            # If it's TILE_FLOOR and it's the default background, skip unless needed
-            if gb_const == "TILE_FLOOR":
+            if is_redundant(gb_const, b["x"], b["y"], b["width"], b["height"]):
                 continue
             blocks_out.append({
                 "x": b["x"],
@@ -219,8 +234,6 @@ def optimize_terrain(level_data, tileset):
 
     if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
         # 2D Grid: Optimize using 2D greedy rectangle merging
-        width = level_data["map"]["width"]
-        height = level_data["map"]["height"]
         visited = [[False for _ in range(width)] for _ in range(height)]
 
         for y in range(height):
@@ -231,8 +244,9 @@ def optimize_terrain(level_data, tileset):
                 t_info = tile_dict.get(t_id, {})
                 gb_const = map_base_tile_const(t_info.get("gb_constant", "TILE_FLOOR"), t_info)
 
-                # Default background is TILE_FLOOR, and perimeter is TILE_WALL
-                if gb_const in ("TILE_FLOOR", "TILE_DESOLATE_FLOOR_PLAIN"):
+                # Default ground needs no row (ROM pre-fill); the perimeter
+                # pre-fills to TILE_WALL, so border defaults stay explicit.
+                if is_redundant(gb_const, x, y):
                     visited[y][x] = True
                     continue
 
@@ -823,19 +837,32 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
     out.append(" * carries a stable ActorId (unique across scenes) so its defeat can be")
     out.append(" * recorded persistently in GameState.world and survive scene reloads.")
     out.append(" */\n")
+    empty_sids = set()
     for sid in ordered:
-        out.append(f"static const WorldActorDefinition g_{sid}_actors[] = {{")
+        rows = []
         for obj in levels_by_id[sid].get("objects", []):
             props = obj.get("properties", {}) or {}
             if not props.get("entity_id"):
                 continue  # decoration object: no engine row
-            out.append(emit_actor_row(obj, enemy_ids, entity_types))
-        out.append("};\n")
+            rows.append(emit_actor_row(obj, enemy_ids, entity_types))
+        if rows:
+            out.append(f"static const WorldActorDefinition g_{sid}_actors[] = {{")
+            out.extend(rows)
+            out.append("};\n")
+        else:
+            # No engine rows: skip the array entirely. SDCC C89 rejects
+            # empty initializers ({}), so the table below uses NULL + 0
+            # (actor_load_banked loops 0..count and never dereferences).
+            empty_sids.add(sid)
     out.append("const WorldActorTable g_actor_tables[] = {")
     for sid in ordered:
         map_id_enum = map_enum[sid]
-        out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
-        out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
+        if sid in empty_sids:
+            out.append(f"    {{ {map_id_enum + ',':<20s} 0,")
+            out.append("        0 },")
+        else:
+            out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
+            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
     out.append("};")
     # Generated table count: the fixed-bank registrar stages this byte via
     # banked_copy (no header dependency, so a stale object cannot desync it
