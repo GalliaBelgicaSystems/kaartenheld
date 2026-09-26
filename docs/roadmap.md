@@ -1408,7 +1408,7 @@ levels). No lossless fit exists: all other bank-5 residents are immovable
 (asset/atlas/tiles/oam/scene-load, smallest mover exceeds every headroom)
 and a merge post-pass saves 0 blocks (greedy output already maximal).
 
-Landed instead:
+Landed:
 1. Compiler elides interior default-ground blocks (`optimize_terrain`
    generalizes the dead `TILE_FLOOR` fossil to each level's own
    `level_default_const`, with a perimeter guard — ROM pre-fills interior
@@ -1416,21 +1416,40 @@ Landed instead:
    untouched). -131 blocks / -655 B permanently, marginally faster loads.
 2. `compile.py` emits NULL+0 actor tables for object-less scenes (SDCC
    rejects `{}`) — `village_area` exposed it.
-3. `castle_entry` redesign only. Release bank 5 headroom 144 B → 384 B.
-   `village_area`/`desolate_field` stay on `origin/new-levels` (intact)
-   until the world bank grows.
+3. `castle_entry` redesign, both new levels, both tunnels (below).
 
-Tunnel sweep after merge: zero point↔point one-way pairs (only the
-pre-existing `tunnel_mountain_pass_south_field` + lone
-`town→grassy_forest`, whose return is an edge — out of scope, tunnels
-cover point exits only). No conversions made.
+Overflow terrain banks (both levels landed in-ROM): `village_area`
+terrain → bank 7, `desolate_field` terrain → bank 6
+(`OVERFLOW_TERRAIN_BANK`, balanced ~340 B headroom each); rows + exits
+stay in bank 5. `SceneDefinition.terrain_bank` (appended last) selects;
+`scene_load_tiles()` dispatches a per-bank stamp body that reads its
+own-bank arrays directly. Release banks: 4:289, 5:295, 6:97, 7:75.
+Two dead ends documented so the next person doesn't repeat them:
+* WRAM staging in the banked body: a 5 B window works, but switching
+  banks from switchable-ROM code self-unmaps the instruction stream
+  (the copy trampoline runs from WRAM for exactly this reason), and
+  struct assignment lowers to `call ___memcpy` (unmapped while
+  switched) — CPU runs away with the LCD off, which presents as PyBoy
+  `tick()` blocking forever (99.7% CPU, zero log output). Verify
+  switched bodies with `lcc -S` (zero `call`s). See docs/level-editor.md
+  Phase 22.
+* An 800 B WRAM staging static flipped hostile spawning under the
+  harness with zero execution difference (BSS-layout sensitivity,
+  §52.19 family); small statics did not. Keep new WRAM statics tiny
+  and let the sentinels judge.
 
-Recorded wiring for the follow-up (verified geometrically, reverted for
-budget): `town.east ↔ village_area.west` reciprocal edge pair, gate
-y=8,9 (town (19,8),(19,9) wall→floor; village (0,8),(0,9) already open).
-Follow-up options for `village_area`/`desolate_field`: paged scene tables
-(`terrain_bank` + WRAM staging in `scene_load_tiles_banked`, transition
-time only) or author-side detail diet (~30 blocks/level at current density).
+Tunnels added (user choice: point pairs, auto `tunnel_a_b` naming):
+`tunnel_town_village_area` (town (18,8) EAST `>` ↔ village (1,8) WEST
+`<`) and `tunnel_desolate_field_south_field` (south_field (5,14) SOUTH
+`>` ↔ desolate (10,14) NORTH `<`). Both pass the compile-time tunnel
+contract; gates sit on existing floor (zero terrain bytes; invisible-
+portal warnings accepted, precedented by fixtures).
+
+Remaining follow-ups: bank 6/7 margins (~100/75 B) fit ~1 small level's
+terrain before another overflow entry (or ROM growth past 8 banks) is
+needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
+(`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
+SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
 
 Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
 updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)

@@ -1237,3 +1237,35 @@ opt-in per exit, never forced.
   partners of deleted levels (delete), same as exits.
 * Whole-edge `neighbors` links are out of scope — tunnels cover point
   exits only.
+
+# Phase 22 — Overflow terrain banks (world bank is full)
+
+Release bank 5 (scene table + tile/atlas/OAM content) sits at ~144 B
+headroom, so detailed new levels no longer fit it. Scenes whose terrain
+exceeds the budget keep their `s_<id>_terrain` arrays in a roomier bank
+(`OVERFLOW_TERRAIN_BANK` in `tools/level_compiler/compile.py`: desolate
+→ 6, village → 7) and record it in `SceneDefinition.terrain_bank`
+(appended last, offsets never shift). `scene_load_tiles()` (fixed bank)
+dispatches a per-bank stamp body (`terrain_stamp_b<N>_banked`, emitted
+into the same file as its arrays) that reads its own-bank tables
+directly. Rules that bit and must not be re-broken:
+* **Never switch banks inside a banked body.** Code executing from
+  switchable ROM unmaps its own instruction stream the moment it
+  selects another bank (the WRAM copy trampoline exists for exactly
+  this reason). The home body skips foreign terrain; only fixed-bank
+  code dispatches.
+* **No calls while switched — including compiler-generated ones.**
+  `s_terrain_window = tbl[i]` lowers to `call ___memcpy`, unmapped
+  while switched: CPU runs away with the LCD off (PyBoy's frame wait
+  then never returns — 99.7% CPU, zero log output). Scalar moves only.
+  Verify with `lcc -S` (zero `call`s in switched bodies).
+* **Keep new WRAM statics tiny.** An 800 B staging buffer flipped
+  hostile spawning under the harness with zero execution difference
+  (BSS-layout sensitivity, §52.19 family); the 5 B window did not.
+* Stamp bodies omit bounds clamps deliberately: `validate.py` fails
+  loudly on out-of-bounds terrain, so committed content always fits
+  (the home body keeps its own clamps).
+* If `OVERFLOW_TERRAIN_BANK` gains a bank: add the terrain file to
+  `Makefile` `CONTENT_SRCS`, extend the `terrain_stamp_b<N>` dispatch
+  in `scene.c`, and cover `decompile.py` (it already parses split
+  files); `make memmap` guards all bank budgets.
