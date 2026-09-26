@@ -37,6 +37,13 @@
         "width": 1,
         "height": 1,
         "tile": "desolate_landscape.desolate_landscape_fire_frame_1"
+      },
+      {
+        "x": 5,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_exit_desolate_landscape"
       }
     ]
   },

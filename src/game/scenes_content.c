@@ -56,6 +56,7 @@ static const SceneTerrainBlock s_town_terrain[] = {
     { 2, 5, 1, 1, TILE_VILLAGE_22 },
     { 4, 5, 1, 1, TILE_VILLAGE_37 },
     { 14, 5, 1, 1, TILE_VILLAGE_37 },
+    { 18, 8, 1, 1, TILE_VILLAGE_40 },
     { 0, 9, 1, 8, TILE_VILLAGE_06 },
     { 1, 9, 1, 1, TILE_VILLAGE_40 },
     { 2, 9, 1, 1, TILE_VILLAGE_22 },
@@ -189,7 +190,7 @@ static const SceneTerrainBlock s_castle_terrain[] = {
 static const SceneTerrainBlock s_south_field_terrain[] = {
     { 12, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_40 },
     { 17, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_37 },
-    { 5, 14, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 5, 14, 1, 1, TILE_DESOLATE_LANDSCAPE_40 },
     { 0, 0, 20, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 19, 1, 1, 17, TILE_DESOLATE_LANDSCAPE_39 },
     { 0, 0, 0, 0, 0 }

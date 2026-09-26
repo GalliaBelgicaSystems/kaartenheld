@@ -1834,15 +1834,17 @@ function levelEditorApiPlugin(): Plugin {
                 to.exits.push(toExit);
                 created = true;
               }
+              let touched = created;
               if (tunnelId) {
                 // Adopt a legacy return into the tunnel: same id, mutual
-                // target, landing on this mouth.
-                toExit.tunnel = tunnelId;
-                toExit.target_scene = from_id;
-                toExit.target_x = exit.x;
-                toExit.target_y = exit.y;
+                // target, landing on this mouth. Only persists when a value
+                // actually changes, so idempotent saves don't bump mtime.
+                if (toExit.tunnel !== tunnelId) { toExit.tunnel = tunnelId; touched = true; }
+                if (toExit.target_scene !== from_id) { toExit.target_scene = from_id; touched = true; }
+                if (toExit.target_x !== exit.x) { toExit.target_x = exit.x; touched = true; }
+                if (toExit.target_y !== exit.y) { toExit.target_y = exit.y; touched = true; }
               }
-              writeJsonAtomic(levelAbs(toId), to);
+              if (touched) writeJsonAtomic(levelAbs(toId), to);
               sendJson({ success: true, from_exit: exit, from_exits: a.exits,
                          to_exit: toExit, created, tunnel: tunnelId });
             } catch (err: any) {

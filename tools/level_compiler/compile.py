@@ -41,7 +41,7 @@ from collision import (  # noqa: E402,F401
     NEIGHBOR_DIRS, cell_tile_info, default_actor_flags, derive_collision,
     first_plain_tile, level_default_tile, load_level, map_base_tile_const,
     neighbor_pairing_issues, neighbor_targets, point_exit_issues,
-    resolve_tiles, tunnel_id_valid, tunnel_issues,
+    resolve_tiles, tunnel_issues,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
