@@ -1,18 +1,24 @@
 #ifdef TEST_LEVELS
 #pragma bank 4
+#define SCENE_HOME_BANK 4
 #else
 #pragma bank 5
+#define SCENE_HOME_BANK 5
 #endif
 
 #include "scene.h"
 #include "banked.h"
 
-/* Banked body of scene_load_tiles() (see scene.c).  Lives in ROM bank 2 and
- * runs through the WRAM banked-call trampoline so the ~600-byte terrain
- * builder does not consume the fixed-bank _CODE budget.  Self-contained: the
- * scene tables (g_scenes / exits / terrain blocks) all live in this same
- * bank, so it reads them directly (no banked_copy, no fixed-bank calls).  It
- * reads the World pointer from g_bk_ptr_a and the map id from g_bk_byte_a. */
+/* Banked body of scene_load_tiles() (see scene.c).  Lives in the home
+ * content bank (5 release, 4 TEST fixtures) and runs through the WRAM
+ * banked-call trampoline so the terrain builder does not consume the
+ * fixed-bank _CODE budget.  Self-contained: the scene tables
+ * (g_scenes / exits / terrain blocks) are read directly while this bank
+ * is mapped (no banked_copy, no fixed-bank calls).  Overflow scenes keep
+ * their terrain_blocks in a roomier bank (SceneDefinition.terrain_bank);
+ * the fixed wrapper dispatches a per-bank stamp body for those (see
+ * scene.c).  It reads the World pointer from g_bk_ptr_a and the map id
+ * from g_bk_byte_a. */
 
 extern const SceneDefinition g_scenes[];
 
@@ -21,6 +27,7 @@ void scene_load_tiles_banked(void)
     World *w = (World *)g_bk_ptr_a;
     MapId map_id = (MapId)g_bk_byte_a;
     const SceneDefinition *def;
+    const SceneTerrainBlock *tbl;
     uint8_t i, x, y;
 
     if (!w) return;
@@ -43,9 +50,18 @@ void scene_load_tiles_banked(void)
         }
     }
 
-    if (def->terrain_blocks) {
+    /* Overflow terrain lives in another bank: skip it here. The fixed
+     * wrapper (scene_load_tiles) dispatches a per-bank stamp body for
+     * those scenes, which reads its own-bank arrays directly. Switching
+     * banks here is impossible: this body executes from switchable ROM,
+     * so selecting another bank would unmap its own instruction stream
+     * mid-execution (the WRAM copy trampoline exists for exactly this
+     * reason). The TEST build never skips (fixture terrain shares
+     * bank 4). */
+    tbl = def->terrain_blocks;
+    if (tbl && def->terrain_bank == SCENE_HOME_BANK) {
         for (i = 0; ; i++) {
-            const SceneTerrainBlock *b = &def->terrain_blocks[i];
+            const SceneTerrainBlock *b = &tbl[i];
             uint8_t ex, ey;
             if (b->w == 0) break;
             ey = (uint8_t)(b->y + b->h);

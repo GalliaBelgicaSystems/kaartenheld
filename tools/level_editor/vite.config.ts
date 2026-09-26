@@ -1390,6 +1390,227 @@ function levelEditorApiPlugin(): Plugin {
           return;
         }
 
+        // ── Auto exits ────────────────────────────────────────────────
+        // A one-directional exit (the hand-authored norm) leaves a level
+        // unreachable from the other side.  These endpoints compute the
+        // reciprocal ("return") exit so the editor can preview it and
+        // assign it in one click.  Placement is deterministic:
+        //   direction  -> opposite side of the target map
+        //   gate       -> one tile inside that side, on the landing row/col
+        //   return spawn -> the tile just inside the from-gate
+        const EXIT_OPPOSITE: Record<string, string> = {
+          NORTH: 'SOUTH', SOUTH: 'NORTH', EAST: 'WEST', WEST: 'EAST',
+        };
+        const EXIT_VEC: Record<string, [number, number]> = {
+          NORTH: [0, -1], SOUTH: [0, 1], EAST: [1, 0], WEST: [-1, 0],
+        };
+        const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+        const readLevel = (id: string) => {
+          if (!isSafeId(id)) throw new Error(`invalid level id '${id}'`);
+          return readJsonFile(path.join('levels', `${id}.json`));
+        };
+        const proposeReturn = (fromId: string, ex: any) => {
+          const toId = ex?.target_scene;
+          if (!toId || !isSafeId(toId)) throw new Error('exit has no valid target scene');
+          if (toId === fromId) throw new Error('exit targets its own level');
+          const to = readLevel(toId);
+          const bw: number = to.map?.width, bh: number = to.map?.height;
+          if (!bw || !bh) throw new Error(`level ${toId} has no map size`);
+          const dir = ex.direction || 'SOUTH';
+          const rdir = EXIT_OPPOSITE[dir];
+          if (!rdir) throw new Error(`exit direction '${dir}' is invalid`);
+          let gx: number, gy: number;
+          if (rdir === 'WEST') { gx = 1; gy = clamp(ex.target_y ?? 1, 1, bh - 2); }
+          else if (rdir === 'EAST') { gx = bw - 2; gy = clamp(ex.target_y ?? 1, 1, bh - 2); }
+          else if (rdir === 'NORTH') { gy = 1; gx = clamp(ex.target_x ?? 1, 1, bw - 2); }
+          else { gy = bh - 2; gx = clamp(ex.target_x ?? 1, 1, bw - 2); }
+          const from = readLevel(fromId);
+          const fw: number = from.map?.width, fh: number = from.map?.height;
+          const dv = EXIT_VEC[dir] || [0, 1];
+          const sx = clamp((ex.x ?? 0) - dv[0], 0, (fw || 1) - 1);
+          const sy = clamp((ex.y ?? 0) - dv[1], 0, (fh || 1) - 1);
+          return {
+            x: gx, y: gy, target_scene: fromId,
+            target_x: sx, target_y: sy, direction: rdir,
+            tile_char: rdir === 'WEST' ? '<' : '>',
+          };
+        };
+        const findReturn = (toLevel: any, fromId: string) =>
+          (toLevel.exits || []).find((e: any) => e.target_scene === fromId) || null;
+
+        // ── Two-way tunnels ─────────────────────────────────────────
+        // A tunnel is two point exits sharing a `tunnel` id (one in each
+        // of two levels, mutual targets, each landing on the other's
+        // gate).  The ROM format is unchanged (two plain SceneExit rows);
+        // the id lives only in JSON + tooling, which keeps the pair in
+        // sync.  Same id shape as scene ids (lowercase, letter-first).
+        const TUNNEL_ID_RE = /^[a-z][a-z0-9_]*$/;
+        const tunnelIdValid = (t: unknown) =>
+          typeof t === 'string' && TUNNEL_ID_RE.test(t);
+        const levelFiles = () =>
+          fs.readdirSync(path.join(repoRoot, 'levels'))
+            .filter((f) => f.endsWith('.json') && f !== 'registry.json');
+        // Single-scan snapshot of every level file (skips unreadable; the
+        // compiler gate flags real problems loudly).  Shared by the tunnel
+        // helpers below so one request does one readdir+parse pass instead
+        // of one scan per candidate / per phase.
+        const readAllLevels = (): Array<{ file: string; data: any }> => {
+          const out: Array<{ file: string; data: any }> = [];
+          for (const f of levelFiles()) {
+            try {
+              out.push({ file: f, data: JSON.parse(fs.readFileSync(path.join(repoRoot, 'levels', f), 'utf-8')) });
+            } catch { continue; }
+          }
+          return out;
+        };
+        const tunnelTakenOnDisk = (tunnel: string, preloaded?: Array<{ file: string; data: any }>): boolean => {
+          const snapshot = preloaded || readAllLevels();
+          for (const { data } of snapshot) {
+            for (const e of data.exits || []) {
+              if (e && e.tunnel === tunnel) return true;
+            }
+          }
+          return false;
+        };
+        // Deterministic fresh id for a from->to pair; suffixed on collision.
+        const newTunnelId = (fromId: string, toId: string, preloaded?: Array<{ file: string; data: any }>): string => {
+          const [a, b] = [fromId, toId].sort();
+          const base = `tunnel_${a}_${b}`;
+          const snapshot = preloaded || readAllLevels();
+          const taken = new Set<string>();
+          for (const { data } of snapshot) {
+            for (const e of data.exits || []) {
+              if (e && typeof e.tunnel === 'string' && e.tunnel) taken.add(e.tunnel);
+            }
+          }
+          let cand = base, n = 2;
+          while (taken.has(cand)) cand = `${base}_${n++}`;
+          return cand;
+        };
+        // Coordinate-aware tunnel partner lookup: prefer the exact
+        // tunnel-id match; otherwise pick among untunneled returns to
+        // `fromId` — single candidate wins, multiple candidates resolve by
+        // spawn-tracks-gate coordinate (mouth landing == return gate), and
+        // ambiguity returns null so the caller creates a fresh partner
+        // instead of absorbing an unrelated passage.  Never adopts a mouth
+        // carrying a different tunnel id.
+        const findTunnelPartner = (toExits: any[], tunnelId: string, fromId: string, mouth: any): any | null => {
+          const byTunnel = (toExits || []).find((e: any) => e && e.tunnel === tunnelId);
+          if (byTunnel) return byTunnel;
+          const candidates = (toExits || []).filter((e: any) =>
+            e && e.target_scene === fromId && !(typeof e.tunnel === 'string' && e.tunnel));
+          if (candidates.length === 1) return candidates[0];
+          if (candidates.length > 1 && mouth) {
+            const aligned = candidates.find((e: any) => e.x === mouth.target_x && e.y === mouth.target_y);
+            if (aligned) return aligned;
+            return null;
+          }
+          return candidates[0] || null;
+        };
+        // Per-tunnel pairing status over a levels map (disk + overrides).
+        // Mirrors tools/level_compiler/collision.py tunnel_report():
+        // same invariants (count == 2, different levels, mutual targets,
+        // spawn-tracks-gate).  Keep both in sync; the parity corpus in
+        // tools/level_compiler/tests/test_tunnel_parity.py guards drift.
+        const tunnelStatus = (tunnel: string, levels: Record<string, any>) => {
+          const ends: Array<{ level: string; index: number; exit: any }> = [];
+          for (const name of Object.keys(levels).sort()) {
+            (levels[name].exits || []).forEach((e: any, i: number) => {
+              if (e && e.tunnel === tunnel) ends.push({ level: name, index: i, exit: e });
+            });
+          }
+          if (ends.length !== 2) {
+            return {
+              ok: false,
+              error: ends.length < 2
+                ? `tunnel '${tunnel}' has only one end — create the return exit with the same tunnel id, or remove it to keep a one-way exit`
+                : `tunnel '${tunnel}' has ${ends.length} ends — a tunnel is exactly two mouths`,
+            };
+          }
+          const [A, B] = ends;
+          if (A.level === B.level) {
+            return { ok: false, error: `tunnel '${tunnel}' has both ends in '${A.level}' — mouths must live in different levels` };
+          }
+          if (A.exit.target_scene !== B.level || B.exit.target_scene !== A.level) {
+            return { ok: false, error: `tunnel '${tunnel}' targets are not mutual (${A.level} → '${A.exit.target_scene}', ${B.level} → '${B.exit.target_scene}')` };
+          }
+          if (A.exit.target_x !== B.exit.x || A.exit.target_y !== B.exit.y ||
+              B.exit.target_x !== A.exit.x || B.exit.target_y !== A.exit.y) {
+            return { ok: false, error: `tunnel '${tunnel}' landings drifted — save the level to re-sync each landing onto the other mouth` };
+          }
+          return { ok: true, error: null as string | null };
+        };
+        // Full auto-sync after saving level `savedId`: every tunnel mouth
+        // in the saved data gets its partner created/updated (target back
+        // at the saver, landing on the saver's gate); lone partner rows
+        // left behind by a deleted mouth are removed.  Returns counts for
+        // the save response.  Throws nothing — partner files that cannot
+        // be read are skipped (the compiler gate flags the pair loudly).
+        const syncTunnels = (savedId: string, savedData: any) => {
+          let synced = 0;
+          const removed: string[] = [];
+          const savedExits = Array.isArray(savedData.exits) ? savedData.exits : [];
+          const live = new Map<string, any>();
+          for (const e of savedExits) {
+            if (e && typeof e.tunnel === 'string' && e.tunnel && e.target_scene) {
+              if (!tunnelIdValid(e.tunnel)) continue;
+              live.set(e.tunnel, e);
+            }
+          }
+          for (const [tunnel, e] of live) {
+            const toId = e.target_scene;
+            if (!isSafeId(toId) || toId === savedId) continue;
+            let to: any;
+            try { to = readLevel(toId); } catch { continue; }
+            to.exits = to.exits || [];
+            let partner = to.exits.find((x: any) => x && x.tunnel === tunnel);
+            if (!partner) {
+              partner = { ...proposeReturn(savedId, e), tunnel };
+              to.exits.push(partner);
+            }
+            partner.target_scene = savedId;
+            partner.target_x = e.x;
+            partner.target_y = e.y;
+            partner.tunnel = tunnel;
+            writeJsonAtomic(levelAbs(toId), to);
+            synced++;
+          }
+          // Lone ends elsewhere (partner of a deleted mouth): drop the
+          // orphan row.  Count ends disk-wide first (the saved file is
+          // already fresh on disk): a healthy pair in two untouched
+          // levels counts 2 and is never disturbed; only a true lone row
+          // (count 1, outside the saved level) is removed.  Lone ends IN
+          // the saved level are left alone — the author may be
+          // mid-authoring, and the compiler flags them loudly.
+          // One snapshot serves both the count and the sweep (taken after
+          // the partner writes above, so it sees the fresh pairs).
+          const snapshot = readAllLevels();
+          const counts = new Map<string, number>();
+          for (const { data } of snapshot) {
+            for (const x of data.exits || []) {
+              if (x && typeof x.tunnel === 'string' && x.tunnel) {
+                counts.set(x.tunnel, (counts.get(x.tunnel) || 0) + 1);
+              }
+            }
+          }
+          for (const { file: f, data } of snapshot) {
+            if (f === `${savedId}.json`) continue;
+            const before = (data.exits || []).length;
+            data.exits = (data.exits || []).filter((x: any) => {
+              if (x && typeof x.tunnel === 'string' && x.tunnel &&
+                  (counts.get(x.tunnel) || 0) <= 1) {
+                removed.push(`${data.id || f}:${x.tunnel}`);
+                return false;
+              }
+              return true;
+            });
+            if (data.exits.length !== before) {
+              writeJsonAtomic(path.join(repoRoot, 'levels', f), data);
+            }
+          }
+          return { synced, removed };
+        };
+
         if (req.method === 'POST' && req.url === '/api/save-level') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
@@ -1412,8 +1633,22 @@ function levelEditorApiPlugin(): Plugin {
               // assigns the next dense scene id on first save, preserves the
               // numeric id on rename (rewiring exits), and never reuses ids.
               const sceneId = saveRealLevel(id, previousId ?? null, data);
+              // Tunnel auto-sync: partner mouths follow this save
+              // (target back here, landing on this gate); orphaned rows of
+              // deleted mouths are removed.  Reported, never silent.
+              let tunnels_synced = 0;
+              let tunnels_removed: string[] = [];
+              let tunnel_error: string | null = null;
+              try {
+                const sync = syncTunnels(id, data);
+                tunnels_synced = sync.synced;
+                tunnels_removed = sync.removed;
+              } catch (err: any) {
+                tunnel_error = err.message;
+              }
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ success: true, path: levelAbs(id), scene_id: sceneId }));
+              res.end(JSON.stringify({ success: true, path: levelAbs(id), scene_id: sceneId,
+                                       tunnels_synced, tunnels_removed, tunnel_error }));
             } catch (err: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: false, error: err.message }));
@@ -1467,56 +1702,9 @@ function levelEditorApiPlugin(): Plugin {
           return;
         }
 
-        // ── Auto exits ────────────────────────────────────────────────
-        // A one-directional exit (the hand-authored norm) leaves a level
-        // unreachable from the other side.  These endpoints compute the
-        // reciprocal ("return") exit so the editor can preview it and
-        // assign it in one click.  Placement is deterministic:
-        //   direction  -> opposite side of the target map
-        //   gate       -> one tile inside that side, on the landing row/col
-        //   return spawn -> the tile just inside the from-gate
-        const EXIT_OPPOSITE: Record<string, string> = {
-          NORTH: 'SOUTH', SOUTH: 'NORTH', EAST: 'WEST', WEST: 'EAST',
-        };
-        const EXIT_VEC: Record<string, [number, number]> = {
-          NORTH: [0, -1], SOUTH: [0, 1], EAST: [1, 0], WEST: [-1, 0],
-        };
-        const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-        const readLevel = (id: string) => {
-          if (!isSafeId(id)) throw new Error(`invalid level id '${id}'`);
-          return readJsonFile(path.join('levels', `${id}.json`));
-        };
-        const proposeReturn = (fromId: string, ex: any) => {
-          const toId = ex?.target_scene;
-          if (!toId || !isSafeId(toId)) throw new Error('exit has no valid target scene');
-          if (toId === fromId) throw new Error('exit targets its own level');
-          const to = readLevel(toId);
-          const bw: number = to.map?.width, bh: number = to.map?.height;
-          if (!bw || !bh) throw new Error(`level ${toId} has no map size`);
-          const dir = ex.direction || 'SOUTH';
-          const rdir = EXIT_OPPOSITE[dir];
-          if (!rdir) throw new Error(`exit direction '${dir}' is invalid`);
-          let gx: number, gy: number;
-          if (rdir === 'WEST') { gx = 1; gy = clamp(ex.target_y ?? 1, 1, bh - 2); }
-          else if (rdir === 'EAST') { gx = bw - 2; gy = clamp(ex.target_y ?? 1, 1, bh - 2); }
-          else if (rdir === 'NORTH') { gy = 1; gx = clamp(ex.target_x ?? 1, 1, bw - 2); }
-          else { gy = bh - 2; gx = clamp(ex.target_x ?? 1, 1, bw - 2); }
-          const from = readLevel(fromId);
-          const fw: number = from.map?.width, fh: number = from.map?.height;
-          const dv = EXIT_VEC[dir] || [0, 1];
-          const sx = clamp((ex.x ?? 0) - dv[0], 0, (fw || 1) - 1);
-          const sy = clamp((ex.y ?? 0) - dv[1], 0, (fh || 1) - 1);
-          return {
-            x: gx, y: gy, target_scene: fromId,
-            target_x: sx, target_y: sy, direction: rdir,
-            tile_char: rdir === 'WEST' ? '<' : '>',
-          };
-        };
-        const findReturn = (toLevel: any, fromId: string) =>
-          (toLevel.exits || []).find((e: any) => e.target_scene === fromId) || null;
-
         // Preview: for each exit of `from_id`, does the target already
-        // have a return, and if not, what would we create?
+        // have a return, and if not, what would we create?  Tunnel pairing
+        // state rides along so the editor can show 🔗 vs one-way per exit.
         if (req.method === 'POST' && req.url === '/api/exit-status') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
@@ -1524,16 +1712,56 @@ function levelEditorApiPlugin(): Plugin {
             try {
               const { from_id, exits } = JSON.parse(body);
               if (!isSafeId(from_id)) throw new Error(`invalid from_id '${from_id}'`);
-              const items = (Array.isArray(exits) ? exits : []).map((ex: any, i: number) => {
+              const list = Array.isArray(exits) ? exits : [];
+              // Disk levels with the from-level overridden by the editor's
+              // (possibly unsaved) exits, so tunnel status reflects what a
+              // save would produce.  One snapshot serves the levels map and
+              // the suggested-tunnel allocation below.
+              const snapshot = readAllLevels();
+              const levels: Record<string, any> = {};
+              for (const { data } of snapshot) {
+                if (data && data.id) levels[data.id] = data;
+              }
+              levels[from_id] = { ...(levels[from_id] || {}), exits: list };
+              const taken = new Set<string>();
+              for (const { data } of snapshot) {
+                for (const e of data.exits || []) {
+                  if (e && typeof e.tunnel === 'string' && e.tunnel) taken.add(e.tunnel);
+                }
+              }
+              const freshTunnelId = (fromId: string, toId: string): string => {
+                const [fa, fb] = [fromId, toId].sort();
+                const base = `tunnel_${fa}_${fb}`;
+                let cand = base, n = 2;
+                while (taken.has(cand)) cand = `${base}_${n++}`;
+                taken.add(cand);
+                return cand;
+              };
+              const items = list.map((ex: any, i: number) => {
+                const tunnel = (ex && typeof ex.tunnel === 'string' && ex.tunnel)
+                  ? ex.tunnel : null;
+                let tunnel_ok: boolean | null = null;
+                let tunnel_error: string | null = null;
+                if (tunnel) {
+                  if (!tunnelIdValid(tunnel)) {
+                    tunnel_error = `tunnel id '${tunnel}' is invalid (lowercase, letter-first)`;
+                  } else {
+                    const st = tunnelStatus(tunnel, levels);
+                    tunnel_ok = st.ok;
+                    tunnel_error = st.error;
+                  }
+                }
                 try {
                   const to = readLevel(ex.target_scene);
                   const ret = findReturn(to, from_id);
                   return { index: i, target: ex.target_scene, has_return: !!ret,
                            return_exit: ret, proposal: ret ? null : proposeReturn(from_id, ex),
-                           error: null };
+                           error: null, tunnel, tunnel_ok, tunnel_error,
+                           suggested_tunnel: tunnel || freshTunnelId(from_id, ex.target_scene) };
                 } catch (e: any) {
                   return { index: i, target: ex?.target_scene || '?', has_return: false,
-                           return_exit: null, proposal: null, error: e.message };
+                           return_exit: null, proposal: null, error: e.message,
+                           tunnel, tunnel_ok, tunnel_error, suggested_tunnel: null };
                 }
               });
               sendJson({ success: true, items });
@@ -1548,32 +1776,110 @@ function levelEditorApiPlugin(): Plugin {
         // Assign: upsert the exit into the from-level and create the
         // reciprocal in the target level when missing.  Both files are
         // written atomically; existing returns are never duplicated.
+        // With as_tunnel, both ends share one tunnel id (adopting a legacy
+        // return when present) with spawn-tracks-gate landings, and the
+        // updated from-level exits come back so editor state cannot go
+        // stale (a later save would otherwise overwrite the pairing).
         if (req.method === 'POST' && req.url === '/api/connect-levels') {
           let body = '';
           req.on('data', chunk => { body += chunk; });
           req.on('end', () => {
             try {
-              const { from_id, exit } = JSON.parse(body);
+              const { from_id, exit, as_tunnel, tunnel } = JSON.parse(body);
               if (!isSafeId(from_id)) throw new Error(`invalid from_id '${from_id}'`);
+              const toId = exit.target_scene;
+              if (!isSafeId(toId)) throw new Error('exit has no valid target scene');
+              if (toId === from_id) throw new Error('exit targets its own level');
               const a = readLevel(from_id);
               a.exits = a.exits || [];
+              let tunnelId: string | null = null;
+              if (as_tunnel) {
+                const snap = readAllLevels();
+                tunnelId = (typeof tunnel === 'string' && tunnel && tunnelIdValid(tunnel) &&
+                            !tunnelTakenOnDisk(tunnel, snap))
+                  ? tunnel : newTunnelId(from_id, toId, snap);
+                exit.tunnel = tunnelId;
+                // This mouth lands on the partner gate: adopt the existing
+                // return's gate when present, else the fresh proposal's.
+                // Coordinate-aware: with several untunneled returns to
+                // from_id, only the one already landing on this mouth's
+                // gate is adopted; ambiguity creates a fresh partner
+                // instead of absorbing an unrelated passage.
+                const toPeek = readLevel(toId);
+                const legacy = findTunnelPartner(toPeek.exits || [], tunnelId, from_id, exit);
+                if (legacy) {
+                  exit.target_x = legacy.x;
+                  exit.target_y = legacy.y;
+                } else {
+                  const prop = proposeReturn(from_id, exit);
+                  exit.target_x = prop.x;
+                  exit.target_y = prop.y;
+                }
+              }
               const idx = a.exits.findIndex((e: any) =>
                 e.x === exit.x && e.y === exit.y && e.target_scene === exit.target_scene);
               if (idx >= 0) a.exits[idx] = exit; else a.exits.push(exit);
               writeJsonAtomic(levelAbs(from_id), a);
 
-              const toId = exit.target_scene;
               const to = readLevel(toId);
-              let toExit = findReturn(to, from_id);
+              to.exits = to.exits || [];
+              let toExit = tunnelId
+                ? findTunnelPartner(to.exits, tunnelId, from_id, exit)
+                : findReturn(to, from_id);
               let created = false;
               if (!toExit) {
-                toExit = proposeReturn(from_id, exit);
-                to.exits = to.exits || [];
+                toExit = tunnelId
+                  ? { ...proposeReturn(from_id, exit), tunnel: tunnelId }
+                  : proposeReturn(from_id, exit);
                 to.exits.push(toExit);
-                writeJsonAtomic(levelAbs(toId), to);
                 created = true;
               }
-              sendJson({ success: true, from_exit: exit, to_exit: toExit, created });
+              if (tunnelId) {
+                // Adopt a legacy return into the tunnel: same id, mutual
+                // target, landing on this mouth.
+                toExit.tunnel = tunnelId;
+                toExit.target_scene = from_id;
+                toExit.target_x = exit.x;
+                toExit.target_y = exit.y;
+              }
+              writeJsonAtomic(levelAbs(toId), to);
+              sendJson({ success: true, from_exit: exit, from_exits: a.exits,
+                         to_exit: toExit, created, tunnel: tunnelId });
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+          });
+          return;
+        }
+
+        // Unlink a tunnel: strip the id from every mouth (both rows stay
+        // as independent one-way exits).  Deleting is different — that
+        // goes through save-time sync, which removes the orphaned row.
+        if (req.method === 'POST' && req.url === '/api/tunnel-unlink') {
+          let body = '';
+          req.on('data', chunk => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const { tunnel } = JSON.parse(body);
+              if (!tunnelIdValid(tunnel)) throw new Error(`invalid tunnel id '${tunnel}'`);
+              let clearedFiles = 0, clearedExits = 0;
+              for (const { file: f, data } of readAllLevels()) {
+                const abs = path.join(repoRoot, 'levels', f);
+                let touched = false;
+                for (const e of data.exits || []) {
+                  if (e && e.tunnel === tunnel) {
+                    delete e.tunnel;
+                    touched = true;
+                    clearedExits++;
+                  }
+                }
+                if (touched) {
+                  writeJsonAtomic(abs, data);
+                  clearedFiles++;
+                }
+              }
+              sendJson({ success: true, cleared: clearedFiles, exits: clearedExits });
             } catch (err: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: false, error: err.message }));

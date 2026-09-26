@@ -435,6 +435,16 @@
       "target_y": 9,
       "direction": "WEST",
       "tile_char": ">"
+    },
+    {
+      "x": 18,
+      "y": 8,
+      "target_scene": "village_area",
+      "target_x": 1,
+      "target_y": 8,
+      "direction": "EAST",
+      "tile_char": ">",
+      "tunnel": "tunnel_town_village_area"
     }
   ],
   "objects": [

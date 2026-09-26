@@ -41,7 +41,7 @@ from collision import (  # noqa: E402,F401
     NEIGHBOR_DIRS, cell_tile_info, default_actor_flags, derive_collision,
     first_plain_tile, level_default_tile, load_level, map_base_tile_const,
     neighbor_pairing_issues, neighbor_targets, point_exit_issues,
-    resolve_tiles,
+    resolve_tiles, tunnel_id_valid, tunnel_issues,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
@@ -197,6 +197,22 @@ def optimize_terrain(level_data, tileset):
     tile_dict = resolve_tiles(level_data, tileset)
     terrain = level_data.get("layers", {}).get("terrain", [])
     blocks_out = []
+    # The ROM pre-fills every interior cell with the level's default ground
+    # (scene_load_tiles_banked) and applies these rows on top, so cells
+    # already showing the default need no row. The perimeter pre-fills to
+    # TILE_WALL instead, so default cells touching the border must stay
+    # explicit (open_ground_blocks, appended after, only covers unpainted
+    # gates/linked edges — never painted cells).
+    default_const = level_default_const(level_data, tileset)
+    width = level_data["map"]["width"]
+    height = level_data["map"]["height"]
+
+    def is_redundant(tile_const, x, y, w=1, h=1):
+        return (
+            tile_const == default_const
+            and x > 0 and y > 0
+            and x + w <= width - 1 and y + h <= height - 1
+        )
 
     if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], dict):
         # Already formatted as block rects
@@ -204,8 +220,7 @@ def optimize_terrain(level_data, tileset):
             t_id = b.get("tile", "").split(".")[-1]
             t_info = tile_dict.get(t_id, {})
             gb_const = map_base_tile_const(t_info.get("gb_constant", "TILE_WALL"), t_info)
-            # If it's TILE_FLOOR and it's the default background, skip unless needed
-            if gb_const == "TILE_FLOOR":
+            if is_redundant(gb_const, b["x"], b["y"], b["width"], b["height"]):
                 continue
             blocks_out.append({
                 "x": b["x"],
@@ -219,8 +234,6 @@ def optimize_terrain(level_data, tileset):
 
     if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
         # 2D Grid: Optimize using 2D greedy rectangle merging
-        width = level_data["map"]["width"]
-        height = level_data["map"]["height"]
         visited = [[False for _ in range(width)] for _ in range(height)]
 
         for y in range(height):
@@ -231,8 +244,9 @@ def optimize_terrain(level_data, tileset):
                 t_info = tile_dict.get(t_id, {})
                 gb_const = map_base_tile_const(t_info.get("gb_constant", "TILE_FLOOR"), t_info)
 
-                # Default background is TILE_FLOOR, and perimeter is TILE_WALL
-                if gb_const in ("TILE_FLOOR", "TILE_DESOLATE_FLOOR_PLAIN"):
+                # Default ground needs no row (ROM pre-fill); the perimeter
+                # pre-fills to TILE_WALL, so border defaults stay explicit.
+                if is_redundant(gb_const, x, y):
                     visited[y][x] = True
                     continue
 
@@ -404,8 +418,30 @@ def emit_exits(levels_by_id, registry=None):
     return "\n".join(lines), scene_exit_info
 
 
+# Overflow terrain banks: scene id -> ROM bank holding its s_<sid>_terrain
+# array. Bank 5 (world bank) is exhausted; overflow scenes keep terrain in
+# a roomier bank and scene_load_tiles_banked() stages it to WRAM before
+# stamping (SceneDefinition.terrain_bank). Balanced for headroom:
+# desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7.
+# If this map changes, keep Makefile CONTENT_SRCS (the per-bank files) and
+# decompile.py (split-file parsing) in sync.
+OVERFLOW_TERRAIN_BANK = {
+    "desolate_field": 6,
+    "village_area": 7,
+}
+
+
+def overflow_terrain_path(bank):
+    """Committed path of the per-bank overflow terrain file."""
+    return REPO_ROOT / "src" / "game" / f"scenes_terrain_b{bank}.c"
+
+
 def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
-    """Generate complete C file matching src/game/scenes_content.c."""
+    """Generate complete C file matching src/game/scenes_content.c.
+
+    Returns (main_code, overflow_codes): overflow terrain arrays live in
+    per-bank files (OVERFLOW_TERRAIN_BANK) instead of the main file.
+    """
     registry = registry or load_registry()
     map_enum, _ = scene_maps(registry)
     ordered_ids, _ = scene_table_order(levels_by_id, registry)
@@ -419,8 +455,21 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
     exits_code, exit_offsets = emit_exits(levels_by_id, registry)
     output.append(exits_code)
 
-    # 2. Emit Terrain Blocks for each scene
+    # 2. Emit Terrain Blocks for each scene. Overflow scenes (bank 5 is
+    # exhausted) stage their arrays into per-bank files instead, read via
+    # WRAM staging in scene_load_tiles_banked().
     scene_terrain_symbols = {}
+    scene_terrain_bank = {}
+    overflow_entries = {}
+
+    def emit_terrain_array(sym_name, blocks, static):
+        lines = []
+        lines.append(f"{'static ' if static else ''}const SceneTerrainBlock {sym_name}[] = {{")
+        for b in blocks:
+            lines.append(f"    {{ {b['x']}, {b['y']}, {b['w']}, {b['h']}, {b['tile']} }},")
+        lines.append("    { 0, 0, 0, 0, 0 }")
+        lines.append("};\n")
+        return lines
 
     for sid in ordered_ids:
         if sid is None:
@@ -435,16 +484,69 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
 
         if not blocks:
             scene_terrain_symbols[sid] = "0"
+            scene_terrain_bank[sid] = bank
             continue
 
         sym_name = f"s_{sid}_terrain"
         scene_terrain_symbols[sid] = sym_name
 
-        output.append(f"static const SceneTerrainBlock {sym_name}[] = {{")
-        for b in blocks:
-            output.append(f"    {{ {b['x']}, {b['y']}, {b['w']}, {b['h']}, {b['tile']} }},")
-        output.append("    { 0, 0, 0, 0, 0 }")
-        output.append("};\n")
+        tbank = OVERFLOW_TERRAIN_BANK.get(sid)
+        if tbank is not None and tbank != bank:
+            # Staging is per-block through a 1-slot WRAM window
+            # (sentinel-terminated), so overflow tables need no length bound.
+            overflow_entries.setdefault(tbank, []).append((sym_name, blocks))
+            scene_terrain_bank[sid] = tbank
+            continue
+
+        scene_terrain_bank[sid] = bank
+        output.extend(emit_terrain_array(sym_name, blocks, static=True))
+
+    # 2b. Overflow terrain files (one per bank). Each file owns its
+    # arrays plus a stamp body dispatched by scene_load_tiles() (see
+    # scene.c); the body reads its own-bank arrays directly, so no bank
+    # switching happens anywhere. Arrays are non-static: the scene table
+    # in scenes_content.c references them for the terrain pointer (used
+    # by the wrapper staging address and by decompile).
+    overflow_codes = {}
+    for tbank in sorted(overflow_entries):
+        lines = []
+        lines.append("/* Generated by tools/level_compiler/compile.py -- DO NOT EDIT DIRECTLY */")
+        lines.append(f"#pragma bank {tbank}\n")
+        lines.append('#include "scene.h"')
+        lines.append('#include "banked.h"\n')
+        lines.append("/* ── Overflow scene terrain (bank 5 is exhausted) ──────")
+        lines.append(" * Stamped by terrain_stamp_b<N>_banked() below, dispatched")
+        lines.append(" * by scene_load_tiles() (see scene.c). Arrays stay static:")
+        lines.append(" * reader and data share this bank, nothing references")
+        lines.append(" * them from outside.")
+        lines.append(" */\n")
+        for sym_name, blocks in overflow_entries[tbank]:
+            lines.extend(emit_terrain_array(sym_name, blocks, static=False))
+            output.append(f"extern const SceneTerrainBlock {sym_name}[];")
+        lines.append(f"/* Terrain stamp body for bank {tbank}: array address arrives")
+        lines.append(" * in g_bk_ptr_b, the World in g_bk_ptr_a. Self-contained:")
+        lines.append(" * no fixed-bank calls (same rule as scene_load_tiles_banked).")
+        lines.append(" * Bounds checks are omitted deliberately: validate.py fails")
+        lines.append(" * loudly on out-of-bounds terrain blocks, so committed")
+        lines.append(" * content always fits (the home body keeps its own clamps). */")
+        lines.append(f"void terrain_stamp_b{tbank}_banked(void)")
+        lines.append("{")
+        lines.append("    World *w = (World *)g_bk_ptr_a;")
+        lines.append("    const SceneTerrainBlock *b = (const SceneTerrainBlock *)g_bk_ptr_b;")
+        lines.append("    uint8_t x, y;")
+        lines.append("")
+        lines.append("    if (!w) return;")
+        lines.append("    for ( ; ; b++) {")
+        lines.append("        if (b->w == 0) break;")
+        lines.append("        for (y = b->y; y < (uint8_t)(b->y + b->h); y++) {")
+        lines.append("            uint8_t *row = w->map[y];")
+        lines.append("            for (x = b->x; x < (uint8_t)(b->x + b->w); x++) {")
+        lines.append("                row[x] = b->tile;")
+        lines.append("            }")
+        lines.append("        }")
+        lines.append("    }")
+        lines.append("}\n")
+        overflow_codes[tbank] = "\n".join(lines) + "\n"
 
     # 3. Emit Scene Definition Table
     output.append("const SceneDefinition g_scenes[] = {")
@@ -456,7 +558,7 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
             # only target registered scenes; no save system replays old
             # ids) — belt and braces, not a playable scene.
             scene_defs.append(
-                "    { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE }"
+                "    { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0 }"
             )
             continue
         lvl = levels_by_id[sid]
@@ -471,6 +573,7 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
         exits_ptr = f"&g_all_exits[{start_idx}]" if count > 0 else "0"
         tileset_kind = TILESET_KIND_MAP.get(lvl["map"]["tileset"], "WORLD_TILESET_FOREST")
         terrain_ptr = scene_terrain_symbols.get(sid, "0")
+        tbank = scene_terrain_bank.get(sid, bank)
         spawn = lvl.get("player", {}).get("spawn", {})
         spawn_facing = SPAWN_FACING_MAP.get(
             str(spawn.get("facing", "DOWN")).upper(), "DIRECTION_DOWN")
@@ -478,12 +581,12 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
         nbr_n, nbr_s, nbr_e, nbr_w = neighbor_enums(lvl, registry)
 
         scene_defs.append(
-            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const}, {nbr_n + ',':<20s} {nbr_s + ',':<20s} {nbr_e + ',':<20s} {nbr_w} }}"
+            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const}, {nbr_n + ',':<20s} {nbr_s + ',':<20s} {nbr_e + ',':<20s} {nbr_w + ',':<6s} {tbank} }}"
         )
     output.append(",\n".join(scene_defs))
     output.append("};\n")
 
-    return "\n".join(output)
+    return "\n".join(output), overflow_codes
 
 
 def main():
@@ -576,6 +679,19 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
+    # Tunnels (linked exit pairs): exactly two mutual mouths per id with
+    # spawn-tracks-gate landings. Abort so a half-linked tunnel can never
+    # ship (a dangling mouth strands the player with no way back).
+    tun_errors, tun_warnings = tunnel_issues(levels_by_id)
+    for warn in tun_warnings:
+        print(f"WARNING: {warn}", file=sys.stderr)
+    if tun_errors:
+        for err in tun_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        print("\nCompilation aborted due to broken tunnel pairings.",
+              file=sys.stderr)
+        sys.exit(1)
+
     # Point exits: the landing cell must be walkable, or the player spawns
     # stuck (visibility is a non-fatal warning).
     px_errors, px_warnings = point_exit_issues(levels_by_id, tilesets)
@@ -588,15 +704,18 @@ def main():
               file=sys.stderr)
         sys.exit(1)
 
-    c_code = emit_c_code(levels_by_id, tilesets,
-                         bank=args.bank if args.bank is not None else 5,
-                         registry=registry)
+    c_code, overflow_codes = emit_c_code(levels_by_id, tilesets,
+                                         bank=args.bank if args.bank is not None else 5,
+                                         registry=registry)
 
     output_path = args.output
     if not output_path:
         output_path = REPO_ROOT / "src" / "game" / "scenes_content.c"
     else:
         output_path = Path(output_path)
+
+    overflow_paths = {tbank: overflow_terrain_path(tbank)
+                      for tbank in overflow_codes}
 
     actors_bank = args.actors_bank
     if actors_bank is None:
@@ -617,8 +736,11 @@ def main():
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if args.check:
-        for path, fresh in ((output_path, c_code), (actors_path, actors_code),
-                            (header_path, header_code)):
+        pairs = [(output_path, c_code), (actors_path, actors_code),
+                 (header_path, header_code)]
+        pairs += [(overflow_paths[tbank], overflow_codes[tbank])
+                  for tbank in sorted(overflow_codes)]
+        for path, fresh in pairs:
             try:
                 committed = path.read_text(encoding="utf-8")
             except FileNotFoundError:
@@ -630,6 +752,9 @@ def main():
         return
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(c_code)
+    for tbank in sorted(overflow_codes):
+        with open(overflow_paths[tbank], "w", encoding="utf-8") as f:
+            f.write(overflow_codes[tbank])
     actors_path.parent.mkdir(parents=True, exist_ok=True)
     with open(actors_path, "w", encoding="utf-8") as f:
         f.write(actors_code)
@@ -810,19 +935,32 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
     out.append(" * carries a stable ActorId (unique across scenes) so its defeat can be")
     out.append(" * recorded persistently in GameState.world and survive scene reloads.")
     out.append(" */\n")
+    empty_sids = set()
     for sid in ordered:
-        out.append(f"static const WorldActorDefinition g_{sid}_actors[] = {{")
+        rows = []
         for obj in levels_by_id[sid].get("objects", []):
             props = obj.get("properties", {}) or {}
             if not props.get("entity_id"):
                 continue  # decoration object: no engine row
-            out.append(emit_actor_row(obj, enemy_ids, entity_types))
-        out.append("};\n")
+            rows.append(emit_actor_row(obj, enemy_ids, entity_types))
+        if rows:
+            out.append(f"static const WorldActorDefinition g_{sid}_actors[] = {{")
+            out.extend(rows)
+            out.append("};\n")
+        else:
+            # No engine rows: skip the array entirely. SDCC C89 rejects
+            # empty initializers ({}), so the table below uses NULL + 0
+            # (actor_load_banked loops 0..count and never dereferences).
+            empty_sids.add(sid)
     out.append("const WorldActorTable g_actor_tables[] = {")
     for sid in ordered:
         map_id_enum = map_enum[sid]
-        out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
-        out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
+        if sid in empty_sids:
+            out.append(f"    {{ {map_id_enum + ',':<20s} 0,")
+            out.append("        0 },")
+        else:
+            out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
+            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
     out.append("};")
     # Generated table count: the fixed-bank registrar stages this byte via
     # banked_copy (no header dependency, so a stale object cannot desync it

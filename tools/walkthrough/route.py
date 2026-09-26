@@ -203,13 +203,41 @@ class Planner:
         for scene in self.scenes.values():
             for e in scene.exits:
                 if e["target_scene"] == name:
-                    return (e["target_x"], e["target_y"])
+                    landing = (e["target_x"], e["target_y"])
+                    if e.get("tunnel"):
+                        # A tunnel mouth lands ON the counterpart gate,
+                        # which is itself a portal back: walking onto it
+                        # as an arrival goal would bounce straight out
+                        # again (path() deliberately steps onto goal
+                        # gates).  Arrive beside the mouth instead.
+                        aside = self._tunnel_arrival(name, landing)
+                        if aside is not None:
+                            return aside
+                    return landing
         for scene in self.scenes.values():
             for target in scene.neighbors.values():
                 if (target or "").strip() == name:
                     level = self.scenes[name].level
                     spawn = level.get("player", {}).get("spawn", {})
                     return (spawn.get("x", 2), spawn.get("y", 2))
+        return None
+
+    def _tunnel_arrival(self, name, landing):
+        """Walkable tile adjacent to a tunnel landing that is itself no
+        portal (neither an exit gate nor a linked edge cell): the safe
+        arrival tile for walks ending at a tunnel mouth.  Deterministic
+        N/S/E/W order.  None when the mouth is fully enclosed — the
+        compiler guarantees a walkable landing but not a free neighbor —
+        in which case callers fall back to the gate itself."""
+        scene = self.scenes[name]
+        lx, ly = landing
+        for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+            cell = (lx + dx, ly + dy)
+            if cell in scene.exit_cells or cell in scene.edge_cells:
+                continue
+            if not scene.walkable(cell[0], cell[1]):
+                continue
+            return cell
         return None
 
     def scene_of(self, scene_id):

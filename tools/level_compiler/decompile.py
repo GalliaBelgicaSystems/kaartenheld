@@ -42,7 +42,8 @@ from validate import validate_level, load_tilesets
 import compile as compiler
 from compile import (
     TILESET_KIND_MAP, REPO_ROOT as CREPO, resolve_sprite_kind,
-    load_enemy_types, scene_maps,
+    load_enemy_types, scene_maps, OVERFLOW_TERRAIN_BANK,
+    overflow_terrain_path,
 )
 
 SCENES_C = CREPO / "src" / "game" / "scenes_content.c"
@@ -384,8 +385,10 @@ def parse_scenes(scenes_text, name_to_value):
     scenes = []
     for row in split_row_groups(scenes_body):
         f = split_fields(row)
-        if len(f) != 16:
+        if len(f) not in (16, 17):
             raise DecompileError(f"scene row has {len(f)} fields: {row[:60]!r}")
+        # 17th field (terrain_bank) is a compile-time placement detail with
+        # no JSON counterpart: parsed positionally, never roundtripped.
         m = re.fullmatch(r"&g_all_exits\[(\d+)\]", f[4].strip())
         facing = f[10].strip()
         if facing not in FACING_REVERSE:
@@ -416,9 +419,9 @@ def parse_scenes(scenes_text, name_to_value):
             "neighbors": neighbors,
         })
     terrain = {}
-    for m in re.finditer(r"static const SceneTerrainBlock (s_\w+)\[\]", scenes_text):
+    for m in re.finditer(r"(?:static\s+)?const SceneTerrainBlock (s_\w+)\[\]", scenes_text):
         sym = m.group(1)
-        body = extract_array_body(scenes_text, r"static const SceneTerrainBlock " + sym + r"\[\]\s*=")
+        body = extract_array_body(scenes_text, r"(?:static\s+)?const SceneTerrainBlock " + sym + r"\[\]\s*=")
         blocks = []
         for row in split_row_groups(body):
             f = split_fields(row)
@@ -479,6 +482,12 @@ def decompile_levels(levels_dir, write):
                     raise DecompileError(f"sprite ref '{ref}' missing from manifest '{ts_id}'")
 
     scenes_text = SCENES_C.read_text()
+    # Overflow terrain lives in per-bank files (compile.OVERFLOW_TERRAIN_BANK):
+    # concatenate whatever exists so every terrain symbol resolves.
+    for tbank in sorted(set(OVERFLOW_TERRAIN_BANK.values())):
+        opath = overflow_terrain_path(tbank)
+        if opath.exists():
+            scenes_text += "\n" + opath.read_text()
     actors_text = ACTORS_C.read_text()
     name_to_value = {n: v for v, n in const_by_value.items()}
     exits, scenes, terrain = parse_scenes(scenes_text, name_to_value)
@@ -632,13 +641,21 @@ def decompile_levels(levels_dir, write):
                 if old is None:
                     warnings.append(f"{sid}: new exit at ({e['gate_x']},{e['gate_y']})->"
                                     f"{target}; direction '{direction}' synthesized")
-            new_exits.append({
+            # Tunnels live only in the JSON (the C rows cannot hold them):
+            # keep the author's tunnel id when the mouth matches, so a
+            # decompile roundtrip never silently unlinks a pair.  A
+            # retargeted mouth matches nothing and loses its id loudly at
+            # the next compile (dangling-tunnel error), never silently.
+            new_exit = {
                 "x": e["gate_x"], "y": e["gate_y"],
                 "target_scene": target,
                 "target_x": e["spawn_x"], "target_y": e["spawn_y"],
                 "direction": direction,
                 "tile_char": e["tile_char"],
-            })
+            }
+            if old is not None and old.get("tunnel"):
+                new_exit["tunnel"] = old["tunnel"]
+            new_exits.append(new_exit)
         level["exits"] = new_exits
 
         # -- neighbors: whole-edge links roundtrip verbatim (MAP_NONE/empty
@@ -797,7 +814,7 @@ def cmd_roundtrip():
                 print(f"roundtrip: decompiled {p.name} INVALID: {errors}")
                 return 1
             levels_by_id[data["id"]] = data
-        c_new = emit_c_code(levels_by_id, tilesets)
+        c_new, c_overflow = emit_c_code(levels_by_id, tilesets)
         c_old = SCENES_C.read_text()
         if c_new.strip() != c_old.strip():
             print("roundtrip FAIL: recompile differs from committed scenes_content.c")
@@ -806,6 +823,15 @@ def cmd_roundtrip():
                     c_old.splitlines(), c_new.splitlines(), lineterm=""))[:40]:
                 print(line)
             return 1
+        for tbank in sorted(c_overflow):
+            opath = overflow_terrain_path(tbank)
+            try:
+                o_old = opath.read_text()
+            except FileNotFoundError:
+                o_old = None
+            if o_old is None or o_old.strip() != c_overflow[tbank].strip():
+                print(f"roundtrip FAIL: recompile differs from committed {opath}")
+                return 1
         a_new = emit_actors_code(levels_by_id)
         a_old = ACTORS_C.read_text()
         if not rows_equal(a_old, a_new):
