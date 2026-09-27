@@ -1613,7 +1613,32 @@ The test should fail before the fix and pass after it whenever practical.
 
 ## Step 6 — Validate
 
-Run:
+Build parallel (`-j` is safe; the Makefile is parallel-clean) and run the
+whole gate in one invocation so agent sessions pay a single `nix develop`
+entry:
+
+```bash
+make -j$(nproc) validate
+```
+
+`validate` runs, in order: `memmap`, `lint`, `test-harness`,
+`test`, `verify-oam`, `verify-music`, `verify-walkthrough`.  The
+individual targets below document what each step covers; run them
+separately only when iterating on one area.  During iteration, run the
+three layout-sensitive sentinels (§52.19) instead of the full suite:
+
+```bash
+make test-sentinels
+```
+
+and reserve the full `make test-harness` for the end.  For tracker-song
+work, answer bank-fit and duration questions without a full build:
+
+```bash
+make music-size [SONG=mimic_intro]
+```
+
+Run (via `validate` or individually):
 
 ```bash
 make test-harness
@@ -2495,8 +2520,9 @@ Rules:
   build there, run the three sentinel scenarios.
 * After ANY change to optimization flags, volatile qualifiers on shared
   globals/params, or banked-body placement, run the sentinels BEFORE
-  trusting the build: `patrol_slime_cross`, `patrol_enemy_bumps_player`,
-  `battle_multi_enemy_cycle_kill`, plus the full harness.
+  trusting the build (`make test-sentinels`: `patrol_slime_cross`,
+  `patrol_enemy_bumps_player`, `battle_multi_enemy_cycle_kill`), plus the
+  full harness.
 * mGBA watchpoints (`watch <addr>`; delete connect()'s breakpoints 1/2
   first, then arm) catch wild writers red-handed — state probes cannot
   distinguish "bad data" from "good data rendered wrong".
