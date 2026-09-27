@@ -55,7 +55,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/assertions.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -91,7 +91,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -617,6 +617,13 @@ $(GENERATED_MUSIC_DIR)/castle.c: assets/music/castle.uge tools/compile_music.py 
 $(GENERATED_MUSIC_DIR)/mimic.c: assets/music/Mimic.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_mimic "$@"
 
+# Mimic battle intro (short sting, ~0.9 s).  Played once on mimic combat entry,
+# then audio_update() swaps in the looping song_mimic above (the ROM driver
+# loops whole songs, so intro and loop must be separate songs).  Bank 7
+# like the loop; both use the _b7 driver copy.
+$(GENERATED_MUSIC_DIR)/mimic_intro.c: assets/music/Mimic_intro.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_mimic_intro "$@"
+
 # Title theme.  Replaces the old hardcoded chiptune title table now that
 # the legacy music engine is gone (docs/uge.md Phase 6).
 $(GENERATED_MUSIC_DIR)/title.c: assets/music/title\ short.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
@@ -632,10 +639,18 @@ $(GENERATED_MUSIC_DIR)/victory.c: assets/music/victory.uge tools/compile_music.p
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"
+
+# Fast pre-link feedback for tracker songs: ROM bytes per song + playback
+# length (tracker ticks, seconds, timer-ISR ticks) without a full build.
+# Usage: make music-size [SONG=mimic_intro]
+# A new song's bank fit and chaining-relevant duration are answered here,
+# before the first compile+link iteration.
+music-size: music
+	CC="$(CC)" INCLUDES="$(INCLUDES)" python3 tools/music_size.py $(SONG)
 
 $(MUSIC_PREVIEW_DIR)/%.wav: $(GENERATED_MUSIC_DIR)/%.c tools/render_music_preview.py | $(MUSIC_PREVIEW_DIR)
 	python3 tools/render_music_preview.py $*
@@ -784,6 +799,23 @@ test: $(TARGET)
 
 test-harness: debug
 	python3 tools/dev.py test --jobs $(JOBS)
+
+# Fast iteration gate: the three layout-sensitive sentinel scenarios
+# (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or
+# banked-body change BEFORE trusting the build; run the full suite at the end.
+test-sentinels: debug
+	python3 tools/dev.py scenario patrol_slime_cross
+	python3 tools/dev.py scenario patrol_enemy_bumps_player
+	python3 tools/dev.py scenario battle_multi_enemy_cycle_kill
+
+# Full validation gate (AGENTS.md Step 6), in order, in one invocation so
+# agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
+validate: memmap lint
+	$(MAKE) test-harness JOBS=$(JOBS)
+	$(MAKE) test
+	$(MAKE) verify-oam
+	$(MAKE) verify-music
+	$(MAKE) verify-walkthrough
 
 test-scenario: debug
 	@python3 tools/dev.py scenario $(SCENARIO)

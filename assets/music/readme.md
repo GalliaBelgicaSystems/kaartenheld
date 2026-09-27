@@ -65,7 +65,10 @@ lib/hUGEDriver/src/hUGEDriver.asm ────────┘
       $(GENERATED_MUSIC_DIR)/<track_name>.c: assets/music/<track_name>.uge | $(GENERATED_MUSIC_DIR)
       	$(UGE2SOURCE) "$<" -b 6 song_<track_name> "$@"
       ```
-      (Bank 6 holds driver + all songs; SFX tables/stepper live in bank 7.)
+   (Bank 6 holds driver + all songs; SFX tables/stepper live in bank 7.
+   Bank 6 is full, so the mimic loop + intro and victory use `-b 7` with
+   `huge_music_play_banked(..., HUGE_MUSIC_BANK_B7)` and the `_b7` driver
+   copy instead.)
 3. **C Code Binding**:
    * Declare the song in `src/audio/huge_music_data.h`:
      ```c

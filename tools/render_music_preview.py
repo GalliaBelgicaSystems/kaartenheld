@@ -32,7 +32,7 @@ GEN_MUSIC = REPO_ROOT / "generated" / "music"
 OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio")
 
 SONGS = ["battle", "desolate_landscape", "forest", "boss_fight",
-         "village", "castle", "mimic"]
+         "village", "castle", "mimic", "mimic_intro"]
 
 SR = 22050          # output sample rate
 TICK_HZ = 64        # hUGE_dosound rate (256 Hz timer / 4)
@@ -138,12 +138,14 @@ def parse_song_c(path, note_names):
                 items.append(vals)
         out[want] = items
 
-    m = re.search(r"static const unsigned char waves\[\] = \{(.*?)\};",
+    m = re.search(r"static const unsigned char waves(\[\d*\])? = \{(.*?)\};",
                   text, re.S)
     if not m:
         raise RenderError(f"{path}: no waves table")
-    out["waves"] = [int(x) for x in re.findall(r"\d+", m.group(1))]
-    if len(out["waves"]) % 16:
+    out["waves"] = [int(x) for x in re.findall(r"\d+", m.group(2))]
+    # compile_music.py patches wave-less songs to a single-zero dummy
+    # (waves[1] = {0}); their CH3 is silent, so no 16-byte slice is read.
+    if out["waves"] != [0] and len(out["waves"]) % 16:
         raise RenderError(f"{path}: waves not a multiple of 16 bytes")
     return out
 

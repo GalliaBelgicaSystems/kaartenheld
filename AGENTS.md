@@ -1340,8 +1340,8 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
-  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.
-  * `huge_music_play_banked(song, bank)` records the song's bank in `s_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
+  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).
+  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
 * **Tick Division (64 Hz from 256 Hz Timer)**:
   * The hardware timer ISR (`src/crt0.s`) calls `audio_update()` at **256 Hz**.
@@ -1613,7 +1613,32 @@ The test should fail before the fix and pass after it whenever practical.
 
 ## Step 6 — Validate
 
-Run:
+Build parallel (`-j` is safe; the Makefile is parallel-clean) and run the
+whole gate in one invocation so agent sessions pay a single `nix develop`
+entry:
+
+```bash
+make -j$(nproc) validate
+```
+
+`validate` runs, in order: `memmap`, `lint`, `test-harness`,
+`test`, `verify-oam`, `verify-music`, `verify-walkthrough`.  The
+individual targets below document what each step covers; run them
+separately only when iterating on one area.  During iteration, run the
+three layout-sensitive sentinels (§52.19) instead of the full suite:
+
+```bash
+make test-sentinels
+```
+
+and reserve the full `make test-harness` for the end.  For tracker-song
+work, answer bank-fit and duration questions without a full build:
+
+```bash
+make music-size [SONG=mimic_intro]
+```
+
+Run (via `validate` or individually):
 
 ```bash
 make test-harness
@@ -2495,8 +2520,9 @@ Rules:
   build there, run the three sentinel scenarios.
 * After ANY change to optimization flags, volatile qualifiers on shared
   globals/params, or banked-body placement, run the sentinels BEFORE
-  trusting the build: `patrol_slime_cross`, `patrol_enemy_bumps_player`,
-  `battle_multi_enemy_cycle_kill`, plus the full harness.
+  trusting the build (`make test-sentinels`: `patrol_slime_cross`,
+  `patrol_enemy_bumps_player`, `battle_multi_enemy_cycle_kill`), plus the
+  full harness.
 * mGBA watchpoints (`watch <addr>`; delete connect()'s breakpoints 1/2
   first, then arm) catch wild writers red-handed — state probes cannot
   distinguish "bad data" from "good data rendered wrong".

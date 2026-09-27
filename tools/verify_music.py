@@ -188,31 +188,57 @@ def main():
     # On the title splash, START fires SFX_CURSOR (id 0): a 9-dosound-tick
     # noise hit holding NR42=0x91 with music CH4 muted, then completion
     # (sfx_id back to 0xFF) while the music clock keeps advancing.
+    #
+    # The trigger hold is STATE-VERIFIED, not time-expected (AGENTS.md
+    # 56.2): PyBoy tick() boundaries and game frames are not 1:1 -- the
+    # run shows multi-tick stalls where neither the main loop (input
+    # heartbeat) nor the audio ISR advance, so a blind short hold can
+    # fall entirely between the game's input samples and be swallowed
+    # (observed: a 4-tick hold never firing, deterministically).  Hold
+    # START until the SFX actually fires instead.
     for _ in range(300):
         pb.tick()
         if pb.memory[game_addr] == 9:
             break
     pb.button_press("start")
-    for _ in range(4):
-        pb.tick()
-    pb.button_release("start")
     sfx_win = []
-    for _ in range(20):
+    triggered = False
+    for _ in range(60):
         pb.tick()
         sfx_win.append((pb.memory[sfx_id_addr],
                         pb.memory[0xFF21],
                         read_ticks()))
-    check("5a. sfx-triggered", any(s == 0 for s, _, _ in sfx_win),
-          "sfx_id never read CURSOR(0) after START")
+        if pb.memory[sfx_id_addr] == 0:
+            triggered = True
+            break
+    pb.button_release("start")
+    for _ in range(40):
+        pb.tick()
+        sfx_win.append((pb.memory[sfx_id_addr],
+                        pb.memory[0xFF21],
+                        read_ticks()))
+    check("5a. sfx-triggered", triggered,
+          "sfx_id never read CURSOR(0) while START held 60 ticks")
     check("5b. sfx-completes", sfx_win[-1][0] == 0xFF,
           f"sfx_id stuck at {sfx_win[-1][0]} (unmute never ran?)")
-    held = sum(1 for _, nr42, _ in sfx_win[:9] if nr42 == 0x91)
-    check("5c. sfx-content-held", held >= 5,
-          f"NR42==0x91 on {held}/9 frames (transcribed envelope not rendered?)")
-    stalled_sfx = [i + 1 for i in range(1, len(sfx_win))
-                   if sfx_win[i][2] - sfx_win[i - 1][2] < 1]
-    check("5d. sfx-no-stall", len(stalled_sfx) == 0,
-          f"music clock stalled during SFX at window frames {stalled_sfx[:5]}")
+    sounding = [(s, nr42) for s, nr42, _ in sfx_win if s == 0]
+    held = sum(1 for _, nr42 in sounding[:9] if nr42 == 0x91)
+    check("5c. sfx-content-held", triggered and held >= 5,
+          f"NR42==0x91 on {held}/9 sampled sounding frames "
+          f"(transcribed envelope not rendered?)")
+    # Stall tolerance, same rationale as check 1: isolated zero-deltas are
+    # PyBoy tick-boundary artifacts (ticks where no emulated time
+    # advances), not music-clock stalls.  A wedged ISR would zero a long
+    # run, so fail only on 3+ consecutive zeros.
+    run, worst = 0, 0
+    for i in range(1, len(sfx_win)):
+        if sfx_win[i][2] - sfx_win[i - 1][2] < 1:
+            run += 1
+            worst = max(worst, run)
+        else:
+            run = 0
+    check("5d. sfx-no-stall", worst < 3,
+          f"music clock stalled during SFX ({worst} consecutive zero deltas)")
 
     # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
     # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
