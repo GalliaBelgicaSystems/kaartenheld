@@ -225,17 +225,17 @@ void battle_target_move(Battle *b, int8_t dir)
     }
 }
 
-void battle_target_auto_advance(Battle *b)
-{
-    if (b && b->enemies[b->target_idx].hp == 0) {
-        battle_target_move(b, 1);
-    }
-}
-
 bool battle_all_enemies_dead(const Battle *b)
 {
+    uint8_t old;
     if (!b) return true;
+    old = b->target_idx;
     battle_nav((Battle *)b, NAV_OP_ALL_DEAD, 0);
+    /* The banked body steps off a tick-killed target (see above): report
+     * the retarget like any other target move. */
+    if (b->target_idx != old) {
+        telemetry_emit(EVENT_TARGET_CHANGED, old, b->target_idx, 0, 0);
+    }
     return g_bk_byte_c != 0;
 }
 
@@ -563,7 +563,6 @@ void battle_execute_combo(Battle *b)
         b->dirty = BATTLE_DIRTY_ALL;
         if (b->enemies[b->target_idx].hp == 0) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-            battle_target_auto_advance(b);
         }
         if (battle_all_enemies_dead(b)) {
             battle_set_result(b, BATTLE_RESULT_VICTORY);

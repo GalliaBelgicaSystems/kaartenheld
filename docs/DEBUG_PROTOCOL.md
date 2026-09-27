@@ -1427,7 +1427,7 @@ plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
 Fires whenever the battle's attacker/card target caret moves (UP/DOWN during
 the player select or defend phase, `battle_target_move`) and when the target
 auto-advances to the next living enemy after its current target is defeated
-(`battle_target_auto_advance`).  The target persists across turns — this
+(step-off-corpse inside the enemy-liveness check).  The target persists across turns — this
 event only fires when the *selection itself* changes, never on the reset of
 a new turn.  Single-enemy battles do not emit it (the caret is trapped on
 the only slot), and a wrap-back press that lands on the same living enemy

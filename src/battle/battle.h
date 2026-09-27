@@ -184,7 +184,6 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp);
 extern uint8_t g_battle_solo;
 void battle_cursor_move(Battle *b, int8_t dir);
 void battle_target_move(Battle *b, int8_t dir);
-void battle_target_auto_advance(Battle *b);
 bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);

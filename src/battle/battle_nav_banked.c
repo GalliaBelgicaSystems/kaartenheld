@@ -180,7 +180,19 @@ void battle_nav_banked(void)
         {
             uint8_t i;
             for (i = 0; i < b->enemy_count; i++) {
-                if (b->enemies[i].hp != 0) return;
+                if (b->enemies[i].hp != 0) {
+                    /* The end-of-round status tick may have killed the
+                     * current target while others live: step off the
+                     * corpse now so the coming attack cannot hit a dead
+                     * slot (duplicate ENTITY_DEFEATED). No-op when the
+                     * target lives; an all-corpses party finds nothing
+                     * to step to. TARGET_CHANGED is emitted by the fixed
+                     * wrapper (same as NAV_OP_TARGET_MOVE). */
+                    if (b->enemies[b->target_idx].hp == 0) {
+                        nav_target_move(b, 1);
+                    }
+                    return;
+                }
             }
             g_bk_byte_c = 1;
         }
