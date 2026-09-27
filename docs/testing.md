@@ -5,7 +5,7 @@ screen.
 
 ## Test layers
 
-1. **Harness scenarios** (`make test-harness`, 90 scenarios): deterministic,
+1. **Harness scenarios** (`make test-harness`, 205 scenarios): deterministic,
    reproducible gameplay situations.  Each JSON scenario defines an
    `initial_state` (scene, position, flags, variables, party, inventory,
    currency, world, progression, equipment), an action sequence (presses,
