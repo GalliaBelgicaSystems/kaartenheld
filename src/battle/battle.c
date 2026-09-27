@@ -320,8 +320,11 @@ void battle_defend_resolve(Battle *b)
     /* Organic enemy status rider (Phase D): g_bk_byte_c = status id the
      * banked body rolled (0 = none).  Apply through the REAL mechanic
      * (status_apply emits STATUS_APPLIED); poison also greys the player's
-     * hand via status_grey_apply. */
-    if (g_bk_byte_c != 0) {
+     * hand via status_grey_apply.  A lethal counter leaves the player at
+     * 0 HP: the rider must not apply to a corpse (same guard as the
+     * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED, no
+     * hand grey-out. */
+    if (g_bk_byte_c != 0 && b->player.hp != 0) {
         status_apply(status_slots(0), 0, g_bk_byte_c, 1, 0);
         if (g_status_applied.id == STATUS_POISON) {
             status_grey_apply(0, BATTLE_HAND_SIZE);
