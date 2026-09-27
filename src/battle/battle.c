@@ -627,7 +627,14 @@ static void battle_tick_statuses(Battle *b)
     uint8_t i, dmg;
 
     for (i = 0; i < b->enemy_count; i++) {
-        if (b->enemies[i].hp == 0) continue;
+        if (b->enemies[i].hp == 0) {
+            /* A poisoned victim's grey-out must drain even after death:
+             * the shared enemy deck reads the union of every slot's mask,
+             * so a frozen corpse mask would jam the draw position and lock
+             * all surviving enemies out of attacking forever. */
+            status_grey_tick((uint8_t)(i + 1));
+            continue;
+        }
         dmg = status_tick(status_slots((uint8_t)(i + 1)), (uint8_t)(i + 1));
         /* Poison grey-out duration drains each round (Phase D). */
         status_grey_tick((uint8_t)(i + 1));
