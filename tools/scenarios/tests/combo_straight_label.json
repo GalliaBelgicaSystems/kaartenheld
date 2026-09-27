@@ -2,7 +2,6 @@
  "name": "combo_straight_label",
  "test": true,
  "description": "Five sequential values with mixed symbols (SW1 SH2 BO3 HE4 DA5) read STRAIGHT on the live COMBO row while pending, before execution.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

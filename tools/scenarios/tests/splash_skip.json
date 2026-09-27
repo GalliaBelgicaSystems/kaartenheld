@@ -2,7 +2,6 @@
  "name": "splash_skip",
  "test": true,
  "description": "Pressing START on the boot studio splash skips it immediately into the title screen.",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

@@ -2,7 +2,6 @@
  "name": "save_load_roundtrip",
  "test": true,
  "description": "SAVE captures the canonical state to SRAM; mutating state then LOAD restores it exactly",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "save"

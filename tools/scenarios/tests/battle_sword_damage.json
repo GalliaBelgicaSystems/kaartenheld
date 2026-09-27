@@ -2,7 +2,6 @@
  "name": "battle_sword_damage",
  "test": true,
  "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) that one-shots the field slime (10 HP)",
- "scenario_id": "BATTLE_BOOT",
  "actions": [
   {
    "type": "wait",

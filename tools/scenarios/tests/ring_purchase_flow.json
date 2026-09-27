@@ -2,7 +2,6 @@
  "name": "ring_purchase_flow",
  "test": true,
  "description": "The Shopkeeper sells WOOD_RING as the I RG card (20 gold): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), it appears in CARDS as an undecked row, and A decks it",
- "scenario_id": "TOWN_BOOT",
  "actions": [
   {
    "type": "interact",

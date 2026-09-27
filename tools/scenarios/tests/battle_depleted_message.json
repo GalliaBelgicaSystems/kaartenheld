@@ -2,7 +2,6 @@
  "name": "battle_depleted_message",
  "test": true,
  "description": "Selecting a card whose uses are exhausted (uses_remaining = 0) is rejected with a transient 'OUT OF USES!' flash on the battle HUD (row 12) -- the id-2 sibling of battle_reject_message's NO ENERGY! case.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

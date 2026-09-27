@@ -2,7 +2,6 @@
  "name": "actor_slime_collision",
  "test": true,
  "description": "Walking into a hostile World Actor (Slime) emits actor collision and starts an encounter",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

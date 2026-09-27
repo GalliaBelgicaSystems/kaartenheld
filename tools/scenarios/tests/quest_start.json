@@ -2,7 +2,6 @@
  "name": "quest_start",
  "test": true,
  "description": "Talking to the Mayor starts the MONSTER HUNT quest: ACTIVE, 3 monsters remaining, MET_MAYOR set",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "interact",

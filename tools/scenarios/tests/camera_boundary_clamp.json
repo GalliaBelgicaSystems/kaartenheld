@@ -2,7 +2,6 @@
  "name": "camera_boundary_clamp",
  "test": true,
  "description": "Walk the player to the far SE corner of the Field (30,16); with a full-screen 18-row viewport the 18-tall map fits exactly so scroll_y stays 0 while scroll_x clamps at 12 (width-20 tiles)",
- "scenario_id": "CAMERA_BOUNDARY_CLAMP",
  "actions": [
   {
    "type": "hold",

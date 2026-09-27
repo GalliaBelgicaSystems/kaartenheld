@@ -2,7 +2,6 @@
  "name": "shop_rider_sweep",
  "test": true,
  "description": "Shop stock carries no riders, so all ten shop rider OAM entries stay hidden: no phantom icons leak onto riderless rows",
- "scenario_id": "ACTOR_SHOPKEEPER",
  "actions": [
   {
    "type": "press",

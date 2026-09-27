@@ -2,7 +2,6 @@
  "name": "battle_slime_sprite",
  "test": true,
  "description": "Slime trio battle: enemies render as OAM sprites (BG art footprint stays blank); HP lines, banner and events pin the rest.",
- "scenario_id": "BATTLE_BOOT",
  "actions": [],
  "assertions": [
   {

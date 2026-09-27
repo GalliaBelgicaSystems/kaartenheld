@@ -2,7 +2,6 @@
  "name": "battle_gold_drop",
  "test": true,
  "description": "Defeating the slime trio grants its gold reward: 25 gold via CURRENCY_ADDED on victory",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

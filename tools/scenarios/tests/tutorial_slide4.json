@@ -2,7 +2,6 @@
  "name": "tutorial_slide4",
  "test": true,
  "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 6, not 3).",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

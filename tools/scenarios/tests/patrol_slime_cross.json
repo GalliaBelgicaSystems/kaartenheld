@@ -2,7 +2,6 @@
  "name": "patrol_slime_cross",
  "test": true,
   "description": "Slime patrols in a cross pattern around spawn (14,8); its first leg must commit UP to (14,7). Asserted via ACTOR_MOVED payloads rather than position-at-frame, which historically raced the first commit boundary (position held only [commit, next-leg) frames under some codegen layouts).",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "wait",

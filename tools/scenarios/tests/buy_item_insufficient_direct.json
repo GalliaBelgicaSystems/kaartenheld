@@ -2,7 +2,6 @@
  "name": "buy_item_insufficient_direct",
  "test": true,
  "description": "A failed card purchase leaves state unchanged and emits ITEM_PURCHASE_FAILED",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "buy_item",

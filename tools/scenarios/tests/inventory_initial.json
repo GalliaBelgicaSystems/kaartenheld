@@ -2,7 +2,6 @@
  "name": "inventory_initial",
  "test": true,
  "description": "Declarative initial_state injects card collection quantities into the canonical GameState; injected WOOD_RING x2 coexists with the new-game starter grant (IRON_SWORD x4)",
- "scenario_id": "NEW_GAME",
  "actions": [],
  "assertions": [
   {

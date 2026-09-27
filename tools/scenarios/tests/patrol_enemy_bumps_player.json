@@ -2,7 +2,6 @@
  "name": "patrol_enemy_bumps_player",
  "test": true,
  "description": "Hostile actor patrols into the player's tile, initiating an encounter",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "wait",

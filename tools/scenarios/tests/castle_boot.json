@@ -2,7 +2,6 @@
  "name": "castle_boot",
  "test": true,
  "description": "Boot directly into the overworld on the Castle scene",
- "scenario_id": "CASTLE_BOOT",
  "actions": [],
  "assertions": [
   {

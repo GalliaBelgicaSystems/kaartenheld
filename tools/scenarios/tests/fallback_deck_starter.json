@@ -1,5 +1,4 @@
 {
- "scenario_id": "FIRST_ENCOUNTER",
  "description": "Regression for the battle fallback deck: initial_state constructs an intentionally EMPTY persistent deck (descriptor deck-present section; the CARDS menu can no longer empty a deck because of DECK_MIN_CARDS) which forces battle_init_from_deck_state onto the packed starter-deck fallback. The 12-card table mirrors the granted composition (4x SW3, 3x SH2, 3x SW4, 2x DA1); the first five entries keep the granted deal order so the opening hand must render SW3 SW3 SH2 SH2 SW4 -- a mis-packed table would show a shuffled order and garbage type-15 codes",
  "initial_state": {
   "scene": "TEST_FIELD",

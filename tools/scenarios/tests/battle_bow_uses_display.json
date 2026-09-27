@@ -2,7 +2,6 @@
  "name": "battle_bow_uses_display",
  "test": true,
  "description": "The 2-shot bow draws its power as the nine icon on the card's middle row (tile 102) and the remaining-uses arrow counter on the floor row (2 arrows fresh, tile 100); the semantic row reads BO2.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

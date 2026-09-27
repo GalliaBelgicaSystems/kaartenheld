@@ -2,7 +2,6 @@
  "name": "thanks_boot",
  "test": true,
  "description": "Boot directly into the terminal Thanks for playing! screen",
- "scenario_id": "THANKS_BOOT",
  "actions": [],
  "assertions": [
   {

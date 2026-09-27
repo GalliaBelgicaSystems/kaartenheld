@@ -2,7 +2,6 @@
  "name": "tutorial_slide1",
  "test": true,
  "description": "RIGHT from slide 0 advances to slide 1 and its CARD TYPES text is on screen.",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

@@ -2,7 +2,6 @@
  "name": "start_swallows_map_commit",
  "test": true,
  "description": "PRESS START on the exact frame the move into the Town gate commits: the map change and its map-enter event must resolve before the menu opens (regression for START swallowing MOVE_RESULT_MAP_CHANGED)",
- "scenario_id": "START_SWALLOWS_MAP_COMMIT",
  "actions": [
   {
    "type": "press",

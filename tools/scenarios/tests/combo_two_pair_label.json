@@ -2,7 +2,6 @@
  "name": "combo_two_pair_label",
  "test": true,
  "description": "Two distinct pairs (SW3 BO3 + SW5 DA5) read TWO PAIR on the live COMBO row while pending, before execution.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

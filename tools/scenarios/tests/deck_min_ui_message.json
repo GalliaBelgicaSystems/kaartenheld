@@ -2,7 +2,6 @@
  "name": "deck_min_ui_message",
  "test": true,
  "description": "CARDS tab reaching the DECK_MIN_CARDS floor through real gameplay on the 12-card starter (SW4 SH3 SW3 DA2): A clears the maxed Iron Sword (12 -> 8), then the maxed Wooden Shield exactly reaches the floor (8 -> 5, allowed), then A on Fire Sword would drop 5 -> 2 and is rejected all-or-nothing with a transient DECK MIN 5 message and no further deck telemetry.",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

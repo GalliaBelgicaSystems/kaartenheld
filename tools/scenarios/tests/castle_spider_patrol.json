@@ -2,7 +2,6 @@
  "name": "castle_spider_patrol",
  "test": true,
   "description": "The castle spider (AI_PATROL_VERT, spawn (17,7)) bounces vertically and never leaves rows spawn-3..spawn+3 (4..10).  Asserted via ACTOR_MOVED payloads: x stays 17 and the extremes y=4 and y=10 are both visited within the wait window.",
- "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
    "type": "wait",

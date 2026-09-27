@@ -2,7 +2,6 @@
  "name": "tutorial_menu",
  "test": true,
  "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 3), and press A to enter the first tutorial slide.",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

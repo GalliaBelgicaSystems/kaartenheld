@@ -2,7 +2,6 @@
  "name": "quest_list_merchant_complete",
  "test": true,
  "description": "A completed LOST AMULET quest stays listed in the QUEST tab as 'complete - MERCHANT'",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

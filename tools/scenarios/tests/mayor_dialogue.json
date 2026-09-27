@@ -2,7 +2,6 @@
  "name": "mayor_dialogue",
  "test": true,
  "description": "Full NPC dialogue sequence with Mayor: approach, advance text lines, close dialogue, and verify MET_MAYOR story flag",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "press",

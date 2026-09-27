@@ -2,7 +2,6 @@
  "name": "walkable_landscape_floor",
  "test": true,
  "description": "Player steps onto a desolate-landscape plain-floor variant tile (TILE_DESOLATE_LANDSCAPE_32, manifest walkable) and movement commits",
- "scenario_id": "FOREST_BOOT",
  "actions": [
   {
    "type": "press",

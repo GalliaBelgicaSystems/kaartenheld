@@ -2,7 +2,6 @@
  "name": "actor_defeat_initial",
  "test": true,
  "description": "A DEFEATED persistent actor in initial_state is not spawned into the scene",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

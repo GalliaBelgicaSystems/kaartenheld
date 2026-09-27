@@ -2,7 +2,6 @@
  "name": "quest_progress",
  "test": true,
  "description": "Defeating a hostile actor increments the global MONSTERS_DEFEATED counter (the quest objective)",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

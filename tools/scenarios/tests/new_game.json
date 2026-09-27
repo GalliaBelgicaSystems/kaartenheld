@@ -2,7 +2,6 @@
  "name": "new_game",
  "test": true,
  "description": "Verify initial game state after boot",
- "scenario_id": "NEW_GAME",
  "actions": [],
  "assertions": [
   {

@@ -2,7 +2,6 @@
  "name": "patrol_bat_circle",
  "test": true,
  "description": "Bat patrols in a 2x2 clockwise circle around its spawn point (7,4)",
- "scenario_id": "FOREST_BOOT",
  "actions": [
   {
    "type": "wait",

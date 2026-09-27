@@ -2,7 +2,6 @@
  "name": "status_freeze_player",
  "test": true,
  "description": "Player-side freeze (status effects): DBG_APPLY_STATUS freezes the PLAYER (slot 0, duration 3). The frozen player can neither attack NOR defend for all three rounds (6 TURN_SKIPPED, data[0]=0, data[1]=3 -- two skips per round) while the enemy still attacks (ENEMY_CARD_PLAYED, once per round). After the 3-round duration elapses the freeze EXPIRES and the player resumes acting (a real attack lands: DAMAGE_DEALT fires, no further TURN_SKIPPED).",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

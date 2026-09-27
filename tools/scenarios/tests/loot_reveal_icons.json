@@ -2,7 +2,6 @@
  "name": "loot_reveal_icons",
  "test": true,
  "description": "Loot reveal regression (docs/loot.md 34.5): seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name W P DA on row 11, and full English description WOOD POISON DAGGER on row 12.",
- "scenario_id": "FIRST_ENCOUNTER",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

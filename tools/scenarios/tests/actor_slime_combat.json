@@ -2,7 +2,6 @@
  "name": "actor_slime_combat",
  "test": true,
  "description": "Hostile World Actor (Slime) engagement starts combat with the Slime battle",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

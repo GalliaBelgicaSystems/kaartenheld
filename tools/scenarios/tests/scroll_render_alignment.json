@@ -2,7 +2,6 @@
  "name": "scroll_render_alignment",
  "test": true,
  "description": "Walk east on the Field to (26,7); with a full-screen 18-row viewport the map fits vertically so camera_px_y stays 0, while the player-centred camera scrolls horizontally to camera_px_x=96 and SCX/SCY track it, while the background tilemap ring holds the correct world tiles at wrapped addresses",
- "scenario_id": "SCROLL_RENDER_ALIGNMENT",
  "actions": [
   {
    "type": "hold",

@@ -2,7 +2,6 @@
  "name": "battle_reject_message",
  "test": true,
  "description": "Selecting a card that costs more than the remaining energy pool is rejected with a transient 'NO ENERGY!' flash on the battle HUD (row 8). Cost-9 cards make even the first selection a rejection.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

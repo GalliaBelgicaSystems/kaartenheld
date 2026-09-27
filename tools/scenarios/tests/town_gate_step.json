@@ -2,7 +2,6 @@
  "name": "town_gate_step",
  "test": true,
  "description": "Step west onto the Town point-exit trigger at (1,7): the invisible gate teleports the player to TEST_FIELD (17,7). Regression for the point-exit walk target (the animation must step onto the gate, not slide toward the far destination).",
- "scenario_id": "TOWN_GATE_STEP",
  "actions": [
   {
    "type": "press",

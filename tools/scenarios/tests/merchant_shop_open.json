@@ -2,7 +2,6 @@
  "name": "merchant_shop_open",
  "test": true,
  "description": "After returning the amulet the Merchant's shop opens (rewarded gold 15). The starter deck already owns all four IRON_SWORD copies (max_copies 4), so buying a fifth is rejected atomically: gold keeps the reward, no CARD_PURCHASED fires",
- "scenario_id": "TOWN_BOOT",
  "actions": [
   {
    "type": "interact",

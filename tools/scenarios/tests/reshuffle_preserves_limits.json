@@ -2,7 +2,6 @@
  "name": "reshuffle_preserves_limits",
  "test": true,
  "description": "A full slime-trio fight needs more card plays than the 5-card starter deck holds, forcing multiple discard-to-draw reshuffles mid-fight. Guards the reshuffle path against stalls and keeps per-copy uses intact across cycles",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "wait",

@@ -2,7 +2,6 @@
  "name": "battle_bat_art",
  "test": true,
  "description": "Bat trio battle: enemies render as OAM sprites with the bat OBJ ramp (BG footprint blank); HP lines and wiring pinned.",
- "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
    "type": "wait",
