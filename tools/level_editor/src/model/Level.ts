@@ -9,6 +9,10 @@ export interface LevelExit {
   target_y: number;
   direction?: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' | string;
   tile_char?: string;
+  /** Two-way tunnel id linking this exit to exactly one return exit in
+   *  the target scene (same id on both mouths, mutual targets, each
+   *  landing on the other's gate). Absent = one-way exit. */
+  tunnel?: string;
 }
 
 /** Whole-edge map links (the "ocean"): stepping onto a non-wall cell of

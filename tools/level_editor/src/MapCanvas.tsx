@@ -1041,7 +1041,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     }
 
     // 6b. Linked-edge indicators (neighbors): a green strip along each
-    // linked border with the target scene name. Exits stay orange squares.
+    // linked border with the target scene name. Exits stay orange squares
+    // (one-way) or teal ⇄ squares (tunnel mouths).
     if (showExits && !level.isScreen) {
       const neighbors = level.neighbors || {};
       const linked: Array<{ direction: string; target: string }> = [];
@@ -1070,7 +1071,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       }
     }
 
-    // 6. Render Exits
+    // 6. Render Exits (orange squares = one-way, teal ⇄ = tunnel mouths)
     if (showExits && level.exits) {
       level.exits.forEach((ex, idx) => {
         const isSelected = activeLayer === 'exits' && selectedEntityIndex === idx;
@@ -1080,20 +1081,21 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         const m = tileSize >= 16 ? 2 : (tileSize >= 8 ? 1 : 0);
         const s = Math.max(2, tileSize - m * 2);
 
-        ctx.fillStyle = isSelected ? '#f39c12' : '#e67e22';
+        ctx.fillStyle = isSelected ? '#f39c12' : (ex.tunnel ? '#16a085' : '#e67e22');
         ctx.fillRect(px + m, py + m, s, s);
 
-        ctx.strokeStyle = isSelected ? '#ffffff' : '#d35400';
+        ctx.strokeStyle = isSelected ? '#ffffff' : (ex.tunnel ? '#0e6655' : '#d35400');
         ctx.lineWidth = isSelected ? 2 : 1;
         ctx.strokeRect(px + m, py + m, s, s);
 
-        // Exit target label / arrow
+        // Exit target label / arrow (tunnels show ⇄, one-ways the direction)
         if (tileSize >= 16) {
           ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${Math.floor(tileSize * 0.55)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          const glyph = ex.direction === 'NORTH' ? '⬆️' : ex.direction === 'SOUTH' ? '⬇️' : ex.direction === 'WEST' ? '⬅️' : '➡️';
+          const glyph = ex.tunnel ? '⇄'
+            : ex.direction === 'NORTH' ? '⬆️' : ex.direction === 'SOUTH' ? '⬇️' : ex.direction === 'WEST' ? '⬅️' : '➡️';
           ctx.fillText(glyph, px + tileSize / 2, py + tileSize / 2);
         }
       });

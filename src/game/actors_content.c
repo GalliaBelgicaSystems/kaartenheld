@@ -527,6 +527,37 @@ static const WorldActorDefinition g_grassy_forest_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_desolate_field_actors[] = {
+    {
+        64, ENTITY_ID_BAT, 13, 7, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_CHASE, 8, 8, 8, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 0, 0
+    },
+    {
+        61, ENTITY_ID_SPIDER, 7, 11, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_CIRCLE, 16, 16, 15, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 10, 0
+    },
+    {
+        62, ENTITY_ID_SPIDER, 15, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 16, 16, 15, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 10, 0
+    },
+    {
+        63, ENTITY_ID_BAT, 4, 6, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_CHASE, 8, 8, 8, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 0, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -558,6 +589,10 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_throne_room_actors) / sizeof(g_throne_room_actors[0])) },
     { MAP_GRASSY_FOREST,   g_grassy_forest_actors,
         (uint8_t)(sizeof(g_grassy_forest_actors) / sizeof(g_grassy_forest_actors[0])) },
+    { MAP_VILLAGE_AREA,    0,
+        0 },
+    { MAP_DESOLATE_FIELD,  g_desolate_field_actors,
+        (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
 };
 
-const uint8_t g_actor_table_count = 15;
+const uint8_t g_actor_table_count = 17;

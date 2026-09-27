@@ -389,3 +389,111 @@ def point_exit_issues(levels_by_id, tilesets):
             errors.extend(entry["errors"])
             warnings.extend(entry["warnings"])
     return errors, warnings
+
+
+# ── Two-way tunnels (linked exit pairs) ──────────────────────────────
+# A tunnel is two point exits sharing a `tunnel` id, one in each of two
+# levels, with mutual targets.  The ROM format is unchanged (two plain
+# SceneExit rows); the id lives only in the JSON + tooling, which keeps
+# the pair in sync.  Spawn-tracks-gate invariant: stepping into mouth A
+# lands ON mouth B (A.target == B.gate and vice versa), so moving a gate
+# has exactly one consistent partner update.
+
+import re as _re
+
+TUNNEL_ID_RE = _re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def tunnel_id_valid(tunnel):
+    """True when a tunnel id matches the project convention (same shape
+    as scene ids: lowercase, starting with a letter)."""
+    return bool(tunnel) and bool(TUNNEL_ID_RE.match(tunnel))
+
+
+def collect_tunnels(levels_by_id):
+    """{tunnel_id: [(level_name, exit_index, exit), ...]} for every exit
+    carrying a truthy `tunnel` field, in deterministic (level, index)
+    order."""
+    out = {}
+    for name in sorted(levels_by_id):
+        lvl = levels_by_id[name]
+        for i, e in enumerate(lvl.get("exits", [])):
+            t = (e.get("tunnel") or "")
+            if not t:
+                continue
+            out.setdefault(str(t), []).append((name, i, e))
+    return out
+
+
+def tunnel_report(levels_by_id):
+    """Per-tunnel diagnostics for linked exit pairs.
+
+    Returns a list of dicts {tunnel, ok, errors, warnings}; every
+    message is fully self-describing (levels + coordinates).  Used by
+    the compiler gate, the validator, and the editor's /api/exit-status.
+
+    Contract mirror: tools/level_editor/vite.config.ts tunnelStatus()
+    checks the same invariants (count == 2, different levels, mutual
+    targets, spawn-tracks-gate).  Keep both in sync; the parity corpus
+    in tools/level_compiler/tests/test_tunnel_parity.py guards drift."""
+    out = []
+    tunnels = collect_tunnels(levels_by_id)
+    for tunnel in sorted(tunnels):
+        ends = tunnels[tunnel]
+        entry = {"tunnel": tunnel, "ok": True, "errors": [], "warnings": []}
+        if len(ends) == 1:
+            name, i, e = ends[0]
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' has only one end ({name}: exit #{i} at "
+                f"({e.get('x')},{e.get('y')}) -> '{e.get('target_scene')}'): "
+                f"create the return exit with the same tunnel id, or remove "
+                f"the tunnel field to keep it a one-way exit.")
+            out.append(entry)
+            continue
+        if len(ends) > 2:
+            where = ", ".join(f"{n} exit #{i}" for n, i, _ in ends)
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' has {len(ends)} ends ({where}): a tunnel "
+                f"is exactly two mouths — split the extras into their own "
+                f"tunnel ids.")
+            out.append(entry)
+            continue
+        (an, ai, a), (bn, bi, b) = ends
+        if an == bn:
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' has both ends in '{an}' (exits #{ai} and "
+                f"#{bi}): the two mouths must live in different levels.")
+        if a.get("target_scene") != bn or b.get("target_scene") != an:
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' targets are not mutual: {an} exit #{ai} "
+                f"-> '{a.get('target_scene')}' but {bn} exit #{bi} -> "
+                f"'{b.get('target_scene')}' (want {an} -> {bn} and {bn} -> "
+                f"{an}). Retarget the mouths so they point at each other.")
+        agate = (a.get("x"), a.get("y"))
+        bgate = (b.get("x"), b.get("y"))
+        if (a.get("target_x"), a.get("target_y")) != bgate or \
+                (b.get("target_x"), b.get("target_y")) != agate:
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' spawns do not track the counterpart gates "
+                f"(spawn-tracks-gate): {an} exit #{ai} lands on "
+                f"({a.get('target_x')},{a.get('target_y')}) but {bn}'s mouth "
+                f"is at {bgate}; {bn} exit #{bi} lands on "
+                f"({b.get('target_x')},{b.get('target_y')}) but {an}'s mouth "
+                f"is at {agate}. Point each landing at the other mouth so a "
+                f"moved gate has one consistent partner update.")
+        out.append(entry)
+    return out
+
+
+def tunnel_issues(levels_by_id):
+    """(errors, warnings) for every tunnel id in the set."""
+    errors, warnings = [], []
+    for entry in tunnel_report(levels_by_id):
+        errors.extend(entry["errors"])
+        warnings.extend(entry["warnings"])
+    return errors, warnings

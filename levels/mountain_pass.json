@@ -253,9 +253,10 @@
       "y": 11,
       "target_scene": "south_field",
       "target_x": 12,
-      "target_y": 12,
+      "target_y": 11,
       "direction": "SOUTH",
-      "tile_char": "<"
+      "tile_char": "<",
+      "tunnel": "tunnel_mountain_pass_south_field"
     }
   ],
   "objects": [

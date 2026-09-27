@@ -230,7 +230,17 @@ export const App: React.FC = () => {
     const res = await saveLevelToServer(level, previousId);
     if (res.success) {
       if (previousId) setCurrentLevelId(level.id);
-      setNotification({ message: `Successfully saved ${level.id} to ${res.path}!`, type: 'success' });
+      const tunnelBits: string[] = [];
+      if (res.tunnels_synced) tunnelBits.push(`${res.tunnels_synced} tunnel mouth(s) synced`);
+      if (res.tunnels_removed && res.tunnels_removed.length > 0) {
+        tunnelBits.push(`orphaned partner(s) removed: ${res.tunnels_removed.join(', ')}`);
+      }
+      if (res.tunnel_error) tunnelBits.push(`tunnel sync warning: ${res.tunnel_error}`);
+      setNotification({
+        message: `Successfully saved ${level.id} to ${res.path}!` +
+          (tunnelBits.length > 0 ? ` (${tunnelBits.join('; ')})` : ''),
+        type: res.tunnel_error ? 'info' : 'success',
+      });
       // Refresh the catalogue so newly created ids appear without a rebuild.
       try {
         const items = await fetchLevelList();
@@ -725,6 +735,12 @@ export const App: React.FC = () => {
     const newExits = level.exits.filter((_, i) => i !== index);
     pushState({ ...level, exits: newExits });
     setSelectedEntityIndex(null);
+  };
+
+  // Server rewrote exits on disk (tunnel pairing via Return-exits panel):
+  // adopt them so the next save cannot overwrite the pairing.
+  const handleExitsSynced = (exits: LevelExit[]) => {
+    pushState({ ...level, exits });
   };
 
   const handleUpdateNeighbors = (neighbors: LevelNeighbors) => {
@@ -1365,6 +1381,7 @@ export const App: React.FC = () => {
               onAddExit={handleAddExit}
               onUpdateExit={handleUpdateExit}
               onDeleteExit={handleDeleteExit}
+              onExitsSynced={handleExitsSynced}
               onUpdateNeighbors={handleUpdateNeighbors}
               onAddObject={handleAddObject}
               onUpdateObject={handleUpdateObject}

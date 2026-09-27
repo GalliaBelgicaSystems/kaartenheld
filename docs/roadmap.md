@@ -1392,3 +1392,95 @@ Memory note (two waves):
    spawns ≥1 hostile, so that regression cannot recur.
    Current release headroom: bank 2 ≈2.1 KB, bank 4 ≈1.1 KB, bank 5 ≈138 B.
 
+## 12. new-levels merge (tunnels branch, Sep 2026)
+
+`origin/new-levels` (one commit on a stale base: `castle_entry` redesign,
+new `village_area` 17 + `desolate_field` 18) was cherry-picked onto
+`tunnels` (linear history). Conflict in `castle_entry.json` resolved:
+tunnels `neighbors` + enemies kept, new terrain/name/spawn taken, invalid
+`castle.forest_plain_floor_1` (287 cells) fixed to `castle.castle_plain_floor`,
+south gate opened at x=9,10, desolate `actor_id` 60→64 collision minted.
+
+Bank-5 findings (release link is ground truth, `build/kaartenheld.map`
+`l__CODE_5`): base headroom was 144 B; the two new levels add ~1576 B
+(149+139 terrain blocks — dense single-cell detail vs 20–66 for existing
+levels). No lossless fit exists: all other bank-5 residents are immovable
+(asset/atlas/tiles/oam/scene-load, smallest mover exceeds every headroom)
+and a merge post-pass saves 0 blocks (greedy output already maximal).
+
+Landed:
+1. Compiler elides interior default-ground blocks (`optimize_terrain`
+   generalizes the dead `TILE_FLOOR` fossil to each level's own
+   `level_default_const`, with a perimeter guard — ROM pre-fills interior
+   default, perimeter pre-fills WALL, open rows appended after are
+   untouched). -131 blocks / -655 B permanently, marginally faster loads.
+2. `compile.py` emits NULL+0 actor tables for object-less scenes (SDCC
+   rejects `{}`) — `village_area` exposed it.
+3. `castle_entry` redesign, both new levels, both tunnels (below).
+
+Overflow terrain banks (both levels landed in-ROM): `village_area`
+terrain → bank 7, `desolate_field` terrain → bank 6
+(`OVERFLOW_TERRAIN_BANK`, balanced ~340 B headroom each); rows + exits
+stay in bank 5. `SceneDefinition.terrain_bank` (appended last) selects;
+`scene_load_tiles()` dispatches a per-bank stamp body that reads its
+own-bank arrays directly. Release banks: 4:289, 5:295, 6:97, 7:75.
+Two dead ends documented so the next person doesn't repeat them:
+* WRAM staging in the banked body: a 5 B window works, but switching
+  banks from switchable-ROM code self-unmaps the instruction stream
+  (the copy trampoline runs from WRAM for exactly this reason), and
+  struct assignment lowers to `call ___memcpy` (unmapped while
+  switched) — CPU runs away with the LCD off, which presents as PyBoy
+  `tick()` blocking forever (99.7% CPU, zero log output). Verify
+  switched bodies with `lcc -S` (zero `call`s). See docs/level-editor.md
+  Phase 22.
+* An 800 B WRAM staging static flipped hostile spawning under the
+  harness with zero execution difference (BSS-layout sensitivity,
+  §52.19 family); small statics did not. Keep new WRAM statics tiny
+  and let the sentinels judge.
+
+Tunnels added (user choice: point pairs, auto `tunnel_a_b` naming):
+`tunnel_town_village_area` (town (18,8) EAST `>` ↔ village (1,8) WEST
+`<`) and `tunnel_desolate_field_south_field` (south_field (5,14) SOUTH
+`>` ↔ desolate (10,14) NORTH `<`). Both pass the compile-time tunnel
+contract; gates sit on existing floor (zero terrain bytes; invisible-
+portal warnings accepted, precedented by fixtures).
+
+Remaining follow-ups: bank 6/7 margins (~100/75 B) fit ~1 small level's
+terrain before another overflow entry (or ROM growth past 8 banks) is
+needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
+(`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
+SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
+
+Castle art drop (same branch, Sep 2026): 9 new tiles (throne 2x2, floor
+debris, rugs, chandeliers) merged via `merge_tileset.py`, then hand-fixed
+— lessons for the next drop: (1) the merge never writes vram `(x,y)` and
+assigns defs by 9-wide sheet position, but castle slots pack 8-wide, so
+everything from slot 8 was shifted garbage (throne_TR at slot 8 pushed
+seven defs down one); always re-derive slots from the gfx `--tile-coords`
+list. (2) Evicted defs keep stale `gb_constant`s → duplicate constants
+(7 collisions here); delete or renumber them. (3) A CSV quoting artifact
+minted junk def `castle_plain_floor_3` (cell art == base floor). (4) New
+defs arrive untagged/wrong-tagged — tag from measured pixels (thrones
+browns→castle2, rugs/chandeliers red-gold→castle3, debris gray→castle4),
+never from the misaligned mismatch report. (5) The artist painted over
+`plain_floor` (296 refs) and `chest` (3 refs): migrated to debris/table
+(blocking preserved) after verifying no sprite-field refs. CI
+`ramp-check --strict` back to green with zero repaints and zero new
+allowlist entries. `make parity` fails identically with and without this
+work (pre-existing, non-gating, not CI-run).
+
+Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
+updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)
+change full-frame (new interior — expected). Five others
+(`01-field-scrolled`, `11-battle-aftermath`, `sweep-forest_deep`,
+`sweep-forest_shrine`, `sweep-grassy_forest`, `sweep-throne_room`) differ
+by 29–54 px (same palettes — sprite-phase scale). Bisect: fossil
+`optimize_terrain` reproduces the committed bytes for those five, so the
+elision's bank-5 shrinkage deterministically shifts sprite phases in
+unrelated walks — all semantic gates stay green (harness 205/205,
+verify-oam, walkthrough 823/823), tilemaps are provably identical
+(pre-fill), and no engine C changed, but SOMETHING layout-coupled exists
+(uninitialized read or OOB-write victim shift — the §52.19 family).
+Prescription: mGBA watchpoint hunt next time this area is touched; do NOT
+treat byte-identical screenshots as proof of no behavioral coupling.
+

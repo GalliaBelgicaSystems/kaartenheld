@@ -15,6 +15,13 @@
 
 extern const SceneExit g_all_exits[];
 extern const SceneDefinition g_scenes[];
+#ifndef TEST_LEVELS
+/* Overflow terrain stamp bodies (one per bank; see scenes_terrain_b*.c,
+ * emitted by compile.py from OVERFLOW_TERRAIN_BANK). Keep the bank list
+ * in sync with that map. */
+extern void terrain_stamp_b6_banked(void);
+extern void terrain_stamp_b7_banked(void);
+#endif
 
 static SceneDefinition s_scene_scratch;
 static SceneExit s_exit_scratch;
@@ -72,6 +79,30 @@ void scene_load_tiles(World *w, MapId map_id)
     g_bk_ptr_a = (void *)w;
     g_bk_byte_a = (uint8_t)map_id;
     banked_call_run();
+#ifndef TEST_LEVELS
+    /* Overflow scenes keep terrain outside the home bank: the body above
+     * prefills and skips, then a per-bank stamp body reads its own-bank
+     * arrays directly (no bank switching anywhere — switching from
+     * switchable ROM would unmap the switcher mid-execution). Fixture
+     * terrain always shares bank 4, so the debug build omits this. */
+    {
+        const SceneDefinition *d = scene_definition_for_map(map_id);
+        if (d && d->terrain_blocks && d->terrain_bank != SCENE_CONTENT_BANK) {
+            g_bk_ptr_a = (void *)w;
+            g_bk_ptr_b = (void *)d->terrain_blocks;
+            g_bk_call_bank = d->terrain_bank;
+            if (d->terrain_bank == 6) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b6_banked;
+                banked_call_run();
+            } else if (d->terrain_bank == 7) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b7_banked;
+                banked_call_run();
+            }
+            /* Unknown overflow bank: leave prefilled floor. Never a hang;
+             * extending OVERFLOW_TERRAIN_BANK requires extending this. */
+        }
+    }
+#endif
 }
 
 /* scene_spawn() is a fixed-bank wrapper around the banked body in

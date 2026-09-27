@@ -59,6 +59,13 @@ typedef struct {
     uint8_t neighbor_s; /* MapId or MAP_NONE */
     uint8_t neighbor_e; /* MapId or MAP_NONE */
     uint8_t neighbor_w; /* MapId or MAP_NONE */
+    /* ROM bank holding this scene's terrain_blocks array.  Normally the
+     * home content bank (5 release, 4 TEST fixtures); overflow scenes keep
+     * their terrain in a roomier bank, stamped by a per-bank body
+     * dispatched from scene_load_tiles() (see scene_load.c).  Appended at
+     * the END so existing field offsets never shift (rebuild everything
+     * after touching this header: AGENTS.md 52.2). */
+    uint8_t terrain_bank;
 } SceneDefinition;
 
 /* Look up a scene definition by its map id.
