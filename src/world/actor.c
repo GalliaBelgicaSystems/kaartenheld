@@ -13,7 +13,9 @@
 
 const WorldActorTable *g_actor_registry = NULL;
 uint8_t g_actor_registry_count = 0;
-static uint8_t g_actor_bank = GAME_ACTOR_BANK;
+/* BSS: actor_register_tables() (via game_content_init() at every boot)
+ * sets the home bank before any table is read. */
+static uint8_t g_actor_bank;
 
 StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 uint8_t g_static_actor_count = 0;

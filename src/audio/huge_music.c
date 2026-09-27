@@ -13,7 +13,9 @@ uint8_t g_huge_tick_divider = 0;
 /* ROM bank holding the active song + its driver copy.  Bank 6 holds the
  * driver and the six original songs; bank 7 holds the second driver copy
  * and the mimic song (bank 6 is full). */
-uint8_t g_huge_music_bank = HUGE_MUSIC_BANK;
+/* BSS (no _INITIALIZER cost): huge_music_init() (via audio_init() at
+ * every boot) sets the home bank before any play/mute/update call. */
+uint8_t g_huge_music_bank;
 
 void huge_music_init(void)
 {
@@ -77,11 +79,6 @@ void huge_music_resume(void)
     if (g_huge_current_song) {
         g_huge_playing = 1;
     }
-}
-
-uint8_t huge_music_is_playing(void)
-{
-    return g_huge_playing;
 }
 
 void huge_music_mute_channel(uint8_t ch, uint8_t mute)

@@ -18,7 +18,9 @@
  * returned pointer is only valid until the next row access. */
 static const EventDefinition *g_events = NULL;
 static uint8_t g_event_count = 0;
-static uint8_t g_event_bank = 2;
+/* BSS: event_init() (via game_content_init() at every boot) sets the home
+ * bank before any row is read. */
+static uint8_t g_event_bank;
 static EventDefinition g_event_scratch;
 
 /* banked_copy() takes a uint8_t byte count; a larger row cannot be staged. */
