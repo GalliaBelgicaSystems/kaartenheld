@@ -496,7 +496,7 @@ No counter needs to be maintained.
 > 3. `battle_resolve_hand_discard()` pays the summed combo cost (saturating
 >    at 0), decrements limited uses, emits `CARD_PLAYED` per card, discards
 >    them and refills those hand slots from the deck.
-> 4. `energy` is a per-turn pool (`BATTLE_ENERGY_PER_TURN`, currently 5),
+> 4. `energy` is a per-turn pool (`BATTLE_ENERGY_PER_TURN`, currently 6),
 >    refreshed to full at every decision-phase entry (attack AND defend).
 >
 > For a Potion:

@@ -387,13 +387,16 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 ### 6.2 Hand, energy, timer
 
 * **Hand**: 5 cards drawn from your deck at battle start.
-* **Energy**: **6 per full round**.  Most cards cost 1; the Mythril Bow
+* **Energy**: **6 per decision phase** (attack and defend each get a
+  fresh 6).  Most cards cost 1; the Mythril Bow
   costs 2.  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
   (1200 frames).  It runs in the attack *and* defend decision phases.
   When it expires, your current selection is auto-executed — a timer-out
-  with no selection commits an empty combo (`battle.c`).
+  with no selection auto-picks the hovered card (or the first playable
+  one) and executes that; only a hand with nothing playable commits an
+  empty combo (`battle.c`).
 
 ### 6.3 Battle phases
 
