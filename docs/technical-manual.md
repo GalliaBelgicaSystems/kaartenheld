@@ -773,8 +773,10 @@ skipping the title screen and the intro slides.
 ## 11. Audio
 
 Music tracks (`src/audio/audio.h`): overworld, battle, victory (one-shot
-fanfare), title, town, dungeon (castle), boss.  The boss theme plays only
-for the Lord of Slimes.  UI SFX: a short cursor blip and a confirm tone.
+fanfare), title, town, dungeon (castle), boss, mimic.  The boss theme plays only
+for the Lord of Slimes.  Mimic combat plays the short `Mimic_intro.uge`
+sting first (~0.9 s), then the looping `Mimic.uge` battle theme (timed swap in
+`audio_update()`; the tracker driver loops whole songs).  UI SFX: a short cursor blip and a confirm tone.
 `SOUND: ON/OFF` on the title menu toggles the soundtrack.
 
 Music runs on the hardware **timer interrupt** at a fixed 256 Hz, so

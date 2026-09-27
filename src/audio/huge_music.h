@@ -26,4 +26,15 @@ uint8_t huge_music_is_playing(void);
 void huge_music_mute_channel(uint8_t ch, uint8_t mute);
 void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute); /* timer-ISR context: no di/ei */
 
+/* Driver state (WRAM): exposed so the bank-7 mimic intro -> loop body
+ * (mimic_chain.c) can switch songs without a fixed-bank helper call
+ * (§52.18 memory budget).  Written under __critical from user context
+ * (huge_music_play_banked) and directly from the timer ISR (chain body,
+ * huge_music_update); same shared-ISR pattern as the SFX cursor state
+ * in audio.c. */
+extern const hUGESong_t *g_huge_current_song;
+extern uint8_t g_huge_playing;
+extern uint8_t g_huge_tick_divider;
+extern uint8_t g_huge_music_bank;
+
 #endif /* HUGE_MUSIC_H */

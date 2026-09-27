@@ -36,6 +36,7 @@ static uint8_t sfx_div = 0;
 static uint8_t sfx_muted = 0;
 
 extern uint8_t sfx_step_tick(void);
+extern void mimic_chain_tick(void);
 
 void audio_play_sfx(uint8_t s)
 {
@@ -109,7 +110,10 @@ void audio_play_music(MusicTrack track)
     } else if (track == MUSIC_BOSS) {
         huge_music_play(&song_boss_fight);
     } else if (track == MUSIC_MIMIC) {
-        huge_music_play_banked(&song_mimic, HUGE_MUSIC_BANK_B7);
+        /* Intro one-shot first; the bank-7 mimic_chain_tick() body swaps
+         * in the looping song when the intro ends (self-arming, so no
+         * fixed-bank countdown is needed). */
+        huge_music_play_banked(&song_mimic_intro, HUGE_MUSIC_BANK_B7);
     } else if (track == MUSIC_TOWN) {
         huge_music_play(&song_village);
     } else if (track == MUSIC_DUNGEON) {
@@ -165,6 +169,13 @@ void audio_update(void)
     }
 
     if (g_audio_current_track == MUSIC_NONE) return;
+
+    /* Mimic intro -> loop service (bank-7 body, same select-7/call/
+     * restore-1 dispatch as the SFX stepper above; stays ISR-safe: no
+     * di/ei inside). */
+    *(volatile uint8_t *)0x2000 = HUGE_MUSIC_BANK_B7;
+    mimic_chain_tick();
+    *(volatile uint8_t *)0x2000 = 1;
 
     /* All playback is tracked now; tracks without a song (OVERWORLD,
      * VICTORY) simply stay silent. */
