@@ -134,11 +134,13 @@ void combo_resolve_banked(void)
     /* Phase rules (docs/loot.md §34.3/§34.4): attack sums every
      * non-SHIELD, non-RING value (rings deal 0 attack -- they heal
      * instead); defend sums SHIELD values AND rings (a ring is a
-     * wild-card shield worth its power).  All selected cards enter the
-     * hand for classification either way. */
+     * wild-card shield worth its power).  Classification runs on the
+     * effective set either way (attack: every selected card; defend:
+     * shields + rings -- inert non-shields contribute 0 block, 0 combo). */
     {
         uint8_t vals[5];
         uint8_t types[5];
+        uint8_t is_ring[5];
         uint8_t w = 0;
 
         for (i = 0; i < count; i++) {
@@ -152,6 +154,7 @@ void combo_resolve_banked(void)
             }
             vals[w] = cards[i].value;
             types[w] = t;
+            is_ring[w] = cards[i].ring ? 1 : 0;
             w++;
         }
         eff_count = w;
@@ -166,10 +169,13 @@ void combo_resolve_banked(void)
         } else {
             /* Ring JOKER (§34.3): a ring's value substitutes freely --
              * try every legal value (1..10) and keep the best tier (types are
-             * untouched, so the suited bonus is unaffected). */
+             * untouched, so the suited bonus is unaffected).  Ring flags ride
+             * in effective order (is_ring[]): the selection may lead with
+             * inert fodder that never enters vals[], so indexing cards[]
+             * directly would test the wrong cards. */
             uint8_t has_ring = 0;
             for (i = 0; i < eff_count; i++) {
-                if (cards[i].ring) has_ring = 1;
+                if (is_ring[i]) has_ring = 1;
             }
             if (has_ring) {
                 uint8_t trial[5];
@@ -179,7 +185,7 @@ void combo_resolve_banked(void)
                  * full legal range. */
                 for (v = 1; v <= 10; v++) {
                     for (k2 = 0; k2 < eff_count; k2++) {
-                        trial[k2] = cards[k2].ring ? v : vals[k2];
+                        trial[k2] = is_ring[k2] ? v : vals[k2];
                     }
                     t2 = combo_classify(trial, types, eff_count);
                     if (t2 > best) best = t2;

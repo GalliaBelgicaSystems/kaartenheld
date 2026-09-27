@@ -46,7 +46,8 @@ typedef struct {
     Card cards[5];
     uint8_t count;
     uint8_t eff_count;   /* cards that entered the hand (attack: every
-                          * card; defend: SHIELD cards only) */
+                          * card; defend: shields + rings -- inert
+                          * non-shields are 0 block, 0 combo) */
     uint8_t tier;        /* HandTier */
     uint8_t suited;      /* all selected share one symbol (telemetry) */
     uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:
