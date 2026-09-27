@@ -2,7 +2,6 @@
  "name": "merchant_sell_loot",
  "test": true,
  "description": "Sell loot at the card merchant (docs/loot.md 24/34.6): engage the Merchant, then the loot card's CARDS-tab detail page offers SELL at its centralized value. Selling one WOOD PLAIN DAGGER (id 131) pays its formula value (dagger base 1 + wood tier 0 = 1 gold), emits CARD_SOLD(131,1,0) and removes the copy",
- "scenario_id": "TOWN_BOOT",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {

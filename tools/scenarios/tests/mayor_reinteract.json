@@ -2,7 +2,6 @@
  "name": "mayor_reinteract",
  "test": true,
  "description": "Conditional re-trigger: first interaction starts the quest (MAYOR_INTRO) and sets MET_MAYOR; a second interaction fires QUEST_ACTIVE while monsters remain",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "interact",

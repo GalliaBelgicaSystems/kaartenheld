@@ -2,7 +2,6 @@
  "name": "game_over",
  "test": true,
  "description": "Hero is defeated in battle, confirming GAME_OVER state and the Continue? prompt renders",
- "scenario_id": "GAME_OVER",
  "actions": [
   {
    "type": "wait",

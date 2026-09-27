@@ -2,7 +2,6 @@
  "name": "game_over_boot",
  "test": true,
  "description": "Boot directly into the Game Over screen with the Continue prompt",
- "scenario_id": "GAME_OVER_BOOT",
  "actions": [],
  "assertions": [
   {

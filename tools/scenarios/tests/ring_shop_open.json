@@ -2,7 +2,6 @@
  "name": "ring_shop_open",
  "test": true,
  "description": "The Shopkeeper's stock row renders the item code derived from the card definition (RG5 for the iron healing ring, price 20) \u2014 the shop layer duplicates no display strings",
- "scenario_id": "TOWN_BOOT",
  "actions": [
   {
    "type": "interact",

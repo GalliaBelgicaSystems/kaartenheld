@@ -2,7 +2,6 @@
  "name": "status_poison_resist",
  "test": true,
  "description": "On-hit status rider that fails its roll: a SW1 hand card carrying POISON with chance 1 (1/255) does not apply the status against this seed's RNG stream -- no STATUS_APPLIED, no ticks",
- "scenario_id": "BATTLE_BOOT",
  "actions": [
   {
    "type": "wait",

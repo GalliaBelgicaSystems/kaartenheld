@@ -2,7 +2,6 @@
  "name": "battle_run",
  "test": true,
  "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (2/5 after one SW3 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. The slime is asserted ALIVE via its persistent lifecycle, not by position, because its patrol moves it within ~30 frames of returning to the overworld.",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

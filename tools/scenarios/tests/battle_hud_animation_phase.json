@@ -2,7 +2,6 @@
  "name": "battle_hud_animation_phase",
  "test": true,
  "description": "Asserts battle HUD text during PLAYER_ANIM: the centered banner row (0) shows the action, and the description row (16) stays blank without a card description",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

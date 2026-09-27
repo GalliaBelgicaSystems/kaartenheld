@@ -2,7 +2,6 @@
  "name": "combo_ring_joker_label",
  "test": true,
  "description": "Ring joker preview (docs/loot.md 34.3): SW3 + SW3 + RING(HE1) must preview the BEST tier the ring can substitute -- THREE KIND, not the raw-value PAIR the pre-fix preview showed. The ring's raw value is 1 so the buggy preview (classify at raw value) reads PAIR.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

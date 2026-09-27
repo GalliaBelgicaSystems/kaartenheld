@@ -2,7 +2,6 @@
  "name": "card_detail",
  "test": true,
  "description": "SELECT on a card row opens the detail page showing type, power/cost, uses/max-copies, owned/decked counts and price",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

@@ -2,7 +2,6 @@
  "name": "card_sort_power",
  "test": true,
  "description": "Power-desc sort shows strongest cards first in the CARDS tab: F SW, I SW, W SH for the granted starter collection",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

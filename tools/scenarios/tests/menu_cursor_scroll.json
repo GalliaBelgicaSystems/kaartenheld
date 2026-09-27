@@ -2,7 +2,6 @@
  "name": "menu_cursor_scroll",
  "test": true,
  "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw) for in-window moves, and takes the rare full-redraw path when the caret crosses the visible-window boundary. Six collection cards plus the FILTER/SORT row make the 7-row list; six DOWN presses drive the caret to the last row, which shifts the window (scroll 0 -> 1) and drops the FILTER/SORT row. Assertions check the shifted semantic layout (FILTER/SORT gone, caret off the top row, help text unchanged).",
- "scenario_id": "NEW_GAME",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

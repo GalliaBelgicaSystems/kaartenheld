@@ -2,7 +2,6 @@
  "name": "overworld_select_load",
  "test": true,
  "description": "Pressing SELECT on the overworld opens the load menu and pressing A loads slot 1",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "save",

@@ -2,7 +2,6 @@
  "name": "quest_no_double_reward",
  "test": true,
  "description": "Once the quest is COMPLETE, the Mayor gives the already-rewarded dialogue and the IRON_SWORD is not duplicated (collection stays at the starter grant's 4 copies; the injected copy is rejected by max_copies)",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "interact",

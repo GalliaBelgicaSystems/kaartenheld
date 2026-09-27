@@ -2,7 +2,6 @@
  "name": "currency_telemetry",
  "test": true,
  "description": "add_currency mutates the GOLD currency and emits CURRENCY_ADDED",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "add_currency",

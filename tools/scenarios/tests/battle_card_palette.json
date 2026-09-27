@@ -2,7 +2,6 @@
  "name": "battle_card_palette",
  "test": true,
  "description": "Battle CGB palette bytes (g_tilemap_attr_mirror): card frame cells carry the paper slot (0), the weapon and digit cells the type weapon slot (5=fight2), the enemy target caret the HUD arrow slot (3=field), and the timer bar the bar slot (0). End-to-end encode==display check for the card/HUD display mapping (the JSON manifest check is host-side only).",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

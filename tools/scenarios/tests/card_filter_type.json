@@ -2,7 +2,6 @@
  "name": "card_filter_type",
  "test": true,
  "description": "Type filter ATTACK shows only attack cards in the CARDS tab (swords + dagger, no shield/ring rows)",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

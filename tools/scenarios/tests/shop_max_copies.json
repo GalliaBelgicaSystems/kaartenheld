@@ -2,7 +2,6 @@
  "name": "shop_max_copies",
  "test": true,
  "description": "Buying a card up to its max_copies limit succeeds; a 4th purchase is rejected with ITEM_PURCHASE_FAILED and gold unchanged",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "buy_item",

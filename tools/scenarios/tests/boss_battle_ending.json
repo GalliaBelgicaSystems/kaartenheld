@@ -2,7 +2,6 @@
  "name": "boss_battle_ending",
  "test": true,
  "description": "Defeating the LORD OF SLIMES sets ENDING_SHOWN via the BOSS_DEFEATED script and routes victory to the ENDING screen.  The castle bat is pre-defeated and SET_ENEMY_HP pins the boss to 20 HP (deterministic fight length: victory ~frame 1660).  Blind SELECT flushes auto-execute drawn cards each round; a single trailing A advances the result phase -- exactly one, because A on the ENDING screen restarts the game.",
- "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
    "type": "wait",

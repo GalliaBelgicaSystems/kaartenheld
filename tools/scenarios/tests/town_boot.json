@@ -2,7 +2,6 @@
  "name": "town_boot",
  "test": true,
  "description": "Boot directly into the overworld on the Town scene with arrival flag set",
- "scenario_id": "TOWN_BOOT",
  "actions": [],
  "assertions": [
   {

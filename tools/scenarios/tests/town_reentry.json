@@ -2,7 +2,6 @@
  "name": "town_reentry",
  "test": true,
  "description": "Re-enter Town when STORY_FLAG_ARRIVED_TOWN is already set (verifies no duplicate story flag event)",
- "scenario_id": "TOWN_REENTRY",
  "actions": [
   {
    "type": "press",

@@ -2,7 +2,6 @@
  "name": "quest_list_merchant",
  "test": true,
  "description": "The QUEST tab lists the LOST AMULET quest automatically (ACTIVE when the amulet was found), alongside MONSTER HUNT",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

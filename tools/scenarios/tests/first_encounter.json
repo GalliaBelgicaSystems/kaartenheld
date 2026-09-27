@@ -2,7 +2,6 @@
  "name": "first_encounter",
  "test": true,
  "description": "Walk right into enemy to trigger battle",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

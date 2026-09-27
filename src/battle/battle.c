@@ -225,17 +225,17 @@ void battle_target_move(Battle *b, int8_t dir)
     }
 }
 
-void battle_target_auto_advance(Battle *b)
-{
-    if (b && b->enemies[b->target_idx].hp == 0) {
-        battle_target_move(b, 1);
-    }
-}
-
 bool battle_all_enemies_dead(const Battle *b)
 {
+    uint8_t old;
     if (!b) return true;
+    old = b->target_idx;
     battle_nav((Battle *)b, NAV_OP_ALL_DEAD, 0);
+    /* The banked body steps off a tick-killed target (see above): report
+     * the retarget like any other target move. */
+    if (b->target_idx != old) {
+        telemetry_emit(EVENT_TARGET_CHANGED, old, b->target_idx, 0, 0);
+    }
     return g_bk_byte_c != 0;
 }
 
@@ -320,8 +320,11 @@ void battle_defend_resolve(Battle *b)
     /* Organic enemy status rider (Phase D): g_bk_byte_c = status id the
      * banked body rolled (0 = none).  Apply through the REAL mechanic
      * (status_apply emits STATUS_APPLIED); poison also greys the player's
-     * hand via status_grey_apply. */
-    if (g_bk_byte_c != 0) {
+     * hand via status_grey_apply.  A lethal counter leaves the player at
+     * 0 HP: the rider must not apply to a corpse (same guard as the
+     * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED, no
+     * hand grey-out. */
+    if (g_bk_byte_c != 0 && b->player.hp != 0) {
         status_apply(status_slots(0), 0, g_bk_byte_c, 1, 0);
         if (g_status_applied.id == STATUS_POISON) {
             status_grey_apply(0, BATTLE_HAND_SIZE);
@@ -563,7 +566,6 @@ void battle_execute_combo(Battle *b)
         b->dirty = BATTLE_DIRTY_ALL;
         if (b->enemies[b->target_idx].hp == 0) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-            battle_target_auto_advance(b);
         }
         if (battle_all_enemies_dead(b)) {
             battle_set_result(b, BATTLE_RESULT_VICTORY);
@@ -628,7 +630,14 @@ static void battle_tick_statuses(Battle *b)
     uint8_t i, dmg;
 
     for (i = 0; i < b->enemy_count; i++) {
-        if (b->enemies[i].hp == 0) continue;
+        if (b->enemies[i].hp == 0) {
+            /* A poisoned victim's grey-out must drain even after death:
+             * the shared enemy deck reads the union of every slot's mask,
+             * so a frozen corpse mask would jam the draw position and lock
+             * all surviving enemies out of attacking forever. */
+            status_grey_tick((uint8_t)(i + 1));
+            continue;
+        }
         dmg = status_tick(status_slots((uint8_t)(i + 1)), (uint8_t)(i + 1));
         /* Poison grey-out duration drains each round (Phase D). */
         status_grey_tick((uint8_t)(i + 1));

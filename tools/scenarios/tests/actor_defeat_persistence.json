@@ -2,7 +2,6 @@
  "name": "actor_defeat_persistence",
  "test": true,
  "description": "Defeating a hostile World Actor records persistent ActorState.DEFEATED and prevents re-engagement on the same tile after returning to the overworld",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",

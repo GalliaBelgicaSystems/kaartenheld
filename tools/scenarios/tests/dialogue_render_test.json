@@ -2,7 +2,6 @@
  "name": "dialogue_render_test",
  "test": true,
  "description": "Start MAYOR_GREETING dialogue directly without NPC interaction, asserting dialogue active, line 0, and screen buffer row contents",
- "scenario_id": "DIALOGUE_RENDER_TEST",
  "actions": [
   {
    "type": "wait",

@@ -2,7 +2,6 @@
  "name": "quest_list",
  "test": true,
  "description": "The QUEST tab (RIGHT from CARDS) lists the ongoing MONSTER HUNT quest with its progress",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

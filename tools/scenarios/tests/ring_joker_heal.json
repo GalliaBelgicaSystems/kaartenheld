@@ -2,7 +2,6 @@
  "name": "ring_joker_heal",
  "test": true,
  "description": "Ring joker (docs/loot.md 34.3): a selected RING substitutes its value freely for classification -- SW5 + RING2 becomes a PAIR of fives -- deals the sword's damage only (ring excluded from the attack sum) and heals its power (EVENT_HEALED amount 2)",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

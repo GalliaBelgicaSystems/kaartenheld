@@ -2,7 +2,6 @@
  "name": "menu_cursor_scroll_quest",
  "test": true,
  "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 5 + 2*index), no full render-cache invalidate. The state-loaded quest list renders entries at rows 5, 7, 9, ... with the caret at column 0.",
- "scenario_id": "NEW_GAME",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

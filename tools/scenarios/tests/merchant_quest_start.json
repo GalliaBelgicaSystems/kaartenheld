@@ -2,7 +2,6 @@
  "name": "merchant_quest_start",
  "test": true,
  "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen amulet: quest dialogue, quest still NOT delivered",
- "scenario_id": "TOWN_BOOT",
  "actions": [
   {
    "type": "interact",

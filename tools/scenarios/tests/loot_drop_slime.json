@@ -2,7 +2,6 @@
  "name": "loot_drop_slime",
  "test": true,
  "description": "Loot identity system smoke test: derived CardIds from material/effect/weapon combinations work via card_get_def synthesis (docs/loot.md \u00a734).  Battle completes normally with the victory drop hook active.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

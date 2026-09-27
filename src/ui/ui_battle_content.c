@@ -585,6 +585,11 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
             battle_put_char((uint8_t)(x + 2), hp_row, '/');
             battle_draw_num2((uint8_t)(x + 3), hp_row, e->max_hp);
             battle_put_char((uint8_t)(x + 5), hp_row, ' ');
+            /* Enemy status tint (same priority as the HERO label): a
+             * burning/poisoned/frozen enemy reads at a glance instead of
+             * hiding its affliction until the tick kills it. */
+            battle_color_span(x, hp_row, 6,
+                              battle_status_color(&s_battle_status[k + 1]));
             if (k == battle->target_idx &&
                 (battle->phase == BATTLE_PHASE_PLAYER_SELECT || battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
                 /* Arrow centered on the art's MIDDLE column (art is 3
@@ -604,6 +609,7 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
             }
         } else {
             battle_draw_text_line(x, hp_row, NULL, 6);
+            battle_color_span(x, hp_row, 6, UI_COLOR_NONE);
             battle_draw_enemy_art(x, k, battle, 1);
         }
         battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, NULL, 3);

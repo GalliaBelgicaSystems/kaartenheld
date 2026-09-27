@@ -2,7 +2,6 @@
  "name": "shop_buy_insufficient_gold",
  "test": true,
  "description": "Buying without enough gold fails: nothing is purchased and the shop stays open",
- "scenario_id": "ACTOR_SHOPKEEPER",
  "actions": [
   {
    "type": "interact",

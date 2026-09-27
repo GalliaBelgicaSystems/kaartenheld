@@ -2,7 +2,6 @@
  "name": "actor_shopkeeper",
  "test": true,
  "description": "Interacting with the Shopkeeper opens the shop screen",
- "scenario_id": "ACTOR_SHOPKEEPER",
  "actions": [
   {
    "type": "press",

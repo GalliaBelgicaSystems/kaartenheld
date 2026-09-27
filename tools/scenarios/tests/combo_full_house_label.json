@@ -2,7 +2,6 @@
  "name": "combo_full_house_label",
  "test": true,
  "description": "Trips plus a pair (SW3 BO3 HE3 + SW5 DA5) read FULL HOUSE on the live COMBO row while pending, before execution.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

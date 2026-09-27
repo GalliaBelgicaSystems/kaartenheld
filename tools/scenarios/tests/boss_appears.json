@@ -2,7 +2,6 @@
  "name": "boss_appears",
  "test": true,
  "description": "Once the Monster Hunt quest is complete, the Lord of Slimes (25 HP) blocks the Castle corridor",
- "scenario_id": "CASTLE_BOOT",
  "actions": [
   {
    "type": "press",

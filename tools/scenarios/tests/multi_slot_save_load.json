@@ -2,7 +2,6 @@
  "name": "multi_slot_save_load",
  "test": true,
  "description": "Saving to slot 2 and slot 3 maintains isolated save states in SRAM",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "save",

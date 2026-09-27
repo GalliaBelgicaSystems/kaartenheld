@@ -2,7 +2,6 @@
  "name": "game_over_continue",
  "test": true,
  "description": "On the Game Over Continue? prompt, the default choice (Continue) resumes a save by opening the SAVE/LOAD screen in LOAD mode.",
- "scenario_id": "GAME_OVER",
  "actions": [
   {
    "type": "wait",

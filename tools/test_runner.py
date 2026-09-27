@@ -14,7 +14,7 @@ import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
-                      SCENARIO_IDS, ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
+                      ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
                       VARIABLE_ID_MAP, ITEM_ID_MAP, ACTOR_ID_MAP,
                       ACTOR_STATE_NAME_MAP, CHARACTER_ID_MAP, SCENE_MAP,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
@@ -63,10 +63,6 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 NEW_GAME_COLLECTION = {"IRON_SWORD": 4, "WOODEN_SHIELD": 3, "FIRE_SWORD": 3, "POISON_DAGGER": 2}
 
 def validate_scenario(data, filepath):
-    scen_id = data.get("scenario_id")
-    if scen_id and scen_id not in SCENARIO_IDS:
-        raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown scenario_id '{scen_id}'. Valid IDs: {list(SCENARIO_IDS.keys())}")
-
     for act in data.get("actions", []):
         if act.get("type") == "interact":
             actor = act.get("actor")
@@ -173,7 +169,6 @@ def run_scenario(scenario):
     """
     name = scenario.get("name", "unknown")
     description = scenario.get("description", "")
-    scenario_id = scenario.get("scenario_id", "NEW_GAME")
     actions = scenario.get("actions", [])
     assertions = scenario.get("assertions", [])
 

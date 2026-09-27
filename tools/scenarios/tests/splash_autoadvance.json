@@ -2,7 +2,6 @@
  "name": "splash_autoadvance",
  "test": true,
  "description": "The boot studio splash auto-advances to the title screen after its ~150-frame hold without any input.",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

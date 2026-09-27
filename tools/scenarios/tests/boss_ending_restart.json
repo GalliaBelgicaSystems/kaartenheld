@@ -2,7 +2,6 @@
  "name": "boss_ending_restart",
  "test": true,
  "description": "Pressing A on the ending screen restarts the game to a fresh state at the FIELD spawn from levels/field.json player.spawn",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

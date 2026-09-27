@@ -2,7 +2,6 @@
  "name": "battle_boot",
  "test": true,
  "description": "Boot directly into a battle against a Slime",
- "scenario_id": "BATTLE_BOOT",
  "actions": [],
  "assertions": [
   {

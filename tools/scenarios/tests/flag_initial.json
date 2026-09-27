@@ -2,7 +2,6 @@
  "name": "flag_initial",
  "test": true,
  "description": "Declarative initial_state injects a story flag into the canonical GameState",
- "scenario_id": "TOWN_BOOT",
  "actions": [],
  "assertions": [
   {

@@ -2,7 +2,6 @@
  "name": "item_rider_icons",
  "test": true,
  "description": "Item CARDS list shows rider OAM sprites over each rider card's elem cell (FIRE SWORD burn row 10 -> entry 3 tile 120, POISON DAGGER row 12 -> entry 4 tile 122); riderless rows stay hidden",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

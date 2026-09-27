@@ -2,7 +2,6 @@
  "name": "guard_after_mayor",
  "test": true,
  "description": "GUARD_AFTER_MAYOR event: once MET_MAYOR is set, interacting with the Guard yields different dialogue",
- "scenario_id": "GUARD_DIALOGUE",
  "actions": [
   {
    "type": "interact",

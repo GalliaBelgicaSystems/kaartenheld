@@ -1484,3 +1484,13 @@ verify-oam, walkthrough 823/823), tilemaps are provably identical
 Prescription: mGBA watchpoint hunt next time this area is touched; do NOT
 treat byte-identical screenshots as proof of no behavioral coupling.
 
+Screenshot note 2 (Sep 2026): `11-battle-aftermath.png` (±74-81 px, a
+patrol-sprite/scroll 1-frame transient in the battle-exit window) flipped
+across three regens while every semantic gate stayed green (harness 210/210,
+verify-oam, walkthrough 919/919) and the other 41 frames stayed identical.
+Suspect: the walk's lossy-press/retry around the exit dead window landing
+the capture ±1 frame (AGENTS.md §56.2), not a ROM change — no ROM-side
+mechanism exists on that path. Prescription: do not read signal into pixel
+diffs confined to that frame; re-run the capture before hunting a rendering
+bug there.
+

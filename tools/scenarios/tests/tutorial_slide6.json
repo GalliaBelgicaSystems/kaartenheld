@@ -2,7 +2,6 @@
  "name": "tutorial_slide6",
  "test": true,
  "description": "RIGHT navigation reaches the SHIELD CARD slide (slide 6, the 7th) and its text teaches the real shield mechanics: a shield in offense deals 0 damage but still counts toward the poker hand. Regression: slide 5 also drops FREEZE so slide 6 stays reachable at the 7-slide RIGHT boundary.",
- "scenario_id": "TITLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
