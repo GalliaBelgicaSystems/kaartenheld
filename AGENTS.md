@@ -144,6 +144,21 @@ this on every push.  Must be included in the standard validate sequence alongsid
 
 ---
 
+## Stack Budget Check
+
+```bash
+make stack-budget
+```
+
+Asserts the statically computed worst-case banked-call stack depth stays
+within the pinned baseline (`tools/stack_budget.py`, a ratchet over the
+debug `.lst` call graph).  Catches stack overflows into WRAM globals that
+no harness scenario can observe (see §52.24).  **Required** — CI runs
+this on every push.  Must be included in the standard validate sequence
+alongside `make test-harness` and `make test`.
+
+---
+
 ## Run in Emulator
 
 ```bash
@@ -2643,10 +2658,12 @@ Rules:
   WRAM statics only when it does not just move the ceiling down with
   the floor (stack->BSS moves are zero-sum for overflow margin).
 * `game_over_quit` is the canary for this family (long auto-battle +
-  menu confirm): it fails on any recurrence.  After ANY change to
-  fixed-bank code size, WRAM globals, banked-body placement, or battle
-  stack frames, run it plus the sentinels (§52.19) before trusting the
-  build -- a green full harness is required, not optional.
+  menu confirm): it fails on any recurrence.  `make stack-budget` is the
+  machine guard (static worst-case ratchet over the debug call graph).
+  After ANY change to fixed-bank code size, WRAM globals, banked-body
+  placement, or battle stack frames, run the gate plus the sentinels
+  (§52.19) before trusting the build -- a green full harness is
+  required, not optional.
 * mGBA `break` at banked targets proved unreliable in this setup
   (hits conflate banks); use `watch` + PC/reported-address
   attribution for wild-write hunts, and distrust single-byte
