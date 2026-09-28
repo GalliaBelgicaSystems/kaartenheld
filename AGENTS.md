@@ -2619,6 +2619,39 @@ Rules:
   EXPECTED (same positional constants) and proves nothing about runtime
   behavior -- the walk table is the other half of the contract.
 
+## 52.24 Banked-call stack budget: deep frames smash globals (Sep 2026)
+
+Under the debug ROM the heap+stack gap (`0xE000 - s__BSS`, ~130-140 B)
+is the entire stack budget: SP starts at `0xE000` (set by `main`, also
+under the harness) and every nested banked call eats into it.  The
+battle combo chain (update -> trampoline -> combo_resolve (48 B frame)
+-> classify (23 B) -> effect) once needed ~160 B: SP descended to
+`DF60` and pushes landed in input state (`injected_pad_state` =
+A+SELECT), so the next menu confirm ghost-fired -- `game_over_quit`
+went SAVE_LOAD instead of THANKS.  A 1 B WRAM layout shift chose the
+victim (base builds silently smashed probe bytes), so the suite was
+green until any `_INITIALIZER`/BSS change flipped it.  Caught with an
+mGBA write watchpoint (`watch ADDR` -- note the `w`-suffixed form
+never fires in this mGBA build; plain `watch` traps reads and writes,
+and the hit text distinguishes them: writes show `new value`).
+
+Rules:
+
+* Keep banked-body stack frames small by structure: reread inputs
+  through staging pointers/index maps instead of staging arrays, share
+  one classifier/tier ladder instead of duplicating it, keep scratch in
+  WRAM statics only when it does not just move the ceiling down with
+  the floor (stack->BSS moves are zero-sum for overflow margin).
+* `game_over_quit` is the canary for this family (long auto-battle +
+  menu confirm): it fails on any recurrence.  After ANY change to
+  fixed-bank code size, WRAM globals, banked-body placement, or battle
+  stack frames, run it plus the sentinels (§52.19) before trusting the
+  build -- a green full harness is required, not optional.
+* mGBA `break` at banked targets proved unreliable in this setup
+  (hits conflate banks); use `watch` + PC/reported-address
+  attribution for wild-write hunts, and distrust single-byte
+  tripwires (a 48 B `add sp` jump lands past them).
+
 ---
 
 # 53. State Ownership
