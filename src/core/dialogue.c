@@ -16,7 +16,9 @@
  * started from the overworld screen and not restarted until it ends). */
 const DialogueDefinition *g_dialogue_table = NULL;
 uint8_t g_dialogue_table_count = 0;
-static uint8_t g_dialogue_bank = 2;
+/* BSS: dialogue_register() (via game_content_init() at every boot) sets
+ * the home bank before any row is read. */
+static uint8_t g_dialogue_bank;
 
 /* Single-flight WRAM staging (not reentrant): a nested banked row/text
  * lookup would silently corrupt the outer one.  Safe today because only one

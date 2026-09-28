@@ -28,8 +28,7 @@
  * them to __mulint/__divuint, which link into the FIXED bank -- an
  * illegal call while bank 3 is mapped (AGENTS.md 52.11.1). */
 
-static const uint16_t s_tier_mult[HAND_TIER_COUNT] = {
-    100, /* NONE */
+static const uint16_t s_tier_mult[HAND_TIER_COUNT] = {    100, /* NONE */
     120, /* PAIR */
     150, /* TWO PAIR */
     180, /* THREE KIND */
@@ -42,36 +41,31 @@ static const uint16_t s_tier_mult[HAND_TIER_COUNT] = {
 };
 
 /* Classify n card values (order-independent).  vals are 1..10,
- * types are BattleCardType. */
-uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
-                       uint8_t n)
+ * types are BattleCardType.  Shared histogram scratch (AGENTS.md 52.14):
+ * the battle banked-call chain runs out of stack under the debug ROM (SP
+ * collides with _DATA globals -- observed smashing input state and
+ * ghost-firing menu confirms), so scratch lives in WRAM, never on the
+ * stack.  Fully rewritten on every call; single-threaded, shared with
+ * combo_classify_loot below but never nested. */
+static uint8_t s_hist[10]; /* values are 1..10 */
+
+/* Shared tier ladder: both classifiers fill s_hist, min/max, and the
+ * suited flag, then resolve here.  One copy keeps bank-3 ROM small
+ * (the release bank sits ~260 B under its ceiling). */
+static uint8_t combo_tier_from_hist(uint8_t n, uint8_t all_same_type,
+                                    uint8_t min, uint8_t max)
 {
-    uint8_t hist[10]; /* values are 1..10 */
-    uint8_t i, distinct, min, max, pairs, trips;
+    uint8_t i, distinct, pairs, trips;
     uint8_t quads = 0, fives = 0;
-    uint8_t all_same_type = 1;
-
-    for (i = 0; i < 10; i++) hist[i] = 0;
-
-    min = 10;
-    max = 0;
-    for (i = 0; i < n; i++) {
-        uint8_t v = vals[i];
-        if (v < 1 || v > 10) return HAND_NONE;
-        hist[v - 1]++;
-        if (v < min) min = v;
-        if (v > max) max = v;
-        if (i > 0 && types[i] != types[0]) all_same_type = 0;
-    }
 
     /* FIVE KIND: all five share one value (beats everything). */
-    if (n == 5 && hist[min - 1] == 5) return HAND_FIVE_KIND;
+    if (n == 5 && s_hist[min - 1] == 5) return HAND_FIVE_KIND;
 
     /* Sequential with no duplicates: straight / straight flush (5 only). */
     if ((uint8_t)(max - min) == (uint8_t)(n - 1)) {
         distinct = 0;
         for (i = 0; i < 10; i++) {
-            if (hist[i] != 0) distinct++;
+            if (s_hist[i] != 0) distinct++;
         }
         if (distinct == n && n == 5) {
             return all_same_type ? HAND_STRAIGHT_FLUSH : HAND_STRAIGHT;
@@ -84,10 +78,10 @@ uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
     pairs = 0;
     trips = 0;
     for (i = 0; i < 10; i++) {
-        if (hist[i] >= 5) fives++;
-        else if (hist[i] == 4) quads++;
-        else if (hist[i] == 3) trips++;
-        else if (hist[i] == 2) pairs++;
+        if (s_hist[i] >= 5) fives++;
+        else if (s_hist[i] == 4) quads++;
+        else if (s_hist[i] == 3) trips++;
+        else if (s_hist[i] == 2) pairs++;
     }
     if (fives != 0) return HAND_FIVE_KIND;
     if (quads != 0) return HAND_FOUR_KIND;
@@ -96,6 +90,59 @@ uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
     if (pairs >= 2) return HAND_TWO_PAIR;
     if (pairs == 1) return HAND_PAIR;
     return HAND_NONE;
+}
+
+uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
+                       uint8_t n)
+{
+    uint8_t i, min, max;
+    uint8_t all_same_type = 1;
+
+    for (i = 0; i < 10; i++) s_hist[i] = 0;
+
+    min = 10;
+    max = 0;
+    for (i = 0; i < n; i++) {
+        uint8_t v = vals[i];
+        if (v < 1 || v > 10) return HAND_NONE;
+        s_hist[v - 1]++;
+        if (v < min) min = v;
+        if (v > max) max = v;
+        if (i > 0 && types[i] != types[0]) all_same_type = 0;
+    }
+
+    return combo_tier_from_hist(n, all_same_type, min, max);
+}
+
+/* Loot-aware classifier: same tiers as combo_classify, but reads values
+ * through the effective->selection map and substitutes ring_sub for ring
+ * cards (the joker trial).  ring_sub == 0 disables substitution (real
+ * values, used for the baseline evaluation).  Shares the static s_hist
+ * (never nested with combo_classify: single-threaded ROM). */
+static uint8_t combo_classify_loot(const Card *cards, const uint8_t *idx,
+                                   uint8_t n, uint8_t ring_sub)
+{
+    uint8_t i, min, max;
+    uint8_t all_same_type = 1;
+    uint8_t first_type = 0;
+
+    for (i = 0; i < 10; i++) s_hist[i] = 0;
+
+    min = 10;
+    max = 0;
+    for (i = 0; i < n; i++) {
+        const Card *c = &cards[idx[i]];
+        uint8_t v = (ring_sub != 0 && c->ring) ? ring_sub : c->value;
+        uint8_t t = c->type;
+        if (v < 1 || v > 10) return HAND_NONE;
+        s_hist[v - 1]++;
+        if (v < min) min = v;
+        if (v > max) max = v;
+        if (i == 0) first_type = t;
+        else if (t != first_type) all_same_type = 0;
+    }
+
+    return combo_tier_from_hist(n, all_same_type, min, max);
 }
 
 /* Decode-range guards (mirror of combo.c's pack guards): fail the build
@@ -113,6 +160,12 @@ void combo_resolve_banked(void)
     uint8_t i, eff_count = 0;
     uint8_t sum = 0;
     uint16_t mult;
+    /* Effective->selection index remap (AGENTS.md 52.14): the old
+     * vals/types/ring/trial scratch (20 B on the banked-call stack)
+     * overflowed DEBUG WRAM and smashed input state.  Values/types/ring
+     * are reread from the staged cards through this 5-byte map instead;
+     * the joker substitution rides a combo_classify_loot parameter, so
+     * no trial buffer exists at all. */
 
     if (!out_result) return;
 
@@ -138,9 +191,7 @@ void combo_resolve_banked(void)
      * effective set either way (attack: every selected card; defend:
      * shields + rings -- inert non-shields contribute 0 block, 0 combo). */
     {
-        uint8_t vals[5];
-        uint8_t types[5];
-        uint8_t is_ring[5];
+        uint8_t idx[5];
         uint8_t w = 0;
 
         for (i = 0; i < count; i++) {
@@ -152,9 +203,7 @@ void combo_resolve_banked(void)
                 if (t != BATTLE_CARD_TYPE_SHIELD && !cards[i].ring) continue;
                 sum += cards[i].value;
             }
-            vals[w] = cards[i].value;
-            types[w] = t;
-            is_ring[w] = cards[i].ring ? 1 : 0;
+            idx[w] = i;
             w++;
         }
         eff_count = w;
@@ -169,30 +218,26 @@ void combo_resolve_banked(void)
         } else {
             /* Ring JOKER (§34.3): a ring's value substitutes freely --
              * try every legal value (1..10) and keep the best tier (types are
-             * untouched, so the suited bonus is unaffected).  Ring flags ride
-             * in effective order (is_ring[]): the selection may lead with
-             * inert fodder that never enters vals[], so indexing cards[]
-             * directly would test the wrong cards. */
+             * untouched, so the suited bonus is unaffected).  The map keeps
+             * effective order: the selection may lead with inert fodder
+             * that never enters idx[], so indexing cards[] directly would
+             * test the wrong cards. */
             uint8_t has_ring = 0;
             for (i = 0; i < eff_count; i++) {
-                if (is_ring[i]) has_ring = 1;
+                if (cards[idx[i]].ring) has_ring = 1;
             }
             if (has_ring) {
-                uint8_t trial[5];
-                uint8_t best = combo_classify(vals, types, eff_count);
-                uint8_t v, k2, t2;
+                uint8_t best = combo_classify_loot(cards, idx, eff_count, 0);
+                uint8_t v, t2;
                 /* Card values are 1..10 (BOW 10): the joker tries the
                  * full legal range. */
                 for (v = 1; v <= 10; v++) {
-                    for (k2 = 0; k2 < eff_count; k2++) {
-                        trial[k2] = is_ring[k2] ? v : vals[k2];
-                    }
-                    t2 = combo_classify(trial, types, eff_count);
+                    t2 = combo_classify_loot(cards, idx, eff_count, v);
                     if (t2 > best) best = t2;
                 }
                 out_result->tier = best;
             } else {
-                out_result->tier = combo_classify(vals, types, eff_count);
+                out_result->tier = combo_classify_loot(cards, idx, eff_count, 0);
             }
             mult = s_tier_mult[out_result->tier];
             if (out_result->tier == HAND_NONE) {
@@ -200,7 +245,7 @@ void combo_resolve_banked(void)
             } else {
                 uint8_t same = 1;
                 for (i = 1; i < eff_count; i++) {
-                    if (types[i] != types[0]) { same = 0; break; }
+                    if (cards[idx[i]].type != cards[idx[0]].type) { same = 0; break; }
                 }
                 out_result->suited = same ? 1 : 0;
                 if (same) mult += 25;

@@ -9,7 +9,9 @@
  * the game's event table, not engine code. */
 static const QuestDefinition *g_quests = NULL;
 static uint8_t g_quest_count = 0;
-static uint8_t g_quest_bank = 2;
+/* BSS: quest_init() (via game_content_init() at every boot) sets the
+ * home bank before any row is read. */
+static uint8_t g_quest_bank;
 static QuestDefinition s_quest_scratch;
 
 void quest_init(const QuestDefinition *table, uint8_t count, uint8_t bank)

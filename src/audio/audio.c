@@ -5,7 +5,10 @@
 #include "sfx_tables.h"
 
 MusicTrack g_audio_current_track = MUSIC_NONE;
-uint8_t g_sound_enabled = 1;
+/* BSS (no _INITIALIZER cost): game_init() re-asserts the sound-on default
+ * before any audio_play_music() call (the harness skips CRT0's .data copy,
+ * so the initializer never reached it anyway). */
+uint8_t g_sound_enabled;
 
 /* ── SFX layer (transcribed tracker SFX) ────────────────────────────
  * Music runs through hUGEDriver.  Effect sounds use channels 2 and 4 so
@@ -37,6 +40,7 @@ static uint8_t sfx_muted = 0;
 
 extern uint8_t sfx_step_tick(void);
 extern void mimic_chain_tick(void);
+extern uint16_t g_mimic_intro_left;
 
 void audio_play_sfx(uint8_t s)
 {
@@ -172,14 +176,19 @@ void audio_update(void)
 
     /* Mimic intro -> loop service (bank-7 body, same select-7/call/
      * restore-1 dispatch as the SFX stepper above; stays ISR-safe: no
-     * di/ei inside). */
-    *(volatile uint8_t *)0x2000 = HUGE_MUSIC_BANK_B7;
-    mimic_chain_tick();
-    *(volatile uint8_t *)0x2000 = 1;
+     * di/ei inside).  Guarded: the 256 Hz ISR skips the two bank switches
+     * + call on every non-mimic tick (the common case).  The counter arm
+     * covers the transient -- a mid-intro track switch leaves it nonzero,
+     * which re-arms exactly one body run that zeroes it. */
+    if (g_audio_current_track == MUSIC_MIMIC || g_mimic_intro_left != 0) {
+        *(volatile uint8_t *)0x2000 = HUGE_MUSIC_BANK_B7;
+        mimic_chain_tick();
+        *(volatile uint8_t *)0x2000 = 1;
+    }
 
     /* All playback is tracked now; tracks without a song (OVERWORLD,
-     * VICTORY) simply stay silent. */
-    if (huge_music_is_playing()) {
-        huge_music_update();
-    }
+     * VICTORY) simply stay silent.  No is_playing gate here: the divider
+     * body re-checks it, so gating twice costs a call on every 256 Hz
+     * tick for no reason. */
+    huge_music_update();
 }
