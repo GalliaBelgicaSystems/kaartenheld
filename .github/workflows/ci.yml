@@ -81,6 +81,26 @@ jobs:
           nix develop -c bash -c "make verify-oam"
         timeout-minutes: 25
 
+  # Static stack-budget ratchet over the debug call graph (see AGENTS.md
+  # 52.24): fails when worst-case banked-call depth exceeds baseline.
+  stack-budget:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v4
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Stack budget check
+        run: |
+          nix develop -c bash -c "make stack-budget"
+        timeout-minutes: 25
+
   # Real-content gate: drives the RELEASE ROM headlessly and asserts
   # canonical gameplay state (docs/verify-walkthrough.md).
   verify-walkthrough:

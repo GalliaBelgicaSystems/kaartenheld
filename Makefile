@@ -91,7 +91,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -814,6 +814,7 @@ validate: memmap lint
 	$(MAKE) test-harness JOBS=$(JOBS)
 	$(MAKE) test
 	$(MAKE) verify-oam
+	$(MAKE) stack-budget
 	$(MAKE) verify-music
 	$(MAKE) verify-walkthrough
 
@@ -866,6 +867,12 @@ verify-walkthrough: release
 # and scene (map) changes via the mGBA debugger (see tools/verify_oam.py).
 verify-oam: debug
 	@python3 tools/verify_oam.py
+
+# Verify the banked-call stack worst case stays within budget: static
+# analysis over the debug .lst call graph (see tools/stack_budget.py).
+# Ratchet: fails when worst-case depth exceeds the pinned baseline.
+stack-budget: debug
+	@python3 tools/stack_budget.py
 
 # Verify real-boot VRAM writes land (vsync-before-render + LCD-off boot
 # redraw): boots the debug ROM WITHOUT harness mode and compares the real
