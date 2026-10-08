@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   PaletteData, Ramp, TILESETS, fetchPalettes, assignPalette,
-  PaletteFreshness, fetchPaletteFreshness,
+  PaletteFreshness, fetchPaletteFreshness, refreshManifest,
 } from './io/palettes';
 import { RampGuide, fetchRampGuide, refreshRampGuide, clearRecolorCache, recoloredImage } from './io/romRecolor';
 import { RampEditor } from './RampEditor';
@@ -92,12 +92,20 @@ export const PaletteManager: React.FC<{
   const [guide, setGuide] = useState<RampGuide | null>(null);
   const [editRamp, setEditRamp] = useState<string | null>(null);
   const [editPreview, setEditPreview] = useState<{ ramp: string; colors: string[] } | null>(null);
+  // Header-level ramp save: the open RampEditor mirrors its dirty/saving
+  // state here and lends its doSave through rampSaveRef, so edits can be
+  // saved without scrolling to the panel (previews alone write nothing).
+  const [rampDirty, setRampDirty] = useState(false);
+  const [rampSaving, setRampSaving] = useState(false);
+  const rampSaveRef = useRef<(() => Promise<void>) | null>(null);
+  // Full-manifest rebuild (the `make manifest` equivalent in the editor).
+  const [manifestBusy, setManifestBusy] = useState(false);
 
   useEffect(() => {
     fetchPalettes(tileset)
       .then((d) => { setData(d); setStatus(''); })
       .catch((e) => setStatus(
-        `load failed: ${e.message}. Run \`make manifest\` once, then restart the editor via \`make editor\`.`));
+        `load failed: ${e.message}. Press Refresh manifest above (or run \`make manifest\`), then restart the editor via \`make editor\`.`));
   }, [tileset]);
   useEffect(() => {
     fetchRampGuide().then(setGuide).catch(() => setGuide(null));
@@ -114,6 +122,10 @@ export const PaletteManager: React.FC<{
   // RampEditor below gets a fresh working copy for it).
   useEffect(() => {
     if (editRequest) {
+      if (rampDirty && !confirm(`Discard unsaved edits to ramp ${editRamp}?`)) {
+        if (onEditRequestConsumed) onEditRequestConsumed();
+        return;
+      }
       setEditRamp(editRequest);
       if (onEditRequestConsumed) onEditRequestConsumed();
     }
@@ -168,12 +180,68 @@ export const PaletteManager: React.FC<{
     } catch (e: any) { setStatus(`assign failed: ${e.message}`); }
   };
 
+  // Unsaved-edit guard: ramp previews write nothing until Save, so
+  // switching ramps/tilesets or closing with dirty edits silently drops
+  // them (the empty-git-diff trap). Confirm first.
+  const confirmDiscardRampEdits = (): boolean => {
+    if (!rampDirty) return true;
+    return confirm(`Discard unsaved edits to ramp ${editRamp}? Previews are not saved.`);
+  };
+  const closeEditor = () => {
+    if (!confirmDiscardRampEdits()) return;
+    setEditRamp(null);
+    setEditPreview(null);
+    setRampDirty(false);
+  };
+  const requestEditRamp = (name: string) => {
+    if (name === editRamp) return;
+    if (!confirmDiscardRampEdits()) return;
+    setEditRamp(name);
+  };
+
+  const handleRampSaved = (summary: string) => {
+    setStatus(summary);
+    setEditRamp(null);
+    setEditPreview(null);
+    setRampDirty(false);
+    // Ramp colors changed: drop cached recolors and push the new
+    // generation to the level views (map canvas, tile picker).
+    clearRecolorCache();
+    if (onPaletteSaved) onPaletteSaved();
+    reloadAll();
+  };
+
+  const doRefreshManifest = async () => {
+    if (manifestBusy || rampSaving) return;
+    if (rampDirty) {
+      setStatus(`ramp ${editRamp} has unsaved edits — Save or close it before refreshing the manifest (previews write nothing).`);
+      return;
+    }
+    setManifestBusy(true);
+    setStatus('refreshing manifest…');
+    try {
+      const { log } = await refreshManifest();
+      const firstLine = (log || '').split('\n').filter(Boolean)[0] || 'manifest refreshed.';
+      setStatus(`manifest refreshed: ${firstLine} Recompile ROM to rebuild art.`);
+      clearRecolorCache();
+      if (onPaletteSaved) onPaletteSaved();
+      await reloadAll();
+    } catch (e: any) {
+      setStatus(`manifest refresh failed: ${e.message}`);
+    } finally {
+      setManifestBusy(false);
+    }
+  };
+
   const pickTileset = (t: string) => {
+    if (t === tileset) return;
+    if (!confirmDiscardRampEdits()) return;
     setTileset(t);
     setSelTile('');
     setSelEnemy('');
     setEditRamp(null);
     setEditPreview(null);
+    setRampDirty(false);
   };
 
   return (
@@ -194,11 +262,29 @@ export const PaletteManager: React.FC<{
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <button
+          className="btn btn-sm btn-primary"
+          onClick={() => { rampSaveRef.current?.(); }}
+          disabled={!editRamp || !rampDirty || rampSaving || manifestBusy}
+          title={editRamp
+            ? (rampDirty ? `Save ramp ${editRamp} to palette.txt` : `Ramp ${editRamp}: no unsaved edits (previews write nothing until Save)`)
+            : 'Open a ramp with ✎ first, then Save here'}
+        >
+          {rampSaving ? 'saving…' : editRamp && rampDirty ? `Save ${editRamp} ●` : 'Save ramp'}
+        </button>
+        <button
+          className="btn btn-sm"
+          onClick={doRefreshManifest}
+          disabled={manifestBusy || rampSaving}
+          title="Rebuild generated/tiles/* + palette_ramps.json from all sources (same as `make manifest`)"
+        >
+          {manifestBusy ? 'refreshing…' : 'Refresh manifest'}
+        </button>
         <span style={{ fontSize: 11, color: '#555', lineHeight: 1.4 }}>
           BG ramps come from generated/tiles/&lt;tileset&gt;.json; OBJ ramps
           from generated/tiles/obj.json. Assign writes into the content JSON;
-          the ✎ button edits ramp colors in palette.txt (full manifest
-          refresh on save).
+          the ✎ button edits ramp colors in palette.txt (previews live —
+          nothing is written until Save).
         </span>
         {freshness && !freshness.fresh && (
           <span
@@ -208,8 +294,8 @@ export const PaletteManager: React.FC<{
               : 'a source changed after the last manifest run'}
           >
             {freshness.state === 'missing'
-              ? '⚠ manifests missing — run `make manifest`'
-              : '⚠ sources changed — run `make manifest` to refresh the preview'}
+              ? '⚠ manifests missing — press Refresh manifest (or run `make manifest`)'
+              : '⚠ sources changed — press Refresh manifest to update the preview'}
           </span>
         )}
         {!data && status && (
@@ -230,8 +316,8 @@ export const PaletteManager: React.FC<{
                 <Swatches ramp={r} active={r.index === ramp} onClick={() => setRamp(r.index)} />
                 <button
                   className="btn btn-sm"
-                  title={`Edit ramp ${r.name} (color picker writes palette.txt)`}
-                  onClick={() => { setEditRamp(r.name); }}
+                  title={`Edit ramp ${r.name} (previews live — Save writes palette.txt)`}
+                  onClick={() => requestEditRamp(r.name)}
                   style={{ cursor: 'pointer' }}
                 >✎</button>
               </div>
@@ -245,17 +331,11 @@ export const PaletteManager: React.FC<{
               guide={guide}
               data={data}
               onPreview={setEditPreview}
-              onClose={() => { setEditRamp(null); setEditPreview(null); }}
-              onSaved={(summary) => {
-                setStatus(summary);
-                setEditRamp(null);
-                setEditPreview(null);
-                // Ramp colors changed: drop cached recolors and push the new
-                // generation to the level views (map canvas, tile picker).
-                clearRecolorCache();
-                if (onPaletteSaved) onPaletteSaved();
-                reloadAll();
-              }}
+              onClose={closeEditor}
+              onSaved={handleRampSaved}
+              onDirtyChange={setRampDirty}
+              onSavingChange={setRampSaving}
+              saveRef={rampSaveRef}
             />
           )}
 
@@ -334,8 +414,8 @@ export const PaletteManager: React.FC<{
                   label={`OBJ ${r.index}`} />
                 <button
                   className="btn btn-sm"
-                  title={`Edit ramp ${r.name} (color picker writes palette.txt)`}
-                  onClick={() => { setEditRamp(r.name); }}
+                  title={`Edit ramp ${r.name} (previews live — Save writes palette.txt)`}
+                  onClick={() => requestEditRamp(r.name)}
                   style={{ cursor: 'pointer' }}
                 >✎</button>
               </div>
@@ -349,17 +429,11 @@ export const PaletteManager: React.FC<{
               guide={guide}
               data={data}
               onPreview={setEditPreview}
-              onClose={() => { setEditRamp(null); setEditPreview(null); }}
-              onSaved={(summary) => {
-                setStatus(summary);
-                setEditRamp(null);
-                setEditPreview(null);
-                // Ramp colors changed: drop cached recolors and push the new
-                // generation to the level views (map canvas, tile picker).
-                clearRecolorCache();
-                if (onPaletteSaved) onPaletteSaved();
-                reloadAll();
-              }}
+              onClose={closeEditor}
+              onSaved={handleRampSaved}
+              onDirtyChange={setRampDirty}
+              onSavingChange={setRampSaving}
+              saveRef={rampSaveRef}
             />
           )}
           <div style={{ fontSize: 11, color: '#777', marginTop: 4 }}>
