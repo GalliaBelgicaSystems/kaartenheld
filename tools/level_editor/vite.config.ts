@@ -1172,6 +1172,27 @@ function levelEditorApiPlugin(): Plugin {
           return;
         }
 
+        // Full manifest rebuild (mirrors `make manifest`): compose the
+        // curated sprite sheets, then run the palette compiler + manifest
+        // verifier. Ramp saves already run palette_compiler.py server-side;
+        // this covers everything else (hand-edited PNGs, content JSON,
+        // stale/missing generated/tiles/*). No body.
+        if (req.method === 'POST' && req.url === '/api/refresh-manifest') {
+          runInToolchain('python3 tools/compose_battle_sprites.py && python3 tools/compose_enemy_sprites.py && python3 tools/compose_hero_sprites.py && python3 tools/compose_card_frames.py && python3 tools/palette_compiler.py && python3 tools/verify_palette_manifest.py', (err: any, stdout: string, stderr: string) => {
+            if (err) {
+              const combined = [stderr, stdout, err.message].filter(Boolean).join('\n\n');
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: `manifest refresh failed: ${combined}`,
+              }));
+              return;
+            }
+            sendJson({ success: true, log: stdout });
+          });
+          return;
+        }
+
         // Manifest freshness for the palette UI: are generated/tiles/*
         // (+ both palette_ramps.json copies) newer than every source that
         // feeds palette_compiler.py? Hand edits (palette.txt, content JSON,

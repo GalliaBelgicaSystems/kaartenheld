@@ -456,7 +456,7 @@ $(GENERATED_TILES_DIR):
 	mkdir -p $(GENERATED_TILES_DIR)
 
 # Consumers rebuild when the generated headers change (they are untracked).
-$(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o: $(GENERATED_TILE_WALK)
+$(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world/edge_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o $(BUILD_DIR)/debug/world/edge_banked.o: $(GENERATED_TILE_WALK)
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GENERATED_TILE_ANIM)
@@ -592,6 +592,15 @@ $(BUILD_DIR)/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR)/debug/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD $(INCLUDES) -o $@ $<
+
+# audio.c + sfx_step.c include generated/sfx/sfx_tables.h (side product of
+# one transcriber run). Order the tables first: on a fresh clone
+# generated/ is absent and parallel make otherwise compiles these objects
+# before the header exists (fatal error: sfx_tables.h: No such file or
+# directory). Normal prerequisites (not order-only) so regenerated tables
+# also rebuild their consumers.
+$(BUILD_DIR)/audio/audio.o $(BUILD_DIR)/audio/sfx_step.o \
+$(BUILD_DIR)/debug/audio/audio.o $(BUILD_DIR)/debug/audio/sfx_step.o: $(SFX_TABLES)
 
 $(GENERATED_MUSIC_DIR)/battle.c: assets/music/Battle\ BGM.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 6 song_battle "$@"

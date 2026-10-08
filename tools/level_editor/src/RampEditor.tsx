@@ -9,6 +9,13 @@ interface RampEditorProps {
   onPreview: (preview: { ramp: string; colors: string[] } | null) => void;
   onClose: () => void;
   onSaved: (summary: string) => void;
+  /** Mirror the panel's dirty/saving state to the palette-view header so
+   *  the header Save button enables only with unsaved edits (previews
+   *  alone write nothing — the empty-git-diff trap). */
+  onDirtyChange?: (dirty: boolean) => void;
+  onSavingChange?: (saving: boolean) => void;
+  /** Header Save calls through here (same doSave as the panel button). */
+  saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -21,6 +28,7 @@ const HEX_RE = /^#[0-9a-fA-F]{6}$/;
  */
 export const RampEditor: React.FC<RampEditorProps> = ({
   rampName, guide, data, onPreview, onClose, onSaved,
+  onDirtyChange, onSavingChange, saveRef,
 }) => {
   const entry = guide.ramps[rampName];
   const origRefs = useMemo(() => entry?.refs || [], [entry]);
@@ -97,8 +105,6 @@ export const RampEditor: React.FC<RampEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey, rampName]);
 
-  if (!entry) return <div style={{ color: '#a00' }}>unknown ramp '{rampName}'</div>;
-
   const allValid = hexes.length === 4 && hexes.every((h) => HEX_RE.test(h));
   const refDirty = refs.some((r, i) => r !== origRefs[i]);
   const hexDirty = refs.some((r, i) => {
@@ -106,6 +112,15 @@ export const RampEditor: React.FC<RampEditorProps> = ({
     return base !== undefined && hexes[i].toLowerCase() !== base.toLowerCase();
   });
   const dirty = allValid && (refDirty || hexDirty);
+
+  // Mirror panel state to the palette-view header (Save enablement +
+  // unsaved-edit guards). Effects, not render-time calls: the parent
+  // setState must not run during this render. Above the !entry return
+  // so hook order stays stable.
+  useEffect(() => { if (onDirtyChange) onDirtyChange(dirty); }, [dirty]);
+  useEffect(() => { if (onSavingChange) onSavingChange(saving); }, [saving]);
+
+  if (!entry) return <div style={{ color: '#a00' }}>unknown ramp '{rampName}'</div>;
 
   const adoptRef = (i: number, ref: string) => {
     setRefs((prev) => prev.map((r, j) => (j === i ? ref : r)));
@@ -165,6 +180,13 @@ export const RampEditor: React.FC<RampEditorProps> = ({
     setRefs(origRefs);
     setError('');
   };
+
+  // Header Save calls through here (same path as the panel button).
+  // Assigned every render so the closure stays fresh; cleared on unmount.
+  useEffect(() => {
+    if (saveRef) saveRef.current = doSave;
+    return () => { if (saveRef && saveRef.current === doSave) saveRef.current = null; };
+  });
 
   const selfTiles = tilesUsing(rampName);
   const selfEnemies = enemiesUsing(rampName);

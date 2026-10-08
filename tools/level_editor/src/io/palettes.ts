@@ -113,3 +113,15 @@ export async function savePalette(
   if (!body.success) throw new Error(body.error || 'save-palette failed');
   return { log: body.log || '' };
 }
+
+/** Full manifest rebuild (mirrors `make manifest`): recompose the sprite
+ *  sheets, recompile palettes, verify the manifest. Covers out-of-band
+ *  changes (hand-edited PNGs, content JSON, stale/missing generated/)
+ *  that a palette.txt save alone does not. No body. */
+export async function refreshManifest(): Promise<{ log: string }> {
+  const res = await fetch('/api/refresh-manifest', { method: 'POST' });
+  if (!res.ok) throw new Error(`refresh-manifest returned ${res.status}`);
+  const body = await res.json();
+  if (!body.success) throw new Error(body.error || 'refresh-manifest failed');
+  return { log: body.log || '' };
+}
