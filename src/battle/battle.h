@@ -14,7 +14,7 @@
 #define BATTLE_TIMER_MAX_FRAMES 1200 /* 20 seconds at 60fps */
 /* Default energy pool per decision phase (attack AND defend).  The live
  * pool is the ENERGY_POOL variable (default: this value), raised by story
- * events with no cap and staged at battle entry by the bank-2 init body.
+ * events with no cap and staged at battle entry by the bank-4 HUD body.
  * Selecting a card whose cost exceeds the remaining energy is rejected;
  * the pool refreshes at battle start and at every transition into a
  * decision phase (deck.md Phase 10: check affordability at select, pay
@@ -111,7 +111,7 @@ extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
  * Staged by the loader from g_battle_art_obj; read by the stamper. */
 extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
- * run the pool read itself, so the bank-2 battle-entry body stages it here
+ * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays
  * above).  Never persisted (Battle is temporary runtime state,
  * AGENTS.md 53.1). */

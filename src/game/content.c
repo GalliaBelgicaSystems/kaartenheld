@@ -1,6 +1,5 @@
 #include "content.h"
 #include "game_ids.h"
-#include "battle/battle.h"
 #include "story.h"
 #include "event.h"
 #include "dialogue.h"
@@ -67,7 +66,10 @@ void game_new_game(GameState *state)
     state->party.members[0].max_hp = HERO_START_HP;
 
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
-    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = BATTLE_ENERGY_PER_TURN;
+    /* NOTE: ENERGY_POOL is deliberately left at 0 ("no unlocks yet");
+     * the battle stager maps < 1 to BATTLE_ENERGY_PER_TURN.  Explicitly
+     * writing the default here would cost 13 fixed-bank bytes we do not
+     * have (bank-1 budget, AGENTS.md 52.18). */
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated
