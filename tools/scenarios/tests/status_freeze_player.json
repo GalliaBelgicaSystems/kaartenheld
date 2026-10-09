@@ -1,182 +1,181 @@
 {
-  "name": "status_freeze_player",
-  "test": true,
-  "description": "Player-side freeze (status effects): DBG_APPLY_STATUS freezes the PLAYER (slot 0, duration 3). The frozen player can neither attack NOR defend for all three rounds (6 TURN_SKIPPED, data[0]=0, data[1]=3 -- two skips per round) while the enemy still attacks (ENEMY_CARD_PLAYED, once per round). After the 3-round duration elapses the freeze EXPIRES and the player resumes acting (a real attack lands: DAMAGE_DEALT fires, no further TURN_SKIPPED).",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 60,
-        "max_hp": 60
-      }
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "status_freeze_player",
+ "test": true,
+ "description": "Player-side freeze (status effects): DBG_APPLY_STATUS freezes the PLAYER (slot 0, duration 3). The frozen player can neither attack NOR defend for all three rounds (6 TURN_SKIPPED, data[0]=0, data[1]=3 -- two skips per round) while the enemy still attacks (ENEMY_CARD_PLAYED, once per round). After the 3-round duration elapses the freeze EXPIRES and the player resumes acting (a real attack lands: DAMAGE_DEALT fires, no further TURN_SKIPPED).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "apply_status",
-      "slot": 0,
-      "status": 3,
-      "duration": 3
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 90
-    }
-  ],
-  "assertions": [
-    {
-      "type": "event_occurred",
-      "event": "STATUS_APPLIED"
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 0,
-      "value": 3
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 2,
-      "value": 3
-    },
-    {
-      "type": "event_count",
-      "event": "TURN_SKIPPED",
-      "count": 6
-    },
-    {
-      "type": "event_arg",
-      "event": "TURN_SKIPPED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "event_arg",
-      "event": "TURN_SKIPPED",
-      "index": 1,
-      "value": 3
-    },
-    {
-      "type": "event_count",
-      "event": "ENEMY_CARD_PLAYED",
-      "count": 4
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    }
-  ]
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 3,
+   "duration": 3
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 90
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 3
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 2,
+   "value": 3
+  },
+  {
+   "type": "event_count",
+   "event": "TURN_SKIPPED",
+   "count": 6
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 1,
+   "value": 3
+  },
+  {
+   "type": "event_count",
+   "event": "ENEMY_CARD_PLAYED",
+   "count": 4
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
 }

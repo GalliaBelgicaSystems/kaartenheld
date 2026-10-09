@@ -1,65 +1,72 @@
 {
-  "name": "combo_pair_label",
-  "test": true,
-  "description": "Two same-value cards read PAIR on the COMBO row regardless of symbol match (SW3+BO3 unsuited: tier PAIR, x120, damage 6*120/100=7). Regression for the old label order that showed FLUSH for suited pairs.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_pair_label",
+ "test": true,
+ "description": "Two same-value cards read PAIR on the COMBO row regardless of symbol match (SW3+BO3 unsuited: tier PAIR, x120, damage 6*120/100=7). Regression for the old label order that showed FLUSH for suited pairs.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "BO",
-      "value": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 200
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "PAIR"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "DAMAGE_DEALT"
-    }
-  ]
+  "seed": 3000,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "PAIR"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
 }

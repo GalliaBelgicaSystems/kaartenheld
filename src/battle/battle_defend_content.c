@@ -1,4 +1,13 @@
-#pragma bank 3
+/* Bank split (memory budget): the release ROM's bank 4 has room while
+ * its bank 3 is render-full (rider OAM pass); the debug ROM's bank 4 is
+ * test-content-full, so the defend body lives in bank 5 there (same
+ * pattern as patrol_banked.c / scene_load.c).  Keep in sync with the
+ * dispatch bank in battle_defend_resolve() below (battle.c). */
+#ifdef DEBUG_BUILD
+#pragma bank 5
+#else
+#pragma bank 4
+#endif
 
 #include "battle.h"
 #include "rpg/effects.h"
@@ -7,9 +16,10 @@
 #include "banked.h"
 
 /* Banked body of battle_defend_resolve (src/battle/battle.c).  Computes
- * and applies the DEFENSE net resolution entirely in bank 3 so the
+ * and applies the DEFENSE net resolution entirely in bank 4 so the
  * fixed bank (which is completely full, see make memmap) only runs a thin
- * staging wrapper + telemetry.
+ * staging wrapper + telemetry.  Lives in bank 4 (not bank 3) to leave
+ * room for the rider OAM pass in the release layout.
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
  * (the staged Battle* and g_effect_last) and its own bank-local code; it

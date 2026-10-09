@@ -1,0 +1,17 @@
+{
+  "$schema": "../schema/combat_art.schema.json",
+  "id": "spider",
+  "label": "Spider",
+  "order": 5,
+  "width": 3,
+  "height": 2,
+  "palette": "fightspider",
+  "oam": true,
+  "obj_palette": "fightspider",
+  "obj_alt_palette": "fightbat",
+  "obj_alt_cells": [1],
+  "frame0": [
+    "combat_top_left_spider", "combat_top_middle_spider", "combat_top_right_spider",
+    "combat_bottom_left_spider", "combat_bottom_middle_spider", "combat_bottom_right_spider"
+  ]
+}

@@ -1,45 +1,44 @@
 {
-  "name": "game_over_boot",
-  "test": true,
-  "description": "Boot directly into the Game Over screen with the Continue prompt",
-  "scenario_id": "GAME_OVER_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "GAME_OVER"
-    },
-    {
-      "type": "scene",
-      "expected": "FIELD"
-    },
-    {
-      "type": "game_state",
-      "expected": "GAME_OVER"
-    },
-    {
-      "type": "game_over_choice",
-      "expected": 0
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "GAME OVER"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "CONTINUE?"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 5003,
-    "screen": "GAME_OVER"
+ "name": "game_over_boot",
+ "test": true,
+ "description": "Boot directly into the Game Over screen with the Continue prompt",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "GAME_OVER"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "game_state",
+   "expected": "GAME_OVER"
+  },
+  {
+   "type": "game_over_choice",
+   "expected": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "GAME OVER"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "CONTINUE?"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 5003,
+  "screen": "GAME_OVER"
+ }
 }

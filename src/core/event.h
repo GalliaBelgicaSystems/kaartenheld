@@ -97,7 +97,7 @@ void event_init(const EventDefinition *table, uint8_t count, uint8_t bank);
 /* Resolve the first matching INTERACT event for the given actor and run its
  * actions.  Returns the engage result the screen should act on:
  * ENGAGE_DIALOGUE if a dialogue was started, else ENGAGE_NONE. */
-ActorEngageResult event_engage_actor(Game *g, const WorldActorDefinition *actor);
+ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor);
 
 /* Resolve the first matching MAP_ENTER event for the map and run it. */
 void event_resolve_map_enter(Game *g, MapId to_map);

@@ -1,71 +1,78 @@
 {
-  "name": "title_menu_caret",
-  "test": true,
-  "description": "Title menu DOWN navigation moves the '>' caret across the 4 entries via the incremental bank-2 caret body (AGENTS.md 36): no full redraw, and wrap at index 3.  Final state after DOWNx3 must show the caret on the TUTORIAL row (16).",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7009,
-    "screen": "TITLE"
+ "name": "title_menu_caret",
+ "test": true,
+ "description": "Title menu DOWN navigation moves the '>' caret across the 4 entries via the incremental bank-2 caret body (AGENTS.md 36): no full redraw, and wrap at index 3.  Final state after DOWNx3 must show the caret on the TUTORIAL row (16).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TITLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": "TUTORIAL"
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": ">"
-    },
-    {
-      "type": "event_count",
-      "event": "RENDER_SCREEN",
-      "count": 2
-    }
-  ]
+  "seed": 7009,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "TUTORIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": ">"
+  },
+  {
+   "type": "event_count",
+   "event": "RENDER_SCREEN",
+   "count": 2
+  },
+  {
+   "type": "sfx_count",
+   "expected": 4
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
+  }
+ ]
 }

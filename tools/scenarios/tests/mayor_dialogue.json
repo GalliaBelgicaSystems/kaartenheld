@@ -1,92 +1,91 @@
 {
-  "name": "mayor_dialogue",
-  "test": true,
-  "description": "Full NPC dialogue sequence with Mayor: approach, advance text lines, close dialogue, and verify MET_MAYOR story flag",
-  "scenario_id": "MAYOR_DIALOGUE",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_facing",
-      "expected": "RIGHT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_STARTED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "RENDER_DIALOGUE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_NEXT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_ENDED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "STORY_FLAG_SET",
-      "flag": "MET_MAYOR"
-    },
-    {
-      "type": "story_flag",
-      "flag": "MET_MAYOR",
-      "expected": true
-    },
-    {
-      "type": "dialogue_active",
-      "expected": false
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 1003,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "mayor_dialogue",
+ "test": true,
+ "description": "Full NPC dialogue sequence with Mayor: approach, advance text lines, close dialogue, and verify MET_MAYOR story flag",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 30
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_facing",
+   "expected": "RIGHT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "RENDER_DIALOGUE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_NEXT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_ENDED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STORY_FLAG_SET",
+   "flag": "MET_MAYOR"
+  },
+  {
+   "type": "story_flag",
+   "flag": "MET_MAYOR",
+   "expected": true
+  },
+  {
+   "type": "dialogue_active",
+   "expected": false
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 1003,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

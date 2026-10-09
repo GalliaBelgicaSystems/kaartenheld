@@ -1,103 +1,102 @@
 {
-  "name": "status_freeze_rejected_no_skip",
-  "test": true,
-  "description": "Rejected FREEZE must not freeze (review fix): a combatant with both status slots full (BURN + POISON) rejects a FREEZE application -- no third STATUS_APPLIED, and the enemy's attack is NOT skipped (no TURN_SKIPPED)",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "status_freeze_rejected_no_skip",
+ "test": true,
+ "description": "Rejected FREEZE must not freeze (review fix): a combatant with both status slots full (BURN + POISON) rejects a FREEZE application -- no third STATUS_APPLIED, and the enemy's attack is NOT skipped (no TURN_SKIPPED)",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "apply_status",
-      "slot": 1,
-      "status": 2,
-      "duration": 3
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "apply_status",
-      "slot": 1,
-      "status": 1,
-      "duration": 3
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "apply_status",
-      "slot": 1,
-      "status": 3,
-      "duration": 1
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    }
-  ],
-  "assertions": [
-    {
-      "type": "event_count",
-      "event": "STATUS_APPLIED",
-      "count": 2
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 0,
-      "value": 2
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "TURN_SKIPPED"
-    }
-  ]
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 2,
+   "duration": 3
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 3
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 3,
+   "duration": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_count",
+   "event": "STATUS_APPLIED",
+   "count": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "TURN_SKIPPED"
+  }
+ ]
 }

@@ -1,143 +1,159 @@
 {
-  "name": "defend_overblock_heal",
-  "test": true,
-  "description": "Negative-net defense (docs/loot.md 34.4): over-block restores HP ONLY when a ring (healing shield) is in the defense combo. SH2 + ring(2) blocks the slime's 2 incoming -> net -2: EVENT_HEALED d0=2 d1=2 (cause defense-overblock, ring-gated), DAMAGE_RECEIVED reports 0, hero ends at 8/10",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "HE",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_ring",
-      "index": 2
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "HEALED"
-    },
-    {
-      "type": "event_arg",
-      "event": "HEALED",
-      "index": 0,
-      "value": 2
-    },
-    {
-      "type": "event_arg",
-      "event": "HEALED",
-      "index": 1,
-      "value": 2
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_RECEIVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "DAMAGE_RECEIVED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 8
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 6,
-        "max_hp": 10
-      }
-    },
-    "seed": 5002,
-    "start_battle": true
+ "name": "defend_overblock_heal",
+ "test": true,
+ "description": "Negative-net defense (docs/loot.md 34.4): over-block restores HP ONLY when a ring (healing shield) is in the defense combo. SH2 + ring(2) blocks the slime's 2 incoming -> net -2: EVENT_HEALED d0=2 d1=2 (cause defense-overblock, ring-gated), DAMAGE_RECEIVED reports 0, hero ends at 8/10",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "HE",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 1,
+   "value": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 6,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
 }

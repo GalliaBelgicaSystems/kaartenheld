@@ -1,64 +1,71 @@
 {
-  "name": "battle_attack",
-  "test": true,
-  "description": "Enter battle with Slime and attack once: the starter deck's first card SW3 deals 3 damage, dropping the slime from 5 to 2 HP",
-  "scenario_id": "BATTLE_ATTACK",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 7
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "7/10"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000
+ "name": "battle_attack",
+ "test": true,
+ "description": "Enter battle with Slime and attack once: the starter deck's first card SW3 deals 3 damage, dropping the slime from 5 to 2 HP",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 4
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 7
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "7/10"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ }
 }

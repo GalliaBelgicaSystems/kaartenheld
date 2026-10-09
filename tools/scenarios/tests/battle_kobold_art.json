@@ -1,0 +1,62 @@
+{
+ "name": "battle_kobold_art",
+ "test": true,
+ "description": "Kobold battle renders 3x2 OAM art (BG footprint blank); HP line and wiring pinned.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "music_track",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET KOBOLD"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "12/12  12/12  12/12"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 2,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 1,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 5,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 777
+ }
+}

@@ -1,0 +1,31 @@
+{
+ "name": "splash_boot",
+ "test": true,
+ "description": "Boot lands on the studio splash (SCREEN_SPLASH) and renders the GALLIA BELGICA SYSTEMS bitmap logo before the title screen appears. The splash is a bitmap, so the semantic check is the screen id + render telemetry; the pixels are covered by the committed screenshot.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7011,
+  "screen": "SPLASH"
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 2
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SPLASH"
+  },
+  {
+   "type": "event_occurred",
+   "event": "RENDER_SCREEN"
+  }
+ ]
+}

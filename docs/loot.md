@@ -8,7 +8,7 @@ Enemies do not primarily drop weapons, armor, potions, crafting materials, or lo
 
 They drop **cards**.
 
-Some cards are useful in battle and can be added to the player's deck. Others exist primarily as valuable loot that can be sold for **ECUs**, the game's currency.
+Some cards are useful in battle and can be added to the player's deck. Others exist primarily as valuable loot that can be sold for **gold**, the game's currency.
 
 The goal is to make every loot drop potentially interesting:
 
@@ -207,24 +207,24 @@ INSPECT
   ↓
 SELL
   ↓
-ECUs
+gold
 ```
 
 Examples:
 
 ```text
 DAMAGED NAVIGATION CORE
-Value: 42 ECUs
+Value: 42 gold
 ```
 
 ```text
 PRISTINE MILITARY AI CHIP
-Value: 630 ECUs
+Value: 630 gold
 ```
 
 ```text
 ANCIENT QUANTUM PROCESSOR
-Value: 4,200 ECUs
+Value: 4,200 gold
 ```
 
 These cards should still be procedurally generated and collectible.
@@ -304,7 +304,7 @@ Type: BLADE
 Value: 4
 
 Economy:
-Sell Value: 145 ECUs
+Sell Value: 145 gold
 ```
 
 ---
@@ -897,7 +897,7 @@ Generated result:
 DAMAGED MILITARY NAVIGATION CORE
 
 Rarity: Common
-Sell Value: 32 ECUs
+Sell Value: 32 gold
 ```
 
 Higher quality:
@@ -906,7 +906,7 @@ Higher quality:
 PRISTINE PRE-WAR NAVIGATION CORE
 
 Rarity: Rare
-Sell Value: 870 ECUs
+Sell Value: 870 gold
 ```
 
 The identity can be generated from:
@@ -949,7 +949,7 @@ Example:
 
 ```text
 PLASMA BLADE
-Base: 40 ECUs
+Base: 40 gold
 
 VENOMOUS:
 +30
@@ -958,7 +958,7 @@ RARE:
 ×2
 
 Final:
-140 ECUs
+140 gold
 ```
 
 The exact formula should be centralized.
@@ -1240,7 +1240,7 @@ SELECT CARD
           DESTROY CARD
               │
               ▼
-          ADD ECUs
+          ADD gold
 ```
 
 Selling a card permanently removes the card instance.
@@ -1620,7 +1620,7 @@ NEW CARD INSTANCE
 
 That loop gives the game a strong central identity:
 
-> **Fight with cards, win cards, build better decks, sell valuable cards for ECUs, and constantly hunt for the next strange, powerful, or valuable procedural drop.**
+> **Fight with cards, win cards, build better decks, sell valuable cards for gold, and constantly hunt for the next strange, powerful, or valuable procedural drop.**
 
 
 ---

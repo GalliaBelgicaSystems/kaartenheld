@@ -1,57 +1,56 @@
 {
-  "name": "field_east_scroll",
-  "test": true,
-  "description": "Walk east across the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while scroll_x advances and clamps at the east edge, proving horizontal camera scroll on a wide map",
-  "scenario_id": "FIELD_EAST_SCROLL",
-  "actions": [
-    {
-      "type": "hold",
-      "button": "RIGHT",
-      "frames": 192
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 26,
-      "expected_y": 7
-    },
-    {
-      "type": "camera",
-      "expected_x": 12,
-      "expected_y": 0
-    },
-    {
-      "type": "scroll_x",
-      "expected": 12
-    },
-    {
-      "type": "scroll_y",
-      "expected": 0
-    },
-    {
-      "type": "world_width",
-      "expected": 32
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 2,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 1000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "field_east_scroll",
+ "test": true,
+ "description": "Walk east across the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while scroll_x advances and clamps at the east edge, proving horizontal camera scroll on a wide map",
+ "actions": [
+  {
+   "type": "hold",
+   "button": "RIGHT",
+   "frames": 192
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 26,
+   "expected_y": 7
+  },
+  {
+   "type": "camera",
+   "expected_x": 12,
+   "expected_y": 0
+  },
+  {
+   "type": "scroll_x",
+   "expected": 12
+  },
+  {
+   "type": "scroll_y",
+   "expected": 0
+  },
+  {
+   "type": "world_width",
+   "expected": 32
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 2,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 1000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

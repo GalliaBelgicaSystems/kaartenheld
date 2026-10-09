@@ -1,0 +1,141 @@
+{
+  "id": "test_south_field",
+  "name": "TEST Desolate South Field",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "desolate_landscape",
+    "music": "MUSIC_DESOLATE",
+    "map_id": "MAP_SOUTH_FIELD"
+  },
+  "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
+  "layers": {
+    "terrain": [
+      {
+        "x": 5,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_plain_floor_1"
+      },
+      {
+        "x": 17,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_fire_frame_1"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 12,
+      "y": 1,
+      "facing": "DOWN",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [
+    {
+      "x": 12,
+      "y": 0,
+      "target_scene": "test_field",
+      "target_x": 12,
+      "target_y": 16,
+      "direction": "NORTH",
+      "tile_char": "<"
+    },
+    {
+      "x": 12,
+      "y": 11,
+      "target_scene": "test_mountain_pass",
+      "target_x": 12,
+      "target_y": 10,
+      "direction": "SOUTH",
+      "tile_char": ">"
+    }
+  ],
+  "objects": [
+    {
+      "id": "south_slime",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ],
+      "position": {
+        "x": 8,
+        "y": 8
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 7,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 10,
+        "max_hp": 10,
+        "gold_reward": 5,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      }
+    },
+    {
+      "id": "south_bat",
+      "type": "enemy",
+      "overworld_sprite": "desolate_landscape.desolate_landscape_enemy_bats_frame_1",
+      "animation_frames": [
+        "desolate_landscape.desolate_landscape_enemy_bats_frame_1",
+        "desolate_landscape.desolate_landscape_enemy_bats_frame_2"
+      ],
+      "position": {
+        "x": 14,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 8,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "southern_wilds",
+      "bounds": {
+        "x": 2,
+        "y": 2,
+        "width": 16,
+        "height": 14
+      },
+      "description": "Wild plains south of the starting area teeming with roaming monsters.",
+      "gameplay": {
+        "purpose": "combat_exploration",
+        "difficulty": 1
+      }
+    }
+  ]
+}

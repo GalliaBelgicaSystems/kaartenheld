@@ -1,117 +1,116 @@
 {
-  "name": "merchant_shop_open",
-  "test": true,
-  "description": "After returning the amulet the Merchant's shop opens (rewarded gold 15). The starter deck already owns all four IRON_SWORD copies (max_copies 4), so buying a fifth is rejected atomically: gold keeps the reward, no CARD_PURCHASED fires",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MERCHANT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "interact",
-      "actor": "MERCHANT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "SHOP"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "SW3"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "10"
-    },
-    {
-      "type": "variable",
-      "variable": "MERCHANT_QUEST",
-      "expected": 2
-    },
-    {
-      "type": "currency",
-      "expected": 65,
-      "currency": "GOLD"
-    },
-    {
-      "type": "inventory",
-      "item": "IRON_SWORD",
-      "expected": 4
-    },
-    {
-      "type": "inventory",
-      "item": "AMULET",
-      "expected": 0
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "CARD_PURCHASED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 10,
-      "y": 3,
-      "facing": "RIGHT"
-    },
-    "seed": 8504,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "inventory": {
-      "AMULET": 1
-    },
-    "currency": {
-      "GOLD": 50
-    },
-    "variables": {
-      "MERCHANT_QUEST": 1
-    }
+ "name": "merchant_shop_open",
+ "test": true,
+ "description": "After returning the amulet the Merchant's shop opens (rewarded gold 15). The starter deck already owns all four IRON_SWORD copies (max_copies 4), so buying a fifth is rejected atomically: gold keeps the reward, no CARD_PURCHASED fires",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "SW3"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "10"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 2
+  },
+  {
+   "type": "currency",
+   "expected": 65,
+   "currency": "GOLD"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_SWORD",
+   "expected": 4
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 0
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "inventory": {
+   "AMULET": 1
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 1
+  }
+ }
 }

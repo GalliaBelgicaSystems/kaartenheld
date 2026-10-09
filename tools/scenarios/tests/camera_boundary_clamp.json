@@ -1,62 +1,61 @@
 {
-  "name": "camera_boundary_clamp",
-  "test": true,
-  "description": "Walk the player to the far SE corner of the Field (30,16); with a full-screen 18-row viewport the 18-tall map fits exactly so scroll_y stays 0 while scroll_x clamps at 12 (width-20 tiles)",
-  "scenario_id": "CAMERA_BOUNDARY_CLAMP",
-  "actions": [
-    {
-      "type": "hold",
-      "button": "RIGHT",
-      "frames": 16
-    },
-    {
-      "type": "wait",
-      "frames": 4
-    },
-    {
-      "type": "hold",
-      "button": "DOWN",
-      "frames": 72
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 30,
-      "expected_y": 16
-    },
-    {
-      "type": "camera",
-      "expected_x": 12,
-      "expected_y": 0
-    },
-    {
-      "type": "scroll_x",
-      "expected": 12
-    },
-    {
-      "type": "scroll_y",
-      "expected": 0
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 28,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 1000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "camera_boundary_clamp",
+ "test": true,
+ "description": "Walk the player to the far SE corner of the Field (30,16); with a full-screen 18-row viewport the 18-tall map fits exactly so scroll_y stays 0 while scroll_x clamps at 12 (width-20 tiles)",
+ "actions": [
+  {
+   "type": "hold",
+   "button": "RIGHT",
+   "frames": 16
+  },
+  {
+   "type": "wait",
+   "frames": 4
+  },
+  {
+   "type": "hold",
+   "button": "DOWN",
+   "frames": 72
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 30,
+   "expected_y": 16
+  },
+  {
+   "type": "camera",
+   "expected_x": 12,
+   "expected_y": 0
+  },
+  {
+   "type": "scroll_x",
+   "expected": 12
+  },
+  {
+   "type": "scroll_y",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 28,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 1000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

@@ -1,55 +1,54 @@
 {
-  "name": "progression_hero_consequence",
-  "test": true,
-  "description": "A HERO level-up triggers the game-specific consequence (max HP +2, full heal) through the separate consequence layer",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "add_progress",
-      "target": "HERO_1",
-      "amount": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "progression_level",
-      "target": "HERO_1",
-      "expected": 2
-    },
-    {
-      "type": "party_hp",
-      "member": 0,
-      "expected": 12
-    },
-    {
-      "type": "party_level",
-      "member": 0,
-      "expected": 2
-    },
-    {
-      "type": "event_occurred",
-      "event": "LEVEL_UP"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8209,
-    "party": {
-      "HERO": {
-        "hp": 10,
-        "max_hp": 10
-      }
-    },
-    "progression": {
-      "HERO_1": {
-        "level": 1,
-        "progress": 90
-      }
-    }
+ "name": "progression_hero_consequence",
+ "test": true,
+ "description": "A HERO level-up triggers the game-specific consequence (max HP +2, full heal) through the separate consequence layer",
+ "actions": [
+  {
+   "type": "add_progress",
+   "target": "HERO_1",
+   "amount": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "progression_level",
+   "target": "HERO_1",
+   "expected": 2
+  },
+  {
+   "type": "party_hp",
+   "member": 0,
+   "expected": 12
+  },
+  {
+   "type": "party_level",
+   "member": 0,
+   "expected": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "LEVEL_UP"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8209,
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "progression": {
+   "HERO_1": {
+    "level": 1,
+    "progress": 90
+   }
+  }
+ }
 }

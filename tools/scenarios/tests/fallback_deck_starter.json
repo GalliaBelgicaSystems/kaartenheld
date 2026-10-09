@@ -1,55 +1,72 @@
 {
-  "scenario_id": "FIRST_ENCOUNTER",
-  "description": "Regression for the battle fallback deck: initial_state constructs an intentionally EMPTY persistent deck (descriptor deck-present section; the CARDS menu can no longer empty a deck because of DECK_MIN_CARDS) which forces battle_init_from_deck_state onto the packed starter-deck fallback. The 12-card table mirrors the granted composition (4x SW3, 3x SH2, 3x SW4, 2x DA1); the first five entries keep the granted deal order so the opening hand must render SW3 SW3 SH2 SH2 SW4 -- a mis-packed table would show a shuffled order and garbage type-15 codes",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 9100,
-    "deck": {}
+ "description": "Regression for the battle fallback deck: initial_state constructs an intentionally EMPTY persistent deck (descriptor deck-present section; the CARDS menu can no longer empty a deck because of DECK_MIN_CARDS) which forces battle_init_from_deck_state onto the packed starter-deck fallback. The 12-card table mirrors the granted composition (4x SW3, 3x SH2, 3x SW4, 2x DA1); the first five entries keep the granted deal order so the opening hand must render SW3 SW3 SH2 SH2 SW4 -- a mis-packed table would show a shuffled order and garbage type-15 codes",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "wait",
-      "frames": 90
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_REMOVED_FROM_DECK",
-      "count": 0
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "SW3 SW3"
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "SH2 SH2"
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "SW4"
-    }
-  ],
-  "name": "fallback_deck_starter"
+  "seed": 9100,
+  "deck": {}
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 90
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_REMOVED_FROM_DECK",
+   "count": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "SW3 SW3"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "SH2 SH2"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "SW4"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 11,
+   "col": 16,
+   "expected": 118
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 12,
+   "col": 17,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 18,
+   "expected": 0
+  }
+ ],
+ "name": "fallback_deck_starter"
 }

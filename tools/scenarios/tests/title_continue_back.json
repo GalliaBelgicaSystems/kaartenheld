@@ -1,77 +1,76 @@
 {
-  "name": "title_continue_back",
-  "test": true,
-  "description": "Boot to the title menu, choose CONTINUE (opens the SAVE/LOAD screen in load mode), then press B. The save/load screen must return to the TITLE menu -- NOT boot a new overworld game. Regression for the B/START hardcoded SCREEN_OVERWORLD bug (only valid for overworld-entered save/load screens).",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7001,
-    "screen": "TITLE"
+ "name": "title_continue_back",
+ "test": true,
+ "description": "Boot to the title menu, choose CONTINUE (opens the SAVE/LOAD screen in load mode), then press B. The save/load screen must return to the TITLE menu -- NOT boot a new overworld game. Regression for the B/START hardcoded SCREEN_OVERWORLD bug (only valid for overworld-entered save/load screens).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "B"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TITLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 12,
-      "contains": "CONTINUE"
-    },
-    {
-      "type": "music_track",
-      "expected": "TITLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "GAME_CONTINUED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "NEW_GAME_STARTED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "GAME_LOADED"
-    }
-  ]
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "CONTINUE"
+  },
+  {
+   "type": "music_track",
+   "expected": "TITLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_CONTINUED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "NEW_GAME_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "GAME_LOADED"
+  }
+ ]
 }

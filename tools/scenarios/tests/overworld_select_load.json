@@ -1,47 +1,46 @@
 {
-  "name": "overworld_select_load",
-  "test": true,
-  "description": "Pressing SELECT on the overworld opens the load menu and pressing A loads slot 1",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "save",
-      "slot": 1
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_occurred",
-      "event": "GAME_LOADED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 5,
-      "y": 5,
-      "facing": "DOWN"
-    },
-    "seed": 5050
+ "name": "overworld_select_load",
+ "test": true,
+ "description": "Pressing SELECT on the overworld opens the load menu and pressing A loads slot 1",
+ "actions": [
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_LOADED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 5,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 5050
+ }
 }

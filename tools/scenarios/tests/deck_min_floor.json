@@ -1,161 +1,161 @@
 {
-  "name": "deck_min_floor",
-  "test": true,
-  "description": "deck_remove_card enforces DECK_MIN_CARDS=5 on the 12-card starter deck (SW4 SH3 SW3 DA2): two removals succeed (12 -> 10); after decking 3 herbs (deck=13) seven more single-copy removals succeed (deck=6); a tenth removal lands exactly on the floor (5, allowed) and an eleventh is rejected by the floor guard (no CARD_REMOVED_FROM_DECK event -- pinned by the exact success count of 10 despite 11 attempts).",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "deck_remove",
-      "card": "FIRE_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "IRON_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "add_item",
-      "item": "WOOD_RING",
-      "quantity": 3
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "WOODEN_SHIELD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "FIRE_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "IRON_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "WOODEN_SHIELD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "FIRE_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "IRON_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_remove",
-      "card": "IRON_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_REMOVED_FROM_DECK",
-      "count": 10
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_ADDED_TO_DECK",
-      "count": 3
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7004
+ "name": "deck_min_floor",
+ "test": true,
+ "description": "deck_remove_card enforces DECK_MIN_CARDS=5 on the 12-card starter deck (SW4 SH3 SW3 DA2): two removals succeed (12 -> 10); after decking 3 herbs (deck=13) seven more single-copy removals succeed (deck=6); a tenth removal lands exactly on the floor (5, allowed) and an eleventh is rejected by the floor guard (no CARD_REMOVED_FROM_DECK event -- pinned by the exact success count of 10 despite 11 attempts).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "deck_remove",
+   "card": "FIRE_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "IRON_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "add_item",
+   "item": "WOOD_RING",
+   "quantity": 3
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "WOODEN_SHIELD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "FIRE_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "IRON_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "WOODEN_SHIELD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "FIRE_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "IRON_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_remove",
+   "card": "IRON_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_REMOVED_FROM_DECK",
+   "count": 10
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_ADDED_TO_DECK",
+   "count": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7004
+ }
 }

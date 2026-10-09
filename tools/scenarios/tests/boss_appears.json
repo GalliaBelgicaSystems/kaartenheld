@@ -1,56 +1,55 @@
 {
-  "name": "boss_appears",
-  "test": true,
-  "description": "Once the Monster Hunt quest is complete, the Lord of Slimes (25 HP) blocks the Castle corridor",
-  "scenario_id": "CASTLE_BOOT",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "music_track",
-      "expected": "BOSS"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 50
-    },
-    {
-      "type": "event_occurred",
-      "event": "ACTOR_COMBAT_START"
-    },
-    {
-      "type": "actor_at",
-      "entity": "SLIME_LORD",
-      "x": 10,
-      "y": 5
-    }
-  ],
-  "initial_state": {
-    "scene": "CASTLE",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 8502,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "variables": {
-      "QUEST_MONSTER_HUNT": 2,
-      "MONSTERS_DEFEATED": 3
-    }
+ "name": "boss_appears",
+ "test": true,
+ "description": "Once the Monster Hunt quest is complete, the Lord of Slimes (25 HP) blocks the Castle corridor",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "music_track",
+   "expected": "BOSS"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 50
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COMBAT_START"
+  },
+  {
+   "type": "actor_at",
+   "entity": "SLIME_LORD",
+   "x": 10,
+   "y": 5
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8502,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2,
+   "MONSTERS_DEFEATED": 3
+  }
+ }
 }

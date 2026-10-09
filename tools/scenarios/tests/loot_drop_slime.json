@@ -1,64 +1,63 @@
 {
-  "name": "loot_drop_slime",
-  "test": true,
-  "description": "Loot identity system smoke test: derived CardIds from material/effect/weapon combinations work via card_get_def synthesis (docs/loot.md \u00a734).  Battle completes normally with the victory drop hook active.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 7001,
-    "start_battle": true
+ "name": "loot_drop_slime",
+ "test": true,
+ "description": "Loot identity system smoke test: derived CardIds from material/effect/weapon combinations work via card_get_def synthesis (docs/loot.md \u00a734).  Battle completes normally with the victory drop hook active.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    }
-  ]
+  "seed": 7001,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
 }

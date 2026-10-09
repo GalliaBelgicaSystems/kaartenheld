@@ -1,38 +1,122 @@
 {
-  "name": "limited_card_resets_next_battle",
-  "test": true,
-  "description": "A limited-use card (uses 1) plays in battle 1, the battle is fled, and a second battle accepts the same limited card again: per-battle availability resets at every battle_start while ownership never changes. Fleeing does not write battle HP back to the party, so battle 2 starts from pre-battle HP 10.",
-  "actions": [
-    {"type": "wait", "frames": 5},
-    {"type": "set_hand_card", "index": 0, "card_type": "HE", "value": 3},
-    {"type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 1},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 6},
-    {"type": "press", "button": "SELECT"},
-    {"type": "wait", "frames": 1360},
-    {"type": "press", "button": "B"},
-    {"type": "wait", "frames": 10},
-    {"type": "start_battle"},
-    {"type": "wait", "frames": 10},
-    {"type": "set_hand_card", "index": 0, "card_type": "HE", "value": 3},
-    {"type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 1},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 6},
-    {"type": "press", "button": "SELECT"},
-    {"type": "wait", "frames": 15}
-  ],
-  "assertions": [
-    {"type": "screen", "expected": "BATTLE"},
-    {"type": "event_occurred", "event": "BATTLE_FLED"},
-    {"type": "event_count", "event": "BATTLE_STARTED", "count": 2},
-    {"type": "event_count", "event": "HEALED", "count": 2},
-    {"type": "battle_player_hp", "expected": 13}
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {"x": 13, "y": 8, "facing": "DOWN"},
-    "party": {"HERO": {"hp": 10, "max_hp": 40}},
-    "seed": 6002,
-    "start_battle": true
+ "name": "limited_card_resets_next_battle",
+ "test": true,
+ "description": "A limited-use card (uses 1) plays in battle 1, the battle is fled, and a second battle accepts the same limited card again: per-battle availability resets at every battle_start while ownership never changes. Fleeing does not write battle HP back to the party, so battle 2 starts from pre-battle HP 10.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 1360
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "start_battle"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 15
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_FLED"
+  },
+  {
+   "type": "event_count",
+   "event": "BATTLE_STARTED",
+   "count": 2
+  },
+  {
+   "type": "event_count",
+   "event": "HEALED",
+   "count": 2
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 13
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6002,
+  "start_battle": true
+ }
 }

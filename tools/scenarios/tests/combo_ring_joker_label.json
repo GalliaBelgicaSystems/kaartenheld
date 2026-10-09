@@ -1,33 +1,116 @@
 {
-  "name": "combo_ring_joker_label",
-  "test": true,
-  "description": "Ring joker preview (docs/loot.md 34.3): SW3 + SW3 + RING(HE1) must preview the BEST tier the ring can substitute -- THREE KIND, not the raw-value PAIR the pre-fix preview showed. The ring's raw value is 1 so the buggy preview (classify at raw value) reads PAIR.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": { "x": 13, "y": 8, "facing": "DOWN" },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_ring_joker_label",
+ "test": true,
+ "description": "Ring joker preview (docs/loot.md 34.3): SW3 + SW3 + RING(HE1) must preview the BEST tier the ring can substitute -- THREE KIND, not the raw-value PAIR the pre-fix preview showed. The ring's raw value is 1 so the buggy preview (classify at raw value) reads PAIR.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    { "type": "wait", "frames": 5 },
-    { "type": "set_hand_card", "index": 0, "card_type": "SW", "value": 3 },
-    { "type": "set_hand_card_meta", "index": 0, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 1, "card_type": "SW", "value": 3 },
-    { "type": "set_hand_card_meta", "index": 1, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 2, "card_type": "HE", "value": 1 },
-    { "type": "set_hand_card_meta", "index": 2, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card_ring", "index": 2 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 200 }
-  ],
-  "assertions": [
-    { "type": "screen", "expected": "BATTLE" },
-    { "type": "screen_row", "row": 13, "contains": "THREE KIND" },
-    { "type": "event_not_occurred", "event": "DAMAGE_DEALT" }
-  ]
+  "seed": 3000,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "THREE KIND"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
 }

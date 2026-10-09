@@ -67,7 +67,7 @@ def convert_symbols(noi_path, map_path, sym_path):
             f_out.write(f"{bank:02X}:{addr_hex} {name}\n")
 
 if __name__ == "__main__":
-    noi = sys.argv[1] if len(sys.argv) > 1 else "build/rpg_card_proto_debug.noi"
-    sym = sys.argv[2] if len(sys.argv) > 2 else "build/rpg_card_proto_debug.sym"
+    noi = sys.argv[1] if len(sys.argv) > 1 else "build/kaartenheld_debug.noi"
+    sym = sys.argv[2] if len(sys.argv) > 2 else "build/kaartenheld_debug.sym"
     map_p = noi.replace(".noi", ".map")
     convert_symbols(noi, map_p, sym)

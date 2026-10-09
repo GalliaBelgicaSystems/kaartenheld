@@ -1,44 +1,43 @@
 {
-  "name": "buy_item_insufficient_direct",
-  "test": true,
-  "description": "A failed card purchase leaves state unchanged and emits ITEM_PURCHASE_FAILED",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "buy_item",
-      "item": "WOOD_RING"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "currency",
-      "currency": "GOLD",
-      "expected": 5
-    },
-    {
-      "type": "inventory",
-      "item": "WOOD_RING",
-      "expected": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "CARD_PURCHASE_FAILED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "CARD_PURCHASED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8205,
-    "currency": {
-      "GOLD": 5
-    }
+ "name": "buy_item_insufficient_direct",
+ "test": true,
+ "description": "A failed card purchase leaves state unchanged and emits ITEM_PURCHASE_FAILED",
+ "actions": [
+  {
+   "type": "buy_item",
+   "item": "WOOD_RING"
   }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 5
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8205,
+  "currency": {
+   "GOLD": 5
+  }
+ }
 }

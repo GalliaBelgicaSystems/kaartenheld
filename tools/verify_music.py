@@ -49,9 +49,9 @@ import os
 import sys
 
 ROM_DEBUG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "build", "rpg_card_proto_debug.gb")
+                         "..", "build", "kaartenheld_debug.gb")
 SYM_DEBUG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "build", "rpg_card_proto_debug.sym")
+                         "..", "build", "kaartenheld_debug.sym")
 
 failures = []
 
@@ -105,6 +105,11 @@ def main():
 
     pb = PyBoy(args.rom, window="null")
 
+    sfx_id_addr = get_symbol(SYM_DEBUG, "sfx_id")
+    if sfx_id_addr is None:
+        print("error: sfx_id not in symbol file (make debug first)", file=sys.stderr)
+        return 1
+
     # Harness mode is NOT enabled: we need the real boot (interrupts on) so
     # the audio ISR actually runs.  Wait for g_boot_phase == 4 (first
     # game_render complete; overworld music is already playing).
@@ -114,10 +119,11 @@ def main():
         if bp_addr and pb.memory[bp_addr] == 4:
             break
 
-    # Locate player in WRAM (same as capture_walkthrough.py)
+    # Locate player in WRAM (same as capture_walkthrough.py: FIELD spawn
+    # (17,7) per levels/field.json, facing LEFT)
     WRAM_BASE = 0xC000
     WRAM_SIZE = 0x2000
-    PLAYER_BOOT = bytes([4, 4, 10, 10, 1, 1, 1])
+    PLAYER_BOOT = bytes([17, 7, 10, 10, 1, 2, 1])
 
     pos_addr = [game_addr + 204]
 
@@ -178,8 +184,65 @@ def main():
     def window_enabled():
         return bool(pb.memory[0xFF40] & 0x20)
 
+    # --- SFX checks (transcribed tracker SFX, Path C) ---
+    # On the title splash, START fires SFX_CURSOR (id 0): a 9-dosound-tick
+    # noise hit holding NR42=0x91 with music CH4 muted, then completion
+    # (sfx_id back to 0xFF) while the music clock keeps advancing.
+    #
+    # The trigger hold is STATE-VERIFIED, not time-expected (AGENTS.md
+    # 56.2): PyBoy tick() boundaries and game frames are not 1:1 -- the
+    # run shows multi-tick stalls where neither the main loop (input
+    # heartbeat) nor the audio ISR advance, so a blind short hold can
+    # fall entirely between the game's input samples and be swallowed
+    # (observed: a 4-tick hold never firing, deterministically).  Hold
+    # START until the SFX actually fires instead.
+    for _ in range(300):
+        pb.tick()
+        if pb.memory[game_addr] == 9:
+            break
+    pb.button_press("start")
+    sfx_win = []
+    triggered = False
+    for _ in range(60):
+        pb.tick()
+        sfx_win.append((pb.memory[sfx_id_addr],
+                        pb.memory[0xFF21],
+                        read_ticks()))
+        if pb.memory[sfx_id_addr] == 0:
+            triggered = True
+            break
+    pb.button_release("start")
+    for _ in range(40):
+        pb.tick()
+        sfx_win.append((pb.memory[sfx_id_addr],
+                        pb.memory[0xFF21],
+                        read_ticks()))
+    check("5a. sfx-triggered", triggered,
+          "sfx_id never read CURSOR(0) while START held 60 ticks")
+    check("5b. sfx-completes", sfx_win[-1][0] == 0xFF,
+          f"sfx_id stuck at {sfx_win[-1][0]} (unmute never ran?)")
+    sounding = [(s, nr42) for s, nr42, _ in sfx_win if s == 0]
+    held = sum(1 for _, nr42 in sounding[:9] if nr42 == 0x91)
+    check("5c. sfx-content-held", triggered and held >= 5,
+          f"NR42==0x91 on {held}/9 sampled sounding frames "
+          f"(transcribed envelope not rendered?)")
+    # Stall tolerance, same rationale as check 1: isolated zero-deltas are
+    # PyBoy tick-boundary artifacts (ticks where no emulated time
+    # advances), not music-clock stalls.  A wedged ISR would zero a long
+    # run, so fail only on 3+ consecutive zeros.
+    run, worst = 0, 0
+    for i in range(1, len(sfx_win)):
+        if sfx_win[i][2] - sfx_win[i - 1][2] < 1:
+            run += 1
+            worst = max(worst, run)
+        else:
+            run = 0
+    check("5d. sfx-no-stall", worst < 3,
+          f"music clock stalled during SFX ({worst} consecutive zero deltas)")
+
     # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
-    # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at (4,4).
+    # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
+    # (17,7) from levels/field.json player.spawn.
     for _ in range(20):
         if pb.memory[game_addr] == 0:
             break
@@ -221,10 +284,17 @@ def main():
     pb.stop()
 
     # Compute per-frame tick deltas (skip the very first sample).
-    deltas = [samples[i][2] - samples[i - 1][2] for i in range(1, len(samples))]
+    # g_audio_ticks is uint16: wrap-aware mod 65536, so long walks (which
+    # lap the counter) don't report phantom stalls at each wrap.
+    deltas = [(samples[i][2] - samples[i - 1][2]) % 65536
+              for i in range(1, len(samples))]
 
     # Check 4: the ISR is actually running (counter is monotonic and moving).
+    # Unwrap the uint16 counter across the whole run for the true total.
     total = samples[-1][2] - samples[0][2]
+    for i in range(1, len(samples)):
+        if samples[i][2] < samples[i - 1][2]:
+            total += 65536
     check("4. ticks-advanced", total > 0, f"g_audio_ticks stuck at {samples[0][2]}")
 
     # Check 3: transitions were really exercised.

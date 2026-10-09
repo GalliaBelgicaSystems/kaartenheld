@@ -1,0 +1,27 @@
+{
+  "id": "hero",
+  "label": "Hero (shared overworld sprite)",
+  "gb_tileset_kind": "WORLD_TILESET_HERO",
+  "tiles": [
+    {
+      "id": "hero_f0",
+      "label": "Hero frame 0",
+      "gb_constant": "TILE_HERO_F0",
+      "walkable": false,
+      "color": "#27ae60",
+      "ascii": "@",
+      "image_url": "/tiles/hero/hero_f0.png",
+      "category": "hero"
+    },
+    {
+      "id": "hero_f1",
+      "label": "Hero frame 1",
+      "gb_constant": "TILE_HERO_F1",
+      "walkable": false,
+      "color": "#27ae60",
+      "ascii": "@",
+      "image_url": "/tiles/hero/hero_f1.png",
+      "category": "hero"
+    }
+  ]
+}

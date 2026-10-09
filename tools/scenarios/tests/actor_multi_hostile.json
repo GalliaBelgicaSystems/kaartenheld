@@ -1,34 +1,33 @@
 {
-  "name": "actor_multi_hostile",
-  "test": true,
-  "description": "A scene can hold multiple hostile World Actors simultaneously (Slime and Bat in Forest)",
-  "scenario_id": "FOREST_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "scene",
-      "expected": "FOREST"
-    },
-    {
-      "type": "actor_at",
-      "entity": "SLIME",
-      "x": 10,
-      "y": 8
-    },
-    {
-      "type": "actor_at",
-      "entity": "BAT",
-      "x": 7,
-      "y": 4
-    }
-  ],
-  "initial_state": {
-    "scene": "FOREST",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5005
+ "name": "actor_multi_hostile",
+ "test": true,
+ "description": "A scene can hold multiple hostile World Actors simultaneously (Slime and Bat in Forest)",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "scene",
+   "expected": "TEST_FOREST"
+  },
+  {
+   "type": "actor_at",
+   "entity": "SLIME",
+   "x": 10,
+   "y": 8
+  },
+  {
+   "type": "actor_at",
+   "entity": "BAT",
+   "x": 7,
+   "y": 4
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5005
+ }
 }

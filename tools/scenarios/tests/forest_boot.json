@@ -1,35 +1,50 @@
 {
-  "name": "forest_boot",
-  "test": true,
-  "description": "Boot directly into the overworld on the Forest scene",
-  "scenario_id": "FOREST_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "FOREST"
-    },
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 8,
-      "expected_y": 6
-    }
-  ],
-  "initial_state": {
-    "scene": "FOREST",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5005
+ "name": "forest_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the Forest scene",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FOREST"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 8,
+   "expected_y": 6
+  },
+  {
+   "type": "music_track",
+   "expected": "FOREST"
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 3,
+   "row": 3,
+   "expected": 2
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 3,
+   "row": 4,
+   "expected": 6
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5005
+ }
 }

@@ -1,31 +1,30 @@
 {
-  "name": "flag_initial",
-  "test": true,
-  "description": "Declarative initial_state injects a story flag into the canonical GameState",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    },
-    {
-      "type": "flag",
-      "flag": "MET_MAYOR",
-      "expected": false
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 7001,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "flag_initial",
+ "test": true,
+ "description": "Declarative initial_state injects a story flag into the canonical GameState",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
+  },
+  {
+   "type": "flag",
+   "flag": "MET_MAYOR",
+   "expected": false
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

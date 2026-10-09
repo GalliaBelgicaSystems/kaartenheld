@@ -1,119 +1,126 @@
 {
-  "name": "battle_sword_damage",
-  "test": true,
-  "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) that one-shots the field slime (10 HP)",
-  "scenario_id": "BATTLE_BOOT",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 6
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "BO",
-      "value": 6
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 12
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_count",
-      "event": "DAMAGE_DEALT",
-      "count": 1
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "COMBO_RESOLVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 1,
-      "value": 2
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 2,
-      "value": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "EFFECT_RESOLVED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "battle_sword_damage",
+ "test": true,
+ "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) that one-shots the field slime (10 HP)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 6
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "BO",
+   "value": 6
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 12
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "COMBO_RESOLVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 1,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 2,
+   "value": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "EFFECT_RESOLVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "start_battle": true
+ }
 }

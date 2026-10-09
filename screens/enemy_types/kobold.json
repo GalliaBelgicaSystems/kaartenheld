@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "kobold",
+  "label": "Kobold",
+  "category": "minion",
+  "sprite": { "art": "kobold", "frames": 1 },
+  "overworld": { "cells": ["kobold_f0", "kobold_f1"], "palette": "sprites" },
+  "name": "KOBOLD",
+  "hp": 12,
+  "max_hp": 12,
+  "battle_id": "BATTLE_KOBOLD",
+  "ai_types": ["AI_CHASE", "AI_PATROL_CROSS"],
+  "gold_reward": 8,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

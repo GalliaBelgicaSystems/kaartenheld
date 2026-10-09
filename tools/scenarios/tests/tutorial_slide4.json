@@ -1,110 +1,109 @@
 {
-  "name": "tutorial_slide4",
-  "test": true,
-  "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 2).",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7004,
-    "screen": "TITLE"
+ "name": "tutorial_slide4",
+ "test": true,
+ "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 2).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TUTORIAL"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "ENERGY & COMBAT"
-    },
-    {
-      "type": "screen_row",
-      "row": 7,
-      "contains": "2/turn"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCREEN_CHANGED"
-    }
-  ]
+  "seed": 7004,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TUTORIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "ENERGY & COMBAT"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "2/turn"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  }
+ ]
 }

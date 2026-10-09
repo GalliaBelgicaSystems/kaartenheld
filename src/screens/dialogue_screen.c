@@ -38,15 +38,20 @@ void dialogue_screen_render(Game *g)
 
     if (first_enter) {
         ui_lcd_off();
-        if (rc->prev_screen != SCREEN_OVERWORLD) {
-            ui_draw_world_full(w);
-        }
+        /* Always redraw the world, even coming from the overworld: the
+         * lcd_off attribute wipe resets every BG tile to palette 0
+         * (grayscale) and only a full redraw re-applies per-tile palettes.
+         * Skipping it here turned the whole screen gray for the dialogue. */
+        ui_draw_world_full(w);
         ui_draw_dialogue(d, w->scroll_x, w->scroll_y);
         ui_lcd_on();
 
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
                        (uint8_t)(world_player_py(w) - w->camera_px_y));
         ui_draw_actors_sprites(w);
+        /* The box is background tiles at rows 12-17; hide any actor sprite
+         * (e.g. the town fire/dog) that would draw over the text. */
+        ui_sprite_hide_actors_below((uint8_t)(12 * 8));
         rc->valid = true;
         rc->prev_screen = SCREEN_DIALOGUE;
         rc->prev_dialogue_active = true;

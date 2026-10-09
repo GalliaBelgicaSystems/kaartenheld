@@ -1,47 +1,46 @@
 {
-  "name": "ring_shop_open",
-  "test": true,
-  "description": "The Shopkeeper's stock row renders the item code derived from the card definition (RG5 for the iron healing ring, price 20) \u2014 the shop layer duplicates no display strings",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "SHOPKEEPER"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "SHOP"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "RG5"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "20"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 4,
-      "facing": "UP"
-    },
-    "seed": 8504,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "currency": {
-      "GOLD": 50
-    }
+ "name": "ring_shop_open",
+ "test": true,
+ "description": "The Shopkeeper's stock row renders the item code derived from the card definition (RG5 for the iron healing ring, price 20) \u2014 the shop layer duplicates no display strings",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "SHOPKEEPER"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "RG5"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "20"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 4,
+   "facing": "UP"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  }
+ }
 }

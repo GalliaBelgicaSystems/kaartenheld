@@ -3932,6 +3932,231 @@
   }
  },
  "named": {
+  "CASTLE_BAT_01": {
+   "col": 5,
+   "png": "castle-tile.png",
+   "row": 2
+  },
+  "CASTLE_BAT_02": {
+   "col": 6,
+   "png": "castle-tile.png",
+   "row": 2
+  },
+  "CASTLE_EXIT": {
+   "col": 8,
+   "png": "castle-tile.png",
+   "row": 2
+  },
+  "CASTLE_FLOOR": {
+   "col": 0,
+   "png": "castle-tile.png",
+   "row": 2
+  },
+  "DESOLATE_FIRE_01": {
+   "col": 5,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_FIRE_02": {
+   "col": 6,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_FLOOR_00": {
+   "col": 6,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_FLOOR_01": {
+   "col": 7,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_FLOOR_02": {
+   "col": 8,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_FLOOR_03": {
+   "col": 9,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_FLOOR_PLAIN": {
+   "col": 0,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_HERO_01": {
+   "col": 1,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_HERO_02": {
+   "col": 2,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_KOBOLD_01": {
+   "col": 3,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_KOBOLD_02": {
+   "col": 4,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_MERCHANT": {
+   "col": 7,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_ROCK_BL": {
+   "col": 14,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_ROCK_BR": {
+   "col": 15,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_ROCK_TL": {
+   "col": 14,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_ROCK_TR": {
+   "col": 15,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_STAIRCASE": {
+   "col": 8,
+   "png": "desolate_landscape.png",
+   "row": 2
+  },
+  "DESOLATE_TREE_BL": {
+   "col": 12,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_TREE_BR": {
+   "col": 13,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_TREE_TL": {
+   "col": 12,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_TREE_TR": {
+   "col": 13,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_00": {
+   "col": 0,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_01": {
+   "col": 1,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_02": {
+   "col": 2,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_03": {
+   "col": 3,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_04": {
+   "col": 4,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_05": {
+   "col": 5,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_06": {
+   "col": 6,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_07": {
+   "col": 7,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_08": {
+   "col": 8,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_09": {
+   "col": 9,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_10": {
+   "col": 10,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_11": {
+   "col": 11,
+   "png": "desolate_landscape.png",
+   "row": 0
+  },
+  "DESOLATE_WALL_12": {
+   "col": 0,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_13": {
+   "col": 1,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_14": {
+   "col": 2,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_15": {
+   "col": 3,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_16": {
+   "col": 4,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_17": {
+   "col": 5,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_18": {
+   "col": 10,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
+  "DESOLATE_WALL_19": {
+   "col": 11,
+   "png": "desolate_landscape.png",
+   "row": 1
+  },
   "EQUIP_C03_R02": {
    "col": 3,
    "png": "equipment_8x8.png",
@@ -4902,65 +5127,35 @@
    "png": "equipment_8x8.png",
    "row": 3
   },
-  "EXTERIOR_BUILDING_WALL": {
-   "col": 0,
-   "png": "RPG_exterior.png",
-   "row": 5
-  },
-  "EXTERIOR_EXIT_GATE": {
+  "FOREST_EXIT": {
    "col": 8,
-   "png": "RPG_exterior.png",
+   "png": "forest-tile.png",
    "row": 2
   },
-  "EXTERIOR_GRASS": {
-   "col": 1,
-   "png": "RPG_exterior.png",
-   "row": 9
-  },
-  "EXTERIOR_WALL": {
-   "col": 8,
-   "png": "RPG_exterior.png",
-   "row": 1
-  },
   "FOREST_FLOOR": {
-   "col": 1,
-   "png": "RPG_exterior.png",
-   "row": 9
-  },
-  "FOREST_GATE": {
-   "col": 8,
-   "png": "RPG_exterior.png",
+   "col": 0,
+   "png": "forest-tile.png",
    "row": 2
   },
   "FOREST_STUMP_BL": {
-   "col": 0,
-   "png": "RPG_exterior.png",
-   "row": 15
+   "col": 14,
+   "png": "forest-tile.png",
+   "row": 1
   },
   "FOREST_STUMP_BR": {
-   "col": 1,
-   "png": "RPG_exterior.png",
-   "row": 15
-  },
-  "FOREST_STUMP_MINI": {
-   "col": 2,
-   "png": "RPG_exterior.png",
-   "row": 16
+   "col": 15,
+   "png": "forest-tile.png",
+   "row": 1
   },
   "FOREST_STUMP_TL": {
-   "col": 0,
-   "png": "RPG_exterior.png",
-   "row": 14
+   "col": 14,
+   "png": "forest-tile.png",
+   "row": 0
   },
   "FOREST_STUMP_TR": {
-   "col": 1,
-   "png": "RPG_exterior.png",
-   "row": 14
-  },
-  "FOREST_TREE": {
-   "col": 0,
-   "png": "RPG_exterior.png",
-   "row": 5
+   "col": 15,
+   "png": "forest-tile.png",
+   "row": 0
   },
   "GLYPH_20": {
    "col": 0,
@@ -5441,31 +5636,6 @@
    "col": 15,
    "png": "intrepid.png",
    "row": 5
-  },
-  "INTERIOR_DOOR": {
-   "col": 8,
-   "png": "RPG_interior.png",
-   "row": 4
-  },
-  "INTERIOR_FLOOR": {
-   "col": 1,
-   "png": "RPG_interior.png",
-   "row": 1
-  },
-  "INTERIOR_SOLID_PROP": {
-   "col": 6,
-   "png": "RPG_interior.png",
-   "row": 3
-  },
-  "INTERIOR_WALL": {
-   "col": 1,
-   "png": "RPG_interior.png",
-   "row": 0
-  },
-  "PLAYER": {
-   "col": 0,
-   "png": "player_demo.png",
-   "row": 0
   },
   "SYM_C03_R02": {
    "col": 3,
@@ -7286,26 +7456,6 @@
    "col": 51,
    "png": "symbols_8x8.png",
    "row": 6
-  },
-  "WORLD_C0_R0": {
-   "col": 0,
-   "png": "world_tiles.png",
-   "row": 0
-  },
-  "WORLD_C0_R1": {
-   "col": 0,
-   "png": "world_tiles.png",
-   "row": 1
-  },
-  "WORLD_C1_R0": {
-   "col": 1,
-   "png": "world_tiles.png",
-   "row": 0
-  },
-  "WORLD_C1_R1": {
-   "col": 1,
-   "png": "world_tiles.png",
-   "row": 1
   }
  },
  "sheets": [
@@ -7313,2463 +7463,303 @@
    "cells": {
     "0": {
      "col": 0,
-     "named": null,
+     "named": "FOREST_TOP_LEFT_CORNER_WALL",
      "row": 0,
      "tile": 0
     },
     "1": {
      "col": 1,
-     "named": null,
+     "named": "FOREST_TOP_WALL_1",
      "row": 0,
      "tile": 1
     },
     "10": {
      "col": 10,
-     "named": null,
+     "named": "FOREST_LEFT_WALL_2",
      "row": 0,
      "tile": 10
     },
-    "100": {
-     "col": 4,
-     "named": null,
-     "row": 4,
-     "tile": 100
-    },
-    "101": {
-     "col": 5,
-     "named": null,
-     "row": 4,
-     "tile": 101
-    },
-    "102": {
-     "col": 6,
-     "named": null,
-     "row": 4,
-     "tile": 102
-    },
-    "103": {
-     "col": 7,
-     "named": null,
-     "row": 4,
-     "tile": 103
-    },
-    "104": {
-     "col": 8,
-     "named": null,
-     "row": 4,
-     "tile": 104
-    },
-    "105": {
-     "col": 9,
-     "named": null,
-     "row": 4,
-     "tile": 105
-    },
-    "106": {
-     "col": 10,
-     "named": null,
-     "row": 4,
-     "tile": 106
-    },
-    "107": {
-     "col": 11,
-     "named": null,
-     "row": 4,
-     "tile": 107
-    },
-    "108": {
-     "col": 12,
-     "named": null,
-     "row": 4,
-     "tile": 108
-    },
-    "109": {
-     "col": 13,
-     "named": null,
-     "row": 4,
-     "tile": 109
-    },
     "11": {
      "col": 11,
-     "named": null,
+     "named": "FOREST_LEFT_WALL_3",
      "row": 0,
      "tile": 11
     },
-    "110": {
-     "col": 14,
-     "named": null,
-     "row": 4,
-     "tile": 110
-    },
-    "111": {
-     "col": 15,
-     "named": null,
-     "row": 4,
-     "tile": 111
-    },
-    "112": {
-     "col": 16,
-     "named": null,
-     "row": 4,
-     "tile": 112
-    },
-    "113": {
-     "col": 17,
-     "named": null,
-     "row": 4,
-     "tile": 113
-    },
-    "114": {
-     "col": 18,
-     "named": null,
-     "row": 4,
-     "tile": 114
-    },
-    "115": {
-     "col": 19,
-     "named": null,
-     "row": 4,
-     "tile": 115
-    },
-    "116": {
-     "col": 20,
-     "named": null,
-     "row": 4,
-     "tile": 116
-    },
-    "117": {
-     "col": 21,
-     "named": null,
-     "row": 4,
-     "tile": 117
-    },
-    "118": {
-     "col": 22,
-     "named": null,
-     "row": 4,
-     "tile": 118
-    },
-    "119": {
-     "col": 23,
-     "named": null,
-     "row": 4,
-     "tile": 119
-    },
     "12": {
      "col": 12,
-     "named": null,
+     "named": "FOREST_TOP_LEFT_TREETOP",
      "row": 0,
      "tile": 12
     },
-    "120": {
-     "col": 0,
-     "named": "FOREST_TREE",
-     "row": 5,
-     "tile": 120
-    },
-    "121": {
-     "col": 1,
-     "named": null,
-     "row": 5,
-     "tile": 121
-    },
-    "122": {
-     "col": 2,
-     "named": null,
-     "row": 5,
-     "tile": 122
-    },
-    "123": {
-     "col": 3,
-     "named": null,
-     "row": 5,
-     "tile": 123
-    },
-    "124": {
-     "col": 4,
-     "named": null,
-     "row": 5,
-     "tile": 124
-    },
-    "125": {
-     "col": 5,
-     "named": null,
-     "row": 5,
-     "tile": 125
-    },
-    "126": {
-     "col": 6,
-     "named": null,
-     "row": 5,
-     "tile": 126
-    },
-    "127": {
-     "col": 7,
-     "named": null,
-     "row": 5,
-     "tile": 127
-    },
-    "128": {
-     "col": 8,
-     "named": null,
-     "row": 5,
-     "tile": 128
-    },
-    "129": {
-     "col": 9,
-     "named": null,
-     "row": 5,
-     "tile": 129
-    },
     "13": {
      "col": 13,
-     "named": null,
+     "named": "FOREST_TOP_RIGHT_TREETOP",
      "row": 0,
      "tile": 13
     },
-    "130": {
-     "col": 10,
-     "named": null,
-     "row": 5,
-     "tile": 130
-    },
-    "131": {
-     "col": 11,
-     "named": null,
-     "row": 5,
-     "tile": 131
-    },
-    "132": {
-     "col": 12,
-     "named": null,
-     "row": 5,
-     "tile": 132
-    },
-    "133": {
-     "col": 13,
-     "named": null,
-     "row": 5,
-     "tile": 133
-    },
-    "134": {
-     "col": 14,
-     "named": null,
-     "row": 5,
-     "tile": 134
-    },
-    "135": {
-     "col": 15,
-     "named": null,
-     "row": 5,
-     "tile": 135
-    },
-    "136": {
-     "col": 16,
-     "named": null,
-     "row": 5,
-     "tile": 136
-    },
-    "137": {
-     "col": 17,
-     "named": null,
-     "row": 5,
-     "tile": 137
-    },
-    "138": {
-     "col": 18,
-     "named": null,
-     "row": 5,
-     "tile": 138
-    },
-    "139": {
-     "col": 19,
-     "named": null,
-     "row": 5,
-     "tile": 139
-    },
     "14": {
      "col": 14,
-     "named": null,
+     "named": "FOREST_STUMP_TL",
      "row": 0,
      "tile": 14
     },
-    "140": {
-     "col": 20,
-     "named": null,
-     "row": 5,
-     "tile": 140
-    },
-    "141": {
-     "col": 21,
-     "named": null,
-     "row": 5,
-     "tile": 141
-    },
-    "142": {
-     "col": 22,
-     "named": null,
-     "row": 5,
-     "tile": 142
-    },
-    "143": {
-     "col": 23,
-     "named": null,
-     "row": 5,
-     "tile": 143
-    },
-    "144": {
-     "col": 0,
-     "named": null,
-     "row": 6,
-     "tile": 144
-    },
-    "145": {
-     "col": 1,
-     "named": null,
-     "row": 6,
-     "tile": 145
-    },
-    "146": {
-     "col": 2,
-     "named": null,
-     "row": 6,
-     "tile": 146
-    },
-    "147": {
-     "col": 3,
-     "named": null,
-     "row": 6,
-     "tile": 147
-    },
-    "148": {
-     "col": 4,
-     "named": null,
-     "row": 6,
-     "tile": 148
-    },
-    "149": {
-     "col": 5,
-     "named": null,
-     "row": 6,
-     "tile": 149
-    },
     "15": {
      "col": 15,
-     "named": null,
+     "named": "FOREST_STUMP_TR",
      "row": 0,
      "tile": 15
     },
-    "150": {
-     "col": 6,
-     "named": null,
-     "row": 6,
-     "tile": 150
-    },
-    "151": {
-     "col": 7,
-     "named": null,
-     "row": 6,
-     "tile": 151
-    },
-    "152": {
-     "col": 8,
-     "named": null,
-     "row": 6,
-     "tile": 152
-    },
-    "153": {
-     "col": 9,
-     "named": null,
-     "row": 6,
-     "tile": 153
-    },
-    "154": {
-     "col": 10,
-     "named": null,
-     "row": 6,
-     "tile": 154
-    },
-    "155": {
-     "col": 11,
-     "named": null,
-     "row": 6,
-     "tile": 155
-    },
-    "156": {
-     "col": 12,
-     "named": null,
-     "row": 6,
-     "tile": 156
-    },
-    "157": {
-     "col": 13,
-     "named": null,
-     "row": 6,
-     "tile": 157
-    },
-    "158": {
-     "col": 14,
-     "named": null,
-     "row": 6,
-     "tile": 158
-    },
-    "159": {
-     "col": 15,
-     "named": null,
-     "row": 6,
-     "tile": 159
-    },
     "16": {
-     "col": 16,
-     "named": null,
-     "row": 0,
+     "col": 0,
+     "named": "FOREST_BOTTOM_LEFT_CORNER_WALL",
+     "row": 1,
      "tile": 16
     },
-    "160": {
-     "col": 16,
-     "named": null,
-     "row": 6,
-     "tile": 160
-    },
-    "161": {
-     "col": 17,
-     "named": null,
-     "row": 6,
-     "tile": 161
-    },
-    "162": {
-     "col": 18,
-     "named": null,
-     "row": 6,
-     "tile": 162
-    },
-    "163": {
-     "col": 19,
-     "named": null,
-     "row": 6,
-     "tile": 163
-    },
-    "164": {
-     "col": 20,
-     "named": null,
-     "row": 6,
-     "tile": 164
-    },
-    "165": {
-     "col": 21,
-     "named": null,
-     "row": 6,
-     "tile": 165
-    },
-    "166": {
-     "col": 22,
-     "named": null,
-     "row": 6,
-     "tile": 166
-    },
-    "167": {
-     "col": 23,
-     "named": null,
-     "row": 6,
-     "tile": 167
-    },
-    "168": {
-     "col": 0,
-     "named": null,
-     "row": 7,
-     "tile": 168
-    },
-    "169": {
-     "col": 1,
-     "named": null,
-     "row": 7,
-     "tile": 169
-    },
     "17": {
-     "col": 17,
-     "named": null,
-     "row": 0,
+     "col": 1,
+     "named": "FOREST_BOTTOM_WALL_1",
+     "row": 1,
      "tile": 17
     },
-    "170": {
-     "col": 2,
-     "named": null,
-     "row": 7,
-     "tile": 170
-    },
-    "171": {
-     "col": 3,
-     "named": null,
-     "row": 7,
-     "tile": 171
-    },
-    "172": {
-     "col": 4,
-     "named": null,
-     "row": 7,
-     "tile": 172
-    },
-    "173": {
-     "col": 5,
-     "named": null,
-     "row": 7,
-     "tile": 173
-    },
-    "174": {
-     "col": 6,
-     "named": null,
-     "row": 7,
-     "tile": 174
-    },
-    "175": {
-     "col": 7,
-     "named": null,
-     "row": 7,
-     "tile": 175
-    },
-    "176": {
-     "col": 8,
-     "named": null,
-     "row": 7,
-     "tile": 176
-    },
-    "177": {
-     "col": 9,
-     "named": null,
-     "row": 7,
-     "tile": 177
-    },
-    "178": {
-     "col": 10,
-     "named": null,
-     "row": 7,
-     "tile": 178
-    },
-    "179": {
-     "col": 11,
-     "named": null,
-     "row": 7,
-     "tile": 179
-    },
     "18": {
-     "col": 18,
-     "named": null,
-     "row": 0,
+     "col": 2,
+     "named": "FOREST_BOTTOM_WALL_2",
+     "row": 1,
      "tile": 18
     },
-    "180": {
-     "col": 12,
-     "named": null,
-     "row": 7,
-     "tile": 180
-    },
-    "181": {
-     "col": 13,
-     "named": null,
-     "row": 7,
-     "tile": 181
-    },
-    "182": {
-     "col": 14,
-     "named": null,
-     "row": 7,
-     "tile": 182
-    },
-    "183": {
-     "col": 15,
-     "named": null,
-     "row": 7,
-     "tile": 183
-    },
-    "184": {
-     "col": 16,
-     "named": null,
-     "row": 7,
-     "tile": 184
-    },
-    "185": {
-     "col": 17,
-     "named": null,
-     "row": 7,
-     "tile": 185
-    },
-    "186": {
-     "col": 18,
-     "named": null,
-     "row": 7,
-     "tile": 186
-    },
-    "187": {
-     "col": 19,
-     "named": null,
-     "row": 7,
-     "tile": 187
-    },
-    "188": {
-     "col": 20,
-     "named": null,
-     "row": 7,
-     "tile": 188
-    },
-    "189": {
-     "col": 21,
-     "named": null,
-     "row": 7,
-     "tile": 189
-    },
     "19": {
-     "col": 19,
-     "named": null,
-     "row": 0,
-     "tile": 19
-    },
-    "190": {
-     "col": 22,
-     "named": null,
-     "row": 7,
-     "tile": 190
-    },
-    "191": {
-     "col": 23,
-     "named": null,
-     "row": 7,
-     "tile": 191
-    },
-    "192": {
-     "col": 0,
-     "named": null,
-     "row": 8,
-     "tile": 192
-    },
-    "193": {
-     "col": 1,
-     "named": null,
-     "row": 8,
-     "tile": 193
-    },
-    "194": {
-     "col": 2,
-     "named": null,
-     "row": 8,
-     "tile": 194
-    },
-    "195": {
      "col": 3,
-     "named": null,
-     "row": 8,
-     "tile": 195
-    },
-    "196": {
-     "col": 4,
-     "named": null,
-     "row": 8,
-     "tile": 196
-    },
-    "197": {
-     "col": 5,
-     "named": null,
-     "row": 8,
-     "tile": 197
-    },
-    "198": {
-     "col": 6,
-     "named": null,
-     "row": 8,
-     "tile": 198
-    },
-    "199": {
-     "col": 7,
-     "named": null,
-     "row": 8,
-     "tile": 199
+     "named": "FOREST_BOTTOM_WALL_3",
+     "row": 1,
+     "tile": 19
     },
     "2": {
      "col": 2,
-     "named": null,
+     "named": "FOREST_TOP_WALL_2",
      "row": 0,
      "tile": 2
     },
     "20": {
-     "col": 20,
-     "named": null,
-     "row": 0,
+     "col": 4,
+     "named": "FOREST_BOTTOM_WALL_4",
+     "row": 1,
      "tile": 20
     },
-    "200": {
-     "col": 8,
-     "named": null,
-     "row": 8,
-     "tile": 200
-    },
-    "201": {
-     "col": 9,
-     "named": null,
-     "row": 8,
-     "tile": 201
-    },
-    "202": {
-     "col": 10,
-     "named": null,
-     "row": 8,
-     "tile": 202
-    },
-    "203": {
-     "col": 11,
-     "named": null,
-     "row": 8,
-     "tile": 203
-    },
-    "204": {
-     "col": 12,
-     "named": null,
-     "row": 8,
-     "tile": 204
-    },
-    "205": {
-     "col": 13,
-     "named": null,
-     "row": 8,
-     "tile": 205
-    },
-    "206": {
-     "col": 14,
-     "named": null,
-     "row": 8,
-     "tile": 206
-    },
-    "207": {
-     "col": 15,
-     "named": null,
-     "row": 8,
-     "tile": 207
-    },
-    "208": {
-     "col": 16,
-     "named": null,
-     "row": 8,
-     "tile": 208
-    },
-    "209": {
-     "col": 17,
-     "named": null,
-     "row": 8,
-     "tile": 209
-    },
     "21": {
-     "col": 21,
-     "named": null,
-     "row": 0,
+     "col": 5,
+     "named": "FOREST_FLOOR_WALKABLE_1",
+     "row": 1,
      "tile": 21
     },
-    "210": {
-     "col": 18,
-     "named": null,
-     "row": 8,
-     "tile": 210
-    },
-    "211": {
-     "col": 19,
-     "named": null,
-     "row": 8,
-     "tile": 211
-    },
-    "212": {
-     "col": 20,
-     "named": null,
-     "row": 8,
-     "tile": 212
-    },
-    "213": {
-     "col": 21,
-     "named": null,
-     "row": 8,
-     "tile": 213
-    },
-    "214": {
-     "col": 22,
-     "named": null,
-     "row": 8,
-     "tile": 214
-    },
-    "215": {
-     "col": 23,
-     "named": null,
-     "row": 8,
-     "tile": 215
-    },
-    "216": {
-     "col": 0,
-     "named": null,
-     "row": 9,
-     "tile": 216
-    },
-    "217": {
-     "col": 1,
-     "named": "FOREST_FLOOR",
-     "row": 9,
-     "tile": 217
-    },
-    "218": {
-     "col": 2,
-     "named": null,
-     "row": 9,
-     "tile": 218
-    },
-    "219": {
-     "col": 3,
-     "named": null,
-     "row": 9,
-     "tile": 219
-    },
     "22": {
-     "col": 22,
-     "named": null,
-     "row": 0,
+     "col": 6,
+     "named": "FOREST_FLOOR_WALKABLE_2",
+     "row": 1,
      "tile": 22
     },
-    "220": {
-     "col": 4,
-     "named": null,
-     "row": 9,
-     "tile": 220
-    },
-    "221": {
-     "col": 5,
-     "named": null,
-     "row": 9,
-     "tile": 221
-    },
-    "222": {
-     "col": 6,
-     "named": null,
-     "row": 9,
-     "tile": 222
-    },
-    "223": {
-     "col": 7,
-     "named": null,
-     "row": 9,
-     "tile": 223
-    },
-    "224": {
-     "col": 8,
-     "named": null,
-     "row": 9,
-     "tile": 224
-    },
-    "225": {
-     "col": 9,
-     "named": null,
-     "row": 9,
-     "tile": 225
-    },
-    "226": {
-     "col": 10,
-     "named": null,
-     "row": 9,
-     "tile": 226
-    },
-    "227": {
-     "col": 11,
-     "named": null,
-     "row": 9,
-     "tile": 227
-    },
-    "228": {
-     "col": 12,
-     "named": null,
-     "row": 9,
-     "tile": 228
-    },
-    "229": {
-     "col": 13,
-     "named": null,
-     "row": 9,
-     "tile": 229
-    },
     "23": {
-     "col": 23,
-     "named": null,
-     "row": 0,
+     "col": 7,
+     "named": "FOREST_FLOOR_WALKABLE_3",
+     "row": 1,
      "tile": 23
     },
-    "230": {
-     "col": 14,
-     "named": null,
-     "row": 9,
-     "tile": 230
-    },
-    "231": {
-     "col": 15,
-     "named": null,
-     "row": 9,
-     "tile": 231
-    },
-    "232": {
-     "col": 16,
-     "named": null,
-     "row": 9,
-     "tile": 232
-    },
-    "233": {
-     "col": 17,
-     "named": null,
-     "row": 9,
-     "tile": 233
-    },
-    "234": {
-     "col": 18,
-     "named": null,
-     "row": 9,
-     "tile": 234
-    },
-    "235": {
-     "col": 19,
-     "named": null,
-     "row": 9,
-     "tile": 235
-    },
-    "236": {
-     "col": 20,
-     "named": null,
-     "row": 9,
-     "tile": 236
-    },
-    "237": {
-     "col": 21,
-     "named": null,
-     "row": 9,
-     "tile": 237
-    },
-    "238": {
-     "col": 22,
-     "named": null,
-     "row": 9,
-     "tile": 238
-    },
-    "239": {
-     "col": 23,
-     "named": null,
-     "row": 9,
-     "tile": 239
-    },
     "24": {
-     "col": 0,
-     "named": null,
+     "col": 8,
+     "named": "FOREST_FLOOR_WALKABLE_4",
      "row": 1,
      "tile": 24
     },
-    "240": {
-     "col": 0,
-     "named": null,
-     "row": 10,
-     "tile": 240
-    },
-    "241": {
-     "col": 1,
-     "named": null,
-     "row": 10,
-     "tile": 241
-    },
-    "242": {
-     "col": 2,
-     "named": null,
-     "row": 10,
-     "tile": 242
-    },
-    "243": {
-     "col": 3,
-     "named": null,
-     "row": 10,
-     "tile": 243
-    },
-    "244": {
-     "col": 4,
-     "named": null,
-     "row": 10,
-     "tile": 244
-    },
-    "245": {
-     "col": 5,
-     "named": null,
-     "row": 10,
-     "tile": 245
-    },
-    "246": {
-     "col": 6,
-     "named": null,
-     "row": 10,
-     "tile": 246
-    },
-    "247": {
-     "col": 7,
-     "named": null,
-     "row": 10,
-     "tile": 247
-    },
-    "248": {
-     "col": 8,
-     "named": null,
-     "row": 10,
-     "tile": 248
-    },
-    "249": {
-     "col": 9,
-     "named": null,
-     "row": 10,
-     "tile": 249
-    },
     "25": {
-     "col": 1,
-     "named": null,
+     "col": 9,
+     "named": "FOREST_RIGHT_WALL_4",
      "row": 1,
      "tile": 25
     },
-    "250": {
-     "col": 10,
-     "named": null,
-     "row": 10,
-     "tile": 250
-    },
-    "251": {
-     "col": 11,
-     "named": null,
-     "row": 10,
-     "tile": 251
-    },
-    "252": {
-     "col": 12,
-     "named": null,
-     "row": 10,
-     "tile": 252
-    },
-    "253": {
-     "col": 13,
-     "named": null,
-     "row": 10,
-     "tile": 253
-    },
-    "254": {
-     "col": 14,
-     "named": null,
-     "row": 10,
-     "tile": 254
-    },
-    "255": {
-     "col": 15,
-     "named": null,
-     "row": 10,
-     "tile": 255
-    },
-    "256": {
-     "col": 16,
-     "named": null,
-     "row": 10,
-     "tile": 256
-    },
-    "257": {
-     "col": 17,
-     "named": null,
-     "row": 10,
-     "tile": 257
-    },
-    "258": {
-     "col": 18,
-     "named": null,
-     "row": 10,
-     "tile": 258
-    },
-    "259": {
-     "col": 19,
-     "named": null,
-     "row": 10,
-     "tile": 259
-    },
     "26": {
-     "col": 2,
-     "named": null,
+     "col": 10,
+     "named": "FOREST_BOTTOM_RIGHT_CORNER_WALL",
      "row": 1,
      "tile": 26
     },
-    "260": {
-     "col": 20,
-     "named": null,
-     "row": 10,
-     "tile": 260
-    },
-    "261": {
-     "col": 21,
-     "named": null,
-     "row": 10,
-     "tile": 261
-    },
-    "262": {
-     "col": 22,
-     "named": null,
-     "row": 10,
-     "tile": 262
-    },
-    "263": {
-     "col": 23,
-     "named": null,
-     "row": 10,
-     "tile": 263
-    },
-    "264": {
-     "col": 0,
-     "named": null,
-     "row": 11,
-     "tile": 264
-    },
-    "265": {
-     "col": 1,
-     "named": null,
-     "row": 11,
-     "tile": 265
-    },
-    "266": {
-     "col": 2,
-     "named": null,
-     "row": 11,
-     "tile": 266
-    },
-    "267": {
-     "col": 3,
-     "named": null,
-     "row": 11,
-     "tile": 267
-    },
-    "268": {
-     "col": 4,
-     "named": null,
-     "row": 11,
-     "tile": 268
-    },
-    "269": {
-     "col": 5,
-     "named": null,
-     "row": 11,
-     "tile": 269
-    },
     "27": {
-     "col": 3,
-     "named": null,
+     "col": 11,
+     "named": "FOREST_LEFT_WALL_4",
      "row": 1,
      "tile": 27
     },
-    "270": {
-     "col": 6,
-     "named": null,
-     "row": 11,
-     "tile": 270
-    },
-    "271": {
-     "col": 7,
-     "named": null,
-     "row": 11,
-     "tile": 271
-    },
-    "272": {
-     "col": 8,
-     "named": null,
-     "row": 11,
-     "tile": 272
-    },
-    "273": {
-     "col": 9,
-     "named": null,
-     "row": 11,
-     "tile": 273
-    },
-    "274": {
-     "col": 10,
-     "named": null,
-     "row": 11,
-     "tile": 274
-    },
-    "275": {
-     "col": 11,
-     "named": null,
-     "row": 11,
-     "tile": 275
-    },
-    "276": {
-     "col": 12,
-     "named": null,
-     "row": 11,
-     "tile": 276
-    },
-    "277": {
-     "col": 13,
-     "named": null,
-     "row": 11,
-     "tile": 277
-    },
-    "278": {
-     "col": 14,
-     "named": null,
-     "row": 11,
-     "tile": 278
-    },
-    "279": {
-     "col": 15,
-     "named": null,
-     "row": 11,
-     "tile": 279
-    },
     "28": {
-     "col": 4,
-     "named": null,
+     "col": 12,
+     "named": "FOREST_BOTTOM_LEFT_TREETRUNK",
      "row": 1,
      "tile": 28
     },
-    "280": {
-     "col": 16,
-     "named": null,
-     "row": 11,
-     "tile": 280
-    },
-    "281": {
-     "col": 17,
-     "named": null,
-     "row": 11,
-     "tile": 281
-    },
-    "282": {
-     "col": 18,
-     "named": null,
-     "row": 11,
-     "tile": 282
-    },
-    "283": {
-     "col": 19,
-     "named": null,
-     "row": 11,
-     "tile": 283
-    },
-    "284": {
-     "col": 20,
-     "named": null,
-     "row": 11,
-     "tile": 284
-    },
-    "285": {
-     "col": 21,
-     "named": null,
-     "row": 11,
-     "tile": 285
-    },
-    "286": {
-     "col": 22,
-     "named": null,
-     "row": 11,
-     "tile": 286
-    },
-    "287": {
-     "col": 23,
-     "named": null,
-     "row": 11,
-     "tile": 287
-    },
-    "288": {
-     "col": 0,
-     "named": null,
-     "row": 12,
-     "tile": 288
-    },
-    "289": {
-     "col": 1,
-     "named": null,
-     "row": 12,
-     "tile": 289
-    },
     "29": {
-     "col": 5,
-     "named": null,
+     "col": 13,
+     "named": "FOREST_BOTTOM_RIGHT_TREETRUNK",
      "row": 1,
      "tile": 29
     },
-    "290": {
-     "col": 2,
-     "named": null,
-     "row": 12,
-     "tile": 290
-    },
-    "291": {
-     "col": 3,
-     "named": null,
-     "row": 12,
-     "tile": 291
-    },
-    "292": {
-     "col": 4,
-     "named": null,
-     "row": 12,
-     "tile": 292
-    },
-    "293": {
-     "col": 5,
-     "named": null,
-     "row": 12,
-     "tile": 293
-    },
-    "294": {
-     "col": 6,
-     "named": null,
-     "row": 12,
-     "tile": 294
-    },
-    "295": {
-     "col": 7,
-     "named": null,
-     "row": 12,
-     "tile": 295
-    },
-    "296": {
-     "col": 8,
-     "named": null,
-     "row": 12,
-     "tile": 296
-    },
-    "297": {
-     "col": 9,
-     "named": null,
-     "row": 12,
-     "tile": 297
-    },
-    "298": {
-     "col": 10,
-     "named": null,
-     "row": 12,
-     "tile": 298
-    },
-    "299": {
-     "col": 11,
-     "named": null,
-     "row": 12,
-     "tile": 299
-    },
     "3": {
      "col": 3,
-     "named": null,
+     "named": "FOREST_TOP_WALL_3",
      "row": 0,
      "tile": 3
     },
     "30": {
-     "col": 6,
-     "named": null,
+     "col": 14,
+     "named": "FOREST_STUMP_BL",
      "row": 1,
      "tile": 30
     },
-    "300": {
-     "col": 12,
-     "named": null,
-     "row": 12,
-     "tile": 300
-    },
-    "301": {
-     "col": 13,
-     "named": null,
-     "row": 12,
-     "tile": 301
-    },
-    "302": {
-     "col": 14,
-     "named": null,
-     "row": 12,
-     "tile": 302
-    },
-    "303": {
-     "col": 15,
-     "named": null,
-     "row": 12,
-     "tile": 303
-    },
-    "304": {
-     "col": 16,
-     "named": null,
-     "row": 12,
-     "tile": 304
-    },
-    "305": {
-     "col": 17,
-     "named": null,
-     "row": 12,
-     "tile": 305
-    },
-    "306": {
-     "col": 18,
-     "named": null,
-     "row": 12,
-     "tile": 306
-    },
-    "307": {
-     "col": 19,
-     "named": null,
-     "row": 12,
-     "tile": 307
-    },
-    "308": {
-     "col": 20,
-     "named": null,
-     "row": 12,
-     "tile": 308
-    },
-    "309": {
-     "col": 21,
-     "named": null,
-     "row": 12,
-     "tile": 309
-    },
     "31": {
-     "col": 7,
-     "named": null,
+     "col": 15,
+     "named": "FOREST_STUMP_MINI",
      "row": 1,
      "tile": 31
     },
-    "310": {
-     "col": 22,
-     "named": null,
-     "row": 12,
-     "tile": 310
-    },
-    "311": {
-     "col": 23,
-     "named": null,
-     "row": 12,
-     "tile": 311
-    },
-    "312": {
-     "col": 0,
-     "named": null,
-     "row": 13,
-     "tile": 312
-    },
-    "313": {
-     "col": 1,
-     "named": null,
-     "row": 13,
-     "tile": 313
-    },
-    "314": {
-     "col": 2,
-     "named": null,
-     "row": 13,
-     "tile": 314
-    },
-    "315": {
-     "col": 3,
-     "named": null,
-     "row": 13,
-     "tile": 315
-    },
-    "316": {
-     "col": 4,
-     "named": null,
-     "row": 13,
-     "tile": 316
-    },
-    "317": {
-     "col": 5,
-     "named": null,
-     "row": 13,
-     "tile": 317
-    },
-    "318": {
-     "col": 6,
-     "named": null,
-     "row": 13,
-     "tile": 318
-    },
-    "319": {
-     "col": 7,
-     "named": null,
-     "row": 13,
-     "tile": 319
-    },
     "32": {
-     "col": 8,
-     "named": "EXTERIOR_WALL",
-     "row": 1,
+     "col": 0,
+     "named": "FOREST_FLOOR",
+     "row": 2,
      "tile": 32
     },
-    "320": {
-     "col": 8,
-     "named": null,
-     "row": 13,
-     "tile": 320
-    },
-    "321": {
-     "col": 9,
-     "named": null,
-     "row": 13,
-     "tile": 321
-    },
-    "322": {
-     "col": 10,
-     "named": null,
-     "row": 13,
-     "tile": 322
-    },
-    "323": {
-     "col": 11,
-     "named": null,
-     "row": 13,
-     "tile": 323
-    },
-    "324": {
-     "col": 12,
-     "named": null,
-     "row": 13,
-     "tile": 324
-    },
-    "325": {
-     "col": 13,
-     "named": null,
-     "row": 13,
-     "tile": 325
-    },
-    "326": {
-     "col": 14,
-     "named": null,
-     "row": 13,
-     "tile": 326
-    },
-    "327": {
-     "col": 15,
-     "named": null,
-     "row": 13,
-     "tile": 327
-    },
-    "328": {
-     "col": 16,
-     "named": null,
-     "row": 13,
-     "tile": 328
-    },
-    "329": {
-     "col": 17,
-     "named": null,
-     "row": 13,
-     "tile": 329
-    },
     "33": {
-     "col": 9,
-     "named": null,
-     "row": 1,
+     "col": 1,
+     "named": "FOREST_HERO_01",
+     "row": 2,
      "tile": 33
     },
-    "330": {
-     "col": 18,
-     "named": null,
-     "row": 13,
-     "tile": 330
-    },
-    "331": {
-     "col": 19,
-     "named": null,
-     "row": 13,
-     "tile": 331
-    },
-    "332": {
-     "col": 20,
-     "named": null,
-     "row": 13,
-     "tile": 332
-    },
-    "333": {
-     "col": 21,
-     "named": null,
-     "row": 13,
-     "tile": 333
-    },
-    "334": {
-     "col": 22,
-     "named": null,
-     "row": 13,
-     "tile": 334
-    },
-    "335": {
-     "col": 23,
-     "named": null,
-     "row": 13,
-     "tile": 335
-    },
-    "336": {
-     "col": 0,
-     "named": "FOREST_STUMP_TL",
-     "row": 14,
-     "tile": 336
-    },
-    "337": {
-     "col": 1,
-     "named": "FOREST_STUMP_TR",
-     "row": 14,
-     "tile": 337
-    },
-    "338": {
-     "col": 2,
-     "named": null,
-     "row": 14,
-     "tile": 338
-    },
-    "339": {
-     "col": 3,
-     "named": null,
-     "row": 14,
-     "tile": 339
-    },
     "34": {
-     "col": 10,
-     "named": null,
-     "row": 1,
+     "col": 2,
+     "named": "FOREST_HERO_02",
+     "row": 2,
      "tile": 34
     },
-    "340": {
-     "col": 4,
-     "named": null,
-     "row": 14,
-     "tile": 340
-    },
-    "341": {
-     "col": 5,
-     "named": null,
-     "row": 14,
-     "tile": 341
-    },
-    "342": {
-     "col": 6,
-     "named": null,
-     "row": 14,
-     "tile": 342
-    },
-    "343": {
-     "col": 7,
-     "named": null,
-     "row": 14,
-     "tile": 343
-    },
-    "344": {
-     "col": 8,
-     "named": null,
-     "row": 14,
-     "tile": 344
-    },
-    "345": {
-     "col": 9,
-     "named": null,
-     "row": 14,
-     "tile": 345
-    },
-    "346": {
-     "col": 10,
-     "named": null,
-     "row": 14,
-     "tile": 346
-    },
-    "347": {
-     "col": 11,
-     "named": null,
-     "row": 14,
-     "tile": 347
-    },
-    "348": {
-     "col": 12,
-     "named": null,
-     "row": 14,
-     "tile": 348
-    },
-    "349": {
-     "col": 13,
-     "named": null,
-     "row": 14,
-     "tile": 349
-    },
     "35": {
-     "col": 11,
-     "named": null,
-     "row": 1,
+     "col": 3,
+     "named": "FOREST_KOBOLD_01",
+     "row": 2,
      "tile": 35
     },
-    "350": {
-     "col": 14,
-     "named": null,
-     "row": 14,
-     "tile": 350
-    },
-    "351": {
-     "col": 15,
-     "named": null,
-     "row": 14,
-     "tile": 351
-    },
-    "352": {
-     "col": 16,
-     "named": null,
-     "row": 14,
-     "tile": 352
-    },
-    "353": {
-     "col": 17,
-     "named": null,
-     "row": 14,
-     "tile": 353
-    },
-    "354": {
-     "col": 18,
-     "named": null,
-     "row": 14,
-     "tile": 354
-    },
-    "355": {
-     "col": 19,
-     "named": null,
-     "row": 14,
-     "tile": 355
-    },
-    "356": {
-     "col": 20,
-     "named": null,
-     "row": 14,
-     "tile": 356
-    },
-    "357": {
-     "col": 21,
-     "named": null,
-     "row": 14,
-     "tile": 357
-    },
-    "358": {
-     "col": 22,
-     "named": null,
-     "row": 14,
-     "tile": 358
-    },
-    "359": {
-     "col": 23,
-     "named": null,
-     "row": 14,
-     "tile": 359
-    },
     "36": {
-     "col": 12,
-     "named": null,
-     "row": 1,
+     "col": 4,
+     "named": "FOREST_KOBOLD_02",
+     "row": 2,
      "tile": 36
     },
-    "360": {
-     "col": 0,
-     "named": "FOREST_STUMP_BL",
-     "row": 15,
-     "tile": 360
-    },
-    "361": {
-     "col": 1,
-     "named": "FOREST_STUMP_BR",
-     "row": 15,
-     "tile": 361
-    },
-    "362": {
-     "col": 2,
-     "named": null,
-     "row": 15,
-     "tile": 362
-    },
-    "363": {
-     "col": 3,
-     "named": null,
-     "row": 15,
-     "tile": 363
-    },
-    "364": {
-     "col": 4,
-     "named": null,
-     "row": 15,
-     "tile": 364
-    },
-    "365": {
-     "col": 5,
-     "named": null,
-     "row": 15,
-     "tile": 365
-    },
-    "366": {
-     "col": 6,
-     "named": null,
-     "row": 15,
-     "tile": 366
-    },
-    "367": {
-     "col": 7,
-     "named": null,
-     "row": 15,
-     "tile": 367
-    },
-    "368": {
-     "col": 8,
-     "named": null,
-     "row": 15,
-     "tile": 368
-    },
-    "369": {
-     "col": 9,
-     "named": null,
-     "row": 15,
-     "tile": 369
-    },
     "37": {
-     "col": 13,
-     "named": null,
-     "row": 1,
+     "col": 5,
+     "named": "FOREST_FIRE_01",
+     "row": 2,
      "tile": 37
     },
-    "370": {
-     "col": 10,
-     "named": null,
-     "row": 15,
-     "tile": 370
-    },
-    "371": {
-     "col": 11,
-     "named": null,
-     "row": 15,
-     "tile": 371
-    },
-    "372": {
-     "col": 12,
-     "named": null,
-     "row": 15,
-     "tile": 372
-    },
-    "373": {
-     "col": 13,
-     "named": null,
-     "row": 15,
-     "tile": 373
-    },
-    "374": {
-     "col": 14,
-     "named": null,
-     "row": 15,
-     "tile": 374
-    },
-    "375": {
-     "col": 15,
-     "named": null,
-     "row": 15,
-     "tile": 375
-    },
-    "376": {
-     "col": 16,
-     "named": null,
-     "row": 15,
-     "tile": 376
-    },
-    "377": {
-     "col": 17,
-     "named": null,
-     "row": 15,
-     "tile": 377
-    },
-    "378": {
-     "col": 18,
-     "named": null,
-     "row": 15,
-     "tile": 378
-    },
-    "379": {
-     "col": 19,
-     "named": null,
-     "row": 15,
-     "tile": 379
-    },
     "38": {
-     "col": 14,
-     "named": null,
-     "row": 1,
+     "col": 6,
+     "named": "FOREST_FIRE_02",
+     "row": 2,
      "tile": 38
     },
-    "380": {
-     "col": 20,
-     "named": null,
-     "row": 15,
-     "tile": 380
-    },
-    "381": {
-     "col": 21,
-     "named": null,
-     "row": 15,
-     "tile": 381
-    },
-    "382": {
-     "col": 22,
-     "named": null,
-     "row": 15,
-     "tile": 382
-    },
-    "383": {
-     "col": 23,
-     "named": null,
-     "row": 15,
-     "tile": 383
-    },
-    "384": {
-     "col": 0,
-     "named": null,
-     "row": 16,
-     "tile": 384
-    },
-    "385": {
-     "col": 1,
-     "named": null,
-     "row": 16,
-     "tile": 385
-    },
-    "386": {
-     "col": 2,
-     "named": "FOREST_STUMP_MINI",
-     "row": 16,
-     "tile": 386
-    },
-    "387": {
-     "col": 3,
-     "named": null,
-     "row": 16,
-     "tile": 387
-    },
-    "388": {
-     "col": 4,
-     "named": null,
-     "row": 16,
-     "tile": 388
-    },
-    "389": {
-     "col": 5,
-     "named": null,
-     "row": 16,
-     "tile": 389
-    },
     "39": {
-     "col": 15,
-     "named": null,
-     "row": 1,
-     "tile": 39
-    },
-    "390": {
-     "col": 6,
-     "named": null,
-     "row": 16,
-     "tile": 390
-    },
-    "391": {
      "col": 7,
-     "named": null,
-     "row": 16,
-     "tile": 391
-    },
-    "392": {
-     "col": 8,
-     "named": null,
-     "row": 16,
-     "tile": 392
-    },
-    "393": {
-     "col": 9,
-     "named": null,
-     "row": 16,
-     "tile": 393
-    },
-    "394": {
-     "col": 10,
-     "named": null,
-     "row": 16,
-     "tile": 394
-    },
-    "395": {
-     "col": 11,
-     "named": null,
-     "row": 16,
-     "tile": 395
-    },
-    "396": {
-     "col": 12,
-     "named": null,
-     "row": 16,
-     "tile": 396
-    },
-    "397": {
-     "col": 13,
-     "named": null,
-     "row": 16,
-     "tile": 397
-    },
-    "398": {
-     "col": 14,
-     "named": null,
-     "row": 16,
-     "tile": 398
-    },
-    "399": {
-     "col": 15,
-     "named": null,
-     "row": 16,
-     "tile": 399
+     "named": "FOREST_MERCHANT",
+     "row": 2,
+     "tile": 39
     },
     "4": {
      "col": 4,
-     "named": null,
+     "named": "FOREST_TOP_WALL_4",
      "row": 0,
      "tile": 4
     },
     "40": {
-     "col": 16,
-     "named": null,
-     "row": 1,
+     "col": 8,
+     "named": "FOREST_EXIT",
+     "row": 2,
      "tile": 40
     },
-    "400": {
-     "col": 16,
-     "named": null,
-     "row": 16,
-     "tile": 400
-    },
-    "401": {
-     "col": 17,
-     "named": null,
-     "row": 16,
-     "tile": 401
-    },
-    "402": {
-     "col": 18,
-     "named": null,
-     "row": 16,
-     "tile": 402
-    },
-    "403": {
-     "col": 19,
-     "named": null,
-     "row": 16,
-     "tile": 403
-    },
-    "404": {
-     "col": 20,
-     "named": null,
-     "row": 16,
-     "tile": 404
-    },
-    "405": {
-     "col": 21,
-     "named": null,
-     "row": 16,
-     "tile": 405
-    },
-    "406": {
-     "col": 22,
-     "named": null,
-     "row": 16,
-     "tile": 406
-    },
-    "407": {
-     "col": 23,
-     "named": null,
-     "row": 16,
-     "tile": 407
-    },
     "41": {
-     "col": 17,
-     "named": null,
-     "row": 1,
+     "col": 9,
+     "named": "FOREST_BAT_01",
+     "row": 2,
      "tile": 41
     },
     "42": {
-     "col": 18,
-     "named": null,
-     "row": 1,
+     "col": 10,
+     "named": "FOREST_BAT_02",
+     "row": 2,
      "tile": 42
     },
     "43": {
-     "col": 19,
-     "named": null,
-     "row": 1,
+     "col": 11,
+     "named": "FOREST_CHEST",
+     "row": 2,
      "tile": 43
     },
     "44": {
-     "col": 20,
-     "named": null,
-     "row": 1,
+     "col": 12,
+     "named": "FOREST_FLOOR_2",
+     "row": 2,
      "tile": 44
     },
     "45": {
-     "col": 21,
-     "named": null,
-     "row": 1,
+     "col": 13,
+     "named": "FOREST_FLOOR_3",
+     "row": 2,
      "tile": 45
     },
     "46": {
-     "col": 22,
-     "named": null,
-     "row": 1,
+     "col": 14,
+     "named": "FOREST_FLOOR_4",
+     "row": 2,
      "tile": 46
     },
     "47": {
-     "col": 23,
-     "named": null,
-     "row": 1,
+     "col": 15,
+     "named": "FOREST_FLOOR_5",
+     "row": 2,
      "tile": 47
-    },
-    "48": {
-     "col": 0,
-     "named": null,
-     "row": 2,
-     "tile": 48
-    },
-    "49": {
-     "col": 1,
-     "named": null,
-     "row": 2,
-     "tile": 49
     },
     "5": {
      "col": 5,
-     "named": null,
+     "named": "FOREST_TOP_RIGHT_CORNER_WALL",
      "row": 0,
      "tile": 5
     },
-    "50": {
-     "col": 2,
-     "named": null,
-     "row": 2,
-     "tile": 50
-    },
-    "51": {
-     "col": 3,
-     "named": null,
-     "row": 2,
-     "tile": 51
-    },
-    "52": {
-     "col": 4,
-     "named": null,
-     "row": 2,
-     "tile": 52
-    },
-    "53": {
-     "col": 5,
-     "named": null,
-     "row": 2,
-     "tile": 53
-    },
-    "54": {
-     "col": 6,
-     "named": null,
-     "row": 2,
-     "tile": 54
-    },
-    "55": {
-     "col": 7,
-     "named": null,
-     "row": 2,
-     "tile": 55
-    },
-    "56": {
-     "col": 8,
-     "named": "FOREST_GATE",
-     "row": 2,
-     "tile": 56
-    },
-    "57": {
-     "col": 9,
-     "named": null,
-     "row": 2,
-     "tile": 57
-    },
-    "58": {
-     "col": 10,
-     "named": null,
-     "row": 2,
-     "tile": 58
-    },
-    "59": {
-     "col": 11,
-     "named": null,
-     "row": 2,
-     "tile": 59
-    },
     "6": {
      "col": 6,
-     "named": null,
+     "named": "FOREST_RIGHT_WALL_1",
      "row": 0,
      "tile": 6
     },
-    "60": {
-     "col": 12,
-     "named": null,
-     "row": 2,
-     "tile": 60
-    },
-    "61": {
-     "col": 13,
-     "named": null,
-     "row": 2,
-     "tile": 61
-    },
-    "62": {
-     "col": 14,
-     "named": null,
-     "row": 2,
-     "tile": 62
-    },
-    "63": {
-     "col": 15,
-     "named": null,
-     "row": 2,
-     "tile": 63
-    },
-    "64": {
-     "col": 16,
-     "named": null,
-     "row": 2,
-     "tile": 64
-    },
-    "65": {
-     "col": 17,
-     "named": null,
-     "row": 2,
-     "tile": 65
-    },
-    "66": {
-     "col": 18,
-     "named": null,
-     "row": 2,
-     "tile": 66
-    },
-    "67": {
-     "col": 19,
-     "named": null,
-     "row": 2,
-     "tile": 67
-    },
-    "68": {
-     "col": 20,
-     "named": null,
-     "row": 2,
-     "tile": 68
-    },
-    "69": {
-     "col": 21,
-     "named": null,
-     "row": 2,
-     "tile": 69
-    },
     "7": {
      "col": 7,
-     "named": null,
+     "named": "FOREST_RIGHT_WALL_2",
      "row": 0,
      "tile": 7
     },
-    "70": {
-     "col": 22,
-     "named": null,
-     "row": 2,
-     "tile": 70
-    },
-    "71": {
-     "col": 23,
-     "named": null,
-     "row": 2,
-     "tile": 71
-    },
-    "72": {
-     "col": 0,
-     "named": null,
-     "row": 3,
-     "tile": 72
-    },
-    "73": {
-     "col": 1,
-     "named": null,
-     "row": 3,
-     "tile": 73
-    },
-    "74": {
-     "col": 2,
-     "named": null,
-     "row": 3,
-     "tile": 74
-    },
-    "75": {
-     "col": 3,
-     "named": null,
-     "row": 3,
-     "tile": 75
-    },
-    "76": {
-     "col": 4,
-     "named": null,
-     "row": 3,
-     "tile": 76
-    },
-    "77": {
-     "col": 5,
-     "named": null,
-     "row": 3,
-     "tile": 77
-    },
-    "78": {
-     "col": 6,
-     "named": null,
-     "row": 3,
-     "tile": 78
-    },
-    "79": {
-     "col": 7,
-     "named": null,
-     "row": 3,
-     "tile": 79
-    },
     "8": {
      "col": 8,
-     "named": null,
+     "named": "FOREST_RIGHT_WALL_3",
      "row": 0,
      "tile": 8
     },
-    "80": {
-     "col": 8,
-     "named": null,
-     "row": 3,
-     "tile": 80
-    },
-    "81": {
-     "col": 9,
-     "named": null,
-     "row": 3,
-     "tile": 81
-    },
-    "82": {
-     "col": 10,
-     "named": null,
-     "row": 3,
-     "tile": 82
-    },
-    "83": {
-     "col": 11,
-     "named": null,
-     "row": 3,
-     "tile": 83
-    },
-    "84": {
-     "col": 12,
-     "named": null,
-     "row": 3,
-     "tile": 84
-    },
-    "85": {
-     "col": 13,
-     "named": null,
-     "row": 3,
-     "tile": 85
-    },
-    "86": {
-     "col": 14,
-     "named": null,
-     "row": 3,
-     "tile": 86
-    },
-    "87": {
-     "col": 15,
-     "named": null,
-     "row": 3,
-     "tile": 87
-    },
-    "88": {
-     "col": 16,
-     "named": null,
-     "row": 3,
-     "tile": 88
-    },
-    "89": {
-     "col": 17,
-     "named": null,
-     "row": 3,
-     "tile": 89
-    },
     "9": {
      "col": 9,
-     "named": null,
+     "named": "FOREST_LEFT_WALL_1",
      "row": 0,
      "tile": 9
-    },
-    "90": {
-     "col": 18,
-     "named": null,
-     "row": 3,
-     "tile": 90
-    },
-    "91": {
-     "col": 19,
-     "named": null,
-     "row": 3,
-     "tile": 91
-    },
-    "92": {
-     "col": 20,
-     "named": null,
-     "row": 3,
-     "tile": 92
-    },
-    "93": {
-     "col": 21,
-     "named": null,
-     "row": 3,
-     "tile": 93
-    },
-    "94": {
-     "col": 22,
-     "named": null,
-     "row": 3,
-     "tile": 94
-    },
-    "95": {
-     "col": 23,
-     "named": null,
-     "row": 3,
-     "tile": 95
-    },
-    "96": {
-     "col": 0,
-     "named": null,
-     "row": 4,
-     "tile": 96
-    },
-    "97": {
-     "col": 1,
-     "named": null,
-     "row": 4,
-     "tile": 97
-    },
-    "98": {
-     "col": 2,
-     "named": null,
-     "row": 4,
-     "tile": 98
-    },
-    "99": {
-     "col": 3,
-     "named": null,
-     "row": 4,
-     "tile": 99
     }
    },
-   "file": "RPG_exterior.png",
+   "file": "forest-tile.png",
    "grid": {
-    "cols": 24,
+    "cols": 16,
     "offset": 0,
-    "rows": 17,
+    "rows": 3,
     "stride": 8
    },
    "pixels": [
-    192,
-    136
+    128,
+    24
    ],
    "tile_size": 8
   },
@@ -9777,1731 +7767,415 @@
    "cells": {
     "0": {
      "col": 0,
-     "named": null,
+     "named": "CASTLE_TOP_LEFT_CORNER_WALL",
      "row": 0,
      "tile": 0
     },
     "1": {
      "col": 1,
-     "named": "INTERIOR_WALL",
+     "named": "CASTLE_TOP_WALL",
+     "row": 0,
+     "tile": 1
+    },
+    "10": {
+     "col": 2,
+     "named": "CASTLE_BOTTOM_RIGHT_CORNER_WALL",
+     "row": 1,
+     "tile": 10
+    },
+    "11": {
+     "col": 3,
+     "named": "CASTLE_CHAIR_LEFT",
+     "row": 1,
+     "tile": 11
+    },
+    "12": {
+     "col": 4,
+     "named": "CASTLE_TABLE",
+     "row": 1,
+     "tile": 12
+    },
+    "13": {
+     "col": 5,
+     "named": "CASTLE_CHAIR_RIGHT",
+     "row": 1,
+     "tile": 13
+    },
+    "14": {
+     "col": 6,
+     "named": "CASTLE_CHEST",
+     "row": 1,
+     "tile": 14
+    },
+    "15": {
+     "col": 7,
+     "named": "CASTLE_BOTTOM_LEFT_BOSS",
+     "row": 1,
+     "tile": 15
+    },
+    "2": {
+     "col": 2,
+     "named": "CASTLE_TOP_RIGHT_CORNER_WALL",
+     "row": 0,
+     "tile": 2
+    },
+    "3": {
+     "col": 3,
+     "named": "CASTLE_LEFT_WALL",
+     "row": 0,
+     "tile": 3
+    },
+    "4": {
+     "col": 4,
+     "named": "CASTLE_RIGHT_WALL",
+     "row": 0,
+     "tile": 4
+    },
+    "5": {
+     "col": 5,
+     "named": "CASTLE_WINDOW",
+     "row": 0,
+     "tile": 5
+    },
+    "6": {
+     "col": 6,
+     "named": "CASTLE_CURTAIN",
+     "row": 0,
+     "tile": 6
+    },
+    "7": {
+     "col": 7,
+     "named": "CASTLE_TOP_LEFT_BOSS",
+     "row": 0,
+     "tile": 7
+    },
+    "8": {
+     "col": 0,
+     "named": "CASTLE_BOTTOM_LEFT_CORNER_WALL",
+     "row": 1,
+     "tile": 8
+    },
+    "9": {
+     "col": 1,
+     "named": "CASTLE_BOTTOM_WALL",
+     "row": 1,
+     "tile": 9
+    }
+   },
+   "file": "castle-tile.png",
+   "grid": {
+    "cols": 8,
+    "offset": 0,
+    "rows": 2,
+    "stride": 8
+   },
+   "pixels": [
+    64,
+    16
+   ],
+   "tile_size": 8
+  },
+  {
+   "cells": {
+    "0": {
+     "col": 0,
+     "named": "DESOLATE_WALL_00",
+     "row": 0,
+     "tile": 0
+    },
+    "1": {
+     "col": 1,
+     "named": "DESOLATE_WALL_01",
      "row": 0,
      "tile": 1
     },
     "10": {
      "col": 10,
-     "named": null,
+     "named": "DESOLATE_WALL_10",
      "row": 0,
      "tile": 10
     },
-    "100": {
-     "col": 12,
-     "named": null,
-     "row": 4,
-     "tile": 100
-    },
-    "101": {
-     "col": 13,
-     "named": null,
-     "row": 4,
-     "tile": 101
-    },
-    "102": {
-     "col": 14,
-     "named": null,
-     "row": 4,
-     "tile": 102
-    },
-    "103": {
-     "col": 15,
-     "named": null,
-     "row": 4,
-     "tile": 103
-    },
-    "104": {
-     "col": 16,
-     "named": null,
-     "row": 4,
-     "tile": 104
-    },
-    "105": {
-     "col": 17,
-     "named": null,
-     "row": 4,
-     "tile": 105
-    },
-    "106": {
-     "col": 18,
-     "named": null,
-     "row": 4,
-     "tile": 106
-    },
-    "107": {
-     "col": 19,
-     "named": null,
-     "row": 4,
-     "tile": 107
-    },
-    "108": {
-     "col": 20,
-     "named": null,
-     "row": 4,
-     "tile": 108
-    },
-    "109": {
-     "col": 21,
-     "named": null,
-     "row": 4,
-     "tile": 109
-    },
     "11": {
      "col": 11,
-     "named": null,
+     "named": "DESOLATE_WALL_11",
      "row": 0,
      "tile": 11
     },
-    "110": {
-     "col": 0,
-     "named": null,
-     "row": 5,
-     "tile": 110
-    },
-    "111": {
-     "col": 1,
-     "named": null,
-     "row": 5,
-     "tile": 111
-    },
-    "112": {
-     "col": 2,
-     "named": null,
-     "row": 5,
-     "tile": 112
-    },
-    "113": {
-     "col": 3,
-     "named": null,
-     "row": 5,
-     "tile": 113
-    },
-    "114": {
-     "col": 4,
-     "named": null,
-     "row": 5,
-     "tile": 114
-    },
-    "115": {
-     "col": 5,
-     "named": null,
-     "row": 5,
-     "tile": 115
-    },
-    "116": {
-     "col": 6,
-     "named": null,
-     "row": 5,
-     "tile": 116
-    },
-    "117": {
-     "col": 7,
-     "named": null,
-     "row": 5,
-     "tile": 117
-    },
-    "118": {
-     "col": 8,
-     "named": null,
-     "row": 5,
-     "tile": 118
-    },
-    "119": {
-     "col": 9,
-     "named": null,
-     "row": 5,
-     "tile": 119
-    },
     "12": {
      "col": 12,
-     "named": null,
+     "named": "DESOLATE_TREE_TL",
      "row": 0,
      "tile": 12
     },
-    "120": {
-     "col": 10,
-     "named": null,
-     "row": 5,
-     "tile": 120
-    },
-    "121": {
-     "col": 11,
-     "named": null,
-     "row": 5,
-     "tile": 121
-    },
-    "122": {
-     "col": 12,
-     "named": null,
-     "row": 5,
-     "tile": 122
-    },
-    "123": {
-     "col": 13,
-     "named": null,
-     "row": 5,
-     "tile": 123
-    },
-    "124": {
-     "col": 14,
-     "named": null,
-     "row": 5,
-     "tile": 124
-    },
-    "125": {
-     "col": 15,
-     "named": null,
-     "row": 5,
-     "tile": 125
-    },
-    "126": {
-     "col": 16,
-     "named": null,
-     "row": 5,
-     "tile": 126
-    },
-    "127": {
-     "col": 17,
-     "named": null,
-     "row": 5,
-     "tile": 127
-    },
-    "128": {
-     "col": 18,
-     "named": null,
-     "row": 5,
-     "tile": 128
-    },
-    "129": {
-     "col": 19,
-     "named": null,
-     "row": 5,
-     "tile": 129
-    },
     "13": {
      "col": 13,
-     "named": null,
+     "named": "DESOLATE_TREE_TR",
      "row": 0,
      "tile": 13
     },
-    "130": {
-     "col": 20,
-     "named": null,
-     "row": 5,
-     "tile": 130
-    },
-    "131": {
-     "col": 21,
-     "named": null,
-     "row": 5,
-     "tile": 131
-    },
-    "132": {
-     "col": 0,
-     "named": null,
-     "row": 6,
-     "tile": 132
-    },
-    "133": {
-     "col": 1,
-     "named": null,
-     "row": 6,
-     "tile": 133
-    },
-    "134": {
-     "col": 2,
-     "named": null,
-     "row": 6,
-     "tile": 134
-    },
-    "135": {
-     "col": 3,
-     "named": null,
-     "row": 6,
-     "tile": 135
-    },
-    "136": {
-     "col": 4,
-     "named": null,
-     "row": 6,
-     "tile": 136
-    },
-    "137": {
-     "col": 5,
-     "named": null,
-     "row": 6,
-     "tile": 137
-    },
-    "138": {
-     "col": 6,
-     "named": null,
-     "row": 6,
-     "tile": 138
-    },
-    "139": {
-     "col": 7,
-     "named": null,
-     "row": 6,
-     "tile": 139
-    },
     "14": {
      "col": 14,
-     "named": null,
+     "named": "DESOLATE_ROCK_TL",
      "row": 0,
      "tile": 14
     },
-    "140": {
-     "col": 8,
-     "named": null,
-     "row": 6,
-     "tile": 140
-    },
-    "141": {
-     "col": 9,
-     "named": null,
-     "row": 6,
-     "tile": 141
-    },
-    "142": {
-     "col": 10,
-     "named": null,
-     "row": 6,
-     "tile": 142
-    },
-    "143": {
-     "col": 11,
-     "named": null,
-     "row": 6,
-     "tile": 143
-    },
-    "144": {
-     "col": 12,
-     "named": null,
-     "row": 6,
-     "tile": 144
-    },
-    "145": {
-     "col": 13,
-     "named": null,
-     "row": 6,
-     "tile": 145
-    },
-    "146": {
-     "col": 14,
-     "named": null,
-     "row": 6,
-     "tile": 146
-    },
-    "147": {
-     "col": 15,
-     "named": null,
-     "row": 6,
-     "tile": 147
-    },
-    "148": {
-     "col": 16,
-     "named": null,
-     "row": 6,
-     "tile": 148
-    },
-    "149": {
-     "col": 17,
-     "named": null,
-     "row": 6,
-     "tile": 149
-    },
     "15": {
      "col": 15,
-     "named": null,
+     "named": "DESOLATE_ROCK_TR",
      "row": 0,
      "tile": 15
     },
-    "150": {
-     "col": 18,
-     "named": null,
-     "row": 6,
-     "tile": 150
-    },
-    "151": {
-     "col": 19,
-     "named": null,
-     "row": 6,
-     "tile": 151
-    },
-    "152": {
-     "col": 20,
-     "named": null,
-     "row": 6,
-     "tile": 152
-    },
-    "153": {
-     "col": 21,
-     "named": null,
-     "row": 6,
-     "tile": 153
-    },
-    "154": {
-     "col": 0,
-     "named": null,
-     "row": 7,
-     "tile": 154
-    },
-    "155": {
-     "col": 1,
-     "named": null,
-     "row": 7,
-     "tile": 155
-    },
-    "156": {
-     "col": 2,
-     "named": null,
-     "row": 7,
-     "tile": 156
-    },
-    "157": {
-     "col": 3,
-     "named": null,
-     "row": 7,
-     "tile": 157
-    },
-    "158": {
-     "col": 4,
-     "named": null,
-     "row": 7,
-     "tile": 158
-    },
-    "159": {
-     "col": 5,
-     "named": null,
-     "row": 7,
-     "tile": 159
-    },
     "16": {
-     "col": 16,
-     "named": null,
-     "row": 0,
+     "col": 0,
+     "named": "DESOLATE_WALL_12",
+     "row": 1,
      "tile": 16
     },
-    "160": {
-     "col": 6,
-     "named": null,
-     "row": 7,
-     "tile": 160
-    },
-    "161": {
-     "col": 7,
-     "named": null,
-     "row": 7,
-     "tile": 161
-    },
-    "162": {
-     "col": 8,
-     "named": null,
-     "row": 7,
-     "tile": 162
-    },
-    "163": {
-     "col": 9,
-     "named": null,
-     "row": 7,
-     "tile": 163
-    },
-    "164": {
-     "col": 10,
-     "named": null,
-     "row": 7,
-     "tile": 164
-    },
-    "165": {
-     "col": 11,
-     "named": null,
-     "row": 7,
-     "tile": 165
-    },
-    "166": {
-     "col": 12,
-     "named": null,
-     "row": 7,
-     "tile": 166
-    },
-    "167": {
-     "col": 13,
-     "named": null,
-     "row": 7,
-     "tile": 167
-    },
-    "168": {
-     "col": 14,
-     "named": null,
-     "row": 7,
-     "tile": 168
-    },
-    "169": {
-     "col": 15,
-     "named": null,
-     "row": 7,
-     "tile": 169
-    },
     "17": {
-     "col": 17,
-     "named": null,
-     "row": 0,
+     "col": 1,
+     "named": "DESOLATE_WALL_13",
+     "row": 1,
      "tile": 17
     },
-    "170": {
-     "col": 16,
-     "named": null,
-     "row": 7,
-     "tile": 170
-    },
-    "171": {
-     "col": 17,
-     "named": null,
-     "row": 7,
-     "tile": 171
-    },
-    "172": {
-     "col": 18,
-     "named": null,
-     "row": 7,
-     "tile": 172
-    },
-    "173": {
-     "col": 19,
-     "named": null,
-     "row": 7,
-     "tile": 173
-    },
-    "174": {
-     "col": 20,
-     "named": null,
-     "row": 7,
-     "tile": 174
-    },
-    "175": {
-     "col": 21,
-     "named": null,
-     "row": 7,
-     "tile": 175
-    },
-    "176": {
-     "col": 0,
-     "named": null,
-     "row": 8,
-     "tile": 176
-    },
-    "177": {
-     "col": 1,
-     "named": null,
-     "row": 8,
-     "tile": 177
-    },
-    "178": {
-     "col": 2,
-     "named": null,
-     "row": 8,
-     "tile": 178
-    },
-    "179": {
-     "col": 3,
-     "named": null,
-     "row": 8,
-     "tile": 179
-    },
     "18": {
-     "col": 18,
-     "named": null,
-     "row": 0,
+     "col": 2,
+     "named": "DESOLATE_WALL_14",
+     "row": 1,
      "tile": 18
     },
-    "180": {
-     "col": 4,
-     "named": null,
-     "row": 8,
-     "tile": 180
-    },
-    "181": {
-     "col": 5,
-     "named": null,
-     "row": 8,
-     "tile": 181
-    },
-    "182": {
-     "col": 6,
-     "named": null,
-     "row": 8,
-     "tile": 182
-    },
-    "183": {
-     "col": 7,
-     "named": null,
-     "row": 8,
-     "tile": 183
-    },
-    "184": {
-     "col": 8,
-     "named": null,
-     "row": 8,
-     "tile": 184
-    },
-    "185": {
-     "col": 9,
-     "named": null,
-     "row": 8,
-     "tile": 185
-    },
-    "186": {
-     "col": 10,
-     "named": null,
-     "row": 8,
-     "tile": 186
-    },
-    "187": {
-     "col": 11,
-     "named": null,
-     "row": 8,
-     "tile": 187
-    },
-    "188": {
-     "col": 12,
-     "named": null,
-     "row": 8,
-     "tile": 188
-    },
-    "189": {
-     "col": 13,
-     "named": null,
-     "row": 8,
-     "tile": 189
-    },
     "19": {
-     "col": 19,
-     "named": null,
-     "row": 0,
+     "col": 3,
+     "named": "DESOLATE_WALL_15",
+     "row": 1,
      "tile": 19
-    },
-    "190": {
-     "col": 14,
-     "named": null,
-     "row": 8,
-     "tile": 190
-    },
-    "191": {
-     "col": 15,
-     "named": null,
-     "row": 8,
-     "tile": 191
-    },
-    "192": {
-     "col": 16,
-     "named": null,
-     "row": 8,
-     "tile": 192
-    },
-    "193": {
-     "col": 17,
-     "named": null,
-     "row": 8,
-     "tile": 193
-    },
-    "194": {
-     "col": 18,
-     "named": null,
-     "row": 8,
-     "tile": 194
-    },
-    "195": {
-     "col": 19,
-     "named": null,
-     "row": 8,
-     "tile": 195
-    },
-    "196": {
-     "col": 20,
-     "named": null,
-     "row": 8,
-     "tile": 196
-    },
-    "197": {
-     "col": 21,
-     "named": null,
-     "row": 8,
-     "tile": 197
-    },
-    "198": {
-     "col": 0,
-     "named": null,
-     "row": 9,
-     "tile": 198
-    },
-    "199": {
-     "col": 1,
-     "named": null,
-     "row": 9,
-     "tile": 199
     },
     "2": {
      "col": 2,
-     "named": null,
+     "named": "DESOLATE_WALL_02",
      "row": 0,
      "tile": 2
     },
     "20": {
-     "col": 20,
-     "named": null,
-     "row": 0,
+     "col": 4,
+     "named": "DESOLATE_WALL_16",
+     "row": 1,
      "tile": 20
     },
-    "200": {
-     "col": 2,
-     "named": null,
-     "row": 9,
-     "tile": 200
-    },
-    "201": {
-     "col": 3,
-     "named": null,
-     "row": 9,
-     "tile": 201
-    },
-    "202": {
-     "col": 4,
-     "named": null,
-     "row": 9,
-     "tile": 202
-    },
-    "203": {
-     "col": 5,
-     "named": null,
-     "row": 9,
-     "tile": 203
-    },
-    "204": {
-     "col": 6,
-     "named": null,
-     "row": 9,
-     "tile": 204
-    },
-    "205": {
-     "col": 7,
-     "named": null,
-     "row": 9,
-     "tile": 205
-    },
-    "206": {
-     "col": 8,
-     "named": null,
-     "row": 9,
-     "tile": 206
-    },
-    "207": {
-     "col": 9,
-     "named": null,
-     "row": 9,
-     "tile": 207
-    },
-    "208": {
-     "col": 10,
-     "named": null,
-     "row": 9,
-     "tile": 208
-    },
-    "209": {
-     "col": 11,
-     "named": null,
-     "row": 9,
-     "tile": 209
-    },
     "21": {
-     "col": 21,
-     "named": null,
-     "row": 0,
+     "col": 5,
+     "named": "DESOLATE_WALL_17",
+     "row": 1,
      "tile": 21
     },
-    "210": {
-     "col": 12,
-     "named": null,
-     "row": 9,
-     "tile": 210
-    },
-    "211": {
-     "col": 13,
-     "named": null,
-     "row": 9,
-     "tile": 211
-    },
-    "212": {
-     "col": 14,
-     "named": null,
-     "row": 9,
-     "tile": 212
-    },
-    "213": {
-     "col": 15,
-     "named": null,
-     "row": 9,
-     "tile": 213
-    },
-    "214": {
-     "col": 16,
-     "named": null,
-     "row": 9,
-     "tile": 214
-    },
-    "215": {
-     "col": 17,
-     "named": null,
-     "row": 9,
-     "tile": 215
-    },
-    "216": {
-     "col": 18,
-     "named": null,
-     "row": 9,
-     "tile": 216
-    },
-    "217": {
-     "col": 19,
-     "named": null,
-     "row": 9,
-     "tile": 217
-    },
-    "218": {
-     "col": 20,
-     "named": null,
-     "row": 9,
-     "tile": 218
-    },
-    "219": {
-     "col": 21,
-     "named": null,
-     "row": 9,
-     "tile": 219
-    },
     "22": {
-     "col": 0,
-     "named": null,
+     "col": 6,
+     "named": "DESOLATE_FLOOR_00",
      "row": 1,
      "tile": 22
     },
-    "220": {
-     "col": 0,
-     "named": null,
-     "row": 10,
-     "tile": 220
-    },
-    "221": {
-     "col": 1,
-     "named": null,
-     "row": 10,
-     "tile": 221
-    },
-    "222": {
-     "col": 2,
-     "named": null,
-     "row": 10,
-     "tile": 222
-    },
-    "223": {
-     "col": 3,
-     "named": null,
-     "row": 10,
-     "tile": 223
-    },
-    "224": {
-     "col": 4,
-     "named": null,
-     "row": 10,
-     "tile": 224
-    },
-    "225": {
-     "col": 5,
-     "named": null,
-     "row": 10,
-     "tile": 225
-    },
-    "226": {
-     "col": 6,
-     "named": null,
-     "row": 10,
-     "tile": 226
-    },
-    "227": {
-     "col": 7,
-     "named": null,
-     "row": 10,
-     "tile": 227
-    },
-    "228": {
-     "col": 8,
-     "named": null,
-     "row": 10,
-     "tile": 228
-    },
-    "229": {
-     "col": 9,
-     "named": null,
-     "row": 10,
-     "tile": 229
-    },
     "23": {
-     "col": 1,
-     "named": "INTERIOR_FLOOR",
+     "col": 7,
+     "named": "DESOLATE_FLOOR_01",
      "row": 1,
      "tile": 23
     },
-    "230": {
-     "col": 10,
-     "named": null,
-     "row": 10,
-     "tile": 230
-    },
-    "231": {
-     "col": 11,
-     "named": null,
-     "row": 10,
-     "tile": 231
-    },
-    "232": {
-     "col": 12,
-     "named": null,
-     "row": 10,
-     "tile": 232
-    },
-    "233": {
-     "col": 13,
-     "named": null,
-     "row": 10,
-     "tile": 233
-    },
-    "234": {
-     "col": 14,
-     "named": null,
-     "row": 10,
-     "tile": 234
-    },
-    "235": {
-     "col": 15,
-     "named": null,
-     "row": 10,
-     "tile": 235
-    },
-    "236": {
-     "col": 16,
-     "named": null,
-     "row": 10,
-     "tile": 236
-    },
-    "237": {
-     "col": 17,
-     "named": null,
-     "row": 10,
-     "tile": 237
-    },
-    "238": {
-     "col": 18,
-     "named": null,
-     "row": 10,
-     "tile": 238
-    },
-    "239": {
-     "col": 19,
-     "named": null,
-     "row": 10,
-     "tile": 239
-    },
     "24": {
-     "col": 2,
-     "named": null,
+     "col": 8,
+     "named": "DESOLATE_FLOOR_02",
      "row": 1,
      "tile": 24
     },
-    "240": {
-     "col": 20,
-     "named": null,
-     "row": 10,
-     "tile": 240
-    },
-    "241": {
-     "col": 21,
-     "named": null,
-     "row": 10,
-     "tile": 241
-    },
-    "242": {
-     "col": 0,
-     "named": null,
-     "row": 11,
-     "tile": 242
-    },
-    "243": {
-     "col": 1,
-     "named": null,
-     "row": 11,
-     "tile": 243
-    },
-    "244": {
-     "col": 2,
-     "named": null,
-     "row": 11,
-     "tile": 244
-    },
-    "245": {
-     "col": 3,
-     "named": null,
-     "row": 11,
-     "tile": 245
-    },
-    "246": {
-     "col": 4,
-     "named": null,
-     "row": 11,
-     "tile": 246
-    },
-    "247": {
-     "col": 5,
-     "named": null,
-     "row": 11,
-     "tile": 247
-    },
-    "248": {
-     "col": 6,
-     "named": null,
-     "row": 11,
-     "tile": 248
-    },
-    "249": {
-     "col": 7,
-     "named": null,
-     "row": 11,
-     "tile": 249
-    },
     "25": {
-     "col": 3,
-     "named": null,
+     "col": 9,
+     "named": "DESOLATE_FLOOR_03",
      "row": 1,
      "tile": 25
     },
-    "250": {
-     "col": 8,
-     "named": null,
-     "row": 11,
-     "tile": 250
-    },
-    "251": {
-     "col": 9,
-     "named": null,
-     "row": 11,
-     "tile": 251
-    },
-    "252": {
-     "col": 10,
-     "named": null,
-     "row": 11,
-     "tile": 252
-    },
-    "253": {
-     "col": 11,
-     "named": null,
-     "row": 11,
-     "tile": 253
-    },
-    "254": {
-     "col": 12,
-     "named": null,
-     "row": 11,
-     "tile": 254
-    },
-    "255": {
-     "col": 13,
-     "named": null,
-     "row": 11,
-     "tile": 255
-    },
-    "256": {
-     "col": 14,
-     "named": null,
-     "row": 11,
-     "tile": 256
-    },
-    "257": {
-     "col": 15,
-     "named": null,
-     "row": 11,
-     "tile": 257
-    },
-    "258": {
-     "col": 16,
-     "named": null,
-     "row": 11,
-     "tile": 258
-    },
-    "259": {
-     "col": 17,
-     "named": null,
-     "row": 11,
-     "tile": 259
-    },
     "26": {
-     "col": 4,
-     "named": null,
+     "col": 10,
+     "named": "DESOLATE_WALL_18",
      "row": 1,
      "tile": 26
     },
-    "260": {
-     "col": 18,
-     "named": null,
-     "row": 11,
-     "tile": 260
-    },
-    "261": {
-     "col": 19,
-     "named": null,
-     "row": 11,
-     "tile": 261
-    },
-    "262": {
-     "col": 20,
-     "named": null,
-     "row": 11,
-     "tile": 262
-    },
-    "263": {
-     "col": 21,
-     "named": null,
-     "row": 11,
-     "tile": 263
-    },
-    "264": {
-     "col": 0,
-     "named": null,
-     "row": 12,
-     "tile": 264
-    },
-    "265": {
-     "col": 1,
-     "named": null,
-     "row": 12,
-     "tile": 265
-    },
-    "266": {
-     "col": 2,
-     "named": null,
-     "row": 12,
-     "tile": 266
-    },
-    "267": {
-     "col": 3,
-     "named": null,
-     "row": 12,
-     "tile": 267
-    },
-    "268": {
-     "col": 4,
-     "named": null,
-     "row": 12,
-     "tile": 268
-    },
-    "269": {
-     "col": 5,
-     "named": null,
-     "row": 12,
-     "tile": 269
-    },
     "27": {
-     "col": 5,
-     "named": null,
+     "col": 11,
+     "named": "DESOLATE_WALL_19",
      "row": 1,
      "tile": 27
     },
-    "270": {
-     "col": 6,
-     "named": null,
-     "row": 12,
-     "tile": 270
-    },
-    "271": {
-     "col": 7,
-     "named": null,
-     "row": 12,
-     "tile": 271
-    },
-    "272": {
-     "col": 8,
-     "named": null,
-     "row": 12,
-     "tile": 272
-    },
-    "273": {
-     "col": 9,
-     "named": null,
-     "row": 12,
-     "tile": 273
-    },
-    "274": {
-     "col": 10,
-     "named": null,
-     "row": 12,
-     "tile": 274
-    },
-    "275": {
-     "col": 11,
-     "named": null,
-     "row": 12,
-     "tile": 275
-    },
-    "276": {
-     "col": 12,
-     "named": null,
-     "row": 12,
-     "tile": 276
-    },
-    "277": {
-     "col": 13,
-     "named": null,
-     "row": 12,
-     "tile": 277
-    },
-    "278": {
-     "col": 14,
-     "named": null,
-     "row": 12,
-     "tile": 278
-    },
-    "279": {
-     "col": 15,
-     "named": null,
-     "row": 12,
-     "tile": 279
-    },
     "28": {
-     "col": 6,
-     "named": null,
+     "col": 12,
+     "named": "DESOLATE_TREE_BL",
      "row": 1,
      "tile": 28
     },
-    "280": {
-     "col": 16,
-     "named": null,
-     "row": 12,
-     "tile": 280
-    },
-    "281": {
-     "col": 17,
-     "named": null,
-     "row": 12,
-     "tile": 281
-    },
-    "282": {
-     "col": 18,
-     "named": null,
-     "row": 12,
-     "tile": 282
-    },
-    "283": {
-     "col": 19,
-     "named": null,
-     "row": 12,
-     "tile": 283
-    },
-    "284": {
-     "col": 20,
-     "named": null,
-     "row": 12,
-     "tile": 284
-    },
-    "285": {
-     "col": 21,
-     "named": null,
-     "row": 12,
-     "tile": 285
-    },
     "29": {
-     "col": 7,
-     "named": null,
+     "col": 13,
+     "named": "DESOLATE_TREE_BR",
      "row": 1,
      "tile": 29
     },
     "3": {
      "col": 3,
-     "named": null,
+     "named": "DESOLATE_WALL_03",
      "row": 0,
      "tile": 3
     },
     "30": {
-     "col": 8,
-     "named": null,
+     "col": 14,
+     "named": "DESOLATE_ROCK_BL",
      "row": 1,
      "tile": 30
     },
     "31": {
-     "col": 9,
-     "named": null,
+     "col": 15,
+     "named": "DESOLATE_ROCK_BR",
      "row": 1,
      "tile": 31
     },
     "32": {
-     "col": 10,
-     "named": null,
-     "row": 1,
+     "col": 0,
+     "named": "DESOLATE_FLOOR_PLAIN",
+     "row": 2,
      "tile": 32
     },
     "33": {
-     "col": 11,
-     "named": null,
-     "row": 1,
+     "col": 1,
+     "named": "DESOLATE_HERO_01",
+     "row": 2,
      "tile": 33
     },
     "34": {
-     "col": 12,
-     "named": null,
-     "row": 1,
+     "col": 2,
+     "named": "DESOLATE_HERO_02",
+     "row": 2,
      "tile": 34
     },
     "35": {
-     "col": 13,
-     "named": null,
-     "row": 1,
+     "col": 3,
+     "named": "DESOLATE_KOBOLD_01",
+     "row": 2,
      "tile": 35
     },
     "36": {
-     "col": 14,
-     "named": null,
-     "row": 1,
+     "col": 4,
+     "named": "DESOLATE_KOBOLD_02",
+     "row": 2,
      "tile": 36
     },
     "37": {
-     "col": 15,
-     "named": null,
-     "row": 1,
+     "col": 5,
+     "named": "DESOLATE_FIRE_01",
+     "row": 2,
      "tile": 37
     },
     "38": {
-     "col": 16,
-     "named": null,
-     "row": 1,
+     "col": 6,
+     "named": "DESOLATE_FIRE_02",
+     "row": 2,
      "tile": 38
     },
     "39": {
-     "col": 17,
-     "named": null,
-     "row": 1,
+     "col": 7,
+     "named": "DESOLATE_MERCHANT",
+     "row": 2,
      "tile": 39
     },
     "4": {
      "col": 4,
-     "named": null,
+     "named": "DESOLATE_WALL_04",
      "row": 0,
      "tile": 4
     },
     "40": {
-     "col": 18,
-     "named": null,
-     "row": 1,
+     "col": 8,
+     "named": "DESOLATE_STAIRCASE",
+     "row": 2,
      "tile": 40
     },
     "41": {
-     "col": 19,
-     "named": null,
-     "row": 1,
+     "col": 9,
+     "named": "DESOLATE_BAT_01",
+     "row": 2,
      "tile": 41
     },
     "42": {
-     "col": 20,
-     "named": null,
-     "row": 1,
+     "col": 10,
+     "named": "DESOLATE_BAT_02",
+     "row": 2,
      "tile": 42
     },
     "43": {
-     "col": 21,
-     "named": null,
-     "row": 1,
+     "col": 11,
+     "named": "DESOLATE_CHEST",
+     "row": 2,
      "tile": 43
     },
     "44": {
-     "col": 0,
-     "named": null,
+     "col": 12,
+     "named": "DESOLATE_FLOOR_04",
      "row": 2,
      "tile": 44
     },
     "45": {
-     "col": 1,
-     "named": null,
+     "col": 13,
+     "named": "DESOLATE_FLOOR_05",
      "row": 2,
      "tile": 45
     },
     "46": {
-     "col": 2,
-     "named": null,
+     "col": 14,
+     "named": "DESOLATE_FLOOR_06",
      "row": 2,
      "tile": 46
     },
     "47": {
-     "col": 3,
-     "named": null,
+     "col": 15,
+     "named": "DESOLATE_FLOOR_07",
      "row": 2,
      "tile": 47
     },
-    "48": {
-     "col": 4,
-     "named": null,
-     "row": 2,
-     "tile": 48
-    },
-    "49": {
-     "col": 5,
-     "named": null,
-     "row": 2,
-     "tile": 49
-    },
     "5": {
      "col": 5,
-     "named": null,
+     "named": "DESOLATE_WALL_05",
      "row": 0,
      "tile": 5
     },
-    "50": {
-     "col": 6,
-     "named": null,
-     "row": 2,
-     "tile": 50
-    },
-    "51": {
-     "col": 7,
-     "named": null,
-     "row": 2,
-     "tile": 51
-    },
-    "52": {
-     "col": 8,
-     "named": null,
-     "row": 2,
-     "tile": 52
-    },
-    "53": {
-     "col": 9,
-     "named": null,
-     "row": 2,
-     "tile": 53
-    },
-    "54": {
-     "col": 10,
-     "named": null,
-     "row": 2,
-     "tile": 54
-    },
-    "55": {
-     "col": 11,
-     "named": null,
-     "row": 2,
-     "tile": 55
-    },
-    "56": {
-     "col": 12,
-     "named": null,
-     "row": 2,
-     "tile": 56
-    },
-    "57": {
-     "col": 13,
-     "named": null,
-     "row": 2,
-     "tile": 57
-    },
-    "58": {
-     "col": 14,
-     "named": null,
-     "row": 2,
-     "tile": 58
-    },
-    "59": {
-     "col": 15,
-     "named": null,
-     "row": 2,
-     "tile": 59
-    },
     "6": {
      "col": 6,
-     "named": null,
+     "named": "DESOLATE_WALL_06",
      "row": 0,
      "tile": 6
     },
-    "60": {
-     "col": 16,
-     "named": null,
-     "row": 2,
-     "tile": 60
-    },
-    "61": {
-     "col": 17,
-     "named": null,
-     "row": 2,
-     "tile": 61
-    },
-    "62": {
-     "col": 18,
-     "named": null,
-     "row": 2,
-     "tile": 62
-    },
-    "63": {
-     "col": 19,
-     "named": null,
-     "row": 2,
-     "tile": 63
-    },
-    "64": {
-     "col": 20,
-     "named": null,
-     "row": 2,
-     "tile": 64
-    },
-    "65": {
-     "col": 21,
-     "named": null,
-     "row": 2,
-     "tile": 65
-    },
-    "66": {
-     "col": 0,
-     "named": null,
-     "row": 3,
-     "tile": 66
-    },
-    "67": {
-     "col": 1,
-     "named": null,
-     "row": 3,
-     "tile": 67
-    },
-    "68": {
-     "col": 2,
-     "named": null,
-     "row": 3,
-     "tile": 68
-    },
-    "69": {
-     "col": 3,
-     "named": null,
-     "row": 3,
-     "tile": 69
-    },
     "7": {
      "col": 7,
-     "named": null,
+     "named": "DESOLATE_WALL_07",
      "row": 0,
      "tile": 7
     },
-    "70": {
-     "col": 4,
-     "named": null,
-     "row": 3,
-     "tile": 70
-    },
-    "71": {
-     "col": 5,
-     "named": null,
-     "row": 3,
-     "tile": 71
-    },
-    "72": {
-     "col": 6,
-     "named": "INTERIOR_SOLID_PROP",
-     "row": 3,
-     "tile": 72
-    },
-    "73": {
-     "col": 7,
-     "named": null,
-     "row": 3,
-     "tile": 73
-    },
-    "74": {
-     "col": 8,
-     "named": null,
-     "row": 3,
-     "tile": 74
-    },
-    "75": {
-     "col": 9,
-     "named": null,
-     "row": 3,
-     "tile": 75
-    },
-    "76": {
-     "col": 10,
-     "named": null,
-     "row": 3,
-     "tile": 76
-    },
-    "77": {
-     "col": 11,
-     "named": null,
-     "row": 3,
-     "tile": 77
-    },
-    "78": {
-     "col": 12,
-     "named": null,
-     "row": 3,
-     "tile": 78
-    },
-    "79": {
-     "col": 13,
-     "named": null,
-     "row": 3,
-     "tile": 79
-    },
     "8": {
      "col": 8,
-     "named": null,
+     "named": "DESOLATE_WALL_08",
      "row": 0,
      "tile": 8
     },
-    "80": {
-     "col": 14,
-     "named": null,
-     "row": 3,
-     "tile": 80
-    },
-    "81": {
-     "col": 15,
-     "named": null,
-     "row": 3,
-     "tile": 81
-    },
-    "82": {
-     "col": 16,
-     "named": null,
-     "row": 3,
-     "tile": 82
-    },
-    "83": {
-     "col": 17,
-     "named": null,
-     "row": 3,
-     "tile": 83
-    },
-    "84": {
-     "col": 18,
-     "named": null,
-     "row": 3,
-     "tile": 84
-    },
-    "85": {
-     "col": 19,
-     "named": null,
-     "row": 3,
-     "tile": 85
-    },
-    "86": {
-     "col": 20,
-     "named": null,
-     "row": 3,
-     "tile": 86
-    },
-    "87": {
-     "col": 21,
-     "named": null,
-     "row": 3,
-     "tile": 87
-    },
-    "88": {
-     "col": 0,
-     "named": null,
-     "row": 4,
-     "tile": 88
-    },
-    "89": {
-     "col": 1,
-     "named": null,
-     "row": 4,
-     "tile": 89
-    },
     "9": {
      "col": 9,
-     "named": null,
+     "named": "DESOLATE_WALL_09",
      "row": 0,
      "tile": 9
-    },
-    "90": {
-     "col": 2,
-     "named": null,
-     "row": 4,
-     "tile": 90
-    },
-    "91": {
-     "col": 3,
-     "named": null,
-     "row": 4,
-     "tile": 91
-    },
-    "92": {
-     "col": 4,
-     "named": null,
-     "row": 4,
-     "tile": 92
-    },
-    "93": {
-     "col": 5,
-     "named": null,
-     "row": 4,
-     "tile": 93
-    },
-    "94": {
-     "col": 6,
-     "named": null,
-     "row": 4,
-     "tile": 94
-    },
-    "95": {
-     "col": 7,
-     "named": null,
-     "row": 4,
-     "tile": 95
-    },
-    "96": {
-     "col": 8,
-     "named": "INTERIOR_DOOR",
-     "row": 4,
-     "tile": 96
-    },
-    "97": {
-     "col": 9,
-     "named": null,
-     "row": 4,
-     "tile": 97
-    },
-    "98": {
-     "col": 10,
-     "named": null,
-     "row": 4,
-     "tile": 98
-    },
-    "99": {
-     "col": 11,
-     "named": null,
-     "row": 4,
-     "tile": 99
     }
    },
-   "file": "RPG_interior.png",
+   "file": "desolate_landscape.png",
    "grid": {
-    "cols": 22,
+    "cols": 16,
     "offset": 0,
-    "rows": 13,
+    "rows": 3,
     "stride": 8
    },
    "pixels": [
-    176,
-    104
+    128,
+    24
    ],
    "tile_size": 8
   },
@@ -12094,68 +8768,6 @@
    "pixels": [
     128,
     48
-   ],
-   "tile_size": 8
-  },
-  {
-   "cells": {
-    "0": {
-     "col": 0,
-     "named": "PLAYER",
-     "row": 0,
-     "tile": 0
-    }
-   },
-   "file": "player_demo.png",
-   "grid": {
-    "cols": 1,
-    "offset": 0,
-    "rows": 1,
-    "stride": 8
-   },
-   "pixels": [
-    8,
-    8
-   ],
-   "tile_size": 8
-  },
-  {
-   "cells": {
-    "0": {
-     "col": 0,
-     "named": "WORLD_C0_R0",
-     "row": 0,
-     "tile": 0
-    },
-    "1": {
-     "col": 1,
-     "named": "WORLD_C1_R0",
-     "row": 0,
-     "tile": 1
-    },
-    "2": {
-     "col": 0,
-     "named": "WORLD_C0_R1",
-     "row": 1,
-     "tile": 2
-    },
-    "3": {
-     "col": 1,
-     "named": "WORLD_C1_R1",
-     "row": 1,
-     "tile": 3
-    }
-   },
-   "file": "world_tiles.png",
-   "grid": {
-    "cols": 2,
-    "offset": 0,
-    "rows": 2,
-    "stride": 8
-   },
-   "pixels": [
-    16,
-    16
    ],
    "tile_size": 8
   },

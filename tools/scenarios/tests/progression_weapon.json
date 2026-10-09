@@ -1,44 +1,43 @@
 {
-  "name": "progression_weapon",
-  "test": true,
-  "description": "Hero progression: adding progress that crosses a threshold levels up and emits LEVEL_UP (engine only supports hero target type)",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "add_progress",
-      "target": "HERO_1",
-      "amount": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "progression_level",
-      "target": "HERO_1",
-      "expected": 2
-    },
-    {
-      "type": "progression_progress",
-      "target": "HERO_1",
-      "expected": 10
-    },
-    {
-      "type": "event_occurred",
-      "event": "LEVEL_UP"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8208,
-    "progression": {
-      "HERO_1": {
-        "level": 1,
-        "progress": 90
-      }
-    }
+ "name": "progression_weapon",
+ "test": true,
+ "description": "Hero progression: adding progress that crosses a threshold levels up and emits LEVEL_UP (engine only supports hero target type)",
+ "actions": [
+  {
+   "type": "add_progress",
+   "target": "HERO_1",
+   "amount": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "progression_level",
+   "target": "HERO_1",
+   "expected": 2
+  },
+  {
+   "type": "progression_progress",
+   "target": "HERO_1",
+   "expected": 10
+  },
+  {
+   "type": "event_occurred",
+   "event": "LEVEL_UP"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8208,
+  "progression": {
+   "HERO_1": {
+    "level": 1,
+    "progress": 90
+   }
+  }
+ }
 }

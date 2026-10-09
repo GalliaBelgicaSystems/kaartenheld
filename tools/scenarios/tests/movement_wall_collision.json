@@ -1,40 +1,39 @@
 {
-  "name": "movement_wall_collision",
-  "test": true,
-  "description": "Player attempts to walk into a solid # wall and is blocked by world collision",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "UP"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 4,
-      "expected_y": 1
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "PLAYER_MOVED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 1,
-      "facing": "UP"
-    },
-    "seed": 42
+ "name": "movement_wall_collision",
+ "test": true,
+ "description": "Player attempts to walk into a solid # wall and is blocked by world collision",
+ "actions": [
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 4,
+   "expected_y": 1
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 1,
+   "facing": "UP"
+  },
+  "seed": 42
+ }
 }

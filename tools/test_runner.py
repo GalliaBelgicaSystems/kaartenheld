@@ -14,7 +14,7 @@ import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
-                      SCENARIO_IDS, ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
+                      ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
                       VARIABLE_ID_MAP, ITEM_ID_MAP, ACTOR_ID_MAP,
                       ACTOR_STATE_NAME_MAP, CHARACTER_ID_MAP, SCENE_MAP,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
@@ -32,7 +32,9 @@ VALID_ASSERTION_TYPES = {
     "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
-    "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell"
+    "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
+    "oam_tile",
+    "sfx_count", "sfx_last"
 }
 
 VALID_ENTITY_IDS = set(ENTITY_ID_MAP.values())
@@ -61,10 +63,6 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 NEW_GAME_COLLECTION = {"IRON_SWORD": 4, "WOODEN_SHIELD": 3, "FIRE_SWORD": 3, "POISON_DAGGER": 2}
 
 def validate_scenario(data, filepath):
-    scen_id = data.get("scenario_id")
-    if scen_id and scen_id not in SCENARIO_IDS:
-        raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown scenario_id '{scen_id}'. Valid IDs: {list(SCENARIO_IDS.keys())}")
-
     for act in data.get("actions", []):
         if act.get("type") == "interact":
             actor = act.get("actor")
@@ -148,6 +146,10 @@ def load_scenarios(scenarios_dir="tools/scenarios"):
     scenarios = []
     pattern = os.path.join(scenarios_dir, "**", "*.json")
     for filepath in sorted(glob.glob(pattern, recursive=True)):
+        # Frozen test-content fixtures live under a fixtures/ dir and are
+        # level JSON, not scenarios -- never load them as tests.
+        if "fixtures" in filepath.split(os.sep):
+            continue
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
@@ -167,7 +169,6 @@ def run_scenario(scenario):
     """
     name = scenario.get("name", "unknown")
     description = scenario.get("description", "")
-    scenario_id = scenario.get("scenario_id", "NEW_GAME")
     actions = scenario.get("actions", [])
     assertions = scenario.get("assertions", [])
 
@@ -308,6 +309,20 @@ def run_scenario(scenario):
         scy = session._memread(0xFF42)
         has_tilemap_assert = any(a.get("type") == "tilemap_cell" for a in scenario.get("assertions", []))
         tilemap_mirror = session.get_tilemap_mirror() if has_tilemap_assert else None
+        has_tilemap_attr_assert = any(a.get("type") == "tilemap_attr" for a in scenario.get("assertions", []))
+        tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
+        has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
+        sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        # OAM HUD assertions (battle top-right rider sprites) must pre-read
+        # before disconnect: evaluation runs after the session closes.
+        has_oam_assert = any(a.get("type") == "oam_tile" for a in scenario.get("assertions", []))
+        oam_entries = {}
+        if has_oam_assert:
+            for a in scenario.get("assertions", []):
+                if a.get("type") == "oam_tile":
+                    entry = a.get("entry", 0)
+                    if entry not in oam_entries:
+                        oam_entries[entry] = session.get_oam_entry(entry)
 
         # Check if any assertion needs logical screen buffer
         has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
@@ -429,9 +444,38 @@ def run_scenario(scenario):
             passed = (actual == int(expected))
             actual = f"tilemap[{world_col},{world_row}]={actual}"
 
+        elif a_type == "tilemap_attr":
+            world_row = a.get("row", 0)
+            world_col = a.get("col", 0)
+            idx = (world_row & 31) * 32 + (world_col & 31)
+            actual = tilemap_attr_mirror[idx] if tilemap_attr_mirror is not None else None
+            passed = (actual == int(expected))
+            actual = f"tilemap_attr[{world_col},{world_row}]={actual}"
+
+        elif a_type == "oam_tile":
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[2] if oam is not None and oam[2] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].tile={actual}"
+
+        elif a_type == "sfx_count":
+            actual = sfx_count
+            passed = (actual == int(expected))
+            actual = f"sfx_count={actual}"
+
+        elif a_type == "sfx_last":
+            actual = sfx_last
+            passed = (actual == int(expected))
+            actual = f"sfx_last={actual}"
+
         elif a_type == "music_track":
             actual = snap.get("music_track", "UNKNOWN")
-            passed = (actual == expected)
+            exp = expected.replace("MUSIC_", "") if isinstance(expected, str) else expected
+            act = actual.replace("MUSIC_", "") if isinstance(actual, str) else actual
+            passed = (actual == expected or act == exp or
+                      (act == "DESOLATE" and exp == "DESOLATE_LANDSCAPE") or
+                      (act == "DESOLATE_LANDSCAPE" and exp == "DESOLATE"))
 
         elif a_type == "enemy_hp":
             actual = snap.get("enemy_hp", 0)

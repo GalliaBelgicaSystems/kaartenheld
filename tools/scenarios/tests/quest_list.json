@@ -1,63 +1,62 @@
 {
-  "name": "quest_list",
-  "test": true,
-  "description": "The QUEST tab (RIGHT from CARDS) lists the ongoing MONSTER HUNT quest with its progress",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "QUESTS"
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "QUEST"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "MONSTER HUNT"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "monsters: 1/3"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410,
-    "variables": {
-      "QUEST_MONSTER_HUNT": 1,
-      "MONSTERS_DEFEATED": 1
-    }
+ "name": "quest_list",
+ "test": true,
+ "description": "The QUEST tab (RIGHT from CARDS) lists the ongoing MONSTER HUNT quest with its progress",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "QUESTS"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "QUEST"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "MONSTER HUNT"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "monsters: 1/3"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MONSTERS_DEFEATED": 1
+  }
+ }
 }

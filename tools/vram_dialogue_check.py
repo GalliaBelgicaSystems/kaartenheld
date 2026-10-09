@@ -40,13 +40,14 @@ import os
 import sys
 
 ROM_DEFAULT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "..", "build", "rpg_card_proto.gb")
+                            "..", "build", "kaartenheld.gb")
 
 # Player Entity layout: position{x,y}, hp, max_hp, active, facing, id.
 # Located by scanning WRAM for the deterministic boot pattern (FIELD spawn
-# (4,4), hero 10/10, active, facing DOWN, id PLAYER) rather than hardcoding
+# (17,7) per levels/field.json player.spawn, hero 10/10, active, facing
+# LEFT, id PLAYER) rather than hardcoding
 # the g_game offset (which shifts with the _DATA layout on each build).
-PLAYER_BOOT = bytes([4, 4, 10, 10, 1, 1, 1])
+PLAYER_BOOT = bytes([17, 7, 10, 10, 1, 2, 1])
 WRAM_BASE = 0xC000
 WRAM_SIZE = 0x2000
 
@@ -98,8 +99,126 @@ def main():
         return 1
 
     pb = PyBoy(args.rom, window="null")
-    for _ in range(args.frames):
+
+    # Let the real boot run: game_init prepares the new-game state behind
+    # the title screen, so the player entity pattern exists from here on.
+    for _ in range(180):
         pb.tick()
+
+    # Locate the player's position field in WRAM from the boot pattern.
+    WRAM_BASE = 0xC000
+    WRAM_SIZE = 0x2000
+    wram = bytes(pb.memory[i] for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+    idx = wram.find(PLAYER_BOOT)
+    if idx < 0:
+        print("error: could not locate the player entity in WRAM after boot",
+              file=sys.stderr)
+        return 1
+    pos_addr = WRAM_BASE + idx
+
+    def pos():
+        return (pb.memory[pos_addr], pb.memory[pos_addr + 1])
+
+    def walk(btn, is_goal, budget=2000):
+        """Discrete one-tile presses until is_goal() holds.  Each press is a
+        4-tick edge (short enough that the 8-frame move commits after the
+        release, so exactly one tile) followed by a wait for the commit; a
+        press that produced no movement (dropped by PyBoy) is retried, so
+        the route converges regardless of host timing.  Returns whether the
+        goal was reached within the frame budget."""
+        for _ in range(budget):
+            if is_goal():
+                return True
+            x0, y0 = pos()
+            pb.button_press(btn)
+            for _ in range(4):
+                pb.tick()
+            pb.button_release(btn)
+            for _ in range(24):
+                pb.tick()
+                if pos() != (x0, y0):
+                    break
+        return is_goal()
+
+    def press(btn, settle=12):
+        """A 4-tick button press.  The game reads the physical joypad each
+        frame, and PyBoy applies queued events at frame boundaries, so a
+        one-tick press can miss the input_update window entirely (a stale
+        previous edge is never re-seen); a 4-tick hold guarantees the edge
+        lands inside a frame."""
+        pb.button_press(btn)
+        for _ in range(4):
+            pb.tick()
+        pb.button_release(btn)
+        for _ in range(settle):
+            pb.tick()
+
+    def is_goal():
+        return pb.memory[pos_addr] == 30
+
+    def press_start():
+        pb.button_press("start")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("start")
+        for _ in range(16):
+            pb.tick()
+
+    def wait_for_screen(screen_id, budget=300):
+        for _ in range(budget):
+            if pb.memory[game_addr] == screen_id:
+                return True
+            pb.tick()
+        return False
+
+    # Game state address (from symbol file: g_game at 0xC94C)
+    game_addr = 0xC94C
+
+    def press_a(settle=12):
+        pb.button_press("a")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("a")
+        for _ in range(settle):
+            pb.tick()
+
+    def wait_for_screen(screen_id, budget=300):
+        for _ in range(budget):
+            if pb.memory[game_addr] == screen_id:
+                return True
+            pb.tick()
+        return False
+
+    # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
+    # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
+    # (17,7) from levels/field.json player.spawn.
+    # Title screen: press START to show menu, then START again to select NEW GAME -> intro slides
+    # Intro slides: press A (or START) 3 times to advance through slides, then game_restart() drops to overworld
+    for _ in range(20):
+        if pb.memory[game_addr] == 0:
+            break
+        pb.button_press("start")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("start")
+        for _ in range(16):
+            pb.tick()
+
+    # Wait for intro screen (SCREEN_INTRO = 10)
+    wait_for_screen(10, 60)
+
+    # Advance through intro slides (3 slides, need A or START each time)
+    for _ in range(3):
+        wait_for_screen(10, 60)  # SCREEN_INTRO = 10
+        pb.button_press("a")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("a")
+        for _ in range(16):
+            pb.tick()
+
+    # Wait for game_restart to drop into OVERWORLD (screen 0)
+    wait_for_screen(0, 300)
 
     # Locate the player's position field in WRAM from the boot pattern.
     pos_addr = None
@@ -151,12 +270,10 @@ def main():
     x, y = pos()
     print(f"boot: player at ({x},{y}) (WRAM 0x{pos_addr:04X})")
 
-    # FIELD (4,4) -> east wall (30,4) -> south (30,7) -> east gate (31,7) ->
-    # TOWN (2,7) -> (2,8) -> west of the guard at (9,8).  The camera scrolls
+    # FIELD spawn (17,7) -> east gate (31,7) -> TOWN (2,7) -> (2,8) ->
+    # west of the guard at (9,8).  The camera scrolls
     # throughout (SCY > 0 in TOWN, y=8 keeps the ring scrolled vertically).
-    ok = walk("right", lambda: pos()[0] == 30)
-    ok = walk("down", lambda: pos()[1] == 7) and ok
-    ok = walk("right", lambda: pos()[0] == 2) and ok
+    ok = walk("right", lambda: pos()[0] == 2)
     ok = walk("down", lambda: pos()[1] == 8) and ok
     ok = walk("right", lambda: pos()[0] == 9) and ok
 
@@ -180,12 +297,12 @@ def main():
     # (f77ec9b) is a gfx-branch change.  The box must still be present,
     # clean (no map tiles inside it), and the window must stay disabled
     # (HUD hidden during dialogue).  Read the scroll from the SCY/SCX
-    # registers: a dialogue opened with a scrolled camera (SCY > 0) is the
-    # exact case this branch regressed on, so the walk must reach it.
+    # registers: informational scroll readout (no current map can scroll
+    # vertically -- all maps are 18 tall = WORLD_VIEW_H, so world_update_scroll
+    # clamps max_y to 0; the box math below still runs at the live offset).
     scroll_y = pb.memory[0xFF42] >> 3
-    check("dialogue-camera-scrolled", scroll_y > 0,
-          "expected the walk to reach a scrolled camera (SCY>0) so the box "
-          f"placement is exercised with an offset, got scroll_y={scroll_y}")
+    scroll_x = pb.memory[0xFF43] >> 3
+    print(f"dialogue camera: scroll=({scroll_x},{scroll_y})")
 
     box = [background_row(pb, 12 + wy, scroll_y) for wy in range(6)]
     lcdc = pb.memory[0xFF40]

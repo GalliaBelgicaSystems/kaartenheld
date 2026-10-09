@@ -1,48 +1,47 @@
 {
-  "name": "actor_defeat_initial",
-  "test": true,
-  "description": "A DEFEATED persistent actor in initial_state is not spawned into the scene",
-  "scenario_id": "FIRST_ENCOUNTER",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 14,
-      "expected_y": 8
-    },
-    {
-      "type": "actor_state",
-      "actor": "SLIME_FIELD",
-      "expected_state": "DEFEATED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "ENCOUNTER_STARTED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 7005,
-    "world": {
-      "SLIME_FIELD": "DEFEATED"
-    }
+ "name": "actor_defeat_initial",
+ "test": true,
+ "description": "A DEFEATED persistent actor in initial_state is not spawned into the scene",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 14,
+   "expected_y": 8
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FIELD",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7005,
+  "world": {
+   "SLIME_FIELD": "DEFEATED"
+  }
+ }
 }

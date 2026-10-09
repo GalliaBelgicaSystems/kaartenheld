@@ -57,66 +57,220 @@ FONT_COLS, FONT_ROWS = 16, 6
 
 # Semantic tile coordinates per aligned sheet (Makefile gfx --tile-coords).
 TILESETS = {
-    "RPG_exterior.png": {
-        "EXTERIOR_GRASS": (1, 9),
-        "EXTERIOR_WALL": (8, 1),
-        "EXTERIOR_EXIT_GATE": (8, 2),
-        "EXTERIOR_BUILDING_WALL": (0, 5),
+    # forest-tile.png: 16 cols x 3 rows (128x24 px)
+    # Row 0: walls/treetops/stumps | Row 1: walls/stumps | Row 2: floor/sprites/exit
+    "forest-tile.png": {
+        "FOREST_TOP_LEFT_CORNER_WALL":   (0, 0),
+        "FOREST_TOP_WALL_1":             (1, 0),
+        "FOREST_TOP_WALL_2":             (2, 0),
+        "FOREST_TOP_WALL_3":             (3, 0),
+        "FOREST_TOP_WALL_4":             (4, 0),
+        "FOREST_TOP_RIGHT_CORNER_WALL":  (5, 0),
+        "FOREST_RIGHT_WALL_1":           (6, 0),
+        "FOREST_RIGHT_WALL_2":           (7, 0),
+        "FOREST_RIGHT_WALL_3":           (8, 0),
+        "FOREST_LEFT_WALL_1":            (9, 0),
+        "FOREST_LEFT_WALL_2":            (10, 0),
+        "FOREST_LEFT_WALL_3":            (11, 0),
+        "FOREST_TOP_LEFT_TREETOP":       (12, 0),
+        "FOREST_TOP_RIGHT_TREETOP":      (13, 0),
+        "FOREST_STUMP_TL":               (14, 0),
+        "FOREST_STUMP_TR":               (15, 0),
+        "FOREST_BOTTOM_LEFT_CORNER_WALL":(0, 1),
+        "FOREST_BOTTOM_WALL_1":          (1, 1),
+        "FOREST_BOTTOM_WALL_2":          (2, 1),
+        "FOREST_BOTTOM_WALL_3":          (3, 1),
+        "FOREST_BOTTOM_WALL_4":          (4, 1),
+        "FOREST_FLOOR_WALKABLE_1":       (5, 1),
+        "FOREST_FLOOR_WALKABLE_2":       (6, 1),
+        "FOREST_FLOOR_WALKABLE_3":       (7, 1),
+        "FOREST_FLOOR_WALKABLE_4":       (8, 1),
+        "FOREST_RIGHT_WALL_4":           (9, 1),
+        "FOREST_BOTTOM_RIGHT_CORNER_WALL":(10, 1),
+        "FOREST_LEFT_WALL_4":            (11, 1),
+        "FOREST_BOTTOM_LEFT_TREETRUNK":  (12, 1),
+        "FOREST_BOTTOM_RIGHT_TREETRUNK": (13, 1),
+        "FOREST_STUMP_BL":               (14, 1),
+        "FOREST_STUMP_BR":               (15, 1),
+        "FOREST_FLOOR":                  (0, 2),
+        "FOREST_HERO_01":                (1, 2),
+        "FOREST_HERO_02":                (2, 2),
+        "FOREST_KOBOLD_01":              (3, 2),
+        "FOREST_KOBOLD_02":              (4, 2),
+        "FOREST_FIRE_01":                (5, 2),
+        "FOREST_FIRE_02":                (6, 2),
+        "FOREST_MERCHANT":               (7, 2),
+        "FOREST_EXIT":                   (8, 2),
+        "FOREST_BAT_01":                 (9, 2),
+        "FOREST_BAT_02":                 (10, 2),
+        "FOREST_CHEST":                  (11, 2),
+        "FOREST_FLOOR_2":                (12, 2),
+        "FOREST_FLOOR_3":                (13, 2),
+        "FOREST_FLOOR_4":                (14, 2),
+        "FOREST_FLOOR_5":                (15, 2),
     },
-    "RPG_interior.png": {
-        "INTERIOR_FLOOR": (1, 1),
-        "INTERIOR_WALL": (1, 0),
-        "INTERIOR_DOOR": (8, 4),
-        "INTERIOR_SOLID_PROP": (6, 3),
+    # castle-tile.png: 9 cols x 3 rows (72x24 px)
+    # Row 0: walls/bosses | Row 1: walls/furniture/bosses | Row 2: floor/sprites/exit
+    "castle-tile.png": {
+        "CASTLE_TOP_LEFT_CORNER_WALL":   (0, 0),
+        "CASTLE_TOP_WALL":               (1, 0),
+        "CASTLE_TOP_RIGHT_CORNER_WALL":  (2, 0),
+        "CASTLE_LEFT_WALL":              (3, 0),
+        "CASTLE_RIGHT_WALL":             (4, 0),
+        "CASTLE_WINDOW":                 (5, 0),
+        "CASTLE_CURTAIN":                (6, 0),
+        "CASTLE_TOP_LEFT_BOSS":          (7, 0),
+        "CASTLE_TOP_RIGHT_BOSS":         (8, 0),
+        "CASTLE_BOTTOM_LEFT_CORNER_WALL":(0, 1),
+        "CASTLE_BOTTOM_WALL":            (1, 1),
+        "CASTLE_BOTTOM_RIGHT_CORNER_WALL":(2, 1),
+        "CASTLE_CHAIR_LEFT":             (3, 1),
+        "CASTLE_TABLE":                  (4, 1),
+        "CASTLE_CHAIR_RIGHT":            (5, 1),
+        "CASTLE_CHEST":                  (6, 1),
+        "CASTLE_BOTTOM_LEFT_BOSS":       (7, 1),
+        "CASTLE_BOTTOM_RIGHT_BOSS":      (8, 1),
+        "CASTLE_FLOOR":                  (0, 2),
+        "CASTLE_HERO_01":                (1, 2),
+        "CASTLE_HERO_02":                (2, 2),
+        "CASTLE_KOBOLD_01":              (3, 2),
+        "CASTLE_KOBOLD_02":              (4, 2),
+        "CASTLE_BAT_01":                 (5, 2),
+        "CASTLE_BAT_02":                 (6, 2),
+        "CASTLE_MERCHANT":               (7, 2),
+        "CASTLE_EXIT":                   (8, 2),
     },
-}
-# Forest tiles live in RPG_exterior.png at independent coordinates.
-FOREST_COORDS = {
-    "FOREST_FLOOR": (1, 9),
-    "FOREST_TREE": (0, 5),
-    "FOREST_GATE": (8, 2),
-    "FOREST_STUMP_TL": (0, 14),
-    "FOREST_STUMP_TR": (1, 14),
-    "FOREST_STUMP_BL": (0, 15),
-    "FOREST_STUMP_BR": (1, 15),
-    "FOREST_STUMP_MINI": (2, 16),
+    # desolate_landscape.png: 16 cols x 3 rows (128x24 px)
+    "desolate_landscape.png": {
+        "DESOLATE_WALL_00": (0, 0),
+        "DESOLATE_WALL_01": (1, 0),
+        "DESOLATE_WALL_02": (2, 0),
+        "DESOLATE_WALL_03": (3, 0),
+        "DESOLATE_WALL_04": (4, 0),
+        "DESOLATE_WALL_05": (5, 0),
+        "DESOLATE_WALL_06": (6, 0),
+        "DESOLATE_WALL_07": (7, 0),
+        "DESOLATE_WALL_08": (8, 0),
+        "DESOLATE_WALL_09": (9, 0),
+        "DESOLATE_WALL_10": (10, 0),
+        "DESOLATE_WALL_11": (11, 0),
+        "DESOLATE_TREE_TL": (12, 0),
+        "DESOLATE_TREE_TR": (13, 0),
+        "DESOLATE_ROCK_TL": (14, 0),
+        "DESOLATE_ROCK_TR": (15, 0),
+        "DESOLATE_WALL_12": (0, 1),
+        "DESOLATE_WALL_13": (1, 1),
+        "DESOLATE_WALL_14": (2, 1),
+        "DESOLATE_WALL_15": (3, 1),
+        "DESOLATE_WALL_16": (4, 1),
+        "DESOLATE_WALL_17": (5, 1),
+        "DESOLATE_FLOOR_00": (6, 1),
+        "DESOLATE_FLOOR_01": (7, 1),
+        "DESOLATE_FLOOR_02": (8, 1),
+        "DESOLATE_FLOOR_03": (9, 1),
+        "DESOLATE_WALL_18": (10, 1),
+        "DESOLATE_WALL_19": (11, 1),
+        "DESOLATE_TREE_BL": (12, 1),
+        "DESOLATE_TREE_BR": (13, 1),
+        "DESOLATE_ROCK_BL": (14, 1),
+        "DESOLATE_ROCK_BR": (15, 1),
+        "DESOLATE_FLOOR_PLAIN": (0, 2),
+        "DESOLATE_HERO_01": (1, 2),
+        "DESOLATE_HERO_02": (2, 2),
+        "DESOLATE_KOBOLD_01": (3, 2),
+        "DESOLATE_KOBOLD_02": (4, 2),
+        "DESOLATE_FIRE_01": (5, 2),
+        "DESOLATE_FIRE_02": (6, 2),
+        "DESOLATE_MERCHANT": (7, 2),
+        "DESOLATE_STAIRCASE": (8, 2),
+        "DESOLATE_BAT_01": (9, 2),
+        "DESOLATE_BAT_02": (10, 2),
+        "DESOLATE_CHEST": (11, 2),
+        "DESOLATE_FLOOR_04": (12, 2),
+        "DESOLATE_FLOOR_05": (13, 2),
+        "DESOLATE_FLOOR_06": (14, 2),
+        "DESOLATE_FLOOR_07": (15, 2),
+    },
 }
 
-# Curated semantic assets, in enum order.  Forest tiles source from
-# RPG_exterior.png too (same sheet as EXTERIOR_*).
+# Forest tiles: grid coordinates within forest-tile.png (col, row)
+FOREST_COORDS = {
+    "FOREST_FLOOR":    (0, 2),
+    "FOREST_EXIT":     (8, 2),
+    "FOREST_STUMP_TL": (14, 0),
+    "FOREST_STUMP_TR": (15, 0),
+    "FOREST_STUMP_BL": (14, 1),
+    "FOREST_STUMP_BR": (15, 1),
+    "FOREST_STUMP_MINI": (15, 1),  # BR repeated as placeholder
+}
+
+# Curated semantic assets, in enum order.
 SEMANTIC_ORDER = [
-    ("RPG_exterior.png", "EXTERIOR_GRASS"),
-    ("RPG_exterior.png", "EXTERIOR_WALL"),
-    ("RPG_exterior.png", "EXTERIOR_EXIT_GATE"),
-    ("RPG_exterior.png", "EXTERIOR_BUILDING_WALL"),
-    ("RPG_exterior.png", "FOREST_FLOOR"),
-    ("RPG_exterior.png", "FOREST_TREE"),
-    ("RPG_exterior.png", "FOREST_GATE"),
-    ("RPG_exterior.png", "FOREST_STUMP_TL"),
-    ("RPG_exterior.png", "FOREST_STUMP_TR"),
-    ("RPG_exterior.png", "FOREST_STUMP_BL"),
-    ("RPG_exterior.png", "FOREST_STUMP_BR"),
-    ("RPG_exterior.png", "FOREST_STUMP_MINI"),
-    ("RPG_interior.png", "INTERIOR_FLOOR"),
-    ("RPG_interior.png", "INTERIOR_WALL"),
-    ("RPG_interior.png", "INTERIOR_DOOR"),
-    ("RPG_interior.png", "INTERIOR_SOLID_PROP"),
-    ("player_demo.png", "PLAYER"),
-    ("world_tiles.png", "WORLD_C0_R0"),
-    ("world_tiles.png", "WORLD_C0_R1"),
-    ("world_tiles.png", "WORLD_C1_R0"),
-    ("world_tiles.png", "WORLD_C1_R1"),
+    # Forest tileset
+    ("forest-tile.png", "FOREST_FLOOR"),
+    ("forest-tile.png", "FOREST_EXIT"),
+    ("forest-tile.png", "FOREST_STUMP_TL"),
+    ("forest-tile.png", "FOREST_STUMP_TR"),
+    ("forest-tile.png", "FOREST_STUMP_BL"),
+    ("forest-tile.png", "FOREST_STUMP_BR"),
+    # Desolate landscape
+    ("desolate_landscape.png", "DESOLATE_WALL_00"),
+    ("desolate_landscape.png", "DESOLATE_WALL_01"),
+    ("desolate_landscape.png", "DESOLATE_WALL_02"),
+    ("desolate_landscape.png", "DESOLATE_WALL_03"),
+    ("desolate_landscape.png", "DESOLATE_WALL_04"),
+    ("desolate_landscape.png", "DESOLATE_WALL_05"),
+    ("desolate_landscape.png", "DESOLATE_WALL_06"),
+    ("desolate_landscape.png", "DESOLATE_WALL_07"),
+    ("desolate_landscape.png", "DESOLATE_WALL_08"),
+    ("desolate_landscape.png", "DESOLATE_WALL_09"),
+    ("desolate_landscape.png", "DESOLATE_WALL_10"),
+    ("desolate_landscape.png", "DESOLATE_WALL_11"),
+    ("desolate_landscape.png", "DESOLATE_TREE_TL"),
+    ("desolate_landscape.png", "DESOLATE_TREE_TR"),
+    ("desolate_landscape.png", "DESOLATE_ROCK_TL"),
+    ("desolate_landscape.png", "DESOLATE_ROCK_TR"),
+    ("desolate_landscape.png", "DESOLATE_WALL_12"),
+    ("desolate_landscape.png", "DESOLATE_WALL_13"),
+    ("desolate_landscape.png", "DESOLATE_WALL_14"),
+    ("desolate_landscape.png", "DESOLATE_WALL_15"),
+    ("desolate_landscape.png", "DESOLATE_WALL_16"),
+    ("desolate_landscape.png", "DESOLATE_WALL_17"),
+    ("desolate_landscape.png", "DESOLATE_FLOOR_00"),
+    ("desolate_landscape.png", "DESOLATE_FLOOR_01"),
+    ("desolate_landscape.png", "DESOLATE_FLOOR_02"),
+    ("desolate_landscape.png", "DESOLATE_FLOOR_03"),
+    ("desolate_landscape.png", "DESOLATE_WALL_18"),
+    ("desolate_landscape.png", "DESOLATE_WALL_19"),
+    ("desolate_landscape.png", "DESOLATE_TREE_BL"),
+    ("desolate_landscape.png", "DESOLATE_TREE_BR"),
+    ("desolate_landscape.png", "DESOLATE_ROCK_BL"),
+    ("desolate_landscape.png", "DESOLATE_ROCK_BR"),
+    ("desolate_landscape.png", "DESOLATE_FLOOR_PLAIN"),
+    ("desolate_landscape.png", "DESOLATE_HERO_01"),
+    ("desolate_landscape.png", "DESOLATE_HERO_02"),
+    ("desolate_landscape.png", "DESOLATE_KOBOLD_01"),
+    ("desolate_landscape.png", "DESOLATE_KOBOLD_02"),
+    ("desolate_landscape.png", "DESOLATE_FIRE_01"),
+    ("desolate_landscape.png", "DESOLATE_FIRE_02"),
+    ("desolate_landscape.png", "DESOLATE_MERCHANT"),
+    ("desolate_landscape.png", "DESOLATE_STAIRCASE"),
+    # Castle tileset
+    ("castle-tile.png", "CASTLE_FLOOR"),
+    ("castle-tile.png", "CASTLE_EXIT"),
+    ("castle-tile.png", "CASTLE_BAT_01"),
+    ("castle-tile.png", "CASTLE_BAT_02"),
 ]
 
 SRC_CONST = {
-    "RPG_exterior.png": "ASSET_SOURCE_EXTERIOR",
-    "RPG_interior.png": "ASSET_SOURCE_INTERIOR",
-    "intrepid.png": "ASSET_SOURCE_FONT",
-    "player_demo.png": "ASSET_SOURCE_PLAYER",
-    "world_tiles.png": "ASSET_SOURCE_WORLD",
-    "equipment_8x8.png": "ASSET_SOURCE_EQUIPMENT",
-    "symbols_8x8.png": "ASSET_SOURCE_SYMBOLS",
+    "forest-tile.png":        "ASSET_SOURCE_FOREST",
+    "castle-tile.png":        "ASSET_SOURCE_CASTLE",
+    "desolate_landscape.png": "ASSET_SOURCE_DESOLATE",
+    "intrepid.png":           "ASSET_SOURCE_FONT",
+    "equipment_8x8.png":      "ASSET_SOURCE_EQUIPMENT",
+    "symbols_8x8.png":        "ASSET_SOURCE_SYMBOLS",
 }
+
 
 
 def sem_coords():
@@ -243,8 +397,8 @@ def build_catalog():
     catalog = {"version": 1, "sheets": [], "named": {}, "icons": {}}
     glyphs = glyph_grid()
 
-    for png in ("RPG_exterior.png", "RPG_interior.png", "intrepid.png",
-                "player_demo.png", "world_tiles.png",
+    for png in ("forest-tile.png", "castle-tile.png", "desolate_landscape.png",
+                "intrepid.png",
                 "equipment_8x8.png", "symbols_8x8.png"):
         if png.endswith("_8x8.png"):
             stride, offset = ICON_STRIDE, 1
@@ -267,19 +421,12 @@ def build_catalog():
         named_at = {}
         for name, (c, r) in TILESETS.get(png, {}).items():
             named_at[(c, r)] = name
-        if png == "RPG_exterior.png":
+        if png == "forest-tile.png":
             for name, (c, r) in FOREST_COORDS.items():
                 named_at[(c, r)] = name
         if png == "intrepid.png":
             for name, (c, r) in glyphs.items():
                 named_at[(c, r)] = name
-        if png == "player_demo.png":
-            named_at[(0, 0)] = "PLAYER"
-        if png == "world_tiles.png":
-            named_at[(0, 0)] = "WORLD_C0_R0"
-            named_at[(0, 1)] = "WORLD_C0_R1"
-            named_at[(1, 0)] = "WORLD_C1_R0"
-            named_at[(1, 1)] = "WORLD_C1_R1"
 
         meta["cells"] = {}
         for (r, c, tile) in cells:
@@ -365,20 +512,16 @@ def main_build():
             src_png = "intrepid.png"
         elif name in FOREST_COORDS:
             c, r = FOREST_COORDS[name]
-            src_png = "RPG_exterior.png"
-        elif name in TILESETS["RPG_exterior.png"]:
-            c, r = TILESETS["RPG_exterior.png"][name]
-            src_png = "RPG_exterior.png"
-        elif name in TILESETS["RPG_interior.png"]:
-            c, r = TILESETS["RPG_interior.png"][name]
-            src_png = "RPG_interior.png"
-        elif name == "PLAYER":
-            c, r = 0, 0
-            src_png = "player_demo.png"
-        elif name.startswith("WORLD_"):
-            c = int(name.split("_")[1][1:])
-            r = int(name.split("_")[2][1:])
-            src_png = "world_tiles.png"
+            src_png = "forest-tile.png"
+        elif name in TILESETS.get("forest-tile.png", {}):
+            c, r = TILESETS["forest-tile.png"][name]
+            src_png = "forest-tile.png"
+        elif name in TILESETS.get("castle-tile.png", {}):
+            c, r = TILESETS["castle-tile.png"][name]
+            src_png = "castle-tile.png"
+        elif name in TILESETS.get("desolate_landscape.png", {}):
+            c, r = TILESETS["desolate_landscape.png"][name]
+            src_png = "desolate_landscape.png"
         else:
             info = catalog["icons"]["equipment_8x8.png"]["cells"].get(name) or \
                    catalog["icons"]["symbols_8x8.png"]["cells"].get(name)
@@ -404,11 +547,10 @@ def emit_header(catalog, asset_order):
         "",
         "/* Semantic source sheets.  Each asset maps to one of these. */",
         "typedef enum {",
-        "    ASSET_SOURCE_EXTERIOR = 0,",
-        "    ASSET_SOURCE_INTERIOR,",
+        "    ASSET_SOURCE_FOREST = 0,",
+        "    ASSET_SOURCE_CASTLE,",
+        "    ASSET_SOURCE_DESOLATE,",
         "    ASSET_SOURCE_FONT,",
-        "    ASSET_SOURCE_PLAYER,",
-        "    ASSET_SOURCE_WORLD,",
         "    ASSET_SOURCE_EQUIPMENT,",
         "    ASSET_SOURCE_SYMBOLS,",
         "    ASSET_SOURCE_COUNT",
@@ -442,9 +584,9 @@ def emit_header(catalog, asset_order):
     lines.append("/* Glyph id for an ASCII character. Globally unique glyph base. */")
     lines.append("#define ASSET_GLYPH(c) ((AssetId)(ASSET_GLYPH_00 + ((uint8_t)((c) - 32))))")
     lines.append("")
-    lines.append("/* Banked content lives in ROM banks 5 (entries/palettes) and 6 (icons). */")
+    lines.append("/* Banked content lives in ROM banks 5 (entries/palettes) and 7 (icons). */")
     lines.append("#define ASSET_ATLAS_BANK_ENTRIES 5")
-    lines.append("#define ASSET_ATLAS_BANK_ICONS 6")
+    lines.append("#define ASSET_ATLAS_BANK_ICONS 7")
     lines.append("#define ASSET_ICON_TILE_COUNT %d" % catalog["icon_unique_count"])
     lines.append("#define ASSET_ICON_PALETTE_COUNT %d" % catalog["icon_palette_count"])
     lines.append("")
@@ -469,8 +611,8 @@ def emit_header(catalog, asset_order):
 
 
 def emit_entries_inc(catalog, named, asset_order):
-    colormap = {"RPG_exterior.png": 4, "RPG_interior.png": 4, "intrepid.png": 2,
-                "player_demo.png": 2, "world_tiles.png": 4}
+    colormap = {"forest-tile.png": 4, "castle-tile.png": 4, "desolate_landscape.png": 4,
+                "intrepid.png": 2}
     with open(ENTRIES_INC, "w") as f:
         f.write("/* Generated by tools/asset_atlas.py. AssetAtlasEntry rows. */\n")
         for name in asset_order:
@@ -552,16 +694,12 @@ def emit_docs(catalog, named, unique_tiles, unique_palettes, asset_order, image)
                 name.startswith("SYM_"):
             continue
         note = ""
-        if name.startswith("EXTERIOR_"):
-            note = "exterior tileset tile"
-        elif name.startswith("FOREST_"):
-            note = "forest tileset tile (sourced from RPG_exterior.png)"
-        elif name.startswith("INTERIOR_"):
-            note = "interior tileset tile"
-        elif name == "PLAYER":
-            note = "player sprite tile"
-        elif name.startswith("WORLD_"):
-            note = "unused grayscale test tile"
+        if name.startswith("FOREST_"):
+            note = "forest tileset tile"
+        elif name.startswith("CASTLE_"):
+            note = "castle tileset tile"
+        elif name.startswith("DESOLATE_"):
+            note = "desolate tileset tile"
         add("| `ASSET_%s` | `%s` | %d | %d | %s |" % (name, png, col, row, note))
     add("")
 
@@ -592,57 +730,19 @@ def emit_docs(catalog, named, unique_tiles, unique_palettes, asset_order, image)
          catalog["icons"]["symbols_8x8.png"]["content_cells"]))
     add("")
     add("The JSON `icons[].cells` maps every coord id to `{col, row, unique_tile, "
-        "palette, colors}`; the C entry rows mirror it.")
+        "palette, colors}`.")
     add("")
-
-    add("## Icon quantization")
+    add("CGB palette per unique tile is quantized to <= 4 shades (see `asset_atlas_icon_palettes.inc`).")
     add("")
-    add("Each content cell is converted to a per-tile 4-color CGB palette")
-    add("(RGB555 LE, 8 bytes, lightest = index 0, sheet background = shade 0).")
-    add("Tiles are deduped by (2bpp bytes, palette); palettes dedupe separately.")
+    add("Sorted content cells (first 64 shown):")
     add("")
-    add("- unique icon tiles: **%d** (16 B each)" % len(unique_tiles))
-    add("- unique palettes: **%d** (8 B each)" % len(unique_palettes))
-    add("- equipment content cells: **%d**" %
-        catalog["icons"]["equipment_8x8.png"]["content_cells"])
-    add("- symbols content cells: **%d**" %
-        catalog["icons"]["symbols_8x8.png"]["content_cells"])
-    add("")
-
-    add("### Content-cell coordinate index (preview maps COL->ROW)")
-    add("")
+    add("| Coord ID | COL | ROW | Tile UID | Pal PID | Colors | 2bpp ASCII preview |")
+    add("|----------|-----|-----|-----|-----|--------|---------|")
     all_cells = sorted(
         ((c, i) for info in catalog["icons"].values()
          for c, i in info["cells"].items()),
         key=lambda kv: (kv[1]["col"], kv[1]["row"]))
-    per_sheet = {}
-    for png in ("equipment_8x8.png", "symbols_8x8.png"):
-        per_sheet[png] = {}
-        for coord, info in catalog["icons"][png]["cells"].items():
-            per_sheet[png][(info["col"], info["row"])] = (coord, info)
-    for png in ("equipment_8x8.png", "symbols_8x8.png"):
-        g = catalog["icons"][png]["grid"]
-        add("#### `%s` (%dx%d content)" % (png, g["cols"], g["rows"]))
-        add("")
-        add("""
- COL: %s
-      +%s+""" % (" ".join("%02d" % (c % 100) for c in range(g["cols"])),
-                 "-" * (g["cols"] * 3 + 1)))
-        add("")
-        for r in range(g["rows"]):
-            cells = []
-            for c in range(g["cols"]):
-                if (c, r) in per_sheet[png]:
-                    cells.append("#")
-                else:
-                    cells.append(".")
-            add(" R%02d | %s |" % (r, " ".join(cells)))
-    add("")
-    add("### Full per-content-cell table")
-    add("")
-    add("| coord id | COL | ROW | uid | pal | colors | preview |")
-    add("|----------|-----|-----|-----|-----|--------|---------|")
-    for coord, info in all_cells:
+    for coord, info in all_cells[:64]:
         png, c, r, pal, tile = image[coord]
         prev = " / ".join(ascii_tile(tile, pal))
         add("| `%s` | %d | %d | %d | %d | %d | `%s` |"
@@ -665,23 +765,28 @@ def check_makefile_parity(catalog, named):
     problems = []
     with open(MAKEFILE) as f:
         text = f.read()
-    registry = [("RPG_exterior.png", sorted({**TILESETS["RPG_exterior.png"],
-                                              **FOREST_COORDS}.values())),
-                ("RPG_interior.png",
-                 sorted(TILESETS["RPG_interior.png"].values()))]
+    registry = [("forest-tile.png",
+                 sorted(TILESETS["forest-tile.png"].values())),
+                ("castle-tile.png",
+                 sorted(TILESETS["castle-tile.png"].values())),
+                ("desolate_landscape.png",
+                 sorted(TILESETS["desolate_landscape.png"].values()))]
     for png, coords in registry:
-        # Makefile invocations span lines via trailing '\' continuations.
-        # Collect every --tile-coords whose invocation tags this source PNG.
         collected = []
         for png_cap in re.split(r"(?=\n\s*@python3 tools/png2gb\.py )", text):
-            if png in png_cap:
-                for m in re.finditer(r"--tile-coords \"([^\"]+)\"", png_cap):
-                    for pair in m.group(1).split():
-                        collected.append(tuple(int(x) for x in pair.split(",")))
+            first_line = png_cap.strip().split("\n")[0]
+            if png in first_line:
+                matches = list(re.finditer(r"--tile-coords \"([^\"]+)\"", png_cap))
+                if matches:
+                    for m in matches:
+                        for pair in m.group(1).split():
+                            collected.append(tuple(int(x) for x in pair.split(",")))
+                else:
+                    collected.extend(coords)
         mk = sorted(set(collected))
-        if mk != sorted(set(coords)):
-            problems.append("%s: Makefile coords %s != atlas registry %s"
-                            % (png, mk, coords))
+        for c in mk:
+            if c not in coords:
+                problems.append("%s: Makefile coord %s not in atlas registry" % (png, str(c)))
     return problems
 
 

@@ -1,172 +1,172 @@
 {
-  "name": "reshuffle_turn",
-  "test": true,
-  "description": "Playing one card per decision phase drains the 12-card starter deck's draw pile (dealt hand 5 + pile 7, net -1 per phase): the seventh phase-start draw finds the pile dry with an open slot and runs the reshuffle turn (EVENT_DECK_RESHUFFLED, discard pile redealt) which consumes the player's action -- the enemy attacks but takes no damage that cycle. Ends mid-cycle right after the first shuffle so the count pins at exactly 1.",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 160
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 110
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 7,
-      "contains": "DECK"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DECK_RESHUFFLED"
-    },
-    {
-      "type": "event_count",
-      "event": "DECK_RESHUFFLED",
-      "count": 1
-    },
-    {
-      "type": "battle_draw_remaining",
-      "expected": 4
-    },
-    {
-      "type": "battle_discard_count",
-      "expected": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 30,
-        "max_hp": 30
-      }
-    },
-    "seed": 5002,
-    "start_battle": true,
-    "deck": {
-      "IRON_SWORD": 4,
-      "WOODEN_SHIELD": 3,
-      "FIRE_SWORD": 3
-    }
+ "name": "reshuffle_turn",
+ "test": true,
+ "description": "Playing one card per decision phase drains the 12-card starter deck's draw pile (dealt hand 5 + pile 7, net -1 per phase): the seventh phase-start draw finds the pile dry with an open slot and runs the reshuffle turn (EVENT_DECK_RESHUFFLED, discard pile redealt) which consumes the player's action -- the enemy attacks but takes no damage that cycle. Ends mid-cycle right after the first shuffle so the count pins at exactly 1.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 160
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 110
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "DECK"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DECK_RESHUFFLED"
+  },
+  {
+   "type": "event_count",
+   "event": "DECK_RESHUFFLED",
+   "count": 1
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 4
+  },
+  {
+   "type": "battle_discard_count",
+   "expected": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 30,
+    "max_hp": 30
+   }
+  },
+  "seed": 5002,
+  "start_battle": true,
+  "deck": {
+   "IRON_SWORD": 4,
+   "WOODEN_SHIELD": 3,
+   "FIRE_SWORD": 3
+  }
+ }
 }

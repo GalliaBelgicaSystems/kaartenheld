@@ -2,7 +2,7 @@
 """Print a reproducible memory budget for the debug ROM from its linker map.
 
 Usage:
-    python3 tools/memmap.py build/rpg_card_proto_debug.map
+    python3 tools/memmap.py build/kaartenheld_debug.map
 
 Reports the fixed code area (_CODE), the non-bankable _HOME area (which must
 stay below 0x8000 on MBC5 -- CPU addresses >= 0x8000 alias VRAM), and the WRAM
@@ -26,6 +26,14 @@ def main():
                 continue
             name, start, size, nbytes = m.groups()
             if name in ("_CODE", "_HOME", "_INITIALIZER", "_DATA"):
+                areas[name] = (int(start, 16), int(size, 16), int(nbytes))
+            elif re.fullmatch(r"_CODE_[0-9]+", name):
+                # Switchable ROM bank content: each bank is 16 KB.  An
+                # overfull bank makes rgblink spill into the next bank and
+                # silently corrupt it (bank 6 music overflowed ~1 KB into
+                # bank 7's icon table when song_castle was added) -- fail
+                # here instead.  Tracked separately so the fixed-area logic
+                # above is untouched.
                 areas[name] = (int(start, 16), int(size, 16), int(nbytes))
 
     # The RAM-resident banked trampolines (crt0.s) are byte-copied at boot
@@ -98,6 +106,22 @@ def main():
         ok = False
 
     print()
+    print("Switchable ROM bank size checks (16 KB each)")
+    print("--------------------------------------------")
+    bank_names = sorted((n for n in areas if re.fullmatch(r"_CODE_[0-9]+", n)),
+                        key=lambda n: int(n.rsplit("_", 1)[1]))
+    if not bank_names:
+        print("(no banked areas found)")
+        ok = False
+    for name in bank_names:
+        start, size, nbytes = areas[name]
+        headroom = 0x4000 - size
+        status = "OK" if size <= 0x4000 else "VIOLATION (spills into next bank)"
+        if size > 0x4000:
+            ok = False
+        print(f"{name:<26} : {size:>6} B  headroom: {headroom:>5} B  [{status}]")
+
+    print()
     print("RAM-resident trampoline size checks")
     print("-----------------------------------")
     for name, (start_sym, end_sym, buf_sym) in tramp_bodies.items():
@@ -127,12 +151,14 @@ def main():
         "_save_op_banked": "SRAM save/load body (bank 3)",
         "_deck_discard_banked": "discard push (bank 3)",
         "_world_px_banked": "pixel interpolation (bank 3)",
+        "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
+        "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
         "_game_render_reset_banked": "render cache reset (bank 3)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
         "_world_on_battle_fled_banked": "battle-fled world update (bank 3)",
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
-        "_deck_reshuffle_banked": "discard reshuffle (bank 2)",
+        "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
         "_ui_format_int_banked": "int formatter (bank 2)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
@@ -142,7 +168,7 @@ def main():
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_loot_synth_banked": "loot def synthesis (bank 3)",
         "_game_loot_drop_banked": "victory drop roll (bank 3)",
-        "_world_patrol_slot_banked": "world actor patrol step (bank 3)",
+        "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",
         "_battle_nav_banked": "battle hand/target nav cluster (bank 4)",
         "_title_content_render": "title screen render (bank 4)",
         "_tutorial_content_render": "tutorial screen render (bank 4)",
@@ -150,6 +176,8 @@ def main():
         "_ending_content_render": "ending screen render (bank 4)",
         "_game_over_content_render": "game over screen render (bank 4)",
         "_item_screen_render_banked": "item screen render (bank 2)",
+        "_ui_load_cram_banked": "CGB CRAM palette loader (bank 5)",
+        "_ui_load_tileset_banked": "tileset VRAM & palette loader (bank 5)",
     }
     print()
     print("Banked target address validation")

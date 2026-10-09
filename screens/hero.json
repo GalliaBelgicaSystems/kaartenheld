@@ -1,0 +1,25 @@
+{
+  "$schema": "./schema/hero.schema.json",
+  "id": "hero",
+  "name": "Hero",
+  "start_hp": 10,
+  "start_gold": 20,
+  "starter_deck": [
+    "CARD_IRON_SWORD",
+    "CARD_IRON_SWORD",
+    "CARD_WOODEN_SHIELD",
+    "CARD_WOODEN_SHIELD",
+    "CARD_FIRE_SWORD",
+    "CARD_IRON_SWORD",
+    "CARD_WOODEN_SHIELD",
+    "CARD_FIRE_SWORD",
+    "CARD_FIRE_SWORD",
+    "CARD_POISON_DAGGER",
+    "CARD_POISON_DAGGER",
+    "CARD_IRON_SWORD"
+  ],
+  "overworld": {
+    "cells": ["hero_f0", "hero_f1"],
+    "palette": "sprites"
+  }
+}

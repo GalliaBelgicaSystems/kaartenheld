@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/entity_type.schema.json",
+  "title": "Entity Type Definition",
+  "description": "A non-battle entity type (friendly NPC / quest actor): id, label, display name and overworld rendering. Battle-capable and shared-overworld-art types live in screens/enemy_types/. The editor and the entity-id compiler both read these; entity ids are generated from the union of both directories.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "label", "kind", "name"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "description": "Unique type id (lowercase, underscores). Maps to ENTITY_ID_<ID>."
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Human-readable label for the editor."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["npc", "item"],
+      "description": "npc = friendly actor; item = pickup/prop actor."
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Default display / battle name."
+    },
+    "visual": {
+      "type": "string",
+      "maxLength": 1,
+      "description": "ASCII fallback glyph."
+    },
+    "sprite_kind": {
+      "type": "string",
+      "enum": ["tile", "ascii", "chest", "boss"],
+      "description": "How this type renders when it has no shared overworld art."
+    }
+  }
+}

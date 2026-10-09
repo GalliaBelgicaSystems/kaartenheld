@@ -1,93 +1,92 @@
 {
-  "name": "battle_run",
-  "test": true,
-  "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (2/5 after one SW3 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. The slime is asserted ALIVE via its persistent lifecycle, not by position, because its patrol moves it within ~30 frames of returning to the overworld.",
-  "scenario_id": "FIRST_ENCOUNTER",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 125
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 45
-    },
-    {
-      "type": "press",
-      "button": "B"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 7
-    },
-    {
-      "type": "event_occurred",
-      "event": "BATTLE_FLED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "BATTLE_WON"
-    },
-    {
-      "type": "actor_state",
-      "actor": "SLIME_FIELD",
-      "expected_state": "ALIVE"
-    },
-    {
-      "type": "variable",
-      "variable": "MONSTERS_DEFEATED",
-      "expected": 0
-    },
-    {
-      "type": "currency",
-      "currency": "GOLD",
-      "expected": 0
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8601,
-    "currency": {
-      "GOLD": 0
-    }
+ "name": "battle_run",
+ "test": true,
+ "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (2/5 after one SW3 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. The slime is asserted ALIVE via its persistent lifecycle, not by position, because its patrol moves it within ~30 frames of returning to the overworld.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 125
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_FLED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FIELD",
+   "expected_state": "ALIVE"
+  },
+  {
+   "type": "variable",
+   "variable": "MONSTERS_DEFEATED",
+   "expected": 0
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8601,
+  "currency": {
+   "GOLD": 0
+  }
+ }
 }

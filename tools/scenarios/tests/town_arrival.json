@@ -1,50 +1,49 @@
 {
-  "name": "town_arrival",
-  "test": true,
-  "description": "Walk east on Field into gate tile to enter Town map",
-  "scenario_id": "TOWN_ARRIVAL",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 2,
-      "expected_y": 7
-    },
-    {
-      "type": "event_occurred",
-      "event": "MAP_CHANGED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "STORY_FLAG_SET",
-      "flag": "ARRIVED_TOWN"
-    },
-    {
-      "type": "story_flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 30,
-      "y": 7,
-      "facing": "DOWN"
-    },
-    "seed": 999
+ "name": "town_arrival",
+ "test": true,
+ "description": "Walk east on Field into gate tile to enter Town map",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 2,
+   "expected_y": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STORY_FLAG_SET",
+   "flag": "ARRIVED_TOWN"
+  },
+  {
+   "type": "story_flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 30,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 999
+ }
 }

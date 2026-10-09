@@ -1,54 +1,53 @@
 {
-  "name": "card_filter_type",
-  "test": true,
-  "description": "Type filter ATTACK shows only attack cards in the CARDS tab (swords + dagger, no shield/ring rows)",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_filter",
-      "filter": "ATTACK"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "I SW"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 8,
-      "contains": "SH2"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 8,
-      "contains": "HE5"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410
+ "name": "card_filter_type",
+ "test": true,
+ "description": "Type filter ATTACK shows only attack cards in the CARDS tab (swords + dagger, no shield/ring rows)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "ATTACK"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "I SW"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 8,
+   "contains": "SH2"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 8,
+   "contains": "HE5"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
 }

@@ -1,0 +1,765 @@
+{
+  "id": "village",
+  "label": "Oakhaven Village",
+  "gb_tileset_kind": "WORLD_TILESET_VILLAGE",
+  "indexed": true,
+  "tiles": [
+    {
+      "id": "village_top_left_corner_wall",
+      "palette": "town1",
+      "label": "top left corner wall",
+      "gb_constant": "TILE_VILLAGE_00",
+      "walkable": false,
+      "color": "#806a44",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_left_corner_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_top_wall",
+      "palette": "town1",
+      "label": "top wall",
+      "gb_constant": "TILE_VILLAGE_01",
+      "walkable": false,
+      "color": "#7e6945",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_top_right_corner_wall",
+      "palette": "town1",
+      "label": "top right corner wall",
+      "gb_constant": "TILE_VILLAGE_02",
+      "walkable": false,
+      "color": "#806a44",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_right_corner_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_right_wall",
+      "palette": "town1",
+      "label": "right wall",
+      "gb_constant": "TILE_VILLAGE_03",
+      "walkable": false,
+      "color": "#a18c67",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_right_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_dog_frame_1",
+      "palette": "town1",
+      "label": "dog frame 1",
+      "gb_constant": "TILE_VILLAGE_04",
+      "walkable": false,
+      "color": "#a58f68",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_dog_frame_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_dog_frame_2",
+      "palette": "town1",
+      "label": "dog frame 2",
+      "gb_constant": "TILE_VILLAGE_05",
+      "walkable": false,
+      "color": "#a58c67",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_dog_frame_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_plain_floor_1",
+      "palette": "town1",
+      "label": "plain floor",
+      "gb_constant": "TILE_VILLAGE_06",
+      "walkable": true,
+      "color": "#b6a27e",
+      "ascii": ".",
+      "image_url": "/tiles/village/village_plain_floor_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_left_well",
+      "palette": "town5",
+      "label": "top left well",
+      "gb_constant": "TILE_VILLAGE_07",
+      "walkable": false,
+      "color": "#9f8f73",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_left_well.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_right_well",
+      "palette": "town5",
+      "label": "top right well",
+      "gb_constant": "TILE_VILLAGE_08",
+      "walkable": false,
+      "color": "#99886b",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_right_well.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_left_roof",
+      "palette": "town2",
+      "label": "top left roof",
+      "gb_constant": "TILE_VILLAGE_10",
+      "walkable": false,
+      "color": "#ae9974",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_left_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_middle_roof",
+      "palette": "town2",
+      "label": "top middle roof",
+      "gb_constant": "TILE_VILLAGE_11",
+      "walkable": false,
+      "color": "#b39a6e",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_middle_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_right_roof",
+      "palette": "town2",
+      "label": "top right roof",
+      "gb_constant": "TILE_VILLAGE_12",
+      "walkable": false,
+      "color": "#ad9975",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_right_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_left_roof_2",
+      "palette": "town2",
+      "label": "top left roof 2",
+      "gb_constant": "TILE_VILLAGE_13",
+      "walkable": false,
+      "color": "#ae9974",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_left_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_middle_roof_2",
+      "palette": "town2",
+      "label": "top middle roof 2",
+      "gb_constant": "TILE_VILLAGE_14",
+      "walkable": false,
+      "color": "#b39a6e",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_middle_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_top_right_roof_2",
+      "palette": "town2",
+      "label": "top right roof 2",
+      "gb_constant": "TILE_VILLAGE_15",
+      "walkable": false,
+      "color": "#ad9975",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_top_right_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_left_corner_wall",
+      "palette": "town1",
+      "label": "bottom left corner wall",
+      "gb_constant": "TILE_VILLAGE_16",
+      "walkable": false,
+      "color": "#95805a",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_left_corner_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_bottom_wall",
+      "palette": "town1",
+      "label": "bottom wall",
+      "gb_constant": "TILE_VILLAGE_17",
+      "walkable": false,
+      "color": "#a18c67",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_bottom_right_corner_wall",
+      "palette": "town1",
+      "label": "bottom right corner wall",
+      "gb_constant": "TILE_VILLAGE_18",
+      "walkable": false,
+      "color": "#95805a",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_right_corner_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_left_wall",
+      "palette": "town1",
+      "label": "left wall",
+      "gb_constant": "TILE_VILLAGE_19",
+      "walkable": false,
+      "color": "#a18c67",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_left_wall.png",
+      "category": "wall"
+    },
+    {
+      "id": "village_floor_with_stuff_on_it",
+      "palette": "town1",
+      "label": "floor with stuff on it",
+      "gb_constant": "TILE_VILLAGE_20",
+      "walkable": true,
+      "color": "#b29e7a",
+      "ascii": ".",
+      "image_url": "/tiles/village/village_floor_with_stuff_on_it.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_floor_with_puddle_on_it",
+      "palette": "town4",
+      "label": "floor with puddle on it",
+      "gb_constant": "TILE_VILLAGE_21",
+      "walkable": true,
+      "color": "#b6a68a",
+      "ascii": ".",
+      "image_url": "/tiles/village/village_floor_with_puddle_on_it.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_barrel",
+      "palette": "town6",
+      "label": "barrel",
+      "gb_constant": "TILE_VILLAGE_22",
+      "walkable": false,
+      "color": "#857353",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_barrel.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_left_well",
+      "palette": "town4",
+      "label": "bottom left well",
+      "gb_constant": "TILE_VILLAGE_23",
+      "walkable": false,
+      "color": "#a49c8d",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_left_well.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_right_well",
+      "palette": "town4",
+      "label": "bottom right well",
+      "gb_constant": "TILE_VILLAGE_24",
+      "walkable": false,
+      "color": "#a2998b",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_right_well.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_left_roof",
+      "palette": "town2",
+      "label": "bottom left roof",
+      "gb_constant": "TILE_VILLAGE_26",
+      "walkable": false,
+      "color": "#ae9568",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_left_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_middle_roof",
+      "palette": "town2",
+      "label": "bottom middle roof",
+      "gb_constant": "TILE_VILLAGE_27",
+      "walkable": false,
+      "color": "#d1b37b",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_middle_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_right_roof",
+      "palette": "town2",
+      "label": "bottom right roof",
+      "gb_constant": "TILE_VILLAGE_28",
+      "walkable": false,
+      "color": "#ad9568",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_right_roof.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_left_roof_2",
+      "palette": "town2",
+      "label": "bottom left roof 2",
+      "gb_constant": "TILE_VILLAGE_29",
+      "walkable": false,
+      "color": "#ad9469",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_left_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_middle_roof_2",
+      "palette": "town2",
+      "label": "bottom middle roof 2",
+      "gb_constant": "TILE_VILLAGE_30",
+      "walkable": false,
+      "color": "#d0b27c",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_middle_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_bottom_right_roof_2",
+      "palette": "town2",
+      "label": "bottom right roof 2",
+      "gb_constant": "TILE_VILLAGE_31",
+      "walkable": false,
+      "color": "#ad9568",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_bottom_right_roof_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_hero_frame_1",
+      "palette": "town1",
+      "label": "hero frame 1",
+      "gb_constant": "TILE_VILLAGE_33",
+      "walkable": false,
+      "color": "#605642",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_hero_frame_1.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_hero_frame_2",
+      "palette": "town1",
+      "label": "hero frame 2",
+      "gb_constant": "TILE_VILLAGE_34",
+      "walkable": false,
+      "color": "#605642",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_hero_frame_2.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_guard",
+      "palette": "town1",
+      "label": "guard",
+      "gb_constant": "TILE_VILLAGE_35",
+      "walkable": true,
+      "color": "#716042",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_guard.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_save_wizard",
+      "palette": "town1",
+      "label": "save wizard",
+      "gb_constant": "TILE_VILLAGE_36",
+      "walkable": true,
+      "color": "#767481",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_save_wizard.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_fire_frame_1",
+      "palette": "town3",
+      "label": "fire frame 1",
+      "gb_constant": "TILE_VILLAGE_37",
+      "walkable": false,
+      "color": "#b3995c",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_fire_frame_1.png",
+      "category": "object"
+    },
+    {
+      "id": "village_fire_frame_2",
+      "palette": "town3",
+      "label": "fire frame 2",
+      "gb_constant": "TILE_VILLAGE_38",
+      "walkable": false,
+      "color": "#b3995c",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_fire_frame_2.png",
+      "category": "object"
+    },
+    {
+      "id": "village_merchant",
+      "palette": "town1",
+      "label": "merchant",
+      "gb_constant": "TILE_VILLAGE_39",
+      "walkable": true,
+      "color": "#8b7550",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_merchant.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_stairs",
+      "palette": "town3",
+      "label": "stairs",
+      "gb_constant": "TILE_VILLAGE_40",
+      "walkable": true,
+      "color": "#5e544d",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_stairs.png",
+      "category": "exit"
+    },
+    {
+      "id": "village_mayor",
+      "palette": "town1",
+      "label": "mayor",
+      "gb_constant": "TILE_VILLAGE_41",
+      "walkable": true,
+      "color": "#8a7459",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_mayor.png",
+      "category": "npc"
+    },
+    {
+      "id": "village_left_house",
+      "palette": "town2",
+      "label": "left house",
+      "gb_constant": "TILE_VILLAGE_42",
+      "walkable": false,
+      "color": "#b89f72",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_left_house.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_middle_house",
+      "palette": "town7",
+      "label": "middle house",
+      "gb_constant": "TILE_VILLAGE_43",
+      "walkable": false,
+      "color": "#262014",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_middle_house.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_right_house",
+      "palette": "town2",
+      "label": "right house",
+      "gb_constant": "TILE_VILLAGE_44",
+      "walkable": false,
+      "color": "#b89f72",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_right_house.png",
+      "category": "terrain"
+    }
+  ],
+  "vram_block": {
+    "palette": "auto",
+    "source_sheet": "assets/village-tile.png",
+    "tiles": [
+      {
+        "x": 0,
+        "y": 0,
+        "index": 0,
+        "tile": "village_top_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "index": 1,
+        "tile": "village_top_wall"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "index": 2,
+        "tile": "village_top_right_corner_wall"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "index": 3,
+        "tile": "village_right_wall"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "index": 4,
+        "tile": "village_dog_frame_1"
+      },
+      {
+        "x": 5,
+        "y": 0,
+        "index": 5,
+        "tile": "village_dog_frame_2"
+      },
+      {
+        "x": 6,
+        "y": 0,
+        "index": 6,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 7,
+        "y": 0,
+        "index": 7,
+        "tile": "village_top_left_well"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "index": 8,
+        "tile": "village_top_right_well"
+      },
+      {
+        "x": 9,
+        "y": 0,
+        "index": 9,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 10,
+        "y": 0,
+        "index": 10,
+        "tile": "village_top_left_roof"
+      },
+      {
+        "x": 11,
+        "y": 0,
+        "index": 11,
+        "tile": "village_top_middle_roof"
+      },
+      {
+        "x": 12,
+        "y": 0,
+        "index": 12,
+        "tile": "village_top_right_roof"
+      },
+      {
+        "x": 13,
+        "y": 0,
+        "index": 13,
+        "tile": "village_top_left_roof_2"
+      },
+      {
+        "x": 14,
+        "y": 0,
+        "index": 14,
+        "tile": "village_top_middle_roof_2"
+      },
+      {
+        "x": 15,
+        "y": 0,
+        "index": 15,
+        "tile": "village_top_right_roof_2"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "index": 16,
+        "tile": "village_bottom_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "index": 17,
+        "tile": "village_bottom_wall"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "index": 18,
+        "tile": "village_bottom_right_corner_wall"
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "index": 19,
+        "tile": "village_left_wall"
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "index": 20,
+        "tile": "village_floor_with_stuff_on_it"
+      },
+      {
+        "x": 5,
+        "y": 1,
+        "index": 21,
+        "tile": "village_floor_with_puddle_on_it"
+      },
+      {
+        "x": 6,
+        "y": 1,
+        "index": 22,
+        "tile": "village_barrel"
+      },
+      {
+        "x": 7,
+        "y": 1,
+        "index": 23,
+        "tile": "village_bottom_left_well"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "index": 24,
+        "tile": "village_bottom_right_well"
+      },
+      {
+        "x": 9,
+        "y": 1,
+        "index": 25,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 10,
+        "y": 1,
+        "index": 26,
+        "tile": "village_bottom_left_roof"
+      },
+      {
+        "x": 11,
+        "y": 1,
+        "index": 27,
+        "tile": "village_bottom_middle_roof"
+      },
+      {
+        "x": 12,
+        "y": 1,
+        "index": 28,
+        "tile": "village_bottom_right_roof"
+      },
+      {
+        "x": 13,
+        "y": 1,
+        "index": 29,
+        "tile": "village_bottom_left_roof_2"
+      },
+      {
+        "x": 14,
+        "y": 1,
+        "index": 30,
+        "tile": "village_bottom_middle_roof_2"
+      },
+      {
+        "x": 15,
+        "y": 1,
+        "index": 31,
+        "tile": "village_bottom_right_roof_2"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "index": 32,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "index": 33,
+        "tile": "village_hero_frame_1"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "index": 34,
+        "tile": "village_hero_frame_2"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "index": 35,
+        "tile": "village_guard"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "index": 36,
+        "tile": "village_save_wizard"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "index": 37,
+        "tile": "village_fire_frame_1"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "index": 38,
+        "tile": "village_fire_frame_2"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "index": 39,
+        "tile": "village_merchant"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "index": 40,
+        "tile": "village_stairs",
+        "exit": true
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "index": 41,
+        "tile": "village_mayor"
+      },
+      {
+        "x": 10,
+        "y": 2,
+        "index": 42,
+        "tile": "village_left_house"
+      },
+      {
+        "x": 11,
+        "y": 2,
+        "index": 43,
+        "tile": "village_middle_house"
+      },
+      {
+        "x": 12,
+        "y": 2,
+        "index": 44,
+        "tile": "village_right_house"
+      },
+      {
+        "x": 13,
+        "y": 2,
+        "index": 45,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 14,
+        "y": 2,
+        "index": 46,
+        "tile": "village_plain_floor_1"
+      },
+      {
+        "x": 15,
+        "y": 2,
+        "index": 47,
+        "tile": "village_plain_floor_1"
+      }
+    ]
+  }
+}

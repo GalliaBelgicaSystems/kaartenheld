@@ -1,48 +1,47 @@
 {
-  "name": "mayor_intro_event",
-  "test": true,
-  "description": "MAYOR_INTRO event: first interaction with the Mayor starts the intro dialogue and sets MET_MAYOR immediately",
-  "scenario_id": "MAYOR_DIALOGUE",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MAYOR"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "MAYOR_INTRO"
-    },
-    {
-      "type": "flag",
-      "flag": "MET_MAYOR",
-      "expected": true
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCRIPT_TRIGGERED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_STARTED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 8001,
-    "flags": {
-      "ARRIVED_TOWN": true,
-      "MET_MAYOR": false
-    }
+ "name": "mayor_intro_event",
+ "test": true,
+ "description": "MAYOR_INTRO event: first interaction with the Mayor starts the intro dialogue and sets MET_MAYOR immediately",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MAYOR"
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MAYOR_INTRO"
+  },
+  {
+   "type": "flag",
+   "flag": "MET_MAYOR",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8001,
+  "flags": {
+   "ARRIVED_TOWN": true,
+   "MET_MAYOR": false
+  }
+ }
 }

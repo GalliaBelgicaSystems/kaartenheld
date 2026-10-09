@@ -1,113 +1,112 @@
 {
-  "name": "game_over_quit",
-  "test": true,
-  "description": "On the Game Over Continue? prompt, choosing NO shows the terminal Thanks for playing! screen. The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat after ~2520 frames.",
-  "scenario_id": "GAME_OVER",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "wait",
-      "frames": 250
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 40
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "THANKS"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "THANKS FOR PLAYING!"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 4000,
-    "party": {
-      "HERO": {
-        "hp": 2
-      }
-    }
+ "name": "game_over_quit",
+ "test": true,
+ "description": "On the Game Over Continue? prompt, choosing NO shows the terminal Thanks for playing! screen. The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat after ~2520 frames.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 40
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "THANKS"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "THANKS FOR PLAYING!"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4000,
+  "party": {
+   "HERO": {
+    "hp": 2
+   }
+  }
+ }
 }

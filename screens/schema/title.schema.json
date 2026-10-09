@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/title.schema.json",
+  "title": "Title Screen Content",
+  "description": "Semantic source of truth for the Game Boy title screen. The web title editor and the JSON->C compiler both read this; it must not be edited by hand except through the editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "grid_width", "grid_height", "logo", "prompt", "menu"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Game/project title, used for identification and the web editor header."
+    },
+    "grid_width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "description": "Title char-grid width in characters (the ROM renders a 20-wide ASCII grid)."
+    },
+    "grid_height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18,
+      "description": "Title char-grid height in rows (the ROM renders an 18-tall ASCII grid)."
+    },
+    "logo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "lines"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 20
+          }
+        }
+      }
+    },
+    "logo_image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "x", "y", "width", "height"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "url": {
+          "type": "string",
+          "description": "Editor-served PNG (public/tiles/title/logo.png); the ROM tile bytes come from make gfx."
+        },
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 18 },
+        "palette": { "type": "integer", "minimum": 0, "maximum": 7 }
+      }
+    },
+    "subtitle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "y"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 20 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "align": { "type": "string", "enum": ["left", "center", "right"] }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "text"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "text": { "type": "string", "maxLength": 20 },
+        "align": { "type": "string", "enum": ["left", "center", "right"] }
+      }
+    },
+    "graphic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "x", "y", "width", "height", "lines"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 18 },
+        "lines": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 20 }
+        }
+      }
+    },
+    "credits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "text", "y"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "text": { "type": "string", "maxLength": 20 },
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "align": { "type": "string", "enum": ["left", "center", "right"] }
+      }
+    },
+    "menu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "caret_x", "first_row", "row_step", "options"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "caret_x": { "type": "integer", "minimum": 0, "maximum": 19 },
+        "first_row": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "row_step": { "type": "integer", "minimum": 1 },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "maxLength": 20
+          }
+        }
+      }
+    }
+  }
+}

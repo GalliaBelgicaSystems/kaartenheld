@@ -1,41 +1,173 @@
 {
-  "name": "combo_straight_label",
-  "test": true,
-  "description": "Five sequential values with mixed symbols (SW1 SH2 BO3 HE4 DA5) read STRAIGHT on the live COMBO row while pending, before execution.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": { "x": 13, "y": 8, "facing": "DOWN" },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_straight_label",
+ "test": true,
+ "description": "Five sequential values with mixed symbols (SW1 SH2 BO3 HE4 DA5) read STRAIGHT on the live COMBO row while pending, before execution.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    { "type": "wait", "frames": 5 },
-    { "type": "set_hand_card", "index": 0, "card_type": "SW", "value": 1 },
-    { "type": "set_hand_card_meta", "index": 0, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 1, "card_type": "SH", "value": 2 },
-    { "type": "set_hand_card_meta", "index": 1, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 2, "card_type": "BO", "value": 3 },
-    { "type": "set_hand_card_meta", "index": 2, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 3, "card_type": "HE", "value": 4 },
-    { "type": "set_hand_card_meta", "index": 3, "cost": 0, "uses": 255 },
-    { "type": "set_hand_card", "index": 4, "card_type": "DA", "value": 5 },
-    { "type": "set_hand_card_meta", "index": 4, "cost": 0, "uses": 255 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 8 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 200 }
-  ],
-  "assertions": [
-    { "type": "screen", "expected": "BATTLE" },
-    { "type": "screen_row", "row": 13, "contains": "STRAIGHT" },
-    { "type": "screen_row_not_contains", "row": 13, "contains": "FLUSH" },
-    { "type": "event_not_occurred", "event": "DAMAGE_DEALT" }
-  ]
+  "seed": 3000,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "BO",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "HE",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "DA",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "STRAIGHT"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 9,
+   "contains": "FLUSH"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
 }

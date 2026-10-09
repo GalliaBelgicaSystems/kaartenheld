@@ -1,0 +1,47 @@
+{
+ "name": "amulet_pickup",
+ "test": true,
+  "description": "Interacting with the forest amulet (floor debris visual) grants the AMULET item and starts the merchant quest",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "AMULET"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "AMULET_FOUND"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 15,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "variables": {
+   "MERCHANT_QUEST": 0
+  }
+ }
+}

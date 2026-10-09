@@ -1,58 +1,57 @@
 {
-  "name": "start_swallows_map_commit",
-  "test": true,
-  "description": "PRESS START on the exact frame the move into the Town gate commits: the map change and its map-enter event must resolve before the menu opens (regression for START swallowing MOVE_RESULT_MAP_CHANGED)",
-  "scenario_id": "START_SWALLOWS_MAP_COMMIT",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 7
-    },
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 2,
-      "expected_y": 7
-    },
-    {
-      "type": "event_occurred",
-      "event": "MAP_CHANGED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "STORY_FLAG_SET",
-      "flag": "ARRIVED_TOWN"
-    },
-    {
-      "type": "story_flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 30,
-      "y": 7,
-      "facing": "DOWN"
-    },
-    "seed": 1002
+ "name": "start_swallows_map_commit",
+ "test": true,
+ "description": "PRESS START on the exact frame the move into the Town gate commits: the map change and its map-enter event must resolve before the menu opens (regression for START swallowing MOVE_RESULT_MAP_CHANGED)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 7
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 1
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 2,
+   "expected_y": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STORY_FLAG_SET",
+   "flag": "ARRIVED_TOWN"
+  },
+  {
+   "type": "story_flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 30,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 1002
+ }
 }

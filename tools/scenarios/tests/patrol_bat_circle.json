@@ -1,33 +1,32 @@
 {
-  "name": "patrol_bat_circle",
-  "test": true,
-  "description": "Bat patrols in a 2x2 clockwise circle around its spawn point (7,4)",
-  "scenario_id": "FOREST_BOOT",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 40
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "actor_at",
-      "entity": "BAT",
-      "x": 8,
-      "y": 4
-    }
-  ],
-  "initial_state": {
-    "scene": "FOREST",
-    "player": {
-      "x": 2,
-      "y": 2,
-      "facing": "DOWN"
-    },
-    "seed": 12345
+ "name": "patrol_bat_circle",
+ "test": true,
+ "description": "Bat patrols in a 2x2 clockwise circle around its spawn point (7,4)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 40
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "actor_at",
+   "entity": "BAT",
+   "x": 8,
+   "y": 4
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 2,
+   "y": 2,
+   "facing": "DOWN"
+  },
+  "seed": 12345
+ }
 }

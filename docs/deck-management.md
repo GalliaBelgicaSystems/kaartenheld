@@ -11,7 +11,11 @@ the *player-facing* management layer.
 
 A new game grants a real, owned 12-card deck (collection **and** deck state in
 `GameState.cards`, written by `game_new_game()` via the silent mutators
-`deck_collection_add` / `deck_add_card` — no boot telemetry):
+`deck_collection_add` / `deck_add_card` — no boot telemetry).  The contents
+and order are data, not code: `screens/hero.json` `starter_deck` (ordered
+draw-pile CardIds), compiled by `battle_compile.py` into
+`src/game/hero_content.c` (`g_hero_starter_deck_ids`, bank 2) and editable
+in the level editor's Hero view.  The default set is:
 
 ```text
 IRON_SWORD    ×4   → SW3   (max_copies 4)
@@ -27,9 +31,11 @@ cycle its deck (draw → discard → reshuffle) without shopping first.
 
 Consequences:
 
-- Battles always draw from the player's real deck. The packed fallback deck
-  (`src/battle/deck_init.c`) remains only as a safety net for empty/legacy
-  state and mirrors this same 12-card set (first five entries in the same
+- Battles always draw from the player's real deck. The fallback deck
+  (`deck_init_default_banked` in `src/battle/deck_init.c`) remains only as
+  a safety net for empty/legacy state and unpacks the same generated
+  `g_hero_starter_deck` table through the card catalog, so it always
+  mirrors the granted set byte-for-byte (including the first-five deal
   order).
 - Healing is **not** free at the start. The only heal source is the shop's
   IRON RING card — **RG5** (power 5, `uses_per_battle` 3, price 20g).

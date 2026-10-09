@@ -1,0 +1,565 @@
+{
+  "id": "test_town",
+  "name": "TEST Oakhaven Town",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "village",
+    "music": "MUSIC_TOWN",
+    "map_id": "MAP_TOWN"
+  },
+  "default_walkable": "village.village_plain_floor_1",
+  "layers": {
+    "terrain": [
+      {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "width": 18,
+        "height": 1,
+        "tile": "village.village_top_wall"
+      },
+      {
+        "x": 19,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_corner_wall"
+      },
+      {
+        "x": 19,
+        "y": 1,
+        "width": 1,
+        "height": 16,
+        "tile": "village.village_right_wall"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "width": 1,
+        "height": 16,
+        "tile": "village.village_left_wall"
+      },
+      {
+        "x": 0,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 17,
+        "width": 18,
+        "height": 1,
+        "tile": "village.village_bottom_wall"
+      },
+      {
+        "x": 19,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_right_corner_wall"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_roof"
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_middle_roof"
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_roof"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_left_house"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_middle_house"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_right_house"
+      },
+      {
+        "x": 15,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_roof_2"
+      },
+      {
+        "x": 16,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_middle_roof_2"
+      },
+      {
+        "x": 17,
+        "y": 1,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_roof_2"
+      },
+      {
+        "x": 15,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_left_house"
+      },
+      {
+        "x": 16,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_middle_house"
+      },
+      {
+        "x": 17,
+        "y": 2,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_right_house"
+      },
+      {
+        "x": 15,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_roof"
+      },
+      {
+        "x": 16,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_middle_roof"
+      },
+      {
+        "x": 17,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_roof"
+      },
+      {
+        "x": 15,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_left_house"
+      },
+      {
+        "x": 16,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_middle_house"
+      },
+      {
+        "x": 17,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_right_house"
+      },
+      {
+        "x": 2,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_roof_2"
+      },
+      {
+        "x": 3,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_middle_roof_2"
+      },
+      {
+        "x": 4,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_roof_2"
+      },
+      {
+        "x": 2,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_left_house"
+      },
+      {
+        "x": 3,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_middle_house"
+      },
+      {
+        "x": 4,
+        "y": 14,
+        "width": 1,
+        "height": 2,
+        "tile": "village.village_right_house"
+      },
+      {
+        "x": 15,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_well"
+      },
+      {
+        "x": 16,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_well"
+      },
+      {
+        "x": 15,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_left_well"
+      },
+      {
+        "x": 16,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_right_well"
+      },
+      {
+        "x": 2,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_left_well"
+      },
+      {
+        "x": 3,
+        "y": 11,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_top_right_well"
+      },
+      {
+        "x": 2,
+        "y": 12,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_left_well"
+      },
+      {
+        "x": 3,
+        "y": 12,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_bottom_right_well"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 16,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 4,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 2,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_barrel"
+      },
+      {
+        "x": 15,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_barrel"
+      },
+      {
+        "x": 2,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_barrel"
+      },
+      {
+        "x": 17,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_barrel"
+      },
+      {
+        "x": 4,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_fire_frame_1"
+      },
+      {
+        "x": 17,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_fire_frame_1"
+      },
+      {
+        "x": 4,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_fire_frame_1"
+      },
+      {
+        "x": 10,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 10,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 11,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 6,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 2,
+      "y": 7,
+      "facing": "RIGHT",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [
+    {
+      "x": 1,
+      "y": 7,
+      "target_scene": "test_field",
+      "target_x": 17,
+      "target_y": 7,
+      "direction": "WEST",
+      "tile_char": "<"
+    }
+  ],
+  "objects": [
+    {
+      "id": "town_mayor",
+      "type": "npc",
+      "position": {
+        "x": 10,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MAYOR",
+        "display_name": "MAYOR",
+        "dialogue": "DIALOGUE_ID_MAYOR_GREETING",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "M",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_mayor"
+      }
+    },
+    {
+      "id": "town_guard",
+      "type": "npc",
+      "position": {
+        "x": 10,
+        "y": 8
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_GUARD",
+        "display_name": "GUARD",
+        "dialogue": "DIALOGUE_ID_GUARD_GREETING",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "G",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
+      }
+    },
+    {
+      "id": "town_shopkeeper",
+      "type": "npc",
+      "position": {
+        "x": 9,
+        "y": 3
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SHOPKEEPER",
+        "display_name": "SHOPKEEPER",
+        "shop": 1,
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "town_merchant",
+      "type": "npc",
+      "position": {
+        "x": 11,
+        "y": 3
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MERCHANT",
+        "display_name": "MERCHANT",
+        "shop": 2,
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "C",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
+      }
+    },
+    {
+      "id": "town_wizard",
+      "type": "npc",
+      "position": {
+        "x": 6,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_WIZARD",
+        "display_name": "WIZARD",
+        "save": 0,
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "W",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_wizard"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "town_square",
+      "bounds": {
+        "x": 8,
+        "y": 4,
+        "width": 6,
+        "height": 6
+      },
+      "description": "Central plaza of the peaceful town where villagers gather.",
+      "gameplay": {
+        "purpose": "hub",
+        "difficulty": 0
+      }
+    }
+  ]
+}

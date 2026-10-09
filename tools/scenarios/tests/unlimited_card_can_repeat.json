@@ -1,33 +1,111 @@
 {
-  "name": "unlimited_card_can_repeat",
-  "test": true,
-  "description": "An unlimited card (uses 0xFF) can be played in consecutive turns: HE5 heals on turn 1 and again on turn 2 after a full defend cycle (defend timer expiry keeps the hand full so no reshuffle eats the next select). Proves unlimited cards never deplete and the phase loop returns to PLAYER_SELECT.",
-  "actions": [
-    {"type": "wait", "frames": 5},
-    {"type": "set_hand_card", "index": 0, "card_type": "HE", "value": 5},
-    {"type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 255},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 6},
-    {"type": "press", "button": "SELECT"},
-    {"type": "wait", "frames": 1360},
-    {"type": "set_hand_card", "index": 1, "card_type": "HE", "value": 5},
-    {"type": "set_hand_card_meta", "index": 1, "cost": 1, "uses": 255},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 6},
-    {"type": "press", "button": "SELECT"},
-    {"type": "wait", "frames": 15}
-  ],
-  "assertions": [
-    {"type": "screen", "expected": "BATTLE"},
-    {"type": "event_count", "event": "HEALED", "count": 2},
-    {"type": "event_count", "event": "CARD_PLAYED", "count": 2},
-    {"type": "battle_player_hp", "expected": 18}
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {"x": 13, "y": 8, "facing": "DOWN"},
-    "party": {"HERO": {"hp": 10, "max_hp": 40}},
-    "seed": 6001,
-    "start_battle": true
+ "name": "unlimited_card_can_repeat",
+ "test": true,
+ "description": "An unlimited card (uses 0xFF) can be played in consecutive turns: HE5 heals on turn 1 and again on turn 2 after a full defend cycle (defend timer expiry keeps the hand full so no reshuffle eats the next select). Proves unlimited cards never deplete and the phase loop returns to PLAYER_SELECT.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 1360
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 15
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_count",
+   "event": "HEALED",
+   "count": 2
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_PLAYED",
+   "count": 2
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 18
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6001,
+  "start_battle": true
+ }
 }

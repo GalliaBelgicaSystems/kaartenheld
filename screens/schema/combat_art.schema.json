@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Combat art set",
+  "description": "One named combat-art meta-tile set. Cells name curated tiles from tools/level_editor/public/tiles/combat/ (see tools/compose_battle_sprites.py LAYOUT); null is the all-white blank cell. frame1 omitted repeats frame0 (single-frame set).",
+  "type": "object",
+  "required": ["id", "order", "width", "height", "palette", "frame0"],
+  "properties": {
+    "id": { "type": "string" },
+    "label": { "type": "string" },
+    "order": { "type": "integer", "minimum": 0 },
+    "width": { "type": "integer", "minimum": 1, "maximum": 6 },
+    "height": { "type": "integer", "minimum": 1, "maximum": 4 },
+    "palette": { "type": "string", "description": "BG-stamp ramp name from assets/palette.txt (must hold a base slot). OAM sets encode with obj_palette instead." },
+    "oam": {
+      "type": "boolean",
+      "description": "Render this set as OAM sprites instead of the BG stamp (small enemies only; boss stays BG). Requires obj_palette."
+    },
+    "obj_palette": {
+      "type": "string",
+      "description": "OBJ ramp name (SLOTS/OBJ) for OAM sets; transparent slot 0."
+    },
+    "obj_alt_palette": {
+      "type": "string",
+      "description": "Optional second OBJ ramp for OAM sets with one off-ramp cell (spider eye): programmed into BATTLE_OBJ_SCRATCH2 at battle entry. Requires obj_alt_cells."
+    },
+    "obj_alt_cells": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "description": "Frame0-relative cell indices (row-major) drawn with obj_alt_palette. Mask is uint8, so width*height must be <= 8."
+    },
+    "glow": {
+      "type": "object",
+      "description": "Eye-glow overlay for BG-stamped sets: these frame0-relative cells (row-major) are redrawn as OAM sprites over the stamp, flipping between two OBJ palettes on the battle clock. Both ramps must match the set palette at indices 0/2/3 and differ only at index 1 (the blink pixel), so only that shade remaps. Every cell index must be < 6 (one OAM stride per enemy slot).",
+      "required": ["cells", "unlit", "lit"],
+      "properties": {
+        "cells": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 5 }
+        },
+        "unlit": { "type": "string" },
+        "lit": { "type": "string" }
+      }
+    },
+    "frame0": {
+      "type": "array",
+      "items": { "type": ["string", "null"] }
+    },
+    "frame1": {
+      "type": "array",
+      "items": { "type": ["string", "null"] }
+    }
+  }
+}

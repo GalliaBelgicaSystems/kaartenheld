@@ -1,138 +1,138 @@
 {
-  "name": "deck_copy_limit",
-  "test": true,
-  "description": "deck_add_card enforces CardDefinition.max_copies: 3 WOOD_RING copies deck successfully, the 4th is rejected; POISON_DAGGER (cap 3, 2 granted at new game) decks its third copy and further copies are rejected by add_item's cap. FIRE_SWORD is already saturated at cap 3 by the starter grant, so both add_item and deck_add reject it. Exactly 4 CARD_ADDED_TO_DECK events fire.",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "add_item",
-      "item": "WOOD_RING",
-      "quantity": 3
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "WOOD_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "add_item",
-      "item": "POISON_DAGGER",
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "add_item",
-      "item": "POISON_DAGGER",
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "POISON_DAGGER"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "POISON_DAGGER"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "add_item",
-      "item": "FIRE_SWORD",
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "FIRE_SWORD"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_ADDED_TO_DECK",
-      "count": 4
-    },
-    {
-      "type": "inventory",
-      "item": "WOOD_RING",
-      "expected": 3
-    },
-    {
-      "type": "inventory",
-      "item": "POISON_DAGGER",
-      "expected": 3
-    },
-    {
-      "type": "inventory",
-      "item": "FIRE_SWORD",
-      "expected": 3
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7003
+ "name": "deck_copy_limit",
+ "test": true,
+ "description": "deck_add_card enforces CardDefinition.max_copies: 3 WOOD_RING copies deck successfully, the 4th is rejected; POISON_DAGGER (cap 3, 2 granted at new game) decks its third copy and further copies are rejected by add_item's cap. FIRE_SWORD is already saturated at cap 3 by the starter grant, so both add_item and deck_add reject it. Exactly 4 CARD_ADDED_TO_DECK events fire.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "add_item",
+   "item": "WOOD_RING",
+   "quantity": 3
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "WOOD_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "add_item",
+   "item": "POISON_DAGGER",
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "add_item",
+   "item": "POISON_DAGGER",
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "add_item",
+   "item": "FIRE_SWORD",
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "FIRE_SWORD"
+  },
+  {
+   "type": "wait",
+   "frames": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_ADDED_TO_DECK",
+   "count": 4
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 3
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 3
+  },
+  {
+   "type": "inventory",
+   "item": "FIRE_SWORD",
+   "expected": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7003
+ }
 }

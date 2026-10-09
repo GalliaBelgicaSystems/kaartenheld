@@ -1,37 +1,37 @@
 {
-  "name": "battle_timer_bar_drain",
-  "test": true,
-  "description": "With no input the SELECT countdown drains exactly one '=' per ~60 frames (~1 second): after wait 61 the bar holds 19 tiles (it dropped from 20 without skipping)",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 61
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 17,
-      "contains": "==================="
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 17,
-      "contains": "===================="
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "battle_timer_bar_drain",
+ "test": true,
+ "description": "With no input the SELECT countdown drains exactly one '=' per ~60 frames (~1 second): after wait 61 the bar holds 19 tiles (it dropped from 20 without skipping)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 61
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "==================="
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 17,
+   "contains": "===================="
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

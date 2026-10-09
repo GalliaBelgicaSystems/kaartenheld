@@ -1,0 +1,44 @@
+{
+ "name": "signpost_postsign_bump",
+ "test": true,
+ "description": "Bumping the forest postsign (solid art + BLOCKING signpost actor) opens its dialogue",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "SIGNPOST"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "actor_at",
+   "entity": "SIGNPOST",
+   "x": 2,
+   "y": 4
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 1,
+   "y": 4,
+   "facing": "RIGHT"
+  },
+  "seed": 1017
+ }
+}

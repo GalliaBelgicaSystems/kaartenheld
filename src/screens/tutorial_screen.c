@@ -10,7 +10,7 @@
 
 void tutorial_screen_render(Game *g)
 {
-    slide_screen_render(g, SCREEN_TUTORIAL, (uint16_t)&tutorial_content_render, g->tutorial_slide);
+    slide_screen_render(g, SCREEN_TUTORIAL, (uint16_t)&tutorial_content_render, g->tutorial_slide, 4);
 }
 
 void tutorial_screen_update(Game *g)

@@ -1,57 +1,56 @@
 {
-  "name": "large_map_scroll",
-  "test": true,
-  "description": "Walk south on the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while the player moves to (2,16), proving the large-map data model works with a full-height viewport",
-  "scenario_id": "LARGE_MAP_SCROLL",
-  "actions": [
-    {
-      "type": "hold",
-      "button": "DOWN",
-      "frames": 72
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 2,
-      "expected_y": 16
-    },
-    {
-      "type": "camera",
-      "expected_x": 0,
-      "expected_y": 0
-    },
-    {
-      "type": "scroll_x",
-      "expected": 0
-    },
-    {
-      "type": "scroll_y",
-      "expected": 0
-    },
-    {
-      "type": "world_height",
-      "expected": 18
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 2,
-      "y": 7,
-      "facing": "DOWN"
-    },
-    "seed": 1000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "large_map_scroll",
+ "test": true,
+ "description": "Walk south on the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while the player moves to (2,16), proving the large-map data model works with a full-height viewport",
+ "actions": [
+  {
+   "type": "hold",
+   "button": "DOWN",
+   "frames": 72
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 2,
+   "expected_y": 16
+  },
+  {
+   "type": "camera",
+   "expected_x": 0,
+   "expected_y": 0
+  },
+  {
+   "type": "scroll_x",
+   "expected": 0
+  },
+  {
+   "type": "scroll_y",
+   "expected": 0
+  },
+  {
+   "type": "world_height",
+   "expected": 18
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 2,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 1000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

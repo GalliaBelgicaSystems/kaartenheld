@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* The generator state lives in WRAM and is exported by symbol so banked
- * code (e.g. deck_reshuffle_banked, ROM bank 2) can advance the SAME
+ * code (e.g. deck_reshuffle_banked, ROM bank 7) can advance the SAME
  * stream with an inlined xorshift step — a banked body must never call
  * fixed-bank functions (see AGENTS.md 52.11.1).  Gameplay code should use
  * rng_next()/rng_set_seed() instead of touching this directly. */

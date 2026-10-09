@@ -1,0 +1,19 @@
+{
+  "$schema": "../schema/combat_art.schema.json",
+  "id": "bat",
+  "label": "Bat",
+  "order": 1,
+  "width": 3,
+  "height": 2,
+  "palette": "fightmimic",
+  "oam": true,
+  "obj_palette": "fightbat",
+  "frame0": [
+    "combat_top_left_bat",
+    "combat_top_middle_bat",
+    "combat_top_right_bat",
+    "combat_bottom_left_bat",
+    "combat_bottom_middle_bat",
+    "combat_bottom_right_bat"
+  ]
+}

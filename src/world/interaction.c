@@ -7,7 +7,7 @@
 
 ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y)
 {
-    const WorldActorDefinition *actor;
+    const StaticActorDefinition *actor;
     ActorEngageResult result;
     uint8_t slot;
 
@@ -38,7 +38,7 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
 
 ActorEngageResult interaction_try_facing(Game *g)
 {
-    const WorldActorDefinition *actor;
+    const StaticActorDefinition *actor;
     uint8_t tx, ty;
 
     if (!g) return ENGAGE_NONE;

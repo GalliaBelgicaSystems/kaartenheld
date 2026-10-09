@@ -1,131 +1,130 @@
 {
-  "name": "tutorial_slide6",
-  "test": true,
-  "description": "RIGHT navigation reaches the SHIELD CARD slide (slide 6, the 7th) and its text teaches the real shield mechanics: a shield in offense deals 0 damage but still counts toward the poker hand. Regression: slide 5 also drops FREEZE so slide 6 stays reachable at the 7-slide RIGHT boundary.",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7006,
-    "screen": "TITLE"
+ "name": "tutorial_slide6",
+ "test": true,
+ "description": "RIGHT navigation reaches the SHIELD CARD slide (slide 6, the 7th) and its text teaches the real shield mechanics: a shield in offense deals 0 damage but still counts toward the poker hand. Regression: slide 5 also drops FREEZE so slide 6 stays reachable at the 7-slide RIGHT boundary.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TUTORIAL"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "SHIELD CARD"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "0 dmg"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "combos"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCREEN_CHANGED"
-    }
-  ]
+  "seed": 7006,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TUTORIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "SHIELD CARD"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "0 dmg"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "combos"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  }
+ ]
 }

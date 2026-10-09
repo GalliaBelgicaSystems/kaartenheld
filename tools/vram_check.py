@@ -41,7 +41,7 @@ import os
 import sys
 
 ROM_DEFAULT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "..", "build", "rpg_card_proto.gb")
+                            "..", "build", "kaartenheld.gb")
 
 failures = []
 
@@ -113,12 +113,11 @@ def main():
         return ident - 256 if ident >= 256 else ident
 
     row0_ids = [raw_id(col, 0) for col in range(20)]
-    # Row 0 in ui_draw_overworld_hud is a divider of repeated non-space
-    # chars, so instead scan the known-blank stretch of HUD rows (2-4 are
-    # cleared to spaces by ui_hud_text_line(y, "", 20)).
-    blank_row_ids = [raw_id(col, 3) for col in range(20)]
-    if blank_row_ids and len(set(blank_row_ids)) == 1:
-        space_tile_id = blank_row_ids[0]
+    for r in (0, 3, 2, 4, 1):
+        r_ids = [raw_id(col, r) for col in range(20)]
+        if r_ids and len(set(r_ids)) == 1:
+            space_tile_id = r_ids[0]
+            break
 
     if space_tile_id is None:
         check("blank-space", False, "could not identify the space tile from HUD row 3 (layout changed?)")

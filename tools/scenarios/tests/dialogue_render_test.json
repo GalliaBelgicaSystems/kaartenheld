@@ -1,72 +1,71 @@
 {
-  "name": "dialogue_render_test",
-  "test": true,
-  "description": "Start MAYOR_GREETING dialogue directly without NPC interaction, asserting dialogue active, line 0, and screen buffer row contents",
-  "scenario_id": "DIALOGUE_RENDER_TEST",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_occurred",
-      "event": "RENDER_DIALOGUE"
-    },
-    {
-      "type": "dialogue_active",
-      "expected": true
-    },
-    {
-      "type": "dialogue_line",
-      "expected": 0
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "MAYOR_GREETING"
-    },
-    {
-      "type": "screen_row",
-      "row": 12,
-      "contains": "+------------------+"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "MAYOR:"
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "Hello! I am Mayor."
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": "[A] CONTINUE"
-    },
-    {
-      "type": "screen_row",
-      "row": 17,
-      "contains": "+------------------+"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 2000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "dialogue": "MAYOR_GREETING"
+ "name": "dialogue_render_test",
+ "test": true,
+ "description": "Start MAYOR_GREETING dialogue directly without NPC interaction, asserting dialogue active, line 0, and screen buffer row contents",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "RENDER_DIALOGUE"
+  },
+  {
+   "type": "dialogue_active",
+   "expected": true
+  },
+  {
+   "type": "dialogue_line",
+   "expected": 0
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MAYOR_GREETING"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "+------------------+"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "MAYOR:"
+  },
+  {
+   "type": "screen_row",
+   "row": 14,
+   "contains": "Hello! I am Mayor."
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "[A] CONTINUE"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "+------------------+"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 2000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "dialogue": "MAYOR_GREETING"
+ }
 }

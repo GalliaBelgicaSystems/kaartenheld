@@ -1,42 +1,41 @@
 {
-  "name": "dialogue_boot",
-  "test": true,
-  "description": "Boot directly into the dialogue screen with an active Mayor dialogue",
-  "scenario_id": "DIALOGUE_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "scene",
-      "expected": "TOWN"
-    },
-    {
-      "type": "dialogue_active",
-      "expected": true
-    },
-    {
-      "type": "dialogue_line",
-      "expected": 0
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "MAYOR_GREETING"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 5001,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "dialogue": "MAYOR_GREETING"
+ "name": "dialogue_boot",
+ "test": true,
+ "description": "Boot directly into the dialogue screen with an active Mayor dialogue",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_TOWN"
+  },
+  {
+   "type": "dialogue_active",
+   "expected": true
+  },
+  {
+   "type": "dialogue_line",
+   "expected": 0
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MAYOR_GREETING"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 5001,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "dialogue": "MAYOR_GREETING"
+ }
 }

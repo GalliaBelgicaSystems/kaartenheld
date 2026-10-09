@@ -1,35 +1,38 @@
 {
-  "name": "mountain_pass_boot",
-  "test": true,
-  "description": "Boot directly into the overworld on the Mountain Pass scene",
-  "scenario_id": "MOUNTAIN_PASS_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "MOUNTAIN_PASS"
-    },
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 8,
-      "expected_y": 6
-    }
-  ],
-  "initial_state": {
-    "scene": "MOUNTAIN_PASS",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5006
+ "name": "mountain_pass_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the Mountain Pass scene",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_MOUNTAIN_PASS"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 8,
+   "expected_y": 6
+  },
+  {
+   "type": "music_track",
+   "expected": "DESOLATE"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5006
+ }
 }

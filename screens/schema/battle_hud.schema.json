@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/battle_hud.schema.json",
+  "title": "Battle HUD Skin",
+  "description": "Semantic source of truth for the battle HUD visuals (hero HP / AP / deck icons + CGB palettes, and the turn-timer bar). The JSON->C compiler emits the const g_hud_skin (bank 4) staged into WRAM at battle entry. Icons resolve to the fixed VRAM icon tiles ui_init loads (UI_TILE_CARD_* 104-112, UI_TILE_HEART 113, UI_TILE_BOLT 114, UI_TILE_COIN 115, UI_TILE_DECK 116, bar segments 117/127); colors to UI_COLOR_* palette indices. Layout rows/cols live per battle screen (screens/battle/*.json hud_layout).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "hp", "ap", "deck", "bar"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "battle_hud",
+      "description": "Singleton id (one HUD skin per game)."
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "Human-readable label for the editor."
+    },
+    "hp": { "$ref": "#/definitions/iconSkin", "description": "Hero HP icon (drawn at the hero row, before 'HP:')." },
+    "ap": { "$ref": "#/definitions/iconSkin", "description": "AP (energy) icon (deck row, before 'AP:')." },
+    "deck": { "$ref": "#/definitions/iconSkin", "description": "Deck icon (deck row, col 0, before 'DECK:')." },    "bar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filled", "empty", "color", "row", "width"],
+      "description": "Turn-timer bar: one segment tile per column; filled while the timer has time left, empty after.",
+      "properties": {
+        "filled": {
+          "type": "string",
+          "enum": ["combat_timer_bar_filled", "combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_fire_status", "combat_ice_status", "combat_poison_status", "combat_hp_icon", "combat_ap_icon", "combat_deck_icon", "combat_timer_bar_empty"],
+          "description": "Tile for an unexpired segment (default bar_filled, VRAM 117)."
+        },
+        "empty": {
+          "type": "string",
+          "enum": ["combat_timer_bar_filled", "combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_fire_status", "combat_ice_status", "combat_poison_status", "combat_hp_icon", "combat_ap_icon", "combat_deck_icon", "combat_timer_bar_empty"],
+          "description": "Tile for an expired segment (default bar_empty, VRAM 127)."
+        },
+        "color": {
+          "type": "string",
+          "enum": ["none", "fire", "iron", "field", "poison", "wood", "gold", "dim"],
+          "description": "CGB BG palette (UI_COLOR_*) applied to the filled span."
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 17,
+          "description": "Tilemap row of the bar (default 17, bottom row)."
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Number of segment columns (default 20)."
+        }
+      }
+    }
+  },
+  "definitions": {
+    "iconSkin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["icon", "color"],
+      "properties": {
+        "icon": {
+          "type": "string",
+          "enum": ["combat_hp_icon", "combat_ap_icon", "combat_deck_icon", "combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet", "combat_fire_status", "combat_ice_status", "combat_poison_status"],
+          "description": "Which VRAM icon tile represents this HUD element. Names are the slugified combat-tileset description entries (assets/combat-tileset-description.csv); dagger/ring/amulet have no CSV entry (atlas-only) and keep plain names."
+        },
+        "color": {
+          "type": "string",
+          "enum": ["none", "fire", "iron", "field", "poison", "wood", "gold", "dim"],
+          "description": "CGB BG palette index (UI_COLOR_*)."
+        }
+      }
+    }
+  }
+}

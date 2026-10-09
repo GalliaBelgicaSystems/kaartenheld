@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "mimic",
+  "label": "Mimic",
+  "category": "elite",
+  "sprite": { "art": "mimic", "frames": 1 },
+  "overworld": { "cells": ["mimic_f0", "mimic_f1"], "palette": "sprites5" },
+  "name": "MIMIC",
+  "hp": 30,
+  "max_hp": 30,
+  "battle_id": "BATTLE_MIMIC",
+  "ai_types": ["AI_NONE"],
+  "gold_reward": 0,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

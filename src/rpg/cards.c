@@ -7,7 +7,9 @@
  * card_register_defs() (see src/game/cards.c). */
 const CardDefinition *g_card_defs = NULL;
 uint8_t g_card_defs_count = 0;
-static uint8_t g_card_bank = 2;
+/* BSS: card_register_defs() (via game_content_init() at every boot) sets
+ * the home bank before any def is read. */
+static uint8_t g_card_bank;
 CardDefinition g_card_scratch;
 
 void card_register_defs(const CardDefinition *defs, uint8_t count,

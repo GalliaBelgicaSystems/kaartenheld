@@ -1,0 +1,47 @@
+{
+ "name": "title_data_driven",
+ "test": true,
+ "description": "Title screen renders the bitmap KAARTENHELD logo (tile bytes from assets/title-red.png) with its BATTLE DEMO subtitle and the centered PRESS START prompt. The semantic screen buffer still exposes the logo identity; the title credits are disabled (the studio credit lives on the boot splash instead).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7010,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 2
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 1,
+   "contains": "KAARTENHELD"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "BATTLE DEMO"
+  },
+  {
+   "type": "screen_row",
+   "row": 14,
+   "contains": "PRESS START"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 17,
+   "contains": "GALLIA"
+  }
+ ]
+}

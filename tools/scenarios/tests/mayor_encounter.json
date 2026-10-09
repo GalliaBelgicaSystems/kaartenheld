@@ -1,54 +1,53 @@
 {
-  "name": "mayor_encounter",
-  "test": true,
-  "description": "Approach Mayor NPC in Town, trigger dialogue overlay, wait 120 frames without input, assert dialogue active & line 0 unchanged",
-  "scenario_id": "MAYOR_ENCOUNTER",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_facing",
-      "expected": "RIGHT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_STARTED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "RENDER_DIALOGUE"
-    },
-    {
-      "type": "dialogue_active",
-      "expected": true
-    },
-    {
-      "type": "dialogue_line",
-      "expected": 0
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 1002,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "mayor_encounter",
+ "test": true,
+ "description": "Approach Mayor NPC in Town, trigger dialogue overlay, wait 120 frames without input, assert dialogue active & line 0 unchanged",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_facing",
+   "expected": "RIGHT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "RENDER_DIALOGUE"
+  },
+  {
+   "type": "dialogue_active",
+   "expected": true
+  },
+  {
+   "type": "dialogue_line",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 1002,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

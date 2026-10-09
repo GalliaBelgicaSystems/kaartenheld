@@ -64,7 +64,7 @@ All development is performed inside the reproducible Nix environment (`nix devel
 | **CI Parallelism** | `make test-harness JOBS=4` | Runs on 4 workers on CI (GitHub Actions) to avoid runner exhaustion. |
 | **Single Scenario** | `make test-scenario SCENARIO=<name>` | Runs one scenario with full diagnostic trace. |
 | **Memory Budget Check** | `make memmap` | Verifies ROM and WRAM memory budget invariants (`_HOME < 0x8000`). |
-| **Regression Checks** | `make verify-scroll verify-patrol verify-oam verify-music verify-endurance` | Verifies scrolling, actor movement, OAM sprite fidelity, timer audio clock, and endurance. |
+| **Regression Checks** | `make verify-scroll verify-patrol verify-oam verify-music verify-endurance` | Verifies scrolling, patrol AI (`patrol_slime_cross` + `patrol_enemy_bumps_player`), OAM sprite fidelity, timer audio clock, and endurance. |
 | **Header & Release Test** | `make test` | Validates release ROM compilation and header checksum integrity. |
 
 ### How Scenarios Work (`tools/scenarios/*.json`)

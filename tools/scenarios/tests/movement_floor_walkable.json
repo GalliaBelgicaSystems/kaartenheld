@@ -1,40 +1,39 @@
 {
-  "name": "movement_floor_walkable",
-  "test": true,
-  "description": "Player walks across walkable . grass/floor and emits PLAYER_MOVED",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 5,
-      "expected_y": 4
-    },
-    {
-      "type": "event_occurred",
-      "event": "PLAYER_MOVED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "RIGHT"
-    },
-    "seed": 42
+ "name": "movement_floor_walkable",
+ "test": true,
+ "description": "Player walks across walkable . grass/floor and emits PLAYER_MOVED",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 5,
+   "expected_y": 4
+  },
+  {
+   "type": "event_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "RIGHT"
+  },
+  "seed": 42
+ }
 }

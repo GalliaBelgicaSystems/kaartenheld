@@ -1,0 +1,8 @@
+{
+  "id": "shopkeeper_greeting",
+  "speaker": "SHOP:",
+  "lines": [
+    "Welcome to my shop.",
+    "Rest up, friend."
+  ]
+}

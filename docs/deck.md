@@ -496,8 +496,8 @@ No counter needs to be maintained.
 > 3. `battle_resolve_hand_discard()` pays the summed combo cost (saturating
 >    at 0), decrements limited uses, emits `CARD_PLAYED` per card, discards
 >    them and refills those hand slots from the deck.
- > 4. `energy` is a per-turn pool (`BATTLE_ENERGY_PER_TURN`, currently 2),
- >    refreshed to full at every decision-phase entry (attack AND defend).
+> 4. `energy` is a per-turn pool (`BATTLE_ENERGY_PER_TURN`, currently 2),
+>    refreshed to full at every decision-phase entry (attack AND defend).
 >
 > For a Potion:
 
@@ -1261,15 +1261,15 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
 - **`max_copies` caps both collection and deck** (spec said the collection is
   uncapped). Enforced in `src/rpg/deck.c`; capping the collection too keeps
   the fixed-size entry array honest at 12 slots.
- - **Energy model**: per-turn pool of 2 (`BATTLE_ENERGY_PER_TURN`) refreshed at
-   every decision-phase entry rather than a per-combat budget. Affordability
-   is checked at selection time against `energy - combo_reserved_cost()` and
-   paid at resolve time. The small pool means combo scenarios select
-   cost-0 (or at most two cost-1) cards so the hand still fits the pool.
+- **Energy model**: per-turn pool of 2 (`BATTLE_ENERGY_PER_TURN`) refreshed at
+  every decision-phase entry rather than a per-combat budget. Affordability
+  is checked at selection time against `energy - combo_reserved_cost()` and
+  paid at resolve time. The small pool means combo scenarios select
+  cost-0 (or at most two cost-1) cards so the hand still fits the pool.
 - **Deck-size ceiling unreachable**: the 20-card deck limit cannot be hit by
   current content — total deckable copies across the catalog are 17
   (IRON_SWORD ×4 + WOODEN_SHIELD ×3 + WOOD_RING ×3 + FIRE_SWORD ×3 +
-  POISON_DAGGER ×3 + BOW_10 ×1; AMULET is SPECIAL and not deckable). Recorded as a known
+  POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not deckable). Recorded as a known
   gap; no synthetic content was added just to test it.
 - **Starter deck granted at new game**: a new game grants the collection
   IRON_SWORD ×4 + WOODEN_SHIELD ×3 + FIRE_SWORD ×3 + POISON_DAGGER ×2 (and decks all

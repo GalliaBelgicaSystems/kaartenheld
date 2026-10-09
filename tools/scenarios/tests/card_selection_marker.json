@@ -1,56 +1,56 @@
 {
-  "name": "card_selection_marker",
-  "test": true,
-  "description": "After pressing A to select a card, row 15 must show the numbered marker (not just the cursor). Validates that the inner selection loop reads combo_count and selected_indices correctly on real boot.",
-  "actions": [
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 4
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 15,
-      "contains": "1"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "card_selection_marker",
+ "test": true,
+ "description": "After pressing A to select a card, row 15 must show the numbered marker (not just the cursor). Validates that the inner selection loop reads combo_count and selected_indices correctly on real boot.",
+ "actions": [
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "1"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

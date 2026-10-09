@@ -7,6 +7,7 @@
 #include "screen.h"
 #include "rpg/cards.h"
 #include "rpg/status.h"
+#include "rider_tiles_generated.h"
 #include "rpg/loot.h"
 #include "rpg/deck.h"
 #include "quest.h"
@@ -80,6 +81,53 @@ static volatile uint8_t *s_ic_dst;
 static char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
+
+/* Rider OAM for the item screen (entries 1-5): icon over a card's elem
+ * cell for cards carrying a rider, hidden otherwise.  Transition-hide
+ * covers screen changes; the render dispatch below sweeps entries
+ * first so quest/picker/emptied rows never go stale.  Same bank (2),
+ * WRAM shadow OAM only; rider tiles/palettes are boot-resident and
+ * item screens never reprogram OBJ slots. */
+static void ic_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
+{
+    *tile = 0;
+    *slot = 0;
+    if (status == STATUS_BURN) {
+        *tile = RIDER_TILE_BURN;
+        *slot = RIDER_OBJ_BURN;
+    } else if (status == STATUS_FREEZE) {
+        *tile = RIDER_TILE_FREEZE;
+        *slot = RIDER_OBJ_FREEZE;
+    } else if (status == STATUS_POISON) {
+        *tile = RIDER_TILE_POISON;
+        *slot = RIDER_OBJ_POISON;
+    }
+}
+
+static void ic_rider_hide(uint8_t entry)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = 0;
+    re[2] = 0;
+}
+
+static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
+{
+    uint8_t tile, slot;
+    volatile uint8_t *re;
+    ic_rider_tile(status, &tile, &slot);
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    if (tile) {
+        re[0] = (uint8_t)((y << 3) + 16);
+        re[1] = (uint8_t)((x << 3) + 8);
+        re[2] = tile;
+        re[3] = slot;
+    } else {
+        re[0] = 0;
+        re[2] = 0;
+    }
+}
 
 static uint8_t s_ic_arg_x;
 static uint8_t s_ic_arg_y;
@@ -332,15 +380,10 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     else
         IC_DRAW_TEXT(0, y, " ", 1);
 
-    if (s_ic_def->status_id == STATUS_BURN) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-    } else if (s_ic_def->status_id == STATUS_POISON) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_POISON;
-    } else if (s_ic_def->status_id == STATUS_FREEZE) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_ICE;
-    } else {
-        s_ic_tile_elem = 0;
-    }
+    /* Element rider OAM is painted per row by the list loop below (over
+     * the col-2 elem cell): the cell itself stays blank and the element
+     * also reads from the color span below (FIRE/POISON/ICE slots). */
+    s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;
@@ -367,10 +410,13 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     }
     *(s_ic_dst + 1) = s_ic_tile_wpn;
 
-    IC_COLOR_SPAN(2, y, 8,
-                  ui_color_card(s_ic_def->battle_type, s_ic_def->status_id,
-                                (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                (s_ic_def->effect == CARD_EFFECT_HEAL_HP)));
+    IC_COLOR_SPAN(3, y, 1, UI_COLOR_WOOD);
+    if (s_ic_def->status_id == STATUS_BURN)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_FIRE);
+    else if (s_ic_def->status_id == STATUS_POISON)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_POISON);
+    else if (s_ic_def->status_id == STATUS_FREEZE)
+        IC_COLOR_SPAN(2, y, 1, UI_COLOR_ICE);
 
     s_ic_in_deck = ic_deck_count(&g->state.cards.deck, s_ic_id);
     s_ic_code[0] = (char)('0' + s_ic_in_deck);
@@ -396,6 +442,8 @@ static void ic_draw_cards_list(Game *g)
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
+        ic_rider_show((uint8_t)(1 + s_ic_lst_pos), 2, s_ic_y,
+                      s_ic_def ? s_ic_def->status_id : 0);
         s_ic_y = (uint8_t)(s_ic_y + 2);
     }
 
@@ -453,11 +501,14 @@ static void ic_draw_quest(Game *g)
         if (LCDC_REG & 0x80) {
             while (STAT_REG & 0x02);
         }
+        /* Quest marker as a font glyph ('!' active, '*' complete): the
+         * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
+         * loader now overwrites tile 116 with the combat deck art). */
         if (ic_quest_status(&g->state, s_ic_q) == QUEST_STATUS_COMPLETE) {
-            *s_ic_dst = UI_TILE_CARD_ELEM_FIRE;
+            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
             IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
         } else {
-            *s_ic_dst = UI_TILE_DECK;
+            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
             IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
         }
 
@@ -477,15 +528,14 @@ static void ic_draw_card_detail_page(Game *g)
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
 
-    if (s_ic_def->status_id == STATUS_BURN) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-    } else if (s_ic_def->status_id == STATUS_POISON) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_POISON;
-    } else if (s_ic_def->status_id == STATUS_FREEZE) {
-        s_ic_tile_elem = UI_TILE_CARD_ELEM_ICE;
-    } else {
-        s_ic_tile_elem = 0;
-    }
+    /* Detail-page rider over the col-0 elem cell (entry 1; the list is
+     * not drawn in detail mode, and the dispatch sweep hid the rest). */
+    ic_rider_show(1, 0, 5, s_ic_def->status_id);
+
+    /* Detail-page rider OAM is painted above (over the col-0 elem cell):
+     * the cell itself stays blank and the element also reads from the
+     * color span below (FIRE/POISON/ICE slots). */
+    s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;
@@ -512,10 +562,13 @@ static void ic_draw_card_detail_page(Game *g)
     }
     *(s_ic_dst + 1) = s_ic_tile_wpn;
 
-    IC_COLOR_SPAN(0, s_ic_y, 11,
-                  ui_color_card(s_ic_def->battle_type, s_ic_def->status_id,
-                                (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                (s_ic_def->effect == CARD_EFFECT_HEAL_HP)));
+    IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
+    if (s_ic_def->status_id == STATUS_BURN)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_FIRE);
+    else if (s_ic_def->status_id == STATUS_POISON)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_POISON);
+    else if (s_ic_def->status_id == STATUS_FREEZE)
+        IC_COLOR_SPAN(0, s_ic_y, 1, UI_COLOR_ICE);
     s_ic_y += 2;
     IC_DRAW_TEXT(0, s_ic_y, "TYPE", 4);
     IC_DRAW_TEXT(6, s_ic_y, ic_card_type_name(s_ic_def->type), 3);
@@ -562,7 +615,14 @@ static void ic_draw_picker(Game *g)
 void item_screen_render_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
+    uint8_t e;
     if (!g) return;
+
+    /* Sweep rider entries first: quest/picker/emptied rows leave nothing
+     * behind, and list/detail set exactly what they show below. */
+    for (e = 1; e <= VISIBLE_CARDS; e++) {
+        ic_rider_hide(e);
+    }
 
     if (g->item_menu_tab == TAB_QUEST) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL)

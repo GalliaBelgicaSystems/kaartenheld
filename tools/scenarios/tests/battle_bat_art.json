@@ -1,0 +1,63 @@
+{
+ "name": "battle_bat_art",
+ "test": true,
+ "description": "Bat trio battle: enemies render as OAM sprites with the bat OBJ ramp (BG footprint blank); HP lines and wiring pinned.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 100
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "music_track",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "8/ 8   8/ 8   8/ 8"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 2,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 3,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 1,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 15,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 777
+ }
+}

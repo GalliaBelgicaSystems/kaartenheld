@@ -1,31 +1,30 @@
 {
-  "name": "thanks_boot",
-  "test": true,
-  "description": "Boot directly into the terminal Thanks for playing! screen",
-  "scenario_id": "THANKS_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "THANKS"
-    },
-    {
-      "type": "scene",
-      "expected": "FIELD"
-    },
-    {
-      "type": "game_state",
-      "expected": "THANKS"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 5004,
-    "screen": "THANKS"
+ "name": "thanks_boot",
+ "test": true,
+ "description": "Boot directly into the terminal Thanks for playing! screen",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "THANKS"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "game_state",
+   "expected": "THANKS"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 5004,
+  "screen": "THANKS"
+ }
 }

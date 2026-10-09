@@ -9,6 +9,7 @@
 #include "battle/card.h"
 #include "rpg/cards.h"
 #include "rpg/status.h"
+#include "rider_tiles_generated.h"
 #include "shops.h"
 #include "menu.h"
 #include "rpg/save.h"
@@ -33,6 +34,7 @@ extern uint8_t g_is_cgb;
 
 extern const CardDefinition g_cards[];
 extern const ShopDefinition g_shops[];
+extern const uint8_t g_shop_count;
 
 /* Shop message states (mirror shop_screen.c). */
 #define SC_SHOP_MSG_NONE 0
@@ -47,6 +49,7 @@ extern const ShopDefinition g_shops[];
 static uint8_t s_sc_txt_i;
 static uint8_t s_sc_col_i;
 static uint8_t s_sc_shop_i;
+static uint8_t s_sc_shop_scroll;
 static uint8_t s_sc_def_i;
 static uint8_t s_sc_shop_pos;
 static uint8_t s_sc_save_pos;
@@ -163,7 +166,7 @@ static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
 
 static const ShopDefinition *sc_shop_active(const Game *g)
 {
-    for (s_sc_shop_i = 0; s_sc_shop_i < 2; s_sc_shop_i++) {
+    for (s_sc_shop_i = 0; s_sc_shop_i < g_shop_count; s_sc_shop_i++) {
         if (g_shops[s_sc_shop_i].id == g->shop_id) return &g_shops[s_sc_shop_i];
     }
     return NULL;
@@ -208,7 +211,7 @@ static uint8_t bm_mode(const Game *g)
 
 static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
 {
-    if (mode == 2) return (uint8_t)(5u + index);
+    if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
     if (mode == 1) return (uint8_t)(5 + (index << 1));
     if (index == 0) return 5;
     s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
@@ -242,6 +245,20 @@ void item_menu_cursor_banked(void)
             s_sc_game->render_cache.valid = false;
             return;
         }
+    } else if (s_sc_mode == 2) {
+        /* Shop list: index is a direct stock position (0-based).  Keep the
+         * cursor inside the SHOP_VISIBLE window; a window shift needs a
+         * full redraw (the banked body cannot repaint scrolled rows). */
+        s_sc_need_scroll = s_sc_game->item_menu_scroll;
+        if (s_sc_new_index < s_sc_need_scroll)
+            s_sc_need_scroll = s_sc_new_index;
+        else if (s_sc_new_index > (uint8_t)(s_sc_need_scroll + SHOP_VISIBLE - 1))
+            s_sc_need_scroll = (uint8_t)(s_sc_new_index - (SHOP_VISIBLE - 1));
+        if (s_sc_need_scroll != s_sc_game->item_menu_scroll) {
+            s_sc_game->item_menu_scroll = s_sc_need_scroll;
+            s_sc_game->render_cache.valid = false;
+            return;
+        }
     }
 
     s_sc_old_row = bm_cursor_row(s_sc_mode, s_sc_old_index, s_sc_game->item_menu_scroll);
@@ -249,6 +266,59 @@ void item_menu_cursor_banked(void)
     if (s_sc_old_row != s_sc_new_row) {
         sc_put_char(0, s_sc_old_row, ' ');
         sc_put_char(0, s_sc_new_row, '>');
+    }
+}
+
+/* Rider OAM for the shop list (entries 1-10, one per visible stock row):
+ * icon over the col-1 elem cell for cards carrying a rider, hidden
+ * otherwise.  Transition-hide covers screen changes; the full render
+ * repaints rows on every state change, and out-of-range rows hide, so
+ * scrolled-away/emptied rows never go stale.  Same bank (2), WRAM
+ * shadow OAM only; rider tiles/palettes are boot-resident (ui_init) and
+ * shop screens never reprogram OBJ slots. */
+static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
+{
+    *tile = 0;
+    *slot = 0;
+    if (status == STATUS_BURN) {
+        *tile = RIDER_TILE_BURN;
+        *slot = RIDER_OBJ_BURN;
+    } else if (status == STATUS_FREEZE) {
+        *tile = RIDER_TILE_FREEZE;
+        *slot = RIDER_OBJ_FREEZE;
+    } else if (status == STATUS_POISON) {
+        *tile = RIDER_TILE_POISON;
+        *slot = RIDER_OBJ_POISON;
+    }
+}
+
+static void shop_rider_draw(void)
+{
+    uint8_t k;
+    uint8_t tile, slot;
+    volatile uint8_t *re;
+
+    for (k = 0; k < SHOP_VISIBLE; k++) {
+        re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
+        tile = 0;
+        slot = 0;
+        if (s_sc_shop_def != 0 &&
+            (uint8_t)(s_sc_shop_scroll + k) < s_sc_shop_def->count) {
+            s_sc_card_def = sc_card_get_def(
+                s_sc_shop_def->items[(uint8_t)(s_sc_shop_scroll + k)]);
+            if (s_sc_card_def != 0) {
+                shop_rider_tile(s_sc_card_def->status_id, &tile, &slot);
+            }
+        }
+        if (tile) {
+            re[0] = (uint8_t)(((5 + k) << 3) + 16);
+            re[1] = (uint8_t)((1 << 3) + 8);
+            re[2] = tile;
+            re[3] = slot;
+        } else {
+            re[0] = 0;
+            re[2] = 0;
+        }
     }
 }
 
@@ -272,18 +342,25 @@ void shop_content_render(void)
     if (!s_sc_shop_def) {
         sc_draw_text(0, 5, "(nothing)", 9);
         sc_draw_text(0, 7, "[B] Leave", 9);
+        shop_rider_draw();
         return;
     }
 
-    for (s_sc_shop_pos = 0; s_sc_shop_pos < s_sc_shop_def->count; s_sc_shop_pos++) {
+    s_sc_shop_scroll = s_sc_game->item_menu_scroll;
+    for (s_sc_shop_pos = s_sc_shop_scroll;
+         s_sc_shop_pos < s_sc_shop_def->count &&
+         s_sc_shop_pos < (uint8_t)(s_sc_shop_scroll + SHOP_VISIBLE);
+         s_sc_shop_pos++) {
         s_sc_card_def = sc_card_get_def(s_sc_shop_def->items[s_sc_shop_pos]);
-        s_sc_y = (uint8_t)(5 + s_sc_shop_pos);
+        s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         if (s_sc_card_def) {
-            if (s_sc_card_def->status_id == 1 /* STATUS_BURN */) s_sc_tile_elem = UI_TILE_CARD_ELEM_FIRE;
-            else if (s_sc_card_def->status_id == 2 /* STATUS_POISON */) s_sc_tile_elem = UI_TILE_CARD_ELEM_POISON;
-            else if (s_sc_card_def->status_id == 3 /* STATUS_FREEZE */) s_sc_tile_elem = UI_TILE_CARD_ELEM_ICE;
-            else s_sc_tile_elem = 0;
+            /* Icon tiles mirror the battle hand (screens/cards_skin.json):
+             * weapon icon only.  Element rider OAM is painted per row by
+             * shop_rider_draw below (over the col-1 elem cell): the cell
+             * itself stays blank and the element also reads from the
+             * color span below (FIRE/POISON/ICE slots). */
+            s_sc_tile_elem = 0;
 
             if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
                 s_sc_tile_wpn = UI_TILE_CARD_RING;
@@ -304,10 +381,20 @@ void shop_content_render(void)
             sc_vram_sync_write(s_sc_dst, s_sc_tile_elem);
             sc_vram_sync_write(s_sc_dst + 1, s_sc_tile_wpn);
 
-            sc_color_span(1, s_sc_y, 6,
-                          ui_color_card(s_sc_card_def->battle_type, s_sc_card_def->status_id,
-                                        (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                                        (s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)));
+            /* Icon palettes mirror the battle-hand display slots
+             * (generated card_display_slots.json: weapons all WOOD/5,
+             * fire 1, ice 2, poison 4): the element cell takes its
+             * element slot, the weapon cell WOOD.  Code/price text
+             * stays on the default paper slot.  Bank-2 bodies cannot
+             * read the bank-4 skin const, so the skin mapping is
+             * mirrored here -- keep in sync with cards_skin.json. */
+            if (s_sc_card_def->status_id == STATUS_BURN)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_FIRE);
+            else if (s_sc_card_def->status_id == STATUS_POISON)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
+            else if (s_sc_card_def->status_id == STATUS_FREEZE)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
+            sc_color_span(2, s_sc_y, 1, UI_COLOR_WOOD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }
@@ -320,13 +407,14 @@ void shop_content_render(void)
         sc_color_span(16, s_sc_y, 1, UI_COLOR_GOLD);
     }
 
-    sc_draw_text(0, (uint8_t)(6 + s_sc_shop_def->count), "[A] Buy  [B] Leave", 18);
+    sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
     if (s_sc_game->shop_message != SC_SHOP_MSG_NONE) {
-        sc_draw_text(0, (uint8_t)(8 + s_sc_shop_def->count),
+        sc_draw_text(0, 17,
                      (s_sc_game->shop_message == SC_SHOP_MSG_BOUGHT) ? "Bought!" :
                      (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) ? "Too many!" : "Not enough!",
                      12);
     }
+    shop_rider_draw();
 }
 
 void save_load_content_render(void)

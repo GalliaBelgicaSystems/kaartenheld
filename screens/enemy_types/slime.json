@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "slime",
+  "label": "Slime",
+  "category": "minion",
+  "sprite": { "art": "slime", "frames": 1 },
+  "overworld": { "cells": ["slime_f0", "slime_f1"], "palette": "sprites11" },
+  "name": "SLIME",
+  "hp": 10,
+  "max_hp": 10,
+  "battle_id": "BATTLE_SLIME",
+  "ai_types": ["AI_PATROL_CROSS", "AI_PATROL_CIRCLE"],
+  "gold_reward": 5,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

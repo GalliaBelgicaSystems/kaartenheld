@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/tutorial.schema.json",
+  "title": "Tutorial Slides",
+  "description": "Semantic source of truth for the title-menu tutorial slides. Fixed 4-row geometry (rows 5-8 plus the [LR] NAV [B] EXIT footer at row 16); the compiler pads short slides with blank lines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slides"],
+  "properties": {
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Slides in navigation order. At least one (the title menu links here unconditionally).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lines"],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "maxLength": 19,
+              "description": "One slide line. Max 19 chars + NUL (fixed [20] ROM arrays); the box renders 18 wide, so longer than 18 warns."
+            }
+          }
+        }
+      }
+    }
+  }
+}

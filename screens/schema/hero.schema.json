@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/hero.schema.json",
+  "title": "Hero Definition",
+  "description": "Single source of truth for the hero: name, stats, starter deck, and overworld sprite. The compiler emits src/game/hero_content.c (bank-2 starter-deck table) from this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "start_hp", "start_gold", "starter_deck", "overworld"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "description": "Must be 'hero' (single hero for now)."
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 10,
+      "description": "Display name shown in battle UI (e.g., 'Hero')."
+    },
+    "start_hp": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255,
+      "description": "Starting HP (also max HP at game start)."
+    },
+    "start_gold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535,
+      "description": "Starting gold."
+    },
+    "starter_deck": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "pattern": "^CARD_[A-Z_]+$"
+      },
+      "description": "Ordered starter deck (exact draw-pile order). Each entry must be a valid CARD_* constant from game_ids.h (quest-only SPECIAL cards are rejected at compile time). Max 20 cards. Compiled into g_hero_starter_deck by battle_compile.py; both game_new_game and the battle fallback read it."
+    },
+    "overworld": {
+      "type": "object",
+      "required": ["cells", "palette"],
+      "properties": {
+        "cells": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "description": "Tile name from tools/compose_hero_sprites.py LAYOUT (1-2 frames)."
+          }
+        },
+        "palette": {
+          "anyOf": [
+            { "type": "string", "description": "OBJ ramp name from assets/palette.txt (preferred; the editor writes names)." },
+            { "type": "integer", "minimum": 0, "maximum": 7 }
+          ],
+          "description": "CGB OAM palette: an OBJ ramp name (preferred) or a legacy hardware slot index."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

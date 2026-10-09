@@ -21,6 +21,18 @@ void title_screen_render(Game *g)
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_TITLE) {
         ui_clear_screen();
+        /* Stream the bitmap logo into the world BG block before the bank-4
+         * content body stamps its tilemap.  The loader's bank differs by
+         * build: bank 5 in the harness build (layout-pinned), bank 2 in
+         * release (title_logo_content.c).  Runs inside the LCD-off full
+         * redraw, so the raw VRAM writes are safe. */
+#ifdef DEBUG_BUILD
+        g_bk_call_bank = 5;
+#else
+        g_bk_call_bank = 2;
+#endif
+        g_bk_call_target = (uint16_t)&ui_title_logo_load_banked;
+        banked_call_run();
         g_bk_call_bank = 4;
         g_bk_call_target = (uint16_t)&title_content_render;
         g_bk_byte_a = g->title_menu_showing;

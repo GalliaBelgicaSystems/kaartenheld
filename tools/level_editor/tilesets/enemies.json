@@ -1,0 +1,177 @@
+{
+  "id": "enemies",
+  "label": "Enemies (shared overworld sprites)",
+  "gb_tileset_kind": "WORLD_TILESET_ENEMIES",
+  "tiles": [
+    {
+      "id": "dog_f0",
+      "label": "Dog frame 0",
+      "gb_constant": "TILE_ENEMIES_DOG_F0",
+      "walkable": false,
+      "color": "#8c7147",
+      "ascii": "D",
+      "image_url": "/tiles/enemies/dog_f0.png",
+      "category": "npc"
+    },
+    {
+      "id": "dog_f1",
+      "label": "Dog frame 1",
+      "gb_constant": "TILE_ENEMIES_DOG_F1",
+      "walkable": false,
+      "color": "#8c6d46",
+      "ascii": "D",
+      "image_url": "/tiles/enemies/dog_f1.png",
+      "category": "npc"
+    },
+    {
+      "id": "slime_f0",
+      "label": "Slime frame 0",
+      "gb_constant": "TILE_ENEMIES_SLIME_F0",
+      "walkable": false,
+      "color": "#72b847",
+      "ascii": "E",
+      "image_url": "/tiles/enemies/slime_f0.png",
+      "category": "enemy"
+    },
+    {
+      "id": "slime_f1",
+      "label": "Slime frame 1",
+      "gb_constant": "TILE_ENEMIES_SLIME_F1",
+      "walkable": false,
+      "color": "#72b847",
+      "ascii": "E",
+      "image_url": "/tiles/enemies/slime_f1.png",
+      "category": "enemy"
+    },
+    {
+      "id": "bat_f0",
+      "label": "Bat frame 0",
+      "gb_constant": "TILE_ENEMIES_BAT_F0",
+      "walkable": false,
+      "color": "#555555",
+      "ascii": "V",
+      "image_url": "/tiles/enemies/bat_f0.png",
+      "category": "enemy"
+    },
+    {
+      "id": "bat_f1",
+      "label": "Bat frame 1",
+      "gb_constant": "TILE_ENEMIES_BAT_F1",
+      "walkable": false,
+      "color": "#555555",
+      "ascii": "V",
+      "image_url": "/tiles/enemies/bat_f1.png",
+      "category": "enemy"
+    },
+    {
+      "id": "boss_ow_tl",
+      "label": "Boss overworld top-left",
+      "gb_constant": "TILE_ENEMIES_BOSS_OW_TL",
+      "walkable": false,
+      "color": "#110b0b",
+      "ascii": "B",
+      "image_url": "/tiles/enemies/boss_ow_tl.png",
+      "category": "enemy"
+    },
+    {
+      "id": "boss_ow_tr",
+      "label": "Boss overworld top-right",
+      "gb_constant": "TILE_ENEMIES_BOSS_OW_TR",
+      "walkable": false,
+      "color": "#1e0a0a",
+      "ascii": "B",
+      "image_url": "/tiles/enemies/boss_ow_tr.png",
+      "category": "enemy"
+    },
+    {
+      "id": "boss_ow_bl",
+      "label": "Boss overworld bottom-left",
+      "gb_constant": "TILE_ENEMIES_BOSS_OW_BL",
+      "walkable": false,
+      "color": "#111111",
+      "ascii": "B",
+      "image_url": "/tiles/enemies/boss_ow_bl.png",
+      "category": "enemy"
+    },
+    {
+      "id": "boss_ow_br",
+      "label": "Boss overworld bottom-right",
+      "gb_constant": "TILE_ENEMIES_BOSS_OW_BR",
+      "walkable": false,
+      "color": "#0e0e0e",
+      "ascii": "B",
+      "image_url": "/tiles/enemies/boss_ow_br.png",
+      "category": "enemy"
+    },
+    {
+      "id": "kobold_f0",
+      "label": "Kobold frame 0",
+      "gb_constant": "TILE_ENEMIES_KOBOLD_F0",
+      "walkable": false,
+      "color": "#8a6d3b",
+      "ascii": "K",
+      "image_url": "/tiles/enemies/kobold_f0.png",
+      "category": "enemy"
+    },
+    {
+      "id": "kobold_f1",
+      "label": "Kobold frame 1",
+      "gb_constant": "TILE_ENEMIES_KOBOLD_F1",
+      "walkable": false,
+      "color": "#8a6d3b",
+      "ascii": "K",
+      "image_url": "/tiles/enemies/kobold_f1.png",
+      "category": "enemy"
+    },
+    {
+      "id": "kobold_idle",
+      "label": "Kobold idle",
+      "gb_constant": "TILE_ENEMIES_KOBOLD_IDLE",
+      "walkable": false,
+      "color": "#8a6d3b",
+      "ascii": "K",
+      "image_url": "/tiles/enemies/kobold_idle.png",
+      "category": "enemy"
+    },
+    {
+      "id": "spider_f0",
+      "label": "Spider frame 0",
+      "gb_constant": "TILE_ENEMIES_SPIDER_F0",
+      "walkable": false,
+      "color": "#555555",
+      "ascii": "S",
+      "image_url": "/tiles/enemies/spider_f0.png",
+      "category": "enemy"
+    },
+    {
+      "id": "spider_f1",
+      "label": "Spider frame 1",
+      "gb_constant": "TILE_ENEMIES_SPIDER_F1",
+      "walkable": false,
+      "color": "#555555",
+      "ascii": "S",
+      "image_url": "/tiles/enemies/spider_f1.png",
+      "category": "enemy"
+    },
+    {
+      "id": "mimic_f0",
+      "label": "Mimic frame 0",
+      "gb_constant": "TILE_ENEMIES_MIMIC_F0",
+      "walkable": false,
+      "color": "#826d37",
+      "ascii": "T",
+      "image_url": "/tiles/enemies/mimic_f0.png",
+      "category": "enemy"
+    },
+    {
+      "id": "mimic_f1",
+      "label": "Mimic frame 1",
+      "gb_constant": "TILE_ENEMIES_MIMIC_F1",
+      "walkable": false,
+      "color": "#826d37",
+      "ascii": "T",
+      "image_url": "/tiles/enemies/mimic_f1.png",
+      "category": "enemy"
+    }
+  ]
+}

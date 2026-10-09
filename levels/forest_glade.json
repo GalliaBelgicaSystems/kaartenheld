@@ -1,0 +1,308 @@
+{
+  "id": "forest_glade",
+  "name": "Mossy Glade",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "forest",
+    "music": "MUSIC_FOREST",
+    "map_id": "MAP_FOREST_GLADE"
+  },
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "forest_deep",
+    "west": "forest"
+  },
+  "default_walkable": "forest.forest_plain_floor_2",
+  "layers": {
+    "terrain": [
+      {
+        "x": 4,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 13,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 13,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 14,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 4,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 5,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 4,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 5,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 13,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 14,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 13,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 14,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 2,
+      "y": 9,
+      "facing": "RIGHT",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [],
+  "objects": [
+    {
+      "id": "glade_slime",
+      "type": "enemy",
+      "position": {
+        "x": 8,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 20,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 12,
+        "max_hp": 12,
+        "gold_reward": 5,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      },
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ]
+    },
+    {
+      "id": "glade_bat",
+      "type": "enemy",
+      "position": {
+        "x": 13,
+        "y": 12
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 21,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      },
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ]
+    },
+    {
+      "id": "glade_hermit",
+      "type": "signpost",
+      "position": {
+        "x": 10,
+        "y": 3
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "HERMIT",
+        "dialogue": "DIALOGUE_ID_ADVICE_HERMIT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "glade_kobold",
+      "type": "enemy",
+      "position": {
+        "x": 7,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "display_name": "KOBOLD",
+        "actor_id": 47,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 12,
+        "max_hp": 12,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_KOBOLD",
+        "ai": "AI_CHASE",
+        "enemy_type": "kobold"
+      }
+    },
+    {
+      "id": "glade_slime2",
+      "type": "enemy",
+      "position": {
+        "x": 13,
+        "y": 6
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 48,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 20,
+        "max_hp": 20,
+        "gold_reward": 10,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      },
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "id": "mossy_glade",
+      "bounds": {
+        "x": 2,
+        "y": 2,
+        "width": 16,
+        "height": 14
+      },
+      "description": "A quiet clearing ringed by old trees.",
+      "gameplay": {
+        "purpose": "advice",
+        "difficulty": 1
+      }
+    }
+  ]
+}

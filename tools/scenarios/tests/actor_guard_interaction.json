@@ -1,48 +1,47 @@
 {
-  "name": "actor_guard_interaction",
-  "test": true,
-  "description": "Friendly World Actor (Guard) starts dialogue when engaged",
-  "scenario_id": "GUARD_DIALOGUE",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "GUARD_GREETING"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ACTOR_INTERACTION"
-    },
-    {
-      "type": "actor_at",
-      "entity": "GUARD",
-      "x": 10,
-      "y": 8
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 8,
-      "facing": "RIGHT"
-    },
-    "seed": 1005,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "actor_guard_interaction",
+ "test": true,
+ "description": "Friendly World Actor (Guard) starts dialogue when engaged",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "GUARD_GREETING"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "actor_at",
+   "entity": "GUARD",
+   "x": 10,
+   "y": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 1005,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

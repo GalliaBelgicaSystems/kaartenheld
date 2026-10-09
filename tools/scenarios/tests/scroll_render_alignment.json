@@ -1,83 +1,82 @@
 {
-  "name": "scroll_render_alignment",
-  "test": true,
-  "description": "Walk east on the Field to (26,7); with a full-screen 18-row viewport the map fits vertically so camera_px_y stays 0, while the player-centred camera scrolls horizontally to camera_px_x=96 and SCX/SCY track it, while the background tilemap ring holds the correct world tiles at wrapped addresses",
-  "scenario_id": "SCROLL_RENDER_ALIGNMENT",
-  "actions": [
-    {
-      "type": "hold",
-      "button": "RIGHT",
-      "frames": 192
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 26,
-      "expected_y": 7
-    },
-    {
-      "type": "camera",
-      "expected_x": 12,
-      "expected_y": 0
-    },
-    {
-      "type": "camera_px_x",
-      "expected": 96
-    },
-    {
-      "type": "camera_px_y",
-      "expected": 0
-    },
-    {
-      "type": "scx",
-      "expected": 96
-    },
-    {
-      "type": "scy",
-      "expected": 0
-    },
-    {
-      "type": "tilemap_cell",
-      "row": 1,
-      "col": 31,
-      "expected": 129
-    },
-    {
-      "type": "tilemap_cell",
-      "row": 2,
-      "col": 12,
-      "expected": 128
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "expected": ">###################"
-    },
-    {
-      "type": "screen_row",
-      "row": 1,
-      "expected": "...................#"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 2,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 1000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "scroll_render_alignment",
+ "test": true,
+ "description": "Walk east on the Field to (26,7); with a full-screen 18-row viewport the map fits vertically so camera_px_y stays 0, while the player-centred camera scrolls horizontally to camera_px_x=96 and SCX/SCY track it, while the background tilemap ring holds the correct world tiles at wrapped addresses",
+ "actions": [
+  {
+   "type": "hold",
+   "button": "RIGHT",
+   "frames": 192
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 26,
+   "expected_y": 7
+  },
+  {
+   "type": "camera",
+   "expected_x": 12,
+   "expected_y": 0
+  },
+  {
+   "type": "camera_px_x",
+   "expected": 96
+  },
+  {
+   "type": "camera_px_y",
+   "expected": 0
+  },
+  {
+   "type": "scx",
+   "expected": 96
+  },
+  {
+   "type": "scy",
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 1,
+   "col": 31,
+   "expected": 136
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 2,
+   "col": 12,
+   "expected": 169
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "expected": ".###################"
+  },
+  {
+   "type": "screen_row",
+   "row": 1,
+   "expected": "...................#"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 2,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 1000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

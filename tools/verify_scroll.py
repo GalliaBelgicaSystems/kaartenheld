@@ -33,9 +33,9 @@ import os
 import sys
 
 ROM_DEBUG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "build", "rpg_card_proto_debug.gb")
+                         "..", "build", "kaartenheld_debug.gb")
 SYM_DEBUG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "build", "rpg_card_proto_debug.sym")
+                         "..", "build", "kaartenheld_debug.sym")
 
 failures = []
 
@@ -126,10 +126,25 @@ def main():
     OAM_Y = 0xC000
     OAM_X = 0xC001
 
-    # Boot position (4,4): row 4 of Field is clear (the slime sits at (14,8)),
-    # so holding RIGHT walks cleanly to the east wall with full camera scroll.
+    # Boot position is the FIELD spawn from levels/field.json player.spawn
+    # ((17,7)): row 7 holds the east gate (31,7), and a held RIGHT would
+    # cross maps mid-check (gate redraws blank the LCD and break the scroll
+    # invariants).  Step up to row 4 first -- it is clear of terrain blocks
+    # and the slime patrol box around (14,8), and its east edge (31,4) is a
+    # plain perimeter wall, so holding RIGHT walks cleanly to the east wall
+    # with full camera scroll and no map change.
     px0, py0 = pb.memory[POS_X], pb.memory[POS_Y]
     print(f"boot: player at ({px0},{py0})")
+    for _ in range(20):
+        if pb.memory[POS_Y] == 4:
+            break
+        pb.button_press("up")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("up")
+        for _ in range(40):
+            pb.tick()
+    print(f"scroll row: player at ({pb.memory[POS_X]},{pb.memory[POS_Y]})")
 
     # Press and hold RIGHT
     pb.button_press("right")

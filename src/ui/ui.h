@@ -13,34 +13,105 @@ extern uint8_t ui_font_tile_base;
  * writes; DMG = 0. */
 extern uint8_t g_is_cgb;
 
-/* Weapon, element & UI icon tile indices (VRAM Block 1, 0x8800) */
+/* Weapon & UI icon tile indices (VRAM Block 1, 0x8800).  Element riders
+ * are OAM sprites (rider_tiles_generated.h), never BG tiles. */
 #define UI_TILE_CARD_SWORD       104u
 #define UI_TILE_CARD_SHIELD      105u
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
 #define UI_TILE_CARD_AMULET      109u
-#define UI_TILE_CARD_ELEM_FIRE   110u
-#define UI_TILE_CARD_ELEM_ICE    111u
-#define UI_TILE_CARD_ELEM_POISON 112u
 #define UI_TILE_HEART            113u
 #define UI_TILE_BOLT             114u
 #define UI_TILE_COIN             115u
 #define UI_TILE_DECK             116u
+/* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
+ * sheet row 3, loaded explicitly at these ids by ui_init).  Together with
+ * the card frames these fully allocate the 117-127 BG window between the
+ * icon block (104-116) and the world / battle-art blocks (128+). */
+#define UI_TILE_TIMER_FILLED     117u
+#define UI_TILE_TIMER_EMPTY      127u
+/* Up-arrow select icons (combat tileset "arrow pointing up light/dark",
+ * card_frames sheet tiles 14/15): the light arrow is the cursor on a plain
+ * card (and the enemy-target caret); the dark arrow stays on a card that is
+ * already in the combo (no auto-advance after select).  Both replace the
+ * '^' font caret on the battle marker / target rows.  BG tile ids 96-103
+ * are the only free block-1 slots (font 0-95, atlas 104-116); the BG never
+ * referenced them before. */
+#define UI_TILE_SELECT_ARROW     96u
+#define UI_TILE_SELECT_ARROW_DARK 110u
+/* Battle hand-card frame tiles (VRAM Block 1, 0x8800): 9 tiles in frame
+ * order TL TM TR / L C R / BL BM BR (generated card_frame_tiles.h from
+ * assets/card_frames.png).  Sits between the icon block (104-116) and the
+ * world / battle-art blocks (128+). */
+#define UI_TILE_CARD_FRAME_BASE  118u
+#define UI_TILE_CARD_FRAME_TL    118u
+#define UI_TILE_CARD_FRAME_TM    119u
+#define UI_TILE_CARD_FRAME_TR    120u
+#define UI_TILE_CARD_FRAME_L     121u
+#define UI_TILE_CARD_FRAME_C     122u
+#define UI_TILE_CARD_FRAME_R     123u
+#define UI_TILE_CARD_FRAME_BL    124u
+#define UI_TILE_CARD_FRAME_BM    125u
+#define UI_TILE_CARD_FRAME_BR    126u
+
+/* Overworld actor OAM sprite tile bases (VRAM Block 0, 0x8000).  Collision
+ * rules: must not overlap the font-duplicate block 0..95 used for ASCII
+ * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
+#define HERO_DESOLATE_SPRITE_TILE_ID 98u
+#define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
+#define KOBOLD_SPRITE_TILE_ID    96u
+#define BAT_DESOLATE_SPRITE_TILE_ID 88u
+#define BAT_CASTLE_SPRITE_TILE_ID   92u
+/* Chest pickup sprite (single-frame art loaded into both anim slots). */
+#define CHEST_SPRITE_TILE_ID     94u
+/* Shared per-enemy overworld sprites (assets/enemy_sprites.png, base must
+ * match ENEMY_OW_BASE in tools/screen_compiler/battle_compile.py).  The
+ * blob holds concatenated per-enemy frames; ids 128+ alias BG tiles. */
+#define ENEMY_OW_BASE            100u
+#define ENEMY_OW_LIMIT           128u
+
+/* Max shadow-OAM entries the actor pipeline can touch: player (entry 0),
+ * hostile actors up to MAX_WORLD_ACTORS each a w*h sprite (max 2x2 = 4),
+ * then static actors.  Used by the transition-hide sweep. */
+#define OAM_MAX_ACTOR_ENTRIES     (1u + (MAX_WORLD_ACTORS * 4u) + MAX_STATIC_ACTORS)
+
+/* Bank-4 no-arg body behind ui_draw_actors_sprites(): writes each active
+ * non-boss actor's shadow-OAM entry (position/tile/prop from SPRITE_KIND_*)
+ * and the castle boss 2x2 background block.  Lives in bank 4 to keep the
+ * fixed bank under 0x8000. */
+void ui_actors_sprites_banked(void);
 
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
- * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = heal / cyan,
- * 4 = poison (emerald), 5 = wood (brown), 6 = gold (mythril),
- * 7 = dim (poison grey-out). */
+ * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
+ * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
+ * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (poison grey-out
+ * and desolate wasteland ground). */
 #define UI_COLOR_NONE   0
 #define UI_COLOR_FIRE   1
 #define UI_COLOR_IRON   2
 #define UI_COLOR_ICE    2
-#define UI_COLOR_HEAL   3
+#define UI_COLOR_FIELD  3
 #define UI_COLOR_POISON 4
+/* Paper: CRAM slot 4 re-programmed to a white/black document ramp while a
+ * dialogue box is open (no world tileset assigns slot 4 to any tile, and
+ * the quick screen -- its only other consumer -- cannot be open during a
+ * dialogue).  Every screen transition re-programs CRAM, which restores
+ * the set's own slot-4 ramp. */
+#define UI_COLOR_PAPER  4
 #define UI_COLOR_WOOD   5
 #define UI_COLOR_GOLD   6
 #define UI_COLOR_DIM    7
+
+/* Select-arrow cell (enemy target caret + card cursor marker).  The arrow
+ * tile is brown on white, which only the field ramp fits.  Single source
+ * for the two battle render sites AND the host palette compiler
+ * (tools/palette_compiler.py reads this define for the card display
+ * mapping), so encode and display cannot drift.  Kept as an engine
+ * constant rather than a HUD-skin field: growing a battle WRAM struct
+ * shifts BSS and flips an SDCC layout-sensitive miscompile (AGENTS.md
+ * 52.19), which broke the game_over_quit sentinel. */
+#define UI_COLOR_ARROW  UI_COLOR_FIELD
 
 /* Effect color for a card (status_id = on-hit rider element, is_heal =
  * ring/heal role).  Returns a UI_COLOR_* palette index.  status_id uses
@@ -78,12 +149,27 @@ void ui_draw_font_test_banked(void);
 void ui_sprite_init(void);
 void ui_sprite_move(uint8_t px, uint8_t py);
 void ui_sprite_hide(void);
+void ui_sprite_hide_actors_below(uint8_t screen_y);
 void ui_sprite_begin_transition(void);
 void ui_sprite_commit(void);
 void oam_dma_init(void);
 
 void ui_init(void);
 void ui_clear_screen(void);
+void ui_set_cram_palette(uint8_t overworld);
+void ui_load_cram_banked(void);
+void ui_load_tileset_banked(void);
+/* Title-logo loader (build-dependent bank: 5 debug / 2 release): streams the
+ * 48 logo tiles (assets/title-red.png,
+ * make gfx) into the world BG block (ids 128-175).  Runs in the title
+ * screen's LCD-off full redraw; AGENTS.md 52.22 signed 0x8800 fetch. */
+void ui_title_logo_load_banked(void);
+/* Bank-2 studio splash body: streams the deduped logo tiles
+ * (assets/gallia_belgica_systems.png, make gfx) into the world BG block
+ * (ids 128-192), stamps the 13x5 map, and programs CGB palette 1 to the
+ * logo's fixed ramp. */
+void ui_splash_logo_render_banked(void);
+extern uint8_t g_active_tile_palette[48];
 
 /* Toggle LCDC bit 7 directly (harness-safe: no GBDK display_off VBlank
  * wait).  Full-screen redraws span several display sweeps and cannot fit
@@ -92,6 +178,8 @@ void ui_clear_screen(void);
 void ui_lcd_off(void);
 void ui_lcd_on(void);
 
+void ui_load_tileset(uint8_t tileset);
+void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);
 void ui_draw_world_full(const World *world);
 void ui_draw_actors_sprites(const World *world);
@@ -131,7 +219,13 @@ void ui_draw_battle_full(const Battle *battle);
 void ui_update_battle(const Battle *battle);
 void ui_update_battle_banked(void);
 void ui_draw_battle_timer(const Battle *battle);
+void ui_draw_battle_timer_banked(void);
 uint8_t ui_calc_timer_bar(uint16_t t);
+
+/* Bank-3 no-arg body behind ui_init's battle-UI tile load (card frames +
+ * bar segments + HUD icons from card_frame_tiles.h); dispatched via
+ * banked_call_run() with the LCD off. */
+void ui_card_tiles_load_banked(void);
 
 void ui_draw_font_test(void);
 

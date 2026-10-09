@@ -1,92 +1,91 @@
 {
-  "name": "tutorial_slide1",
-  "test": true,
-  "description": "RIGHT from slide 0 advances to slide 1 and its CARD TYPES text is on screen.",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7003,
-    "screen": "TITLE"
+ "name": "tutorial_slide1",
+ "test": true,
+ "description": "RIGHT from slide 0 advances to slide 1 and its CARD TYPES text is on screen.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TUTORIAL"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "CARD TYPES"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "SW: SWORD"
-    },
-    {
-      "type": "screen_row",
-      "row": 7,
-      "contains": "SH: SHIELD"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "BO: BOW"
-    }
-  ]
+  "seed": 7003,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TUTORIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "CARD TYPES"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "SW: SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "SH: SHIELD"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "BO: BOW"
+  }
+ ]
 }

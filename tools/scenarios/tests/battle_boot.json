@@ -1,52 +1,56 @@
 {
-  "name": "battle_boot",
-  "test": true,
-  "description": "Boot directly into a battle against a Slime",
-  "scenario_id": "BATTLE_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "scene",
-      "expected": "FIELD"
-    },
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 10
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "SLIME"
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 10
-    },
-    {
-      "type": "music_track",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "BATTLE_STARTED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 5002,
-    "start_battle": true
+ "name": "battle_boot",
+ "test": true,
+ "description": "Boot directly into a battle against a Slime",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 10
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET SLIME"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "SLIME"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 10
+  },
+  {
+   "type": "music_track",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
 }

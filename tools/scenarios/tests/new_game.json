@@ -1,60 +1,59 @@
 {
-  "name": "new_game",
-  "test": true,
-  "description": "Verify initial game state after boot",
-  "scenario_id": "NEW_GAME",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_hp",
-      "expected": 10
-    },
-    {
-      "type": "player_position",
-      "expected_x": 4,
-      "expected_y": 4
-    },
-    {
-      "type": "music_track",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": false
-    },
-    {
-      "type": "currency",
-      "expected": 20,
-      "currency": "GOLD"
-    },
-    {
-      "type": "variable",
-      "variable": "CHAPTER",
-      "expected": 1
-    },
-    {
-      "type": "party_hp",
-      "member": 0,
-      "expected": 10
-    },
-    {
-      "type": "party_level",
-      "member": 0,
-      "expected": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 42
+ "name": "new_game",
+ "test": true,
+ "description": "Verify initial game state after boot",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_hp",
+   "expected": 10
+  },
+  {
+   "type": "player_position",
+   "expected_x": 4,
+   "expected_y": 4
+  },
+  {
+   "type": "music_track",
+   "expected": "FOREST"
+  },
+  {
+   "type": "flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": false
+  },
+  {
+   "type": "currency",
+   "expected": 20,
+   "currency": "GOLD"
+  },
+  {
+   "type": "variable",
+   "variable": "CHAPTER",
+   "expected": 1
+  },
+  {
+   "type": "party_hp",
+   "member": 0,
+   "expected": 10
+  },
+  {
+   "type": "party_level",
+   "member": 0,
+   "expected": 1
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
 }

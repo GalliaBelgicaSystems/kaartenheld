@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/enemy_type.schema.json",
+  "title": "Enemy Type Definition",
+  "description": "Semantic source of truth for an enemy type. The web enemy type editor and the JSON->C compiler both read this; it must not be edited by hand except through the editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "category", "sprite", "name", "hp", "max_hp", "battle_id", "gold_reward", "reward_currency"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "description": "Unique identifier for this enemy type (lowercase, underscores only)."
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Human-readable label for the editor."
+    },
+    "category": {
+      "type": "string",
+      "enum": ["minion", "elite", "boss"],
+      "description": "Enemy category for battle screen filtering."
+    },
+    "sprite": {
+      "type": ["object", "null"],
+      "description": "Battle-sprite art selection. Null = text fallback (no battle art). Otherwise names an art set from assets/battle_sprites.png (see ART_SETS in battle_compile.py) rendered as 3x2 background tiles in battle.",
+      "properties": {
+        "art": {
+          "type": "string",
+          "enum": ["slime", "bat", "boss"],
+          "description": "Art-set id; must exist in the compiler's ART_SETS table."
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Animation frames (2 = alternate top row, e.g. slime mouth; 1 = static)."
+        }
+      },
+      "required": ["art", "frames"],
+      "additionalProperties": false
+    },
+    "overworld": {
+      "type": ["object", "null"],
+      "description": "Shared overworld OAM sprite (one sprite for every world; the sheet background maps to transparent). Absent/null = legacy SPRITE_KIND rendering. cells is a flat frame-major list of width*height*frames tile names: a 1x1 sprite uses one tile per frame (2 cells = 2 animation frames), a 2x2 sprite uses four tiles per frame (4 cells = 1 frame).",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Overworld sprite width in tiles (default 1). A 2x2 boss uses width 2."
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "description": "Overworld sprite height in tiles (default 1). A 2x2 boss uses height 2."
+        },
+        "cells": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Compose-layout tile names (tools/compose_enemy_sprites.py LAYOUT); width*height*frames entries, frame-major (frame0's width*height cells, then frame1's, ...)."
+        },
+        "palette": {
+          "anyOf": [
+            { "type": "string", "description": "OBJ ramp name from assets/palette.txt (preferred; the editor writes names)." },
+            { "type": "integer", "minimum": 0, "maximum": 7 }
+          ],
+          "description": "CGB OAM palette: an OBJ ramp name (preferred) or a legacy hardware slot index."
+        }
+      },
+      "required": ["cells", "palette"],
+      "additionalProperties": false
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Display name shown in battle UI (e.g., 'SLIME')."
+    },
+    "hp": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255,
+      "description": "Base HP for this enemy type."
+    },
+    "max_hp": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255,
+      "description": "Base maximum HP for this enemy type."
+    },
+    "battle_id": {
+      "type": "string",
+      "pattern": "^BATTLE_[A-Z_]+$",
+      "description": "Engine battle ID constant (e.g., BATTLE_SLIME, BATTLE_BOSS)."
+    },
+    "ai_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["AI_NONE", "AI_PATROL_CROSS", "AI_PATROL_CIRCLE", "AI_CHASE"]
+      },
+      "description": "Valid AI types for this enemy type."
+    },
+    "gold_reward": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "description": "Gold granted on defeat."
+    },
+    "reward_currency": {
+      "type": "string",
+      "pattern": "^CURRENCY_ID_[A-Z_]+$",
+      "description": "Currency ID granted on defeat (e.g., CURRENCY_ID_GOLD)."
+    }
+  }
+}

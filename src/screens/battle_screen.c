@@ -42,8 +42,16 @@ void battle_screen_update(Game *g)
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             if (vg->battle.result == BATTLE_RESULT_VICTORY ||
                 vg->battle.result == BATTLE_RESULT_FLED) {
-                vg->world.player.hp = vg->battle.player.hp;
-                vg->state.party.members[0].hp = vg->battle.player.hp;
+                uint8_t exit_hp = vg->battle.player.hp;
+                /* Mutual-KO survival: a victory earned with 0 HP (shared
+                 * status-tick boundary killed both sides, victory shadows
+                 * the death) exits breathing at 1 HP instead of stranding
+                 * a corpse in the overworld. */
+                if (vg->battle.result == BATTLE_RESULT_VICTORY && exit_hp == 0) {
+                    exit_hp = 1;
+                }
+                vg->world.player.hp = exit_hp;
+                vg->state.party.members[0].hp = exit_hp;
                 /* Return to the current scene's area track (TOWN/DUNGEON
                  * get their own theme again instead of the field's). */
                 {

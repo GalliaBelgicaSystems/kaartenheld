@@ -1436,9 +1436,10 @@ The player should draw replacement cards after cards are played according to the
 > reject-and-retry, draw + discard, and draw-to-replace after each resolved combo
 > (`battle_resolve_hand_discard` draws one replacement per played card). Cards are
 > represented as compact type+value structs, not strings. Battles always draw from
-> the player's persistent deck; the packed fallback table (`s_starter_deck_packed`
-> in `src/battle/deck_init.c`, unpacked through the WRAM banked-call trampoline)
-> mirrors the granted 12-card starter deck (4xSW3 / 3xSH2 / 3xSW4 / 2xDA1) and only serves
+> the player's persistent deck; the fallback deck (`deck_init_default_banked`
+> in `src/battle/deck_init.c`, reading the generated `g_hero_starter_deck`
+> table from `screens/hero.json` via `battle_compile.py`, unpacked through the
+> WRAM banked-call trampoline) mirrors the granted starter deck and only serves
 > empty/legacy state. Removals are floored at `DECK_MIN_CARDS` (5, one full hand)
 > by an engine backstop in `deck_remove_card`. Deck composition and management
 > rules live in `docs/deck.md` and `docs/deck-management.md`.

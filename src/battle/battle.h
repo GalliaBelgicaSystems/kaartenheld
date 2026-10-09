@@ -92,14 +92,98 @@ typedef struct {
     Card enemy_played_card;                    /* Card drawn by enemy this turn */
 } Battle;
 
+/* Per-enemy battle art (screens/enemy_types.json), parallel to
+ * Battle.enemies[] but stored OUTSIDE Battle: Battle sits mid-Game, so any
+ * growth shifts every later Game field to 16-bit offsets across dozens of
+ * fixed-bank accessors (fixed-bank _CODE budget; see 52.18).  WRAM has room
+ * (_DATA headroom), fixed bank does not.  Written by the battle art loader;
+ * never persisted (Battle is temporary runtime state, AGENTS.md 53.1). */
+extern uint8_t g_battle_enemy_art[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_frames[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
+extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+/* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
+ * Staged by the loader from g_battle_art_obj; read by the stamper. */
+extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+
+/* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
+ * engage clones of one type). Programmed at battle entry, restored with
+ * the NPC ramps on overworld return. BG slot 7 (boss) is a different
+ * palette bank and unaffected. */
+#define BATTLE_OBJ_SCRATCH 7
+
+/* Second scratch OBJ slot for per-cell OAM alt palettes (spider eye:
+ * one cell rides its own artist ramp instead of a repaint).  Programmed
+ * at battle entry only when the battle's art set names an alt ramp;
+ * OBJ slots 0-6 hold stale overworld ramps during battle and are all
+ * restored with the NPC ramps on overworld return (ui.c), so borrowing
+ * slot 6 is free. */
+#define BATTLE_OBJ_SCRATCH2 6
+
+/* Per-art-set OBJ ramp data (generated battle_obj_tables.c, fixed bank). */
+extern const uint8_t g_battle_art_obj[];
+extern const uint8_t g_battle_obj_ramps[];
+/* Per-art-set alt OBJ ramp index (0xFF = none) + frame-relative cell
+ * bitmask drawn with it.  No new WRAM: the bank-5 alt loader caches the
+ * mask in g_battle_enemy_art_pal[k] for OAM slots (whose BG palette is
+ * unused -- the stamper blanks OAM footprints), read by the bank-5 OAM
+ * pass for per-entry slot selection. */
+extern const uint8_t g_battle_art_obj_alt[];
+extern const uint8_t g_battle_art_alt_mask[];
+
+/* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
+ * shows while the attack resolves.  Empty string = no attack this ANIM
+ * (freeze/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
+extern char g_battle_anim_target_name[12];
+
+/* Banked battle-art loader (src/battle/battle_art_banked.c, ROM bank 4):
+ * g_bk_ptr_a = Battle*.  Resolves the battle's enemy-type row through
+ * the game layer, loads each slot's WxH art tiles into VRAM from
+ * cumulative bases, and caches art + geometry in the WRAM globals
+ * above.  Dispatched once per battle entry from ui_draw_battle_full()
+ * (LCD-off window). */
+void battle_art_load_banked(void);
+
+/* Banked battle-OAM pass (src/battle/battle_oam_banked.c, ROM bank 5):
+ * g_bk_ptr_a = Battle*.  Draws/hides per-slot OAM strides from the same
+ * WRAM caches the BG stamper uses.  Dispatched from the fixed-bank
+ * ui_update_battle wrapper right after the bank-3 render (sequential
+ * trampoline calls, never nested). */
+void battle_oam_draw_banked(void);
+
+/* Bank-3 rider-HUD helper (src/battle/battle_rider_content.c): draws /
+ * hides one OAM rider icon per hand slot (entry 19+i) inset over that
+ * card's own top-right frame corner whenever the card carries a rider.
+ * Called directly (plain C call) from ui_update_battle_banked(), same
+ * bank, every battle render. */
+void battle_rider_draw(const volatile Battle *battle);
+
+/* Banked alt-scratch loader (same bank-5 file, separate entry point):
+ * programs BATTLE_OBJ_SCRATCH2 when the battle's art set names an alt
+ * ramp and caches the alt-cell mask in g_battle_enemy_art_pal[k] for OAM
+ * slots.  Reads the art set from the loader-cached g_battle_enemy_art[0]
+ * (clone encounters share one row) plus the fixed alt tables -- no new
+ * WRAM, no cross-bank reads.  Dispatched once per battle entry from
+ * ui_draw_battle_full() (LCD-off window) right after battle_art_load_banked
+ * (sequential trampoline calls, never nested). */
+void battle_alt_load_banked(void);
+
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
                   uint8_t enemy_hp, uint8_t enemy_max_hp,
-                  const DeckState *ds, uint8_t battle_id);
+                  const DeckState *ds, uint8_t battle_id, uint8_t solo);
 void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp);
+
+/* Solo-encounter flag for the active battle (WRAM, staged by battle_start):
+ * bosses (BATTLE_NONE) and solo-flagged minibosses stand alone and render
+ * on the single-enemy centered battle screen ("boss"); everything else
+ * uses the standard 3-slot screen ("default").  Read directly by
+ * battle_hud_load_banked() in the same bank-4 dispatch. */
+extern uint8_t g_battle_solo;
 void battle_cursor_move(Battle *b, int8_t dir);
 void battle_target_move(Battle *b, int8_t dir);
-void battle_target_auto_advance(Battle *b);
 bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);

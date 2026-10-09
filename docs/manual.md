@@ -1,793 +1,333 @@
-# GB Card Combat Prototype — Game Manual
+![KAARTENHELD](manual_images/title.png)
 
-A complete, player-facing guide to **GIAUSAR — The Waking Whale and the
-Closed Sky**, the Game Boy card-combat RPG.
+# KAARTENHELD
 
-This manual describes the game exactly as implemented.  Where a design
-document and the code disagree, the code wins (for example the BURN/POISON
-tick values in §8.5 come from `src/rpg/status_content.c`).
+### Player's Guide
 
-Everything here is readable without booting the ROM, but you can also walk
-it live with the deterministic harness (`make test-harness`,
-`make screenshots`) — see §12.
+**Welcome, hero!** A dark shadow has fallen over the land, and only you can
+lift it — not with a sword and shield, but with a **deck of magical cards**.
 
----
-
-## 1. Story
-
-### 1.1 Premise
-
-Three slides play over the intro (`src/screens/title_content.c`,
-`intro_screen.c`):
-
-> The skies above
-> Giausar grow dark.
-> A whale stirs
-> in the deep.
->
-> The sky closes,
-> sealed against
-> the waking whale.
->
-> Only the Lord of
-> Slimes stands
-> between all that
-> lives and the end.
-
-A Waking Whale stirs beneath the world of **Giausar** and the sky is
-closing.  The Lord of Slimes — a slime of terrible size — stands between
-everything living and the end, and slimes have begun to menace the
-settlements.
-
-You play the **Hero**.  Your task, given indirectly by the Mayor of the
-town, is to clear the monster threat, claim the reward, and finally reach
-**Castle** where the Lord of Slimes waits.  Defeating it lifts the blight
-and the game reaches its ending.
-
-### 1.2 The villain
-
-Castle is empty except for a bat and, once the Monster Hunt quest is
-complete, the **Lord of Slimes** (50 HP).  He appears **only after** the
-quest is complete (his spawn is gated on the quest variable, see §4.2), so
-"every slime you kill leads to a bigger slime".
+This little book shows you how to walk, talk, battle, and win. Take your
+time. The land can wait a few more minutes.
 
 ---
 
-## 2. Getting started
+## 1. The Story
 
-### 2.1 Title screen
+Once the land was peaceful. Then the **monsters** came — slimes, bats,
+spiders, and worse — and now only one brave hero can push them back.
 
-Boot lands on the title screen: the **GIAUSAR** logo, subtitle "The
-Waking Whale and the Closed Sky", and `PRESS START`.
+Your cards are your courage. Every battle is a card duel, and if you play
+your cards well, you can beat any monster.
 
-The on-screen logo block reads exactly:
+But far away, behind the old castle walls, the biggest monster of all is
+waiting: the **Lord of Slimes**. Beat him, and the land is free.
 
-```
-   G I A U S A R
-------------------
-The Waking Whale
- and the Closed
-       Sky
-```
+![The Lord of Slimes](manual_images/boss.png)
 
-Pressing START opens a menu with four entries (`title_screen.c`,
-`title_content.c`):
+---
 
-| Entry | Effect |
+## 2. Starting the Game
+
+Turn on your Game Boy and you will see the **title screen**:
+
+![Title screen](manual_images/title.png)
+
+Press **START**, then choose from the menu:
+
+| Menu | What it does |
 |---|---|
-| `NEW GAME` | Starts a fresh game: intro slides → overworld. |
-| `CONTINUE` | Opens the **LOAD GAME** screen (saves, see §10). |
-| `SOUND: ON/OFF` | Toggles the soundtrack. |
-| `TUTORIAL` | Plays the 7-slide tutorial (see §2.4). |
+| **NEW GAME** | Start a brand-new adventure. |
+| **CONTINUE** | Load a game you saved earlier. |
+| **SOUND: ON/OFF** | Turn the music on or off. |
+| **TUTORIAL** | A short, friendly how-to-play lesson. |
 
-### 2.2 Intro
+**Tip:** if you have never played before, pick **TUTORIAL** first!
 
-`NEW GAME` shows the three story slides above.  `A` or `START` advances;
-after the third slide the game drops into a fresh overworld.
+---
 
-### 2.3 Controls
+## 3. The Controls
 
-Overworld:
-
-| Button | Action |
+| Button | What it does |
 |---|---|
-| D-Pad | Move (hold to keep walking). |
-| `A` | Interact with the actor you face (talk / shop / save / battle). |
-| `START` | Open the quick screen (cards & quests, §7). |
-| `SELECT` | Open the **LOAD GAME** screen. |
+| **D-Pad** | Walk around. Hold it down to keep walking. |
+| **A** | Talk, open, confirm, or use what is in front of you. |
+| **B** | Go back or cancel. In battle, it also *flees*. |
+| **START** | Open your **Cards & Quests** screen. |
+| **SELECT** | Open the **Load Game** screen. |
 
-Dialogue: `A`/`START` advances to the next line; the dialogue closes after
-the last line.
-
-Battle and menus have their own controls, covered in §6 and §7.
-
-### 2.4 Tutorial
-
-`TUTORIAL` on the title menu plays seven slides (`tutorial_content.c`).
-`LEFT`/`RIGHT` navigates, `B` exits.  The slides cover:
-
-1. **TUTORIAL BASICS** — use LEFT/RIGHT to navigate, B to exit.
-2. **CARD TYPES** — SW sword (damage), SH shield (block), BO bow (damage).
-3. **CARD TYPES 2** — HE heal (restore), DA dagger (dmg), F SW fire + BURN.
-4. **COMBOS** — played cards rank like poker hands, boosting effects.
-5. **ENERGY & COMBAT** — cards cost ENERGY; start with 2/turn.
-6. **DEFEND & STATUS** — only SH blocks dmg; SW/BO/DA block 0; POISON is a
-   damage-over-time.
-7. **SHIELD CARD** — offense: 0 dmg, but still counts for combos.
+Inside menus, **LEFT** and **RIGHT** switch pages, **UP** and **DOWN** move
+the pointer, **A** chooses, and **B** backs out.
 
 ---
 
-## 3. The world
+## 4. Walking the World
 
-### 3.1 Maps and travel
+The land is a great big map made of little squares. Walk to the edge and
+step on a gate arrow (`>` or `<`) to travel to the next place.
 
-The world is one connected chain of five maps
-(`scenes_content.c`, `src/world/world.h`):
+![The world map](manual_images/field.png)
 
-```
-FIELD (32×18)  ←gates→  TOWN (20×18)
-FIELD          ←gates→  FOREST (20×18)
-FOREST         ←gates→  MOUNTAIN PASS (20×18)
-MOUNTAIN PASS  ←gates→  CASTLE (20×18)
-```
+Here is a friendly town on your journey:
 
-`>` / `<` tiles on the ground are gates.  Walk onto a gate to cross.  The
-specific connections:
+![A town](manual_images/world.png)
 
-| From | Gate tile | Arrive at |
-|---|---|---|
-| FIELD | (31,7) → east | TOWN (2,7) |
-| FIELD | (12,0) → north | FOREST (12,10) |
-| TOWN | (1,7) → west | FIELD (17,7) |
-| FOREST | (12,11) → south | FIELD (12,1) |
-| FOREST | (12,0) → north | MOUNTAIN PASS (12,10) |
-| MOUNTAIN PASS | (12,11) → south | FOREST (12,1) |
-| MOUNTAIN PASS | (12,0) → north | CASTLE (10,10) |
-| CASTLE | (12,11) → south | MOUNTAIN PASS (12,1) |
+Along the way you will meet lots of characters. Stand in front of someone
+and press **A** to talk.
 
-Each map has its own looping music theme: FIELD/FOREST/MOUNTAIN PASS play
-the overworld theme, TOWN plays its own theme, CASTLE a dungeon theme.
+![Talking to a guard](manual_images/dialogue.png)
 
-### 3.2 Terrain legend
+- **Signposts** teach you things. Read every one!
+- **Kind helpers** — a hermit, a scout, a knight — share hints.
+- **Monsters** wander the wilds. Touch one and a battle begins!
 
-The world is rendered as ASCII tiles (`ui.c`):
+---
 
-| Glyph | Meaning |
+## 5. Your Quest
+
+### The Monster Hunt
+
+Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
+
+When you have beaten all three, go back to him and he will give you a
+wonderful prize: the **Iron Sword** card. Then he warns you that something
+dreadful waits at the castle.
+
+![Your quests](manual_images/quests.png)
+
+### The Lost Amulet
+
+The **Lost Merchant** in town has lost his family treasure. It is hiding
+somewhere in the **Forest**.
+
+![The forest](manual_images/map-forest.png)
+
+Find it, bring it back, and he will thank you with **15 gold** — and open
+his shop for you.
+
+---
+
+## 6. Your Cards
+
+Everything you need to win is written on a card. A card shows:
+
+- its **name** and a picture,
+- a **symbol** like `SW` (sword) or `SH` (shield),
+- and a **number** called its **power**.
+
+![Your card collection](manual_images/cards.png)
+
+Here is the card list up close. The number on the right is how many copies
+you own:
+
+![A closer look at your cards](manual_images/detail-card.png)
+
+### The five kinds of cards
+
+| Card | What it does |
 |---|---|
-| `.` | Floor — walkable. |
-| `#` | Wall / tree / solid — blocked. |
-| `>` | Gate (exit) — walkable, crossing changes map. |
-| `B` | Building — blocked (town and castle interiors' outer walls). |
-| `1` `2` / `3` `4` | 2×2 stump pairs in the forest — blocked. |
+| **Sword** (`SW`) | Hurts the monster. |
+| **Shield** (`SH`) | Blocks damage when the monster attacks. |
+| **Bow** (`BO`) | Hurts from far away. The mighty Mythril Bow costs extra Energy. |
+| **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
+| **Dagger** (`DA`) | A small hit that can poison. |
 
-### 3.3 Places
+Some cards are extra special: a **Fire Sword** burns, a **Poison Dagger**
+poisons, and the **Mythril Bow** hits very, very hard.
 
-**FIELD** — your starting area (spawn at (4,4), facing down).  A signpost
-near the top (:2,4) teaches the game:
+### Collection and deck
 
-> East: Town. North: Forest (danger!).
-> ATK: A then SELECT. Shields add to combos (no dmg).
-> DEF: shields block. Combos are poker!
+The cards you **own** are your **collection**. The cards you actually
+**bring to battle** are your **deck**.
 
-A slime patrols near the middle-east of the field.
-
-**TOWN** — the hub.  Contains (actors at `src/game/actors_content.c`):
-
-| Actor | Position | Role |
-|---|---|---|
-| Mayor | (10,5) | Gives the Monster Hunt quest (§4.2). |
-| Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
-| Shopkeeper | (9,3) | Runs the shop (sells the Ring, §9). |
-| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then a bigger shop (§4.3, §9). |
-| Wizard | (6,10) | Let you save the game to one of three slots (§10). |
-
-**FOREST** — trees, stumps, a slime (12 HP), a bat (8 HP), and the Lost
-Amulet at (16,10).
-
-**MOUNTAIN PASS** — a narrow walled corridor with one tougher slime
-(16 HP).
-
-**CASTLE** — interior corridors between two building blocks, a bat,
-and — after the Monster Hunt quest is complete — the Lord of Slimes.
-
-### 3.4 Encounters
-
-Hostiles roam and pat​rol (slimes do a cross pattern, bats a circle
-`patrol_banked.c`).  Two ways to start a battle:
-
-* Walk **into** a hostile's tile.
-* Have a patrolling hostile walk **into** you.
-
-You will also be hit if you try to bump-past a hostile who blocks the
-path.  Every normal encounter engages as a **trio**: the struck monster
-plus two clones with the same HP (bosses stand alone).  See §9.2 for
-enemy statistics and §6.6 for their decks.
+Open your Cards screen with **START**, then press **A** on a card to add it
+to your deck. You start with **12 cards**, and your deck can grow to
+**20**.
 
 ---
 
-## 4. Quests
+## 7. A Battle Begins
 
-Quests surface on the quick screen's `QUEST` tab (§7.2).  Both quests are
-fully data-driven in the event table (`src/game/events_content.c`).
+When a battle starts, you will see the battlefield:
 
-### 4.1 Quest status model
+![A battle](manual_images/battle.png)
 
-Each quest has a status **variable**: `0` = not started, `1` = active,
-`2` = complete.  Quest list (`src/game/quests_content.c`):
+The top shows the monsters and their health. The bottom shows **you**, your
+deck, your Energy, and your **hand** of cards.
 
-| Quest | Status var | Objective | Reward note |
-|---|---|---|---|
-| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "SWORD" |
-| LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
+A battle goes around and around in four steps.
 
-### 4.2 Monster Hunt — the main quest
+### Step 1 — Choose your attack
 
-1. **Start.** Talk to the **Mayor** for the first time:
+Pick the cards you want to use, then press **SELECT** to play them. You can
+play up to **5** cards at once.
 
-   > I am the Mayor.
-   > Slimes menace the forest.
-   > Please help us!
+![Choosing cards](manual_images/detail-hand.png)
 
-2. **Objective.** Defeat **3 monsters in total** — any hostile counts
-   (field/forest slimes, bats, even the boss).  Kills made *before* the
-   quest starts still count toward the total.  While the quest is active
-   the Mayor says "Still monsters about. Defeat them all!"
-3. **Complete.** Talk to the Mayor again once 3 are defeated.  He gives
-   you the **Iron Sword** card and warns that something dreadful waits at
-   the Castle:
+Every card costs **Energy**. You get **2 Energy** each round, so spend it
+carefully!
 
-   > You did it! Take this Sword!
-   > I have felt a disturbance in the ether: I believe that something
-   > dreadful waits for you at the Castle.
+### Step 2 — Watch your attack
 
-4. **Finished.** Talking to the Mayor after completion is a short "go
-   forth, hero!" line ("The Sword suits you. Go forth, hero!").
+Your hero attacks with the cards you chose. A better *combo* means a bigger
+hit (see the next page).
 
-Completing this quest is what unlocks the spawn of the **Lord of Slimes**
-in the Castle.
+![Your attack lands](manual_images/attack.png)
 
-### 4.3 Lost Amulet — the side quest
+### Step 3 — The monster gets ready
 
-1. **Start.** Talk to the **Lost Merchant** in Town (the first visit):
+The monster shows you which card it will attack with. That card's number is
+how much damage is coming, so get ready to block it!
 
-   > A thief stole my
-   > family heirloom!
-   > Find it in the Forest!
+![The monster prepares](manual_images/detail-enemy.png)
 
-2. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
-   Interact with it ("You found the Lost Amulet!").  It is added to your
-   card collection (as a non-deckable `SPECIAL` card).  Returning to the
-   spot afterwards says "Nothing here now."
-3. **Complete.** Return to the Merchant once you have the amulet.  He
-   thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his real shop (which sells the Iron Sword and
-   the Mythril Bow):
+### Step 4 — Defend!
 
-   > You found it! Thank you, hero!
-   > My shop is open now.
+Now play your **Shield** cards to block. Any damage left over hurts you.
+
+![Your health and deck](manual_images/detail-hero.png)
+
+Then the round starts again. Keep going until the monsters — or you — run
+out of health!
+
+> **Hurry!** A timer bar drains at the bottom of the screen. If it runs all
+> the way down, you will play whatever cards you have already chosen, so
+> decide quickly!
+
+![The timer bar](manual_images/detail-timer.png)
 
 ---
 
-## 5. Cards
+## 8. Combos: Play Poker!
 
-### 5.1 The card language
+Here is the big secret: **the cards in your hand are like a poker hand!**
+The more alike your cards are, the stronger your attack becomes.
 
-Every tool in battle is a **card**.  Cards have several attributes
-(`src/rpg/cards.h`, `src/game/cards_content.c`):
-
-| Field | Meaning |
+| Combo | You have... |
 |---|---|
-| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The descriptive name shown in menus. |
-| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW3`,
-`SH2`, `RG5`; the **battle hand** uses its own code set — `SW3`, `SH2`,
-`BO2`, **`HE5`** for a heal ring, `DA1`. |
-| **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
-| **Power** | Base magnitude of the effect. |
-| **Cost** | Energy price to play in battle (most cards cost 1). |
-| **Uses** | Limited uses per battle (rings: 3). `-` = unlimited. |
-| **Max copies** | How many copies may be decked at once. |
-| **Rider** | On-hit status rider (fire → BURN, poison → POISON) with a base chance, scaled by your combo. |
-| **Price** | Buy cost in gold (and sell value, §9.3). |
+| **Pair** | Two cards of the same number |
+| **Two Pair** | Two pairs |
+| **Three of a Kind** | Three cards of the same number |
+| **Straight** | Five numbers in a row |
+| **Flush** | Five cards of the same kind |
+| **Full House** | Three of a kind plus a pair |
+| **Four of a Kind** | Four cards of the same number |
+| **Straight Flush** | A straight, all in one kind |
+| **Five of a Kind** | All five cards the same number! |
 
-### 5.2 Battle card types
+The higher the combo, the harder you hit. Try to build the best hand you
+can!
 
-| Symbol | Name | Battle role | Description |
-|---|---|---|---|
-| `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
-| `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
-| `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG5`, battle hand label `HE5`. |
-| `DA` | Dagger | Attack | 1 damage plus a poison rider. |
-
-Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
-`UTL` utility, `SPL` special (quest items that cannot be decked).
-
-### 5.3 The card catalog
-
-All catalogue cards (`src/game/cards_content.c`):
-
-| Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
-|---|---|---|---|---|---|---|---|---|---|
-| Iron Sword | `I SW` | `SW3` | ATK | 3 | 1 | – | 4 | — | 10g |
-| Wooden Shield | `W SH` | `SH2` | DEF | 2 | 1 | – | 3 | — | — |
-| Ring (shop) | `I RG` | `RG5` | HEL | 5 | 1 | 3/battle | 3 | — | 20g |
-| Fire Sword | `F SW` | `SW4` | ATK | 4 | 1 | – | 3 | BURN 128 | — |
-| Poison Dagger | `P DA` | `DA1` | ATK | 1 | 1 | – | 3 | POISON 128 | — |
-| Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
-| Mythril Bow | `M BO` | `BO10` | ATK | 10 | 2 | – | 1 | — | 30g |
-
-Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
-multiplier (§8.4).
-
-### 5.4 The collection and the battle deck
-
-Your **collection** is every card you own (up to 12 distinct card types).
-Your **battle deck** is a subset (up to 20 copies) that you actually
-bring into battle.  Owning a card is not enough — it must be stacked in
-the deck to appear in your hand.
-
-Deck rules (`src/rpg/deck.h`):
-
-* `DECK_MIN_CARDS 5` — the deck can never drop below 5 copies.
-* `MAX_DECK_CARDS 20` — the deck cap.
-* You can only add a copy if you own it, it is deckable (not `SPL`), and
-  it is within the card's `max copies`.
-* A card's decked count is visualised in the menu as the membership digit.
-
-### 5.5 Starter deck
-
-A new game grants this 12-card deck (`content.c`): **4× Iron Sword
-(`SW3`), 3× Wooden Shield (`SH2`), 3× Fire Sword (`SW4`), 2× Poison
-Dagger (`DA1`)**.  The opening hand is always `SW SW SH SH SW` (the first
-five copies are the two swords, two shields and a fire sword; the extras
-only deepen the draw pile).
+**Rings are clever helpers.** When you make a combo, a Ring can count as
+any *number* you need — super for making pairs or straights. But it is
+still a heal card, so it will **break** a "flush" (five cards of the same
+kind). And a Ring never hits the monster: it heals you instead.
 
 ---
 
-## 6. Battle
+## 9. Shields, Heals and Curses
 
-### 6.1 Battle screen layout
+- **Shields** only block. They do not hurt the monster, but they keep you
+  safe — and they still count toward your combo.
+- **Rings** heal you, count as any number in a combo, or act as wild
+  shields on defence.
+- **Poison** and **Burn** hurt a little every turn. Watch the little marks
+  beside a fighter.
+- **Freeze** is nasty: a frozen fighter **misses a whole turn!**
+- When you are **poisoned**, a couple of your cards turn grey and cannot be
+  used until the poison wears off.
 
-The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
+---
 
-| Row | Content |
+## 10. Gold and Shops
+
+Win battles to earn **gold**. You start with **20 gold**.
+
+Talk to the **Shopkeeper** in town to spend it:
+
+![The shop](manual_images/shop.png)
+
+![The shop up close](manual_images/detail-shop.png)
+
+Press **A** to buy and **B** to leave. The Shopkeeper sells a **Healing
+Ring** — your best friend when you are hurt.
+
+Later, the **Lost Merchant** opens a bigger shop with an **Iron Sword** and
+a powerful **Mythril Bow**.
+
+---
+
+## 11. Card Loot
+
+Every monster you beat drops **one card**, and no two are quite the same.
+
+You can:
+
+- **Keep it** in your collection,
+- **Add it** to your deck to make yourself stronger,
+- or **sell it** for gold when a merchant is nearby.
+
+It is like a treasure hunt that never ends!
+
+---
+
+## 12. Saving Your Game
+
+Find the **Wizard** in town. He can save your adventure to one of **three
+slots**.
+
+![Saving your game](manual_images/save.png)
+
+Choose a slot and press **A**. Your Game Boy remembers even after you turn
+it off, so you can always come back later.
+
+To load a game, press **SELECT** while walking around, or choose
+**CONTINUE** on the title screen.
+
+---
+
+## 13. Winning and Losing
+
+- **Win a battle** when every monster is defeated. Then you will find out
+  what card you discovered!
+- **Lose a battle** if your health reaches zero. You will see the **GAME
+  OVER** screen:
+  - **YES** — go back and load a saved game.
+  - **NO** — say goodbye and stop playing.
+
+Beat the **Lord of Slimes** in the Throne Room and you will see the happy
+ending. The land is saved, thanks to you!
+
+![The castle](manual_images/map-castle.png)
+
+---
+
+## 14. Tips & Tricks
+
+- **Read the signposts** — they tell you real secrets.
+- **Only Shields block.** Save your shields for defence.
+- **Rings are flexible!** Use one to finish a number combo, or save it to
+  heal.
+- **Watch your Energy.** Two points a round goes fast.
+- **Do not waste your timer.** Decide, then press **SELECT**.
+- **Beat the 3 monsters early** to win the Iron Sword.
+- **Sell cards you do not need** and buy a Healing Ring.
+- **Save often** at the Wizard — you never know what is around the corner!
+
+---
+
+## 15. Quick Reference
+
+| | |
 |---|---|
-| 0 | Turn banner, centered (`PLAYER TURN`, `ENEMY ATTACK!`, `DEFENSE TURN`, `VICTORY!`, `DEFEATED!`, `FLED!`, ...). |
-| 2–4 | Enemy rows: name, HP, target caret. Up to 3 of them. |
-| 6 | Hero row: `HERO  HP: n/m`. |
-| 7 | Deck counter: `DECK: n` (cards left in the draw pile). |
-| 13 | Live combo row: `COMBO:` + current hand name while you select. |
-| 14 | Your hand (up to 5 cards). |
-| 15 | Selection markers: digits 1–5 in selection order + the `^` cursor. |
-| 16 | Card description of the hovered card. |
-| 17 | Timer bar (window), draining as the turn timer runs. |
-
-An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
-11–12 after a victory.
-
-### 6.2 Hand, energy, timer
-
-* **Hand**: 5 cards drawn from your deck at battle start.
-* **Energy**: **6 per full round**.  Most cards cost 1; the Mythril Bow
-  costs 2.  Selecting a card reserves its cost; you cannot select a card
-  whose cost exceeds the energy you have left (`battle_nav_banked.c`).
-* **Timer**: **20 seconds** per player decision phase, shown as a bar
-  (1200 frames).  It runs in the attack *and* defend decision phases.
-  When it expires, your current selection is auto-executed — a timer-out
-  with no selection commits an empty combo (`battle.c`).
-
-### 6.3 Battle phases
-
-Battles run a fixed cycle (`battle.h`):
-
-```
-PLAYER_SELECT → PLAYER_ANIM → ENEMY_TELEGRAPH → PLAYER_DEFEND
-                                                   → DEFENSE_RESOLVE
-                                                   → (status ticks)
-                                                   → back to PLAYER_SELECT
-```
-
-1. **Play your attack** — pick up to 5 cards from your hand.
-2. The hero's attack resolves (with combo multipliers, §8.4).
-3. **Enemy telegraph** — the enemy draws a card; its value is the damage
-   incoming this round, announced before you defend.
-4. **Defend** — play shield cards to block that incoming damage.
-5. **Resolve** damage and recover, statuses tick (poison/burn), then the
-   next round begins: hand refills, energy and timer reset.
-
-### 6.4 Playing your attack
-
-Battle input:
-
-| Button | Action |
-|---|---|
-| `LEFT` / `RIGHT` | Move the hand cursor. |
-| `UP` / `DOWN` | Change the current target (when several enemies are alive, e.g. a trio). |
-| `A` | Select the hovered hand card (locks in at the next marker slot). |
-| `B` | Undo the last selection. With **no cards selected in the attack phase**, `B` **flees** the battle. |
-| `SELECT` | **Execute** the current selection. |
-| `START` | Open the quick screen (pauses battle; it resumes when you close it). |
-
-You may select up to **5** cards.  The order you select them in is the
-order they are played (selection digits show the order).
-
-The first (leading) card decides the action:
-
-* A **sword/bow/dagger** lead deals damage.
-* A **ring** lead heals you instead.
-* A **shield** lead still deals the non-shield damage sum (shields are
-  "fodder" but count toward your hand shape).
-
-### 6.5 The defend phase
-
-After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
-
-* **Only `SH` (shield) cards block.**  Swords/bows/daggers in the defend
-  hand contribute `0` block.
-* Rings act as **wild shields** worth their power.
-* The net is `incoming − (sum of shields + rings)`.
-  * **Net > 0** → you take that damage (clamped to your HP).
-  * **Net ≤ 0** → no damage.  Over-block *heals* you only while a ring is
-    present, capped at max HP.
-
-### 6.6 Enemy turn details
-
-* The enemy draws **one card per attack turn** from its fixed deck;
-  the card's value is the damage you must block.  Slimes swing for small
-  values (a `SW2/SW3` mix with an occasional heal card worth 2), bats mix
-  bow and sword values up to 4, and team slimes hit for 2–3 each round
-  (see `enemy_deck_content.c`).
-* When the enemy deck is exhausted it **reshuffles** and keeps going.
-* Freeze / grey-out can make the enemy skip (see §8.5/§8.7).
-* The boss (no deck) simply telegraphs a flat 3-damage swing.
-
-### 6.7 Deck exhaustion — the reshuffle turn
-
-When both the draw pile **and** the hand are empty at the start of your
-round, the game consumes your action that cycle to **reshuffle** the
-discard pile back into the draw pile and re-deal; the enemy still attacks
-that round (`deck.md Phase 10`).  The draw pile otherwise never auto-
-refills from the discard (a draw from a dry pile would hand you a phantom
-`SW2` safety card, but the reshuffle turn is designed to prevent it).
-
-### 6.8 Victory, defeat, flee
-
-* **Victory** — all enemies are defeated.  A one-shot victory fanfare
-  plays, the loot card reveal shows what you found (`YOU FOUND:`), and
-  you are returned to the overworld with HP carried over.  Gold is
-  awarded and the defeated monster is recorded as dead (it will **not
-  respawn** on that save file).
-* **Defeat** — your HP reaches 0.  Game Over screen (§10).
-* **Flee** — `B` with nothing selected in the attack phase.  You escape,
-  no reward, the enemy survives where it was.
-
-### 6.9 The loot roll
-
-Every victory drops **exactly one combat card** — rolled precisely at
-battle start (isolated RNG), revealed and granted on victory
-(`loot.md §34.5`).  The card is added to your collection.  If your
-collection is full (12 distinct types), no card is granted.
-
----
-
-## 7. Menus
-
-### 7.1 Opening menus
-
-* Overworld `START` → **CARDS** quick screen.
-* Overworld `SELECT` → **LOAD GAME**.
-* Facing an actor and pressing `A` → dialogue, shop, save, or battle,
-  depending on the actor.
-
-### 7.2 The quick screen (CARDS / QUESTS)
-
-Two tabs, switched with `LEFT`/`RIGHT`.  A `^` marks the active tab.
-
-**CARDS tab** — the collection/deck manager:
-
-* The top row (`* FILTER/SORT *`) opens a picker with `A`.
-* Each card row shows its identity name (e.g. `I SW`) and, at the far
-  right, the **decked-copy count** (0..n).
-* `A` on a card adds **one copy** to your battle deck; pressing `A` again
-  once the card is fully decked **clears all its copies** from the deck
-  (all-or-nothing — it refuses if that would drop you below the 5-card
-  minimum).  Rejections show a transient message: `DECK FULL`, `DECK MIN
-  5`, or `QUEST ITEM` (for special quest items).
-* `SELECT` on a card opens the **detail page**: name, type, power, cost,
-  uses/battle, max copies, owned, decked, price.
-* `B` backs out (two-step on the cards list: first `B` jumps to the top
-  row, `B` again closes the menu).  `START` closes from the list.
-* `A` on a loot card's **detail page** sells one copy while you have a
-  buying merchant engaged (§9.3).
-
-The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
-rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
-
-* Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
-* Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
-
-**QUEST tab** — the quest list.  Each entry shows the quest name and a
-status line:
-
-* `not started`
-* `status var: X/T` while active (e.g. `monsters: 2/3`)
-* `complete - SWORD` when done.
-
-`SELECT` on a quest opens a placeholder detail page.
-
----
-
-## 8. Combos & statuses
-
-### 8.1 Card values and symbols
-
-Each card has a **value** (its power) and a **symbol** (battle type).
-In battle the only thing that matters for combinations is the value and
-the symbol — the names are cosmetic.
-
-### 8.2 Hand classification
-
-Selected cards are ranked **exactly like poker hands**
-(`combo_content.c`).  The evaluator is order-independent:
-
-| Tier | Name | Requirement | Multiplier |
-|---|---|---|---|
-| 0 | (high card / <2) | — | 100% |
-| 1 | PAIR | 2+ same value | 120% |
-| 2 | TWO PAIR | 2 pairs | 150% |
-| 3 | THREE KIND | 3 same value | 180% |
-| 4 | STRAIGHT | all 5 sequential values | 210% |
-| 5 | FLUSH | all 5 same symbol | 240% |
-| 6 | FULL HOUSE | trips + pair | 260% |
-| 7 | FOUR KIND | 4 same value | 280% |
-| 8 | STRAIGHT FLUSH | 5 sequential, same symbol | 350% |
-| 9 | FIVE KIND | all 5 same value | 400% |
-
-* Straights/flushes/straight-flushes/five-kind require **all five** cards;
-  pairs and kinds work with 2+.
-* **Rings are JOKER cards** (`combo_content.c` §34.3): in the hand
-  evaluation, each ring's value may be any value **1..10** — the evaluator
-  tries every legal value and keeps the *best* tier.  A `SW3, SH2, RG5`
-  selection lets the ring become a 3 (a pair) so the tier improves.
-  Crucially the joker substitutes **values only** — a ring's symbol is
-  still `HE/RG`, so it still participates in (and can break) a suited
-  bonus.  A lone ring is the best hand-add (wild value), but two rings
-  drag your suitedness.
-* The whole selected hand contributes to the classification, but only the
-  **effective** cards contribute to the base magnitude (see §8.3).
-
-### 8.3 Base power
-
-* **Attack phase**: base power = sum of all non-shield, non-ring values.
-  (Shields and rings deal 0 in attack but still count toward the hand
-  shape.)
-* **Defend phase**: base power = sum of **shield values and rings**
-  (rings are wild shields worth their power).
-
-### 8.4 Effect scaling
-
-The resolved effect magnitude is
-
-```
-amount = base_power × multiplier / 100
-```
-
-where multiplier is the tier percent, plus a **+25% suited bonus** when all
-cards that enter the hand evaluation share one symbol — in **attack** that
-means every selected card (a shield or ring you slot in can break a suited
-bonus); in **defend** it means every shield/ring you play.  Examples: a
-`SW3 + SW3` pair = 6 × 120% = 7 (truncated); a `SW3,SW3,SH2,SH2,SH2` full
-house (power 6) = 6 × 260% = 15.
-
-The **suited bonus** is the reason mixing too many card types dilutes your
-damage — a homogeneous hand punches well above its weight.
-
-### 8.5 Status effects
-
-Statuses (`src/rpg/status_content.c`):
-
-| Status | Tick (dmg/round) | Max stacks | Duration | Effect |
-|---|---|---|---|---|
-| POISON | 1 | 5 | 3 rounds | Deals flat 1 HP/round. Also **greys out** the victim's cards (§8.7). |
-| BURN | 1 | 3 | 3 rounds | Deals flat 1 HP/round. |
-| FREEZE | 0 | 1 | 3 rounds | Victim **skips its whole action** (no attack for the player, no swing for the enemy) each round it lasts. |
-
-The tick is **flat per status** regardless of stack count; extra
-applications refresh the duration and deepen the stack counter (visible in
-telemetry).  Statuses tick once per round at the return to `PLAYER_SELECT`;
-deaths from poison/burn resolve like combat deaths.
-
-**Applying statuses.**  Riders come from cards:
-
-* Player→enemy: the status rider on your **leading card**, with a base
-  chance scaled by your combined multiplier (`chance × mult / 100`,
-  capped ~100%), rolled vs the deterministic RNG.  `F SW` → BURN 128,
-  `P DA` → POISON 128, loot fire swords → BURN 128, loot ice swords →
-  FREEZE 96, loot poison daggers → POISON 128.
-* Enemy→player: the bat's poisoned swing carries a ~60/255 poison chance
-  that also greys your hand.
-
-If the roll fails the target **resists** (telemetry `STATUS_RESISTED`).
-
-### 8.6 Freeze
-
-A frozen player can neither attack (whole offense skipped) nor defend
-(the incoming swing lands unblocked).  A frozen enemy skips its swing.
-Freeze never stacks and lasts 3 rounds.
-
-### 8.7 Poison grey-out
-
-Poison's special penalty: while a combatant is poisoned,
-`POISON_GREY_CARDS` **2** random cards in its pool become **unplayable**
-for `POISON_GREY_TURNS` **2** rounds (`status.h`):
-
-* **Player**: 2 cards from your 5-card hand grey out — you cannot select
-  them.
-* **Enemy**: 2 positions in its **shared deck** grey out — those swings
-  are skipped (and the draw position does not advance, so the enemy is
-  locked out for the grey duration).
-
-Re-poisoning refreshes the grey without re-rolling which cards are greyed.
-
----
-
-## 9. Loot, shops & economy
-
-### 9.1 Gold
-
-Your only currency is **gold** (start: 20g, `HERO_START_GOLD` in
-`content.c`).  Sources: battle rewards (below), the Amulet quest (+15g),
-selling loot.  Uses: shop purchases.
-
-### 9.2 Battle rewards
-
-Defeating a monster grants gold **once per battle** (a trio pays the
-plain reward once, not per clone):
-
-| Enemy | HP | Gold |
-|---|---|---|
-| Field Slime | 10 | 5 |
-| Forest Slime | 12 | 5 |
-| Mountain Pass Slime | 16 | 5 |
-| Bat | 8 | 8 |
-| Lord of Slimes | 50 | 50 |
-
-### 9.3 Shops
-
-Two shops exist (`src/game/shops_content.c`):
-
-* **Shopkeeper** (Town, (9,3)) — shop 1 — sells the **Ring** (`I RG`,
-  `RG5`) for **20g** (a heal card; the game's only reliable healing,
-  outside loot rings).
-* **Lost Merchant** (Town, (11,3)) — shop 2 — sells the **Iron Sword**
-  for **10g** and the **Mythril Bow** for **30g**.  Reachable only after
-  the Lost Amulet quest (§4.3).
-
-Shopping: `A` buys the hovered item if you have enough gold and room in
-your card collection (max distinct types = 12).  Feedback lines: `Bought!`,
-`Too many!`, `Not enough!`.  `B` or `START` leaves.  Purchased cards join
-your **collection**; deck them from the CARDS menu to use them.
-
-### 9.4 Loot cards and selling
-
-Victory loot cards are **procedurally generated** with a derived identity
-name `[material] [effect] weapon` (`loot_banked.c`, `loot.md §34`) — e.g.
-`W SW` (wood sword), `M P DA` (mythril poison dagger), `W F SW` (wood fire
-sword).
-
-* Materials raise power: **W**ood +0, **B**ronze +1, **I**ron +2,
-  **M**ythril +3 (weighted wood-heavy).
-* Effects are legal per weapon: daggers may carry **P**oison, swords may
-  carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
-  plain.  Illegal pairs carry no rider.
-* Weapon bases: sword 3, shield 2, bow 2, ring 2 (heals), dagger 1.
-
-Loot cards are unlimited-use (no per-battle uses) and have no copy limit
-(0 = unlimited duplicates).
-
-**Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
-the shop actor; only the Lost Merchant buys), you can sell **loot** cards
-from the CARDS tab: open a loot card's detail page (`SELECT`) and press
-`A` to sell one copy (no `SELL` label is shown — the sale is silent; the
-`CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
-the card's price field, synthesized as `base power + material tier×2 (+2
-for a poison dagger)`.  You cannot sell a copy that would strand a decked
-card without ownership backing (rejected with the `DECK FULL` message).
-
----
-
-## 10. Saving, game over & the ending
-
-### 10.1 Saving
-
-* **Wizard** in Town (6,10) saves the game: pick one of **three slots**
-  (`SAVE GAME` screen: `SLOT 1/2/3`, saved vs empty).  `A` saves, `B`
-  back.
-* **Overworld `SELECT`** and the **title `CONTINUE`** open **LOAD GAME**:
-  pick a saved slot and `A` to load.
-* Saves are battery-backed SRAM; the slot stores the whole persistent
-  `GameState` with a magic/version/checksum (`save.md`).  Empty or a
-  version-mismatched slot cannot be loaded.
-
-### 10.2 Game over
-
-Defeat in battle → `GAME OVER … CONTINUE? YES / NO`:
-
-* **YES** → goes to the LOAD GAME screen so you continue from a save.
-* **NO** → `THANKS FOR PLAYING!` (a dead-end screen).
-
-### 10.3 The ending
-
-Defeating the **Lord of Slimes** sets the ending flag; after the battle
-you go to the **ENDING** screen instead of back to the overworld:
-
-```
-      THE END
---------------------
-The Hero cleared
-the land of slimes!
-Peace has returned!
-Thanks for playing!
-[A] RESTART
-```
-
-`A` (or `START`) restarts a fresh game — straight back into the overworld,
-skipping the title screen and the intro slides.
-
----
-
-## 11. Audio
-
-Music tracks (`src/audio/audio.h`): overworld, battle, victory (one-shot
-fanfare), title, town, dungeon (castle), boss.  The boss theme plays only
-for the Lord of Slimes.  UI SFX: a short cursor blip and a confirm tone.
-`SOUND: ON/OFF` on the title menu toggles the soundtrack.
-
-Music runs on the hardware **timer interrupt** at a fixed 256 Hz, so
-tempos are stable across menus, dialogue and map transitions (AGENTS.md
-§35).
-
----
-
-## 12. Developer appendix — the debug harness
-
-The game is a first-class **LLM/agent development target**.  Everything
-above is observable through a deterministic, machine-readable harness:
-
-| Tool | Purpose |
-|---|---|
-| `make debug` | Build the debug ROM (telemetry, scenarios, RNG control, assertions). |
-| `make test-harness` / `make test-scenario SCENARIO=<name>` | Run all / one scenario against the ROM (`tools/scenarios/tests/*.json`), returning PASS/FAIL. |
-| `make test` | Release ROM validation (link, header, checksum). |
-| `make verify-oam` | mGBA execution checks for VBlank-timed OAM bugs. |
-| `make screenshots` | Deterministic headless walkthrough producing `screenshots/*.png`. |
-| `make memmap` | Memory-budget reporter (fails on fixed-bank overflow). |
-| `make lint` | `-Wf-Wall` compile-to-asm lint (no warnings allowed). |
-
-The debug protocol (`docs/DEBUG_PROTOCOL.md`) exposes `PRESS/WAIT/STEP`,
-`INSPECT`, `SNAPSHOT`, `EVENTS`, `SET_RNG`, `SET_FLAG`, `TELEPORT`,
-`ASSERT`, and scenario loading.  Key telemetry events: `PLAYER_MOVED`,
-`COLLISION`, `ENCOUNTER_STARTED`, `BATTLE_STARTED`, `COMBO_RESOLVED`,
-`EFFECT_RESOLVED`, `STATUS_APPLIED`, `STATUS_RESISTED`, `CARDS_GREYED`,
-`TURN_SKIPPED`, `DAMAGE_DEALT/RECEIVED`, `ENTITY_DEFEATED`,
-`LOOT_CARD_ADDED`, `CURRENCY_ADDED`, `GAME_STATE_CHANGED`, `SCREEN_CHANGED`,
-`MAP_CHANGED`, `MUSIC_CHANGED`, `SCRIPT_TRIGGERED`.
-
-Reproduce any trophy scenario ("can I beat the boss at 20 HP?") with a
-scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
-
----
-
-## 13. Reference: quick numbers
-
-* Hero: HP 10, gold 20, deck 12, opening hand `SW SW SH SH SW`.
-* Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 2/round, timer 20s per decision.
-* Enemies: trios for normal monsters, solo boss; HP/gold per §9.2.
-* Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3
-  rounds skip; poison greys 2 cards for 2 rounds.
-* Combos: 10 poker tiers, 100–400%, +25% if suited.
-
-> Source of truth for every number above: the code tree (`src/`).  Where
-> a doc in `docs/` disagrees (e.g. older BURN "tick 2" notes in
-> `combo-system.md`), the code tables in `status_content.c` win.
+| Your health | **10 HP** |
+| Starting gold | **20** |
+| Cards in hand | **5** |
+| Energy each round | **2** |
+| Time to decide | **20 seconds** |
+| Starter deck | **12 cards** |
+| Biggest deck | **20 cards** |
+| Collection limit | **12 different cards** |
+| Main quest | Defeat **3 monsters** for the Mayor |
+
+Now go, hero — the cards are in your hands!

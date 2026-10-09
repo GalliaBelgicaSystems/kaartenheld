@@ -1,85 +1,92 @@
 {
-  "name": "ring_one_ring_gate",
-  "test": true,
-  "description": "MAX ONE RING per selection (docs/loot.md 34.3): selecting a second ring card flashes ONE RING! and refuses the add -- no combo is played",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "ring_one_ring_gate",
+ "test": true,
+ "description": "MAX ONE RING per selection (docs/loot.md 34.3): selecting a second ring card flashes ONE RING! and refuses the add -- no combo is played",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "HE",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "HE",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_ring",
-      "index": 0
-    },
-    {
-      "type": "set_hand_card_ring",
-      "index": 1
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "COMBO_RESOLVED"
-    },
-    {
-      "type": "screen_row",
-      "row": 12,
-      "contains": "ONE RING!"
-    }
-  ]
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 0
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "COMBO_RESOLVED"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "ONE RING!"
+  }
+ ]
 }

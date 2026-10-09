@@ -1,59 +1,58 @@
 {
-  "name": "card_description_render",
-  "test": true,
-  "description": "CARDS tab renders each battle card type's banked description under its row. Regression lock for s_card_desc_blob: a flat multi-literal array initializer is silently miscompiled by SDCC to 'first row + zero fill', which blanked every non-sword description while all tests stayed green. Grants WOOD_RING so the HEAL row renders too. BOW is deliberately uncovered: no catalog card maps to BATTLE_CARD_TYPE_BOW (attacks are SWORD-typed; BOW exists only in enemy deck tables, which never render descriptions).",
-  "scenario_id": "NEW_GAME",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410,
-    "inventory": {
-      "WOOD_RING": 1
-    }
+ "name": "card_description_render",
+ "test": true,
+ "description": "CARDS tab renders each battle card type's banked description under its row. Regression lock for s_card_desc_blob: a flat multi-literal array initializer is silently miscompiled by SDCC to 'first row + zero fill', which blanked every non-sword description while all tests stayed green. Grants WOOD_RING so the HEAL row renders too. BOW is deliberately uncovered: no catalog card maps to BATTLE_CARD_TYPE_BOW (attacks are SWORD-typed; BOW exists only in enemy deck tables, which never render descriptions).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 7,
-      "contains": "Sword: physical"
-    },
-    {
-      "type": "screen_row",
-      "row": 9,
-      "contains": "Shield: block dmg"
-    },
-    {
-      "type": "screen_row",
-      "row": 11,
-      "contains": "Sword: physical"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "Dagger: poison"
-    },
-    {
-      "type": "screen_row",
-      "row": 15,
-      "contains": "Heal: restore HP"
-    }
-  ]
+  "seed": 8410,
+  "inventory": {
+   "WOOD_RING": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "Sword: physical"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "Shield: block dmg"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "Sword: physical"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "Dagger: poison"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Heal: restore HP"
+  }
+ ]
 }

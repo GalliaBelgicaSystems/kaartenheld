@@ -1,0 +1,60 @@
+{
+ "name": "battle_enemy_art_centered",
+ "test": true,
+ "description": "Slime art renders as OAM centered on the 6-column name slot (BG footprint blank); catches caret/art centering drift.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 2,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 3,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 3,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 42
+ }
+}

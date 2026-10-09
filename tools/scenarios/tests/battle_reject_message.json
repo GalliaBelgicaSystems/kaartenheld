@@ -1,25 +1,64 @@
 {
-  "name": "battle_reject_message",
-  "test": true,
-  "description": "Selecting a card that costs more than the remaining energy pool is rejected with a transient 'NO ENERGY!' flash on the battle HUD (row 12). Cost-9 cards make even the first selection a rejection.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {"x": 13, "y": 8, "facing": "DOWN"},
-    "seed": 7001,
-    "start_battle": true
+ "name": "battle_reject_message",
+ "test": true,
+ "description": "Selecting a card that costs more than the remaining energy pool is rejected with a transient 'NO ENERGY!' flash on the battle HUD (row 8). Cost-9 cards make even the first selection a rejection.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {"type": "wait", "frames": 5},
-    {"type": "set_hand_card", "index": 0, "card_type": "SW", "value": 1},
-    {"type": "set_hand_card_meta", "index": 0, "cost": 9, "uses": 255},
-    {"type": "set_hand_card", "index": 1, "card_type": "SW", "value": 1},
-    {"type": "set_hand_card_meta", "index": 1, "cost": 9, "uses": 255},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 12}
-  ],
-  "assertions": [
-    {"type": "screen", "expected": "BATTLE"},
-    {"type": "screen_row", "row": 12, "contains": "NO ENERGY!"}
-  ]
+  "seed": 7001,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 9,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 9,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "NO ENERGY!"
+  }
+ ]
 }

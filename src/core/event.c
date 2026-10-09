@@ -18,7 +18,9 @@
  * returned pointer is only valid until the next row access. */
 static const EventDefinition *g_events = NULL;
 static uint8_t g_event_count = 0;
-static uint8_t g_event_bank = 2;
+/* BSS: event_init() (via game_content_init() at every boot) sets the home
+ * bank before any row is read. */
+static uint8_t g_event_bank;
 static EventDefinition g_event_scratch;
 
 /* banked_copy() takes a uint8_t byte count; a larger row cannot be staged. */
@@ -103,19 +105,31 @@ static const EventDefinition *event_first_match(Game *g, EventTriggerType trigge
                                                 EntityId actor, MapId map)
 {
     uint8_t i;
+    MapId match_map;
     if (!g_events) return NULL;
+    /* Frozen harness-test fixtures run on TEST_* maps (6..11) while the
+     * single event table is written against the real maps (0..5): alias
+     * test maps to their real counterparts so one table drives both
+     * worlds (no duplicated event content to drift).  Release builds
+     * never see the TEST block (guarded at every lookup), so this is a
+     * no-op there. */
+    match_map = map;
+    if (map != EVENT_MAP_ANY && map >= MAP_TEST_FIELD
+        && map < (MapId)(MAP_TEST_FIELD + MAP_TEST_COUNT)) {
+        match_map = (MapId)(map - MAP_TEST_FIELD);
+    }
     for (i = 0; i < g_event_count; i++) {
         const EventDefinition *def = event_get_row(i);
         if (def->trigger != trigger) continue;
         if (actor != ENTITY_ID_NONE && def->actor != ENTITY_ID_NONE && def->actor != actor) continue;
-        if (map != EVENT_MAP_ANY && def->map != EVENT_MAP_ANY && def->map != map) continue;
+        if (map != EVENT_MAP_ANY && def->map != EVENT_MAP_ANY && def->map != match_map) continue;
         if (!event_conds_met(&g->state, def)) continue;
         return def;
     }
     return NULL;
 }
 
-ActorEngageResult event_engage_actor(Game *g, const WorldActorDefinition *actor)
+ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor)
 {
     bool dialogue_started = false;
     const EventDefinition *def;

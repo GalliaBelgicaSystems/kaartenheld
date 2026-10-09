@@ -154,7 +154,7 @@ make debug
 Result:
 
 ```text
-build/rpg_card_proto_debug.gb
+build/kaartenheld_debug.gb
 ```
 
 The release ROM:
@@ -1086,6 +1086,8 @@ COLLISION
 ACTOR_COLLISION
 ACTOR_INTERACTION
 ACTOR_COMBAT_START
+ACTOR_STATE_CHANGE
+ACTOR_MOVED
 
 ENCOUNTER_STARTED
 BATTLE_STARTED
@@ -1127,6 +1129,10 @@ Observe actors with:
 ACTOR_COLLISION      actor collided with the player (id, x, y)
 ACTOR_INTERACTION    actor engaged by the player (id, interaction)
 ACTOR_COMBAT_START   hostile actor engagement started combat (id)
+ACTOR_STATE_CHANGE   persistent actor lifecycle changed (actor id lo, id hi, new state)
+ACTOR_MOVED          patrol step committed (entity id, x, y, facing); split
+                     from ACTOR_STATE_CHANGE so one event id means one
+                     payload shape
 ```
 
 The SNAPSHOT `actors` section lists the active scene's actors with their
@@ -1421,7 +1427,7 @@ plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
 Fires whenever the battle's attacker/card target caret moves (UP/DOWN during
 the player select or defend phase, `battle_target_move`) and when the target
 auto-advances to the next living enemy after its current target is defeated
-(`battle_target_auto_advance`).  The target persists across turns — this
+(step-off-corpse inside the enemy-liveness check).  The target persists across turns — this
 event only fires when the *selection itself* changes, never on the reset of
 a new turn.  Single-enemy battles do not emit it (the caret is trapped on
 the only slot), and a wrap-back press that lands on the same living enemy
@@ -2175,7 +2181,7 @@ Example:
 ```text
 REPLAY:
 
-ROM: rpg_card_proto_debug
+ROM: kaartenheld_debug
 SCENARIO: first_encounter
 RNG: 12345
 
@@ -2362,7 +2368,7 @@ Conceptual response:
   },
 
   "game": {
-    "name": "rpg_card_proto",
+    "name": "kaartenheld",
     "build": "debug"
   }
 }

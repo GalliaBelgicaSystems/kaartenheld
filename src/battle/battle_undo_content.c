@@ -1,9 +1,10 @@
-#pragma bank 3
+#pragma bank 2
 
 #include "battle.h"
 #include "banked.h"
 
-/* Banked body of battle_card_undo (src/battle/battle.c).
+/* Banked body of battle_card_undo (src/battle/battle.c, ROM bank 2).
+ * Lives here (not bank 3: that room belongs to the rider HUD body).
  * Self-contained: reads/writes only Battle struct fields (WRAM)
  * and calls no fixed-bank functions.  For the flee path, it sets
  * the result fields directly; the fixed-bank wrapper emits telemetry

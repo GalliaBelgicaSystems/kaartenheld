@@ -14,17 +14,13 @@
  * *_FIRST_GAME bases, so a different RPG built on the same engine defines
  * its own ids here without ever touching the engine headers. */
 
-/* ── Entity types (engine range: NONE=0, PLAYER=1; game range >= 0x80) ── */
-#define ENTITY_ID_SLIME       (ENTITY_ID_FIRST_GAME + 0)
-#define ENTITY_ID_MAYOR       (ENTITY_ID_FIRST_GAME + 1)
-#define ENTITY_ID_GUARD       (ENTITY_ID_FIRST_GAME + 2)
-#define ENTITY_ID_SHOPKEEPER  (ENTITY_ID_FIRST_GAME + 3)
-#define ENTITY_ID_BAT         (ENTITY_ID_FIRST_GAME + 4)
-#define ENTITY_ID_SLIME_LORD  (ENTITY_ID_FIRST_GAME + 5)
-#define ENTITY_ID_MERCHANT    (ENTITY_ID_FIRST_GAME + 6)
-#define ENTITY_ID_AMULET      (ENTITY_ID_FIRST_GAME + 7)
-#define ENTITY_ID_WIZARD      (ENTITY_ID_FIRST_GAME + 8)
-#define ENTITY_ID_SIGNPOST    (ENTITY_ID_FIRST_GAME + 9)
+/* ── Entity types (engine range: NONE=0, PLAYER=1; game range >= 0x80) ──
+ * Values come from the generated entity_ids_generated.h (single source of
+ * truth: the entity-type JSON registries in screens/enemy_types and
+ * screens/entity_types, emitted by
+ * tools/screen_compiler/entity_compile.py).  Humans add entity types in
+ * the editor — never hand-allocate ids here. */
+#include "entity_ids_generated.h"
 
 /* ── Cards (engine range: NONE=0; game range >= CARD_FIRST_GAME) ── */
 #define CARD_IRON_SWORD    (CARD_FIRST_GAME + 0)
@@ -33,7 +29,7 @@
 #define CARD_FIRE_SWORD    (CARD_FIRST_GAME + 3)
 #define CARD_POISON_DAGGER (CARD_FIRST_GAME + 4)
 #define CARD_AMULET        (CARD_FIRST_GAME + 5)
-#define CARD_BOW_10        (CARD_FIRST_GAME + 6)
+#define CARD_BOW_9        (CARD_FIRST_GAME + 6)
 #define GAME_CARD_COUNT    7
 
 /* ── Events (engine range: NONE=0; game range >= 0x80) ── */
@@ -50,20 +46,12 @@
 #define EVENT_ID_MERCHANT_DELIVER (EVENT_ID_FIRST_GAME + 10)
 #define EVENT_ID_AMULET_PICKUP   (EVENT_ID_FIRST_GAME + 11)
 
-/* ── Dialogues (engine range: NONE=0; game range >= 0x80) ── */
-#define DIALOGUE_ID_MAYOR_GREETING    (DIALOGUE_ID_FIRST_GAME + 0)
-#define DIALOGUE_ID_GUARD_GREETING    (DIALOGUE_ID_FIRST_GAME + 1)
-#define DIALOGUE_ID_SHOPKEEPER_GREETING (DIALOGUE_ID_FIRST_GAME + 2)
-#define DIALOGUE_ID_MAYOR_INTRO       (DIALOGUE_ID_FIRST_GAME + 3)
-#define DIALOGUE_ID_GUARD_AFTER_MAYOR (DIALOGUE_ID_FIRST_GAME + 4)
-#define DIALOGUE_ID_QUEST_ACTIVE      (DIALOGUE_ID_FIRST_GAME + 5)
-#define DIALOGUE_ID_QUEST_COMPLETE    (DIALOGUE_ID_FIRST_GAME + 6)
-#define DIALOGUE_ID_QUEST_DONE        (DIALOGUE_ID_FIRST_GAME + 7)
-#define DIALOGUE_ID_MERCHANT_INTRO    (DIALOGUE_ID_FIRST_GAME + 8)
-#define DIALOGUE_ID_MERCHANT_THANKS   (DIALOGUE_ID_FIRST_GAME + 9)
-#define DIALOGUE_ID_AMULET_FOUND      (DIALOGUE_ID_FIRST_GAME + 10)
-#define DIALOGUE_ID_AMULET_NOTHING    (DIALOGUE_ID_FIRST_GAME + 11)
-#define DIALOGUE_ID_SIGNPOST          (DIALOGUE_ID_FIRST_GAME + 12)
+/* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
+ * Values come from the generated dialogue_ids_generated.h (single source
+ * of truth: the screens/dialogue JSON files, emitted by
+ * tools/screen_compiler/dialogue_compile.py).  Humans author dialogue
+ * text in the editor — never hand-allocate ids here. */
+#include "dialogue_ids_generated.h"
 
 /* Story flags.  Each maps to bit (id-1) of GameState.flags.bytes[].
  * STORY_FLAG_ID_COUNT is the exclusive upper bound passed to story_init(). */
@@ -100,6 +88,20 @@ typedef enum {
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
 #define GAME_EVENT_COUNT 12
-#define GAME_DIALOGUE_COUNT 13
+/* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
+ * (emitted by dialogue_compile.py from the screens/dialogue files). */
+
+/* Frozen harness-test content (TEST_LEVELS, debug build only): the test
+ * scenes/actors compile into ROM bank 4 (battle-art bank, which has the
+ * headroom) so the release budgets are untouched, the debug link stays
+ * at 8 banks (-yo8), and the fixtures can diverge freely. */
+#define GAME_TEST_CONTENT_BANK 4
+
+/* Per-scene actor tables (actors_content.c) live in bank 4 in BOTH builds:
+ * the debug build already links the fixture actor tables there
+ * (GAME_TEST_CONTENT_BANK) and the release build moved there to free the
+ * tight bank 2 for the other content tables (dialogue/events/cards/...).
+ * actor_load_banked.c (#pragma bank 4) reads them in-bank. */
+#define GAME_ACTOR_BANK 4
 
 #endif /* GAME_IDS_H */

@@ -1,0 +1,58 @@
+{
+ "name": "castle_spider_patrol",
+ "test": true,
+  "description": "The castle spider (AI_PATROL_VERT, spawn (17,7)) bounces vertically and never leaves rows spawn-3..spawn+3 (4..10).  Asserted via ACTOR_MOVED payloads: x stays 17 and the extremes y=4 and y=10 are both visited within the wait window.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 400
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+   {
+    "type": "event_occurred",
+    "event": "ACTOR_MOVED"
+   },
+   {
+    "type": "event_not_occurred",
+    "event": "ACTOR_STATE_CHANGE"
+   },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 0,
+   "value": 139
+  },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 1,
+   "value": 17
+  },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 2,
+   "value": 4
+  },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 2,
+   "value": 10
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 2,
+   "y": 2,
+   "facing": "DOWN"
+  },
+  "seed": 777
+ }
+}

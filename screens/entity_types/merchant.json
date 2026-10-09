@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "merchant",
+  "label": "Merchant",
+  "kind": "npc",
+  "name": "MERCHANT",
+  "visual": "M",
+  "sprite_kind": "tile"
+}

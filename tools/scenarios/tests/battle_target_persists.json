@@ -1,120 +1,120 @@
 {
-  "name": "battle_target_persists",
-  "test": true,
-  "description": "The player's selected enemy stays targeted into the next player turn. On the Mountain Pass trio, DOWN moves the caret to the middle slime, an SW2 attack lands on it (16 -> 14), the enemy counter is deflected/absorbed, and back at turn 2 the caret is STILL on the middle slime (row 4 caret at column 9, the TARGET's 14 HP, caret never reset by the turn boundary). TARGET_CHANGED is emitted exactly once (0 -> 1) by the DOWN move.",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 40
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "PLAYER TURN"
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "SLIME  SLIME  SLIME"
-    },
-    {
-      "type": "screen_row",
-      "row": 4,
-      "contains": "         ^"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 14
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "TARGET_CHANGED"
-    },
-    {
-      "type": "event_arg",
-      "event": "TARGET_CHANGED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "event_arg",
-      "event": "TARGET_CHANGED",
-      "index": 1,
-      "value": 1
-    },
-    {
-      "type": "event_count",
-      "event": "TARGET_CHANGED",
-      "count": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "MOUNTAIN_PASS",
-    "player": {
-      "x": 13,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 5002,
-    "party": {
-      "HERO": {
-        "hp": 60,
-        "max_hp": 60
-      }
-    }
+ "name": "battle_target_persists",
+ "test": true,
+ "description": "The player's selected enemy stays targeted into the next player turn. On the Mountain Pass trio, DOWN moves the caret to the middle slime, an SW2 attack lands on it (16 -> 14), the enemy counter is deflected/absorbed, and back at turn 2 the caret is STILL on the middle slime (row 4 caret at column 9, the TARGET's 14 HP, caret never reset by the turn boundary). TARGET_CHANGED is emitted exactly once (0 -> 1) by the DOWN move.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 40
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET SLIME"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "SLIME"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "         ^"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 14
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "TARGET_CHANGED"
+  },
+  {
+   "type": "event_arg",
+   "event": "TARGET_CHANGED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_arg",
+   "event": "TARGET_CHANGED",
+   "index": 1,
+   "value": 1
+  },
+  {
+   "type": "event_count",
+   "event": "TARGET_CHANGED",
+   "count": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  }
+ }
 }

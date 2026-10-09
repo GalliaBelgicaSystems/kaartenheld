@@ -1,0 +1,39 @@
+{
+ "name": "walkable_landscape_floor",
+ "test": true,
+ "description": "Player steps onto a desolate-landscape plain-floor variant tile (TILE_DESOLATE_LANDSCAPE_32, manifest walkable) and movement commits",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 5,
+   "expected_y": 5
+  },
+  {
+   "type": "event_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 4,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 42
+ }
+}

@@ -6,28 +6,28 @@
 #include "banked.h"
 
 /* ASCII intro sequence shown when starting a NEW GAME from the title
- * screen.  Three scripted slides (the waking whale, the closed sky, the
- * slime blight); A/START advances, the final slide drops into a fresh
- * overworld playthrough.  Rendering lives in the bank-2 intro_content
- * body (title_content.c) to keep the fixed bank small. */
+ * screen.  Three scripted slides (a hero of a new kind, cards as your
+ * strength, the slime blight); A/START advances, the final slide drops
+ * into a fresh overworld playthrough.  Rendering lives in the bank-4
+ * intro_content body (title_content.c) to keep the fixed bank small. */
 
 #define INTRO_SLIDE_COUNT 3
 
-/* Shared slide-show renderer used by the intro and tutorial screens: a
- * full clear, a bank-2 content-body call staged on the address of the
- * renderer + slide byte, telemetry, and a render-cache commit.  Both
- * screens draw one of several full-screen ASCII slides, so they share
- * this fixed wrapper to keep the fixed _CODE/_HOME bank within budget
- * (make memmap). */
+/* Shared slide-show renderer used by the intro, tutorial and splash
+ * screens: a full clear, a banked content-body call staged on the address
+ * of the renderer + slide byte, telemetry, and a render-cache commit.
+ * `bank` selects the content body's ROM bank (4 = ASCII slides, 2 = the
+ * studio splash bitmap body).  Kept in the fixed bank to hold the fixed
+ * _CODE/_HOME area within budget (make memmap). */
 
-void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t slide)
+void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t slide, uint8_t bank)
 {
     RenderCache *rc;
     if (!g) return;
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != scr) {
         ui_clear_screen();
-        g_bk_call_bank = 4;
+        g_bk_call_bank = bank;
         g_bk_call_target = content_target;
         g_bk_byte_a = slide;
         banked_call_run();
@@ -39,7 +39,7 @@ void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t
 
 void intro_screen_render(Game *g)
 {
-    slide_screen_render(g, SCREEN_INTRO, (uint16_t)&intro_content_render, g->intro_slide);
+    slide_screen_render(g, SCREEN_INTRO, (uint16_t)&intro_content_render, g->intro_slide, 4);
 }
 
 void intro_screen_update(Game *g)

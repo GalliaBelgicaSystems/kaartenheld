@@ -4,11 +4,13 @@
 #include "event.h"
 #include "dialogue.h"
 #include "actor.h"
+#include "scene.h"
 #include "rpg/party.h"
 #include "rpg/deck.h"
 #include "rpg/loot.h"
 #include "core/game.h"
 #include "banked.h"
+#include "battle_data.h"
 
 #define HERO_START_HP    10
 #define HERO_START_GOLD  20
@@ -42,10 +44,21 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
+    /* Player start is compiled from the field spawn (the single source of
+     * truth).  scene_spawn() runs the banked table read; the fallback for
+     * bad map ids lives in that banked body, so this fixed-bank call site
+     * stays branch-free (fixed-bank _CODE budget).  Harness builds start
+     * in the frozen fixture field, never the real content. */
+#ifdef TEST_LEVELS
+    state->scene.scene_id = SCENE_TEST_FIELD;
+    scene_spawn(MAP_TEST_FIELD);
+#else
     state->scene.scene_id = SCENE_FIELD;
-    state->scene.player_x = 4;
-    state->scene.player_y = 4;
-    state->scene.player_facing = (uint8_t)DIRECTION_DOWN;
+    scene_spawn(MAP_FIELD);
+#endif
+    state->scene.player_x = g_bk_byte_b;
+    state->scene.player_y = g_bk_byte_c;
+    state->scene.player_facing = g_bk_byte_d;
 
     state->party.count = 1;
     state->party.members[0].id = CHARACTER_HERO;
@@ -55,30 +68,40 @@ void game_new_game(GameState *state)
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
 
-    /* Starter deck (docs/deck-management.md §1): 12 cards — 4x SW3, 3x SH2,
-     * 3x SW4 (Fire Sword), 2x DA1.  The original five are decked first so the
-     * opening battle hand (SW SW SH SH SW) is unchanged; the extras only
-     * deepen the draw pile.
-     * Granted as real owned state via the silent mutators so battles draw
-     * from the player's actual deck from turn one. */
-    deck_collection_add(&state->cards, CARD_IRON_SWORD, 4);
-    deck_collection_add(&state->cards, CARD_WOODEN_SHIELD, 3);
-    deck_collection_add(&state->cards, CARD_FIRE_SWORD, 3);
-    deck_collection_add(&state->cards, CARD_POISON_DAGGER, 2);
-    deck_add_card(&state->cards, CARD_IRON_SWORD);
-    deck_add_card(&state->cards, CARD_IRON_SWORD);
-    deck_add_card(&state->cards, CARD_WOODEN_SHIELD);
-    deck_add_card(&state->cards, CARD_WOODEN_SHIELD);
-    deck_add_card(&state->cards, CARD_FIRE_SWORD);
-    deck_add_card(&state->cards, CARD_IRON_SWORD);
-    deck_add_card(&state->cards, CARD_WOODEN_SHIELD);
-    deck_add_card(&state->cards, CARD_FIRE_SWORD);
-    deck_add_card(&state->cards, CARD_FIRE_SWORD);
-    deck_add_card(&state->cards, CARD_POISON_DAGGER);
-    deck_add_card(&state->cards, CARD_POISON_DAGGER);
-    deck_add_card(&state->cards, CARD_IRON_SWORD);
+    /* Starter deck (docs/deck-management.md §1), granted from the generated
+     * hero table (screens/hero.json via battle_compile.py) so the editor
+     * owns the contents: each entry is granted once to the collection and
+     * once to the draw pile, preserving exact draw order.  The bank-2
+     * table is staged one byte at a time (no large stack or WRAM scratch
+     * needed); deck_add_card/deck_collection_add enforce max_copies. */
+    {
+        uint8_t n = 0;
+        uint8_t i;
+        CardId id = CARD_NONE;
+        banked_copy(2, &n, &g_hero_starter_deck_count, 1);
+        if (n > MAX_DECK_CARDS) n = MAX_DECK_CARDS;
+        for (i = 0; i < n; i++) {
+            banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
+            deck_collection_add(&state->cards, id, 1);
+        }
+        for (i = 0; i < n; i++) {
+            banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
+            deck_add_card(&state->cards, id);
+        }
+    }
 }
 
+/* Thin fixed-bank wrapper: stages the battle type and dispatches to the
+ * bank-4 body (battle_hud_load_banked) which does the actual id-scan and
+ * WRAM copy.  This keeps the bulky id-scan + copy logic out of the fixed
+ * bank (fixes _HOME overflow). */
+void game_battle_hud_load(uint8_t battle_type)
+{
+    g_bk_byte_a = battle_type;
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
+    banked_call_run();
+}
 void game_on_level_up(GameState *state, ProgressionTarget target,
                       const ProgressionAddResult *result)
 {

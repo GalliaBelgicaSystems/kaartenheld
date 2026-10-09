@@ -197,7 +197,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
    Verify all scenario tests pass.
 
 3. **Interactive 4-Card and 5-Card Selection Verification**:
-   Execute automated emulator tests (`/tmp/test_release_rom.py`, `combo_5card`, `card_battle_select_4`) on `build/rpg_card_proto.gb` to verify:
+   Execute automated emulator tests (`/tmp/test_release_rom.py`, `combo_5card`, `card_battle_select_4`) on `build/kaartenheld.gb` to verify:
    * 4-card selection displays the combo name correctly (e.g. `TWO PAIR`, `FOUR KIND`).
    * No screen corruption occurs.
    * No illegal opcodes or CPU lockups occur.

@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/card_skin.schema.json",
+  "title": "Battle Hand-Card Skin",
+  "description": "Semantic source of truth for how cards render in the battle hand: card box geometry, per battle-card-type weapon icon + CGB palette. Element riders are OAM sprites (screens/enemy_types rider_*), not skin icons. The JSON->C compiler emits the const g_card_skin (bank 4) that is staged into WRAM at battle entry. Icons resolve to the fixed VRAM icon tiles ui_init loads (UI_TILE_CARD_* 104-109); colors to UI_COLOR_* palette indices.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "box", "types"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "card_skin",
+      "description": "Singleton id (one skin per game)."
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "Human-readable label for the editor."
+    },
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["w", "h"],
+      "properties": {
+        "w": {
+          "type": "integer",
+          "const": 3,
+          "description": "Card box width in tiles. Fixed at 3: the hand lays 5 boxes on a stride-4 column grid (3 box + 1 gap = 20 columns)."
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 5,
+          "description": "Card box height in tiles (rows). The first interior row carries the weapon icon, the last interior row the power digit; selected-card element riders show as OAM sprites at the battle top-right. cards_row (battle screen hud_layout) is the BOTTOM row; the box occupies cards_row-h+1 .. cards_row."
+        }
+      }
+    },
+    "types": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sword", "shield", "bow", "heal", "dagger"],
+      "description": "Per BattleCardType (src/battle/card.h order SWORD SHIELD BOW HEAL DAGGER).",
+      "properties": {
+        "sword":  { "$ref": "#/definitions/typeSkin" },
+        "shield": { "$ref": "#/definitions/typeSkin" },
+        "bow":    { "$ref": "#/definitions/typeSkin" },
+        "heal":   { "$ref": "#/definitions/typeSkin" },
+        "dagger": { "$ref": "#/definitions/typeSkin" }
+      }
+    }
+  },
+  "definitions": {
+    "typeSkin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["icon", "color"],
+      "properties": {
+        "icon": {
+          "type": "string",
+          "enum": ["combat_sword_icon", "combat_shield_icon", "combat_bow_icon", "combat_dagger_icon", "combat_ring_icon", "amulet"],
+          "description": "Which VRAM icon tile represents this type/element. Names are the slugified combat-tileset description entries (assets/combat-tileset-description.csv); dagger/ring/amulet have no CSV entry (atlas-only) and keep plain names."
+        },
+        "color": {
+          "type": "string",
+          "enum": ["none", "fire", "iron", "field", "poison", "wood", "gold", "dim"],
+          "description": "CGB BG palette index (UI_COLOR_*) applied to the box/icons. On DMG this only affects shade grouping."
+        },
+        "uses_icons": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "type": "string" },
+          "description": "Optional, at most one card type: remaining-uses floor glyphs, ordered uses 4,3,2,1,0. Slot 4 doubles as the clamp target for uses above 4."
+        },
+        "uses_power_icon": {
+          "type": "string",
+          "description": "Optional, same single card type: power glyph drawn on the middle interior row instead of the power digit."
+        }
+      }
+    }
+  }
+}

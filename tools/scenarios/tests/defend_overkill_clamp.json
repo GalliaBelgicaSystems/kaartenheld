@@ -1,111 +1,111 @@
 {
-  "name": "defend_overkill_clamp",
-  "test": true,
-  "description": "Overkill defense (docs/loot.md 34.4): when the incoming net exceeds the hero's remaining HP, the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10; a 0-block defend hand (BO) vs the slime's 2 incoming -> net 2 overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "BO",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_RECEIVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "DAMAGE_RECEIVED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "HEALED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 1,
-        "max_hp": 10
-      }
-    },
-    "seed": 5002,
-    "start_battle": true
+ "name": "defend_overkill_clamp",
+ "test": true,
+ "description": "Overkill defense (docs/loot.md 34.4): when the incoming net exceeds the hero's remaining HP, the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10; a 0-block defend hand (BO) vs the slime's 2 incoming -> net 2 overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "HEALED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 1,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
 }

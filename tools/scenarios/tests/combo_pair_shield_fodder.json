@@ -1,67 +1,75 @@
 {
-  "name": "combo_pair_shield_fodder",
-  "test": true,
-  "description": "Pair of different types (SW2 + SH2) in attack phase: shield card still increments eff_count (2) and participates in straight/same-type chain (both become false), but its value is excluded from the power sum.  power=sum=2.  5HP enemy -> HP3.",
-  "actions": [
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 8
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_pair_shield_fodder",
+ "test": true,
+ "description": "Pair of different types (SW2 + SH2) in attack phase: shield card still increments eff_count (2) and participates in straight/same-type chain (both become false), but its value is excluded from the power sum.  power=sum=2.  5HP enemy -> HP3.",
+ "actions": [
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 8
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

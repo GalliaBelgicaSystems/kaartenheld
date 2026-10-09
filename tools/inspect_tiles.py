@@ -3,9 +3,9 @@ import os
 import sys
 
 ROM_DEBUG = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "..", "build", "rpg_card_proto_debug.gb")
+                         "..", "build", "kaartenheld_debug.gb")
 SYM = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                       "..", "build", "rpg_card_proto_debug.sym")
+                       "..", "build", "kaartenheld_debug.sym")
 
 def get_symbol(name):
     for line in open(SYM):

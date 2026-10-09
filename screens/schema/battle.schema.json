@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/battle.schema.json",
+  "title": "Battle Screen Definition",
+  "description": "Semantic source of truth for a battle screen layout. The web battle editor and the JSON->C compiler both read this; it must not be edited by hand except through the editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "max_enemies", "allowed_categories", "enemy_positions", "timer_config", "hud_layout"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "description": "Unique identifier for this battle screen (lowercase, underscores only)."
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 30,
+      "description": "Human-readable label for the editor."
+    },
+    "max_enemies": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3,
+      "description": "Maximum number of enemies in this battle screen (1-3)."
+    },
+    "allowed_categories": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["minion", "elite", "boss"]
+      },
+      "description": "Enemy categories allowed in this battle screen."
+    },
+    "enemy_positions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["x", "y"],
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 19,
+            "description": "X position column on the battle grid (0-19)."
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 17,
+            "description": "Y position row on the battle grid (0-17)."
+          }
+        }
+      },
+      "description": "Positions for each enemy slot (must match max_enemies count)."
+    },
+    "timer_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overworld_ticks", "battle_ticks"],
+      "properties": {
+        "overworld_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255,
+          "description": "Timer ticks per note in overworld mode (e.g., 43)."
+        },
+        "battle_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 255,
+          "description": "Timer ticks per note in battle mode (e.g., 17)."
+        }
+      }
+    },
+    "hud_layout": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "turn_banner_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Row for TURN banner (default: 0)." },
+        "enemy_hp_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Row for enemy HP counters (default: 1)." },
+        "enemy_sprite_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Row for enemy sprites (default: 2)." },
+        "enemy_cursor_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Row for enemy target cursor arrow (default: 4)." },
+        "enemy_col_start": { "type": "integer", "minimum": 0, "maximum": 19, "description": "Starting column for enemy columns (default: 1)." },
+        "enemy_col_step": { "type": "integer", "minimum": 1, "maximum": 19, "description": "Column step between enemies (default: 7)." },
+        "hero_label_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Hero label row (default: 6)." },
+        "hero_label_col": { "type": "integer", "minimum": 0, "maximum": 19, "description": "Hero label col (default: 1)." },
+        "hero_hp_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Hero HP row (default: 6)." },
+        "hero_hp_col": { "type": "integer", "minimum": 0, "maximum": 19, "description": "Hero HP col (default: 13)." },
+        "deck_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Deck counter row (default: 7)." },
+        "deck_col": { "type": "integer", "minimum": 0, "maximum": 19, "description": "Deck counter col (default: 1)." },
+        "ap_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "AP/Energy row (default: 7)." },
+        "ap_col": { "type": "integer", "minimum": 0, "maximum": 19, "description": "AP/Energy col (default: 13)." },
+        "combo_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Combo preview row (default: 9)." },
+        "cards_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Hand cards row start (default: 10)." },
+        "card_cursor_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Hand cursor row (default: 14)." },
+        "card_desc_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Card description row (default: 15)." },
+        "timer_row": { "type": "integer", "minimum": 0, "maximum": 17, "description": "Timer bar row (default: 16)." },
+        "timer_col": { "type": "integer", "minimum": 0, "maximum": 19, "description": "Timer bar starting col (default: 0)." },
+        "timer_width": { "type": "integer", "minimum": 1, "maximum": 20, "description": "Timer bar width in tiles (default: 20)." },
+        "enemy_row_start": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "enemy_row_step": { "type": "integer", "minimum": 1 },
+        "combo_row_start": { "type": "integer", "minimum": 0, "maximum": 17 },
+        "combo_row_step": { "type": "integer", "minimum": 1 },
+        "caret_x": { "type": "integer", "minimum": 0, "maximum": 19 }
+      }
+    }
+  }
+}

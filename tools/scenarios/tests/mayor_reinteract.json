@@ -1,83 +1,82 @@
 {
-  "name": "mayor_reinteract",
-  "test": true,
-  "description": "Conditional re-trigger: first interaction starts the quest (MAYOR_INTRO) and sets MET_MAYOR; a second interaction fires QUEST_ACTIVE while monsters remain",
-  "scenario_id": "MAYOR_DIALOGUE",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MAYOR"
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "interact",
-      "actor": "MAYOR"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "QUEST_ACTIVE"
-    },
-    {
-      "type": "flag",
-      "flag": "MET_MAYOR",
-      "expected": true
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCRIPT_TRIGGERED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DIALOGUE_ENDED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 8003,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "mayor_reinteract",
+ "test": true,
+ "description": "Conditional re-trigger: first interaction starts the quest (MAYOR_INTRO) and sets MET_MAYOR; a second interaction fires QUEST_ACTIVE while monsters remain",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MAYOR"
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MAYOR"
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "QUEST_ACTIVE"
+  },
+  {
+   "type": "flag",
+   "flag": "MET_MAYOR",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_ENDED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8003,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

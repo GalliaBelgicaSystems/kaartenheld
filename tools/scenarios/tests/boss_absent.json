@@ -1,39 +1,38 @@
 {
-  "name": "boss_absent",
-  "test": true,
-  "description": "The Lord of Slimes is not in the Castle until the Monster Hunt quest is complete",
-  "scenario_id": "CASTLE_BOOT",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 10,
-      "expected_y": 5
-    }
-  ],
-  "initial_state": {
-    "scene": "CASTLE",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 8501,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "boss_absent",
+ "test": true,
+ "description": "The Lord of Slimes is not in the Castle until the Monster Hunt quest is complete",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 10,
+   "expected_y": 5
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8501,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

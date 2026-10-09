@@ -1,345 +1,344 @@
 {
-  "name": "status_poison_reshuffle",
-  "test": true,
-  "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card dagger deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing past 1 (poison damage itself is flat 1 HP).",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true,
-    "deck": {
-      "POISON_DAGGER": 5
-    }
+ "name": "status_poison_reshuffle",
+ "test": true,
+ "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card dagger deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing past 1 (poison damage itself is flat 1 HP).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 0,
-      "status": 1,
-      "chance": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 1,
-      "status": 1,
-      "chance": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 2,
-      "status": 1,
-      "chance": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 3,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 3,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 3,
-      "status": 1,
-      "chance": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 4,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 4,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 4,
-      "status": 1,
-      "chance": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 100
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DECK_RESHUFFLED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "STATUS_APPLIED"
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 1,
-      "value": 5
-    },
-    {
-      "type": "event_occurred",
-      "event": "CARDS_GREYED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "TURN_SKIPPED"
-    }
-  ]
+  "seed": 8408,
+  "start_battle": true,
+  "deck": {
+   "POISON_DAGGER": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 0,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 1,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 2,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 3,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 4,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DECK_RESHUFFLED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 1,
+   "value": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARDS_GREYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "TURN_SKIPPED"
+  }
+ ]
 }

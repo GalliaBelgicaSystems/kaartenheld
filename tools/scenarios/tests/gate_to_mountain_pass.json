@@ -1,0 +1,51 @@
+{
+ "name": "gate_to_mountain_pass",
+ "test": true,
+ "description": "Walk south in Desolate Landscape onto staircase to transition to Mountain Pass",
+ "actions": [
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  }
+ ],
+ "assertions": [
+  {
+   "type": "scene",
+   "expected": "TEST_MOUNTAIN_PASS"
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 12,
+   "expected_y": 10
+  },
+  {
+   "type": "music_track",
+   "expected": "DESOLATE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
+}

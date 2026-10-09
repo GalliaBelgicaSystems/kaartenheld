@@ -1,152 +1,151 @@
 {
-  "name": "status_freeze_skip",
-  "test": true,
-  "description": "On-hit status rider Phase D: a SW1 hand card carrying FREEZE (chance 255=guaranteed) applies FREEZE to the slime; the frozen slime skips its next attack entirely (TURN_SKIPPED, no ENEMY_CARD_PLAYED, no incoming damage)",
-  "scenario_id": "BATTLE_BOOT",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 3,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 3,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 4,
-      "card_type": "SH",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 4,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 0,
-      "status": 3,
-      "chance": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 55
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "wait",
-      "frames": 100
-    }
-  ],
-  "assertions": [
-    {
-      "type": "event_occurred",
-      "event": "STATUS_APPLIED"
-    },
-    {
-      "type": "event_arg",
-      "event": "STATUS_APPLIED",
-      "index": 0,
-      "value": 3
-    },
-    {
-      "type": "event_occurred",
-      "event": "TURN_SKIPPED"
-    },
-    {
-      "type": "event_arg",
-      "event": "TURN_SKIPPED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_arg",
-      "event": "TURN_SKIPPED",
-      "index": 1,
-      "value": 3
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "ENEMY_CARD_PLAYED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "status_freeze_skip",
+ "test": true,
+ "description": "On-hit status rider Phase D: a SW1 hand card carrying FREEZE (chance 255=guaranteed) applies FREEZE to the slime; the frozen slime skips its next attack entirely (TURN_SKIPPED, no ENEMY_CARD_PLAYED, no incoming damage)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SH",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 0,
+   "status": 3,
+   "chance": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "wait",
+   "frames": 100
   }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 3
+  },
+  {
+   "type": "event_occurred",
+   "event": "TURN_SKIPPED"
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 1,
+   "value": 3
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENEMY_CARD_PLAYED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "start_battle": true
+ }
 }

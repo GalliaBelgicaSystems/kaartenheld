@@ -1,57 +1,56 @@
 {
-  "name": "quest_tab_switch",
-  "test": true,
-  "description": "Quick-screen tab switching is symmetric: LEFT/RIGHT moves CARDS -> QUESTS and back again (QUEST list previously swallowed LEFT/RIGHT so the return trip was impossible)",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "LEFT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "CARDS"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "I SW"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410
+ "name": "quest_tab_switch",
+ "test": true,
+ "description": "Quick-screen tab switching is symmetric: LEFT/RIGHT moves CARDS -> QUESTS and back again (QUEST list previously swallowed LEFT/RIGHT so the return trip was impossible)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "CARDS"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "I SW"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
 }

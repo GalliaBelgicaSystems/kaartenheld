@@ -1,46 +1,45 @@
 {
-  "name": "overworld_boot",
-  "test": true,
-  "description": "Boot directly into the overworld screen on the Town scene (plays the Town theme)",
-  "scenario_id": "OVERWORLD_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "TOWN"
-    },
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 8,
-      "expected_y": 6
-    },
-    {
-      "type": "player_facing",
-      "expected": "DOWN"
-    },
-    {
-      "type": "music_track",
-      "expected": "TOWN"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "overworld_boot",
+ "test": true,
+ "description": "Boot directly into the overworld screen on the Town scene (plays the Town theme)",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_TOWN"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 8,
+   "expected_y": 6
+  },
+  {
+   "type": "player_facing",
+   "expected": "DOWN"
+  },
+  {
+   "type": "music_track",
+   "expected": "TOWN"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

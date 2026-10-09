@@ -1,0 +1,253 @@
+{
+  "id": "test_castle",
+  "name": "TEST Ruined Castle",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "castle",
+    "music": "MUSIC_DUNGEON",
+    "map_id": "MAP_CASTLE"
+  },
+  "default_walkable": "castle.castle_floor_with_debris",
+  "layers": {
+    "terrain": [
+      {
+        "x": 3,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_left_wall"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_right_wall"
+      },
+      {
+        "x": 13,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_left_wall"
+      },
+      {
+        "x": 16,
+        "y": 3,
+        "width": 1,
+        "height": 6,
+        "tile": "castle.castle_right_wall"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 4,
+        "y": 8,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 14,
+        "y": 8,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 9,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_table"
+      },
+      {
+        "x": 9,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_table"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 10,
+      "y": 10,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [
+    {
+      "x": 12,
+      "y": 11,
+      "target_scene": "test_mountain_pass",
+      "target_x": 12,
+      "target_y": 1,
+      "direction": "SOUTH",
+      "tile_char": "<"
+    }
+  ],
+  "objects": [
+    {
+      "id": "castle_bat",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ],
+      "position": {
+        "x": 12,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 5,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      }
+    },
+    {
+      "id": "castle_mimic",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_chest_closed",
+      "animation_frames": [
+        "actors.actors_chest_closed",
+        "actors.actors_chest_mimic"
+      ],
+      "position": {
+        "x": 12,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MIMIC",
+        "enemy_type": "mimic",
+        "display_name": "MIMIC",
+        "actor_id": 10,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "T",
+        "hp": 30,
+        "max_hp": 30,
+        "gold_reward": 0,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_MIMIC",
+        "ai": "AI_NONE",
+        "solo": true
+      }
+    },
+    {
+      "id": "castle_spider",
+      "type": "enemy",
+      "position": {
+        "x": 17,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SPIDER",
+        "enemy_type": "spider",
+        "display_name": "SPIDER",
+        "actor_id": 11,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 15,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SPIDER",
+        "ai": "AI_PATROL_VERT"
+      }
+    },
+    {
+      "id": "slime_lord",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_boss_top_left_corner",
+      "animation_frames": [
+        "actors.actors_boss_top_left_corner",
+        "actors.actors_boss_top_right_corner",
+        "actors.actors_boss_bottom_left_corner",
+        "actors.actors_boss_bottom_right_corner"
+      ],
+      "position": {
+        "x": 10,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME_LORD",
+        "display_name": "LORD OF SLIMES",
+        "actor_id": 6,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "L",
+        "hp": 50,
+        "max_hp": 50,
+        "gold_reward": 50,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_NONE",
+        "ai": "AI_NONE",
+        "solo": true,
+        "quest_var": "VARIABLE_ID_QUEST_MONSTER_HUNT",
+        "quest_val": 2
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "throne_room",
+      "bounds": {
+        "x": 4,
+        "y": 2,
+        "width": 12,
+        "height": 12
+      },
+      "description": "The abandoned castle throne room where the Slime Lord awaits.",
+      "gameplay": {
+        "purpose": "boss_arena",
+        "difficulty": 3
+      }
+    }
+  ]
+}

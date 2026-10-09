@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Output file
 OUTPUT_IMAGE="${1:-build/screenshot.png}"
-ROM_PATH="${2:-build/rpg_card_proto.gb}"
+ROM_PATH="${2:-build/kaartenheld.gb}"
 
 if [ ! -f "$ROM_PATH" ]; then
     echo "Error: ROM file $ROM_PATH does not exist." >&2

@@ -1,142 +1,149 @@
 {
-  "name": "ring_joker_heal",
-  "test": true,
-  "description": "Ring joker (docs/loot.md 34.3): a selected RING substitutes its value freely for classification -- SW5 + RING2 becomes a PAIR of fives -- deals the sword's damage only (ring excluded from the attack sum) and heals its power (EVENT_HEALED amount 2)",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "ring_joker_heal",
+ "test": true,
+ "description": "Ring joker (docs/loot.md 34.3): a selected RING substitutes its value freely for classification -- SW5 + RING2 becomes a PAIR of fives -- deals the sword's damage only (ring excluded from the attack sum) and heals its power (EVENT_HEALED amount 2)",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "HE",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 3,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 3,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 4,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 4,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_ring",
-      "index": 1
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    }
-  ],
-  "assertions": [
-    {
-      "type": "event_occurred",
-      "event": "COMBO_RESOLVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "HEALED"
-    },
-    {
-      "type": "event_arg",
-      "event": "HEALED",
-      "index": 0,
-      "value": 2
-    },
-    {
-      "type": "event_arg",
-      "event": "HEALED",
-      "index": 1,
-      "value": 1
-    }
-  ]
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "COMBO_RESOLVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 1,
+   "value": 1
+  }
+ ]
 }

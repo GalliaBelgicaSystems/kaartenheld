@@ -1,0 +1,75 @@
+{
+ "name": "battle_slime_sprite",
+ "test": true,
+ "description": "Slime trio battle: enemies render as OAM sprites (BG art footprint stays blank); HP lines, banner and events pin the rest.",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "10/10"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET SLIME"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "SLIME"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 2,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 1,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 8,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 15,
+   "expected": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

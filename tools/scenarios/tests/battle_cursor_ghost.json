@@ -1,107 +1,107 @@
 {
-  "name": "battle_cursor_ghost",
-  "test": true,
-  "description": "Regression guard for ghost battle cursors: stresses the hand and target cursors through many moves and asserts exactly one caret remains on the target row (4) and the hand row (15)",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "UP"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    },
-    {
-      "type": "press",
-      "button": "LEFT"
-    },
-    {
-      "type": "wait",
-      "frames": 1
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 4,
-      "contains": "^"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 4,
-      "contains": "^^"
-    },
-    {
-      "type": "screen_row",
-      "row": 15,
-      "contains": "^"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 15,
-      "contains": "^^"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "battle_cursor_ghost",
+ "test": true,
+ "description": "Regression guard for ghost battle cursors: stresses the hand and target cursors through many moves and asserts exactly one caret remains on the target row (5) and the hand row (15)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 1
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "^"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": "^^"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "^"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 15,
+   "contains": "^^"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

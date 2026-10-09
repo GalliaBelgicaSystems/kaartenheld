@@ -1,0 +1,58 @@
+{
+ "name": "card_cursor_stays_dark",
+ "test": true,
+ "description": "Selecting a card keeps the cursor on it: the marker shows the dark arrow (VRAM 110, UI_TILE_SELECT_ARROW_DARK) instead of auto-advancing right",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 15,
+   "col": 1,
+   "expected": 110
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "^"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
+}

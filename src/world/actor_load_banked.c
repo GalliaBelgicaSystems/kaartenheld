@@ -1,9 +1,14 @@
-#pragma bank 2
+#pragma bank 4
 
 #include "actor.h"
 #include "world.h"
 #include "rpg/state.h"
 #include "banked.h"
+
+/* Fixed-WRAM per-slot display-name staging (defined in actor.c, always
+ * mapped).  actor_spawn copies the bank-2 def literal here; fixed-bank
+ * encounter code then dereferences it with any ROM bank mapped. */
+extern char s_actor_names[MAX_WORLD_ACTORS][12];
 
 /* ── Scene actor loader, bank-2 body ────────────────────────────────
  * Dispatched by actor_load_scene() (src/world/actor.c) through the WRAM
@@ -18,15 +23,16 @@
  * (src/rpg/state.c) -- KEEP IN SYNC with those if their storage layout
  * ever changes. */
 
-extern WorldActorDefinition g_static_actors[7];
+extern StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 extern uint8_t g_static_actor_count;
+extern const uint8_t g_actor_table_count;   /* generated, bank-local */
 
 static void actor_spawn(WorldActorRuntime *r, const WorldActorDefinition *def)
 {
-    /* NOTE: display_name is deliberately NOT set here -- the wrapper
-     * derives it from `visual` AFTER the trampoline returns, because
-     * these literals must live in the fixed bank (overworld_screen
-     * dereferences the pointer while bank 1 is mapped). */
+    /* NOTE: display_name bytes are staged into fixed WRAM (s_actor_names)
+     * here, where bank 2 (the def literals) is mapped.  Fixed-bank code
+     * dereferences the staged pointer with any bank mapped -- hence no
+     * fixed-bank name table (fixed _HOME budget, AGENTS.md 55.5). */
     r->actor_id = def->actor_id;
     r->id = def->id;
     r->active = 1;
@@ -38,11 +44,11 @@ static void actor_spawn(WorldActorRuntime *r, const WorldActorDefinition *def)
     r->flags = ACTOR_STATE_NONE;
     r->gold_reward = def->gold_reward;
     r->reward_currency = def->reward_currency;
-    /* display_name deliberately left unset: the wrapper derives it from
-     * `visual` after the trampoline returns, because these literals must
-     * live in the fixed bank (overworld_screen dereferences the pointer
-     * while bank 1 is mapped). */
+    /* display_name bytes are staged by the caller into s_actor_names
+     * (fixed WRAM); the pointer is assigned there. */
     r->visual = def->visual;
+    r->sprite_kind = def->sprite_kind;
+    r->ow_type = def->ow_type;
     r->spawn_x = def->x;
     r->spawn_y = def->y;
     r->ai_type = def->ai_type;
@@ -53,6 +59,7 @@ static void actor_spawn(WorldActorRuntime *r, const WorldActorDefinition *def)
     r->move_target_y = def->y;
     r->move_progress = 0;
     r->battle_type = (uint8_t)def->battle_id;
+    r->solo = def->solo;
 }
 
 void actor_load_scene_banked(void)
@@ -71,7 +78,10 @@ void actor_load_scene_banked(void)
 
     if (!g_actor_registry) return;
 
-    for (i = 0; i < g_actor_registry_count; i++) {
+    /* The generated count is bank-local (emitted next to g_actor_tables by
+     * compile.py), so it is read directly here; g_actor_registry_count is
+     * the fixed-bank registration hint only (AGENTS.md 52.2). */
+    for (i = 0; i < g_actor_table_count; i++) {
         const WorldActorTable *tbl = &g_actor_registry[i];
         if (tbl->map_id != map_id) continue;
 
@@ -106,13 +116,26 @@ void actor_load_scene_banked(void)
 
             if (def->flags & ACTOR_FLAG_HOSTILE) {
                 if (slot < MAX_WORLD_ACTORS) {
+                    uint8_t j;
+                    char *dst = s_actor_names[slot];
+                    const char *src = def->display_name ?
+                        def->display_name : "Enemy";
                     actor_spawn(&world->actors[slot], def);
+                    /* Stage the def name literal (bank 2 mapped here) into
+                     * fixed WRAM, capped like Combatant.name (11+NUL, same
+                     * idiom as battle_start in battle.c). */
+                    for (j = 0; j < 11 && src[j]; j++) {
+                        dst[j] = src[j];
+                    }
+                    dst[j] = 0;
+                    world->actors[slot].display_name = dst;
                     slot++;
                 }
-            } else if (g_static_actor_count < 6) {
-                /* Field-wise copy: struct assignment lowers to
-                 * __memcpy, which lives in the fixed bank and is
-                 * unreachable while bank 2 is mapped (see
+            } else if (g_static_actor_count < MAX_STATIC_ACTORS) {
+                /* Field-wise copy into the compact StaticActorDefinition
+                 * (hostile-only payload dropped): struct assignment
+                 * lowers to __memcpy, which lives in the fixed bank and
+                 * is unreachable while bank 2 is mapped (see
                  * status_content.c for the identical pattern). */
                 g_static_actors[g_static_actor_count].actor_id = def->actor_id;
                 g_static_actors[g_static_actor_count].id = def->id;
@@ -121,6 +144,10 @@ void actor_load_scene_banked(void)
                 g_static_actors[g_static_actor_count].facing = def->facing;
                 g_static_actors[g_static_actor_count].flags = def->flags;
                 g_static_actors[g_static_actor_count].visual = def->visual;
+                g_static_actors[g_static_actor_count].sprite_kind =
+                    def->sprite_kind;
+                g_static_actors[g_static_actor_count].ow_type =
+                    def->ow_type;
                 g_static_actors[g_static_actor_count].display_name =
                     def->display_name;
                 g_static_actors[g_static_actor_count].interaction =
@@ -128,19 +155,6 @@ void actor_load_scene_banked(void)
                 g_static_actors[g_static_actor_count].shop_id = def->shop_id;
                 g_static_actors[g_static_actor_count].dialogue_id =
                     def->dialogue_id;
-                g_static_actors[g_static_actor_count].battle_id =
-                    def->battle_id;
-                g_static_actors[g_static_actor_count].ai_type = def->ai_type;
-                g_static_actors[g_static_actor_count].hp = def->hp;
-                g_static_actors[g_static_actor_count].max_hp = def->max_hp;
-                g_static_actors[g_static_actor_count].gold_reward =
-                    def->gold_reward;
-                g_static_actors[g_static_actor_count].reward_currency =
-                    def->reward_currency;
-                g_static_actors[g_static_actor_count].spawn_variable =
-                    def->spawn_variable;
-                g_static_actors[g_static_actor_count].spawn_value =
-                    def->spawn_value;
                 g_static_actor_count++;
             }
         }

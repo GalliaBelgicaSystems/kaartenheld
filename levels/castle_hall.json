@@ -1,0 +1,234 @@
+{
+  "id": "castle_hall",
+  "name": "Great Hall",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "castle",
+    "music": "MUSIC_DUNGEON",
+    "map_id": "MAP_CASTLE_HALL"
+  },
+  "neighbors": {
+    "north": "castle",
+    "south": "castle_entry",
+    "east": "",
+    "west": ""
+  },
+  "default_walkable": "castle.castle_floor_with_debris",
+  "layers": {
+    "terrain": [
+      {
+        "x": 3,
+        "y": 4,
+        "width": 1,
+        "height": 8,
+        "tile": "castle.castle_left_wall"
+      },
+      {
+        "x": 16,
+        "y": 4,
+        "width": 1,
+        "height": 8,
+        "tile": "castle.castle_right_wall"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 13,
+        "y": 4,
+        "width": 2,
+        "height": 1,
+        "tile": "castle.castle_top_wall"
+      },
+      {
+        "x": 9,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_table"
+      },
+      {
+        "x": 10,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_table"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 10,
+      "y": 16,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [],
+  "objects": [
+    {
+      "id": "hall_kobold",
+      "type": "enemy",
+      "position": {
+        "x": 5,
+        "y": 9
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "display_name": "KOBOLD",
+        "actor_id": 35,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 18,
+        "max_hp": 18,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_KOBOLD",
+        "ai": "AI_CHASE",
+        "enemy_type": "kobold"
+      }
+    },
+    {
+      "id": "hall_spider",
+      "type": "enemy",
+      "position": {
+        "x": 14,
+        "y": 9
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SPIDER",
+        "display_name": "SPIDER",
+        "actor_id": 36,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 18,
+        "max_hp": 18,
+        "gold_reward": 15,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SPIDER",
+        "ai": "AI_PATROL_VERT",
+        "enemy_type": "spider"
+      }
+    },
+    {
+      "id": "hall_bat",
+      "type": "enemy",
+      "position": {
+        "x": 15,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 37,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 12,
+        "max_hp": 12,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      },
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ]
+    },
+    {
+      "id": "hall_knight",
+      "type": "signpost",
+      "position": {
+        "x": 6,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "KNIGHT",
+        "dialogue": "DIALOGUE_ID_ADVICE_KNIGHT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "hall_slime",
+      "type": "enemy",
+      "position": {
+        "x": 6,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 56,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 20,
+        "max_hp": 20,
+        "gold_reward": 10,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      },
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "id": "great_hall",
+      "bounds": {
+        "x": 2,
+        "y": 2,
+        "width": 16,
+        "height": 14
+      },
+      "description": "A long hall of broken banners and old stone.",
+      "gameplay": {
+        "purpose": "combat_exploration",
+        "difficulty": 3
+      }
+    }
+  ]
+}

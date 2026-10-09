@@ -1,83 +1,82 @@
 {
-  "name": "status_poison_resist",
-  "test": true,
-  "description": "On-hit status rider that fails its roll: a SW1 hand card carrying POISON with chance 1 (1/255) does not apply the status against this seed's RNG stream -- no STATUS_APPLIED, no ticks",
-  "scenario_id": "BATTLE_BOOT",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card_status",
-      "index": 0,
-      "status": 1,
-      "chance": 1
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 150
-    }
-  ],
-    "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "STATUS_APPLIED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "STATUS_TICKED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "STATUS_RESISTED",
-      "note": "Phase D: failed rider rolls are now observable (docs/combo-system.md 19)"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 8408,
-    "start_battle": true
+ "name": "status_poison_resist",
+ "test": true,
+ "description": "On-hit status rider that fails its roll: a SW1 hand card carrying POISON with chance 1 (1/255) does not apply the status against this seed's RNG stream -- no STATUS_APPLIED, no ticks",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 0,
+   "status": 1,
+   "chance": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 150
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "STATUS_TICKED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_RESISTED",
+   "note": "Phase D: failed rider rolls are now observable (docs/combo-system.md 19)"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "start_battle": true
+ }
 }

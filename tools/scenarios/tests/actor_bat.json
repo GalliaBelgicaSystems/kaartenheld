@@ -1,65 +1,69 @@
 {
-  "name": "actor_bat",
-  "test": true,
-  "description": "Extensibility: a second hostile actor (Bat) starts combat with no generic engine changes",
-  "scenario_id": "ACTOR_BAT",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "wait",
-      "frames": 4
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 8
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "BAT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ACTOR_COLLISION"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ACTOR_COMBAT_START"
-    },
-    {
-      "type": "actor_at",
-      "entity": "BAT",
-      "x": 12,
-      "y": 7
-    }
-  ],
-  "initial_state": {
-    "scene": "CASTLE",
-    "player": {
-      "x": 11,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 6002,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "actor_bat",
+ "test": true,
+ "description": "Extensibility: a second hostile actor (Bat) starts combat with no generic engine changes",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 4
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 8
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET BAT"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "BAT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COLLISION"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COMBAT_START"
+  },
+  {
+   "type": "actor_at",
+   "entity": "BAT",
+   "x": 12,
+   "y": 7
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 11,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 6002,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

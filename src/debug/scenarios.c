@@ -220,6 +220,12 @@ static void scenario_load_state(void)
         g_game.title_menu_index = 0;
         audio_play_music(MUSIC_TITLE);
     }
+    if (screen == SCREEN_SPLASH) {
+        /* Studio splash boot state (auto-advance / skip scenarios). */
+        g_game.screen = SCREEN_SPLASH;
+        g_game.prev_screen = SCREEN_SPLASH;
+        audio_play_music(MUSIC_TITLE);
+    }
 
     game_render_reset(&g_game);
 

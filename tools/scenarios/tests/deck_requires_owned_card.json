@@ -1,64 +1,64 @@
 {
-  "name": "deck_requires_owned_card",
-  "test": true,
-  "description": "deck_add_card rejects cards the player does not own: POISON_DAGGER deck-add fails while unowned (no CARD_ADDED_TO_DECK), AMULET is rejected as SPECIAL, and after the card enters the collection exactly 1 CARD_ADDED_TO_DECK event fires",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "deck_add",
-      "card": "POISON_DAGGER"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "AMULET"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "add_item",
-      "item": "POISON_DAGGER",
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "deck_add",
-      "card": "POISON_DAGGER"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_ADDED_TO_DECK",
-      "count": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7004
+ "name": "deck_requires_owned_card",
+ "test": true,
+ "description": "deck_add_card rejects cards the player does not own: POISON_DAGGER deck-add fails while unowned (no CARD_ADDED_TO_DECK), AMULET is rejected as SPECIAL, and after the card enters the collection exactly 1 CARD_ADDED_TO_DECK event fires",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "AMULET"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "add_item",
+   "item": "POISON_DAGGER",
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_ADDED_TO_DECK",
+   "count": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7004
+ }
 }

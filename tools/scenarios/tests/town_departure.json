@@ -1,43 +1,42 @@
 {
-  "name": "town_departure",
-  "test": true,
-  "description": "Walk west on Town map into exit gate to return to Field",
-  "scenario_id": "TOWN_DEPARTURE",
-  "actions": [
-    {
-      "type": "press",
-      "button": "LEFT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 17,
-      "expected_y": 7
-    },
-    {
-      "type": "event_occurred",
-      "event": "MAP_CHANGED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 2,
-      "y": 7,
-      "facing": "DOWN"
-    },
-    "seed": 1000,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "town_departure",
+ "test": true,
+ "description": "Walk west on Town map into exit gate to return to Field",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 17,
+   "expected_y": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 2,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 1000,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

@@ -1,52 +1,51 @@
 {
-  "name": "actor_mayor_interaction",
-  "test": true,
-  "description": "Friendly World Actor (Mayor) starts dialogue when engaged",
-  "scenario_id": "MAYOR_DIALOGUE",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "MAYOR_INTRO"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ACTOR_INTERACTION"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCRIPT_TRIGGERED"
-    },
-    {
-      "type": "actor_at",
-      "entity": "MAYOR",
-      "x": 10,
-      "y": 5
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 1003,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "actor_mayor_interaction",
+ "test": true,
+ "description": "Friendly World Actor (Mayor) starts dialogue when engaged",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MAYOR_INTRO"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "actor_at",
+   "entity": "MAYOR",
+   "x": 10,
+   "y": 5
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 1003,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

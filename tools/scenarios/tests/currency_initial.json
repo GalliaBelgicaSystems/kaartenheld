@@ -1,31 +1,30 @@
 {
-  "name": "currency_initial",
-  "test": true,
-  "description": "Currency is injectable via initial_state and assertable as a semantic currency (not a variable)",
-  "scenario_id": "NEW_GAME",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "currency",
-      "currency": "GOLD",
-      "expected": 150
-    },
-    {
-      "type": "variable",
-      "variable": "CHAPTER",
-      "expected": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8201,
-    "currency": {
-      "GOLD": 150
-    }
+ "name": "currency_initial",
+ "test": true,
+ "description": "Currency is injectable via initial_state and assertable as a semantic currency (not a variable)",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 150
+  },
+  {
+   "type": "variable",
+   "variable": "CHAPTER",
+   "expected": 1
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8201,
+  "currency": {
+   "GOLD": 150
+  }
+ }
 }

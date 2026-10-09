@@ -1,82 +1,81 @@
 {
-  "name": "tutorial_menu",
-  "test": true,
-  "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 3), and press A to enter the first tutorial slide.",
-  "scenario_id": "TITLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7001,
-    "screen": "TITLE"
+ "name": "tutorial_menu",
+ "test": true,
+ "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 3), and press A to enter the first tutorial slide.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "TUTORIAL"
-    },
-    {
-      "type": "music_track",
-      "expected": "TITLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "TUTORIAL BASICS"
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": "[LR] NAV"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCREEN_CHANGED"
-    }
-  ]
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TUTORIAL"
+  },
+  {
+   "type": "music_track",
+   "expected": "TITLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "TUTORIAL BASICS"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "[LR] NAV"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  }
+ ]
 }

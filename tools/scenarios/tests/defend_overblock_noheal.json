@@ -1,107 +1,115 @@
 {
-  "name": "defend_overblock_noheal",
-  "test": true,
-  "description": "Plain-shield over-block (docs/loot.md 34.4): WITHOUT a ring in the defense combo the negative net is CLAMPED to zero -- SH5 blocks the slime's 2 incoming but the -3 over-block restores NOTHING: DAMAGE_RECEIVED reports 0, no HEALED event, hero stays at 6/10",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 1,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_RECEIVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "DAMAGE_RECEIVED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "HEALED"
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 6
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 6,
-        "max_hp": 10
-      }
-    },
-    "seed": 5002,
-    "start_battle": true
+ "name": "defend_overblock_noheal",
+ "test": true,
+ "description": "Plain-shield over-block (docs/loot.md 34.4): WITHOUT a ring in the defense combo the negative net is CLAMPED to zero -- SH5 blocks the slime's 2 incoming but the -3 over-block restores NOTHING: DAMAGE_RECEIVED reports 0, no HEALED event, hero stays at 6/10",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 6
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 6,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
 }

@@ -1,151 +1,183 @@
 {
-  "name": "combo_5card",
-  "test": true,
-  "description": "Straight flush (SW1..SW5): tier STRAIGHT FLUSH, multiplier 350+25=375, damage 15*375/100=56.  Kills the 5 HP enemy.  Verifies the top realistic hand multiplier.",
-  "actions": [
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 1
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SW",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 3,
-      "card_type": "SW",
-      "value": 4
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 3,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 4,
-      "card_type": "SW",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 4,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 15
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 0,
-      "value": 8
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 2,
-      "value": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_5card",
+ "test": true,
+ "description": "Straight flush (SW1..SW5): tier STRAIGHT FLUSH, multiplier 350+25=375, damage 15*375/100=56.  Kills the 5 HP enemy.  Verifies the top realistic hand multiplier.",
+ "actions": [
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SW",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 15
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 0,
+   "value": 8
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 2,
+   "value": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

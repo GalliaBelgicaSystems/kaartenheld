@@ -1,0 +1,314 @@
+{
+  "id": "forest_grove",
+  "name": "Sunken Grove",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "forest",
+    "music": "MUSIC_FOREST",
+    "map_id": "MAP_FOREST_GROVE"
+  },
+  "neighbors": {
+    "north": "",
+    "south": "forest_deep",
+    "east": "",
+    "west": ""
+  },
+  "default_walkable": "forest.forest_plain_floor_2",
+  "layers": {
+    "terrain": [
+      {
+        "x": 4,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 15,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 16,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 15,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 16,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 4,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 5,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 4,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 5,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 15,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 16,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 15,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 16,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      },
+      {
+        "x": 5,
+        "y": 7,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_left_treetop"
+      },
+      {
+        "x": 6,
+        "y": 7,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_top_right_tree_top"
+      },
+      {
+        "x": 5,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_left_treetrunk"
+      },
+      {
+        "x": 6,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "forest.forest_bottom_right_tree_trunk"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 9,
+      "y": 15,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [],
+  "objects": [
+    {
+      "id": "grove_mimic",
+      "type": "enemy",
+      "position": {
+        "x": 10,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MIMIC",
+        "display_name": "MIMIC",
+        "actor_id": 26,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "T",
+        "hp": 30,
+        "max_hp": 30,
+        "gold_reward": 0,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_MIMIC",
+        "ai": "AI_NONE",
+        "enemy_type": "mimic",
+        "solo": true
+      },
+      "overworld_sprite": "actors.actors_chest_closed",
+      "animation_frames": [
+        "actors.actors_chest_closed",
+        "actors.actors_chest_mimic"
+      ]
+    },
+    {
+      "id": "grove_spider",
+      "type": "enemy",
+      "position": {
+        "x": 5,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SPIDER",
+        "display_name": "SPIDER",
+        "actor_id": 27,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 15,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SPIDER",
+        "ai": "AI_PATROL_VERT",
+        "enemy_type": "spider"
+      }
+    },
+    {
+      "id": "grove_bat",
+      "type": "enemy",
+      "position": {
+        "x": 14,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 49,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      },
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ]
+    },
+    {
+      "id": "grove_slime",
+      "type": "enemy",
+      "position": {
+        "x": 6,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 50,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 20,
+        "max_hp": 20,
+        "gold_reward": 10,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      },
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ]
+    }
+  ],
+  "regions": [
+    {
+      "id": "sunken_grove",
+      "bounds": {
+        "x": 2,
+        "y": 2,
+        "width": 16,
+        "height": 14
+      },
+      "description": "A treasure chest sits at the grove's heart...",
+      "gameplay": {
+        "purpose": "miniboss",
+        "difficulty": 3
+      }
+    }
+  ]
+}

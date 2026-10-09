@@ -1,39 +1,38 @@
 {
-  "name": "party_initial",
-  "test": true,
-  "description": "Declarative initial_state injects party member stats into the canonical GameState",
-  "scenario_id": "NEW_GAME",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "party_hp",
-      "member": 0,
-      "expected": 24
-    },
-    {
-      "type": "party_level",
-      "member": 0,
-      "expected": 3
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7004,
-    "party": {
-      "HERO": {
-        "hp": 24,
-        "max_hp": 30
-      }
-    },
-    "progression": {
-      "HERO_1": {
-        "level": 3
-      }
-    }
+ "name": "party_initial",
+ "test": true,
+ "description": "Declarative initial_state injects party member stats into the canonical GameState",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "party_hp",
+   "member": 0,
+   "expected": 24
+  },
+  {
+   "type": "party_level",
+   "member": 0,
+   "expected": 3
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7004,
+  "party": {
+   "HERO": {
+    "hp": 24,
+    "max_hp": 30
+   }
+  },
+  "progression": {
+   "HERO_1": {
+    "level": 3
+   }
+  }
+ }
 }

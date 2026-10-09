@@ -34,15 +34,25 @@ typedef enum {
     BATTLE_NONE = 0,
     BATTLE_SLIME = 1,
     BATTLE_BAT = 2,
-    BATTLE_SLIME_TRIO = 3
+    BATTLE_SLIME_TRIO = 3,
+    BATTLE_MIMIC = 4,
+    BATTLE_KOBOLD = 5,
+    BATTLE_SPIDER = 6
 } BattleId;
 
 /* Overworld autonomous patrol/AI behavior type. */
 typedef enum {
     AI_NONE          = 0,
     AI_PATROL_CIRCLE = 1,   /* Clockwise 2x2 circle around spawn (Bats) */
-    AI_PATROL_CROSS  = 2    /* + cross pattern around spawn (Slimes) */
+    AI_PATROL_CROSS  = 2,   /* + cross pattern around spawn (Slimes) */
+    AI_CHASE         = 3,   /* Step toward the player every AI tick (Kobolds) */
+    AI_PATROL_VERT   = 4    /* Bounce vertically up/down 3 tiles from spawn
+                             * (castle Spiders); direction held in ai_step
+                             * bit 0, flips at the bound or a blocked path */
 } ActorAiType;
+
+/* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */
+#define AI_PATROL_VERT_TILES 3
 
 /* Static, scene-owned actor configuration.  No mutable gameplay state.
  * actor_id is the stable persistent instance id (ActorId) used to track
@@ -67,6 +77,12 @@ typedef struct {
     CurrencyId reward_currency;  /* currency granted on defeat (0 = none) */
     VariableId spawn_variable;   /* spawn only when this variable == spawn_value (0 = always) */
     int16_t spawn_value;
+    ActorSpriteKind sprite_kind; /* how the overworld renders this actor */
+    uint8_t ow_type;             /* enemy-type OAM index for SPRITE_KIND_ENEMY
+                                    (into g_enemy_types; 0xFF = ASCII fallback) */
+    uint8_t solo;                /* nonzero: this hostile engages alone (no
+                                    trio clones), even with an enemy deck.
+                                    Appended last: keep initializers in sync. */
 } WorldActorDefinition;
 
 /* A per-map block of actor definitions.  The engine owns no scene content:
@@ -96,10 +112,45 @@ typedef enum {
     ENGAGE_SAVE = 4
 } ActorEngageResult;
 
+/* Registered static actor table (WRAM copy, banked_copy pattern).  Read
+ * directly by bank-2 snapshot code; gameplay lookups stay in actor.c.
+ * Non-hostile sprite-kind statics (e.g. chests) also render as OAM
+ * sprites in the slots after the hostile ones (see ui.c).  Sized for the
+ * busiest hub scene.
+ *
+ * The table rows are a COMPACT StaticActorDefinition: the WRAM tail sits
+ * inside the boot stack's blast zone (crt0 SP=0xE000 descends through
+ * the s__BSS tail, AGENTS.md 52.14), so ten static rows must cost LESS
+ * than the old seven full WorldActorDefinition rows (150 vs 175 B) —
+ * statics never battle, never patrol, never drop loot, and only the
+ * final boss uses conditional spawns, so the hostile-only payload is
+ * dropped from the static copy.  Field names mirror
+ * WorldActorDefinition so consumers read the same accessors. */
+typedef struct StaticActorDefinition {
+    ActorId actor_id;
+    EntityId id;
+    uint8_t x;
+    uint8_t y;
+    uint8_t facing;
+    uint8_t flags;
+    uint8_t visual;              /* ASCII prototype character */
+    const char *display_name;    /* semantic name (battle label, ...) */
+    InteractionId interaction;
+    uint8_t shop_id;             /* which shop this actor runs (0 = none) */
+    DialogueId dialogue_id;
+    ActorSpriteKind sprite_kind; /* how the overworld renders this actor */
+    uint8_t ow_type;             /* enemy-type OAM index for SPRITE_KIND_ENEMY
+                                    (into g_enemy_types; 0xFF = ASCII fallback) */
+} StaticActorDefinition;
+
+/* Registered static actor table: 10 compact rows (see the comment above
+ * the typedef).  The cap lives here so validate.py can parse it. */
+#define MAX_STATIC_ACTORS 10
+
 /* Find the actor definition at a world position on the current map.
  * Friendly actors use their static position; hostile actors resolve
  * against the spawned runtime actor slots. */
-const WorldActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_t y);
+const StaticActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_t y);
 
 /* Return the runtime slot index of the active hostile actor at (x, y),
  * or NO_ACTOR_INDEX if none. */
@@ -107,16 +158,14 @@ uint8_t actor_find_hostile_slot(const World *world, uint8_t x, uint8_t y);
 
 /* Single generic engagement entry point: hostile actors request combat,
  * everything else runs its interaction (dialogue for v1). */
-ActorEngageResult actor_engage(const WorldActorDefinition *actor, DialogueState *dialogue);
+ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState *dialogue);
 
 /* Spawn all hostile actor definitions for the given map into
  * World.actors runtime slots.  Actors whose ActorId is marked DEFEATED in
  * state are not spawned (persistent defeat). */
 void actor_load_scene(World *world, MapId map_id, const GameState *state);
 
-/* Registered static actor table (WRAM copy, banked_copy pattern).  Read
- * directly by bank-2 snapshot code; gameplay lookups stay in actor.c. */
-extern WorldActorDefinition g_static_actors[7];
+extern StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 extern uint8_t g_static_actor_count;
 
 

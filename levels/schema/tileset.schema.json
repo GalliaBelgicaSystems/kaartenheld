@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tileset",
+  "description": "Definition of a tileset and its semantic tiles for the Game Boy RPG level editor.",
+  "type": "object",
+  "required": ["id", "tiles"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the tileset (e.g. forest, exterior, interior)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name"
+    },
+    "gb_tileset_kind": {
+      "type": "string",
+      "description": "C enum constant for WorldTilesetKind (e.g. WORLD_TILESET_FOREST, WORLD_TILESET_EXTERIOR, WORLD_TILESET_INTERIOR)"
+    },
+    "tiles": {
+      "type": "array",
+      "description": "List of tile definitions available in this tileset",
+      "items": {
+        "type": "object",
+        "required": ["id", "gb_constant", "walkable"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Semantic tile ID within the tileset (e.g. floor, tree, building)"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human readable tile name"
+          },
+          "gb_constant": {
+            "type": "string",
+            "description": "C enum constant for TileType (e.g. TILE_FLOOR, TILE_WALL, TILE_BUILDING, TILE_STUMP_TL)"
+          },
+          "gb_tile_index": {
+            "type": "integer",
+            "description": "Optional hardware tile index"
+          },
+          "walkable": {
+            "type": "boolean",
+            "description": "Whether entities can walk over this tile"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex color code for editor rendering"
+          },
+          "ascii": {
+            "type": "string",
+            "description": "ASCII representation character (legacy display fallback; the ROM glyph comes from 'glyph' below)"
+          },
+          "glyph": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1,
+            "description": "Mandatory semantic glyph for this tile (e.g. T tree canopy, t trunk, s stump, O chest, R rock, ',' tufted ground). Drives the ROM text layer, the editor, and palette selection. See docs/glyphs.md for the registry. When absent, tools derive '.', '#', '>', '*' from walkable/category/exit."
+          }
+        }
+      }
+    }
+  }
+}

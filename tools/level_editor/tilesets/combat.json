@@ -1,0 +1,767 @@
+{
+  "id": "combat",
+  "label": "Combat Icons",
+  "gb_tileset_kind": "WORLD_TILESET_FOREST",
+  "tiles": [
+    {
+      "id": "combat_sword_icon",
+      "label": "sword icon",
+      "gb_constant": "TILE_COMBAT_SWORD_ICON",
+      "walkable": false,
+      "color": "#c2a274",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_sword_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bow_icon",
+      "label": "bow icon",
+      "gb_constant": "TILE_COMBAT_BOW_ICON",
+      "walkable": false,
+      "color": "#c1a072",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bow_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_shield_icon",
+      "label": "shield icon",
+      "gb_constant": "TILE_COMBAT_SHIELD_ICON",
+      "walkable": false,
+      "color": "#ad8e61",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_shield_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_left_card_corner",
+      "label": "top left card corner",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_CARD_CORNER",
+      "walkable": false,
+      "color": "#d5b27f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_card_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_middle_card",
+      "label": "top middle card",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_CARD",
+      "walkable": false,
+      "color": "#d9b582",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_card.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_right_card_corner",
+      "label": "top right card corner",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_CARD_CORNER",
+      "walkable": false,
+      "color": "#d5b27f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_card_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_left_card_side",
+      "label": "left card side",
+      "gb_constant": "TILE_COMBAT_LEFT_CARD_SIDE",
+      "walkable": false,
+      "color": "#d9b582",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_left_card_side.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_right_card_side",
+      "label": "right card side",
+      "gb_constant": "TILE_COMBAT_RIGHT_CARD_SIDE",
+      "walkable": false,
+      "color": "#d9b582",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_right_card_side.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_left_card_corner",
+      "label": "bottom left card corner",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_CARD_CORNER",
+      "walkable": false,
+      "color": "#d5b27f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_card_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_middle_card",
+      "label": "bottom middle card",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_CARD",
+      "walkable": false,
+      "color": "#d9b582",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_card.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_right_card_corner",
+      "label": "bottom right card corner",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_CARD_CORNER",
+      "walkable": false,
+      "color": "#d5b27f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_card_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_one_icon",
+      "label": "one icon",
+      "gb_constant": "TILE_COMBAT_ONE_ICON",
+      "walkable": false,
+      "color": "#c2a274",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_one_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_two_icon",
+      "label": "two icon",
+      "gb_constant": "TILE_COMBAT_TWO_ICON",
+      "walkable": false,
+      "color": "#b59568",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_two_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_three_icon",
+      "label": "three icon",
+      "gb_constant": "TILE_COMBAT_THREE_ICON",
+      "walkable": false,
+      "color": "#b8996b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_three_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_four_icon",
+      "label": "four icon",
+      "gb_constant": "TILE_COMBAT_FOUR_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_four_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_arrow_pointing_up_dark",
+      "label": "arrow pointing up dark",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_DARK",
+      "walkable": false,
+      "color": "#c9beae",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_dark.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_arrow_pointing_up_light",
+      "label": "arrow pointing up light",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_LIGHT",
+      "walkable": false,
+      "color": "#e0d4c3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_light.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_hp_icon",
+      "label": "hp icon",
+      "gb_constant": "TILE_COMBAT_HP_ICON",
+      "walkable": false,
+      "color": "#e5b49e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_hp_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_ap_icon",
+      "label": "ap icon",
+      "gb_constant": "TILE_COMBAT_AP_ICON",
+      "walkable": false,
+      "color": "#c3b6a3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_ap_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_deck_icon",
+      "label": "deck icon",
+      "gb_constant": "TILE_COMBAT_DECK_ICON",
+      "walkable": false,
+      "color": "#baac97",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_deck_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_hero_icon",
+      "label": "hero icon",
+      "gb_constant": "TILE_COMBAT_HERO_ICON",
+      "walkable": false,
+      "color": "#c4b8a7",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_hero_icon.png",
+      "category": "hero"
+    },
+    {
+      "id": "combat_center_card",
+      "label": "center card",
+      "gb_constant": "TILE_COMBAT_CENTER_CARD",
+      "walkable": false,
+      "color": "#e3c59b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_center_card.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_left_slime",
+      "label": "top left slime",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_SLIME",
+      "walkable": false,
+      "color": "#b9d9a5",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_slime",
+      "label": "top middle slime",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SLIME",
+      "walkable": false,
+      "color": "#99ce77",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_slime",
+      "label": "top right slime",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SLIME",
+      "walkable": false,
+      "color": "#bad8a7",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_left_slime",
+      "label": "bottom left slime",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_SLIME",
+      "walkable": false,
+      "color": "#87bc65",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_slime",
+      "label": "bottom middle slime",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_SLIME",
+      "walkable": false,
+      "color": "#558238",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_slime",
+      "label": "bottom right slime",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_SLIME",
+      "walkable": false,
+      "color": "#7bb159",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_slime.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_left_bat",
+      "label": "top left bat",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_BAT",
+      "walkable": false,
+      "color": "#918d93",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_middle_bat",
+      "label": "top middle bat",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_BAT",
+      "walkable": false,
+      "color": "#888483",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_top_right_bat",
+      "label": "top right bat",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_BAT",
+      "walkable": false,
+      "color": "#827e84",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_left_bat",
+      "label": "bottom left bat",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_BAT",
+      "walkable": false,
+      "color": "#ececed",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_middle_bat",
+      "label": "bottom middle bat",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_BAT",
+      "walkable": false,
+      "color": "#787679",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_right_bat",
+      "label": "bottom right bat",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_BAT",
+      "walkable": false,
+      "color": "#dfdee0",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_bat.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_bottom_left_boss",
+      "label": "bottom left boss",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_BOSS",
+      "walkable": false,
+      "color": "#464646",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_boss",
+      "label": "bottom middle boss",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_BOSS",
+      "walkable": false,
+      "color": "#171615",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_boss",
+      "label": "bottom right boss",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_BOSS",
+      "walkable": false,
+      "color": "#4d4c4b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_left_middle_boss",
+      "label": "left middle boss",
+      "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS",
+      "walkable": false,
+      "color": "#6c6767",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_left_middle_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_middle_center_boss",
+      "label": "middle center boss",
+      "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS",
+      "walkable": false,
+      "color": "#100707",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_middle_center_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_middle_right_boss",
+      "label": "middle right boss",
+      "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS",
+      "walkable": false,
+      "color": "#9b958a",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_middle_right_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_left_boss",
+      "label": "top left boss",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_BOSS",
+      "walkable": false,
+      "color": "#afafaf",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_boss",
+      "label": "top middle boss",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_BOSS",
+      "walkable": false,
+      "color": "#8b8b8b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_boss",
+      "label": "top right boss",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_BOSS",
+      "walkable": false,
+      "color": "#e5e4e2",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_boss.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_left_kobold",
+      "label": "top left kobold",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_KOBOLD",
+      "walkable": false,
+      "color": "#ab9090",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_kobold",
+      "label": "top middle kobold",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_KOBOLD",
+      "walkable": false,
+      "color": "#a28080",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_kobold",
+      "label": "top right kobold",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_KOBOLD",
+      "walkable": false,
+      "color": "#beadad",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_left_kobold",
+      "label": "bottom left kobold",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_KOBOLD",
+      "walkable": false,
+      "color": "#b8a3a3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_kobold",
+      "label": "bottom middle kobold",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_KOBOLD",
+      "walkable": false,
+      "color": "#916c6c",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_kobold",
+      "label": "bottom right kobold",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_KOBOLD",
+      "walkable": false,
+      "color": "#b29c9c",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_kobold.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_left_spider",
+      "label": "top left spider",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_SPIDER",
+      "walkable": false,
+      "color": "#cdcdcd",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_spider",
+      "label": "top middle spider",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SPIDER",
+      "walkable": false,
+      "color": "#a19d9c",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_spider",
+      "label": "top right spider",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SPIDER",
+      "walkable": false,
+      "color": "#e3e3e3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_left_spider",
+      "label": "bottom left spider",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_SPIDER",
+      "walkable": false,
+      "color": "#afadab",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_spider",
+      "label": "bottom middle spider",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_SPIDER",
+      "walkable": false,
+      "color": "#9f9f9f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_spider",
+      "label": "bottom right spider",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_SPIDER",
+      "walkable": false,
+      "color": "#bbbbbb",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_spider.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_left_mimic",
+      "label": "top left mimic",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_MIMIC",
+      "walkable": false,
+      "color": "#ccc4b7",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_mimic",
+      "label": "top middle mimic",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_MIMIC",
+      "walkable": false,
+      "color": "#968568",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_mimic",
+      "label": "top right mimic",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_MIMIC",
+      "walkable": false,
+      "color": "#a6987e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_black_emptyness_1",
+      "label": "empty",
+      "gb_constant": "TILE_COMBAT_BLACK_EMPTYNESS",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_black_emptyness_1.png",
+      "category": "object"
+    },
+    {
+      "id": "combat_bottom_left_mimic",
+      "label": "bottom left mimic",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_MIMIC",
+      "walkable": false,
+      "color": "#c2b9a8",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_mimic",
+      "label": "bottom middle mimic",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_MIMIC",
+      "walkable": false,
+      "color": "#76674e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_mimic",
+      "label": "bottom right mimic",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_MIMIC",
+      "walkable": false,
+      "color": "#9c907c",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_mimic.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_left_middle_boss_2",
+      "label": "left middle boss 2",
+      "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS_2",
+      "walkable": false,
+      "color": "#716b68",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_left_middle_boss_2.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_middle_center_boss_2",
+      "label": "middle center boss 2",
+      "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS_2",
+      "walkable": false,
+      "color": "#180e09",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_middle_center_boss_2.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_middle_right_boss_2",
+      "label": "middle right boss 2",
+      "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS_2",
+      "walkable": false,
+      "color": "#9b958a",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_middle_right_boss_2.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_dagger_icon",
+      "label": "dagger icon",
+      "gb_constant": "TILE_COMBAT_DAGGER_ICON",
+      "walkable": false,
+      "color": "#c9a87a",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_dagger_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_ring_icon",
+      "label": "ring icon",
+      "gb_constant": "TILE_COMBAT_RING_ICON",
+      "walkable": false,
+      "color": "#b5986b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_ring_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_0_arrows_left",
+      "label": "0_arrows_left",
+      "gb_constant": "TILE_COMBAT_0_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#cca977",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_0_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_4_arrows_left",
+      "label": "4_arrows_left",
+      "gb_constant": "TILE_COMBAT_4_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c09e6d",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_4_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_3_arrows_left",
+      "label": "3_arrows_left",
+      "gb_constant": "TILE_COMBAT_3_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c09e6d",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_3_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_2_arrows_left",
+      "label": "2_arrows_left",
+      "gb_constant": "TILE_COMBAT_2_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c29f6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_2_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_1_arrow_left",
+      "label": "1_arrow_left",
+      "gb_constant": "TILE_COMBAT_1_ARROW_LEFT",
+      "walkable": false,
+      "color": "#c4a16f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_1_arrow_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_zero_icon",
+      "label": "zero icon",
+      "gb_constant": "TILE_COMBAT_ZERO_ICON",
+      "walkable": false,
+      "color": "#b09164",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_zero_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_nine_icon",
+      "label": "nine icon",
+      "gb_constant": "TILE_COMBAT_NINE_ICON",
+      "walkable": false,
+      "color": "#b29265",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_nine_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_black_emptyness_2",
+      "label": "empty",
+      "gb_constant": "TILE_COMBAT_BLACK_EMPTYNESS",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_black_emptyness_2.png",
+      "category": "object"
+    },
+    {
+      "id": "combat_black_emptyness_3",
+      "label": "empty",
+      "gb_constant": "TILE_COMBAT_BLACK_EMPTYNESS",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_black_emptyness_3.png",
+      "category": "object"
+    }
+  ]
+}

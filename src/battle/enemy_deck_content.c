@@ -34,6 +34,28 @@ static const Card s_slime_trio_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
     { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
 };
+static const Card s_kobold_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+};
+static const Card s_mimic_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 4, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
+    { BATTLE_CARD_TYPE_HEAL,  3, 0xFF },
+};
+static const Card s_spider_deck[] = {
+    { BATTLE_CARD_TYPE_BOW,   2, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+    /* Webbing strike: poison rider at ~70/255; landing it also greys the
+     * player's hand (Phase D), the spider's signature threat. */
+    { BATTLE_CARD_TYPE_BOW,   3, 0xFF, 0, 0, STATUS_POISON, 70 },
+};
 
 void enemy_deck_setup_banked(void)
 {
@@ -48,6 +70,11 @@ void enemy_deck_setup_banked(void)
     case 1:  src = s_slime_deck;      count = 4; break;
     case 2:  src = s_bat_deck;        count = 5; break;
     case 3:  src = s_slime_trio_deck; count = 5; break;
+    /* BATTLE_MIMIC = 4, BATTLE_KOBOLD = 5, BATTLE_SPIDER = 6 (numeric
+     * cases match the BattleId enum; see actor.h). */
+    case 4:  src = s_mimic_deck;      count = 5; break;
+    case 5:  src = s_kobold_deck;     count = 4; break;
+    case 6:  src = s_spider_deck;     count = 5; break;
     }
 
     if (!src) return;

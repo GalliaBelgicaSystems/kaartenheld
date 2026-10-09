@@ -72,6 +72,13 @@ void screen_change(Game *g, ScreenId screen)
     g->prev_screen = old_screen;
     g->screen = screen;
 
+    /* Screens that own VRAM block-1 art (battle enemy art shares slots
+     * 128+ with world tiles) must not leak it into the next overworld
+     * redraw: force a tileset reload there. */
+    if (screen == SCREEN_OVERWORLD) {
+        ui_invalidate_tileset();
+    }
+
     telemetry_emit(EVENT_SCREEN_CHANGED, (uint8_t)old_screen, (uint8_t)screen, 0, 0);
     game_render_reset(g);
 }
@@ -90,6 +97,7 @@ void screen_update(Game *g)
     case SCREEN_ENDING: ending_screen_update(g); break;
     case SCREEN_SAVE_LOAD: save_load_screen_update(g); break;
     case SCREEN_TITLE: title_screen_update(g); break;
+    case SCREEN_SPLASH: splash_screen_update(g); break;
     case SCREEN_INTRO: intro_screen_update(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_update(g); break;
     default: break;
@@ -110,6 +118,7 @@ void screen_render(Game *g)
     case SCREEN_ENDING: ending_screen_render(g); break;
     case SCREEN_SAVE_LOAD: save_load_screen_render(g); break;
     case SCREEN_TITLE: title_screen_render(g); break;
+    case SCREEN_SPLASH: splash_screen_render(g); break;
     case SCREEN_INTRO: intro_screen_render(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_render(g); break;
     default: break;

@@ -1,31 +1,30 @@
 {
-  "name": "variable_initial",
-  "test": true,
-  "description": "Declarative initial_state injects variables into the canonical GameState without clobbering defaults",
-  "scenario_id": "NEW_GAME",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "variable",
-      "expected": 3,
-      "variable": "MONSTERS_DEFEATED"
-    },
-    {
-      "type": "variable",
-      "variable": "CHAPTER",
-      "expected": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 7002,
-    "variables": {
-      "MONSTERS_DEFEATED": 3
-    }
+ "name": "variable_initial",
+ "test": true,
+ "description": "Declarative initial_state injects variables into the canonical GameState without clobbering defaults",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "variable",
+   "expected": 3,
+   "variable": "MONSTERS_DEFEATED"
+  },
+  {
+   "type": "variable",
+   "variable": "CHAPTER",
+   "expected": 1
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7002,
+  "variables": {
+   "MONSTERS_DEFEATED": 3
+  }
+ }
 }

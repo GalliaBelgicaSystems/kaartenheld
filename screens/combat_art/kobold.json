@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/combat_art.schema.json",
+  "id": "kobold",
+  "label": "Kobold",
+  "order": 4,
+  "width": 3,
+  "height": 2,
+  "palette": "fightgoblin",
+  "oam": true,
+  "obj_palette": "fightgoblin",
+  "frame0": [
+    "combat_top_left_kobold", "combat_top_middle_kobold", "combat_top_right_kobold",
+    "combat_bottom_left_kobold", "combat_bottom_middle_kobold", "combat_bottom_right_kobold"
+  ]
+}

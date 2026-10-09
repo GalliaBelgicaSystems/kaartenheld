@@ -1,51 +1,50 @@
 {
-  "name": "merchant_quest_start",
-  "test": true,
-  "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen amulet: quest dialogue, quest still NOT delivered",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MERCHANT"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "DIALOGUE"
-    },
-    {
-      "type": "dialogue_id",
-      "expected": "MERCHANT_INTRO"
-    },
-    {
-      "type": "variable",
-      "variable": "MERCHANT_QUEST",
-      "expected": 0
-    },
-    {
-      "type": "inventory",
-      "item": "AMULET",
-      "expected": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCRIPT_TRIGGERED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 10,
-      "y": 3,
-      "facing": "RIGHT"
-    },
-    "seed": 8501,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "variables": {
-      "MERCHANT_QUEST": 0
-    }
+ "name": "merchant_quest_start",
+ "test": true,
+ "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen amulet: quest dialogue, quest still NOT delivered",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MERCHANT_INTRO"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 0
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8501,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "MERCHANT_QUEST": 0
+  }
+ }
 }

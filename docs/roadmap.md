@@ -131,6 +131,14 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
 
 ### LATER
 
+- `ACTOR_FLAG_BLOCKING` (src/world/actor.h) is emitted by the compiler and
+  editor but never read by the ROM: `world_try_begin_move` blocks on any
+  `g_static_actors` entry (`actor_find_at`) regardless of the flag, so a
+  non-hostile compiled actor blocks even without `BLOCKING`.  The
+  walkthrough planner mirrors that actual behavior (every non-hostile
+  compiled actor is avoided) rather than the flag.  Decide later: honor
+  `BLOCKING` in the engine (a gameplay change) or drop it from the flag
+  vocabulary.
 - Dialogue boxes: raise `MAX_DIALOGUE_LINES` beyond 8 for richer NPC /
   signpost text — constraints and deferred checklist in
   `docs/dialogue-boxes.md`.
@@ -1285,6 +1293,54 @@ Missing:
 * status effects;
 * richer rewards (XP/leveling from battle, loot);
 * flee chance / consequences.
+* **data-driven battle HUD (Option B) — DONE:** `screens/battle/*.json`
+  compiles to `BattleScreenDef`, and the ROM now reads it: `battle_start`
+  dispatches a bank-4 body (`battle_hud_load_banked`, co-located with
+  `g_battle_screens`) that stages positions + ticks + HUD rows into the
+  WRAM `g_battle_hud` cache (`BattleHudCache`, `battle_data.h`), and the
+  bank-3 renderer (`ui_battle_content.c`) draws every row/column from the
+  cache.  Boss fights (`BATTLE_NONE`) select the `boss` screen, everything
+  else `default`; `ambush`/`duo` remain compiled-but-unselected future
+  variants.  All 4 battle JSONs are canonicalized to the ROM geometry and
+  `make screens-check` pins generated C to source.  The editor preview
+  still mirrors the same geometry with `hud_layout` reserved.  Validated:
+  181/181 harness, `make test`, `make verify-oam`, `make memmap` OK
+  (`make lint` has one pre-existing `rng_next` warning in untouched
+  `battle.c` status code).
+* **combat-art meta-tiles — DONE (ROM + compiler + editor):** enemies draw
+  combat art from data, not hardcoded sets.  `screens/combat_art/*.json`
+  declares named WxH sets (tiles, dims, palette, order;
+  `combat_art.schema.json`); `battle_compile.py` emits blob offsets +
+  dims into `battle_types.c` and the gfx `--tile-coords` order, replacing
+  the hardcoded `ART_SETS`/Makefile coord literal (`battle_enemy_art.h`
+  regenerates byte-identical).  The ROM loader stages per-slot geometry +
+  cumulative VRAM bases (128-tile budget cap, text fallback past it) and
+  the bank-3 stamper draws WxH from the cache with mult-free arithmetic
+  (8-bit `*` would pull mult routines into fixed `_CODE`, §52.18).  Art
+  resolves per battle through the game layer
+  (`game_battle_enemy_type_id`, bank 4, same-bank call: fixed bank pays
+  nothing).  The Combat Art Studio (editor toolbar) composes meta-tiles up
+  to 6x4 from sheet tiles with frame-0/1, assigns combat art per enemy
+  type, and the battle preview renders real meta-tiles per slot.  New sets
+  append at the end (blob offsets stay stable).  Validated: 181/181
+  harness, `make test`, `make verify-oam`, `make memmap` OK.
+* **enemy overworld sprites — DONE (shared, type-owned):** the Enemies
+  view (level dropdown) defines one transparent-background overworld
+  sprite per enemy type (`screens/enemy_types`
+  `overworld.cells/palette`, with optional `width`/`height` for multi-tile
+  grids like the 2x2 boss), applied everywhere the type is placed.
+  Pixels live in the shared `assets/enemy_sprites.png` (composed from
+  `public/tiles/enemies/`); the gfx rule + compiler `--ow-coords` build the
+  OAM blob (base 100, 28-tile budget, enemies-only: the hero uses its own
+  `HERO_DESOLATE` sprite) and per-type base/frames/w/h/palette in
+  `battle_types.c`.  Spawn resolves the type by the `ENTITY_ID_X`
+  convention (explicit `enemy_type` wins) into a new actor `ow_type`
+  field; the OAM writer reads the bank-4 row directly (`SPRITE_KIND_ENEMY`),
+  writing a w*h grid of OAM entries for multi-tile sprites and falling back
+  to ASCII.  Per-instance `overworld_sprite` names are ignored for typed
+  enemies (Inspector says so).  Validated: 181/181 harness, `make test`,
+  `make verify-oam` (boss asserted as a 2x2 OAM grid), `make memmap`,
+  `screens-check` + `levels-check` OK.
 
 ### 9.1 Deck management UI — DONE
 
@@ -1306,3 +1362,136 @@ feature must plan banked placement (§52.11.1) up front.
 Finally introduce the Baten Kaitos-inspired card mechanics on top of the stable RPG/battle foundation rather than allowing the card system to dictate the architecture.
 
 **Guiding principle for the whole roadmap:** build only the abstractions that the current RPG actually proves it needs, while making every important state deterministic, observable, and testable by an LLM.
+
+## 11. Content expansion (14-level demo)
+
+The demo grew from 6 to 14 connected rooms on the current branch: the
+forest branch (`forest_glade` → `forest_deep` → `forest_grove`,
+`forest_shrine`), a desolate spur (`south_ridge`), and the castle chain
+(`castle_entry` → `castle_hall` → `castle` → `throne_room`, with the
+Lord of Slimes relocated to the throne room).  Reused enemy types with
+per-placement HP/gold variants; advice is carried by signpost `?` NPCs;
+no new entities/quests/assets.
+
+Memory note (two waves):
+1. The real scene table lives in bank 5 and the actor table in bank 2,
+   both of which were nearly full.  To fit the new rooms, the release build
+   moves the title-logo tiles + loader to bank 2 (spare after wave 2),
+   while the harness build keeps them in bank 5 because moving them flips a
+   layout-sensitive SDCC dialogue miscompile (AGENTS.md §52.19 — verified
+   via `make verify-oam`).  The fixed title wrapper selects the matching
+   bank at compile time.
+2. Enemy wave: bank 2 (actor table) had only ~57 B left, so the **actor
+   tables + loader moved to bank 4** (`GAME_ACTOR_BANK`, `--actors-bank 4`,
+   `actor_load_banked.c #pragma bank 4`) — the debug build already linked
+   the fixture actors in bank 4, so the harness is untouched.  Bank 2 then
+   held ~3 KB spare, enough for the extra enemies while bank 4 keeps ~1 KB.
+   The per-scene actor-table count is now **generated**
+   (`g_actor_table_count`, read by the bank-4 loader) -- the previous
+   hardcoded `GAME_ACTOR_TABLE_COUNT 6` silently dropped maps 8+ (the new
+   rooms spawned no enemies).  `walk_sweep` now asserts each combat level
+   spawns ≥1 hostile, so that regression cannot recur.
+   Current release headroom: bank 2 ≈2.1 KB, bank 4 ≈1.1 KB, bank 5 ≈138 B.
+
+## 12. new-levels merge (tunnels branch, Sep 2026)
+
+`origin/new-levels` (one commit on a stale base: `castle_entry` redesign,
+new `village_area` 17 + `desolate_field` 18) was cherry-picked onto
+`tunnels` (linear history). Conflict in `castle_entry.json` resolved:
+tunnels `neighbors` + enemies kept, new terrain/name/spawn taken, invalid
+`castle.forest_plain_floor_1` (287 cells) fixed to `castle.castle_plain_floor`,
+south gate opened at x=9,10, desolate `actor_id` 60→64 collision minted.
+
+Bank-5 findings (release link is ground truth, `build/kaartenheld.map`
+`l__CODE_5`): base headroom was 144 B; the two new levels add ~1576 B
+(149+139 terrain blocks — dense single-cell detail vs 20–66 for existing
+levels). No lossless fit exists: all other bank-5 residents are immovable
+(asset/atlas/tiles/oam/scene-load, smallest mover exceeds every headroom)
+and a merge post-pass saves 0 blocks (greedy output already maximal).
+
+Landed:
+1. Compiler elides interior default-ground blocks (`optimize_terrain`
+   generalizes the dead `TILE_FLOOR` fossil to each level's own
+   `level_default_const`, with a perimeter guard — ROM pre-fills interior
+   default, perimeter pre-fills WALL, open rows appended after are
+   untouched). -131 blocks / -655 B permanently, marginally faster loads.
+2. `compile.py` emits NULL+0 actor tables for object-less scenes (SDCC
+   rejects `{}`) — `village_area` exposed it.
+3. `castle_entry` redesign, both new levels, both tunnels (below).
+
+Overflow terrain banks (both levels landed in-ROM): `village_area`
+terrain → bank 7, `desolate_field` terrain → bank 6
+(`OVERFLOW_TERRAIN_BANK`, balanced ~340 B headroom each); rows + exits
+stay in bank 5. `SceneDefinition.terrain_bank` (appended last) selects;
+`scene_load_tiles()` dispatches a per-bank stamp body that reads its
+own-bank arrays directly. Release banks: 4:289, 5:295, 6:97, 7:75.
+Two dead ends documented so the next person doesn't repeat them:
+* WRAM staging in the banked body: a 5 B window works, but switching
+  banks from switchable-ROM code self-unmaps the instruction stream
+  (the copy trampoline runs from WRAM for exactly this reason), and
+  struct assignment lowers to `call ___memcpy` (unmapped while
+  switched) — CPU runs away with the LCD off, which presents as PyBoy
+  `tick()` blocking forever (99.7% CPU, zero log output). Verify
+  switched bodies with `lcc -S` (zero `call`s). See docs/level-editor.md
+  Phase 22.
+* An 800 B WRAM staging static flipped hostile spawning under the
+  harness with zero execution difference (BSS-layout sensitivity,
+  §52.19 family); small statics did not. Keep new WRAM statics tiny
+  and let the sentinels judge.
+
+Tunnels added (user choice: point pairs, auto `tunnel_a_b` naming):
+`tunnel_town_village_area` (town (18,8) EAST `>` ↔ village (1,8) WEST
+`<`) and `tunnel_desolate_field_south_field` (south_field (5,14) SOUTH
+`>` ↔ desolate (10,14) NORTH `<`). Both pass the compile-time tunnel
+contract; gates sit on existing floor (zero terrain bytes; invisible-
+portal warnings accepted, precedented by fixtures).
+
+Remaining follow-ups: bank 6/7 margins (~100/75 B) fit ~1 small level's
+terrain before another overflow entry (or ROM growth past 8 banks) is
+needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
+(`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
+SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
+
+Castle art drop (same branch, Sep 2026): 9 new tiles (throne 2x2, floor
+debris, rugs, chandeliers) merged via `merge_tileset.py`, then hand-fixed
+— lessons for the next drop: (1) the merge never writes vram `(x,y)` and
+assigns defs by 9-wide sheet position, but castle slots pack 8-wide, so
+everything from slot 8 was shifted garbage (throne_TR at slot 8 pushed
+seven defs down one); always re-derive slots from the gfx `--tile-coords`
+list. (2) Evicted defs keep stale `gb_constant`s → duplicate constants
+(7 collisions here); delete or renumber them. (3) A CSV quoting artifact
+minted junk def `castle_plain_floor_3` (cell art == base floor). (4) New
+defs arrive untagged/wrong-tagged — tag from measured pixels (thrones
+browns→castle2, rugs/chandeliers red-gold→castle3, debris gray→castle4),
+never from the misaligned mismatch report. (5) The artist painted over
+`plain_floor` (296 refs) and `chest` (3 refs): migrated to debris/table
+(blocking preserved) after verifying no sprite-field refs. CI
+`ramp-check --strict` back to green with zero repaints and zero new
+allowlist entries. `make parity` fails identically with and without this
+work (pre-existing, non-gating, not CI-run).
+
+Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
+updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)
+change full-frame (new interior — expected). Five others
+(`01-field-scrolled`, `11-battle-aftermath`, `sweep-forest_deep`,
+`sweep-forest_shrine`, `sweep-grassy_forest`, `sweep-throne_room`) differ
+by 29–54 px (same palettes — sprite-phase scale). Bisect: fossil
+`optimize_terrain` reproduces the committed bytes for those five, so the
+elision's bank-5 shrinkage deterministically shifts sprite phases in
+unrelated walks — all semantic gates stay green (harness 205/205,
+verify-oam, walkthrough 823/823), tilemaps are provably identical
+(pre-fill), and no engine C changed, but SOMETHING layout-coupled exists
+(uninitialized read or OOB-write victim shift — the §52.19 family).
+Prescription: mGBA watchpoint hunt next time this area is touched; do NOT
+treat byte-identical screenshots as proof of no behavioral coupling.
+
+Screenshot note 2 (Sep 2026): `11-battle-aftermath.png` (±74-81 px, a
+patrol-sprite/scroll 1-frame transient in the battle-exit window) flipped
+across three regens while every semantic gate stayed green (harness 210/210,
+verify-oam, walkthrough 919/919) and the other 41 frames stayed identical.
+Suspect: the walk's lossy-press/retry around the exit dead window landing
+the capture ±1 frame (AGENTS.md §56.2), not a ROM change — no ROM-side
+mechanism exists on that path. Prescription: do not read signal into pixel
+diffs confined to that frame; re-run the capture before hunting a rendering
+bug there.
+

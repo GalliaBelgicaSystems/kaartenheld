@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "signpost",
+  "label": "Signpost",
+  "kind": "npc",
+  "name": "SIGNPOST",
+  "visual": "?",
+  "sprite_kind": "ascii"
+}

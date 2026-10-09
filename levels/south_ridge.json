@@ -1,0 +1,332 @@
+{
+  "id": "south_ridge",
+  "name": "Howling Ridge",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "desolate_landscape",
+    "music": "MUSIC_DESOLATE",
+    "map_id": "MAP_SOUTH_RIDGE"
+  },
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "",
+    "west": "south_field"
+  },
+  "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
+  "layers": {
+    "terrain": [
+      {
+        "x": 4,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 4,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 5,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 4,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 5,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 8,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 9,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 8,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 9,
+        "y": 6,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 2,
+      "y": 9,
+      "facing": "RIGHT",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [],
+  "objects": [
+    {
+      "id": "ridge_kobold",
+      "type": "enemy",
+      "position": {
+        "x": 6,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "display_name": "KOBOLD",
+        "actor_id": 30,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_KOBOLD",
+        "ai": "AI_CHASE",
+        "enemy_type": "kobold"
+      }
+    },
+    {
+      "id": "ridge_bat",
+      "type": "enemy",
+      "position": {
+        "x": 13,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_BAT",
+        "display_name": "BAT",
+        "actor_id": 31,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "V",
+        "hp": 12,
+        "max_hp": 12,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_BAT",
+        "ai": "AI_PATROL_CIRCLE"
+      },
+      "overworld_sprite": "actors.actors_bats_frame_1",
+      "animation_frames": [
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
+      ]
+    },
+    {
+      "id": "ridge_slime",
+      "type": "enemy",
+      "position": {
+        "x": 10,
+        "y": 13
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 32,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 20,
+        "max_hp": 20,
+        "gold_reward": 10,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_PATROL_CROSS"
+      },
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ]
+    },
+    {
+      "id": "ridge_scout",
+      "type": "signpost",
+      "position": {
+        "x": 10,
+        "y": 4
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "SCOUT",
+        "dialogue": "DIALOGUE_ID_ADVICE_SCOUT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "ridge_spider",
+      "type": "enemy",
+      "position": {
+        "x": 15,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SPIDER",
+        "display_name": "SPIDER",
+        "actor_id": 53,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 15,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SPIDER",
+        "ai": "AI_PATROL_VERT",
+        "enemy_type": "spider"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "howling_ridge",
+      "bounds": {
+        "x": 2,
+        "y": 2,
+        "width": 16,
+        "height": 14
+      },
+      "description": "Wind-scoured rocks east of the desolate field.",
+      "gameplay": {
+        "purpose": "combat_exploration",
+        "difficulty": 3
+      }
+    }
+  ]
+}

@@ -1,56 +1,55 @@
 {
-  "name": "movement_stability",
-  "test": true,
-  "description": "Move right, down, left across overworld with 60-frame waits, asserting player position updates incrementally without triggering full screen redraw events on steps",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    },
-    {
-      "type": "press",
-      "button": "LEFT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 4,
-      "expected_y": 5
-    },
-    {
-      "type": "event_occurred",
-      "event": "PLAYER_MOVED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 42
+ "name": "movement_stability",
+ "test": true,
+ "description": "Move right, down, left across overworld with 60-frame waits, asserting player position updates incrementally without triggering full screen redraw events on steps",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 4,
+   "expected_y": 5
+  },
+  {
+   "type": "event_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
 }

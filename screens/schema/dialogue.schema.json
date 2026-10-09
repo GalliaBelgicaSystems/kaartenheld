@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/dialogue.schema.json",
+  "title": "Dialogue Definition",
+  "description": "Semantic source of truth for one NPC dialogue: speaker tag, text lines, and the story flag set on close. The web dialogue editor and the JSON->C compiler both read this; ids are assigned by sorted filename order (DIALOGUE_ID_FIRST_GAME + index).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "speaker", "lines"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z_]+$",
+      "description": "Unique identifier for this dialogue (lowercase, underscores only). Compiles to DIALOGUE_ID_<UPPER>."
+    },
+    "speaker": {
+      "type": "string",
+      "maxLength": 11,
+      "description": "Speaker tag drawn above the text (e.g. 'GUARD:'). Max 11 chars (WRAM staging); empty string = no tag."
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "maxLength": 20,
+        "description": "One dialogue line. Max 20 chars incl. terminator (WRAM staging); the box renders 18 wide, so longer than 18 warns."
+      },
+      "description": "Text lines, advanced one at a time with A. Max 8 (MAX_DIALOGUE_LINES)."
+    },
+    "completion_flag": {
+      "type": "string",
+      "description": "Story flag set when the dialogue closes (STORY_FLAG_ID_* name, LLM-authored only — the editor never shows this field). Absent/null = none."
+    }
+  }
+}

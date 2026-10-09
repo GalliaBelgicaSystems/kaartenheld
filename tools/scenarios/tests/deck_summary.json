@@ -1,74 +1,73 @@
 {
-  "name": "deck_summary",
-  "test": true,
-  "description": "The CARDS tab lists every owned card as a paired row (short code + combat description) with its deck membership in the rightmost column: the 12-card starter shows I SW x4, W SH x3, F SW x3",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "CARDS"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "I SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "4"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "W SH"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "3"
-    },
-    {
-      "type": "screen_row",
-      "row": 10,
-      "contains": "F SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 10,
-      "contains": "3"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410
+ "name": "deck_summary",
+ "test": true,
+ "description": "The CARDS tab lists every owned card as a paired row (short code + combat description) with its deck membership in the rightmost column: the 12-card starter shows I SW x4, W SH x3, F SW x3",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "CARDS"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "I SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "4"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "W SH"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "3"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "F SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "3"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
 }

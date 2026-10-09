@@ -92,6 +92,12 @@ void shop_screen_render(Game *g)
 
     if (!rc->valid || rc->prev_screen != SCREEN_SHOP) {
         menu_draw_frame("SHOP");
+        /* UI-mode CRAM (base set): the card icons stamped below are
+         * encoded with the battle display ramps (card_display_slots.json).
+         * Without this they would inherit the world tileset's CRAM and
+         * show village/forest colors.  The overworld/battle full redraws
+         * restore their own CRAM on exit, so no restore is needed here. */
+        ui_set_cram_palette(0);
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&shop_content_render;
         g_bk_ptr_a = (void *)g;

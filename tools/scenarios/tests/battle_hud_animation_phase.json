@@ -1,67 +1,66 @@
 {
-  "name": "battle_hud_animation_phase",
-  "test": true,
-  "description": "Asserts battle HUD text during PLAYER_ANIM: the centered banner row (0) shows the action, and the description row (16) stays blank without a card description",
-  "scenario_id": "FIRST_ENCOUNTER",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "PLAYER ATTACK!"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 16,
-      "contains": "Sword"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 16,
-      "contains": "physical"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 16,
-      "contains": "UNDO"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000
+ "name": "battle_hud_animation_phase",
+ "test": true,
+ "description": "Asserts battle HUD text during PLAYER_ANIM: the centered banner row (0) shows the action, and the description row (16) stays blank without a card description",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "ATTACK SLIME"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 16,
+   "contains": "Sword"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 16,
+   "contains": "physical"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 16,
+   "contains": "UNDO"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ }
 }

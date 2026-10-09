@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "spider",
+  "label": "Spider",
+  "category": "elite",
+  "sprite": { "art": "spider", "frames": 1 },
+  "overworld": { "cells": ["spider_f0", "spider_f1"], "palette": "sprites" },
+  "name": "SPIDER",
+  "hp": 16,
+  "max_hp": 16,
+  "battle_id": "BATTLE_SPIDER",
+  "ai_types": ["AI_PATROL_VERT"],
+  "gold_reward": 15,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

@@ -1,99 +1,98 @@
 {
-  "name": "game_over",
-  "test": true,
-  "description": "Hero is defeated in battle, confirming GAME_OVER state and the Continue? prompt renders",
-  "scenario_id": "GAME_OVER",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 125
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 12
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "GAME_OVER"
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 0
-    },
-    {
-      "type": "battle_result",
-      "expected": "DEFEAT"
-    },
-    {
-      "type": "game_over_choice",
-      "expected": 0
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "GAME OVER"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "CONTINUE?"
-    },
-    {
-      "type": "screen_row",
-      "row": 11,
-      "contains": "> YES"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 4000,
-    "party": {
-      "HERO": {
-        "hp": 2
-      }
-    }
+ "name": "game_over",
+ "test": true,
+ "description": "Hero is defeated in battle, confirming GAME_OVER state and the Continue? prompt renders",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 125
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "GAME_OVER"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 0
+  },
+  {
+   "type": "battle_result",
+   "expected": "DEFEAT"
+  },
+  {
+   "type": "game_over_choice",
+   "expected": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "GAME OVER"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "CONTINUE?"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "> YES"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4000,
+  "party": {
+   "HERO": {
+    "hp": 2
+   }
+  }
+ }
 }

@@ -1,35 +1,34 @@
 {
-  "name": "patrol_enemy_bumps_player",
-  "test": true,
-  "description": "Hostile actor patrols into the player's tile, initiating an encounter",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENCOUNTER_STARTED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 14,
-      "y": 7,
-      "facing": "DOWN"
-    },
-    "seed": 12345
+ "name": "patrol_enemy_bumps_player",
+ "test": true,
+ "description": "Hostile actor patrols into the player's tile, initiating an encounter",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 120
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 14,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 12345
+ }
 }

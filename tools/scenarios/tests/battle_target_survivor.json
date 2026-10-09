@@ -1,92 +1,92 @@
 {
-  "name": "battle_target_survivor",
-  "test": true,
-  "description": "With only the middle Mountain Pass slime surviving (slots 0 and 2 at 0 HP), a DOWN press that wraps back onto the SAME living slot must NOT emit TARGET_CHANGED. The first DOWN (0 -> 1, a real selection change) emits exactly once; the second DOWN wraps 1->2->0->1 and changes nothing, so event_count stays 1 and the caret stays on the middle slime.",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "set_enemy_hp",
-      "index": 0,
-      "hp": 0
-    },
-    {
-      "type": "set_enemy_hp",
-      "index": 2,
-      "hp": 0
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 4,
-      "contains": "         ^"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 16
-    },
-    {
-      "type": "event_count",
-      "event": "TARGET_CHANGED",
-      "count": 1
-    },
-    {
-      "type": "event_arg",
-      "event": "TARGET_CHANGED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "event_arg",
-      "event": "TARGET_CHANGED",
-      "index": 1,
-      "value": 1
-    }
-  ],
-  "initial_state": {
-    "scene": "MOUNTAIN_PASS",
-    "player": {
-      "x": 13,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 5002,
-    "party": {
-      "HERO": {
-        "hp": 60,
-        "max_hp": 60
-      }
-    }
+ "name": "battle_target_survivor",
+ "test": true,
+ "description": "With only the middle Mountain Pass slime surviving (slots 0 and 2 at 0 HP), a DOWN press that wraps back onto the SAME living slot must NOT emit TARGET_CHANGED. The first DOWN (0 -> 1, a real selection change) emits exactly once; the second DOWN wraps 1->2->0->1 and changes nothing, so event_count stays 1 and the caret stays on the middle slime.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 0
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 0
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "         ^"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 16
+  },
+  {
+   "type": "event_count",
+   "event": "TARGET_CHANGED",
+   "count": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "TARGET_CHANGED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_arg",
+   "event": "TARGET_CHANGED",
+   "index": 1,
+   "value": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  }
+ }
 }

@@ -1,28 +1,27 @@
 {
-  "name": "font_test",
-  "test": true,
-  "description": "Render full ASCII charset and verify active GBDK font rendering. Screen assertions verified by dialogue_render_test.",
-  "scenario_id": "FONT_TEST",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 1999,
-    "font_test": true
+ "name": "font_test",
+ "test": true,
+ "description": "Render full ASCII charset and verify active GBDK font rendering. Screen assertions verified by dialogue_render_test.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 1999,
+  "font_test": true
+ }
 }

@@ -1,92 +1,91 @@
 {
-  "name": "cards_menu_toggle",
-  "test": true,
-  "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter sword (glyph 4 -> 0), then single adds walk the count back up (1, 2). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 sword / 3 shield / 3 fire + 3 herbs = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5",
-  "scenario_id": "NEW_GAME",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410,
-    "inventory": {
-      "WOOD_RING": 3
-    },
-    "deck": {
-      "IRON_SWORD": 4,
-      "WOODEN_SHIELD": 3,
-      "FIRE_SWORD": 3,
-      "WOOD_RING": 3
-    }
+ "name": "cards_menu_toggle",
+ "test": true,
+ "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter sword (glyph 4 -> 0), then single adds walk the count back up (1, 2). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 sword / 3 shield / 3 fire + 3 herbs = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_REMOVED_FROM_DECK",
-      "count": 4
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_ADDED_TO_DECK",
-      "count": 2
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "I SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "2"
-    }
-  ]
+  "seed": 8410,
+  "inventory": {
+   "WOOD_RING": 3
+  },
+  "deck": {
+   "IRON_SWORD": 4,
+   "WOODEN_SHIELD": 3,
+   "FIRE_SWORD": 3,
+   "WOOD_RING": 3
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_REMOVED_FROM_DECK",
+   "count": 4
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_ADDED_TO_DECK",
+   "count": 2
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "I SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "2"
+  }
+ ]
 }

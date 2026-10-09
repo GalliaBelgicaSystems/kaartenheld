@@ -1,112 +1,111 @@
 {
-  "name": "menu_cursor_scroll",
-  "test": true,
-  "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw) for in-window moves, and takes the rare full-redraw path when the caret crosses the visible-window boundary. Six collection cards plus the FILTER/SORT row make the 7-row list; six DOWN presses drive the caret to the last row, which shifts the window (scroll 0 -> 1) and drops the FILTER/SORT row. Assertions check the shifted semantic layout (FILTER/SORT gone, caret off the top row, help text unchanged).",
-  "scenario_id": "NEW_GAME",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 9299,
-    "inventory": {
-      "IRON_SWORD": 1,
-      "WOODEN_SHIELD": 1,
-      "WOOD_RING": 1,
-      "FIRE_SWORD": 1,
-      "POISON_DAGGER": 1,
-      "BOW_10": 1
-    }
+ "name": "menu_cursor_scroll",
+ "test": true,
+ "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw) for in-window moves, and takes the rare full-redraw path when the caret crosses the visible-window boundary. Six collection cards plus the FILTER/SORT row make the 7-row list; six DOWN presses drive the caret to the last row, which shifts the window (scroll 0 -> 1) and drops the FILTER/SORT row. Assertions check the shifted semantic layout (FILTER/SORT gone, caret off the top row, help text unchanged).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 5,
-      "contains": "FILTER/SORT"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 5,
-      "contains": ">"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": ">"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 15,
-      "contains": ">"
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": "A:ADD"
-    }
-  ]
+  "seed": 9299,
+  "inventory": {
+   "IRON_SWORD": 1,
+   "WOODEN_SHIELD": 1,
+   "WOOD_RING": 1,
+   "FIRE_SWORD": 1,
+   "POISON_DAGGER": 1,
+   "BOW_9": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": "FILTER/SORT"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": ">"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": ">"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 15,
+   "contains": ">"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "A:ADD"
+  }
+ ]
 }

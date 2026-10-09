@@ -12,8 +12,14 @@ typedef enum {
     MUSIC_TITLE,     /* title screen theme (loops) */
     MUSIC_TOWN,      /* town / hub theme (loops) */
     MUSIC_DUNGEON,   /* castle / dungeon theme (loops) */
-    MUSIC_BOSS       /* final-boss theme (loops) */
+    MUSIC_BOSS,      /* final-boss theme (loops) */
+    MUSIC_MIMIC,     /* mimic battle: short intro sting (Mimic_intro.uge,
+                        ~0.9 s) then looping Mimic.uge; both bank 7 */
+    MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
+    MUSIC_FOREST     /* forest / plain theme (Forest.uge, loops) */
 } MusicTrack;
+
+#define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
 
 /* Master sound enable (title menu SOUND ON/OFF).  Gates both music and
  * SFX: audio_play_music() no-ops (leaving any currently playing track

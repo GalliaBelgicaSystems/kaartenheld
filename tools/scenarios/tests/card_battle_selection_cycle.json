@@ -1,106 +1,168 @@
 {
-  "name": "card_battle_selection_cycle",
-  "test": true,
-  "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 3
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SH",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "BO",
-      "value": 4
-    },
-    {
-      "type": "set_hand_card",
-      "index": 3,
-      "card_type": "SW",
-      "value": 4
-    },
-    {
-      "type": "set_hand_card",
-      "index": 4,
-      "card_type": "HE",
-      "value": 7
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "B"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "COMBO:"
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "SW3 SH2 BO4 SW4 HE7"
-    },
-    {
-      "type": "screen_row",
-      "row": 15,
-      "contains": "1"
-    },
-    {
-      "type": "screen_row",
-      "row": 15,
-      "contains": "^"
-    },
-    {
-      "type": "screen_row",
-      "row": 16,
-      "contains": "Shield: block dmg"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "card_battle_selection_cycle",
+ "test": true,
+ "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "BO",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SW",
+   "value": 4
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "HE",
+   "value": 7
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 6
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 11,
+   "col": 0,
+   "expected": 118
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 14,
+   "col": 0,
+   "expected": 124
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 12,
+   "col": 5,
+   "expected": 105
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 14,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 17,
+   "col": 0,
+   "expected": 117
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 17,
+   "col": 19,
+   "expected": 117
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 11,
+   "expected": 113
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 0,
+   "expected": 116
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 11,
+   "expected": 114
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "COMBO:"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "SW3 SH2 BO4 SW4 HE7"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "1"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "^"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "Shield: block dmg"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

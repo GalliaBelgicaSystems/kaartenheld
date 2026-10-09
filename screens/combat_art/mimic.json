@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/combat_art.schema.json",
+  "id": "mimic",
+  "label": "Mimic",
+  "order": 3,
+  "width": 3,
+  "height": 2,
+  "palette": "fightmimic",
+  "oam": true,
+  "obj_palette": "sprites6",
+  "frame0": [
+    "combat_top_left_mimic", "combat_top_middle_mimic", "combat_top_right_mimic",
+    "combat_bottom_left_mimic", "combat_bottom_middle_mimic", "combat_bottom_right_mimic"
+  ]
+}

@@ -18,7 +18,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-ROM = "build/rpg_card_proto.gb"
+ROM = "build/kaartenheld.gb"
 MAX_WALK = 300
 SETTLE_FRAMES = 120
 HP_WATCH_FRAMES = 1500

@@ -1,47 +1,46 @@
 {
-  "name": "town_boot",
-  "test": true,
-  "description": "Boot directly into the overworld on the Town scene with arrival flag set",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "TOWN"
-    },
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 8,
-      "expected_y": 6
-    },
-    {
-      "type": "music_track",
-      "expected": "TOWN"
-    },
-    {
-      "type": "story_flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5008,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "town_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the Town scene with arrival flag set",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_TOWN"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 8,
+   "expected_y": 6
+  },
+  {
+   "type": "music_track",
+   "expected": "TOWN"
+  },
+  {
+   "type": "story_flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5008,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

@@ -1,0 +1,8 @@
+{
+  "label": "Merchant",
+  "buys": 1,
+  "items": [
+    "CARD_IRON_SWORD",
+    "CARD_BOW_9"
+  ]
+}

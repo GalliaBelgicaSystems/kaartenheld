@@ -1,148 +1,147 @@
 {
-  "name": "merchant_sell_loot",
-  "test": true,
-  "description": "Sell loot at the card merchant (docs/loot.md 24/34.6): engage the Merchant, then the loot card's CARDS-tab detail page offers SELL at its centralized value. Selling one WOOD PLAIN DAGGER (id 131) pays its formula value (dagger base 1 + wood tier 0 = 1 gold), emits CARD_SOLD(131,1,0) and removes the copy",
-  "scenario_id": "TOWN_BOOT",
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 10,
-      "y": 3,
-      "facing": "RIGHT"
-    },
-    "seed": 8504,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "currency": {
-      "GOLD": 0
-    },
-    "variables": {
-      "MERCHANT_QUEST": 2
-    }
+ "name": "merchant_sell_loot",
+ "test": true,
+ "description": "Sell loot at the card merchant (docs/loot.md 24/34.6): engage the Merchant, then the loot card's CARDS-tab detail page offers SELL at its centralized value. Selling one WOOD PLAIN DAGGER (id 131) pays its formula value (dagger base 1 + wood tier 0 = 1 gold), emits CARD_SOLD(131,1,0) and removes the copy",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
   },
-  "actions": [
-    {
-      "type": "collection_add",
-      "card_id": 131,
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "interact",
-      "actor": "MERCHANT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "B"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "event_occurred",
-      "event": "CARD_SOLD"
-    },
-    {
-      "type": "event_arg",
-      "event": "CARD_SOLD",
-      "index": 0,
-      "value": 131
-    },
-    {
-      "type": "event_arg",
-      "event": "CARD_SOLD",
-      "index": 1,
-      "value": 1
-    },
-    {
-      "type": "event_arg",
-      "event": "CARD_SOLD",
-      "index": 2,
-      "value": 0
-    },
-    {
-      "type": "currency",
-      "expected": 1,
-      "currency": "GOLD"
-    }
-  ]
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 131,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_SOLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 0,
+   "value": 131
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 1,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 2,
+   "value": 0
+  },
+  {
+   "type": "currency",
+   "expected": 1,
+   "currency": "GOLD"
+  }
+ ]
 }

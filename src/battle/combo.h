@@ -10,6 +10,18 @@ typedef enum {
     COMBO_PHASE_DEFEND = 1
 } ComboPhase;
 
+/* Banked-dispatch staging pack (combo.c encodes into g_bk_byte_b,
+ * combo_content.c decodes): bit 0 = ComboPhase, bits 1..7 =
+ * CardEffectType.  Single source of truth — both sides must use these,
+ * never hand-rolled shifts/masks.  Valid ranges (phase <= 1, effect <=
+ * 127) are compile-time enforced at each use site, so a future phase or
+ * effect id that outgrows the byte breaks the build instead of wrapping
+ * silently. */
+#define COMBO_PACK(phase, fx) \
+    ((uint8_t)(((uint8_t)(phase)) | ((uint8_t)((uint8_t)(fx) << 1))))
+#define COMBO_UNPACK_PHASE(b) ((uint8_t)(((uint8_t)(b)) & 0x01))
+#define COMBO_UNPACK_EFFECT(b) ((uint8_t)(((uint8_t)(b)) >> 1))
+
 /* Poker hand tiers (docs/combo-system.md hand table).  Strict sizes:
  * STRAIGHT / FLUSH / STRAIGHT_FLUSH / FIVE_KIND require all five
  * selected cards; pairs and kinds work at any count >= 2.  Order here
@@ -34,7 +46,8 @@ typedef struct {
     Card cards[5];
     uint8_t count;
     uint8_t eff_count;   /* cards that entered the hand (attack: every
-                          * card; defend: SHIELD cards only) */
+                          * card; defend: shields + rings -- inert
+                          * non-shields are 0 block, 0 combo) */
     uint8_t tier;        /* HandTier */
     uint8_t suited;      /* all selected share one symbol (telemetry) */
     uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:

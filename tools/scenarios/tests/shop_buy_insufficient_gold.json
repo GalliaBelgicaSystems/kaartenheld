@@ -1,55 +1,54 @@
 {
-  "name": "shop_buy_insufficient_gold",
-  "test": true,
-  "description": "Buying without enough gold fails: nothing is purchased and the shop stays open",
-  "scenario_id": "ACTOR_SHOPKEEPER",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "SHOPKEEPER"
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "SHOP"
-    },
-    {
-      "type": "currency",
-      "expected": 5,
-      "currency": "GOLD"
-    },
-    {
-      "type": "inventory",
-      "item": "WOOD_RING",
-      "expected": 0
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "CARD_PURCHASED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 4,
-      "facing": "UP"
-    },
-    "seed": 8102,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "currency": {
-      "GOLD": 5
-    }
+ "name": "shop_buy_insufficient_gold",
+ "test": true,
+ "description": "Buying without enough gold fails: nothing is purchased and the shop stays open",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "SHOPKEEPER"
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "currency",
+   "expected": 5,
+   "currency": "GOLD"
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 0
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 4,
+   "facing": "UP"
+  },
+  "seed": 8102,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 5
+  }
+ }
 }

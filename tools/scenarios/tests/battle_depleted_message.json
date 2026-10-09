@@ -1,23 +1,52 @@
 {
-  "name": "battle_depleted_message",
-  "test": true,
-  "description": "Selecting a card whose uses are exhausted (uses_remaining = 0) is rejected with a transient 'OUT OF USES!' flash on the battle HUD (row 12) -- the id-2 sibling of battle_reject_message's NO ENERGY! case.",
-  "scenario_id": "BATTLE_BOOT",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {"x": 13, "y": 8, "facing": "DOWN"},
-    "seed": 7001,
-    "start_battle": true
+ "name": "battle_depleted_message",
+ "test": true,
+ "description": "Selecting a card whose uses are exhausted (uses_remaining = 0) is rejected with a transient 'OUT OF USES!' flash on the battle HUD (row 12) -- the id-2 sibling of battle_reject_message's NO ENERGY! case.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {"type": "wait", "frames": 5},
-    {"type": "set_hand_card", "index": 0, "card_type": "SW", "value": 3},
-    {"type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 0},
-    {"type": "press", "button": "A"},
-    {"type": "wait", "frames": 12}
-  ],
-  "assertions": [
-    {"type": "screen", "expected": "BATTLE"},
-    {"type": "screen_row", "row": 12, "contains": "OUT OF USES!"}
-  ]
+  "seed": 7001,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 0
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "OUT OF USES!"
+  }
+ ]
 }

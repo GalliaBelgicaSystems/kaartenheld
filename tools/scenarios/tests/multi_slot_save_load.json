@@ -1,44 +1,43 @@
 {
-  "name": "multi_slot_save_load",
-  "test": true,
-  "description": "Saving to slot 2 and slot 3 maintains isolated save states in SRAM",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "save",
-      "slot": 2
-    },
-    {
-      "type": "add_currency",
-      "currency": "GOLD",
-      "amount": 200
-    },
-    {
-      "type": "save",
-      "slot": 3
-    },
-    {
-      "type": "load",
-      "slot": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "currency",
-      "currency": "GOLD",
-      "expected": 50
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "currency": {
-      "GOLD": 50
-    },
-    "seed": 6060
+ "name": "multi_slot_save_load",
+ "test": true,
+ "description": "Saving to slot 2 and slot 3 maintains isolated save states in SRAM",
+ "actions": [
+  {
+   "type": "save",
+   "slot": 2
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 200
+  },
+  {
+   "type": "save",
+   "slot": 3
+  },
+  {
+   "type": "load",
+   "slot": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "seed": 6060
+ }
 }

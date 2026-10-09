@@ -1,54 +1,53 @@
 {
-  "name": "card_sort_power",
-  "test": true,
-  "description": "Power-desc sort shows strongest cards first in the CARDS tab: F SW, I SW, W SH for the granted starter collection",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_sort",
-      "mode": "POWER_DESC"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "F SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 8,
-      "contains": "I SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 10,
-      "contains": "W SH"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410
+ "name": "card_sort_power",
+ "test": true,
+ "description": "Power-desc sort shows strongest cards first in the CARDS tab: F SW, I SW, W SH for the granted starter collection",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_sort",
+   "mode": "POWER_DESC"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "F SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "I SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "W SH"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
 }

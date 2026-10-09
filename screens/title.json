@@ -1,0 +1,66 @@
+{
+  "$schema": "./schema/title.schema.json",
+  "title": "Kaartenheld",
+  "grid_width": 20,
+  "grid_height": 18,
+  "logo": {
+    "x": 0,
+    "y": 1,
+    "lines": [
+      "KAARTENHELD"
+    ]
+  },
+  "logo_image": {
+    "enabled": true,
+    "url": "/tiles/title/logo.png",
+    "x": 2,
+    "y": 1,
+    "width": 16,
+    "height": 3,
+    "palette": 1
+  },
+  "subtitle": {
+    "text": "BATTLE DEMO",
+    "y": 5,
+    "align": "center"
+  },
+  "prompt": {
+    "x": 4,
+    "y": 14,
+    "text": "PRESS START",
+    "align": "center"
+  },
+  "graphic": {
+    "enabled": false,
+    "x": 2,
+    "y": 7,
+    "width": 16,
+    "height": 5,
+    "lines": [
+      "  /\\____/\\    ",
+      " (  o  o  )   ",
+      " (  ==0== )   ",
+      "  )      (    ",
+      " (________)   "
+    ]
+  },
+  "credits": {
+    "enabled": false,
+    "x": 1,
+    "y": 17,
+    "text": "GALLIA BELGICA",
+    "align": "right"
+  },
+  "menu": {
+    "x": 3,
+    "caret_x": 3,
+    "first_row": 10,
+    "row_step": 2,
+    "options": [
+      "> NEW GAME",
+      "> CONTINUE",
+      "> SOUND",
+      "> TUTORIAL"
+    ]
+  }
+}

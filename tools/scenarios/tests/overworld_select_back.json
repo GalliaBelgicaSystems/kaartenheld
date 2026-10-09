@@ -1,47 +1,46 @@
 {
-  "name": "overworld_select_back",
-  "test": true,
-  "description": "Press SELECT on the overworld to open the load menu, then press B. The save/load screen must return to the OVERWORLD (not anywhere else). Regression guard for the save/load B/START handler honoring the caller screen.",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "B"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCREEN_CHANGED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "GAME_LOADED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 5,
-      "y": 5,
-      "facing": "DOWN"
-    },
-    "seed": 5050
+ "name": "overworld_select_back",
+ "test": true,
+ "description": "Press SELECT on the overworld to open the load menu, then press B. The save/load screen must return to the OVERWORLD (not anywhere else). Regression guard for the save/load B/START handler honoring the caller screen.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 3
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "GAME_LOADED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 5,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 5050
+ }
 }

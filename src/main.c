@@ -31,6 +31,7 @@ volatile uint8_t g_boot_phase = 0;
 extern void timer_isr_init(void);
 extern void oam_dma_init(void);
 extern void banked_copy_init(void);
+extern void banked_call_init(void);
 
 int main(void)
 {
@@ -43,6 +44,7 @@ int main(void)
     timer_isr_init();
     oam_dma_init();
     banked_copy_init();
+    banked_call_init();
     g_boot_phase = 1;
 
     if (!g_harness_mode) {

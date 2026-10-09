@@ -1,0 +1,332 @@
+{
+  "id": "test_mountain_pass",
+  "name": "TEST Craggy Mountain Pass",
+  "map": {
+    "width": 20,
+    "height": 18,
+    "tileset": "desolate_landscape",
+    "music": "MUSIC_DESOLATE",
+    "map_id": "MAP_MOUNTAIN_PASS"
+  },
+  "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
+  "layers": {
+    "terrain": [
+      {
+        "x": 1,
+        "y": 0,
+        "width": 3,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_wall_1"
+      },
+      {
+        "x": 16,
+        "y": 0,
+        "width": 3,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_wall_2"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "width": 3,
+        "height": 16,
+        "tile": "desolate_landscape.desolate_landscape_left_wall_1"
+      },
+      {
+        "x": 16,
+        "y": 1,
+        "width": 3,
+        "height": 16,
+        "tile": "desolate_landscape.desolate_landscape_right_wall_1"
+      },
+      {
+        "x": 1,
+        "y": 17,
+        "width": 3,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_wall_1"
+      },
+      {
+        "x": 16,
+        "y": 17,
+        "width": 3,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_wall_2"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 7,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 13,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 13,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 14,
+        "y": 4,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 6,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 7,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 6,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 7,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 14,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 15,
+        "y": 9,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 5,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 6,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 5,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 6,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 13,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_left_rock"
+      },
+      {
+        "x": 14,
+        "y": 13,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_top_right_rock"
+      },
+      {
+        "x": 13,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_left_rock"
+      },
+      {
+        "x": 14,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      }
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 12,
+      "y": 10,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [
+    {
+      "x": 12,
+      "y": 11,
+      "target_scene": "test_south_field",
+      "target_x": 12,
+      "target_y": 12,
+      "direction": "SOUTH",
+      "tile_char": "<"
+    },
+    {
+      "x": 12,
+      "y": 0,
+      "target_scene": "test_castle",
+      "target_x": 10,
+      "target_y": 10,
+      "direction": "NORTH",
+      "tile_char": ">"
+    }
+  ],
+  "objects": [
+    {
+      "id": "mountain_slime",
+      "type": "enemy",
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ],
+      "position": {
+        "x": 14,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 4,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 16,
+        "max_hp": 16,
+        "gold_reward": 5,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME_TRIO",
+        "ai": "AI_PATROL_CROSS"
+      }
+    },
+    {
+      "id": "wall_slime",
+      "type": "enemy",
+      "position": {
+        "x": 3,
+        "y": 1
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME",
+        "display_name": "SLIME",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "E",
+        "hp": 8,
+        "max_hp": 8,
+        "gold_reward": 0,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME",
+        "ai": "AI_NONE"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "narrow_pass",
+      "bounds": {
+        "x": 4,
+        "y": 1,
+        "width": 12,
+        "height": 16
+      },
+      "description": "A narrow rocky canyon flanked by steep cliffs.",
+      "gameplay": {
+        "purpose": "corridor",
+        "difficulty": 2
+      }
+    }
+  ]
+}

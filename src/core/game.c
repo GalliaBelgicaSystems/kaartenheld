@@ -53,10 +53,11 @@ void game_init(Game *g)
     banked_call_init();
     telemetry_init();
     telemetry_set_frame_ptr(&g->frame);
-    /* Boot into the classic title screen (not straight into the world),
-     * with a fresh new-game state behind it. */
-    g->screen = SCREEN_TITLE;
-    g->prev_screen = SCREEN_TITLE;
+    /* Boot into the studio splash, which auto-advances (or is skipped)
+     * onto the classic title screen.  A fresh new-game state sits behind
+     * both screens. */
+    g->screen = SCREEN_SPLASH;
+    g->prev_screen = SCREEN_SPLASH;
     g->title_menu_showing = 0;
     g->title_menu_index = 0;
     g->intro_slide = 0;

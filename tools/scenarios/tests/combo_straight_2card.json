@@ -1,71 +1,79 @@
 {
-  "name": "combo_straight_2card",
-  "test": true,
-  "description": "Two consecutive-value cards (SW2 + BO3, different types): under STRICT poker sizes a straight needs all five effective cards, so this is HIGH CARD x100 -- 5 damage, enemy survives.  Locks the strict-sizing boundary.",
-  "actions": [
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 2
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "BO",
-      "value": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 5
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_straight_2card",
+ "test": true,
+ "description": "Two consecutive-value cards (SW2 + BO3, different types): under STRICT poker sizes a straight needs all five effective cards, so this is HIGH CARD x100 -- 5 damage, enemy survives.  Locks the strict-sizing boundary.",
+ "actions": [
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 5
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

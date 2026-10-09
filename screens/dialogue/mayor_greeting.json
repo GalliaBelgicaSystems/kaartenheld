@@ -1,0 +1,8 @@
+{
+  "id": "mayor_greeting",
+  "speaker": "MAYOR:",
+  "lines": [
+    "Hello! I am Mayor.",
+    "Welcome to town!"
+  ]
+}

@@ -49,6 +49,7 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
 static bool nav_hand_playable(const Battle *b, uint8_t hand_idx)
 {
     uint8_t available;
+    if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_EMPTY) return false;
     if (b->hand[hand_idx].uses_remaining == 0) return false;
     if ((s_grey_mask[0] & (uint8_t)(1u << hand_idx)) != 0) return false;
     available = b->energy - nav_combo_reserved_cost(b);
@@ -109,7 +110,7 @@ static void nav_target_move(Battle *b, int8_t dir)
         if (b->enemies[t].hp != 0) {
             if (t != old) {
                 b->target_idx = t;
-                b->dirty |= BATTLE_DIRTY_ENEMIES;
+                b->dirty |= (uint8_t)(BATTLE_DIRTY_ENEMIES | BATTLE_DIRTY_BANNER);
             }
             return;
         }
@@ -118,7 +119,6 @@ static void nav_target_move(Battle *b, int8_t dir)
 
 static void nav_card_select(Battle *b)
 {
-    uint8_t step, next_pos;
     if (b->phase != BATTLE_PHASE_PLAYER_SELECT && b->phase != BATTLE_PHASE_PLAYER_DEFEND) {
         return;
     }
@@ -155,16 +155,9 @@ static void nav_card_select(Battle *b)
          * (not on rejections like NO ENERGY / a duplicate). */
         g_bk_byte_c = 1;
 
-        next_pos = b->cursor_pos;
-        for (step = 1; step < BATTLE_HAND_SIZE; step++) {
-            next_pos++;
-            if (next_pos >= BATTLE_HAND_SIZE) next_pos = 0;
-            if (!nav_is_card_selected(b, next_pos) &&
-                nav_hand_playable(b, next_pos)) {
-                b->cursor_pos = next_pos;
-                break;
-            }
-        }
+        /* The cursor stays on the selected card (no auto-advance right):
+         * the marker row shows the dark arrow there, and the 1-5 digit
+         * appears once the player moves away. */
     }
 }
 
@@ -187,7 +180,19 @@ void battle_nav_banked(void)
         {
             uint8_t i;
             for (i = 0; i < b->enemy_count; i++) {
-                if (b->enemies[i].hp != 0) return;
+                if (b->enemies[i].hp != 0) {
+                    /* The end-of-round status tick may have killed the
+                     * current target while others live: step off the
+                     * corpse now so the coming attack cannot hit a dead
+                     * slot (duplicate ENTITY_DEFEATED). No-op when the
+                     * target lives; an all-corpses party finds nothing
+                     * to step to. TARGET_CHANGED is emitted by the fixed
+                     * wrapper (same as NAV_OP_TARGET_MOVE). */
+                    if (b->enemies[b->target_idx].hp == 0) {
+                        nav_target_move(b, 1);
+                    }
+                    return;
+                }
             }
             g_bk_byte_c = 1;
         }

@@ -1,59 +1,58 @@
 {
-  "name": "merchant_repeat",
-  "test": true,
-  "description": "Once the amulet is delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",
-  "scenario_id": "TOWN_BOOT",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MERCHANT"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "SHOP"
-    },
-    {
-      "type": "variable",
-      "variable": "MERCHANT_QUEST",
-      "expected": 2
-    },
-    {
-      "type": "currency",
-      "expected": 20,
-      "currency": "GOLD"
-    },
-    {
-      "type": "inventory",
-      "item": "AMULET",
-      "expected": 0
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "SCRIPT_TRIGGERED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "CURRENCY_ADDED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 10,
-      "y": 3,
-      "facing": "RIGHT"
-    },
-    "seed": 8505,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "currency": {
-      "GOLD": 20
-    },
-    "variables": {
-      "MERCHANT_QUEST": 2
-    }
+ "name": "merchant_repeat",
+ "test": true,
+ "description": "Once the amulet is delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 2
+  },
+  {
+   "type": "currency",
+   "expected": 20,
+   "currency": "GOLD"
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 0
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CURRENCY_ADDED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8505,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 20
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
 }

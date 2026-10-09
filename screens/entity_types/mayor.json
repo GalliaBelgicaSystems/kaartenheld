@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "mayor",
+  "label": "Mayor",
+  "kind": "npc",
+  "name": "MAYOR",
+  "visual": "M",
+  "sprite_kind": "tile"
+}

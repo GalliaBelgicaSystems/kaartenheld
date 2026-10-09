@@ -1,48 +1,47 @@
 {
-  "name": "progression_hero",
-  "test": true,
-  "description": "Generic progression: the HERO target gains progress, crosses a threshold, and levels up",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "add_progress",
-      "target": "HERO_1",
-      "amount": 20
-    }
-  ],
-  "assertions": [
-    {
-      "type": "progression_level",
-      "target": "HERO_1",
-      "expected": 2
-    },
-    {
-      "type": "progression_progress",
-      "target": "HERO_1",
-      "expected": 10
-    },
-    {
-      "type": "event_occurred",
-      "event": "PROGRESSION_GAINED"
-    },
-    {
-      "type": "event_occurred",
-      "event": "LEVEL_UP"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8207,
-    "progression": {
-      "HERO_1": {
-        "level": 1,
-        "progress": 90
-      }
-    }
+ "name": "progression_hero",
+ "test": true,
+ "description": "Generic progression: the HERO target gains progress, crosses a threshold, and levels up",
+ "actions": [
+  {
+   "type": "add_progress",
+   "target": "HERO_1",
+   "amount": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "progression_level",
+   "target": "HERO_1",
+   "expected": 2
+  },
+  {
+   "type": "progression_progress",
+   "target": "HERO_1",
+   "expected": 10
+  },
+  {
+   "type": "event_occurred",
+   "event": "PROGRESSION_GAINED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "LEVEL_UP"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8207,
+  "progression": {
+   "HERO_1": {
+    "level": 1,
+    "progress": 90
+   }
+  }
+ }
 }

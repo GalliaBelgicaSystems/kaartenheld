@@ -1,62 +1,61 @@
 {
-  "name": "menu_cursor_scroll_quest",
-  "test": true,
-  "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 5 + 2*index), no full render-cache invalidate. The state-loaded quest list renders entries at rows 5, 7, 9, ... with the caret at column 0.",
-  "scenario_id": "NEW_GAME",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 4247
+ "name": "menu_cursor_scroll_quest",
+ "test": true,
+ "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 5 + 2*index), no full render-cache invalidate. The state-loaded quest list renders entries at rows 5, 7, 9, ... with the caret at column 0.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "^"
-    },
-    {
-      "type": "screen_row",
-      "row": 7,
-      "contains": ">"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 5,
-      "contains": ">"
-    }
-  ]
+  "seed": 4247
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "^"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": ">"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": ">"
+  }
+ ]
 }

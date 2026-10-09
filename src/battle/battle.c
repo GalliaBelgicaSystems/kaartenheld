@@ -5,17 +5,54 @@
 #include "rpg/cards.h"
 #include "rpg/deck.h"
 #include "rpg/effects.h"
-#include "rpg/status.h"
-#include "rng.h"
 #include "rpg/loot.h"
+#include "rpg/status.h"
+#include "rpg/loot.h"
+#include "rng.h"
 #include "game/game_ids.h"
 #include "content.h"
+#include "battle_data.h"
 #include <string.h>
+
+/* Per-enemy battle art (see battle.h): uninitialized WRAM arrays (bss, so
+ * no _INITIALIZER cost); written by the bank-4 battle art loader at every
+ * battle entry, read by the bank-3 stamper. */
+uint8_t g_battle_enemy_art[MAX_BATTLE_ENEMIES];
+uint8_t g_battle_enemy_art_frames[MAX_BATTLE_ENEMIES];
+uint8_t g_battle_enemy_art_pal[MAX_BATTLE_ENEMIES];
+/* Per-slot combat-art geometry + VRAM base (tile index), staged by the
+ * bank-4 art loader alongside the arrays above.  Slots that fall back to
+ * text (or exceed the VRAM art budget) keep art 0xFF with the standard
+ * 3x2 dims so the bank-3 stamper's blank path clears the usual zone. */
+uint8_t g_battle_enemy_art_w[MAX_BATTLE_ENEMIES];
+uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
+uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
+/* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
+uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+
+/* Active battle screen layout (see battle_data.h): uninitialized WRAM
+ * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()
+ * at every battle entry, read by the bank-3 renderer. */
+BattleHudCache g_battle_hud;
+
+/* Battle hand-card skin (see battle_data.h): uninitialized WRAM (bss);
+ * staged from the bank-4 generated const by battle_hud_load_banked() at
+ * every battle entry, read by the bank-3 renderer. */
+CardSkinDef g_card_skin_wram;
+
+/* Battle HUD skin (see battle_data.h): uninitialized WRAM (bss); same
+ * staging contract as the card skin; read by the fixed-bank timer draw
+ * (ui.c) and the bank-3 renderer. */
+HudSkinDef g_hud_skin_wram;
+
+/* Solo-encounter flag (see battle.h): staged by battle_start, read by
+ * battle_hud_load_banked to pick the single-enemy boss screen. */
+uint8_t g_battle_solo;
 
 /* ── Bridge: persistent DeckState → battle Deck ───────────────────
  * When a DeckState is provided (player has cards), build the battle
  * deck from the player's owned cards.  When NULL, fall back to the
- * hardcoded starter deck (all unlimited uses).
+ * data-driven starter deck (screens/hero.json via hero_content.c).
  *
  * The bridge body lives in ROM bank 2 (src/battle/battle_init_content.c)
  * so it can read the registered card catalog directly without consuming
@@ -46,10 +83,18 @@ static const int g_deck_min_matches_hand_size[
     (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : 0
 ];
 
+/* Victim name snapshot for the ANIM banner ("ATTACK <name>"): resolution
+ * may kill the target and auto-advance target_idx before the banner
+ * draws, so the name is captured here at execute time.  Empty when the
+ * ANIM phase runs without an attack (freeze skip, empty combo) -- the
+ * banner then falls back to "PLAYER ATTACK!".  WRAM (fixed bank stays
+ * lean); read by the bank-3 renderer. */
+char g_battle_anim_target_name[12];
+
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
                   uint8_t enemy_hp, uint8_t enemy_max_hp,
-                  const DeckState *ds, uint8_t battle_id)
+                  const DeckState *ds, uint8_t battle_id, uint8_t solo)
 {
     uint8_t *p = (uint8_t *)b;
     uint16_t n = sizeof(Battle);
@@ -57,11 +102,12 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     if (!b) return;
 
     while (n--) *p++ = 0;
+    g_battle_anim_target_name[0] = '\0';
     { const char *s = "Hero"; uint8_t j; for (j = 0; j < 7 && s[j]; j++) b->player.name[j] = s[j]; b->player.name[j] = '\0'; }
     b->player.hp = player_hp;
     b->player.max_hp = player_max_hp;
 
-    { const char *s = enemy_name ? enemy_name : "Enemy"; uint8_t j; for (j = 0; j < 7 && s[j]; j++) b->enemies[0].name[j] = s[j]; b->enemies[0].name[j] = '\0'; }
+    { const char *s = enemy_name ? enemy_name : "Enemy"; uint8_t j; for (j = 0; j < 11 && s[j]; j++) b->enemies[0].name[j] = s[j]; b->enemies[0].name[j] = '\0'; }
     b->enemies[0].hp = enemy_hp;
     b->enemies[0].max_hp = enemy_max_hp;
     b->enemy_count = 1;
@@ -98,6 +144,16 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
 
     status_reset_battle();
 
+    /* Stage the active screen's layout (rows/cols/positions) into WRAM
+     * for the bank-3 renderer.  Game layer picks the screen by battle
+     * type + solo flag (boss/miniboss vs standard); engine never names
+     * screens itself. */
+    g_battle_solo = solo;
+    g_bk_byte_a = b->enemy_battle_id;
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
+    banked_call_run();
+
     telemetry_emit(EVENT_BATTLE_STARTED, 0, 0, 0, 0);
 }
 
@@ -106,7 +162,7 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp)
     uint8_t idx;
     if (!b || b->enemy_count >= MAX_BATTLE_ENEMIES) return;
     idx = b->enemy_count++;
-    { const char *nm = name ? name : "Enemy"; uint8_t j; for (j = 0; j < 7 && nm[j]; j++) b->enemies[idx].name[j] = nm[j]; b->enemies[idx].name[j] = '\0'; }
+    { const char *nm = name ? name : "Enemy"; uint8_t j; for (j = 0; j < 11 && nm[j]; j++) b->enemies[idx].name[j] = nm[j]; b->enemies[idx].name[j] = '\0'; }
     b->enemies[idx].hp = hp;
     b->enemies[idx].max_hp = max_hp;
     b->dirty = BATTLE_DIRTY_ALL;
@@ -169,17 +225,17 @@ void battle_target_move(Battle *b, int8_t dir)
     }
 }
 
-void battle_target_auto_advance(Battle *b)
-{
-    if (b && b->enemies[b->target_idx].hp == 0) {
-        battle_target_move(b, 1);
-    }
-}
-
 bool battle_all_enemies_dead(const Battle *b)
 {
+    uint8_t old;
     if (!b) return true;
+    old = b->target_idx;
     battle_nav((Battle *)b, NAV_OP_ALL_DEAD, 0);
+    /* The banked body steps off a tick-killed target (see above): report
+     * the retarget like any other target move. */
+    if (b->target_idx != old) {
+        telemetry_emit(EVENT_TARGET_CHANGED, old, b->target_idx, 0, 0);
+    }
     return g_bk_byte_c != 0;
 }
 
@@ -218,7 +274,7 @@ void battle_card_undo(Battle *b)
     if (!b) return;
 
     prev_result = b->result;
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 2;
     g_bk_call_target = (uint16_t)&battle_card_undo_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -243,7 +299,11 @@ void battle_defend_resolve(Battle *b)
 {
     if (!b) return;
     audio_play_sfx(SFX_BLOCK);
-    g_bk_call_bank = 3;
+#ifdef DEBUG_BUILD
+    g_bk_call_bank = 5;
+#else
+    g_bk_call_bank = 4;
+#endif
     g_bk_call_target = (uint16_t)&battle_defend_resolve_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -260,8 +320,11 @@ void battle_defend_resolve(Battle *b)
     /* Organic enemy status rider (Phase D): g_bk_byte_c = status id the
      * banked body rolled (0 = none).  Apply through the REAL mechanic
      * (status_apply emits STATUS_APPLIED); poison also greys the player's
-     * hand via status_grey_apply. */
-    if (g_bk_byte_c != 0) {
+     * hand via status_grey_apply.  A lethal counter leaves the player at
+     * 0 HP: the rider must not apply to a corpse (same guard as the
+     * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED, no
+     * hand grey-out. */
+    if (g_bk_byte_c != 0 && b->player.hp != 0) {
         status_apply(status_slots(0), 0, g_bk_byte_c, 1, 0);
         if (g_status_applied.id == STATUS_POISON) {
             status_grey_apply(0, BATTLE_HAND_SIZE);
@@ -291,9 +354,22 @@ static void battle_resolve_hand_discard(Battle *b)
 }
 
 /* Refill empty hand slots from the draw pile at a decision-phase start.
- * Returns false when the pile is dry while slots remain open AND the
+ * Returns false when the pile cannot cover every open slot AND the
  * discard pile can feed a reshuffle — the caller then runs the reshuffle
- * turn (reshuffle + re-deal + skip the player's action). */
+ * turn (reshuffle + re-deal + skip the player's action).
+ *
+ * The decision is atomic: a partial pile plus a non-empty discard deals
+ * NOTHING and reports dry so the caller reshuffles first.  Dealing partial
+ * real cards would mix pre/post-shuffle cards, and reaching deck_draw()
+ * with a dry pile would mint phantom swords (deck.c) that get discarded
+ * and baked into the redealt pile permanently.
+ *
+ * No per-iteration dry check is needed: with DECK_MIN_CARDS >=
+ * BATTLE_HAND_SIZE (statically asserted above), cards are conserved
+ * (pile + hand + discard == total deck size; the reshuffle preserves
+ * the undrawn remainder), so an empty discard pile implies the pile
+ * covers every open slot.  The only dry-pile loop entry is the fully-dry
+ * case handled by the early return above. */
 static bool battle_turn_draw(Battle *b)
 {
     uint8_t i, need = 0;
@@ -303,6 +379,13 @@ static bool battle_turn_draw(Battle *b)
     if (need == 0) return true;
     if (b->deck.draw_idx >= b->deck.count) {
         return (b->deck.discard_count == 0);
+    }
+    /* Partial cover plus a non-empty discard: deal nothing so the caller
+     * reshuffles first (see header comment).  Additive form keeps the
+     * 8-bit compare cheap (draw_idx + need cannot wrap: both are tiny). */
+    if (b->deck.discard_count != 0 &&
+        (uint8_t)(b->deck.draw_idx + need) > b->deck.count) {
+        return false;
     }
     for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
         if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) {
@@ -348,6 +431,7 @@ static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
 void battle_execute_combo(Battle *b)
 {
     EffectResult res;
+    uint8_t j;
     if (!b || b->battle_over) return;
 
     /* STATUS_FREEZE on the player (docs/combo-system.md §12): the whole
@@ -365,6 +449,7 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
+        g_battle_anim_target_name[0] = '\0';
         return;
     }
 
@@ -383,11 +468,23 @@ void battle_execute_combo(Battle *b)
                     b->phase = BATTLE_PHASE_PLAYER_ANIM;
                     b->delay_timer = 30;
                     b->dirty = BATTLE_DIRTY_ALL;
+                    g_battle_anim_target_name[0] = '\0';
                     return;
                 }
             }
             b->selected_indices[0] = b->cursor_pos;
             b->combo_count = 1;
+        }
+        /* Snapshot the victim for the ANIM banner: resolution may kill
+         * it and auto-advance target_idx before the banner draws. */
+        if (b->target_idx < b->enemy_count) {
+            for (j = 0; j < 11 && b->enemies[b->target_idx].name[j]; j++) {
+                g_battle_anim_target_name[j] =
+                    b->enemies[b->target_idx].name[j];
+            }
+            g_battle_anim_target_name[j] = '\0';
+        } else {
+            g_battle_anim_target_name[0] = '\0';
         }
         battle_play_hand(b, true, &res);
         /* Rings heal their power as the combo resolves, whatever the
@@ -469,7 +566,6 @@ void battle_execute_combo(Battle *b)
         b->dirty = BATTLE_DIRTY_ALL;
         if (b->enemies[b->target_idx].hp == 0) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-            battle_target_auto_advance(b);
         }
         if (battle_all_enemies_dead(b)) {
             battle_set_result(b, BATTLE_RESULT_VICTORY);
@@ -534,7 +630,14 @@ static void battle_tick_statuses(Battle *b)
     uint8_t i, dmg;
 
     for (i = 0; i < b->enemy_count; i++) {
-        if (b->enemies[i].hp == 0) continue;
+        if (b->enemies[i].hp == 0) {
+            /* A poisoned victim's grey-out must drain even after death:
+             * the shared enemy deck reads the union of every slot's mask,
+             * so a frozen corpse mask would jam the draw position and lock
+             * all surviving enemies out of attacking forever. */
+            status_grey_tick((uint8_t)(i + 1));
+            continue;
+        }
         dmg = status_tick(status_slots((uint8_t)(i + 1)), (uint8_t)(i + 1));
         /* Poison grey-out duration drains each round (Phase D). */
         status_grey_tick((uint8_t)(i + 1));
@@ -581,8 +684,18 @@ void battle_update(Battle *b)
         }
         if (vb->timer_ticks > 0) {
             vb->timer_ticks--;
-            if (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && ((vb->timer_ticks & 15) == 0 || (vb->timer_ticks & 15) == 15)) {
-                vb->dirty |= BATTLE_DIRTY_BLINK;
+            /* Multi-frame enemy art (boss glow-eyes) rides the battle
+             * clock, but the stamper only runs on ENEMIES -- otherwise
+             * set on target change, which a solo boss never triggers.
+             * Re-stamp at the clock edge where the art bit flips (== 15
+             * going down) in both player phases, keeping the existing
+             * == 0 edge in DEFEND for the blink cadence (fused into one
+             * condition at zero net size: the fixed bank sits ~16 B
+             * under 0x8000, AGENTS.md 52.18). BLINK in SELECT is
+             * harmless: its only consumer redraws the enemy columns
+             * (ui_battle_content.c). */
+            if ((vb->timer_ticks & 15) == 15 || (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
+                vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {
             battle_execute_combo(b);

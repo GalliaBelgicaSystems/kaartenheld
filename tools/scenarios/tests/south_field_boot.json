@@ -1,0 +1,50 @@
+{
+ "name": "south_field_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the South Field scene with roaming enemies",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_SOUTH_FIELD"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 12,
+   "expected_y": 1
+  },
+  {
+   "type": "music_track",
+   "expected": "DESOLATE"
+  },
+  {
+   "type": "actor_at",
+   "entity": "SLIME",
+   "x": 8,
+   "y": 8
+  },
+  {
+   "type": "actor_at",
+   "entity": "BAT",
+   "x": 14,
+   "y": 10
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 12,
+   "y": 1,
+   "facing": "DOWN"
+  },
+  "seed": 5005
+ }
+}

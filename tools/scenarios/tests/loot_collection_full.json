@@ -1,217 +1,217 @@
 {
-  "name": "loot_collection_full",
-  "test": true,
-  "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'.",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 5002,
-    "party": {
-      "HERO": {
-        "hp": 60,
-        "max_hp": 60
-      }
-    },
-    "start_battle": true
+ "name": "loot_collection_full",
+ "test": true,
+ "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "collection_add",
-      "card_id": 128,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 129,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 130,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 131,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 132,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 133,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 134,
-      "quantity": 1
-    },
-    {
-      "type": "collection_add",
-      "card_id": 135,
-      "quantity": 1
-    },
-    {
-      "type": "set_enemy_hp",
-      "index": 0,
-      "hp": 1
-    },
-    {
-      "type": "set_enemy_hp",
-      "index": 1,
-      "hp": 1
-    },
-    {
-      "type": "set_enemy_hp",
-      "index": 2,
-      "hp": 1
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 30
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "BATTLE_WON"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "LOOT_CARD_ADDED"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 10,
-      "contains": "YOU FOUND"
-    }
-  ]
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 128,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 130,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 131,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 133,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 134,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 135,
+   "quantity": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 10,
+   "contains": "YOU FOUND"
+  }
+ ]
 }

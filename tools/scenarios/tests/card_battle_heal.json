@@ -1,96 +1,96 @@
 {
-  "name": "card_battle_heal",
-  "test": true,
-  "description": "Playing a HE5 card in the attack phase heals the hero by its power (5) instead of dealing damage",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "HE",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 1,
-      "uses": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 15
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "HEALED"
-    },
-    {
-      "type": "event_count",
-      "event": "CARD_PLAYED",
-      "count": 1
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 15
-    },
-    {
-      "type": "event_arg",
-      "event": "COMBO_RESOLVED",
-      "index": 0,
-      "value": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "EFFECT_RESOLVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "EFFECT_RESOLVED",
-      "index": 0,
-      "value": 5
-    },
-    {
-      "type": "event_arg",
-      "event": "EFFECT_RESOLVED",
-      "index": 1,
-      "value": 3
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 10,
-        "max_hp": 40
-      }
-    },
-    "seed": 6001,
-    "start_battle": true
+ "name": "card_battle_heal",
+ "test": true,
+ "description": "Playing a HE5 card in the attack phase heals the hero by its power (5) instead of dealing damage",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 15
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_PLAYED",
+   "count": 1
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 15
+  },
+  {
+   "type": "event_arg",
+   "event": "COMBO_RESOLVED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "EFFECT_RESOLVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "EFFECT_RESOLVED",
+   "index": 0,
+   "value": 5
+  },
+  {
+   "type": "event_arg",
+   "event": "EFFECT_RESOLVED",
+   "index": 1,
+   "value": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6001,
+  "start_battle": true
+ }
 }

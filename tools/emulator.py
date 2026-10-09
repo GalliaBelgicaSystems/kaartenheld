@@ -4,7 +4,33 @@ mgba CLI debugger transport for Game Boy RPG development harness.
 Uses mgba's command-line debugger (-d) via PTY with raw TTY mode.
 Authoritative bridge for Game Boy snapshot, telemetry, and screen inspection.
 """
-import subprocess, pty, os, select, time, tty, termios, fcntl, re, signal
+import subprocess, pty, os, select, time, tty, termios, fcntl, re, signal, json, sys
+from pathlib import Path
+
+_TOOLS_DIR = Path(__file__).resolve().parent
+if str(_TOOLS_DIR / "screen_compiler") not in sys.path:
+    sys.path.insert(0, str(_TOOLS_DIR / "screen_compiler"))
+
+_REPOROOT = Path(__file__).resolve().parent.parent
+
+
+def _scene_id_maps():
+    """SCENE_MAP / MAP_NAME_MAP derived from levels/registry.json (+ fixed
+    TEST block): display names for snapshot bytes.  Unknown ids fall back
+    to UNKNOWN_<n> at the use sites, so a stale map degrades loudly."""
+    try:
+        reg = json.loads((_REPOROOT / "levels" / "registry.json").read_text(
+            encoding="utf-8"))
+        scenes = reg.get("scenes", {})
+        base = reg.get("_test_base", 240)
+    except (OSError, ValueError):
+        scenes, base = {}, 240
+    test_names = ["test_field", "test_town", "test_forest",
+                  "test_mountain_pass", "test_castle", "test_south_field"]
+    real = {num: sid.upper() for sid, num in scenes.items()
+            if isinstance(num, int)}
+    test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
+    return {**real, **test}
 
 DEBUG_PROTOCOL_VERSION = 1
 
@@ -14,36 +40,56 @@ TELEMETRY_EVENT_SIZE = 13
 GAME_STATE_MAP = {0: "OVERWORLD", 1: "BATTLE", 2: "GAME_OVER", 3: "THANKS"}
 SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "THANKS",
               5: "SHOP", 6: "ITEM", 7: "ENDING", 8: "SAVE_LOAD", 9: "TITLE", 10: "INTRO",
-              11: "TUTORIAL"}
-SCENE_MAP = {0: "FIELD", 1: "TOWN", 2: "FOREST", 3: "MOUNTAIN_PASS", 4: "CASTLE"}
+              11: "TUTORIAL", 12: "SPLASH"}
+SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
-                   4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS"}
+                   4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
+                   9: "DESOLATE", 10: "FOREST"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
-MAP_NAME_MAP = {0: "FIELD", 1: "TOWN", 2: "FOREST", 3: "MOUNTAIN_PASS", 4: "CASTLE"}
+MAP_NAME_MAP = dict(SCENE_MAP)
 STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
-ENTITY_ID_MAP = {0: "NONE", 1: "PLAYER",
-                 GAME_ID_BASE + 0: "SLIME", GAME_ID_BASE + 1: "MAYOR",
-                 GAME_ID_BASE + 2: "GUARD", GAME_ID_BASE + 3: "SHOPKEEPER",
-                 GAME_ID_BASE + 4: "BAT", GAME_ID_BASE + 5: "SLIME_LORD",
-                 GAME_ID_BASE + 6: "MERCHANT", GAME_ID_BASE + 7: "AMULET",
-                 GAME_ID_BASE + 8: "WIZARD"}
+
+
+def _entity_id_map():
+    """ENTITY_ID_MAP derived from the entity-type registries
+    (tools/screen_compiler/entity_ids.py), the same source the ROM's
+    generated header uses.  Falls back to the engine sentinels if the
+    content is unreadable."""
+    try:
+        from entity_ids import entity_id_map
+        return entity_id_map()
+    except Exception:
+        return {0: "NONE", 1: "PLAYER"}
+
+
+ENTITY_ID_MAP = _entity_id_map()
 INTERACTION_ID_MAP = {0: "NONE", 1: "DIALOGUE", 2: "COMBAT", 3: "SHOP", 4: "SAVE"}
-DIALOGUE_ID_MAP = {0: "NONE",
-                   GAME_ID_BASE + 0: "MAYOR_GREETING",
-                   GAME_ID_BASE + 1: "GUARD_GREETING",
-                   GAME_ID_BASE + 2: "SHOPKEEPER_GREETING",
-                   GAME_ID_BASE + 3: "MAYOR_INTRO",
-                   GAME_ID_BASE + 4: "GUARD_AFTER_MAYOR",
-                   GAME_ID_BASE + 5: "QUEST_ACTIVE",
-                   GAME_ID_BASE + 6: "QUEST_COMPLETE",
-                   GAME_ID_BASE + 7: "QUEST_DONE",
-                   GAME_ID_BASE + 8: "MERCHANT_INTRO",
-                   GAME_ID_BASE + 9: "MERCHANT_THANKS",
-                   GAME_ID_BASE + 10: "AMULET_FOUND",
-                   GAME_ID_BASE + 11: "AMULET_NOTHING"}
+
+
+def _dialogue_id_map():
+    """DIALOGUE_ID_MAP derived from screens/dialogue/*.json (same
+    sorted-filename assignment as dialogue_compile.py).  Falls back to
+    {} (plus NONE) if the content is unreadable — callers render
+    UNKNOWN_<n> for unmapped ids."""
+    from dialogue_ids import dialogue_files, load_dialogue_json
+    out = {0: "NONE"}
+    try:
+        files = dialogue_files()
+    except OSError:
+        return out
+    for i, path in enumerate(files):
+        try:
+            data = load_dialogue_json(path)
+        except (OSError, ValueError):
+            continue
+        out[0x80 + i] = data["_id"].upper()
+    return out
+
+
+DIALOGUE_ID_MAP = _dialogue_id_map()
 BATTLE_ID_MAP = {0: "NONE", 1: "SLIME", 2: "BAT"}
 EVENT_TYPE_MAP = {
     0: "PLAYER_MOVED", 1: "COLLISION", 2: "ENCOUNTER_STARTED",
@@ -69,7 +115,8 @@ EVENT_TYPE_MAP = {
     57: "TURN_SKIPPED", 58: "STATUS_RESISTED",
     59: "NEW_GAME_STARTED", 60: "GAME_CONTINUED", 61: "SOUND_TOGGLED",
     62: "TARGET_CHANGED",
-    63: "CARDS_GREYED", 64: "CARDS_UNGREYED"
+    63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
+    65: "ACTOR_MOVED"
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -87,6 +134,7 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
 # Static per-actor semantics resolved from the snapshot's actor ids.
+# Visuals mirror levels/*.json properties.visual (see docs/glyphs.md).
 ACTOR_INFO_MAP = {
     "PLAYER":      {"visual": "@", "hostile": False, "interaction": "NONE", "dialogue": "NONE", "battle": "NONE"},
     "SLIME":       {"visual": "E", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME"},
@@ -95,8 +143,10 @@ ACTOR_INFO_MAP = {
     "SHOPKEEPER":  {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SHOPKEEPER_GREETING", "battle": "NONE"},
     "BAT":         {"visual": "V", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "BAT"},
     "SLIME_LORD":  {"visual": "L", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "NONE"},
-    "MERCHANT":    {"visual": "M", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},
-    "AMULET":      {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
+    "MERCHANT":    {"visual": "C", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},
+    "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
+    "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
+    "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's
@@ -106,21 +156,6 @@ BUTTON_NAMES = ["RIGHT", "LEFT", "UP", "DOWN", "A", "B", "SELECT", "START"]
 BUTTON_MASKS = {
     "RIGHT": 0x01, "LEFT": 0x02, "UP": 0x04, "DOWN": 0x08,
     "A": 0x10, "B": 0x20, "SELECT": 0x40, "START": 0x80
-}
-
-SCENARIO_IDS = {
-    "NEW_GAME": 1, "FIRST_ENCOUNTER": 2, "TOWN_ARRIVAL": 3,
-    "TOWN_DEPARTURE": 4, "TOWN_REENTRY": 5, "MAYOR_ENCOUNTER": 6,
-    "MAYOR_DIALOGUE": 7, "MAYOR_DIALOGUE_MOVEMENT_BLOCKED": 8,
-    "GUARD_DIALOGUE": 9, "FONT_TEST": 10, "DIALOGUE_RENDER_TEST": 11,
-    "BATTLE_ATTACK": 12, "GUARD_INTERACTION_DISTANCE": 13, "GAME_OVER": 14,
-    "OVERWORLD_BOOT": 15, "DIALOGUE_BOOT": 16, "BATTLE_BOOT": 17,
-    "GAME_OVER_BOOT": 18, "THANKS_BOOT": 19, "FOREST_BOOT": 20,
-    "MOUNTAIN_PASS_BOOT": 21, "CASTLE_BOOT": 22, "TOWN_BOOT": 23,
-    "ACTOR_COLLISION_BLOCKING": 24, "ACTOR_SHOPKEEPER": 25, "ACTOR_BAT": 26,
-    "LARGE_MAP_SCROLL": 27, "FIELD_EAST_SCROLL": 28, "CAMERA_BOUNDARY_CLAMP": 29,
-    "SCROLL_RENDER_ALIGNMENT": 30, "START_SWALLOWS_MAP_COMMIT": 31,
-    "TITLE_BOOT": 32
 }
 
 # ── Declarative initial-state descriptor ─────────────────────────────
@@ -181,8 +216,9 @@ ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "WOOD_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_10": 0x46}
+               "BOW_9": 0x46}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
+                "SPIDER_FIELD": 12,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
 ACTOR_STATE_NAME_MAP = {"ALIVE": 0, "DEFEATED": 1}
 # Status IDs (mirrors src/rpg/status.h StatusId enum)
@@ -381,7 +417,7 @@ class TelemetryEventList(list):
 
 
 class EmulatorSession:
-    def __init__(self, rom_path="build/rpg_card_proto_debug.gb"):
+    def __init__(self, rom_path="build/kaartenheld_debug.gb"):
         self.rom_path = rom_path
         self.sym_path = rom_path.replace(".gb", ".sym")
         self.master = None
@@ -530,7 +566,8 @@ class EmulatorSession:
         self._session_dir = session_dir
         rom_copy = os.path.join(session_dir, "rom.gb")
         shutil.copyfile(self.rom_path, rom_copy)
-        cmd = ['xvfb-run', '-a', 'mgba',
+        auth_file = os.path.join(session_dir, "Xauthority")
+        cmd = ['xvfb-run', '-d', '-f', auth_file, 'mgba',
                '-C', 'audioSync=false', '-C', 'videoSync=false',
                '-d', rom_copy]
         self.proc = subprocess.Popen(cmd, stdin=slave, stdout=slave, stderr=slave,
@@ -1016,6 +1053,34 @@ class EmulatorSession:
         console-font tile indices (ui_font_tile_base + (ch - ' '))."""
         addr = self.get_symbol("g_tilemap_mirror")
         return [self._memread(addr + i) for i in range(32 * 32)]
+
+    def get_tilemap_attr_mirror(self):
+        """Read the g_tilemap_attr_mirror ring (DEBUG build). Indexed
+        by (world_row & 31) * 32 + (world_col & 31); values are CGB palette
+        attribute indices (0..7)."""
+        addr = self.get_symbol("g_tilemap_attr_mirror")
+        return [self._memread(addr + i) for i in range(32 * 32)]
+
+    def get_oam_entry(self, entry):
+        """Read one shadow-OAM entry (WRAM 0xC000, 4 bytes: y, x, tile, prop).
+        Used for OAM HUD assertions (battle top-right rider sprites); the
+        SameBoy harness cannot observe VBlank-timed rendering, but OAM entry
+        bytes are deterministic WRAM state (AGENTS.md 52.15: riders are set
+        by the bank-5 OAM pass, not by a VBlank-timed reveal)."""
+        base = 0xC000 + (entry & 0xFF) * 4
+        return tuple(self._memread(base + i) for i in range(4))
+
+    def get_sfx_state(self):
+        """Read the SFX trigger log: (total count, last SFX id).
+        Per-trigger SFX telemetry would flood the 32-entry gameplay ring
+        and evict gameplay events, so triggers land in these WRAM globals
+        instead (see audio.c)."""
+        count_addr = self.get_symbol("g_sfx_played_count")
+        last_addr = self.get_symbol("g_sfx_last_id")
+        lo = self._memread(count_addr)
+        hi = self._memread(count_addr + 1)
+        count = (lo or 0) | ((hi or 0) << 8)
+        return count, self._memread(last_addr)
 
     def get_screen_buf(self):
         """Read 18×20 characters from g_ui_screen_buf."""

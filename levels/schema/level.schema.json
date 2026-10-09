@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Level",
+  "description": "Canonical level definition for the Game Boy RPG level editor and compiler.",
+  "type": "object",
+  "required": ["id", "name", "map", "layers", "player"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the level/scene (e.g. forest, town, field)"
+    },
+    "default_walkable": {
+      "type": "string",
+      "description": "Ground tile for every cell the terrain layer leaves unpainted (tileset.tile_id format, e.g. forest.forest_plain_floor_2). Declared once per level; the editor fill, the compiler expansion, the ROM fallback rendering, and the parity gate all use this one field. When absent, tools fall back to the first tile with 'plain' in the manifest order."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable level title"
+    },
+    "map": {
+      "type": "object",
+      "required": ["width", "height", "tileset"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40,
+          "description": "Width in tiles (<= WORLD_WIDTH 40)"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 24,
+          "description": "Height in tiles (<= WORLD_HEIGHT 24)"
+        },
+        "tileset": {
+          "type": "string",
+          "description": "Tileset identifier (e.g. forest, exterior, interior)"
+        },
+        "music": {
+          "type": "string",
+          "description": "Background music track enum (e.g. MUSIC_OVERWORLD, MUSIC_TOWN, MUSIC_DUNGEON)"
+        },
+        "map_id": {
+          "type": "string",
+          "description": "Engine MapId enum constant (e.g. MAP_FOREST, MAP_TOWN)"
+        }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "required": ["terrain"],
+      "properties": {
+        "terrain": {
+          "description": "2D tile grid array of strings (rows of semantic tile IDs) or list of block placements",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["x", "y", "width", "height", "tile"],
+                "properties": {
+                  "x": { "type": "integer" },
+                  "y": { "type": "integer" },
+                  "width": { "type": "integer" },
+                  "height": { "type": "integer" },
+                  "tile": { "type": "string" }
+                }
+              }
+            }
+          ]
+        },
+        "blocks": {
+          "type": "array",
+          "description": "Optional explicit list of SceneTerrainBlock rects",
+          "items": {
+            "type": "object",
+            "required": ["x", "y", "width", "height", "tile"],
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" },
+              "tile": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "player": {
+      "type": "object",
+      "required": ["spawn"],
+      "properties": {
+        "spawn": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" },
+            "facing": {
+              "type": "string",
+              "enum": ["UP", "DOWN", "LEFT", "RIGHT", "NORTH", "SOUTH", "WEST", "EAST"]
+            }
+          }
+        }
+      }
+    },
+    "neighbors": {
+      "type": "object",
+      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene with a mirrored entry one cell inside the neighbor's opposite edge. A point exit on the same cell wins over the edge rule. Because the landing cell is inside the neighbor, that entry line must be walkable too or the player is trapped; the compiler refuses to build a pairing that drops the player into a wall. Empty string or absent = no link on that edge.",
+      "properties": {
+        "north": { "type": "string" },
+        "south": { "type": "string" },
+        "east": { "type": "string" },
+        "west": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "exits": {
+      "type": "array",
+      "description": "List of invisible scene-transition triggers (doors, elevators, stairs you paint yourself). The trigger keeps the terrain art painted underneath and never stamps its own tile. A trigger on a linked border cell wins over the neighbors edge rule.",
+      "items": {
+        "type": "object",
+        "required": ["x", "y", "target_scene", "target_x", "target_y"],
+        "properties": {
+          "x": { "type": "integer" },
+          "y": { "type": "integer" },
+          "target_scene": { "type": "string" },
+          "target_x": { "type": "integer" },
+          "target_y": { "type": "integer" },
+          "direction": { "type": "string" },
+          "tile_char": { "type": "string" },
+          "tunnel": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Two-way tunnel id linking this exit to exactly one return exit in the target scene (same id on both mouths, mutual targets, each landing on the other's gate). Absent = one-way exit." }
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "description": "Semantic objects and entities placed in the level",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "position"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["player_spawn", "npc", "enemy", "chest", "door", "warp", "trigger", "item", "signpost"]
+          },
+          "position": {
+            "type": "object",
+            "required": ["x", "y"],
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" }
+            }
+          },
+          "properties": {
+            "type": "object",
+            "description": "Engine-mapped actor fields. entity_id/display_name/battle/ai/dialogue/shop/save/quest_var/quest_val are the original slots; actor_id/facing/flags/visual/hp/max_hp/gold_reward/reward_currency are full-fidelity slots so JSON roundtrips the C rows (see tools/level_compiler/decompile.py). overworld_sprite/animation_frames select the SPRITE_KIND_* render.",
+            "properties": {
+              "entity_id": { "type": "string" },
+              "enemy_type": { "type": "string", "description": "Explicit enemy-type id (screens/enemy_types/<id>.json) for type=enemy placements. Wins over the ENTITY_ID_X naming convention when resolving shared overworld art." },
+              "display_name": { "type": "string" },
+              "battle": { "type": "string" },
+              "ai": { "type": "string" },
+              "dialogue": { "type": "string" },
+              "shop": { "type": "integer" },
+              "save": { "type": "integer" },
+              "quest_var": { "type": "string" },
+              "quest_val": { "type": "integer" },
+              "actor_id": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535,
+                "description": "Stable persistent instance id (defeat tracking). Must be unique across scenes when nonzero."
+              },
+              "facing": {
+                "type": "string",
+                "enum": ["UP", "DOWN", "LEFT", "RIGHT"]
+              },
+              "flags": {
+                "type": "array",
+                "items": { "type": "string", "enum": ["HOSTILE", "BLOCKING", "INTERACTABLE"] }
+              },
+              "visual": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1,
+                "description": "ASCII fallback glyph (semantic buffer + ASCII-kind actors)"
+              },
+              "hp": { "type": "integer", "minimum": 0, "description": "Required for type=enemy" },
+              "max_hp": { "type": "integer", "minimum": 0, "description": "Required for type=enemy" },
+              "gold_reward": { "type": "integer", "minimum": 0 },
+              "reward_currency": { "type": "string" },
+              "overworld_sprite": { "type": "string" },
+              "animation_frames": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "description": "Semantic zones for LLM contextual awareness and gameplay triggers",
+      "items": {
+        "type": "object",
+        "required": ["id", "bounds"],
+        "properties": {
+          "id": { "type": "string" },
+          "bounds": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "width": { "type": "integer" },
+              "height": { "type": "integer" }
+            }
+          },
+          "description": { "type": "string" },
+          "gameplay": {
+            "type": "object",
+            "properties": {
+              "purpose": { "type": "string" },
+              "difficulty": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

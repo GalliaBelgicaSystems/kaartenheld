@@ -25,6 +25,17 @@ static uint8_t pad_state = 0;
 static uint8_t prev_pad_state = 0;
 static uint8_t injected_pad_state = 0;
 
+#ifdef DEBUG_BUILD
+/* Cross-emulator joypad probe (diagnostic, harness/host reads it via the
+ * symbol table): [0] = raw joypad() sample, [1] = P1 register byte as seen
+ * right after the sample, [2] = post-injection pad_state, [3] = write
+ * heartbeat (increments once per input_update).  Passive only: the actual
+ * P1 sampling stays GBDK's joypad() (which ends with both rows
+ * deselected); a local reimplementation that leaves a row selected
+ * returns stale data on the next call in strict emulators. */
+volatile uint8_t g_input_probe[4] = {0, 0, 0, 0};
+#endif
+
 const uint8_t g_input_button_bits[8] = {
     (uint8_t)(1 << INPUT_RIGHT),
     (uint8_t)(1 << INPUT_LEFT),
@@ -71,6 +82,13 @@ void input_update(void)
     }
     pad_state = physical_pad_state | injected_pad_state;
     injected_pad_state = 0;
+    g_input_probe[0] = physical_pad_state;
+    g_input_probe[1] = P1_REG;
+    g_input_probe[2] = pad_state;
+    g_input_probe[3]++;
+    /* NOTE: do NOT telemetry_emit pad edges here -- the 32-event ring is
+     * semantic state (BATTLE_WON etc.) and per-button noise floods it out
+     * (host-side joypad diagnosis reads g_input_probe via the debugger). */
 #else
     /* Honor the debug injection channel outside DEBUG_BUILD too: without
      * this, g_inp_mask writes are silently discarded (the mask is cleared

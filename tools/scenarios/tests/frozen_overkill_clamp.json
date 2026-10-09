@@ -1,90 +1,90 @@
 {
-  "name": "frozen_overkill_clamp",
-  "test": true,
-  "description": "Frozen overkill defense: when the incoming net exceeds the hero's remaining HP and the hero is frozen (cannot defend), the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10 HP and frozen; slime deals 2 damage -> overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "party": {
-      "HERO": {
-        "hp": 1,
-        "max_hp": 10
-      }
-    },
-    "seed": 5002,
-    "start_battle": true,
-    "status": {
-      "frozen_mask": 1
-    }
+ "name": "frozen_overkill_clamp",
+ "test": true,
+ "description": "Frozen overkill defense: when the incoming net exceeds the hero's remaining HP and the hero is frozen (cannot defend), the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10 HP and frozen; slime deals 2 damage -> overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 70
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "battle_player_hp",
-      "expected": 0
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_RECEIVED"
-    },
-    {
-      "type": "event_arg",
-      "event": "DAMAGE_RECEIVED",
-      "index": 0,
-      "value": 1
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "HEALED"
-    }
-  ]
+  "party": {
+   "HERO": {
+    "hp": 1,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true,
+  "status": {
+   "frozen_mask": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "HEALED"
+  }
+ ]
 }

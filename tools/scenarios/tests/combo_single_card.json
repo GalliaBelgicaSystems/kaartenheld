@@ -1,58 +1,58 @@
 {
-  "name": "combo_single_card",
-  "test": true,
-  "description": "Single card deal: SW4 at cursor position 0, select and execute.  Damage = card value (4); enemy HP 5 -> 1.  After the play the card leaves the hand (row 14 shows the remaining default cards).  Proves single-card path in banked combo_evaluate.",
-  "actions": [
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 4
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 14,
-      "contains": "SW3"
-    },
-    {
-      "type": "battle_enemy_hp",
-      "expected": 6
-    },
-    {
-      "type": "event_occurred",
-      "event": "DAMAGE_DEALT"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "combo_single_card",
+ "test": true,
+ "description": "Single card deal: SW4 at cursor position 0, select and execute.  Damage = card value (4); enemy HP 5 -> 1.  After the play the card leaves the hand (row 14 shows the remaining default cards).  Proves single-card path in banked combo_evaluate.",
+ "actions": [
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 4
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "SW3"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 6
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

@@ -1,173 +1,189 @@
 {
-  "name": "battle_multi_enemy_cycle_kill",
-  "test": true,
-  "description": "Patrol bump engages the Mountain Pass slime trio (16 HP each). After the engagement settles, three SW5 cards are injected and selected -- suited THREE KIND, 15 x 205% = 30 damage -- and executed, killing one member (ENTITY_DEFEATED); the HUD then shows exactly two live slimes. Sacrificial flushes absorb the patrol-engagement round so the pins land inside a stable PLAYER_SELECT phase.",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 240
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 45
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 45
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 45
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    },
-    {
-      "type": "set_hand_card",
-      "index": 0,
-      "card_type": "SW",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 0,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 1,
-      "card_type": "SW",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 1,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "set_hand_card",
-      "index": 2,
-      "card_type": "SW",
-      "value": 5
-    },
-    {
-      "type": "set_hand_card_meta",
-      "index": 2,
-      "cost": 0,
-      "uses": 255
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 6
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 60
-    },
-    {
-      "type": "wait",
-      "frames": 1300
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    },
-    {
-      "type": "wait",
-      "frames": 200
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "event_occurred",
-      "event": "ENTITY_DEFEATED"
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "SLIME  SLIME"
-    },
-    {
-      "type": "screen_row_not_contains",
-      "row": 2,
-      "contains": "SLIME  SLIME  SLIME"
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "16/16  16/16"
-    }
-  ],
-  "initial_state": {
-    "scene": "MOUNTAIN_PASS",
-    "player": {
-      "x": 13,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 5002
+ "name": "battle_multi_enemy_cycle_kill",
+ "test": true,
+ "description": "Patrol bump engages the Mountain Pass slime trio (16 HP each). After the engagement settles, three SW5 cards are injected and selected -- suited THREE KIND, 15 x 205% = 30 damage -- and executed, killing one member (ENTITY_DEFEATED); the HUD then shows exactly two live slimes. Sacrificial flushes absorb the patrol-engagement round so the pins land inside a stable PLAYER_SELECT phase.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 240
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "wait",
+   "frames": 1300
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 200
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "SLIME"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET SLIME"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "16/16  16/16"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002
+ }
 }

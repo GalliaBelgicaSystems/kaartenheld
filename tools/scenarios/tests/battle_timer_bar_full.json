@@ -1,32 +1,32 @@
 {
-  "name": "battle_timer_bar_full",
-  "test": true,
-  "description": "The battle countdown bar renders a full 20 cells on entry (20 '=' tiles, 20 seconds at 1 second per tile)",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 1
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 17,
-      "contains": "===================="
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 3000,
-    "start_battle": true
+ "name": "battle_timer_bar_full",
+ "test": true,
+ "description": "The battle countdown bar renders a full 20 cells on entry (20 '=' tiles, 20 seconds at 1 second per tile)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 1
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "===================="
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
 }

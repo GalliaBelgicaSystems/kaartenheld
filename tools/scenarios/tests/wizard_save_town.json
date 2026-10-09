@@ -1,49 +1,48 @@
 {
-  "name": "wizard_save_town",
-  "test": true,
-  "description": "Talking to the Wizard in Town opens the save menu and pressing A saves the game",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 2
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "SAVE_LOAD"
-    },
-    {
-      "type": "event_occurred",
-      "event": "GAME_SAVED"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 6,
-      "y": 11,
-      "facing": "UP"
-    },
-    "seed": 4040,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "currency": {
-      "GOLD": 50
-    }
+ "name": "wizard_save_town",
+ "test": true,
+ "description": "Talking to the Wizard in Town opens the save menu and pressing A saves the game",
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 2
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SAVE_LOAD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_SAVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 6,
+   "y": 11,
+   "facing": "UP"
+  },
+  "seed": 4040,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  }
+ }
 }

@@ -1,42 +1,41 @@
 {
-  "name": "castle_boot",
-  "test": true,
-  "description": "Boot directly into the overworld on the Castle scene",
-  "scenario_id": "CASTLE_BOOT",
-  "actions": [],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "CASTLE"
-    },
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 8,
-      "expected_y": 6
-    },
-    {
-      "type": "music_track",
-      "expected": "DUNGEON"
-    }
-  ],
-  "initial_state": {
-    "scene": "CASTLE",
-    "player": {
-      "x": 8,
-      "y": 6,
-      "facing": "DOWN"
-    },
-    "seed": 5007,
-    "flags": {
-      "ARRIVED_TOWN": true
-    }
+ "name": "castle_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the Castle scene",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_CASTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 8,
+   "expected_y": 6
+  },
+  {
+   "type": "music_track",
+   "expected": "DUNGEON"
   }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 5007,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
 }

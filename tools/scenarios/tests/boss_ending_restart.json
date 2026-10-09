@@ -1,54 +1,53 @@
 {
-  "name": "boss_ending_restart",
-  "test": true,
-  "description": "Pressing A on the ending screen restarts the game to a fresh state",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "FIELD"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 4,
-      "expected_y": 4
-    },
-    {
-      "type": "variable",
-      "variable": "QUEST_MONSTER_HUNT",
-      "expected": 0
-    },
-    {
-      "type": "variable",
-      "variable": "ENDING_SHOWN",
-      "expected": 0
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8504,
-    "screen": "ENDING",
-    "variables": {
-      "ENDING_SHOWN": 1
-    }
+ "name": "boss_ending_restart",
+ "test": true,
+ "description": "Pressing A on the ending screen restarts the game to a fresh state at the FIELD spawn from levels/field.json player.spawn",
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 17,
+   "expected_y": 7
+  },
+  {
+   "type": "variable",
+   "variable": "QUEST_MONSTER_HUNT",
+   "expected": 0
+  },
+  {
+   "type": "variable",
+   "variable": "ENDING_SHOWN",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "screen": "ENDING",
+  "variables": {
+   "ENDING_SHOWN": 1
+  }
+ }
 }

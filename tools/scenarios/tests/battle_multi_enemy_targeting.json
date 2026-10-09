@@ -1,72 +1,72 @@
 {
-  "name": "battle_multi_enemy_targeting",
-  "test": true,
-  "description": "Bumping the Mountain Pass slime starts a 3-slime battle (trio clones share the struck actor's 8 HP) and D-pad DOWN cycles the target cursor",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "game_state",
-      "expected": "BATTLE"
-    },
-    {
-      "type": "screen_row",
-      "row": 0,
-      "contains": "PLAYER TURN"
-    },
-    {
-      "type": "screen_row",
-      "row": 2,
-      "contains": "SLIME  SLIME  SLIME"
-    },
-    {
-      "type": "screen_row",
-      "row": 3,
-      "contains": "16/16  16/16  16/16"
-    },
-    {
-      "type": "screen_row",
-      "row": 4,
-      "contains": "       ^"
-    },
-    {
-      "type": "screen_row",
-      "row": 6,
-      "contains": "HERO        HP:10/10"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "COMBO:"
-    }
-  ],
-  "initial_state": {
-    "scene": "MOUNTAIN_PASS",
-    "player": {
-      "x": 13,
-      "y": 7,
-      "facing": "RIGHT"
-    },
-    "seed": 5002
+ "name": "battle_multi_enemy_targeting",
+ "test": true,
+ "description": "Bumping the Mountain Pass slime starts a 3-slime battle (trio clones share the struck actor's 8 HP) and D-pad DOWN cycles the target cursor",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET SLIME"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "SLIME"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "16/16  16/16  16/16"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "       ^"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "HERO        HP:10/10"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "COMBO:"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002
+ }
 }

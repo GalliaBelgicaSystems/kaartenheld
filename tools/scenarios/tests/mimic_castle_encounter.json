@@ -1,0 +1,75 @@
+{
+ "name": "mimic_castle_encounter",
+ "test": true,
+ "description": "Walking into the castle mimic (12,10) starts a BATTLE_MIMIC battle with the new 3x2 mimic art and deck",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENCOUNTER_STARTED"
+  },
+  {
+   "type": "event_arg",
+   "event": "ENCOUNTER_STARTED",
+   "index": 0,
+   "value": 138
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 30
+  },
+  {
+   "type": "music_track",
+   "expected": "MIMIC"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "TARGET MIMIC"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "    TARGET MIMIC"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 2,
+   "contains": "MIMIC"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 10,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 777
+ }
+}

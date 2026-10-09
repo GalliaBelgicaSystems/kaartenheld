@@ -16,21 +16,24 @@ void start_battle_from_world(Game *g)
     act = &g->world.actors[idx];
 
     /* Hero HP is authoritative in the party state; the world entity is the
-     * runtime engine copy. */
+     * runtime engine copy.  Bosses (no enemy deck) and solo-flagged
+     * minibosses stand alone on the single-enemy centered boss screen. */
     battle_start(&g->battle,
                  act->display_name ? act->display_name : "ENEMY",
                  g->state.party.members[0].hp,
                  g->state.party.members[0].max_hp,
                  act->hp, act->max_hp,
                  &g->state.cards.deck,
-                 act->battle_type);
+                 act->battle_type,
+                 (uint8_t)((act->battle_type == BATTLE_NONE) || act->solo));
 
     /* Every hostile encounter engages as a trio: the struck actor plus
      * two clones of its stats -- EXCEPT actors with no enemy deck
-     * (BATTLE_NONE): the Lord of Slimes stands alone as a proper final
-     * boss.  Enemy decks wrap their draw index, so per-type decks serve
-     * trios unchanged. */
-    if (act->battle_type != BATTLE_NONE) {
+     * (BATTLE_NONE) and actors flagged solo (e.g. the Lord of Slimes as
+     * a proper final boss, the castle mimic as an optional boss): those
+     * stand alone.  Enemy decks wrap their draw index, so per-type decks
+     * serve trios unchanged. */
+    if (act->battle_type != BATTLE_NONE && !act->solo) {
         battle_add_enemy(&g->battle,
                          act->display_name ? act->display_name : "ENEMY",
                          act->hp, act->max_hp);
@@ -40,8 +43,11 @@ void start_battle_from_world(Game *g)
     }
 
     /* Boss actors carry no enemy deck (BATTLE_NONE) and stand alone;
-     * give them the dedicated boss theme, everyone else the battle theme. */
-    if (act->battle_type == BATTLE_NONE) {
+     * give them the dedicated boss theme.  Mimics get their own theme
+     * (bank-7 tracker song); everyone else the battle theme. */
+    if (act->battle_type == BATTLE_MIMIC) {
+        audio_play_music(MUSIC_MIMIC);
+    } else if (act->battle_type == BATTLE_NONE) {
         audio_play_music(MUSIC_BOSS);
     } else {
         audio_play_music(MUSIC_BATTLE);
@@ -130,6 +136,7 @@ void overworld_screen_update(Game *g)
             start_battle_from_world(g);
         } else if (engage == ENGAGE_SHOP) {
             g->item_menu_index = 0;
+            g->item_menu_scroll = 0;
             screen_change(g, SCREEN_SHOP);
         } else if (engage == ENGAGE_SAVE) {
             g->save_slot_mode = 1;

@@ -1,116 +1,91 @@
 {
-  "name": "game_over_continue",
-  "test": true,
-  "description": "On the Game Over Continue? prompt, the default choice (Continue) resumes a save by opening the SAVE/LOAD screen in LOAD mode. The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat and the game-over screen appears.",
-  "scenario_id": "GAME_OVER",
-  "actions": [
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "wait",
-      "frames": 500
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    }
-  ],
-  "assertions": [
-    {
-      "type": "battle_result",
-      "expected": "DEFEAT"
-    },
-    {
-      "type": "game_over_choice",
-      "expected": 0
-    },
-    {
-      "type": "screen",
-      "expected": "SAVE_LOAD"
-    },
-    {
-      "type": "event_occurred",
-      "event": "SCREEN_CHANGED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 13,
-      "y": 8,
-      "facing": "DOWN"
-    },
-    "seed": 4000,
-    "party": {
-      "HERO": {
-        "hp": 2
-      }
-    }
+ "name": "game_over_continue",
+ "test": true,
+ "description": "On the Game Over Continue? prompt, the default choice (Continue) resumes a save by opening the SAVE/LOAD screen in LOAD mode.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 125
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
+ ],
+ "assertions": [
+  {
+   "type": "battle_result",
+   "expected": "DEFEAT"
+  },
+  {
+   "type": "game_over_choice",
+   "expected": 0
+  },
+  {
+   "type": "screen",
+   "expected": "SAVE_LOAD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4000,
+  "party": {
+   "HERO": {
+    "hp": 2
+   }
+  }
+ }
 }

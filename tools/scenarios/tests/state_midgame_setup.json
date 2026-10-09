@@ -1,114 +1,113 @@
 {
-  "name": "state_midgame_setup",
-  "test": true,
-  "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section",
-  "scenario_id": "FOREST_BOOT",
-  "actions": [
-    {
-      "type": "press",
-      "button": "RIGHT"
-    },
-    {
-      "type": "wait",
-      "frames": 8
-    }
-  ],
-  "assertions": [
-    {
-      "type": "game_state",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "scene",
-      "expected": "FOREST"
-    },
-    {
-      "type": "player_position",
-      "expected_x": 10,
-      "expected_y": 8
-    },
-    {
-      "type": "flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    },
-    {
-      "type": "flag",
-      "flag": "MET_MAYOR",
-      "expected": true
-    },
-    {
-      "type": "currency",
-      "expected": 150,
-      "currency": "GOLD"
-    },
-    {
-      "type": "variable",
-      "variable": "CHAPTER",
-      "expected": 1
-    },
-    {
-      "type": "inventory",
-      "item": "WOOD_RING",
-      "expected": 2
-    },
-    {
-      "type": "party_hp",
-      "member": 0,
-      "expected": 24
-    },
-    {
-      "type": "party_level",
-      "member": 0,
-      "expected": 3
-    },
-    {
-      "type": "actor_state",
-      "actor": "SLIME_FOREST",
-      "expected_state": "DEFEATED"
-    },
-    {
-      "type": "actor_state",
-      "actor": "BAT_FOREST",
-      "expected_state": "DEFEATED"
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "ENCOUNTER_STARTED"
-    }
-  ],
-  "initial_state": {
-    "scene": "FOREST",
-    "player": {
-      "x": 9,
-      "y": 8,
-      "facing": "RIGHT"
-    },
-    "seed": 7100,
-    "flags": {
-      "ARRIVED_TOWN": true,
-      "MET_MAYOR": true
-    },
-    "party": {
-      "HERO": {
-        "hp": 24,
-        "max_hp": 30
-      }
-    },
-    "inventory": {
-      "WOOD_RING": 2
-    },
-    "world": {
-      "SLIME_FOREST": "DEFEATED",
-      "BAT_FOREST": "DEFEATED"
-    },
-    "currency": {
-      "GOLD": 150
-    },
-    "progression": {
-      "HERO_1": {
-        "level": 3
-      }
-    }
+ "name": "state_midgame_setup",
+ "test": true,
+ "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
   }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FOREST"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 10,
+   "expected_y": 8
+  },
+  {
+   "type": "flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
+  },
+  {
+   "type": "flag",
+   "flag": "MET_MAYOR",
+   "expected": true
+  },
+  {
+   "type": "currency",
+   "expected": 150,
+   "currency": "GOLD"
+  },
+  {
+   "type": "variable",
+   "variable": "CHAPTER",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 2
+  },
+  {
+   "type": "party_hp",
+   "member": 0,
+   "expected": 24
+  },
+  {
+   "type": "party_level",
+   "member": 0,
+   "expected": 3
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_state",
+   "actor": "BAT_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 9,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 7100,
+  "flags": {
+   "ARRIVED_TOWN": true,
+   "MET_MAYOR": true
+  },
+  "party": {
+   "HERO": {
+    "hp": 24,
+    "max_hp": 30
+   }
+  },
+  "inventory": {
+   "WOOD_RING": 2
+  },
+  "world": {
+   "SLIME_FOREST": "DEFEATED",
+   "BAT_FOREST": "DEFEATED"
+  },
+  "currency": {
+   "GOLD": 150
+  },
+  "progression": {
+   "HERO_1": {
+    "level": 3
+   }
+  }
+ }
 }

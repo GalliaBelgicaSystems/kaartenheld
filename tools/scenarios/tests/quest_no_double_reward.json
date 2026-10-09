@@ -1,45 +1,44 @@
 {
-  "name": "quest_no_double_reward",
-  "test": true,
-  "description": "Once the quest is COMPLETE, the Mayor gives the already-rewarded dialogue and the IRON_SWORD is not duplicated (collection stays at the starter grant's 4 copies; the injected copy is rejected by max_copies)",
-  "scenario_id": "MAYOR_DIALOGUE",
-  "actions": [
-    {
-      "type": "interact",
-      "actor": "MAYOR"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "dialogue_id",
-      "expected": "QUEST_DONE"
-    },
-    {
-      "type": "inventory",
-      "item": "IRON_SWORD",
-      "expected": 4
-    },
-    {
-      "type": "event_not_occurred",
-      "event": "CARD_ADDED_TO_COLLECTION"
-    }
-  ],
-  "initial_state": {
-    "scene": "TOWN",
-    "player": {
-      "x": 9,
-      "y": 5,
-      "facing": "RIGHT"
-    },
-    "seed": 8404,
-    "flags": {
-      "ARRIVED_TOWN": true
-    },
-    "variables": {
-      "QUEST_MONSTER_HUNT": 2
-    },
-    "inventory": {
-      "IRON_SWORD": 1
-    }
+ "name": "quest_no_double_reward",
+ "test": true,
+ "description": "Once the quest is COMPLETE, the Mayor gives the already-rewarded dialogue and the IRON_SWORD is not duplicated (collection stays at the starter grant's 4 copies; the injected copy is rejected by max_copies)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MAYOR"
   }
+ ],
+ "assertions": [
+  {
+   "type": "dialogue_id",
+   "expected": "QUEST_DONE"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_SWORD",
+   "expected": 4
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_ADDED_TO_COLLECTION"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8404,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2
+  },
+  "inventory": {
+   "IRON_SWORD": 1
+  }
+ }
 }

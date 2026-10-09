@@ -1,72 +1,76 @@
 {
-  "name": "card_detail",
-  "test": true,
-  "description": "SELECT on a card row opens the detail page showing type, power/cost, uses/max-copies, owned/decked counts and price",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "SELECT"
-    },
-    {
-      "type": "wait",
-      "frames": 5
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {
-      "type": "screen_row",
-      "row": 5,
-      "contains": "I SW"
-    },
-    {
-      "type": "screen_row",
-      "row": 9,
-      "contains": "PWR"
-    },
-    {
-      "type": "screen_row",
-      "row": 9,
-      "contains": "COST"
-    },
-    {
-      "type": "screen_row",
-      "row": 11,
-      "contains": "USES"
-    },
-    {
-      "type": "screen_row",
-      "row": 13,
-      "contains": "OWN"
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8410
+ "name": "card_detail",
+ "test": true,
+ "description": "SELECT on a card row opens the detail page showing type, power/cost, uses/max-copies, owned/decked counts and price",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "I SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "PWR"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "COST"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "OWN"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
 }

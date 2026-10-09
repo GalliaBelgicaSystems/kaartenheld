@@ -1,77 +1,76 @@
 {
-  "name": "save_load_roundtrip",
-  "test": true,
-  "description": "SAVE captures the canonical state to SRAM; mutating state then LOAD restores it exactly",
-  "scenario_id": "NEW_GAME",
-  "actions": [
-    {
-      "type": "save"
-    },
-    {
-      "type": "add_currency",
-      "currency": "GOLD",
-      "amount": 100
-    },
-    {
-      "type": "load"
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "OVERWORLD"
-    },
-    {
-      "type": "currency",
-      "currency": "GOLD",
-      "expected": 50
-    },
-    {
-      "type": "variable",
-      "variable": "MONSTERS_DEFEATED",
-      "expected": 3
-    },
-    {
-      "type": "inventory",
-      "item": "WOOD_RING",
-      "expected": 1
-    },
-    {
-      "type": "party_hp",
-      "expected": 7
-    },
-    {
-      "type": "story_flag",
-      "flag": "ARRIVED_TOWN",
-      "expected": true
-    }
-  ],
-  "initial_state": {
-    "scene": "FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8601,
-    "flags": {
-      "ARRIVED_TOWN": true,
-      "MET_MAYOR": true
-    },
-    "variables": {
-      "MONSTERS_DEFEATED": 3
-    },
-    "party": {
-      "HERO": {
-        "hp": 7,
-        "max_hp": 10
-      }
-    },
-    "inventory": {
-      "WOOD_RING": 1
-    },
-    "currency": {
-      "GOLD": 50
-    }
+ "name": "save_load_roundtrip",
+ "test": true,
+ "description": "SAVE captures the canonical state to SRAM; mutating state then LOAD restores it exactly",
+ "actions": [
+  {
+   "type": "save"
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 100
+  },
+  {
+   "type": "load"
   }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  },
+  {
+   "type": "variable",
+   "variable": "MONSTERS_DEFEATED",
+   "expected": 3
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 1
+  },
+  {
+   "type": "party_hp",
+   "expected": 7
+  },
+  {
+   "type": "story_flag",
+   "flag": "ARRIVED_TOWN",
+   "expected": true
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8601,
+  "flags": {
+   "ARRIVED_TOWN": true,
+   "MET_MAYOR": true
+  },
+  "variables": {
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 7,
+    "max_hp": 10
+   }
+  },
+  "inventory": {
+   "WOOD_RING": 1
+  },
+  "currency": {
+   "GOLD": 50
+  }
+ }
 }

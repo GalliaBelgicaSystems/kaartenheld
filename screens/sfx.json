@@ -1,0 +1,9 @@
+{
+  "CURSOR": "assets/sfx/sfx cursor.uge",
+  "CONFIRM": "assets/sfx/sfx accept.uge",
+  "SELECT": "assets/sfx/sfx accept.uge",
+  "BACK": "assets/sfx/sfx back.uge",
+  "ATTACK": "assets/sfx/sfx hit2.uge",
+  "HIT": "assets/sfx/sfx hit.uge",
+  "BLOCK": "assets/sfx/sfx block.uge"
+}

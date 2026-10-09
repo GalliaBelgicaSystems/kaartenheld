@@ -1,0 +1,10 @@
+{
+  "$schema": "./schema/rider_icons.schema.json",
+  "id": "rider_icons",
+  "label": "Battle top-right OAM rider HUD",
+  "cells": {
+    "rider_fire": "sprites2",
+    "rider_ice": "sprites12",
+    "rider_poison": "sprites12"
+  }
+}
