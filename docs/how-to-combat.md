@@ -10,6 +10,19 @@ Reduce every enemy's HP to 0 before yours reaches 0. Most fights are
 against a **trio** of monsters (clones of one type); bosses fight alone.
 You always strike first each round, then block.
 
+## First spar: Carl
+
+The field holds a single slime, **CARL**. He is a friendly practice
+dummy: press `A` facing him and he introduces himself, warns you that
+the wilds kill the unready, and teaches the controls (pick cards with
+`LEFT`/`RIGHT`, take them with `A`, attack with `SELECT`; block his
+turn with shields, confirmed with `SELECT`).
+
+Walk into him to spar: a solo fight against his 15 HP. His practice
+deck deals **0 damage**, so you cannot lose — learn the round below at
+your own pace. Beat him and he wishes you luck: your energy pool grows
+from **2 to 3 AP** per phase for every later battle.
+
 ## One round, step by step
 
 ```
@@ -40,7 +53,8 @@ attack *does* (see below).
 
 - **Hand**: 5 cards, drawn from your deck. Played cards are discarded
   and replaced at the round boundary.
-- **Energy**: **6 per phase** — attack *and* defend each get a fresh 6.
+- **Energy**: **2 per phase** at first — attack *and* defend each get a
+  fresh pool. Beating Carl's practice spar raises it to **3 per phase**.
   Every card shows a cost; selecting reserves it, resolving pays it.
   A card you can't afford can't be selected (`NO ENERGY!`).
 - **Timer**: **20 seconds** per decision, shown as the bottom bar. Expiry

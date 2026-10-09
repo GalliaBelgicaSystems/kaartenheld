@@ -150,6 +150,7 @@ STORY_FLAG_ID_MET_MAYOR = 2
 
 # Variables (src/game/game_ids.h)
 VARIABLE_ID_QUEST_MONSTER_HUNT = 3
+VARIABLE_ID_ENERGY_POOL = 6
 
 # Currency (src/game/game_ids.h) — dense slots indexed by id-1.
 CURRENCY_ID_GOLD = 1

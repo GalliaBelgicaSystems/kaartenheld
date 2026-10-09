@@ -60,7 +60,11 @@ void battle_screen_update(Game *g)
                 }
                 if (vg->battle.result == BATTLE_RESULT_VICTORY) {
                     world_on_battle_end(g, true);
-                    screen_change(g, game_screen_after_victory(g));
+                    /* Deferred victory dialogue (e.g. Carl's reward
+                     * speech, started by the ACTOR_DEFEATED event inside
+                     * world_on_battle_end): show it before leaving. */
+                    screen_change(g, vg->dialogue.active ? SCREEN_DIALOGUE :
+                        game_screen_after_victory(g));
                 } else {
                     world_on_battle_fled(g);
                     screen_change(g, SCREEN_OVERWORLD);

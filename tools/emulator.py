@@ -129,7 +129,8 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 8: "BOSS_DEFEATED",
                 GAME_ID_BASE + 9: "MERCHANT_INTRO",
                 GAME_ID_BASE + 10: "MERCHANT_DELIVER",
-                GAME_ID_BASE + 11: "AMULET_PICKUP"}
+                GAME_ID_BASE + 11: "AMULET_PICKUP",
+                GAME_ID_BASE + 12: "TUTORIAL_COMPLETE"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 

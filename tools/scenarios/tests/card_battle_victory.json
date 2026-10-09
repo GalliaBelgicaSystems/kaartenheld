@@ -1,7 +1,7 @@
 {
  "name": "card_battle_victory",
  "test": true,
- "description": "Playing through the slime trio with the real starter deck (attack and defend phases, exercising draw and reshuffle) ends in BATTLE_WON and returns to the overworld",
+ "description": "Playing through Carl's solo practice spar with the real starter deck (attack and defend phases, exercising draw and reshuffle) ends in BATTLE_WON and returns to the overworld",
  "actions": [
   {
    "type": "wait",

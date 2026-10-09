@@ -3,7 +3,7 @@
  "test": true,
  "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card dagger deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing past 1 (poison damage itself is flat 1 HP).",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
    "x": 13,
    "y": 8,
@@ -330,7 +330,7 @@
    "type": "event_arg",
    "event": "STATUS_APPLIED",
    "index": 1,
-   "value": 2
+   "value": 3
   },
   {
    "type": "event_occurred",

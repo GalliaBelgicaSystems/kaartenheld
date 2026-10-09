@@ -89,7 +89,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 18
+   "expected": 20
   }
  ],
  "initial_state": {

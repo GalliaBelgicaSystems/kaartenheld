@@ -82,9 +82,9 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
-   "x": 13,
+   "x": 9,
    "y": 8,
    "facing": "DOWN"
   },

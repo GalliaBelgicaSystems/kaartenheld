@@ -1,7 +1,7 @@
 {
  "name": "patrol_slime_cross",
  "test": true,
-  "description": "Slime patrols in a cross pattern around spawn (14,8); its first leg must commit UP to (14,7). Asserted via ACTOR_MOVED payloads rather than position-at-frame, which historically raced the first commit boundary (position held only [commit, next-leg) frames under some codegen layouts).",
+  "description": "Slime patrols in a cross pattern around spawn (10,8); its first leg must commit UP to (10,7). Asserted via ACTOR_MOVED payloads rather than position-at-frame, which historically raced the first commit boundary (position held only [commit, next-leg) frames under some codegen layouts). Lives on TEST_FOREST: the field slime is now Carl, a stationary practice dummy.",
  "actions": [
   {
    "type": "wait",
@@ -31,7 +31,7 @@
    "type": "event_arg",
    "event": "ACTOR_MOVED",
    "index": 1,
-   "value": 14
+   "value": 10
   },
   {
    "type": "event_arg",
@@ -41,7 +41,7 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 4,
    "y": 4,

@@ -1,7 +1,7 @@
 {
  "name": "loot_drop_victory",
  "test": true,
- "description": "Victory loot drop hook (docs/loot.md 34.5): defeating the slime trio always rolls one combat card from the isolated loot RNG. Seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W P DA).",
+ "description": "Victory loot drop hook (docs/loot.md 34.5): defeating Carl's solo spar always rolls one combat card from the isolated loot RNG. Seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W P DA).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

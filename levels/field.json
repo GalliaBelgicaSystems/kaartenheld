@@ -156,7 +156,7 @@
       [
         "forest.forest_left_wall_3",
         "forest.forest_plain_floor_2",
-        "forest.forest_postsign",
+        "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
@@ -645,7 +645,7 @@
   "exits": [],
   "objects": [
     {
-      "id": "field_slime",
+      "id": "field_carl",
       "type": "enemy",
       "overworld_sprite": "actors.actors_slime_frame_1",
       "animation_frames": [
@@ -657,8 +657,9 @@
         "y": 8
       },
       "properties": {
-        "entity_id": "ENTITY_ID_SLIME",
-        "display_name": "SLIME",
+        "entity_id": "ENTITY_ID_CARL",
+        "enemy_type": "slime",
+        "display_name": "CARL",
         "actor_id": 1,
         "facing": "DOWN",
         "flags": [
@@ -666,122 +667,44 @@
           "BLOCKING",
           "INTERACTABLE"
         ],
-        "visual": "E",
-        "hp": 10,
-        "max_hp": 10,
+        "visual": "C",
+        "hp": 15,
+        "max_hp": 15,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "battle": "BATTLE_SLIME_TRIO",
-        "ai": "AI_PATROL_CROSS"
+        "battle": "BATTLE_CARL",
+        "solo": true,
+        "ai": "AI_NONE"
       }
     },
     {
-      "id": "field_signpost",
-      "type": "signpost",
+      "id": "field_carl_tutor",
+      "type": "npc",
+      "overworld_sprite": "actors.actors_slime_frame_1",
+      "animation_frames": [
+        "actors.actors_slime_frame_1",
+        "actors.actors_slime_frame_2"
+      ],
       "position": {
-        "x": 2,
-        "y": 4
+        "x": 14,
+        "y": 8
       },
       "properties": {
-        "entity_id": "ENTITY_ID_SIGNPOST",
-        "display_name": "SIGNPOST",
-        "dialogue": "DIALOGUE_ID_SIGNPOST",
+        "entity_id": "ENTITY_ID_CARL",
+        "enemy_type": "slime",
+        "display_name": "CARL",
+        "dialogue": "DIALOGUE_ID_TUTORIAL_CARL_INTRO",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [
           "BLOCKING",
           "INTERACTABLE"
         ],
-        "visual": "?",
+        "visual": "C",
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
         "ai": "AI_NONE"
-      }
-    },
-    {
-      "id": "obj_3645",
-      "type": "enemy",
-      "position": {
-        "x": 23,
-        "y": 9
-      },
-      "properties": {
-        "display_name": "SPIDER",
-        "battle": "BATTLE_SPIDER",
-        "ai": "AI_PATROL_VERT",
-        "enemy_type": "spider",
-        "entity_id": "ENTITY_ID_SPIDER",
-        "facing": "DOWN",
-        "flags": [
-          "HOSTILE",
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "S",
-        "hp": 16,
-        "max_hp": 16,
-        "gold_reward": 15,
-        "reward_currency": "CURRENCY_ID_GOLD",
-        "actor_id": 12
-      }
-    },
-    {
-      "id": "field_bat2",
-      "type": "enemy",
-      "position": {
-        "x": 8,
-        "y": 12
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_BAT",
-        "display_name": "BAT",
-        "actor_id": 40,
-        "facing": "DOWN",
-        "flags": [
-          "HOSTILE",
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "V",
-        "hp": 8,
-        "max_hp": 8,
-        "gold_reward": 8,
-        "reward_currency": "CURRENCY_ID_GOLD",
-        "battle": "BATTLE_BAT",
-        "ai": "AI_PATROL_CIRCLE"
-      },
-      "overworld_sprite": "actors.actors_bats_frame_1",
-      "animation_frames": [
-        "actors.actors_bats_frame_1",
-        "actors.actors_bats_frame_2"
-      ]
-    },
-    {
-      "id": "field_kobold",
-      "type": "enemy",
-      "position": {
-        "x": 26,
-        "y": 14
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_KOBOLD",
-        "display_name": "KOBOLD",
-        "actor_id": 41,
-        "facing": "DOWN",
-        "flags": [
-          "HOSTILE",
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "K",
-        "hp": 14,
-        "max_hp": 14,
-        "gold_reward": 8,
-        "reward_currency": "CURRENCY_ID_GOLD",
-        "battle": "BATTLE_KOBOLD",
-        "ai": "AI_CHASE",
-        "enemy_type": "kobold"
       }
     }
   ],

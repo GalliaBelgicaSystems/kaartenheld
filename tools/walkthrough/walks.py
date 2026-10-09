@@ -21,6 +21,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
+                                      VARIABLE_ID_ENERGY_POOL,
                                       CARD_WOOD_RING, HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON)
@@ -302,31 +303,39 @@ def walk_a(planner, checks, sram_out=None):
         s.close()
 
 
-# ── Walk B: slime battle -> victory + loot ───────────────────────────
+# ── Walk B: Carl practice spar -> victory + AP unlock ─────────────────
 
 def walk_b(planner, checks):
     s = Session(checks, "walk-b")
     field = _level("field")
     spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
-    slime = next((o for o in field["objects"]
-                  if (o.get("properties") or {}).get("entity_id")
-                  == "ENTITY_ID_SLIME"), None)
-    slime_xy = (slime["position"]["x"], slime["position"]["y"])
-    props = slime["properties"]
-    s.check("slime engaged",
-            engage_hostile(s, planner, "field", slime_xy),
+    carl = next((o for o in field["objects"] if o.get("type") == "enemy"),
+                None)
+    carl_xy = (carl["position"]["x"], carl["position"]["y"])
+    props = carl["properties"]
+    # Carl spars on bump (he is stationary, so walk adjacent and step
+    # in; the planner routes around his tile).
+    adj = (carl_xy[0] - 1, carl_xy[1])
+    path = planner.path("field", s.pos(), adj)
+    s.check("path to carl", path is not None, expected="bfs path",
+            actual="none" if path is None else "ok")
+    if path:
+        _walk_path(s, path)
+    s.press("right", settle=24)
+    s.check("carl engaged", s.text_has("DECK:"),
             expected="DECK:", actual="none")
     s.tick(40)
     s.shoot("09-battle", need="DECK:")
     s.check_eq("hero hp at battle start", s.reader.battle_player_hp(),
                HERO_START_HP)
-    s.check_eq("slime hp at battle start", s.reader.battle_enemy_hp(0),
+    s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
 
-    # Fight with hand-aware selection until the trio drops (variance-
-    # safe: total enemy HP strictly decreases per landed hit; never
-    # assert exact damage).  Bounded rounds + defeat detection.
-    prev_total = sum(s.reader.battle_enemy_hp(i) for i in range(3))
+    # Fight with hand-aware selection until the solo spar drops
+    # (variance-safe: enemy HP strictly decreases per landed hit; never
+    # assert exact damage).  Bounded rounds + defeat detection.  Carl's
+    # practice deck deals 0, so the hero must still be full afterwards.
+    prev_total = s.reader.battle_enemy_hp(0)
     start_total = prev_total
     victory = False
     defeated = False
@@ -341,7 +350,7 @@ def walk_b(planner, checks):
         if s.reader.battle_player_hp() == 0:
             defeated = True
             break
-        total = sum(s.reader.battle_enemy_hp(i) for i in range(3))
+        total = s.reader.battle_enemy_hp(0)
         if total < prev_total:
             s.check("damage dealt round %d" % round_no, True)
             prev_total = total
@@ -351,9 +360,16 @@ def walk_b(planner, checks):
                " (hero defeated)" if defeated else ""))
     s.shoot("11-battle-victory", need="VICTORY")
 
-    # Leave the result screen; prove the overworld return.  The loot
-    # hook credits gold on battle end, so assert gold AFTER the exit.
-    s.press("a", settle=30)
+    # Leave the result screen; Carl's good-luck speech shows deferred
+    # before the overworld return.  The loot hook credits gold on battle
+    # end, so assert gold AFTER the exit.  The exit press is retried: screen
+    # transitions eat input for a few dozen frames.
+    s.check("victory speech",
+            s.press_until("a", lambda: s.text_has("CARL:"), tries=6),
+            expected="CARL:", actual="none")
+    s.check("speech closed",
+            close_dialogue(s, "CARL:"),
+            expected="closed", actual="open")
     s.check("aftermath overworld",
             s.wait_for(lambda: s.reader.scene_state()["scene_id"]
                        == SCENE_FIELD, ticks=180),
@@ -361,9 +377,10 @@ def walk_b(planner, checks):
             actual="scene %d" % s.reader.scene_state()["scene_id"])
     s.check_eq("victory gold", s.reader.gold(),
                HERO_START_GOLD + props.get("gold_reward", 0))
-    s.check("hero hp post-battle sane",
-            0 < s.reader.hero()["hp"] <= HERO_START_HP, expected="1..10",
-            actual=str(s.reader.hero()["hp"]))
+    s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
+               HERO_START_HP)
+    s.check_eq("energy pool raised 2 -> 3",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
     s.tick(30)

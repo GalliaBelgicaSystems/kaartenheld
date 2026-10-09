@@ -18,6 +18,7 @@ const char *game_battle_enemy_type_id(uint8_t battle_id)
     switch (battle_id) {
         case BATTLE_SLIME:
         case BATTLE_SLIME_TRIO:
+        case BATTLE_CARL:
             return "slime";
         case BATTLE_BAT:
             return "bat";

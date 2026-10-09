@@ -32,7 +32,6 @@ static const SceneTerrainBlock s_test_field_terrain[] = {
     { 31, 1, 1, 1, TILE_FOREST_08 },
     { 31, 2, 1, 3, TILE_FOREST_07 },
     { 0, 3, 1, 2, TILE_FOREST_11 },
-    { 2, 4, 1, 1, TILE_FOREST_39 },
     { 0, 5, 1, 1, TILE_FOREST_09 },
     { 31, 5, 1, 2, TILE_FOREST_08 },
     { 0, 6, 1, 1, TILE_FOREST_11 },

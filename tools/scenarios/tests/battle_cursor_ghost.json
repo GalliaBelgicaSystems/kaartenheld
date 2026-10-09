@@ -75,12 +75,12 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 6,
    "contains": "^"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 5,
+   "row": 6,
    "contains": "^^"
   },
   {
