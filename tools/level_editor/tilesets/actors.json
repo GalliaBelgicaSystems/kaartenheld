@@ -128,7 +128,7 @@
       "label": "guard",
       "gb_constant": "TILE_ACTORS_GUARD",
       "walkable": false,
-      "color": "#413218",
+      "color": "#3f3017",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_guard.png",
       "category": "npc"
