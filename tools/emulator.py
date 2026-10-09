@@ -210,7 +210,7 @@ DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
 STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
-                   "MERCHANT_QUEST": 5}
+                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,

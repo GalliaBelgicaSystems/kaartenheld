@@ -71,9 +71,12 @@ testable, save/load works, and the memory budget is understood.
     (clones of the struck actor; the final boss stands alone), regular
     enemy HP doubled (slimes 10-16, bats 8), boss tuned to 50 HP with a
     SET_ENEMY_HP scenario hook pinning it to 20 for deterministic tests.
-  - Energy pool set to 2/phase (`BATTLE_ENERGY_PER_TURN`; was 6 — combo
-    scenarios now select cost-0 cards so a full hand still fits);
-    rejected selections flash NO ENERGY! / OUT OF USES! on the battle HUD.
+  - Energy pool defaults to 2/phase (`BATTLE_ENERGY_PER_TURN`; was 6 —
+    combo scenarios now select cost-0 cards so a full hand still fits);
+    the live pool is the uncapped `ENERGY_POOL` variable
+    (staged at battle entry), raised by story events (first: tutorial
+    completion); rejected selections flash NO ENERGY! / OUT OF USES! on
+    the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
     resolution; executed results announce via the banner).  The Lost
     Amulet now renders in the CARDS tab as a non-deckable QUEST ITEM, and

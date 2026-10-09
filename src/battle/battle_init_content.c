@@ -5,19 +5,24 @@
 #include "rpg/loot.h"
 #include "rpg/status.h"
 #include "banked.h"
+#include "core/game.h"
+#include "game/game_ids.h"
 
 /* Banked body of battle_init_from_deck_state() (see src/battle/battle.c).
  * Lives in ROM bank 2 so the deck-bridge loop does not consume the
  * fixed-bank budget, and reads the registered card catalog DIRECTLY
  * (g_card_defs, same bank) instead of per-card banked_copy staging.
- * Self-contained: reads only the staged Battle/DeckState pointers and its
- * own bank-local data; writes through the staged pointer. */
+ * Self-contained: reads only the staged Battle/DeckState pointers, its
+ * own bank-local data, and one WRAM word of canonical state (the
+ * ENERGY_POOL variable -- WRAM is always mapped, so unlike a fixed-bank
+ * *call* this needs no trampoline); writes through the staged pointer. */
 
 void battle_init_deck_banked(void)
 {
     Battle *b = (Battle *)g_bk_ptr_a;
     const DeckState *ds = (const DeckState *)g_bk_ptr_b;
     uint8_t i, j;
+    int16_t pool;
 
     if (!b || !ds) return;
     b->deck.count = ds->count;
@@ -126,4 +131,18 @@ void battle_init_deck_banked(void)
             b->deck.cards[i].ring = 0;
         }
     }
+
+    /* Energy-pool staging (docs/deck.md energy model): the live pool is
+     * the uncapped ENERGY_POOL variable, raised by story events (first:
+     * tutorial completion).  Values below 1 mean "unset" (fresh boot,
+     * old saves, scenarios that do not stage it) and fall back to
+     * BATTLE_ENERGY_PER_TURN; above 255 saturates (uint8 width, not a
+     * gameplay cap).  Staged here because this body already runs at every
+     * battle entry with zero marginal fixed-bank cost; battle.c refresh
+     * sites and the bank-3 HUD badge reuse it for the whole fight (story
+     * events never fire mid-battle, so the pool is fixed per battle). */
+    pool = g_game.state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+    if (pool < 1) pool = BATTLE_ENERGY_PER_TURN;
+    if (pool > 255) pool = 255;
+    g_battle_pool_max = (uint8_t)pool;
 }
