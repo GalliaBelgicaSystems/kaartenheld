@@ -8,7 +8,7 @@
       "label": "hero idle",
       "gb_constant": "TILE_ACTORS_HERO_IDLE",
       "walkable": false,
-      "color": "#000000",
+      "color": "#020202",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_hero_idle.png",
       "category": "hero"
@@ -18,7 +18,7 @@
       "label": "hero frame 1",
       "gb_constant": "TILE_ACTORS_HERO_FRAME_1",
       "walkable": false,
-      "color": "#000000",
+      "color": "#020202",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_hero_frame_1.png",
       "category": "hero"
@@ -28,7 +28,7 @@
       "label": "hero frame 2",
       "gb_constant": "TILE_ACTORS_HERO_FRAME_2",
       "walkable": false,
-      "color": "#000000",
+      "color": "#020202",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_hero_frame_2.png",
       "category": "hero"
