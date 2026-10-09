@@ -16,7 +16,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 0,
-   "cost": 1,
+   "cost": 0,
    "uses": 255
   },
   {
@@ -28,7 +28,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 1,
-   "cost": 1,
+   "cost": 0,
    "uses": 255
   },
   {
@@ -40,7 +40,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 2,
-   "cost": 1,
+   "cost": 0,
    "uses": 255
   },
   {

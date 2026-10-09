@@ -114,7 +114,7 @@ Battle and menus have their own controls, covered in §6 and §7.
 2. **CARD TYPES** — SW sword (damage), SH shield (block), BO bow (damage).
 3. **CARD TYPES 2** — HE heal (restore), DA dagger (dmg), F SW fire + BURN.
 4. **COMBOS** — played cards rank like poker hands, boosting effects.
-5. **ENERGY & COMBAT** — cards cost ENERGY; start with 6/turn.
+5. **ENERGY & COMBAT** — cards cost ENERGY; start with 2/turn.
 6. **DEFEND & STATUS** — only SH blocks dmg; SW/BO/DA block 0; POISON is a
    damage-over-time.
 7. **SHIELD CARD** — offense: 0 dmg, but still counts for combos.
@@ -824,7 +824,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 * Hero: HP 10, gold 20, deck 12, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 6/round, timer 20s per decision.
+* Battle: hand 5, energy 2/round, timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

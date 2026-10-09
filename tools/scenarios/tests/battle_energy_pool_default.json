@@ -1,68 +1,46 @@
 {
- "name": "combo_four_kind_label",
+ "name": "battle_energy_pool_default",
  "test": true,
- "description": "Four of a kind (SW3 BO3 HE3 DA3) reads FOUR KIND on the live COMBO row while pending, before execution.",
- "initial_state": {
-  "scene": "TEST_FIELD",
-  "player": {
-   "x": 13,
-   "y": 8,
-   "facing": "DOWN"
-  },
-  "seed": 3000,
-  "start_battle": true
- },
+ "description": "Unset ENERGY_POOL (0, e.g. scenarios that do not stage it) falls back to the default pool of 2: two cost-1 cards select (AP 2 to 0) and the third is rejected, so the badge shows AP: 0/ 2 and battle_energy stays at 2 pre-resolve. Companion to battle_energy_pool_grows (raised pool) and card_cost_energy (rejection executes).",
  "actions": [
   {
    "type": "wait",
-   "frames": 5
+   "frames": 30
   },
   {
    "type": "set_hand_card",
    "index": 0,
    "card_type": "SW",
-   "value": 3
+   "value": 1
   },
   {
    "type": "set_hand_card_meta",
    "index": 0,
-   "cost": 0,
+   "cost": 1,
    "uses": 255
   },
   {
    "type": "set_hand_card",
    "index": 1,
-   "card_type": "BO",
-   "value": 3
+   "card_type": "SW",
+   "value": 1
   },
   {
    "type": "set_hand_card_meta",
    "index": 1,
-   "cost": 0,
+   "cost": 1,
    "uses": 255
   },
   {
    "type": "set_hand_card",
    "index": 2,
-   "card_type": "HE",
-   "value": 3
+   "card_type": "SW",
+   "value": 1
   },
   {
    "type": "set_hand_card_meta",
    "index": 2,
-   "cost": 0,
-   "uses": 255
-  },
-  {
-   "type": "set_hand_card",
-   "index": 3,
-   "card_type": "DA",
-   "value": 3
-  },
-  {
-   "type": "set_hand_card_meta",
-   "index": 3,
-   "cost": 0,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -71,7 +49,7 @@
   },
   {
    "type": "wait",
-   "frames": 8
+   "frames": 6
   },
   {
    "type": "press",
@@ -87,7 +65,7 @@
   },
   {
    "type": "wait",
-   "frames": 8
+   "frames": 6
   },
   {
    "type": "press",
@@ -103,23 +81,7 @@
   },
   {
    "type": "wait",
-   "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
    "frames": 6
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 200
   }
  ],
  "assertions": [
@@ -128,13 +90,34 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "FOUR KIND"
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 0
   },
   {
-   "type": "event_not_occurred",
-   "event": "DAMAGE_DEALT"
+   "type": "screen_row",
+   "row": 8,
+   "contains": "AP: 0/ 2"
+  },
+  {
+   "type": "battle_energy",
+   "expected": 2
   }
- ]
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 20,
+    "max_hp": 40
+   }
+  },
+  "seed": 7011,
+  "start_battle": true
+ }
 }

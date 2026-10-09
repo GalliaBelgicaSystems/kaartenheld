@@ -1,7 +1,7 @@
 {
  "name": "battle_ap_ticks_down",
  "test": true,
- "description": "The AP badge ticks down as cards are selected: two cost-2 cards move the displayed AP from 6 to 2, while the phase pool itself (battle_energy) stays at 6 because reservation is display-level -- battle_energy is only paid down when the hand actually resolves.  Proves the HUD reflects the same reserved remainder that nav_hand_playable gates on.",
+ "description": "The AP badge ticks down as cards are selected: two cost-1 cards move the displayed AP from 2 to 0, while the phase pool itself (battle_energy) stays at 2 because reservation is display-level -- battle_energy is only paid down when the hand actually resolves.  Proves the HUD reflects the same reserved remainder that nav_hand_playable gates on.",
  "actions": [
   {
    "type": "wait",
@@ -16,7 +16,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 0,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -28,7 +28,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 1,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -64,11 +64,11 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "AP: 2/"
+   "contains": "AP: 0/"
   },
   {
    "type": "battle_energy",
-   "expected": 6
+   "expected": 2
   }
  ],
  "initial_state": {

@@ -1,7 +1,7 @@
 {
  "name": "card_cost_energy",
  "test": true,
- "description": "Energy pool (6/phase) gates combo building: three cost-2 cards select (2+2+2 = 6 exactly), the fourth is rejected (8 > 6), the hand executes as suited THREE KIND for 6 damage, and the pool refreshes at the next decision phase.  Rejection feedback itself is covered by battle_reject_message.",
+ "description": "Energy pool (2/phase) gates combo building: a cost-0 card plus two cost-1 cards select (0+1+1 = 2 exactly), the fourth is rejected (3 > 2), the hand executes as suited THREE KIND for 6 damage, and the pool refreshes at the next decision phase.  Rejection feedback itself is covered by battle_reject_message.",
  "actions": [
   {
    "type": "wait",
@@ -16,7 +16,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 0,
-   "cost": 2,
+   "cost": 0,
    "uses": 255
   },
   {
@@ -28,7 +28,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 1,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -40,7 +40,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 2,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -52,7 +52,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 3,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -64,7 +64,7 @@
   {
    "type": "set_hand_card_meta",
    "index": 4,
-   "cost": 2,
+   "cost": 1,
    "uses": 255
   },
   {
@@ -162,7 +162,7 @@
   },
   {
    "type": "battle_energy",
-   "expected": 6
+   "expected": 2
   }
  ],
  "initial_state": {

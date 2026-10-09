@@ -695,7 +695,7 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_text_line((uint8_t)(ap_col - 1), ap_row, "AP:", 3);
     battle_draw_num2((uint8_t)(ap_col + 2), ap_row, battle_energy_display(battle));
     battle_put_char((uint8_t)(ap_col + 4), ap_row, '/');
-    battle_draw_num2((uint8_t)(ap_col + 5), ap_row, BATTLE_ENERGY_PER_TURN);
+    battle_draw_num2((uint8_t)(ap_col + 5), ap_row, g_battle_pool_max);
 
     /* Icon tiles + palettes come from the staged HUD skin (battle_hud.json). */
     VBK_REG = 0;

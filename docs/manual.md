@@ -164,7 +164,7 @@ play up to **5** cards at once.
 
 ![Choosing cards](manual_images/detail-hand.png)
 
-Every card costs **Energy**. You get **6 Energy** each round, so spend it
+Every card costs **Energy**. You get **2 Energy** each round, so spend it
 carefully!
 
 ### Step 2 — Watch your attack
@@ -308,7 +308,7 @@ ending. The land is saved, thanks to you!
 - **Only Shields block.** Save your shields for defence.
 - **Rings are flexible!** Use one to finish a number combo, or save it to
   heal.
-- **Watch your Energy.** Six points a round goes fast.
+- **Watch your Energy.** Two points a round goes fast.
 - **Do not waste your timer.** Decide, then press **SELECT**.
 - **Beat the 3 monsters early** to win the Iron Sword.
 - **Sell cards you do not need** and buy a Healing Ring.
@@ -323,7 +323,7 @@ ending. The land is saved, thanks to you!
 | Your health | **10 HP** |
 | Starting gold | **20** |
 | Cards in hand | **5** |
-| Energy each round | **6** |
+| Energy each round | **2** |
 | Time to decide | **20 seconds** |
 | Starter deck | **12 cards** |
 | Biggest deck | **20 cards** |

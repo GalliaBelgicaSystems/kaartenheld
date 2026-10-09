@@ -43,7 +43,7 @@ Flow when a dialogue starts (`dialogue_start_def`):
 
 The battle-system signpost (`DIALOGUE_ID_SIGNPOST`, the "?" in the starting
 area) ships as 8 dense telegraph-style lines describing trios, poker tiers,
-the suited bonus, the 6-energy pool and poison ticks.  A richer explanation
+the suited bonus, the 2-energy pool and poison ticks.  A richer explanation
 in fuller sentences wants more than 8 lines.
 
 **Recorded decision**: lift `MAX_DIALOGUE_LINES` beyond 8 (target range

@@ -553,7 +553,7 @@ def walk_d(checks):
             ("17-tutorial-slide1", "SW: SWORD"),
             ("18-tutorial-slide2", "CARD TYPES 2"),
             ("19-tutorial-slide3", "COMBOS"),
-            ("20-tutorial-slide4", "6/turn"),
+            ("20-tutorial-slide4", "2/turn"),
             ("21-tutorial-slide5", "DEFEND & STATUS"),
             ("22-tutorial-slide6", "SHIELD CARD")):
         s.check(label, s.press_until(

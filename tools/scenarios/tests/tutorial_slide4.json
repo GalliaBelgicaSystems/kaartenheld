@@ -1,7 +1,7 @@
 {
  "name": "tutorial_slide4",
  "test": true,
- "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 6, not 3).",
+ "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 2).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -99,7 +99,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "6/turn"
+   "contains": "2/turn"
   },
   {
    "type": "event_occurred",

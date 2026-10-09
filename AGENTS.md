@@ -3127,7 +3127,7 @@ the commit/PR without booting anything.
 17-tutorial-slide1   CARD TYPES
 18-tutorial-slide2   CARD TYPES 2
 19-tutorial-slide3   COMBOS
-20-tutorial-slide4   ENERGY & COMBAT (6/turn)
+20-tutorial-slide4   ENERGY & COMBAT (2/turn)
 21-tutorial-slide5   DEFEND & STATUS
 22-tutorial-slide6   SHIELD CARD
 ```

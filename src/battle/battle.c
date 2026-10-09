@@ -29,6 +29,8 @@ uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Live pool max staged for the bank-3 HUD badge (see battle.h). */
+uint8_t g_battle_pool_max;
 
 /* Active battle screen layout (see battle_data.h): uninitialized WRAM
  * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()
@@ -129,6 +131,20 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
         deck_draw(&b->deck, &b->hand[i]);
     }
 
+    /* Stage the active screen's layout (rows/cols/positions) into WRAM
+     * for the bank-3 renderer.  Game layer picks the screen by battle
+     * type + solo flag (boss/miniboss vs standard); engine never names
+     * screens itself.  The bank-4 body also stages g_battle_pool_max
+     * (docs/deck.md energy model).  Runs here -- before the timer/energy
+     * stores below so b->energy stays with its sibling stores (fixed-bank
+     * codegen density, AGENTS.md 52.18) -- and before enemy_deck_setup,
+     * which re-stages g_bk_byte_a for its own dispatch. */
+    g_battle_solo = solo;
+    g_bk_byte_a = b->enemy_battle_id;
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
+    banked_call_run();
+
     if (battle_id != 0) {
         g_bk_byte_a = battle_id;
         g_bk_ptr_a = (void *)&b->enemy_deck;
@@ -136,23 +152,16 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     }
 
     b->timer_ticks = BATTLE_TIMER_MAX_FRAMES;
-    b->timer_max = BATTLE_TIMER_MAX_FRAMES;
-    b->energy = BATTLE_ENERGY_PER_TURN;
+    /* Pool staged by the bank-4 dispatch above; reused at every
+     * decision-phase entry (story events never fire mid-battle, so the
+     * pool is fixed per battle; mid-battle variable pokes affect later
+     * battles). */
+    b->energy = g_battle_pool_max;
     b->phase = BATTLE_PHASE_PLAYER_SELECT;
     b->turn = BATTLE_TURN_PLAYER;
     b->dirty = BATTLE_DIRTY_ALL;
 
     status_reset_battle();
-
-    /* Stage the active screen's layout (rows/cols/positions) into WRAM
-     * for the bank-3 renderer.  Game layer picks the screen by battle
-     * type + solo flag (boss/miniboss vs standard); engine never names
-     * screens itself. */
-    g_battle_solo = solo;
-    g_bk_byte_a = b->enemy_battle_id;
-    g_bk_call_bank = 4;
-    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
-    banked_call_run();
 
     telemetry_emit(EVENT_BATTLE_STARTED, 0, 0, 0, 0);
 }
@@ -783,7 +792,9 @@ void battle_update(Battle *b)
             vb->phase = (vb->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) ? BATTLE_PHASE_PLAYER_DEFEND : BATTLE_PHASE_PLAYER_SELECT;
             vb->turn = BATTLE_TURN_PLAYER;
             vb->combo_count = 0;
-            vb->energy = BATTLE_ENERGY_PER_TURN;
+            /* Staged pool, not a variable re-read: the pool is fixed for
+             * the battle's duration (see battle_start). */
+            vb->energy = g_battle_pool_max;
             vb->timer_ticks = BATTLE_TIMER_MAX_FRAMES;
             if (vb->phase == BATTLE_PHASE_PLAYER_SELECT && vb->enemy_count > 1) {
                 /* Wrap instead of % (see note above). */

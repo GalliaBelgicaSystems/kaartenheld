@@ -67,7 +67,8 @@ typedef enum {
     VARIABLE_ID_MONSTERS_DEFEATED  = 2,   /* global total (all kills count) */
     VARIABLE_ID_QUEST_MONSTER_HUNT = 3,   /* 0 = NOT_STARTED, 1 = ACTIVE, 2 = COMPLETE */
     VARIABLE_ID_ENDING_SHOWN       = 4,   /* set when the final boss is defeated */
-    VARIABLE_ID_MERCHANT_QUEST     = 5    /* 0 = not started, 1 = amulet found, 2 = complete */
+    VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = amulet found, 2 = complete */
+    VARIABLE_ID_ENERGY_POOL        = 6    /* battle energy pool: story events raise it, no cap */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */

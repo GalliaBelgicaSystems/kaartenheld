@@ -5,6 +5,8 @@
 #include "battle_data.h"
 #include "world/actor.h"
 #include "banked.h"
+#include "core/game.h"
+#include "game_ids.h"
 
 /* Footprint contract (C89 file-scope assert: a negative array size is a
  * compile error): the cache stays 36 bytes of uint8_t (no padding, no
@@ -24,7 +26,8 @@ typedef char battle_hud_cache_size_ok[(sizeof(BattleHudCache) == 36) ? 1 : -1];
  *
  * Everything is read directly: g_battle_screens lives in this same bank
  * (no banked_copy -- that would restore the home bank mid-body and crash
- * on return), and g_battle_hud / g_bk_byte_a are WRAM (always mapped).
+ * on return), and g_battle_hud / g_bk_byte_a / g_game.state are WRAM
+ * (always mapped).
  * Fully self-contained: no fixed-bank calls (banked.h ABI contract).
  * No struct assignment: banked bodies must not rely on compiler memcpys
  * across banks. */
@@ -36,6 +39,7 @@ void battle_hud_load_banked(void)
     const BattleScreenDef *dflt;
     uint8_t i, k;
     uint8_t match;
+    int16_t pool;
 
     want = (battle_type == BATTLE_NONE || g_battle_solo) ? "boss" : "default";
 
@@ -132,4 +136,21 @@ void battle_hud_load_banked(void)
     g_battle_hud.hud_combo_row_step = def->hud_combo_row_step;
     g_battle_hud.hud_timer_row = def->hud_timer_row;
     g_battle_hud.hud_caret_x = def->hud_caret_x;
+
+    /* Energy-pool staging (docs/deck.md energy model): the live pool is
+     * the uncapped ENERGY_POOL variable, raised by story events (first:
+     * tutorial completion).  Values below 1 mean "unset" (fresh boot,
+     * scenarios that do not stage it) and fall back to
+     * BATTLE_ENERGY_PER_TURN; above 255 saturates (uint8 width, not a
+     * gameplay cap).  Staged here because this body already runs on EVERY
+     * battle entry (unlike the deck bridge, which the empty-deck fallback
+     * path skips): without this a first-boot fallback battle would open
+     * on the BSS-zero pool and reject every card.  battle.c refresh sites
+     * and the bank-3 HUD badge reuse the staged value for the whole fight
+     * (story events never fire mid-battle, so the pool is fixed per
+     * battle; mid-battle variable pokes affect subsequent battles). */
+    pool = g_game.state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+    if (pool < 1) pool = BATTLE_ENERGY_PER_TURN;
+    if (pool > 255) pool = 255;
+    g_battle_pool_max = (uint8_t)pool;
 }
