@@ -428,6 +428,7 @@ def emit_exits(levels_by_id, registry=None):
 OVERFLOW_TERRAIN_BANK = {
     "desolate_field": 6,
     "village_area": 7,
+    "castle": 7,
 }
 
 
