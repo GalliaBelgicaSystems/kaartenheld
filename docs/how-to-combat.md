@@ -12,8 +12,8 @@ You always strike first each round, then block.
 
 ## First spar: Carl
 
-The field holds a single slime, **CARL**, among a tree, old stumps and
-grass tufts.
+The field holds a single slime, **CARL**, in a grove of trees, old
+stumps and grass tufts.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
