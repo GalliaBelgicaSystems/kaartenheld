@@ -1,7 +1,7 @@
 {
  "name": "battle_attack",
  "test": true,
- "description": "Enter battle with Slime and attack once: the starter deck's first card SW3 deals 3 damage, dropping the slime from 5 to 2 HP",
+ "description": "Enter battle with Carl and attack once: the starter deck's first card SW3 deals 3 damage, dropping him from 15 to 12 HP",
  "actions": [
   {
    "type": "wait",
@@ -51,12 +51,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 7
+   "expected": 12
   },
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "7/10"
+   "contains": "12/15"
   }
  ],
  "initial_state": {

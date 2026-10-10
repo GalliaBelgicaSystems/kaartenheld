@@ -10,6 +10,42 @@ Reduce every enemy's HP to 0 before yours reaches 0. Most fights are
 against a **trio** of monsters (clones of one type); bosses fight alone.
 You always strike first each round, then block.
 
+## First spar: Carl
+
+The field holds a single slime, **CARL**, in a grove of trees, old
+stumps and grass tufts. Walk into him and a dialogue box opens first:
+it is dangerous to go alone, and he will teach you how to fight. Then
+bump his sparring spot beside him and the fight starts.
+
+![Carl waits on the field](../screenshots/08-carl-field.png)
+
+East of him sits a treasure chest with your first POISON_DAGGER (the
+starter deck carries none); the Merchant sells more.
+
+He is a friendly practice dummy whose every word is green, so you know
+it is him speaking.
+
+![Carl's lesson](../screenshots/08-carl-tutor.png)
+
+Walk into him to spar: a solo fight against his 15 HP. His practice
+deck deals **0 damage**, so you cannot lose — learn the round below at
+your own pace (the battle timer still runs, but nothing can hurt you).
+There is no target arrow over Carl: with a single foe there is nothing
+to aim at. On your turn the top reads `CARL: PICK CARDS`, then
+`DO POKER HANDS.` below it.
+
+![Pick cards, then SELECT](../screenshots/09-battle.png)
+
+On his turn he coaches the block (`SHIELD` cards stop his swing,
+`SELECT` defends).
+
+![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
+
+Beat him and he wishes you luck: your energy pool grows from **2 to
+3 AP** per phase for every later battle.
+
+![Good luck, and +1 AP](../screenshots/11-victory-speech.png)
+
 ## One round, step by step
 
 ```
@@ -40,7 +76,8 @@ attack *does* (see below).
 
 - **Hand**: 5 cards, drawn from your deck. Played cards are discarded
   and replaced at the round boundary.
-- **Energy**: **6 per phase** — attack *and* defend each get a fresh 6.
+- **Energy**: **2 per phase** at first — attack *and* defend each get a
+  fresh pool. Beating Carl's practice spar raises it to **3 per phase**.
   Every card shows a cost; selecting reserves it, resolving pays it.
   A card you can't afford can't be selected (`NO ENERGY!`).
 - **Timer**: **20 seconds** per decision, shown as the bottom bar. Expiry

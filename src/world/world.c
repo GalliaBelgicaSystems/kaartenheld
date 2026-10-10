@@ -338,10 +338,11 @@ void world_on_battle_end(Game *g, bool victory)
 
 void world_on_battle_fled(Game *g)
 {
-    /* Body runs banked (src/world/fled_banked.c) through the WRAM
-     * trampoline -- pure WRAM reads/writes, no staging args needed. */
+    /* Body runs banked in bank 7 (src/world/fled_banked.c) through the
+     * WRAM trampoline -- pure WRAM reads/writes, no staging args needed.
+     * Bank 7 (not 3) to relieve the fixed-adjacent bank-3 budget. */
     if (!g) return;
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
     g_bk_ptr_a = (void *)g;
     banked_call_run();

@@ -1,7 +1,7 @@
 {
  "name": "battle_boot",
  "test": true,
- "description": "Boot directly into a battle against a Slime",
+ "description": "Boot directly into a battle against Carl",
  "actions": [],
  "assertions": [
   {
@@ -18,12 +18,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "TARGET SLIME"
+   "contains": "CARL: PICK CARDS"
   },
   {
    "type": "screen_row_not_contains",

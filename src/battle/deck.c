@@ -53,10 +53,11 @@ void deck_reshuffle(Deck *d)
 
 void deck_discard(Deck *d, const Card *c)
 {
-    /* Body runs banked (src/battle/deck_banked.c): pure WRAM writes,
-     * staged Deck/card pointers, keeps fixed-bank budget small. */
+    /* Body runs banked in bank 7 (src/battle/deck_banked.c): pure WRAM
+     * writes, staged Deck/card pointers, keeps fixed-bank budget small.
+     * Bank 7 (not 3) to relieve the fixed-adjacent bank-3 budget. */
     if (!d || !c) return;
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&deck_discard_banked;
     g_bk_ptr_a = (void *)d;
     g_bk_ptr_b = (void *)c;

@@ -138,6 +138,44 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
         }
+    },
+    /* ── Field tutorial spar (Carl, the friendly slime) ────────────
+     * Carl teaches through two existing paths, no combat-code changes:
+     * his friendly side is an INTERACTION_DIALOGUE static whose lesson
+     * plays through the ordinary fallback dialogue path, and his spar
+     * side is a solo BATTLE_CARL hostile on the same tile (movement
+     * resolves hostiles first, so bumps fight while A-presses talk).
+     * TUTORIAL_COMPLETE is all-match ACTOR_DEFEATED like
+     * MONSTER_DEFEATED.  Carl owns ENTITY_ID_CARL (no other actor
+     * carries it), so only his defeat grants the pool: the pool==0
+     * condition makes the +1 AP unlock one-shot, and the victory
+     * dialogue shows deferred at the battle exit (see
+     * battle_screen.c). */
+    {
+        EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_VARIABLE, VARIABLE_ID_ENERGY_POOL, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
+        }
+    },
+    /* ── Field cache (first poison dagger) ─────────────────────────
+     * A chest east of Carl holds one POISON_DAGGER: the first the
+     * player can own (starter deck carries none; the Merchant sells
+     * more).  One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats fall
+     * through to no interaction.  Silent grant (no dialogue row):
+     * Carl's lesson points at the cache, and the CARDS tab shows it. */
+    {
+        EVENT_ID_FIELD_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
+        }
     }
 };
 

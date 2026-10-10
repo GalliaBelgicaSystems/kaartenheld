@@ -1,7 +1,7 @@
 {
  "name": "card_defend_inert_nonshield",
  "test": true,
- "description": "In defend phase non-shield cards are inert: playing BO4 contributes 0 block, so the hero takes the full 2 damage from the enemy (slime deck SWORD(2))",
+ "description": "In defend phase non-shield cards are inert: playing BO4 contributes 0 block, but Carl's practice deck deals 0 damage, so the hero stays at full HP",
  "actions": [
   {
    "type": "wait",
@@ -71,7 +71,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 10
   },
   {
    "type": "event_occurred",

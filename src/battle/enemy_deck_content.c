@@ -56,6 +56,12 @@ static const Card s_spider_deck[] = {
      * player's hand (Phase D), the spider's signature threat. */
     { BATTLE_CARD_TYPE_BOW,   3, 0xFF, 0, 0, STATUS_POISON, 70 },
 };
+/* Carl's practice deck: a single 0-power swing, drawn every round.  The
+ * tutorial spar is harmless by construction (no defend needed to
+ * survive it); the telegraphed 0 is the visible proof. */
+static const Card s_carl_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 0, 0xFF },
+};
 
 void enemy_deck_setup_banked(void)
 {
@@ -75,6 +81,7 @@ void enemy_deck_setup_banked(void)
     case 4:  src = s_mimic_deck;      count = 5; break;
     case 5:  src = s_kobold_deck;     count = 4; break;
     case 6:  src = s_spider_deck;     count = 5; break;
+    case 7:  src = s_carl_deck;       count = 1; break;
     }
 
     if (!src) return;

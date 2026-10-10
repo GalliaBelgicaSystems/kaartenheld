@@ -1,0 +1,48 @@
+{
+ "name": "tutorial_carl_intro",
+ "test": true,
+ "description": "Bumping into Carl opens his lesson first (dangerous alone, spar offer) through the ordinary static-bump dialogue path, before any fighting",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "TUTORIAL_CARL_INTRO"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "actor_at",
+   "entity": "CARL",
+   "x": 15,
+   "y": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 16,
+   "y": 8,
+   "facing": "LEFT"
+  },
+  "seed": 4242
+ }
+}

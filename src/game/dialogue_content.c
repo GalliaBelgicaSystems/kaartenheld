@@ -147,6 +147,20 @@ const DialogueDefinition g_dialogues[] = {
         {"East: Town. North:", "Forest (danger!).", "", "ATK: A then SELECT", "Shields add to", "combos (no dmg).", "DEF: shields block", "Combos are poker!"},
         0
     },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_INTRO,
+        "CARL:",
+        4,
+        {"It is dangerous to", "go alone! I will", "teach you to fight!", "Now lets spar!"},
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
+        "CARL:",
+        2,
+        {"Real fights begin!", "Good luck! AP +1!"},
+        0
+    },
 };
 
 /* Keep the register-time count in the generated header in sync. */

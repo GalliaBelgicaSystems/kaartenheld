@@ -1,8 +1,12 @@
 {
  "name": "actor_defeat_persistence",
  "test": true,
- "description": "Defeating a hostile World Actor records persistent ActorState.DEFEATED and prevents re-engagement on the same tile after returning to the overworld",
+ "description": "Defeating Carl records persistent ActorState.DEFEATED: walking back onto his tile is free and starts no new battle (stays OVERWORLD, spar stays DEFEATED)",
  "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
   {
    "type": "press",
    "button": "RIGHT"
@@ -21,16 +25,6 @@
    "hp": 1
   },
   {
-   "type": "set_enemy_hp",
-   "index": 1,
-   "hp": 1
-  },
-  {
-   "type": "set_enemy_hp",
-   "index": 2,
-   "hp": 1
-  },
-  {
    "type": "press",
    "button": "SELECT"
   },
@@ -64,123 +58,27 @@
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "A"
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 20
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "A"
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 20
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "A"
   },
   {
    "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "B"
-  },
-  {
-   "type": "wait",
-   "frames": 8
+   "frames": 20
   },
   {
    "type": "press",
@@ -189,311 +87,15 @@
   {
    "type": "wait",
    "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "wait",
-   "frames": 70
-  },
-  {
-   "type": "press",
-   "button": "B"
-  },
-  {
-   "type": "wait",
-   "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
   }
  ],
  "assertions": [
   {
    "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "screen",
    "expected": "OVERWORLD"
   },
   {

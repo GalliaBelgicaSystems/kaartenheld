@@ -1,0 +1,66 @@
+{
+ "name": "field_chest_dagger",
+ "test": true,
+ "description": "Bumping the field cache (chest east of Carl) grants the first POISON_DAGGER (starter deck carries none) and sets FIELD_CHEST; bumping again grants nothing (one-shot)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "actor_at",
+   "entity": "CHEST",
+   "x": 21,
+   "y": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

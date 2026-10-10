@@ -30,7 +30,7 @@ testable, save/load works, and the memory budget is understood.
 - **Camera / scroll — B1 + B2 DONE**: scenes are parameterized, the
   overworld has a pixel camera (`World.camera_px_x/y`, `world_update_scroll`
   follows the player smoothly and clamps to scene bounds; exposed in the
-  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 32x18; covered by
+  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 24x18; covered by
   `large_map_scroll` + `field_east_scroll`.  B2 rendered the terrain as real
   GB tiles (`src/gfx/world_tiles.h`) into the 0x9800 tilemap.
 - **Camera / scroll — B3 + B4 DONE**: the overworld background scrolls
