@@ -23,7 +23,7 @@
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "TARGET CARL"
+   "contains": "CARL: PICK CARDS"
   },
   {
    "type": "screen_row_not_contains",

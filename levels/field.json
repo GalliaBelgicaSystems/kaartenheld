@@ -452,8 +452,8 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_tree_stump",
+        "forest.forest_top_right_tree_stump",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
@@ -487,7 +487,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_bottom_left_tree_stump",
-        "forest.forest_bottom_left_tree_stump",
+        "forest.forest_bottom_right_tree_stump",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
@@ -686,7 +686,7 @@
         "actors.actors_slime_frame_2"
       ],
       "position": {
-        "x": 14,
+        "x": 15,
         "y": 8
       },
       "properties": {

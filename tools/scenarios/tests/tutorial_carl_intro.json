@@ -1,11 +1,11 @@
 {
  "name": "tutorial_carl_intro",
  "test": true,
- "description": "Pressing A facing Carl the tutorial slime opens his combat lesson (name, unprepared warning, card controls, 0-damage spar, defend, AP promise) through the ordinary friendly-dialogue path",
+ "description": "Bumping into Carl opens his lesson first (dangerous alone, spar offer) through the ordinary static-bump dialogue path, before any fighting",
  "actions": [
   {
    "type": "press",
-   "button": "A"
+   "button": "LEFT"
   },
   {
    "type": "wait",
@@ -32,16 +32,16 @@
   {
    "type": "actor_at",
    "entity": "CARL",
-   "x": 14,
+   "x": 15,
    "y": 8
   }
  ],
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
-   "x": 13,
+   "x": 16,
    "y": 8,
-   "facing": "RIGHT"
+   "facing": "LEFT"
   },
   "seed": 4242
  }

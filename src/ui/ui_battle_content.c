@@ -592,6 +592,7 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
             battle_color_span(x, hp_row, 6,
                               battle_status_color(&s_battle_status[k + 1]));
             if (k == battle->target_idx &&
+                battle->enemy_battle_id != BATTLE_CARL &&
                 (battle->phase == BATTLE_PHASE_PLAYER_SELECT || battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
                 /* Arrow centered on the art's MIDDLE column (art is 3
                  * wide at art_x..art_x+2): on the boss screen a 3x3 art
@@ -1120,6 +1121,9 @@ static const char *battle_banner_text(const volatile Battle *battle)
     if (battle->result == BATTLE_RESULT_FLED) return "FLED!";
 
     if (battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
+        if (battle->enemy_battle_id == BATTLE_CARL) {
+            return "CARL: PICK CARDS";
+        }
         /* Live target: follows UP/DOWN cycling (BATTLE_DIRTY_BANNER set
          * by the banked nav body on every target move). */
         if (battle->target_idx < battle->enemy_count &&
@@ -1208,7 +1212,16 @@ void ui_update_battle_banked(void)
         }
     }
 
-    if (d & BATTLE_DIRTY_BANNER) battle_draw_banner_line(banner_row, turn_banner, timer_w);
+    if (d & BATTLE_DIRTY_BANNER) {
+        battle_draw_banner_line(banner_row, turn_banner, timer_w);
+        if (battle->enemy_battle_id == BATTLE_CARL && battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
+            battle_color_span(0, banner_row, timer_w, UI_COLOR_FIELD);
+            battle_draw_text_line(0, 1, "DO POKER HANDS.", 20);
+            battle_color_span(0, 1, 20, UI_COLOR_FIELD);
+        } else if (battle->enemy_battle_id == BATTLE_CARL) {
+            battle_draw_text_line(0, 1, NULL, 20);
+        }
+    }
     if (d & (BATTLE_DIRTY_ENEMIES | BATTLE_DIRTY_BLINK)) battle_draw_enemy_columns(battle);
     if (d & BATTLE_DIRTY_HERO) {
         battle_draw_hero_row(battle);
@@ -1257,46 +1270,59 @@ void ui_update_battle_banked(void)
             }
             battle_draw_banner_line(10, "YOU FOUND:", 20);
 
-            /* Row 11: icons + abbreviated name */
-            while (len < 20 && g_card_scratch.name[len]) len++;
-            block = (uint8_t)(3 + len);
-            x = (uint8_t)((20 - block) / 2);
-            battle_draw_text_line(0, 11, NULL, 20);
-            battle_card_icon_tiles(g_card_scratch.status_id,
-                                   g_card_scratch.battle_type,
-                                   (g_card_scratch.battle_type ==
-                                    BATTLE_CARD_TYPE_HEAL) ||
-                                   (g_card_scratch.effect ==
-                                    CARD_EFFECT_HEAL_HP),
-                                   &tile_elem, &tile_wpn);
+            /* Row 11: icons + abbreviated name.  All scratch reads go
+             * through one explicit volatile base (52.19: this function
+             * is large and SDCC reuses address slots across its long
+             * render calls, so a shared base is re-derived per access,
+             * never cached across calls). */
+            {
+                const volatile CardDefinition *vs =
+                    (const volatile CardDefinition *)&g_card_scratch;
+                len = 0;
+                while (len < 20 && vs->name[len]) len++;
+                block = (uint8_t)(3 + len);
+                x = (uint8_t)((20 - block) / 2);
+                battle_draw_text_line(0, 11, NULL, 20);
+                battle_card_icon_tiles(vs->status_id,
+                                       vs->battle_type,
+                                       (vs->battle_type ==
+                                        BATTLE_CARD_TYPE_HEAL) ||
+                                       (vs->effect ==
+                                        CARD_EFFECT_HEAL_HP),
+                                       &tile_elem, &tile_wpn);
             dst = (volatile uint8_t *)(0x9800 + (11u << 5) + x);
             VBK_REG = 0;
             battle_vram_sync_write(dst, tile_elem);
             battle_vram_sync_write(dst + 1, tile_wpn);
-            battle_draw_text_line((uint8_t)(x + 3), 11, g_card_scratch.name,
+            battle_draw_text_line((uint8_t)(x + 3), 11, (const char *)vs->name,
                                   (uint8_t)(20 - x - 3));
             ncolor = battle_card_color(
-                g_card_scratch.battle_type,
-                g_card_scratch.status_id,
-                (g_card_scratch.battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                (g_card_scratch.effect == CARD_EFFECT_HEAL_HP));
+                vs->battle_type,
+                vs->status_id,
+                (vs->battle_type == BATTLE_CARD_TYPE_HEAL) ||
+                (vs->effect == CARD_EFFECT_HEAL_HP));
             battle_color_span(x, 11, block, ncolor);
 
             /* Row 12: full English description, centered */
-            loot_build_full_name(&g_card_scratch);
+            loot_build_full_name((const CardDefinition *)vs);
             len = 0;
             while (len < 20 && s_reveal_full_name[len]) len++;
             x = (uint8_t)((20 - len) / 2);
             battle_draw_text_line(x, 12, s_reveal_full_name,
                                   (uint8_t)(20 - x));
             battle_color_span(x, 12, len, ncolor);
+            }
         } else if (carl_help) {
             if (bphase == BATTLE_PHASE_PLAYER_SELECT) {
-                battle_draw_text_line(0, 5, "CARL:L/R PICK A TAKE", 20);
-                battle_draw_text_line(0, 9, "SELECT TO ATTACK!", 20);
+                battle_draw_text_line(0, 5, "CARL:L/R MOVE A TAKE", 20);
+                battle_color_span(0, 5, 20, UI_COLOR_FIELD);
+                battle_draw_text_line(0, 9, "CONFIRM WITH SELECT.", 20);
+                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             } else {
                 battle_draw_text_line(0, 5, "CARL:SHIELD BLOCKS", 20);
+                battle_color_span(0, 5, 20, UI_COLOR_FIELD);
                 battle_draw_text_line(0, 9, "SELECT TO DEFEND", 20);
+                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
         } else {
             /* Transient gameplay messages live on row 9 (below the

@@ -24,12 +24,22 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "CARL:L/R PICK A TAKE"
+   "contains": "CARL:L/R MOVE A TAKE"
   },
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "SELECT TO ATTACK!"
+   "contains": "CONFIRM WITH SELECT."
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "CARL: PICK CARDS"
+  },
+  {
+   "type": "screen_row",
+   "row": 1,
+   "contains": "DO POKER HANDS."
   }
  ],
  "initial_state": {

@@ -1,7 +1,7 @@
 {
  "name": "actor_defeat_persistence",
  "test": true,
- "description": "Defeating Carl records persistent ActorState.DEFEATED: bumping his tile afterwards meets the tutor lesson instead of a new battle (exactly one ENCOUNTER_STARTED for the run, spar stays DEFEATED)",
+ "description": "Defeating Carl records persistent ActorState.DEFEATED: walking back onto his tile is free and starts no new battle (stays OVERWORLD, spar stays DEFEATED)",
  "actions": [
   {
    "type": "wait",
@@ -96,15 +96,11 @@
   },
   {
    "type": "screen",
-   "expected": "DIALOGUE"
-  },
-  {
-   "type": "dialogue_id",
-   "expected": "TUTORIAL_CARL_INTRO"
+   "expected": "OVERWORLD"
   },
   {
    "type": "player_position",
-   "expected_x": 13,
+   "expected_x": 14,
    "expected_y": 8
   },
   {

@@ -13,23 +13,26 @@ You always strike first each round, then block.
 ## First spar: Carl
 
 The field holds a single slime, **CARL**, in a grove of trees, old
-stumps and grass tufts.
+stumps and grass tufts. Walk into him and a dialogue box opens first:
+it is dangerous to go alone, and he will teach you how to fight. Then
+bump his sparring spot beside him and the fight starts.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
 East of him sits a treasure chest with your first POISON_DAGGER (the
 starter deck carries none); the Merchant sells more.
 
-He is a friendly practice dummy: press `A` facing him and he
-introduces himself, warns you that the wilds kill the unready, and
-teaches the controls.
+He is a friendly practice dummy whose every word is green, so you know
+it is him speaking.
 
 ![Carl's lesson](../screenshots/08-carl-tutor.png)
 
 Walk into him to spar: a solo fight against his 15 HP. His practice
 deck deals **0 damage**, so you cannot lose — learn the round below at
-your own pace. On your turn he coaches card selection (`LEFT`/`RIGHT`
-pick, `A` takes) with the confirm step (`SELECT` attacks) beneath it.
+your own pace (the battle timer still runs, but nothing can hurt you).
+There is no target arrow over Carl: with a single foe there is nothing
+to aim at. On your turn the top reads `CARL: PICK CARDS`, then
+`DO POKER HANDS.` below it.
 
 ![Pick cards, then SELECT](../screenshots/09-battle.png)
 

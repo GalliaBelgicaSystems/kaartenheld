@@ -151,7 +151,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
         4,
-        {"I am CARL!", "Unready fall!", "Grab cache east!", "Win: AP goes to 3!"},
+        {"It is dangerous to", "go alone! I will", "teach you to fight!", "Now lets spar!"},
         0
     },
     {

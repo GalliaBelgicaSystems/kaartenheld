@@ -136,8 +136,10 @@ def _battle_round(s):
     cards + execute.  True when the battle reached a result banner.
     Phase waits are input-free (the game advances automatically after
     each execute)."""
-    # Select phase: TARGET banner (fallback literal PLAYER TURN).
+    # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
+    # fallback literal PLAYER TURN).
     s.wait_for(lambda: s.text_has("TARGET ")
+               or s.text_has("PICK CARDS")
                or s.text_has("PLAYER TURN"), ticks=180)
     _select_cards(s, ATTACK_TYPES)
     s.press("select", settle=40)     # execute attack
@@ -315,28 +317,24 @@ def walk_b(planner, checks):
     props = carl["properties"]
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
-    # transitions eat input for a few dozen frames.  Arrive stepping east
-    # so the hero faces him for the lesson below.
-    adj = (carl_xy[0] - 1, carl_xy[1])
-    path = planner.path("field", s.pos(), (adj[0] - 1, adj[1]))
-    s.check("path to carl", path is not None, expected="bfs path",
-            actual="none" if path is None else "ok")
-    if path:
-        _walk_path(s, path)
-    s.check("step to carl",
-            s.walk_btn("right", lambda: s.pos() == adj),
-            expected="tile commit", actual="pos %s" % (s.pos(),))
-    # Carl himself, one tile east: the field holds a single slime.
-    s.shoot("08-carl-field")
-    # His tutor side teaches on A-press; close the lesson afterwards.
-    s.check("tutor opens",
-            s.press_until("a", lambda: s.text_has("CARL:"), tries=6,
-                          settle=30),
+    # transitions eat input for a few dozen frames.  His tutor side
+    # stands one tile east of the sparring spot: bump it from (16,8)
+    # for the lesson, then circle around to (13,8) for the fight.
+    s.check("tutor bump",
+            bump_actor(s, planner, "field", (16, 8), "left", "CARL:"),
             expected="CARL:", actual="none")
+    # Carl himself, one tile west of the hero: the field's single slime.
+    s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
     s.check("lesson closed",
             close_dialogue(s, "CARL:"),
             expected="closed", actual="open")
+    adj = (carl_xy[0] - 1, carl_xy[1])
+    path = planner.path("field", s.pos(), adj)
+    s.check("path to carl", path is not None, expected="bfs path",
+            actual="none" if path is None else "ok")
+    if path:
+        _walk_path(s, path)
     s.check("carl engaged",
             s.press_until("right", lambda: s.text_has("DECK:"),
                           tries=6, settle=24),
@@ -358,8 +356,9 @@ def walk_b(planner, checks):
     start_total = prev_total
     victory = False
     defeated = False
-    s.check("select hint", s.text_has("L/R PICK"),
-            expected="L/R PICK", actual="none")
+    # Select-stage banner and hint are up while choosing the attack.
+    s.check("select hint", s.text_has("PICK CARDS"),
+            expected="PICK CARDS", actual="none")
     _select_cards(s, ATTACK_TYPES)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.

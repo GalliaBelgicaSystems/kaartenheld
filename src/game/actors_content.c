@@ -22,7 +22,7 @@ static const WorldActorDefinition g_field_actors[] = {
          SPRITE_KIND_ENEMY, 8, 1
     },
     {
-        0, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
+        0, ENTITY_ID_CARL, 15, 8, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'C', "CARL", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_TUTORIAL_CARL_INTRO, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,

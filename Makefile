@@ -152,11 +152,12 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
 		--shade-map generated/tiles/shades/forest.json --tile-coords "14,0 15,0 14,1 15,1 15,1" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
-	# Chest sprite tile from forest-tile.png (tile 11,2 "treasure chest
-	# forest"). Shade 0 of its ramp is the transparent key, matching the
-	# sheet encoding, so no anchor flag is needed.
+	# Chest sprite tile from forest-tile.png (tile 8,2 "treasure chest
+	# forest", right half with the gold lock). Shade 0 of its ramp is the
+	# transparent key, matching the sheet encoding, so no anchor flag is
+	# needed.
 	@python3 tools/png2gb.py assets/forest-tile.png --name forest_chest_sprite_tile \
-		--shade-map generated/tiles/shades/forest.json --tile-coords "11,2" \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "8,2" \
 		-o $(GFX_OUT_DIR)/forest_chest_sprite_tile.h
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
