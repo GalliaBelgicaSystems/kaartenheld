@@ -20,8 +20,11 @@ turn with shields, confirmed with `SELECT`).
 
 Walk into him to spar: a solo fight against his 15 HP. His practice
 deck deals **0 damage**, so you cannot lose — learn the round below at
-your own pace. Beat him and he wishes you luck: your energy pool grows
-from **2 to 3 AP** per phase for every later battle.
+your own pace. While you choose, Carl coaches from the sidelines: row 5
+shows the current lesson (`CARL:L/R PICK A TAKE` on your turn,
+`CARL:SHIELD BLOCKS` on his) with the confirm step on row 9. Beat him
+and he wishes you luck: your energy pool grows from **2 to 3 AP** per
+phase for every later battle.
 
 ## One round, step by step
 

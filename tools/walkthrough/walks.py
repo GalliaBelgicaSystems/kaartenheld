@@ -314,15 +314,17 @@ def walk_b(planner, checks):
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
     props = carl["properties"]
     # Carl spars on bump (he is stationary, so walk adjacent and step
-    # in; the planner routes around his tile).
+    # in; the planner routes around his tile).  Bumps are retried: screen
+    # transitions eat input for a few dozen frames.
     adj = (carl_xy[0] - 1, carl_xy[1])
     path = planner.path("field", s.pos(), adj)
     s.check("path to carl", path is not None, expected="bfs path",
             actual="none" if path is None else "ok")
     if path:
         _walk_path(s, path)
-    s.press("right", settle=24)
-    s.check("carl engaged", s.text_has("DECK:"),
+    s.check("carl engaged",
+            s.press_until("right", lambda: s.text_has("DECK:"),
+                          tries=6, settle=24),
             expected="DECK:", actual="none")
     s.tick(40)
     s.shoot("09-battle", need="DECK:")
@@ -335,14 +337,37 @@ def walk_b(planner, checks):
     # (variance-safe: enemy HP strictly decreases per landed hit; never
     # assert exact damage).  Bounded rounds + defeat detection.  Carl's
     # practice deck deals 0, so the hero must still be full afterwards.
+    # His stepwise sparring hints show per phase: the card-pick lesson
+    # while choosing the attack, the shield lesson while defending.
     prev_total = s.reader.battle_enemy_hp(0)
     start_total = prev_total
     victory = False
     defeated = False
-    for round_no in range(MAX_BATTLE_ROUNDS):
+    s.check("select hint", s.text_has("L/R PICK"),
+            expected="L/R PICK", actual="none")
+    _select_cards(s, ATTACK_TYPES)
+    # The execute press is retried: a press eaten by edge timing leaves
+    # the SELECT phase open instead of advancing to DEFEND.
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+            break
+    s.check("defend banner", s.text_has("DEFEND"),
+            expected="DEFEND", actual="none")
+    # The hint shares row 9 with transient messages (a selection
+    # rejection's 45-frame TTL freezes through attack animations, so it
+    # can still own the row when DEFEND opens): wait for the lesson.
+    s.check("defend hint",
+            s.wait_for(lambda: s.text_has("SHIELD"), ticks=150),
+            expected="SHIELD", actual="none")
+    _select_cards(s, (BT_SHIELD,))
+    s.press("select", settle=40)     # execute defense
+    s.shoot("10-battle-attack")
+    prev_total = s.reader.battle_enemy_hp(0)
+    for round_no in range(1, MAX_BATTLE_ROUNDS):
         done = _battle_round(s)
-        if round_no == 0:
-            s.shoot("10-battle-attack")
         if done:
             victory = s.text_has("VICTORY")
             defeated = s.text_has("DEFEATED")

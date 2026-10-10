@@ -1,0 +1,44 @@
+{
+ "name": "tutorial_carl_hints_select",
+ "test": true,
+ "description": "Carl's sparring hints (attack stage): during his battle's SELECT phase the blank row 5 shows the card-pick lesson and row 9 the validate lesson, stepwise with the fight",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "CARL:L/R PICK A TAKE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "SELECT TO ATTACK!"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4242
+ }
+}

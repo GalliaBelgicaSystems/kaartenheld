@@ -6,6 +6,7 @@
 #include "battle_data.h"
 #include "card.h"
 #include "banked.h"
+#include "world/actor.h"
 #include "rpg/status.h"
 #include <gb/gb.h>
 
@@ -1217,7 +1218,21 @@ void ui_update_battle_banked(void)
     if (d & BATTLE_DIRTY_HAND) battle_draw_battle_hand(battle);
     if (d & BATTLE_DIRTY_DESC) battle_draw_text_line(0, desc_row, desc_msg, timer_w);
     if (d & BATTLE_DIRTY_MSG) {
-        if (battle->msg_id == 4) {
+        /* Carl's stepwise sparring hints (tutorial): lesson lines on the
+         * otherwise-blank row 5 (headline) and row 9 (detail, shared
+         * with the transient message row below, which wins whenever
+         * set).  Row 5 is free on Carl's solo screen (the target caret
+         * lives on row 6 there); the phase picks the lesson, so
+         * guidance stays stepwise with the fight.  Reads hoisted: the
+         * volatile battle pointer recomputes 16-bit field addresses per
+         * access, so one read per field (bank-3 budget). */
+        uint8_t bmsg = battle->msg_id;
+        uint8_t bbid = battle->enemy_battle_id;
+        uint8_t bphase = battle->phase;
+        uint8_t carl_help = (uint8_t)(bmsg == 0 && bbid == BATTLE_CARL &&
+            (bphase == BATTLE_PHASE_PLAYER_SELECT ||
+             bphase == BATTLE_PHASE_PLAYER_DEFEND));
+        if (bmsg == 4) {
             /* Loot reveal (docs/loot.md §34.5): three-line centered block
              * on the otherwise-blank rows 10-12:
              *   row 10: "YOU FOUND:"
@@ -1227,6 +1242,11 @@ void ui_update_battle_banked(void)
             uint8_t len = 0, x, block, i;
             uint8_t ncolor, tile_elem, tile_wpn;
             volatile uint8_t *dst;
+            /* Carl's sparring hint on row 5 is retired with the fight:
+             * only loot shows from here. */
+            if (bbid == BATTLE_CARL) {
+                battle_draw_text_line(0, 5, NULL, 20);
+            }
 
             /* The reveal overlays the hand zone (rows 10-12): clear every
              * card box footprint + floating status cell first.  Direct
@@ -1270,6 +1290,14 @@ void ui_update_battle_banked(void)
             battle_draw_text_line(x, 12, s_reveal_full_name,
                                   (uint8_t)(20 - x));
             battle_color_span(x, 12, len, ncolor);
+        } else if (carl_help) {
+            if (bphase == BATTLE_PHASE_PLAYER_SELECT) {
+                battle_draw_text_line(0, 5, "CARL:L/R PICK A TAKE", 20);
+                battle_draw_text_line(0, 9, "SELECT TO ATTACK!", 20);
+            } else {
+                battle_draw_text_line(0, 5, "CARL:SHIELD BLOCKS", 20);
+                battle_draw_text_line(0, 9, "SELECT TO DEFEND", 20);
+            }
         } else {
             /* Transient gameplay messages live on row 9 (below the
              * DECK/AP line, above the COMBO row): rows 11-14 are the
@@ -1278,6 +1306,13 @@ void ui_update_battle_banked(void)
                 (battle->msg_id == 1) ? "NO ENERGY!" :
                 (battle->msg_id == 2) ? "OUT OF USES!" :
                 (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
+            /* A stale sparring hint never survives its battle: row 5 is
+             * blanked here on Carl's fights whenever the hints above do
+             * not draw (other phases, victory loot).  Trio screens never
+             * reach this (their caret owns row 5). */
+            if (bbid == BATTLE_CARL) {
+                battle_draw_text_line(0, 5, NULL, 20);
+            }
         }
     }
     /* Per-card rider icons (same bank, plain call -- no dispatch).
