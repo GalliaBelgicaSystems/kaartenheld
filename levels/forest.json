@@ -8,12 +8,6 @@
     "music": "MUSIC_FOREST",
     "map_id": "MAP_FOREST"
   },
-  "neighbors": {
-    "north": "",
-    "south": "field",
-    "east": "forest_glade",
-    "west": ""
-  },
   "default_walkable": "forest.forest_plain_floor_2",
   "layers": {
     "terrain": [
@@ -283,6 +277,12 @@
     }
   },
   "exits": [],
+  "neighbors": {
+    "north": "",
+    "south": "field",
+    "east": "forest_glade",
+    "west": ""
+  },
   "objects": [
     {
       "id": "forest_slime",
