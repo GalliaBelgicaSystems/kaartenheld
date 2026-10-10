@@ -29,7 +29,7 @@ static const WorldActorDefinition g_field_actors[] = {
          SPRITE_KIND_ENEMY, 8, 0
     },
     {
-        0, ENTITY_ID_CHEST, 24, 8, DIRECTION_DOWN,
+        0, ENTITY_ID_CHEST, 21, 8, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,

@@ -50,14 +50,14 @@
   {
    "type": "actor_at",
    "entity": "CHEST",
-   "x": 24,
+   "x": 21,
    "y": 8
   }
  ],
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
-   "x": 23,
+   "x": 20,
    "y": 8,
    "facing": "RIGHT"
   },
