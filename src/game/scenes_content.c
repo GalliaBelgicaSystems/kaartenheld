@@ -15,19 +15,26 @@ const SceneExit g_all_exits[] = {
 
 static const SceneTerrainBlock s_field_terrain[] = {
     { 0, 0, 1, 1, TILE_FOREST_00 },
-    { 1, 0, 30, 18, TILE_FOREST_41 },
+    { 1, 0, 30, 2, TILE_FOREST_41 },
     { 31, 0, 1, 1, TILE_FOREST_05 },
     { 0, 1, 1, 2, TILE_FOREST_09 },
     { 31, 1, 1, 16, TILE_FOREST_41 },
+    { 26, 2, 1, 1, TILE_FOREST_12 },
+    { 27, 2, 1, 1, TILE_FOREST_13 },
     { 0, 3, 1, 2, TILE_FOREST_11 },
+    { 26, 3, 1, 1, TILE_FOREST_28 },
+    { 27, 3, 1, 1, TILE_FOREST_29 },
     { 0, 5, 1, 1, TILE_FOREST_09 },
     { 0, 6, 1, 1, TILE_FOREST_11 },
     { 0, 7, 1, 2, TILE_FOREST_09 },
     { 0, 9, 1, 1, TILE_FOREST_10 },
     { 0, 10, 1, 3, TILE_FOREST_11 },
     { 0, 13, 1, 3, TILE_FOREST_10 },
+    { 26, 13, 2, 1, TILE_FOREST_30 },
+    { 8, 15, 6, 1, TILE_FOREST_21 },
     { 0, 16, 1, 1, TILE_FOREST_11 },
     { 0, 17, 1, 1, TILE_FOREST_16 },
+    { 1, 17, 30, 1, TILE_FOREST_41 },
     { 31, 17, 1, 1, TILE_FOREST_26 },
     { 0, 0, 0, 0, 0 }
 };
