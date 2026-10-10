@@ -3100,7 +3100,7 @@ the commit/PR without booting anything.
   DOWN to the TUTORIAL entry, A, then RIGHT through the seven slides); it never
   enters the game.
 * Determinism is verified: the walk's position/caret/text checks make the
-  24 frames byte-identical across repeated runs.
+  29 frames byte-identical across repeated runs.
 
 ## 56.3 Milestones
 
@@ -3114,9 +3114,13 @@ the commit/PR without booting anything.
 06-cards-menu        START quick screen (CARDS tab)
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
-09-battle            slime encounter (battle screen)
+08-carl-field        overworld beside Carl (single field slime)
+08-carl-tutor        Carl's lesson dialogue (name + warning)
+09-battle            Carl spar opens (select hints on rows 5/9)
 10-battle-attack     after a player attack (damage dealt)
-11-battle-victory    VICTORY result over the slime trio (loot gold asserted)
+10-battle-defend     Carl's telegraph + defend hints
+11-battle-victory    VICTORY result over the solo spar (loot gold asserted)
+11-victory-speech    Carl's good-luck speech (AP 2 -> 3)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)
 12-wizard-save       save menu at the wizard
 13-wizard-saved      after saving to Slot 1

@@ -315,13 +315,28 @@ def walk_b(planner, checks):
     props = carl["properties"]
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
-    # transitions eat input for a few dozen frames.
+    # transitions eat input for a few dozen frames.  Arrive stepping east
+    # so the hero faces him for the lesson below.
     adj = (carl_xy[0] - 1, carl_xy[1])
-    path = planner.path("field", s.pos(), adj)
+    path = planner.path("field", s.pos(), (adj[0] - 1, adj[1]))
     s.check("path to carl", path is not None, expected="bfs path",
             actual="none" if path is None else "ok")
     if path:
         _walk_path(s, path)
+    s.check("step to carl",
+            s.walk_btn("right", lambda: s.pos() == adj),
+            expected="tile commit", actual="pos %s" % (s.pos(),))
+    # Carl himself, one tile east: the field holds a single slime.
+    s.shoot("08-carl-field")
+    # His tutor side teaches on A-press; close the lesson afterwards.
+    s.check("tutor opens",
+            s.press_until("a", lambda: s.text_has("CARL:"), tries=6,
+                          settle=30),
+            expected="CARL:", actual="none")
+    s.shoot("08-carl-tutor", need="CARL:")
+    s.check("lesson closed",
+            close_dialogue(s, "CARL:"),
+            expected="closed", actual="open")
     s.check("carl engaged",
             s.press_until("right", lambda: s.text_has("DECK:"),
                           tries=6, settle=24),
@@ -362,6 +377,7 @@ def walk_b(planner, checks):
     s.check("defend hint",
             s.wait_for(lambda: s.text_has("SHIELD"), ticks=150),
             expected="SHIELD", actual="none")
+    s.shoot("10-battle-defend", need="DEFEND")
     _select_cards(s, (BT_SHIELD,))
     s.press("select", settle=40)     # execute defense
     s.shoot("10-battle-attack")
@@ -392,6 +408,7 @@ def walk_b(planner, checks):
     s.check("victory speech",
             s.press_until("a", lambda: s.text_has("CARL:"), tries=6),
             expected="CARL:", actual="none")
+    s.shoot("11-victory-speech", need="CARL:")
     s.check("speech closed",
             close_dialogue(s, "CARL:"),
             expected="closed", actual="open")
