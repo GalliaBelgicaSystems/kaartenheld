@@ -46,6 +46,7 @@
 #define EVENT_ID_MERCHANT_DELIVER (EVENT_ID_FIRST_GAME + 10)
 #define EVENT_ID_AMULET_PICKUP   (EVENT_ID_FIRST_GAME + 11)
 #define EVENT_ID_TUTORIAL_COMPLETE (EVENT_ID_FIRST_GAME + 12)
+#define EVENT_ID_FIELD_CHEST     (EVENT_ID_FIRST_GAME + 13)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -59,7 +60,8 @@
 typedef enum {
     STORY_FLAG_ID_ARRIVED_TOWN = 1,
     STORY_FLAG_ID_MET_MAYOR    = 2,
-    STORY_FLAG_ID_COUNT        = 3
+    STORY_FLAG_ID_FIELD_CHEST  = 3,
+    STORY_FLAG_ID_COUNT        = 4
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -89,7 +91,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 13
+#define GAME_EVENT_COUNT 14
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

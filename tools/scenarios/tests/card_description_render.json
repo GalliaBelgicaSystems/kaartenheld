@@ -11,7 +11,8 @@
   },
   "seed": 8410,
   "inventory": {
-   "WOOD_RING": 1
+   "WOOD_RING": 1,
+   "POISON_DAGGER": 1
   }
  },
  "actions": [
@@ -47,12 +48,12 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "Dagger: poison"
+   "contains": "Heal: restore HP"
   },
   {
    "type": "screen_row",
    "row": 15,
-   "contains": "Heal: restore HP"
+   "contains": "Dagger: poison"
   }
  ]
 }

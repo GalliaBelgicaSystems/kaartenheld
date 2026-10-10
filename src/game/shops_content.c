@@ -15,6 +15,6 @@
 
 const ShopDefinition g_shops[] = {
     { 1, 1, 0, { CARD_WOOD_RING } },
-    { 2, 2, 1, { CARD_IRON_SWORD, CARD_BOW_9 } },
+    { 2, 3, 1, { CARD_IRON_SWORD, CARD_BOW_9, CARD_POISON_DAGGER } },
 };
 const uint8_t g_shop_count = 2;

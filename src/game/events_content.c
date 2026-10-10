@@ -160,6 +160,22 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
         }
+    },
+    /* ── Field cache (first poison dagger) ─────────────────────────
+     * A chest east of Carl holds one POISON_DAGGER: the first the
+     * player can own (starter deck carries none; the Merchant sells
+     * more).  One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats fall
+     * through to no interaction.  Silent grant (no dialogue row):
+     * Carl's lesson points at the cache, and the CARDS tab shows it. */
+    {
+        EVENT_ID_FIELD_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
+        }
     }
 };
 

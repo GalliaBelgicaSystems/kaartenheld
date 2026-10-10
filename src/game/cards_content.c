@@ -16,7 +16,7 @@ const CardDefinition g_cards[] = {
     { CARD_FIRE_SWORD,    CARD_TYPE_ATTACK,  4, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    0, STATUS_BURN,     128,  "F SW" },
     /* Poison Dagger (DA1): 1 physical damage; base 50% poison chance
      * scaled by the played hand's multiplier (docs/combo-system.md §13). */
-    { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  1, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    0, STATUS_POISON,   128,  "P DA" },
+    { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  1, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, STATUS_POISON,   128,  "P DA" },
     { CARD_AMULET,        CARD_TYPE_SPECIAL, 0, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "AMULET"  },
     /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2). */
     { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  2,  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, STATUS_NONE,       0,   "M BO"  }

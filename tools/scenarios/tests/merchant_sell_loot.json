@@ -88,14 +88,6 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
    "button": "SELECT"
   },
   {

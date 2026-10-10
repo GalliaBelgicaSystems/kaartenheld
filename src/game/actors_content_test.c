@@ -28,6 +28,13 @@ static const WorldActorDefinition g_test_field_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },
+    {
+        0, ENTITY_ID_CHEST, 24, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_CHEST, 0xFF, 0
+    },
 };
 
 static const WorldActorDefinition g_test_town_actors[] = {

@@ -728,6 +728,29 @@
         "gold_reward": 0,
         "ai": "AI_NONE"
       }
+    },
+    {
+      "id": "field_cache",
+      "type": "chest",
+      "position": {
+        "x": 24,
+        "y": 8
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_CHEST",
+        "display_name": "CHEST",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "T",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
     }
   ],
   "regions": [

@@ -9,7 +9,7 @@ the *player-facing* management layer.
 
 ## 1. Starter deck
 
-A new game grants a real, owned 12-card deck (collection **and** deck state in
+A new game grants a real, owned 10-card deck (collection **and** deck state in
 `GameState.cards`, written by `game_new_game()` via the silent mutators
 `deck_collection_add` / `deck_add_card` — no boot telemetry).  The contents
 and order are data, not code: `screens/hero.json` `starter_deck` (ordered
@@ -21,12 +21,16 @@ in the level editor's Hero view.  The default set is:
 IRON_SWORD    ×4   → SW3   (max_copies 4)
 WOODEN_SHIELD ×3   → SH2   (max_copies 3)
 FIRE_SWORD    ×3   → SW4   (unlimited uses; BURN rider)
-POISON_DAGGER ×2   → DA1   (max_copies 3)
 ```
+
+No daggers: the first POISON_DAGGER (DA1, max_copies 3) comes from the
+field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
+one-shot via `STORY_FLAG_ID_FIELD_CHEST`) — and the Merchant sells more
+for 8 gold.
 
 The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
 the opening battle hand is `SW3 SW3 SH2 SH2 SW4` and the draw pile starts at
-7. The original five-card grant was enlarged so a fresh file can actually
+5. The original five-card grant was enlarged so a fresh file can actually
 cycle its deck (draw → discard → reshuffle) without shopping first.
 
 Consequences:
@@ -110,11 +114,10 @@ A routes through the real mechanics — no UI-side shortcuts:
   - `DECK MIN 5` — the clear is rejected all-or-nothing when the cards
     left after removing every copy of this card would drop the deck below
     **5** (`DECK_MIN_CARDS`, one full opening hand). Nothing is removed in
-    that case. On the 12-card starter a single-card clear can no longer
-    breach the floor (the largest stack is 4 swords, leaving 8), so the
+    that case. On the 10-card starter a single-card clear can no longer
+    breach the floor (the largest stack is 4 swords, leaving 6), so the
     boundary is reached by clearing stacks in sequence — e.g. after the
-    swords and shields are cleared, the fire-sword clear at deck 5 is
-    rejected.
+    swords are cleared, the shield clear at deck 6 is rejected.
     `deck_remove_card()` enforces the same floor as an engine backstop for
     any other caller.
 
@@ -182,7 +185,7 @@ semantic assertion names.
 | Scenario | Proves |
 |---|---|
 | `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
-| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW3 SW3 SH2 SH2 SW4 from the 12-card table) |
+| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW3 SW3 SH2 SH2 SW4 from the 10-card table) |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
 | `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |

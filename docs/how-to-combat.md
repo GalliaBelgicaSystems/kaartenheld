@@ -16,6 +16,9 @@ The field holds a single slime, **CARL**.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
+East of him sits a treasure chest with your first POISON_DAGGER (the
+starter deck carries none); the Merchant sells more.
+
 He is a friendly practice dummy: press `A` facing him and he
 introduces himself, warns you that the wilds kill the unready, and
 teaches the controls.

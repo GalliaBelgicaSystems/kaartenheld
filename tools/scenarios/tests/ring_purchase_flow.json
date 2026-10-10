@@ -69,14 +69,6 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
    "button": "A"
   },
   {
@@ -109,12 +101,12 @@
   },
   {
    "type": "screen_row",
-   "row": 14,
+   "row": 12,
    "contains": "I RG"
   },
   {
    "type": "screen_row",
-   "row": 14,
+   "row": 12,
    "contains": "1"
   }
  ],
