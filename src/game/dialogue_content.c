@@ -151,7 +151,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
         8,
-        {"It is dangerous to", "go alone! I will", "teach you to fight!", "U/D choose target", "SW are swords!", "SH are shields!", "BO bows, HE heals!", "Fire, ice, poison!"},
+        {"Danger! I will", "teach you to fight!", "U/D choose target", "SW sword, SH block", "BO bows hurt!", "HE rings hit 0!", "Heal, make poker!", "Fire, ice, poison!"},
         0
     },
     {
