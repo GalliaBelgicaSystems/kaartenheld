@@ -1316,12 +1316,12 @@ void ui_update_battle_banked(void)
             if (bphase == BATTLE_PHASE_PLAYER_SELECT) {
                 battle_draw_text_line(0, 5, "CARL:L/R MOVE A TAKE", 20);
                 battle_color_span(0, 5, 20, UI_COLOR_FIELD);
-                battle_draw_text_line(0, 9, "CONFIRM WITH SELECT.", 20);
+                battle_draw_text_line(0, 9, "SELECT TO CONFIRM", 20);
                 battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             } else {
                 battle_draw_text_line(0, 5, "CARL:SHIELD BLOCKS", 20);
                 battle_color_span(0, 5, 20, UI_COLOR_FIELD);
-                battle_draw_text_line(0, 9, "SELECT TO DEFEND", 20);
+                battle_draw_text_line(0, 9, "SELECT TO CONFIRM", 20);
                 battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
         } else {

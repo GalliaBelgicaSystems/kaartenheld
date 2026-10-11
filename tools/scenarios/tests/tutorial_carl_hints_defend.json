@@ -65,7 +65,7 @@
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "SELECT TO DEFEND"
+   "contains": "SELECT TO CONFIRM"
   }
  ],
  "initial_state": {

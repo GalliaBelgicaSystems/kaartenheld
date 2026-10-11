@@ -61,7 +61,7 @@
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "CONFIRM WITH SELECT."
+   "contains": "SELECT TO CONFIRM"
   },
   {
    "type": "screen_row",
