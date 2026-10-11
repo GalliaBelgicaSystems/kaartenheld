@@ -152,19 +152,13 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
 		--shade-map generated/tiles/shades/forest.json --tile-coords "14,0 15,0 14,1 15,1 15,1" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
-	# Chest open/closed sprites from the curated actors tileset (8x8
-	# PNGs, not sheet cells): stacked side-by-side into one 2-tile
-	# array (closed = tile 0, open = tile 1), loaded with a single
-	# 2-tile set_sprite_data call -- one call + 32 B data is smaller
-	# than two calls + split arrays, which matters in the packed debug
-	# fixed bank.  The flag-driven frame (FIELD_CHEST) picks between
-	# them in ui_world_sprite_banked.c; the old single-tile rule
-	# (sheet cell 8,2, shared with the exit/stairs art) is retired.
-	@mkdir -p $(BUILD_DIR)
-	@python3 -c "from PIL import Image; c=Image.open('tools/level_editor/public/tiles/actors/actors_chest_closed.png'); o=Image.open('tools/level_editor/public/tiles/actors/actors_chest_open.png'); s=Image.new('RGBA',(16,8)); s.paste(c,(0,0)); s.paste(o,(8,0)); s.save('$(BUILD_DIR)/chest_both.png')"
-	@python3 tools/png2gb.py $(BUILD_DIR)/chest_both.png --name chest_sprite_tiles \
-		--shade-map generated/tiles/shades/forest.json \
-		-o $(GFX_OUT_DIR)/chest_sprite_tiles.h
+	# Chest sprite tile from forest-tile.png (tile 8,2 "treasure chest
+	# forest", right half with the gold lock). Shade 0 of its ramp is the
+	# transparent key, matching the sheet encoding, so no anchor flag is
+	# needed.
+	@python3 tools/png2gb.py assets/forest-tile.png --name forest_chest_sprite_tile \
+		--shade-map generated/tiles/shades/forest.json --tile-coords "8,2" \
+		-o $(GFX_OUT_DIR)/forest_chest_sprite_tile.h
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets
@@ -512,7 +506,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 
 # Ensure UI modules rebuild when generated sprite headers change
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
-$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h $(GFX_OUT_DIR)/chest_sprite_tiles.h
+$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path

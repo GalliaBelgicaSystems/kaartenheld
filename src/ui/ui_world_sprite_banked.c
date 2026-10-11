@@ -5,20 +5,15 @@
 #include "actor.h"
 #include "ui.h"
 #include "banked.h"
-#include "game.h"
-#include "game_ids.h"
 #include "battle_data.h"
 #include "gfx/rpg_tile_lookup.h"
+#include "gfx/enemy_ow_tiles.h"
 #include "anim_pairs.h"
 
-/* FIELD_CHEST must stay flag 3 (byte 0, mask 0x04): the body below reads
- * the flag byte directly to keep the banked body small. */
-typedef char chest_flag_layout_ok[STORY_FLAG_ID_FIELD_CHEST == 3 ? 1 : -1];
-
-/* ── Overworld actor sprites + castle boss background (bank-4 body) ──
+/* ── Overworld actor sprites + castle boss background (bank-3 body) ──
  * The data-driven SPRITE_KIND_* OAM choice, the per-actor shadow-OAM write
  * (position + tile + prop) and the castle-boss 2x2 background-tile draw live
- * in bank 4 so the fixed-bank ui.c stays under
+ * in bank 3 (like ui_color_banked) so the fixed-bank ui.c stays under
  * 0x8000 (AGENTS.md §52.18 / §55.5).  ui_draw_actors_sprites() dispatches
  * this one banked pass per frame via the staging globals; the caller only
  * stages the World pointer and reads nothing back (shadow OAM 0xC000 is
@@ -66,11 +61,8 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
  * Bats use the grey ramp (black bodies); the chest uses the brown wood
  * ramp (OBJ palette 6); kobolds still ride OBJ palette 2 (ice ramp --
- * looks blue, kept as-is pending its own visual pass).  The chest owns
- * two frames (closed = slot 0, open = slot 1); the statics loop below
- * derives the frame per-actor (field cache opens on its loot flag,
- * other chest-kind statics stay closed), passing the global anim step
- * for everything else.
+ * looks blue, kept as-is pending its own visual pass).  The chest art
+ * is 1 frame in both anim slots, so + anim stays uniform.
  * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
  * read) for its shared OAM base, frames, and palette; unknown rows fall
  * back to the ASCII glyph. */
@@ -149,18 +141,8 @@ void ui_actors_sprites_banked(void)
     uint8_t slot;
     uint8_t i;
     uint8_t oam_slot = OAM_SLOT_ACTOR0;  /* running OAM entry cursor */
-    uint8_t chest_open;
 
     if (!w) return;
-    /* Chest frame comes from the FIELD_CHEST story flag, not the global
-     * anim step: closed until looted, open after.  Read directly from
-     * the WRAM canonical state (no function calls: a banked target must
-     * not call fixed-bank code while a content bank is selected).
-     * FIELD_CHEST is flag 3: byte 0, mask 0x04 (see flag_byte_bit() in
-     * state.c).  The layout assert below breaks the build if the flag
-     * id ever moves, so the offsets cannot silently rot. */
-    chest_open = 0;
-    if (g_game.state.flags.bytes[0] & 4) chest_open = 1;
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
         const WorldActorRuntime *a = &w->actors[slot];
         uint8_t tile = 0;
@@ -237,7 +219,6 @@ void ui_actors_sprites_banked(void)
         uint8_t tile;
         uint8_t prop = 0;
         uint8_t px, py;
-        uint8_t frame;
         /* Clamped (see actor_find_at): a trashed count must neither
          * render garbage rows as phantom sprites nor hide valid ones.
          * Valid counts never exceed the cap (loader enforces it), so an
@@ -255,18 +236,8 @@ void ui_actors_sprites_banked(void)
             e[0] = 0;  /* glyph / boss / background-art actors own these */
             continue;
         }
-        /* Chest frame is per-actor, not global anim: only the field
-         * cache (ENTITY_ID_CHEST) opens, driven by its loot flag; other
-         * chest-kind statics (e.g. the amulet pickup) keep frame 0, as
-         * when the chest owned a single frame.  Branch form (no bool
-         * temporaries): debug bank 4 is nearly full. */
-        frame = anim;
-        if (d->sprite_kind == SPRITE_KIND_CHEST) {
-            frame = 0;
-            if (d->id == ENTITY_ID_CHEST) frame = chest_open;
-        }
         tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                               castle, frame, d->ow_type, &prop);
+                               castle, anim, d->ow_type, &prop);
         if (!tile) {
             e[0] = 0;
             continue;
