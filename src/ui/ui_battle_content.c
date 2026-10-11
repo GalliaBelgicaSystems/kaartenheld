@@ -1314,7 +1314,7 @@ void ui_update_battle_banked(void)
             }
         } else if (carl_help) {
             if (bphase == BATTLE_PHASE_PLAYER_SELECT) {
-                battle_draw_text_line(0, 5, "CARL:L/R MOVE A TAKE", 20);
+                battle_draw_text_line(0, 5, "CARL:L/R MOVE CURSOR", 20);
                 battle_color_span(0, 5, 20, UI_COLOR_FIELD);
                 battle_draw_text_line(0, 9, "SELECT TO CONFIRM", 20);
                 battle_color_span(0, 9, 20, UI_COLOR_FIELD);

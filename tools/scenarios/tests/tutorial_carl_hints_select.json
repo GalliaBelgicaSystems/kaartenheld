@@ -56,7 +56,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "CARL:L/R MOVE A TAKE"
+   "contains": "CARL:L/R MOVE CURSOR"
   },
   {
    "type": "screen_row",
