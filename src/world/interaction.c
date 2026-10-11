@@ -3,7 +3,11 @@
 #include "event.h"
 #include "telemetry.h"
 #include "story.h"
+#include "banked.h"
 #include <stddef.h>
+
+/* Bank-7 lesson-sync body (src/world/lesson_banked.c). */
+void lesson_sync_banked(void);
 
 ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y)
 {
@@ -30,6 +34,27 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
     if (result == ENGAGE_SHOP) {
         g->shop_id = actor->shop_id;
     }
+    /* Lesson tile (Carl): facing-talk must sync the co-located
+     * spar exactly like the bump path does, or closing the lesson
+     * returns to the overworld with no fight.  The store is
+     * unconditional (NO when nothing hostile is there), mirroring
+     * the bump path; the scan skips inactive slots, so post-victory
+     * the remedial lesson just repeats.  DEBUG builds run the scan
+     * banked (debug bank 3 has room; debug fixed has 17 B -- the
+     * body derives the tile from facing, see lesson_b3.c); RELEASE
+     * builds run the identical sync inline (release fixed is roomy).
+     * Both mirror actor_find_hostile_slot(). */
+#ifdef DEBUG_BUILD
+    g_bk_call_bank = 3;
+    g_bk_call_target = (uint16_t)&lesson_sync_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
+#else
+    if (result == ENGAGE_DIALOGUE) {
+        g->world.encounter_actor_index =
+            actor_find_hostile_slot(&g->world, target_x, target_y);
+    }
+#endif
     return result;
 }
 

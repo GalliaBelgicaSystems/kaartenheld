@@ -18,7 +18,8 @@ it is dangerous to go alone, and he will teach you how to fight -- his
 full field guide (targeting, swords, shields, bows, `HE` rings that hit
 for 0 but heal and build poker hands, riders included,
 repeated on every later visit). Close the lesson and the spar starts by
-itself — no second bump needed. He never leaves: bump him any time to
+itself — no second bump needed. Pressing A while facing him teaches
+and spars exactly the same. He never leaves: bump him any time to
 hear the guide again.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)

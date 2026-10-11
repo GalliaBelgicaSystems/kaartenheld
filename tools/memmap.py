@@ -197,6 +197,23 @@ def main():
             print(f"{sym:<28}: not found in .noi")
             ok = False
 
+    # Build-conditional trampoline targets: present in exactly one build
+    # (DEBUG_ONLY_SRCS).  Missing is fine; misplaced is a violation.
+    optional_banked_targets = {
+        "_lesson_sync_banked": "lesson stash sync (debug bank 3; release inlines it)",
+    }
+    for sym, desc in optional_banked_targets.items():
+        if sym in symbols:
+            addr = symbols[sym]
+            low16 = addr & 0xFFFF
+            in_window = 0x4000 <= low16 <= 0x7FFF
+            status = "OK" if in_window else "VIOLATION (not in switchable ROM 0x4000-0x7FFF)"
+            if not in_window:
+                ok = False
+            print(f"{sym:<28}: 0x{addr:05X} (window 0x{low16:04X})  ({desc})  [{status}]")
+        else:
+            print(f"{sym:<28}: absent (build-conditional)  ({desc})  [OK]")
+
     print()
     if ok:
         print("memory budget: invariants OK")

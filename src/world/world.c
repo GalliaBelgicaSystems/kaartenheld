@@ -179,11 +179,10 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
         w->move_target_x = target_x;
         w->move_target_y = target_y;
     } else {
-        /* Stash for the lesson auto-start (lesson tiles only: this
-         * stores NO_ACTOR_INDEX on plain static bumps, which is already
-         * the invariant there -- no encounter can be pending, since
-         * every battle exit clears it). */
-        w->encounter_actor_index = hostile_slot;
+        /* No stash here: the BLOCKED bump below lands in
+         * interaction_try_bump, which syncs encounter_actor_index from
+         * the same tile when its dialogue opens (and the A-key facing
+         * path does the same).  One writer, no stale slots. */
         actor = actor_find_at(w, target_x, target_y);
         if (actor) {
             telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,

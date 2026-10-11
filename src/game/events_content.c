@@ -140,15 +140,19 @@ const EventDefinition g_events[] = {
         }
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────
-     * Carl is a SINGLE hostile sprite with a lesson: walking into him
-     * raises MOVE_RESULT_ENCOUNTER, start_battle_from_world() detours a
-     * hostile carrying dialogue_id into the ordinary dialogue screen
-     * (the encounter slot stays stashed), and closing the lesson starts
-     * the spar from the stashed slot (dialogue_screen.c).  The detour
-     * clears the runtime dialogue_id, so the lesson plays once per scene
-     * visit; TUTORIAL_COMPLETE below is all-match ACTOR_DEFEATED like
-     * MONSTER_DEFEATED.  Carl owns ENTITY_ID_CARL (no other actor
-     * carries it), so only his defeat grants the pool.  The SET is
+     * Carl is TWO co-located actors on one tile: a tutor hostile
+     * (actor_id 1, AI_TUTOR, 15 HP, 0-power spar deck) and a dialogue
+     * static (actor_id 0, never defeat-gated, carries
+     * DIALOGUE_ID_TUTORIAL_CARL_INTRO).  Both share ENTITY_ID_CARL;
+     * only the runtime hostile slot can be defeated, so
+     * TUTORIAL_COMPLETE below fires exactly once on the spar win.
+     * Bumping or facing-talking the tile opens the static's lesson
+     * through the ordinary dialogue path while the spar slot stays
+     * stashed (world.c bump path, interaction.c facing path); closing
+     * the lesson auto-starts the spar iff the slot still holds an
+     * active tutor (dialogue_screen.c guard).  The static never
+     * despawns by design: post-victory the spar is gone, so bumps
+     * replay the lesson as a remedial with no fight.  The SET is
      * unconditional (no pool==0 gate): the field cache SETs the same
      * value, so whichever comes first wins and the second is a harmless
      * no-op -- opening the chest first must not eat the victory speech.
