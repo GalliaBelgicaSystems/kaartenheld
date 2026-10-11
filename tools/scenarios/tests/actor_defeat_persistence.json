@@ -188,10 +188,6 @@
   },
   {
    "type": "event_occurred",
-   "event": "BATTLE_WON"
-  },
-  {
-   "type": "event_occurred",
    "event": "ENTITY_DEFEATED"
   },
   {

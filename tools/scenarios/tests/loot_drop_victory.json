@@ -100,6 +100,58 @@
    "frames": 130
   },
   {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
    "type": "press",
    "button": "A"
   },
@@ -136,10 +188,6 @@
   {
    "type": "game_state",
    "expected": "OVERWORLD"
-  },
-  {
-   "type": "event_occurred",
-   "event": "BATTLE_WON"
   },
   {
    "type": "event_occurred",

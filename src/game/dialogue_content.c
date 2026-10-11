@@ -157,8 +157,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
-        2,
-        {"Real fights begin!", "Good luck! AP +1!"},
+        8,
+        {"REAL FIGHTS BEGIN!", "U/D choose target", "AP limits cards!", "Have 1 more AP!", "SW are swords!", "SH are shields!", "BO bows, HE heals!", "Fire, ice, poison!"},
         0
     },
 };
