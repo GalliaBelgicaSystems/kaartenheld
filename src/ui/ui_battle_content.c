@@ -566,7 +566,7 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
 
 static void battle_draw_enemy_columns(const volatile Battle *battle)
 {
-    uint8_t k, x;
+    uint8_t k, x, bbid;
     const Combatant *e;
     bool blink_name = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND) &&
                       (((battle->timer_ticks >> 4) & 1) == 0);
@@ -578,6 +578,7 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
 
     for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
         x = g_battle_hud.enemy_positions[k][0];
+        bbid = battle->enemy_battle_id;
         if (k < battle->enemy_count && battle->enemies[k].hp != 0) {
             e = &battle->enemies[k];
             battle_draw_enemy_art(x, k, battle,
@@ -592,7 +593,7 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
             battle_color_span(x, hp_row, 6,
                               battle_status_color(&s_battle_status[k + 1]));
             if (k == battle->target_idx &&
-                battle->enemy_battle_id != BATTLE_CARL &&
+                bbid != BATTLE_CARL &&
                 (battle->phase == BATTLE_PHASE_PLAYER_SELECT || battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
                 /* Arrow centered on the art's MIDDLE column (art is 3
                  * wide at art_x..art_x+2): on the boss screen a 3x3 art
@@ -614,7 +615,12 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
             battle_color_span(x, hp_row, 6, UI_COLOR_NONE);
             battle_draw_enemy_art(x, k, battle, 1);
         }
-        battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, NULL, 3);
+        /* Row-6 caret wipe (stale target arrows): skipped for Carl, whose
+         * row 6 owns the A-button lesson (he never targets, so there is
+         * nothing to erase there). */
+        if (bbid != BATTLE_CARL) {
+            battle_draw_text_line(battle_enemy_art_x(x, k), cur_row, NULL, 3);
+        }
     }
 }
 
@@ -1216,7 +1222,7 @@ void ui_update_battle_banked(void)
         battle_draw_banner_line(banner_row, turn_banner, timer_w);
         if (battle->enemy_battle_id == BATTLE_CARL && battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
             battle_color_span(0, banner_row, timer_w, UI_COLOR_FIELD);
-            battle_draw_text_line(0, 1, "DO POKER HANDS.", 20);
+            battle_draw_banner_line(1, "DO POKER HANDS.", 20);
             battle_color_span(0, 1, 20, UI_COLOR_FIELD);
         } else if (battle->enemy_battle_id == BATTLE_CARL) {
             battle_draw_text_line(0, 1, NULL, 20);
@@ -1232,13 +1238,14 @@ void ui_update_battle_banked(void)
     if (d & BATTLE_DIRTY_DESC) battle_draw_text_line(0, desc_row, desc_msg, timer_w);
     if (d & BATTLE_DIRTY_MSG) {
         /* Carl's stepwise sparring hints (tutorial): lesson lines on the
-         * otherwise-blank row 5 (headline) and row 9 (detail, shared
-         * with the transient message row below, which wins whenever
-         * set).  Row 5 is free on Carl's solo screen (the target caret
-         * lives on row 6 there); the phase picks the lesson, so
-         * guidance stays stepwise with the fight.  Reads hoisted: the
-         * volatile battle pointer recomputes 16-bit field addresses per
-         * access, so one read per field (bank-3 budget). */
+         * otherwise-blank rows 5 (headline), 6 (A-button lesson) and 9
+         * (detail, shared with the transient message row below, which
+         * wins whenever set).  Rows 5-6 are free on Carl's solo screen:
+         * the enemy-target caret would live on row 6, but Carl never
+         * targets (single foe, no caret).  The phase picks the lesson,
+         * so guidance stays stepwise with the fight.  Reads hoisted:
+         * the volatile battle pointer recomputes 16-bit field addresses
+         * per access, so one read per field (bank-3 budget). */
         uint8_t bmsg = battle->msg_id;
         uint8_t bbid = battle->enemy_battle_id;
         uint8_t bphase = battle->phase;
@@ -1313,17 +1320,17 @@ void ui_update_battle_banked(void)
             battle_color_span(x, 12, len, ncolor);
             }
         } else if (carl_help) {
+            battle_draw_text_line(0, 6, "A: CHOOSE CARD", 20);
+            battle_color_span(0, 6, 20, UI_COLOR_FIELD);
             if (bphase == BATTLE_PHASE_PLAYER_SELECT) {
                 battle_draw_text_line(0, 5, "CARL:L/R MOVE CURSOR", 20);
                 battle_color_span(0, 5, 20, UI_COLOR_FIELD);
-                battle_draw_text_line(0, 9, "SELECT TO CONFIRM", 20);
-                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             } else {
                 battle_draw_text_line(0, 5, "CARL:SHIELD BLOCKS", 20);
                 battle_color_span(0, 5, 20, UI_COLOR_FIELD);
-                battle_draw_text_line(0, 9, "SELECT TO CONFIRM", 20);
-                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
+            battle_draw_text_line(0, 9, "SELECT: CONFIRM HAND", 20);
+            battle_color_span(0, 9, 20, UI_COLOR_FIELD);
         } else {
             /* Transient gameplay messages live on row 9 (below the
              * DECK/AP line, above the COMBO row): rows 11-14 are the
@@ -1332,12 +1339,13 @@ void ui_update_battle_banked(void)
                 (battle->msg_id == 1) ? "NO ENERGY!" :
                 (battle->msg_id == 2) ? "OUT OF USES!" :
                 (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
-            /* A stale sparring hint never survives its battle: row 5 is
-             * blanked here on Carl's fights whenever the hints above do
-             * not draw (other phases, victory loot).  Trio screens never
-             * reach this (their caret owns row 5). */
+            /* A stale sparring hint never survives its battle: rows 5 and 6
+             * are blanked here on Carl's fights whenever the hints above
+             * do not draw (other phases, victory loot).  Trio screens
+             * never reach this (their caret owns row 5). */
             if (bbid == BATTLE_CARL) {
                 battle_draw_text_line(0, 5, NULL, 20);
+                battle_draw_text_line(0, 6, NULL, 20);
             }
         }
     }

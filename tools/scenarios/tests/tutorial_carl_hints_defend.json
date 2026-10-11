@@ -64,8 +64,13 @@
   },
   {
    "type": "screen_row",
+   "row": 6,
+   "contains": "A: CHOOSE CARD"
+  },
+  {
+   "type": "screen_row",
    "row": 9,
-   "contains": "SELECT TO CONFIRM"
+   "contains": "SELECT: CONFIRM HAND"
   }
  ],
  "initial_state": {

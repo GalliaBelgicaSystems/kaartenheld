@@ -35,7 +35,9 @@ deck deals **0 damage**, so you cannot lose — learn the round below at
 your own pace (the battle timer still runs, but nothing can hurt you).
 There is no target arrow over Carl: with a single foe there is nothing
 to aim at. On your turn the top reads `CARL: PICK CARDS`, then
-`DO POKER HANDS.` below it.
+`DO POKER HANDS.` below it. The screen coaches the buttons too:
+`L/R` moves the cursor, `A` chooses the card, `SELECT` confirms the
+hand — same wording every phase.
 
 ![Pick cards, then SELECT](../screenshots/09-battle.png)
 

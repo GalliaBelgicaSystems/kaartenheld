@@ -212,7 +212,17 @@ void ui_format_int_banked(void);
  * reads its staged args from g_bk_ptr_a. */
 void ui_color_span_banked(void);
 
-/* Bank-3 no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_color_banked.c):
+/* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
+ * per-build split (debug 5 / release 4) so release bank 3 keeps room for
+ * battle HUD work.  The fixed-bank wrapper stages through this macro, so
+ * pragma and dispatch can never disagree. */
+#ifdef DEBUG_BUILD
+#define UI_DIALOGUE_BOX_BANK 5
+#else
+#define UI_DIALOGUE_BOX_BANK 4
+#endif
+
+/* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):
  * paints the 6 box rows FULL-WIDTH with the dialogue paper palette and
  * re-syncs SCX to the world camera (scroll_y in g_bk_byte_b shifts the base
  * for vertically scrolled maps; camera in g_bk_byte_c).  Full-width is exact

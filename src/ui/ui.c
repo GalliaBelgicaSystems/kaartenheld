@@ -940,7 +940,7 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
      * paints full-width rows and re-syncs SCX. */
     g_bk_byte_b = scroll_y;
     g_bk_byte_c = world->camera_px_x;
-    g_bk_call_bank = 3;
+    g_bk_call_bank = UI_DIALOGUE_BOX_BANK;
     g_bk_call_target = (uint16_t)&ui_dialogue_box_banked;
     banked_call_run();
 }
