@@ -62,9 +62,8 @@ const StaticActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_
 ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState *dialogue)
 {
     if (!actor) return ENGAGE_NONE;
-    if (actor->flags & ACTOR_FLAG_HOSTILE) {
-        return ENGAGE_BATTLE;
-    }
+    /* No hostile branch (see interaction_try_at): the loader never
+     * places a HOSTILE-flagged def in the static table. */
 
     if (actor->interaction == INTERACTION_DIALOGUE) {
         dialogue_start_def(dialogue, actor->dialogue_id);

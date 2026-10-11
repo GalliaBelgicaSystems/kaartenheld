@@ -71,6 +71,13 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_FIELD_CHEST_AP,
+        "CHEST:",
+        3,
+        {"POISON DAGGER!", "Plus one action", "point! AP up!"},
+        0
+    },
+    {
         DIALOGUE_ID_GUARD_AFTER_MAYOR,
         "GUARD:",
         2,
@@ -131,13 +138,6 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"The Sword suits you.", "Go forth, hero!"},
-        0
-    },
-    {
-        DIALOGUE_ID_SHOPKEEPER_GREETING,
-        "SHOP:",
-        2,
-        {"Welcome to my shop.", "Rest up, friend."},
         0
     },
     {

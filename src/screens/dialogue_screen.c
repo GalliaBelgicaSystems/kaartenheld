@@ -12,6 +12,16 @@ void dialogue_screen_update(Game *g)
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (!dialogue_next(&g->dialogue)) {
             interaction_on_dialogue_end(&g->dialogue, &g->state);
+            /* Stashed spar: closing a lesson that detoured from an
+             * encounter (Carl) starts the battle instead of returning
+             * to the overworld.  The slot is set only by the encounter
+             * path (movement/patrol bump or hostile interaction) and
+             * cleared by every battle exit, so no other dialogue can
+             * trip this. */
+            if (g->world.encounter_actor_index != NO_ACTOR_INDEX) {
+                start_battle_from_world(g);
+                return;
+            }
             screen_change(g, SCREEN_OVERWORLD);
         }
     }

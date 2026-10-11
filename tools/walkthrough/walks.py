@@ -22,7 +22,8 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_ENERGY_POOL,
-                                      CARD_WOOD_RING, HERO_START_GOLD,
+                                      CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON)
 
@@ -317,27 +318,22 @@ def walk_b(planner, checks):
     props = carl["properties"]
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
-    # transitions eat input for a few dozen frames.  His tutor side
-    # stands one tile east of the sparring spot: bump it from (16,8)
-    # for the lesson, then circle around to (13,8) for the fight.
-    s.check("tutor bump",
-            bump_actor(s, planner, "field", (16, 8), "left", "CARL:"),
+    # transitions eat input for a few dozen frames.  Carl is a single
+    # sprite now: bumping him opens the lesson first, and closing it
+    # auto-starts the spar from the stashed encounter (no second bump).
+    s.check("carl lesson bump",
+            bump_actor(s, planner, "field", (15, 8), "left", "CARL:"),
             expected="CARL:", actual="none")
     # Carl himself, one tile west of the hero: the field's single slime.
     s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
-    s.check("lesson closed",
-            close_dialogue(s, "CARL:"),
-            expected="closed", actual="open")
-    adj = (carl_xy[0] - 1, carl_xy[1])
-    path = planner.path("field", s.pos(), adj)
-    s.check("path to carl", path is not None, expected="bfs path",
-            actual="none" if path is None else "ok")
-    if path:
-        _walk_path(s, path)
-    s.check("carl engaged",
-            s.press_until("right", lambda: s.text_has("DECK:"),
-                          tries=6, settle=24),
+    # Closing by battle-open (not by CARL: gone): the spar banner itself
+    # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
+    # the fight.  Four advances close the 4-line lesson; press_until
+    # self-heals dropped presses and stops at the first DECK: sighting.
+    s.check("lesson closed into spar",
+            s.press_until("a", lambda: s.text_has("DECK:"),
+                          tries=8, settle=30, label="DECK:"),
             expected="DECK:", actual="none")
     s.tick(40)
     s.shoot("09-battle", need="DECK:")
@@ -421,6 +417,20 @@ def walk_b(planner, checks):
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
     s.check_eq("energy pool raised 2 -> 3",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    # Field cache east of Carl: bumping it opens the reward speech (first
+    # poison dagger plus the AP unlock, idempotent with the spar reward),
+    # then grants both.
+    s.check("chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.shoot("11-chest", need="CHEST:")
+    s.check("cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("first poison dagger",
+               s.reader.collection_count(CARD_POISON_DAGGER), 1)
+    s.check_eq("energy pool still 3",
                s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)

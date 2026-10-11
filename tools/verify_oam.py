@@ -417,10 +417,16 @@ def verify_battle_transition(sess):
     check("overworld @ sprite position (shadow OAM)", (80, 88), shadow_oam(sess))
     check("overworld sprite tile (shadow OAM)", 98, shadow_sprite_tile(sess))
 
-    # 2. Walk right into the slime at (14,8): the encounter is decided once
-    #    the hold-to-move commits the tile (MOVE_FRAMES=8).  The sprite is
-    #    hidden for the battle redraw (no sprite on the card battle screen).
+    # 2. Walk right into the slime at (14,8): Carl teaches first, so the
+    #    bump opens his lesson (dialogue); closing it auto-starts the spar
+    #    from the stashed encounter.  The sprite is hidden for the battle
+    #    redraw (no sprite on the card battle screen).
     sess.hold("RIGHT", 10)
+    for _ in range(6):
+        sess.press("A")
+        sess.step(20)
+        if sess.snapshot().get("screen") == "BATTLE":
+            break
     check("battle sprite: hidden (shadow OAM)", 0, shadow_oam(sess)[0])
 
     # 3. Open the item menu (START): the item screen keeps the sprite
@@ -619,6 +625,13 @@ def verify_battle_vram_restore(sess):
     check("pre-battle VRAM read in VBlank", True, wait_vblank(sess))
     before = vram_tiles()
     sess.hold("RIGHT", 10)
+    # Carl teaches first: close the lesson so the spar (which clobbers
+    # the world tiles with enemy art) actually starts.
+    for _ in range(6):
+        sess.press("A")
+        sess.step(20)
+        if sess.snapshot().get("screen") == "BATTLE":
+            break
     sess.step(2)
     check("battle VRAM read in VBlank", True, wait_vblank(sess))
     during = vram_tiles()

@@ -14,13 +14,16 @@ You always strike first each round, then block.
 
 The field holds a single slime, **CARL**, in a grove of trees, old
 stumps and grass tufts. Walk into him and a dialogue box opens first:
-it is dangerous to go alone, and he will teach you how to fight. Then
-bump his sparring spot beside him and the fight starts.
+it is dangerous to go alone, and he will teach you how to fight. Close
+the lesson and the spar starts by itself — no second bump needed.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
 East of him sits a treasure chest with your first POISON_DAGGER (the
-starter deck carries none); the Merchant sells more.
+starter deck carries none); the Merchant sells more. Bumping the chest
+also plays a reward speech and grants **+1 action point**, same as beating
+Carl — whichever comes first wins, the second is a harmless no-op, so the
+order never matters.
 
 He is a friendly practice dummy whose every word is green, so you know
 it is him speaking.
@@ -77,7 +80,8 @@ attack *does* (see below).
 - **Hand**: 5 cards, drawn from your deck. Played cards are discarded
   and replaced at the round boundary.
 - **Energy**: **2 per phase** at first — attack *and* defend each get a
-  fresh pool. Beating Carl's practice spar raises it to **3 per phase**.
+  fresh pool. Beating Carl's practice spar raises it to **3 per phase**
+  (opening the field cache does the same, idempotently).
   Every card shows a cost; selecting reserves it, resolving pays it.
   A card you can't afford can't be selected (`NO ENERGY!`).
 - **Timer**: **20 seconds** per decision, shown as the bottom bar. Expiry

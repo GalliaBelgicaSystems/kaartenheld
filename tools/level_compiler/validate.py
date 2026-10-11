@@ -583,6 +583,28 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 errors.append(f"Object '{oid}' has invalid {key} '{props[key]}'")
                 objects_ok = False
 
+    # Lesson tiles (Carl): an AI_TUTOR hostile teaches through a
+    # co-located dialogue static on the same tile (one visual sprite:
+    # both render the same slime art).  The movement lesson branch
+    # assumes this pairing -- a lone tutor would be stepped onto, and a
+    # tutor without a lesson-giver never spars.  Fail loudly instead.
+    for obj in objects:
+        props = obj.get("properties", {}) or {}
+        if obj.get("type") == "enemy" and props.get("ai") == "AI_TUTOR":
+            pos = obj.get("position", {}) or {}
+            mates = [o for o in objects
+                     if o is not obj
+                     and (o.get("position", {}) or {}).get("x") == pos.get("x")
+                     and (o.get("position", {}) or {}).get("y") == pos.get("y")]
+            lesson = [o for o in mates
+                      if (o.get("properties", {}) or {}).get("dialogue")]
+            if len(lesson) != 1:
+                errors.append(
+                    f"AI_TUTOR '{obj.get('id')}' needs exactly one co-located "
+                    f"dialogue static on its tile (lesson before the spar), "
+                    f"found {len(lesson)}")
+                objects_ok = False
+
     # Engine actor-slot caps: actor_load_banked() spawns hostile rows into
     # World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
     # g_static_actors (MAX_STATIC_ACTORS, parsed from src/world/actor.h —
@@ -774,19 +796,28 @@ def main():
             overall_success = False
 
     # Cross-file check: nonzero actor_id values drive persistent defeat
-    # tracking in GameState.world and must be unique across scenes.
+    # tracking in GameState.world and must be unique across scenes --
+    # EXCEPT the lesson pattern (Carl): one hostile and one non-hostile
+    # may share an id within the SAME scene, so the spar and its tutor
+    # vanish together when the spar is won.  Anything else sharing an id
+    # (cross-scene, or two hostiles) is a lifecycle collision.
     seen_actor_ids = {}
     for p, data in loaded_levels:
         for obj in data.get("objects", []):
             props = obj.get("properties", {}) or {}
             aid = props.get("actor_id", 0)
             if isinstance(aid, int) and aid != 0:
-                if aid in seen_actor_ids:
-                    print(f"ERROR: actor_id {aid} used by both "
-                          f"'{seen_actor_ids[aid]}' and '{obj.get('id')}' (must be unique)")
-                    overall_success = False
-                else:
-                    seen_actor_ids[aid] = obj.get("id")
+                seen_actor_ids.setdefault(aid, []).append(
+                    (p, obj.get("id"), "HOSTILE" in (props.get("flags") or [])))
+    for aid, users in seen_actor_ids.items():
+        if len(users) == 1:
+            continue
+        paths = {u[0] for u in users}
+        hostiles = sum(1 for u in users if u[2])
+        if len(users) == 2 and len(paths) == 1 and hostiles == 1:
+            continue  # lesson pattern: spar + tutor share one lifecycle
+        print(f"ERROR: actor_id {aid} shared by {users} (must be unique)")
+        overall_success = False
 
     # Cross-file check: neighbor links should be reciprocal (walk back).
     # One-sided links still compile (walk in works); warn so the missing

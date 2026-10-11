@@ -46,7 +46,7 @@ void world_patrol_slot_banked(void)
     active_v = bp[ACTOR_OFFSET(active)];
     if (!active_v) return;
     ai_type_v = bp[ACTOR_OFFSET(ai_type)];
-    if (ai_type_v == AI_NONE) return;
+    if (ai_type_v == AI_NONE || ai_type_v == AI_TUTOR) return;
 
     /* Read ALL fields through byte pointer arithmetic (via ACTOR_OFFSET)
      * -- no struct pointer, no SDCC pointer caching across branch joins. */

@@ -28,6 +28,7 @@ export const AI_IDS = [
   'AI_PATROL_CIRCLE',
   'AI_CHASE',
   'AI_PATROL_VERT',
+  'AI_TUTOR',
 ] as const;
 
 export interface LevelObject {

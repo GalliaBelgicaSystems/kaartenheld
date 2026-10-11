@@ -25,8 +25,9 @@ FIRE_SWORD    ×3   → SW4   (unlimited uses; BURN rider)
 
 No daggers: the first POISON_DAGGER (DA1, max_copies 3) comes from the
 field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
-one-shot via `STORY_FLAG_ID_FIELD_CHEST`) — and the Merchant sells more
-for 8 gold.
+one-shot via `STORY_FLAG_ID_FIELD_CHEST`, announced by its own reward
+speech that also grants the +1 AP pool unlock) — and the Merchant sells
+more for 8 gold.
 
 The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
 the opening battle hand is `SW3 SW3 SH2 SH2 SW4` and the draw pile starts at

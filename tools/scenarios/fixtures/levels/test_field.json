@@ -696,7 +696,7 @@
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_CARL",
         "solo": true,
-        "ai": "AI_NONE"
+        "ai": "AI_TUTOR"
       }
     },
     {
@@ -708,7 +708,7 @@
         "actors.actors_slime_frame_2"
       ],
       "position": {
-        "x": 15,
+        "x": 14,
         "y": 8
       },
       "properties": {
@@ -716,7 +716,7 @@
         "enemy_type": "slime",
         "display_name": "CARL",
         "dialogue": "DIALOGUE_ID_TUTORIAL_CARL_INTRO",
-        "actor_id": 0,
+        "actor_id": 1,
         "facing": "DOWN",
         "flags": [
           "BLOCKING",

@@ -37,7 +37,7 @@ CLASSIC_MILESTONES = [
     "08-carl-field", "08-carl-tutor",
     "09-battle", "10-battle-attack", "10-battle-defend",
     "11-battle-aftermath",
-    "11-battle-victory", "11-victory-speech", "12-wizard-save", "13-wizard-saved",
+    "11-battle-victory", "11-victory-speech", "11-chest", "12-wizard-save", "13-wizard-saved",
     "14-forest-arrived", "15-title-menu", "16-tutorial-slide0",
     "17-tutorial-slide1", "18-tutorial-slide2", "19-tutorial-slide3",
     "20-tutorial-slide4", "21-tutorial-slide5", "22-tutorial-slide6",

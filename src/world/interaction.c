@@ -9,7 +9,6 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
 {
     const StaticActorDefinition *actor;
     ActorEngageResult result;
-    uint8_t slot;
 
     if (!g) return ENGAGE_NONE;
 
@@ -19,12 +18,10 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
     telemetry_emit(EVENT_ACTOR_INTERACTION, target_x, target_y,
                    (uint8_t)actor->id, (uint8_t)actor->interaction);
 
-    if (actor->flags & ACTOR_FLAG_HOSTILE) {
-        slot = actor_find_hostile_slot(&g->world, target_x, target_y);
-        g->world.encounter_actor_index = slot;
-        return ENGAGE_BATTLE;
-    }
-
+    /* No hostile branch: statics are never hostile (actor_load_banked
+     * spawns every HOSTILE-flagged def into the runtime slots; only
+     * non-hostiles reach g_static_actors).  Hostile bumps resolve as
+     * movement encounters, never here. */
     result = event_engage_actor(g, actor);
     if (result != ENGAGE_NONE) {
         return result;

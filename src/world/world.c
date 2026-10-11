@@ -165,14 +165,25 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     }
 
     /* Hostile/static actors resolve only on walkable (or trigger) cells
-     * and win over the exit trigger staged above. */
+     * and win over the exit trigger staged above.  Lesson tile (Carl):
+     * world_lesson_stash teaches first (static bump path below) instead
+     * of encountering; the bump's dialogue auto-starts the stashed spar
+     * when it closes (dialogue_screen.c).  Co-location with a dialogue
+     * static is enforced by validate.py (a lone tutor would be stepped
+     * onto). */
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
-    if (hostile_slot != NO_ACTOR_INDEX) {
+    if (hostile_slot != NO_ACTOR_INDEX &&
+        w->actors[hostile_slot].ai_type != AI_TUTOR) {
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
         w->encounter_actor_index = hostile_slot;
         w->move_target_x = target_x;
         w->move_target_y = target_y;
     } else {
+        /* Stash for the lesson auto-start (lesson tiles only: this
+         * stores NO_ACTOR_INDEX on plain static bumps, which is already
+         * the invariant there -- no encounter can be pending, since
+         * every battle exit clears it). */
+        w->encounter_actor_index = hostile_slot;
         actor = actor_find_at(w, target_x, target_y);
         if (actor) {
             telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,

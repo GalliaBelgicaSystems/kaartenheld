@@ -126,6 +126,30 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
   now exits 2 (not-found) vs 1 (fail) and suggests close names.  Do not
   treat make's rc alone as evidence.
 
+### STACK-BLAST POST-MORTEM (resolved 2026-10-11, Carl lesson work)
+
+Post-victory field statics (Carl's tutor, then the chest too) silently
+vanished: tiles walkable, no interactions, snapshot empty.  Established
+by mGBA write-watchpoint on `g_static_actor_count` (NOT by reading
+state): a stack push landed on it (SP=0xDF87, 121 B deep) inside
+`status_grey_tick_banked` during battle turns.  The chain is
+pre-existing and untouched by the lesson work (battle turns never touch
+the new code); the stack-budget model already admits worst=157 B vs a
+~130 B physical gap and gates deltas only, so the blast was always
+possible.  What changed was the VICTIM: padding `WorldActorRuntime` to
+32 B shifted BSS +12 B, moving a self-healing victim (patrol temps,
+rewritten every frame) onto the persistent count.  Reverting the padding
+restored the baseline layout (count back at 0xDF7B) and the wipe is gone
+(219/219 + walkthrough green).  Lessons:
+* BSS layout shifts move stack-blast victims: any struct-size change
+  near the stack end must re-run the post-victory static checks
+  (`actor_defeat_persistence`, chest walk) even when no gameplay code
+  changed.
+* The battle-turn chain remains over budget by model; a real fix (frame
+  diet across battle_update/tick wrappers) is still open.  Until then,
+  treat any new BSS growth or call-depth addition on battle-reachable
+  paths as guilty until the persistence + chest probes pass.
+
 ### DONE
 
 - Card battle prototype (hand/deck/discard, draw, play, resolve; per-card
