@@ -43,7 +43,7 @@ void dialogue_screen_render(Game *g)
          * (grayscale) and only a full redraw re-applies per-tile palettes.
          * Skipping it here turned the whole screen gray for the dialogue. */
         ui_draw_world_full(w);
-        ui_draw_dialogue(d, w->scroll_x, w->scroll_y);
+        ui_draw_dialogue(d, w);
         ui_lcd_on();
 
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),

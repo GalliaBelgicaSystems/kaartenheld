@@ -87,6 +87,59 @@ void ui_draw_font_test_banked(void)
 }
 #endif
 
+/* Dialogue box paper + camera sync, bank-3 body (see ui.h).  Reads the
+ * camera low byte from g_bk_byte_c.  The paper palette (CRAM slot 4,
+ * re-programmed here to a pure white/black document ramp: pure white box,
+ * pure black font ink in every tileset) must land on the same SCROLLED
+ * tilemap cells as the box text -- a fixed 0..19 span paints the wrong
+ * cells whenever scroll_x != 0, leaving the box on world background.
+ * Palette 0 cannot be used: it anchors the world tiles' background tone
+ * (tan in the village, slate in the desolate lands).  Slot 4 is free in
+ * every world tileset and the quick screen (its only other consumer)
+ * cannot be open during a dialogue; every screen transition re-programs
+ * CRAM, restoring the set's own slot-4 ramp.  SCX/SCY are re-synced here
+ * because the post-battle victory dialogue arrives with SCX/SCY = 0
+ * (screen_change zeroes them for battle) while its text is drawn at the
+ * scrolled cells -- without this the box shifts right and clips. */
+static const uint8_t s_dialogue_paper[8] = {
+    0xFF, 0x7F, /* RGB8(255,255,255) */
+    0x39, 0x67, /* RGB8(200,200,200) */
+    0x4A, 0x29, /* RGB8(85,85,85) */
+    0x00, 0x00  /* RGB8(0,0,0) */
+};
+
+void ui_dialogue_box_banked(void)
+{
+    uint8_t sy = g_bk_byte_b;
+    uint8_t i;
+    volatile uint8_t *dst;
+    /* First box row in tilemap space.  Rows are painted full-width (see
+     * ui.h): sy shifts the base down on vertically scrolled maps.  The
+     * validator caps height at 24 (sy <= 6), so (sy << 5) fits in a byte
+     * and rows never wrap the 32-row ring. */
+    dst = (volatile uint8_t *)((uint16_t)(0x9980u + ((uint8_t)(sy << 5))));
+    if (g_is_cgb) {
+        BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
+        for (i = 0; i < 8; i++) {
+            BCPD_REG = s_dialogue_paper[i];
+        }
+    }
+    /* Direct VRAM writes: the sole caller (ui_draw_dialogue, first dialogue
+     * frame) runs with the LCD off, so no PPU wait is needed. */
+    VBK_REG = 1;
+    i = 192;
+    do {
+        *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
+        dst++;
+    } while (--i != 0);
+    VBK_REG = 0;
+    /* SCX re-sync (SCY is 0 on every map: all are 18 tall): the post-battle
+     * victory dialogue arrives with SCX = 0 (screen_change zeroes it for
+     * battle) while its text is drawn at the scrolled cells -- without
+     * this the box shifts right and clips. */
+    SCX_REG = g_bk_byte_c;
+}
+
 /* Reset every BG tilemap attribute byte (0x9800-0x9BFF) to palette 0
  * (grayscale).  The span writers above only ever SET attributes, so without
  * this wipe stale palettes leak across full redraws: overworld tiles at the

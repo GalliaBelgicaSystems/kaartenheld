@@ -212,7 +212,21 @@ void ui_format_int_banked(void);
  * reads its staged args from g_bk_ptr_a. */
 void ui_color_span_banked(void);
 
-void ui_draw_dialogue(const DialogueState *dialogue, uint8_t scroll_x, uint8_t scroll_y);
+/* Bank-3 no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_color_banked.c):
+ * paints the 6 box rows FULL-WIDTH with the dialogue paper palette and
+ * re-syncs SCX to the world camera (scroll_y in g_bk_byte_b shifts the base
+ * for vertically scrolled maps; camera in g_bk_byte_c).  Full-width is exact
+ * where it matters: the viewport always shows a 20-col slice of those rows,
+ * and the rows ARE the box (text rows 12-17 + scroll_y).  Painting hidden
+ * cols too is safe: ui_lcd_off() wipes the whole attribute map on every
+ * transition and the next full redraw repaints world attrs, so stale paper
+ * can never scroll into view.  The SCX sync fixes the post-battle victory
+ * dialogue, which arrives with SCX = 0 (screen_change zeroes it for battle)
+ * while its text is drawn at scrolled tilemap cells -- without this the box
+ * shifts right and clips.  SCY needs no sync (0 on every map). */
+void ui_dialogue_box_banked(void);
+
+void ui_draw_dialogue(const DialogueState *dialogue, const World *world);
 void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
                            uint8_t max_chars, uint8_t ox, uint8_t oy);
 void ui_draw_battle_full(const Battle *battle);
