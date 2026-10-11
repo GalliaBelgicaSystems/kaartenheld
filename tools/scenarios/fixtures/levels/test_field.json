@@ -716,7 +716,7 @@
         "enemy_type": "slime",
         "display_name": "CARL",
         "dialogue": "DIALOGUE_ID_TUTORIAL_CARL_INTRO",
-        "actor_id": 1,
+        "actor_id": 0,
         "facing": "DOWN",
         "flags": [
           "BLOCKING",

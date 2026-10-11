@@ -150,15 +150,15 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
-        4,
-        {"It is dangerous to", "go alone! I will", "teach you to fight!", "Now lets spar!"},
+        8,
+        {"It is dangerous to", "go alone! I will", "teach you to fight!", "U/D choose target", "SW are swords!", "SH are shields!", "BO bows, HE heals!", "Fire, ice, poison!"},
         0
     },
     {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
-        8,
-        {"REAL FIGHTS BEGIN!", "U/D choose target", "AP limits cards!", "Have 1 more AP!", "SW are swords!", "SH are shields!", "BO bows, HE heals!", "Fire, ice, poison!"},
+        3,
+        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!"},
         0
     },
 };

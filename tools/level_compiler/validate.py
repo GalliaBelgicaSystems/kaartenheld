@@ -796,28 +796,19 @@ def main():
             overall_success = False
 
     # Cross-file check: nonzero actor_id values drive persistent defeat
-    # tracking in GameState.world and must be unique across scenes --
-    # EXCEPT the lesson pattern (Carl): one hostile and one non-hostile
-    # may share an id within the SAME scene, so the spar and its tutor
-    # vanish together when the spar is won.  Anything else sharing an id
-    # (cross-scene, or two hostiles) is a lifecycle collision.
+    # tracking in GameState.world and must be unique across scenes.
     seen_actor_ids = {}
     for p, data in loaded_levels:
         for obj in data.get("objects", []):
             props = obj.get("properties", {}) or {}
             aid = props.get("actor_id", 0)
             if isinstance(aid, int) and aid != 0:
-                seen_actor_ids.setdefault(aid, []).append(
-                    (p, obj.get("id"), "HOSTILE" in (props.get("flags") or [])))
-    for aid, users in seen_actor_ids.items():
-        if len(users) == 1:
-            continue
-        paths = {u[0] for u in users}
-        hostiles = sum(1 for u in users if u[2])
-        if len(users) == 2 and len(paths) == 1 and hostiles == 1:
-            continue  # lesson pattern: spar + tutor share one lifecycle
-        print(f"ERROR: actor_id {aid} shared by {users} (must be unique)")
-        overall_success = False
+                if aid in seen_actor_ids:
+                    print(f"ERROR: actor_id {aid} used by both "
+                          f"'{seen_actor_ids[aid]}' and '{obj.get('id')}' (must be unique)")
+                    overall_success = False
+                else:
+                    seen_actor_ids[aid] = obj.get("id")
 
     # Cross-file check: neighbor links should be reciprocal (walk back).
     # One-sided links still compile (walk in works); warn so the missing

@@ -422,7 +422,7 @@ def verify_battle_transition(sess):
     #    from the stashed encounter.  The sprite is hidden for the battle
     #    redraw (no sprite on the card battle screen).
     sess.hold("RIGHT", 10)
-    for _ in range(6):
+    for _ in range(12):
         sess.press("A")
         sess.step(20)
         if sess.snapshot().get("screen") == "BATTLE":
@@ -635,7 +635,7 @@ def verify_battle_vram_restore(sess):
     sess.hold("RIGHT", 10)
     # Carl teaches first: close the lesson so the spar (which clobbers
     # the world tiles with enemy art) actually starts.
-    for _ in range(6):
+    for _ in range(12):
         sess.press("A")
         sess.step(20)
         if sess.snapshot().get("screen") == "BATTLE":

@@ -14,8 +14,11 @@ You always strike first each round, then block.
 
 The field holds a single slime, **CARL**, in a grove of trees, old
 stumps and grass tufts. Walk into him and a dialogue box opens first:
-it is dangerous to go alone, and he will teach you how to fight. Close
-the lesson and the spar starts by itself — no second bump needed.
+it is dangerous to go alone, and he will teach you how to fight -- his
+full field guide (targeting, `SW`/`SH`/`BO`/`HE` cards, riders included,
+repeated on every later visit). Close the lesson and the spar starts by
+itself — no second bump needed. He never leaves: bump him any time to
+hear the guide again.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
@@ -46,11 +49,11 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
-Beat him and he gives a graduation speech: real fights begin, `U/D`
-picks targets, AP limits how many cards you can play (yours grows from
-**2 to 3 AP** per phase for every later battle — have one more!), and a
-field guide to the cards (`SW` swords, `SH` shields, `BO` bows,
-`HE` heals from rings, plus fire/ice/poison riders).
+Beat him and he gives a graduation speech: real fights begin, AP
+limits how many cards you can play (yours grows from **2 to 3 AP** per
+phase for every later battle — have one more!). Bumping into him
+afterwards repeats the whole field guide from his lesson (swords,
+shields, bows, ring-heals, riders) — but never the extra AP.
 
 ![Good luck, and +1 AP](../screenshots/11-victory-speech.png)
 
