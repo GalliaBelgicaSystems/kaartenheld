@@ -148,11 +148,16 @@ const EventDefinition g_events[] = {
      * TUTORIAL_COMPLETE below fires exactly once on the spar win.
      * Bumping or facing-talking the tile opens the static's lesson
      * through the ordinary dialogue path while the spar slot stays
-     * stashed (world.c bump path, interaction.c facing path); closing
-     * the lesson auto-starts the spar iff the slot still holds an
-     * active tutor (dialogue_screen.c guard).  The static never
+     * stashed (synced when the dialogue opens, interaction.c);
+     * closing the lesson auto-starts the spar via dialogue_screen's
+     * stashed-slot test.  Stale-index safety is structural (every
+     * gameplay writer stores NO or a live slot, dialogues are modal,
+     * every battle exit clears it), not a slot-active guard -- the
+     * full vetting call was measured at 136 B and does not fit the
+     * debug fixed bank.  The static never
      * despawns by design: post-victory the spar is gone, so bumps
-     * replay the lesson as a remedial with no fight.  The SET is
+     * replay the lesson as a remedial with no fight (locked by the
+     * actor_defeat_initial scenario).  The SET is
      * unconditional (no pool==0 gate): the field cache SETs the same
      * value, so whichever comes first wins and the second is a harmless
      * no-op -- opening the chest first must not eat the victory speech.
