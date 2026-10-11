@@ -51,7 +51,10 @@ const StaticActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_
 {
     uint8_t i;
     (void)world;
-    for (i = 0; i < g_static_actor_count; i++) {
+    /* Clamped: a battle-turn stack blast can trash this byte with push
+     * residue (see roadmap post-mortem); the loader never exceeds the
+     * cap, so clamping changes nothing in valid states. */
+    for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
         if (g_static_actors[i].x == x && g_static_actors[i].y == y) {
             return &g_static_actors[i];
         }

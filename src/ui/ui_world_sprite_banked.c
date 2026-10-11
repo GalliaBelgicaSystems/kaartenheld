@@ -219,7 +219,13 @@ void ui_actors_sprites_banked(void)
         uint8_t tile;
         uint8_t prop = 0;
         uint8_t px, py;
-        if (i >= g_static_actor_count) {
+        /* Clamped (see actor_find_at): a trashed count must neither
+         * render garbage rows as phantom sprites nor hide valid ones.
+         * Valid counts never exceed the cap (loader enforces it), so an
+         * over-cap count means corruption: hide everything rather than
+         * draw stale rows. */
+        if (g_static_actor_count > MAX_STATIC_ACTORS ||
+            i >= g_static_actor_count) {
             e[0] = 0;  /* no static here: hide any stale sprite */
             continue;
         }

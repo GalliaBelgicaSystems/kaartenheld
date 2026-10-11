@@ -46,8 +46,11 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
-Beat him and he wishes you luck: your energy pool grows from **2 to
-3 AP** per phase for every later battle.
+Beat him and he gives a graduation speech: real fights begin, `U/D`
+picks targets, AP limits how many cards you can play (yours grows from
+**2 to 3 AP** per phase for every later battle — have one more!), and a
+field guide to the cards (`SW` swords, `SH` shields, `BO` bows,
+`HE` heals from rings, plus fire/ice/poison riders).
 
 ![Good luck, and +1 AP](../screenshots/11-victory-speech.png)
 

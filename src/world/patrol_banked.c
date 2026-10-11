@@ -199,7 +199,9 @@ void world_patrol_slot_banked(void)
     }
 
     if (!blocked) {
-        for (i = 0; i < g_static_actor_count; i++) {
+        /* Clamped like actor_find_at (trashed count must not collide
+         * with garbage rows). */
+        for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
             if (g_static_actors[i].x == target_x &&
                 g_static_actors[i].y == target_y) {
                 blocked = 1; break;

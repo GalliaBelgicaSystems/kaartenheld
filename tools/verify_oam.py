@@ -509,10 +509,18 @@ def verify_dialogue_transition(sess):
 
     sess.press("A")
     # press() leaves us paused at the frame-entry breakpoint; continue
-    # through the frame: the dialogue render must hit ui_draw_world_full.
-    sess._cmd("frame", timeout=5.0)
+    # through frames: the dialogue render must hit ui_draw_world_full.
+    # The A edge can land a frame later (mask-write vs step host race,
+    # plus the armed redraw breakpoint perturbing press()'s own step),
+    # so allow a few frames instead of asserting the very next one.
+    pc = None
+    for _ in range(4):
+        sess._cmd("frame", timeout=5.0)
+        pc = sess._read_pc()
+        if pc == full_addr:
+            break
     check("dialogue entry: world redrawn behind the box",
-          full_addr, sess._read_pc())
+          full_addr, pc)
     # Disarm the redraw breakpoint before engaging: while armed, press()'s
     # internal step pauses mid-frame and the A edge never engages (proven
     # by matrix probe: armed=never, clean=always). mGBA prints

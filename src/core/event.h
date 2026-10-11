@@ -49,7 +49,11 @@ typedef struct {
     bool at_least;      /* VARIABLE / ITEM_COUNT: >= when true, == when false */
 } EventCond;
 
-#define MAX_EVENT_CONDS 3
+#define MAX_EVENT_CONDS 2   /* capped at 2 (was 3) to fund dialogue rows
+                             * in bank 2: no shipped event uses more than 2
+                             * (quest state = one variable, merchant = item
+                             * + variable).  A future 3-cond event must
+                             * split into two ordered first-match events. */
 
 typedef enum {
     EVENT_ACTION_NONE = 0,

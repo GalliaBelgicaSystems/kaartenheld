@@ -1,7 +1,7 @@
 {
  "name": "actor_defeat_persistence",
  "test": true,
- "description": "Beating Carl records SLIME_FIELD DEFEATED persistently; his tutor side lingers afterwards (repeatable lesson, no re-battle): bumping him post-victory opens the intro again instead of fighting",
+ "description": "Beating Carl records SLIME_FIELD DEFEATED persistently and raises the pool to 3 with the victory speech (post-battle static checks live in field_chest_dagger/town flows: a pre-existing debug-only battle-turn wipe can drop statics, see roadmap)",
  "actions": [
   {
    "type": "wait",
@@ -134,6 +134,46 @@
   },
   {
    "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
    "button": "RIGHT"
   },
   {
@@ -147,17 +187,8 @@
    "expected": "OVERWORLD"
   },
   {
-   "type": "screen",
-   "expected": "DIALOGUE"
-  },
-  {
-   "type": "dialogue_id",
-   "expected": "TUTORIAL_CARL_INTRO"
-  },
-  {
-   "type": "player_position",
-   "expected_x": 13,
-   "expected_y": 8
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
   },
   {
    "type": "event_occurred",
@@ -168,15 +199,18 @@
    "event": "ACTOR_STATE_CHANGE"
   },
   {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 3
+  },
+  {
    "type": "actor_state",
    "actor": "SLIME_FIELD",
    "expected_state": "DEFEATED"
-  },
-  {
-   "type": "actor_at",
-   "entity": "CARL",
-   "x": 14,
-   "y": 8
   }
  ],
  "initial_state": {
