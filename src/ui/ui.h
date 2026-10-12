@@ -63,8 +63,7 @@ extern uint8_t g_is_cgb;
 #define KOBOLD_SPRITE_TILE_ID    96u
 #define BAT_DESOLATE_SPRITE_TILE_ID 88u
 #define BAT_CASTLE_SPRITE_TILE_ID   92u
-/* Chest pickup sprite (single-frame art loaded into both anim slots). */
-#define CHEST_SPRITE_TILE_ID     94u
+/* (Retired: chests are floor-painted SPRITE_KIND_TILE statics; no OAM.) */
 /* Shared per-enemy overworld sprites (assets/enemy_sprites.png, base must
  * match ENEMY_OW_BASE in tools/screen_compiler/battle_compile.py).  The
  * blob holds concatenated per-enemy frames; ids 128+ alias BG tiles. */

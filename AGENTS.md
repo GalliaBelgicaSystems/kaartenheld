@@ -3020,6 +3020,23 @@ screen drawn over the live world (dialogue) must redraw the world (tilemap
 + attribute spans), not just stamp its own box.  `make verify-oam`
 executes both regressions (battle VRAM restore, dialogue palette restore).
 
+## 55.7 Static art is floor-painted, not OAM sprites
+
+Chests, signposts, shrines and similar statics render as background
+tiles, never OAM sprites: the level paints the cell, the actor is an
+invisible `SPRITE_KIND_TILE` interactable on it, and any loot/state
+variant resolves inside `ui_draw_world_cell` (e.g. the field cache
+retargets its cell to the open-chest tile once `STORY_FLAG_ID_FIELD_CHEST`
+is set).  The resolver runs on every full redraw, so the state
+re-applies after scene loads, battle returns and dialogue boxes with no
+extra plumbing -- state lives in flags/variables, presentation resolves
+at render.  Rationale: one cell works on every map without per-tileset
+sprite ports, frees OAM slots, and needs no battle-VRAM reload dance
+(§55.6).  New cells go on repurposed duplicate sheet cells (never move
+existing indices -- §52.23), stay solid in `tile_walk.h`, and get
+`tilemap_cell` scenario asserts (closed + opened) plus a `verify-oam`
+background-cell check.
+
 ---
 
 # 56. Headless Screenshot Walkthrough Capture

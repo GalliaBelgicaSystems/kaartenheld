@@ -242,22 +242,20 @@ def verify_hostile_sprites(sess):
     check("forest treetrunk (3, 4) has field4 trunk palette (6)",
           6, mirror_at(sess, attr_mirror, 3, 4))
 
-    print("== Chest pickup sprite (forest amulet as OAM, no BG glyph) ==")
+    print("== Floor-painted chest static (forest amulet as BG tile, no OAM) ==")
     forest_amulet = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest_amulet)
     sess.step(2)
     # Amulet is static index 0 -> OAM entry 1 + MAX_WORLD_ACTORS (4).
-    chest = shadow_oam_slot_tile(sess, 5)
-    check("forest amulet renders as chest OAM tile (94|95)",
-          1, (94 <= chest <= 95))
-    # The background cell underneath must be the floor tile the level
-    # places at the amulet spot (TILE_FOREST_21 =
-    # forest_floor_with_stuff_walkable_1, VRAM tile 128 + 21 -- the chest
-    # itself renders as OAM since the forest-chest tile was removed),
-    # not the '?' ASCII glyph: glyph suppression for OAM-rendered statics.
+    # TILE-kind statics own no OAM entry: the slot must stay hidden.
+    check("forest amulet owns no OAM entry (hidden)",
+          0, sess._memread(0xC000 + 4 * 5))
+    # The background cell itself paints the closed-chest cell
+    # (TILE_FOREST_43 -> VRAM tile 128 + 43 = 171), not the '?' glyph:
+    # floor-painted statics resolve in ui_draw_world_cell.
     mirror = sess.get_symbol("g_tilemap_mirror")
-    check("amulet background cell is floor, not '?'",
-          149, mirror_at(sess, mirror, 16, 10))
+    check("amulet cell paints closed chest tile",
+          171, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")
     south = load_scenario(sess, "south_field_boot.json")

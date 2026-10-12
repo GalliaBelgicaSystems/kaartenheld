@@ -59,10 +59,10 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 }
 
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
- * Bats use the grey ramp (black bodies); the chest uses the brown wood
- * ramp (OBJ palette 6); kobolds still ride OBJ palette 2 (ice ramp --
- * looks blue, kept as-is pending its own visual pass).  The chest art
- * is 1 frame in both anim slots, so + anim stays uniform.
+ * Bats use the grey ramp (black bodies); kobolds ride OBJ palette 2
+ * (ice ramp -- looks blue, kept as-is pending its own visual pass).
+ * Chests are floor-painted TILE statics (no OAM; open frame in
+ * ui_draw_world_cell).
  * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
  * read) for its shared OAM base, frames, and palette; unknown rows fall
  * back to the ASCII glyph. */
@@ -78,8 +78,11 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual, uint8_t castle,
             return (uint8_t)((castle ? BAT_CASTLE_SPRITE_TILE_ID
                                      : BAT_DESOLATE_SPRITE_TILE_ID) + anim);
         case SPRITE_KIND_CHEST:
-            *prop = 6;
-            return (uint8_t)(CHEST_SPRITE_TILE_ID + anim);
+            /* Retired: chests are floor-painted TILE statics (open frame
+             * in ui_draw_world_cell); no OAM.  Kept as a case so old
+             * content rows still resolve instead of falling through. */
+            *prop = 0;
+            return 0;
         case SPRITE_KIND_ENEMY:
             if (ow_type < g_enemy_type_count) {
                 const EnemyTypeDef *t = g_enemy_types[ow_type];

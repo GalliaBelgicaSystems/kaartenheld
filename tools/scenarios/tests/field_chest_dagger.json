@@ -85,6 +85,12 @@
    "entity": "CHEST",
    "x": 21,
    "y": 8
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 21,
+   "row": 8,
+   "expected": 172
   }
  ],
  "initial_state": {
