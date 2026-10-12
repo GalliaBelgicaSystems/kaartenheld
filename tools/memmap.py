@@ -166,6 +166,7 @@ def main():
         "_battle_card_undo_banked": "battle card undo (bank 3)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
+        "_open_stamp_banked": "floor-painted open re-stamp (actor tables bank)",
         "_loot_synth_banked": "loot def synthesis (bank 3)",
         "_game_loot_drop_banked": "victory drop roll (bank 3)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",
@@ -196,6 +197,23 @@ def main():
         else:
             print(f"{sym:<28}: not found in .noi")
             ok = False
+
+    # Build-conditional trampoline targets: present in exactly one build
+    # (DEBUG_ONLY_SRCS).  Missing is fine; misplaced is a violation.
+    optional_banked_targets = {
+        "_lesson_sync_banked": "lesson stash sync (debug bank 3; release inlines it)",
+    }
+    for sym, desc in optional_banked_targets.items():
+        if sym in symbols:
+            addr = symbols[sym]
+            low16 = addr & 0xFFFF
+            in_window = 0x4000 <= low16 <= 0x7FFF
+            status = "OK" if in_window else "VIOLATION (not in switchable ROM 0x4000-0x7FFF)"
+            if not in_window:
+                ok = False
+            print(f"{sym:<28}: 0x{addr:05X} (window 0x{low16:04X})  ({desc})  [{status}]")
+        else:
+            print(f"{sym:<28}: absent (build-conditional)  ({desc})  [OK]")
 
     print()
     if ok:

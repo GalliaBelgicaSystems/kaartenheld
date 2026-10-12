@@ -52,8 +52,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_AMULET_FOUND,
         "",
-        2,
-        {"You found the", "Lost Amulet!"},
+        1,
+        {"FOUND AMULET!!"},
         0
     },
     {
@@ -68,6 +68,13 @@ const DialogueDefinition g_dialogues[] = {
         "WILD DOG:",
         2,
         {"Meow.", "I mean, bark bark."},
+        0
+    },
+    {
+        DIALOGUE_ID_FIELD_CHEST_AP,
+        "CHEST:",
+        3,
+        {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
         0
     },
     {
@@ -134,17 +141,24 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
-        DIALOGUE_ID_SHOPKEEPER_GREETING,
-        "SHOP:",
-        2,
-        {"Welcome to my shop.", "Rest up, friend."},
-        0
-    },
-    {
         DIALOGUE_ID_SIGNPOST,
         "",
         8,
         {"East: Town. North:", "Forest (danger!).", "", "ATK: A then SELECT", "Shields add to", "combos (no dmg).", "DEF: shields block", "Combos are poker!"},
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_INTRO,
+        "CARL:",
+        8,
+        {"Danger! I will", "teach you to fight!", "U/D choose target", "SW sword, SH block", "BO bows hurt!", "HE rings hit 0!", "Heal, make poker!", "Fire, ice, poison!"},
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
+        "CARL:",
+        3,
+        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!"},
         0
     },
 };

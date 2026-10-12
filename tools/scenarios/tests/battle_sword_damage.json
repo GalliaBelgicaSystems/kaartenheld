@@ -1,7 +1,7 @@
 {
  "name": "battle_sword_damage",
  "test": true,
- "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) that one-shots the field slime (10 HP)",
+ "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) against Carl the 15 HP sparring slime: no kill, enemy left at 1 HP",
  "actions": [
   {
    "type": "wait",
@@ -84,10 +84,6 @@
   },
   {
    "type": "event_occurred",
-   "event": "ENTITY_DEFEATED"
-  },
-  {
-   "type": "event_occurred",
    "event": "COMBO_RESOLVED"
   },
   {
@@ -107,6 +103,10 @@
    "event": "COMBO_RESOLVED",
    "index": 2,
    "value": 0
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 1
   },
   {
    "type": "event_occurred",

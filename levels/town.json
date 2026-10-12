@@ -282,7 +282,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_plain_floor_1",
+        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_bottom_left_well",
         "village.village_bottom_right_well",
@@ -304,7 +304,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_plain_floor_1",
+        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_top_left_roof_2",
         "village.village_top_middle_roof_2",
@@ -348,7 +348,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_plain_floor_1",
+        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
         "village.village_middle_house",
@@ -370,7 +370,7 @@
         "village.village_right_wall"
       ],
       [
-        "village.village_plain_floor_1",
+        "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",

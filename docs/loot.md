@@ -1756,7 +1756,8 @@ The Lost Amulet merchant opens shop 2 as the CARD MERCHANT:
   rings are THE healing vector, so healing is purchasable but never
   free.  The Lost Amulet merchant (shop 2) stocks curated iron/mythril
   loot at formula prices (an iron sword and the mythril bow
-  `M BO`).
+  `M BO`) plus POISON_DAGGER (8g) -- the only dagger source besides
+  the field cache, now that the starter deck carries none.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one

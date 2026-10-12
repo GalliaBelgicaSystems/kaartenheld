@@ -32,12 +32,12 @@ static const SceneTerrainBlock s_test_field_terrain[] = {
     { 31, 1, 1, 1, TILE_FOREST_08 },
     { 31, 2, 1, 3, TILE_FOREST_07 },
     { 0, 3, 1, 2, TILE_FOREST_11 },
-    { 2, 4, 1, 1, TILE_FOREST_39 },
     { 0, 5, 1, 1, TILE_FOREST_09 },
     { 31, 5, 1, 2, TILE_FOREST_08 },
     { 0, 6, 1, 1, TILE_FOREST_11 },
     { 0, 7, 1, 2, TILE_FOREST_09 },
     { 31, 7, 1, 1, TILE_FOREST_41 },
+    { 21, 8, 1, 1, TILE_FOREST_43 },
     { 31, 8, 1, 1, TILE_FOREST_08 },
     { 0, 9, 1, 1, TILE_FOREST_10 },
     { 31, 9, 1, 1, TILE_FOREST_06 },
@@ -158,7 +158,7 @@ static const SceneTerrainBlock s_test_forest_terrain[] = {
     { 6, 14, 1, 1, TILE_FOREST_15 },
     { 5, 15, 1, 1, TILE_FOREST_30 },
     { 6, 15, 1, 1, TILE_FOREST_31 },
-    { 16, 10, 1, 1, TILE_FOREST_21 },
+    { 16, 10, 1, 1, TILE_FOREST_43 },
     { 12, 11, 1, 1, TILE_FOREST_41 },
     { 0, 0, 0, 0, 0 }
 };

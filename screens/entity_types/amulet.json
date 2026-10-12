@@ -5,5 +5,5 @@
   "kind": "npc",
   "name": "AMULET",
   "visual": "?",
-  "sprite_kind": "chest"
+  "sprite_kind": "tile"
 }

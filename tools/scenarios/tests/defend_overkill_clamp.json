@@ -1,7 +1,7 @@
 {
  "name": "defend_overkill_clamp",
  "test": true,
- "description": "Overkill defense (docs/loot.md 34.4): when the incoming net exceeds the hero's remaining HP, the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10; a 0-block defend hand (BO) vs the slime's 2 incoming -> net 2 overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
+ "description": "Overkill defense (docs/loot.md 34.4): when the incoming net exceeds the hero's remaining HP, the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10; a 0-block defend hand (BO) vs the forest slime's 2 incoming -> net 2 overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
  "actions": [
   {
    "type": "wait",
@@ -93,7 +93,7 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,

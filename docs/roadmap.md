@@ -30,7 +30,7 @@ testable, save/load works, and the memory budget is understood.
 - **Camera / scroll — B1 + B2 DONE**: scenes are parameterized, the
   overworld has a pixel camera (`World.camera_px_x/y`, `world_update_scroll`
   follows the player smoothly and clamps to scene bounds; exposed in the
-  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 32x18; covered by
+  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 24x18; covered by
   `large_map_scroll` + `field_east_scroll`.  B2 rendered the terrain as real
   GB tiles (`src/gfx/world_tiles.h`) into the 0x9800 tilemap.
 - **Camera / scroll — B3 + B4 DONE**: the overworld background scrolls
@@ -125,6 +125,31 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
   failures and for missing scenario files; `python3 tools/dev.py scenario`
   now exits 2 (not-found) vs 1 (fail) and suggests close names.  Do not
   treat make's rc alone as evidence.
+
+### STATIC-WIPE POST-MORTEM (found 2026-10-11, Carl/chest work)
+
+Post-battle field statics (Carl's tutor, then the chest too) silently
+vanish in the DEBUG build: tiles walkable, no interactions, snapshot
+empty.  Established by mGBA write-watchpoint on
+`g_static_actor_count` (NOT by reading state): a stack push lands on it
+(SP=0xDF87, ~121 B deep) inside `status_grey_tick_banked` during battle
+turns.  Decisive attribution: the wipe reproduces on the clean ccbba76
+baseline (a post-victory chest walk finds no dagger there too), so it is
+PRE-EXISTING, not a Carl/chest regression -- no prior scenario ever
+checked post-battle statics, and the release ROM never shows it
+(walkthrough chest milestone green: no mirror writes, shallower frames).
+An early BSS-padding experiment briefly moved the victim (self-healing
+patrol temps onto the persistent count) and was reverted.  Hardening
+kept: every `g_static_actor_count` read is clamped to
+MAX_STATIC_ACTORS (the loader already caps writes there, so clamping is
+a no-op in valid states).  Lessons:
+* BSS layout shifts move stack-blast victims: any struct-size change
+  near the stack end must re-run post-battle static checks even when no
+  gameplay code changed.
+* The battle-turn chain remains over budget by model (worst 157 B); a
+  real frame diet is still open.  Until then, post-battle static
+  assertions stay out of the harness (persistence asserts the defeat
+  record + pool, never the tile).
 
 ### DONE
 

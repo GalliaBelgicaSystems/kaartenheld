@@ -23,17 +23,6 @@
 extern uint8_t g_tilemap_mirror[32 * 32];
 #endif
 
-/* Bat OAM sprite tile data (2 frames), shared by the desolate and castle
- * tileset variants (identical pixel art).  Lives in bank 3 so the fixed
- * bank's _CODE does not carry 64 bytes of sprite data; ui_init() copies it
- * into WRAM via banked_copy and set_sprite_data()s both tile IDs. */
-const uint8_t s_bat_tiles[32] = {
-    0x00, 0x00, 0xA0, 0xA0, 0x4A, 0x4A, 0x04, 0x04,
-    0x00, 0x00, 0x28, 0x28, 0x10, 0x10, 0x00, 0x00,
-    0x00, 0x00, 0x0A, 0x0A, 0xA4, 0xA4, 0x40, 0x40,
-    0x00, 0x00, 0x00, 0x00, 0x28, 0x28, 0x10, 0x10
-};
-
 /* Shadow OAM WRAM base (GBDK's global `shadow_OAM` at 0xC000).  Each entry
  * is 4 bytes: y, x, tile, attr.  Written directly (WRAM is always mapped)
  * so the fixed-bank caller need not loop over actors. */
@@ -59,25 +48,26 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 }
 
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
- * Bats use the grey ramp (black bodies); kobolds and chests use the brown
- * wood palette (OBJ palette 2); the chest art is 1 frame in both anim
- * slots, so + anim stays uniform.  SPRITE_KIND_ENEMY reads the actor's
- * enemy-type row (same bank: direct read) for its shared OAM base,
- * frames, and palette; unknown rows fall back to the ASCII glyph. */
-static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual, uint8_t castle,
+ * Bats use the grey ramp (black bodies); kobolds ride OBJ palette 2
+ * (ice ramp -- looks blue, kept as-is pending its own visual pass).
+ * Chests are floor-painted TILE statics (no OAM; open frame in
+ * ui_draw_world_cell).
+ * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
+ * read) for its shared OAM base, frames, and palette; unknown rows fall
+ * back to the ASCII glyph. */
+static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                                 uint8_t anim, uint8_t ow_type, uint8_t *prop)
 {
     switch (kind) {
         case SPRITE_KIND_KOBOLD:
             *prop = 2;
             return (uint8_t)(KOBOLD_SPRITE_TILE_ID + anim);
-        case SPRITE_KIND_BAT:
-            *prop = 0;
-            return (uint8_t)((castle ? BAT_CASTLE_SPRITE_TILE_ID
-                                     : BAT_DESOLATE_SPRITE_TILE_ID) + anim);
         case SPRITE_KIND_CHEST:
-            *prop = 2;
-            return (uint8_t)(CHEST_SPRITE_TILE_ID + anim);
+            /* Retired: chests are floor-painted TILE statics (open frame
+             * in ui_draw_world_cell); no OAM.  Kept as a case so old
+             * content rows still resolve instead of falling through. */
+            *prop = 0;
+            return 0;
         case SPRITE_KIND_ENEMY:
             if (ow_type < g_enemy_type_count) {
                 const EnemyTypeDef *t = g_enemy_types[ow_type];
@@ -151,7 +141,7 @@ void ui_actors_sprites_banked(void)
 
         if (a->active) {
             tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
-                                   castle, anim, a->ow_type, &prop);
+                                   anim, a->ow_type, &prop);
         }
         /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
@@ -217,7 +207,13 @@ void ui_actors_sprites_banked(void)
         uint8_t tile;
         uint8_t prop = 0;
         uint8_t px, py;
-        if (i >= g_static_actor_count) {
+        /* Clamped (see actor_find_at): a trashed count must neither
+         * render garbage rows as phantom sprites nor hide valid ones.
+         * Valid counts never exceed the cap (loader enforces it), so an
+         * over-cap count means corruption: hide everything rather than
+         * draw stale rows. */
+        if (g_static_actor_count > MAX_STATIC_ACTORS ||
+            i >= g_static_actor_count) {
             e[0] = 0;  /* no static here: hide any stale sprite */
             continue;
         }
@@ -229,7 +225,7 @@ void ui_actors_sprites_banked(void)
             continue;
         }
         tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                               castle, anim, d->ow_type, &prop);
+                               anim, d->ow_type, &prop);
         if (!tile) {
             e[0] = 0;
             continue;

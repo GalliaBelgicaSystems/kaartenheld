@@ -487,6 +487,28 @@
       "ascii": "#",
       "image_url": "/tiles/forest/forest_postsign.png",
       "category": "terrain"
+    },
+    {
+      "id": "forest_chest_closed",
+      "palette": "field3",
+      "label": "treasure chest closed",
+      "gb_constant": "TILE_FOREST_43",
+      "walkable": false,
+      "color": "#8a6d3b",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_chest_closed.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_chest_open",
+      "palette": "field3",
+      "label": "treasure chest open",
+      "gb_constant": "TILE_FOREST_44",
+      "walkable": false,
+      "color": "#8a6d3b",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_chest_open.png",
+      "category": "terrain"
     }
   ],
   "vram_block": {
@@ -756,13 +778,13 @@
         "x": 11,
         "y": 2,
         "index": 43,
-        "tile": "forest_plain_floor_2"
+        "tile": "forest_chest_closed"
       },
       {
         "x": 12,
         "y": 2,
         "index": 44,
-        "tile": "forest_plain_floor_2"
+        "tile": "forest_chest_open"
       },
       {
         "x": 13,

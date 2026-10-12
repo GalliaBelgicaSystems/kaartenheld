@@ -1,0 +1,43 @@
+{
+ "name": "field_chest_closed_tile",
+ "test": true,
+ "description": "Before looting, the field cache cell paints the closed-chest tile (TILE_FOREST_43 -> VRAM 171): floor-painted statics resolve in ui_draw_world_cell, no OAM",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 21,
+   "row": 8,
+   "expected": 171
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": false
+  },
+  {
+   "type": "actor_at",
+   "entity": "CHEST",
+   "x": 21,
+   "y": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

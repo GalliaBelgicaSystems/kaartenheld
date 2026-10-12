@@ -37,7 +37,8 @@ typedef enum {
     BATTLE_SLIME_TRIO = 3,
     BATTLE_MIMIC = 4,
     BATTLE_KOBOLD = 5,
-    BATTLE_SPIDER = 6
+    BATTLE_SPIDER = 6,
+    BATTLE_CARL = 7
 } BattleId;
 
 /* Overworld autonomous patrol/AI behavior type. */
@@ -48,7 +49,14 @@ typedef enum {
     AI_CHASE         = 3,   /* Step toward the player every AI tick (Kobolds) */
     AI_PATROL_VERT   = 4    /* Bounce vertically up/down 3 tiles from spawn
                              * (castle Spiders); direction held in ai_step
-                             * bit 0, flips at the bound or a blocked path */
+                             * bit 0, flips at the bound or a blocked path */,
+    AI_TUTOR         = 5    /* Stationary sparring tutor (Carl): movement
+                             * treats the tile as a lesson bump (BLOCKED +
+                             * dialogue via the co-located static) instead
+                             * of an encounter, and stashes the spar for
+                             * auto-start on close.  Patrol ignores it
+                             * (see patrol_banked.c).  Co-location with a
+                             * dialogue static is enforced by validate.py. */
 } ActorAiType;
 
 /* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */
@@ -102,6 +110,11 @@ extern uint8_t g_actor_registry_count;
 
 /* Bank-2 body dispatched by actor_load_scene(). */
 void actor_load_scene_banked(void);
+
+/* Banked open-state re-stamp body (emitted with the actor tables by
+ * compile.py, same bank: plain call, no trampoline).  Reads g_game
+ * directly (WRAM, always mapped). */
+void open_stamp_banked(void);
 
 /* Result of engaging an actor. */
 typedef enum {

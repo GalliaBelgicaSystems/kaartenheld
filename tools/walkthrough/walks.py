@@ -21,7 +21,9 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
-                                      CARD_WOOD_RING, HERO_START_GOLD,
+                                      VARIABLE_ID_ENERGY_POOL,
+                                      CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON)
 
@@ -135,8 +137,10 @@ def _battle_round(s):
     cards + execute.  True when the battle reached a result banner.
     Phase waits are input-free (the game advances automatically after
     each execute)."""
-    # Select phase: TARGET banner (fallback literal PLAYER TURN).
+    # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
+    # fallback literal PLAYER TURN).
     s.wait_for(lambda: s.text_has("TARGET ")
+               or s.text_has("PICK CARDS")
                or s.text_has("PLAYER TURN"), ticks=180)
     _select_cards(s, ATTACK_TYPES)
     s.press("select", settle=40)     # execute attack
@@ -302,38 +306,79 @@ def walk_a(planner, checks, sram_out=None):
         s.close()
 
 
-# ── Walk B: slime battle -> victory + loot ───────────────────────────
+# ── Walk B: Carl practice spar -> victory + AP unlock ─────────────────
 
 def walk_b(planner, checks):
     s = Session(checks, "walk-b")
     field = _level("field")
     spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
-    slime = next((o for o in field["objects"]
-                  if (o.get("properties") or {}).get("entity_id")
-                  == "ENTITY_ID_SLIME"), None)
-    slime_xy = (slime["position"]["x"], slime["position"]["y"])
-    props = slime["properties"]
-    s.check("slime engaged",
-            engage_hostile(s, planner, "field", slime_xy),
+    carl = next((o for o in field["objects"] if o.get("type") == "enemy"),
+                None)
+    carl_xy = (carl["position"]["x"], carl["position"]["y"])
+    props = carl["properties"]
+    # Carl spars on bump (he is stationary, so walk adjacent and step
+    # in; the planner routes around his tile).  Bumps are retried: screen
+    # transitions eat input for a few dozen frames.  Carl is a single
+    # sprite now: bumping him opens the lesson first, and closing it
+    # auto-starts the spar from the stashed encounter (no second bump).
+    s.check("carl lesson bump",
+            bump_actor(s, planner, "field", (15, 8), "left", "CARL:"),
+            expected="CARL:", actual="none")
+    # Carl himself, one tile west of the hero: the field's single slime.
+    s.shoot("08-carl-field")
+    s.shoot("08-carl-tutor", need="CARL:")
+    # Closing by battle-open (not by CARL: gone): the spar banner itself
+    # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
+    # the fight.  Four advances close the 4-line lesson; press_until
+    # self-heals dropped presses and stops at the first DECK: sighting.
+    s.check("lesson closed into spar",
+            s.press_until("a", lambda: s.text_has("DECK:"),
+                          tries=8, settle=30, label="DECK:"),
             expected="DECK:", actual="none")
     s.tick(40)
     s.shoot("09-battle", need="DECK:")
     s.check_eq("hero hp at battle start", s.reader.battle_player_hp(),
                HERO_START_HP)
-    s.check_eq("slime hp at battle start", s.reader.battle_enemy_hp(0),
+    s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
 
-    # Fight with hand-aware selection until the trio drops (variance-
-    # safe: total enemy HP strictly decreases per landed hit; never
-    # assert exact damage).  Bounded rounds + defeat detection.
-    prev_total = sum(s.reader.battle_enemy_hp(i) for i in range(3))
+    # Fight with hand-aware selection until the solo spar drops
+    # (variance-safe: enemy HP strictly decreases per landed hit; never
+    # assert exact damage).  Bounded rounds + defeat detection.  Carl's
+    # practice deck deals 0, so the hero must still be full afterwards.
+    # His stepwise sparring hints show per phase: the card-pick lesson
+    # while choosing the attack, the shield lesson while defending.
+    prev_total = s.reader.battle_enemy_hp(0)
     start_total = prev_total
     victory = False
     defeated = False
-    for round_no in range(MAX_BATTLE_ROUNDS):
+    # Select-stage banner and hint are up while choosing the attack.
+    s.check("select hint", s.text_has("PICK CARDS"),
+            expected="PICK CARDS", actual="none")
+    _select_cards(s, ATTACK_TYPES)
+    # The execute press is retried: a press eaten by edge timing leaves
+    # the SELECT phase open instead of advancing to DEFEND.
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+            break
+    s.check("defend banner", s.text_has("DEFEND"),
+            expected="DEFEND", actual="none")
+    # The hint shares row 9 with transient messages (a selection
+    # rejection's 45-frame TTL freezes through attack animations, so it
+    # can still own the row when DEFEND opens): wait for the lesson.
+    s.check("defend hint",
+            s.wait_for(lambda: s.text_has("SHIELD"), ticks=150),
+            expected="SHIELD", actual="none")
+    s.shoot("10-battle-defend", need="DEFEND")
+    _select_cards(s, (BT_SHIELD,))
+    s.press("select", settle=40)     # execute defense
+    s.shoot("10-battle-attack")
+    prev_total = s.reader.battle_enemy_hp(0)
+    for round_no in range(1, MAX_BATTLE_ROUNDS):
         done = _battle_round(s)
-        if round_no == 0:
-            s.shoot("10-battle-attack")
         if done:
             victory = s.text_has("VICTORY")
             defeated = s.text_has("DEFEATED")
@@ -341,7 +386,7 @@ def walk_b(planner, checks):
         if s.reader.battle_player_hp() == 0:
             defeated = True
             break
-        total = sum(s.reader.battle_enemy_hp(i) for i in range(3))
+        total = s.reader.battle_enemy_hp(0)
         if total < prev_total:
             s.check("damage dealt round %d" % round_no, True)
             prev_total = total
@@ -351,9 +396,17 @@ def walk_b(planner, checks):
                " (hero defeated)" if defeated else ""))
     s.shoot("11-battle-victory", need="VICTORY")
 
-    # Leave the result screen; prove the overworld return.  The loot
-    # hook credits gold on battle end, so assert gold AFTER the exit.
-    s.press("a", settle=30)
+    # Leave the result screen; Carl's good-luck speech shows deferred
+    # before the overworld return.  The loot hook credits gold on battle
+    # end, so assert gold AFTER the exit.  The exit press is retried: screen
+    # transitions eat input for a few dozen frames.
+    s.check("victory speech",
+            s.press_until("a", lambda: s.text_has("CARL:"), tries=6),
+            expected="CARL:", actual="none")
+    s.shoot("11-victory-speech", need="CARL:")
+    s.check("speech closed",
+            close_dialogue(s, "CARL:"),
+            expected="closed", actual="open")
     s.check("aftermath overworld",
             s.wait_for(lambda: s.reader.scene_state()["scene_id"]
                        == SCENE_FIELD, ticks=180),
@@ -361,9 +414,24 @@ def walk_b(planner, checks):
             actual="scene %d" % s.reader.scene_state()["scene_id"])
     s.check_eq("victory gold", s.reader.gold(),
                HERO_START_GOLD + props.get("gold_reward", 0))
-    s.check("hero hp post-battle sane",
-            0 < s.reader.hero()["hp"] <= HERO_START_HP, expected="1..10",
-            actual=str(s.reader.hero()["hp"]))
+    s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
+               HERO_START_HP)
+    s.check_eq("energy pool raised 2 -> 3",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    # Field cache east of Carl: bumping it opens the reward speech (first
+    # poison dagger plus the AP unlock, idempotent with the spar reward),
+    # then grants both.
+    s.check("chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.shoot("11-chest", need="CHEST:")
+    s.check("cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("first poison dagger",
+               s.reader.collection_count(CARD_POISON_DAGGER), 1)
+    s.check_eq("energy pool still 3",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
     s.tick(30)

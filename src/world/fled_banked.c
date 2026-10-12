@@ -1,4 +1,4 @@
-#pragma bank 3
+#pragma bank 7
 
 #include "world.h"
 #include "game.h"
@@ -6,7 +6,8 @@
 
 /* Banked body of world_on_battle_fled() (src/world/world.c).  Pure WRAM
  * reads/writes on the staged Game pointer; calls no functions at all, so
- * it is trivially self-contained (AGENTS.md 52.11.1). */
+ * it is trivially self-contained (AGENTS.md 52.11.1).  Lives in bank 7
+ * (not bank 3) to relieve the fixed-adjacent bank-3 budget. */
 
 void world_on_battle_fled_banked(void)
 {

@@ -27,7 +27,7 @@
 |---|---|
 | field1 (0) | forest_black_emptyness, forest_bottom_left_corner_wall, forest_bottom_left_interior_corner, forest_bottom_right_corner_wall, forest_bottom_right_interior_corner, forest_bottom_wall_1, forest_bottom_wall_2, forest_bottom_wall_3, forest_bottom_wall_4, forest_floor_with_stuff_walkable_2, forest_left_wall_1, forest_left_wall_2, forest_left_wall_3, forest_left_wall_4, forest_postsign, forest_right_wall_1, forest_right_wall_2, forest_right_wall_3, forest_right_wall_4, forest_stairs, forest_top_left_corner_wall, forest_top_left_interior_corner, forest_top_right_corner_wall, forest_top_right_interior_corner, forest_top_wall_1, forest_top_wall_2, forest_top_wall_3, forest_top_wall_4 |
 | field2 (2) | forest_floor_with_stuff_walkable_3, forest_floor_with_stuff_walkable_4, forest_plain_floor_2, forest_plain_floor_3, forest_top_left_treetop, forest_top_right_tree_top |
-| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_top_left_tree_stump |
+| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_chest_closed, forest_chest_open, forest_top_left_tree_stump |
 | field4 (6) | forest_bottom_left_treetrunk, forest_bottom_right_tree_trunk, forest_top_right_tree_stump |
 | field5 (7) | forest_floor_with_stuff_walkable_1 |
 | field6 (1) | forest_fire_frame_1, forest_fire_frame_2 |

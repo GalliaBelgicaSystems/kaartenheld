@@ -60,6 +60,15 @@
    "quantity": 1
   },
   {
+   "type": "collection_add",
+   "card_id": 70,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
    "type": "set_enemy_hp",
    "index": 0,
    "hp": 1

@@ -79,7 +79,6 @@ SPRITE_RULE_CELLS = {
     "forest_kobold_sprite_tile": {(3, 2), (4, 2)},
     "forest_bat_sprite_tile": {(9, 2), (10, 2)},
     "forest_hero_sprite_tile": {(1, 2), (2, 2)},
-    "forest_chest_sprite_tile": {(11, 2)},
     "hero_desolate_sprite_tile": {(1, 2), (2, 2)},
     "kobold_sprite_tile": {(3, 2), (4, 2)},
     "desolate_bat_sprite_tile": {(9, 2), (10, 2)},

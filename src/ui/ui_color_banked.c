@@ -87,6 +87,7 @@ void ui_draw_font_test_banked(void)
 }
 #endif
 
+
 /* Reset every BG tilemap attribute byte (0x9800-0x9BFF) to palette 0
  * (grayscale).  The span writers above only ever SET attributes, so without
  * this wipe stale palettes leak across full redraws: overworld tiles at the

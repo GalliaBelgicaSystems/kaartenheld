@@ -1,7 +1,7 @@
 {
  "name": "actor_slime_collision",
  "test": true,
- "description": "Walking into a hostile World Actor (Slime) emits actor collision and starts an encounter",
+ "description": "Walking into Carl (lesson tile) emits actor collision and opens his lesson first; closing it auto-starts the encounter battle",
  "actions": [
   {
    "type": "press",
@@ -10,6 +10,70 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
  ],
  "assertions": [
@@ -27,11 +91,15 @@
   },
   {
    "type": "event_occurred",
-   "event": "ENCOUNTER_STARTED"
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COMBAT_START"
   },
   {
    "type": "actor_at",
-   "entity": "SLIME",
+   "entity": "CARL",
    "x": 14,
    "y": 8
   }

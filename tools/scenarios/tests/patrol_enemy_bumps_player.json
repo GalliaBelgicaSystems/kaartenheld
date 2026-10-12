@@ -1,7 +1,7 @@
 {
  "name": "patrol_enemy_bumps_player",
  "test": true,
- "description": "Hostile actor patrols into the player's tile, initiating an encounter",
+ "description": "Hostile actor patrols into the player's tile, initiating an encounter (forest slime; the field slime is now Carl, a stationary practice dummy)",
  "actions": [
   {
    "type": "wait",
@@ -23,9 +23,9 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
-   "x": 14,
+   "x": 10,
    "y": 7,
    "facing": "DOWN"
   },

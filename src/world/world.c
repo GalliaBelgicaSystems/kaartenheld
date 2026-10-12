@@ -165,14 +165,25 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     }
 
     /* Hostile/static actors resolve only on walkable (or trigger) cells
-     * and win over the exit trigger staged above. */
+     * and win over the exit trigger staged above.  Lesson tile (Carl):
+     * the tutor hostile never encounters directly; the co-located
+     * dialogue static teaches first (bump/facing paths in
+     * interaction.c) and closing its dialogue auto-starts the
+     * stashed spar (dialogue_screen.c).  Co-location with a dialogue
+     * static is enforced by validate.py (a lone tutor would be stepped
+     * onto). */
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
-    if (hostile_slot != NO_ACTOR_INDEX) {
+    if (hostile_slot != NO_ACTOR_INDEX &&
+        w->actors[hostile_slot].ai_type != AI_TUTOR) {
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
         w->encounter_actor_index = hostile_slot;
         w->move_target_x = target_x;
         w->move_target_y = target_y;
     } else {
+        /* No stash here: the BLOCKED bump below lands in
+         * interaction_try_bump, which syncs encounter_actor_index from
+         * the same tile when its dialogue opens (and the A-key facing
+         * path does the same).  One writer, no stale slots. */
         actor = actor_find_at(w, target_x, target_y);
         if (actor) {
             telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,
@@ -338,10 +349,11 @@ void world_on_battle_end(Game *g, bool victory)
 
 void world_on_battle_fled(Game *g)
 {
-    /* Body runs banked (src/world/fled_banked.c) through the WRAM
-     * trampoline -- pure WRAM reads/writes, no staging args needed. */
+    /* Body runs banked in bank 7 (src/world/fled_banked.c) through the
+     * WRAM trampoline -- pure WRAM reads/writes, no staging args needed.
+     * Bank 7 (not 3) to relieve the fixed-adjacent bank-3 budget. */
     if (!g) return;
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
     g_bk_ptr_a = (void *)g;
     banked_call_run();

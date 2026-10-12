@@ -60,6 +60,9 @@
    "y": 4,
    "facing": "DOWN"
   },
-  "seed": 8410
+  "seed": 8410,
+  "inventory": {
+   "POISON_DAGGER": 1
+  }
  }
 }

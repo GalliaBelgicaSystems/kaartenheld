@@ -63,7 +63,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 5
+   "expected": 10
   }
  ],
  "initial_state": {

@@ -3020,6 +3020,26 @@ screen drawn over the live world (dialogue) must redraw the world (tilemap
 + attribute spans), not just stamp its own box.  `make verify-oam`
 executes both regressions (battle VRAM restore, dialogue palette restore).
 
+## 55.7 Static art is floor-painted, not OAM sprites
+
+Chests, signposts, shrines and similar statics render as background
+tiles, never OAM sprites: the level paints the cell, the actor is an
+invisible `SPRITE_KIND_TILE` interactable on it.  Loot/state variants
+are data, not engine branches: each openable object carries
+`open_tile` / `open_flag` / `open_variable` props, compiled into the
+separate `g_actor_open_states[]` table (a new chest = new JSON props,
+never an engine change).  Two stamps keep it open: the loot event's
+`DIALOGUE` action carries the open cell (flat map offset in its spare
+args) for the banked dialogue body to stamp painted+1 on open
+(mid-visit flip), and the banked scene loader re-stamps already-looted
+cells into the fresh map on every revisit (validate.py checks both
+sides, including the open == painted+1 adjacency) -- so the state
+renders immediately and persists with no render branch and no engine
+struct growth (both blew past the link budget when tried).  New cells go on repurposed
+duplicate sheet cells (never move existing indices -- §52.23), stay
+solid in `tile_walk.h`, and get `tilemap_cell` scenario asserts
+(closed + opened) plus a `verify-oam` background-cell check.
+
 ---
 
 # 56. Headless Screenshot Walkthrough Capture
@@ -3100,7 +3120,7 @@ the commit/PR without booting anything.
   DOWN to the TUTORIAL entry, A, then RIGHT through the seven slides); it never
   enters the game.
 * Determinism is verified: the walk's position/caret/text checks make the
-  24 frames byte-identical across repeated runs.
+  29 frames byte-identical across repeated runs.
 
 ## 56.3 Milestones
 
@@ -3114,9 +3134,13 @@ the commit/PR without booting anything.
 06-cards-menu        START quick screen (CARDS tab)
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
-09-battle            slime encounter (battle screen)
+08-carl-field        overworld beside Carl (single field slime)
+08-carl-tutor        Carl's lesson dialogue (name + warning)
+09-battle            Carl spar opens (select hints on rows 5/9)
 10-battle-attack     after a player attack (damage dealt)
-11-battle-victory    VICTORY result over the slime trio (loot gold asserted)
+10-battle-defend     Carl's telegraph + defend hints
+11-battle-victory    VICTORY result over the solo spar (loot gold asserted)
+11-victory-speech    Carl's good-luck speech (AP 2 -> 3)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)
 12-wizard-save       save menu at the wizard
 13-wizard-saved      after saving to Slot 1

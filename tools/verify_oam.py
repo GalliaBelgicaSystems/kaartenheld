@@ -242,22 +242,20 @@ def verify_hostile_sprites(sess):
     check("forest treetrunk (3, 4) has field4 trunk palette (6)",
           6, mirror_at(sess, attr_mirror, 3, 4))
 
-    print("== Chest pickup sprite (forest amulet as OAM, no BG glyph) ==")
+    print("== Floor-painted chest static (forest amulet as BG tile, no OAM) ==")
     forest_amulet = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest_amulet)
     sess.step(2)
     # Amulet is static index 0 -> OAM entry 1 + MAX_WORLD_ACTORS (4).
-    chest = shadow_oam_slot_tile(sess, 5)
-    check("forest amulet renders as chest OAM tile (94|95)",
-          1, (94 <= chest <= 95))
-    # The background cell underneath must be the floor tile the level
-    # places at the amulet spot (TILE_FOREST_21 =
-    # forest_floor_with_stuff_walkable_1, VRAM tile 128 + 21 -- the chest
-    # itself renders as OAM since the forest-chest tile was removed),
-    # not the '?' ASCII glyph: glyph suppression for OAM-rendered statics.
+    # TILE-kind statics own no OAM entry: the slot must stay hidden.
+    check("forest amulet owns no OAM entry (hidden)",
+          0, sess._memread(0xC000 + 4 * 5))
+    # The background cell itself paints the closed-chest cell
+    # (TILE_FOREST_43 -> VRAM tile 128 + 43 = 171), not the '?' glyph:
+    # floor-painted statics resolve in ui_draw_world_cell.
     mirror = sess.get_symbol("g_tilemap_mirror")
-    check("amulet background cell is floor, not '?'",
-          149, mirror_at(sess, mirror, 16, 10))
+    check("amulet cell paints closed chest tile",
+          171, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")
     south = load_scenario(sess, "south_field_boot.json")
@@ -417,10 +415,16 @@ def verify_battle_transition(sess):
     check("overworld @ sprite position (shadow OAM)", (80, 88), shadow_oam(sess))
     check("overworld sprite tile (shadow OAM)", 98, shadow_sprite_tile(sess))
 
-    # 2. Walk right into the slime at (14,8): the encounter is decided once
-    #    the hold-to-move commits the tile (MOVE_FRAMES=8).  The sprite is
-    #    hidden for the battle redraw (no sprite on the card battle screen).
+    # 2. Walk right into the slime at (14,8): Carl teaches first, so the
+    #    bump opens his lesson (dialogue); closing it auto-starts the spar
+    #    from the stashed encounter.  The sprite is hidden for the battle
+    #    redraw (no sprite on the card battle screen).
     sess.hold("RIGHT", 10)
+    for _ in range(12):
+        sess.press("A")
+        sess.step(20)
+        if sess.snapshot().get("screen") == "BATTLE":
+            break
     check("battle sprite: hidden (shadow OAM)", 0, shadow_oam(sess)[0])
 
     # 3. Open the item menu (START): the item screen keeps the sprite
@@ -503,10 +507,18 @@ def verify_dialogue_transition(sess):
 
     sess.press("A")
     # press() leaves us paused at the frame-entry breakpoint; continue
-    # through the frame: the dialogue render must hit ui_draw_world_full.
-    sess._cmd("frame", timeout=5.0)
+    # through frames: the dialogue render must hit ui_draw_world_full.
+    # The A edge can land a frame later (mask-write vs step host race,
+    # plus the armed redraw breakpoint perturbing press()'s own step),
+    # so allow a few frames instead of asserting the very next one.
+    pc = None
+    for _ in range(4):
+        sess._cmd("frame", timeout=5.0)
+        pc = sess._read_pc()
+        if pc == full_addr:
+            break
     check("dialogue entry: world redrawn behind the box",
-          full_addr, sess._read_pc())
+          full_addr, pc)
     # Disarm the redraw breakpoint before engaging: while armed, press()'s
     # internal step pauses mid-frame and the A edge never engages (proven
     # by matrix probe: armed=never, clean=always). mGBA prints
@@ -619,6 +631,13 @@ def verify_battle_vram_restore(sess):
     check("pre-battle VRAM read in VBlank", True, wait_vblank(sess))
     before = vram_tiles()
     sess.hold("RIGHT", 10)
+    # Carl teaches first: close the lesson so the spar (which clobbers
+    # the world tiles with enemy art) actually starts.
+    for _ in range(12):
+        sess.press("A")
+        sess.step(20)
+        if sess.snapshot().get("screen") == "BATTLE":
+            break
     sess.step(2)
     check("battle VRAM read in VBlank", True, wait_vblank(sess))
     during = vram_tiles()

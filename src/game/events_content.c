@@ -134,9 +134,65 @@ const EventDefinition g_events[] = {
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
         3,
         {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 416, TILE_FOREST_44 },
             { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
+        }
+    },
+    /* ── Field tutorial spar (Carl, the friendly slime) ────────────
+     * Carl is TWO co-located actors on one tile: a tutor hostile
+     * (actor_id 1, AI_TUTOR, 15 HP, 0-power spar deck) and a dialogue
+     * static (actor_id 0, never defeat-gated, carries
+     * DIALOGUE_ID_TUTORIAL_CARL_INTRO).  Both share ENTITY_ID_CARL;
+     * only the runtime hostile slot can be defeated, so
+     * TUTORIAL_COMPLETE below fires exactly once on the spar win.
+     * Bumping or facing-talking the tile opens the static's lesson
+     * through the ordinary dialogue path while the spar slot stays
+     * stashed (synced when the dialogue opens, interaction.c);
+     * closing the lesson auto-starts the spar via dialogue_screen's
+     * stashed-slot test.  Stale-index safety is structural (every
+     * gameplay writer stores NO or a live slot, dialogues are modal,
+     * every battle exit clears it), not a slot-active guard -- the
+     * full vetting call was measured at 136 B and does not fit the
+     * debug fixed bank.  The static never
+     * despawns by design: post-victory the spar is gone, so bumps
+     * replay the lesson as a remedial with no fight (locked by the
+     * actor_defeat_initial scenario).  The SET is
+     * unconditional (no pool==0 gate): the field cache SETs the same
+     * value, so whichever comes first wins and the second is a harmless
+     * no-op -- opening the chest first must not eat the victory speech.
+     * The pool write is idempotent either way, and Carl's defeat is
+     * persistent (one-shot via GameState.world), so the reward fires
+     * exactly once. */
+    {
+        EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
+        }
+    },
+    /* ── Field cache (first poison dagger + AP unlock) ───────────────
+     * A chest east of Carl holds one POISON_DAGGER (the first the
+     * player can own: starter deck carries none; the Merchant sells
+     * more) and the +1 AP pool unlock, announced by its own dialogue.
+     * One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats fall through to
+     * no interaction.  The pool SET mirrors TUTORIAL_COMPLETE (same
+     * value, order-safe in both directions).  The DIALOGUE action's
+     * spare args carry the open-cell stamp (flat map offset, tile) for
+     * the banked dialogue body -- see AGENTS.md 55.7. */
+    {
+        EVENT_ID_FIELD_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
+        4,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_FIELD_CHEST_AP, 341, TILE_FOREST_44 },
+            { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
         }
     }
 };

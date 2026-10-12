@@ -1,7 +1,7 @@
 {
  "name": "first_encounter",
  "test": true,
- "description": "Walk right into enemy to trigger battle",
+ "description": "Walk right into Carl (lesson tile): the bump opens his lesson (no encounter event), closing it auto-starts the spar battle",
  "actions": [
   {
    "type": "press",
@@ -10,6 +10,70 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
  ],
  "assertions": [
@@ -23,7 +87,11 @@
   },
   {
    "type": "event_occurred",
-   "event": "ENCOUNTER_STARTED"
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COMBAT_START"
   }
  ],
  "initial_state": {

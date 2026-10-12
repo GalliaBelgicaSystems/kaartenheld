@@ -10,6 +10,56 @@ Reduce every enemy's HP to 0 before yours reaches 0. Most fights are
 against a **trio** of monsters (clones of one type); bosses fight alone.
 You always strike first each round, then block.
 
+## First spar: Carl
+
+The field holds a single slime, **CARL**, in a grove of trees, old
+stumps and grass tufts. Walk into him and a dialogue box opens first:
+it is dangerous to go alone, and he will teach you how to fight -- his
+full field guide (targeting, swords, shields, bows, `HE` rings that hit
+for 0 but heal and build poker hands, riders included,
+repeated on every later visit). Close the lesson and the spar starts by
+itself — no second bump needed. Pressing A while facing him teaches
+and spars exactly the same. He never leaves: bump him any time to
+hear the guide again.
+
+![Carl waits on the field](../screenshots/08-carl-field.png)
+
+East of him sits a treasure chest with your first POISON_DAGGER (the
+starter deck carries none); the Merchant sells more. Bumping the chest
+also plays a reward speech and grants **+1 action point**, same as beating
+Carl — whichever comes first wins, the second is a harmless no-op, so the
+order never matters.
+
+He is a friendly practice dummy whose every word is green, so you know
+it is him speaking.
+
+![Carl's lesson](../screenshots/08-carl-tutor.png)
+
+Walk into him to spar: a solo fight against his 15 HP. His practice
+deck deals **0 damage**, so you cannot lose — learn the round below at
+your own pace (the battle timer still runs, but nothing can hurt you).
+There is no target arrow over Carl: with a single foe there is nothing
+to aim at. On your turn the top reads `CARL: PICK CARDS`, then
+`DO POKER HANDS.` below it. The screen coaches the buttons too:
+`L/R` moves the cursor, `A` chooses the card, `SELECT` confirms the
+hand — same wording every phase.
+
+![Pick cards, then SELECT](../screenshots/09-battle.png)
+
+On his turn he coaches the block (`SHIELD` cards stop his swing,
+`SELECT` defends).
+
+![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
+
+Beat him and he gives a graduation speech: real fights begin, AP
+limits how many cards you can play (yours grows from **2 to 3 AP** per
+phase for every later battle — have one more!). Bumping into him
+afterwards repeats the whole field guide from his lesson (swords,
+shields, bows, rings that hit for 0 but heal and build poker hands,
+riders) — but never the extra AP.
+
+![Good luck, and +1 AP](../screenshots/11-victory-speech.png)
+
 ## One round, step by step
 
 ```
@@ -40,7 +90,9 @@ attack *does* (see below).
 
 - **Hand**: 5 cards, drawn from your deck. Played cards are discarded
   and replaced at the round boundary.
-- **Energy**: **6 per phase** — attack *and* defend each get a fresh 6.
+- **Energy**: **2 per phase** at first — attack *and* defend each get a
+  fresh pool. Beating Carl's practice spar raises it to **3 per phase**
+  (opening the field cache does the same, idempotently).
   Every card shows a cost; selecting reserves it, resolving pays it.
   A card you can't afford can't be selected (`NO ENERGY!`).
 - **Timer**: **20 seconds** per decision, shown as the bottom bar. Expiry

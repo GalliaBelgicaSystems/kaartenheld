@@ -4,6 +4,11 @@
  "description": "Post-trampoline integration: execute a banked 2-card combo that kills the slime, then ride out the full attack cycle including the post-kill reshuffle and a full defend timer expiry, landing back in a clean PLAYER_SELECT. Verifies bank restore, hand discard, phase advance, timer reset, and enemy attack resolution.",
  "actions": [
   {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 2
+  },
+  {
    "type": "set_hand_card",
    "index": 0,
    "card_type": "SW",
@@ -67,11 +72,11 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
    "x": 13,
-   "y": 8,
-   "facing": "DOWN"
+   "y": 7,
+   "facing": "RIGHT"
   },
   "seed": 3000,
   "start_battle": true

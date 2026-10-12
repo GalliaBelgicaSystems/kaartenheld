@@ -1,7 +1,7 @@
 {
  "name": "actor_slime_combat",
  "test": true,
- "description": "Hostile World Actor (Slime) engagement starts combat with the Slime battle",
+ "description": "Hostile World Actor (Carl) engagement starts combat with the Carl practice battle",
  "actions": [
   {
    "type": "press",
@@ -10,6 +10,70 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
  ],
  "assertions": [
@@ -19,7 +83,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "battle_turn",

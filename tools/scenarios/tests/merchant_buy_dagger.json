@@ -1,0 +1,70 @@
+{
+ "name": "merchant_buy_dagger",
+ "test": true,
+ "description": "The Merchant sells POISON_DAGGER (8 gold, new since the starter deck carries none): buying the third list row adds it to the collection and spends gold",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 1
+  },
+  {
+   "type": "currency",
+   "expected": 12,
+   "currency": "GOLD"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

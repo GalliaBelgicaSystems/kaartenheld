@@ -1,7 +1,7 @@
 {
  "name": "defend_overblock_heal",
  "test": true,
- "description": "Negative-net defense (docs/loot.md 34.4): over-block restores HP ONLY when a ring (healing shield) is in the defense combo. SH2 + ring(2) blocks the slime's 2 incoming -> net -2: EVENT_HEALED d0=2 d1=2 (cause defense-overblock, ring-gated), DAMAGE_RECEIVED reports 0, hero ends at 8/10",
+ "description": "Negative-net defense (docs/loot.md 34.4): over-block restores HP ONLY when a ring (healing shield) is in the defense combo. SH2 + ring(2) blocks Carl's 0 incoming -> net -4: EVENT_HEALED d0=4 d1=2 (cause defense-overblock, ring-gated), DAMAGE_RECEIVED reports 0, hero ends at 10/10",
  "actions": [
   {
    "type": "wait",
@@ -117,7 +117,7 @@
    "type": "event_arg",
    "event": "HEALED",
    "index": 0,
-   "value": 2
+   "value": 4
   },
   {
    "type": "event_arg",
@@ -137,7 +137,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 10
   }
  ],
  "initial_state": {

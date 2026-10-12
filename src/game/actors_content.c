@@ -15,39 +15,25 @@
 
 static const WorldActorDefinition g_field_actors[] = {
     {
-        1, ENTITY_ID_SLIME, 14, 8, DIRECTION_DOWN,
+        1, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME_TRIO, AI_PATROL_CROSS, 10, 10, 5, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 15, 15, 5, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 8, 1
+    },
+    {
+        0, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "CARL", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_TUTORIAL_CARL_INTRO, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },
     {
-        0, ENTITY_ID_SIGNPOST, 2, 4, DIRECTION_DOWN,
+        0, ENTITY_ID_CHEST, 21, 8, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SIGNPOST, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_ASCII, 0xFF, 0
-    },
-    {
-        12, ENTITY_ID_SPIDER, 23, 9, DIRECTION_DOWN,
-        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 16, 16, 15, CURRENCY_ID_GOLD,
-        0, 0,
-         SPRITE_KIND_ENEMY, 10, 0
-    },
-    {
-        40, ENTITY_ID_BAT, 8, 12, DIRECTION_DOWN,
-        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'V', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_PATROL_CIRCLE, 8, 8, 8, CURRENCY_ID_GOLD,
-        0, 0,
-         SPRITE_KIND_ENEMY, 0, 0
-    },
-    {
-        41, ENTITY_ID_KOBOLD, 26, 14, DIRECTION_DOWN,
-        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_CHASE, 14, 14, 8, CURRENCY_ID_GOLD,
-        0, 0,
-         SPRITE_KIND_ENEMY, 2, 0
+         SPRITE_KIND_TILE, 0xFF, 0
     },
 };
 
@@ -130,7 +116,7 @@ static const WorldActorDefinition g_forest_actors[] = {
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_CHEST, 0xFF, 0
+         SPRITE_KIND_TILE, 0xFF, 0
     },
     {
         42, ENTITY_ID_SLIME, 14, 12, DIRECTION_DOWN,
@@ -594,5 +580,19 @@ const WorldActorTable g_actor_tables[] = {
     { MAP_DESOLATE_FIELD,  g_desolate_field_actors,
         (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
 };
+
+#include "game.h"
+/* Banked re-stamp body (AGENTS.md 55.7): already-looted
+ * cells back into the fresh map on every scene load (the
+ * loot event's DIALOGUE args cover the mid-visit flip).
+ * Self-contained: g_game is WRAM (always mapped), everything
+ * else is literals -- no staging, no table, no fixed-bank
+ * calls while mapped.  Called directly by the banked scene
+ * loader (same bank: plain call, no trampoline). */
+void open_stamp_banked(void)
+{
+    if (g_game.world.map_id == MAP_FIELD && ((g_game.state.flags.bytes[0] & 4))) ((uint8_t *)g_game.world.map)[341] = TILE_FOREST_44;
+    if (g_game.world.map_id == MAP_FOREST && (g_game.state.variables.values[4])) ((uint8_t *)g_game.world.map)[416] = TILE_FOREST_44;
+}
 
 const uint8_t g_actor_table_count = 17;

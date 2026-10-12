@@ -48,7 +48,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -129,7 +129,9 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 8: "BOSS_DEFEATED",
                 GAME_ID_BASE + 9: "MERCHANT_INTRO",
                 GAME_ID_BASE + 10: "MERCHANT_DELIVER",
-                GAME_ID_BASE + 11: "AMULET_PICKUP"}
+                GAME_ID_BASE + 11: "AMULET_PICKUP",
+                GAME_ID_BASE + 12: "TUTORIAL_COMPLETE",
+                GAME_ID_BASE + 13: "FIELD_CHEST"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -207,7 +209,7 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}
