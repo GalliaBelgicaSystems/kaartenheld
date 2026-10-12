@@ -26,7 +26,6 @@ from walkthrough.session import Session, ROM  # noqa: E402
 from walkthrough.route import Planner  # noqa: E402
 from walkthrough.state_reader import SymTable, BT_SWORD, BT_SHIELD  # noqa: E402
 from walkthrough import walks as W  # noqa: E402
-from walkthrough.state_reader import OFF_VARIABLES  # noqa: E402
 
 SCALE = 3
 OUT = os.path.join(REPO, "screenshots")
@@ -35,11 +34,8 @@ BATTLE_GIF = os.path.join(OUT, "battle.gif")
 OVERWORLD_GIF = os.path.join(OUT, "overworld.gif")
 BOSS_GIF = os.path.join(OUT, "boss.gif")
 
-# Quest variable id for the Monster Hunt (src/game/game_ids.h:
-# VARIABLE_ID_QUEST_MONSTER_HUNT = 3); 2 = COMPLETE, which spawns the
-# Lord of Slimes in the throne room (levels/throne_room.json quest_var).
-QUEST_MONSTER_HUNT = 3
-QUEST_COMPLETE = 2
+# The Lord of Slimes always spawns in the throne room (ungated since the
+# mayor-quest rework: 5 kills grant +1 AP, no spawn gating anywhere).
 
 # Release-ROM screen ids (src/screens/screen.h).
 SCREEN_TITLE = 9
@@ -207,19 +203,9 @@ def capture_boss():
                  field["player"]["spawn"]["y"])
         # Castle via the walk-E route, stopping at the interior arrival
         # tile (NOT the throne portal edge: stepping onto it would cross
-        # before the quest flag is staged and the boss would not spawn).
+        # into the throne room early).
         castle_arrival = planner.arrival_pos("castle") or spawn
         W.follow(s, planner, "field", spawn, "castle", castle_arrival)
-        # Stage the completed quest BEFORE entering: the boss spawns on
-        # throne-room entry only when QUEST_MONSTER_HUNT == COMPLETE.
-        r = s.reader
-        var_addr = r.state + OFF_VARIABLES + 2 * (QUEST_MONSTER_HUNT - 1)
-        s.pb.memory[var_addr] = QUEST_COMPLETE
-        s.pb.memory[var_addr + 1] = 0
-        s.check("quest staged COMPLETE", r.variable(QUEST_MONSTER_HUNT)
-                == QUEST_COMPLETE,
-                expected=str(QUEST_COMPLETE),
-                actual=str(r.variable(QUEST_MONSTER_HUNT)))
         # Cross into the throne room and stop south of the boss at (10,7).
         W.follow(s, planner, "castle", s.pos(), "throne_room", (10, 8))
         throne_id = planner.scenes["throne_room"].scene_id

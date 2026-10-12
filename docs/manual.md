@@ -87,11 +87,11 @@ and press **A** to talk.
 
 ### The Monster Hunt
 
-Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
+Talk to the **Mayor** in town. He asks you to defeat **5 monsters**.
 
-When you have beaten all three, go back to him and he will give you a
-wonderful prize: the **Iron Sword** card. Then he warns you that something
-dreadful waits at the castle.
+When you have beaten all five, go back to him and he will grant you
+wonderful power: **one extra AP** every round. Then he warns you that a
+darkness stirs at the castle.
 
 ![Your quests](manual_images/quests.png)
 
@@ -310,7 +310,7 @@ ending. The land is saved, thanks to you!
   heal.
 - **Watch your Energy.** Two points a round goes fast.
 - **Do not waste your timer.** Decide, then press **SELECT**.
-- **Beat the 3 monsters early** to win the Iron Sword.
+- **Beat the 5 monsters early** to win an extra AP.
 - **Sell cards you do not need** and buy a Healing Ring.
 - **Save often** at the Wizard — you never know what is around the corner!
 
@@ -328,6 +328,6 @@ ending. The land is saved, thanks to you!
 | Starter deck | **12 cards** |
 | Biggest deck | **20 cards** |
 | Collection limit | **12 different cards** |
-| Main quest | Defeat **3 monsters** for the Mayor |
+| Main quest | Defeat **5 monsters** for the Mayor |
 
 Now go, hero — the cards are in your hands!

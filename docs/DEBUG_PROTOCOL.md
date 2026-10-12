@@ -560,8 +560,8 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 
 * `QUEST_START` (interact MAYOR, quest NOT_STARTED) → MAYOR_INTRO dialogue,
   set MET_MAYOR, quest=ACTIVE.
-* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 3) → reward dialogue +
-  give SWORD + quest=COMPLETE (given exactly once).
+* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 5) → reward dialogue +
+  +1 AP (ENERGY_POOL) + quest=COMPLETE (given exactly once).
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
 

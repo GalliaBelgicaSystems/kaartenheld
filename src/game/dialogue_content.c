@@ -102,7 +102,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
         3,
-        {"I am the Mayor.", "Slimes menace us.", "Please help us!"},
+        {"I am the Mayor.", "Defeat 5 monsters!", "Gain extra AP!"},
         0
     },
     {
@@ -123,21 +123,21 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_QUEST_ACTIVE,
         "MAYOR:",
         2,
-        {"Monsters remain.", "Defeat them all!"},
+        {"Defeat 5 monsters!", "Return for power!"},
         0
     },
     {
         DIALOGUE_ID_QUEST_COMPLETE,
         "MAYOR:",
-        8,
-        {"You did it!", "Take this Sword!", "I have felt a", "disturbance in the", "ether: I believe", "that something", "dreadful waits for", "you at the Castle."},
+        6,
+        {"You did it!", "Take this power:", "one more AP!", "I feel a darkness", "at the Castle.", "Steel yourself!"},
         0
     },
     {
         DIALOGUE_ID_QUEST_DONE,
         "MAYOR:",
         2,
-        {"The Sword suits you.", "Go forth, hero!"},
+        {"Use your power.", "Go forth, hero!"},
         0
     },
     {

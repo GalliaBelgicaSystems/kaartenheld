@@ -365,7 +365,7 @@
    "ARRIVED_TOWN": true
   },
   "variables": {
-   "QUEST_MONSTER_HUNT": 2,
+   "QUEST_MONSTER_HUNT": 0,
    "MONSTERS_DEFEATED": 3
   },
   "party": {
