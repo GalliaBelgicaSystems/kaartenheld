@@ -50,9 +50,8 @@ and the game reaches its ending.
 ### 1.2 The villain
 
 The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
-**Throne Room** is where the **Lord of Slimes** (50 HP) waits.  He appears
-**only after** the Monster Hunt quest is complete (his spawn is gated on the
-quest variable, see §4.2), so "every slime you kill leads to a bigger slime".
+**Throne Room** is where the **Lord of Slimes** (99 HP) waits.  He is
+always present and reachable, so the final fight is open from the start.
 
 ---
 
@@ -203,8 +202,8 @@ kobold, a bat, a tougher slime and a spider, plus a scout's advice.
 **CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, tough slime), the
 GREAT HALL (kobold, spider, bat, tough slime; a knight's advice), CASTLE
 (a bat, a spider, a kobold and the solo Mimic), and the THRONE ROOM,
-where the Lord of Slimes waits (with a bat and a spider) once the Monster
-Hunt quest is complete.
+where the Lord of Slimes (99 HP, always present) waits with a bat and
+a spider.
 
 ### 3.4 Encounters
 
@@ -234,7 +233,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 
 | Quest | Status var | Objective | Reward note |
 |---|---|---|---|
-| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "SWORD" |
+| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 5 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
 
 ### 4.2 Monster Hunt — the main quest
@@ -242,26 +241,25 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 1. **Start.** Talk to the **Mayor** for the first time:
 
    > I am the Mayor.
-   > Slimes menace the forest.
-   > Please help us!
+   > Defeat 5 monsters!
+   > Gain extra AP!
 
-2. **Objective.** Defeat **3 monsters in total** — any hostile counts
+2. **Objective.** Defeat **5 monsters in total** — any hostile counts
    (field/forest slimes, bats, even the boss).  Kills made *before* the
    quest starts still count toward the total.  While the quest is active
-   the Mayor says "Still monsters about. Defeat them all!"
-3. **Complete.** Talk to the Mayor again once 3 are defeated.  He gives
-   you the **Iron Sword** card and warns that something dreadful waits at
+   the Mayor says "Defeat 5 monsters! Return for power!"
+3. **Complete.** Talk to the Mayor again once 5 are defeated.  He grants
+   **one extra AP** (ENERGY_POOL +1) and warns that a darkness stirs at
    the Castle:
 
-   > You did it! Take this Sword!
-   > I have felt a disturbance in the ether: I believe that something
-   > dreadful waits for you at the Castle.
+   > You did it! Take this power: one more AP!
+   > I feel a darkness at the Castle. Steel yourself!
 
 4. **Finished.** Talking to the Mayor after completion is a short "go
-   forth, hero!" line ("The Sword suits you. Go forth, hero!").
+   forth, hero!" line ("Use your power. Go forth, hero!").
 
-Completing this quest is what unlocks the spawn of the **Lord of Slimes**
-in the Castle.
+The **Lord of Slimes** (99 HP) in the Castle is always present and
+reachable — it is not gated behind this quest.
 
 ### 4.3 Lost Amulet — the side quest
 
@@ -687,7 +685,7 @@ on the enemy type:
 | Kobold | 12–18 | 8 |
 | Spider | 16–18 | 15 |
 | Mimic (solo) | 30 | 0 |
-| Lord of Slimes (solo boss) | 50 | 50 |
+| Lord of Slimes (solo boss) | 99 | 50 |
 
 ### 9.3 Shops
 

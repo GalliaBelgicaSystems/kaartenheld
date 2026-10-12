@@ -85,15 +85,13 @@
           "INTERACTABLE"
         ],
         "visual": "L",
-        "hp": 50,
-        "max_hp": 50,
+        "hp": 99,
+        "max_hp": 99,
         "gold_reward": 50,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_NONE",
         "ai": "AI_NONE",
-        "solo": true,
-        "quest_var": "VARIABLE_ID_QUEST_MONSTER_HUNT",
-        "quest_val": 2
+        "solo": true
       },
       "overworld_sprite": "actors.actors_boss_top_left_corner",
       "animation_frames": [

@@ -1,7 +1,7 @@
 {
  "name": "boss_appears",
  "test": true,
- "description": "Once the Monster Hunt quest is complete, the Lord of Slimes (25 HP) blocks the Castle corridor",
+ "description": "The Lord of Slimes (99 HP) is always present in the Castle and reachable without completing the Monster Hunt quest",
  "actions": [
   {
    "type": "press",
@@ -23,7 +23,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 50
+   "expected": 99
   },
   {
    "type": "event_occurred",
@@ -48,8 +48,8 @@
    "ARRIVED_TOWN": true
   },
   "variables": {
-   "QUEST_MONSTER_HUNT": 2,
-   "MONSTERS_DEFEATED": 3
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 0
   }
  }
 }

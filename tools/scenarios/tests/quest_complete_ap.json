@@ -1,0 +1,52 @@
+{
+ "name": "quest_complete_ap",
+ "test": true,
+ "description": "With 5 monsters defeated and the quest ACTIVE, talking to the Mayor completes MONSTER HUNT: QUEST_COMPLETE dialogue, quest=COMPLETE, ENERGY_POOL +1",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MAYOR"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "dialogue_id",
+   "expected": "QUEST_COMPLETE"
+  },
+  {
+   "type": "variable",
+   "variable": "QUEST_MONSTER_HUNT",
+   "expected": 2
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 4
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "VARIABLE_SET"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8405,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MONSTERS_DEFEATED": 5,
+   "ENERGY_POOL": 3
+  }
+ }
+}

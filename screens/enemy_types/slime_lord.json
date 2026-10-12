@@ -11,8 +11,8 @@
     "palette": "sprites2"
   },
   "name": "L.of Slimes",
-  "hp": 50,
-  "max_hp": 50,
+  "hp": 99,
+  "max_hp": 99,
   "battle_id": "BATTLE_SLIME_LORD",
   "ai_types": ["AI_NONE"],
   "gold_reward": 50,

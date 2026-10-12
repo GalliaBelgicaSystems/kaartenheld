@@ -16,9 +16,9 @@
  * Mayor quest (MONSTER HUNT), expressed as data, not game code:
  *   QUEST_START    : first meeting (quest NOT_STARTED) starts the quest:
  *                    MAYOR_INTRO dialogue, MET_MAYOR, quest=ACTIVE.
- *   QUEST_COMPLETE : quest ACTIVE and >= 3 monsters defeated -> reward
- *                    dialogue, give SWORD, quest=COMPLETE (given once).
- *   QUEST_ACTIVE   : quest ACTIVE (fewer than 3 defeated) -> "still working".
+ *   QUEST_COMPLETE : quest ACTIVE and >= 5 monsters defeated -> reward
+ *                    dialogue, +1 AP (ENERGY_POOL), quest=COMPLETE (given once).
+ *   QUEST_ACTIVE   : quest ACTIVE (fewer than 5 defeated) -> "still working".
  *   QUEST_DONE     : quest COMPLETE -> already-rewarded dialogue.
  *   MONSTER_DEFEATED : every hostile defeat increments the global
  *                    MONSTERS_DEFEATED counter (no quest gating), so kills
@@ -50,12 +50,12 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 1, false, false },
-            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, true }
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, true }
         },
         3,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_QUEST_COMPLETE, 0, 0 },
-            { EVENT_ACTION_ADD_ITEM, CARD_IRON_SWORD, 1, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 2, 0 }
         }
     },

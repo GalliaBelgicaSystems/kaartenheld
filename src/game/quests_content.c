@@ -9,7 +9,7 @@ const QuestDefinition g_quests[] = {
     {
         1, "MONSTER HUNT",
         VARIABLE_ID_QUEST_MONSTER_HUNT, 1, 2,
-        VARIABLE_ID_MONSTERS_DEFEATED, 3, "monsters", "SWORD"
+        VARIABLE_ID_MONSTERS_DEFEATED, 5, "monsters", "+1 AP"
     },
     {
         2, "LOST AMULET",
