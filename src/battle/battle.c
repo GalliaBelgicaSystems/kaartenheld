@@ -424,8 +424,16 @@ static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
     }
     fx = attack_phase ? b->last_combo.cards[0].effect
                       : (uint8_t)CARD_EFFECT_BLOCK_DAMAGE;
-    combo_resolve(b->last_combo.cards, b->combo_count, phase, fx,
-                  &b->last_combo);
+    /* Single-level dispatch (stack discipline): the combo_resolve()
+     * wrapper's staging is inlined here instead of nesting another frame
+     * -- battle_play_hand is the only caller.  See combo.c. */
+    g_bk_call_bank = 3;
+    g_bk_call_target = (uint16_t)&combo_resolve_banked;
+    g_bk_ptr_a = (void *)b->last_combo.cards;
+    g_bk_ptr_b = (void *)&b->last_combo;
+    g_bk_byte_a = b->combo_count;
+    g_bk_byte_b = COMBO_PACK(phase, fx);
+    banked_call_run();
     telemetry_emit(EVENT_COMBO_RESOLVED,
                    b->last_combo.tier,
                    b->last_combo.eff_count,
@@ -714,19 +722,20 @@ void battle_update(Battle *b)
     } else {
         if (vb->phase == BATTLE_PHASE_PLAYER_ANIM ||
             vb->phase == BATTLE_PHASE_SHUFFLE) {
-            uint8_t count = 0;
             uint8_t grey_mask = 0;
             uint8_t gi;
             vb->phase = BATTLE_PHASE_ENEMY_TELEGRAPH;
             vb->turn = BATTLE_TURN_ENEMY;
-            while (count < vb->enemy_count && vb->enemies[vb->attacking_enemy_idx].hp == 0) {
+            /* gi doubles as the advance counter (stack discipline). */
+            gi = 0;
+            while (gi < vb->enemy_count && vb->enemies[vb->attacking_enemy_idx].hp == 0) {
                 /* Wrap instead of % -- keeps the SDCC int-mod library
                  * out of the tight fixed bank. */
                 vb->attacking_enemy_idx++;
                 if (vb->attacking_enemy_idx >= vb->enemy_count) {
                     vb->attacking_enemy_idx = 0;
                 }
-                count++;
+                gi++;
             }
             /* The enemy deck and its draw position are SHARED by the whole
              * hostile party (every encounter engages as a trio).  A poisoned

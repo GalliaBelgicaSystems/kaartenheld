@@ -50,11 +50,18 @@ LST_GLOB = os.path.join(BUILD, "debug", "**", "*.lst")
 CALL_OVERHEAD = 3
 
 # Pinned worst-case depth in bytes, measured on the post-stack-fix
-# tree (perf-spree). This is a ratchet, not an absolute budget: the
+# tree (perf-spree, then the 52.24 follow-up that de-nested the battle
+# render clear path and slimmed combo_resolve_banked to stop trashing
+# g_static_actor_count). 142 (not lower) because combo_resolve_banked
+# keeps its out_result staging pointer: re-reading it per access saved
+# 2 B of stack but blew release bank 3 past its ceiling, so the pointer
+# stays.  True depth is canary-measured at <= 125 B in the heaviest
+# battles (trio kill), 11 B clear of s__BSS.  This is a ratchet, not an
+# absolute budget: the
 # per-edge overhead above is approximate, so only DELTAS gate. Bump the
 # constant only with reviewer eyes on the responsible frame growth, and
 # re-run game_over_quit plus the sentinels (AGENTS.md 52.19/52.24).
-BASELINE = 158
+BASELINE = 142
 
 # Fixed main-loop prefix live under every battle chain.
 PREFIX = ["main", "game_update", "screen_update"]

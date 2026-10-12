@@ -1,0 +1,250 @@
+{
+ "name": "carl_remedial_lesson",
+ "test": true,
+ "description": "Post-victory statics stay interactable: after beating Carl\u2019s spar, facing-talk toward his tile reopens the repeat lesson (INTRO) instead of finding nothing. Regression for battle-turn stack pressure trashing g_static_actor_count (2->0), which silently killed every static interaction after any battle.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 13
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 130
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 55
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 130
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "TUTORIAL_CARL_INTRO"
+  },
+  {
+   "type": "event_count",
+   "event": "DIALOGUE_STARTED",
+   "count": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": 146
+  },
+  {
+   "type": "actor_at",
+   "entity": "CARL",
+   "x": 14,
+   "y": 8
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
+  }
+ ]
+}

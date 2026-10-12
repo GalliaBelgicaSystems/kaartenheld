@@ -124,7 +124,6 @@ static uint8_t combo_classify_loot(const Card *cards, const uint8_t *idx,
 {
     uint8_t i, min, max;
     uint8_t all_same_type = 1;
-    uint8_t first_type = 0;
 
     for (i = 0; i < 10; i++) s_hist[i] = 0;
 
@@ -138,8 +137,7 @@ static uint8_t combo_classify_loot(const Card *cards, const uint8_t *idx,
         s_hist[v - 1]++;
         if (v < min) min = v;
         if (v > max) max = v;
-        if (i == 0) first_type = t;
-        else if (t != first_type) all_same_type = 0;
+        if (i > 0 && t != cards[idx[0]].type) all_same_type = 0;
     }
 
     return combo_tier_from_hist(n, all_same_type, min, max);
@@ -152,31 +150,30 @@ static const int g_combo_unpack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
 
 void combo_resolve_banked(void)
 {
-    const Card *cards = (const Card *)g_bk_ptr_a;
     uint8_t count = g_bk_byte_a;
-    uint8_t phase = COMBO_UNPACK_PHASE(g_bk_byte_b);
-    uint8_t effect = COMBO_UNPACK_EFFECT(g_bk_byte_b);
     ComboResult *out_result = (ComboResult *)g_bk_ptr_b;
-    uint8_t i, eff_count = 0;
-    uint8_t sum = 0;
-    uint16_t mult;
-    /* Effective->selection index remap (AGENTS.md 52.14): the old
-     * vals/types/ring/trial scratch (20 B on the banked-call stack)
-     * overflowed DEBUG WRAM and smashed input state.  Values/types/ring
-     * are reread from the staged cards through this 5-byte map instead;
-     * the joker substitution rides a combo_classify_loot parameter, so
-     * no trial buffer exists at all. */
+    uint8_t i;
+    uint8_t w = 0;
+    uint8_t idx[5];
+    /* Stack-budget discipline (AGENTS.md 52.24): this body sits near the
+     * bottom of the deepest battle chain, so it keeps almost no locals.
+     * Inputs are reread from the staging globals at each use -- safe
+     * because nothing called from here clobbers staging (the classifiers
+     * take plain params, and effect_resolve_into() runs last while its
+     * own argument is evaluated first).  Outputs accumulate straight into
+     * the staged result struct.  The idx[] map and s_hist stay untouched:
+     * they replaced a 20 B scratch buffer after it smashed input state. */
 
     if (!out_result) return;
 
-    if (!cards || count == 0) {
+    if (!g_bk_ptr_a || count == 0) {
         out_result->count = 0;
         out_result->eff_count = 0;
         out_result->tier = HAND_NONE;
         out_result->suited = 0;
         out_result->multiplier = 100;
         out_result->base_power = 0;
-        g_effect_last.type = effect;
+        g_effect_last.type = COMBO_UNPACK_EFFECT(g_bk_byte_b);
         g_effect_last.amount = 0;
         return;
     }
@@ -190,28 +187,22 @@ void combo_resolve_banked(void)
      * wild-card shield worth its power).  Classification runs on the
      * effective set either way (attack: every selected card; defend:
      * shields + rings -- inert non-shields contribute 0 block, 0 combo). */
+    out_result->base_power = 0;
     {
-        uint8_t idx[5];
-        uint8_t w = 0;
-
         for (i = 0; i < count; i++) {
-            uint8_t t = cards[i].type;
-            if (phase == COMBO_PHASE_ATTACK) {
-                if (t != BATTLE_CARD_TYPE_SHIELD && !cards[i].ring)
-                    sum += cards[i].value;
+            uint8_t t = ((const Card *)g_bk_ptr_a)[i].type;
+            if (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK) {
+                if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[i].ring)
+                    out_result->base_power += ((const Card *)g_bk_ptr_a)[i].value;
             } else {
-                if (t != BATTLE_CARD_TYPE_SHIELD && !cards[i].ring) continue;
-                sum += cards[i].value;
+                if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[i].ring) continue;
+                out_result->base_power += ((const Card *)g_bk_ptr_a)[i].value;
             }
             idx[w] = i;
             w++;
         }
-        eff_count = w;
 
-        out_result->base_power = sum;
-        out_result->eff_count = eff_count;
-
-        if (eff_count < 2) {
+        if (w < 2) {
             out_result->tier = HAND_NONE;
             out_result->suited = 0;
             out_result->multiplier = 100;
@@ -223,37 +214,38 @@ void combo_resolve_banked(void)
              * that never enters idx[], so indexing cards[] directly would
              * test the wrong cards. */
             uint8_t has_ring = 0;
-            for (i = 0; i < eff_count; i++) {
-                if (cards[idx[i]].ring) has_ring = 1;
+            for (i = 0; i < w; i++) {
+                if (((const Card *)g_bk_ptr_a)[idx[i]].ring) has_ring = 1;
             }
             if (has_ring) {
-                uint8_t best = combo_classify_loot(cards, idx, eff_count, 0);
+                uint8_t best = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
                 uint8_t v, t2;
                 /* Card values are 1..10 (BOW 10): the joker tries the
                  * full legal range. */
                 for (v = 1; v <= 10; v++) {
-                    t2 = combo_classify_loot(cards, idx, eff_count, v);
+                    t2 = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, v);
                     if (t2 > best) best = t2;
                 }
                 out_result->tier = best;
             } else {
-                out_result->tier = combo_classify_loot(cards, idx, eff_count, 0);
+                out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }
-            mult = s_tier_mult[out_result->tier];
+            out_result->multiplier =
+                s_tier_mult[out_result->tier];
             if (out_result->tier == HAND_NONE) {
                 out_result->suited = 0;
             } else {
                 uint8_t same = 1;
-                for (i = 1; i < eff_count; i++) {
-                    if (cards[idx[i]].type != cards[idx[0]].type) { same = 0; break; }
+                for (i = 1; i < w; i++) {
+                    if (((const Card *)g_bk_ptr_a)[idx[i]].type != ((const Card *)g_bk_ptr_a)[idx[0]].type) { same = 0; break; }
                 }
                 out_result->suited = same ? 1 : 0;
-                if (same) mult += 25;
+                if (same) out_result->multiplier += 25;
             }
-            out_result->multiplier = mult;
         }
+        out_result->eff_count = w;
     }
 
     /* Effect resolution consumes the evaluated hand (bank-local call). */
-    effect_resolve_into(effect, out_result, &g_effect_last);
+    effect_resolve_into(COMBO_UNPACK_EFFECT(g_bk_byte_b), (ComboResult *)g_bk_ptr_b, &g_effect_last);
 }

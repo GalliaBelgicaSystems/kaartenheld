@@ -2639,8 +2639,8 @@ Rules:
 Under the debug ROM the heap+stack gap (`0xE000 - s__BSS`, ~130-140 B)
 is the entire stack budget: SP starts at `0xE000` (set by `main`, also
 under the harness) and every nested banked call eats into it.  The
-battle combo chain (update -> trampoline -> combo_resolve (48 B frame)
--> classify (23 B) -> effect) once needed ~160 B: SP descended to
+battle combo chain (update -> trampoline -> the banked combo dispatch
+(48 B frame) -> classify (23 B) -> effect) once needed ~160 B: SP descended to
 `DF60` and pushes landed in input state (`injected_pad_state` =
 A+SELECT), so the next menu confirm ghost-fired -- `game_over_quit`
 went SAVE_LOAD instead of THANKS.  A 1 B WRAM layout shift chose the

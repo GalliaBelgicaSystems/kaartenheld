@@ -17,12 +17,13 @@
  * (status, draw, ...) extend that enum without touching the combo side.
  *
  * Dispatch note: the scaling body lives in ROM bank 3 next to the combo
- * evaluator, and combo_resolve() runs BOTH in one banked dispatch --
- * the bank-3 combo body calls effect_resolve_into() bank-locally (same
- * bank, no trampoline).  This keeps the fixed-bank cost of the seam to
- * one wrapper (the fixed bank is completely full; see make memmap).
- * A standalone fixed-entry effect_resolve() can be added when a second
- * caller appears.
+ * evaluator, and the banked combo dispatch runs BOTH in one banked
+ * dispatch -- the bank-3 combo body calls effect_resolve_into()
+ * bank-locally (same bank, no trampoline).  This keeps the fixed-bank
+ * cost of the seam to one inline staging sequence (battle_play_hand
+ * dispatches directly; there is deliberately no wrapper -- see
+ * combo.h).  A standalone fixed-entry effect_resolve() can be added
+ * when a second caller appears.
  *
  * Statuses are deliberately NOT implemented yet (plan §2); the seam they
  * will plug into is the per-effect switch in the banked body. */
@@ -34,9 +35,9 @@ typedef struct {
     uint8_t amount;  /* Scaled magnitude (damage / block / heal points) */
 } EffectResult;
 
-/* Result of the most recent combo_resolve().  Single slot by design:
- * combat resolution is sequential.  Read via effect_last() immediately
- * after the call. */
+/* Result of the most recent banked combo dispatch.  Single slot by
+ * design: combat resolution is sequential.  Read via effect_last()
+ * immediately after the call. */
 extern EffectResult g_effect_last;
 const EffectResult *effect_last(void);
 

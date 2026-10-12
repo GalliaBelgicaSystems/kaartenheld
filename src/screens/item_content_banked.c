@@ -16,6 +16,7 @@
 #include "card.h"
 #include "game_ids.h"
 #include "banked.h"
+#include "rpg/loot.h"
 
 #define TAB_CARDS 0
 #define TAB_QUEST 1
@@ -59,18 +60,10 @@ static uint8_t s_ic_col_i;
 static uint8_t s_ic_def_i;
 static uint8_t s_ic_deck_i;
 static uint8_t s_ic_coll_i;
-static uint8_t s_ic_bld_i;
-static uint8_t s_ic_sort_i;
-static uint8_t s_ic_sort_j;
 static uint8_t s_ic_lst_pos;
 static uint8_t s_ic_qst_pos;
 
 static uint8_t s_ic_y;
-static uint8_t s_ic_tmp;
-static uint8_t s_ic_va;
-static uint8_t s_ic_vb;
-static uint8_t s_ic_desc;
-static uint8_t s_ic_total;
 static uint8_t s_ic_tile_elem;
 static uint8_t s_ic_tile_wpn;
 static uint8_t s_ic_in_deck;
@@ -231,8 +224,90 @@ static void ic_color_span_fast(void)
     ic_color_span_fast(); \
 } while(0)
 
+/* Loot display synthesis (bank-2-local mirror of loot_synth_banked) ──
+ * The fixed-bank view builder resolves loot ids through the bank-3
+ * tables, but this bank cannot: selecting another ROM bank would unmap
+ * the running body, and banked_copy() restores the home bank mid-body
+ * (same reason battle_hud_load_banked reads its tables in-bank).  Bank 2
+ * has no room for full table duplicates either, so this synthesizes only
+ * the display fields from the shift/mask id layout (loot.h) with three
+ * packed tables.  Every VALUE must match src/rpg/loot_banked.c exactly
+ * (name format, power, cost, price, rider legality): the SELL price and
+ * the detail page read through here, and a mismatch would show one
+ * price and charge another. */
+static const char s_ic_loot_mat[4] = { 'W', 'B', 'I', 'M' };
+static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
+static const uint8_t s_ic_loot_base[8] = { 3, 2, 2, 1, 2, 0, 0, 0 };
+static const uint8_t s_ic_loot_status[4] =
+    { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
+static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
+
+static const CardDefinition *ic_loot_synth(CardId id)
+{
+    uint8_t material = loot_id_material(id);
+    uint8_t effect = loot_id_effect(id);
+    uint8_t weapon = loot_id_weapon(id);
+    uint8_t has_rider;
+    uint8_t i;
+    uint8_t *d;
+    char *n;
+    char ec;
+
+    d = (uint8_t *)&g_card_scratch;
+    for (i = 0; i < sizeof(CardDefinition); i++) d[i] = 0;
+
+    g_card_scratch.id = id;
+    g_card_scratch.type = CARD_TYPE_ATTACK;
+    if (weapon == WPN_SWORD) {
+        g_card_scratch.battle_type = BATTLE_CARD_TYPE_SWORD;
+        g_card_scratch.effect = CARD_EFFECT_DAMAGE_TARGET;
+    } else if (weapon == WPN_SHIELD) {
+        g_card_scratch.type = CARD_TYPE_DEFENSE;
+        g_card_scratch.battle_type = BATTLE_CARD_TYPE_SHIELD;
+        g_card_scratch.effect = CARD_EFFECT_BLOCK_DAMAGE;
+    } else if (weapon == WPN_BOW) {
+        g_card_scratch.battle_type = BATTLE_CARD_TYPE_BOW;
+        g_card_scratch.effect = CARD_EFFECT_DAMAGE_TARGET;
+    } else if (weapon == WPN_DAGGER) {
+        g_card_scratch.battle_type = BATTLE_CARD_TYPE_DAGGER;
+        g_card_scratch.effect = CARD_EFFECT_DAMAGE_TARGET;
+    } else {
+        /* Ring and reserved weapons heal (mirrors the synth default). */
+        g_card_scratch.type = CARD_TYPE_HEAL;
+        g_card_scratch.battle_type = BATTLE_CARD_TYPE_HEAL;
+        g_card_scratch.effect = CARD_EFFECT_HEAL_HP;
+    }
+    g_card_scratch.power = (uint8_t)(s_ic_loot_base[weapon] + material);
+    g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;
+    g_card_scratch.price = (uint8_t)(s_ic_loot_base[weapon] +
+        (uint8_t)(material << 1) +
+        ((effect == EFF_POISON && weapon == WPN_DAGGER) ? 2 : 0));
+    has_rider = (s_ic_loot_status[effect] != STATUS_NONE &&
+        ((effect == EFF_POISON) ? (weapon == WPN_DAGGER) :
+         ((effect == EFF_FIRE || effect == EFF_ICE) ?
+             (weapon == WPN_SWORD) : 0)));
+    if (has_rider) {
+        g_card_scratch.status_id = s_ic_loot_status[effect];
+        g_card_scratch.status_chance = s_ic_loot_chance[effect];
+    }
+    n = g_card_scratch.name;
+    *n++ = s_ic_loot_mat[material];
+    *n++ = ' ';
+    if (has_rider) {
+        ec = (effect == EFF_POISON) ? 'P' :
+            ((effect == EFF_FIRE) ? 'F' : 'I');
+        *n++ = ec;
+        *n++ = ' ';
+    }
+    *n++ = s_ic_loot_sym[(uint8_t)(weapon << 1)];
+    *n++ = s_ic_loot_sym[(uint8_t)((weapon << 1) + 1)];
+    *n = '\0';
+    return &g_card_scratch;
+}
+
 static const CardDefinition *ic_card_get_def(CardId id)
 {
+    if (loot_is_loot_id(id)) return ic_loot_synth(id);
     for (s_ic_def_i = 0; s_ic_def_i < GAME_CARD_COUNT; s_ic_def_i++) {
         if (g_cards[s_ic_def_i].id == id) return &g_cards[s_ic_def_i];
     }
@@ -242,11 +317,6 @@ static const CardDefinition *ic_card_get_def(CardId id)
 static const char *ic_card_desc(uint8_t type)
 {
     return (type < CARD_DESC_TYPES) ? (const char *)&s_card_desc_blob[type][0] : "";
-}
-
-static bool ic_card_deckable(const CardDefinition *def)
-{
-    return def && def->type != CARD_TYPE_SPECIAL;
 }
 
 static CardId ic_view_card_id(Game *g, uint8_t pos)
@@ -286,62 +356,13 @@ static QuestStatus ic_quest_status(const GameState *state, const QuestDefinition
     return QUEST_STATUS_NOT_STARTED;
 }
 
-static bool ic_filter_matches(Game *g, CardId id)
-{
-    if (g->item_menu_filter == FILTER_ALL) return true;
-    s_ic_def = ic_card_get_def(id);
-    if (!s_ic_def) return false;
-    return s_ic_def->type == g->item_menu_filter;
-}
-
-static uint8_t ic_sort_value(const CardDefinition *def, uint8_t sort)
-{
-    switch (sort) {
-        case SORT_TYPE:  return def->type;
-        case SORT_POWER:
-        case SORT_POWER_DESC: return def->power;
-        case SORT_COST:
-        case SORT_COST_DESC:  return def->cost;
-        default: return 0;
-    }
-}
-
-static void ic_sort_view(Game *g)
-{
-    s_ic_desc = (g->item_menu_sort == SORT_POWER_DESC ||
-                 g->item_menu_sort == SORT_COST_DESC);
-
-    for (s_ic_sort_i = 1; s_ic_sort_i < s_view_count; s_ic_sort_i++) {
-        s_ic_tmp = s_view_indices[s_ic_sort_i];
-        s_ic_va = ic_sort_value(ic_card_get_def(g->state.cards.collection.entries[s_ic_tmp].id), g->item_menu_sort);
-        s_ic_sort_j = s_ic_sort_i;
-        while (s_ic_sort_j > 0) {
-            s_ic_vb = ic_sort_value(ic_card_get_def(g->state.cards.collection.entries[s_view_indices[s_ic_sort_j - 1]].id),
-                                    g->item_menu_sort);
-            if (s_ic_desc ? (s_ic_vb < s_ic_va) : (s_ic_vb > s_ic_va)) {
-                s_view_indices[s_ic_sort_j] = s_view_indices[s_ic_sort_j - 1];
-                s_ic_sort_j--;
-            } else {
-                break;
-            }
-        }
-        s_view_indices[s_ic_sort_j] = s_ic_tmp;
-    }
-}
-
-void ic_build_view(Game *g)
-{
-    s_view_count = 0;
-    s_ic_total = g->state.cards.collection.count;
-    for (s_ic_bld_i = 0; s_ic_bld_i < s_ic_total; s_ic_bld_i++) {
-        s_ic_def = ic_card_get_def(g->state.cards.collection.entries[s_ic_bld_i].id);
-        if (!ic_card_deckable(s_ic_def)) continue;
-        if (ic_filter_matches(g, g->state.cards.collection.entries[s_ic_bld_i].id))
-            s_view_indices[s_view_count++] = s_ic_bld_i;
-    }
-    if (g->item_menu_sort != SORT_NONE && s_view_count > 1)
-        ic_sort_view(g);
-}
+/* NOTE: the filtered/sorted view (s_view_indices/s_view_count) is built
+ * by the fixed-bank side (item_screen.c: on every full redraw, plus
+ * explicitly after picker filter/sort changes) and consumed here
+ * read-only.  A bank-2 duplicate used to rebuild it on every full
+ * redraw; besides wasting ROM it could DIVERGE from the action view
+ * (it resolved loot ids to NULL while the fixed side synthesizes them),
+ * shifting every selection at/after a loot card onto the wrong card. */
 
 static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
     "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
@@ -428,7 +449,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 
 static void ic_draw_cards_list(Game *g)
 {
-    ic_build_view(g);
+    /* View is fixed-bank-built (see note above); the render only walks it. */
     s_ic_y = 5;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)

@@ -84,7 +84,11 @@ const CardDefinition *card_get_def(CardId id);
 
 /* Shared definition scratch (WRAM): card_get_def's return target.  The
  * bank-3 synth body (loot_synth_banked) writes it directly, so it must
- * be visible project-wide rather than file-static. */
+ * be visible project-wide rather than file-static.  The bank-2 item
+ * render synthesizes loot defs into the SAME scratch (ic_loot_synth in
+ * item_content_banked.c, which cannot reach bank 3) -- so never hold
+ * two looked-up defs across another def lookup; copy out what you need
+ * first. */
 extern CardDefinition g_card_scratch;
 
 #endif /* RPG_CARDS_H */
