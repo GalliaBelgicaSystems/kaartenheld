@@ -538,7 +538,9 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "open_tile": "TILE_FOREST_44",
+        "open_variable": "VARIABLE_ID_MERCHANT_QUEST"
       }
     },
     {

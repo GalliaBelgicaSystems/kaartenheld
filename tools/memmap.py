@@ -166,6 +166,7 @@ def main():
         "_battle_card_undo_banked": "battle card undo (bank 3)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
+        "_open_stamp_banked": "floor-painted open re-stamp (actor tables bank)",
         "_loot_synth_banked": "loot def synthesis (bank 3)",
         "_game_loot_drop_banked": "victory drop roll (bank 3)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",

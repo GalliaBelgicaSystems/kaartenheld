@@ -66,7 +66,6 @@ uint8_t ui_font_tile_base;
 #include "gfx/hero_desolate_sprite_tile.h"
 #include "gfx/rpg_tile_lookup.h"
 #include "gfx/asset_atlas.h"
-#include "game_ids.h"
 #include "banked.h"
 
 #define PLAYER_SPRITE_NUM 0
@@ -529,23 +528,6 @@ static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
     return UI_COLOR_NONE;
 }
 
-/* Floor-painted statics with loot state: the level paints the CLOSED
- * cell; when looted, retarget the cell to the OPEN tile and let the
- * ordinary terrain machinery below resolve tile art, glyph and palette
- * (TILE_FOREST_44 sits inside the forest range, glyph '#', slot 5).
- * Runs on every full redraw (scene loads, battle returns, dialogue
- * boxes), so no extra plumbing -- this is the static-art pattern
- * (AGENTS.md): state lives in flags/variables, presentation resolves
- * at render.  Inlined branch form (no helper, no extra local, ASCII
- * arm untouched): this cell path avalanches on added locals/calls.
- * Only the field cache opens today; the amulet keeps its painted
- * closed cell after pickup (same as its old single-frame look).
- *
- * FIELD_CHEST is flag 3: state.flags byte 0, mask 0x04 (see
- * flag_byte_bit() in rpg/state.c); break the build if the id ever
- * moves so the offset cannot silently rot. */
-typedef char chest_state_layout_ok[STORY_FLAG_ID_FIELD_CHEST == 3 ? 1 : -1];
-
 static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
 {
     uint8_t t;
@@ -563,11 +545,6 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
     }
 
     actor = actor_find_at(world, col, row);
-    if (actor && !(actor->flags & ACTOR_FLAG_HOSTILE) &&
-        actor->sprite_kind == SPRITE_KIND_TILE &&
-        actor->id == ENTITY_ID_CHEST && (g_game.state.flags.bytes[0] & 4)) {
-        t = TILE_FOREST_44;
-    }
     if (actor && !(actor->flags & ACTOR_FLAG_HOSTILE) &&
         actor->sprite_kind == SPRITE_KIND_ASCII) {
         tile_idx = (uint8_t)(ui_font_tile_base + (uint8_t)(actor->visual - ' '));

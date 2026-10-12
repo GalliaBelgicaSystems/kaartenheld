@@ -111,6 +111,11 @@ extern uint8_t g_actor_registry_count;
 /* Bank-2 body dispatched by actor_load_scene(). */
 void actor_load_scene_banked(void);
 
+/* Banked open-state re-stamp body (emitted with the actor tables by
+ * compile.py, same bank: plain call, no trampoline).  Reads g_game
+ * directly (WRAM, always mapped). */
+void open_stamp_banked(void);
+
 /* Result of engaging an actor. */
 typedef enum {
     ENGAGE_NONE = 0,

@@ -52,8 +52,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_AMULET_FOUND,
         "",
-        2,
-        {"You found the", "Lost Amulet!"},
+        1,
+        {"FOUND AMULET!!"},
         0
     },
     {
@@ -74,7 +74,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_FIELD_CHEST_AP,
         "CHEST:",
         3,
-        {"POISON DAGGER!", "Plus one action", "point! AP up!"},
+        {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
         0
     },
     {

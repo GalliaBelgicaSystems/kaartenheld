@@ -1,6 +1,7 @@
 #include "scene.h"
 #include "actor.h"
 #include "banked.h"
+#include "game_ids.h"
 
 /* ── Scene data location ───────────────────────────────────────────
  * Real content (levels/) compiles into ROM bank 5; the frozen harness

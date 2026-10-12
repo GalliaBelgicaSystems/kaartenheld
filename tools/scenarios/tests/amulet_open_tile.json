@@ -1,0 +1,67 @@
+{
+ "name": "amulet_open_tile",
+ "test": true,
+ "description": "Picking up the forest amulet flips its painted cell to the open-chest tile (TILE_FOREST_44 -> VRAM 172): the event sets MERCHANT_QUEST, closing the FOUND AMULET!! dialogue redraws the world, and the cell stays open",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "AMULET"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 16,
+   "row": 10,
+   "expected": 172
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 1
+  },
+  {
+   "type": "actor_at",
+   "entity": "AMULET",
+   "x": 16,
+   "y": 10
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 15,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "variables": {
+   "MERCHANT_QUEST": 0
+  }
+ }
+}

@@ -186,4 +186,18 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
 };
 
+#include "game.h"
+/* Banked re-stamp body (AGENTS.md 55.7): already-looted
+ * cells back into the fresh map on every scene load (the
+ * loot event's DIALOGUE args cover the mid-visit flip).
+ * Self-contained: g_game is WRAM (always mapped), everything
+ * else is literals -- no staging, no table, no fixed-bank
+ * calls while mapped.  Called directly by the banked scene
+ * loader (same bank: plain call, no trampoline). */
+void open_stamp_banked(void)
+{
+    if (g_game.world.map_id == MAP_TEST_FIELD && ((g_game.state.flags.bytes[0] & 4))) ((uint8_t *)g_game.world.map)[341] = TILE_FOREST_44;
+    if (g_game.world.map_id == MAP_TEST_FOREST && (g_game.state.variables.values[4])) ((uint8_t *)g_game.world.map)[416] = TILE_FOREST_44;
+}
+
 const uint8_t g_actor_table_count = 6;

@@ -18,6 +18,7 @@ Usage:
 
 import sys
 import os
+import re
 import json
 import glob
 from pathlib import Path
@@ -28,7 +29,7 @@ from scene_registry import (
 from collision import (
     derive_collision, edge_link_report, effective_actor_flags,
     neighbor_pairing_issues, point_exit_issues, tunnel_id_valid,
-    tunnel_issues,
+    tunnel_issues, cell_tile_info,
 )
 
 MAX_WORLD_WIDTH = 40
@@ -132,7 +133,40 @@ def validate_dialogue_refs(levels_dir=None):
     for name in sorted(set(known) - referenced):
         warnings.append(
             f"Dialogue '{name}' is referenced by no actor or event.")
-    return errors, warnings
+    errors2, warnings2 = validate_set_tile_refs(events_text)
+    return errors + errors2, warnings + warnings2
+
+
+def validate_set_tile_refs(events_text):
+    """EVENT DIALOGUE loot-stamp args must be sane (AGENTS.md 55.7):
+    loot events carry the open cell as (flat map offset, tile) in the
+    DIALOGUE action's spare args for the banked dialogue body to stamp
+    on open.  Flat must land inside the world map, tile must be a known
+    TILE_* const.  A bad row would write outside world->map (WRAM
+    corruption), and the executor trusts content -- so fail loudly
+    here.  Plain dialogues carry (0, 0) and stamp nothing."""
+    import re
+    errors, warnings = [], []
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    try:
+        world_h = (repo_root / "src" / "world" / "world.h").read_text()
+    except OSError:
+        world_h = ""
+    known_tiles = set(re.findall(r"\b(TILE_[A-Z0-9_]+)\s*=", world_h))
+    m2 = re.search(r"#define\s+WORLD_WIDTH\s+(\d+)", world_h)
+    m3 = re.search(r"#define\s+WORLD_HEIGHT\s+(\d+)", world_h)
+    cells = (int(m2.group(1)) * int(m3.group(1)) if m2 and m3 else 960)
+    for m in re.finditer(
+            r"EVENT_ACTION_DIALOGUE\s*,\s*[A-Z0-9_]+\s*,\s*(-?\d+)\s*,\s*([A-Z0-9_]+)",
+            events_text):
+        flat, tile = int(m.group(1)), m.group(2)
+        if flat == 0:
+            continue
+        if not (0 <= flat < cells):
+            errors.append(
+                f"DIALOGUE stamp offset {flat} outside the world map")
+        if tile not in known_tiles:
+            errors.append(f"DIALOGUE stamp tile '{tile}' is not a TILE_* const")
 
 
 def validate_shop_refs(levels_dir=None):
@@ -269,6 +303,25 @@ def load_tilesets(tilesets_dir=None):
 
 
 _KNOWN_ENTITY_IDS = None
+
+
+_TILE_CONSTANTS = None
+
+
+def _tile_const_values():
+    """{TILE_* const name: value} parsed from src/world/world.h."""
+    global _TILE_CONSTANTS
+    if _TILE_CONSTANTS is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        try:
+            text = (repo_root / "src" / "world" / "world.h").read_text()
+        except OSError:
+            text = ""
+        _TILE_CONSTANTS = {
+            m.group(1): int(m.group(2))
+            for m in re.finditer(r"\b(TILE_[A-Z0-9_]+)\s*=\s*(\d+)", text)
+        }
+    return _TILE_CONSTANTS
 
 
 def known_entity_ids():
@@ -582,6 +635,49 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             if key in props and (not isinstance(props[key], int) or props[key] < 0):
                 errors.append(f"Object '{oid}' has invalid {key} '{props[key]}'")
                 objects_ok = False
+        # Floor-painted open state (AGENTS.md 55.7): open_tile names a
+        # TILE_* const for the opened cell; open_flag/open_variable name
+        # the story state that opens it.  Names resolve at compile time
+        # (compile.py fails loudly on unknown ones); here we only check
+        # the shape, so a typo surfaces with the object id attached.
+        if "open_tile" in props and not isinstance(props["open_tile"], str):
+            errors.append(f"Object '{oid}' open_tile must be a TILE_* name")
+            objects_ok = False
+        for key, prefix in (("open_flag", "STORY_FLAG_ID_"),
+                            ("open_variable", "VARIABLE_ID_")):
+            if key in props and (not isinstance(props[key], str) or
+                                 not props[key].startswith(prefix)):
+                errors.append(f"Object '{oid}' {key} must name a {prefix}* id")
+                objects_ok = False
+        if isinstance(props.get("open_tile"), str):
+            # Adjacency: the banked dialogue body stamps painted+1, so
+            # the open const must be exactly one past the painted cell's
+            # const.  Also requires explicit paint (an unpainted cell
+            # would never show the closed art).
+            pos = obj.get("position", {}) or {}
+            painted = cell_tile_info(level_data, tileset,
+                                     pos.get("x", -1), pos.get("y", -1))
+            if painted is None:
+                errors.append(
+                    f"Object '{oid}' has open_tile but its cell is "
+                    f"unpainted -- paint the closed cell explicitly")
+                objects_ok = False
+            else:
+                tvals = _tile_const_values()
+                pv = tvals.get(painted.get("gb_constant", ""))
+                ov = tvals.get(props["open_tile"])
+                if pv is None or ov is None:
+                    errors.append(
+                        f"Object '{oid}': cannot resolve tile consts "
+                        f"('{painted.get('gb_constant')}' vs "
+                        f"'{props['open_tile']}')")
+                    objects_ok = False
+                elif ov != pv + 1:
+                    errors.append(
+                        f"Object '{oid}': open_tile "
+                        f"{props['open_tile']} must be painted+1 "
+                        f"({painted.get('gb_constant')}+1)")
+                    objects_ok = False
 
     # Lesson tiles (Carl): an AI_TUTOR hostile teaches through a
     # co-located dialogue static on the same tile (one visual sprite:

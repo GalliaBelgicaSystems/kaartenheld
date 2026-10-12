@@ -16,6 +16,7 @@ Usage:
 
 import sys
 import os
+import re
 import json
 import glob
 import argparse
@@ -863,6 +864,83 @@ def actor_interaction(obj):
     return "INTERACTION_NONE"
 
 
+_game_ids_cache = None
+_world_dims_cache = None
+
+
+def load_game_ids():
+    """({flag name: value}, {variable name: value}) parsed from the
+    STORY_FLAG / VARIABLE_ID enums in src/game/game_ids.h (explicit
+    values; _COUNT sentinels skipped)."""
+    global _game_ids_cache
+    if _game_ids_cache is not None:
+        return _game_ids_cache
+    text = (REPO_ROOT / "src" / "game" / "game_ids.h").read_text()
+    flags, variables = {}, {}
+    for m in re.finditer(r"(STORY_FLAG_ID_[A-Z0-9_]+)\s*=\s*(\d+)", text):
+        if "COUNT" not in m.group(1):
+            flags[m.group(1)] = int(m.group(2))
+    for m in re.finditer(r"(VARIABLE_ID_[A-Z0-9_]+)\s*=\s*(\d+)", text):
+        variables[m.group(1)] = int(m.group(2))
+    _game_ids_cache = (flags, variables)
+    return _game_ids_cache
+
+
+def load_world_dims():
+    """(WORLD_WIDTH, WORLD_HEIGHT) parsed from src/world/world.h.  The
+    open-table flat offset strides by WORLD_WIDTH (not the level's own
+    width -- world->map is a fixed [HEIGHT][WIDTH] array)."""
+    global _world_dims_cache
+    if _world_dims_cache is not None:
+        return _world_dims_cache
+    text = (REPO_ROOT / "src" / "world" / "world.h").read_text()
+    w = int(re.search(r"#define\s+WORLD_WIDTH\s+(\d+)", text).group(1))
+    h = int(re.search(r"#define\s+WORLD_HEIGHT\s+(\d+)", text).group(1))
+    _world_dims_cache = (w, h)
+    return _world_dims_cache
+
+
+def emit_open_stamp_if(obj, map_enum):
+    """Floor-painted open-state re-stamp statement for one actor
+    (AGENTS.md 55.7), or None when the actor has no open_tile prop.
+    Everything resolves to literals here (map enum, flat map offset,
+    flag byte+mask, variable slot, tile const), so the ROM body is a
+    flat chain of ifs with no table, no indexing mults, no count.
+    Properties: open_tile (TILE_* name), open_flag (STORY_FLAG_ID_*),
+    open_variable (VARIABLE_ID_*).  Unknown names fail loudly here,
+    never silently in ROM."""
+    props = obj.get("properties", {})
+    tile = props.get("open_tile", "0")
+    if not tile or tile == "0":
+        return None
+    flags, variables = load_game_ids()
+    w, h = load_world_dims()
+    pos = obj.get("position", {})
+    x, y = pos.get("x", 0), pos.get("y", 0)
+    if not (0 <= x < w and 0 <= y < h):
+        raise ValueError(
+            f"actor '{obj.get('id')}': open position ({x},{y}) outside "
+            f"the world map -- stamp would corrupt WRAM")
+    offset = y * w + x
+    flag = props.get("open_flag", 0)
+    var = props.get("open_variable", 0)
+    conds = []
+    if flag:
+        if flag not in flags:
+            raise ValueError(
+                f"actor '{obj.get('id')}': unknown open_flag '{flag}'")
+        f = flags[flag] - 1
+        conds.append(f"(g_game.state.flags.bytes[{f >> 3}] & {(1 << (f & 7))})")
+    if var:
+        if var not in variables:
+            raise ValueError(
+                f"actor '{obj.get('id')}': unknown open_variable '{var}'")
+        conds.append(f"g_game.state.variables.values[{variables[var] - 1}]")
+    cond = " && ".join(conds) if conds else "1"
+    return (f"    if (g_game.world.map_id == {map_enum} && ({cond})) "
+            f"((uint8_t *)g_game.world.map)[{offset}] = {tile};")
+
+
 def emit_actor_row(obj, enemy_ids, entity_types):
     props = obj.get("properties", {})
     pos = obj.get("position", {})
@@ -963,6 +1041,34 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
             out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
             out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
     out.append("};")
+    # Floor-painted open states (AGENTS.md 55.7): one resolved if per
+    # actor with an open_tile prop, in registry order.  No table, no
+    # count, no indexing mults -- a generic scan loop avalanched this
+    # bank past the link budget before.  A new chest is still new JSON
+    # props only (never an engine change); each costs ~one if (~30 B).
+    open_ifs = []
+    for sid in ordered:
+        for obj in levels_by_id[sid].get("objects", []):
+            props = obj.get("properties", {}) or {}
+            if not props.get("entity_id"):
+                continue
+            stmt = emit_open_stamp_if(obj, map_enum[sid])
+            if stmt is not None:
+                open_ifs.append(stmt)
+    out.append("")
+    out.append('#include "game.h"')
+    out.append("/* Banked re-stamp body (AGENTS.md 55.7): already-looted")
+    out.append(" * cells back into the fresh map on every scene load (the")
+    out.append(" * loot event's DIALOGUE args cover the mid-visit flip).")
+    out.append(" * Self-contained: g_game is WRAM (always mapped), everything")
+    out.append(" * else is literals -- no staging, no table, no fixed-bank")
+    out.append(" * calls while mapped.  Called directly by the banked scene")
+    out.append(" * loader (same bank: plain call, no trampoline). */")
+    out.append("void open_stamp_banked(void)")
+    out.append("{")
+    if open_ifs:
+        out.extend(open_ifs)
+    out.append("}")
     # Generated table count: the fixed-bank registrar stages this byte via
     # banked_copy (no header dependency, so a stale object cannot desync it
     # from the linked table -- AGENTS.md 52.2).

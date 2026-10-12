@@ -3024,18 +3024,21 @@ executes both regressions (battle VRAM restore, dialogue palette restore).
 
 Chests, signposts, shrines and similar statics render as background
 tiles, never OAM sprites: the level paints the cell, the actor is an
-invisible `SPRITE_KIND_TILE` interactable on it, and any loot/state
-variant resolves inside `ui_draw_world_cell` (e.g. the field cache
-retargets its cell to the open-chest tile once `STORY_FLAG_ID_FIELD_CHEST`
-is set).  The resolver runs on every full redraw, so the state
-re-applies after scene loads, battle returns and dialogue boxes with no
-extra plumbing -- state lives in flags/variables, presentation resolves
-at render.  Rationale: one cell works on every map without per-tileset
-sprite ports, frees OAM slots, and needs no battle-VRAM reload dance
-(§55.6).  New cells go on repurposed duplicate sheet cells (never move
-existing indices -- §52.23), stay solid in `tile_walk.h`, and get
-`tilemap_cell` scenario asserts (closed + opened) plus a `verify-oam`
-background-cell check.
+invisible `SPRITE_KIND_TILE` interactable on it.  Loot/state variants
+are data, not engine branches: each openable object carries
+`open_tile` / `open_flag` / `open_variable` props, compiled into the
+separate `g_actor_open_states[]` table (a new chest = new JSON props,
+never an engine change).  Two stamps keep it open: the loot event's
+`DIALOGUE` action carries the open cell (flat map offset in its spare
+args) for the banked dialogue body to stamp painted+1 on open
+(mid-visit flip), and the banked scene loader re-stamps already-looted
+cells into the fresh map on every revisit (validate.py checks both
+sides, including the open == painted+1 adjacency) -- so the state
+renders immediately and persists with no render branch and no engine
+struct growth (both blew past the link budget when tried).  New cells go on repurposed
+duplicate sheet cells (never move existing indices -- §52.23), stay
+solid in `tile_walk.h`, and get `tilemap_cell` scenario asserts
+(closed + opened) plus a `verify-oam` background-cell check.
 
 ---
 
