@@ -326,7 +326,6 @@ void item_screen_update(Game *g)
             switch_tab(g);
             return;
         }
-        build_view(g);
         total = quest_count();
         if (total == 0) return;
         if (input_pressed(INPUT_UP)) {
@@ -375,9 +374,14 @@ void item_screen_update(Game *g)
         return;
     }
 
-    /* One fresh view per frame for every LIST-mode path below. */
-    build_view(g);
-
+    /* NOTE: no per-frame build_view here.  The view is rebuilt on every
+     * full redraw (see item_screen_render) plus explicitly after picker
+     * filter/sort changes.  That covers every consumer: at most one menu
+     * action runs per frame, every collection mutation invalidates the
+     * cache (same-frame rebuild before the next frame's consumption), and
+     * the SELECT/A/detail guards reject out-of-range indices.  A per-frame
+     * rebuild would cost fixed-bank bytes we do not have (see the render
+     * note; _HOME must stay below 0x8000). */
     if (input_pressed(INPUT_SELECT)) {
         if (g->item_menu_index >= FIRST_CARD &&
             (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
@@ -462,6 +466,15 @@ void item_screen_render(Game *g)
         ui_set_cram_palette(0);
         ui_draw_text_line(0, 2, "CARDS QUEST", 11);
         ui_draw_text_line((uint8_t)(g->item_menu_tab * 6), 3, "^", 1);
+
+        /* The banked body consumes the view read-only (single shared
+         * view; see build_view).  The update no longer rebuilds it every
+         * frame (fixed-bank budget — see its note), so every full redraw
+         * rebuilds it here instead: the open frame can otherwise run
+         * before any update (same-frame screen_change), painting blank
+         * rows from the BSS-zero view that the valid cache then freezes.
+         * Detail-page sells also mutate and redraw in the same frame. */
+        build_view(g);
 
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&item_screen_render_banked;
