@@ -15,7 +15,7 @@ returns `{ source, size, col, row, colors, icon_uid, icon_pal }`.
 | Sheet | Pixels | Grid | Stride | Palette | Notes |
 |-------|--------|------|--------|---------|-------|
 | `forest-tile.png` | 128x24 | 16x3 | 8 | canonical | 48 cells |
-| `castle-tile.png` | 64x16 | 8x2 | 8 | canonical | 16 cells |
+| `castle-tile.png` | 72x24 | 9x3 | 8 | canonical | 27 cells |
 | `desolate_landscape.png` | 128x24 | 16x3 | 8 | canonical | 48 cells |
 | `intrepid.png` | 128x48 | 16x6 | 8 | canonical | 96 cells |
 | `equipment_8x8.png` | 298x163 | 33x18 | 9 | per-tile CGB | 594 cells |
