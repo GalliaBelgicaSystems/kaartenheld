@@ -168,14 +168,6 @@
    "frames": 20
   },
   {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
    "type": "add_item",
    "item": "POISON_DAGGER",
    "quantity": 1

@@ -324,7 +324,13 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     if (bh < 3 || bh > 5) bh = 4;
 
     if (type == BATTLE_CARD_TYPE_EMPTY) {
-        battle_clear_card_box(x, y);
+        /* No clearing here: the caller (battle_draw_battle_hand) owns
+         * EMPTY boxes and runs battle_clear_card_box AFTER this returns.
+         * Nesting the clear inside this painter cost a full extra frame
+         * plus its span/write tail on the deepest render path, pushing
+         * the stack into WRAM globals (g_static_actor_count trashed 2->0
+         * mid-battle; see world/actor.c).  Sequential same-frame calls
+         * peak at the deeper sibling, not the sum. */
         return;
     }
 
@@ -878,6 +884,9 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
          * painting icon/rider palettes from them would leave a tinted
          * rectangle in the middle of the cleared box until the refill. */
         if (ctype == BATTLE_CARD_TYPE_EMPTY) {
+            /* Box clearing lives here (sequential, not nested inside
+             * battle_draw_card_at above): same pixels, shallower peak. */
+            battle_clear_card_box(col, cards_row);
             drow_empty = (uint8_t)(top + bh - 2);
             for (r = 0; r < bh; r++) {
                 battle_color_span(col, (uint8_t)(top + r), 3, UI_COLOR_NONE);

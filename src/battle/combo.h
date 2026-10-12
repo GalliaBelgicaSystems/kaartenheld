@@ -71,9 +71,12 @@ typedef struct {
  *
  * Note: To conserve Bank 0 ROM budget, the dispatch does not copy cards
  * into out_result->cards[]; the caller pre-populates or aliases
- * out_result->cards[] if needed (as in battle_play_hand). */
-void combo_resolve(const Card *cards, uint8_t count, ComboPhase phase,
-                   uint8_t effect_type, ComboResult *out_result);
+ * out_result->cards[] if needed (as in battle_play_hand).
+ *
+ * There is deliberately NO fixed-bank combo_resolve() staging wrapper:
+ * battle_play_hand stages and dispatches directly so the deepest battle
+ * chain carries one fewer nesting level (AGENTS.md 52.24).  Do not
+ * reintroduce a wrapper without re-checking make stack-budget. */
 
 /* The banked no-arg body (src/battle/combo_content.c, ROM bank 3), run via
  * the WRAM banked-call trampoline.  Read only the staged _DATA globals;
