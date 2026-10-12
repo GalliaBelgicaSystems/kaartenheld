@@ -4,7 +4,7 @@
 #include "banked.h"
 
 /* ── Banked effect resolution (docs/combo-system.md Phase B/C) ───────
- * Runs inside the combo_resolve() dispatch (ROM bank 3): the combo body
+ * Runs inside the banked combo dispatch (ROM bank 3): the combo body
  * calls effect_resolve_into() bank-locally after evaluating hand shape.
  * Self-contained: pure function of its arguments; writes the shared
  * g_effect_last slot (WRAM) and/or the caller's out pointer; never calls

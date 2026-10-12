@@ -60,30 +60,10 @@ static uint8_t s_ic_col_i;
 static uint8_t s_ic_def_i;
 static uint8_t s_ic_deck_i;
 static uint8_t s_ic_coll_i;
-/* WRAM-footprint keepers (8 bytes): the deleted bank-2 view builder owned
- * 8 file-static bytes.  They are re-declared volatile under their ORIGINAL
- * names so the linker keeps them under any allocation order, preserving
- * this object's exact BSS footprint with zero code.  This is load-bearing,
- * not tidiness: battle-turn stack pressure can trash WRAM bytes in the
- * heap+stack gap, and WHICH byte gets hit depends on the BSS layout
- * (cf. g_static_actor_count's "stack blast" note in world/actor.c and
- * AGENTS.md 52.24).  Shifting this object's BSS by 8 moved the victim onto
- * g_static_actor_count (2 -> 0 during battles), silently killing every
- * static interaction post-battle.  Do NOT remove these without
- * carl_remedial_lesson (post-battle static-interaction regression) and
- * the stack canary probes running green. */
-static volatile uint8_t s_ic_bld_i;
-static volatile uint8_t s_ic_sort_i;
-static volatile uint8_t s_ic_sort_j;
 static uint8_t s_ic_lst_pos;
 static uint8_t s_ic_qst_pos;
 
 static uint8_t s_ic_y;
-static volatile uint8_t s_ic_tmp;
-static volatile uint8_t s_ic_va;
-static volatile uint8_t s_ic_vb;
-static volatile uint8_t s_ic_desc;
-static volatile uint8_t s_ic_total;
 static uint8_t s_ic_tile_elem;
 static uint8_t s_ic_tile_wpn;
 static uint8_t s_ic_in_deck;
