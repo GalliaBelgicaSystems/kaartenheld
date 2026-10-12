@@ -1353,6 +1353,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
   * Bank 6 is full (16224/16384 B): the transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 7`) live in **ROM Bank 7** alongside the icon table.  The timer ISR selects bank 7 around `sfx_step_tick()` and bank 6 around `hUGE_dosound()`; muting targets bank 6 (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
   * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the asset-atlas entries (`src/game/asset_atlas_content.c`, `ASSET_ATLAS_BANK_ENTRIES 8`) and the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`).  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
   * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).
@@ -3020,25 +3021,33 @@ screen drawn over the live world (dialogue) must redraw the world (tilemap
 + attribute spans), not just stamp its own box.  `make verify-oam`
 executes both regressions (battle VRAM restore, dialogue palette restore).
 
-## 55.7 Static art is floor-painted, not OAM sprites
+## 55.7 Chests are OAM sprites, floor stays floor
 
-Chests, signposts, shrines and similar statics render as background
-tiles, never OAM sprites: the level paints the cell, the actor is an
-invisible `SPRITE_KIND_TILE` interactable on it.  Loot/state variants
-are data, not engine branches: each openable object carries
-`open_tile` / `open_flag` / `open_variable` props, compiled into the
-separate `g_actor_open_states[]` table (a new chest = new JSON props,
-never an engine change).  Two stamps keep it open: the loot event's
-`DIALOGUE` action carries the open cell (flat map offset in its spare
-args) for the banked dialogue body to stamp painted+1 on open
-(mid-visit flip), and the banked scene loader re-stamps already-looted
-cells into the fresh map on every revisit (validate.py checks both
-sides, including the open == painted+1 adjacency) -- so the state
-renders immediately and persists with no render branch and no engine
-struct growth (both blew past the link budget when tried).  New cells go on repurposed
-duplicate sheet cells (never move existing indices -- §52.23), stay
-solid in `tile_walk.h`, and get `tilemap_cell` scenario asserts
-(closed + opened) plus a `verify-oam` background-cell check.
+Chests (and similar openable pickups like the forest amulet) render as
+OAM sprites, never background tiles: the level paints plain ground on
+the cell and the actor is a `SPRITE_KIND_CHEST` interactable on it
+(solid via the actor's `BLOCKING` flag, not via tile walkability).
+Closed/open art lives in the shared overworld blob as consecutive
+frames owned by `screens/enemy_types/treasure_chest.json`
+(`chest_closed` then `chest_open`, sprites5 ramp); the banked sprite
+body picks the frame from loot state at render time.
+
+Loot/state variants are data, not engine branches: each openable
+object carries `open_flag` / `open_variable` props (the retired
+`open_tile` floor-paint prop is rejected by validate.py), compiled into
+the banked `chest_is_open_banked()` resolver (a new chest = new JSON
+props, never an engine change).  The opened chest stays open because
+the flag/variable persists -- no floor stamp on open, no re-stamp on
+revisit, no render branch and no engine struct growth.  Chests get
+`oam_tile` scenario asserts (closed pre-loot, open post-loot) plus a
+`verify-oam` sprite check; the floor cell gets a plain-floor
+`tilemap_cell` assert proving the paint was never touched.
+
+Water bodies are ordinary solid terrain, not sprites: the forest and
+desolate sheets carry full water tile sets (borders, interiors, two
+animation frames) in 64-slot VRAM blocks.  New cells go on fresh sheet
+indices (never move existing indices -- §52.23); the forest default
+ground moved to the new plain-floor slots as part of that migration.
 
 ---
 

@@ -20,7 +20,7 @@ char g_ui_screen_buf[18][21];
  * tilemap is never overwritten with palette bytes.  Read from the banked
  * battle renderer too (WRAM, always mapped). */
 uint8_t g_is_cgb;
-uint8_t g_active_tile_palette[48];
+uint8_t g_active_tile_palette[64];
 
 void ui_set_cram_palette(uint8_t overworld)
 {
@@ -193,21 +193,23 @@ void ui_sprite_init(void)
      * here; the player OAM slot now only ever shows frames 1 & 2 (see
      * ui_draw_actors_sprites). */
     set_sprite_data(HERO_DESOLATE_SPRITE_TILE_ID, 2, hero_desolate_sprite_tile);
-    /* Shared per-enemy overworld sprites (assets/enemy_sprites.png blob in
-     * bank 4): stream into OAM at ENEMY_OW_BASE in screen-buf chunks
-     * (g_ui_screen_buf holds 128 bytes safely; no multiply anywhere). */
-    banked_copy(4, &ow_n, &g_enemy_ow_tile_count, 1);
+    /* Shared per-enemy overworld sprites (bank-8 blob, see
+     * src/game/enemy_ow_content.c): stream into OAM at ENEMY_OW_BASE in
+     * screen-buf chunks (g_ui_screen_buf holds 128 bytes safely; no
+     * multiply anywhere). */
+    banked_copy(8, &ow_n, &g_enemy_ow_tile_count, 1);
     for (t = 0; t < ow_n; t = (uint8_t)(t + 8)) {
         c = (uint8_t)(ow_n - t);
         if (c > 8) c = 8;
-        banked_copy(4, (void *)g_ui_screen_buf,
+        banked_copy(8, (void *)g_ui_screen_buf,
                     (const void *)&enemy_ow_tiles[(uint16_t)t << 4],
                     (uint16_t)c << 4);
         set_sprite_data((uint8_t)(ENEMY_OW_BASE + t), c,
                         (const uint8_t *)g_ui_screen_buf);
     }
-    /* No chest OAM: chests are floor-painted statics (SPRITE_KIND_TILE)
-     * with the open frame resolved in ui_draw_world_cell. */
+    /* Chest OAM (SPRITE_KIND_CHEST statics): the shared-blob closed/open
+     * frames stream with the enemy blob above; the banked sprite body
+     * picks the frame from loot state. */
     shadow_OAM[PLAYER_SPRITE_NUM].tile = PLAYER_SPRITE_TILE_ID;
     shadow_OAM[PLAYER_SPRITE_NUM].y = 0;
     SPRITES_8x8;
@@ -490,8 +492,8 @@ static char ui_get_world_tile_glyph(uint8_t t)
         if ((t >= TILE_DESOLATE_FLOOR_00 && t <= TILE_DESOLATE_FLOOR_03) || t == TILE_DESOLATE_FLOOR_PLAIN) return '.';
         return '#';
     }
-if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_47) ||
-            (t >= TILE_FOREST_00 && t <= TILE_FOREST_47) ||
+if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) ||
+            (t >= TILE_FOREST_00 && t <= TILE_FOREST_63) ||
             (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) ||
             (t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47))
         return tile_landscape_glyph(t);
@@ -515,7 +517,7 @@ if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_47) ||
  * palette 0 (map changes and power-on attribute garbage stay invisible). */
 static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
 {
-    if (tile_idx >= 128 && (uint8_t)(tile_idx - 128) < 48) {
+    if (tile_idx >= 128 && (uint8_t)(tile_idx - 128) < 64) {
         return g_active_tile_palette[(uint8_t)(tile_idx - 128)];
     }
     if (glyph == 'T') return UI_COLOR_FIELD;
@@ -559,11 +561,11 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_WALL_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
-                   t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_47) {
+                   t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) {
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_LANDSCAPE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_FOREST &&
-                   t >= TILE_FOREST_00 && t <= TILE_FOREST_47) {
+                   t >= TILE_FOREST_00 && t <= TILE_FOREST_63) {
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&

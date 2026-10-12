@@ -134,7 +134,7 @@ const EventDefinition g_events[] = {
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
         3,
         {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 416, TILE_FOREST_44 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
         }
@@ -180,16 +180,16 @@ const EventDefinition g_events[] = {
      * more) and the +1 AP pool unlock, announced by its own dialogue.
      * One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats fall through to
      * no interaction.  The pool SET mirrors TUTORIAL_COMPLETE (same
-     * value, order-safe in both directions).  The DIALOGUE action's
-     * spare args carry the open-cell stamp (flat map offset, tile) for
-     * the banked dialogue body -- see AGENTS.md 55.7. */
+     * value, order-safe in both directions).  The chest is an OAM
+     * sprite: setting the flag flips it to the open frame (and it
+     * stays open), no floor-paint stamp. */
     {
         EVENT_ID_FIELD_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, EVENT_MAP_ANY,
         1,
         {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
         4,
         {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_FIELD_CHEST_AP, 341, TILE_FOREST_44 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_FIELD_CHEST_AP, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }

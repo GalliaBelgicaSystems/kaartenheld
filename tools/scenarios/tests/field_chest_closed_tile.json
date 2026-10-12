@@ -1,7 +1,7 @@
 {
  "name": "field_chest_closed_tile",
  "test": true,
- "description": "Before looting, the field cache cell paints the closed-chest tile (TILE_FOREST_43 -> VRAM 171): floor-painted statics resolve in ui_draw_world_cell, no OAM",
+ "description": "Before looting, the field cache cell shows plain floor (VRAM 190) with the closed-chest OAM sprite on top: chests are SPRITE_KIND_CHEST sprites, no floor paint",
  "actions": [
   {
    "type": "wait",
@@ -17,7 +17,7 @@
    "type": "tilemap_cell",
    "col": 21,
    "row": 8,
-   "expected": 171
+   "expected": 190
   },
   {
    "type": "flag",
@@ -29,6 +29,11 @@
    "entity": "CHEST",
    "x": 21,
    "y": 8
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 120
   }
  ],
  "initial_state": {

@@ -267,7 +267,30 @@ static const EnemyTypeDef g_enemy_type_spider = {
     0
 };
 
-const EnemyTypeDef* const g_enemy_types[11] = {
+static const EnemyTypeDef g_enemy_type_treasure_chest = {
+    "treasure_chest",
+    "Chest",
+    0,
+    "CHEST",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    120,
+    1,
+    1,
+    2,
+    1
+};
+
+const EnemyTypeDef* const g_enemy_types[12] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
     &g_enemy_type_kobold,
@@ -279,7 +302,8 @@ const EnemyTypeDef* const g_enemy_types[11] = {
     &g_enemy_type_slime,
     &g_enemy_type_slime_lord,
     &g_enemy_type_spider,
+    &g_enemy_type_treasure_chest,
 };
-const uint8_t g_enemy_type_count = 11;
+const uint8_t g_enemy_type_count = 12;
 
-const uint8_t g_enemy_ow_tile_count = 23;
+const uint8_t g_enemy_ow_tile_count = 25;

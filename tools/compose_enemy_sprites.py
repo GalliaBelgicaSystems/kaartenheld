@@ -23,6 +23,17 @@ NPC_FILES = {
     'npc_mayor': 'actors_mayor',
 }
 
+# Pickup-chest art (closed/open OAM frames for SPRITE_KIND_CHEST statics,
+# owned by screens/enemy_types/treasure_chest.json with the mimic-exact
+# Pickup-chest art (closed/open OAM frames for SPRITE_KIND_CHEST statics,
+# owned by screens/enemy_types/treasure_chest.json with the mimic-exact
+# sprites5 OBJ ramp).  Curated from assets/sprites.png (chest cells);
+# appended last so no existing blob offset moves.
+CHEST_FILES = {
+    'chest_closed': 'chest_closed',
+    'chest_open': 'chest_open',
+}
+
 # Selected-card element riders (battle top-right OAM HUD): curated from
 # assets/sprites.png via reload_boss_tiles.py RIDER_MAP, same as the NPC
 # portraits above. Appended last so no existing blob offset moves.
@@ -54,6 +65,9 @@ LAYOUT = [
     # screens/enemy_types/rider_*.json with sprites13/14 OBJ ramps).
     # Appended last so no existing blob offset moves.
     ['rider_fire', 'rider_ice', 'rider_poison', None],
+    # Pickup chests (SPRITE_KIND_CHEST statics, closed then open frame).
+    # Appended last so no existing blob offset moves.
+    ['chest_closed', 'chest_open', None, None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy
@@ -80,6 +94,8 @@ def main():
                 src = '%s/%s.png' % (ACTORS_PUB, NPC_FILES[name])
             elif name in RIDER_FILES:
                 src = '%s/%s.png' % (ACTORS_PUB, RIDER_FILES[name])
+            elif name in CHEST_FILES:
+                src = '%s/%s.png' % (PUB, CHEST_FILES[name])
             else:
                 src = '%s/%s.png' % (PUB, name)
             im = Image.open(src).convert('RGBA')

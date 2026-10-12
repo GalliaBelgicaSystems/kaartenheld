@@ -1,7 +1,7 @@
 {
  "name": "amulet_open_tile",
  "test": true,
- "description": "Picking up the forest amulet flips its painted cell to the open-chest tile (TILE_FOREST_44 -> VRAM 172): the event sets MERCHANT_QUEST, closing the FOUND AMULET!! dialogue redraws the world, and the cell stays open",
+ "description": "Picking up the forest amulet leaves its floor cell plain (VRAM 190) while the chest OAM sprite flips to the open frame: the event sets MERCHANT_QUEST and the opened chest stays open",
  "actions": [
   {
    "type": "interact",
@@ -33,7 +33,7 @@
    "type": "tilemap_cell",
    "col": 16,
    "row": 10,
-   "expected": 172
+   "expected": 190
   },
   {
    "type": "variable",
@@ -50,6 +50,11 @@
    "entity": "AMULET",
    "x": 16,
    "y": 10
+  },
+  {
+   "type": "oam_tile",
+   "entry": 5,
+   "expected": 121
   }
  ],
  "initial_state": {

@@ -63,7 +63,10 @@ extern uint8_t g_is_cgb;
 #define KOBOLD_SPRITE_TILE_ID    96u
 #define BAT_DESOLATE_SPRITE_TILE_ID 88u
 #define BAT_CASTLE_SPRITE_TILE_ID   92u
-/* (Retired: chests are floor-painted SPRITE_KIND_TILE statics; no OAM.) */
+/* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
+ * owned by screens/enemy_types/treasure_chest.json).  Collision rules:
+ * must not overlap the font-duplicate block 0..95 used for ASCII
+ * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
 /* Shared per-enemy overworld sprites (assets/enemy_sprites.png, base must
  * match ENEMY_OW_BASE in tools/screen_compiler/battle_compile.py).  The
  * blob holds concatenated per-enemy frames; ids 128+ alias BG tiles. */
@@ -168,7 +171,7 @@ void ui_title_logo_load_banked(void);
  * (ids 128-192), stamps the 13x5 map, and programs CGB palette 1 to the
  * logo's fixed ramp. */
 void ui_splash_logo_render_banked(void);
-extern uint8_t g_active_tile_palette[48];
+extern uint8_t g_active_tile_palette[64];
 
 /* Toggle LCDC bit 7 directly (harness-safe: no GBDK display_off VBlank
  * wait).  Full-screen redraws span several display sweeps and cannot fit

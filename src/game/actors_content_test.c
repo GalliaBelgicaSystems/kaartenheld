@@ -2,6 +2,7 @@
 #pragma bank 4
 
 #include "actor.h"
+#include "banked.h"
 #include "game_ids.h"
 
 /* ── Scene-owned actor definitions (game content) ──────────────────
@@ -33,7 +34,7 @@ static const WorldActorDefinition g_test_field_actors[] = {
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_TILE, 0xFF, 0
+         SPRITE_KIND_CHEST, 11, 0
     },
 };
 
@@ -102,7 +103,7 @@ static const WorldActorDefinition g_test_forest_actors[] = {
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_TILE, 0xFF, 0
+         SPRITE_KIND_CHEST, 11, 0
     },
 };
 
@@ -187,17 +188,21 @@ const WorldActorTable g_actor_tables[] = {
 };
 
 #include "game.h"
-/* Banked re-stamp body (AGENTS.md 55.7): already-looted
- * cells back into the fresh map on every scene load (the
- * loot event's DIALOGUE args cover the mid-visit flip).
- * Self-contained: g_game is WRAM (always mapped), everything
- * else is literals -- no staging, no table, no fixed-bank
- * calls while mapped.  Called directly by the banked scene
- * loader (same bank: plain call, no trampoline). */
-void open_stamp_banked(void)
+/* Banked chest-open resolver: reports whether the chest at the
+ * staged (map, x, y) was already looted (g_bk_byte_a = map id,
+ * g_bk_byte_b = x, g_bk_byte_c = y).  Chests are OAM sprites:
+ * the sprite body shows the open frame once the loot flag or
+ * variable is set, so the opened chest stays open across scene
+ * loads with no floor-paint stamp.  Self-contained: g_game is
+ * WRAM (always mapped), everything else is literals -- no
+ * staging, no table, no fixed-bank calls while mapped.  Called
+ * directly by the banked sprite body (same bank: plain call,
+ * no trampoline). */
+uint8_t chest_is_open_banked(void)
 {
-    if (g_game.world.map_id == MAP_TEST_FIELD && ((g_game.state.flags.bytes[0] & 4))) ((uint8_t *)g_game.world.map)[341] = TILE_FOREST_44;
-    if (g_game.world.map_id == MAP_TEST_FOREST && (g_game.state.variables.values[4])) ((uint8_t *)g_game.world.map)[416] = TILE_FOREST_44;
+    if (g_game.world.map_id == MAP_TEST_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
+    if (g_game.world.map_id == MAP_TEST_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && g_game.state.variables.values[4]) return 1;
+    return 0;
 }
 
 const uint8_t g_actor_table_count = 6;
