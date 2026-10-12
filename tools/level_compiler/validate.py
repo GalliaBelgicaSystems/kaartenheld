@@ -167,6 +167,7 @@ def validate_set_tile_refs(events_text):
                 f"DIALOGUE stamp offset {flat} outside the world map")
         if tile not in known_tiles:
             errors.append(f"DIALOGUE stamp tile '{tile}' is not a TILE_* const")
+    return errors, warnings
 
 
 def validate_shop_refs(levels_dir=None):
