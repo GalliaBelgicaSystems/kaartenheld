@@ -3954,207 +3954,207 @@
   },
   "DESOLATE_FIRE_01": {
    "col": 5,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_FIRE_02": {
    "col": 6,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_FLOOR_00": {
    "col": 6,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_FLOOR_01": {
    "col": 7,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_FLOOR_02": {
    "col": 8,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_FLOOR_03": {
    "col": 9,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_FLOOR_PLAIN": {
    "col": 0,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_HERO_01": {
    "col": 1,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_HERO_02": {
    "col": 2,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_KOBOLD_01": {
    "col": 3,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_KOBOLD_02": {
    "col": 4,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_MERCHANT": {
    "col": 7,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_ROCK_BL": {
    "col": 14,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_ROCK_BR": {
    "col": 15,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_ROCK_TL": {
    "col": 14,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_ROCK_TR": {
    "col": 15,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_STAIRCASE": {
    "col": 8,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 2
   },
   "DESOLATE_TREE_BL": {
    "col": 12,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_TREE_BR": {
    "col": 13,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_TREE_TL": {
    "col": 12,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_TREE_TR": {
    "col": 13,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_00": {
    "col": 0,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_01": {
    "col": 1,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_02": {
    "col": 2,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_03": {
    "col": 3,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_04": {
    "col": 4,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_05": {
    "col": 5,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_06": {
    "col": 6,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_07": {
    "col": 7,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_08": {
    "col": 8,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_09": {
    "col": 9,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_10": {
    "col": 10,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_11": {
    "col": 11,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 0
   },
   "DESOLATE_WALL_12": {
    "col": 0,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_13": {
    "col": 1,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_14": {
    "col": 2,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_15": {
    "col": 3,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_16": {
    "col": 4,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_17": {
    "col": 5,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_18": {
    "col": 10,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "DESOLATE_WALL_19": {
    "col": 11,
-   "png": "desolate_landscape.png",
+   "png": "desolate-tile.png",
    "row": 1
   },
   "EQUIP_C03_R02": {
@@ -7719,17 +7719,113 @@
      "row": 2,
      "tile": 47
     },
+    "48": {
+     "col": 0,
+     "named": null,
+     "row": 3,
+     "tile": 48
+    },
+    "49": {
+     "col": 1,
+     "named": null,
+     "row": 3,
+     "tile": 49
+    },
     "5": {
      "col": 5,
      "named": "FOREST_TOP_RIGHT_CORNER_WALL",
      "row": 0,
      "tile": 5
     },
+    "50": {
+     "col": 2,
+     "named": null,
+     "row": 3,
+     "tile": 50
+    },
+    "51": {
+     "col": 3,
+     "named": null,
+     "row": 3,
+     "tile": 51
+    },
+    "52": {
+     "col": 4,
+     "named": null,
+     "row": 3,
+     "tile": 52
+    },
+    "53": {
+     "col": 5,
+     "named": null,
+     "row": 3,
+     "tile": 53
+    },
+    "54": {
+     "col": 6,
+     "named": null,
+     "row": 3,
+     "tile": 54
+    },
+    "55": {
+     "col": 7,
+     "named": null,
+     "row": 3,
+     "tile": 55
+    },
+    "56": {
+     "col": 8,
+     "named": null,
+     "row": 3,
+     "tile": 56
+    },
+    "57": {
+     "col": 9,
+     "named": null,
+     "row": 3,
+     "tile": 57
+    },
+    "58": {
+     "col": 10,
+     "named": null,
+     "row": 3,
+     "tile": 58
+    },
+    "59": {
+     "col": 11,
+     "named": null,
+     "row": 3,
+     "tile": 59
+    },
     "6": {
      "col": 6,
      "named": "FOREST_RIGHT_WALL_1",
      "row": 0,
      "tile": 6
+    },
+    "60": {
+     "col": 12,
+     "named": null,
+     "row": 3,
+     "tile": 60
+    },
+    "61": {
+     "col": 13,
+     "named": null,
+     "row": 3,
+     "tile": 61
+    },
+    "62": {
+     "col": 14,
+     "named": null,
+     "row": 3,
+     "tile": 62
+    },
+    "63": {
+     "col": 15,
+     "named": null,
+     "row": 3,
+     "tile": 63
     },
     "7": {
      "col": 7,
@@ -7754,12 +7850,12 @@
    "grid": {
     "cols": 16,
     "offset": 0,
-    "rows": 3,
+    "rows": 4,
     "stride": 8
    },
    "pixels": [
     128,
-    24
+    32
    ],
    "tile_size": 8
   },
@@ -8201,17 +8297,113 @@
      "row": 2,
      "tile": 47
     },
+    "48": {
+     "col": 0,
+     "named": null,
+     "row": 3,
+     "tile": 48
+    },
+    "49": {
+     "col": 1,
+     "named": null,
+     "row": 3,
+     "tile": 49
+    },
     "5": {
      "col": 5,
      "named": "DESOLATE_WALL_05",
      "row": 0,
      "tile": 5
     },
+    "50": {
+     "col": 2,
+     "named": null,
+     "row": 3,
+     "tile": 50
+    },
+    "51": {
+     "col": 3,
+     "named": null,
+     "row": 3,
+     "tile": 51
+    },
+    "52": {
+     "col": 4,
+     "named": null,
+     "row": 3,
+     "tile": 52
+    },
+    "53": {
+     "col": 5,
+     "named": null,
+     "row": 3,
+     "tile": 53
+    },
+    "54": {
+     "col": 6,
+     "named": null,
+     "row": 3,
+     "tile": 54
+    },
+    "55": {
+     "col": 7,
+     "named": null,
+     "row": 3,
+     "tile": 55
+    },
+    "56": {
+     "col": 8,
+     "named": null,
+     "row": 3,
+     "tile": 56
+    },
+    "57": {
+     "col": 9,
+     "named": null,
+     "row": 3,
+     "tile": 57
+    },
+    "58": {
+     "col": 10,
+     "named": null,
+     "row": 3,
+     "tile": 58
+    },
+    "59": {
+     "col": 11,
+     "named": null,
+     "row": 3,
+     "tile": 59
+    },
     "6": {
      "col": 6,
      "named": "DESOLATE_WALL_06",
      "row": 0,
      "tile": 6
+    },
+    "60": {
+     "col": 12,
+     "named": null,
+     "row": 3,
+     "tile": 60
+    },
+    "61": {
+     "col": 13,
+     "named": null,
+     "row": 3,
+     "tile": 61
+    },
+    "62": {
+     "col": 14,
+     "named": null,
+     "row": 3,
+     "tile": 62
+    },
+    "63": {
+     "col": 15,
+     "named": null,
+     "row": 3,
+     "tile": 63
     },
     "7": {
      "col": 7,
@@ -8232,16 +8424,16 @@
      "tile": 9
     }
    },
-   "file": "desolate_landscape.png",
+   "file": "desolate-tile.png",
    "grid": {
     "cols": 16,
     "offset": 0,
-    "rows": 3,
+    "rows": 4,
     "stride": 8
    },
    "pixels": [
     128,
-    24
+    32
    ],
    "tile_size": 8
   },

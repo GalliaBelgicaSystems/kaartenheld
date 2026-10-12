@@ -75,11 +75,10 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         uint16_t a0 = a->arg0;
         int16_t a1 = a->arg1;
         if (t == EVENT_ACTION_DIALOGUE) {
-            /* Floor-painted open-state stamp args (AGENTS.md 55.7): loot
-             * events carry the open cell's flat map offset in arg1 for
-             * the banked body to stamp on open, so the opening redraw
-             * already shows it.  Flat 0 (ordinary dialogues) means "no
-             * stamp" -- no loot cell may sit at flat 0 (validate.py). */
+            /* Spare args (flat map offset, tile) once carried the
+             * floor-painted open-cell stamp; chests are OAM sprites now,
+             * so loot dialogues stage (0, 0) = no stamp.  The staging
+             * stays for future debug use. */
             g_bk_byte_b = (uint8_t)a1;
             g_bk_byte_c = (uint8_t)(a1 >> 8);
             dialogue_start_def(&g->dialogue, (DialogueId)a0);

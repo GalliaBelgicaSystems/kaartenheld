@@ -1,0 +1,82 @@
+{
+ "name": "field_chest_jingle_restore",
+ "test": true,
+ "description": "After the field-cache loot jingle (MUSIC_CHEST) ends (~180 overworld frames), the scene track (FOREST) is restored: the one-shot does not ring forever",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": true
+  },
+  {
+   "type": "music_track",
+   "expected": "FOREST"
+  },
+  {
+   "type": "event_occurred",
+   "event": "MUSIC_CHANGED"
+  },
+  {
+   "type": "actor_at",
+   "entity": "CHEST",
+   "x": 21,
+   "y": 8
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 121
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

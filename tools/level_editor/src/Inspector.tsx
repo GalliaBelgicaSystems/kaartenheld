@@ -60,7 +60,7 @@ interface InspectorProps {
 
 // BGM preview files rendered by tools/render_music_preview.py
 // (make music-preview) into tools/level_editor/public/audio/.
-// Chiptune-only tracks (OVERWORLD/TITLE/VICTORY) have no preview.
+// One-shot jingles (VICTORY/CHEST) and the title theme have no preview.
 const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_BATTLE: '/audio/battle.wav',
   MUSIC_DESOLATE: '/audio/desolate_landscape.wav',
@@ -68,6 +68,7 @@ const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_BOSS: '/audio/boss_fight.wav',
   MUSIC_TOWN: '/audio/village.wav',
   MUSIC_DUNGEON: '/audio/castle.wav',
+  MUSIC_OVERWORLD: '/audio/opening.wav',
 };
 
 const MusicPreviewToggle: React.FC<{ music: string; levelId: string }> = ({

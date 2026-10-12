@@ -96,6 +96,10 @@
    "type": "oam_tile",
    "entry": 6,
    "expected": 121
+  },
+  {
+   "type": "music_track",
+   "expected": "CHEST"
   }
  ],
  "initial_state": {

@@ -6,7 +6,7 @@
 
 typedef enum {
     MUSIC_NONE,
-    MUSIC_OVERWORLD,
+    MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
     MUSIC_TITLE,     /* title screen theme (loops) */
@@ -16,7 +16,10 @@ typedef enum {
     MUSIC_MIMIC,     /* mimic battle: short intro sting (Mimic_intro.uge,
                         ~0.9 s) then looping Mimic.uge; both bank 7 */
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
-    MUSIC_FOREST     /* forest / plain theme (Forest.uge, loops) */
+    MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
+    MUSIC_CHEST      /* chest-loot jingle (chest opening.uge, one-shot,
+                        bank 8); the overworld restores the scene track
+                        when it ends (audio_jingle_tick) */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -51,10 +54,14 @@ enum {
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);
 
+/* Chest-loot jingle (MUSIC_CHEST, one-shot): edge-trigger + timed
+ * restore, driven by the overworld screen every frame (see audio.c).
+ * open_mask bit 0 = field cache open, bit 1 = amulet found. */
+void audio_jingle_frame(uint8_t map_id, uint8_t open_mask);
+
 /* Current track (WRAM): readable directly from bank-2 code, which cannot
  * call this fixed-bank getter. */
 extern MusicTrack g_audio_current_track;
-MusicTrack audio_get_current_track(void);
 
 #ifdef DEBUG_BUILD
 /* Per-music-clock-tick counter, incremented once per audio_update() call
