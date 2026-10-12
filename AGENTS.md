@@ -3009,6 +3009,16 @@ The non-bankable `_HOME` area must stay below `0x8000` (CPU addresses
 track the budget in the roadmap; every substantial feature should be checked
 against `make memmap`.
 
+The ROM is 256 KB / 16 banks (Makefile `-Wl-yo16`, MBC5 0x1B).  Banks 8-15
+are free for new banked content: the MBC5 low bank byte at `0x2000` addresses
+them with the high byte at `0x3000` still 0, so the existing trampolines
+(`crt0.s`, `src/core/banked.c`) reach them with no assembly change.  Banks
+16+ would need the high-bit register and are out of scope.  Placement rules
+for new banks: code that reads banked tables directly must share the tables'
+bank (§52.11.1); prefer data-driven placement (compiler-emitted sections)
+over hand-split files; the fixed bank can never grow, so it is not a spill
+target for anything.
+
 ## 55.6 VRAM / palette ownership across screens
 
 World tile art lives in VRAM block 1 (slots 128+) and battle enemy art
