@@ -30,9 +30,16 @@
  * load_game_slot, which clears the seeded flag).
  * Tick: the play ends after CHEST_JINGLE_FRAMES frames. */
 
-/* Overworld frames per jingle play: chest opening.uge is 192 tracker
- * ticks at 64 Hz = 3.0 s (see `make music-size SONG=chest_opening`). */
-#define CHEST_JINGLE_FRAMES 180
+/* Overworld frames per jingle play: the song is one 64-row order (the
+ * audible arp is over by row 4; the rest is silence) looping every 192
+ * tracker ticks (3.0 s at 64 Hz), and the ROM driver wraps
+ * unconditionally -- so a restore at ~180 replays the opening attack as
+ * an audible flam/double-hit whenever frame and tracker rates drift
+ * apart (LCD-off redraws stall frames but never the timer ISR).  168
+ * restores ~0.2 s early, deep in the silent tail where no musical
+ * content can be clipped and no wrap can replay.  Must stay below ~179
+ * (tick 192 = song end). */
+#define CHEST_JINGLE_FRAMES 168
 
 static uint8_t s_jingle_frames = 0;
 /* Per-chest done bits (bit 7 = seeded flag).  Global (not file-static)

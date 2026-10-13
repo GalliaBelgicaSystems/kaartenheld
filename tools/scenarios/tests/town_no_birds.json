@@ -1,7 +1,7 @@
 {
  "name": "town_no_birds",
  "test": true,
- "description": "Birdsong is forest-only: waiting 60 frames in town emits no BIRD_CHIRP, proving the tileset gate",
+ "description": "Birdsong is grove-and-field-only: waiting 60 frames in town emits no BIRD_CHIRP, proving the map gate",
  "actions": [
   {
    "type": "wait",

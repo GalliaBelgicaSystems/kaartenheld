@@ -71,12 +71,14 @@ void overworld_screen_update(Game *g)
     /* Ambient birdsong: the bank-7 body streams the frame-derived
      * chirp window (zero WRAM, see audio.h); a nonzero return is the
      * window-start species and becomes one EVENT_BIRD_CHIRP telemetry
-     * event (one ring entry per ~128 frames). */
+     * event (one ring entry per ~128 frames).  WHERE birds sing is game
+     * content (game_scene_has_birds: grove + Carl's field); the engine
+     * never branches on map ids itself. */
     {
         extern void bird_ambient_banked(void);
         g_bk_call_bank = 7;
         g_bk_call_target = (uint16_t)&bird_ambient_banked;
-        g_bk_byte_a = (uint8_t)(g->world.tileset_kind == WORLD_TILESET_FOREST);
+        g_bk_byte_a = game_scene_has_birds(g->world.map_id);
         banked_call_run();
         if (g_bk_byte_b) {
             telemetry_emit(EVENT_BIRD_CHIRP, g_bk_byte_b, 0, 0, 0);

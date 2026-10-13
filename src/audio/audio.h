@@ -60,7 +60,8 @@ void audio_update(void);
  * body, one wave frame per overworld frame without touching the timer
  * ISR.  One chirp window (BIRD_MAX_FRAMES streaming frames from
  * generated/birds/bird_data.h, then release) opens every BIRD_GAP
- * overworld frames in forests; species alternates per window.  At ~60
+ * overworld frames on birdsong maps (Wake Grove + Carl's field, via
+ * game_scene_has_birds); species alternates per window.  At ~60
  * wave frames/s each 32-sample frame loops about four times, so the
  * chirp plays roughly four times slower and lower than the transcribed
  * ~8 kHz -- the price of zero WRAM and no ISR work.  The tracker CH3

@@ -1,0 +1,43 @@
+{
+  "name": "forest_no_birds",
+  "test": true,
+  "description": "Birdsong is grove-and-field-only: waiting a full 128-frame period in the forest emits no BIRD_CHIRP, proving the map gate (game_scene_has_birds), not the tileset",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 140
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BIRD_CHIRP"
+    },
+    {
+      "type": "music_track",
+      "expected": "FOREST"
+    },
+    {
+      "type": "actor_at",
+      "entity": "AMULET",
+      "x": 16,
+      "y": 10
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 15,
+      "y": 10,
+      "facing": "RIGHT"
+    },
+    "seed": 8503,
+    "variables": {
+      "MERCHANT_QUEST": 0
+    }
+  }
+}
