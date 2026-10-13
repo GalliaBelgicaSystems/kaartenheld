@@ -1,5 +1,5 @@
 {
- "name": "field_chest_closed_tile",
+ "name": "field_chest_closed_sprite",
  "test": true,
  "description": "Before looting, the field cache cell shows plain floor (VRAM 190) with the closed-chest OAM sprite on top: chests are SPRITE_KIND_CHEST sprites, no floor paint",
  "actions": [

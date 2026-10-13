@@ -13,10 +13,6 @@ void dialogue_screen_update(Game *g)
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (!dialogue_next(&g->dialogue)) {
             interaction_on_dialogue_end(&g->dialogue, &g->state);
-            /* Clear loot-stamp staging (AGENTS.md 55.7): the next
-             * dialogue open must not re-stamp a stale cell. */
-            g_bk_byte_b = 0;
-            g_bk_byte_c = 0;
             /* Stashed spar: closing a lesson that detoured from an
              * encounter (Carl) starts the battle instead of returning
              * to the overworld.  The slot is set only by the encounter

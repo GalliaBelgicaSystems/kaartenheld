@@ -63,18 +63,17 @@ lib/hUGEDriver/src/hUGEDriver.asm ────────┘
    * In the `Makefile`, add a rule to generate the C source into `generated/music/`:
       ```makefile
       $(GENERATED_MUSIC_DIR)/<track_name>.c: assets/music/<track_name>.uge | $(GENERATED_MUSIC_DIR)
-      	$(UGE2SOURCE) "$<" -b 6 song_<track_name> "$@"
+      	$(UGE2SOURCE) "$<" -b 7 song_<track_name> "$@"
       ```
-   (Bank 6 holds driver + all songs; SFX tables/stepper live in bank 7.
-   Bank 6 is full, so the mimic loop + intro and victory use `-b 7` with
-   `huge_music_play_banked(..., HUGE_MUSIC_BANK_B7)` and the `_b7` driver
-   copy instead.)
+   (Bank 6 holds the driver + the six original songs and is full -- all
+   new songs use `-b 7` with `huge_music_play_banked(...,
+   HUGE_MUSIC_BANK_B7)` and the `_b7` driver copy instead.)
 3. **C Code Binding**:
    * Declare the song in `src/audio/huge_music_data.h`:
      ```c
      extern const hUGESong_t song_<track_name>;
      ```
-   * Hook into `audio_play_music()` in `src/audio/audio.c` using `huge_music_play(&song_<track_name>)`.
+   * Hook into `audio_play_music()` in `src/audio/audio.c` using `huge_music_play_banked(&song_<track_name>, HUGE_MUSIC_BANK_B7)`.
 4. **Editor preview**:
    * Re-run `make music-preview` to re-render `tools/level_editor/public/audio/<track_name>.wav`
      (`tools/render_music_preview.py`: driver-faithful approximation from the generated song C).

@@ -75,12 +75,6 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         uint16_t a0 = a->arg0;
         int16_t a1 = a->arg1;
         if (t == EVENT_ACTION_DIALOGUE) {
-            /* Spare args (flat map offset, tile) once carried the
-             * floor-painted open-cell stamp; chests are OAM sprites now,
-             * so loot dialogues stage (0, 0) = no stamp.  The staging
-             * stays for future debug use. */
-            g_bk_byte_b = (uint8_t)a1;
-            g_bk_byte_c = (uint8_t)(a1 >> 8);
             dialogue_start_def(&g->dialogue, (DialogueId)a0);
             if (dialogue_started) *dialogue_started = true;
         } else if (t == EVENT_ACTION_SET_FLAG) {

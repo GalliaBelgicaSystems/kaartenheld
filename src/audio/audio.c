@@ -128,13 +128,15 @@ void audio_play_music(MusicTrack track)
 /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot).  Single fixed-bank
  * entry: the counters live in the bank-8 body (jingle_banked.c) and the
  * action returns through g_bk_byte_b (0 = nothing, 1 = play the jingle,
- * 2 = restore the scene track).  The overworld calls it every frame with
- * the map and the current loot mask (bit 0 = field cache open, bit 1 =
- * amulet found).  The first frame a chest reads open starts the jingle
- * once (done bits); clearing the loot state re-arms it, so fresh
- * scenarios replay.  When the jingle ends the scene track is restored
- * (the driver loops whole songs, so without this the jingle would ring
- * forever). */
+ * 2 = restore the scene track).  game_update() calls it every frame
+ * (except battle/game-over, which own their music) with the map and the
+ * current loot mask (bit 0 = field cache open, bit 1 = amulet found);
+ * ticking in game_update instead of the overworld screen keeps menus,
+ * dialogue and shops from freezing the restore timer.  The first frame
+ * a chest reads open starts the jingle once (done bits); clearing the
+ * loot state re-arms it, so fresh scenarios replay.  When the jingle
+ * ends the scene track is restored (the driver loops whole songs, so
+ * without this the jingle would ring forever). */
 void audio_jingle_frame(uint8_t map_id, uint8_t open_mask)
 {
     const SceneDefinition *def;

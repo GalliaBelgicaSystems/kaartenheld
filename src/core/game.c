@@ -86,6 +86,12 @@ void game_update(Game *g)
     g->frame++;
 
     screen_update(g);
+    /* THIS-game per-frame audio edge (chest-jingle trigger + restore;
+     * mask bits are game story state, so the engine only owns this call
+     * site -- see game_jingle_frame).  Lives in game_update rather than
+     * the overworld screen so menus, dialogue and shops don't freeze
+     * the restore timer. */
+    game_jingle_frame(g);
     scene_sync_from_world(g);
     /* The world player entity mirrors the canonical party HP so the
      * overworld HUD and the core snapshot reflect healing immediately. */

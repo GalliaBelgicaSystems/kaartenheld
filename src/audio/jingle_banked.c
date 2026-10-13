@@ -27,31 +27,36 @@
 #define CHEST_JINGLE_FRAMES 180
 
 static uint8_t s_jingle_frames = 0;
-static uint8_t s_chest_jingle_done = 0;
+/* Per-chest done bits (bit 7 = seeded flag).  Global (not file-static)
+ * so load_game_slot() can re-arm the edge when a save replaces the
+ * whole canonical state mid-session -- otherwise chests already open
+ * in the loaded state replay their jingle on the first overworld
+ * frame.  Written only here and in save.c (re-arm); read only here. */
+uint8_t g_jingle_done = 0;
 
 void jingle_frame_banked(void)
 {
     uint8_t mask = g_bk_byte_a;
     uint8_t b;
     g_bk_byte_b = 0;
-    if (!(s_chest_jingle_done & 0x80)) {
+    if (!(g_jingle_done & 0x80)) {
         /* First call (boot, new game, fresh scenario, loaded save):
          * seed the edge from the live loot state, so an already-looted
          * chest does not replay its jingle on the first overworld
          * frame.  Bit 7 is the seeded flag; bits 0-1 stay the per-chest
          * done bits, so no extra WRAM is spent. */
-        s_chest_jingle_done = (uint8_t)(0x80 | (mask & 0x03));
+        g_jingle_done = (uint8_t)(0x80 | (mask & 0x03));
     }
     for (b = 0; b < 2; b++) {
         if (mask & (uint8_t)(1u << b)) {
-            if (!(s_chest_jingle_done & (uint8_t)(1u << b)) &&
+            if (!(g_jingle_done & (uint8_t)(1u << b)) &&
                 g_audio_current_track != MUSIC_CHEST) {
-                s_chest_jingle_done |= (uint8_t)(1u << b);
+                g_jingle_done |= (uint8_t)(1u << b);
                 g_bk_byte_b = 1;
                 return;
             }
         } else {
-            s_chest_jingle_done &= (uint8_t)~(1u << b);
+            g_jingle_done &= (uint8_t)~(1u << b);
         }
     }
     if (g_audio_current_track != MUSIC_CHEST) {

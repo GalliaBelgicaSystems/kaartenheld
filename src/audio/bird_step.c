@@ -8,6 +8,14 @@
 #include "bird_data.h"
 #include "game.h"
 
+/* The streaming window must end well before the gap wraps: at
+ * w == BIRD_MAX_FRAMES the body releases CH3, and frames past that
+ * must hit the release branch (never re-enter the window).  If a chirp
+ * ever reached BIRD_GAP frames, w < BIRD_MAX_FRAMES would hold for the
+ * whole gap and CH3 would stay muted for good.  A size-0 array is a
+ * hard compile error (same pattern as g_tiletype_fits_u8). */
+static const int g_bird_win_fits_gap[(BIRD_MAX_FRAMES < BIRD_GAP) ? 1 : 0];
+
 /* Tracker CH3 mute masks, one per driver copy (hUGEDriver.asm
  * hUGE_mute_channel: channel B sets bit B; CH3 = 0x04; the bank-6 mask
  * comes from hUGEDriver.h).  The body pokes both directly instead of
@@ -93,15 +101,19 @@ void bird_ambient_banked(void)
                 /* Driver wave-load protocol (hUGEDriver
                  * update_ch3_waveform): kill the channel while rewriting
                  * wave RAM (a trigger mid-read corrupts it), then
-                 * re-enable at the transcribed chirp rate (the bird PCM
-                 * was transcribed for NR33/NR34 = 2044). */
+                 * re-enable.  NR33/NR34 = 1792: the 32-sample wave loops
+                 * at 65536/(2048-1792) = 256 Hz, so each held frame
+                 * plays almost exactly once per 256 Hz-tick equivalent
+                 * (at 60 fps it instead loops ~4x -- see the fidelity
+                 * note above).  0xFC here would be x=2044 = 16.4 kHz
+                 * loop rate, a near-ultrasonic buzz, not birdsong. */
                 NR30_REG = 0x00;
                 for (i = 0; i < 16; i++) {
                     ((volatile uint8_t *)0xFF30)[i] = p[i];
                 }
                 NR30_REG = 0x80;
                 NR32_REG = 0x20;
-                NR33_REG = 0xFC;
+                NR33_REG = 0x00;
                 NR34_REG = 0x87;
             }
             /* One telemetry event per chirp, fired on the window-start

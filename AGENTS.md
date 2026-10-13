@@ -1357,8 +1357,8 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
   * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.
-  * **Ambient birdsong is ZERO-WRAM by design** (`bird1.pcm`/`bird2.pcm` -> 4-bit wave frames in bank 7 via `tools/bird_compile.py`, streamed on CH3 by `bird_ambient_banked` at frame rate, one `EVENT_BIRD_CHIRP` per 128-frame forest window).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`), so birds keep zero WRAM bytes (timing from `g_game.frame` bits, no ISR work, no song-wave save) and live in bank 7 so layout-pinned bank 5 stays byte-identical.  Any future WRAM growth must re-run `battle_boot` first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
-  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
+  * **Ambient birdsong is ZERO-WRAM by design** (`bird1.pcm`/`bird2.pcm` -> 4-bit wave frames in bank 7 via `tools/bird_compile.py`, streamed on CH3 by `bird_ambient_banked` at frame rate, one `EVENT_BIRD_CHIRP` per 128-frame forest window).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`), so birds keep zero WRAM bytes (timing from `g_game.frame` bits, no ISR work, no song-wave save) and live in bank 7 so layout-pinned bank 5 stays byte-identical.  The chest jingle is the exception that proves the rule: its 2 BSS bytes (`s_jingle_frames`, `s_chest_jingle_done` in `jingle_banked.c`) plus the 64-entry tile palette (+16 B over the old 48) are the branch's entire WRAM growth vs master (~18 B).  Any further WRAM growth must re-run `battle_boot` first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
+  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
 * **Tick Division (64 Hz from 256 Hz Timer)**:
   * The hardware timer ISR (`src/crt0.s`) calls `audio_update()` at **256 Hz**.
@@ -3056,9 +3056,15 @@ revisit, no render branch and no engine struct growth.  Chests get
 
 Water bodies are ordinary solid terrain, not sprites: the forest and
 desolate sheets carry full water tile sets (borders, interiors, two
-animation frames) in 64-slot VRAM blocks.  New cells go on fresh sheet
-indices (never move existing indices -- §52.23); the forest default
-ground moved to the new plain-floor slots as part of that migration.
+animation frames) in 64-slot VRAM blocks.  Sheet cells are addressed
+positionally (see §52.23): repurposing a cell that levels reference --
+as water did to forest/desolate indices 41-47, flipping default ground
+to solid -- requires migrating every reference (terrain blocks,
+fixtures, scene defaults, `default_walkable`) and eyeballing the
+regenerated `tile_walk.h`, because the compiled content stays
+byte-identical while the walk table flips.  `validate.py` fails loudly
+if a scene's default ground tile is not walkable, so this class can no
+longer land silently.
 
 ---
 

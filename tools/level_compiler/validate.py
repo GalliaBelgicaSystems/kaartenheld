@@ -29,7 +29,7 @@ from scene_registry import (
 from collision import (
     derive_collision, edge_link_report, effective_actor_flags,
     neighbor_pairing_issues, point_exit_issues, tunnel_id_valid,
-    tunnel_issues, cell_tile_info,
+    tunnel_issues, cell_tile_info, level_default_tile,
 )
 
 MAX_WORLD_WIDTH = 40
@@ -540,6 +540,21 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     if collision_ok:
         passed.append("Collision valid")
         passed.append("Player spawn valid")
+
+    # 3b. Default-ground walkability (§52.23): the ROM pre-fills every
+    # interior cell with the level default, so a solid default bricks
+    # movement, patrols and encounters map-wide while other tilesets
+    # keep working.  Missing info stays silent (other checks own those
+    # cases); only an explicitly solid default fails.
+    default_tid = level_default_tile(level_data, tilesets)
+    if default_tid and "." in default_tid:
+        set_id, _, tile_id = default_tid.partition(".")
+        ts = tilesets.get(set_id, {})
+        tinfo = {t.get("id"): t for t in ts.get("tiles", [])}.get(tile_id)
+        if tinfo is not None and not tinfo.get("walkable", True):
+            errors.append(
+                f"Default ground '{default_tid}' is not walkable: "
+                f"unpainted interior cells would all be solid")
 
     # 4. Exits Check
     exits_ok = True

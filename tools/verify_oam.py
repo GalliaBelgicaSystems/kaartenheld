@@ -256,11 +256,11 @@ def verify_hostile_sprites(sess):
     mirror = sess.get_symbol("g_tilemap_mirror")
     check("amulet cell paints plain floor (190), not chest art",
           190, mirror_at(sess, mirror, 16, 10))
-    # Loot it through the real interact path (amulet_open_tile spawns
+    # Loot it through the real interact path (amulet_open_sprite spawns
     # the player beside the amulet facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
     # (121) and stay there across redraws.
-    loot = load_scenario(sess, "amulet_open_tile.json")
+    loot = load_scenario(sess, "amulet_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
     sess.press("A")

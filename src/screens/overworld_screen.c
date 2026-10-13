@@ -64,18 +64,9 @@ void overworld_screen_update(Game *g)
     int8_t dy = 0;
     WorldMoveResult move_res = MOVE_RESULT_NONE;
     ActorEngageResult engage = ENGAGE_NONE;
-    uint8_t loot_mask;
 
-    /* Chest-loot jingle: edge-trigger on the two loot states, then time
-     * the restore to the scene track (audio owns the counters). */
-    loot_mask = 0;
-    if (game_flag_is_set(&g->state, STORY_FLAG_ID_FIELD_CHEST)) {
-        loot_mask |= 1u;
-    }
-    if (game_variable_get(&g->state, VARIABLE_ID_MERCHANT_QUEST) != 0) {
-        loot_mask |= 2u;
-    }
-    audio_jingle_frame(g->world.map_id, loot_mask);
+    /* (Chest-loot jingle ticks in game_update so menus don't freeze its
+     * restore timer; see core/game.c.) */
 
     /* Ambient birdsong: the bank-7 body streams the frame-derived
      * chirp window (zero WRAM, see audio.h); a nonzero return is the

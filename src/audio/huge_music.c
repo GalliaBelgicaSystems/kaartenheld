@@ -55,6 +55,10 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
 
 void huge_music_stop(void)
 {
+    /* Fixed-bank twin of huge_stop_inline() in huge_music_banked.c
+     * (bank 8): identical register writes.  The banked copy exists
+     * because a banked body cannot call fixed-bank code while its own
+     * bank is unmapped -- keep the two in sync. */
     __critical {
         g_huge_playing = 0;
         g_huge_current_song = 0;

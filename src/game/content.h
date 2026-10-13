@@ -38,6 +38,14 @@ uint8_t game_loot_drop(uint8_t battle_type);
  * else the standard screen.  Called by battle_start on every battle entry. */
 void game_battle_hud_load(uint8_t battle_type);
 
+/* Per-frame audio edge for THIS game: chest-loot jingle trigger + restore
+ * timer (mask bits from game story state).  Ticks in game_update rather
+ * than the overworld screen so menus, dialogue and shops don't freeze
+ * the restore while the driver loops the one-shot; battles and
+ * game-over own their music and pause it.  Called by game_update every
+ * frame. */
+void game_jingle_frame(Game *g);
+
 /* Banked body (bank 4): loads the active battle screen's HUD layout from
  * g_battle_screens into WRAM g_battle_hud.  Called via banked_call_run(). */
 void battle_hud_load_banked(void);

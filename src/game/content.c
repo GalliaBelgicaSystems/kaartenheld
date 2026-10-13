@@ -11,6 +11,7 @@
 #include "core/game.h"
 #include "banked.h"
 #include "battle_data.h"
+#include "audio.h"
 
 #define HERO_START_HP    10
 #define HERO_START_GOLD  20
@@ -105,6 +106,28 @@ void game_battle_hud_load(uint8_t battle_type)
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
     banked_call_run();
+}
+
+/* Per-frame chest-jingle edge for THIS game (see content.h).  The mask
+ * bits are game story state (field cache flag, merchant-quest amulet
+ * variable); the engine owns only the call site in game_update.  Reads
+ * the state fields directly (like game_new_game does) instead of the
+ * flag/variable API calls: identical for these constant ids, and two
+ * fewer calls in the fixed-bank budget. */
+void game_jingle_frame(Game *g)
+{
+    uint8_t loot_mask;
+    if (!g || g->screen == SCREEN_BATTLE || g->screen == SCREEN_GAME_OVER)
+        return;
+    loot_mask = 0;
+    if (g->state.flags.bytes[(STORY_FLAG_ID_FIELD_CHEST - 1) >> 3] &
+       (uint8_t)(1u << ((STORY_FLAG_ID_FIELD_CHEST - 1) & 7))) {
+        loot_mask |= 1u;
+    }
+    if (g->state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1] != 0) {
+        loot_mask |= 2u;
+    }
+    audio_jingle_frame(g->world.map_id, loot_mask);
 }
 void game_on_level_up(GameState *state, ProgressionTarget target,
                       const ProgressionAddResult *result)

@@ -109,7 +109,7 @@ Introduce:
 // huge_music.h
 
 void huge_music_init(void);
-void huge_music_play(const hUGESong_t *song);
+void huge_music_play_banked(const hUGESong_t *song, uint8_t bank);
 void huge_music_stop(void);
 void huge_music_update(void);
 ```
@@ -216,7 +216,7 @@ void audio_play_music(MusicTrack track)
     if (track == g_audio_current_track)
         return;
 
-    huge_music_play(music_songs[track]);
+    huge_music_play_banked(song, bank);
 
     g_audio_current_track = track;
 }
@@ -470,7 +470,7 @@ MusicTrack
     ↓
 audio_play_music()
     ↓
-huge_music_play()
+huge_music_play_banked()
     ↓
 hUGEDriver
 ```

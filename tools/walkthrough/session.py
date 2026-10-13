@@ -265,11 +265,16 @@ class Session:
     def cross_exit(self, btn, expect_scene, tries=4):
         """Step onto an exit tile and ride out the transition wipe.  A
         dropped press leaves us unmoved — only the wipe tells them
-        apart, so a wipe-free arrival is retried, never trusted."""
+        apart, so a wipe-free arrival is retried, never trusted.
+        A 4-tick press that lands fully inside an LCD-off blackout
+        (arrival redraws, transition wipes) never samples, so a wipe
+        seen WITHOUT the scene changing must also retry: only return
+        early on an actual scene match, never on a wipe alone."""
         for _ in range(tries):
             self.press(btn, settle=12)
             if self.wiped() and self.settle_scene():
-                return self.reader.scene_state()["scene_id"] == expect_scene
+                if self.reader.scene_state()["scene_id"] == expect_scene:
+                    return True
         return self.reader.scene_state()["scene_id"] == expect_scene
 
     # ── OAM ──────────────────────────────────────────────────────────
