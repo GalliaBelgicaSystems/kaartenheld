@@ -5,23 +5,23 @@
       "0": "field1",
       "1": "field6",
       "2": "field2",
-      "3": "field1",
+      "3": "water",
       "4": "field2",
       "5": "field3",
       "6": "field4",
       "7": "field5",
-      "_why": "3/0 ground=field1 (27 tiles); 1 fire=field6; 2/4 dark-green=field2; 5/6 stump-wood=field3/field4; 7 rocks=field5"
+      "_why": "3 water=water (blue lake); 0 ground=field1 (27 tiles); 1 fire=field6; 2/4 dark-green=field2; 5/6 stump-wood=field3/field4; 7 rocks=field5"
     },
     "desolate_landscape": {
       "0": "desolate2",
       "1": "desolate3",
-      "2": "desolate2",
+      "2": "desolate_water",
       "3": "desolate1",
       "4": "desolate1",
       "5": "desolate2",
       "6": "desolate1",
       "7": "desolate1",
-      "_why": "7/3/4/6 ground=desolate1 (36 tiles, floor slot 7); 1 fire=desolate3; 0/2/5 rocks=desolate2"
+      "_why": "2 water=desolate_water (violet bodies); 7/3/4/6 ground=desolate1 (36 tiles, floor slot 7); 1 fire=desolate3; 0/5 rocks=desolate2"
     },
     "castle": {
       "0": "castle4",
