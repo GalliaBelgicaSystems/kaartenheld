@@ -469,6 +469,7 @@
     },
     {
       "id": "desolate_landscape_water_top_left_corner_wall",
+      "palette": "desolate2",
       "label": "top left corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_41",
       "walkable": false,
@@ -479,6 +480,7 @@
     },
     {
       "id": "desolate_landscape_water_top_wall_1",
+      "palette": "desolate2",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_42",
       "walkable": false,
@@ -489,6 +491,7 @@
     },
     {
       "id": "desolate_landscape_water_top_wall_2",
+      "palette": "desolate2",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_43",
       "walkable": false,
@@ -499,6 +502,7 @@
     },
     {
       "id": "desolate_landscape_water_top_wall_3",
+      "palette": "desolate2",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_44",
       "walkable": false,
@@ -509,6 +513,7 @@
     },
     {
       "id": "desolate_landscape_water_top_wall_4",
+      "palette": "desolate2",
       "label": "top wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_45",
       "walkable": false,
@@ -519,6 +524,7 @@
     },
     {
       "id": "desolate_landscape_water_top_right_corner_wall",
+      "palette": "desolate2",
       "label": "top right corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_46",
       "walkable": false,
@@ -529,6 +535,7 @@
     },
     {
       "id": "desolate_landscape_water_right_wall_1",
+      "palette": "desolate2",
       "label": "right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_47",
       "walkable": false,
@@ -539,6 +546,7 @@
     },
     {
       "id": "desolate_landscape_water_left_wall",
+      "palette": "desolate2",
       "label": "water left wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_48",
       "walkable": false,
@@ -549,6 +557,7 @@
     },
     {
       "id": "desolate_landscape_water_right_wall_2",
+      "palette": "desolate2",
       "label": "water right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_49",
       "walkable": false,
@@ -559,6 +568,7 @@
     },
     {
       "id": "desolate_landscape_water_right_wall_3",
+      "palette": "desolate2",
       "label": "water right wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_50",
       "walkable": false,
@@ -569,6 +579,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_left_corner_wall",
+      "palette": "desolate2",
       "label": "water bottom left corner wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_51",
       "walkable": false,
@@ -579,6 +590,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_wall_1",
+      "palette": "desolate2",
       "label": "water bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_52",
       "walkable": false,
@@ -589,6 +601,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_wall_2",
+      "palette": "desolate2",
       "label": "water bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_53",
       "walkable": false,
@@ -599,6 +612,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_wall_3",
+      "palette": "desolate2",
       "label": "water bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_54",
       "walkable": false,
@@ -609,6 +623,7 @@
     },
     {
       "id": "desolate_landscape_watter_bottom_wall",
+      "palette": "desolate2",
       "label": "watter bottom wall",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_55",
       "walkable": false,
@@ -619,6 +634,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_left_interior_corner",
+      "palette": "desolate2",
       "label": "water bottom left interior corner",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_56",
       "walkable": false,
@@ -629,6 +645,7 @@
     },
     {
       "id": "desolate_landscape_water_bottom_right_interior_corner",
+      "palette": "desolate2",
       "label": "water bottom right interior corner",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_57",
       "walkable": false,
@@ -639,6 +656,7 @@
     },
     {
       "id": "desolate_landscape_water_top_right_interior_corner",
+      "palette": "desolate2",
       "label": "water top right interior corner",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_58",
       "walkable": false,
@@ -649,6 +667,7 @@
     },
     {
       "id": "desolate_landscape_water_top_left_interior_corner",
+      "palette": "desolate2",
       "label": "water top left interior corner",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_59",
       "walkable": false,
@@ -659,6 +678,7 @@
     },
     {
       "id": "desolate_landscape_water_frame_2_1",
+      "palette": "desolate2",
       "label": "water frame 2",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_60",
       "walkable": false,
@@ -669,6 +689,7 @@
     },
     {
       "id": "desolate_landscape_water_frame_2_2",
+      "palette": "desolate2",
       "label": "water frame 2",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_61",
       "walkable": false,
@@ -679,6 +700,7 @@
     },
     {
       "id": "desolate_landscape_plain_water",
+      "palette": "desolate2",
       "label": "plain water",
       "gb_constant": "TILE_DESOLATE_LANDSCAPE_62",
       "walkable": false,
