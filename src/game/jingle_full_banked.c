@@ -43,18 +43,20 @@ extern volatile uint8_t g_harness_mode;
 
 /* Restore points for the one-shot: the song is a 3-note arp over by
  * tracker tick ~15 and then silence, wrapping unconditionally at tick
- * 192 (3.0 s at 64 Hz).  The tick clock restores at 170 tracker ticks
- * (2.66 s, counted by the tracker's own ÷4 divider in
- * huge_music_update, so it cannot drift against the song): deep in the
- * silent tail where no musical content can be clipped and the wrap can
- * never replay audibly.  The harness has no timer ISR, so there the
- * frame backstop restores instead (later than the tick clock, well
- * inside every restore scenario's final wait). */
-#define CHEST_JINGLE_TICKS 170
+ * 192 (3.0 s at 64 Hz).  The tick clock restores at 80 tracker ticks
+ * (1.25 s, counted by the tracker's own ÷4 divider in
+ * huge_music_update, so it cannot drift against the song): ~1 s of
+ * ring-out silence after the arp, deep in the silent tail where no
+ * musical content can be clipped and the wrap can never replay audibly.
+ * The harness has no timer ISR, so there the frame backstop restores
+ * instead (later than the tick clock, well inside every restore
+ * scenario's final wait). */
+#define CHEST_JINGLE_TICKS 80
 #define CHEST_JINGLE_BACKSTOP 240
 
 /* Tick/frame counter for the restore clock.  Shared with the timer ISR
- * (audio_update increments while the jingle owns the track): volatile
+ * (huge_music_update's divider branch increments while the jingle owns
+ * the track): volatile
  * because it changes outside the main thread, though the race is
  * harmless either way (worst case a ±1-tick restore against 20+ ticks
  * of margin).  Same BSS slot as the old frame-only counter, so the WRAM
