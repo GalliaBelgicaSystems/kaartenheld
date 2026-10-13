@@ -18,8 +18,8 @@ typedef enum {
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
     MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
     MUSIC_CHEST      /* chest-loot jingle (chest opening.uge, one-shot,
-                        bank 8); the overworld restores the scene track
-                        when it ends (audio_jingle_tick) */
+                        bank 7); the overworld restores the scene track
+                        when it ends (audio_jingle_frame) */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -57,17 +57,20 @@ void audio_update(void);
 /* Ambient bird chirps (bird1.pcm = BIRD_1, bird2.pcm = BIRD_2 -- the
  * EVENT_BIRD_CHIRP d0 values).  PCM transcribed to 4-bit wave frames
  * (tools/bird_compile.py, bank 7) and streamed on CH3 by the bank-7
- * body, up to BIRD_CHUNK wave frames per overworld frame (~240
- * wave-frames/s at 60 fps, the same ~8 kHz playback the ISR design had
- * without touching the timer ISR).  One chirp window (BIRD_WIN frames)
- * opens every BIRD_GAP overworld frames in forests; species alternates
- * per window.  The tracker CH3 is muted for the ~130 ms play; no song
- * wave is saved (that buffer was the WRAM-shift that broke battles),
- * so the bass drops out for a few frames until its next note reloads
- * the wave -- inaudible against the chirp.
+ * body, one wave frame per overworld frame without touching the timer
+ * ISR.  One chirp window (BIRD_MAX_FRAMES streaming frames from
+ * generated/birds/bird_data.h, then release) opens every BIRD_GAP
+ * overworld frames in forests; species alternates per window.  At ~60
+ * wave frames/s each 32-sample frame loops about four times, so the
+ * chirp plays roughly four times slower and lower than the transcribed
+ * ~8 kHz -- the price of zero WRAM and no ISR work.  The tracker CH3
+ * is muted for the ~220 ms play; no song wave is saved (that buffer
+ * was the WRAM-shift that broke battles), so the bass drops out for a
+ * few frames until its next note reloads the wave -- inaudible against
+ * the chirp.
  *
  * ZERO-WRAM BY DESIGN: window/species derive from g_game.frame (low
- * byte / bit 8), so no countdown/cursor state exists; observation is
+ * byte / bit 7), so no countdown/cursor state exists; observation is
  * one EVENT_BIRD_CHIRP telemetry event per chirp (fixed-bank emit in
  * the overworld wrapper, one ring entry per ~128 frames).  A +23B WRAM
  * layout shift was proven to break battle_boot (ghost START input),
@@ -76,13 +79,13 @@ enum {
     BIRD_1 = 1,
     BIRD_2 = 2
 };
-/* Chirp window every 128 overworld frames (~2.1 s at 60 fps); 8
- * streaming frames per window, then one cleanup frame.  Power-of-two
- * gap on purpose: the banked body uses masking/shifts, never % or /,
- * which would pull SDCC div/mod support routines into fixed _CODE. */
+/* Chirp window every 128 overworld frames (~2.1 s at 60 fps).  The
+ * streaming window itself is BIRD_MAX_FRAMES (generated header: longest
+ * chirp in wave frames, one per overworld frame, then release).
+ * Power-of-two gap on purpose: the banked body uses masking/shifts,
+ * never % or /, which would pull SDCC div/mod support routines into
+ * fixed _CODE. */
 #define BIRD_GAP 128
-#define BIRD_WIN 8
-#define BIRD_CHUNK 4
 
 /* Chest-loot jingle (MUSIC_CHEST, one-shot): edge-trigger + timed
  * restore, driven by the overworld screen every frame (see audio.c).

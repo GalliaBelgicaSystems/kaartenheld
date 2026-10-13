@@ -584,8 +584,9 @@ const WorldActorTable g_actor_tables[] = {
 
 #include "game.h"
 /* Banked chest-open resolver: reports whether the chest at the
- * staged (map, x, y) was already looted (g_bk_byte_a = map id,
- * g_bk_byte_b = x, g_bk_byte_c = y).  Chests are OAM sprites:
+ * staged (x, y) was already looted (g_bk_byte_b = x,
+ * g_bk_byte_c = y; the map comes from g_game.world, WRAM and
+ * always mapped).  Chests are OAM sprites:
  * the sprite body shows the open frame once the loot flag or
  * variable is set, so the opened chest stays open across scene
  * loads with no floor-paint stamp.  Self-contained: g_game is

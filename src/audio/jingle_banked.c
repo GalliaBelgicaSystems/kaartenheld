@@ -13,7 +13,9 @@
  *
  * Protocol (audio.c documents the full jingle contract):
  * - edge: loot mask bit 0 = field cache open, bit 1 = amulet found.
- *   The first frame a chest reads open starts the jingle once.
+ *   The first frame a chest reads open starts the jingle once; the
+ *   very first call seeds the edge from the live mask (bit 7 flag),
+ *   so a save loaded with chests already open stays silent.
  * - tick: the play ends after CHEST_JINGLE_FRAMES overworld frames. */
 
 #include <stdint.h>
@@ -32,6 +34,14 @@ void jingle_frame_banked(void)
     uint8_t mask = g_bk_byte_a;
     uint8_t b;
     g_bk_byte_b = 0;
+    if (!(s_chest_jingle_done & 0x80)) {
+        /* First call (boot, new game, fresh scenario, loaded save):
+         * seed the edge from the live loot state, so an already-looted
+         * chest does not replay its jingle on the first overworld
+         * frame.  Bit 7 is the seeded flag; bits 0-1 stay the per-chest
+         * done bits, so no extra WRAM is spent. */
+        s_chest_jingle_done = (uint8_t)(0x80 | (mask & 0x03));
+    }
     for (b = 0; b < 2; b++) {
         if (mask & (uint8_t)(1u << b)) {
             if (!(s_chest_jingle_done & (uint8_t)(1u << b)) &&

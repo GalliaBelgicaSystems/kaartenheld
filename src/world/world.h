@@ -327,6 +327,11 @@ typedef enum {
     TILE_DESOLATE_LANDSCAPE_63 = 250,
 } TileType;
 
+/* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
+ * (empty/unset cell), so the enum must never reach it -- another 8-tile
+ * block past 250 would overflow.  Enforced by g_tiletype_fits_u8 in
+ * world.c (kept out of this header so the 2 bytes are emitted once). */
+
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32
 

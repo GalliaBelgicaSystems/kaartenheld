@@ -13,8 +13,8 @@ uint8_t g_huge_playing = 0;
 uint8_t g_huge_tick_divider = 0;
 /* ROM bank holding the active song + its driver copy.  Bank 6 holds the
  * driver and the six original songs; bank 7 holds the second driver copy
- * and the mimic/victory songs (bank 6 is full); bank 8 holds the third
- * driver copy and the opening/chest songs (banks 6/7 are full). */
+ * and the mimic/victory/opening/chest songs (bank 6 is full -- the SFX
+ * moved to bank 8 to make room, so no third driver copy was needed). */
 /* BSS (no _INITIALIZER cost): huge_music_init() (via audio_init() at
  * every boot) sets the home bank before any play/mute/update call. */
 uint8_t g_huge_music_bank;

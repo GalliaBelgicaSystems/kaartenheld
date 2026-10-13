@@ -233,9 +233,10 @@ void ui_actors_sprites_banked(void)
                                anim, d->ow_type, &prop);
         if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
             /* State-driven frame: the shared-blob closed tile, or the
-             * next tile (open frame) once the chest was looted.  Staged
-             * through the banked-call globals (same bank: plain call). */
-            g_bk_byte_a = w->map_id;
+             * next tile (open frame) once the chest was looted.  The
+             * resolver reads the map from g_game (WRAM, always mapped);
+             * only the chest position stages through the banked-call
+             * globals (same bank: plain call). */
             g_bk_byte_b = d->x;
             g_bk_byte_c = d->y;
             if (chest_is_open_banked()) {

@@ -304,6 +304,43 @@ def load_tilesets(tilesets_dir=None):
 
 
 _KNOWN_ENTITY_IDS = None
+_ENTITY_SPRITE_KINDS = None
+
+
+def entity_sprite_kind(entity_id):
+    """sprite_kind for an ENTITY_ID_* from screens/entity_types/*.json.
+
+    Mirrors the data-driven fallback in compile.py resolve_sprite_kind:
+    friendly NPCs authored in the editor (amulet, chest, ...) resolve
+    their overworld sprite here without a hardcoded id list."""
+    global _ENTITY_SPRITE_KINDS
+    if _ENTITY_SPRITE_KINDS is None:
+        _ENTITY_SPRITE_KINDS = {}
+        tools_dir = Path(__file__).resolve().parent.parent
+        for path in (tools_dir / ".." / "screens" / "entity_types").glob("*.json"):
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, ValueError):
+                continue
+            tid = data.get("id") or path.stem
+            _ENTITY_SPRITE_KINDS["ENTITY_ID_" + str(tid).upper()] = data.get("sprite_kind")
+    return _ENTITY_SPRITE_KINDS.get(entity_id)
+
+
+def is_chest_sprite(obj):
+    """True when compile.py would resolve this object to SPRITE_KIND_CHEST:
+    a "chest" token in its sprite names, or its entity type's sprite_kind.
+    (Boss tokens win over chest in compile.py; mirrored here.)"""
+    props = obj.get("properties") or {}
+    names = " ".join(str(f) for f in (obj.get("animation_frames") or []))
+    names += " " + str(obj.get("overworld_sprite") or "")
+    if "boss" in names:
+        return False
+    if "chest" in names:
+        return True
+    if props.get("entity_id") == "ENTITY_ID_SLIME_LORD":
+        return False
+    return entity_sprite_kind(props.get("entity_id", "")) == "chest"
 
 
 _TILE_CONSTANTS = None
@@ -655,6 +692,17 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                                  not props[key].startswith(prefix)):
                 errors.append(f"Object '{oid}' {key} must name a {prefix}* id")
                 objects_ok = False
+        # A non-hostile chest sprite with neither open prop silently
+        # never opens (compile.py emits no resolver clause and the sprite
+        # stays closed forever).  Require one, like open_tile used to
+        # require a floor cell.  Hostile chest sprites (mimics: battle
+        # prop) are exempt -- they open via defeat, never via flags.
+        if (is_chest_sprite(obj) and "battle" not in props and
+                not props.get("open_flag") and
+                not props.get("open_variable")):
+            errors.append(f"Object '{oid}' is a chest sprite with no "
+                          f"open_flag/open_variable: it would never open")
+            objects_ok = False
 
     # Lesson tiles (Carl): an AI_TUTOR hostile teaches through a
     # co-located dialogue static on the same tile (one visual sprite:

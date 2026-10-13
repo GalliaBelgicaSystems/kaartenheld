@@ -593,12 +593,6 @@ $(BUILD_DIR)/debug/birds/%.o: $(GENERATED_BIRDS_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD $(INCLUDES) -o $@ $<
 
-$(SFX_TABLES) &: $(SFX_ALL_UGE) $(SFX_REGISTRY) tools/transcribe_sfx.py | $(GENERATED_SFX_DIR) doctor
-	python3 tools/transcribe_sfx.py --out $(GENERATED_SFX_DIR)/sfx_tables.c
-
-$(GENERATED_SFX_DIR):
-	mkdir -p $(GENERATED_SFX_DIR)
-
 SFX_OBJS = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/sfx/%.o,$(SFX_TABLES))
 SFX_OBJS_DEBUG = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/debug/sfx/%.o,$(SFX_TABLES))
 

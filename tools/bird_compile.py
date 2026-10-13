@@ -40,9 +40,12 @@ def main():
     out.append("")
     out.append('#include <stdint.h>')
     out.append("")
+    max_frames = 0
     for stem, const in BIRDS:
         packed = convert(ASSETS / (stem + ".pcm"))
         frames = len(packed) // 16
+        if frames > max_frames:
+            max_frames = frames
         out.append("/* %s.pcm: %d bytes -> %d wave frames (%d bytes). */"
                    % (stem, len(open(ASSETS / (stem + ".pcm"), "rb").read()),
                       frames, len(packed)))
@@ -58,11 +61,15 @@ def main():
         "#ifndef BIRD_DATA_H\n"
         "#define BIRD_DATA_H\n"
         "#include <stdint.h>\n"
+        "/* Longest chirp in wave frames: the overworld streamer sizes its\n"
+        " * window from this (one wave frame per overworld frame, then one\n"
+        " * cleanup frame), so new/longer chirps never overflow the window. */\n"
+        "#define BIRD_MAX_FRAMES %d\n"
         "extern const uint8_t g_bird_bird1[];\n"
         "extern const uint8_t g_bird_bird1_frames;\n"
         "extern const uint8_t g_bird_bird2[];\n"
         "extern const uint8_t g_bird_bird2_frames;\n"
-        "#endif\n")
+        "#endif\n" % max_frames)
     print("wrote generated/birds/bird_data.c")
 
 

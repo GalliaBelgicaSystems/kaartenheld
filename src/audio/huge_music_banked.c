@@ -7,7 +7,7 @@
 #include "huge_music.h"
 #include "huge_music_data.h"
 
-/* ── Track mapping body (bank-5) ────────────────────────────────────
+/* ── Track mapping body (bank-8) ────────────────────────────────────
  * Dispatched by audio_play_music() through the WRAM trampoline (the
  * fixed bank is full, §52.18).  PURE mapping: stop-inline (sound regs
  * + WRAM only, bank-safe), track -> (song, bank) lookup, set track.
