@@ -1,7 +1,7 @@
 {
  "name": "field_chest_jingle_restore",
  "test": true,
- "description": "After the field-cache loot jingle (MUSIC_CHEST) ends (~170 overworld frames, restored inside the song's silent tail so the hook can never replay), the scene track (FOREST) is restored: the one-shot does not ring forever",
+ "description": "After the field-cache loot jingle (MUSIC_CHEST) ends (tracker-tick clock, ~2.7 s; ~240-frame backstop under the harness), the scene track (FOREST) is restored: the one-shot does not ring forever",
  "actions": [
   {
    "type": "press",
