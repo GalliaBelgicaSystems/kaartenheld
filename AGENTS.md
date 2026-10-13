@@ -3151,7 +3151,8 @@ the commit/PR without booting anything.
 ## 56.3 Milestones
 
 ```text
-00-boot-field        overworld at spawn with the HUD
+00-boot-grove        WAKE GROVE at spawn with the HUD (hero wakes)
+00-stairs-refusal    staircase refusal dialogue ("back down there")
 01-field-scrolled    FIELD with the camera scrolled (SCX > 0)
 02-town-arrived      TOWN just inside the east gate (camera at origin)
 03-guard-dialogue    dialogue box over the scrolled town (camera offset)

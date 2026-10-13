@@ -5,7 +5,7 @@
   "width": 24,
   "height": 18,
   "tileset": "forest",
-  "music": "MUSIC_FOREST",
+  "music": "MUSIC_OVERWORLD",
   "map_id": "MAP_FIELD"
  },
  "default_walkable": "forest.forest_plain_floor_2",
@@ -220,7 +220,7 @@
     "forest.forest_plain_floor_2"
    ],
    [
-    "forest.forest_left_wall_1",
+    "forest.forest_plain_floor_2",
     "forest.forest_plain_floor_2",
     "forest.forest_plain_floor_2",
     "forest.forest_plain_floor_2",
@@ -497,7 +497,7 @@
   "north": "forest",
   "south": "south_field",
   "east": "town",
-  "west": ""
+  "west": "wake_grove"
  },
  "objects": [
   {

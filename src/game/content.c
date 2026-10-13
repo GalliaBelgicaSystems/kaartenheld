@@ -45,7 +45,7 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
-    /* Player start is compiled from the field spawn (the single source of
+    /* Player start is compiled from the wake-grove spawn (the single source of
      * truth).  scene_spawn() runs the banked table read; the fallback for
      * bad map ids lives in that banked body, so this fixed-bank call site
      * stays branch-free (fixed-bank _CODE budget).  Harness builds start
@@ -54,8 +54,8 @@ void game_new_game(GameState *state)
     state->scene.scene_id = SCENE_TEST_FIELD;
     scene_spawn(MAP_TEST_FIELD);
 #else
-    state->scene.scene_id = SCENE_FIELD;
-    scene_spawn(MAP_FIELD);
+    state->scene.scene_id = SCENE_WAKE_GROVE;
+    scene_spawn(MAP_WAKE_GROVE);
 #endif
     state->scene.player_x = g_bk_byte_b;
     state->scene.player_y = g_bk_byte_c;

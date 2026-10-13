@@ -23,7 +23,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 |---|---|
 | Release ROM `.sym` exposes readable WRAM symbols | `_g_game`@0xC94C, `g_battle`@0xD0D5, `g_audio_current_track`@0xDA19, `g_rng_state`@0xDA37 (0x44D85-range entries are ROM initializers — ignored) |
 | Struct layouts | `Game`: screen(0), prev_screen(1), **state@2**; `GameState`: scene(4B: id,x,y,facing), party(13B), cards(CardState), flags(8B), variables(32B), currency(8B), world(49B), progression(49B); `Battle`: player Combatant(14B: hp,max_hp,name[12]), enemies[3]@+14, phase/turn/result, battle_over |
-| Boot anchors | scene pattern `[0,17,7,3]` (SCENE_FIELD + spawn + DIRECTION_RIGHT) + party `[1,10,10]` + gold=20 + hp=10/10; anchor failure = loud error naming offset-mirror drift |
+| Boot anchors | scene pattern `[19,10,8,0]` (SCENE_WAKE_GROVE + spawn + DIRECTION_UP) + party `[1,10,10]` + gold=20 + hp=10/10; anchor failure = loud error naming offset-mirror drift |
 | Enums | SceneId 0..N real (registry-assigned) / TEST fixed at 240+; MusicTrack NONE0 OVERWORLD1 BATTLE2 VICTORY3 TITLE4 TOWN5 DUNGEON6 BOSS7 MIMIC8 DESOLATE9 FOREST10; flags bit-packed (N → byte (N-1)/8 bit (N-1)%8): ARRIVED_TOWN=1, MET_MAYOR=2; CURRENCY_ID_GOLD=1 → amount[0]; HERO_START gold=20 hp=10 |
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
@@ -55,8 +55,8 @@ tools/walkthrough/
   `deck_count`, `collection_count(card_id)`,
   `battle.{player_hp, enemy_hp[i], result, phase}`, `music_track`,
   `shop_message`, `save_slot_message`.
-* **Boot anchors**: at session start assert scene==SCENE_FIELD,
-  position==spawn (from `levels/field.json`), gold==20, hp==10/10,
+* **Boot anchors**: at session start assert scene==SCENE_WAKE_GROVE,
+  position==spawn (from `levels/wake_grove.json`), gold==20, hp==10/10,
   ARRIVED_TOWN unset.  Post-action anchors re-verify (ARRIVED_TOWN set
   after town entry; gold==20−cost after purchase).  Anchor failure →
   hard error: "struct offset mirror drift — update the mirror from

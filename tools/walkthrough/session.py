@@ -65,8 +65,8 @@ class Session:
             self.pb.tick()
         self.reader = StateReader(self.pb, rom)
         import json
-        field = json.load(open(os.path.join(LEVELS_DIR, "field.json")))
-        self.spawn = field["player"]["spawn"]
+        grove = json.load(open(os.path.join(LEVELS_DIR, "wake_grove.json")))
+        self.spawn = grove["player"]["spawn"]
         self.reader.assert_boot_anchors(self.spawn, label)
         self.t_start = time.time()
         if boot:
