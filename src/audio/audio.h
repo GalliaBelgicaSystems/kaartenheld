@@ -6,7 +6,7 @@
 
 typedef enum {
     MUSIC_NONE,
-    MUSIC_OVERWORLD,
+    MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
     MUSIC_TITLE,     /* title screen theme (loops) */
@@ -16,7 +16,10 @@ typedef enum {
     MUSIC_MIMIC,     /* mimic battle: short intro sting (Mimic_intro.uge,
                         ~0.9 s) then looping Mimic.uge; both bank 7 */
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
-    MUSIC_FOREST     /* forest / plain theme (Forest.uge, loops) */
+    MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
+    MUSIC_CHEST      /* chest-loot jingle (chest opening.uge, one-shot,
+                        bank 7); the overworld restores the scene track
+                        when it ends (audio_jingle_frame) */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -51,10 +54,48 @@ enum {
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);
 
+/* Ambient bird chirps (bird1.pcm = BIRD_1, bird2.pcm = BIRD_2 -- the
+ * EVENT_BIRD_CHIRP d0 values).  PCM transcribed to 4-bit wave frames
+ * (tools/bird_compile.py, bank 7) and streamed on CH3 by the bank-7
+ * body, one wave frame per overworld frame without touching the timer
+ * ISR.  One chirp window (BIRD_MAX_FRAMES streaming frames from
+ * generated/birds/bird_data.h, then release) opens every BIRD_GAP
+ * overworld frames in forests; species alternates per window.  At ~60
+ * wave frames/s each 32-sample frame loops about four times, so the
+ * chirp plays roughly four times slower and lower than the transcribed
+ * ~8 kHz -- the price of zero WRAM and no ISR work.  The tracker CH3
+ * is muted for the ~220 ms play; no song wave is saved (that buffer
+ * was the WRAM-shift that broke battles), so the bass drops out for a
+ * few frames until its next note reloads the wave -- inaudible against
+ * the chirp.
+ *
+ * ZERO-WRAM BY DESIGN: window/species derive from g_game.frame (low
+ * byte / bit 7), so no countdown/cursor state exists; observation is
+ * one EVENT_BIRD_CHIRP telemetry event per chirp (fixed-bank emit in
+ * the overworld wrapper, one ring entry per ~128 frames).  A +23B WRAM
+ * layout shift was proven to break battle_boot (ghost START input),
+ * so birds must not move a single WRAM byte. */
+enum {
+    BIRD_1 = 1,
+    BIRD_2 = 2
+};
+/* Chirp window every 128 overworld frames (~2.1 s at 60 fps).  The
+ * streaming window itself is BIRD_MAX_FRAMES (generated header: longest
+ * chirp in wave frames, one per overworld frame, then release).
+ * Power-of-two gap on purpose: the banked body uses masking/shifts,
+ * never % or /, which would pull SDCC div/mod support routines into
+ * fixed _CODE. */
+#define BIRD_GAP 128
+
+/* Chest-loot jingle (MUSIC_CHEST, one-shot): edge-trigger + timed
+ * restore, driven by game_update() every non-battle frame through the
+ * game-layer bank-8 body (src/game/jingle_full_banked.c, which reads
+ * the loot mask from game story state).  Mask bit 0 = field cache
+ * open, bit 1 = amulet found. */
+
 /* Current track (WRAM): readable directly from bank-2 code, which cannot
  * call this fixed-bank getter. */
 extern MusicTrack g_audio_current_track;
-MusicTrack audio_get_current_track(void);
 
 #ifdef DEBUG_BUILD
 /* Per-music-clock-tick counter, incremented once per audio_update() call

@@ -151,6 +151,63 @@ a no-op in valid states).  Lessons:
   assertions stay out of the harness (persistence asserts the defeat
   record + pool, never the tile).
 
+### WRAM-SHIFT POST-MORTEM (found 2026-10-13, birdsong work)
+
+Adding 23 B of WRAM globals (bird countdown/cursor/wave-save) broke
+107/227 harness scenarios with a ghost START press (battle_boot drops
+to the ITEM screen on frame 2 with pad=0x99/prev=0x99).  Established by
+bisection, not by reading state: the battle failure reproduces with the
+bird runtime fully disabled (`if (0 && ...)` + void-cast trigger), and
+decisively with ONLY 23 dummy WRAM bytes on the green music commit
+(worktree wramtest @ e156e3d + `uint8_t g_wram_probe[23]` → battle_boot
+FAIL; same tree without the dummy → PASS).  So the killer is the
+_layout shift itself_, not bird code: every symbol after the insertion
+point moves (input block DF6C→DF83) and the heap+stack gap shrinks
+192→169 B against a ~142 B modeled worst chain.  The first design also
+streamed from the 256 Hz timer ISR (extra ISR depth on top of the
+deepest battle nesting) and returned the chirp species in register A
+while the fixed wrapper read the shared g_bk_byte_b staging byte --
+stale zero forever, so no chirp event ever emitted (plus untrustworthy
+window-address breakpoint forensics on top).  Lessons kept in code:
+* birds are ZERO-WRAM by design (timing from g_game.frame low bits,
+  one EVENT_BIRD_CHIRP per 128-frame window, no ISR work, bank-7 bodies
+  so layout-pinned bank 5 stays byte-identical, WRAM map 5632 B
+  unchanged from green);
+* banked bodies return results through explicit g_bk_byte_b stores,
+  never bare C returns (the staging byte is the protocol);
+* power-of-two cadences (mask/shift, never % or /) keep SDCC div/mod
+  support routines out of fixed _CODE.
+* Open: the underlying overshoot (wild write or stack depth) predates
+  birds -- any future WRAM growth must re-run battle_boot first, and a
+  real stack-frame diet is still wanted (§52.24).
+
+### STACK CANARY (landed 2026-10-13, host-side measurement)
+
+The static stack-budget model (142 B worst chain) cannot see ISR
+nesting or layout-sensitive codegen, and the memmap "_DATA headroom"
+figure overstated the gap by ~66 B (it counted from _DATA end,
+ignoring the _INITIALIZED/BSS globals above it).  Measured with the
+host-side canary (`stack_canary_fill`/`stack_canary_read` in
+tools/emulator.py, asserted as `stack_margin_min` in scenarios --
+zero ROM bytes, opt-in per scenario like the SFX log):
+* true stack gap (s__HEAP..0xE000): 126 B, not 192;
+* idle title path: 94 B deep (margin 32);
+* battle paths (game_over_quit, battle_multi_enemy_cycle_kill):
+  125-126 B deep -- margin 0-1.  The suite is green with essentially
+  zero headroom.
+Guards landed with the canary:
+* `make memmap` reports the true gap AND hard-fails below 126 B
+  (WRAM freeze: any growth must first land the battle frame diet --
+  lowering the floor without it re-arms silent corruption);
+* `stack_margin_min: 0` on the two deepest battle paths locks the
+  measurement pipeline (fill/read/symbols) and turns guest crashes
+  into loud canary failures instead of mystery gameplay FAILs.
+Honest limits: at margin ~0 the canary measures but cannot by itself
+fail on smash-past-the-gap (reads clamp at the gap floor) -- the
+memmap freeze above is the actual tripwire, the canary is the
+tape measure.  If a future build needs WRAM and cannot diet first,
+the escape hatch is a sacrificial guard region, not a quieter assert.
+
 ### DONE
 
 - Card battle prototype (hand/deck/discard, draw, play, resolve; per-card

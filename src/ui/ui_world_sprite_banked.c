@@ -7,7 +7,6 @@
 #include "banked.h"
 #include "battle_data.h"
 #include "gfx/rpg_tile_lookup.h"
-#include "gfx/enemy_ow_tiles.h"
 #include "anim_pairs.h"
 
 /* ── Overworld actor sprites + castle boss background (bank-3 body) ──
@@ -50,8 +49,10 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
  * Bats use the grey ramp (black bodies); kobolds ride OBJ palette 2
  * (ice ramp -- looks blue, kept as-is pending its own visual pass).
- * Chests are floor-painted TILE statics (no OAM; open frame in
- * ui_draw_world_cell).
+ * Chests read the shared-blobs treasure-chest row (same bank: direct
+ * read): closed frame, or the open frame once chest_is_open_banked says
+ * the staged chest was looted.  The hostile loop never stages a chest
+ * (no hostile compiles to SPRITE_KIND_CHEST), so it shows closed.
  * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
  * read) for its shared OAM base, frames, and palette; unknown rows fall
  * back to the ASCII glyph. */
@@ -63,9 +64,13 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
             *prop = 2;
             return (uint8_t)(KOBOLD_SPRITE_TILE_ID + anim);
         case SPRITE_KIND_CHEST:
-            /* Retired: chests are floor-painted TILE statics (open frame
-             * in ui_draw_world_cell); no OAM.  Kept as a case so old
-             * content rows still resolve instead of falling through. */
+            if (ow_type < g_enemy_type_count) {
+                const EnemyTypeDef *t = g_enemy_types[ow_type];
+                if (t->ow_tile != 0xFF) {
+                    *prop = t->ow_palette;
+                    return t->ow_tile;
+                }
+            }
             *prop = 0;
             return 0;
         case SPRITE_KIND_ENEMY:
@@ -226,6 +231,18 @@ void ui_actors_sprites_banked(void)
         }
         tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
                                anim, d->ow_type, &prop);
+        if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
+            /* State-driven frame: the shared-blob closed tile, or the
+             * next tile (open frame) once the chest was looted.  The
+             * resolver reads the map from g_game (WRAM, always mapped);
+             * only the chest position stages through the banked-call
+             * globals (same bank: plain call). */
+            g_bk_byte_b = d->x;
+            g_bk_byte_c = d->y;
+            if (chest_is_open_banked()) {
+                tile = (uint8_t)(tile + 1);
+            }
+        }
         if (!tile) {
             e[0] = 0;
             continue;

@@ -6,13 +6,13 @@
 #define RPG_TILE_BASE_WORLD          128u
 #define RPG_TILE_BASE_DESOLATE       128u
 
-extern const uint8_t g_tileset_forest[768];
-extern const uint8_t g_tileset_desolate[768];
+extern const uint8_t g_tileset_forest[1024];
+extern const uint8_t g_tileset_desolate[1024];
 extern const uint8_t g_tileset_castle[256];
 extern const uint8_t g_tileset_village[768];
 extern const uint8_t g_intrepid_font_tiles[1536];
-extern const uint8_t g_tile_pal_forest[48];
-extern const uint8_t g_tile_pal_desolate[48];
+extern const uint8_t g_tile_pal_forest[64];
+extern const uint8_t g_tile_pal_desolate[64];
 extern const uint8_t g_tile_pal_castle[16];
 extern const uint8_t g_tile_pal_village[48];
 

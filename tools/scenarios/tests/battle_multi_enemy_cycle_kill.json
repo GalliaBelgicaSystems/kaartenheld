@@ -175,6 +175,10 @@
    "type": "screen_row",
    "row": 2,
    "contains": "16/16  16/16"
+  },
+  {
+   "type": "stack_margin_min",
+   "expected": 0
   }
  ],
  "initial_state": {

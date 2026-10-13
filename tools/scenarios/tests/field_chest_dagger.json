@@ -90,7 +90,16 @@
    "type": "tilemap_cell",
    "col": 21,
    "row": 8,
-   "expected": 172
+   "expected": 190
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 121
+  },
+  {
+   "type": "music_track",
+   "expected": "CHEST"
   }
  ],
  "initial_state": {

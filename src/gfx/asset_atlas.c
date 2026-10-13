@@ -1,6 +1,6 @@
 /* Fixed-bank accessors for the asset atlas (see gfx/asset_atlas.h).
  *
- * The atlas data lives in ROM banks 5 (entries + palettes) and 6 (icon
+ * The atlas data lives in ROM banks 8 (entries + palettes) and 7 (icon
  * tiles); the engine code that reads it stays in the fixed bank.  Each
  * accessor stages its source inside the banked_copy() trampoline and copies
  * the small row / tile into a WRAM scratch buffer, so the caller never has

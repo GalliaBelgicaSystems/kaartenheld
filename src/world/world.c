@@ -14,6 +14,12 @@
 #include "audio.h"
 #include "banked.h"
 
+/* TileType headroom (see the note on the enum in world.h): ids live in
+ * uint8_t map arrays with 0xFF as the empty-cell sentinel.  A size-0
+ * array is a hard compile error (same pattern as g_input_bit_layout_ok
+ * in input.c). */
+static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0];
+
 /* Bank-3 movement bodies (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
 void world_edge_spawn_banked(void);

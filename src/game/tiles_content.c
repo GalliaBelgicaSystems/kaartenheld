@@ -52,13 +52,15 @@ void ui_load_cram_banked(void)
 
 /* World background tiles extracted from assets/ by tools/png2gb.py (make gfx) */
 
-const uint8_t g_tileset_forest[768] = {
-    /* 48 forest tiles (768 bytes): All wall, floor, stump, tree, and exit tiles */
+const uint8_t g_tileset_forest[1024] = {
+    /* 64 forest tiles (1024 bytes): walls, floors, stumps, trees, water
+     * bodies, and exit tiles */
 #include "gfx/rpg_forest_world_tiles.inc"
 };
 
-const uint8_t g_tileset_desolate[768] = {
-    /* 48 desolate landscape tiles (768 bytes): All wall, floor, rock, tree, and prop tiles */
+const uint8_t g_tileset_desolate[1024] = {
+    /* 64 desolate landscape tiles (1024 bytes): walls, floors, rocks,
+     * trees, water bodies, and prop tiles */
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
 
@@ -102,12 +104,12 @@ void ui_load_tileset_banked(void)
         case WORLD_TILESET_FOREST:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 48;
+            tile_count = 64;
             break;
         case WORLD_TILESET_DESOLATE:
             src = g_tileset_desolate;
             pal_src = g_tile_pal_desolate;
-            tile_count = 48;
+            tile_count = 64;
             break;
         case WORLD_TILESET_CASTLE:
             src = g_tileset_castle;
@@ -122,7 +124,7 @@ void ui_load_tileset_banked(void)
         default:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 48;
+            tile_count = 64;
             break;
     }
 
@@ -132,11 +134,16 @@ void ui_load_tileset_banked(void)
     while (n--) {
         *dst++ = *src++;
     }
-    for (i = 0; i < tile_count; i++) {
-        g_active_tile_palette[i] = pal_src[i];
-    }
-    for (; i < 48; i++) {
-        g_active_tile_palette[i] = 0;
+    for (i = 0; i < 64; i++) {
+        /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
+         * byte): even slots assign the low nibble first, odd slots OR
+         * in the high nibble (ascending i guarantees the order). */
+        uint8_t v = (i < tile_count) ? pal_src[i] : 0;
+        if ((i & 1) == 0) {
+            g_active_tile_palette[i >> 1] = v;
+        } else {
+            g_active_tile_palette[i >> 1] |= (uint8_t)(v << 4);
+        }
     }
 
     /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites

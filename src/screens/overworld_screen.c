@@ -5,6 +5,7 @@
 #include "event.h"
 #include "telemetry.h"
 #include "audio.h"
+#include "banked.h"
 #include "content.h"
 #include "game_ids.h"
 
@@ -63,6 +64,24 @@ void overworld_screen_update(Game *g)
     int8_t dy = 0;
     WorldMoveResult move_res = MOVE_RESULT_NONE;
     ActorEngageResult engage = ENGAGE_NONE;
+
+    /* (Chest-loot jingle ticks in game_update so menus don't freeze its
+     * restore timer; see core/game.c.) */
+
+    /* Ambient birdsong: the bank-7 body streams the frame-derived
+     * chirp window (zero WRAM, see audio.h); a nonzero return is the
+     * window-start species and becomes one EVENT_BIRD_CHIRP telemetry
+     * event (one ring entry per ~128 frames). */
+    {
+        extern void bird_ambient_banked(void);
+        g_bk_call_bank = 7;
+        g_bk_call_target = (uint16_t)&bird_ambient_banked;
+        g_bk_byte_a = (uint8_t)(g->world.tileset_kind == WORLD_TILESET_FOREST);
+        banked_call_run();
+        if (g_bk_byte_b) {
+            telemetry_emit(EVENT_BIRD_CHIRP, g_bk_byte_b, 0, 0, 0);
+        }
+    }
 
     /* A committed move may resolve a map change or an encounter; resolve
      * those before reading fresh input. */

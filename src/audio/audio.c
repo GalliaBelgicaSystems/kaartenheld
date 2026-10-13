@@ -3,6 +3,8 @@
 #include "huge_music.h"
 #include "huge_music_data.h"
 #include "sfx_tables.h"
+#include "scene.h"
+#include "banked.h"
 
 MusicTrack g_audio_current_track = MUSIC_NONE;
 /* BSS (no _INITIALIZER cost): game_init() re-asserts the sound-on default
@@ -20,10 +22,10 @@ uint8_t g_sound_enabled;
  * unmuted at the table end. */
 #define SFX_NONE 0xFF
 /* ROM bank holding the transcribed-SFX stepper body + tables
- * (src/audio/sfx_step.c, generated/sfx/sfx_tables.c).  Bank 6 holds the
- * driver + six tracker songs and is full, so SFX live in bank 7. */
-#define SFX_STEP_BANK 7
-/* Cursor state shared with the bank-7 stepper (src/audio/sfx_step.c):
+ * (src/audio/sfx_step.c, generated/sfx/sfx_tables.c).  Banks 6/7 hold
+ * drivers + tracker songs and are full, so SFX live in bank 8. */
+#define SFX_STEP_BANK 8
+/* Cursor state shared with the bank-8 stepper (src/audio/sfx_step.c):
  * plain WRAM globals, readable from any bank. */
 /* Harness-visible trigger log (AGENTS.md 53.7: semantic, not transport):
  * per-trigger SFX telemetry would flood the 32-entry gameplay ring and
@@ -73,9 +75,9 @@ volatile uint16_t g_audio_ticks = 0;
 
 /* All music is tracked (hUGEDriver) now: the old hardcoded chiptune
  * note-table engine (note freqs, per-track note arrays, play_note) was
- * removed per docs/uge.md Phase 6.  MUSIC_OVERWORLD and MUSIC_VICTORY
- * have no authored .uge yet, so they play nothing; MUSIC_TITLE plays
- * song_title (assets/music/title short.uge). */
+ * removed per docs/uge.md Phase 6.  MUSIC_OVERWORLD plays the opening
+ * theme (assets/music/opening.uge, bank 7); MUSIC_TITLE plays song_title
+ * (assets/music/title short.uge). */
 
 void audio_init(void)
 {
@@ -97,47 +99,30 @@ void audio_init(void)
 
 void audio_play_music(MusicTrack track)
 {
+    const hUGESong_t *song;
+    uint8_t bank;
+    extern void music_play_banked(void);
     if (g_audio_current_track == track) return;
     if (!g_sound_enabled) return;
-    /* Suppress the ISR while switching: set MUSIC_NONE first so the timer
-     * interrupt never steps the new track mid-switch. */
+    /* Track -> (song, bank) resolves in the bank-8 body (fixed bank is
+     * full); the MBC select + driver call stay fixed (a banked body
+     * must never switch away its own bank).  The body stops the old
+     * song first with the track already switched, so the ISR never
+     * steps a half-switched song. */
     g_audio_current_track = MUSIC_NONE;
-    huge_music_stop();
-
-    g_audio_current_track = track;
-    if (track == MUSIC_BATTLE) {
-        huge_music_play(&song_battle);
-    } else if (track == MUSIC_DESOLATE) {
-        huge_music_play(&song_desolate_landscape);
-    } else if (track == MUSIC_FOREST) {
-        huge_music_play(&song_forest);
-    } else if (track == MUSIC_BOSS) {
-        huge_music_play(&song_boss_fight);
-    } else if (track == MUSIC_MIMIC) {
-        /* Intro one-shot first; the bank-7 mimic_chain_tick() body swaps
-         * in the looping song when the intro ends (self-arming, so no
-         * fixed-bank countdown is needed). */
-        huge_music_play_banked(&song_mimic_intro, HUGE_MUSIC_BANK_B7);
-    } else if (track == MUSIC_TOWN) {
-        huge_music_play(&song_village);
-    } else if (track == MUSIC_DUNGEON) {
-        huge_music_play(&song_castle);
-    } else if (track == MUSIC_TITLE) {
-        huge_music_play(&song_title);
-    } else if (track == MUSIC_VICTORY) {
-        huge_music_play_banked(&song_victory, HUGE_MUSIC_BANK_B7);
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&music_play_banked;
+    g_bk_byte_a = track;
+    banked_call_run();
+    song = (const hUGESong_t *)g_bk_ptr_a;
+    bank = g_bk_byte_b;
+    if (song) {
+        huge_music_play_banked(song, bank);
     }
-    /* MUSIC_OVERWORLD has no authored .uge yet: it stays silent (the
-     * track still reports correctly via telemetry). */
 
     /* Centralized MUSIC_CHANGED telemetry (AGENTS.md 8): emitted only when
      * the track actually changes, so callers never forget it. */
     telemetry_emit(EVENT_MUSIC_CHANGED, track, 0, 0, 0);
-}
-
-MusicTrack audio_get_current_track(void)
-{
-    return g_audio_current_track;
 }
 
 void audio_update(void)
@@ -145,9 +130,8 @@ void audio_update(void)
 #ifdef DEBUG_BUILD
     g_audio_ticks++;
 #endif
-
     /* Step the transcribed SFX at the 64 Hz tracker rate through the
-     * bank-7 stepper body (inline select-7/call/restore-1; the music path
+     * bank-8 stepper body (inline select-8/call/restore-1; the music path
      * below selects bank 6 separately in the same ISR). At the table
      * end the used voices are silenced and their music channels unmuted. */
     if (sfx_id <= SFX_BLOCK) {
@@ -171,6 +155,10 @@ void audio_update(void)
             *(volatile uint8_t *)0x2000 = 1;
         }
     }
+
+    /* Ambient birdsong needs no ISR work: the bank-7 overworld body
+     * streams wave frames at frame rate (see audio.h).  The timer ISR
+     * stays exactly as the green build had it. */
 
     if (g_audio_current_track == MUSIC_NONE) return;
 

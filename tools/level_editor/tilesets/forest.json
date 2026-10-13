@@ -368,28 +368,6 @@
       "category": "nature"
     },
     {
-      "id": "forest_fire_frame_1",
-      "palette": "field6",
-      "label": "fire frame 1",
-      "gb_constant": "TILE_FOREST_37",
-      "walkable": false,
-      "color": "#8ea549",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_fire_frame_1.png",
-      "category": "object"
-    },
-    {
-      "id": "forest_fire_frame_2",
-      "palette": "field6",
-      "label": "fire frame 2",
-      "gb_constant": "TILE_FOREST_38",
-      "walkable": false,
-      "color": "#8ea549",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_fire_frame_2.png",
-      "category": "object"
-    },
-    {
       "id": "forest_black_emptyness",
       "palette": "field1",
       "label": "black emptyness",
@@ -445,37 +423,26 @@
       "category": "terrain"
     },
     {
-      "id": "forest_stairs",
-      "palette": "field1",
-      "label": "stairs",
-      "gb_constant": "TILE_FOREST_40",
-      "walkable": true,
-      "color": "#4b6832",
-      "ascii": ".",
-      "image_url": "/tiles/forest/forest_stairs.png",
-      "category": "terrain"
+      "id": "forest_fire_frame_1",
+      "palette": "field6",
+      "label": "fire frame 1",
+      "gb_constant": "TILE_FOREST_37",
+      "walkable": false,
+      "color": "#8ea549",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_fire_frame_1.png",
+      "category": "object"
     },
     {
-      "id": "forest_plain_floor_2",
-      "palette": "field2",
-      "label": "plain floor",
-      "gb_constant": "TILE_FOREST_41",
-      "walkable": true,
-      "color": "#7bb660",
-      "ascii": ".",
-      "image_url": "/tiles/forest/forest_plain_floor_2.png",
-      "category": "terrain"
-    },
-    {
-      "id": "forest_plain_floor_3",
-      "palette": "field2",
-      "label": "plain floor",
-      "gb_constant": "TILE_FOREST_42",
-      "walkable": true,
-      "color": "#7bb660",
-      "ascii": ".",
-      "image_url": "/tiles/forest/forest_plain_floor_3.png",
-      "category": "terrain"
+      "id": "forest_fire_frame_2",
+      "palette": "field6",
+      "label": "fire frame 2",
+      "gb_constant": "TILE_FOREST_38",
+      "walkable": false,
+      "color": "#8ea549",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_fire_frame_2.png",
+      "category": "object"
     },
     {
       "id": "forest_postsign",
@@ -489,25 +456,256 @@
       "category": "terrain"
     },
     {
-      "id": "forest_chest_closed",
-      "palette": "field3",
-      "label": "treasure chest closed",
-      "gb_constant": "TILE_FOREST_43",
-      "walkable": false,
-      "color": "#8a6d3b",
-      "ascii": "#",
-      "image_url": "/tiles/forest/forest_chest_closed.png",
+      "id": "forest_stairs",
+      "palette": "field1",
+      "label": "stairs",
+      "gb_constant": "TILE_FOREST_40",
+      "walkable": true,
+      "color": "#4b6832",
+      "ascii": ".",
+      "image_url": "/tiles/forest/forest_stairs.png",
       "category": "terrain"
     },
     {
-      "id": "forest_chest_open",
-      "palette": "field3",
-      "label": "treasure chest open",
+      "id": "forest_water_top_left_corner_wall",
+      "palette": "field5",
+      "label": "water top left corner wall",
+      "gb_constant": "TILE_FOREST_41",
+      "walkable": false,
+      "color": "#5f9d8f",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_left_corner_wall.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_wall_1",
+      "palette": "field5",
+      "label": "water top wall",
+      "gb_constant": "TILE_FOREST_42",
+      "walkable": false,
+      "color": "#63a086",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_wall_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_wall_2",
+      "palette": "field5",
+      "label": "water top wall",
+      "gb_constant": "TILE_FOREST_43",
+      "walkable": false,
+      "color": "#64a184",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_wall_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_wall_3",
+      "palette": "field5",
+      "label": "water top wall",
       "gb_constant": "TILE_FOREST_44",
       "walkable": false,
-      "color": "#8a6d3b",
+      "color": "#609c7f",
       "ascii": "#",
-      "image_url": "/tiles/forest/forest_chest_open.png",
+      "image_url": "/tiles/forest/forest_water_top_wall_3.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_wall_4",
+      "palette": "field5",
+      "label": "water top wall",
+      "gb_constant": "TILE_FOREST_45",
+      "walkable": false,
+      "color": "#65a073",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_wall_4.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_right_corner_wall",
+      "palette": "field5",
+      "label": "water top right corner wall",
+      "gb_constant": "TILE_FOREST_46",
+      "walkable": false,
+      "color": "#5d9b91",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_right_corner_wall.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_bottom_right_tree_stump_2",
+      "palette": "field3",
+      "label": "bottom right tree stump",
+      "gb_constant": "TILE_FOREST_47",
+      "walkable": false,
+      "color": "#64a184",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_bottom_right_tree_stump_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_left_wall",
+      "palette": "field5",
+      "label": "water left wall",
+      "gb_constant": "TILE_FOREST_48",
+      "walkable": false,
+      "color": "#62a089",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_left_wall.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_right_wall_1",
+      "palette": "field5",
+      "label": "water right wall",
+      "gb_constant": "TILE_FOREST_49",
+      "walkable": false,
+      "color": "#64a184",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_right_wall_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_right_wall_2",
+      "palette": "field5",
+      "label": "water right wall",
+      "gb_constant": "TILE_FOREST_50",
+      "walkable": false,
+      "color": "#63a086",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_right_wall_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_left_corner_wall",
+      "palette": "field5",
+      "label": "water bottom left corner wall",
+      "gb_constant": "TILE_FOREST_51",
+      "walkable": false,
+      "color": "#619e82",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_left_corner_wall.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_wall_1",
+      "palette": "field5",
+      "label": "water bottom wall",
+      "gb_constant": "TILE_FOREST_52",
+      "walkable": false,
+      "color": "#67a377",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_wall_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_wall_2",
+      "palette": "field5",
+      "label": "water bottom wall",
+      "gb_constant": "TILE_FOREST_53",
+      "walkable": false,
+      "color": "#5e997d",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_wall_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_wall_3",
+      "palette": "field5",
+      "label": "water bottom wall",
+      "gb_constant": "TILE_FOREST_54",
+      "walkable": false,
+      "color": "#6ba56a",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_wall_3.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_watter_bottom_wall",
+      "palette": "field5",
+      "label": "watter bottom wall",
+      "gb_constant": "TILE_FOREST_55",
+      "walkable": false,
+      "color": "#66a27c",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_watter_bottom_wall.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_left_interior_corner",
+      "palette": "field5",
+      "label": "water bottom left interior corner",
+      "gb_constant": "TILE_FOREST_56",
+      "walkable": false,
+      "color": "#65a075",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_left_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_bottom_right_interior_corner",
+      "palette": "field5",
+      "label": "water bottom right interior corner",
+      "gb_constant": "TILE_FOREST_57",
+      "walkable": false,
+      "color": "#67a275",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_bottom_right_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_right_interior_corner",
+      "palette": "field5",
+      "label": "water top right interior corner",
+      "gb_constant": "TILE_FOREST_58",
+      "walkable": false,
+      "color": "#6aa46f",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_right_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_top_left_interior_corner",
+      "palette": "field5",
+      "label": "water top left interior corner",
+      "gb_constant": "TILE_FOREST_59",
+      "walkable": false,
+      "color": "#68a370",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_top_left_interior_corner.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_frame_1",
+      "palette": "field5",
+      "label": "water frame 1",
+      "gb_constant": "TILE_FOREST_60",
+      "walkable": false,
+      "color": "#5ba1c6",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_frame_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_water_frame_2",
+      "palette": "field5",
+      "label": "water frame 2",
+      "gb_constant": "TILE_FOREST_61",
+      "walkable": false,
+      "color": "#5ba1c6",
+      "ascii": "#",
+      "image_url": "/tiles/forest/forest_water_frame_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "forest_plain_floor_2",
+      "palette": "field2",
+      "label": "plain floor",
+      "gb_constant": "TILE_FOREST_62",
+      "walkable": true,
+      "color": "#7bb660",
+      "ascii": ".",
+      "image_url": "/tiles/forest/forest_plain_floor_2.png",
       "category": "terrain"
     }
   ],
@@ -766,42 +964,138 @@
         "x": 9,
         "y": 2,
         "index": 41,
-        "tile": "forest_plain_floor_2"
+        "tile": "forest_water_top_left_corner_wall"
       },
       {
         "x": 10,
         "y": 2,
         "index": 42,
-        "tile": "forest_plain_floor_3"
+        "tile": "forest_water_top_wall_1"
       },
       {
         "x": 11,
         "y": 2,
         "index": 43,
-        "tile": "forest_chest_closed"
+        "tile": "forest_water_top_wall_2"
       },
       {
         "x": 12,
         "y": 2,
         "index": 44,
-        "tile": "forest_chest_open"
+        "tile": "forest_water_top_wall_3"
       },
       {
         "x": 13,
         "y": 2,
         "index": 45,
-        "tile": "forest_plain_floor_2"
+        "tile": "forest_water_top_wall_4"
       },
       {
         "x": 14,
         "y": 2,
         "index": 46,
-        "tile": "forest_plain_floor_2"
+        "tile": "forest_water_top_right_corner_wall"
       },
       {
         "x": 15,
         "y": 2,
         "index": 47,
+        "tile": "forest_bottom_right_tree_stump_2"
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "index": 48,
+        "tile": "forest_water_left_wall"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "index": 49,
+        "tile": "forest_water_right_wall_1"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "index": 50,
+        "tile": "forest_water_right_wall_2"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "index": 51,
+        "tile": "forest_water_bottom_left_corner_wall"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "index": 52,
+        "tile": "forest_water_bottom_wall_1"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "index": 53,
+        "tile": "forest_water_bottom_wall_2"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "index": 54,
+        "tile": "forest_water_bottom_wall_3"
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "index": 55,
+        "tile": "forest_watter_bottom_wall"
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "index": 56,
+        "tile": "forest_water_bottom_left_interior_corner"
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "index": 57,
+        "tile": "forest_water_bottom_right_interior_corner"
+      },
+      {
+        "x": 10,
+        "y": 3,
+        "index": 58,
+        "tile": "forest_water_top_right_interior_corner"
+      },
+      {
+        "x": 11,
+        "y": 3,
+        "index": 59,
+        "tile": "forest_water_top_left_interior_corner"
+      },
+      {
+        "x": 12,
+        "y": 3,
+        "index": 60,
+        "tile": "forest_water_frame_1"
+      },
+      {
+        "x": 13,
+        "y": 3,
+        "index": 61,
+        "tile": "forest_water_frame_2"
+      },
+      {
+        "x": 14,
+        "y": 3,
+        "index": 62,
+        "tile": "forest_plain_floor_2"
+      },
+      {
+        "x": 15,
+        "y": 3,
+        "index": 63,
         "tile": "forest_plain_floor_2"
       }
     ]

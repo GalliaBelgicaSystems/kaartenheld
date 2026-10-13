@@ -1351,12 +1351,14 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
 * **ROM Bank 6 Isolation**:
   * The driver assembly (`lib/hUGEDriver/src/hUGEDriver.asm` via `tools/rgb2sdas.py -b 6`) and all converted track data (`#pragma bank 6`, six songs) live in **ROM Bank 6**.  The driver reads song bytes through the mapped ROM window, so songs cannot live anywhere else.
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
-  * Bank 6 is full (16224/16384 B): the transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 7`) live in **ROM Bank 7** alongside the icon table.  The timer ISR selects bank 7 around `sfx_step_tick()` and bank 6 around `hUGE_dosound()`; muting targets bank 6 (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
+  * Bank 6 is full (16224/16384 B): the opening theme, chest jingle, mimic loop + intro and victory (`generated/music/*.c`, `#pragma bank 7`) live in **ROM Bank 7** next to a **second copy of the hUGE driver**.  The transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 8`) live in **ROM Bank 8** alongside the icon table and the shared overworld sprite blob.  The timer ISR selects bank 8 around `sfx_step_tick()` and bank 6/7 around `hUGE_dosound()`; muting targets the song's bank (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
   * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the asset-atlas entries (`src/game/asset_atlas_content.c`, `ASSET_ATLAS_BANK_ENTRIES 8`) and the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
-  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).
-  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
+  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.
+  * **Ambient birdsong is ZERO-WRAM by design** (`bird1.pcm`/`bird2.pcm` -> 4-bit wave frames in bank 7 via `tools/bird_compile.py`, streamed on CH3 by `bird_ambient_banked` at frame rate, one `EVENT_BIRD_CHIRP` per 128-frame forest window).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`), so birds keep zero WRAM bytes (timing from `g_game.frame` bits, no ISR work, no song-wave save) and live in bank 7 so layout-pinned bank 5 stays byte-identical.  The chest jingle is the exception that proves the rule: its 2 BSS bytes (`s_jingle_frames`, `s_chest_jingle_done` in `jingle_banked.c`) plus the 64-entry tile palette (+16 B over the old 48) are the branch's entire WRAM growth vs master (~18 B).  Any further WRAM growth must re-run `battle_boot` first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
+  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
 * **Tick Division (64 Hz from 256 Hz Timer)**:
   * The hardware timer ISR (`src/crt0.s`) calls `audio_update()` at **256 Hz**.
@@ -3030,25 +3032,39 @@ screen drawn over the live world (dialogue) must redraw the world (tilemap
 + attribute spans), not just stamp its own box.  `make verify-oam`
 executes both regressions (battle VRAM restore, dialogue palette restore).
 
-## 55.7 Static art is floor-painted, not OAM sprites
+## 55.7 Chests are OAM sprites, floor stays floor
 
-Chests, signposts, shrines and similar statics render as background
-tiles, never OAM sprites: the level paints the cell, the actor is an
-invisible `SPRITE_KIND_TILE` interactable on it.  Loot/state variants
-are data, not engine branches: each openable object carries
-`open_tile` / `open_flag` / `open_variable` props, compiled into the
-separate `g_actor_open_states[]` table (a new chest = new JSON props,
-never an engine change).  Two stamps keep it open: the loot event's
-`DIALOGUE` action carries the open cell (flat map offset in its spare
-args) for the banked dialogue body to stamp painted+1 on open
-(mid-visit flip), and the banked scene loader re-stamps already-looted
-cells into the fresh map on every revisit (validate.py checks both
-sides, including the open == painted+1 adjacency) -- so the state
-renders immediately and persists with no render branch and no engine
-struct growth (both blew past the link budget when tried).  New cells go on repurposed
-duplicate sheet cells (never move existing indices -- §52.23), stay
-solid in `tile_walk.h`, and get `tilemap_cell` scenario asserts
-(closed + opened) plus a `verify-oam` background-cell check.
+Chests (and similar openable pickups like the forest amulet) render as
+OAM sprites, never background tiles: the level paints plain ground on
+the cell and the actor is a `SPRITE_KIND_CHEST` interactable on it
+(solid via the actor's `BLOCKING` flag, not via tile walkability).
+Closed/open art lives in the shared overworld blob as consecutive
+frames owned by `screens/enemy_types/treasure_chest.json`
+(`chest_closed` then `chest_open`, sprites5 ramp); the banked sprite
+body picks the frame from loot state at render time.
+
+Loot/state variants are data, not engine branches: each openable
+object carries `open_flag` / `open_variable` props (the retired
+`open_tile` floor-paint prop is rejected by validate.py), compiled into
+the banked `chest_is_open_banked()` resolver (a new chest = new JSON
+props, never an engine change).  The opened chest stays open because
+the flag/variable persists -- no floor stamp on open, no re-stamp on
+revisit, no render branch and no engine struct growth.  Chests get
+`oam_tile` scenario asserts (closed pre-loot, open post-loot) plus a
+`verify-oam` sprite check; the floor cell gets a plain-floor
+`tilemap_cell` assert proving the paint was never touched.
+
+Water bodies are ordinary solid terrain, not sprites: the forest and
+desolate sheets carry full water tile sets (borders, interiors, two
+animation frames) in 64-slot VRAM blocks.  Sheet cells are addressed
+positionally (see §52.23): repurposing a cell that levels reference --
+as water did to forest/desolate indices 41-47, flipping default ground
+to solid -- requires migrating every reference (terrain blocks,
+fixtures, scene defaults, `default_walkable`) and eyeballing the
+regenerated `tile_walk.h`, because the compiled content stays
+byte-identical while the walk table flips.  `validate.py` fails loudly
+if a scene's default ground tile is not walkable, so this class can no
+longer land silently.
 
 ---
 

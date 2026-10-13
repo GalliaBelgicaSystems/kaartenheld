@@ -13,5 +13,7 @@ extern const hUGESong_t song_village;
 extern const hUGESong_t song_castle;
 extern const hUGESong_t song_title;
 extern const hUGESong_t song_victory;
+extern const hUGESong_t song_opening;       /* bank 7 (HUGE_MUSIC_BANK_B7) */
+extern const hUGESong_t song_chest_opening; /* bank 7: chest-loot jingle (one-shot) */
 
 #endif /* HUGE_MUSIC_DATA_H */

@@ -160,5 +160,4 @@ void actor_load_scene_banked(void)
         }
         break;
     }
-    open_stamp_banked();
 }

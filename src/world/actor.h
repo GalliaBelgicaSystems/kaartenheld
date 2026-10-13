@@ -111,10 +111,11 @@ extern uint8_t g_actor_registry_count;
 /* Bank-2 body dispatched by actor_load_scene(). */
 void actor_load_scene_banked(void);
 
-/* Banked open-state re-stamp body (emitted with the actor tables by
- * compile.py, same bank: plain call, no trampoline).  Reads g_game
+/* Banked chest-open resolver (emitted with the actor tables by
+ * compile.py, same bank: plain call, no trampoline).  Staged inputs:
+ * g_bk_byte_a = map id, g_bk_byte_b = x, g_bk_byte_c = y.  Reads g_game
  * directly (WRAM, always mapped). */
-void open_stamp_banked(void);
+uint8_t chest_is_open_banked(void);
 
 /* Result of engaging an actor. */
 typedef enum {

@@ -1,4 +1,5 @@
 #include "huge_music.h"
+#include "banked.h"
 
 /* Driver state (WRAM globals, not static: the bank-7 mimic intro -> loop
  * body (mimic_chain.c) runs in the timer ISR and must touch these
@@ -12,7 +13,8 @@ uint8_t g_huge_playing = 0;
 uint8_t g_huge_tick_divider = 0;
 /* ROM bank holding the active song + its driver copy.  Bank 6 holds the
  * driver and the six original songs; bank 7 holds the second driver copy
- * and the mimic song (bank 6 is full). */
+ * and the mimic/victory/opening/chest songs (bank 6 is full -- the SFX
+ * moved to bank 8 to make room, so no third driver copy was needed). */
 /* BSS (no _INITIALIZER cost): huge_music_init() (via audio_init() at
  * every boot) sets the home bank before any play/mute/update call. */
 uint8_t g_huge_music_bank;
@@ -25,13 +27,11 @@ void huge_music_init(void)
     g_huge_music_bank = HUGE_MUSIC_BANK;
 }
 
-void huge_music_play(const hUGESong_t *song)
-{
-    huge_music_play_banked(song, HUGE_MUSIC_BANK);
-}
-
 void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
 {
+    /* Fixed-bank driver switch: fixed code is immune to MBC window
+     * remaps (bank 0 never remaps); a banked body must never switch
+     * away its own bank mid-function. */
     if (!song) {
         huge_music_stop();
         return;
@@ -55,6 +55,10 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
 
 void huge_music_stop(void)
 {
+    /* Fixed-bank twin of huge_stop_inline() in huge_music_banked.c
+     * (bank 8): identical register writes.  The banked copy exists
+     * because a banked body cannot call fixed-bank code while its own
+     * bank is unmapped -- keep the two in sync. */
     __critical {
         g_huge_playing = 0;
         g_huge_current_song = 0;
@@ -66,18 +70,6 @@ void huge_music_stop(void)
         NR32_REG = 0x00;
         NR42_REG = 0x00;
         NR44_REG = 0x80;
-    }
-}
-
-void huge_music_pause(void)
-{
-    g_huge_playing = 0;
-}
-
-void huge_music_resume(void)
-{
-    if (g_huge_current_song) {
-        g_huge_playing = 1;
     }
 }
 

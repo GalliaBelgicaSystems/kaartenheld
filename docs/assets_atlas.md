@@ -14,9 +14,9 @@ returns `{ source, size, col, row, colors, icon_uid, icon_pal }`.
 
 | Sheet | Pixels | Grid | Stride | Palette | Notes |
 |-------|--------|------|--------|---------|-------|
-| `forest-tile.png` | 128x24 | 16x3 | 8 | canonical | 48 cells |
+| `forest-tile.png` | 128x32 | 16x4 | 8 | canonical | 64 cells |
 | `castle-tile.png` | 72x24 | 9x3 | 8 | canonical | 27 cells |
-| `desolate_landscape.png` | 128x24 | 16x3 | 8 | canonical | 48 cells |
+| `desolate-tile.png` | 128x32 | 16x4 | 8 | canonical | 64 cells |
 | `intrepid.png` | 128x48 | 16x6 | 8 | canonical | 96 cells |
 | `equipment_8x8.png` | 298x163 | 33x18 | 9 | per-tile CGB | 594 cells |
 | `symbols_8x8.png` | 469x190 | 52x21 | 9 | per-tile CGB | 1092 cells |
@@ -36,47 +36,47 @@ tile, not a source sheet.
 | `ASSET_FOREST_STUMP_TR` | `forest-tile.png` | 15 | 0 | forest tileset tile |
 | `ASSET_FOREST_STUMP_BL` | `forest-tile.png` | 14 | 1 | forest tileset tile |
 | `ASSET_FOREST_STUMP_BR` | `forest-tile.png` | 15 | 1 | forest tileset tile |
-| `ASSET_DESOLATE_WALL_00` | `desolate_landscape.png` | 0 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_01` | `desolate_landscape.png` | 1 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_02` | `desolate_landscape.png` | 2 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_03` | `desolate_landscape.png` | 3 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_04` | `desolate_landscape.png` | 4 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_05` | `desolate_landscape.png` | 5 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_06` | `desolate_landscape.png` | 6 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_07` | `desolate_landscape.png` | 7 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_08` | `desolate_landscape.png` | 8 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_09` | `desolate_landscape.png` | 9 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_10` | `desolate_landscape.png` | 10 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_11` | `desolate_landscape.png` | 11 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_TREE_TL` | `desolate_landscape.png` | 12 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_TREE_TR` | `desolate_landscape.png` | 13 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_ROCK_TL` | `desolate_landscape.png` | 14 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_ROCK_TR` | `desolate_landscape.png` | 15 | 0 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_12` | `desolate_landscape.png` | 0 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_13` | `desolate_landscape.png` | 1 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_14` | `desolate_landscape.png` | 2 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_15` | `desolate_landscape.png` | 3 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_16` | `desolate_landscape.png` | 4 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_17` | `desolate_landscape.png` | 5 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_FLOOR_00` | `desolate_landscape.png` | 6 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_FLOOR_01` | `desolate_landscape.png` | 7 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_FLOOR_02` | `desolate_landscape.png` | 8 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_FLOOR_03` | `desolate_landscape.png` | 9 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_18` | `desolate_landscape.png` | 10 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_WALL_19` | `desolate_landscape.png` | 11 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_TREE_BL` | `desolate_landscape.png` | 12 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_TREE_BR` | `desolate_landscape.png` | 13 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_ROCK_BL` | `desolate_landscape.png` | 14 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_ROCK_BR` | `desolate_landscape.png` | 15 | 1 | desolate tileset tile |
-| `ASSET_DESOLATE_FLOOR_PLAIN` | `desolate_landscape.png` | 0 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_HERO_01` | `desolate_landscape.png` | 1 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_HERO_02` | `desolate_landscape.png` | 2 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_KOBOLD_01` | `desolate_landscape.png` | 3 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_KOBOLD_02` | `desolate_landscape.png` | 4 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_FIRE_01` | `desolate_landscape.png` | 5 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_FIRE_02` | `desolate_landscape.png` | 6 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_MERCHANT` | `desolate_landscape.png` | 7 | 2 | desolate tileset tile |
-| `ASSET_DESOLATE_STAIRCASE` | `desolate_landscape.png` | 8 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_00` | `desolate-tile.png` | 0 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_01` | `desolate-tile.png` | 1 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_02` | `desolate-tile.png` | 2 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_03` | `desolate-tile.png` | 3 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_04` | `desolate-tile.png` | 4 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_05` | `desolate-tile.png` | 5 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_06` | `desolate-tile.png` | 6 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_07` | `desolate-tile.png` | 7 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_08` | `desolate-tile.png` | 8 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_09` | `desolate-tile.png` | 9 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_10` | `desolate-tile.png` | 10 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_11` | `desolate-tile.png` | 11 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_TREE_TL` | `desolate-tile.png` | 12 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_TREE_TR` | `desolate-tile.png` | 13 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_ROCK_TL` | `desolate-tile.png` | 14 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_ROCK_TR` | `desolate-tile.png` | 15 | 0 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_12` | `desolate-tile.png` | 0 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_13` | `desolate-tile.png` | 1 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_14` | `desolate-tile.png` | 2 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_15` | `desolate-tile.png` | 3 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_16` | `desolate-tile.png` | 4 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_17` | `desolate-tile.png` | 5 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_FLOOR_00` | `desolate-tile.png` | 6 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_FLOOR_01` | `desolate-tile.png` | 7 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_FLOOR_02` | `desolate-tile.png` | 8 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_FLOOR_03` | `desolate-tile.png` | 9 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_18` | `desolate-tile.png` | 10 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_WALL_19` | `desolate-tile.png` | 11 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_TREE_BL` | `desolate-tile.png` | 12 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_TREE_BR` | `desolate-tile.png` | 13 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_ROCK_BL` | `desolate-tile.png` | 14 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_ROCK_BR` | `desolate-tile.png` | 15 | 1 | desolate tileset tile |
+| `ASSET_DESOLATE_FLOOR_PLAIN` | `desolate-tile.png` | 0 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_HERO_01` | `desolate-tile.png` | 1 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_HERO_02` | `desolate-tile.png` | 2 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_KOBOLD_01` | `desolate-tile.png` | 3 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_KOBOLD_02` | `desolate-tile.png` | 4 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_FIRE_01` | `desolate-tile.png` | 5 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_FIRE_02` | `desolate-tile.png` | 6 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_MERCHANT` | `desolate-tile.png` | 7 | 2 | desolate tileset tile |
+| `ASSET_DESOLATE_STAIRCASE` | `desolate-tile.png` | 8 | 2 | desolate tileset tile |
 | `ASSET_CASTLE_FLOOR` | `castle-tile.png` | 0 | 2 | castle tileset tile |
 | `ASSET_CASTLE_EXIT` | `castle-tile.png` | 8 | 2 | castle tileset tile |
 | `ASSET_CASTLE_BAT_01` | `castle-tile.png` | 5 | 2 | castle tileset tile |

@@ -11,6 +11,7 @@
 #include "core/game.h"
 #include "banked.h"
 #include "battle_data.h"
+#include "audio.h"
 
 #define HERO_START_HP    10
 #define HERO_START_GOLD  20

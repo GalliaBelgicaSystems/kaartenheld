@@ -512,7 +512,7 @@ def main():
         else:
             ids = []
             cells = []
-            n = {"forest": 48, "desolate_landscape": 48, "village": 48}[ts]
+            n = {"forest": 64, "desolate_landscape": 64, "village": 48}[ts]
             for i in range(n):
                 coord = (i % w, i // w)
                 cells.append(coord)

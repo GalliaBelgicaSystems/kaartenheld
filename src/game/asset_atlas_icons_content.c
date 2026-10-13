@@ -1,4 +1,4 @@
-#pragma bank 7
+#pragma bank 8
 
 #include "gfx/asset_atlas.h"
 

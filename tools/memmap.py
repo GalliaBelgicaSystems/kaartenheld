@@ -101,6 +101,34 @@ def main():
         ram_headroom = 0xE000 - end
         print(f"_DATA (WRAM)                  : {nbytes:>6} B  @ 0x{start:04X}-0x{end:04X}  "
               f"headroom to 0xE000: {ram_headroom} B")
+        # True stack gap: _DATA end is NOT the stack floor -- the
+        # _INITIALIZED image + BSS globals (input mask, telemetry,
+        # scenario state, ...) live above it up to s__HEAP, and the
+        # stack grows down from 0xE000 into whatever is below.  The old
+        # headroom figure overstated the gap by that ~66 B, which is
+        # exactly how a +23 B WRAM shift looked safe while smashing
+        # input (ghost START; see the canary post-mortem in
+        # docs/roadmap.md).  Report the gap that matters.
+        if "s__HEAP" in symbols:
+            heap = symbols["s__HEAP"]
+            gap = 0xE000 - heap
+            # Hard floor (ratchet): the battle path measures ~125-126 B
+            # of real stack reach against this gap (canary scenarios
+            # game_over_quit + battle_multi_enemy_cycle_kill read
+            # margin 0-1).  ANY shrinkage risks smashing the topmost
+            # globals (the +23 B ghost-input class).  Growing WRAM must
+            # first land the battle frame diet (docs/roadmap.md §52.24);
+            # lowering this floor without that diet just re-arms silent
+            # corruption.  Debug map only -- the harness runs debug.
+            gap_min = 126
+            gstatus = "OK" if gap >= gap_min else \
+                "VIOLATION (WRAM grew into the zero-margin stack gap)"
+            if gap < gap_min:
+                ok = False
+            print(f"stack gap (s__HEAP..0xE000)   : {gap:>6} B  @ 0x{heap:04X}-0xE000  [{gstatus}]")
+        else:
+            print("stack gap: s__HEAP not found in .noi")
+            ok = False
     else:
         print("_DATA : (not found)")
         ok = False
@@ -166,7 +194,7 @@ def main():
         "_battle_card_undo_banked": "battle card undo (bank 3)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
-        "_open_stamp_banked": "floor-painted open re-stamp (actor tables bank)",
+        "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",
         "_loot_synth_banked": "loot def synthesis (bank 3)",
         "_game_loot_drop_banked": "victory drop roll (bank 3)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",

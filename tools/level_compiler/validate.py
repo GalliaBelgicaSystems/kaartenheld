@@ -29,7 +29,7 @@ from scene_registry import (
 from collision import (
     derive_collision, edge_link_report, effective_actor_flags,
     neighbor_pairing_issues, point_exit_issues, tunnel_id_valid,
-    tunnel_issues, cell_tile_info,
+    tunnel_issues, cell_tile_info, level_default_tile,
 )
 
 MAX_WORLD_WIDTH = 40
@@ -304,6 +304,43 @@ def load_tilesets(tilesets_dir=None):
 
 
 _KNOWN_ENTITY_IDS = None
+_ENTITY_SPRITE_KINDS = None
+
+
+def entity_sprite_kind(entity_id):
+    """sprite_kind for an ENTITY_ID_* from screens/entity_types/*.json.
+
+    Mirrors the data-driven fallback in compile.py resolve_sprite_kind:
+    friendly NPCs authored in the editor (amulet, chest, ...) resolve
+    their overworld sprite here without a hardcoded id list."""
+    global _ENTITY_SPRITE_KINDS
+    if _ENTITY_SPRITE_KINDS is None:
+        _ENTITY_SPRITE_KINDS = {}
+        tools_dir = Path(__file__).resolve().parent.parent
+        for path in (tools_dir / ".." / "screens" / "entity_types").glob("*.json"):
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, ValueError):
+                continue
+            tid = data.get("id") or path.stem
+            _ENTITY_SPRITE_KINDS["ENTITY_ID_" + str(tid).upper()] = data.get("sprite_kind")
+    return _ENTITY_SPRITE_KINDS.get(entity_id)
+
+
+def is_chest_sprite(obj):
+    """True when compile.py would resolve this object to SPRITE_KIND_CHEST:
+    a "chest" token in its sprite names, or its entity type's sprite_kind.
+    (Boss tokens win over chest in compile.py; mirrored here.)"""
+    props = obj.get("properties") or {}
+    names = " ".join(str(f) for f in (obj.get("animation_frames") or []))
+    names += " " + str(obj.get("overworld_sprite") or "")
+    if "boss" in names:
+        return False
+    if "chest" in names:
+        return True
+    if props.get("entity_id") == "ENTITY_ID_SLIME_LORD":
+        return False
+    return entity_sprite_kind(props.get("entity_id", "")) == "chest"
 
 
 _TILE_CONSTANTS = None
@@ -504,6 +541,21 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         passed.append("Collision valid")
         passed.append("Player spawn valid")
 
+    # 3b. Default-ground walkability (§52.23): the ROM pre-fills every
+    # interior cell with the level default, so a solid default bricks
+    # movement, patrols and encounters map-wide while other tilesets
+    # keep working.  Missing info stays silent (other checks own those
+    # cases); only an explicitly solid default fails.
+    default_tid = level_default_tile(level_data, tilesets)
+    if default_tid and "." in default_tid:
+        set_id, _, tile_id = default_tid.partition(".")
+        ts = tilesets.get(set_id, {})
+        tinfo = {t.get("id"): t for t in ts.get("tiles", [])}.get(tile_id)
+        if tinfo is not None and not tinfo.get("walkable", True):
+            errors.append(
+                f"Default ground '{default_tid}' is not walkable: "
+                f"unpainted interior cells would all be solid")
+
     # 4. Exits Check
     exits_ok = True
     exits = level_data.get("exits", [])
@@ -636,13 +688,18 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             if key in props and (not isinstance(props[key], int) or props[key] < 0):
                 errors.append(f"Object '{oid}' has invalid {key} '{props[key]}'")
                 objects_ok = False
-        # Floor-painted open state (AGENTS.md 55.7): open_tile names a
-        # TILE_* const for the opened cell; open_flag/open_variable name
-        # the story state that opens it.  Names resolve at compile time
-        # (compile.py fails loudly on unknown ones); here we only check
-        # the shape, so a typo surfaces with the object id attached.
-        if "open_tile" in props and not isinstance(props["open_tile"], str):
-            errors.append(f"Object '{oid}' open_tile must be a TILE_* name")
+        # Chest-sprite open state: open_flag/open_variable name the story
+        # state that opens the chest (compile.py resolves them into the
+        # banked chest_is_open_banked resolver).  Chests are OAM sprites
+        # now, not floor paint: the retired open_tile prop is rejected
+        # here so a stale level fails loudly instead of stamping water.
+        # Names resolve at compile time (compile.py fails loudly on
+        # unknown ones); here we only check the shape, so a typo
+        # surfaces with the object id attached.
+        if "open_tile" in props:
+            errors.append(f"Object '{oid}' uses retired open_tile: chests "
+                          f"are OAM sprites, open state comes from "
+                          f"open_flag/open_variable only")
             objects_ok = False
         for key, prefix in (("open_flag", "STORY_FLAG_ID_"),
                             ("open_variable", "VARIABLE_ID_")):
@@ -650,35 +707,17 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                                  not props[key].startswith(prefix)):
                 errors.append(f"Object '{oid}' {key} must name a {prefix}* id")
                 objects_ok = False
-        if isinstance(props.get("open_tile"), str):
-            # Adjacency: the banked dialogue body stamps painted+1, so
-            # the open const must be exactly one past the painted cell's
-            # const.  Also requires explicit paint (an unpainted cell
-            # would never show the closed art).
-            pos = obj.get("position", {}) or {}
-            painted = cell_tile_info(level_data, tileset,
-                                     pos.get("x", -1), pos.get("y", -1))
-            if painted is None:
-                errors.append(
-                    f"Object '{oid}' has open_tile but its cell is "
-                    f"unpainted -- paint the closed cell explicitly")
-                objects_ok = False
-            else:
-                tvals = _tile_const_values()
-                pv = tvals.get(painted.get("gb_constant", ""))
-                ov = tvals.get(props["open_tile"])
-                if pv is None or ov is None:
-                    errors.append(
-                        f"Object '{oid}': cannot resolve tile consts "
-                        f"('{painted.get('gb_constant')}' vs "
-                        f"'{props['open_tile']}')")
-                    objects_ok = False
-                elif ov != pv + 1:
-                    errors.append(
-                        f"Object '{oid}': open_tile "
-                        f"{props['open_tile']} must be painted+1 "
-                        f"({painted.get('gb_constant')}+1)")
-                    objects_ok = False
+        # A non-hostile chest sprite with neither open prop silently
+        # never opens (compile.py emits no resolver clause and the sprite
+        # stays closed forever).  Require one, like open_tile used to
+        # require a floor cell.  Hostile chest sprites (mimics: battle
+        # prop) are exempt -- they open via defeat, never via flags.
+        if (is_chest_sprite(obj) and "battle" not in props and
+                not props.get("open_flag") and
+                not props.get("open_variable")):
+            errors.append(f"Object '{oid}' is a chest sprite with no "
+                          f"open_flag/open_variable: it would never open")
+            objects_ok = False
 
     # Lesson tiles (Carl): an AI_TUTOR hostile teaches through a
     # co-located dialogue static on the same tile (one visual sprite:

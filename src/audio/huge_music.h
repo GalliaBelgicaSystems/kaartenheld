@@ -14,14 +14,9 @@ extern void hUGE_dosound_b7(void);
 extern void hUGE_mute_channel_b7(enum hUGE_channel_t ch, enum hUGE_mute_t mute);
 
 void huge_music_init(void);
-void huge_music_play(const hUGESong_t *song);
-/* Play a song from an explicit ROM bank (HUGE_MUSIC_BANK or
- * HUGE_MUSIC_BANK_B7).  huge_music_play() is the bank-6 shorthand. */
 void huge_music_play_banked(const hUGESong_t *song, uint8_t bank);
 void huge_music_stop(void);
 void huge_music_update(void);
-void huge_music_pause(void);
-void huge_music_resume(void);
 void huge_music_mute_channel(uint8_t ch, uint8_t mute);
 void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute); /* timer-ISR context: no di/ei */
 

@@ -1,16 +1,16 @@
-#pragma bank 7
+#pragma bank 8
 
 #include "deck.h"
 #include "banked.h"
 #include "rng.h"
 
-/* Banked body of deck_reshuffle() (see deck.c).  Lives in ROM bank 7:
- * bank 2 ran out of room for the remainder fold and bank 3 (home of
- * deck_discard_banked) overflows in the release build, while bank 7 has
- * room in both builds.  The deck module is therefore split by dispatch
- * (init in bank 2, discard in bank 3, reshuffle here) -- each body is
- * self-contained and entered through the WRAM trampoline, so shared
- * banks are not required.
+/* Banked body of deck_reshuffle() (see deck.c).  Lives in ROM bank 8:
+ * bank 2 ran out of room for the remainder fold, bank 3 (home of
+ * deck_discard_banked) overflows in the release build, and bank 7 filled
+ * with tracker songs -- while bank 8 has room in both builds.  The deck
+ * module is therefore split by dispatch (init in bank 2, discard in
+ * bank 7, reshuffle here) -- each body is self-contained and entered
+ * through the WRAM trampoline, so shared banks are not required.
  *
  * Self-contained: reads only the staged Deck pointer (ptr_a) and advances
  * the shared RNG stream via an inlined xorshift on g_rng_state (banked code

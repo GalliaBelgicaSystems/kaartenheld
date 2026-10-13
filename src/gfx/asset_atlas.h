@@ -740,9 +740,9 @@ typedef struct {
 /* Glyph id for an ASCII character. Globally unique glyph base. */
 #define ASSET_GLYPH(c) ((AssetId)(ASSET_GLYPH_00 + ((uint8_t)((c) - 32))))
 
-/* Banked content lives in ROM banks 8 (entries/palettes) and 7 (icons). */
+/* Banked content lives in ROM bank 8 (entries/palettes/icons). */
 #define ASSET_ATLAS_BANK_ENTRIES 8
-#define ASSET_ATLAS_BANK_ICONS 7
+#define ASSET_ATLAS_BANK_ICONS 8
 #define ASSET_ICON_TILE_COUNT 501
 #define ASSET_ICON_PALETTE_COUNT 29
 

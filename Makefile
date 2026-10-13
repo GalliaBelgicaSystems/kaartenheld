@@ -23,11 +23,12 @@ GB_LITE = $(BUILD_DIR)/gb_lite.lib
 SM83_LITE = $(BUILD_DIR)/sm83_lite.lib
 
 GENERATED_MUSIC_DIR = generated/music
+GENERATED_BIRDS_DIR = generated/birds
 RGBASM_HUGE ?= $(shell command -v rgbasm-huge 2>/dev/null || echo rgbasm)
 RGB2SDAS = python3 tools/rgb2sdas.py
 UGE2SOURCE = uge2source
 
-INCLUDES = -I$(SRC_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/world -I$(SRC_DIR)/battle -I$(SRC_DIR)/input -I$(SRC_DIR)/audio -I$(SRC_DIR)/ui -I$(SRC_DIR)/debug -I$(SRC_DIR)/screens -I$(SRC_DIR)/game -Ilib/hUGEDriver/include -I$(GENERATED_MUSIC_DIR) -I$(GENERATED_SFX_DIR) -I$(GENERATED_TILES_DIR)
+INCLUDES = -I$(SRC_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/world -I$(SRC_DIR)/battle -I$(SRC_DIR)/input -I$(SRC_DIR)/audio -I$(SRC_DIR)/ui -I$(SRC_DIR)/debug -I$(SRC_DIR)/screens -I$(SRC_DIR)/game -Ilib/hUGEDriver/include -I$(GENERATED_MUSIC_DIR) -I$(GENERATED_SFX_DIR) -I$(GENERATED_TILES_DIR) -I$(GENERATED_BIRDS_DIR)
 
 ALL_SRCS = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c)
 BANK5_EARLY_SRCS = $(SRC_DIR)/world/scene_load.c
@@ -55,7 +56,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/assertions.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/world/lesson_b3.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -85,8 +86,8 @@ HUGEDRIVER_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver.o
 HUGEDRIVER_B7_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b7.o
 HUGEDRIVER_B7_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b7.o
 
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
-OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(BIRD_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
+OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(BIRD_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
@@ -106,7 +107,8 @@ debug: $(TARGET_DEBUG)
 # sfx is a prerequisite: the banked sfx_step.c includes the transcribed
 # generated/sfx/sfx_tables.h, which does not exist on a fresh clone
 # (generated/ is untracked) -- without it the ABI guard below fails.
-lint: gfx tiles sfx $(SRCS)
+# birds is the same hazard for bird_step.c / generated/birds/bird_data.h.
+lint: gfx tiles sfx birds $(SRCS)
 	@ok=1; \
 	for f in $(SRCS); do \
 		out=$$($(CC) -S -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
@@ -279,7 +281,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
@@ -340,7 +342,7 @@ src/game/entity_ids_generated.h: $(wildcard screens/enemy_types/*.json) $(wildca
 src/game/title_data.c: screens/title.json
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-src/game/battle_screens.c src/game/battle_types.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
+src/game/battle_screens.c src/game/battle_types.c src/game/enemy_ow_count.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 
 # Extract tile images from source PNGs for the web editor (import_tileset.py)
@@ -352,7 +354,7 @@ extract-tiles:
 		--output-dir tools/level_editor/public/tiles/forest \
 		--output-json tools/level_editor/tilesets/forest.json
 	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/desolate_landscape.png --csv assets/desolate_landscape-description.csv \
+		--sheet assets/desolate-tile.png --csv assets/desolate-description.csv \
 		--tileset-id desolate_landscape --label "Desolate Landscape" \
 		--gb-tileset-kind WORLD_TILESET_DESOLATE \
 		--output-dir tools/level_editor/public/tiles/desolate_landscape \
@@ -564,7 +566,7 @@ build/debug/game/content.o: src/game/content.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD -DTEST_LEVELS $(INCLUDES) -o $@ $<
 
-music: $(MUSIC_SRCS) sfx
+music: $(MUSIC_SRCS) sfx birds
 
 # Tracker SFX -> synth step tables (Path C transcription). Deterministic:
 # rerunning reproduces generated/sfx/sfx_tables.c byte-identically.
@@ -575,6 +577,27 @@ $(SFX_TABLES) &: $(SFX_ALL_UGE) $(SFX_REGISTRY) tools/transcribe_sfx.py | $(GENE
 
 $(GENERATED_SFX_DIR):
 	mkdir -p $(GENERATED_SFX_DIR)
+
+# Bird-chirp PCM -> wave frames. Deterministic: rerunning reproduces
+# generated/birds/bird_data.c byte-identically.
+BIRD_DATA = $(GENERATED_BIRDS_DIR)/bird_data.c
+BIRD_OBJS = $(BUILD_DIR)/birds/bird_data.o
+BIRD_OBJS_DEBUG = $(BUILD_DIR)/debug/birds/bird_data.o
+birds: $(BIRD_DATA)
+
+$(BIRD_DATA) &: assets/music/bird1.pcm assets/music/bird2.pcm tools/bird_compile.py | $(GENERATED_BIRDS_DIR) doctor
+	python3 tools/bird_compile.py
+
+$(GENERATED_BIRDS_DIR):
+	mkdir -p $(GENERATED_BIRDS_DIR)
+
+$(BUILD_DIR)/birds/%.o: $(GENERATED_BIRDS_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c $(INCLUDES) -o $@ $<
+
+$(BUILD_DIR)/debug/birds/%.o: $(GENERATED_BIRDS_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DDEBUG_BUILD $(INCLUDES) -o $@ $<
 
 SFX_OBJS = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/sfx/%.o,$(SFX_TABLES))
 SFX_OBJS_DEBUG = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/debug/sfx/%.o,$(SFX_TABLES))
@@ -595,6 +618,11 @@ $(BUILD_DIR)/debug/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 # also rebuild their consumers.
 $(BUILD_DIR)/audio/audio.o $(BUILD_DIR)/audio/sfx_step.o \
 $(BUILD_DIR)/debug/audio/audio.o $(BUILD_DIR)/debug/audio/sfx_step.o: $(SFX_TABLES)
+
+# bird_step.c includes generated/birds/bird_data.h (side product of one
+# bird_compile.py run). Same ordering hazard and fix as the SFX tables.
+$(BUILD_DIR)/audio/bird_step.o $(BUILD_DIR)/debug/audio/bird_step.o: $(BIRD_DATA)
+$(BUILD_DIR)/birds/bird_data.o $(BUILD_DIR)/debug/birds/bird_data.o: $(BIRD_DATA) | $(BUILD_DIR)
 
 $(GENERATED_MUSIC_DIR)/battle.c: assets/music/Battle\ BGM.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 6 song_battle "$@"
@@ -637,12 +665,25 @@ $(GENERATED_MUSIC_DIR)/title.c: assets/music/title\ short.uge tools/compile_musi
 $(GENERATED_MUSIC_DIR)/victory.c: assets/music/victory.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_victory "$@"
 
+# Opening theme (assets/music/opening.uge).  Wired to MUSIC_OVERWORLD:
+# the four scenes on that track had no authored music yet.  Bank 7
+# (the SFX moved to bank 8 to make room): plays through the bank-7
+# driver copy.
+$(GENERATED_MUSIC_DIR)/opening.c: assets/music/opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_opening "$@"
+
+# Chest-opening jingle (assets/music/chest opening.uge, one-shot).
+# Played once per chest loot (MUSIC_CHEST); the overworld restores the
+# scene track when it ends.  Bank 7 like the opening theme.
+$(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+
 # WAV previews for the level editor's BGM toggle (Inspector Map Info).
 # Rendered from the generated song C by tools/render_music_preview.py
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

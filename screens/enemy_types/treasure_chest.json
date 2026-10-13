@@ -1,0 +1,14 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "treasure_chest",
+  "label": "Chest",
+  "category": "minion",
+  "sprite": null,
+  "overworld": { "cells": ["chest_closed", "chest_open"], "palette": "sprites5" },
+  "name": "CHEST",
+  "hp": 1,
+  "max_hp": 1,
+  "battle_id": "BATTLE_NONE",
+  "gold_reward": 0,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

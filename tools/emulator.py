@@ -44,7 +44,7 @@ SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "TH
 SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
-                   9: "DESOLATE", 10: "FOREST"}
+                   9: "DESOLATE", 10: "FOREST", 11: "CHEST"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
@@ -116,7 +116,7 @@ EVENT_TYPE_MAP = {
     59: "NEW_GAME_STARTED", 60: "GAME_CONTINUED", 61: "SOUND_TOGGLED",
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
-    65: "ACTOR_MOVED"
+    65: "ACTOR_MOVED", 66: "BIRD_CHIRP"
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -1083,6 +1083,77 @@ class EmulatorSession:
         hi = self._memread(count_addr + 1)
         count = (lo or 0) | ((hi or 0) << 8)
         return count, self._memread(last_addr)
+
+    # Stack high-water canary (AGENTS.md §52.24): the static stack-budget
+    # model cannot see ISR nesting or layout-sensitive codegen, so this
+    # measures the real thing.  The heap+stack gap (linker _DATA end ..
+    # 0xE000) is filled with a pattern after scenario load; after the
+    # scenario's actions the lowest overwritten byte marks the deepest
+    # stack reach.  Host-side only (zero ROM bytes): fill/read ride the
+    # debugger like every other harness read.  Only scenarios asserting
+    # stack_margin_min pay the memread cost (same opt-in pattern as the
+    # SFX log).
+    STACK_TOP = 0xE000
+    STACK_CANARY_BYTE = 0xAA
+
+    def _read_sp(self):
+        """Return the current SP as an int, or None.  Fails loudly via
+        None (callers raise) so a drifted register-dump format can never
+        pass as a clean bill of stack health."""
+        m = re.search(r'SP:\s*([0-9A-Fa-f]+)', self._read_registers())
+        return int(m.group(1), 16) if m else None
+
+    def _gap_start(self):
+        """First address past ALL WRAM globals (the heap+stack gap starts
+        here).  Uses the linker's s__HEAP marker -- not s__DATA+l__DATA,
+        which stops at _DATA end and would scribble the _INITIALIZED /
+        BSS globals living above it (input mask, telemetry, scenario
+        state: the ghost-input class).  Recomputed per session from the
+        ROM's own .sym so a WRAM layout shift moves the canary with the
+        gap instead of scribbling globals.  Caveat: file-scope statics
+        without initializers would land here too (BSS grows upward from
+        s__BSS); none exist in this build (l__BSS is 0 -- SDCC emits
+        even =0 statics with _INITIALIZER records), and if one ever
+        appears the canary scenarios fail loudly, which is the correct
+        response to stack-allocated overlap."""
+        return self.get_symbol("s__HEAP")
+
+    def stack_canary_fill(self):
+        """Fill the dead stack region with the canary pattern.  Returns
+        the (gap_start, sp) pair the readback needs.  Must run while the
+        guest is halted at a breakpoint (it is: the harness steps frames
+        that way).  Raises instead of scribbling live frames: an SP
+        already inside globals means the stack has smashed globals and
+        the scenario is broken beyond measuring."""
+        gap_start = self._gap_start()
+        sp = self._read_sp()
+        if sp is None:
+            raise RuntimeError("stack canary: cannot read SP from debugger")
+        if sp < gap_start or sp > self.STACK_TOP:
+            raise RuntimeError(
+                "stack canary: SP=%04X outside gap [%04X, %04X): "
+                "stack already smashed, refusing to fill" % (sp, gap_start, self.STACK_TOP))
+        for addr in range(gap_start, sp):
+            self._memwrite(addr, self.STACK_CANARY_BYTE)
+        return gap_start, sp
+
+    def stack_canary_read(self, gap_start, sp_fill):
+        """Return (depth, margin) in bytes.  depth = deepest stack reach
+        measured from STACK_TOP (0xE000); margin = untouched pattern
+        bytes remaining below it (gap room the run did NOT need).  A
+        WRAM shift that shrinks the gap trips margin even when depth is
+        unchanged -- that is the +23 B ghost-input class.  Raises on
+        unreadable bytes (guest crash reads as failure, never as health)."""
+        lowest = sp_fill
+        for addr in range(gap_start, sp_fill):
+            val = self._memread(addr)
+            if val is None:
+                raise RuntimeError(
+                    "stack canary: unreadable byte at %04X" % addr)
+            if val != self.STACK_CANARY_BYTE:
+                lowest = addr
+                break
+        return self.STACK_TOP - lowest, lowest - gap_start
 
     def get_screen_buf(self):
         """Read 18×20 characters from g_ui_screen_buf."""
