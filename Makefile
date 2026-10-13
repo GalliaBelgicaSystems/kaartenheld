@@ -572,6 +572,12 @@ music: $(MUSIC_SRCS) sfx birds
 # rerunning reproduces generated/sfx/sfx_tables.c byte-identically.
 sfx: $(SFX_TABLES)
 
+$(SFX_TABLES) &: $(SFX_ALL_UGE) $(SFX_REGISTRY) tools/transcribe_sfx.py | $(GENERATED_SFX_DIR) doctor
+	python3 tools/transcribe_sfx.py --out $(GENERATED_SFX_DIR)/sfx_tables.c
+
+$(GENERATED_SFX_DIR):
+	mkdir -p $(GENERATED_SFX_DIR)
+
 # Bird-chirp PCM -> wave frames. Deterministic: rerunning reproduces
 # generated/birds/bird_data.c byte-identically.
 BIRD_DATA = $(GENERATED_BIRDS_DIR)/bird_data.c
