@@ -34,7 +34,8 @@ VALID_ASSERTION_TYPES = {
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
     "oam_tile",
-    "sfx_count", "sfx_last"
+    "sfx_count", "sfx_last",
+    "stack_margin_min",
 }
 
 VALID_ENTITY_IDS = set(ENTITY_ID_MAP.values())
@@ -179,6 +180,12 @@ def run_scenario(scenario):
         # Load requested scenario from its declarative initial_state
         session.load_scenario(scenario)
 
+        # Stack canary (opt-in, like the SFX log): fill the dead stack
+        # region after load so boot/load frames don't pollute the
+        # measurement; only the scenario's own actions count.
+        has_canary_assert = any(a.get("type") == "stack_margin_min" for a in scenario.get("assertions", []))
+        canary_base, canary_sp = session.stack_canary_fill() if has_canary_assert else (None, None)
+
         # Execute action sequence
         for act in actions:
             act_type = act.get("type")
@@ -313,6 +320,10 @@ def run_scenario(scenario):
         tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
         has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
         sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        if has_canary_assert:
+            canary_depth, canary_margin = session.stack_canary_read(canary_base, canary_sp)
+        else:
+            canary_depth, canary_margin = None, None
         # OAM HUD assertions (battle top-right rider sprites) must pre-read
         # before disconnect: evaluation runs after the session closes.
         has_oam_assert = any(a.get("type") == "oam_tile" for a in scenario.get("assertions", []))
@@ -468,6 +479,15 @@ def run_scenario(scenario):
             actual = sfx_last
             passed = (actual == int(expected))
             actual = f"sfx_last={actual}"
+
+        elif a_type == "stack_margin_min":
+            # Stack high-water canary: passes when the untouched-pattern
+            # margin below the deepest stack reach is at least `expected`
+            # bytes.  Catches both deeper frames and WRAM shifts that
+            # shrink the gap (the ghost-input class); see AGENTS.md §52.24.
+            actual = canary_margin
+            passed = (actual is not None and actual >= int(expected))
+            actual = f"stack_margin={actual}"
 
         elif a_type == "music_track":
             actual = snap.get("music_track", "UNKNOWN")

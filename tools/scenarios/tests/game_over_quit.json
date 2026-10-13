@@ -93,6 +93,10 @@
    "type": "screen_row",
    "row": 8,
    "contains": "THANKS FOR PLAYING!"
+  },
+  {
+   "type": "stack_margin_min",
+   "expected": 0
   }
  ],
  "initial_state": {

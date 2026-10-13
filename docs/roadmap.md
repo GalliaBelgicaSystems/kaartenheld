@@ -181,6 +181,33 @@ window-address breakpoint forensics on top).  Lessons kept in code:
   birds -- any future WRAM growth must re-run battle_boot first, and a
   real stack-frame diet is still wanted (§52.24).
 
+### STACK CANARY (landed 2026-10-13, host-side measurement)
+
+The static stack-budget model (142 B worst chain) cannot see ISR
+nesting or layout-sensitive codegen, and the memmap "_DATA headroom"
+figure overstated the gap by ~66 B (it counted from _DATA end,
+ignoring the _INITIALIZED/BSS globals above it).  Measured with the
+host-side canary (`stack_canary_fill`/`stack_canary_read` in
+tools/emulator.py, asserted as `stack_margin_min` in scenarios --
+zero ROM bytes, opt-in per scenario like the SFX log):
+* true stack gap (s__HEAP..0xE000): 126 B, not 192;
+* idle title path: 94 B deep (margin 32);
+* battle paths (game_over_quit, battle_multi_enemy_cycle_kill):
+  125-126 B deep -- margin 0-1.  The suite is green with essentially
+  zero headroom.
+Guards landed with the canary:
+* `make memmap` reports the true gap AND hard-fails below 126 B
+  (WRAM freeze: any growth must first land the battle frame diet --
+  lowering the floor without it re-arms silent corruption);
+* `stack_margin_min: 0` on the two deepest battle paths locks the
+  measurement pipeline (fill/read/symbols) and turns guest crashes
+  into loud canary failures instead of mystery gameplay FAILs.
+Honest limits: at margin ~0 the canary measures but cannot by itself
+fail on smash-past-the-gap (reads clamp at the gap floor) -- the
+memmap freeze above is the actual tripwire, the canary is the
+tape measure.  If a future build needs WRAM and cannot diet first,
+the escape hatch is a sacrificial guard region, not a quieter assert.
+
 ### DONE
 
 - Card battle prototype (hand/deck/discard, draw, play, resolve; per-card
