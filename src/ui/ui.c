@@ -194,7 +194,8 @@ void ui_sprite_init(void)
      * ui_draw_actors_sprites). */
     set_sprite_data(HERO_DESOLATE_SPRITE_TILE_ID, 2, hero_desolate_sprite_tile);
     /* Shared per-enemy overworld sprites (bank-8 blob, see
-     * src/game/enemy_ow_content.c): stream into OAM at ENEMY_OW_BASE in
+     * src/game/enemy_ow_content.c, with its size in bank-8
+     * src/game/enemy_ow_count.c): stream into OAM at ENEMY_OW_BASE in
      * screen-buf chunks (g_ui_screen_buf holds 128 bytes safely; no
      * multiply anywhere). */
     banked_copy(8, &ow_n, &g_enemy_ow_tile_count, 1);

@@ -305,5 +305,3 @@ const EnemyTypeDef* const g_enemy_types[12] = {
     &g_enemy_type_treasure_chest,
 };
 const uint8_t g_enemy_type_count = 12;
-
-const uint8_t g_enemy_ow_tile_count = 25;

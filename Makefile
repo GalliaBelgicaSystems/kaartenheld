@@ -107,7 +107,8 @@ debug: $(TARGET_DEBUG)
 # sfx is a prerequisite: the banked sfx_step.c includes the transcribed
 # generated/sfx/sfx_tables.h, which does not exist on a fresh clone
 # (generated/ is untracked) -- without it the ABI guard below fails.
-lint: gfx tiles sfx $(SRCS)
+# birds is the same hazard for bird_step.c / generated/birds/bird_data.h.
+lint: gfx tiles sfx birds $(SRCS)
 	@ok=1; \
 	for f in $(SRCS); do \
 		out=$$($(CC) -S -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
@@ -280,7 +281,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
@@ -341,7 +342,7 @@ src/game/entity_ids_generated.h: $(wildcard screens/enemy_types/*.json) $(wildca
 src/game/title_data.c: screens/title.json
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-src/game/battle_screens.c src/game/battle_types.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
+src/game/battle_screens.c src/game/battle_types.c src/game/enemy_ow_count.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 
 # Extract tile images from source PNGs for the web editor (import_tileset.py)
