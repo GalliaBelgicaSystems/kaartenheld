@@ -134,11 +134,16 @@ void ui_load_tileset_banked(void)
     while (n--) {
         *dst++ = *src++;
     }
-    for (i = 0; i < tile_count; i++) {
-        g_active_tile_palette[i] = pal_src[i];
-    }
-    for (; i < 64; i++) {
-        g_active_tile_palette[i] = 0;
+    for (i = 0; i < 64; i++) {
+        /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
+         * byte): even slots assign the low nibble first, odd slots OR
+         * in the high nibble (ascending i guarantees the order). */
+        uint8_t v = (i < tile_count) ? pal_src[i] : 0;
+        if ((i & 1) == 0) {
+            g_active_tile_palette[i >> 1] = v;
+        } else {
+            g_active_tile_palette[i >> 1] |= (uint8_t)(v << 4);
+        }
     }
 
     /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites

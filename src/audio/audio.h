@@ -88,9 +88,10 @@ enum {
 #define BIRD_GAP 128
 
 /* Chest-loot jingle (MUSIC_CHEST, one-shot): edge-trigger + timed
- * restore, driven by the overworld screen every frame (see audio.c).
- * open_mask bit 0 = field cache open, bit 1 = amulet found. */
-void audio_jingle_frame(uint8_t map_id, uint8_t open_mask);
+ * restore, driven by game_update() every non-battle frame through the
+ * game-layer bank-8 body (src/game/jingle_full_banked.c, which reads
+ * the loot mask from game story state).  Mask bit 0 = field cache
+ * open, bit 1 = amulet found. */
 
 /* Current track (WRAM): readable directly from bank-2 code, which cannot
  * call this fixed-bank getter. */

@@ -20,7 +20,7 @@ char g_ui_screen_buf[18][21];
  * tilemap is never overwritten with palette bytes.  Read from the banked
  * battle renderer too (WRAM, always mapped). */
 uint8_t g_is_cgb;
-uint8_t g_active_tile_palette[64];
+uint8_t g_active_tile_palette[32];
 
 void ui_set_cram_palette(uint8_t overworld)
 {
@@ -518,8 +518,13 @@ if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) ||
  * palette 0 (map changes and power-on attribute garbage stay invisible). */
 static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
 {
-    if (tile_idx >= 128 && (uint8_t)(tile_idx - 128) < 64) {
-        return g_active_tile_palette[(uint8_t)(tile_idx - 128)];
+    uint8_t j;
+    uint8_t b;
+    if (tile_idx >= 128 && (j = (uint8_t)(tile_idx - 128)) < 64) {
+        /* Nibble-packed table (see g_active_tile_palette): even slots
+         * ride the low nibble, odd slots the high nibble. */
+        b = g_active_tile_palette[j >> 1];
+        return (j & 1) ? (uint8_t)(b >> 4) : (uint8_t)(b & 0x0F);
     }
     if (glyph == 'T') return UI_COLOR_FIELD;
     if (glyph == 't' || glyph == 's') return UI_COLOR_WOOD;

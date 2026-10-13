@@ -41,7 +41,7 @@ bool load_game_slot(uint8_t slot, GameState *state)
      * jingle edge (bank-8 BSS) keys off live loot flags, so a save
      * loaded mid-session with chests already open would replay on the
      * first overworld frame.  Clearing re-seeds from the live mask on
-     * the next call (see jingle_frame_banked).  Real saves and the
+     * the next call (see jingle_full_banked).  Real saves and the
      * harness debug-load action share this path. */
     extern uint8_t g_jingle_done;
     if (!state) return false;
