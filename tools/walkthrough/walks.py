@@ -359,6 +359,8 @@ def walk_b(planner, checks):
     # transitions eat input for a few dozen frames.  Carl is a single
     # sprite now: bumping him opens the lesson first, and closing it
     # auto-starts the spar from the stashed encounter (no second bump).
+    # (Carl's hut-doorstep spot is on hold while a rare battle-window
+    # remap is hunted; he waits mid-field meanwhile.)
     s.check("carl lesson bump",
             bump_actor(s, planner, "field", (15, 8), "left", "CARL:"),
             expected="CARL:", actual="none")
