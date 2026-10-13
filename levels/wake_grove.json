@@ -432,7 +432,7 @@
     "y": 6
    },
    "properties": {
-    "entity_id": "ENTITY_ID_SIGNPOST",
+    "entity_id": "ENTITY_ID_STAIRS",
     "display_name": "STAIRCASE",
     "dialogue": "DIALOGUE_ID_WAKE_STAIRS",
     "actor_id": 0,

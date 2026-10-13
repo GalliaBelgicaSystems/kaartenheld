@@ -547,11 +547,11 @@ static const WorldActorDefinition g_desolate_field_actors[] = {
 
 static const WorldActorDefinition g_wake_grove_actors[] = {
     {
-        0, ENTITY_ID_SIGNPOST, 10, 6, DIRECTION_DOWN,
+        0, ENTITY_ID_STAIRS, 10, 6, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         '>', "STAIRCASE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WAKE_STAIRS, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_ASCII, 0xFF, 0
+         SPRITE_KIND_TILE, 0xFF, 0
     },
 };
 
