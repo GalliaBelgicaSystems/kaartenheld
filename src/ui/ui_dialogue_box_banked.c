@@ -56,12 +56,20 @@ void ui_dialogue_box_banked(void)
             BCPD_REG = s_dialogue_paper[i];
         }
     }
-    /* Direct VRAM writes: the sole caller (ui_draw_dialogue, first dialogue
-     * frame) runs with the LCD off, so no PPU wait is needed. */
+    /* VRAM attr writes: PPU-safe so the box can be painted while the LCD
+     * stays on (overworld -> dialogue overlay path).  When the LCD is off the
+     * wait is skipped (STAT is idle and a wait would spin forever). */
     VBK_REG = 1;
     i = 128;
     do {
-        *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
+        if (LCDC_REG & 0x80) {
+            __asm di __endasm;
+            while (STAT_REG & 0x02);
+            *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
+            __asm ei __endasm;
+        } else {
+            *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
+        }
         dst++;
     } while (--i != 0);
     VBK_REG = 0;

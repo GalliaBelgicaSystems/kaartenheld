@@ -501,66 +501,36 @@ def verify_steady_battle_frame(sess):
 
 
 def verify_dialogue_transition(sess):
-    """Dialogue redraws the world behind the box on entry (the map is
-    already on screen from the overworld, but ui_lcd_off() wipes every CGB
-    tile attribute to palette 0, so only a full redraw re-applies per-tile
-    palettes -- skipping it turned the whole screen gray for the dialogue).
-    The Mayor sits at (10,5); the scenario boots the player at (9,5)
-    facing RIGHT, so a single A press engages him and starts the dialogue
-    within that frame.  Arm a breakpoint at ui_draw_world_full before the
-    press: the dialogue-entry render must reach it (checked by continuing
-    past the frame-entry pause).  The sprite stays visible behind the box."""
-    print("== Dialogue entry (mayor): redrawn world + box, colors kept ==")
+    """Dialogue entry is an overlay: the map stays on screen (no LCD-off
+    wipe, no full world redraw), the box paints over rows 14-17.  The Mayor
+    sits at (10,5); the scenario boots the player at (9,5) facing RIGHT,
+    so a single A press engages him and starts the dialogue within that
+    frame.  Asserts: dialogue activates, box text is on screen, CGB attrs
+    stay applied (no grayscale wipe), sprite stays visible behind the box.
+    (The old breakpoint-at-ui_draw_world_full form asserted the previous
+    architecture -- full redraw behind the box -- and its CPU-address break
+    collides with banked code at the same offset, firing spuriously.)"""
+    print("== Dialogue entry (mayor): overlay box, colors kept ==")
     initial = load_scenario(sess, "mayor_dialogue.json")["initial_state"]
     sess.load_scenario(initial)
     sess.step(1)
 
-    full_addr = sess.get_symbol("ui_draw_world_full")
-    brk = sess._cmd(f"break 0x{full_addr:04X}")
-    if b"Added breakpoint" not in brk:
-        raise RuntimeError(f"ui_draw_world_full break not armed: {brk!r}")
-
     sess.press("A")
-    # press() leaves us paused at the frame-entry breakpoint; continue
-    # through frames: the dialogue render must hit ui_draw_world_full.
-    # The A edge can land a frame later (mask-write vs step host race,
-    # plus the armed redraw breakpoint perturbing press()'s own step),
-    # so allow a few frames instead of asserting the very next one.
-    pc = None
-    for _ in range(4):
-        sess._cmd("frame", timeout=5.0)
-        pc = sess._read_pc()
-        if pc == full_addr:
-            break
-    check("dialogue entry: world redrawn behind the box",
-          full_addr, pc)
-    # Disarm the redraw breakpoint before engaging: while armed, press()'s
-    # internal step pauses mid-frame and the A edge never engages (proven
-    # by matrix probe: armed=never, clean=always). mGBA prints
-    # "Added breakpoint #N" (note the hash). A reset frame first (edge
-    # discipline, AGENTS.md 52.10); press A only if the first press did
-    # not already engage -- with three-line pages the 3-line INTRO is a
-    # single page, so a second press would CLOSE it ("advances a line,
-    # still active" only held under single-line stepping).
-    import re as _re
-    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
-    if _m:
-        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
     sess.step(1)
     if not sess.snapshot().get("dialogue_active"):
-        sess.press("A")
         sess.step(1)
-    # Continue past the redraw breakpoint to the next frame entry: the
-    # redraw (tilemap + CGB attrs + palettes) has now fully executed.
-    sess._cmd("c", timeout=10.0)
 
     snap = sess.snapshot()
     check("dialogue entry: dialogue is active", True, snap.get("dialogue_active"))
 
-    # CGB attributes must be re-applied, not left at the lcd_off wipe
-    # (all-zero = grayscale).  Count nonzero attrs over the visible map
-    # with true VRAM reads (the WRAM mirror goes stale across the wipe),
-    # gated on VBlank: mid-scanout every attr reads back 0xFF (nonzero)
+    # Box text painted over the live map (speaker + first lines on rows 14-17).
+    buf = sess.get_screen_buf().split("\n")
+    box = "".join(buf[14:18]) if len(buf) >= 18 else ""
+    check("dialogue entry: box text on screen (non-blank rows 14-17)",
+          True, len(box.strip()) > 0)
+
+    # CGB attributes must stay applied, not wiped to grayscale.
+    # Gated on VBlank: mid-scanout every attr reads back 0xFF (nonzero)
     # and the check would pass vacuously.
     check("dialogue VRAM read in VBlank", True, wait_vblank(sess))
     nonzero = 0
@@ -568,7 +538,7 @@ def verify_dialogue_transition(sess):
         for x in range(20):
             if vram_attr_at(sess, x, y) not in (None, 0):
                 nonzero += 1
-    check("dialogue entry: CGB attrs re-applied (nonzero count)",
+    check("dialogue entry: CGB attrs kept (nonzero count)",
           True, nonzero > 20)
 
     # Sprite stays visible behind the box at the player's position (9,5),

@@ -60,6 +60,7 @@ extern volatile uint8_t g_harness_mode;
 extern uint8_t g_anim_count;
 
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
+static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
 static int8_t s_loaded_tileset = -1;
 
 /* First VRAM tile the font occupies.  Tile 0 is space (0x20), so the tile
@@ -303,8 +304,9 @@ static void ui_put_char_ring(uint8_t x, uint8_t y, char ch, uint8_t ox, uint8_t 
 {
     if (y < 18 && x < 20) {
         VBK_REG = 0;  /* tile-index bank, not the CGB attribute bank */
-        ((volatile uint8_t *)0x9800)[((y + oy) & 31) * 32 + ((x + ox) & 31)] =
-            (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+        ui_vram_sync_write(
+            &((volatile uint8_t *)0x9800)[((y + oy) & 31) * 32 + ((x + ox) & 31)],
+            (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
         g_ui_screen_buf[y][x] = ch;
     }
 }

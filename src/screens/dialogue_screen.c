@@ -48,14 +48,17 @@ void dialogue_screen_render(Game *g)
     }
 
     if (first_enter) {
-        ui_lcd_off();
-        /* Always redraw the world, even coming from the overworld: the
-         * lcd_off attribute wipe resets every BG tile to palette 0
-         * (grayscale) and only a full redraw re-applies per-tile palettes.
-         * Skipping it here turned the whole screen gray for the dialogue. */
-        ui_draw_world_full(w);
+        /* From battle (or any non-overworld): full LCD-off redraw to
+         * recreate VRAM Block 1 after enemy art.  From overworld: overlay,
+         * no LCD-off, paint the box over the live map. */
+        if (g->prev_screen != SCREEN_OVERWORLD) {
+            ui_lcd_off();
+            ui_draw_world_full(w);
+        }
         ui_draw_dialogue(d, w);
-        ui_lcd_on();
+        if (g->prev_screen != SCREEN_OVERWORLD) {
+            ui_lcd_on();
+        }
 
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
                        (uint8_t)(world_player_py(w) - w->camera_px_y));

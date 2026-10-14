@@ -133,6 +133,7 @@ void game_render(Game *g)
 {
     RenderCache *rc;
     uint8_t full_redraw;
+    uint8_t overlay_redraw;
 
     if (!g) return;
     rc = &g->render_cache;
@@ -162,7 +163,13 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    if (full_redraw) {
+    /* Overlay transition (overworld -> dialogue entry): keep the map on
+     * screen -- no LCD-off wipe, no sprite re-hide, no full world redraw.
+     * The box paints over the live map.  Every other transition (dialogue
+     * exit, battle, level, menu) keeps the full LCD-off redraw. */
+    overlay_redraw = (full_redraw &&
+                      (g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE));
+    if (full_redraw && !overlay_redraw) {
         ui_sprite_begin_transition();
         /* A full redraw is much larger than the part of VBlank remaining
          * after vsync() returns.  Keeping the LCD on here makes the PPU drop
