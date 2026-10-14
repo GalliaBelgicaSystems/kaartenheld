@@ -51,10 +51,10 @@ uint8_t g_anim_count;
  * cell at ~492 cycles) -- ~5 VBlanks of CPU every 4th frame, halving
  * release speed (vsync-gated main loop; measured 40 ticks/flip vs 16
  * at full speed).  A full-ring single scan (576 cells) recovered to
- * ~80% -- not enough.  Now the swap walks the recorded list (<=16
- * entries, ~100 cycles each every 4th frame ~= 0.5k avg, <1% of a
- * VBlank): measured full speed again (16.0 ticks/flip, same as the
- * no-animation baseline).  A VRAM-index list was chosen over in-draw
+ * ~80% -- not enough.  Now the swap walks the recorded list (<=8
+ * entries every 4th frame, <1% of a VBlank): measured parity with the
+ * no-animation baseline (16.84 ticks/flip both).  A VRAM-index list
+ * was chosen over in-draw
  * recording because the record hook would live in fixed-bank
  * ui_draw_world_cell (~38 B of _HOME margin left); the post-redraw
  * rebuild scan needs no fixed-bank loop and no per-cell history.
@@ -65,7 +65,17 @@ uint8_t g_anim_count;
  * water patterns only).  Font tiles (ids < 128) can never false-match
  * animation VRAM ids (>= 128), so the dialogue box rows stamped after
  * a rebuild are safely skipped.  Stateless swap (no last-step byte):
- * value-matched writes only, idempotent. */
+ * value-matched writes only, idempotent.
+ *
+ * PPU gating (Oct 2026): the swap runs LCD-on at a fixed point in the
+ * render path, so with a constant per-frame update cost it executes at
+ * a fixed PPU phase every run.  A Mode-3 phase drops every raw access
+ * (reads return 0xFF, writes are ignored): the animation froze while
+ * idle and only advanced when input jittered the phase, while OAM
+ * actors (WRAM + VBlank DMA) kept animating.  Every swap cell access
+ * therefore waits for an accessible window first (see anim_read_cell);
+ * PyBoy, which does not gate VRAM, exits the wait at once and behaves
+ * exactly as before. */
 void world_anim_rebuild_banked(void)
 {
     uint8_t slots[4];
@@ -142,6 +152,62 @@ void world_anim_rebuild_banked(void)
     g_anim_count = n;
 }
 
+/* -- PPU-gated VRAM cell access (swap only) -----------------------------
+ * The swap runs LCD-on at a fixed point in the render path, so with a
+ * constant per-frame update cost it executes at a fixed PPU phase every
+ * run.  A Mode-3 phase drops every raw access (reads return 0xFF,
+ * writes are ignored): the animation freezes while idle and only
+ * advances when input jitters the phase, while OAM actors (WRAM +
+ * VBlank DMA) keep animating.  Every swap cell access therefore waits
+ * for an accessible window first (Modes 0-1; Mode 2 is too short to be
+ * useful).  Same contract as fixed-bank ui_vram_sync_write (which a
+ * banked body must not call -- the bank is switched away), plus a
+ * bound: a frozen PPU (paused debugger) can never hang the ROM
+ * (~200 x ~6 cycles far exceeds one scanline; on timeout the access
+ * still executes and reruns converge).  Pauses landing at the
+ * game_render breakpoint in VBlank exit the waits at once.
+ * LCD-off reads STAT idle (mode 0) and skips instantly; PyBoy, which
+ * does not gate VRAM, exits at once too.
+ *
+ * Deliberately NO di/ei around the window (unlike fixed-bank
+ * ui_vram_sync_write): rapid di/ei pairs inside the per-cell walk
+ * freeze PyBoy outright (reproduced on field: stuck movement, 0 flips
+ * in 160 ticks; byte-identical NOPs in the same layout run fine, so it
+ * is the interrupt semantics, not code layout).  They are also
+ * unnecessary here: an ISR-eclipsed access merely drops/skips one cell
+ * for one run and the 4-frame reruns converge invisibly.  One-shot menu
+ * writes cannot rely on reruns, hence the difference. */
+static uint8_t anim_read_cell(uint16_t cell)
+{
+    uint8_t v;
+    uint8_t t;
+    t = 200;
+    while (t--) {
+        if (!(STAT_REG & 0x02)) {
+            break;
+        }
+    }
+    VBK_REG = 0;
+    v = ((volatile uint8_t *)0x9800)[cell];
+    return v;
+}
+
+static void anim_write_cell(uint16_t cell, uint8_t tile)
+{
+    uint8_t t;
+    t = 200;
+    while (t--) {
+        if (!(STAT_REG & 0x02)) {
+            break;
+        }
+    }
+    VBK_REG = 0;
+    ((volatile uint8_t *)0x9800)[cell] = tile;
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[cell] = tile;
+#endif
+}
+
 void world_anim_swap_banked(void)
 {
     const World *w = (const World *)g_bk_ptr_a;
@@ -160,10 +226,6 @@ void world_anim_swap_banked(void)
     uint8_t n;
     uint8_t v;
     uint16_t cell;
-    volatile uint8_t *tilemap;
-#ifdef DEBUG_BUILD
-    uint8_t *mirror;
-#endif
     if (!w) return;
     /* Throttle: every 4th game frame is plenty -- steps last 16 frames
      * and the walk is tiny now.  g_game.frame advances once per
@@ -206,26 +268,16 @@ void world_anim_swap_banked(void)
     if (npairs == 0) {
         return;
     }
-    /* Tilemap ring lives in VRAM bank 0 (callers leave VBK anywhere). */
-    VBK_REG = 0;
-    tilemap = (volatile uint8_t *)0x9800;
-#ifdef DEBUG_BUILD
-    mirror = &g_tilemap_mirror[0];
-#endif
+    /* Walk the recorded list through PPU-gated cell access (above):
+     * phase-independent on every target, idle or moving. */
     n = (g_anim_count <= ANIM_CELL_CAP) ? g_anim_count : ANIM_CELL_CAP;
     for (i = 0; i < n; i++) {
         cell = g_anim_cells[i];
-        v = tilemap[cell];
+        v = anim_read_cell(cell);
         if (v == o0) {
-            tilemap[cell] = w0;
-#ifdef DEBUG_BUILD
-            mirror[cell] = w0;
-#endif
+            anim_write_cell(cell, w0);
         } else if (npairs > 1 && v == o1) {
-            tilemap[cell] = w1;
-#ifdef DEBUG_BUILD
-            mirror[cell] = w1;
-#endif
+            anim_write_cell(cell, w1);
         }
     }
 }

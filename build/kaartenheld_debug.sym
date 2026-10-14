@@ -25,7 +25,7 @@
 00:7F2E 0000007D
 00:C940 000015F9
 00:74000 00002201
-00:54000 00002EAE
+00:54000 00002E8F
 00:64000 00003BF8
 00:34000 00003F49
 00:44000 00003FA8
@@ -977,8 +977,8 @@
 00:37AD7 _ui_color
 00:6FCA _ui_color_span
 00:37AD7 _ui_color_span_banked
-00:56793 _ui_dialo
-00:56793 _ui_dialogue_box_banked
+00:56774 _ui_dialo
+00:56774 _ui_dialogue_box_banked
 00:37B46 _ui_draw_
 00:6A09 _ui_draw_actors_sprites
 00:6EB3 _ui_draw_battle_full
@@ -1036,9 +1036,9 @@
 00:7CE1 _world_ac
 00:7CD6 _world_actor_px
 00:7CE1 _world_actor_py
-00:5661B _world_an
+00:5664D _world_an
 00:56469 _world_anim_rebuild_banked
-00:5661B _world_anim_swap_banked
+00:5664D _world_anim_swap_banked
 00:77DA _world_ch
 00:77DA _world_change_map
 00:27F6C _world_ed
@@ -1053,8 +1053,8 @@
 00:7CEC _world_on_battle_end
 00:7E23 _world_on_battle_fled
 00:74144 _world_on_battle_fled_banked
-00:5681A _world_pa
-00:5681A _world_patrol_slot_banked
+00:567FB _world_pa
+00:567FB _world_patrol_slot_banked
 00:7CCB _world_pl
 00:7CC1 _world_player_px
 00:7CCB _world_player_py
@@ -1593,7 +1593,7 @@
 00:3FE0 l__CODE_2
 00:3F49 l__CODE_3
 00:3FA8 l__CODE_4
-00:2EAE l__CODE_5
+00:2E8F l__CODE_5
 00:3BF8 l__CODE_6
 00:2201 l__CODE_7
 00:3FD7 l__CODE_8
@@ -1858,8 +1858,8 @@
 00:37AD7 ui_color
 00:6FCA ui_color_span
 00:37AD7 ui_color_span_banked
-00:56793 ui_dialo
-00:56793 ui_dialogue_box_banked
+00:56774 ui_dialo
+00:56774 ui_dialogue_box_banked
 00:37B46 ui_draw_
 00:6A09 ui_draw_actors_sprites
 00:6EB3 ui_draw_battle_full
@@ -1917,9 +1917,9 @@
 00:7CE1 world_ac
 00:7CD6 world_actor_px
 00:7CE1 world_actor_py
-00:5661B world_an
+00:5664D world_an
 00:56469 world_anim_rebuild_banked
-00:5661B world_anim_swap_banked
+00:5664D world_anim_swap_banked
 00:77DA world_ch
 00:77DA world_change_map
 00:27F6C world_ed
@@ -1934,8 +1934,8 @@
 00:7CEC world_on_battle_end
 00:7E23 world_on_battle_fled
 00:74144 world_on_battle_fled_banked
-00:5681A world_pa
-00:5681A world_patrol_slot_banked
+00:567FB world_pa
+00:567FB world_patrol_slot_banked
 00:7CCB world_pl
 00:7CC1 world_player_px
 00:7CCB world_player_py
