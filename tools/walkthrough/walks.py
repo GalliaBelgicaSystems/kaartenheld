@@ -369,9 +369,23 @@ def walk_b(planner, checks):
     # Carl himself, one tile east of the hero: the field's single slime.
     s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
+    # Real-VRAM exact-row regression (Oct 2026): a tree trunk (world
+    # glyph 't', tile 157) underlaps the 't' of "fight" here, and the
+    # redraw skip once left trunk art on screen while RAM claimed text
+    # (harness text asserts are blind to it).  Row 16 must decode the
+    # font 't', not '?' (non-font tile); '?' at col 19 of row 17 is the
+    # expected chevron tile.
+    rows = s.bg_text()
+    s.check("carl tutor rows exact",
+            rows[14] == "+--CARL:-----------+"
+            and rows[15] == "Danger! I will      "
+            and rows[16] == "teach you to fight! "
+            and rows[17] == "U/D choose target  ?",
+            expected="exact box text",
+            actual=" / ".join(rows[14:18]))
     # Closing by battle-open (not by CARL: gone): the spar banner itself
     # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
-    # the fight.  Four advances close the 4-line lesson; press_until
+    # the fight.  Three advances close the 8-line lesson; press_until
     # self-heals dropped presses and stops at the first DECK: sighting.
     s.check("lesson closed into spar",
             s.press_until("a", lambda: s.text_has("DECK:"),

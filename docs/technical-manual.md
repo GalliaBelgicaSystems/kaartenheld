@@ -99,8 +99,8 @@ Overworld:
 | `START` | Open the quick screen (cards & quests, §7). |
 | `SELECT` | Open the **LOAD GAME** screen. |
 
-Dialogue: `A`/`START` advances to the next line; the dialogue closes after
-the last line.
+Dialogue: `A`/`START` advances to the next page (three lines); the dialogue closes after
+the last page.
 
 Battle and menus have their own controls, covered in §6 and §7.
 

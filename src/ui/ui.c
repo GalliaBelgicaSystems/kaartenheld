@@ -882,15 +882,13 @@ void ui_draw_dialogue_page(const DialogueState *dialogue,
     } else {
         third = "";
     }
+    ui_draw_dialogue_line(0, 17, third, 20, scroll_x, scroll_y);
     if (has_more) {
-        ui_draw_dialogue_line(0, 17, third, 19, scroll_x, scroll_y);
         VBK_REG = 0;
         ui_vram_sync_write(
             &((volatile uint8_t *)0x9800)[((17 + scroll_y) & 31) * 32 + ((19 + scroll_x) & 31)],
             UI_TILE_DIALOGUE_CONTINUE);
         g_ui_screen_buf[17][19] = 'v';
-    } else {
-        ui_draw_dialogue_line(0, 17, third, 20, scroll_x, scroll_y);
     }
 }
 
@@ -902,6 +900,8 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
     uint8_t i;
     uint8_t col;
     const char *sp;
+    char *inv;
+    uint8_t inv_n;
     if (!dialogue || !dialogue->active) return;
     if (!world) return;
     if (dialogue->current_line >= dialogue->line_count) return;
@@ -920,6 +920,20 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
     sp = dialogue->speaker ? dialogue->speaker : "";
     len = 0;
     while (len < 16 && sp[len]) len++;
+    /* Invalidate the box rows in the semantic buffer before stamping.
+     * The redraw helpers skip VRAM writes whose buffer char already
+     * matches (an LCD-on incremental-update optimization), but the
+     * buffer currently holds WORLD glyphs from ui_draw_world_full just
+     * above -- a cross-domain collision.  A tree trunk (world glyph
+     * 't', VRAM tile 157) under a text 't' skipped its write and left
+     * trunk art on screen while the buffer claimed text (Carl's
+     * "fight", Oct 2026): invisible to every harness assert, visible
+     * in pixels.  NUL never equals printable text, so the whole first
+     * stamp writes unconditionally; later page turns compare
+     * text-vs-text and their skips stay sound. */
+    inv = &g_ui_screen_buf[14][0];
+    inv_n = 80;
+    while (inv_n--) *inv++ = 0;
     ui_put_char_ring(0, 14, '+', scroll_x, scroll_y);
     ui_put_char_ring(1, 14, '-', scroll_x, scroll_y);
     ui_put_char_ring(2, 14, '-', scroll_x, scroll_y);

@@ -36,7 +36,11 @@ Flow when a dialogue starts (`dialogue_start_def`):
    — the intrepid `>` glyph rotated 90 degrees clockwise (VRAM 109,
    `UI_TILE_DIALOGUE_CONTINUE`, `v` in the semantic buffer) — whenever
    another page follows; the last page shows none.  Full width gives
-   two extra characters per row, so the chevron never eats text.
+   two extra characters per row, so the chevron never eats text.  The
+   first stamp invalidates the box rows in the semantic buffer: the
+   redraw skip compares against world glyphs otherwise, and an equal
+   glyph (trunk 't' under text 't') would skip its VRAM write, leaving
+   world art on screen while RAM claims text.
 
 ## 2. Why the limits exist
 

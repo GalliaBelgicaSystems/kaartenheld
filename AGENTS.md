@@ -2670,6 +2670,33 @@ Rules:
   attribution for wild-write hunts, and distrust single-byte
   tripwires (a 48 B `add sp` jump lands past them).
 
+## 52.25 Redraw skips go stale across domains (Oct 2026)
+
+`ui_draw_dialogue_line` / `ui_put_char_ring` skip VRAM writes whose
+`g_ui_screen_buf` char already matches (an LCD-on incremental-update
+optimization).  The buffer is only a valid short-circuit when it holds
+the SAME domain the new text is compared against.  The dialogue box
+stamps over a live world redraw, so the buffer holds WORLD glyphs at
+stamp time: a tree trunk (glyph `t`, VRAM tile 157) under a text `t`
+skipped its write, leaving trunk art on screen while the buffer (and
+every harness assert reading it) claimed text.  Only pixels showed it
+(Carl's "fight", one cell; PyBoy `bg_text` decodes the art tile as
+`?`).
+
+Rules:
+
+* Any first stamp over a live world (or any cross-domain redraw) must
+  invalidate the covered buffer rows first (`ui_draw_dialogue` zeroes
+  rows 14-17; NUL never equals text, so the whole stamp writes, and
+  later same-domain page turns keep their sound skips).  Menus are
+  safe by structure (`menu_draw_frame` clears first); audit any new
+  world-overlay path for the same hazard.
+* Harness text asserts are blind to this class (RAM truth vs VRAM lie,
+  same family as §52.15): gate overlay text with a real-VRAM read --
+  the walkthrough's exact-row `bg_text` assert at a proven-colliding
+  position (`08-carl-tutor` row 16) is the canary, negative-tested
+  (pre-fix it decodes `?`).
+
 ---
 
 # 53. State Ownership
