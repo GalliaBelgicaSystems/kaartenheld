@@ -107,7 +107,9 @@ uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
 
 /* Decode the two set-bit positions of a grey mask into out-a/out-b
  * (0xFF when absent).  Pools are <= 5 positions, so only bits 0-4 are
- * ever set. */
+ * ever set.  Debug-only: the sole caller (status_grey_apply's telemetry
+ * tail) compiles out of the release ROM. */
+#ifdef DEBUG_BUILD
 void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b)
 {
     uint8_t i, n = 0;
@@ -121,6 +123,7 @@ void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b)
         }
     }
 }
+#endif
 
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
 {

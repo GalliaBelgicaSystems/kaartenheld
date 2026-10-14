@@ -122,8 +122,10 @@ void status_grey_tick_banked(void);
 
 /* Decode the two set-bit positions of a grey mask into out-a/out-b
  * (0xFF when absent).  Pools are <= 5 positions, so only bits 0-4 are
- * ever set.  Exposed for battle.c's defend-resolve wrapper telemetry. */
+ * ever set.  Debug-only: feeds status_grey_apply's telemetry tail. */
+#ifdef DEBUG_BUILD
 void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b);
+#endif
 
 void status_reset_battle(void);
 StatusSlots *status_slots(uint8_t actor_slot);

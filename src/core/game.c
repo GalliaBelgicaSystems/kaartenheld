@@ -11,12 +11,22 @@
 #include "rpg/party.h"
 #include "banked.h"
 
+/* Reset the render cache so the next render takes the full-redraw path.
+ * Inline (not banked): pure WRAM writes, and the fixed bank has room
+ * again. */
 void game_render_reset(Game *g)
 {
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&game_render_reset_banked;
-    g_bk_ptr_a = (void *)g;
-    banked_call_run();
+    uint8_t *p;
+    uint16_t n;
+    if (!g) return;
+    p = (uint8_t *)&g->render_cache;
+    n = sizeof(RenderCache);
+    while (n--) *p++ = 0xFF;
+    g->render_cache.valid = false;
+    g->render_cache.prev_dialogue_active = false;
+    g->render_cache.prev_screen = g->prev_screen;
+    g->render_cache.prev_map_id = g->world.map_id;
+    g->battle.dirty = BATTLE_DIRTY_ALL;
 }
 
 /* Reset the world to a fresh new-game state: canonical state, the runtime

@@ -138,17 +138,16 @@ typedef enum {
  * than the old seven full WorldActorDefinition rows (150 vs 175 B) —
  * statics never battle, never patrol, never drop loot, and only the
  * final boss uses conditional spawns, so the hostile-only payload is
- * dropped from the static copy.  Field names mirror
- * WorldActorDefinition so consumers read the same accessors. */
+ * dropped from the static copy.  ActorId/display_name/flags are dropped
+ * too: the loader only stores non-hostiles here (no defeat tracking, no
+ * battle labels, never hostile), so those fields were write-only.  Field
+ * names mirror WorldActorDefinition so consumers read the same accessors. */
 typedef struct StaticActorDefinition {
-    ActorId actor_id;
     EntityId id;
     uint8_t x;
     uint8_t y;
     uint8_t facing;
-    uint8_t flags;
     uint8_t visual;              /* ASCII prototype character */
-    const char *display_name;    /* semantic name (battle label, ...) */
     InteractionId interaction;
     uint8_t shop_id;             /* which shop this actor runs (0 = none) */
     DialogueId dialogue_id;

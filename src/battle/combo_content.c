@@ -92,35 +92,16 @@ static uint8_t combo_tier_from_hist(uint8_t n, uint8_t all_same_type,
     return HAND_NONE;
 }
 
-uint8_t combo_classify(const uint8_t *vals, const uint8_t *types,
-                       uint8_t n)
-{
-    uint8_t i, min, max;
-    uint8_t all_same_type = 1;
-
-    for (i = 0; i < 10; i++) s_hist[i] = 0;
-
-    min = 10;
-    max = 0;
-    for (i = 0; i < n; i++) {
-        uint8_t v = vals[i];
-        if (v < 1 || v > 10) return HAND_NONE;
-        s_hist[v - 1]++;
-        if (v < min) min = v;
-        if (v > max) max = v;
-        if (i > 0 && types[i] != types[0]) all_same_type = 0;
-    }
-
-    return combo_tier_from_hist(n, all_same_type, min, max);
-}
-
-/* Loot-aware classifier: same tiers as combo_classify, but reads values
- * through the effective->selection map and substitutes ring_sub for ring
- * cards (the joker trial).  ring_sub == 0 disables substitution (real
+/* Loot-aware classifier: same tiers as the shared ladder below, but reads
+ * values through the effective->selection map and substitutes ring_sub for
+ * ring cards (the joker trial).  ring_sub == 0 disables substitution (real
  * values, used for the baseline evaluation).  Shares the static s_hist
- * (never nested with combo_classify: single-threaded ROM). */
-static uint8_t combo_classify_loot(const Card *cards, const uint8_t *idx,
-                                   uint8_t n, uint8_t ring_sub)
+ * (single-threaded ROM; never re-entered: the HUD preview and the resolve
+ * dispatch never nest).  Cards are const-volatile so both the WRAM staging
+ * (combo_resolve_banked) and the live volatile battle hand (HUD preview)
+ * call this directly, same bank, no trampoline. */
+uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
+                             uint8_t n, uint8_t ring_sub)
 {
     uint8_t i, min, max;
     uint8_t all_same_type = 1;
@@ -130,7 +111,7 @@ static uint8_t combo_classify_loot(const Card *cards, const uint8_t *idx,
     min = 10;
     max = 0;
     for (i = 0; i < n; i++) {
-        const Card *c = &cards[idx[i]];
+        const volatile Card *c = &cards[idx[i]];
         uint8_t v = (ring_sub != 0 && c->ring) ? ring_sub : c->value;
         uint8_t t = c->type;
         if (v < 1 || v > 10) return HAND_NONE;

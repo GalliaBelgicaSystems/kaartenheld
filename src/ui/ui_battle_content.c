@@ -710,10 +710,6 @@ static const char *battle_combo_tier_name(uint8_t tier)
     }
 }
 
-/* Live COMBO-row classification buffers: file-static so the HUD never
- * grows stack under the harness (SP=0xFFFE, AGENTS.md 52.14). */
-static uint8_t s_pv_vals[5];
-static uint8_t s_pv_types[5];
 /* Selection-marker scratch: file-static to survive timer ISR re-entrancy
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
@@ -722,38 +718,36 @@ static const char *battle_combo_pending_name(const volatile Battle *battle)
 {
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
-    uint8_t ring_pos = 0xFF;
-    uint8_t saved, tier, best, v;
+    uint8_t has_ring = 0;
+    uint8_t tier, best, v;
+    uint8_t idx[BATTLE_HAND_SIZE];
 
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
-        const Card *c = &battle->hand[battle->selected_indices[i]];
+        uint8_t s = battle->selected_indices[i];
+        const volatile Card *c = &battle->hand[s];
         /* Defend preview mirrors combo_resolve_banked: SHIELD cards AND
          * rings enter the hand; everything else is ignored. */
         if (defend && c->type != BATTLE_CARD_TYPE_SHIELD && !c->ring) continue;
-        s_pv_vals[w] = c->value;
-        s_pv_types[w] = c->type;
-        if (c->ring && ring_pos == 0xFF) ring_pos = w;
-        w++;
+        idx[w++] = s;
+        if (c->ring) has_ring = 1;
     }
-    if (ring_pos != 0xFF) {
+    if (has_ring) {
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
          * value range, which covers the ring's raw value, so no separate
          * baseline classify is needed.  Gameplay allows at most one ring
-         * per selection (battle_card_select), so tracking the first ring
-         * is exact. */
+         * per selection (battle_card_select), so one flag is exact.
+         * Classifier shared with combo_resolve_banked (same bank, direct
+         * call -- no trampoline, no duplicate ladder). */
         best = HAND_NONE;
         for (v = 1; v <= 10; v++) {
-            saved = s_pv_vals[ring_pos];
-            s_pv_vals[ring_pos] = v;
-            tier = combo_classify(s_pv_vals, s_pv_types, w);
+            tier = combo_classify_loot(battle->hand, idx, w, v);
             if (tier > best) best = tier;
-            s_pv_vals[ring_pos] = saved;
         }
         tier = best;
     } else {
-        tier = combo_classify(s_pv_vals, s_pv_types, w);
+        tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
     return battle_combo_tier_name(tier);
 }

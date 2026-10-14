@@ -55,7 +55,9 @@ static void scenario_begin(uint16_t seed)
     g_game.frame = 0;
     g_game.game_over_choice = 0;
     rng_set_seed(seed);
+#ifdef DEBUG_BUILD
     input_reset();
+#endif
     telemetry_init();
     telemetry_set_frame_ptr(&g_game.frame);
     /* Baseline music is the loaded scene's track (runs after
@@ -114,7 +116,7 @@ static void scenario_load_state(void)
     }
 
     p = b + STATE_LOAD_DESC_PARTY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF]; i++) {
+    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF] && i < MAX_PARTY_MEMBERS; i++) {
         g_game.state.party.members[i].id = (CharacterId)*p++;
         g_game.state.party.members[i].hp = *p++;
         g_game.state.party.members[i].max_hp = *p++;

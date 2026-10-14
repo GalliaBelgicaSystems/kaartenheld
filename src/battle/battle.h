@@ -92,7 +92,7 @@ typedef struct {
     uint8_t attacking_enemy_idx;               /* Index of enemy currently attacking / blinking */
     EnemyCompactDeck enemy_deck;               /* Enemy AI card deck */
     uint8_t enemy_battle_id;                   /* Battle ID for enemy deck lookup */
-    Card enemy_played_card;                    /* Card drawn by enemy this turn */
+    EnemyCard enemy_played_card;               /* Card drawn by enemy this turn */
 } Battle;
 
 /* Per-enemy battle art (screens/enemy_types.json), parallel to

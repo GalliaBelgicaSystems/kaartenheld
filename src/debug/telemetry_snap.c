@@ -28,11 +28,9 @@ void debug_state_snapshot_banked(void)
 
     b[STATE_SNAP_CURRENCY_COUNT_OFF] = MAX_CURRENCIES;
     p = b + STATE_SNAP_CURRENCY_ENTRY_OFF;
-    for (i = 0; i < MAX_CURRENCIES; i++) {
-        *p++ = (uint8_t)(i + 1);
-        snap_copy(p, &st->currency.amount[i], 2);
-        p += 2;
-    }
+    /* Single-currency game (gold only): unrolled single entry. */
+    *p++ = 1;
+    snap_copy(p, &st->currency.amount[0], 2);
 
     b[STATE_SNAP_PARTY_OFFSET] = st->party.count;
     p = b + STATE_SNAP_PARTY_OFFSET + 1;

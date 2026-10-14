@@ -55,6 +55,7 @@ void input_init(void)
     g_inp_mask = 0;
 }
 
+#ifdef DEBUG_BUILD
 void input_reset(void)
 {
     pad_state = 0;
@@ -62,6 +63,7 @@ void input_reset(void)
     injected_pad_state = 0;
     g_inp_mask = 0;
 }
+#endif
 
 void input_update(void)
 {

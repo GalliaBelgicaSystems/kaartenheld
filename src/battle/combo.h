@@ -83,9 +83,13 @@ typedef struct {
  * self-contained apart from the bank-local call into effects_content.c. */
 void combo_resolve_banked(void);
 
-/* Order-independent hand classifier (bank-local utility): evaluates vals
- * 1..10 with phase-filtered entries.  Bank-3 callers (e.g. the battle HUD's
- * live COMBO row) invoke this DIRECTLY -- same bank, no trampoline. */
-uint8_t combo_classify(const uint8_t *vals, const uint8_t *types, uint8_t n);
+/* Order-independent hand classifier (bank-local utility): evaluates card
+ * values 1..10 through an effective->selection index map, substituting
+ * ring_sub for ring cards (0 = real values).  Bank-3 callers invoke this
+ * DIRECTLY -- same bank, no trampoline: the resolve dispatch
+ * (combo_resolve_banked) and the battle HUD's live COMBO-row preview share
+ * this one ladder instead of duplicating it. */
+uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
+                             uint8_t n, uint8_t ring_sub);
 
 #endif /* COMBO_H */

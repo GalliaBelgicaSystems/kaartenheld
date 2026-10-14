@@ -522,8 +522,9 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
     }
 
     actor = actor_find_at(world, col, row);
-    if (actor && !(actor->flags & ACTOR_FLAG_HOSTILE) &&
-        actor->sprite_kind == SPRITE_KIND_ASCII) {
+    /* Statics are never hostile (the loader spawns every HOSTILE-flagged
+     * def into the runtime slots): ASCII-kind statics own the cell glyph. */
+    if (actor && actor->sprite_kind == SPRITE_KIND_ASCII) {
         tile_idx = (uint8_t)(ui_font_tile_base + (uint8_t)(actor->visual - ' '));
         glyph = actor->visual;
     } else {
