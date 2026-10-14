@@ -721,6 +721,13 @@ void ui_draw_world_map(const World *world)
      * full map redraw. Field: all 32 x 18 cells. Smaller maps: col 20..31 are
      * filled with floor tiles in ui_draw_world_cell. */
     ui_draw_world_rect(world, 0, 32, 0, 18);
+    /* Re-record animation-frame ring cells (fire/water) for the bank-5
+     * swap pass: the ring is static until the next full redraw, so one
+     * LCD-off scan here replaces every per-frame scan.  No staging (the
+     * rebuild reads the ring only); ~12 B fixed for the dispatch. */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&world_anim_rebuild_banked;
+    banked_call_run();
     for (y = 0; y < WORLD_VIEW_H; y++) {
         g_ui_screen_buf[y][WORLD_VIEW_W] = '\0';
     }
