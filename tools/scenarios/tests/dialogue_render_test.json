@@ -31,28 +31,23 @@
   },
   {
    "type": "screen_row",
-   "row": 12,
-   "contains": "+------------------+"
-  },
-  {
-   "type": "screen_row",
-   "row": 13,
-   "contains": "MAYOR:"
-  },
-  {
-   "type": "screen_row",
    "row": 14,
+   "contains": "+--MAYOR:"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
    "contains": "Hello! I am Mayor."
   },
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "[A] CONTINUE"
+   "contains": "Welcome to town!"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 17,
-   "contains": "+------------------+"
+   "contains": "+"
   }
  ],
  "initial_state": {

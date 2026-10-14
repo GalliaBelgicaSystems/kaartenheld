@@ -199,12 +199,11 @@ def walk_a(planner, checks, sram_out=None):
 
     # Staircase refusal: the stairs stand north of the wake clearing;
     # bumping them opens the refusal line (dialogue, no map change).
-    # Marker is the first box line ("not going"): the second line only
-    # renders after an A advance, so the bump must key on line 1.  The
-    # close is two-phase for the same reason: advance until line 2
-    # ("back down there") is visible, THEN close on its absence — a bare
-    # close on line 2 returns instantly (absent on line 1) with the modal
-    # box still open, eating every later move.
+    # Three-line pages show both refusal lines at once plus a blank third
+    # row, so the bump keys on line 1 ("not going") and line 2
+    # ("back down there") is already visible: the page-2 press returns
+    # instantly and the close shuts the single-page box.  Kept two-phase
+    # so a future multi-page refusal still walks correctly.
     s.check("stairs refusal",
             bump_actor(s, planner, "wake_grove", (10, 7), "up",
                        "not going"),
@@ -235,27 +234,31 @@ def walk_a(planner, checks, sram_out=None):
                (1, 7))
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
+    # Three-line pages show both guard lines at once plus a blank third
+    # row (single page, no continue chevron on the last page), so one
+    # close shuts the box.
     s.check("guard dialogue opened",
             bump_actor(s, planner, "town", (9, 8), "right", "GUARD:"),
             expected="GUARD:", actual="none")
     s.shoot("03-guard-dialogue", need="GUARD:")
-    # The box is background tiles at rows 12-17; no actor OAM entry (the
+    # The box is background tiles at rows 14-17; no actor OAM entry (the
     # town fire/dog use enemy-kind OAM art) may draw over it.  Box top
-    # row 12 -> stored OAM y 112.  Regression for the fire/dog overlay.
+    # row 14 -> stored OAM y 128.  Regression for the fire/dog overlay.
     s.tick(4)
-    _over = [y for y in s.oam_actor_ys() if y >= 112]
+    _over = [y for y in s.oam_actor_ys() if y >= 128]
     s.check("guard dialogue: no actor sprite over the box", not _over,
-            expected="actor OAM y < 112 (box top row 12)",
+            expected="actor OAM y < 128 (box top row 14)",
             actual=str(_over))
-    s.press("a", settle=30)
-    s.shoot("04-dialogue-next")
     close_dialogue(s, "GUARD:")
 
     # Mayor: interact event sets MET_MAYOR + starts the quest.
+    # The 3-line INTRO fits on one page (all three lines, no chevron);
+    # milestone 04 captures that page (the next dialogue after the guard).
     s.check("mayor dialogue opened",
             bump_actor(s, planner, "town", (9, 5), "right", "MAYOR:",
                        tries=6),
             expected="MAYOR:", actual="none")
+    s.shoot("04-dialogue-next", need="MAYOR:")
     close_dialogue(s, "MAYOR:")
     s.check_eq("MET_MAYOR flag", s.reader.flag(STORY_FLAG_ID_MET_MAYOR),
                True)
@@ -366,9 +369,23 @@ def walk_b(planner, checks):
     # Carl himself, one tile east of the hero: the field's single slime.
     s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
+    # Real-VRAM exact-row regression (Oct 2026): a tree trunk (world
+    # glyph 't', tile 157) underlaps the 't' of "fight" here, and the
+    # redraw skip once left trunk art on screen while RAM claimed text
+    # (harness text asserts are blind to it).  Row 16 must decode the
+    # font 't', not '?' (non-font tile); '?' at col 19 of row 17 is the
+    # expected chevron tile.
+    rows = s.bg_text()
+    s.check("carl tutor rows exact",
+            rows[14] == "+--CARL:-----------+"
+            and rows[15] == "Danger! I will      "
+            and rows[16] == "teach you to fight! "
+            and rows[17] == "U/D choose target  ?",
+            expected="exact box text",
+            actual=" / ".join(rows[14:18]))
     # Closing by battle-open (not by CARL: gone): the spar banner itself
     # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
-    # the fight.  Four advances close the 4-line lesson; press_until
+    # the fight.  Three advances close the 8-line lesson; press_until
     # self-heals dropped presses and stops at the first DECK: sighting.
     s.check("lesson closed into spar",
             s.press_until("a", lambda: s.text_has("DECK:"),

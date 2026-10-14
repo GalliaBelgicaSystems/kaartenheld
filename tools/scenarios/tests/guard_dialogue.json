@@ -1,7 +1,7 @@
 {
  "name": "guard_dialogue",
  "test": true,
- "description": "Interact with Guard NPC in Town: triggers GUARD_GREETING dialogue and does NOT trigger MET_MAYOR story flag",
+ "description": "Interact with Guard NPC in Town: triggers GUARD_GREETING dialogue and does NOT trigger MET_MAYOR story flag. Two-line pages show both lines at once, so one A press closes (no DIALOGUE_NEXT for a single page).",
  "actions": [
   {
    "type": "press",
@@ -18,14 +18,6 @@
   {
    "type": "wait",
    "frames": 120
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 30
   }
  ],
  "assertions": [
@@ -44,10 +36,6 @@
   {
    "type": "event_occurred",
    "event": "RENDER_DIALOGUE"
-  },
-  {
-   "type": "event_occurred",
-   "event": "DIALOGUE_NEXT"
   },
   {
    "type": "event_occurred",

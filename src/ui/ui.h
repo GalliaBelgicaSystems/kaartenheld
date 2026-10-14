@@ -36,6 +36,17 @@ extern uint8_t g_is_cgb;
  * referenced them before. */
 #define UI_TILE_SELECT_ARROW     96u
 #define UI_TILE_SELECT_ARROW_DARK 110u
+/* Dialogue continue chevron (down-pointing): the intrepid ">" glyph
+ * (font tile 30) rotated 90 degrees clockwise, loaded at boot by the
+ * bank-3 card-tile loader into this free BG slot.  Shown at the far
+ * bottom right (col 19, row 17) of the third full-width text row
+ * whenever another dialogue page follows; hidden on the last page.  Slot 109 is the only free id in 96-127
+ * (96 light arrow, 97-103 bow counters, 104-108 weapons, 110-112 dark
+ * arrow + blanks, 113/114/116 HUD, 115 coin, 117/127 bar, 118-126
+ * frames): its same-numbered OAM id lives in the 0x8000 sprite block,
+ * a different physical address (AGENTS.md 52.22).  The semantic screen
+ * buffer keeps 'v' for harness text assertions. */
+#define UI_TILE_DIALOGUE_CONTINUE 109u
 /* Battle hand-card frame tiles (VRAM Block 1, 0x8800): 9 tiles in frame
  * order TL TM TR / L C R / BL BM BR (generated card_frame_tiles.h from
  * assets/card_frames.png).  Sits between the icon block (104-116) and the
@@ -215,11 +226,11 @@ void ui_update_camera(const World *world);
 #endif
 
 /* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):
- * paints the 6 box rows FULL-WIDTH with the dialogue paper palette and
+ * paints the 4 box rows FULL-WIDTH with the dialogue paper palette and
  * re-syncs SCX to the world camera (scroll_y in g_bk_byte_b shifts the base
  * for vertically scrolled maps; camera in g_bk_byte_c).  Full-width is exact
  * where it matters: the viewport always shows a 20-col slice of those rows,
- * and the rows ARE the box (text rows 12-17 + scroll_y).  Painting hidden
+ * and the rows ARE the box (text rows 14-17 + scroll_y).  Painting hidden
  * cols too is safe: ui_lcd_off() wipes the whole attribute map on every
  * transition and the next full redraw repaints world attrs, so stale paper
  * can never scroll into view.  The SCX sync fixes the post-battle victory
@@ -229,6 +240,12 @@ void ui_update_camera(const World *world);
 void ui_dialogue_box_banked(void);
 
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world);
+/* LCD-safe page redraw (text rows + continue chevron, no paper paint):
+ * used by the dialogue screen's line-change path while the LCD is on.
+ * The full box (top/bottom/sides + paper) is drawn once by
+ * ui_draw_dialogue while the LCD is off. */
+void ui_draw_dialogue_page(const DialogueState *dialogue,
+                           uint8_t scroll_x, uint8_t scroll_y);
 void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
                            uint8_t max_chars, uint8_t ox, uint8_t oy);
 void ui_draw_battle_full(const Battle *battle);

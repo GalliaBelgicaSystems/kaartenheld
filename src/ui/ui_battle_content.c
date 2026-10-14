@@ -988,6 +988,23 @@ static const uint8_t s_coin_tile[16] = {
     0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
 };
 
+/* Dialogue continue chevron (VRAM 109, UI_TILE_DIALOGUE_CONTINUE): the
+ * intrepid ">" glyph (font tile 30) rotated 90 degrees clockwise so it
+ * points down.  Monochrome doubles (lo == hi, shade 3 ink on shade 0
+ * paper, like the font): rows decode to a down chevron 7 wide at the
+ * top narrowing to 1 at row 6.  Lives here so the fixed bank pays
+ * nothing for it (same LCD-off window as the coin tile above). */
+static const uint8_t s_dialogue_continue_tile[16] = {
+    0x00, 0x00,
+    0x00, 0x00,
+    0x41, 0x41,
+    0x63, 0x63,
+    0x36, 0x36,
+    0x1C, 0x1C,
+    0x08, 0x08,
+    0x00, 0x00
+};
+
 void ui_card_tiles_load_banked(void)
 {
     uint8_t i, j;
@@ -1013,6 +1030,11 @@ void ui_card_tiles_load_banked(void)
     dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_COIN << 4));
     for (j = 0; j < 16; j++) {
         dst[j] = s_coin_tile[j];
+    }
+    /* Dialogue continue chevron (VRAM 109): same signed addressing. */
+    dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_DIALOGUE_CONTINUE << 4));
+    for (j = 0; j < 16; j++) {
+        dst[j] = s_dialogue_continue_tile[j];
     }
 }
 

@@ -538,15 +538,18 @@ def verify_dialogue_transition(sess):
     # internal step pauses mid-frame and the A edge never engages (proven
     # by matrix probe: armed=never, clean=always). mGBA prints
     # "Added breakpoint #N" (note the hash). A reset frame first (edge
-    # discipline, AGENTS.md 52.10); if the first press already started
-    # the dialogue, this one merely advances a line (still active).
+    # discipline, AGENTS.md 52.10); press A only if the first press did
+    # not already engage -- with three-line pages the 3-line INTRO is a
+    # single page, so a second press would CLOSE it ("advances a line,
+    # still active" only held under single-line stepping).
     import re as _re
     _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
     if _m:
         sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
     sess.step(1)
-    sess.press("A")
-    sess.step(1)
+    if not sess.snapshot().get("dialogue_active"):
+        sess.press("A")
+        sess.step(1)
     # Continue past the redraw breakpoint to the next frame entry: the
     # redraw (tilemap + CGB attrs + palettes) has now fully executed.
     sess._cmd("c", timeout=10.0)

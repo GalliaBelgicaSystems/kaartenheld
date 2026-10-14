@@ -1,4 +1,4 @@
-# Dialogue Boxes — Constraints and Planned Height Increase
+# Dialogue Boxes — Layout and Constraints
 
 This document explains how the dialogue system's size limits work today,
 why they exist, and records the design decision to raise the dialogue-box
@@ -25,9 +25,22 @@ Flow when a dialogue starts (`dialogue_start_def`):
    fixed code can never read bank-2 rodata after returning.
 3. `DialogueState.lines[i]` pointers target those WRAM buffers, never
    bank-2 addresses.
-4. Display: one line at a time in the box — speaker on row 13, the current
-   line on row 14, **18 visible characters** (`ui_draw_dialogue_line`,
-   `src/screens/dialogue_screen.c`).  Pressing A advances to the next line.
+4. Display: three lines at a time in a top-bar box at screen rows
+   14-17 — only a top horizontal bar carrying the speaker
+   (`+--SPEAKER-----+` on row 14), then plain full-width text on rows
+   15-17 (**20 visible characters**, 19 beside the chevron, via
+   `ui_draw_dialogue_line`, `src/screens/dialogue_screen.c`).  Pressing
+   A turns to the next triple (`dialogue_next` steps `current_line` by
+   3, so a 2-line greeting reads in one page and an 8-line lesson in
+   three).  The far bottom right (col 19, row 17) shows a down-chevron
+   — the intrepid `>` glyph rotated 90 degrees clockwise (VRAM 109,
+   `UI_TILE_DIALOGUE_CONTINUE`, `v` in the semantic buffer) — whenever
+   another page follows; the last page shows none.  Full width gives
+   two extra characters per row, so the chevron never eats text.  The
+   first stamp invalidates the box rows in the semantic buffer: the
+   redraw skip compares against world glyphs otherwise, and an equal
+   glyph (trunk 't' under text 't') would skip its VRAM write, leaving
+   world art on screen while RAM claims text.
 
 ## 2. Why the limits exist
 
@@ -62,6 +75,3 @@ cost, while small, should be spent deliberately.
    (`dialogue_banked.c`, `dialogue_screen.c`) — no hard-coded 8s expected,
    but verify.
 5. Update the authoring table in §1 with the new numbers.
-6. Optional UX follow-up: consider showing two lines simultaneously
-   (taller visual box) so long dialogues need fewer A-presses — separate
-   change, not required by the capacity raise.

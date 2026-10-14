@@ -60,17 +60,14 @@ void dialogue_screen_render(Game *g)
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
                        (uint8_t)(world_player_py(w) - w->camera_px_y));
         ui_draw_actors_sprites(w);
-        /* The box is background tiles at rows 12-17; hide any actor sprite
+        /* The box is background tiles at rows 14-17; hide any actor sprite
          * (e.g. the town fire/dog) that would draw over the text. */
-        ui_sprite_hide_actors_below((uint8_t)(12 * 8));
+        ui_sprite_hide_actors_below((uint8_t)(14 * 8));
         rc->valid = true;
         rc->prev_screen = SCREEN_DIALOGUE;
         rc->prev_dialogue_active = true;
     } else {
-        ui_draw_dialogue_line(1, 13, d->speaker ? d->speaker : "", 18,
-                              w->scroll_x, w->scroll_y);
-        ui_draw_dialogue_line(1, 14, d->lines[d->current_line], 18,
-                              w->scroll_x, w->scroll_y);
+        ui_draw_dialogue_page(d, w->scroll_x, w->scroll_y);
     }
 
     telemetry_emit(EVENT_RENDER_DIALOGUE, (uint8_t)d->id,

@@ -309,26 +309,6 @@ static void ui_put_char_ring(uint8_t x, uint8_t y, char ch, uint8_t ox, uint8_t 
     }
 }
 
-static void ui_draw_text_line_ring(uint8_t x, uint8_t y, const char *text,
-                                   uint8_t max_chars, uint8_t ox, uint8_t oy)
-{
-    uint8_t i;
-    char ch;
-    uint8_t ended = (text == NULL);
-    for (i = 0; i < max_chars; i++) {
-        if (!ended) {
-            ch = text[i];
-            if (ch == '\0') {
-                ended = 1;
-                ch = ' ';
-            }
-        } else {
-            ch = ' ';
-        }
-        ui_put_char_ring((uint8_t)(x + i), y, ch, ox, oy);
-    }
-}
-
 /* Write one tile to the BG tilemap (0x9800) such that the store lands in a
  * VRAM-accessible PPU window.  Per Pan Docs (Accessing_VRAM_and_OAM), VRAM
  * is accessible in Modes 0-2 and writes are IGNORED in Mode 3; the safe
@@ -856,28 +836,97 @@ void ui_update_battle(const Battle *battle)
     banked_call_run();
 }
 
+void ui_draw_dialogue_page(const DialogueState *dialogue,
+                           uint8_t scroll_x, uint8_t scroll_y)
+{
+    uint8_t has_more;
+    const char *second;
+    const char *third;
+    if (!dialogue || !dialogue->active) return;
+    if (dialogue->current_line >= dialogue->line_count) return;
+    /* Full-width text rows (no side borders, no bottom border): three
+     * rows of 20 columns.  The last row reserves col 19 for the
+     * continue chevron when another page follows, so 19-char lines fit
+     * with no loss. */
+    ui_draw_dialogue_line(0, 15, dialogue->lines[dialogue->current_line],
+                          20, scroll_x, scroll_y);
+    has_more = ((uint8_t)(dialogue->current_line + 3) < dialogue->line_count);
+    if ((uint8_t)(dialogue->current_line + 1) < dialogue->line_count) {
+        second = dialogue->lines[(uint8_t)(dialogue->current_line + 1)];
+    } else {
+        second = "";
+    }
+    ui_draw_dialogue_line(0, 16, second, 20, scroll_x, scroll_y);
+    if ((uint8_t)(dialogue->current_line + 2) < dialogue->line_count) {
+        third = dialogue->lines[(uint8_t)(dialogue->current_line + 2)];
+    } else {
+        third = "";
+    }
+    ui_draw_dialogue_line(0, 17, third, 20, scroll_x, scroll_y);
+    if (has_more) {
+        VBK_REG = 0;
+        ui_vram_sync_write(
+            &((volatile uint8_t *)0x9800)[((17 + scroll_y) & 31) * 32 + ((19 + scroll_x) & 31)],
+            UI_TILE_DIALOGUE_CONTINUE);
+        g_ui_screen_buf[17][19] = 'v';
+    }
+}
+
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
 {
-    uint8_t y;
     uint8_t scroll_x;
     uint8_t scroll_y;
+    uint8_t len;
+    uint8_t i;
+    uint8_t col;
+    const char *sp;
+    char *inv;
+    uint8_t inv_n;
     if (!dialogue || !dialogue->active) return;
     if (!world) return;
     if (dialogue->current_line >= dialogue->line_count) return;
     scroll_x = world->scroll_x;
     scroll_y = world->scroll_y;
 
-    /* Dialogue box occupies dedicated modal overlay region: rows 12-17 (6 rows, 20 columns) */
-    ui_draw_text_line_ring(0, 12, "+------------------+", 20, scroll_x, scroll_y);
-    for (y = 13; y <= 16; y++) {
-        ui_put_char_ring(0, y, '|', scroll_x, scroll_y);
-        ui_put_char_ring(19, y, '|', scroll_x, scroll_y);
+    /* Dialogue box: top bar plus three full-width text rows at the
+     * screen bottom (rows 14-17).  Only a top horizontal bar carrying
+     * the speaker name ("+--SPEAKER-----+"); the three middle rows are
+     * plain text (20 columns, no side or bottom borders) running to the
+     * screen edge.  A down-chevron (rotated intrepid ">", VRAM 109, 'v'
+     * in the semantic buffer) at the far bottom right (col 19, row 17)
+     * signals another page; the last page shows none.  Full width gives
+     * two extra characters per row, so the chevron never eats text
+     * (19-char lines fit beside it). */
+    sp = dialogue->speaker ? dialogue->speaker : "";
+    len = 0;
+    while (len < 16 && sp[len]) len++;
+    /* Invalidate the box rows in the semantic buffer before stamping.
+     * ui_draw_dialogue_line skips VRAM writes whose buffer char already
+     * matches (an LCD-on incremental-update optimization), but the
+     * buffer currently holds WORLD glyphs from ui_draw_world_full just
+     * above -- a cross-domain collision.  A tree trunk (world glyph
+     * 't', VRAM tile 157) under a text 't' skipped its write and left
+     * trunk art on screen while the buffer claimed text (Carl's
+     * "fight", Oct 2026): invisible to every harness assert, visible
+     * in pixels.  NUL never equals printable text, so the whole first
+     * stamp writes unconditionally; later page turns compare
+     * text-vs-text and their skips stay sound.  84 bytes = 4 rows of
+     * the 21-byte g_ui_screen_buf stride (20 cols + NUL); writing 0
+     * into [r][20] preserves the NUL terminators. */
+    inv = &g_ui_screen_buf[14][0];
+    inv_n = 84;
+    while (inv_n--) *inv++ = 0;
+    ui_put_char_ring(0, 14, '+', scroll_x, scroll_y);
+    ui_put_char_ring(1, 14, '-', scroll_x, scroll_y);
+    ui_put_char_ring(2, 14, '-', scroll_x, scroll_y);
+    for (i = 0; i < len; i++) {
+        ui_put_char_ring((uint8_t)(3 + i), 14, sp[i], scroll_x, scroll_y);
     }
-    ui_draw_text_line_ring(1, 13, dialogue->speaker ? dialogue->speaker : "", 18, scroll_x, scroll_y);
-    ui_draw_text_line_ring(1, 14, dialogue->lines[dialogue->current_line], 18, scroll_x, scroll_y);
-    ui_draw_text_line_ring(1, 15, "", 18, scroll_x, scroll_y);
-    ui_draw_text_line_ring(1, 16, " [A] CONTINUE", 18, scroll_x, scroll_y);
-    ui_draw_text_line_ring(0, 17, "+------------------+", 20, scroll_x, scroll_y);
+    for (col = (uint8_t)(3 + len); col < 19; col++) {
+        ui_put_char_ring(col, 14, '-', scroll_x, scroll_y);
+    }
+    ui_put_char_ring(19, 14, '+', scroll_x, scroll_y);
+    ui_draw_dialogue_page(dialogue, scroll_x, scroll_y);
 
     /* Box background (paper palette) + SCX sync live in the bank-3 body
      * below (one dispatch replaces six fixed ui_color_span calls, so the
