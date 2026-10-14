@@ -49,6 +49,11 @@ volatile __at(0xC100) uint8_t g_tilemap_attr_mirror[32 * 32];
 /* GBDK console .mode byte (defined in crt0.s _DATA). Bit 2 is M_NO_SCROLL. */
 extern uint8_t console_mode;
 
+/* Harness flag (main.c): when set, vsync is skipped and VBlank never
+ * fires, so per-frame CPU cost is irrelevant -- but the semantic screen
+ * buffer must stay exact for harness text assertions. */
+extern volatile uint8_t g_harness_mode;
+
 /* Background-animation cell count (bank-5 anim_swap_banked.c, WRAM always
  * mapped): lets the caller skip the swap dispatch on frames with nothing
  * to swap (same throttle the body applies internally). */
@@ -724,7 +729,14 @@ void ui_update_camera(const World *world)
     SCX_REG = world->camera_px_x;
     SCY_REG = world->camera_px_y;
 #ifdef DEBUG_BUILD
-    ui_refill_semantic(world);
+    /* Semantic refill (~43k T-states over the full 20x18 view): only the
+     * harness reads g_ui_screen_buf on overworld frames, and only it
+     * needs it exact every frame.  On hardware (even debug builds
+     * running live) the buffer is stale-but-harmless, so skip the scan
+     * and keep steady overworld frames inside VBlank. */
+    if (g_harness_mode) {
+        ui_refill_semantic(world);
+    }
 #endif
 }
 

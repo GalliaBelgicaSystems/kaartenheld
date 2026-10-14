@@ -739,15 +739,14 @@ void battle_update(Battle *b)
             /* Multi-frame enemy art (boss glow-eyes) rides the battle
              * clock, but the stamper only runs on ENEMIES -- otherwise
              * set on target change, which a solo boss never triggers.
-             * The == 15 edge flips the art frame: re-stamp only when the
-             * battle's art animates (g_battle_multiframe from the art
-             * loader).  The == 0 edge in DEFEND is the telegraph blink
-             * and always re-stamps, even for static art. */
-            if ((vb->timer_ticks & 15) == 15) {
-                if (g_battle_multiframe) {
-                    vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
-                }
-            } else if (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0) {
+             * timer_ticks counts DOWN, so bit 4 flips at the == 15 edge:
+             * re-stamp there when the art animates (g_battle_multiframe)
+             * or in DEFEND (the telegraph blink flips there for every
+             * enemy).  The == 0 edge in DEFEND keeps the blink cadence
+             * for static art. */
+            if (((vb->timer_ticks & 15) == 15 &&
+                 (g_battle_multiframe || vb->phase == BATTLE_PHASE_PLAYER_DEFEND)) ||
+                (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {

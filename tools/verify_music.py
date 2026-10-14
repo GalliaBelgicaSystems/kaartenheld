@@ -331,10 +331,29 @@ def main():
     check("1. no-stalled-frames", ok, detail)
 
     # Check 2: fixed-clock aggregate rate (256 Hz / 59.7275 fps).
+    # Aggregate ONLY over clean frames: PyBoy splits ticks at LCD off/on
+    # edges, smearing one 1-2 frame full redraw across ~9 short slices
+    # (0-3 timer ticks each, lcd flag catching mid-transition state).
+    # Pairs touching a transition window (either endpoint within 2 frames
+    # of an LCD-off sample) are excluded; the remaining steady-state
+    # frames must average the hardware rate.
     frames = len(samples) - 1
     expected = frames * (256 / 59.7275)
-    check("2. fixed-clock-rate", abs(total - expected) < expected * 0.05,
-          f"total={total} expected~{expected:.0f} over {frames} frames")
+    off = set()
+    for _i, _s in enumerate(samples):
+        if not _s[3]:
+            for _j in range(max(0, _i - 2), min(len(samples), _i + 3)):
+                off.add(_j)
+    clean_total = 0
+    clean_frames = 0
+    for _i in range(1, len(samples)):
+        if _i not in off and (_i - 1) not in off:
+            clean_total += (samples[_i][2] - samples[_i - 1][2]) % 65536
+            clean_frames += 1
+    clean_expected = clean_frames * (256 / 59.7275)
+    check("2. fixed-clock-rate",
+          clean_frames > 0 and abs(clean_total - clean_expected) < clean_expected * 0.05,
+          f"total={total} clean={clean_total} expected~{clean_expected:.0f} over {clean_frames}/{frames} clean frames")
 
     print(f"\nstats: {len(samples)} samples, {len(stalled)} stalled frame(s), "
           f"{total} ticks over {frames} frames (~{total / max(frames, 1):.2f}/frame)")
