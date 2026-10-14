@@ -359,12 +359,11 @@ def walk_b(planner, checks):
     # transitions eat input for a few dozen frames.  Carl is a single
     # sprite now: bumping him opens the lesson first, and closing it
     # auto-starts the spar from the stashed encounter (no second bump).
-    # (Carl's hut-doorstep spot is on hold while a rare battle-window
-    # remap is hunted; he waits mid-field meanwhile.)
+    # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
     s.check("carl lesson bump",
-            bump_actor(s, planner, "field", (15, 8), "left", "CARL:"),
+            bump_actor(s, planner, "field", (14, 12), "right", "CARL:"),
             expected="CARL:", actual="none")
-    # Carl himself, one tile west of the hero: the field's single slime.
+    # Carl himself, one tile east of the hero: the field's single slime.
     s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
     # Closing by battle-open (not by CARL: gone): the spar banner itself

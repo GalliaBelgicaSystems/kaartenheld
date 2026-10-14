@@ -509,8 +509,8 @@
         "actors.actors_slime_frame_2"
       ],
       "position": {
-        "x": 14,
-        "y": 8
+        "x": 15,
+        "y": 12
       },
       "properties": {
         "entity_id": "ENTITY_ID_CARL",
@@ -542,8 +542,8 @@
         "actors.actors_slime_frame_2"
       ],
       "position": {
-        "x": 14,
-        "y": 8
+        "x": 15,
+        "y": 12
       },
       "properties": {
         "entity_id": "ENTITY_ID_CARL",
