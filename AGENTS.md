@@ -2672,9 +2672,10 @@ Rules:
 
 ## 52.25 Redraw skips go stale across domains (Oct 2026)
 
-`ui_draw_dialogue_line` / `ui_put_char_ring` skip VRAM writes whose
-`g_ui_screen_buf` char already matches (an LCD-on incremental-update
-optimization).  The buffer is only a valid short-circuit when it holds
+`ui_draw_dialogue_line` skips VRAM writes whose `g_ui_screen_buf` char
+already matches (an LCD-on incremental-update optimization;
+`ui_put_char_ring` writes unconditionally).  The buffer is only a valid
+short-circuit when it holds
 the SAME domain the new text is compared against.  The dialogue box
 stamps over a live world redraw, so the buffer holds WORLD glyphs at
 stamp time: a tree trunk (glyph `t`, VRAM tile 157) under a text `t`

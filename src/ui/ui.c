@@ -309,26 +309,6 @@ static void ui_put_char_ring(uint8_t x, uint8_t y, char ch, uint8_t ox, uint8_t 
     }
 }
 
-static void ui_draw_text_line_ring(uint8_t x, uint8_t y, const char *text,
-                                   uint8_t max_chars, uint8_t ox, uint8_t oy)
-{
-    uint8_t i;
-    char ch;
-    uint8_t ended = (text == NULL);
-    for (i = 0; i < max_chars; i++) {
-        if (!ended) {
-            ch = text[i];
-            if (ch == '\0') {
-                ended = 1;
-                ch = ' ';
-            }
-        } else {
-            ch = ' ';
-        }
-        ui_put_char_ring((uint8_t)(x + i), y, ch, ox, oy);
-    }
-}
-
 /* Write one tile to the BG tilemap (0x9800) such that the store lands in a
  * VRAM-accessible PPU window.  Per Pan Docs (Accessing_VRAM_and_OAM), VRAM
  * is accessible in Modes 0-2 and writes are IGNORED in Mode 3; the safe
@@ -921,7 +901,7 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
     len = 0;
     while (len < 16 && sp[len]) len++;
     /* Invalidate the box rows in the semantic buffer before stamping.
-     * The redraw helpers skip VRAM writes whose buffer char already
+     * ui_draw_dialogue_line skips VRAM writes whose buffer char already
      * matches (an LCD-on incremental-update optimization), but the
      * buffer currently holds WORLD glyphs from ui_draw_world_full just
      * above -- a cross-domain collision.  A tree trunk (world glyph
@@ -930,9 +910,11 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
      * "fight", Oct 2026): invisible to every harness assert, visible
      * in pixels.  NUL never equals printable text, so the whole first
      * stamp writes unconditionally; later page turns compare
-     * text-vs-text and their skips stay sound. */
+     * text-vs-text and their skips stay sound.  84 bytes = 4 rows of
+     * the 21-byte g_ui_screen_buf stride (20 cols + NUL); writing 0
+     * into [r][20] preserves the NUL terminators. */
     inv = &g_ui_screen_buf[14][0];
-    inv_n = 80;
+    inv_n = 84;
     while (inv_n--) *inv++ = 0;
     ui_put_char_ring(0, 14, '+', scroll_x, scroll_y);
     ui_put_char_ring(1, 14, '-', scroll_x, scroll_y);
