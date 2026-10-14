@@ -319,7 +319,7 @@ def emit_palette():
             print(f"generate_tiles: missing manifest generated/tiles/{ts_id}.json "
                   f"(run make manifest)", file=sys.stderr)
             return None
-        # Full VRAM-slot-order array, emitted as-is (lengths 48/48/16/48
+        # Full VRAM-slot-order array, emitted as-is (lengths 80/64/16/48
         # must match rpg_tile_lookup.h; SDCC fails loudly otherwise).
         pal_values = manifest["tile_palettes"]
 

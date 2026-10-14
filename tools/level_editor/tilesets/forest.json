@@ -707,6 +707,61 @@
    "ascii": ".",
    "image_url": "/tiles/forest/forest_plain_floor_2.png",
    "category": "terrain"
+  },
+  {
+   "id": "forest_top_left_hut",
+   "palette": "field5",
+   "label": "top left hut",
+   "gb_constant": "TILE_FOREST_64",
+   "walkable": false,
+   "color": "#7f9082",
+   "ascii": "#",
+   "image_url": "/tiles/forest/forest_top_left_hut.png",
+   "category": "terrain"
+  },
+  {
+   "id": "forest_top_right_hut",
+   "palette": "field5",
+   "label": "top right hut",
+   "gb_constant": "TILE_FOREST_65",
+   "walkable": false,
+   "color": "#7f9082",
+   "ascii": "#",
+   "image_url": "/tiles/forest/forest_top_right_hut.png",
+   "category": "terrain"
+  },
+  {
+   "id": "forest_bottom_left_hut",
+   "palette": "field5",
+   "label": "bottom left hut",
+   "gb_constant": "TILE_FOREST_66",
+   "walkable": false,
+   "color": "#5f6d61",
+   "ascii": "#",
+   "image_url": "/tiles/forest/forest_bottom_left_hut.png",
+   "category": "terrain"
+  },
+  {
+   "id": "forest_bottom_right_hut",
+   "palette": "field5",
+   "label": "bottom right hut",
+   "gb_constant": "TILE_FOREST_67",
+   "walkable": false,
+   "color": "#5f6d61",
+   "ascii": "#",
+   "image_url": "/tiles/forest/forest_bottom_right_hut.png",
+   "category": "terrain"
+  },
+  {
+   "id": "forest_mailbox",
+   "palette": "field3",
+   "label": "mailbox",
+   "gb_constant": "TILE_FOREST_68",
+   "walkable": false,
+   "color": "#6f914b",
+   "ascii": "#",
+   "image_url": "/tiles/forest/forest_mailbox.png",
+   "category": "terrain"
   }
  ],
  "vram_block": {
@@ -1096,6 +1151,102 @@
     "x": 15,
     "y": 3,
     "index": 63,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 0,
+    "y": 4,
+    "index": 64,
+    "tile": "forest_top_left_hut"
+   },
+   {
+    "x": 1,
+    "y": 4,
+    "index": 65,
+    "tile": "forest_top_right_hut"
+   },
+   {
+    "x": 2,
+    "y": 4,
+    "index": 66,
+    "tile": "forest_bottom_left_hut"
+   },
+   {
+    "x": 3,
+    "y": 4,
+    "index": 67,
+    "tile": "forest_bottom_right_hut"
+   },
+   {
+    "x": 4,
+    "y": 4,
+    "index": 68,
+    "tile": "forest_mailbox"
+   },
+   {
+    "x": 5,
+    "y": 4,
+    "index": 69,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 6,
+    "y": 4,
+    "index": 70,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 7,
+    "y": 4,
+    "index": 71,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 8,
+    "y": 4,
+    "index": 72,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 9,
+    "y": 4,
+    "index": 73,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 10,
+    "y": 4,
+    "index": 74,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 11,
+    "y": 4,
+    "index": 75,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 12,
+    "y": 4,
+    "index": 76,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 13,
+    "y": 4,
+    "index": 77,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 14,
+    "y": 4,
+    "index": 78,
+    "tile": "forest_plain_floor_2"
+   },
+   {
+    "x": 15,
+    "y": 4,
+    "index": 79,
     "tile": "forest_plain_floor_2"
    }
   ]

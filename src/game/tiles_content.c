@@ -52,9 +52,10 @@ void ui_load_cram_banked(void)
 
 /* World background tiles extracted from assets/ by tools/png2gb.py (make gfx) */
 
-const uint8_t g_tileset_forest[1024] = {
-    /* 64 forest tiles (1024 bytes): walls, floors, stumps, trees, water
-     * bodies, and exit tiles */
+const uint8_t g_tileset_forest[1280] = {
+    /* 80 forest tiles (1280 bytes): walls, floors, stumps, trees, water
+     * bodies, exit tiles, and the row-4 hut/mailbox extension (slots
+     * 64..68; slots 69..79 are plain-floor duplicates) */
 #include "gfx/rpg_forest_world_tiles.inc"
 };
 
@@ -104,7 +105,7 @@ void ui_load_tileset_banked(void)
         case WORLD_TILESET_FOREST:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 64;
+            tile_count = 80;
             break;
         case WORLD_TILESET_DESOLATE:
             src = g_tileset_desolate;
@@ -124,7 +125,7 @@ void ui_load_tileset_banked(void)
         default:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 64;
+            tile_count = 80;
             break;
     }
 
@@ -134,7 +135,7 @@ void ui_load_tileset_banked(void)
     while (n--) {
         *dst++ = *src++;
     }
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < 80; i++) {
         /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
          * byte): even slots assign the low nibble first, odd slots OR
          * in the high nibble (ascending i guarantees the order). */
