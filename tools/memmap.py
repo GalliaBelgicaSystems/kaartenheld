@@ -188,7 +188,6 @@ def main():
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
         "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
-        "_ui_format_int_banked": "int formatter (bank 2)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
         "_battle_card_undo_banked": "battle card undo (bank 3)",

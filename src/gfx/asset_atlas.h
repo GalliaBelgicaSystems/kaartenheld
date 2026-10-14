@@ -746,18 +746,8 @@ typedef struct {
 #define ASSET_ICON_TILE_COUNT 501
 #define ASSET_ICON_PALETTE_COUNT 29
 
-/* Banked arrays (defined in src/game/asset_atlas_*_content.c, with the
- * #pragma bank matching the defines above).  Read only through the
- * accessors below -- banked_copy() restores home bank before returning. */
-extern const AssetAtlasEntry g_asset_atlas_entries[];
-extern const uint8_t g_asset_icon_tiles[];
-extern const uint8_t g_asset_icon_palettes[];
-
-/* Copy the entry row for `id` into `out`. */
-void asset_atlas_get(AssetId id, AssetAtlasEntry *out);
-/* Copy the unique icon tile `uid` (16 bytes) into `out`. */
-void asset_atlas_icon_tile(uint16_t uid, uint8_t *out);
-/* Copy the CGB palette `pid` (8 bytes, RGB555 LE) into `out`. */
-void asset_atlas_icon_palette(uint8_t pid, uint8_t *out);
+/* Step 1 purge: the atlas entry/palette/icon tables and their accessors were
+ * removed (only the gold-coin tile survived, now embedded in ui.c).  The
+ * AssetId / AssetAtlasEntry types stay for tools/asset_atlas.py codegen. */
 
 #endif /* ASSET_ATLAS_H */

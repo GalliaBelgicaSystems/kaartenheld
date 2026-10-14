@@ -504,9 +504,6 @@ void world_px_banked(void);
 uint8_t world_player_px(const World *w);
 uint8_t world_player_py(const World *w);
 
-uint8_t world_actor_px(const WorldActorRuntime *a);
-uint8_t world_actor_py(const WorldActorRuntime *a);
-
 void world_on_battle_end(Game *g, bool victory);
 void world_patrol_slot_banked(void);
 

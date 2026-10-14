@@ -193,33 +193,6 @@ static void cycle_sort(Game *g)
         SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
 }
 
-/* Shared label tables (fixed bank, same file — safe per AGENTS.md §54.6). */
-static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
-    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
-};
-
-static const char *card_type_name(uint8_t t)
-{
-    return (t < CARD_TYPE_COUNT) ? s_card_type_names[t] : "SPL";
-}
-
-static const char *filter_name(uint8_t f)
-{
-    return (f <= CARD_TYPE_UTILITY) ? s_card_type_names[f] : "ALL";
-}
-
-static const char *sort_name(uint8_t s)
-{
-    switch (s) {
-        case SORT_TYPE:       return "TYPE";
-        case SORT_POWER:      return "PWR+";
-        case SORT_COST:       return "CST+";
-        case SORT_POWER_DESC: return "PWR-";
-        case SORT_COST_DESC:  return "CST-";
-        default:              return "OFF";
-    }
-}
-
 static void switch_tab(Game *g)
 {
     g->item_menu_tab = (g->item_menu_tab == TAB_CARDS) ? TAB_QUEST : TAB_CARDS;

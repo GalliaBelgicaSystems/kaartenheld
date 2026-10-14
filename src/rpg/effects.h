@@ -36,10 +36,9 @@ typedef struct {
 } EffectResult;
 
 /* Result of the most recent banked combo dispatch.  Single slot by
- * design: combat resolution is sequential.  Read via effect_last()
+ * design: combat resolution is sequential.  Read g_effect_last directly
  * immediately after the call. */
 extern EffectResult g_effect_last;
-const EffectResult *effect_last(void);
 
 /* Bank-3 scaling body, called bank-locally by combo_resolve_banked().
  * Self-contained: pure function of (effect, combo).  Not for fixed-bank

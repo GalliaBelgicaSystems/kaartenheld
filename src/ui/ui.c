@@ -65,25 +65,17 @@ uint8_t ui_font_tile_base;
  * assets/hero_sprites.png (make gfx); see docs/graphics.md. */
 #include "gfx/hero_desolate_sprite_tile.h"
 #include "gfx/rpg_tile_lookup.h"
-#include "gfx/asset_atlas.h"
 #include "banked.h"
 
 #define PLAYER_SPRITE_NUM 0
 
-static const uint16_t s_card_icon_uids[13] = {
-    29,  /* ASSET_EQUIP_C04_R03: Iron Sword (UI_TILE_CARD_SWORD) */
-    64,  /* ASSET_EQUIP_C19_R05: Shield 6th row rightmost (UI_TILE_CARD_SHIELD) */
-    138, /* ASSET_EQUIP_C07_R11: Bow (UI_TILE_CARD_BOW) */
-    9,   /* ASSET_EQUIP_C07_R02: Dagger first weapon row (UI_TILE_CARD_DAGGER) */
-    354, /* ASSET_SYM_C05_R04: Solitaire Diamond Ring (UI_TILE_CARD_RING) */
-    149, /* ASSET_EQUIP_C07_R12: Amulet (UI_TILE_CARD_AMULET) */
-    479, /* ASSET_SYM_C23_R16: Flame Spire (VRAM 110: stale atlas icon, never referenced) */
-    351, /* ASSET_SYM_C13_R09: Snowflake Star (VRAM 111: stale atlas icon, never referenced) */
-    21,  /* ASSET_EQUIP_C25_R02: Toxic Vial (VRAM 112: stale atlas icon, never referenced) */
-    210, /* ASSET_SYM_C30_R02: Heart (UI_TILE_HEART) */
-    463, /* ASSET_SYM_C23_R15: Lightning Bolt (UI_TILE_BOLT) */
-    53,  /* ASSET_EQUIP_C25_R04: Gold Coin (UI_TILE_COIN) */
-    134  /* ASSET_EQUIP_C28_R10: Card Deck (UI_TILE_DECK) */
+/* Gold-coin UI tile (VRAM 115, UI_TILE_COIN): the only surviving asset-atlas
+ * icon.  The 13-tile atlas copy loop used to stream 12 dead tiles (8
+ * overwritten by card_frame_tiles, 3 stale) from bank 8; now the single live
+ * tile lives here (16 B fixed) and bank 8 no longer carries the 12 KB atlas. */
+static const uint8_t s_coin_tile[16] = {
+    0x70, 0xFF, 0x98, 0xAF, 0x4C, 0xF7, 0x6A, 0xD7,
+    0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
 };
 
 /* ASCII semantic char per TileType (0..3): '.', '#', '>', 'B'.  The
@@ -118,12 +110,10 @@ void ui_init(void)
     }
     ui_font_tile_base = 0;
 
-    /* Load weapon, element & UI icon tiles from Bank 6 into VRAM Block 1 (tiles 104..116) */
-    for (p = 0; p < 13; p++) {
-        banked_copy(ASSET_ATLAS_BANK_ICONS, g_ui_screen_buf,
-                    g_asset_icon_tiles + (s_card_icon_uids[p] << 4), 16);
-        set_bkg_data((uint8_t)(UI_TILE_CARD_SWORD + p), 1, (const uint8_t *)g_ui_screen_buf);
-    }
+    /* Gold-coin UI tile (VRAM 115): the only atlas icon still referenced
+     * (shop gold rows).  All other atlas tiles were dead (overwritten by
+     * card_frame_tiles or never referenced). */
+    set_bkg_data(UI_TILE_COIN, 1, s_coin_tile);
 
     /* Battle UI tiles (card frames, timer-bar segments, HUD hp/ap/deck
      * icons, light/dark select arrows, weapon icons) stream from Bank 3
@@ -440,20 +430,6 @@ void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
 
 
 
-/* ui_format_int() is a fixed-bank wrapper around the banked body in
- * src/ui/ui_format.c (ROM bank 2).  The wrapper stages its arguments into
- * the _DATA globals (banked.c) and runs the banked no-arg function through
- * the WRAM banked-call trampoline (crt0.s): see src/core/banked.h. */
-void ui_format_int(int16_t value, char *out)
-{
-    g_bk_call_bank = 2;
-    g_bk_call_target = (uint16_t)&ui_format_int_banked;
-    g_bk_byte_a = (uint8_t)(value & 0xFF);
-    g_bk_byte_b = (uint8_t)((uint16_t)value >> 8);
-    g_bk_ptr_a = (void *)out;
-    banked_call_run();
-}
-
 void ui_load_tileset(uint8_t tileset)
 {
     if (s_loaded_tileset == (int8_t)tileset) return;
@@ -765,15 +741,6 @@ static void ui_put_char(uint8_t x, uint8_t y, char ch)
     }
 }
 
-void ui_draw_num2(uint8_t x, uint8_t y, uint8_t val)
-{
-    uint8_t d = 0;
-    if (val > 99) val = 99;
-    while (val >= 10) { val -= 10; d++; }
-    ui_put_char(x, y, d ? (char)('0' + d) : ' ');
-    ui_put_char((uint8_t)(x + 1), y, (char)('0' + val));
-}
-
 void ui_draw_hline(uint8_t y, char ch)
 {
     uint8_t x;
@@ -874,67 +841,6 @@ void ui_update_battle(const Battle *battle)
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&battle_oam_draw_banked;
     g_bk_ptr_a = (void *)battle;
-    banked_call_run();
-}
-
-/* Shop item codes indexed by BattleCardType (src/battle/card.h).  The shop
- * labels a HEAL card with its ITEM code — a heal card is a ring, RG — while
- * the combat hand shows the battle code (HE) via its own table in
- * ui_battle_content.c. */
-static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
-
-static const char *ui_card_code(uint8_t battle_type)
-{
-    return (battle_type <= BATTLE_CARD_TYPE_DAGGER) ?
-        (s_card_bt_codes + (battle_type * 3)) : "??";
-}
-
-char ui_ones_digit(uint8_t v)
-{
-    while (v >= 10) v -= 10;
-    return (char)('0' + v);
-}
-
-void ui_card_code_str(uint8_t battle_type, uint8_t power, char *out)
-{
-    /* Two-digit powers (e.g. BOW 10) need 5 bytes incl. NUL.
-     * Subtraction-based digits -- see ui_ones_digit(). */
-    const char *bt = ui_card_code(battle_type);
-    uint8_t tens = 0;
-    uint8_t ones = power;
-    while (ones >= 10) {
-        ones -= 10;
-        tens++;
-    }
-    out[0] = bt[0];
-    out[1] = bt[1];
-    if (power >= 10) {
-        out[2] = (char)('0' + tens);
-        out[3] = (char)('0' + ones);
-        out[4] = '\0';
-    } else {
-        out[2] = (char)('0' + ones);
-        out[3] = '\0';
-    }
-}
-
-
-/* Staging for the bank-3 attribute writer (x, y, len, palette). */
-static uint8_t s_color_span_args[4];
-
-/* Set the CGB per-tile palette for a horizontal span of background tiles.
- * Thin fixed-bank wrapper: stages x/y/len/palette and dispatches the bank-3
- * body (ui_color_banked.c) through the WRAM trampoline so the fixed bank
- * stays under 0x8000 (AGENTS.md §55.5).  Palette 0 resets to grayscale. */
-void ui_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
-{
-    s_color_span_args[0] = x;
-    s_color_span_args[1] = y;
-    s_color_span_args[2] = len;
-    s_color_span_args[3] = palette;
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&ui_color_span_banked;
-    g_bk_ptr_a = (void *)s_color_span_args;
     banked_call_run();
 }
 

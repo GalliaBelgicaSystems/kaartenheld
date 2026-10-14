@@ -6,10 +6,8 @@
 #include "banked.h"
 
 /* ── CGB effect-color support, bank-3 body (docs/loot.md §34) ─────────
- * The palette ramps and the VRAM bank-1 attribute writer live here so the
- * fixed bank stays under 0x8000 (AGENTS.md §55.5).  ui_init() banked_copies
- * the palette table into WRAM to program BCPS; the fixed-bank ui_color_span()
- * wrapper stages x/y/len/palette through g_bk_ptr_a and dispatches here.
+ * The VRAM bank-1 attribute clear lives here so the fixed bank stays
+ * under 0x8000 (AGENTS.md §55.5).
  */
 
 
@@ -25,29 +23,6 @@ static void color_vram_sync_write(volatile uint8_t *dst, uint8_t v)
     } else {
         *dst = v;
     }
-}
-
-/* Reads the staged x/y/len/palette from g_bk_ptr_a (see ui_color_span()). */
-void ui_color_span_banked(void)
-{
-    uint8_t *a = (uint8_t *)g_bk_ptr_a;
-    uint8_t x = a[0];
-    uint8_t y = a[1];
-    uint8_t len = a[2];
-    uint8_t palette = a[3];
-    uint8_t i;
-    volatile uint8_t *dst;
-
-    if (!g_is_cgb) return;
-    if (y >= 18 || x >= 32) return;
-    if ((uint8_t)(x + len) > 32) len = (uint8_t)(32 - x);
-
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-    VBK_REG = 1;
-    for (i = 0; i < len; i++) {
-        color_vram_sync_write(&dst[i], (uint8_t)(palette & 0x07));
-    }
-    VBK_REG = 0;
 }
 
 /* DEBUG-only font test body.  Lives in bank 3 so the debug fixed bank keeps

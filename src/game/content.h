@@ -32,12 +32,6 @@ ScreenId game_screen_after_victory(const Game *g);
  * Uses the isolated loot RNG only -- never consumes the shared stream. */
 uint8_t game_loot_drop(uint8_t battle_type);
 
-/* Pick the battle screen (screens/battle JSON id) for a battle type and
- * stage its layout (positions + HUD rows) into the WRAM g_battle_hud cache
- * for the bank-3 renderer.  Boss fights use the boss screen, everything
- * else the standard screen.  Called by battle_start on every battle entry. */
-void game_battle_hud_load(uint8_t battle_type);
-
 /* Birdsong ambience gate (game content decision, not engine policy):
  * nonzero on the maps where birds are heard (Wake Grove + the plain
  * field with Carl, plus the field's harness fixture mirror so the

@@ -300,16 +300,6 @@ uint8_t world_player_py(const World *w)
     return w ? px_dispatch(1, w) : 0;
 }
 
-uint8_t world_actor_px(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(2, a) : 0;
-}
-
-uint8_t world_actor_py(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(3, a) : 0;
-}
-
 void world_on_battle_end(Game *g, bool victory)
 {
     World *w;

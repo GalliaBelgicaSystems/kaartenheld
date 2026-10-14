@@ -147,10 +147,6 @@ void world_anim_rebuild_banked(void);
 
 #define ui_color_class(st, ih) ui_color_card(0, (st), (ih))
 
-/* Set the CGB per-tile palette for a horizontal span of background tiles
- * (no-op on DMG; palette 0 resets to grayscale). */
-void ui_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette);
-
 /* Bank-3 no-arg body dispatched by ui_lcd_off() (src/ui/ui_color_banked.c);
  * clears every BG tilemap attribute byte back to palette 0. */
 void ui_clear_atts_banked(void);
@@ -209,33 +205,11 @@ void ui_draw_world_map(const World *world);
 void ui_draw_world_full(const World *world);
 void ui_draw_actors_sprites(const World *world);
 void ui_draw_text_line(uint8_t x, uint8_t y, const char *text, uint8_t max_chars);
-void ui_draw_num2(uint8_t x, uint8_t y, uint8_t val);
 void ui_draw_hline(uint8_t y, char ch);
 
 /* Set SCX/SCY from the overworld camera pixel position.  Called every
  * overworld frame so the background glides smoothly. */
 void ui_update_camera(const World *world);
-
-/* Write value as a decimal string into out (at least 7 bytes).  Avoids the
- * stdio/console chain so _HOME stays under 0x8000. */
-void ui_format_int(int16_t value, char *out);
-
-/* Write "XYn" — two-letter battle code ("SW"/"SH"/"BO"/"HE"/"DA" per
- * BattleCardType in src/battle/card.h) plus power digit — into out
- * (at least 4 bytes); "??" when battle_type is out of range. */
-void ui_card_code_str(uint8_t battle_type, uint8_t power, char *out);
-
-/* Ones digit of `v` as a character, computed by subtraction: SM83 has
- * no hardware divide and the SDCC divmod library would land in the
- * tight fixed bank (AGENTS.md 52.18).  Use instead of `% 10`. */
-char ui_ones_digit(uint8_t v);
-
-/* Banked no-arg body (ROM bank 2) dispatched by ui_format_int(). */
-void ui_format_int_banked(void);
-
-/* Bank-3 no-arg body dispatched by ui_color_span() (src/ui/ui_color_banked.c);
- * reads its staged args from g_bk_ptr_a. */
-void ui_color_span_banked(void);
 
 /* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
  * per-build split (debug 5 / release 4) so release bank 3 keeps room for

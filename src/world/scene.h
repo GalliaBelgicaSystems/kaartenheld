@@ -75,9 +75,6 @@ typedef struct {
  * Do not retain this pointer across nested or subsequent scene lookups. */
 const SceneDefinition *scene_definition_for_map(MapId map_id);
 
-/* Get the tileset kind for a given map id. */
-WorldTilesetKind scene_get_tileset(MapId map_id);
-
 /* Find the exit whose gate tile sits at (x, y), or NULL. */
 const SceneExit *scene_exit_at(const SceneDefinition *def, uint8_t x, uint8_t y);
 

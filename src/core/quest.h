@@ -35,9 +35,5 @@ void quest_init(const QuestDefinition *table, uint8_t count, uint8_t bank);
 
 /* Iterate the registered quest table. */
 uint8_t quest_count(void);
-const QuestDefinition *quest_at(uint8_t idx);
-
-/* Derive a quest's current status from the canonical state. */
-QuestStatus quest_status(const GameState *state, const QuestDefinition *q);
 
 #endif /* QUEST_H */

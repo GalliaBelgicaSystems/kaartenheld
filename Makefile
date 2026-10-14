@@ -138,22 +138,6 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
 		--shade-map generated/tiles/shades/forest.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
-	# Floor tile: col 0, row 2
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_floor \
-		--shade-map generated/tiles/shades/forest.json --tile-coords "0,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_floor.inc
-	# Treetop tile: col 12, row 0
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_tree \
-		--shade-map generated/tiles/shades/forest.json --tile-coords "12,0" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_tree.inc
-	# Exit tile: col 8, row 2
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_exit \
-		--shade-map generated/tiles/shades/forest.json --tile-coords "8,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_exit.inc
-	# Stump tiles TL,TR,BL,BR + mini (BR repeated): cols 14-15, rows 0-1
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
-		--shade-map generated/tiles/shades/forest.json --tile-coords "14,0 15,0 14,1 15,1 15,1" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets
@@ -175,10 +159,6 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
 		--shade-map generated/tiles/shades/desolate_landscape.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
-	# 41-tile subset for scene terrain lookup (rows 0–2, cols 0–8 on row 2)
-	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_tiles \
-		--shade-map generated/tiles/shades/desolate_landscape.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_desolate_tiles.inc
 	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
 		--shade-map generated/tiles/shades/hero_ow.json \
