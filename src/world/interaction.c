@@ -3,11 +3,7 @@
 #include "event.h"
 #include "telemetry.h"
 #include "story.h"
-#include "banked.h"
 #include <stddef.h>
-
-/* DEBUG-build lesson-sync body (src/world/lesson_b3.c, bank 3). */
-void lesson_sync_banked(void);
 
 ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y)
 {
@@ -36,38 +32,26 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
     }
     /* Lesson tile (Carl): facing-talk must sync the co-located
      * spar exactly like the bump path does, or closing the lesson
-     * returns to the overworld with no fight.  The store is
-     * unconditional (NO when nothing hostile is there), mirroring
-     * the bump path; the scan skips inactive slots, so post-victory
-     * the remedial lesson just repeats.  DEBUG builds run the scan
-     * banked (debug bank 3 has room; debug fixed has 17 B -- the
-     * body derives the tile from facing, see lesson_b3.c); RELEASE
-     * builds run the identical sync inline (release fixed is roomy).
-     * Both mirror actor_find_hostile_slot().
+     * returns to the overworld with no fight.  The scan mirrors
+     * actor_find_hostile_slot() and skips inactive slots, so post-victory
+     * the remedial lesson just repeats.  Gated on dialogue.active: shop/
+     * save/failed talks change nothing.
      *
      * Stale-index safety is structural, not checked: every gameplay
      * writer of encounter_actor_index stores NO or a live slot
      * (init/clears, the encounter branch, this sync -- all sources
      * skip inactive actors), dialogues are modal, and every battle
      * exit clears it, so dialogue_screen's != NO test cannot meet a
-     * dead slot.  A full active-guard was measured at 136 B and does
-     * not fit the debug fixed bank.
+     * dead slot.
      *
      * Constraint: this block is skipped when event_engage_actor
      * handles the tile first (early return above).  Never put an
      * INTERACT event on a lesson tile -- its dialogue would open
      * with no synced spar and the auto-start would silently break. */
-#ifdef DEBUG_BUILD
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&lesson_sync_banked;
-    g_bk_ptr_a = (void *)g;
-    banked_call_run();
-#else
-    if (result == ENGAGE_DIALOGUE) {
+    if (result == ENGAGE_DIALOGUE && g->dialogue.active) {
         g->world.encounter_actor_index =
             actor_find_hostile_slot(&g->world, target_x, target_y);
     }
-#endif
     return result;
 }
 

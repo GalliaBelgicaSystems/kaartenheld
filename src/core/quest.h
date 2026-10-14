@@ -5,11 +5,14 @@
 #include <stdbool.h>
 #include "rpg/state.h"
 
-/* Generic quest engine.  The engine owns the quest vocabulary and the
- * status derivation; the game layer supplies its quest table at boot via
- * quest_init() (see src/game/quests.c).  A quest tracks its progress in ONE
- * status variable with thresholds declared per quest; the state itself is
- * mutated by the generic event system (quests are events, not engine code). */
+/* Quest content types.  Quests are data: the registry lives in
+ * src/game/quests_content.c (bank 2) and the bank-2 item renderer derives
+ * status directly from it; quest state itself is mutated by the generic
+ * event system (quests are events, not engine code).  A quest tracks its
+ * progress in ONE status variable with thresholds declared per quest. */
+
+/* Quest count (length of g_quests[] in quests_content.c).  Kept in sync by
+ * the compile-time assert next to the table. */
 
 typedef enum {
     QUEST_STATUS_NOT_STARTED = 0,
@@ -29,15 +32,6 @@ typedef struct {
     char complete_note[10];     /* reward shown as "complete - <note>" */
 } QuestDefinition;
 
-/* Register the game's quest table.  The engine is generic; the game layer
- * supplies its content table at boot. */
-void quest_init(const QuestDefinition *table, uint8_t count, uint8_t bank);
-
-/* Iterate the registered quest table. */
-uint8_t quest_count(void);
-const QuestDefinition *quest_at(uint8_t idx);
-
-/* Derive a quest's current status from the canonical state. */
-QuestStatus quest_status(const GameState *state, const QuestDefinition *q);
+#define GAME_QUEST_COUNT 2
 
 #endif /* QUEST_H */

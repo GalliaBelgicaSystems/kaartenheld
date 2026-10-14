@@ -12,62 +12,62 @@
  * Fixed order (no startup shuffle) — the starter deck follows the
  * same pattern (see deck_init.c). */
 
-static const Card s_slime_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+static const EnemyCard s_slime_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
-static const Card s_bat_deck[] = {
-    { BATTLE_CARD_TYPE_BOW,   2, 0xFF },
-    { BATTLE_CARD_TYPE_BOW,   3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 4, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
+static const EnemyCard s_bat_deck[] = {
+    { BATTLE_CARD_TYPE_BOW,   2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_BOW,   3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     /* Organic poison rider (Phase D): this swing carries a poison rider at
      * ~60/255 chance; when it lands on the player it also greys her hand. */
-    { BATTLE_CARD_TYPE_BOW,   3, 0xFF, 0, 0, STATUS_POISON, 60 },
+    { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 60 },
 };
-static const Card s_slime_trio_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+static const EnemyCard s_slime_trio_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
-static const Card s_kobold_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+static const EnemyCard s_kobold_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
-static const Card s_mimic_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 4, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 2, 0xFF },
-    { BATTLE_CARD_TYPE_HEAL,  3, 0xFF },
+static const EnemyCard s_mimic_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  3, STATUS_NONE, 0 },
 };
-static const Card s_spider_deck[] = {
-    { BATTLE_CARD_TYPE_BOW,   2, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_SWORD, 3, 0xFF },
-    { BATTLE_CARD_TYPE_HEAL,  2, 0xFF },
+static const EnemyCard s_spider_deck[] = {
+    { BATTLE_CARD_TYPE_BOW,   2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
     /* Webbing strike: poison rider at ~70/255; landing it also greys the
      * player's hand (Phase D), the spider's signature threat. */
-    { BATTLE_CARD_TYPE_BOW,   3, 0xFF, 0, 0, STATUS_POISON, 70 },
+    { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 70 },
 };
 /* Carl's practice deck: a single 0-power swing, drawn every round.  The
  * tutorial spar is harmless by construction (no defend needed to
  * survive it); the telegraphed 0 is the visible proof. */
-static const Card s_carl_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 0, 0xFF },
+static const EnemyCard s_carl_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 0, STATUS_NONE, 0 },
 };
 
 void enemy_deck_setup_banked(void)
 {
     EnemyCompactDeck *ed = (EnemyCompactDeck *)g_bk_ptr_a;
     uint8_t battle_id = g_bk_byte_a;
-    const Card *src = (const Card *)0;
+    const EnemyCard *src = (const EnemyCard *)0;
     uint8_t count = 0, i;
 
     if (!ed) return;
@@ -90,11 +90,6 @@ void enemy_deck_setup_banked(void)
     for (i = 0; i < count; i++) {
         ed->cards[i].type = src[i].type;
         ed->cards[i].value = src[i].value;
-        ed->cards[i].uses_remaining = src[i].uses_remaining;
-        ed->cards[i].cost = 0; /* enemies never pay energy */
-        ed->cards[i].effect = src[i].effect; /* NONE: enemies never resolve
-                                              * effects -- their card value
-                                              * IS the incoming damage. */
         ed->cards[i].status_id = src[i].status_id;
         ed->cards[i].status_chance = src[i].status_chance;
     }

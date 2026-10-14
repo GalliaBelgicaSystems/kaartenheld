@@ -126,10 +126,16 @@ void battle_screen_render(Game *g)
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_BATTLE, 0, 0, 0);
         vg->render_cache.valid = true;
         vg->render_cache.prev_screen = SCREEN_BATTLE;
-    } else if (vg->battle.dirty) {
-        ui_update_battle((Battle *)&vg->battle);
-    } else if (vg->render_cache.prev_battle_timer_bar != timer_bar) {
-        ui_draw_battle_timer((Battle *)&vg->battle);
+    } else {
+        if (vg->battle.dirty) {
+            ui_update_battle((Battle *)&vg->battle);
+        }
+        /* Independent if (not else-if): a dirty frame coinciding with a
+         * bar-tick change must still redraw the bar, or the bar freezes
+         * for a full second while prev_battle_timer_bar moves on. */
+        if (vg->render_cache.prev_battle_timer_bar != timer_bar) {
+            ui_draw_battle_timer((Battle *)&vg->battle);
+        }
     }
     vg->battle.dirty = 0;
     vg->render_cache.prev_battle_timer_bar = timer_bar;

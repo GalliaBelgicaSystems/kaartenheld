@@ -41,21 +41,6 @@ const SceneDefinition *scene_definition_for_map(MapId map_id)
     return &s_scene_scratch;
 }
 
-static MapId s_cached_tileset_map = (MapId)0xFF;
-static WorldTilesetKind s_cached_tileset_kind = WORLD_TILESET_FOREST;
-
-WorldTilesetKind scene_get_tileset(MapId map_id)
-{
-    const SceneDefinition *def;
-    if (map_id == s_cached_tileset_map) {
-        return s_cached_tileset_kind;
-    }
-    s_cached_tileset_map = map_id;
-    def = scene_definition_for_map(map_id);
-    s_cached_tileset_kind = def ? def->tileset : WORLD_TILESET_FOREST;
-    return s_cached_tileset_kind;
-}
-
 const SceneExit *scene_exit_at(const SceneDefinition *def, uint8_t x, uint8_t y)
 {
     uint8_t i;

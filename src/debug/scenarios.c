@@ -55,7 +55,9 @@ static void scenario_begin(uint16_t seed)
     g_game.frame = 0;
     g_game.game_over_choice = 0;
     rng_set_seed(seed);
+#ifdef DEBUG_BUILD
     input_reset();
+#endif
     telemetry_init();
     telemetry_set_frame_ptr(&g_game.frame);
     /* Baseline music is the loaded scene's track (runs after
@@ -114,7 +116,7 @@ static void scenario_load_state(void)
     }
 
     p = b + STATE_LOAD_DESC_PARTY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF]; i++) {
+    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF] && i < MAX_PARTY_MEMBERS; i++) {
         g_game.state.party.members[i].id = (CharacterId)*p++;
         g_game.state.party.members[i].hp = *p++;
         g_game.state.party.members[i].max_hp = *p++;
@@ -345,6 +347,13 @@ static void debug_run_action(void)
                                              : g_game.battle.enemy_deck.count;
                     status_grey_apply(a0, pool);
                 }
+                /* Repaint the tinted row: on hardware every apply is
+                 * followed by a phase change (DIRTY_ALL), but debug-action
+                 * applies land mid-phase with no widely-dirty redraw. */
+                if (ok) {
+                    g_game.battle.dirty |= (a0 == 0) ? BATTLE_DIRTY_HERO
+                                                     : BATTLE_DIRTY_ENEMIES;
+                }
             }
             break;
 
@@ -360,17 +369,25 @@ static void debug_run_action(void)
         case DBG_ACT_DECK_ADD:
             /* Real mechanic call: all deck_add_card validations apply
              * (ownership, SPECIAL exclusion, max_copies, size). */
+#ifdef DEBUG_BUILD
             if (deck_add_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
             }
+#else
+            (void)deck_add_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_DECK_REMOVE:
             /* Real mechanic call: membership + DECK_MIN_CARDS floor apply.
              * Both emit on success only (mirroring the UI caller), so
              * scenarios assert acceptance/rejection via event counts. */
+#ifdef DEBUG_BUILD
             if (deck_remove_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, a0, 0, 0, 0);
             }
+#else
+            (void)deck_remove_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_SET_HAND_CARD_META:
             /* Companion to SET_HAND_CARD: pins the injected hand card's

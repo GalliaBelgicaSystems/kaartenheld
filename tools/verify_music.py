@@ -128,7 +128,18 @@ def main():
     pos_addr = [game_addr + 204]
 
     def read_ticks():
-        # 16-bit counter incremented by the ISR; tolerate a torn read by
+        # 16-bit counter with torn-read protection: the ISR's ++ is two
+        # instructions (lo-inc, hi-inc); a host read landing between them
+        # sees lo wrapped with a stale hi (observed once as 0x0700 for a
+        # true ~0x0800). Latch hi first AND last: on mismatch the counter
+        # wrapped mid-read, so retry (bounded, then best effort).
+        for _ in range(3):
+            hi1 = pb.memory[ticks_addr + 1]
+            lo = pb.memory[ticks_addr]
+            hi2 = pb.memory[ticks_addr + 1]
+            if hi1 == hi2:
+                return (hi1 << 8) | lo
+        # Fallback (also the old behavior): tolerate a torn read by
         # taking the max of three reads (the counter is monotonic).
         return max(pb.memory[ticks_addr] | (pb.memory[ticks_addr + 1] << 8)
                    for _ in range(3))
@@ -291,10 +302,14 @@ def main():
 
     # Check 4: the ISR is actually running (counter is monotonic and moving).
     # Unwrap the uint16 counter across the whole run for the true total.
+    # Only LARGE backward steps count as wraps: a small dip (<= 255) is a
+    # torn host read at a 256-boundary (lo wrapped, hi stale), not a wrap --
+    # counting it would add a phantom 65536 (observed once: +251 dip).
     total = samples[-1][2] - samples[0][2]
     for i in range(1, len(samples)):
         if samples[i][2] < samples[i - 1][2]:
-            total += 65536
+            if samples[i - 1][2] - samples[i][2] > 32768:
+                total += 65536
     check("4. ticks-advanced", total > 0, f"g_audio_ticks stuck at {samples[0][2]}")
 
     # Check 3: transitions were really exercised.
@@ -316,10 +331,29 @@ def main():
     check("1. no-stalled-frames", ok, detail)
 
     # Check 2: fixed-clock aggregate rate (256 Hz / 59.7275 fps).
+    # Aggregate ONLY over clean frames: PyBoy splits ticks at LCD off/on
+    # edges, smearing one 1-2 frame full redraw across ~9 short slices
+    # (0-3 timer ticks each, lcd flag catching mid-transition state).
+    # Pairs touching a transition window (either endpoint within 2 frames
+    # of an LCD-off sample) are excluded; the remaining steady-state
+    # frames must average the hardware rate.
     frames = len(samples) - 1
     expected = frames * (256 / 59.7275)
-    check("2. fixed-clock-rate", abs(total - expected) < expected * 0.05,
-          f"total={total} expected~{expected:.0f} over {frames} frames")
+    off = set()
+    for _i, _s in enumerate(samples):
+        if not _s[3]:
+            for _j in range(max(0, _i - 2), min(len(samples), _i + 3)):
+                off.add(_j)
+    clean_total = 0
+    clean_frames = 0
+    for _i in range(1, len(samples)):
+        if _i not in off and (_i - 1) not in off:
+            clean_total += (samples[_i][2] - samples[_i - 1][2]) % 65536
+            clean_frames += 1
+    clean_expected = clean_frames * (256 / 59.7275)
+    check("2. fixed-clock-rate",
+          clean_frames > 0 and abs(clean_total - clean_expected) < clean_expected * 0.05,
+          f"total={total} clean={clean_total} expected~{clean_expected:.0f} over {clean_frames}/{frames} clean frames")
 
     print(f"\nstats: {len(samples)} samples, {len(stalled)} stalled frame(s), "
           f"{total} ticks over {frames} frames (~{total / max(frames, 1):.2f}/frame)")

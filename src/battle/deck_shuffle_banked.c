@@ -5,12 +5,11 @@
 #include "rng.h"
 
 /* Banked body of deck_reshuffle() (see deck.c).  Lives in ROM bank 8:
- * bank 2 ran out of room for the remainder fold, bank 3 (home of
- * deck_discard_banked) overflows in the release build, and bank 7 filled
- * with tracker songs -- while bank 8 has room in both builds.  The deck
- * module is therefore split by dispatch (init in bank 2, discard in
- * bank 7, reshuffle here) -- each body is self-contained and entered
- * through the WRAM trampoline, so shared banks are not required.
+ * bank 2 ran out of room for the remainder fold and bank 3 was full when
+ * this was written -- while bank 8 has room in both builds.  The deck
+ * module is therefore split by dispatch (init in bank 2, discard inline
+ * in the fixed bank, reshuffle here) -- each body is self-contained and
+ * entered through the WRAM trampoline, so shared banks are not required.
  *
  * Self-contained: reads only the staged Deck pointer (ptr_a) and advances
  * the shared RNG stream via an inlined xorshift on g_rng_state (banked code
@@ -64,7 +63,7 @@ void deck_reshuffle_banked(void)
      * pile first so no real card is lost.  Remainder + discard are
      * disjoint subsets of one deck, so their sum cannot exceed
      * MAX_DECK_SIZE (same trust level as the copy loop below and the
-     * MAX_DECK_SIZE cap in deck_discard_banked); draw_idx <= count
+     * MAX_DECK_SIZE cap in deck_discard); draw_idx <= count
      * always holds (draw_idx advances only inside deck_draw's guarded
      * draw), so the subtraction cannot wrap.  Base pointers are
      * hoisted out of the loop (far-struct address math is expensive);

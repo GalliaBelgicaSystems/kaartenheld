@@ -27,13 +27,16 @@ OFF_STATE = 2
 
 # GameState (src/rpg/state.h) — fields in declaration order.
 OFF_SCENE = 0            # SceneState: SceneId, x, y, facing (4 B)
-OFF_PARTY = 4            # PartyState: members[4]x(id,hp,max)=12 + count = 13
-OFF_CARDS = 17           # CardState: collection + deck
+OFF_PARTY = 4            # PartyState: members[1]x(id,hp,max)=3 + count = 4
+OFF_CARDS = 8            # CardState: collection + deck
 OFF_CARDS_COLLECTION = OFF_CARDS         # entries[12]x(id,count)=24 + count
 OFF_CARDS_DECK = OFF_CARDS + 25          # cards[20] + count = 21
 OFF_FLAGS = OFF_CARDS + 46               # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
-OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 4 = 8
+OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
+OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
+OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
+STATE_SIZE = OFF_PROGRESSION + 13        # == sizeof(GameState); locates World/Battle
 
 # CardDefinition (src/rpg/cards.h): id type power cost uses max_copies
 # effect battle_type price status_id status_chance name[12] = 23 B.
@@ -54,7 +57,7 @@ CHARACTER_STATE_MAX_HP = 2
 
 # ── World (src/world/world.h) — needed to reach g_game.battle ────────
 # Packed layout: width, height, map_id, encounter_actor_index,
-# map_changed(bool), player Entity, actors[4], map[24][40], camera_px_x,
+# map_changed(bool), player Entity, actors[4], map[18][32], camera_px_x,
 # camera_px_y, scroll_x, scroll_y, move_state, move_target_x,
 # move_target_y, move_progress, move_outcome, tileset_kind, move_param,
 # move_dir, move_exit_x, move_exit_y.
@@ -63,8 +66,8 @@ CHARACTER_STATE_MAX_HP = 2
 # the old PLAYER_BOOT locate found).
 ENTITY_SIZE = 7
 MAX_WORLD_ACTORS = 4        # src/world/world.h
-WORLD_WIDTH = 40
-WORLD_HEIGHT = 24
+WORLD_WIDTH = 32            # src/world/world.h (32x18 renderer limit)
+WORLD_HEIGHT = 18
 
 def _world_actor_runtime_size(name_ptr_size):
     # WorldActorRuntime (src/world/world.h): actor_id(u16), id, active,
@@ -239,7 +242,7 @@ class StateReader:
         self.g_game = self.sym.wram("g_game")
         self.g_audio = self.sym.wram("g_audio_current_track")
         self.state = self.g_game + OFF_STATE
-        self.world = self.state + 209      # sizeof(GameState), see above
+        self.world = self.state + STATE_SIZE   # sizeof(GameState), see above
         self._battle_base = None           # resolved at first battle read
         self._world_ptr_size = None        # const-char* size once probed
         self._rom = open(rom_path, "rb")
@@ -309,7 +312,7 @@ class StateReader:
         validates against the live battle (hero hp/max + 'H' name)."""
         if self._battle_base is not None:
             return self._battle_base
-        state_size = 209
+        state_size = STATE_SIZE
         for ptr in NAME_PTR_CANDIDATES:
             cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
             head = self.rd(cand, 2)

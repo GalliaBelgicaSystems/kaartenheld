@@ -35,8 +35,12 @@ void ui_set_cram_palette(uint8_t overworld)
 /* Mirror of the background tilemap ring (0x9800), written alongside every
  * ring write, so the harness can assert the actual rendered map (mGBA's
  * debugger cannot read VRAM).  DEBUG-only: 1 KB of WRAM the release does
- * not carry. */
-uint8_t g_tilemap_mirror[32 * 32];
+ * not carry.
+ * Pinned in unmapped WRAM0 (0xC500-0xC8FF, right after the attribute mirror
+ * at 0xC100-0xC4FF) so it does not consume _DATA budget: the debug stack
+ * gap (s__HEAP..0xE000) keeps the full kilobyte.  The host resolves the
+ * address via the ROM's .sym, so the pin is transparent to tools/. */
+__at(0xC500) uint8_t g_tilemap_mirror[32 * 32];
 /* Mirror of the background tilemap attribute ring (VBK=1 0x9800).
  * Placed in unmapped WRAM0 (0xC100-0xC4FF) so it does not consume _DATA budget. */
 volatile __at(0xC100) uint8_t g_tilemap_attr_mirror[32 * 32];
@@ -44,6 +48,16 @@ volatile __at(0xC100) uint8_t g_tilemap_attr_mirror[32 * 32];
 
 /* GBDK console .mode byte (defined in crt0.s _DATA). Bit 2 is M_NO_SCROLL. */
 extern uint8_t console_mode;
+
+/* Harness flag (main.c): when set, vsync is skipped and VBlank never
+ * fires, so per-frame CPU cost is irrelevant -- but the semantic screen
+ * buffer must stay exact for harness text assertions. */
+extern volatile uint8_t g_harness_mode;
+
+/* Background-animation cell count (bank-5 anim_swap_banked.c, WRAM always
+ * mapped): lets the caller skip the swap dispatch on frames with nothing
+ * to swap (same throttle the body applies internally). */
+extern uint8_t g_anim_count;
 
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static int8_t s_loaded_tileset = -1;
@@ -65,26 +79,9 @@ uint8_t ui_font_tile_base;
  * assets/hero_sprites.png (make gfx); see docs/graphics.md. */
 #include "gfx/hero_desolate_sprite_tile.h"
 #include "gfx/rpg_tile_lookup.h"
-#include "gfx/asset_atlas.h"
 #include "banked.h"
 
 #define PLAYER_SPRITE_NUM 0
-
-static const uint16_t s_card_icon_uids[13] = {
-    29,  /* ASSET_EQUIP_C04_R03: Iron Sword (UI_TILE_CARD_SWORD) */
-    64,  /* ASSET_EQUIP_C19_R05: Shield 6th row rightmost (UI_TILE_CARD_SHIELD) */
-    138, /* ASSET_EQUIP_C07_R11: Bow (UI_TILE_CARD_BOW) */
-    9,   /* ASSET_EQUIP_C07_R02: Dagger first weapon row (UI_TILE_CARD_DAGGER) */
-    354, /* ASSET_SYM_C05_R04: Solitaire Diamond Ring (UI_TILE_CARD_RING) */
-    149, /* ASSET_EQUIP_C07_R12: Amulet (UI_TILE_CARD_AMULET) */
-    479, /* ASSET_SYM_C23_R16: Flame Spire (VRAM 110: stale atlas icon, never referenced) */
-    351, /* ASSET_SYM_C13_R09: Snowflake Star (VRAM 111: stale atlas icon, never referenced) */
-    21,  /* ASSET_EQUIP_C25_R02: Toxic Vial (VRAM 112: stale atlas icon, never referenced) */
-    210, /* ASSET_SYM_C30_R02: Heart (UI_TILE_HEART) */
-    463, /* ASSET_SYM_C23_R15: Lightning Bolt (UI_TILE_BOLT) */
-    53,  /* ASSET_EQUIP_C25_R04: Gold Coin (UI_TILE_COIN) */
-    134  /* ASSET_EQUIP_C28_R10: Card Deck (UI_TILE_DECK) */
-};
 
 /* ASCII semantic char per TileType (0..3): '.', '#', '>', 'B'.  The
  * overworld renders these via the console font (ui_font_tile_base + (ch -
@@ -118,19 +115,14 @@ void ui_init(void)
     }
     ui_font_tile_base = 0;
 
-    /* Load weapon, element & UI icon tiles from Bank 6 into VRAM Block 1 (tiles 104..116) */
-    for (p = 0; p < 13; p++) {
-        banked_copy(ASSET_ATLAS_BANK_ICONS, g_ui_screen_buf,
-                    g_asset_icon_tiles + (s_card_icon_uids[p] << 4), 16);
-        set_bkg_data((uint8_t)(UI_TILE_CARD_SWORD + p), 1, (const uint8_t *)g_ui_screen_buf);
-    }
-
     /* Battle UI tiles (card frames, timer-bar segments, HUD hp/ap/deck
-     * icons, light/dark select arrows, weapon icons) stream from Bank 3
-     * (generated card_frame_tiles.h, make gfx) through the banked loader
+     * icons, light/dark select arrows, weapon icons, gold-coin tile) stream
+     * from Bank 3
+     * (generated card_frame_tiles.h + bank-local coin tile, make gfx) through
+     * the banked loader
      * -- the fixed bank stays lean (AGENTS.md 52.18).  VRAM (signed BG
      * block, 0x9000-based: AGENTS.md 52.22): frames 118-126, bar 117/127,
-     * HUD icons overwrite the atlas data at 113/114/116 (sheet tiles
+     * HUD icons at 113/114/116 (sheet tiles
      * 11-13), light arrow at 96 (sheet tile 14), dark arrow at 110
      * (sheet tile 15), weapons overwrite the atlas data at 104-108
      * (sheet tiles 16-20), spare blank at 97.  Runs with
@@ -440,20 +432,6 @@ void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
 
 
 
-/* ui_format_int() is a fixed-bank wrapper around the banked body in
- * src/ui/ui_format.c (ROM bank 2).  The wrapper stages its arguments into
- * the _DATA globals (banked.c) and runs the banked no-arg function through
- * the WRAM banked-call trampoline (crt0.s): see src/core/banked.h. */
-void ui_format_int(int16_t value, char *out)
-{
-    g_bk_call_bank = 2;
-    g_bk_call_target = (uint16_t)&ui_format_int_banked;
-    g_bk_byte_a = (uint8_t)(value & 0xFF);
-    g_bk_byte_b = (uint8_t)((uint16_t)value >> 8);
-    g_bk_ptr_a = (void *)out;
-    banked_call_run();
-}
-
 void ui_load_tileset(uint8_t tileset)
 {
     if (s_loaded_tileset == (int8_t)tileset) return;
@@ -554,8 +532,9 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
     }
 
     actor = actor_find_at(world, col, row);
-    if (actor && !(actor->flags & ACTOR_FLAG_HOSTILE) &&
-        actor->sprite_kind == SPRITE_KIND_ASCII) {
+    /* Statics are never hostile (the loader spawns every HOSTILE-flagged
+     * def into the runtime slots): ASCII-kind statics own the cell glyph. */
+    if (actor && actor->sprite_kind == SPRITE_KIND_ASCII) {
         tile_idx = (uint8_t)(ui_font_tile_base + (uint8_t)(actor->visual - ' '));
         glyph = actor->visual;
     } else {
@@ -645,15 +624,17 @@ void ui_draw_actors_sprites(const World *world)
     castle = (world->tileset_kind == WORLD_TILESET_CASTLE);
     /* Background animation first: its LCD-on tilemap writes must land
      * inside VBlank, while the OAM pass below is WRAM-only (timing-safe
-     * anywhere). ptr_a/byte_b are staged ONCE up front for both passes
-     * (the swap body reads world/anim_step); the second pass only adds
-     * the castle flag -- no extra fixed-bank stores (debug _HOME is
-     * brim-full, AGENTS.md 52.18). */
+     * anywhere).  Staging (world/anim_step) is shared by both passes;
+     * only the swap DISPATCH is gated here on the body's own throttle
+     * (every 4th frame) plus a nonzero recorded-cell count, so 75-100%
+     * of frames skip that bank switch entirely. */
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
-    g_bk_call_bank = 5;
-    g_bk_call_target = (uint16_t)&world_anim_swap_banked;
-    banked_call_run();
+    if ((((uint8_t)g_game.frame & 3) == 0) && g_anim_count != 0) {
+        g_bk_call_bank = 5;
+        g_bk_call_target = (uint16_t)&world_anim_swap_banked;
+        banked_call_run();
+    }
     g_bk_byte_a = castle;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&ui_actors_sprites_banked;
@@ -748,7 +729,14 @@ void ui_update_camera(const World *world)
     SCX_REG = world->camera_px_x;
     SCY_REG = world->camera_px_y;
 #ifdef DEBUG_BUILD
-    ui_refill_semantic(world);
+    /* Semantic refill (~43k T-states over the full 20x18 view): only the
+     * harness reads g_ui_screen_buf on overworld frames, and only it
+     * needs it exact every frame.  On hardware (even debug builds
+     * running live) the buffer is stale-but-harmless, so skip the scan
+     * and keep steady overworld frames inside VBlank. */
+    if (g_harness_mode) {
+        ui_refill_semantic(world);
+    }
 #endif
 }
 
@@ -763,15 +751,6 @@ static void ui_put_char(uint8_t x, uint8_t y, char ch)
             g_ui_screen_buf[y][x] = ch;
         }
     }
-}
-
-void ui_draw_num2(uint8_t x, uint8_t y, uint8_t val)
-{
-    uint8_t d = 0;
-    if (val > 99) val = 99;
-    while (val >= 10) { val -= 10; d++; }
-    ui_put_char(x, y, d ? (char)('0' + d) : ' ');
-    ui_put_char((uint8_t)(x + 1), y, (char)('0' + val));
 }
 
 void ui_draw_hline(uint8_t y, char ch)
@@ -874,67 +853,6 @@ void ui_update_battle(const Battle *battle)
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&battle_oam_draw_banked;
     g_bk_ptr_a = (void *)battle;
-    banked_call_run();
-}
-
-/* Shop item codes indexed by BattleCardType (src/battle/card.h).  The shop
- * labels a HEAL card with its ITEM code — a heal card is a ring, RG — while
- * the combat hand shows the battle code (HE) via its own table in
- * ui_battle_content.c. */
-static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
-
-static const char *ui_card_code(uint8_t battle_type)
-{
-    return (battle_type <= BATTLE_CARD_TYPE_DAGGER) ?
-        (s_card_bt_codes + (battle_type * 3)) : "??";
-}
-
-char ui_ones_digit(uint8_t v)
-{
-    while (v >= 10) v -= 10;
-    return (char)('0' + v);
-}
-
-void ui_card_code_str(uint8_t battle_type, uint8_t power, char *out)
-{
-    /* Two-digit powers (e.g. BOW 10) need 5 bytes incl. NUL.
-     * Subtraction-based digits -- see ui_ones_digit(). */
-    const char *bt = ui_card_code(battle_type);
-    uint8_t tens = 0;
-    uint8_t ones = power;
-    while (ones >= 10) {
-        ones -= 10;
-        tens++;
-    }
-    out[0] = bt[0];
-    out[1] = bt[1];
-    if (power >= 10) {
-        out[2] = (char)('0' + tens);
-        out[3] = (char)('0' + ones);
-        out[4] = '\0';
-    } else {
-        out[2] = (char)('0' + ones);
-        out[3] = '\0';
-    }
-}
-
-
-/* Staging for the bank-3 attribute writer (x, y, len, palette). */
-static uint8_t s_color_span_args[4];
-
-/* Set the CGB per-tile palette for a horizontal span of background tiles.
- * Thin fixed-bank wrapper: stages x/y/len/palette and dispatches the bank-3
- * body (ui_color_banked.c) through the WRAM trampoline so the fixed bank
- * stays under 0x8000 (AGENTS.md §55.5).  Palette 0 resets to grayscale. */
-void ui_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
-{
-    s_color_span_args[0] = x;
-    s_color_span_args[1] = y;
-    s_color_span_args[2] = len;
-    s_color_span_args[3] = palette;
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&ui_color_span_banked;
-    g_bk_ptr_a = (void *)s_color_span_args;
     banked_call_run();
 }
 

@@ -234,10 +234,24 @@ extern GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
 extern uint8_t g_telemetry_count;
 extern uint8_t g_telemetry_head;
 
+#ifdef DEBUG_BUILD
+
 void telemetry_init(void);
 void telemetry_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3);
 void telemetry_set_frame_ptr(const uint32_t *frame_ptr);
 void debug_snapshot(void);
+
+#else /* release ROM: telemetry is debug-only (no ring buffer, no per-event
+ * CPU).  Calls compile out entirely; the one call site with a
+ * side-effecting argument (world_on_battle_end's LOOT_CARD_ADDED count)
+ * is #ifdef'd at the site, so no gameplay behavior changes. */
+
+#define telemetry_init() ((void)0)
+#define telemetry_emit(type, d0, d1, d2, d3) ((void)0)
+#define telemetry_set_frame_ptr(frame_ptr) ((void)0)
+#define debug_snapshot() ((void)0)
+
+#endif /* DEBUG_BUILD */
 /* Bank-2 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
 void debug_snapshot_banked(void);
 void debug_state_snapshot(void);

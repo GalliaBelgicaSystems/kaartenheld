@@ -53,13 +53,18 @@ void deck_reshuffle(Deck *d)
 
 void deck_discard(Deck *d, const Card *c)
 {
-    /* Body runs banked in bank 8 (src/battle/deck_banked.c): pure WRAM
-     * writes, staged Deck/card pointers, keeps fixed-bank budget small.
-     * Bank 8 (not 3) to relieve the fixed-adjacent bank-3 budget. */
-    if (!d || !c) return;
-    g_bk_call_bank = 8;
-    g_bk_call_target = (uint16_t)&deck_discard_banked;
-    g_bk_ptr_a = (void *)d;
-    g_bk_ptr_b = (void *)c;
-    banked_call_run();
+    Card *slot;
+    /* Inline (not banked): pure WRAM field writes, and the fixed bank has
+     * room again.  Field-wise (no struct assignment: keep the banked-ABI
+     * habit -- one copy idiom everywhere). */
+    if (!d || !c || d->discard_count >= MAX_DECK_SIZE) return;
+    slot = &d->discard[d->discard_count++];
+    slot->type = c->type;
+    slot->value = c->value;
+    slot->uses_remaining = c->uses_remaining;
+    slot->cost = c->cost;
+    slot->effect = c->effect;
+    slot->status_id = c->status_id;
+    slot->status_chance = c->status_chance;
+    slot->ring = c->ring;
 }

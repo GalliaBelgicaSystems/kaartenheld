@@ -74,6 +74,7 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         uint8_t t = a->type;
         uint16_t a0 = a->arg0;
         int16_t a1 = a->arg1;
+        bool ok;
         if (t == EVENT_ACTION_DIALOGUE) {
             dialogue_start_def(&g->dialogue, (DialogueId)a0);
             if (dialogue_started) *dialogue_started = true;
@@ -88,15 +89,25 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         } else if (t == EVENT_ACTION_SCENE_CHANGE) {
             scene_load(g, (SceneId)a0, (uint8_t)a1, (uint8_t)a->arg2);
         } else if (t == EVENT_ACTION_ADD_ITEM) {
-            if (deck_collection_add(&g->state.cards, (CardId)a0, (uint8_t)a1)) {
+            ok = deck_collection_add(&g->state.cards, (CardId)a0, (uint8_t)a1);
+#ifdef DEBUG_BUILD
+            if (ok) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_COLLECTION, (uint8_t)a0, (uint8_t)a1, 0, 0);
             }
+#else
+            (void)ok;
+#endif
         } else if (t == EVENT_ACTION_ADD_CURRENCY) {
             currency_add(&g->state, (CurrencyId)a0, a1);
         } else if (t == EVENT_ACTION_REMOVE_ITEM) {
-            if (deck_collection_remove(&g->state.cards, (CardId)a0, (uint8_t)a1)) {
+            ok = deck_collection_remove(&g->state.cards, (CardId)a0, (uint8_t)a1);
+#ifdef DEBUG_BUILD
+            if (ok) {
                 telemetry_emit(EVENT_CARD_REMOVED_FROM_COLLECTION, (uint8_t)a0, (uint8_t)a1, 0, 0);
             }
+#else
+            (void)ok;
+#endif
         }
     }
 }

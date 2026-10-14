@@ -20,11 +20,7 @@ extern uint8_t g_is_cgb;
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
-#define UI_TILE_CARD_AMULET      109u
-#define UI_TILE_HEART            113u
-#define UI_TILE_BOLT             114u
 #define UI_TILE_COIN             115u
-#define UI_TILE_DECK             116u
 /* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
  * sheet row 3, loaded explicitly at these ids by ui_init).  Together with
  * the card frames these fully allocate the 117-127 BG window between the
@@ -57,16 +53,13 @@ extern uint8_t g_is_cgb;
 
 /* Overworld actor OAM sprite tile bases (VRAM Block 0, 0x8000).  Collision
  * rules: must not overlap the font-duplicate block 0..95 used for ASCII
- * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
+ * actor glyphs, PLAYER (102) or HERO (98). */
 #define HERO_DESOLATE_SPRITE_TILE_ID 98u
 #define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
-#define KOBOLD_SPRITE_TILE_ID    96u
-#define BAT_DESOLATE_SPRITE_TILE_ID 88u
-#define BAT_CASTLE_SPRITE_TILE_ID   92u
 /* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
  * owned by screens/enemy_types/treasure_chest.json).  Collision rules:
  * must not overlap the font-duplicate block 0..95 used for ASCII
- * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
+ * actor glyphs, PLAYER (102) or HERO (98). */
 /* Shared per-enemy overworld sprites (assets/enemy_sprites.png, base must
  * match ENEMY_OW_BASE in tools/screen_compiler/battle_compile.py).  The
  * blob holds concatenated per-enemy frames; ids 128+ alias BG tiles. */
@@ -147,10 +140,6 @@ void world_anim_rebuild_banked(void);
 
 #define ui_color_class(st, ih) ui_color_card(0, (st), (ih))
 
-/* Set the CGB per-tile palette for a horizontal span of background tiles
- * (no-op on DMG; palette 0 resets to grayscale). */
-void ui_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette);
-
 /* Bank-3 no-arg body dispatched by ui_lcd_off() (src/ui/ui_color_banked.c);
  * clears every BG tilemap attribute byte back to palette 0. */
 void ui_clear_atts_banked(void);
@@ -209,33 +198,11 @@ void ui_draw_world_map(const World *world);
 void ui_draw_world_full(const World *world);
 void ui_draw_actors_sprites(const World *world);
 void ui_draw_text_line(uint8_t x, uint8_t y, const char *text, uint8_t max_chars);
-void ui_draw_num2(uint8_t x, uint8_t y, uint8_t val);
 void ui_draw_hline(uint8_t y, char ch);
 
 /* Set SCX/SCY from the overworld camera pixel position.  Called every
  * overworld frame so the background glides smoothly. */
 void ui_update_camera(const World *world);
-
-/* Write value as a decimal string into out (at least 7 bytes).  Avoids the
- * stdio/console chain so _HOME stays under 0x8000. */
-void ui_format_int(int16_t value, char *out);
-
-/* Write "XYn" — two-letter battle code ("SW"/"SH"/"BO"/"HE"/"DA" per
- * BattleCardType in src/battle/card.h) plus power digit — into out
- * (at least 4 bytes); "??" when battle_type is out of range. */
-void ui_card_code_str(uint8_t battle_type, uint8_t power, char *out);
-
-/* Ones digit of `v` as a character, computed by subtraction: SM83 has
- * no hardware divide and the SDCC divmod library would land in the
- * tight fixed bank (AGENTS.md 52.18).  Use instead of `% 10`. */
-char ui_ones_digit(uint8_t v);
-
-/* Banked no-arg body (ROM bank 2) dispatched by ui_format_int(). */
-void ui_format_int_banked(void);
-
-/* Bank-3 no-arg body dispatched by ui_color_span() (src/ui/ui_color_banked.c);
- * reads its staged args from g_bk_ptr_a. */
-void ui_color_span_banked(void);
 
 /* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
  * per-build split (debug 5 / release 4) so release bank 3 keeps room for

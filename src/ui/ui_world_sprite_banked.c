@@ -46,8 +46,6 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 }
 
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
- * Bats use the grey ramp (black bodies); kobolds ride OBJ palette 2
- * (ice ramp -- looks blue, kept as-is pending its own visual pass).
  * Chests read the shared-blobs treasure-chest row (same bank: direct
  * read): closed frame, or the open frame once chest_is_open_banked says
  * the staged chest was looted.  The hostile loop never stages a chest
@@ -59,9 +57,6 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                                 uint8_t anim, uint8_t ow_type, uint8_t *prop)
 {
     switch (kind) {
-        case SPRITE_KIND_KOBOLD:
-            *prop = 2;
-            return (uint8_t)(KOBOLD_SPRITE_TILE_ID + anim);
         case SPRITE_KIND_CHEST:
             if (ow_type < g_enemy_type_count) {
                 const EnemyTypeDef *t = g_enemy_types[ow_type];

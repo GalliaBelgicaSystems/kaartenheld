@@ -92,7 +92,7 @@ typedef struct {
     uint8_t attacking_enemy_idx;               /* Index of enemy currently attacking / blinking */
     EnemyCompactDeck enemy_deck;               /* Enemy AI card deck */
     uint8_t enemy_battle_id;                   /* Battle ID for enemy deck lookup */
-    Card enemy_played_card;                    /* Card drawn by enemy this turn */
+    EnemyCard enemy_played_card;               /* Card drawn by enemy this turn */
 } Battle;
 
 /* Per-enemy battle art (screens/enemy_types.json), parallel to
@@ -116,6 +116,12 @@ extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
  * above).  Never persisted (Battle is temporary runtime state,
  * AGENTS.md 53.1). */
 extern uint8_t g_battle_pool_max;
+/* Nonzero when anything in the battle animates on the 16-frame clock:
+ * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
+ * set (ORed by the bank-5 alt loader -- the overlay blinks even on
+ * single-frame stamps).  Cleared by battle_start; read by the battle
+ * clock to skip the re-stamp for fully static lineups. */
+extern uint8_t g_battle_multiframe;
 
 /* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
  * engage clones of one type). Programmed at battle entry, restored with

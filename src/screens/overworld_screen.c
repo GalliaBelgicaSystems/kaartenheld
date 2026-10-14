@@ -9,6 +9,13 @@
 #include "content.h"
 #include "game_ids.h"
 
+/* Tracker CH3 mute masks (hUGEDriver WRAM state, always mapped): the
+ * ambient body mutes CH3 for chirps and releases it after.  Reading them
+ * here lets the overworld skip the bank-7 dispatch when no chirp can
+ * start AND no release is pending. */
+extern volatile uint8_t hUGE_mute_mask;
+extern volatile uint8_t hUGE_mute_mask_b7;
+
 void start_battle_from_world(Game *g)
 {
     WorldActorRuntime *act;
@@ -73,16 +80,22 @@ void overworld_screen_update(Game *g)
      * window-start species and becomes one EVENT_BIRD_CHIRP telemetry
      * event (one ring entry per ~128 frames).  WHERE birds sing is game
      * content (game_scene_has_birds: grove + Carl's field); the engine
-     * never branches on map ids itself. */
-    {
+     * never branches on map ids itself.  The dispatch is gated on
+     * chirp-possible OR a pending CH3 release (mid-chirp map cross,
+     * jingle start, sound toggle): otherwise non-birdsong maps skip
+     * the bank switch entirely. */
+    if (game_scene_has_birds(g->world.map_id) ||
+        ((hUGE_mute_mask | hUGE_mute_mask_b7) & 0x04) != 0) {
         extern void bird_ambient_banked(void);
         g_bk_call_bank = 7;
         g_bk_call_target = (uint16_t)&bird_ambient_banked;
         g_bk_byte_a = game_scene_has_birds(g->world.map_id);
         banked_call_run();
+#ifdef DEBUG_BUILD
         if (g_bk_byte_b) {
             telemetry_emit(EVENT_BIRD_CHIRP, g_bk_byte_b, 0, 0, 0);
         }
+#endif
     }
 
     /* A committed move may resolve a map change or an encounter; resolve

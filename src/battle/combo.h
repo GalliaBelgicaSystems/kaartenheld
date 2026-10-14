@@ -62,8 +62,8 @@ typedef struct {
  * The evaluator produces ONLY the quality of the selection (tier,
  * multiplier, base_power) into out_result -- never an effect magnitude.
  * The resolver (src/rpg/effects_content.c, same bank) then scales that
- * quality into g_effect_last per effect_type; battle reads it via
- * effect_last() and applies it (docs/combo-system.md §5/§7).
+ * quality into g_effect_last per effect_type; battle reads g_effect_last
+ * directly and applies it (docs/combo-system.md §5/§7).
  *
  * effect_type: CardEffectType the played hand performs.  Attack play uses
  * the leading card's Card.effect; defend play requests BLOCK_DAMAGE (the
@@ -83,9 +83,13 @@ typedef struct {
  * self-contained apart from the bank-local call into effects_content.c. */
 void combo_resolve_banked(void);
 
-/* Order-independent hand classifier (bank-local utility): evaluates vals
- * 1..10 with phase-filtered entries.  Bank-3 callers (e.g. the battle HUD's
- * live COMBO row) invoke this DIRECTLY -- same bank, no trampoline. */
-uint8_t combo_classify(const uint8_t *vals, const uint8_t *types, uint8_t n);
+/* Order-independent hand classifier (bank-local utility): evaluates card
+ * values 1..10 through an effective->selection index map, substituting
+ * ring_sub for ring cards (0 = real values).  Bank-3 callers invoke this
+ * DIRECTLY -- same bank, no trampoline: the resolve dispatch
+ * (combo_resolve_banked) and the battle HUD's live COMBO-row preview share
+ * this one ladder instead of duplicating it. */
+uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
+                             uint8_t n, uint8_t ring_sub);
 
 #endif /* COMBO_H */

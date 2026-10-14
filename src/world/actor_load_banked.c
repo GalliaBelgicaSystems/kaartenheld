@@ -137,19 +137,15 @@ void actor_load_scene_banked(void)
                  * lowers to __memcpy, which lives in the fixed bank and
                  * is unreachable while bank 2 is mapped (see
                  * status_content.c for the identical pattern). */
-                g_static_actors[g_static_actor_count].actor_id = def->actor_id;
                 g_static_actors[g_static_actor_count].id = def->id;
                 g_static_actors[g_static_actor_count].x = def->x;
                 g_static_actors[g_static_actor_count].y = def->y;
                 g_static_actors[g_static_actor_count].facing = def->facing;
-                g_static_actors[g_static_actor_count].flags = def->flags;
                 g_static_actors[g_static_actor_count].visual = def->visual;
                 g_static_actors[g_static_actor_count].sprite_kind =
                     def->sprite_kind;
                 g_static_actors[g_static_actor_count].ow_type =
                     def->ow_type;
-                g_static_actors[g_static_actor_count].display_name =
-                    def->display_name;
                 g_static_actors[g_static_actor_count].interaction =
                     def->interaction;
                 g_static_actors[g_static_actor_count].shop_id = def->shop_id;

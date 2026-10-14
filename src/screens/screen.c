@@ -16,9 +16,11 @@ void scene_update_from_map(Game *g)
     new_scene = map_to_scene_id(g->world.map_id);
     old_scene = g->state.scene.scene_id;
     g->state.scene.scene_id = new_scene;
+#ifdef DEBUG_BUILD
     if (old_scene != new_scene) {
         telemetry_emit(EVENT_SCENE_CHANGED, (uint8_t)old_scene, (uint8_t)new_scene, 0, 0);
     }
+#endif
 }
 
 void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
@@ -34,9 +36,11 @@ void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
     /* A scene change ends any merchant engagement: the CARDS tab's
      * SELL action is only available at a buying shop's doorstep. */
     g->shop_id = 0;
+#ifdef DEBUG_BUILD
     if (old_scene != scene) {
         telemetry_emit(EVENT_SCENE_CHANGED, (uint8_t)old_scene, (uint8_t)scene, spawn_x, spawn_y);
     }
+#endif
     game_render_reset(g);
 }
 

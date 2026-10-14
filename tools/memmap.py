@@ -177,18 +177,13 @@ def main():
         "_status_apply_banked": "status apply body (bank 3)",
         "_status_tick_banked": "status tick body (bank 3)",
         "_save_op_banked": "SRAM save/load body (bank 3)",
-        "_deck_discard_banked": "discard push (bank 3)",
-        "_world_px_banked": "pixel interpolation (bank 3)",
         "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
         "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
-        "_game_render_reset_banked": "render cache reset (bank 3)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
-        "_world_on_battle_fled_banked": "battle-fled world update (bank 3)",
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
         "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
-        "_ui_format_int_banked": "int formatter (bank 2)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
         "_battle_card_undo_banked": "battle card undo (bank 3)",
@@ -226,10 +221,10 @@ def main():
             print(f"{sym:<28}: not found in .noi")
             ok = False
 
-    # Build-conditional trampoline targets: present in exactly one build
-    # (DEBUG_ONLY_SRCS).  Missing is fine; misplaced is a violation.
+    # No build-conditional trampoline targets remain: the last one
+    # (lesson_sync_banked) was unified inline when the debug fixed bank
+    # regained headroom.  The dict stays as the extension point.
     optional_banked_targets = {
-        "_lesson_sync_banked": "lesson stash sync (debug bank 3; release inlines it)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

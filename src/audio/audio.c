@@ -30,9 +30,12 @@ uint8_t g_sound_enabled;
 /* Harness-visible trigger log (AGENTS.md 53.7: semantic, not transport):
  * per-trigger SFX telemetry would flood the 32-entry gameplay ring and
  * evict gameplay events scenarios assert on, so triggers land here
- * instead: total count + last id, read by name from host tools. */
+ * instead: total count + last id, read by name from host tools.
+ * Debug-only: the release ROM never reads them. */
+#ifdef DEBUG_BUILD
 uint16_t g_sfx_played_count = 0;
 uint8_t g_sfx_last_id = SFX_NONE;
+#endif
 uint8_t sfx_id = SFX_NONE;
 uint8_t sfx_tick = 0;
 uint8_t sfx_tone_idx = 0;
@@ -65,8 +68,10 @@ void audio_play_sfx(uint8_t s)
         huge_music_mute_channel(HT_CH4, HT_CH_MUTE);
         sfx_muted |= 0x02;
     }
+#ifdef DEBUG_BUILD
     g_sfx_played_count++;
     g_sfx_last_id = s;
+#endif
 }
 
 #ifdef DEBUG_BUILD

@@ -49,7 +49,6 @@ void game_content_init(void)
     game_dialogue_register();
     game_actors_register();
     game_cards_register();
-    game_quest_register();
 }
 
 void game_new_game(GameState *state)
@@ -108,17 +107,6 @@ void game_new_game(GameState *state)
     }
 }
 
-/* Thin fixed-bank wrapper: stages the battle type and dispatches to the
- * bank-4 body (battle_hud_load_banked) which does the actual id-scan and
- * WRAM copy.  This keeps the bulky id-scan + copy logic out of the fixed
- * bank (fixes _HOME overflow). */
-void game_battle_hud_load(uint8_t battle_type)
-{
-    g_bk_byte_a = battle_type;
-    g_bk_call_bank = 4;
-    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
-    banked_call_run();
-}
 void game_on_level_up(GameState *state, ProgressionTarget target,
                       const ProgressionAddResult *result)
 {

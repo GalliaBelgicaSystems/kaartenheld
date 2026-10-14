@@ -276,38 +276,33 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
     return MOVE_RESULT_MOVED;
 }
 
-/* Pixel helpers run banked (src/world/px_banked.c) -- pure arithmetic,
- * staged pointers, results through the shared byte below. */
-uint8_t g_px_result;
-
-static uint8_t px_dispatch(uint8_t variant, const void *p)
+/* Sub-tile pixel interpolation: tile*8 plus the in-flight walk progress.
+ * Inline (not banked): this runs 2-4x per overworld frame and the fixed
+ * bank has room again. */
+static uint8_t px_calc_interp(uint8_t base, uint8_t target, uint8_t progress)
 {
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&world_px_banked;
-    g_bk_byte_a = variant;
-    g_bk_ptr_a = (void *)p;
-    banked_call_run();
-    return g_px_result;
+    uint8_t px = (uint8_t)(base << 3);
+    if (target > base) return (uint8_t)(px + progress);
+    if (target < base) return (uint8_t)(px - progress);
+    return px;
 }
 
 uint8_t world_player_px(const World *w)
 {
-    return w ? px_dispatch(0, w) : 0;
+    if (!w) return 0;
+    return (w->move_state == MOVE_STATE_MOVING) ?
+        px_calc_interp(w->player.position.x, w->move_target_x,
+                       w->move_progress) :
+        (uint8_t)(w->player.position.x << 3);
 }
 
 uint8_t world_player_py(const World *w)
 {
-    return w ? px_dispatch(1, w) : 0;
-}
-
-uint8_t world_actor_px(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(2, a) : 0;
-}
-
-uint8_t world_actor_py(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(3, a) : 0;
+    if (!w) return 0;
+    return (w->move_state == MOVE_STATE_MOVING) ?
+        px_calc_interp(w->player.position.y, w->move_target_y,
+                       w->move_progress) :
+        (uint8_t)(w->player.position.y << 3);
 }
 
 void world_on_battle_end(Game *g, bool victory)
@@ -343,9 +338,11 @@ void world_on_battle_end(Game *g, bool victory)
          * CARD_NONE = collection previously full (no room to grant). */
         if (g_loot_id != CARD_NONE) {
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
+#ifdef DEBUG_BUILD
                 telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
                                deck_collection_count(&g->state.cards,
                                                      g_loot_id), 0, 0);
+#endif
             } else {
                 g_loot_id = CARD_NONE;
             }
@@ -355,14 +352,21 @@ void world_on_battle_end(Game *g, bool victory)
 
 void world_on_battle_fled(Game *g)
 {
-    /* Body runs banked in bank 7 (src/world/fled_banked.c) through the
-     * WRAM trampoline -- pure WRAM reads/writes, no staging args needed.
-     * Bank 7 (not 3) to relieve the fixed-adjacent bank-3 budget. */
+    World *w;
+    uint8_t idx;
     if (!g) return;
-    g_bk_call_bank = 7;
-    g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
-    g_bk_ptr_a = (void *)g;
-    banked_call_run();
+    w = &g->world;
+
+    /* The enemy stays on the map at the HP it had when the hero ran:
+     * no reward, defeat, or quest progress.  Inline (not banked): pure
+     * WRAM reads/writes, and the fixed bank has room again. */
+    idx = w->encounter_actor_index;
+    w->encounter_actor_index = NO_ACTOR_INDEX;
+    if (idx == NO_ACTOR_INDEX) return;
+
+    if (w->actors[idx].active) {
+        w->actors[idx].hp = g->battle.enemies[0].hp;
+    }
 }
 
 uint8_t g_patrol_outcome = 0;
@@ -377,6 +381,10 @@ WorldMoveResult world_update_actors(World *w)
     if (!w) return MOVE_RESULT_NONE;
 
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
+        /* Inactive slots have no patrol state (the banked body returns
+         * immediately for them): skip the trampoline round-trip.  Peaceful
+         * maps (town, cleared scenes) run zero patrol dispatches/frame. */
+        if (!w->actors[slot].active) continue;
         g_patrol_outcome = 0;
         g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;

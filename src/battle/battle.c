@@ -31,6 +31,11 @@ uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
 /* Live pool max staged for the bank-3 HUD badge (see battle.h). */
 uint8_t g_battle_pool_max;
+/* Nonzero when anything in the battle animates on the 16-frame clock:
+ * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
+ * set (ORed by the bank-5 alt loader).  Uninitialized WRAM (bss);
+ * battle_start clears it before the loaders run. */
+uint8_t g_battle_multiframe;
 
 /* Active battle screen layout (see battle_data.h): uninitialized WRAM
  * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()
@@ -84,6 +89,13 @@ static const int g_battle_timer_cadence_ok[
 static const int g_deck_min_matches_hand_size[
     (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : 0
 ];
+
+/* Pack-range guards (see COMBO_PACK in combo.h): battle_play_hand encodes
+ * the phase in bit 0 and the effect id in bits 1..7 of the staging byte.
+ * Tested against the COUNT sentinel so a future effect outgrows the byte
+ * loudly (decode-side twins live in combo_content.c). */
+static const int g_combo_pack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
+static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
 
 /* Victim name snapshot for the ANIM banner ("ATTACK <name>"): resolution
  * may kill the target and auto-advance target_idx before the banner
@@ -140,6 +152,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * codegen density, AGENTS.md 52.18) -- and before enemy_deck_setup,
      * which re-stages g_bk_byte_a for its own dispatch. */
     g_battle_solo = solo;
+    g_battle_multiframe = 0;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
@@ -229,9 +242,11 @@ void battle_target_move(Battle *b, int8_t dir)
 
     old = b->target_idx;
     battle_nav(b, NAV_OP_TARGET_MOVE, (uint8_t)dir);
+#ifdef DEBUG_BUILD
     if (b->target_idx != old) {
         telemetry_emit(EVENT_TARGET_CHANGED, old, b->target_idx, 0, 0);
     }
+#endif
 }
 
 bool battle_all_enemies_dead(const Battle *b)
@@ -242,9 +257,11 @@ bool battle_all_enemies_dead(const Battle *b)
     battle_nav((Battle *)b, NAV_OP_ALL_DEAD, 0);
     /* The banked body steps off a tick-killed target (see above): report
      * the retarget like any other target move. */
+#ifdef DEBUG_BUILD
     if (b->target_idx != old) {
         telemetry_emit(EVENT_TARGET_CHANGED, old, b->target_idx, 0, 0);
     }
+#endif
     return g_bk_byte_c != 0;
 }
 
@@ -262,14 +279,18 @@ void battle_card_select(Battle *b)
 
 void battle_set_result(Battle *b, uint8_t res)
 {
-    uint8_t ev = (res == BATTLE_RESULT_VICTORY) ? EVENT_BATTLE_WON :
-                 ((res == BATTLE_RESULT_DEFEAT) ? EVENT_BATTLE_LOST : EVENT_BATTLE_FLED);
     b->result = (BattleResult)res;
     b->phase = BATTLE_PHASE_RESULT;
     b->turn = BATTLE_TURN_RESULT;
     b->battle_over = true;
     b->dirty = BATTLE_DIRTY_ALL;
-    telemetry_emit(ev, 0, 0, 0, 0);
+#ifdef DEBUG_BUILD
+    {
+        uint8_t ev = (res == BATTLE_RESULT_VICTORY) ? EVENT_BATTLE_WON :
+                     ((res == BATTLE_RESULT_DEFEAT) ? EVENT_BATTLE_LOST : EVENT_BATTLE_FLED);
+        telemetry_emit(ev, 0, 0, 0, 0);
+    }
+#endif
     if (res == BATTLE_RESULT_VICTORY) {
         /* One-shot victory fanfare; the exit path switches back to the
          * overworld track. */
@@ -279,10 +300,14 @@ void battle_set_result(Battle *b, uint8_t res)
 
 void battle_card_undo(Battle *b)
 {
+#ifdef DEBUG_BUILD
     BattleResult prev_result;
+#endif
     if (!b) return;
 
+#ifdef DEBUG_BUILD
     prev_result = b->result;
+#endif
     g_bk_call_bank = 2;
     g_bk_call_target = (uint16_t)&battle_card_undo_banked;
     g_bk_ptr_a = (void *)b;
@@ -293,9 +318,11 @@ void battle_card_undo(Battle *b)
     if (g_bk_byte_c != 0) {
         audio_play_sfx(SFX_BACK);
     }
+#ifdef DEBUG_BUILD
     if (prev_result != BATTLE_RESULT_FLED && b->result == BATTLE_RESULT_FLED) {
         telemetry_emit(EVENT_BATTLE_FLED, 0, 0, 0, 0);
     }
+#endif
 }
 
 /* Fixed-bank wrapper for the defense net resolution (docs/loot.md §34.4).
@@ -317,6 +344,7 @@ void battle_defend_resolve(Battle *b)
     g_bk_ptr_a = (void *)b;
     banked_call_run();
 
+#ifdef DEBUG_BUILD
     if (g_bk_byte_a != 0) {
         telemetry_emit(EVENT_DAMAGE_RECEIVED, g_bk_byte_a, 0, 0, 0);
     } else {
@@ -325,6 +353,7 @@ void battle_defend_resolve(Battle *b)
             telemetry_emit(EVENT_HEALED, g_bk_byte_b, 2, 0, 0);
         }
     }
+#endif
 
     /* Organic enemy status rider (Phase D): g_bk_byte_c = status id the
      * banked body rolled (0 = none).  Apply through the REAL mechanic
@@ -581,9 +610,11 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
+#ifdef DEBUG_BUILD
         if (b->enemies[b->target_idx].hp == 0) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
         }
+#endif
         if (battle_all_enemies_dead(b)) {
             battle_set_result(b, BATTLE_RESULT_VICTORY);
         }
@@ -660,18 +691,22 @@ static void battle_tick_statuses(Battle *b)
         status_grey_tick((uint8_t)(i + 1));
         if (dmg == 0) continue;
         combatant_take_damage(&b->enemies[i], dmg);
+#ifdef DEBUG_BUILD
         if (b->enemies[i].hp == 0) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(i + 1), 0, 0, 0);
         }
+#endif
     }
     if (b->player.hp != 0) {
         dmg = status_tick(status_slots(0), 0);
         status_grey_tick(0);
         if (dmg != 0) {
             combatant_take_damage(&b->player, dmg);
+#ifdef DEBUG_BUILD
             if (b->player.hp == 0) {
                 telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
             }
+#endif
         }
     }
     if (battle_all_enemies_dead(b)) {
@@ -704,14 +739,14 @@ void battle_update(Battle *b)
             /* Multi-frame enemy art (boss glow-eyes) rides the battle
              * clock, but the stamper only runs on ENEMIES -- otherwise
              * set on target change, which a solo boss never triggers.
-             * Re-stamp at the clock edge where the art bit flips (== 15
-             * going down) in both player phases, keeping the existing
-             * == 0 edge in DEFEND for the blink cadence (fused into one
-             * condition at zero net size: the fixed bank sits ~16 B
-             * under 0x8000, AGENTS.md 52.18). BLINK in SELECT is
-             * harmless: its only consumer redraws the enemy columns
-             * (ui_battle_content.c). */
-            if ((vb->timer_ticks & 15) == 15 || (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
+             * timer_ticks counts DOWN, so bit 4 flips at the == 15 edge:
+             * re-stamp there when the art animates (g_battle_multiframe)
+             * or in DEFEND (the telegraph blink flips there for every
+             * enemy).  The == 0 edge in DEFEND keeps the blink cadence
+             * for static art. */
+            if (((vb->timer_ticks & 15) == 15 &&
+                 (g_battle_multiframe || vb->phase == BATTLE_PHASE_PLAYER_DEFEND)) ||
+                (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {

@@ -17,3 +17,8 @@ const QuestDefinition g_quests[] = {
         0, 0, "", "MERCHANT"
     }
 };
+
+/* Keep the count in quest.h in sync with this table. */
+typedef char quest_table_count_ok[
+    sizeof(g_quests) / sizeof(g_quests[0]) == GAME_QUEST_COUNT ? 1 : -1
+];

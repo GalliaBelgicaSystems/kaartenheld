@@ -17,11 +17,14 @@ typedef enum {
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
- * the scene and scrolls it with the scroll offset; the 40-col cap
- * exercises the tilemap ring-buffer wrap (the 32x32 BG tilemap is 32
- * wide). */
-#define WORLD_WIDTH  40
-#define WORLD_HEIGHT 24
+ * the scene and scrolls it with the scroll offset.  The caps match the
+ * renderer + hardware limits: ui_draw_world_map() draws a 32x18 window
+ * once at map load and the 32x32 BG tilemap ring is 32 wide, so a wider
+ * or taller scene would wrap/clobber VRAM instead of displaying.  The
+ * 32-wide stride also keeps every map[y][x] lookup a shift, not a
+ * multiply, on the multiply-less SM83. */
+#define WORLD_WIDTH  32
+#define WORLD_HEIGHT 18
 
 /* Overworld camera view window in tiles.  The camera (World.scroll_x/y)
  * keeps the player inside this window, scrolling as the player crosses its
@@ -497,15 +500,8 @@ WorldMoveResult world_update_actors(World *w);
 
 /* Renderer pixel position (tile*8 plus the sub-tile walk progress) of the
  * player sprite.  Valid whenever the player is not animating a move. */
-/* Bank-3 pixel-interpolation body (src/world/px_banked.c); dispatched by
- * the four world_*_px/py wrappers. */
-void world_px_banked(void);
-
 uint8_t world_player_px(const World *w);
 uint8_t world_player_py(const World *w);
-
-uint8_t world_actor_px(const WorldActorRuntime *a);
-uint8_t world_actor_py(const WorldActorRuntime *a);
 
 void world_on_battle_end(Game *g, bool victory);
 void world_patrol_slot_banked(void);
@@ -514,7 +510,5 @@ void world_patrol_slot_banked(void);
  * the hero ran (written back into the runtime actor); no reward, defeat or
  * quest progress is applied. */
 void world_on_battle_fled(Game *g);
-/* Bank-2 body (src/world/fled_banked.c) dispatched by the wrapper. */
-void world_on_battle_fled_banked(void);
 
 #endif /* WORLD_H */

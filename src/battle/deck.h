@@ -37,14 +37,24 @@ void deck_reshuffle(Deck *d);
 /* Banked no-arg body (ROM bank 7) dispatched by deck_reshuffle(). */
 void deck_reshuffle_banked(void);
 
-/* Add a card to the discard pile (card staged through a pointer so the
- * banked body can read it; see deck_banked.c). */
+/* Add a card to the discard pile. */
 void deck_discard(Deck *d, const Card *c);
-void deck_discard_banked(void);
+
+/* Enemy card: the only fields enemy AI draws ever read (battle.c takes
+ * .value as incoming damage, battle_defend_content.c takes the
+ * .status_id/.status_chance rider).  Enemies never pay .cost, never
+ * resolve .effect, and never deplete .uses_remaining -- those live only
+ * on player Cards.  4 bytes instead of 8. */
+typedef struct {
+    uint8_t type;           /* BattleCardType */
+    uint8_t value;          /* incoming damage when drawn */
+    uint8_t status_id;      /* on-hit rider (STATUS_NONE = none) */
+    uint8_t status_chance;  /* rider land chance in 1/255 units */
+} EnemyCard;
 
 /* Enemy compact deck: small fixed-size deck for enemy AI card draws. */
 typedef struct {
-    Card cards[ENEMY_DECK_SIZE];
+    EnemyCard cards[ENEMY_DECK_SIZE];
     uint8_t count;
     uint8_t draw_idx;
 } EnemyCompactDeck;

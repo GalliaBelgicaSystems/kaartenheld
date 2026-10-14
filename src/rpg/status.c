@@ -91,6 +91,7 @@ uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
      * reporting the first removed instance (docs/combo-system.md §19;
      * MAX_STATUSES_PER_COMBATANT bounds simultaneity, and multi-expiry
      * rounds remain fully described by TICKED's d2 count). */
+#ifdef DEBUG_BUILD
     if (g_status_tick.damage != 0 || g_status_tick.expired_count != 0) {
         telemetry_emit(EVENT_STATUS_TICKED, g_status_tick.damage,
                        actor_slot, g_status_tick.expired_count,
@@ -100,12 +101,15 @@ uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
                            g_status_tick.expired_ids[0], actor_slot, 0, 0);
         }
     }
+#endif
     return g_status_tick.damage;
 }
 
 /* Decode the two set-bit positions of a grey mask into out-a/out-b
  * (0xFF when absent).  Pools are <= 5 positions, so only bits 0-4 are
- * ever set. */
+ * ever set.  Debug-only: the sole caller (status_grey_apply's telemetry
+ * tail) compiles out of the release ROM. */
+#ifdef DEBUG_BUILD
 void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b)
 {
     uint8_t i, n = 0;
@@ -119,10 +123,13 @@ void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b)
         }
     }
 }
+#endif
 
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
 {
+#ifdef DEBUG_BUILD
     uint8_t a, b;
+#endif
     if (actor_slot >= STATUS_ROUND_SLOTS) return;
 
     g_bk_call_bank = 3;
@@ -131,12 +138,14 @@ void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
     g_bk_byte_b = pool_size;
     banked_call_run();
 
+#ifdef DEBUG_BUILD
     /* An empty pool or a bad slot leaves the mask untouched (no event). */
     if (s_grey_mask[actor_slot] == 0) return;
 
     status_grey_mask_indices(s_grey_mask[actor_slot], &a, &b);
     telemetry_emit(EVENT_CARDS_GREYED, actor_slot, a, b,
                    POISON_GREY_TURNS);
+#endif
 }
 
 void status_grey_tick(uint8_t actor_slot)
@@ -149,7 +158,9 @@ void status_grey_tick(uint8_t actor_slot)
     g_bk_byte_a = actor_slot;
     banked_call_run();
 
+#ifdef DEBUG_BUILD
     if (g_bk_byte_a != 0) {
         telemetry_emit(EVENT_CARDS_UNGREYED, actor_slot, g_bk_byte_b, g_bk_byte_c, 0);
     }
+#endif
 }

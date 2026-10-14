@@ -21,7 +21,6 @@
 #define TAB_CARDS 0
 #define TAB_QUEST 1
 #define NUM_TABS  2
-#define GAME_QUEST_COUNT 2
 
 #define ROW_TOP     0
 #define FIRST_CARD  1

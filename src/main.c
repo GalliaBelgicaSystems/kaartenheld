@@ -84,11 +84,13 @@ int main(void)
             vsync();
         }
         game_render(&g_game);
-        /* DMA shadow OAM to real OAM.  Runs right after game_render, so for
-         * steady frames it is still inside the VBlank opened by the vsync
-         * above.  Transitions force the hide earlier (ui_sprite_begin_transition
-         * in game_render) so the sprite is gone before the new screen's
-         * redraw wipes the display. */
+        /* DMA shadow OAM to real OAM right after the render: SCX_REG and
+         * hardware OAM always belong to the same frame (no 1-px scroll
+         * lag).  Steady frames fit in VBlank (the only VBlank-buster,
+         * ui_refill_semantic's 43k-T-state scan, runs harness-only now);
+         * full redraws run LCD-off, where DMA timing is irrelevant, and
+         * transition hides land immediately via
+         * ui_sprite_begin_transition(). */
         ui_sprite_commit();
     }
 }

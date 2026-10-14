@@ -13,9 +13,6 @@
 
 const WorldActorTable *g_actor_registry = NULL;
 uint8_t g_actor_registry_count = 0;
-/* BSS: actor_register_tables() (via game_content_init() at every boot)
- * sets the home bank before any table is read. */
-static uint8_t g_actor_bank;
 
 StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 uint8_t g_static_actor_count = 0;
@@ -28,9 +25,9 @@ char s_actor_names[MAX_WORLD_ACTORS][12];
 
 void actor_register_tables(const WorldActorTable *tables, uint8_t count, uint8_t bank)
 {
+    (void)bank;
     g_actor_registry = tables;
     g_actor_registry_count = count;
-    g_actor_bank = bank;
 }
 
 uint8_t actor_find_hostile_slot(const World *world, uint8_t x, uint8_t y)

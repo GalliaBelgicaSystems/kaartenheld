@@ -35,6 +35,11 @@
 #define BATTLE_ART_MAX_W 6u
 #define BATTLE_ART_MAX_H 4u
 
+/* Staged multi-frame flag (battle.c WRAM, always mapped): 1 when the
+ * battle's shared art row animates (art_frames > 1).  Cleared by
+ * battle_start, set here alongside the per-slot caches. */
+extern uint8_t g_battle_multiframe;
+
 void battle_art_load_banked(void)
 {
     const volatile Battle *b = (const Battle *)g_bk_ptr_a;
@@ -85,6 +90,7 @@ void battle_art_load_banked(void)
     if (art_w == 0 || art_w > BATTLE_ART_MAX_W) art_w = 3;
     if (art_h == 0 || art_h > BATTLE_ART_MAX_H) art_h = 2;
     if (art_frames == 0 || art_frames > 2) art_frames = 1;
+    g_battle_multiframe = (art_frames > 1) ? 1 : 0;
 
     /* OAM battle art (Florent's model: enemies are sprites, boss stays
      * BG): program the battle's single OBJ ramp (clones share it) into

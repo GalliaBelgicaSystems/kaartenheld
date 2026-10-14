@@ -2,8 +2,8 @@
 
 #include "card.h"
 
-/* Packed card descriptions (fixed 18-byte stride, NUL-padded), staged to
- * WRAM by card_get_description() via banked_copy.  Bank 2 keeps the text
+/* Packed card descriptions (fixed 18-byte stride, NUL-padded), read directly
+ * by item_content_banked.c (same bank).  Bank 2 keeps the text
  * out of the fixed-bank budget (make memmap).
  *
  * NOTE: rows must be a proper 2D array.  A flat uint8_t[] initialized with

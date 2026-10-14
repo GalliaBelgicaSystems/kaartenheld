@@ -24,7 +24,10 @@ extern volatile uint8_t g_inp_mask;
 extern const uint8_t g_input_button_bits[8];
 
 void input_init(void);
+#ifdef DEBUG_BUILD
+/* Scenario setup only (scenario_begin): the release ROM never resets input. */
 void input_reset(void);
+#endif
 void input_update(void);
 bool input_pressed(InputButton button);
 bool input_held(InputButton button);

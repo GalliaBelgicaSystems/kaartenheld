@@ -13,6 +13,7 @@ void currency_add(GameState *state, CurrencyId currency, int16_t amount)
     if (!state || currency < 1 || currency > MAX_CURRENCIES || amount == 0) return;
     new_value = (int16_t)(state->currency.amount[currency - 1] + amount);
     state->currency.amount[currency - 1] = new_value;
+#ifdef DEBUG_BUILD
     if (amount > 0) {
         telemetry_emit(EVENT_CURRENCY_ADDED, (uint8_t)currency,
                        (uint8_t)(amount & 0xFF),
@@ -22,4 +23,5 @@ void currency_add(GameState *state, CurrencyId currency, int16_t amount)
                        (uint8_t)((-amount) & 0xFF),
                        (uint8_t)((-amount >> 8) & 0xFF), 0);
     }
+#endif
 }
