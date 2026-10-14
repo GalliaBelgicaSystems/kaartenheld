@@ -863,27 +863,31 @@ void ui_draw_dialogue_page(const DialogueState *dialogue,
     const char *second;
     if (!dialogue || !dialogue->active) return;
     if (dialogue->current_line >= dialogue->line_count) return;
-    ui_draw_dialogue_line(1, 15, dialogue->lines[dialogue->current_line],
-                          18, scroll_x, scroll_y);
+    /* Full-width text rows (no side borders): 20 columns.  The second
+     * row reserves col 19 for the continue chevron when another page
+     * follows, so 19-char lines fit with no loss. */
+    ui_draw_dialogue_line(0, 15, dialogue->lines[dialogue->current_line],
+                          20, scroll_x, scroll_y);
+    has_more = ((uint8_t)(dialogue->current_line + 2) < dialogue->line_count);
     if ((uint8_t)(dialogue->current_line + 1) < dialogue->line_count) {
         second = dialogue->lines[(uint8_t)(dialogue->current_line + 1)];
     } else {
         second = "";
     }
-    ui_draw_dialogue_line(1, 16, second, 18, scroll_x, scroll_y);
-    has_more = ((uint8_t)(dialogue->current_line + 2) < dialogue->line_count);
     if (has_more) {
+        ui_draw_dialogue_line(0, 16, second, 19, scroll_x, scroll_y);
         VBK_REG = 0;
         ui_vram_sync_write(
-            &((volatile uint8_t *)0x9800)[((16 + scroll_y) & 31) * 32 + ((18 + scroll_x) & 31)],
+            &((volatile uint8_t *)0x9800)[((16 + scroll_y) & 31) * 32 + ((19 + scroll_x) & 31)],
             UI_TILE_DIALOGUE_CONTINUE);
-        g_ui_screen_buf[16][18] = 'v';
+        g_ui_screen_buf[16][19] = 'v';
+    } else {
+        ui_draw_dialogue_line(0, 16, second, 20, scroll_x, scroll_y);
     }
 }
 
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
 {
-    uint8_t y;
     uint8_t scroll_x;
     uint8_t scroll_y;
     uint8_t len;
@@ -896,12 +900,15 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
     scroll_x = world->scroll_x;
     scroll_y = world->scroll_y;
 
-    /* Dialogue box: 4 rows at the screen bottom (rows 14-17).  The top
-     * border carries the speaker name ("+--SPEAKER-----+"), the two
-     * middle rows show two dialogue lines at once, and the bottom
-     * border closes the box.  A down-chevron (rotated intrepid ">",
-     * VRAM 109, 'v' in the semantic buffer) at the bottom right of the
-     * second text row signals another page; the last page shows none. */
+    /* Dialogue box: 4 rows at the screen bottom (rows 14-17).  Only
+     * horizontal bars: the top carries the speaker name
+     * ("+--SPEAKER-----+"), the two middle rows are full-width text
+     * (20 columns, no side borders), and the bottom border closes the
+     * box.  A down-chevron (rotated intrepid ">", VRAM 109, 'v' in the
+     * semantic buffer) at the far bottom right (col 19) of the second
+     * text row signals another page; the last page shows none.  Full
+     * width gives two extra characters per row, so the chevron never
+     * eats text (19-char lines fit beside it). */
     sp = dialogue->speaker ? dialogue->speaker : "";
     len = 0;
     while (len < 16 && sp[len]) len++;
@@ -915,10 +922,6 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
         ui_put_char_ring(col, 14, '-', scroll_x, scroll_y);
     }
     ui_put_char_ring(19, 14, '+', scroll_x, scroll_y);
-    for (y = 15; y <= 16; y++) {
-        ui_put_char_ring(0, y, '|', scroll_x, scroll_y);
-        ui_put_char_ring(19, y, '|', scroll_x, scroll_y);
-    }
     ui_draw_dialogue_page(dialogue, scroll_x, scroll_y);
     ui_draw_text_line_ring(0, 17, "+------------------+", 20, scroll_x, scroll_y);
 
