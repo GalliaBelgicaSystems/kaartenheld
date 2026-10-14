@@ -456,6 +456,7 @@ $(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GENERATED_TILE_ANIM)
+$(BUILD_DIR)/ui/anim_swap_banked.o $(BUILD_DIR)/debug/ui/anim_swap_banked.o: $(GENERATED_TILE_ANIM)
 
 # Header-dependency safety net (AGENTS.md 52.2): the compile rules track
 # only .c -> .o mtimes, so an object compiled against an older struct

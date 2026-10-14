@@ -20,7 +20,7 @@ char g_ui_screen_buf[18][21];
  * tilemap is never overwritten with palette bytes.  Read from the banked
  * battle renderer too (WRAM, always mapped). */
 uint8_t g_is_cgb;
-uint8_t g_active_tile_palette[32];
+uint8_t g_active_tile_palette[40];
 
 void ui_set_cram_palette(uint8_t overworld)
 {
@@ -495,6 +495,7 @@ static char ui_get_world_tile_glyph(uint8_t t)
     }
 if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) ||
             (t >= TILE_FOREST_00 && t <= TILE_FOREST_63) ||
+            (t >= TILE_FOREST_64 && t <= TILE_FOREST_68) ||
             (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) ||
             (t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47))
         return tile_landscape_glyph(t);
@@ -520,7 +521,7 @@ static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
 {
     uint8_t j;
     uint8_t b;
-    if (tile_idx >= 128 && (j = (uint8_t)(tile_idx - 128)) < 64) {
+    if (tile_idx >= 128 && (j = (uint8_t)(tile_idx - 128)) < 80) {
         /* Nibble-packed table (see g_active_tile_palette): even slots
          * ride the low nibble, odd slots the high nibble. */
         b = g_active_tile_palette[j >> 1];
@@ -571,8 +572,13 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_LANDSCAPE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_FOREST &&
-                   t >= TILE_FOREST_00 && t <= TILE_FOREST_63) {
+                   t >= TILE_FOREST_00 && t <= TILE_FOREST_68 &&
+                   (t <= TILE_FOREST_63 || t >= TILE_FOREST_64)) {
+            /* Split range (see world.h): values 8..71 map slot (t - 8);
+             * gap values 136..140 map slot (t - 72).  f_idx - 64 folds
+             * 128..132 down to 64..68. */
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
+            if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
                    t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) {
@@ -637,11 +643,20 @@ void ui_draw_actors_sprites(const World *world)
      * The banked body writes directly into shadow OAM (WRAM, always
      * mapped) and hides inactive/BOSS actors. */
     castle = (world->tileset_kind == WORLD_TILESET_CASTLE);
+    /* Background animation first: its LCD-on tilemap writes must land
+     * inside VBlank, while the OAM pass below is WRAM-only (timing-safe
+     * anywhere). ptr_a/byte_b are staged ONCE up front for both passes
+     * (the swap body reads world/anim_step); the second pass only adds
+     * the castle flag -- no extra fixed-bank stores (debug _HOME is
+     * brim-full, AGENTS.md 52.18). */
+    g_bk_ptr_a = (void *)world;
+    g_bk_byte_b = anim_step;
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&world_anim_swap_banked;
+    banked_call_run();
+    g_bk_byte_a = castle;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&ui_actors_sprites_banked;
-    g_bk_ptr_a = (void *)world;
-    g_bk_byte_a = castle;
-    g_bk_byte_b = anim_step;
     banked_call_run();
 }
 

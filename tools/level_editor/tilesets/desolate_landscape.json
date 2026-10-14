@@ -677,25 +677,25 @@
    "category": "terrain"
   },
   {
-   "id": "desolate_landscape_water_frame_2_1",
+   "id": "desolate_landscape_water_frame_1",
    "palette": "desolate_water",
-   "label": "water frame 2",
+   "label": "water frame 1",
    "gb_constant": "TILE_DESOLATE_LANDSCAPE_60",
    "walkable": false,
    "color": "#793db6",
    "ascii": "#",
-   "image_url": "/tiles/desolate_landscape/desolate_landscape_water_frame_2_1.png",
+   "image_url": "/tiles/desolate_landscape/desolate_landscape_water_frame_1.png",
    "category": "terrain"
   },
   {
-   "id": "desolate_landscape_water_frame_2_2",
+   "id": "desolate_landscape_water_frame_2",
    "palette": "desolate_water",
    "label": "water frame 2",
    "gb_constant": "TILE_DESOLATE_LANDSCAPE_61",
    "walkable": false,
    "color": "#793db6",
    "ascii": "#",
-   "image_url": "/tiles/desolate_landscape/desolate_landscape_water_frame_2_2.png",
+   "image_url": "/tiles/desolate_landscape/desolate_landscape_water_frame_2.png",
    "category": "terrain"
   },
   {
@@ -1079,13 +1079,13 @@
     "x": 12,
     "y": 3,
     "index": 60,
-    "tile": "desolate_landscape_water_frame_2_1"
+    "tile": "desolate_landscape_water_frame_1"
    },
    {
     "x": 13,
     "y": 3,
     "index": 61,
-    "tile": "desolate_landscape_water_frame_2_2"
+    "tile": "desolate_landscape_water_frame_2"
    },
    {
     "x": 14,

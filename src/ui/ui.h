@@ -84,6 +84,16 @@ extern uint8_t g_is_cgb;
  * fixed bank under 0x8000. */
 void ui_actors_sprites_banked(void);
 
+/* Bank-5 no-arg body behind ui_draw_actors_sprites(): swaps visible
+ * background cells showing an animation frame tile to the current
+ * anim step's frame (fire flicker / water shimmer, data-driven from
+ * generated anim_pairs.h).  Staged inputs ride along (g_bk_ptr_a = World,
+ * g_bk_byte_b = anim_step).  Lives in bank 5 (debug bank 4, where its
+ * caller lives, is full, and bank 2 overflows with it); dispatched as a
+ * second pass from fixed code because a banked body must never switch
+ * banks mid-function. */
+void world_anim_swap_banked(void);
+
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
  * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
  * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
@@ -172,11 +182,13 @@ void ui_title_logo_load_banked(void);
  * logo's fixed ramp. */
 void ui_splash_logo_render_banked(void);
 /* Active tileset palette table, nibble-packed (two 0-7 indices per byte):
- * 32 WRAM bytes for the 64 world-block slots, not 64 (stack-gap budget,
+ * 40 WRAM bytes for the 80 world-block slots, not 80 (stack-gap budget,
  * AGENTS.md §52.24 -- a full byte per slot was part of the +16 B WRAM
  * growth that zeroed the battle stack margin).  Written by the bank-5
- * tileset loader, read by ui_cell_palette below. */
-extern uint8_t g_active_tile_palette[32];
+ * tileset loader, read by ui_cell_palette below.  Grew 32 -> 40 for the
+ * forest row-4 extension (hut/mailbox, slots 64..68); the sentinels +
+ * full harness pin the margin. */
+extern uint8_t g_active_tile_palette[40];
 
 /* Toggle LCDC bit 7 directly (harness-safe: no GBDK display_off VBlank
  * wait).  Full-screen redraws span several display sweeps and cannot fit
