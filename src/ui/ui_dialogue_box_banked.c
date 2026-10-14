@@ -45,9 +45,10 @@ void ui_dialogue_box_banked(void)
     volatile uint8_t *dst;
     /* First box row in tilemap space.  Rows are painted full-width (see
      * ui.h): sy shifts the base down on vertically scrolled maps.  The
-     * validator caps height at 24 (sy <= 6), so (sy << 5) fits in a
-     * byte and rows never wrap the 32-row ring. */
-    dst = (volatile uint8_t *)((uint16_t)(0x9980u + ((uint8_t)(sy << 5))));
+     * box is 4 rows (14-17): top with the speaker name, two text rows,
+     * bottom border.  The validator caps height at 24 (sy <= 6), so
+     * (sy << 5) fits in a byte and rows never wrap the 32-row ring. */
+    dst = (volatile uint8_t *)((uint16_t)(0x99C0u + ((uint8_t)(sy << 5))));
     if (g_is_cgb) {
         BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
         for (i = 0; i < 8; i++) {
@@ -57,7 +58,7 @@ void ui_dialogue_box_banked(void)
     /* Direct VRAM writes: the sole caller (ui_draw_dialogue, first dialogue
      * frame) runs with the LCD off, so no PPU wait is needed. */
     VBK_REG = 1;
-    i = 192;
+    i = 128;
     do {
         *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
         dst++;

@@ -199,12 +199,11 @@ def walk_a(planner, checks, sram_out=None):
 
     # Staircase refusal: the stairs stand north of the wake clearing;
     # bumping them opens the refusal line (dialogue, no map change).
-    # Marker is the first box line ("not going"): the second line only
-    # renders after an A advance, so the bump must key on line 1.  The
-    # close is two-phase for the same reason: advance until line 2
-    # ("back down there") is visible, THEN close on its absence — a bare
-    # close on line 2 returns instantly (absent on line 1) with the modal
-    # box still open, eating every later move.
+    # Two-line pages show both refusal lines at once, so the bump keys on
+    # line 1 ("not going") and line 2 ("back down there") is already
+    # visible: the page-2 press returns instantly and the close shuts the
+    # single-page box.  Kept two-phase so a future multi-page refusal
+    # still walks correctly.
     s.check("stairs refusal",
             bump_actor(s, planner, "wake_grove", (10, 7), "up",
                        "not going"),
@@ -235,27 +234,31 @@ def walk_a(planner, checks, sram_out=None):
                (1, 7))
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
+    # Two-line pages show both guard lines at once (single page, no
+    # continue chevron on the last page), so one close shuts the box.
     s.check("guard dialogue opened",
             bump_actor(s, planner, "town", (9, 8), "right", "GUARD:"),
             expected="GUARD:", actual="none")
     s.shoot("03-guard-dialogue", need="GUARD:")
-    # The box is background tiles at rows 12-17; no actor OAM entry (the
+    # The box is background tiles at rows 14-17; no actor OAM entry (the
     # town fire/dog use enemy-kind OAM art) may draw over it.  Box top
-    # row 12 -> stored OAM y 112.  Regression for the fire/dog overlay.
+    # row 14 -> stored OAM y 128.  Regression for the fire/dog overlay.
     s.tick(4)
-    _over = [y for y in s.oam_actor_ys() if y >= 112]
+    _over = [y for y in s.oam_actor_ys() if y >= 128]
     s.check("guard dialogue: no actor sprite over the box", not _over,
-            expected="actor OAM y < 112 (box top row 12)",
+            expected="actor OAM y < 128 (box top row 14)",
             actual=str(_over))
-    s.press("a", settle=30)
-    s.shoot("04-dialogue-next")
     close_dialogue(s, "GUARD:")
 
     # Mayor: interact event sets MET_MAYOR + starts the quest.
+    # The 3-line INTRO shows lines 1-2 with the continue chevron on page
+    # 1; milestone 04 captures that first page (the next dialogue after
+    # the guard).
     s.check("mayor dialogue opened",
             bump_actor(s, planner, "town", (9, 5), "right", "MAYOR:",
                        tries=6),
             expected="MAYOR:", actual="none")
+    s.shoot("04-dialogue-next", need="MAYOR:")
     close_dialogue(s, "MAYOR:")
     s.check_eq("MET_MAYOR flag", s.reader.flag(STORY_FLAG_ID_MET_MAYOR),
                True)
