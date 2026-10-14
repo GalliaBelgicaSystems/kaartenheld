@@ -199,11 +199,11 @@ def walk_a(planner, checks, sram_out=None):
 
     # Staircase refusal: the stairs stand north of the wake clearing;
     # bumping them opens the refusal line (dialogue, no map change).
-    # Two-line pages show both refusal lines at once, so the bump keys on
-    # line 1 ("not going") and line 2 ("back down there") is already
-    # visible: the page-2 press returns instantly and the close shuts the
-    # single-page box.  Kept two-phase so a future multi-page refusal
-    # still walks correctly.
+    # Three-line pages show both refusal lines at once plus a blank third
+    # row, so the bump keys on line 1 ("not going") and line 2
+    # ("back down there") is already visible: the page-2 press returns
+    # instantly and the close shuts the single-page box.  Kept two-phase
+    # so a future multi-page refusal still walks correctly.
     s.check("stairs refusal",
             bump_actor(s, planner, "wake_grove", (10, 7), "up",
                        "not going"),
@@ -234,8 +234,9 @@ def walk_a(planner, checks, sram_out=None):
                (1, 7))
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
-    # Two-line pages show both guard lines at once (single page, no
-    # continue chevron on the last page), so one close shuts the box.
+    # Three-line pages show both guard lines at once plus a blank third
+    # row (single page, no continue chevron on the last page), so one
+    # close shuts the box.
     s.check("guard dialogue opened",
             bump_actor(s, planner, "town", (9, 8), "right", "GUARD:"),
             expected="GUARD:", actual="none")
@@ -251,9 +252,8 @@ def walk_a(planner, checks, sram_out=None):
     close_dialogue(s, "GUARD:")
 
     # Mayor: interact event sets MET_MAYOR + starts the quest.
-    # The 3-line INTRO shows lines 1-2 with the continue chevron on page
-    # 1; milestone 04 captures that first page (the next dialogue after
-    # the guard).
+    # The 3-line INTRO fits on one page (all three lines, no chevron);
+    # milestone 04 captures that page (the next dialogue after the guard).
     s.check("mayor dialogue opened",
             bump_actor(s, planner, "town", (9, 5), "right", "MAYOR:",
                        tries=6),

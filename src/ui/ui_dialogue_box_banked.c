@@ -45,8 +45,9 @@ void ui_dialogue_box_banked(void)
     volatile uint8_t *dst;
     /* First box row in tilemap space.  Rows are painted full-width (see
      * ui.h): sy shifts the base down on vertically scrolled maps.  The
-     * box is 4 rows (14-17): top with the speaker name, two text rows,
-     * bottom border.  The validator caps height at 24 (sy <= 6), so
+     * box is a top bar plus three text rows (14-17): top with the
+     * speaker name, then plain full-width text to the screen edge (no
+     * bottom border).  The validator caps height at 24 (sy <= 6), so
      * (sy << 5) fits in a byte and rows never wrap the 32-row ring. */
     dst = (volatile uint8_t *)((uint16_t)(0x99C0u + ((uint8_t)(sy << 5))));
     if (g_is_cgb) {

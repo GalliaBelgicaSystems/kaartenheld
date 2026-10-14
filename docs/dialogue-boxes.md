@@ -25,18 +25,18 @@ Flow when a dialogue starts (`dialogue_start_def`):
    fixed code can never read bank-2 rodata after returning.
 3. `DialogueState.lines[i]` pointers target those WRAM buffers, never
    bank-2 addresses.
-4. Display: two lines at a time in a 4-row box at screen rows 14-17 —
-   only horizontal bars (no side borders): top carries the speaker
-   (`+--SPEAKER-----+` on row 14), the current pair on rows 15-16 as
-   full-width text (**20 visible characters**, 19 beside the chevron,
-   via `ui_draw_dialogue_line`, `src/screens/dialogue_screen.c`).
-   Pressing A turns to the next pair (`dialogue_next` steps
-   `current_line` by 2, so a 2-line greeting reads in one page and an
-   8-line lesson in four).  The far bottom right (col 19, row 16) shows
-   a down-chevron — the intrepid `>` glyph rotated 90 degrees clockwise
-   (VRAM 109, `UI_TILE_DIALOGUE_CONTINUE`, `v` in the semantic buffer) —
-   whenever another page follows; the last page shows none.  Full width
-   gives two extra characters per row, so the chevron never eats text.
+4. Display: three lines at a time in a top-bar box at screen rows
+   14-17 — only a top horizontal bar carrying the speaker
+   (`+--SPEAKER-----+` on row 14), then plain full-width text on rows
+   15-17 (**20 visible characters**, 19 beside the chevron, via
+   `ui_draw_dialogue_line`, `src/screens/dialogue_screen.c`).  Pressing
+   A turns to the next triple (`dialogue_next` steps `current_line` by
+   3, so a 2-line greeting reads in one page and an 8-line lesson in
+   three).  The far bottom right (col 19, row 17) shows a down-chevron
+   — the intrepid `>` glyph rotated 90 degrees clockwise (VRAM 109,
+   `UI_TILE_DIALOGUE_CONTINUE`, `v` in the semantic buffer) — whenever
+   another page follows; the last page shows none.  Full width gives
+   two extra characters per row, so the chevron never eats text.
 
 ## 2. Why the limits exist
 

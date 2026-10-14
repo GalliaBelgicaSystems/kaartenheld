@@ -60,12 +60,12 @@ void dialogue_start_def(DialogueState *d, DialogueId id)
 bool dialogue_next(DialogueState *d)
 {
     if (!d || !d->active) return false;
-    /* Two-line pages: each A press turns to the next pair of lines, so a
-     * 2-line box reads in one page and an 8-line lesson in four.  The
-     * continue chevron (far bottom right, col 19, of the second
-     * full-width text row) shows whenever another page follows
-     * (current+2 < line_count) and hides on the last page. */
-    d->current_line = (uint8_t)(d->current_line + 2);
+    /* Three-line pages: each A press turns to the next triple of lines,
+     * so a 2-line greeting reads in one page and an 8-line lesson in
+     * three.  The continue chevron (far bottom right, col 19, row 17)
+     * shows whenever another page follows (current+3 < line_count) and
+     * hides on the last page. */
+    d->current_line = (uint8_t)(d->current_line + 3);
     if (d->current_line >= d->line_count) {
         dialogue_end(d);
         return false;

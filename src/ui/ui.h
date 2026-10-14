@@ -39,8 +39,8 @@ extern uint8_t g_is_cgb;
 /* Dialogue continue chevron (down-pointing): the intrepid ">" glyph
  * (font tile 30) rotated 90 degrees clockwise, loaded at boot by the
  * bank-3 card-tile loader into this free BG slot.  Shown at the far
- * bottom right (col 19) of the second full-width text row whenever
- * another dialogue page follows; hidden on the last page.  Slot 109 is the only free id in 96-127
+ * bottom right (col 19, row 17) of the third full-width text row
+ * whenever another dialogue page follows; hidden on the last page.  Slot 109 is the only free id in 96-127
  * (96 light arrow, 97-103 bow counters, 104-108 weapons, 110-112 dark
  * arrow + blanks, 113/114/116 HUD, 115 coin, 117/127 bar, 118-126
  * frames): its same-numbered OAM id lives in the 0x8000 sprite block,

@@ -45,9 +45,9 @@
    "contains": "Welcome to town!"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 17,
-   "contains": "+------------------+"
+   "contains": "+"
   }
  ],
  "initial_state": {

@@ -1,7 +1,7 @@
 {
  "name": "cards_menu_loot_shift",
  "test": true,
- "description": "Loot cards must not shift CARDS menu mapping: with a loot drop plus bought dagger+bow owned, UP-wrap + A decks the bow under its own caret, and the next UP lands on the dagger row (regression: the bank-2 render used to rebuild the view loot-blind, shifting every selection at/after a loot card) Two-line pages: 3-line victory closes in 2 presses. Two-line pages: 3-line victory closes in 2 presses; double START opens ITEM reliably post-battle.",
+ "description": "Loot cards must not shift CARDS menu mapping: with a loot drop plus bought dagger+bow owned, UP-wrap + A decks the bow under its own caret, and the next UP lands on the dagger row (regression: the bank-2 render used to rebuild the view loot-blind, shifting every selection at/after a loot card) Two-line pages: 3-line victory closes in 1 press. Two-line pages: 3-line victory closes in 1 press; double START opens ITEM reliably post-battle.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -134,14 +134,6 @@
   {
    "type": "wait",
    "frames": 200
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
   },
   {
    "type": "press",

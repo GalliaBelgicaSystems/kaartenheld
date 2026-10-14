@@ -15,8 +15,8 @@ scrolled, SCY > 0), triggers the dialogue by bumping the guard, and decodes
 the actual BACKGROUND tilemap:
 
   1. dialogue-bg-box: the box is present in the background at screen rows
-     14-17 at the expected shape (top with speaker, two text lines,
-     bottom border; no "[A] CONTINUE").
+     14-17 at the expected shape (top bar with speaker, three text
+     rows, no bottom border; no "[A] CONTINUE").
   2. dialogue-clean: the box contains only dialogue text -- no map tiles
      mixed in.
   3. dialogue-window-hidden: the HUD window is disabled during dialogue.
@@ -311,16 +311,17 @@ def main():
     win_enabled = bool(lcdc & 0x20)
 
     # ── 1. Dialogue box present in the BACKGROUND at the expected shape ──
-    # 4 rows: top with the speaker name, two text lines, bottom border.
-    # The guard greeting shows both lines at once (two-line pages, no
-    # "[A] CONTINUE"): first line on row 15, second on row 16.  The last
-    # page shows no continue chevron (tile 109, decoded as "#" below).
+    # Top bar with the speaker name, three full-width text rows, no
+    # bottom border.  The guard greeting shows both lines at once plus a
+    # blank third row (two-line pages, no "[A] CONTINUE"): first line on
+    # row 15, second on row 16, blank on row 17.  The last page shows no
+    # continue chevron (tile 109, decoded as "#" below).
     top_ok = box[0].startswith("+") and box[0].endswith("+") and "GUARD:" in box[0]
-    bottom_ok = box[3].startswith("+") and box[3].endswith("+")
     first_ok = "Halt! Keep peace." in box[1]
     second_ok = "Watch for slimes." in box[2]
-    check("dialogue-bg-box", top_ok and bottom_ok and first_ok and second_ok,
-          "expected the box (+ borders, GUARD: top, two lines) in background rows "
+    third_blank = box[3].strip() == ""
+    check("dialogue-bg-box", top_ok and first_ok and second_ok and third_blank,
+          "expected the box (GUARD: top, two lines, blank third row) in background rows "
           f"14-17 at the scrolled ring offset (scroll_y={scroll_y}), got: "
           + " / ".join(box))
 
