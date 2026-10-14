@@ -80,9 +80,11 @@ void overworld_screen_update(Game *g)
         g_bk_call_target = (uint16_t)&bird_ambient_banked;
         g_bk_byte_a = game_scene_has_birds(g->world.map_id);
         banked_call_run();
+#ifdef DEBUG_BUILD
         if (g_bk_byte_b) {
             telemetry_emit(EVENT_BIRD_CHIRP, g_bk_byte_b, 0, 0, 0);
         }
+#endif
     }
 
     /* A committed move may resolve a map change or an encounter; resolve

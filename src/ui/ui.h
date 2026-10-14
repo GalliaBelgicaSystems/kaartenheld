@@ -20,11 +20,7 @@ extern uint8_t g_is_cgb;
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
-#define UI_TILE_CARD_AMULET      109u
-#define UI_TILE_HEART            113u
-#define UI_TILE_BOLT             114u
 #define UI_TILE_COIN             115u
-#define UI_TILE_DECK             116u
 /* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
  * sheet row 3, loaded explicitly at these ids by ui_init).  Together with
  * the card frames these fully allocate the 117-127 BG window between the
@@ -57,16 +53,13 @@ extern uint8_t g_is_cgb;
 
 /* Overworld actor OAM sprite tile bases (VRAM Block 0, 0x8000).  Collision
  * rules: must not overlap the font-duplicate block 0..95 used for ASCII
- * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
+ * actor glyphs, PLAYER (102) or HERO (98). */
 #define HERO_DESOLATE_SPRITE_TILE_ID 98u
 #define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
-#define KOBOLD_SPRITE_TILE_ID    96u
-#define BAT_DESOLATE_SPRITE_TILE_ID 88u
-#define BAT_CASTLE_SPRITE_TILE_ID   92u
 /* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
  * owned by screens/enemy_types/treasure_chest.json).  Collision rules:
  * must not overlap the font-duplicate block 0..95 used for ASCII
- * actor glyphs, PLAYER (102), HERO (98), or the kobold/bat bases. */
+ * actor glyphs, PLAYER (102) or HERO (98). */
 /* Shared per-enemy overworld sprites (assets/enemy_sprites.png, base must
  * match ENEMY_OW_BASE in tools/screen_compiler/battle_compile.py).  The
  * blob holds concatenated per-enemy frames; ids 128+ alias BG tiles. */

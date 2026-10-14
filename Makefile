@@ -51,9 +51,13 @@ RELEASE_ONLY_SRCS = $(SRC_DIR)/screens/title_logo_content.c
 DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_CONTENT_SRCS)
 
 # Debug-harness-only sources excluded from the release ROM.
-# telemetry.c IS needed by gameplay (game.c/world.c emit events);
+# telemetry.c (ring buffer + snapshot dispatch) is debug-only now: release
+# builds compile telemetry calls out via no-op macros in telemetry.h, so the
+# 670 B WRAM ring and all per-event CPU leave the release ROM.  The one
+# telemetry arg with a gameplay side effect (loot-count read) is #ifdef'd at
+# its call site in world.c.
 # telemetry_snap.c is the banked extended-snapshot builder (debug-only).
-DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/assertions.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/world/lesson_b3.c
+DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/world/lesson_b3.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
 MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c
@@ -92,7 +96,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -199,14 +203,6 @@ gfx: manifest
 
 
 
-# Regenerate the asset atlas (docs/assets_atlas.md + src/gfx/asset_atlas.h
-# + the banked .inc data).  Deterministic: rerunning produces byte-identical
-# output.  See docs/assets_atlas.md and tools/asset_atlas.py.
-atlas:
-	@python3 tools/asset_atlas.py
-
-# Drift check: Makefile gfx --tile-coords must match the atlas registry, and
-# the generated artifacts must be in sync with the current source assets.
 # Level compiler targets (docs/level-editor.md)
 LEVEL ?= forest
 level:
@@ -376,9 +372,6 @@ reload-boss-tiles-check:
 editor:
 	@echo "Starting Game Boy RPG Level Editor..."
 	@cd tools/level_editor && npm install --no-audit --no-fund && npm run dev
-
-atlas-check:
-	@python3 tools/asset_atlas.py --check
 
 # Tileset manifest check: vram_block composition, exit marking, sheet bounds.
 tiles-check:

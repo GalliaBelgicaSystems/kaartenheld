@@ -16,7 +16,7 @@
  * "what hand did these cards form" -- tier, multiplier, base_power.
  * It must never compute an effect magnitude; scaling base_power into
  * damage/heal/block happens in effect_resolve_into() at the end of this
- * dispatch, whose result battle reads via effect_last().
+ * dispatch, whose result battle reads from g_effect_last directly.
  *
  * Hand model: strict poker.  Pairs/kinds any count >= 2; STRAIGHT, FLUSH,
  * STRAIGHT_FLUSH and FIVE_KIND need all five effective cards.  Values are

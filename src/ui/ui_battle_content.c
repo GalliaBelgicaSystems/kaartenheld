@@ -159,19 +159,8 @@ static void battle_draw_num2(uint8_t x, uint8_t y, uint8_t val)
     battle_put_char((uint8_t)(x + 1), y, (char)('0' + val));
 }
 
-/* Loot-reveal row color: paper default (no tints; the stamped elem +
- * weapon icons carry type and element). */
-static uint8_t battle_card_color(uint8_t type, uint8_t status_id, uint8_t is_heal)
-{
-    (void)type;
-    (void)status_id;
-    (void)is_heal;
-    return UI_COLOR_NONE;
-}
-
-/* CGB per-tile palette span (self-contained mirror of ui_color_span, gated
- * on g_is_cgb; keep in sync with ui_color_span_banked in ui_color_banked.c).
- * Banked body, so it cannot call fixed-bank helpers. */
+/* CGB per-tile palette span (bank-local VRAM bank-1 writer, gated
+ * on g_is_cgb).  Banked body, so it cannot call fixed-bank helpers. */
 static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
 {
     uint8_t i;
@@ -246,30 +235,6 @@ static uint8_t battle_card_weapon_tile(uint8_t type, uint8_t is_heal)
     if (t > 4) t = 0;
     if (is_heal) t = BATTLE_CARD_TYPE_HEAL;
     return g_card_skin_wram.weapon_tile[t];
-}
-
-/* Loot-reveal icon: weapon tile only.  Element riders are OAM sprites
- * (battle per-card OAM icons), never BG tiles, so there is no elem tile here.
- * is_heal (ring joker / heal effect) forces the HEAL type's weapon icon. */
-static void battle_card_icon_tiles(uint8_t status_id, uint8_t type,
-                                   uint8_t is_heal, uint8_t *tile_elem,
-                                   uint8_t *tile_wpn)
-{
-    (void)status_id;
-    *tile_elem = 0;
-    *tile_wpn = battle_card_weapon_tile(type, is_heal);
-}
-
-/* Box color for a hand card: always the paper default (Florent's model:
- * no card tints; type and element read from the weapon/power/rider icons).
- * Poison grey-out still forces UI_COLOR_DIM at the call site. */
-static uint8_t battle_card_box_color(uint8_t type, uint8_t status_id,
-                                     uint8_t is_heal)
-{
-    (void)type;
-    (void)status_id;
-    (void)is_heal;
-    return UI_COLOR_NONE;
 }
 
 /* Unconditionally blank one card slot's box footprint (3 x box_h rows)
@@ -912,13 +877,13 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             }
             continue;
         }
-        /* No card tints (Florent's model): boxes stay paper, type reads
+        /* No card tints: boxes stay paper (UI_COLOR_NONE), type reads
          * from the stamped weapon icon, element from the per-card OAM
          * rider HUD. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
          * of the arrow-counter type grey out too once their uses are
          * spent (matches the unplayable nav rule). */
-        ccolor = battle_card_box_color(ctype, cstat, is_heal);
+        ccolor = UI_COLOR_NONE;
         if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
             (ctype == g_card_skin_wram.uses_type && cuses == 0)) {
             ccolor = UI_COLOR_DIM;
@@ -988,21 +953,20 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
 /* Battle UI tile loader (bank-3 body behind the fixed-bank
  * ui_card_tiles_load() wrapper, dispatched once from ui_init with the LCD
  * off): streams the card frame tiles, the turn-timer bar segments, the
- * HUD hp/ap/deck icons and the light/dark select arrows from THIS bank's
- * generated card_frame_tiles.h into VRAM block 1.  Reads its own bank-local data
+ * HUD hp/ap/deck icons, the light/dark select arrows and the gold-coin
+ * tile from THIS bank's data (generated card_frame_tiles.h + s_coin_tile
+ * below) into VRAM block 1.  Reads its own bank-local data
  * directly (no banked_copy, which would restore the home bank mid-body --
  * banked.h ABI) and writes VRAM at the SIGNED BG tile addresses
  * (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
  * AGENTS.md 52.22).  VRAM: frames 118-126, bar filled 117 / empty 127,
- * HUD icons overwrite the atlas data at 113 (hp/heart), 114 (ap/bolt)
- * and 116 (deck), light arrow at 96, dark arrow at 110 (overwrites the
- * atlas Flame Spire; 111/112 keep stale atlas icons, never referenced). */
+ * HUD icons at 113 (hp), 114 (ap) and 116 (deck), light arrow at 96,
+ * dark arrow at 110, weapons at 104-108, coin at 115. */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
  * is tile 14 (VRAM 96), the dark select arrow is tile 15 (VRAM 110). */
-static const uint8_t s_card_tile_vram_ids[31] = {
-    118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
+static const uint8_t s_card_tile_vram_ids[31] = {    118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
     117, 127,                                     /* bar filled, empty */
     113, 114, 116,                                /* HUD: hp, ap, deck */
     96,                                           /* light select arrow */
@@ -1011,12 +975,20 @@ static const uint8_t s_card_tile_vram_ids[31] = {
     97,                                           /* spare blank (unused scratch) */
     /* Limited-use arrow counters (bow floor row): uses 0/1/2/3, power
      * icon, plus the trailing blank cell mapped to the unused BG fetch
-     * slot 103.  Ids 98-103 are free BG fetch slots: the atlas
-     * only loads 104-116, the font 0-95, and no tilemap ever references
+     * slot 103.  Ids 98-103 are free BG fetch slots: the font covers
+     * 0-95 and no tilemap ever references
      * 98-103 (their same-numbered OAM ids live in the 0x8000 sprite
      * block — a different physical address, AGENTS.md 52.22). */
     98, 99, 100, 101, 102, 103,                   /* arrows 0, 1, 2, 3, nine, blank */
     97,                                           /* arrows 4 (appended cell) */
+};
+
+/* Gold-coin UI tile (VRAM 115, shop gold rows): the only icon not owned
+ * by the card-frames sheet.  Lives here so the fixed bank pays nothing
+ * for it (this loader already runs LCD-off at boot). */
+static const uint8_t s_coin_tile[16] = {
+    0x70, 0xFF, 0x98, 0xAF, 0x4C, 0xF7, 0x6A, 0xD7,
+    0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
 };
 
 void ui_card_tiles_load_banked(void)
@@ -1039,6 +1011,11 @@ void ui_card_tiles_load_banked(void)
         for (j = 0; j < 16; j++) {
             dst[j] = src[j];
         }
+    }
+    /* Gold-coin tile (VRAM 115): same signed addressing as above. */
+    dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_COIN << 4));
+    for (j = 0; j < 16; j++) {
+        dst[j] = s_coin_tile[j];
     }
 }
 
@@ -1299,24 +1276,21 @@ void ui_update_battle_banked(void)
                 block = (uint8_t)(3 + len);
                 x = (uint8_t)((20 - block) / 2);
                 battle_draw_text_line(0, 11, NULL, 20);
-                battle_card_icon_tiles(vs->status_id,
-                                       vs->battle_type,
-                                       (vs->battle_type ==
-                                        BATTLE_CARD_TYPE_HEAL) ||
-                                       (vs->effect ==
-                                        CARD_EFFECT_HEAL_HP),
-                                       &tile_elem, &tile_wpn);
+                /* Loot-reveal icon: weapon tile only (riders are OAM
+                 * sprites, never BG tiles); the elem cell stays blank. */
+                tile_elem = 0;
+                tile_wpn = battle_card_weapon_tile(
+                    vs->battle_type,
+                    (vs->battle_type == BATTLE_CARD_TYPE_HEAL) ||
+                    (vs->effect == CARD_EFFECT_HEAL_HP));
             dst = (volatile uint8_t *)(0x9800 + (11u << 5) + x);
             VBK_REG = 0;
             battle_vram_sync_write(dst, tile_elem);
             battle_vram_sync_write(dst + 1, tile_wpn);
             battle_draw_text_line((uint8_t)(x + 3), 11, (const char *)vs->name,
                                   (uint8_t)(20 - x - 3));
-            ncolor = battle_card_color(
-                vs->battle_type,
-                vs->status_id,
-                (vs->battle_type == BATTLE_CARD_TYPE_HEAL) ||
-                (vs->effect == CARD_EFFECT_HEAL_HP));
+            /* Loot-reveal row: paper default, no tints. */
+            ncolor = UI_COLOR_NONE;
             battle_color_span(x, 11, block, ncolor);
 
             /* Row 12: full English description, centered */

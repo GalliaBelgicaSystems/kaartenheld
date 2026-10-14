@@ -5,25 +5,11 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── CGB effect-color support, bank-3 body (docs/loot.md §34) ─────────
+/* ── CGB attribute clear, bank-3 body ───────────────────────────────
  * The VRAM bank-1 attribute clear lives here so the fixed bank stays
- * under 0x8000 (AGENTS.md §55.5).
+ * under 0x8000 (AGENTS.md §55.5).  Runs LCD-off from ui_lcd_off(), so the
+ * 1024-byte wipe is plain writes (no PPU waits needed).
  */
-
-
-
-/* Self-contained VRAM-sync write (banked code cannot call ui_vram_sync_write).
- * di/ei guards the PPU wait; unconditionally re-enabling IME via ei is safe
- * because interrupts are always active during normal play and stubbed under the harness. */
-static void color_vram_sync_write(volatile uint8_t *dst, uint8_t v)
-{
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = v;
-    } else {
-        *dst = v;
-    }
-}
 
 /* DEBUG-only font test body.  Lives in bank 3 so the debug fixed bank keeps
  * a real margin under 0x8000 (AGENTS.md §52.18);
@@ -64,12 +50,9 @@ void ui_draw_font_test_banked(void)
 
 
 /* Reset every BG tilemap attribute byte (0x9800-0x9BFF) to palette 0
- * (grayscale).  The span writers above only ever SET attributes, so without
- * this wipe stale palettes leak across full redraws: overworld tiles at the
- * coordinates of a previous menu/battle span keep their tint, and a menu row
- * that previously held a colored name renders its description text in the
- * old palette.  Called from ui_lcd_off() while the LCD is off, so the
- * per-byte PPU wait inside color_vram_sync_write is skipped. */
+ * (grayscale).  Span writers only ever SET attributes, so without this wipe
+ * stale palettes leak across full redraws.  Called from ui_lcd_off() while
+ * the LCD is off, so the wipe is plain writes. */
 void ui_clear_atts_banked(void)
 {
     uint16_t i;

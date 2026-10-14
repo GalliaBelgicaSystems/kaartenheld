@@ -50,9 +50,11 @@ void dialogue_start_def(DialogueState *d, DialogueId id)
     g_bk_ptr_a = (void *)d;
     g_bk_byte_a = id;
     banked_call_run();
+#ifdef DEBUG_BUILD
     if (d->active) {
         telemetry_emit(EVENT_DIALOGUE_STARTED, (uint8_t)d->id, 0, 0, 0);
     }
+#endif
 }
 
 bool dialogue_next(DialogueState *d)

@@ -360,17 +360,25 @@ static void debug_run_action(void)
         case DBG_ACT_DECK_ADD:
             /* Real mechanic call: all deck_add_card validations apply
              * (ownership, SPECIAL exclusion, max_copies, size). */
+#ifdef DEBUG_BUILD
             if (deck_add_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
             }
+#else
+            (void)deck_add_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_DECK_REMOVE:
             /* Real mechanic call: membership + DECK_MIN_CARDS floor apply.
              * Both emit on success only (mirroring the UI caller), so
              * scenarios assert acceptance/rejection via event counts. */
+#ifdef DEBUG_BUILD
             if (deck_remove_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, a0, 0, 0, 0);
             }
+#else
+            (void)deck_remove_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_SET_HAND_CARD_META:
             /* Companion to SET_HAND_CARD: pins the injected hand card's

@@ -35,8 +35,12 @@ void ui_set_cram_palette(uint8_t overworld)
 /* Mirror of the background tilemap ring (0x9800), written alongside every
  * ring write, so the harness can assert the actual rendered map (mGBA's
  * debugger cannot read VRAM).  DEBUG-only: 1 KB of WRAM the release does
- * not carry. */
-uint8_t g_tilemap_mirror[32 * 32];
+ * not carry.
+ * Pinned in unmapped WRAM0 (0xC500-0xC8FF, right after the attribute mirror
+ * at 0xC100-0xC4FF) so it does not consume _DATA budget: the debug stack
+ * gap (s__HEAP..0xE000) keeps the full kilobyte.  The host resolves the
+ * address via the ROM's .sym, so the pin is transparent to tools/. */
+__at(0xC500) uint8_t g_tilemap_mirror[32 * 32];
 /* Mirror of the background tilemap attribute ring (VBK=1 0x9800).
  * Placed in unmapped WRAM0 (0xC100-0xC4FF) so it does not consume _DATA budget. */
 volatile __at(0xC100) uint8_t g_tilemap_attr_mirror[32 * 32];
@@ -68,15 +72,6 @@ uint8_t ui_font_tile_base;
 #include "banked.h"
 
 #define PLAYER_SPRITE_NUM 0
-
-/* Gold-coin UI tile (VRAM 115, UI_TILE_COIN): the only surviving asset-atlas
- * icon.  The 13-tile atlas copy loop used to stream 12 dead tiles (8
- * overwritten by card_frame_tiles, 3 stale) from bank 8; now the single live
- * tile lives here (16 B fixed) and bank 8 no longer carries the 12 KB atlas. */
-static const uint8_t s_coin_tile[16] = {
-    0x70, 0xFF, 0x98, 0xAF, 0x4C, 0xF7, 0x6A, 0xD7,
-    0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
-};
 
 /* ASCII semantic char per TileType (0..3): '.', '#', '>', 'B'.  The
  * overworld renders these via the console font (ui_font_tile_base + (ch -
@@ -110,17 +105,14 @@ void ui_init(void)
     }
     ui_font_tile_base = 0;
 
-    /* Gold-coin UI tile (VRAM 115): the only atlas icon still referenced
-     * (shop gold rows).  All other atlas tiles were dead (overwritten by
-     * card_frame_tiles or never referenced). */
-    set_bkg_data(UI_TILE_COIN, 1, s_coin_tile);
-
     /* Battle UI tiles (card frames, timer-bar segments, HUD hp/ap/deck
-     * icons, light/dark select arrows, weapon icons) stream from Bank 3
-     * (generated card_frame_tiles.h, make gfx) through the banked loader
+     * icons, light/dark select arrows, weapon icons, gold-coin tile) stream
+     * from Bank 3
+     * (generated card_frame_tiles.h + bank-local coin tile, make gfx) through
+     * the banked loader
      * -- the fixed bank stays lean (AGENTS.md 52.18).  VRAM (signed BG
      * block, 0x9000-based: AGENTS.md 52.22): frames 118-126, bar 117/127,
-     * HUD icons overwrite the atlas data at 113/114/116 (sheet tiles
+     * HUD icons at 113/114/116 (sheet tiles
      * 11-13), light arrow at 96 (sheet tile 14), dark arrow at 110
      * (sheet tile 15), weapons overwrite the atlas data at 104-108
      * (sheet tiles 16-20), spare blank at 97.  Runs with

@@ -62,8 +62,8 @@ typedef struct {
  * The evaluator produces ONLY the quality of the selection (tier,
  * multiplier, base_power) into out_result -- never an effect magnitude.
  * The resolver (src/rpg/effects_content.c, same bank) then scales that
- * quality into g_effect_last per effect_type; battle reads it via
- * effect_last() and applies it (docs/combo-system.md §5/§7).
+ * quality into g_effect_last per effect_type; battle reads g_effect_last
+ * directly and applies it (docs/combo-system.md §5/§7).
  *
  * effect_type: CardEffectType the played hand performs.  Attack play uses
  * the leading card's Card.effect; defend play requests BLOCK_DAMAGE (the

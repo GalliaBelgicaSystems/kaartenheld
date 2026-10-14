@@ -299,8 +299,7 @@ void item_screen_update(Game *g)
             switch_tab(g);
             return;
         }
-        total = quest_count();
-        if (total == 0) return;
+        total = GAME_QUEST_COUNT;
         if (input_pressed(INPUT_UP)) {
             item_menu_step(g, (g->item_menu_index > 0) ?
                 (uint8_t)(g->item_menu_index - 1) : (uint8_t)(total - 1));

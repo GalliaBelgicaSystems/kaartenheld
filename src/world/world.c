@@ -333,9 +333,11 @@ void world_on_battle_end(Game *g, bool victory)
          * CARD_NONE = collection previously full (no room to grant). */
         if (g_loot_id != CARD_NONE) {
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
+#ifdef DEBUG_BUILD
                 telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
                                deck_collection_count(&g->state.cards,
                                                      g_loot_id), 0, 0);
+#endif
             } else {
                 g_loot_id = CARD_NONE;
             }
