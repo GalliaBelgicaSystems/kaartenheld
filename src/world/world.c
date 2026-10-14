@@ -381,6 +381,10 @@ WorldMoveResult world_update_actors(World *w)
     if (!w) return MOVE_RESULT_NONE;
 
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
+        /* Inactive slots have no patrol state (the banked body returns
+         * immediately for them): skip the trampoline round-trip.  Peaceful
+         * maps (town, cleared scenes) run zero patrol dispatches/frame. */
+        if (!w->actors[slot].active) continue;
         g_patrol_outcome = 0;
         g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;

@@ -186,7 +186,10 @@ void battle_oam_draw_banked(void)
  * mixes glow with an alt set; this runs after the alt block and wins
  * ties deterministically.  The art set comes from the loader-cached
  * g_battle_enemy_art[0] (clone encounters share one row; 0xFF = text
- * fallback) plus the fixed tables -- no new WRAM, no cross-bank reads. */
+ * fallback) plus the fixed tables -- no new WRAM, no cross-bank reads.
+ * Also ORs the staged multi-frame flag (battle.c): a glow set blinks
+ * on the battle clock even when its stamp art is single-frame, so the
+ * 16-frame re-stamp must keep running for it. */
 void battle_alt_load_banked(void)
 {
     uint8_t ai = g_battle_enemy_art[0];
@@ -216,6 +219,10 @@ void battle_alt_load_banked(void)
     if (ai != 0xFF && g_battle_art_glow_mask[ai] != 0) {
         uint8_t gu = g_battle_art_glow_unlit[ai];
         uint8_t gl = g_battle_art_glow_lit[ai];
+        /* Glow sets blink on the battle clock via the OAM overlay pass,
+         * which only re-runs on dirty frames: keep the 16-frame re-stamp
+         * alive even when the stamp art itself is single-frame. */
+        g_battle_multiframe = 1;
         if (gu != 0xFF && gl != 0xFF) {
             pal = &g_battle_glow_ramps[(uint16_t)gu << 3];
             OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH2 << 3));

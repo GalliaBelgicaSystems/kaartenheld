@@ -732,6 +732,9 @@ static const char *battle_combo_pending_name(const volatile Battle *battle)
         idx[w++] = s;
         if (c->ring) has_ring = 1;
     }
+    /* Fewer than 2 effective cards can never form a poker hand (same
+     * early-out as combo_resolve_banked): skip the ring trial entirely. */
+    if (w < 2) return "";
     if (has_ring) {
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
@@ -1327,9 +1330,12 @@ void ui_update_battle_banked(void)
         }
     }
     /* Per-card rider icons (same bank, plain call -- no dispatch).
-     * Unconditional like the bank-5 enemy pass in ui_update_battle: icons
-     * track live hand contents (discard/refill clears them naturally),
-     * and debug-action injection is always followed by dirty-setting
-     * input before any assert reads. */
-    battle_rider_draw(battle);
+     * Redrawn with the hand or a message: icons derive from hand contents
+     * (every hand mutation sets DIRTY_HAND or DIRTY_ALL) except the loot
+     * reveal, which repurposes the rider slots (MSG-gated); debug-action
+     * injection is always followed by dirty-setting input before any
+     * assert reads. */
+    if (d & (BATTLE_DIRTY_HAND | BATTLE_DIRTY_MSG)) {
+        battle_rider_draw(battle);
+    }
 }

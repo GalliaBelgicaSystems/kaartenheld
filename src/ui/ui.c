@@ -49,6 +49,11 @@ volatile __at(0xC100) uint8_t g_tilemap_attr_mirror[32 * 32];
 /* GBDK console .mode byte (defined in crt0.s _DATA). Bit 2 is M_NO_SCROLL. */
 extern uint8_t console_mode;
 
+/* Background-animation cell count (bank-5 anim_swap_banked.c, WRAM always
+ * mapped): lets the caller skip the swap dispatch on frames with nothing
+ * to swap (same throttle the body applies internally). */
+extern uint8_t g_anim_count;
+
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static int8_t s_loaded_tileset = -1;
 
@@ -614,15 +619,17 @@ void ui_draw_actors_sprites(const World *world)
     castle = (world->tileset_kind == WORLD_TILESET_CASTLE);
     /* Background animation first: its LCD-on tilemap writes must land
      * inside VBlank, while the OAM pass below is WRAM-only (timing-safe
-     * anywhere). ptr_a/byte_b are staged ONCE up front for both passes
-     * (the swap body reads world/anim_step); the second pass only adds
-     * the castle flag -- no extra fixed-bank stores (debug _HOME is
-     * brim-full, AGENTS.md 52.18). */
+     * anywhere).  Staging (world/anim_step) is shared by both passes;
+     * only the swap DISPATCH is gated here on the body's own throttle
+     * (every 4th frame) plus a nonzero recorded-cell count, so 75-100%
+     * of frames skip that bank switch entirely. */
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
-    g_bk_call_bank = 5;
-    g_bk_call_target = (uint16_t)&world_anim_swap_banked;
-    banked_call_run();
+    if ((((uint8_t)g_game.frame & 3) == 0) && g_anim_count != 0) {
+        g_bk_call_bank = 5;
+        g_bk_call_target = (uint16_t)&world_anim_swap_banked;
+        banked_call_run();
+    }
     g_bk_byte_a = castle;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&ui_actors_sprites_banked;

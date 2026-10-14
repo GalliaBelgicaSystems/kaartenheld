@@ -347,6 +347,13 @@ static void debug_run_action(void)
                                              : g_game.battle.enemy_deck.count;
                     status_grey_apply(a0, pool);
                 }
+                /* Repaint the tinted row: on hardware every apply is
+                 * followed by a phase change (DIRTY_ALL), but debug-action
+                 * applies land mid-phase with no widely-dirty redraw. */
+                if (ok) {
+                    g_game.battle.dirty |= (a0 == 0) ? BATTLE_DIRTY_HERO
+                                                     : BATTLE_DIRTY_ENEMIES;
+                }
             }
             break;
 

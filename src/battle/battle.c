@@ -31,6 +31,11 @@ uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
 /* Live pool max staged for the bank-3 HUD badge (see battle.h). */
 uint8_t g_battle_pool_max;
+/* Nonzero when anything in the battle animates on the 16-frame clock:
+ * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
+ * set (ORed by the bank-5 alt loader).  Uninitialized WRAM (bss);
+ * battle_start clears it before the loaders run. */
+uint8_t g_battle_multiframe;
 
 /* Active battle screen layout (see battle_data.h): uninitialized WRAM
  * (bss); staged from the bank-4 BattleScreenDef by game_battle_hud_load()
@@ -147,6 +152,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * codegen density, AGENTS.md 52.18) -- and before enemy_deck_setup,
      * which re-stages g_bk_byte_a for its own dispatch. */
     g_battle_solo = solo;
+    g_battle_multiframe = 0;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
@@ -733,14 +739,15 @@ void battle_update(Battle *b)
             /* Multi-frame enemy art (boss glow-eyes) rides the battle
              * clock, but the stamper only runs on ENEMIES -- otherwise
              * set on target change, which a solo boss never triggers.
-             * Re-stamp at the clock edge where the art bit flips (== 15
-             * going down) in both player phases, keeping the existing
-             * == 0 edge in DEFEND for the blink cadence (fused into one
-             * condition at zero net size: the fixed bank sits ~16 B
-             * under 0x8000, AGENTS.md 52.18). BLINK in SELECT is
-             * harmless: its only consumer redraws the enemy columns
-             * (ui_battle_content.c). */
-            if ((vb->timer_ticks & 15) == 15 || (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0)) {
+             * The == 15 edge flips the art frame: re-stamp only when the
+             * battle's art animates (g_battle_multiframe from the art
+             * loader).  The == 0 edge in DEFEND is the telegraph blink
+             * and always re-stamps, even for static art. */
+            if ((vb->timer_ticks & 15) == 15) {
+                if (g_battle_multiframe) {
+                    vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
+                }
+            } else if (vb->phase == BATTLE_PHASE_PLAYER_DEFEND && (vb->timer_ticks & 15) == 0) {
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {

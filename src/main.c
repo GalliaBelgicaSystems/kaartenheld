@@ -82,13 +82,20 @@ int main(void)
              * vsync() busy-waits for LY == 144 (the first VBlank scanline).
              * The PPU silently ignores VRAM writes during LCD modes 2/3. */
             vsync();
+            /* DMA shadow OAM to real OAM FIRST, while still inside the
+             * VBlank opened above: OAM DMA during active display (modes
+             * 2/3) corrupts sprites, and a big dirty redraw (full battle
+             * hand, dialogue box) can run past VBlank.  Positions lag one
+             * frame behind game_render (standard GB practice, invisible
+             * at 60 fps); transition hides stay exact because
+             * ui_sprite_begin_transition() writes real OAM immediately. */
+            ui_sprite_commit();
         }
         game_render(&g_game);
-        /* DMA shadow OAM to real OAM.  Runs right after game_render, so for
-         * steady frames it is still inside the VBlank opened by the vsync
-         * above.  Transitions force the hide earlier (ui_sprite_begin_transition
-         * in game_render) so the sprite is gone before the new screen's
-         * redraw wipes the display. */
-        ui_sprite_commit();
+        if (g_harness_mode) {
+            /* No VBlank under the harness (vsync skipped): commit after
+             * the render, as before. */
+            ui_sprite_commit();
+        }
     }
 }

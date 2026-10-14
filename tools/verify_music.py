@@ -128,7 +128,18 @@ def main():
     pos_addr = [game_addr + 204]
 
     def read_ticks():
-        # 16-bit counter incremented by the ISR; tolerate a torn read by
+        # 16-bit counter with torn-read protection: the ISR's ++ is two
+        # instructions (lo-inc, hi-inc); a host read landing between them
+        # sees lo wrapped with a stale hi (observed once as 0x0700 for a
+        # true ~0x0800). Latch hi first AND last: on mismatch the counter
+        # wrapped mid-read, so retry (bounded, then best effort).
+        for _ in range(3):
+            hi1 = pb.memory[ticks_addr + 1]
+            lo = pb.memory[ticks_addr]
+            hi2 = pb.memory[ticks_addr + 1]
+            if hi1 == hi2:
+                return (hi1 << 8) | lo
+        # Fallback (also the old behavior): tolerate a torn read by
         # taking the max of three reads (the counter is monotonic).
         return max(pb.memory[ticks_addr] | (pb.memory[ticks_addr + 1] << 8)
                    for _ in range(3))
@@ -291,10 +302,14 @@ def main():
 
     # Check 4: the ISR is actually running (counter is monotonic and moving).
     # Unwrap the uint16 counter across the whole run for the true total.
+    # Only LARGE backward steps count as wraps: a small dip (<= 255) is a
+    # torn host read at a 256-boundary (lo wrapped, hi stale), not a wrap --
+    # counting it would add a phantom 65536 (observed once: +251 dip).
     total = samples[-1][2] - samples[0][2]
     for i in range(1, len(samples)):
         if samples[i][2] < samples[i - 1][2]:
-            total += 65536
+            if samples[i - 1][2] - samples[i][2] > 32768:
+                total += 65536
     check("4. ticks-advanced", total > 0, f"g_audio_ticks stuck at {samples[0][2]}")
 
     # Check 3: transitions were really exercised.
