@@ -87,7 +87,7 @@ void world_init(World *w, const GameState *state)
 {
     if (!w) return;
     /* Runtime player position seeds from the canonical state (which
-     * game_new_game fills from levels/field.json player.spawn, the single
+     * game_new_game fills from levels/wake_grove.json player.spawn, the single
      * source of truth).  Never hardcode coordinates here: scene_sync_from_world
      * copies the runtime position back into GameState every frame, so a
      * hardcoded value would silently overwrite the authored spawn. */

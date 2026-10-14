@@ -80,7 +80,7 @@ typedef enum {
     TILE_STUMP_BL           = 6,
     TILE_STUMP_BR           = 7,
     /* Forest Landscape tiles: 64 tiles in sheet scan order (0..63),
-     * mapping 1:1 to the 64-tile forest VRAM block (RPG_TILE_BASE_WORLD). */
+     * mapping 1:1 to the first 64 forest VRAM slots (RPG_TILE_BASE_WORLD). */
     TILE_FOREST_00 = 8,
     TILE_FOREST_01 = 9,
     TILE_FOREST_02 = 10,
@@ -145,6 +145,17 @@ typedef enum {
     TILE_FOREST_61 = 69,
     TILE_FOREST_62 = 70,
     TILE_FOREST_63 = 71,
+    /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
+     * 0xFF is the empty-cell sentinel and the enum must stay <= 250
+     * (g_tiletype_fits_u8), so these live in the free 136..145 gap, NOT
+     * contiguously after 71 (72+ belongs to castle/village).  The renderer
+     * maps them with (value - 72), not (value - TILE_FOREST_00): see
+     * ui_draw_world_cell.  value = 72 + VRAM slot. */
+    TILE_FOREST_64 = 136,
+    TILE_FOREST_65 = 137,
+    TILE_FOREST_66 = 138,
+    TILE_FOREST_67 = 139,
+    TILE_FOREST_68 = 140,
 
     /* Castle Landscape tiles: 16 tiles in sheet scan order (0..15),
      * mapping 1:1 to the 16-tile castle VRAM block (RPG_TILE_BASE_WORLD). */

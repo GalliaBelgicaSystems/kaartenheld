@@ -11,8 +11,8 @@
 
 | set | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|---|
-| forest | field1 | field6 | field2 | field1 | field2 | field3 | field4 | field5 |
-| desolate_landscape | desolate2 | desolate3 | desolate2 | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
+| forest | field1 | field6 | field2 | water | field2 | field3 | field4 | field5 |
+| desolate_landscape | desolate2 | desolate3 | desolate_water | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town4 | town1 | town2 | town7 |
 | base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fightspider | fightboss |
@@ -27,10 +27,11 @@
 |---|---|
 | field1 (0) | forest_black_emptyness, forest_bottom_left_corner_wall, forest_bottom_left_interior_corner, forest_bottom_right_corner_wall, forest_bottom_right_interior_corner, forest_bottom_wall_1, forest_bottom_wall_2, forest_bottom_wall_3, forest_bottom_wall_4, forest_floor_with_stuff_walkable_2, forest_left_wall_1, forest_left_wall_2, forest_left_wall_3, forest_left_wall_4, forest_postsign, forest_right_wall_1, forest_right_wall_2, forest_right_wall_3, forest_right_wall_4, forest_stairs, forest_top_left_corner_wall, forest_top_left_interior_corner, forest_top_right_corner_wall, forest_top_right_interior_corner, forest_top_wall_1, forest_top_wall_2, forest_top_wall_3, forest_top_wall_4 |
 | field2 (2) | forest_floor_with_stuff_walkable_3, forest_floor_with_stuff_walkable_4, forest_plain_floor_2, forest_top_left_treetop, forest_top_right_tree_top |
-| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_bottom_right_tree_stump_2 (≈ #2a4f1a, #5ea4c8), forest_top_left_tree_stump |
+| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_bottom_right_tree_stump_2 (≈ #2a4f1a, #5ea4c8), forest_mailbox, forest_top_left_tree_stump |
 | field4 (6) | forest_bottom_left_treetrunk, forest_bottom_right_tree_trunk, forest_top_right_tree_stump |
-| field5 (7) | forest_floor_with_stuff_walkable_1, forest_water_bottom_left_corner_wall (≈ #2a4f1a, #5ea4c8), forest_water_bottom_left_interior_corner (≈ #2a4f1a, #5ea4c8), forest_water_bottom_right_interior_corner (≈ #2a4f1a, #5ea4c8), forest_water_bottom_wall_1 (≈ #2a4f1a, #5ea4c8), forest_water_bottom_wall_2 (≈ #2a4f1a, #5ea4c8), forest_water_bottom_wall_3 (≈ #2a4f1a, #5ea4c8), forest_water_frame_1 (≈ #408cb3, #5ea4c8), forest_water_frame_2 (≈ #408cb3, #5ea4c8), forest_water_left_wall (≈ #2a4f1a, #5ea4c8), forest_water_right_wall_1 (≈ #2a4f1a, #5ea4c8), forest_water_right_wall_2 (≈ #2a4f1a, #5ea4c8), forest_water_top_left_corner_wall (≈ #2a4f1a, #5ea4c8), forest_water_top_left_interior_corner (≈ #2a4f1a, #5ea4c8), forest_water_top_right_corner_wall (≈ #2a4f1a, #5ea4c8), forest_water_top_right_interior_corner (≈ #2a4f1a, #5ea4c8), forest_water_top_wall_1 (≈ #2a4f1a, #5ea4c8), forest_water_top_wall_2 (≈ #2a4f1a, #5ea4c8), forest_water_top_wall_3 (≈ #2a4f1a, #5ea4c8), forest_water_top_wall_4 (≈ #2a4f1a, #5ea4c8), forest_watter_bottom_wall (≈ #2a4f1a, #5ea4c8) |
+| field5 (7) | forest_bottom_left_hut, forest_bottom_right_hut, forest_floor_with_stuff_walkable_1, forest_top_left_hut, forest_top_right_hut |
 | field6 (1) | forest_fire_frame_1, forest_fire_frame_2 |
+| water (3) | forest_water_bottom_left_corner_wall, forest_water_bottom_left_interior_corner, forest_water_bottom_right_interior_corner, forest_water_bottom_wall_1, forest_water_bottom_wall_2, forest_water_bottom_wall_3, forest_water_frame_1, forest_water_frame_2, forest_water_left_wall, forest_water_right_wall_1, forest_water_right_wall_2, forest_water_top_left_corner_wall, forest_water_top_left_interior_corner, forest_water_top_right_corner_wall, forest_water_top_right_interior_corner, forest_water_top_wall_1, forest_water_top_wall_2, forest_water_top_wall_3, forest_water_top_wall_4, forest_watter_bottom_wall |
 
 ### castle (set `castle`)
 
@@ -45,8 +46,9 @@
 | ramp (slot) | tiles |
 |---|---|
 | desolate1 (3) | desolate_landscape_black_emptyness, desolate_landscape_bottom_left_corner_interior, desolate_landscape_bottom_left_corner_wall, desolate_landscape_bottom_left_treetrunk, desolate_landscape_bottom_right_corner_interior, desolate_landscape_bottom_right_corner_wall, desolate_landscape_bottom_right_tree_trunk, desolate_landscape_bottom_wall_1, desolate_landscape_bottom_wall_2, desolate_landscape_bottom_wall_3, desolate_landscape_bottom_wall_4, desolate_landscape_exit_desolate_landscape, desolate_landscape_floor_with_stuff_walkable_3, desolate_landscape_floor_with_stuff_walkable_4, desolate_landscape_left_wall_1, desolate_landscape_left_wall_2, desolate_landscape_left_wall_3, desolate_landscape_left_wall_4, desolate_landscape_plain_floor_1, desolate_landscape_right_wall_1, desolate_landscape_right_wall_2, desolate_landscape_right_wall_3, desolate_landscape_right_wall_4, desolate_landscape_top_left_corner_wall, desolate_landscape_top_left_corner_wall_interior, desolate_landscape_top_left_treetop, desolate_landscape_top_right_corner_wall, desolate_landscape_top_right_corner_wall_interior, desolate_landscape_top_right_tree_top, desolate_landscape_top_wall_1, desolate_landscape_top_wall_2, desolate_landscape_top_wall_3, desolate_landscape_top_wall_4 |
-| desolate2 (0) | desolate_landscape_bottom_left_rock, desolate_landscape_bottom_right_rock, desolate_landscape_floor_with_stuff_walkable_1, desolate_landscape_floor_with_stuff_walkable_2, desolate_landscape_plain_water (≈ #7d40bb), desolate_landscape_top_left_rock, desolate_landscape_top_right_rock, desolate_landscape_water_bottom_left_corner_wall (≈ #7d40bb), desolate_landscape_water_bottom_left_interior_corner (≈ #7d40bb), desolate_landscape_water_bottom_right_interior_corner (≈ #7d40bb), desolate_landscape_water_bottom_wall_1 (≈ #7d40bb), desolate_landscape_water_bottom_wall_2 (≈ #7d40bb), desolate_landscape_water_bottom_wall_3 (≈ #7d40bb), desolate_landscape_water_frame_2_1 (≈ #602a98, #7d40bb), desolate_landscape_water_frame_2_2 (≈ #602a98, #7d40bb), desolate_landscape_water_left_wall (≈ #7d40bb), desolate_landscape_water_right_wall_1 (≈ #7d40bb), desolate_landscape_water_right_wall_2 (≈ #7d40bb), desolate_landscape_water_right_wall_3 (≈ #7d40bb), desolate_landscape_water_top_left_corner_wall (≈ #7d40bb), desolate_landscape_water_top_left_interior_corner (≈ #7d40bb), desolate_landscape_water_top_right_corner_wall (≈ #7d40bb), desolate_landscape_water_top_right_interior_corner (≈ #7d40bb), desolate_landscape_water_top_wall_1 (≈ #7d40bb), desolate_landscape_water_top_wall_2 (≈ #7d40bb), desolate_landscape_water_top_wall_3 (≈ #7d40bb), desolate_landscape_water_top_wall_4 (≈ #7d40bb), desolate_landscape_watter_bottom_wall (≈ #7d40bb) |
+| desolate2 (0) | desolate_landscape_bottom_left_rock, desolate_landscape_bottom_right_rock, desolate_landscape_floor_with_stuff_walkable_1, desolate_landscape_floor_with_stuff_walkable_2, desolate_landscape_top_left_rock, desolate_landscape_top_right_rock |
 | desolate3 (1) | desolate_landscape_fire_frame_1, desolate_landscape_fire_frame_2 |
+| desolate_water (2) | desolate_landscape_plain_water, desolate_landscape_water_bottom_left_corner_wall, desolate_landscape_water_bottom_left_interior_corner, desolate_landscape_water_bottom_right_interior_corner, desolate_landscape_water_bottom_wall_1, desolate_landscape_water_bottom_wall_2, desolate_landscape_water_bottom_wall_3, desolate_landscape_water_frame_1, desolate_landscape_water_frame_2, desolate_landscape_water_left_wall, desolate_landscape_water_right_wall_1, desolate_landscape_water_right_wall_2, desolate_landscape_water_right_wall_3, desolate_landscape_water_top_left_corner_wall, desolate_landscape_water_top_left_interior_corner, desolate_landscape_water_top_right_corner_wall, desolate_landscape_water_top_right_interior_corner, desolate_landscape_water_top_wall_1, desolate_landscape_water_top_wall_2, desolate_landscape_water_top_wall_3, desolate_landscape_water_top_wall_4, desolate_landscape_watter_bottom_wall |
 
 ### village (set `village`)
 
@@ -137,49 +139,7 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| forest | [0, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [1, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [2, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [3, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [4, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [5, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [6, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [7, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [8, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [9, 2] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [9, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [10, 2] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [10, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [11, 2] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [11, 3] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [12, 2] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [12, 3] | field5 | #408cb3, #5ea4c8 |
-| forest | [13, 2] | field5 | #2a4f1a, #5ea4c8 |
-| forest | [13, 3] | field5 | #408cb3, #5ea4c8 |
-| forest | [14, 2] | field5 | #2a4f1a, #5ea4c8 |
 | forest | [15, 2] | field3 | #2a4f1a, #5ea4c8 |
-| desolate_landscape | [0, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [1, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [2, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [3, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [4, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [5, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [6, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [7, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [8, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [9, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [9, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [10, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [10, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [11, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [11, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [12, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [12, 3] | desolate2 | #602a98, #7d40bb |
-| desolate_landscape | [13, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [13, 3] | desolate2 | #602a98, #7d40bb |
-| desolate_landscape | [14, 2] | desolate2 | #7d40bb |
-| desolate_landscape | [14, 3] | desolate2 | #7d40bb |
-| desolate_landscape | [15, 2] | desolate2 | #7d40bb |
 | enemy_ow | [0, 4] | sprites9 | #8b1b1b |
 | enemy_ow | [1, 4] | sprites9 | #8b1b1b |
 

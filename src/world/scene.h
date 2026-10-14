@@ -37,7 +37,7 @@ typedef struct {
  * width/height set the scene's tile bounds (<= WORLD_WIDTH/HEIGHT); the
  * overworld camera clamps its view window to them.  spawn_x/spawn_y/spawn_facing
  * is the player start compiled from the level JSON's player.spawn (the single
- * source of truth; game_new_game reads the FIELD row). */
+ * source of truth; game_new_game reads the WAKE_GROVE row). */
 typedef struct {
     MapId map_id;
     MusicTrack music;

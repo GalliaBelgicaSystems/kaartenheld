@@ -38,6 +38,14 @@ uint8_t game_loot_drop(uint8_t battle_type);
  * else the standard screen.  Called by battle_start on every battle entry. */
 void game_battle_hud_load(uint8_t battle_type);
 
+/* Birdsong ambience gate (game content decision, not engine policy):
+ * nonzero on the maps where birds are heard (Wake Grove + the plain
+ * field with Carl, plus the field's harness fixture mirror so the
+ * ambience stays observable to make test-harness).  Called once per
+ * overworld frame by the shared overworld screen; the engine never
+ * branches on map ids itself (§55.1). */
+uint8_t game_scene_has_birds(uint8_t map_id);
+
 /* Banked body (bank 4): loads the active battle screen's HUD layout from
  * g_battle_screens into WRAM g_battle_hud.  Called via banked_call_run(). */
 void battle_hud_load_banked(void);

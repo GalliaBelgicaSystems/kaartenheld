@@ -124,13 +124,14 @@ def flag_bit(flag_id):
 
 
 # ── Engine/game constants (mirrored from headers, cited) ────────────
-# SceneId (src/screens/screen.h)
+# SceneId (src/world/scene_ids_generated.h, from levels/registry.json)
 SCENE_FIELD = 0
 SCENE_TOWN = 1
 SCENE_FOREST = 2
 SCENE_MOUNTAIN_PASS = 3
 SCENE_CASTLE = 4
 SCENE_SOUTH_FIELD = 5
+SCENE_WAKE_GROVE = 19
 
 # MusicTrack (src/audio/audio.h)
 MUSIC_OVERWORLD = 1
@@ -166,9 +167,11 @@ CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
 HERO_START_HP = 10
-# Observed boot facing byte in state.scene / world.player (the compiled
-# spawn-facing mapping; asserted, not derived).
-BOOT_FACING = 2
+# Spawn-facing bytes (Direction enum, src/world/entity.h: UP=0, DOWN=1,
+# LEFT=2, RIGHT=3).  Keyed by the level JSON player.spawn facing string;
+# the boot anchor derives the expectation from the JSON, never a constant.
+SPAWN_FACING_BYTES = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3,
+                      "NORTH": 0, "SOUTH": 1, "WEST": 2, "EAST": 3}
 ENTITY_ID_PLAYER = 1        # engine sentinel (src/world/entity.h)
 
 
@@ -419,9 +422,9 @@ class StateReader:
         this file (every constant cites its header)."""
         problems = []
         s = self.scene_state()
-        if s["scene_id"] != SCENE_FIELD:
-            problems.append("scene_id=%d != SCENE_FIELD(%d)"
-                            % (s["scene_id"], SCENE_FIELD))
+        if s["scene_id"] != SCENE_WAKE_GROVE:
+            problems.append("scene_id=%d != SCENE_WAKE_GROVE(%d)"
+                            % (s["scene_id"], SCENE_WAKE_GROVE))
         if (s["player_x"], s["player_y"]) != (spawn["x"], spawn["y"]):
             problems.append("pos=(%d,%d) != spawn (%d,%d)"
                             % (s["player_x"], s["player_y"],
@@ -437,8 +440,10 @@ class StateReader:
         # World mirror: the player Entity must sit exactly at
         # world+5 with the boot spawn pattern.
         pe = self.rd(self.world + 5, ENTITY_SIZE)
+        facing = SPAWN_FACING_BYTES.get(str(spawn.get("facing", "DOWN")),
+                                        1)
         want = bytes([spawn["x"], spawn["y"], HERO_START_HP, HERO_START_HP,
-                      1, BOOT_FACING, ENTITY_ID_PLAYER])
+                      1, facing, ENTITY_ID_PLAYER])
         if pe != want:
             problems.append("world.player=%s != %s"
                             % (pe.hex(), want.hex()))

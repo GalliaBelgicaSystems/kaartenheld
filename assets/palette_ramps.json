@@ -108,7 +108,6 @@
    ],
    "slots": [
     "desolate_landscape:0",
-    "desolate_landscape:2",
     "desolate_landscape:5"
    ]
   },
@@ -129,6 +128,23 @@
     "desolate_landscape:1"
    ]
   },
+  "desolate_water": {
+   "colors": [
+    "#938da1",
+    "#7d40bb",
+    "#602a98",
+    "#26232e"
+   ],
+   "refs": [
+    "DESOLATE/ground",
+    "DESOLATE/water_light",
+    "DESOLATE/water_dark",
+    "DESOLATE/tree_item_outlines_cracks_fire_base"
+   ],
+   "slots": [
+    "desolate_landscape:2"
+   ]
+  },
   "field1": {
    "colors": [
     "#7bb660",
@@ -143,8 +159,7 @@
     "FOREST/void_holes"
    ],
    "slots": [
-    "forest:0",
-    "forest:3"
+    "forest:0"
    ]
   },
   "field2": {
@@ -793,6 +808,23 @@
    "slots": [
     "village:7"
    ]
+  },
+  "water": {
+   "colors": [
+    "#7bb660",
+    "#5ea4c8",
+    "#408cb3",
+    "#2a4f1a"
+   ],
+   "refs": [
+    "FOREST/grass",
+    "FOREST/water_light",
+    "FOREST/water_dark",
+    "FOREST/tree_leaves_terrain_outline_big_grass"
+   ],
+   "slots": [
+    "forest:3"
+   ]
   }
  },
  "slots": {
@@ -819,7 +851,7 @@
   "desolate_landscape": {
    "0": "desolate2",
    "1": "desolate3",
-   "2": "desolate2",
+   "2": "desolate_water",
    "3": "desolate1",
    "4": "desolate1",
    "5": "desolate2",
@@ -830,7 +862,7 @@
    "0": "field1",
    "1": "field6",
    "2": "field2",
-   "3": "field1",
+   "3": "water",
    "4": "field2",
    "5": "field3",
    "6": "field4",

@@ -1,5 +1,13 @@
 #include "huge_music.h"
 #include "banked.h"
+#include "audio.h"
+
+/* Chest-jingle restore clock (bank-8 BSS in jingle_full_banked.c):
+ * counted in huge_music_update's divider branch while the jingle owns
+ * the track (see below).  WRAM-only byte: no bank switch, no di/ei,
+ * atomic against the main-thread reader (worst case a ±1-tick
+ * restore). */
+extern volatile uint8_t g_jingle_frames;
 
 /* Driver state (WRAM globals, not static: the bank-7 mimic intro -> loop
  * body (mimic_chain.c) runs in the timer ISR and must touch these
@@ -112,6 +120,12 @@ void huge_music_update(void)
     /* 256 Hz TIMA timer -> 64 Hz tracker tick (every 4 timer interrupts) */
     if (++g_huge_tick_divider >= 4) {
         g_huge_tick_divider = 0;
+        /* Chest-jingle restore clock (see jingle_full_banked): count the
+         * tracker's own ticks while the jingle owns the track, so the
+         * restore cannot drift against the song it times. */
+        if (g_audio_current_track == MUSIC_CHEST) {
+            ++g_jingle_frames;
+        }
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
         if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
             hUGE_dosound_b7();

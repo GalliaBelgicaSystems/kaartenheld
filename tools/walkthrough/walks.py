@@ -43,6 +43,24 @@ def _level(name):
     return json.load(open(os.path.join(LEVELS_DIR, name + ".json")))
 
 
+# Wake-grove boot: every session starts in the grove clearing; the only
+# way out is the east corridor at row 8, landing one cell inside the
+# field's west edge at the crossed row (edge_banked.c mirror).
+FIELD_WEST_ENTRY = (1, 8)
+
+
+def _grove_spawn():
+    sp = _level("wake_grove")["player"]["spawn"]
+    return (sp["x"], sp["y"])
+
+
+def _boot_to_field(s, planner):
+    """Route a session out of the grove into the field; returns the
+    field entry position."""
+    return follow(s, planner, "wake_grove", s.pos(), "field",
+                  FIELD_WEST_ENTRY)
+
+
 # ── shared step helpers ──────────────────────────────────────────────
 
 def _walk_path(s, path):
@@ -177,14 +195,34 @@ def walk_a(planner, checks, sram_out=None):
     """Town walkthrough.  With sram_out (a list), the cartridge RAM is
     captured on exit for the load-roundtrip walk (walk_l)."""
     s = Session(checks, "walk-a")
-    field = _level("field")
-    spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
-    s.shoot("00-boot-field")
+    s.shoot("00-boot-grove")
 
-    # Route into town; capture the camera-scrolled field shot on the way.
+    # Staircase refusal: the stairs stand north of the wake clearing;
+    # bumping them opens the refusal line (dialogue, no map change).
+    # Marker is the first box line ("not going"): the second line only
+    # renders after an A advance, so the bump must key on line 1.  The
+    # close is two-phase for the same reason: advance until line 2
+    # ("back down there") is visible, THEN close on its absence — a bare
+    # close on line 2 returns instantly (absent on line 1) with the modal
+    # box still open, eating every later move.
+    s.check("stairs refusal",
+            bump_actor(s, planner, "wake_grove", (10, 7), "up",
+                       "not going"),
+            expected="not going", actual="none")
+    s.shoot("00-stairs-refusal", need="not going")
+    s.check("refusal page 2",
+            s.press_until("a", lambda: s.text_has("back down there"),
+                          tries=6, label="page 2"),
+            expected="back down there", actual="none")
+    s.check("refusal closed", close_dialogue(s, "back down there"),
+            expected="closed", actual="open")
+
+    # Route into town via the grove corridor; capture the
+    # camera-scrolled field shot on the way.
     # Town entry is the field-east mirrored spawn (1,7): one inside the
     # west edge at the crossed row.
-    follow(s, planner, "field", spawn, "town", (1, 7),
+    field_pos = _boot_to_field(s, planner)
+    follow(s, planner, "field", field_pos, "town", (1, 7),
            capture_when=lambda: s.pos()[0] >= 22,
            capture_label="01-field-scrolled")
     s.settle_scene(expected_scene=SCENE_TOWN)
@@ -310,8 +348,8 @@ def walk_a(planner, checks, sram_out=None):
 
 def walk_b(planner, checks):
     s = Session(checks, "walk-b")
+    _boot_to_field(s, planner)
     field = _level("field")
-    spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
     carl = next((o for o in field["objects"] if o.get("type") == "enemy"),
                 None)
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
@@ -321,10 +359,11 @@ def walk_b(planner, checks):
     # transitions eat input for a few dozen frames.  Carl is a single
     # sprite now: bumping him opens the lesson first, and closing it
     # auto-starts the spar from the stashed encounter (no second bump).
+    # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
     s.check("carl lesson bump",
-            bump_actor(s, planner, "field", (15, 8), "left", "CARL:"),
+            bump_actor(s, planner, "field", (14, 12), "right", "CARL:"),
             expected="CARL:", actual="none")
-    # Carl himself, one tile west of the hero: the field's single slime.
+    # Carl himself, one tile east of the hero: the field's single slime.
     s.shoot("08-carl-field")
     s.shoot("08-carl-tutor", need="CARL:")
     # Closing by battle-open (not by CARL: gone): the spar banner itself
@@ -444,7 +483,7 @@ def walk_b(planner, checks):
 def walk_c(planner, checks):
     s = Session(checks, "walk-c")
     field = _level("field")
-    spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
+    spawn = _boot_to_field(s, planner)
     # Forest arrival = the field's north link (content-coupled).
     assert (field.get("neighbors", {}) or {}).get("north") == "forest", \
         "walk_c expects field.north == forest"
@@ -464,7 +503,7 @@ def walk_c(planner, checks):
 def walk_e(planner, checks):
     s = Session(checks, "walk-e")
     field = _level("field")
-    spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
+    spawn = _boot_to_field(s, planner)
     castle = _level("castle")
     mimic = next((o for o in castle["objects"]
                   if (o.get("properties") or {}).get("battle")
@@ -551,8 +590,7 @@ def walk_sweep(planner, checks):
     walk to it — likely a content bug, e.g. no portal points at it).
     One session per level: every walk starts coherent at the spawn, so
     a failure isolates to exactly one level."""
-    field = _level("field")
-    spawn = (field["player"]["spawn"]["x"], field["player"]["spawn"]["y"])
+    grove_spawn = _grove_spawn()
     for name in sorted(planner.scenes):
         scene = planner.scenes[name]
         want_music = _music_enum(scene.level["map"].get("music"))
@@ -562,7 +600,7 @@ def walk_sweep(planner, checks):
                            str(scene.level["map"].get("music"))))
             want_music = -1
         s = Session(checks, "sweep")
-        if name == "field":
+        if name == "wake_grove":
             st = s.reader.scene_state()
             s.check_eq("sweep %s scene" % name, st["scene_id"],
                        scene.scene_id)
@@ -580,7 +618,7 @@ def walk_sweep(planner, checks):
                     actual="unreachable (no portal -> %s)" % name)
             s.close()
             continue
-        follow(s, planner, "field", spawn, name, goal)
+        follow(s, planner, "wake_grove", grove_spawn, name, goal)
         s.settle_scene(expected_scene=scene.scene_id)
         st = s.reader.scene_state()
         s.check_eq("sweep %s scene" % name, st["scene_id"], scene.scene_id)

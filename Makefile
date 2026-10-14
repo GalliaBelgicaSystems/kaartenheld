@@ -129,12 +129,12 @@ gfx: manifest
 	# ── Intrepid font ─────────────────────────────────────────────────────
 	@python3 tools/png2gb.py assets/intrepid.png --name intrepid_font_tiles \
 		--raw -o $(GFX_OUT_DIR)/intrepid_font_tiles.inc
-	# ── Forest tileset (assets/forest-tile.png, 16 cols × 3 rows) ────────
+	# ── Forest tileset (assets/forest-tile.png, 16 cols × 5 rows) ────────
 	# Shade maps come from generated/tiles/shades/*.json (palette_compiler:
 	# exact artist ramps per tile, no luminance guessing). Every rule below
 	# takes --shade-map; off-ramp pixels use the nearest shade of the
 	# tile's ramp and are listed in generated/tiles/ramp_mismatches.json.
-	# Full 48-tile world sheet (g_tileset_forest)
+	# Full 80-tile world sheet (g_tileset_forest)
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
 		--shade-map generated/tiles/shades/forest.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
@@ -456,6 +456,7 @@ $(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GENERATED_TILE_ANIM)
+$(BUILD_DIR)/ui/anim_swap_banked.o $(BUILD_DIR)/debug/ui/anim_swap_banked.o: $(GENERATED_TILE_ANIM)
 
 # Header-dependency safety net (AGENTS.md 52.2): the compile rules track
 # only .c -> .o mtimes, so an object compiled against an older struct

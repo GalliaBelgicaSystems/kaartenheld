@@ -16,14 +16,14 @@
 
 static const WorldActorDefinition g_field_actors[] = {
     {
-        1, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
+        1, ENTITY_ID_CARL, 15, 12, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 15, 15, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 1
     },
     {
-        0, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
+        0, ENTITY_ID_CARL, 15, 12, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'C', "CARL", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_TUTORIAL_CARL_INTRO, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
@@ -545,6 +545,16 @@ static const WorldActorDefinition g_desolate_field_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_wake_grove_actors[] = {
+    {
+        0, ENTITY_ID_STAIRS, 10, 6, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '>', "STAIRCASE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WAKE_STAIRS, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -580,6 +590,8 @@ const WorldActorTable g_actor_tables[] = {
         0 },
     { MAP_DESOLATE_FIELD,  g_desolate_field_actors,
         (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
+    { MAP_WAKE_GROVE,      g_wake_grove_actors,
+        (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
 };
 
 #include "game.h"
@@ -601,4 +613,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 17;
+const uint8_t g_actor_table_count = 18;

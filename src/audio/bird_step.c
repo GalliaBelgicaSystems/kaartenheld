@@ -62,7 +62,7 @@ extern volatile uint8_t hUGE_mute_mask_b7;
  * the chirp. */
 
 /* Staged input: g_bk_byte_a = nonzero when a chirp may start this frame
- * (overworld in a forest scene).  Results return through g_bk_byte_b
+ * (overworld on a birdsong map: game_scene_has_birds).  Results return through g_bk_byte_b
  * (0 = nothing, else the window-start species for one EVENT_BIRD_CHIRP,
  * emitted by the fixed wrapper).  Species alternates per window
  * (deterministic, no shared-RNG impact). */
@@ -125,7 +125,7 @@ void bird_ambient_banked(void)
             return;
         }
     }
-    /* Past the window, or no chirp frame (outside forests, muted, or the
+    /* Past the window, or no chirp frame (outside the grove/field, muted, or the
      * chest jingle owns the channels): hand CH3 back if a chirp left it
      * muted (gate crossed or battle entered mid-chirp, jingle started
      * mid-chirp, sound toggled mid-chirp).  Idempotent -- the mute-bit

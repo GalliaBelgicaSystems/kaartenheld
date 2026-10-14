@@ -6,6 +6,8 @@
 #include "game.h"
 #include "game_ids.h"
 
+extern volatile uint8_t g_harness_mode;
+
 /* ── Chest-jingle full body (MUSIC_CHEST, one-shot) ────────────────────
  * Game-layer banked body: reads the loot mask from game story state
  * directly (field-cache flag, merchant-quest amulet variable), so the
@@ -28,13 +30,38 @@
  * first call seeds the edge from the live mask (bit 7 flag), so a save
  * loaded with chests already open stays silent (re-armed by
  * load_game_slot, which clears the seeded flag).
- * Tick: the play ends after CHEST_JINGLE_FRAMES frames. */
+ * Restore clock: the tracker's ÷4 divider counts into g_jingle_frames
+ * while the jingle owns the track (see huge_music_update), so the
+ * restore lands at an exact tracker-tick count no matter how loop
+ * iterations drift against frames (LCD-off full redraws consume whole
+ * frames of PPU time without running game_update, while the timer keeps
+ * ticking: a frame-counted restore lands late and the driver's
+ * unconditional song wrap replays the opening attack as a double-hit).
+ * The ISR never runs under the harness, so there the main thread counts
+ * exact STEP frames instead (backstop: later than the tick clock can
+ * ever be, early enough that the restore scenarios still observe it). */
 
-/* Overworld frames per jingle play: chest opening.uge is 192 tracker
- * ticks at 64 Hz = 3.0 s (see `make music-size SONG=chest_opening`). */
-#define CHEST_JINGLE_FRAMES 180
+/* Restore points for the one-shot: the song is a 3-note arp over by
+ * tracker tick ~15 and then silence, wrapping unconditionally at tick
+ * 192 (3.0 s at 64 Hz).  The tick clock restores at 80 tracker ticks
+ * (1.25 s, counted by the tracker's own ÷4 divider in
+ * huge_music_update, so it cannot drift against the song): ~1 s of
+ * ring-out silence after the arp, deep in the silent tail where no
+ * musical content can be clipped and the wrap can never replay audibly.
+ * The harness has no timer ISR, so there the frame backstop restores
+ * instead (later than the tick clock, well inside every restore
+ * scenario's final wait). */
+#define CHEST_JINGLE_TICKS 80
+#define CHEST_JINGLE_BACKSTOP 240
 
-static uint8_t s_jingle_frames = 0;
+/* Tick/frame counter for the restore clock.  Shared with the timer ISR
+ * (huge_music_update's divider branch increments while the jingle owns
+ * the track): volatile
+ * because it changes outside the main thread, though the race is
+ * harmless either way (worst case a ±1-tick restore against 20+ ticks
+ * of margin).  Same BSS slot as the old frame-only counter, so the WRAM
+ * layout does not move a byte. */
+volatile uint8_t g_jingle_frames = 0;
 /* Per-chest done bits (bit 7 = seeded flag).  Global (not file-static)
  * so load_game_slot() can re-arm the edge when a save replaces the
  * whole canonical state mid-session.  Written only here and in save.c
@@ -78,11 +105,18 @@ void jingle_full_banked(void)
         }
     }
     if (g_audio_current_track != MUSIC_CHEST) {
-        s_jingle_frames = 0;
+        g_jingle_frames = 0;
         return;
     }
-    if (++s_jingle_frames > CHEST_JINGLE_FRAMES) {
-        s_jingle_frames = 0;
+    if (g_harness_mode) {
+        /* No timer ISR under the harness, so the tick clock above never
+         * advances there: count exact STEP frames instead. */
+        if (++g_jingle_frames > CHEST_JINGLE_BACKSTOP) {
+            g_jingle_frames = 0;
+            g_bk_byte_b = 2;
+        }
+    } else if (g_jingle_frames > CHEST_JINGLE_TICKS) {
+        g_jingle_frames = 0;
         g_bk_byte_b = 2;
     }
 }

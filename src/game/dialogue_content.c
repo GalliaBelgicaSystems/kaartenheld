@@ -161,6 +161,13 @@ const DialogueDefinition g_dialogues[] = {
         {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!"},
         0
     },
+    {
+        DIALOGUE_ID_WAKE_STAIRS,
+        "",
+        2,
+        {"I'm not going", "back down there."},
+        0
+    },
 };
 
 /* Keep the register-time count in the generated header in sync. */

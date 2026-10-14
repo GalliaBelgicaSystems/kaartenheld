@@ -17,7 +17,8 @@
     "throne_room": 15,
     "grassy_forest": 16,
     "village_area": 17,
-    "desolate_field": 18
+    "desolate_field": 18,
+    "wake_grove": 19
   },
   "_retired": {
     "forest2": 6,

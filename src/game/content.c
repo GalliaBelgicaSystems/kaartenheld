@@ -30,6 +30,18 @@ uint8_t game_loot_drop(uint8_t battle_type)
     return g_loot_id;
 }
 
+/* Birdsong lives only in the wake grove and on the plain field with
+ * Carl.  TEST_FIELD is the harness fixture mirror of the field, so the
+ * ambience stays observable to make test-harness (the debug ROM links
+ * fixtures only, never the real maps). */
+uint8_t game_scene_has_birds(uint8_t map_id)
+{
+    if (map_id == MAP_FIELD) return 1;
+    if (map_id == MAP_WAKE_GROVE) return 1;
+    if (map_id == MAP_TEST_FIELD) return 1;
+    return 0;
+}
+
 void game_content_init(void)
 {
     story_init(STORY_FLAG_ID_COUNT);
@@ -45,7 +57,7 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
-    /* Player start is compiled from the field spawn (the single source of
+    /* Player start is compiled from the wake-grove spawn (the single source of
      * truth).  scene_spawn() runs the banked table read; the fallback for
      * bad map ids lives in that banked body, so this fixed-bank call site
      * stays branch-free (fixed-bank _CODE budget).  Harness builds start
@@ -54,8 +66,8 @@ void game_new_game(GameState *state)
     state->scene.scene_id = SCENE_TEST_FIELD;
     scene_spawn(MAP_TEST_FIELD);
 #else
-    state->scene.scene_id = SCENE_FIELD;
-    scene_spawn(MAP_FIELD);
+    state->scene.scene_id = SCENE_WAKE_GROVE;
+    scene_spawn(MAP_WAKE_GROVE);
 #endif
     state->scene.player_x = g_bk_byte_b;
     state->scene.player_y = g_bk_byte_c;
