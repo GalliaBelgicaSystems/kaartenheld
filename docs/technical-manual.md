@@ -538,10 +538,11 @@ rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
 * Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
 * Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
 
-**QUEST tab** — the quest list.  Each entry shows the quest name and a
-status line:
+**QUEST tab** — the tracked-quest list.  Only accepted quests appear:
+entries with status `not started` stay hidden, so the tab starts empty
+(`no quests yet`) and fills as quests are accepted.  Each tracked entry
+shows the quest name and a status line:
 
-* `not started`
 * `status var: X/T` while active (e.g. `monsters: 2/3`)
 * `complete - SWORD` when done.
 

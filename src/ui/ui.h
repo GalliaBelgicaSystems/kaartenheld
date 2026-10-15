@@ -176,6 +176,16 @@ void ui_sprite_hide(void);
 void ui_sprite_hide_actors_below(uint8_t screen_y);
 void ui_sprite_begin_transition(void);
 void ui_sprite_commit(void);
+#ifdef DEBUG_BUILD
+/* Transition-hide execution counter (verify-oam): incremented by
+ * ui_sprite_begin_transition().  Lets the OAM gate assert the hide RAN
+ * without halting inside a banked ROM window -- mGBA matches those
+ * breakpoints bank-agnostically (false hits) AND cannot resume past
+ * them (`c`/`frame` re-trap instantly), so window-address breaks are
+ * unusable here (AGENTS.md 52.26).  DEBUG-only: the release ROM carries
+ * no hook. */
+extern volatile uint8_t g_debug_hide_count;
+#endif
 void oam_dma_init(void);
 
 void ui_init(void);

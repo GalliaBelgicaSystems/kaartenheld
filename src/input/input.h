@@ -17,6 +17,12 @@ typedef enum {
 
 extern volatile uint8_t g_inp_mask;
 
+/* Live button bits for the bank-2 quest navigator (see input.c): it reads
+ * pressed edges in-bank because the fixed bank cannot afford a staged
+ * edge mask.  Written by input_init(), input_reset(), and input_update(). */
+extern uint8_t g_inp_pad;
+extern uint8_t g_inp_prev;
+
 /* Button bit values in enum order (1 << InputButton).  Mirrors GBDK
  * joypad()'s J_* layout, enforced by a compile-time check in input.c.  The
  * harness reads this table to build its injection masks, so the injected

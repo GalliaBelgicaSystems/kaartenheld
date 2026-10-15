@@ -21,14 +21,19 @@ static const int g_input_bit_layout_ok[
 ];
 
 volatile uint8_t g_inp_mask = 0;
-static uint8_t pad_state = 0;
-static uint8_t prev_pad_state = 0;
+/* Current/previous raw button bits (1 << InputButton).  Non-static so the
+ * bank-2 quest navigator can derive pressed edges in-bank: the fixed bank
+ * has no headroom left for a staged edge mask (AGENTS.md 52.18), and WRAM
+ * is always mapped.  Written by input_init(), input_reset(), and
+ * input_update(). */
+uint8_t g_inp_pad = 0;
+uint8_t g_inp_prev = 0;
 static uint8_t injected_pad_state = 0;
 
 #ifdef DEBUG_BUILD
 /* Cross-emulator joypad probe (diagnostic, harness/host reads it via the
  * symbol table): [0] = raw joypad() sample, [1] = P1 register byte as seen
- * right after the sample, [2] = post-injection pad_state, [3] = write
+ * right after the sample, [2] = post-injection g_inp_pad, [3] = write
  * heartbeat (increments once per input_update).  Passive only: the actual
  * P1 sampling stays GBDK's joypad() (which ends with both rows
  * deselected); a local reimplementation that leaves a row selected
@@ -49,8 +54,8 @@ const uint8_t g_input_button_bits[8] = {
 
 void input_init(void)
 {
-    pad_state = joypad();
-    prev_pad_state = pad_state;
+    g_inp_pad = joypad();
+    g_inp_prev = g_inp_pad;
     injected_pad_state = 0;
     g_inp_mask = 0;
 }
@@ -58,8 +63,8 @@ void input_init(void)
 #ifdef DEBUG_BUILD
 void input_reset(void)
 {
-    pad_state = 0;
-    prev_pad_state = 0;
+    g_inp_pad = 0;
+    g_inp_prev = 0;
     injected_pad_state = 0;
     g_inp_mask = 0;
 }
@@ -70,7 +75,7 @@ void input_update(void)
 #ifdef DEBUG_BUILD
     uint8_t physical_pad_state;
 #endif
-    prev_pad_state = pad_state;
+    g_inp_prev = g_inp_pad;
 #ifdef DEBUG_BUILD
     /* Debug builds must remain playable outside the harness.  The harness
      * writes g_inp_mask for deterministic one-frame presses, while mGBA,
@@ -82,11 +87,11 @@ void input_update(void)
         injected_pad_state = g_inp_mask;
         g_inp_mask = 0;
     }
-    pad_state = physical_pad_state | injected_pad_state;
+    g_inp_pad = physical_pad_state | injected_pad_state;
     injected_pad_state = 0;
     g_input_probe[0] = physical_pad_state;
     g_input_probe[1] = P1_REG;
-    g_input_probe[2] = pad_state;
+    g_input_probe[2] = g_inp_pad;
     g_input_probe[3]++;
     /* NOTE: do NOT telemetry_emit pad edges here -- the 32-event ring is
      * semantic state (BATTLE_WON etc.) and per-button noise floods it out
@@ -100,7 +105,7 @@ void input_update(void)
         injected_pad_state = g_inp_mask;
         g_inp_mask = 0;
     }
-    pad_state = joypad() | injected_pad_state;
+    g_inp_pad = joypad() | injected_pad_state;
     injected_pad_state = 0;
 #endif
 }
@@ -108,12 +113,12 @@ void input_update(void)
 bool input_pressed(InputButton button)
 {
     uint8_t mask = (1 << button);
-    return ((pad_state & mask) != 0) && ((prev_pad_state & mask) == 0);
+    return ((g_inp_pad & mask) != 0) && ((g_inp_prev & mask) == 0);
 }
 
 bool input_held(InputButton button)
 {
     uint8_t mask = (1 << button);
-    return (pad_state & mask) != 0;
+    return (g_inp_pad & mask) != 0;
 }
 

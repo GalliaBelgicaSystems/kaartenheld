@@ -1,7 +1,7 @@
 {
  "name": "menu_cursor_scroll_quest",
  "test": true,
- "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 5 + 2*index), no full render-cache invalidate. The state-loaded quest list renders entries at rows 5, 7, 9, ... with the caret at column 0.",
+ "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 5 + 2*index), no full render-cache invalidate. Both quests are ACTIVE so the visible list has entries at rows 5, 7, ... with the caret at column 0.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -9,7 +9,11 @@
    "y": 4,
    "facing": "DOWN"
   },
-  "seed": 4247
+  "seed": 4247,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MERCHANT_QUEST": 1
+  }
  },
  "actions": [
   {

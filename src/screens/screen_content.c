@@ -212,7 +212,9 @@ static uint8_t bm_mode(const Game *g)
 static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
 {
     if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    if (mode == 1) return (uint8_t)(5 + (index << 1));
+    /* No mode-1 (QUEST) branch: the quest tab repaints its caret inline
+     * in item_quest_nav_banked (item_content_banked.c), so this body
+     * never sees a quest index. */
     if (index == 0) return 5;
     s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
     if (scroll == 0) return (uint8_t)(6 + (s_sc_pos << 1));

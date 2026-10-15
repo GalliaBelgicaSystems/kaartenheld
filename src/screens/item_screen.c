@@ -18,6 +18,12 @@
  * (AGENTS.md 52.18). */
 void item_menu_cursor_banked(void);
 
+/* Bank-2 quest-tab navigator (item_content_banked.c): the fixed bank
+ * sits hard against 0x8000 (AGENTS.md 52.18), so quest cursor/detail
+ * input lives in-bank with the quest table.  Thin dispatch only;
+ * LEFT/RIGHT tab-switching stays fixed-bank with the CARDS tab path. */
+void item_quest_nav_banked(void);
+
 #define TAB_CARDS 0
 #define TAB_QUEST 1
 #define NUM_TABS  2
@@ -290,23 +296,17 @@ void item_screen_update(Game *g)
 
     if (g->item_menu_tab == TAB_QUEST) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
-        if (input_pressed(INPUT_SELECT)) {
-            g->item_menu_mode = MODE_QUEST_DETAIL;
-            g->render_cache.valid = false;
-            return;
-        }
+        /* LR-before-SELECT, like the CARDS tab below.  Cursor/detail
+         * input lives in bank 2 with the quest table (fixed-bank
+         * headroom: AGENTS.md 52.18). */
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             switch_tab(g);
             return;
         }
-        total = GAME_QUEST_COUNT;
-        if (input_pressed(INPUT_UP)) {
-            item_menu_step(g, (g->item_menu_index > 0) ?
-                (uint8_t)(g->item_menu_index - 1) : (uint8_t)(total - 1));
-        } else if (input_pressed(INPUT_DOWN)) {
-            item_menu_step(g, (g->item_menu_index < (uint8_t)(total - 1)) ?
-                (uint8_t)(g->item_menu_index + 1) : 0);
-        }
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&item_quest_nav_banked;
+        g_bk_ptr_a = (void *)g;
+        banked_call_run();
         return;
     }
 

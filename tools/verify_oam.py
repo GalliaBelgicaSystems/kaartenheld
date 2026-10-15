@@ -19,9 +19,10 @@ world-tile*8 position the overworld renderer used before the scroll.
   Steady battle frame: the sprite must NOT be re-hidden every frame (the
                      old prev_map_id=255 reset sentinel re-ran the hide on
                      every non-overworld frame, keeping the sprite hidden
-                     for the whole fight on real hardware).  Detected by
-                     breakpoint, since the harness's vsync-skip hides the
-                     symptom from OAM reads.
+                     for the whole fight on real hardware).  Detected via
+                     the hide counter staying at zero, since the
+                     harness's vsync-skip hides the symptom from OAM
+                     reads.
   Scene transition   (town_arrival): FIELD (30,7) camera (96,0) -> shadow
                      OAM (72,152) -> gate -> TOWN (2,7) camera (0,0) ->
                      shadow OAM (72,27).
@@ -45,13 +46,19 @@ IMPORTANT -- which OAM to read, and why these are the observable states:
   commit complete within a single frame and no pause point lands between
   them (AGENTS.md 52.15).  The old assertions for a mid-wipe (0,..) state
   are therefore removed; what IS verified is that the sprite is at the
-  correct position before and after each transition, and (via breakpoint)
-  that ui_sprite_begin_transition fires on the transition frame but not on
-  steady frames.
+  correct position before and after each transition, and (via the
+  DEBUG-only g_debug_hide_count execution counter) that
+  ui_sprite_begin_transition ran on the transition frame but not on
+  steady frames.  A breakpoint inside the banked wipe body was tried and
+  removed: mGBA matches window-address (0x4000-0x7FFF) breakpoints
+  bank-agnostically (false hits in fixed-bank _HOME code at the same
+  address) and cannot resume past them (`c`/`frame` re-trap instantly,
+  freezing the poll loop) -- see the bank-window note in
+  verify_scene_transition and AGENTS.md 52.26.
 
-Each section runs in its own EmulatorSession so the extra breakpoints armed
-by the checks (begin_transition, ui_draw_world_full) cannot contaminate the
-next section's frame stepping.
+Each section runs in its own EmulatorSession so debugger state (the
+game_render frame-sync breakpoint connect() arms, watchpoints) cannot
+contaminate the next section's frame stepping.
 
 Run inside the Nix dev shell:
     make verify-oam
@@ -154,6 +161,19 @@ def wait_vblank(sess, tries=3):
         if ly is not None and ly >= 144:
             return True
     return False
+
+
+def hide_count(sess):
+    """Transition-hide execution count (g_debug_hide_count, DEBUG-only
+    WRAM incremented by ui_sprite_begin_transition).  None if
+    unreadable.  Reset with reset_hide_count() before driving, then
+    assert the delta: execution proof without halting inside a banked
+    ROM window (see bank-window note in verify_scene_transition)."""
+    return sess._memread(sess.get_symbol("g_debug_hide_count"))
+
+
+def reset_hide_count(sess):
+    sess._memwrite(sess.get_symbol("g_debug_hide_count"), 0)
 
 
 def verify_battle_spider_oam(sess):
@@ -488,28 +508,39 @@ def verify_steady_battle_frame(sess):
     # Establish a real steady battle frame first: without the scenario setup
     # this check runs from the boot/title state, where begin_transition
     # correctly never fires per frame, so the buggy ROM would pass.
+    # Walk-in mirrors verify_battle_transition: Carl teaches first, so the
+    # bump opens his lesson (dialogue) and closing it auto-starts the spar
+    # -- without the A presses this section lands in Carl's dialogue (hide
+    # correctly skipped by the overlay path) and the assertion is vacuous.
     sess.load_scenario(load_scenario(sess, "first_encounter.json"))
     sess.step(1)
     sess.hold("RIGHT", 10)
-    sess.step(1)
-    sess._cmd("frame", timeout=5.0)
-    sess.step(1)
-
-    bt = sess.get_symbol("ui_sprite_begin_transition")
-    brk = sess._cmd(f"break 0x{bt:04X}")
-    if b"Added breakpoint" not in brk:
-        raise RuntimeError(f"begin_transition break not armed: {brk!r}")
-    paused_at_bt = None
-    for i in range(3):
-        sess._cmd("frame", timeout=5.0)
-        pc = sess._read_pc()
-        if pc == bt:
-            paused_at_bt = i + 1
+    reached = False
+    for _ in range(12):
+        sess.press("A")
+        sess.step(20)
+        if sess.snapshot().get("screen") == "BATTLE":
+            reached = True
             break
+    check("steady battle frame: reached battle", True, reached)
+
+    # Settle: the entry transition's render (and its hide) may still be
+    # pending when BATTLE first observes -- those hides pre-date the
+    # reset below and must not leak into the 3-frame window, or a late
+    # entry hide fails the check spuriously.
+    sess.step(10)
+
+    # Execution proof via the hide counter (no window breakpoint: see
+    # the bank-window note in verify_scene_transition).  A spurious
+    # re-hide on steady battle frames increments it; three clean frames
+    # must leave it at zero.  Drive with step(1): raw `frame` does not
+    # advance the guest from a step-paused state (40 frames, zero
+    # movement observed) while step() crosses in ~8.
+    reset_hide_count(sess)
+    for i in range(3):
+        sess.step(1)
     check("steady battle frame: no spurious re-hide over 3 frames",
-          "begin_transition never reached",
-          "paused at ui_sprite_begin_transition (0x%04X)" % bt if paused_at_bt
-          else "begin_transition never reached")
+          0, hide_count(sess))
 
 
 def verify_dialogue_transition(sess):
@@ -627,59 +658,54 @@ def verify_scene_transition(sess):
     #    Screen A's sprites floated over the sweep until the tail
     #    re-resolved OAM.  Reload for a clean session, poke the exact
     #    post-dialogue staleness (g_game+1, the prev_screen byte that
-    #    screen_change() leaves behind on dialogue close), arm a
-    #    breakpoint at the wipe body, and drive through the gate with raw
-    #    frames (rewriting the edge mask every frame, hold-style: an armed
-    #    breakpoint can perturb press()'s own stepping).
+    #    screen_change() leaves behind on dialogue close), and drive
+    #    through the gate asserting the hide RAN (counter delta == 1).
+    #
+    #    Bank-window note: this used to halt at the wipe body via a CPU
+    #    breakpoint, but mGBA matches those bank-agnostically (false hits
+    #    in fixed-bank _HOME code at the same address) AND cannot resume
+    #    past them (`c`/`frame` re-trap instantly at a 0x4000-0x7FFF halt,
+    #    freezing the poll loop).  A fixed-layout shift once parked
+    #    ui_invalidate_tileset on the wipe address and failed the check
+    #    spuriously with live OAM.  The counter proves execution with no
+    #    window halt at all (AGENTS.md 52.26).
     sess.load_scenario(initial)
     sess.step(1)
     sess._memwrite(sess.get_symbol("g_game") + 1, 1)  # SCREEN_DIALOGUE
-    wipe = sess.get_symbol("ui_wipe_black_banked") & 0x3FFF | 0x4000
-    brk = sess._cmd(f"break 0x{wipe:04X}")
-    if b"Added breakpoint" not in brk:
-        raise RuntimeError(f"wipe break not armed: {brk!r}")
-    import re as _re
+    reset_hide_count(sess)
     import time as _time
     mask_addr = sess.get_symbol("g_inp_mask")
     right = sess.button_masks["RIGHT"]
-    hid_at_wipe = None
-    # Poll with `c`, not `frame`: the wipe body runs mid-frame inside
-    # game_render, so frame-boundary pauses can never observe its PC --
-    # only a breakpoint halted mid-frame can.  (connect() leaves its own
-    # game_render breakpoint armed; each `c` advances about a frame and
-    # halts at whichever breakpoint fires first.)
-    for _ in range(60):
-        sess._memwrite(mask_addr, right)
-        _time.sleep(0.005)
-        sess._cmd("c", timeout=10.0)
-        if sess._read_pc() == wipe:
-            hid_at_wipe = [sess._memread(0xC000 + 4 * i)
-                           for i in range(6)]
-            break
-    check("gate after dialogue: Screen A sprites hidden at wipe entry",
-          [0, 0, 0, 0, 0, 0], hid_at_wipe)
-    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
-    if _m:
-        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
-
-    # 4. No LCD-off across the crossing (the converse stale-prev bug
-    #    blanked the display via ui_lcd_off after menus): sample LCDC on
-    #    every frame until TOWN settles; a white flash would span dozens
-    #    of frames, so all-on samples prove it never blanked.
+    # Drive with step(1) (hold-style mask rewrite per frame, like
+    # hold()): a raw `frame` loop does NOT advance the guest here (40
+    # frames, zero movement observed) while step() crosses in ~8.
+    # The scene flips in game_update, one render behind the halt.
+    crossed = False
     lcd_off_frames = 0
-    for _ in range(40):
+    for _ in range(30):
         sess._memwrite(mask_addr, right)
         _time.sleep(0.005)
-        sess._cmd("frame", timeout=10.0)
+        sess.step(1)
+        # Sample LCDC on the driven frames: the converse stale-prev bug
+        # blanked the display via ui_lcd_off, and a white flash would
+        # span dozens of frames, so all-on samples prove it never
+        # blanked.  (A separate post-arrival loop cannot work: it would
+        # start settled in TOWN and exit after ~1 frame.)
         if not (sess._memread(0xFF40) & 0x80):
             lcd_off_frames += 1
-        st = sess.snapshot().get("scene")
-        if st == "TEST_TOWN":
+        if sess.snapshot().get("scene") == "TEST_TOWN":
+            crossed = True
             break
+    check("gate crossing reached TOWN", True, crossed)
+    # Step past the crossing frame's render (hide + wipe + settle) --
+    # extra steady frames add no hides -- then assert exactly one hide.
+    sess.step(2)
+    check("gate after dialogue: transition hide ran exactly once",
+          1, hide_count(sess))
     check("gate crossing: LCD never blanks (no white flash)", 0,
           lcd_off_frames)
 
-    # 5. Palette integrity across the LCD-on load: TOWN CRAM after the
+    # 4. Palette integrity across the LCD-on load: TOWN CRAM after the
     #    gate crossing must equal a fresh TOWN boot on every slot except
     #    4 (held black by the wipe; free in every world tileset), proving
     #    zero Mode-3 palette drops.  VBlank-gated: mid-scanout CRAM reads
@@ -840,9 +866,9 @@ def verify_battle_vram_restore(sess):
 
 
 def main():
-    # Each section uses its own session so the extra breakpoints armed by
-    # the checks (begin_transition, ui_draw_world_full) never contaminate
-    # another section's frame stepping or VBlank reads.
+    # Each section uses its own session so debugger state (the game_render
+    # frame-sync breakpoint, watchpoints) never contaminates another
+    # section's frame stepping or VBlank reads.
     for label, fn in (("battle", verify_battle_transition),
                       ("battle steady frame", verify_steady_battle_frame),
                       ("battle VRAM restore", verify_battle_vram_restore),
