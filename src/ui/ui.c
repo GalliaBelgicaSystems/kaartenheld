@@ -718,6 +718,11 @@ void ui_draw_world_transition(const World *world)
     /* No null guard (cf. ui_draw_world_rect): the overworld caller always
      * passes a live world. */
     kind = (uint8_t)world->tileset_kind;
+    /* NB: no ui_sprite_begin_transition() here: game_render() hides OAM
+     * on every path that reaches this transition (gate crossings flow
+     * through its LCD-on branch; battle/menu/boot through LCD-off), so
+     * hiding here would only duplicate it.  Keep it that way: if a new
+     * caller ever bypasses game_render, the hide must come back. */
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&ui_wipe_black_banked;
     banked_call_run();
@@ -743,7 +748,8 @@ void ui_draw_world_transition(const World *world)
 
 void ui_update_camera(const World *world)
 {
-    if (!world) return;
+    /* No null guard: both callers (overworld render, world transition)
+     * always pass a live world. */
     SCX_REG = world->camera_px_x;
     SCY_REG = world->camera_px_y;
 #ifdef DEBUG_BUILD

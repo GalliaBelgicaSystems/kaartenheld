@@ -126,6 +126,18 @@ def vram_attr_at(sess, x, y):
     return val
 
 
+def bg_cram(sess):
+    """All 64 CGB background CRAM bytes via BCPS/BCPD (paused core: safe).
+    Returned as a list of 8 palettes x 4 RGB555 words, for asserting a
+    transition loaded the new scene's palettes without Mode-3 drops."""
+    raw = []
+    for i in range(64):
+        sess._memwrite(0xFF68, i)
+        raw.append(sess._memread(0xFF69))
+    return [[raw[p * 8 + c * 2] | (raw[p * 8 + c * 2 + 1] << 8)
+             for c in range(4)] for p in range(8)]
+
+
 def wait_vblank(sess, tries=3):
     """Pause at a VBlank boundary: VRAM is only readable outside scanout
     modes 2/3 (real HW blocks it; mGBA returns 0xFF).  step() pauses at the
@@ -597,6 +609,87 @@ def verify_scene_transition(sess):
     sess.hold("RIGHT", 14)
     check("new map: @ sprite position (shadow OAM)",
           (72, 27), shadow_oam(sess))
+
+    # 3. Stale-prev regression (prior dialogue closed on the overworld):
+    #    g->prev_screen stays DIALOGUE across the whole OW session, and the
+    #    old game_render() misclassified the next gate crossing as a
+    #    dialogue overlay -- skipping ui_sprite_begin_transition() so
+    #    Screen A's sprites floated over the sweep until the tail
+    #    re-resolved OAM.  Reload for a clean session, poke the exact
+    #    post-dialogue staleness (g_game+1, the prev_screen byte that
+    #    screen_change() leaves behind on dialogue close), arm a
+    #    breakpoint at the wipe body, and drive through the gate with raw
+    #    frames (rewriting the edge mask every frame, hold-style: an armed
+    #    breakpoint can perturb press()'s own stepping).
+    sess.load_scenario(initial)
+    sess.step(1)
+    sess._memwrite(sess.get_symbol("g_game") + 1, 1)  # SCREEN_DIALOGUE
+    wipe = sess.get_symbol("ui_wipe_black_banked") & 0x3FFF | 0x4000
+    brk = sess._cmd(f"break 0x{wipe:04X}")
+    if b"Added breakpoint" not in brk:
+        raise RuntimeError(f"wipe break not armed: {brk!r}")
+    import re as _re
+    import time as _time
+    mask_addr = sess.get_symbol("g_inp_mask")
+    right = sess.button_masks["RIGHT"]
+    hid_at_wipe = None
+    # Poll with `c`, not `frame`: the wipe body runs mid-frame inside
+    # game_render, so frame-boundary pauses can never observe its PC --
+    # only a breakpoint halted mid-frame can.  (connect() leaves its own
+    # game_render breakpoint armed; each `c` advances about a frame and
+    # halts at whichever breakpoint fires first.)
+    for _ in range(60):
+        sess._memwrite(mask_addr, right)
+        _time.sleep(0.005)
+        sess._cmd("c", timeout=10.0)
+        if sess._read_pc() == wipe:
+            hid_at_wipe = [sess._memread(0xC000 + 4 * i)
+                           for i in range(6)]
+            break
+    check("gate after dialogue: Screen A sprites hidden at wipe entry",
+          [0, 0, 0, 0, 0, 0], hid_at_wipe)
+    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
+    if _m:
+        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
+
+    # 4. No LCD-off across the crossing (the converse stale-prev bug
+    #    blanked the display via ui_lcd_off after menus): sample LCDC on
+    #    every frame until TOWN settles; a white flash would span dozens
+    #    of frames, so all-on samples prove it never blanked.
+    lcd_off_frames = 0
+    for _ in range(40):
+        sess._memwrite(mask_addr, right)
+        _time.sleep(0.005)
+        sess._cmd("frame", timeout=10.0)
+        if not (sess._memread(0xFF40) & 0x80):
+            lcd_off_frames += 1
+        st = sess.snapshot().get("scene")
+        if st == "TEST_TOWN":
+            break
+    check("gate crossing: LCD never blanks (no white flash)", 0,
+          lcd_off_frames)
+
+    # 5. Palette integrity across the LCD-on load: TOWN CRAM after the
+    #    gate crossing must equal a fresh TOWN boot on every slot except
+    #    4 (held black by the wipe; free in every world tileset), proving
+    #    zero Mode-3 palette drops.  VBlank-gated: mid-scanout CRAM reads
+    #    back 0xFF and pass vacuously.
+    check("town CRAM read in VBlank", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "town_boot.json"))
+    sess.step(2)
+    check("fresh town boot read in VBlank", True, wait_vblank(sess))
+    ref_cram = bg_cram(sess)
+    sess.load_scenario(initial)
+    sess.step(1)
+    sess.hold("RIGHT", 14)
+    check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
+    arr_cram = bg_cram(sess)
+    check("gate crossing: slot 4 held black",
+          [0, 0, 0, 0], arr_cram[4])
+    same = all(ref_cram[p] == arr_cram[p]
+               for p in (0, 1, 2, 3, 5, 6, 7))
+    check("gate crossing: TOWN CRAM matches fresh boot (slots 0-3,5-7)",
+          True, same)
 
 
 def verify_portal_step_oam(sess):

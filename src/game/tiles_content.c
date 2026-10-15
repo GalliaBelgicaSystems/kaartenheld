@@ -31,7 +31,7 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 
 void ui_load_cram_banked(void)
 {
-    uint8_t p, c, t;
+    uint8_t p, c, t, val;
     uint8_t kind;
     uint8_t keep;
     const uint8_t *pal_data;
@@ -67,12 +67,16 @@ void ui_load_cram_banked(void)
         if (keep && p == UI_COLOR_PAPER) continue;
         BCPS_REG = (uint8_t)(0x80 | (p << 3));
         for (c = 0; c < 8; c++) {
-            /* Bounded PPU wait (same contract as the tileset loop). */
+            /* Value first, wait second, bare store last: only ~20
+             * T-states separate the last STAT sample from the store
+             * (inside the 80-T-state Mode-2 buffer), so a Mode-0 sample
+             * can never roll into Mode 3.  NO di/ei (52.11.3). */
+            val = ramp[c];
             t = 200;
             while (t--) {
                 if (!(STAT_REG & 0x02)) break;
             }
-            BCPD_REG = ramp[c];
+            BCPD_REG = val;
         }
     }
 }
@@ -126,6 +130,7 @@ void ui_load_tileset_banked(void)
     uint8_t tile_count;
     uint8_t i;
     uint8_t t;
+    uint8_t val;
     uint16_t n;
     volatile uint8_t *dst;
 
@@ -161,14 +166,13 @@ void ui_load_tileset_banked(void)
     dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
     n = (uint16_t)tile_count << 4;
     while (n--) {
-        /* Bounded PPU wait (anim-swap contract: a frozen PPU under the
-         * debugger times out instead of hanging, and the access still
-         * executes; NO di/ei, AGENTS.md 52.11.3). */
+        /* Value first, wait second, bare store last (see above). */
+        val = *src++;
         t = 200;
         while (t--) {
             if (!(STAT_REG & 0x02)) break;
         }
-        *dst++ = *src++;
+        *dst++ = val;
     }
     for (i = 0; i < 80; i++) {
         /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
@@ -193,11 +197,12 @@ void ui_load_tileset_banked(void)
     if (g_is_cgb) {
         OCPS_REG = (uint8_t)(0x80 | (5 << 3));
         for (i = 0; i < 24; i++) {
+            val = ((const uint8_t *)cgb_obj_palettes)[40 + i];
             t = 200;
             while (t--) {
                 if (!(STAT_REG & 0x02)) break;
             }
-            OCPD_REG = ((const uint8_t *)cgb_obj_palettes)[40 + i];
+            OCPD_REG = val;
         }
     }
 }
@@ -213,6 +218,7 @@ void ui_wipe_black_banked(void)
     uint8_t r;
     uint8_t c;
     uint8_t t;
+    uint8_t val;
     uint16_t off;
     volatile uint8_t *dst;
     if (g_is_cgb) {
@@ -240,11 +246,12 @@ void ui_wipe_black_banked(void)
             VBK_REG = 1;
             dst = (volatile uint8_t *)(0x9800u + off);
             for (c = 0; c < 32; c++) {
+                val = UI_COLOR_PAPER;
                 t = 200;
                 while (t--) {
                     if (!(STAT_REG & 0x02)) break;
                 }
-                *dst++ = UI_COLOR_PAPER;
+                *dst++ = val;
             }
             VBK_REG = 0;
         }

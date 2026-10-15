@@ -162,22 +162,31 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    /* LCD-on transitions (no wipe white-flash): overworld <-> dialogue
-     * paints/restores just the box rows, and an overworld map crossing
-     * runs the black-wipe + invisible-load + row-reveal transition
-     * (ui_draw_world_transition: PPU-gated writes, no vsync pacing, safe
-     * under the harness and with the LCD off).  Every other full redraw
-     * (battle, menus, boot) blanks via LCD-off: those paths own VRAM
-     * block-1 art or writers that cannot run against an active PPU. */
+    /* LCD-on transitions (no wipe white-flash): overworld -> dialogue
+     * entry paints the box over the live map; dialogue -> overworld exit
+     * restores just the box rows; an overworld map crossing runs the
+     * black-wipe + invisible-load + row-reveal transition.  Every other
+     * full redraw (battle, menus, boot) blanks via LCD-off.
+     *
+     * Classification reads rc->prev_screen (the last RENDERED screen),
+     * never g->prev_screen (the last CHANGED-FROM screen, which stays
+     * stale across a whole overworld session): after closing any
+     * dialogue g->prev_screen remains DIALOGUE, which once misclassified
+     * the next gate crossing as a dialogue overlay (sprites never
+     * hidden) or -- after a menu -- forced ui_lcd_off (white flash).
+     * A dialogue exit that somehow lands on a different map still takes
+     * the LCD-on path: overworld_screen_render() routes any map mismatch
+     * to the full transition repaint (which reloads the tileset), so no
+     * white flash and no stale tiles either way. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
-          (g->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
-        /* A gate crossing teleports the player sprite: hide it in real
-         * OAM now so it cannot float over the repaint at a stale
-         * position (the frame-boundary commit reveals it at the spawn).
-         * The LCD stays on for the streaming repaint. */
+          (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
+        /* A full redraw hides the sprite in real OAM first: the redraw
+         * spans several display sweeps, and the sprite must not float
+         * over it at a stale position.  The frame-boundary commit
+         * (ui_sprite_commit in main.c) reveals it at the new position. */
         ui_sprite_begin_transition();
-        if (g->prev_screen != SCREEN_OVERWORLD || g->screen != SCREEN_OVERWORLD) {
+        if (rc->prev_screen != SCREEN_OVERWORLD || g->screen != SCREEN_OVERWORLD) {
             /* A full redraw is much larger than the part of VBlank remaining
              * after vsync() returns.  Keeping the LCD on here makes the PPU
              * drop the tail of the tilemap writes in modes 2/3, which
