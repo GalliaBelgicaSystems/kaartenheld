@@ -574,10 +574,9 @@ sprite and chest jingle key off loot, never quest state:
   quest=ACTIVE (tracked immediately).
 * `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the amulet) →
   briefing again (shop stays locked until delivery).
-* `AMULET_PICKUP` (interact AMULET, NOT_STARTED) → FOUND dialogue + item
-  + quest=ACTIVE + chest flag.  Finding it before talking counts.
-* `AMULET_PICKUP_ACCEPTED` (interact AMULET, ACTIVE without the amulet)
-  → same grant for the accept-first order.
+* `AMULET_PICKUP` (interact AMULET, chest unopened) → FOUND dialogue +
+  item + quest=ACTIVE + chest flag.  Finding it before talking counts;
+  after delivery the flag stays set so it never refires.
 * `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the amulet) →
   thanks + 15g, amulet removed, quest=COMPLETE; the shop opens.
 

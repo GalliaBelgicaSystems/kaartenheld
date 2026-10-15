@@ -200,6 +200,8 @@ def main():
         "_ending_content_render": "ending screen render (bank 4)",
         "_game_over_content_render": "game over screen render (bank 4)",
         "_item_screen_render_banked": "item screen render (bank 2)",
+        "_item_quest_render_banked": "quest tab render (bank 5)",
+        "_item_quest_nav_banked": "quest tab nav (bank 5)",
         "_ui_load_cram_banked": "CGB CRAM palette loader (bank 5)",
         "_ui_load_tileset_banked": "tileset VRAM & palette loader (bank 5)",
     }

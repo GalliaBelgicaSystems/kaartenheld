@@ -1,7 +1,7 @@
 {
  "name": "amulet_pickup_accepted",
  "test": true,
- "description": "Finding the amulet after accepting the quest still grants it: interact at MERCHANT_QUEST=1 gives AMULET_FOUND, the item, and keeps the quest ACTIVE",
+ "description": "Finding the amulet after accepting the quest still grants it: interact at MERCHANT_QUEST=1 fires the single flag-gated AMULET_PICKUP row (AMULET_FOUND, the item, quest stays ACTIVE)",
  "actions": [
   {
    "type": "interact",

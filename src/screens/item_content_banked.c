@@ -50,21 +50,25 @@ extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
 
-static uint8_t s_ic_txt_i;
-static uint8_t s_ic_col_i;
+/* Shared draw scratch, also used by the bank-5 quest body
+ * (item_quest_banked.c): the trampoline is non-reentrant and only one
+ * tab renders at a time, so one copy serves both (AGENTS.md 52.18:
+ * no duplicate WRAM for bank-split mirrors). */
+uint8_t s_ic_txt_i;
+uint8_t s_ic_col_i;
 static uint8_t s_ic_def_i;
 static uint8_t s_ic_deck_i;
 static uint8_t s_ic_coll_i;
 static uint8_t s_ic_lst_pos;
 
-static uint8_t s_ic_y;
+uint8_t s_ic_y;
 static uint8_t s_ic_tile_elem;
 static uint8_t s_ic_tile_wpn;
 static uint8_t s_ic_in_deck;
 static CardId s_ic_id;
 static const CardDefinition *s_ic_def;
-static volatile uint8_t *s_ic_dst;
-static char *s_ic_buf;
+volatile uint8_t *s_ic_dst;
+char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
 
@@ -115,12 +119,12 @@ static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
     }
 }
 
-static uint8_t s_ic_arg_x;
-static uint8_t s_ic_arg_y;
-static uint8_t s_ic_arg_len;
+uint8_t s_ic_arg_x;
+uint8_t s_ic_arg_y;
+uint8_t s_ic_arg_len;
 static uint8_t s_ic_arg_val;
-static uint8_t s_ic_arg_palette;
-static const char *s_ic_arg_text;
+uint8_t s_ic_arg_palette;
+const char *s_ic_arg_text;
 
 static void ic_draw_text_fast(void)
 {

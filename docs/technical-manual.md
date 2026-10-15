@@ -278,7 +278,7 @@ reachable — it is not gated behind this quest.
    card collection (as a non-deckable `SPECIAL` card).  Finding it
    before talking to him works too: the pickup counts either way.
    Returning to the spot afterwards says "Nothing here now."
-3. **Complete.** Return to the Merchant once you have the amulet.  He
+4. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
    **15 gold**, and opens his real shop (which sells the Iron Sword and
    the Mythril Bow):

@@ -152,22 +152,7 @@ const EventDefinition g_events[] = {
     {
         EVENT_ID_AMULET_PICKUP, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
         1,
-        {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
-        4,
-        {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
-            { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 },
-            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, 0 }
-        }
-    },
-    {
-        EVENT_ID_AMULET_PICKUP_ACCEPTED, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
-        2,
-        {
-            { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false },
-            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 0, false, false }
-        },
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, false, false }},
         4,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },

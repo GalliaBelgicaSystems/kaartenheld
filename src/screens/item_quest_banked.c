@@ -28,11 +28,12 @@
  * actor_load_banked.c).  No banked-to-banked calls: the caret repaint
  * is inline and the quest marker glyph write is direct VRAM.
  *
- * The text/color/rider-cell helpers are small mirrors of the bank-2
- * item renderer above (same buffer-checked VRAM protocol, same
- * g_ui_screen_buf mirror): a banked body cannot call across banks, so
- * sharing one copy is impossible.  KEEP IN SYNC if that protocol
- * changes. */
+ * The text/color/rider-cell helper BODIES mirror the bank-2 item
+ * renderer above (same buffer-checked VRAM protocol): a banked body
+ * cannot call across banks, so sharing one copy is impossible -- but
+ * their WRAM scratch (s_ic_* globals owned by item_content_banked.c)
+ * IS shared, since the trampoline is non-reentrant and only one tab
+ * renders at a time.  KEEP IN SYNC if that protocol changes. */
 
 #define MODE_QUEST_DETAIL 2
 
@@ -48,40 +49,43 @@ extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
 
-static uint8_t s_iq_txt_i;
-static uint8_t s_iq_col_i;
+/* Shared draw scratch owned by item_content_banked.c (see the note
+ * there); the quest-table cursor + row pointer stay local to this body
+ * (they replace the s_ic_qst_pos/s_ic_q the cards file dropped). */
+extern uint8_t s_ic_txt_i;
+extern uint8_t s_ic_col_i;
 static uint8_t s_iq_qst_pos;
 
-static uint8_t s_iq_y;
+extern uint8_t s_ic_y;
 static const QuestDefinition *s_iq_q;
-static volatile uint8_t *s_iq_dst;
-static char *s_iq_buf;
+extern volatile uint8_t *s_ic_dst;
+extern char *s_ic_buf;
 
-static uint8_t s_iq_arg_x;
-static uint8_t s_iq_arg_y;
-static uint8_t s_iq_arg_len;
-static uint8_t s_iq_arg_palette;
-static const char *s_iq_arg_text;
+extern uint8_t s_ic_arg_x;
+extern uint8_t s_ic_arg_y;
+extern uint8_t s_ic_arg_len;
+extern uint8_t s_ic_arg_palette;
+extern const char *s_ic_arg_text;
 
 static void iq_draw_text_fast(void)
 {
     uint8_t ended;
     char ch;
-    uint8_t max_chars = s_iq_arg_len;
-    uint8_t x = s_iq_arg_x;
-    uint8_t y = s_iq_arg_y;
+    uint8_t max_chars = s_ic_arg_len;
+    uint8_t x = s_ic_arg_x;
+    uint8_t y = s_ic_arg_y;
 
     if (y >= 18) return;
     if ((uint8_t)(x + max_chars) > 20) max_chars = (uint8_t)(20 - x);
 
     VBK_REG = 0;
-    ended = (s_iq_arg_text == NULL);
-    s_iq_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-    s_iq_buf = &g_ui_screen_buf[y][x];
+    ended = (s_ic_arg_text == NULL);
+    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_ic_buf = &g_ui_screen_buf[y][x];
 
-    for (s_iq_txt_i = 0; s_iq_txt_i < max_chars; s_iq_txt_i++) {
+    for (s_ic_txt_i = 0; s_ic_txt_i < max_chars; s_ic_txt_i++) {
         if (!ended) {
-            ch = s_iq_arg_text[s_iq_txt_i];
+            ch = s_ic_arg_text[s_ic_txt_i];
             if (ch == '\0') {
                 ended = 1;
                 ch = ' ';
@@ -89,48 +93,48 @@ static void iq_draw_text_fast(void)
         } else {
             ch = ' ';
         }
-        if (*s_iq_buf != ch) {
+        if (*s_ic_buf != ch) {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
             if (LCDC_REG & 0x80) {
                 while (STAT_REG & 0x02);
             }
-            *s_iq_dst = tile;
-            *s_iq_buf = ch;
+            *s_ic_dst = tile;
+            *s_ic_buf = ch;
         }
-        s_iq_dst++;
-        s_iq_buf++;
+        s_ic_dst++;
+        s_ic_buf++;
     }
 }
 
 #define IQ_DRAW_TEXT(x, y, text, len) do { \
-    s_iq_arg_x = (x); s_iq_arg_y = (y); s_iq_arg_text = (text); s_iq_arg_len = (len); \
+    s_ic_arg_x = (x); s_ic_arg_y = (y); s_ic_arg_text = (text); s_ic_arg_len = (len); \
     iq_draw_text_fast(); \
 } while(0)
 
 static void iq_color_span_fast(void)
 {
-    uint8_t x = s_iq_arg_x;
-    uint8_t y = s_iq_arg_y;
-    uint8_t len = s_iq_arg_len;
-    uint8_t pal = s_iq_arg_palette & 0x07;
+    uint8_t x = s_ic_arg_x;
+    uint8_t y = s_ic_arg_y;
+    uint8_t len = s_ic_arg_len;
+    uint8_t pal = s_ic_arg_palette & 0x07;
 
     if (!g_is_cgb) return;
     if (y >= 18 || x >= 32) return;
     if ((uint8_t)(x + len) > 32) len = (uint8_t)(32 - x);
 
-    s_iq_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     VBK_REG = 1;
-    for (s_iq_col_i = 0; s_iq_col_i < len; s_iq_col_i++) {
+    for (s_ic_col_i = 0; s_ic_col_i < len; s_ic_col_i++) {
         if (LCDC_REG & 0x80) {
             while (STAT_REG & 0x02);
         }
-        s_iq_dst[s_iq_col_i] = (uint8_t)(pal & 0x07);
+        s_ic_dst[s_ic_col_i] = (uint8_t)(pal & 0x07);
     }
     VBK_REG = 0;
 }
 
 #define IQ_COLOR_SPAN(x, y, len, pal) do { \
-    s_iq_arg_x = (x); s_iq_arg_y = (y); s_iq_arg_len = (len); s_iq_arg_palette = (pal); \
+    s_ic_arg_x = (x); s_ic_arg_y = (y); s_ic_arg_len = (len); s_ic_arg_palette = (pal); \
     iq_color_span_fast(); \
 } while(0)
 
@@ -208,17 +212,17 @@ static void iq_draw_quest(Game *g)
      * "not started" rows).  item_menu_index addresses the VISIBLE list,
      * so the caret compares against the visible position, not the table
      * position. */
-    s_iq_y = 5;
+    s_ic_y = 5;
     vis = 0;
-    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT && s_iq_y < 15; s_iq_qst_pos++) {
+    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT && s_ic_y < 15; s_iq_qst_pos++) {
         s_iq_q = &g_quests[s_iq_qst_pos];
         if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_NOT_STARTED)
             continue;
-        if (g->item_menu_index == vis) IQ_DRAW_TEXT(0, s_iq_y, ">", 1);
-        else IQ_DRAW_TEXT(0, s_iq_y, " ", 1);
-        IQ_DRAW_TEXT(2, s_iq_y, s_iq_q->name, 18);
+        if (g->item_menu_index == vis) IQ_DRAW_TEXT(0, s_ic_y, ">", 1);
+        else IQ_DRAW_TEXT(0, s_ic_y, " ", 1);
+        IQ_DRAW_TEXT(2, s_ic_y, s_iq_q->name, 18);
 
-        s_iq_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_iq_y << 5) + 1);
+        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5) + 1);
         VBK_REG = 0;
         if (LCDC_REG & 0x80) {
             while (STAT_REG & 0x02);
@@ -227,20 +231,20 @@ static void iq_draw_quest(Game *g)
          * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
          * loader now overwrites tile 116 with the combat deck art). */
         if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_COMPLETE) {
-            *s_iq_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
-            IQ_COLOR_SPAN(1, s_iq_y, 1, UI_COLOR_GOLD);
+            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
+            IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
         } else {
-            *s_iq_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
-            IQ_COLOR_SPAN(1, s_iq_y, 1, UI_COLOR_WOOD);
+            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
+            IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
         }
 
-        s_iq_y++;
-        iq_quest_draw_status_line(g, s_iq_q, s_iq_y);
-        s_iq_y++;
+        s_ic_y++;
+        iq_quest_draw_status_line(g, s_iq_q, s_ic_y);
+        s_ic_y++;
         vis++;
     }
     if (vis == 0) {
-        IQ_DRAW_TEXT(2, s_iq_y, "no quests yet", 13);
+        IQ_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
     }
 }
 
