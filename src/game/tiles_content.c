@@ -98,6 +98,7 @@ void ui_load_tileset_banked(void)
     const uint8_t *pal_src;
     uint8_t tile_count;
     uint8_t i;
+    uint8_t t;
     uint16_t n;
     volatile uint8_t *dst;
 
@@ -133,6 +134,18 @@ void ui_load_tileset_banked(void)
     dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
     n = (uint16_t)tile_count << 4;
     while (n--) {
+        /* Bounded PPU wait (same contract as the anim-swap cell accessors,
+         * and NO di/ei -- AGENTS.md 52.11.3): gate crossings repaint with
+         * the LCD on, so mode-3 stores must land in an accessible window.
+         * LCD-off (or non-gated PyBoy) STAT reads idle and skips at once;
+         * a frozen PPU (paused debugger) times out instead of hanging and
+         * the access still executes. */
+        t = 200;
+        while (t--) {
+            if (!(STAT_REG & 0x02)) {
+                break;
+            }
+        }
         *dst++ = *src++;
     }
     for (i = 0; i < 80; i++) {

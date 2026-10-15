@@ -168,27 +168,36 @@ void game_render(Game *g)
      * the 4 box rows.  Anything else (battle, level/map change, menu) keeps
      * the full LCD-off redraw: an LCD-on full redraw would drop PPU writes
      * mid-modes and garble. */
-    /* Overlay transitions (overworld <-> dialogue): render with the LCD on
-     * (no wipe, no sprite re-hide).  The map-same choice (restore rows vs
-     * full redraw) lives in overworld_screen_render, which re-checks it:
-     * falling through to a full redraw with the LCD on is slow (synced
-     * writes span frames) but correct, never garbled. */
+    /* Overlay transitions render with the LCD on (no wipe white-flash):
+     * overworld <-> dialogue paints/restores just the box rows, and an
+     * overworld map crossing streams a full repaint (synced/bounded
+     * writes: slower, spanning frames, but correct -- never garbled).
+     * Every other full redraw (battle, menus, boot) blanks via LCD-off:
+     * those paths own VRAM block-1 art or unsynced writers that cannot
+     * run against an active PPU. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
           (g->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
+        /* A gate crossing teleports the player sprite: hide it in real
+         * OAM now so it cannot float over the repaint at a stale
+         * position (the frame-boundary commit reveals it at the spawn).
+         * The LCD stays on for the streaming repaint. */
         ui_sprite_begin_transition();
-        /* A full redraw is much larger than the part of VBlank remaining
-         * after vsync() returns.  Keeping the LCD on here makes the PPU drop
-         * the tail of the tilemap writes in modes 2/3, which produces
-         * garbled menus, incomplete maps, and eventually a white screen.
-         * Disable the LCD for the complete transaction instead.  This is
-         * also required for the boot redraw, which runs before the first
-         * main-loop vsync().  Re-enable it before returning so the next
-         * iteration can synchronize normally. */
-        ui_lcd_off();
-        screen_render(g);
-        ui_lcd_on();
-        return;
+        if (g->prev_screen != SCREEN_OVERWORLD || g->screen != SCREEN_OVERWORLD) {
+            /* A full redraw is much larger than the part of VBlank remaining
+             * after vsync() returns.  Keeping the LCD on here makes the PPU
+             * drop the tail of the tilemap writes in modes 2/3, which
+             * produces garbled menus, incomplete maps, and eventually a
+             * white screen.  Disable the LCD for the complete transaction
+             * instead.  This is also required for the boot redraw, which
+             * runs before the first main-loop vsync().  Re-enable it
+             * before returning so the next iteration can synchronize
+             * normally. */
+            ui_lcd_off();
+            screen_render(g);
+            ui_lcd_on();
+            return;
+        }
     }
     screen_render(g);
 }
