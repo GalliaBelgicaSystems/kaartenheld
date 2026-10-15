@@ -126,6 +126,18 @@ def vram_attr_at(sess, x, y):
     return val
 
 
+def bg_cram(sess):
+    """All 64 CGB background CRAM bytes via BCPS/BCPD (paused core: safe).
+    Returned as a list of 8 palettes x 4 RGB555 words, for asserting a
+    transition loaded the new scene's palettes without Mode-3 drops."""
+    raw = []
+    for i in range(64):
+        sess._memwrite(0xFF68, i)
+        raw.append(sess._memread(0xFF69))
+    return [[raw[p * 8 + c * 2] | (raw[p * 8 + c * 2 + 1] << 8)
+             for c in range(4)] for p in range(8)]
+
+
 def wait_vblank(sess, tries=3):
     """Pause at a VBlank boundary: VRAM is only readable outside scanout
     modes 2/3 (real HW blocks it; mGBA returns 0xFF).  step() pauses at the
@@ -501,66 +513,48 @@ def verify_steady_battle_frame(sess):
 
 
 def verify_dialogue_transition(sess):
-    """Dialogue redraws the world behind the box on entry (the map is
-    already on screen from the overworld, but ui_lcd_off() wipes every CGB
-    tile attribute to palette 0, so only a full redraw re-applies per-tile
-    palettes -- skipping it turned the whole screen gray for the dialogue).
-    The Mayor sits at (10,5); the scenario boots the player at (9,5)
-    facing RIGHT, so a single A press engages him and starts the dialogue
-    within that frame.  Arm a breakpoint at ui_draw_world_full before the
-    press: the dialogue-entry render must reach it (checked by continuing
-    past the frame-entry pause).  The sprite stays visible behind the box."""
-    print("== Dialogue entry (mayor): redrawn world + box, colors kept ==")
+    """Dialogue entry is an overlay: the map stays on screen (no LCD-off
+    wipe, no full world redraw), the box paints over rows 14-17.  The Mayor
+    sits at (10,5); the scenario boots the player at (9,5) facing RIGHT,
+    so a single A press engages him and starts the dialogue within that
+    frame.  Asserts: dialogue activates, speaker bar is painted, CGB attrs
+    stay applied (no grayscale wipe), sprite stays visible behind the box.
+    NOTE: these prove the overlay is correct, NOT that no LCD-off happened --
+    a full LCD-off redraw would pass all four.  The no-flash property itself
+    is timing (LCD never blanks) and needs a VBlank/LCDC execution check
+    or walkthrough-frame evidence, not state reads (same family as
+    AGENTS.md 52.15).
+    (The old breakpoint-at-ui_draw_world_full form asserted the previous
+    architecture -- full redraw behind the box -- and its CPU-address break
+    collides with banked code at the same offset, firing spuriously.)"""
+    print("== Dialogue entry (mayor): overlay box, colors kept ==")
     initial = load_scenario(sess, "mayor_dialogue.json")["initial_state"]
     sess.load_scenario(initial)
     sess.step(1)
 
-    full_addr = sess.get_symbol("ui_draw_world_full")
-    brk = sess._cmd(f"break 0x{full_addr:04X}")
-    if b"Added breakpoint" not in brk:
-        raise RuntimeError(f"ui_draw_world_full break not armed: {brk!r}")
-
     sess.press("A")
-    # press() leaves us paused at the frame-entry breakpoint; continue
-    # through frames: the dialogue render must hit ui_draw_world_full.
-    # The A edge can land a frame later (mask-write vs step host race,
-    # plus the armed redraw breakpoint perturbing press()'s own step),
-    # so allow a few frames instead of asserting the very next one.
-    pc = None
-    for _ in range(4):
-        sess._cmd("frame", timeout=5.0)
-        pc = sess._read_pc()
-        if pc == full_addr:
-            break
-    check("dialogue entry: world redrawn behind the box",
-          full_addr, pc)
-    # Disarm the redraw breakpoint before engaging: while armed, press()'s
-    # internal step pauses mid-frame and the A edge never engages (proven
-    # by matrix probe: armed=never, clean=always). mGBA prints
-    # "Added breakpoint #N" (note the hash). A reset frame first (edge
-    # discipline, AGENTS.md 52.10); press A only if the first press did
-    # not already engage -- with three-line pages the 3-line INTRO is a
-    # single page, so a second press would CLOSE it ("advances a line,
-    # still active" only held under single-line stepping).
-    import re as _re
-    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
-    if _m:
-        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
     sess.step(1)
     if not sess.snapshot().get("dialogue_active"):
+        # Edge-triggered input (AGENTS.md 52.10): the A edge can land a
+        # frame late (mask-write vs step host race), so a bare extra step
+        # is not enough -- the step is the reset frame, then re-press.
+        sess.step(1)
         sess.press("A")
         sess.step(1)
-    # Continue past the redraw breakpoint to the next frame entry: the
-    # redraw (tilemap + CGB attrs + palettes) has now fully executed.
-    sess._cmd("c", timeout=10.0)
 
     snap = sess.snapshot()
     check("dialogue entry: dialogue is active", True, snap.get("dialogue_active"))
 
-    # CGB attributes must be re-applied, not left at the lcd_off wipe
-    # (all-zero = grayscale).  Count nonzero attrs over the visible map
-    # with true VRAM reads (the WRAM mirror goes stale across the wipe),
-    # gated on VBlank: mid-scanout every attr reads back 0xFF (nonzero)
+    # Box painted over the live map: row 14 is the speaker top bar
+    # ("+--SPEAKER-----+"), so '-' must be present.  A plain non-blank
+    # test would pass vacuously (world glyphs fill rows 14-17 anyway).
+    buf = sess.get_screen_buf().split("\n")
+    box = "".join(buf[14:18]) if len(buf) >= 18 else ""
+    check("dialogue entry: speaker bar painted (row 14 has '-')",
+          True, "-" in box)
+
+    # CGB attributes must stay applied, not wiped to grayscale.
+    # Gated on VBlank: mid-scanout every attr reads back 0xFF (nonzero)
     # and the check would pass vacuously.
     check("dialogue VRAM read in VBlank", True, wait_vblank(sess))
     nonzero = 0
@@ -568,13 +562,41 @@ def verify_dialogue_transition(sess):
         for x in range(20):
             if vram_attr_at(sess, x, y) not in (None, 0):
                 nonzero += 1
-    check("dialogue entry: CGB attrs re-applied (nonzero count)",
+    check("dialogue entry: CGB attrs kept (nonzero count)",
           True, nonzero > 20)
+
+    # Paper ramp integrity: slot 4 must equal the dialogue paper ramp
+    # (white/grey/dark/black).  The paper loop runs LCD-on with no PPU
+    # wait in the old code, so a Mode-3 drop splices a stale byte into
+    # the ramp and the whole box background changes color (caught live
+    # as black/tan patches depending on slot-4 history).  Already in
+    # VBlank from the gate above: CRAM reads are exact here.
+    paper = bg_cram(sess)[4]
+    check("dialogue entry: paper ramp intact (slot 4)",
+          [0x7FFF, 0x6739, 0x294A, 0x0000], paper)
 
     # Sprite stays visible behind the box at the player's position (9,5),
     # camera (0,0) -> OAM y=5*8+16=56, x=9*8+8=80.
     sess.step(1)
     check("dialogue steady: @ sprite visible (shadow OAM)",
+          (56, 80), shadow_oam(sess))
+
+    # Exit: closing the dialogue restores just the 4 box rows (no LCD-off
+    # wipe).  The speaker bar ('-'/'+"'+'" row 14) must be gone -- world
+    # glyphs never contain those -- while the map and sprite are intact.
+    sess.press("A")
+    sess.step(2)
+    if sess.snapshot().get("dialogue_active"):
+        sess.step(1)
+        sess.press("A")
+        sess.step(2)
+    check("dialogue exit: back to overworld", "OVERWORLD",
+          sess.snapshot().get("screen"))
+    buf = sess.get_screen_buf().split("\n")
+    row14 = buf[14] if len(buf) >= 15 else ""
+    check("dialogue exit: box rows restored ('+' bar gone from row 14)",
+          True, "+" not in row14 and "-" not in row14)
+    check("dialogue exit: @ sprite visible (shadow OAM)",
           (56, 80), shadow_oam(sess))
 
 
@@ -597,6 +619,144 @@ def verify_scene_transition(sess):
     sess.hold("RIGHT", 14)
     check("new map: @ sprite position (shadow OAM)",
           (72, 27), shadow_oam(sess))
+
+    # 3. Stale-prev regression (prior dialogue closed on the overworld):
+    #    g->prev_screen stays DIALOGUE across the whole OW session, and the
+    #    old game_render() misclassified the next gate crossing as a
+    #    dialogue overlay -- skipping ui_sprite_begin_transition() so
+    #    Screen A's sprites floated over the sweep until the tail
+    #    re-resolved OAM.  Reload for a clean session, poke the exact
+    #    post-dialogue staleness (g_game+1, the prev_screen byte that
+    #    screen_change() leaves behind on dialogue close), arm a
+    #    breakpoint at the wipe body, and drive through the gate with raw
+    #    frames (rewriting the edge mask every frame, hold-style: an armed
+    #    breakpoint can perturb press()'s own stepping).
+    sess.load_scenario(initial)
+    sess.step(1)
+    sess._memwrite(sess.get_symbol("g_game") + 1, 1)  # SCREEN_DIALOGUE
+    wipe = sess.get_symbol("ui_wipe_black_banked") & 0x3FFF | 0x4000
+    brk = sess._cmd(f"break 0x{wipe:04X}")
+    if b"Added breakpoint" not in brk:
+        raise RuntimeError(f"wipe break not armed: {brk!r}")
+    import re as _re
+    import time as _time
+    mask_addr = sess.get_symbol("g_inp_mask")
+    right = sess.button_masks["RIGHT"]
+    hid_at_wipe = None
+    # Poll with `c`, not `frame`: the wipe body runs mid-frame inside
+    # game_render, so frame-boundary pauses can never observe its PC --
+    # only a breakpoint halted mid-frame can.  (connect() leaves its own
+    # game_render breakpoint armed; each `c` advances about a frame and
+    # halts at whichever breakpoint fires first.)
+    for _ in range(60):
+        sess._memwrite(mask_addr, right)
+        _time.sleep(0.005)
+        sess._cmd("c", timeout=10.0)
+        if sess._read_pc() == wipe:
+            hid_at_wipe = [sess._memread(0xC000 + 4 * i)
+                           for i in range(6)]
+            break
+    check("gate after dialogue: Screen A sprites hidden at wipe entry",
+          [0, 0, 0, 0, 0, 0], hid_at_wipe)
+    _m = _re.search(r"#(\d+)", brk.decode("utf-8", "ignore"))
+    if _m:
+        sess._cmd(f"delete {_m.group(1)}", timeout=5.0)
+
+    # 4. No LCD-off across the crossing (the converse stale-prev bug
+    #    blanked the display via ui_lcd_off after menus): sample LCDC on
+    #    every frame until TOWN settles; a white flash would span dozens
+    #    of frames, so all-on samples prove it never blanked.
+    lcd_off_frames = 0
+    for _ in range(40):
+        sess._memwrite(mask_addr, right)
+        _time.sleep(0.005)
+        sess._cmd("frame", timeout=10.0)
+        if not (sess._memread(0xFF40) & 0x80):
+            lcd_off_frames += 1
+        st = sess.snapshot().get("scene")
+        if st == "TEST_TOWN":
+            break
+    check("gate crossing: LCD never blanks (no white flash)", 0,
+          lcd_off_frames)
+
+    # 5. Palette integrity across the LCD-on load: TOWN CRAM after the
+    #    gate crossing must equal a fresh TOWN boot on every slot except
+    #    4 (held black by the wipe; free in every world tileset), proving
+    #    zero Mode-3 palette drops.  VBlank-gated: mid-scanout CRAM reads
+    #    back 0xFF and pass vacuously.
+    check("town CRAM read in VBlank", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "town_boot.json"))
+    sess.step(2)
+    check("fresh town boot read in VBlank", True, wait_vblank(sess))
+    ref_cram = bg_cram(sess)
+    sess.load_scenario(initial)
+    sess.step(1)
+    sess.hold("RIGHT", 14)
+    check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
+    arr_cram = bg_cram(sess)
+    check("gate crossing: slot 4 held black",
+          [0, 0, 0, 0], arr_cram[4])
+    same = all(ref_cram[p] == arr_cram[p]
+               for p in (0, 1, 2, 3, 5, 6, 7))
+    check("gate crossing: TOWN CRAM matches fresh boot (slots 0-3,5-7)",
+          True, same)
+
+
+def verify_restart_clears_boss_oam(sess):
+    """Regression (boss ghost after new game): the actor loader clears
+    only each runtime slot's `active` flag, leaving sprite_kind/ow_type
+    stale.  The sprite body's multi-tile ENEMY grid block used to ignore
+    `active`, so an inactive slot keeping the castle boss's 2x2 kind
+    redrew the boss every frame on maps without one -- visible at the
+    wake grove (here TEST_FIELD) after killing the end boss and starting
+    a new game, until some map overwrote the slot.  Fixed by gating the
+    grid block on active; stale kinds are now inert.
+    Drives the REAL game_restart() through the debugger (pause at the
+    game_render breakpoint connect() arms, where de already holds &g_game
+    from the main loop, then jump straight into game_restart): no
+    test-only shortcuts, the same code the ending screen runs."""
+    print("== Restart (boss castle -> new game): no boss ghost in OAM ==")
+    initial = load_scenario(sess, "boss_appears.json")["initial_state"]
+    sess.load_scenario(initial)
+    sess.step(2)
+
+    # Precondition (52.16: never assert on a state we did not reach): the
+    # castle boss must own entries 4-7 visibly, or the post-restart reads
+    # below would pass vacuously on a broken setup.
+    pre_tiles = [shadow_oam_slot_tile(sess, i) for i in range(4, 8)]
+    check("restart setup: castle boss owns OAM entries 4-7",
+          [108, 109, 110, 111], pre_tiles)
+    pre_y = [sess._memread(0xC000 + 4 * i) for i in range(4, 8)]
+    check("restart setup: boss entries visible", True,
+          all(y not in (None, 0) for y in pre_y))
+
+    # Call game_restart(&g_game) in place: `c` halts at the armed
+    # game_render breakpoint (de == &g_game from the main loop's call),
+    # so only the PC needs redirecting; the trailing `ret` lands back
+    # in the main loop and subsequent frames render the new game.
+    sess._cmd("c", timeout=15.0)
+    sess._cmd(f"w/r pc 0x{sess.get_symbol('game_restart'):04X}")
+    sess._cmd("c", timeout=15.0)
+    for _ in range(8):
+        sess.step(2)
+    check("restart lands in a boss-less map", "TEST_FIELD",
+          sess.snapshot().get("scene"))
+
+    # The boss footprint must be hidden.  Pin entry 4 precisely: with
+    # slot 3 inactive the body hides exactly that entry, so a visible
+    # entry 4 here is the resurrected boss grid (entries 5+ legitimately
+    # hold field statics -- see below -- so they are not pinned)...
+    post_y4 = sess._memread(0xC000 + 4 * 4)
+    check("restart: ex-boss OAM entry 4 hidden", 0, post_y4)
+    # ...and sweep the whole table: no boss tile (108-111) may be
+    # visible anywhere (stale tile bytes in hidden entries are harmless:
+    # y == 0 means the PPU skips them).
+    ghosts = [(i, sess._memread(0xC000 + 4 * i),
+               sess._memread(0xC000 + 4 * i + 2))
+              for i in range(27)
+              if (sess._memread(0xC000 + 4 * i + 2) or 0) in (108, 109, 110, 111)
+              and (sess._memread(0xC000 + 4 * i) or 0) != 0]
+    check("restart: no visible boss sprite anywhere in OAM", [], ghosts)
 
 
 def verify_portal_step_oam(sess):
@@ -687,6 +847,7 @@ def main():
                       ("battle steady frame", verify_steady_battle_frame),
                       ("battle VRAM restore", verify_battle_vram_restore),
                       ("scene", verify_scene_transition),
+                      ("restart", verify_restart_clears_boss_oam),
                       ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),

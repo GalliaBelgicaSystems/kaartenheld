@@ -76,6 +76,8 @@ uint8_t g_anim_count;
  * therefore waits for an accessible window first (see anim_read_cell);
  * PyBoy, which does not gate VRAM, exits the wait at once and behaves
  * exactly as before. */
+static uint8_t anim_read_cell(uint16_t cell);
+
 void world_anim_rebuild_banked(void)
 {
     uint8_t slots[4];
@@ -93,7 +95,6 @@ void world_anim_rebuild_banked(void)
     uint8_t found;
     uint8_t base;
     uint16_t idx;
-    volatile uint8_t *tilemap;
     /* Distinct pair-endpoint slots across all kinds (fire 37/38, water
      * 60/61 -- shared by every kind, so the rebuild is kind-agnostic;
      * castle maps can never hold these VRAM ids anyway). */
@@ -120,16 +121,16 @@ void world_anim_rebuild_banked(void)
             }
         }
     }
-    /* Ring lives in VRAM bank 0.  Runs LCD-off inside the full redraw,
-     * so every read lands (no PPU Mode-3 drops).  Every map fits rows
-     * 0..17 x cols 0..31 (<=24 wide, <=18 tall). */
-    VBK_REG = 0;
-    tilemap = (volatile uint8_t *)0x9800;
+    /* Ring lives in VRAM bank 0.  Gate crossings repaint with the LCD
+     * on, so reads go through the bounded helper (mode-3 returns 0xFF,
+     * which can only under-record, never mis-record: 0xFF decodes past
+     * every animation slot).  LCD-off full redraws skip the wait at once.
+     * Every map fits rows 0..17 x cols 0..31 (<=24 wide, <=18 tall). */
     n = 0;
     idx = 0;
     for (row = 0; row < 18; row++) {
         for (col = 0; col < 32; col++) {
-            v = *tilemap;
+            v = anim_read_cell(idx);
             base = (uint8_t)(v - RPG_TILE_BASE_WORLD);
             /* v is an animation id iff v >= 128 and its slot is listed.
              * The subtraction is unsigned: font tiles (v < 128) wrap
@@ -145,7 +146,6 @@ void world_anim_rebuild_banked(void)
                     }
                 }
             }
-            tilemap++;
             idx++;
         }
     }

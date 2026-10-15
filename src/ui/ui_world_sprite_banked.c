@@ -130,10 +130,17 @@ void ui_actors_sprites_banked(void)
         }
         /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
-         * frame-major: the frame offset is anim*cell_count. */
+         * frame-major: the frame offset is anim*cell_count.  Gated on
+         * active like sprite_tile_for above: the loader clears only the
+         * active flag, so an inactive slot keeps its previous map's kind
+         * and ow_type -- without this gate a stale multi-tile ENEMY kind
+         * resurrects its old sprite (visible boss ghost after restart)
+         * and the single-hide below only covers the first of its w*h
+         * entries. */
         gw = 1;
         gh = 1;
-        if ((int)a->sprite_kind == SPRITE_KIND_ENEMY &&
+        if (a->active &&
+            (int)a->sprite_kind == SPRITE_KIND_ENEMY &&
             a->ow_type < g_enemy_type_count) {
             const EnemyTypeDef *t = g_enemy_types[a->ow_type];
             if (t->ow_tile != 0xFF && (t->ow_w > 1 || t->ow_h > 1)) {

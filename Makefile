@@ -121,6 +121,15 @@ lint: gfx tiles sfx birds $(SRCS)
 		fi; \
 	done; \
 	CC="$(CC)" INCLUDES="$(INCLUDES)" sh tools/check_banked_copies.sh || ok=0; \
+	for f in $(SRCS); do \
+		if grep -q "#pragma bank" "$$f"; then \
+			hits=$$(sed -e 's|//.*$$||' -e 's|/\*.*\*/||g' "$$f" | grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|\<CRITICAL\>|enable_interrupts|disable_interrupts|set_interrupts' | grep -vE '^[0-9]+:[[:space:]]*\*'); \
+			if [ -n "$$hits" ]; then \
+				echo "$$hits" | sed "s|^|$$f:|"; \
+				echo "BANKED-DI-EI: $$f has $$(echo "$$hits" | wc -l) forbidden interrupt op(s) in a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			fi; \
+		fi; \
+	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).

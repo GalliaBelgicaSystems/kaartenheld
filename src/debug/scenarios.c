@@ -193,6 +193,13 @@ static void scenario_load_state(void)
     }
     if (dialogue_id != DIALOGUE_ID_NONE) {
         dialogue_start_def(&g_game.dialogue, (DialogueId)dialogue_id);
+        /* Tell the truth about what was rendered: this scenario boots
+         * straight into dialogue without ever rendering the overworld,
+         * so prev must read DIALOGUE (not OVERWORLD) or the entry takes
+         * the LCD-on overlay over uninitialized VRAM.  Normal NPC
+         * entries set prev via screen_change from the live current
+         * screen and are unaffected. */
+        g_game.prev_screen = SCREEN_DIALOGUE;
         g_game.screen = SCREEN_DIALOGUE;
     }
     if (start_battle) {
@@ -231,9 +238,6 @@ static void scenario_load_state(void)
 
     game_render_reset(&g_game);
 
-    if (dialogue_id != DIALOGUE_ID_NONE) {
-        g_game.render_cache.prev_screen = SCREEN_DIALOGUE;
-    }
     debug_snapshot();
 }
 

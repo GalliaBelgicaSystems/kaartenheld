@@ -41,7 +41,18 @@ void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
         telemetry_emit(EVENT_SCENE_CHANGED, (uint8_t)old_scene, (uint8_t)scene, spawn_x, spawn_y);
     }
 #endif
-    game_render_reset(g);
+    /* A scene change is not a screen change: force the next frame to
+     * redraw fully WITHOUT reseeding render state.  game_render_reset()
+     * would copy the stale g->prev_screen (DIALOGUE long after a
+     * conversation closed) into rc->prev_screen and seed rc->prev_map_id
+     * with the already-new map -- the next frame then misclassifies as
+     * a dialogue exit and restores 4 rows instead of repainting.  The
+     * untouched prev_screen/prev_map_id keep whatever the last rendered
+     * frame left, and their mismatch with the new map routes overworld
+     * to the full transition repaint.  Force the tileset reload too:
+     * battle art or another set may own VRAM block 1. */
+    g->render_cache.valid = false;
+    ui_invalidate_tileset();
 }
 
 /* Sync the canonical GameState.scene from the runtime World copy.  Called
