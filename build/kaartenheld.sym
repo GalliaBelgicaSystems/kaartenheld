@@ -28,8 +28,8 @@
 00:74000 000024EE
 00:54000 00003655
 00:34000 00003BFF
-00:44000 00003E15
 00:24000 00003E28
+00:44000 00003E2B
 00:64000 00003EEE
 00:0200 000069F5
 00:FF30 AUD3WAVE
@@ -239,9 +239,9 @@
 00:5F2C _actor_fi
 00:5F2C _actor_find_at
 00:5E6D _actor_find_hostile_slot
-00:479E0 _actor_lo
+00:479F6 _actor_lo
 00:5F98 _actor_load_scene
-00:479E0 _actor_load_scene_banked
+00:479F6 _actor_load_scene_banked
 00:5E61 _actor_re
 00:5E61 _actor_register_tables
 00:024F _add_VBL
@@ -905,8 +905,8 @@
 00:46C30 _tutorial_content_render
 00:4C38 _tutorial_screen_render
 00:4C4D _tutorial_screen_update
-00:4715E _ui_actor
-00:4715E _ui_actors_sprites_banked
+00:47174 _ui_actor
+00:47174 _ui_actors_sprites_banked
 00:5AA8 _ui_calc_
 00:5AA8 _ui_calc_timer_bar
 00:36910 _ui_card_
@@ -914,8 +914,8 @@
 00:37519 _ui_clear
 00:37519 _ui_clear_atts_banked
 00:50DB _ui_clear_screen
-00:46ED9 _ui_dialo
-00:46ED9 _ui_dialogue_box_banked
+00:46EEE _ui_dialo
+00:46EEE _ui_dialogue_box_banked
 00:369E5 _ui_draw_
 00:57FC _ui_draw_actors_sprites
 00:5AE9 _ui_draw_battle_full
@@ -1000,9 +1000,9 @@
 00:5F2C actor_fi
 00:5F2C actor_find_at
 00:5E6D actor_find_hostile_slot
-00:479E0 actor_lo
+00:479F6 actor_lo
 00:5F98 actor_load_scene
-00:479E0 actor_load_scene_banked
+00:479F6 actor_load_scene_banked
 00:5E61 actor_re
 00:5E61 actor_register_tables
 00:024F add_VBL
@@ -1471,7 +1471,7 @@
 00:69F5 l__CODE
 00:3E28 l__CODE_2
 00:3BFF l__CODE_3
-00:3E15 l__CODE_4
+00:3E2B l__CODE_4
 00:3655 l__CODE_5
 00:3EEE l__CODE_6
 00:24EE l__CODE_7
@@ -1715,8 +1715,8 @@
 00:46C30 tutorial_content_render
 00:4C38 tutorial_screen_render
 00:4C4D tutorial_screen_update
-00:4715E ui_actor
-00:4715E ui_actors_sprites_banked
+00:47174 ui_actor
+00:47174 ui_actors_sprites_banked
 00:5AA8 ui_calc_
 00:5AA8 ui_calc_timer_bar
 00:36910 ui_card_
@@ -1724,8 +1724,8 @@
 00:37519 ui_clear
 00:37519 ui_clear_atts_banked
 00:50DB ui_clear_screen
-00:46ED9 ui_dialo
-00:46ED9 ui_dialogue_box_banked
+00:46EEE ui_dialo
+00:46EEE ui_dialogue_box_banked
 00:369E5 ui_draw_
 00:57FC ui_draw_actors_sprites
 00:5AE9 ui_draw_battle_full

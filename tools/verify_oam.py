@@ -565,6 +565,16 @@ def verify_dialogue_transition(sess):
     check("dialogue entry: CGB attrs kept (nonzero count)",
           True, nonzero > 20)
 
+    # Paper ramp integrity: slot 4 must equal the dialogue paper ramp
+    # (white/grey/dark/black).  The paper loop runs LCD-on with no PPU
+    # wait in the old code, so a Mode-3 drop splices a stale byte into
+    # the ramp and the whole box background changes color (caught live
+    # as black/tan patches depending on slot-4 history).  Already in
+    # VBlank from the gate above: CRAM reads are exact here.
+    paper = bg_cram(sess)[4]
+    check("dialogue entry: paper ramp intact (slot 4)",
+          [0x7FFF, 0x6739, 0x294A, 0x0000], paper)
+
     # Sprite stays visible behind the box at the player's position (9,5),
     # camera (0,0) -> OAM y=5*8+16=56, x=9*8+8=80.
     sess.step(1)

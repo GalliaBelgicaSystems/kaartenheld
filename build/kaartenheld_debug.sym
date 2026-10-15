@@ -26,7 +26,7 @@
 00:84000 000008C1
 00:C940 00000F83
 00:74000 000021A8
-00:54000 0000303E
+00:54000 00003054
 00:34000 00003A3F
 00:64000 00003BF8
 00:24000 00003DFD
@@ -945,8 +945,8 @@
 00:37A23 _ui_clear
 00:37A23 _ui_clear_atts_banked
 00:6162 _ui_clear_screen
-00:5691E _ui_dialo
-00:5691E _ui_dialogue_box_banked
+00:56933 _ui_dialo
+00:56933 _ui_dialogue_box_banked
 00:37944 _ui_draw_
 00:6895 _ui_draw_actors_sprites
 00:6D4F _ui_draw_battle_full
@@ -1017,8 +1017,8 @@
 00:7D85 _world_on
 00:7C4E _world_on_battle_end
 00:7D85 _world_on_battle_fled
-00:569B1 _world_pa
-00:569B1 _world_patrol_slot_banked
+00:569C7 _world_pa
+00:569C7 _world_patrol_slot_banked
 00:7C28 _world_pl
 00:7C02 _world_player_px
 00:7C28 _world_player_py
@@ -1538,7 +1538,7 @@
 00:3DFD l__CODE_2
 00:3A3F l__CODE_3
 00:3ECE l__CODE_4
-00:303E l__CODE_5
+00:3054 l__CODE_5
 00:3BF8 l__CODE_6
 00:21A8 l__CODE_7
 00:08C1 l__CODE_8
@@ -1788,8 +1788,8 @@
 00:37A23 ui_clear
 00:37A23 ui_clear_atts_banked
 00:6162 ui_clear_screen
-00:5691E ui_dialo
-00:5691E ui_dialogue_box_banked
+00:56933 ui_dialo
+00:56933 ui_dialogue_box_banked
 00:37944 ui_draw_
 00:6895 ui_draw_actors_sprites
 00:6D4F ui_draw_battle_full
@@ -1860,8 +1860,8 @@
 00:7D85 world_on
 00:7C4E world_on_battle_end
 00:7D85 world_on_battle_fled
-00:569B1 world_pa
-00:569B1 world_patrol_slot_banked
+00:569C7 world_pa
+00:569C7 world_patrol_slot_banked
 00:7C28 world_pl
 00:7C02 world_player_px
 00:7C28 world_player_py
