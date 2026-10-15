@@ -104,6 +104,12 @@ void world_anim_swap_banked(void);
  * ring's only writer).  Needs no staging.  Same bank/why as the swap. */
 void world_anim_rebuild_banked(void);
 
+/* Bank-5 full-ring black wipe behind ui_draw_world_transition():
+ * blackens CGB slot 4, then paints all 18 ring rows with blank tiles +
+ * slot 4.  The fixed driver runs it once (the writes themselves span a
+ * display frame); the reveal loop paces row-by-row with vsync. */
+void ui_wipe_black_banked(void);
+
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
  * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
  * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
@@ -207,6 +213,7 @@ void ui_load_tileset(uint8_t tileset);
 void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);
 void ui_draw_world_full(const World *world);
+void ui_draw_world_transition(const World *world);
 void ui_restore_dialogue_rows(const World *world);
 void ui_draw_actors_sprites(const World *world);
 void ui_draw_text_line(uint8_t x, uint8_t y, const char *text, uint8_t max_chars);

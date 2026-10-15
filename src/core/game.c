@@ -162,19 +162,13 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    /* Overlay transitions (overworld <-> dialogue, map unchanged): keep the
-     * map on screen -- no LCD-off wipe, no sprite re-hide, no full world
-     * redraw.  Entry paints the box over the live map; exit restores just
-     * the 4 box rows.  Anything else (battle, level/map change, menu) keeps
-     * the full LCD-off redraw: an LCD-on full redraw would drop PPU writes
-     * mid-modes and garble. */
-    /* Overlay transitions render with the LCD on (no wipe white-flash):
-     * overworld <-> dialogue paints/restores just the box rows, and an
-     * overworld map crossing streams a full repaint (synced/bounded
-     * writes: slower, spanning frames, but correct -- never garbled).
-     * Every other full redraw (battle, menus, boot) blanks via LCD-off:
-     * those paths own VRAM block-1 art or unsynced writers that cannot
-     * run against an active PPU. */
+    /* LCD-on transitions (no wipe white-flash): overworld <-> dialogue
+     * paints/restores just the box rows, and an overworld map crossing
+     * runs the black-wipe + invisible-load + row-reveal transition
+     * (ui_draw_world_transition: PPU-gated writes, no vsync pacing, safe
+     * under the harness and with the LCD off).  Every other full redraw
+     * (battle, menus, boot) blanks via LCD-off: those paths own VRAM
+     * block-1 art or writers that cannot run against an active PPU. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
           (g->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {

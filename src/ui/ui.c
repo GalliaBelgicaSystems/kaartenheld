@@ -61,6 +61,7 @@ extern uint8_t g_anim_count;
 
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
+static void ui_world_tail(const World *world);
 static int8_t s_loaded_tileset = -1;
 
 /* First VRAM tile the font occupies.  Tile 0 is space (0x20), so the tile
@@ -423,17 +424,6 @@ void ui_load_tileset(uint8_t tileset)
     g_bk_call_target = (uint16_t)&ui_load_tileset_banked;
     g_bk_byte_a = tileset;
     banked_call_run();
-
-    /* Battles program the scratch OBJ slot for OAM enemy art; restore
-     * the NPC ramps (slots 5-7) on every tileset load so town sprites
-     * keep exact colors after a fight. Idempotent back in fixed bank. */
-    if (g_is_cgb) {
-        uint8_t q;
-        OCPS_REG = (uint8_t)(0x80 | (5 << 3));
-        for (q = 0; q < 24; q++) {
-            OCPD_REG = ((const uint8_t *)cgb_obj_palettes)[40 + q];
-        }
-    }
 }
 
 /* Drop the VRAM tileset cache so the next overworld redraw reloads tile
@@ -673,7 +663,6 @@ static void ui_refill_semantic(const World *world)
 
 void ui_draw_world_map(const World *world)
 {
-    uint8_t y;
     if (!world) return;
 
     /* Ensure active scene's tileset is loaded into VRAM Block 1 (slots 128..255) */
@@ -684,6 +673,16 @@ void ui_draw_world_map(const World *world)
      * full map redraw. Field: all 32 x 18 cells. Smaller maps: col 20..31 are
      * filled with floor tiles in ui_draw_world_cell. */
     ui_draw_world_rect(world, 0, 32, 0, 18);
+    ui_world_tail(world);
+}
+
+/* Shared tail of every full world draw (see ui_draw_world_map): anim-cell
+ * re-record, semantic NULs, harness refill, sprite place.  Factored out so
+ * the transition reveal below reuses it instead of duplicating ~35 bytes
+ * of fixed bank. */
+static void ui_world_tail(const World *world)
+{
+    uint8_t y;
     /* Re-record animation-frame ring cells (fire/water) for the bank-5
      * swap pass: the ring is static until the next full redraw, so one
      * LCD-off scan here replaces every per-frame scan.  No staging (the
@@ -703,6 +702,43 @@ void ui_draw_world_map(const World *world)
     ui_sprite_move((uint8_t)(world_player_px(world) - world->camera_px_x),
                    (uint8_t)(world_player_py(world) - world->camera_px_y));
     ui_draw_actors_sprites(world);
+}
+
+/* Scene-transition repaint: black wipe, invisible load, row reveal.
+ * The LCD never blanks (no white flash) and no half-loaded map is ever
+ * visible: every displayed pixel is black until its own row is written.
+ * No vsync pacing anywhere: the ~1700 synced writes span several display
+ * frames by themselves, so the curtain visibly sweeps top-down in write
+ * order, fast.  With no vsync and only Mode-gated writes, this is safe
+ * under the harness, with the LCD off (STAT reads idle: waits fall
+ * through), and on DMG (grey blanks: still cover, never white). */
+void ui_draw_world_transition(const World *world)
+{
+    uint8_t kind;
+    /* No null guard (cf. ui_draw_world_rect): the overworld caller always
+     * passes a live world. */
+    kind = (uint8_t)world->tileset_kind;
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&ui_wipe_black_banked;
+    banked_call_run();
+    /* Invisible load: tileset pixels + real CRAM land while every row
+     * shows black, so nothing half-loaded can display.  The CRAM load
+     * keeps slot 4 black (KEEP bit): re-blackening it afterwards would
+     * cost a whole extra banked dispatch. */
+    ui_load_tileset(kind);
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&ui_load_cram_banked;
+    g_bk_byte_a = (uint8_t)(kind | 0x80);
+    banked_call_run();
+    /* The old camera dies with the old map: the new one takes effect
+     * while the screen is still black, so the viewport never jumps. */
+    ui_update_camera(world);
+    /* Reveal: the new map opens top-to-bottom in write order. */
+    ui_draw_world_rect(world, 0, 32, 0, 18);
+    /* Slot 4 stays black: it is free in every world tileset, and every
+     * consumer (dialogue paper, quick-screen tints, menus, battles,
+     * world maps) reprograms CRAM on entry. */
+    ui_world_tail(world);
 }
 
 void ui_update_camera(const World *world)
@@ -756,8 +792,10 @@ void ui_draw_hline(uint8_t y, char ch)
 
 void ui_draw_world_full(const World *world)
 {
-    if (!world) return;
-    ui_clear_screen();
+    /* No null guard and no ui_clear_screen(): callers always pass a live
+     * world, and ui_draw_world_map's rect overwrites every ring cell
+     * (32x18 tiles + attrs + mirrors) while the tail resets the
+     * semantic NULs, so the clear was redundant writes. */
     ui_draw_world_map(world);
 }
 
@@ -767,16 +805,14 @@ void ui_draw_world_full(const World *world)
  * battle entries reload at entry via ui_invalidate_tileset) and only the
  * box rows need their world tiles/attrs back.  Runs with the LCD on:
  * per-cell writes are PPU-synced.  Row coverage mirrors the entry paint
- * (full 32-wide ring rows at the scroll-shifted base). */
+ * (full 32-wide ring rows at the scroll-shifted base).  A thin wrapper
+ * over ui_draw_world_rect (same cells, shared code). */
 void ui_restore_dialogue_rows(const World *world)
 {
-    uint8_t sy;
-    uint8_t col;
-    for (sy = 14; sy < 18; sy++) {
-        for (col = 0; col < 32; col++) {
-            ui_draw_world_cell(world, col, (uint8_t)(world->scroll_y + sy));
-        }
-    }
+    /* No null guard (cf. ui_draw_world_rect): the overworld caller
+     * always passes a live world. */
+    ui_draw_world_rect(world, 0, 32, (uint8_t)(world->scroll_y + 14),
+                       (uint8_t)(world->scroll_y + 18));
 }
 
 uint8_t ui_calc_timer_bar(uint16_t t)

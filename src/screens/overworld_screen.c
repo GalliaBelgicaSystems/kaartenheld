@@ -193,7 +193,6 @@ void overworld_screen_render(Game *g)
 
     px = (uint8_t)(world_player_px(w) - w->camera_px_x);
     py = (uint8_t)(world_player_py(w) - w->camera_px_y);
-    ui_update_camera(w);
 
     if (!rc->valid || rc->prev_screen != SCREEN_OVERWORLD ||
         w->map_id != rc->prev_map_id) {
@@ -201,12 +200,13 @@ void overworld_screen_render(Game *g)
             /* Overlay exit: same map that was on screen under the box, so
              * only the 4 box rows need their world tiles back (LCD stays
              * on).  Battle-entered dialogues reloaded the tileset at entry,
-             * so their exits restore correctly too.  On a map mismatch fall
-             * through to the full redraw: slower with the LCD on, but the
-             * synced cell writes keep it correct. */
+             * so their exits restore correctly too. */
             ui_restore_dialogue_rows(w);
         } else {
-            ui_draw_world_full(w);
+            /* Any other overworld (re)draw -- gate crossing, battle/menu
+             * return, boot: the streaming LCD-on repaint (instant full
+             * redraw fallback inside, same end state). */
+            ui_draw_world_transition(w);
         }
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
@@ -217,6 +217,11 @@ void overworld_screen_render(Game *g)
         rc->prev_dialogue_line = 255;
         rc->prev_dialogue_id = DIALOGUE_ID_NONE;
     }
+
+    /* Camera follows the player -- after the branch, so a gate-crossing
+     * wipe covers the old viewport before it snaps (the transition
+     * re-syncs mid-way while the screen is black). */
+    ui_update_camera(w);
 
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);
