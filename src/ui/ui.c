@@ -905,8 +905,9 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
     /* Invalidate the box rows in the semantic buffer before stamping.
      * ui_draw_dialogue_line skips VRAM writes whose buffer char already
      * matches (an LCD-on incremental-update optimization), but the
-     * buffer currently holds WORLD glyphs from ui_draw_world_full just
-     * above -- a cross-domain collision.  A tree trunk (world glyph
+     * buffer currently holds WORLD glyphs from the live overworld map
+     * underneath (previous frames; the entry overlay path above skips
+     * the full redraw) -- a cross-domain collision.  A tree trunk (world glyph
      * 't', VRAM tile 157) under a text 't' skipped its write and left
      * trunk art on screen while the buffer claimed text (Carl's
      * "fight", Oct 2026): invisible to every harness assert, visible

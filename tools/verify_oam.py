@@ -505,8 +505,13 @@ def verify_dialogue_transition(sess):
     wipe, no full world redraw), the box paints over rows 14-17.  The Mayor
     sits at (10,5); the scenario boots the player at (9,5) facing RIGHT,
     so a single A press engages him and starts the dialogue within that
-    frame.  Asserts: dialogue activates, box text is on screen, CGB attrs
+    frame.  Asserts: dialogue activates, speaker bar is painted, CGB attrs
     stay applied (no grayscale wipe), sprite stays visible behind the box.
+    NOTE: these prove the overlay is correct, NOT that no LCD-off happened --
+    a full LCD-off redraw would pass all four.  The no-flash property itself
+    is timing (LCD never blanks) and needs a VBlank/LCDC execution check
+    or walkthrough-frame evidence, not state reads (same family as
+    AGENTS.md 52.15).
     (The old breakpoint-at-ui_draw_world_full form asserted the previous
     architecture -- full redraw behind the box -- and its CPU-address break
     collides with banked code at the same offset, firing spuriously.)"""
@@ -518,16 +523,23 @@ def verify_dialogue_transition(sess):
     sess.press("A")
     sess.step(1)
     if not sess.snapshot().get("dialogue_active"):
+        # Edge-triggered input (AGENTS.md 52.10): the A edge can land a
+        # frame late (mask-write vs step host race), so a bare extra step
+        # is not enough -- the step is the reset frame, then re-press.
+        sess.step(1)
+        sess.press("A")
         sess.step(1)
 
     snap = sess.snapshot()
     check("dialogue entry: dialogue is active", True, snap.get("dialogue_active"))
 
-    # Box text painted over the live map (speaker + first lines on rows 14-17).
+    # Box painted over the live map: row 14 is the speaker top bar
+    # ("+--SPEAKER-----+"), so '-' must be present.  A plain non-blank
+    # test would pass vacuously (world glyphs fill rows 14-17 anyway).
     buf = sess.get_screen_buf().split("\n")
     box = "".join(buf[14:18]) if len(buf) >= 18 else ""
-    check("dialogue entry: box text on screen (non-blank rows 14-17)",
-          True, len(box.strip()) > 0)
+    check("dialogue entry: speaker bar painted (row 14 has '-')",
+          True, "-" in box)
 
     # CGB attributes must stay applied, not wiped to grayscale.
     # Gated on VBlank: mid-scanout every attr reads back 0xFF (nonzero)

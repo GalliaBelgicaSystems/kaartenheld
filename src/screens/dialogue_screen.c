@@ -54,10 +54,10 @@ void dialogue_screen_render(Game *g)
         if (g->prev_screen != SCREEN_OVERWORLD) {
             ui_lcd_off();
             ui_draw_world_full(w);
-        }
-        ui_draw_dialogue(d, w);
-        if (g->prev_screen != SCREEN_OVERWORLD) {
+            ui_draw_dialogue(d, w);
             ui_lcd_on();
+        } else {
+            ui_draw_dialogue(d, w);
         }
 
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
