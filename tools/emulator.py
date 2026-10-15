@@ -40,7 +40,7 @@ TELEMETRY_EVENT_SIZE = 13
 GAME_STATE_MAP = {0: "OVERWORLD", 1: "BATTLE", 2: "GAME_OVER", 3: "THANKS"}
 SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "THANKS",
               5: "SHOP", 6: "ITEM", 7: "ENDING", 8: "SAVE_LOAD", 9: "TITLE", 10: "INTRO",
-              11: "TUTORIAL", 12: "SPLASH"}
+              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS"}
 SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",

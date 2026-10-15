@@ -24,7 +24,8 @@ typedef enum {
     SCREEN_TITLE     = 9,
     SCREEN_INTRO     = 10,
     SCREEN_TUTORIAL  = 11,
-    SCREEN_SPLASH    = 12
+    SCREEN_SPLASH    = 12,
+    SCREEN_CREDITS   = 13
 } ScreenId;
 
 /*
@@ -76,6 +77,7 @@ void intro_screen_update(Game *g);
 void intro_screen_render(Game *g);
 void tutorial_screen_update(Game *g);
 void tutorial_screen_render(Game *g);
+void credits_screen_render(Game *g);
 
 /* Shared by tutorial_screen.c (RIGHT/LEFT wrap) and tutorial_content.c
  * (slide table end).  Generated from screens/tutorial.json — single
@@ -95,6 +97,7 @@ void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t
 void title_content_render(void);
 void intro_content_render(void);
 void tutorial_content_render(void);
+void credits_content_render(void);
 
 /* Bank-2 no-arg bodies dispatched by the simple_screens render wrappers
  * (thanks/ending/game-over).  game_over_content_render() reads

@@ -1,0 +1,95 @@
+{
+ "name": "credits_menu",
+ "test": true,
+ "description": "Boot into the title screen, open the menu (START), move down to the CREDITS entry (index 4, row 17), and press A to enter the credit screen. B returns to the title menu.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "CREDITS"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "CREDITS"
+  },
+  {
+   "type": "screen_row",
+   "row": 2,
+   "contains": "Jonas Bryan"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "Bruno Rodrigues"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "Florent Berault"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCREEN_CHANGED"
+  }
+ ]
+}
