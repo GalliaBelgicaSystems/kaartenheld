@@ -539,7 +539,7 @@
     "max_hp": 0,
     "gold_reward": 0,
     "ai": "AI_NONE",
-    "open_variable": "VARIABLE_ID_MERCHANT_QUEST"
+    "open_flag": "STORY_FLAG_ID_AMULET_CHEST"
    }
   },
   {

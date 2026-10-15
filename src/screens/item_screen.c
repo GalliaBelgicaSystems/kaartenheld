@@ -18,9 +18,9 @@
  * (AGENTS.md 52.18). */
 void item_menu_cursor_banked(void);
 
-/* Bank-2 quest-tab navigator (item_content_banked.c): the fixed bank
+/* Bank-5 quest-tab navigator (item_quest_banked.c): the fixed bank
  * sits hard against 0x8000 (AGENTS.md 52.18), so quest cursor/detail
- * input lives in-bank with the quest table.  Thin dispatch only;
+ * input lives in-bank with the quest registry.  Thin dispatch only;
  * LEFT/RIGHT tab-switching stays fixed-bank with the CARDS tab path. */
 void item_quest_nav_banked(void);
 
@@ -297,13 +297,13 @@ void item_screen_update(Game *g)
     if (g->item_menu_tab == TAB_QUEST) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
         /* LR-before-SELECT, like the CARDS tab below.  Cursor/detail
-         * input lives in bank 2 with the quest table (fixed-bank
+         * input lives in bank 5 with the quest registry (fixed-bank
          * headroom: AGENTS.md 52.18). */
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             switch_tab(g);
             return;
         }
-        g_bk_call_bank = 2;
+        g_bk_call_bank = 5;
         g_bk_call_target = (uint16_t)&item_quest_nav_banked;
         g_bk_ptr_a = (void *)g;
         banked_call_run();
@@ -419,6 +419,7 @@ void item_screen_update(Game *g)
 }
 
 void item_screen_render_banked(void);
+void item_quest_render_banked(void);
 
 void item_screen_render(Game *g)
 {
@@ -448,8 +449,16 @@ void item_screen_render(Game *g)
          * Detail-page sells also mutate and redraw in the same frame. */
         build_view(g);
 
-        g_bk_call_bank = 2;
-        g_bk_call_target = (uint16_t)&item_screen_render_banked;
+        /* CARDS content renders in bank 2; the QUEST tab renders in
+         * bank 5 with the quest registry (AGENTS.md 52.11.1: code
+         * shares its tables' bank; bank 2 is full). */
+        if (g->item_menu_tab == TAB_QUEST) {
+            g_bk_call_bank = 5;
+            g_bk_call_target = (uint16_t)&item_quest_render_banked;
+        } else {
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&item_screen_render_banked;
+        }
         g_bk_ptr_a = (void *)g;
         banked_call_run();
 

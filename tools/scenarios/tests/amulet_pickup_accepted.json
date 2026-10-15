@@ -1,0 +1,52 @@
+{
+ "name": "amulet_pickup_accepted",
+ "test": true,
+ "description": "Finding the amulet after accepting the quest still grants it: interact at MERCHANT_QUEST=1 gives AMULET_FOUND, the item, and keeps the quest ACTIVE",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "AMULET"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "AMULET_FOUND"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "AMULET_CHEST",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 15,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "variables": {
+   "MERCHANT_QUEST": 1
+  }
+ }
+}

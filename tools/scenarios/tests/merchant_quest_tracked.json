@@ -1,0 +1,75 @@
+{
+ "name": "merchant_quest_tracked",
+ "test": true,
+ "description": "Accepting the Lost Amulet quest tracks it: after the merchant's briefing closes, the QUEST tab lists LOST AMULET as active (regression: accepting left MERCHANT_QUEST at 0, invisible)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "LOST AMULET"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "active"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8501,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "MERCHANT_QUEST": 0
+  }
+ }
+}

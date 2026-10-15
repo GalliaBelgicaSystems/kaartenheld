@@ -103,9 +103,15 @@ const EventDefinition g_events[] = {
     },
     /* ── Lost Merchant quest (data-driven fetch/deliver) ─────────────
      * Quest state is the MERCHANT_QUEST variable: 0 = not started,
-     * 1 = amulet found (ACTIVE), 2 = complete.  DELIVER must precede INTRO
-     * (more specific first).  After delivery no merchant event matches, so
-     * the interaction falls back to the merchant's SHOP interaction. */
+     * 1 = ACTIVE (accepted from the merchant, or amulet found first),
+     * 2 = complete.  Loot state is STORY_FLAG_ID_AMULET_CHEST (set
+     * atomically with the AMULET grant, like FIELD_CHEST): the chest
+     * sprite and the chest jingle key off the flag, never the quest
+     * variable, so accepting early neither opens the chest art nor
+     * plays the jingle.  DELIVER must precede INTRO (more specific
+     * first).  After delivery no merchant event matches, so the
+     * interaction falls back to the merchant's SHOP interaction; the
+     * same fallback is blocked mid-quest by REMINDER below. */
     {
         EVENT_ID_MERCHANT_DELIVER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         2,
@@ -125,6 +131,21 @@ const EventDefinition g_events[] = {
         EVENT_ID_MERCHANT_INTRO, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         1,
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_INTRO, 0, 0 },
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
+        }
+    },
+    {
+        /* Mid-quest talks re-brief (same INTRO text, distinct telemetry
+         * id) instead of falling through to the locked shop. */
+        EVENT_ID_MERCHANT_REMINDER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false },
+            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 0, false, false }
+        },
         1,
         {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_INTRO, 0, 0 }}
     },
@@ -132,11 +153,27 @@ const EventDefinition g_events[] = {
         EVENT_ID_AMULET_PICKUP, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
         1,
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
-        3,
+        4,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, 0 }
+        }
+    },
+    {
+        EVENT_ID_AMULET_PICKUP_ACCEPTED, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false },
+            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 0, false, false }
+        },
+        4,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
+            { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, 0 }
         }
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────

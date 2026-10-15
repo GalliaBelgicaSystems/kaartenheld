@@ -1,4 +1,4 @@
-#pragma bank 2
+#pragma bank 5
 
 #include "quest.h"
 #include "game_ids.h"

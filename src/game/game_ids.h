@@ -47,6 +47,8 @@
 #define EVENT_ID_AMULET_PICKUP   (EVENT_ID_FIRST_GAME + 11)
 #define EVENT_ID_TUTORIAL_COMPLETE (EVENT_ID_FIRST_GAME + 12)
 #define EVENT_ID_FIELD_CHEST     (EVENT_ID_FIRST_GAME + 13)
+#define EVENT_ID_MERCHANT_REMINDER (EVENT_ID_FIRST_GAME + 14)
+#define EVENT_ID_AMULET_PICKUP_ACCEPTED (EVENT_ID_FIRST_GAME + 15)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -61,7 +63,10 @@ typedef enum {
     STORY_FLAG_ID_ARRIVED_TOWN = 1,
     STORY_FLAG_ID_MET_MAYOR    = 2,
     STORY_FLAG_ID_FIELD_CHEST  = 3,
-    STORY_FLAG_ID_COUNT        = 4
+    STORY_FLAG_ID_AMULET_CHEST = 4,   /* forest amulet chest opened (loot
+                                       * state, like FIELD_CHEST -- set
+                                       * atomically with the AMULET grant) */
+    STORY_FLAG_ID_COUNT        = 5
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -70,7 +75,7 @@ typedef enum {
     VARIABLE_ID_MONSTERS_DEFEATED  = 2,   /* global total (all kills count) */
     VARIABLE_ID_QUEST_MONSTER_HUNT = 3,   /* 0 = NOT_STARTED, 1 = ACTIVE, 2 = COMPLETE */
     VARIABLE_ID_ENDING_SHOWN       = 4,   /* set when the final boss is defeated */
-    VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = amulet found, 2 = complete */
+    VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = ACTIVE (accepted or found), 2 = complete */
     VARIABLE_ID_ENERGY_POOL        = 6    /* battle energy pool: story events raise it, no cap */
 } VariableIdNamed;
 
@@ -91,7 +96,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 14
+#define GAME_EVENT_COUNT 16
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

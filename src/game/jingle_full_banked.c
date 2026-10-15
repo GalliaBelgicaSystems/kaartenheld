@@ -10,8 +10,7 @@ extern volatile uint8_t g_harness_mode;
 
 /* ── Chest-jingle full body (MUSIC_CHEST, one-shot) ────────────────────
  * Game-layer banked body: reads the loot mask from game story state
- * directly (field-cache flag, merchant-quest amulet variable), so the
- * fixed-bank engine never branches on game ids (§55.1) -- it only owns
+ * directly (field-cache and amulet-chest loot flags), so the fixed-bank engine never branches on game ids (§55.1) -- it only owns
  * the trampoline dispatch in game_update().  Ticks every non-battle
  * frame (menus, dialogue, shops included) so they can't freeze the
  * restore timer while the driver loops the one-shot song.  Returns
@@ -81,7 +80,8 @@ void jingle_full_banked(void)
         (uint8_t)(1u << ((STORY_FLAG_ID_FIELD_CHEST - 1) & 7))) {
         mask |= 1u;
     }
-    if (g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1] != 0) {
+    if (g_game.state.flags.bytes[(STORY_FLAG_ID_AMULET_CHEST - 1) >> 3] &
+        (uint8_t)(1u << ((STORY_FLAG_ID_AMULET_CHEST - 1) & 7))) {
         mask |= 2u;
     }
     if (!(g_jingle_done & 0x80)) {

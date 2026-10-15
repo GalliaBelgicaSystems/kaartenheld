@@ -263,16 +263,21 @@ reachable — it is not gated behind this quest.
 
 ### 4.3 Lost Amulet — the side quest
 
-1. **Start.** Talk to the **Lost Merchant** in Town (the first visit):
+1. **Start.** Talk to the **Lost Merchant** in Town (the first visit).
+   Accepting sets the quest **ACTIVE**, so it is tracked on the QUEST
+   tab straight away:
 
    > A thief stole my
    > family heirloom!
    > Find it in the Forest!
 
-2. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
+2. **Reminder.** Talking to him again before you found it re-briefs
+   (same lines); his shop stays locked until the delivery.
+3. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
    Interact with it ("You found the Lost Amulet!").  It is added to your
-   card collection (as a non-deckable `SPECIAL` card).  Returning to the
-   spot afterwards says "Nothing here now."
+   card collection (as a non-deckable `SPECIAL` card).  Finding it
+   before talking to him works too: the pickup counts either way.
+   Returning to the spot afterwards says "Nothing here now."
 3. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
    **15 gold**, and opens his real shop (which sells the Iron Sword and

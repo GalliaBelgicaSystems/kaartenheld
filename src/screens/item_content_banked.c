@@ -10,7 +10,6 @@
 #include "rider_tiles_generated.h"
 #include "rpg/loot.h"
 #include "rpg/deck.h"
-#include "quest.h"
 #include "ui.h"
 #include "menu.h"
 #include "card.h"
@@ -19,7 +18,6 @@
 #include "rpg/loot.h"
 
 #define TAB_CARDS 0
-#define TAB_QUEST 1
 #define NUM_TABS  2
 
 #define ROW_TOP     0
@@ -28,7 +26,6 @@
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
-#define MODE_QUEST_DETAIL 2
 #define MODE_PICKER       3
 
 #define MSG_NONE       0
@@ -49,7 +46,6 @@ extern uint8_t s_view_count;
 
 extern const CardDefinition g_cards[];
 extern const uint8_t s_card_desc_blob[CARD_DESC_TYPES][CARD_DESC_STRIDE];
-extern const QuestDefinition g_quests[];
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
@@ -60,7 +56,6 @@ static uint8_t s_ic_def_i;
 static uint8_t s_ic_deck_i;
 static uint8_t s_ic_coll_i;
 static uint8_t s_ic_lst_pos;
-static uint8_t s_ic_qst_pos;
 
 static uint8_t s_ic_y;
 static uint8_t s_ic_tile_elem;
@@ -68,7 +63,6 @@ static uint8_t s_ic_tile_wpn;
 static uint8_t s_ic_in_deck;
 static CardId s_ic_id;
 static const CardDefinition *s_ic_def;
-static const QuestDefinition *s_ic_q;
 static volatile uint8_t *s_ic_dst;
 static char *s_ic_buf;
 static char s_ic_code[3];
@@ -343,30 +337,6 @@ static uint8_t ic_collection_count(const CardState *cs, CardId id)
     return 0;
 }
 
-/* Bank-local replica of game_variable_get() (src/rpg/state.c): a banked
- * body must never call fixed-bank code (AGENTS.md 52.11.1) -- the call
- * only works today because _game_variable_get happens to link into ROM0,
- * and any placement shift would jump into unmapped bytes.  Same pattern
- * as actor_load_banked.c.  KEEP IN SYNC with src/rpg/state.c if the
- * storage layout ever changes. */
-static int16_t ic_variable_get(const GameState *state, VariableId variable)
-{
-    if (!state || variable < 1 || variable > MAX_STATE_VARIABLES) return 0;
-    return state->variables.values[variable - 1];
-}
-
-static QuestStatus ic_quest_status(const GameState *state, const QuestDefinition *q)
-{
-    int16_t v;
-    if (!state || !q || q->status_variable == 0) {
-        return QUEST_STATUS_NOT_STARTED;
-    }
-    v = ic_variable_get(state, q->status_variable);
-    if (v == q->status_complete) return QUEST_STATUS_COMPLETE;
-    if (v == q->status_active) return QUEST_STATUS_ACTIVE;
-    return QUEST_STATUS_NOT_STARTED;
-}
-
 /* NOTE: the filtered/sorted view (s_view_indices/s_view_count) is built
  * by the fixed-bank side (item_screen.c: on every full redraw, plus
  * explicitly after picker filter/sort changes) and consumed here
@@ -489,144 +459,6 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
 }
 
-static void ic_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t y)
-{
-    QuestStatus st;
-    char b[6];
-    uint8_t val;
-    if (!q) return;
-    st = ic_quest_status(&g->state, q);
-
-    /* NOT_STARTED never reaches here: ic_draw_quest only draws tracked
-     * (ACTIVE/COMPLETE) quests, so anything else is COMPLETE. */
-    if (st == QUEST_STATUS_ACTIVE) {
-        if (q->progress_variable != 0) {
-            val = (uint8_t)ic_variable_get(&g->state, q->progress_variable);
-            IC_DRAW_TEXT(2, y, q->progress_label ? q->progress_label : "", 8);
-            b[0] = ':';
-            b[1] = ' ';
-            b[2] = (char)('0' + val);
-            b[3] = '/';
-            b[4] = (char)('0' + (uint8_t)q->progress_target);
-            b[5] = '\0';
-            IC_DRAW_TEXT(10, y, b, 5);
-        } else {
-            IC_DRAW_TEXT(2, y, "active", 6);
-        }
-    } else {
-        IC_DRAW_TEXT(1, y, "complete - ", 11);
-        IC_DRAW_TEXT(12, y, q->complete_note ? q->complete_note : "", 8);
-    }
-}
-
-/* The quest list draws at most 5 entries (rows 5..13 step 2, loop bound
- * y < 15): the nav caret math assumes the visible list fits on screen.
- * Fail the build if the registry outgrows the layout. */
-typedef char quest_list_fits_display[GAME_QUEST_COUNT <= 5 ? 1 : -1];
-
-static void ic_draw_quest(Game *g)
-{
-    uint8_t vis;
-    /* Only accepted quests are tracked: NOT_STARTED entries stay hidden
-     * (an empty quest log shows a placeholder instead of two
-     * "not started" rows).  item_menu_index addresses the VISIBLE list,
-     * so the caret compares against the visible position, not the table
-     * position. */
-    s_ic_y = 5;
-    vis = 0;
-    for (s_ic_qst_pos = 0; s_ic_qst_pos < GAME_QUEST_COUNT && s_ic_y < 15; s_ic_qst_pos++) {
-        s_ic_q = &g_quests[s_ic_qst_pos];
-        if (ic_quest_status(&g->state, s_ic_q) == QUEST_STATUS_NOT_STARTED)
-            continue;
-        if (g->item_menu_index == vis) IC_DRAW_TEXT(0, s_ic_y, ">", 1);
-        else IC_DRAW_TEXT(0, s_ic_y, " ", 1);
-        IC_DRAW_TEXT(2, s_ic_y, s_ic_q->name, 18);
-
-        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5) + 1);
-        VBK_REG = 0;
-        if (LCDC_REG & 0x80) {
-            while (STAT_REG & 0x02);
-        }
-        /* Quest marker as a font glyph ('!' active, '*' complete): the
-         * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
-         * loader now overwrites tile 116 with the combat deck art). */
-        if (ic_quest_status(&g->state, s_ic_q) == QUEST_STATUS_COMPLETE) {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
-            IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
-        } else {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
-            IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
-        }
-
-        s_ic_y++;
-        ic_quest_draw_status_line(g, s_ic_q, s_ic_y);
-        s_ic_y++;
-        vis++;
-    }
-    if (vis == 0) {
-        IC_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
-    }
-}
-
-/* Quest-tab input behind the thin fixed dispatch in item_screen.c.
- * Kept in-bank because the fixed bank sits hard against 0x8000
- * (AGENTS.md 52.18): the visible-count, empty-guard, detail-entry and
- * cursor wrap all live here with the quest table.  Staged input:
- * g_bk_ptr_a = Game*.  Pad edges are read directly from WRAM (always
- * mapped, like the staged Game*); this body calls no fixed-bank
- * functions.  The cursor repaint is inline (two buffer-checked cells --
- * the quest list never scrolls), so there is no cross-file banked call
- * to screen_content.c's cursor body either. */
-void item_quest_nav_banked(void)
-{
-    Game *g = (Game *)g_bk_ptr_a;
-    uint8_t total = 0;
-    uint8_t edges;
-    uint8_t i;
-    uint8_t old_index;
-    uint8_t new_index;
-    uint8_t old_row;
-    uint8_t new_row;
-    if (!g) return;
-    /* Pressed edges in one pass: compile-time bitmasks, no per-button
-     * shift loops and no helper call (Bank 2 headroom, AGENTS.md 52.18).
-     * Tab-switching (LEFT/RIGHT) is handled fixed-bank before this
-     * dispatch, matching the CARDS tab's LR-before-SELECT order. */
-    edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
-    for (i = 0; i < GAME_QUEST_COUNT; i++) {
-        if (ic_quest_status(&g->state, &g_quests[i]) != QUEST_STATUS_NOT_STARTED)
-            total++;
-    }
-    if (total == 0) {
-        /* Empty quest log: nothing to select or cursor through. */
-        return;
-    }
-    if (g->item_menu_index >= total)
-        g->item_menu_index = 0;
-    if (edges & (uint8_t)(1u << INPUT_SELECT)) {
-        /* Future per-quest detail needs a visible-to-table index map:
-         * item_menu_index addresses the VISIBLE list, not g_quests. */
-        g->item_menu_mode = MODE_QUEST_DETAIL;
-        g->render_cache.valid = false;
-        return;
-    }
-    old_index = g->item_menu_index;
-    if (edges & (uint8_t)(1u << INPUT_UP)) {
-        new_index = (old_index > 0) ? (uint8_t)(old_index - 1) : (uint8_t)(total - 1);
-    } else if (edges & (uint8_t)(1u << INPUT_DOWN)) {
-        new_index = (old_index < (uint8_t)(total - 1)) ? (uint8_t)(old_index + 1) : 0;
-    } else {
-        return;
-    }
-    g->item_menu_index = new_index;
-    old_row = (uint8_t)(5 + (old_index << 1));
-    new_row = (uint8_t)(5 + (new_index << 1));
-    if (old_row != new_row) {
-        IC_DRAW_TEXT(0, old_row, " ", 1);
-        IC_DRAW_TEXT(0, new_row, ">", 1);
-    }
-}
-
 static void ic_draw_card_detail_page(Game *g)
 {
     s_ic_y = 5;
@@ -727,22 +559,17 @@ void item_screen_render_banked(void)
     uint8_t e;
     if (!g) return;
 
-    /* Sweep rider entries first: quest/picker/emptied rows leave nothing
-     * behind, and list/detail set exactly what they show below. */
+    /* Sweep rider entries first: picker/emptied rows leave nothing
+     * behind, and list/detail set exactly what they show below.  (The
+     * QUEST tab dispatches to the bank-5 quest body, which sweeps for
+     * itself on entry.) */
     for (e = 1; e <= VISIBLE_CARDS; e++) {
         ic_rider_hide(e);
     }
 
-    if (g->item_menu_tab == TAB_QUEST) {
-        if (g->item_menu_mode == MODE_QUEST_DETAIL)
-            IC_DRAW_TEXT(0, 8, "no details yet", 14);
-        else
-            ic_draw_quest(g);
-    } else {
-        switch (g->item_menu_mode) {
-            case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;
-            case MODE_PICKER:      ic_draw_picker(g); break;
-            default:               ic_draw_cards_list(g); break;
-        }
+    switch (g->item_menu_mode) {
+        case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;
+        case MODE_PICKER:      ic_draw_picker(g); break;
+        default:               ic_draw_cards_list(g); break;
     }
 }

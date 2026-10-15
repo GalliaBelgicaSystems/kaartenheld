@@ -609,7 +609,7 @@ const WorldActorTable g_actor_tables[] = {
 uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
-    if (g_game.world.map_id == MAP_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && g_game.state.variables.values[4]) return 1;
+    if (g_game.world.map_id == MAP_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && (g_game.state.flags.bytes[0] & 8)) return 1;
     return 0;
 }
 
