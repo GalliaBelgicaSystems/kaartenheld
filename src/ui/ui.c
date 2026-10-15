@@ -812,7 +812,13 @@ void ui_draw_world_full(const World *world)
  * box rows need their world tiles/attrs back.  Runs with the LCD on:
  * per-cell writes are PPU-synced.  Row coverage mirrors the entry paint
  * (full 32-wide ring rows at the scroll-shifted base).  A thin wrapper
- * over ui_draw_world_rect (same cells, shared code). */
+ * over ui_draw_world_rect (same cells, shared code).
+ * Accepted limits (no bytes left to spend): hostile actors on these rows
+ * keep terrain glyphs in g_ui_screen_buf (the harness refills via
+ * ui_update_camera; on hardware the buffer is stale-but-harmless), and
+ * animated tiles restore at frame 0 until the next swap tick resyncs
+ * (<=4 frames cosmetic).  g_anim_cells[] itself stays valid (the box
+ * overwrote VRAM, never the index list). */
 void ui_restore_dialogue_rows(const World *world)
 {
     /* No null guard (cf. ui_draw_world_rect): the overworld caller

@@ -29,6 +29,14 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 /* Backward compatibility alias */
 #define cgb_bg_palettes_overworld cgb_bg_palettes_forest
 
+/* KEEP_SLOT4 travels in bit 7 of the staged kind byte (ui.h): every real
+ * tileset kind and mode must stay below 0x80 so no plain caller can ever
+ * trip it.  Zero ROM cost (same pattern as g_tiletype_fits_u8). */
+static const int g_cram_keep_kind_ok[((int)WORLD_TILESET_FOREST < 0x80 &&
+                                      (int)WORLD_TILESET_VILLAGE < 0x80 &&
+                                      (int)WORLD_TILESET_DESOLATE < 0x80 &&
+                                      (int)WORLD_TILESET_CASTLE < 0x80) ? 1 : 0];
+
 void ui_load_cram_banked(void)
 {
     uint8_t p, c, t, val;
