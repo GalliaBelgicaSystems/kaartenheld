@@ -554,7 +554,7 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             tile_idx = lookup_id ? lookup_id : (uint8_t)(ui_font_tile_base + (uint8_t)(glyph - ' '));
         }
     }
-    tilemap[(row & 31) * 32 + (col & 31)] = tile_idx;
+    ui_vram_sync_write(&tilemap[(row & 31) * 32 + (col & 31)], tile_idx);
 #ifdef DEBUG_BUILD
     g_tilemap_mirror[(row & 31) * 32 + (col & 31)] = tile_idx;
 #endif
@@ -568,7 +568,7 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
     {
         uint8_t pal = ui_cell_palette(tile_idx, (uint8_t)glyph, (uint8_t)world->tileset_kind);
         VBK_REG = 1;
-        ((volatile uint8_t *)0x9800)[(row & 31) * 32 + (col & 31)] = pal;
+        ui_vram_sync_write(&((volatile uint8_t *)0x9800)[(row & 31) * 32 + (col & 31)], pal);
         VBK_REG = 0;
 #ifdef DEBUG_BUILD
         g_tilemap_attr_mirror[(row & 31) * 32 + (col & 31)] = pal;
@@ -759,6 +759,24 @@ void ui_draw_world_full(const World *world)
     if (!world) return;
     ui_clear_screen();
     ui_draw_world_map(world);
+}
+
+/* Restore only the 4 dialogue-box rows (screen rows 14-17) after an
+ * overlay dialogue closes.  The map stayed on screen under the box, so
+ * tileset VRAM + CRAM are intact (overlay entries never evict them;
+ * battle entries reload at entry via ui_invalidate_tileset) and only the
+ * box rows need their world tiles/attrs back.  Runs with the LCD on:
+ * per-cell writes are PPU-synced.  Row coverage mirrors the entry paint
+ * (full 32-wide ring rows at the scroll-shifted base). */
+void ui_restore_dialogue_rows(const World *world)
+{
+    uint8_t sy;
+    uint8_t col;
+    for (sy = 14; sy < 18; sy++) {
+        for (col = 0; col < 32; col++) {
+            ui_draw_world_cell(world, col, (uint8_t)(world->scroll_y + sy));
+        }
+    }
 }
 
 uint8_t ui_calc_timer_bar(uint16_t t)

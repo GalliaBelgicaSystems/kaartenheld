@@ -53,6 +53,10 @@ void dialogue_screen_render(Game *g)
          * no LCD-off, paint the box over the live map. */
         if (g->prev_screen != SCREEN_OVERWORLD) {
             ui_lcd_off();
+            /* Battle enemy art shares VRAM slots 128+ with world tiles and
+             * the loader bypasses ui_load_tileset's cache, so force the
+             * reload: without this the world redraw keeps enemy art. */
+            ui_invalidate_tileset();
             ui_draw_world_full(w);
             ui_draw_dialogue(d, w);
             ui_lcd_on();

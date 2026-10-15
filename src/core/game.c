@@ -133,7 +133,6 @@ void game_render(Game *g)
 {
     RenderCache *rc;
     uint8_t full_redraw;
-    uint8_t overlay_redraw;
 
     if (!g) return;
     rc = &g->render_cache;
@@ -163,13 +162,20 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    /* Overlay transition (overworld -> dialogue entry): keep the map on
-     * screen -- no LCD-off wipe, no sprite re-hide, no full world redraw.
-     * The box paints over the live map.  Every other transition (dialogue
-     * exit, battle, level, menu) keeps the full LCD-off redraw. */
-    overlay_redraw = (full_redraw &&
-                      (g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE));
-    if (full_redraw && !overlay_redraw) {
+    /* Overlay transitions (overworld <-> dialogue, map unchanged): keep the
+     * map on screen -- no LCD-off wipe, no sprite re-hide, no full world
+     * redraw.  Entry paints the box over the live map; exit restores just
+     * the 4 box rows.  Anything else (battle, level/map change, menu) keeps
+     * the full LCD-off redraw: an LCD-on full redraw would drop PPU writes
+     * mid-modes and garble. */
+    /* Overlay transitions (overworld <-> dialogue): render with the LCD on
+     * (no wipe, no sprite re-hide).  The map-same choice (restore rows vs
+     * full redraw) lives in overworld_screen_render, which re-checks it:
+     * falling through to a full redraw with the LCD on is slow (synced
+     * writes span frames) but correct, never garbled. */
+    if (full_redraw &&
+        !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
+          (g->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
         ui_sprite_begin_transition();
         /* A full redraw is much larger than the part of VBlank remaining
          * after vsync() returns.  Keeping the LCD on here makes the PPU drop

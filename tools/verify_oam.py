@@ -559,6 +559,24 @@ def verify_dialogue_transition(sess):
     check("dialogue steady: @ sprite visible (shadow OAM)",
           (56, 80), shadow_oam(sess))
 
+    # Exit: closing the dialogue restores just the 4 box rows (no LCD-off
+    # wipe).  The speaker bar ('-'/'+"'+'" row 14) must be gone -- world
+    # glyphs never contain those -- while the map and sprite are intact.
+    sess.press("A")
+    sess.step(2)
+    if sess.snapshot().get("dialogue_active"):
+        sess.step(1)
+        sess.press("A")
+        sess.step(2)
+    check("dialogue exit: back to overworld", "OVERWORLD",
+          sess.snapshot().get("screen"))
+    buf = sess.get_screen_buf().split("\n")
+    row14 = buf[14] if len(buf) >= 15 else ""
+    check("dialogue exit: box rows restored ('+' bar gone from row 14)",
+          True, "+" not in row14 and "-" not in row14)
+    check("dialogue exit: @ sprite visible (shadow OAM)",
+          (56, 80), shadow_oam(sess))
+
 
 def verify_scene_transition(sess):
     print("== Scene transition (town_arrival: FIELD gate -> TOWN) ==")

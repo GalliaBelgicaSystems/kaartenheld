@@ -207,6 +207,7 @@ void ui_load_tileset(uint8_t tileset);
 void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);
 void ui_draw_world_full(const World *world);
+void ui_restore_dialogue_rows(const World *world);
 void ui_draw_actors_sprites(const World *world);
 void ui_draw_text_line(uint8_t x, uint8_t y, const char *text, uint8_t max_chars);
 void ui_draw_hline(uint8_t y, char ch);

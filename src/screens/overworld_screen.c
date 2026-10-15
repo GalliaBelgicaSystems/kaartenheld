@@ -197,7 +197,17 @@ void overworld_screen_render(Game *g)
 
     if (!rc->valid || rc->prev_screen != SCREEN_OVERWORLD ||
         w->map_id != rc->prev_map_id) {
-        ui_draw_world_full(w);
+        if (rc->prev_screen == SCREEN_DIALOGUE && w->map_id == rc->prev_map_id) {
+            /* Overlay exit: same map that was on screen under the box, so
+             * only the 4 box rows need their world tiles back (LCD stays
+             * on).  Battle-entered dialogues reloaded the tileset at entry,
+             * so their exits restore correctly too.  On a map mismatch fall
+             * through to the full redraw: slower with the LCD on, but the
+             * synced cell writes keep it correct. */
+            ui_restore_dialogue_rows(w);
+        } else {
+            ui_draw_world_full(w);
+        }
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
         rc->valid = true;
