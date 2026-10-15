@@ -155,6 +155,7 @@ STORY_FLAG_ID_MET_MAYOR = 2
 
 # Variables (src/game/game_ids.h)
 VARIABLE_ID_QUEST_MONSTER_HUNT = 3
+VARIABLE_ID_MERCHANT_QUEST = 5
 VARIABLE_ID_ENERGY_POOL = 6
 
 # Currency (src/game/game_ids.h) — dense slots indexed by id-1.
@@ -166,6 +167,7 @@ CARD_IRON_SWORD = CARD_FIRST_GAME + 0
 CARD_WOODEN_SHIELD = CARD_FIRST_GAME + 1
 CARD_WOOD_RING = CARD_FIRST_GAME + 2
 CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
+CARD_AMULET = CARD_FIRST_GAME + 5
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20

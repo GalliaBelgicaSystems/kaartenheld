@@ -472,30 +472,6 @@
       }
     },
     {
-      "id": "town_shopkeeper",
-      "type": "npc",
-      "position": {
-        "x": 9,
-        "y": 3
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SHOPKEEPER",
-        "display_name": "SHOPKEEPER",
-        "shop": 1,
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "S",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
       "id": "town_merchant",
       "type": "npc",
       "position": {

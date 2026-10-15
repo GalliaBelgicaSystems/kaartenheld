@@ -1698,9 +1698,9 @@ Illegal combinations are unrepresentable: the generator only rolls legal
 * MAX ONE RING PER SELECTION; a second attempt flashes "ONE RING!".
   IMPLEMENTED (selection gate, battle msg id 3).
 * Rings are THE healing vector of the game: every HEAL-type card is a
-  ring by construction, and the Shopkeeper sells a curated IRON RING
-  (`I RG`; shop label **RG5**, 20g) as the early-game heal source.
-  IMPLEMENTED.
+  ring by construction, and the Merchant sells a curated IRON RING
+  (`I RG`; shop label **RG5**, 20g) as the heal source once his shop
+  opens.  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
 ## 34.4 Combat resolution rules
@@ -1752,12 +1752,12 @@ same as the battle-hand cards and the CARDS-tab list.  Regression:
 
 The Lost Amulet merchant opens shop 2 as the CARD MERCHANT:
 
-* BUY: the Shopkeeper (shop 1) sells a curated IRON RING (**RG5**, 20g) --
-  rings are THE healing vector, so healing is purchasable but never
-  free.  The Lost Amulet merchant (shop 2) stocks curated iron/mythril
+* BUY: the Lost Amulet merchant's merged shop stocks curated iron/mythril
   loot at formula prices (an iron sword and the mythril bow
   `M BO`) plus POISON_DAGGER (8g) -- the only dagger source besides
-  the field cache, now that the starter deck carries none.
+  the field cache, now that the starter deck carries none -- and the
+  curated IRON RING (**RG5**, 20g).  Rings are THE healing vector, so
+  healing is purchasable but never free.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one

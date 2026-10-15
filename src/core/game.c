@@ -37,7 +37,7 @@ static void game_prepare_new_game(Game *g)
 {
     g->frame = 0;
     g->game_over_choice = 0;
-    g->shop_id = 1;
+    g->shop_id = 2;
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);

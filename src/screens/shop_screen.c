@@ -19,7 +19,7 @@
  * Cursor state lives in g->item_menu_index. */
 static const ShopDefinition *shop_active(const Game *g)
 {
-    return game_shop_for_id(g ? g->shop_id : 1);
+    return game_shop_for_id(g ? g->shop_id : 2);
 }
 
 /* Full shop content draw lives in the bank-2 body (screen_content.c) so the

@@ -21,8 +21,10 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
+                                      VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
                                       CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      CARD_AMULET,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON)
@@ -265,14 +267,66 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("quest monster hunt active",
                s.reader.variable(VARIABLE_ID_QUEST_MONSTER_HUNT), 1)
 
-    # Shop purchase: shopkeeper at (9,3) bumped from (9,4) upwards.
+    # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
+    # then the amulet is fetched from the forest and delivered for +15g,
+    # unlocking the merchant's merged shop (ring included).  The INTRO is
+    # one page, like the mayor's.
+    s.check("merchant briefing opened",
+            bump_actor(s, planner, "town", (10, 3), "right", "MERCHANT:"),
+            expected="MERCHANT:", actual="none")
+    close_dialogue(s, "MERCHANT:")
+    s.check_eq("amulet quest active",
+               s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 1)
+
+    # Forest detour for the amulet (position from the level JSON; the
+    # planner routes around patrol boxes and blocking actors, goal
+    # exempt).  The amulet chest is blocking: bump from the west.
+    forest = _level("forest")
+    amulet = next(o for o in forest["objects"]
+                  if (o.get("properties") or {}).get("entity_id")
+                  == "ENTITY_ID_AMULET")
+    ax, ay = amulet["position"]["x"], amulet["position"]["y"]
+    follow(s, planner, "town", s.pos(), "forest", (ax - 1, ay))
+    s.settle_scene(expected_scene=SCENE_FOREST)
+    s.check("amulet found",
+            bump_actor(s, planner, "forest", (ax - 1, ay), "right",
+                       "FOUND AMULET"),
+            expected="FOUND AMULET", actual="none")
+    close_dialogue(s, "FOUND AMULET")
+    s.check_eq("amulet in collection",
+               s.reader.collection_count(CARD_AMULET), 1)
+
+    # Back to town: delivery opens the shop (thanks + 15g, amulet
+    # removed, quest COMPLETE).
+    follow(s, planner, "forest", s.pos(), "town", (10, 3))
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("deliver dialogue opened",
+            bump_actor(s, planner, "town", (10, 3), "right",
+                       "You found it!"),
+            expected="You found it!", actual="none")
+    close_dialogue(s, "You found it!")
+    s.check_eq("amulet quest complete",
+               s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 2)
+    s.check_eq("delivery gold",
+               s.reader.gold(), HERO_START_GOLD + 15)
+
+    # Merged shop (merchant, unlocked by the delivery): the ring is the
+    # fourth row (index 3).  Cursor down until its caret shows, then buy.
     s.check("shop opened",
-            bump_actor(s, planner, "town", (9, 4), "up", "SHOP"),
+            bump_actor(s, planner, "town", (10, 3), "right", "SHOP"),
             expected="SHOP", actual="none")
     s.shoot("05-shop", need="SHOP")
+    ring_row = False
+    for _ in range(8):
+        if s.bg_text()[8][:1] == ">":
+            ring_row = True
+            break
+        s.press("down", settle=20)
+    s.check("ring row caret", ring_row, expected="> at row 8",
+            actual=s.bg_text()[8])
     gold0 = s.reader.gold()
     price = s.reader.card_price(CARD_WOOD_RING)
-    s.check_eq("gold before purchase", gold0, HERO_START_GOLD)
+    s.check_eq("gold before purchase", gold0, HERO_START_GOLD + 15)
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
     s.check_eq("ring in collection", s.reader.collection_count(

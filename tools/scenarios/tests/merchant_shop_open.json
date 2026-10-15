@@ -68,6 +68,16 @@
    "contains": "10"
   },
   {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "RG5"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "20"
+  },
+  {
    "type": "variable",
    "variable": "MERCHANT_QUEST",
    "expected": 2

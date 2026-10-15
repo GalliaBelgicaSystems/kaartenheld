@@ -175,8 +175,7 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 |---|---|---|
 | Mayor | (10,5) | Gives the Monster Hunt quest (§4.2). |
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
-| Shopkeeper | (9,3) | Runs the shop (sells the Ring, §9). |
-| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then a bigger shop (§4.3, §9). |
+| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
@@ -280,8 +279,8 @@ reachable — it is not gated behind this quest.
    Returning to the spot afterwards says "Nothing here now."
 4. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his real shop (which sells the Iron Sword and
-   the Mythril Bow):
+   **15 gold**, and opens his shop (Iron Sword, Mythril Bow, Poison
+   Dagger and Ring, §9.3):
 
    > You found it! Thank you, hero!
    > My shop is open now.
@@ -695,14 +694,14 @@ on the enemy type:
 
 ### 9.3 Shops
 
-Two shops exist (`src/game/shops_content.c`):
+One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
-* **Shopkeeper** (Town, (9,3)) — shop 1 — sells the **Ring** (`I RG`,
-  `RG5`) for **20g** (a heal card; the game's only reliable healing,
-  outside loot rings).
-* **Lost Merchant** (Town, (11,3)) — shop 2 — sells the **Iron Sword**
-  for **10g** and the **Mythril Bow** for **30g**.  Reachable only after
-  the Lost Amulet quest (§4.3).
+* **Lost Merchant** (Town, (11,3)) — sells the **Iron Sword** (`I SW`,
+  `SW3`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
+  the **Poison Dagger** (`P DA`, `DA1`) for **8g** and the **Ring**
+  (`I RG`, `RG5`) for **20g** (a heal card; the game's only reliable
+  healing, outside loot rings).  Reachable only after the Lost Amulet
+  quest (§4.3): before the delivery he re-briefs instead of selling.
 
 Shopping: `A` buys the hovered item if you have enough gold and room in
 your card collection (max distinct types = 12).  Feedback lines: `Bought!`,

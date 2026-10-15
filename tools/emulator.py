@@ -143,7 +143,6 @@ ACTOR_INFO_MAP = {
     "SLIME":       {"visual": "E", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME"},
     "MAYOR":       {"visual": "M", "hostile": False, "interaction": "DIALOGUE", "dialogue": "MAYOR_GREETING", "battle": "NONE"},
     "GUARD":       {"visual": "G", "hostile": False, "interaction": "DIALOGUE", "dialogue": "GUARD_GREETING", "battle": "NONE"},
-    "SHOPKEEPER":  {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SHOPKEEPER_GREETING", "battle": "NONE"},
     "BAT":         {"visual": "V", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "BAT"},
     "SLIME_LORD":  {"visual": "L", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "NONE"},
     "MERCHANT":    {"visual": "C", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},

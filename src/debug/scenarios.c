@@ -184,7 +184,7 @@ static void scenario_load_state(void)
         g_game.state.flags.bytes[i] = b[STATE_LOAD_DESC_FLAGS_OFF + i];
     }
     g_game.game_over_choice = b[STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF];
-    g_game.shop_id = 1;
+    g_game.shop_id = 2;
     g_game.prev_screen = SCREEN_OVERWORLD;
     g_game.screen = SCREEN_OVERWORLD;
 

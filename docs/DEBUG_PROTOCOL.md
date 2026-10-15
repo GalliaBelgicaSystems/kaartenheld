@@ -1133,7 +1133,7 @@ RNG_USED
 ## World Actors
 
 **World Actor** is the canonical term for any character-like entity that
-exists in an overworld scene (Mayor, Guard, Shopkeeper, Slime, Bat, Boss,
+exists in an overworld scene (Mayor, Guard, Merchant, Slime, Bat, Boss,
 Villager, Monster). Friendly NPCs and hostile enemies share one data-driven
 structure; hostility, interaction type, dialogue ID, and battle ID decide
 what happens when the player engages an actor.

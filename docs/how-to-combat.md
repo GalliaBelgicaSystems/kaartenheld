@@ -167,8 +167,8 @@ Worked example: incoming 3, you play `SH2` → take **1**.
 
 ## Rings and healing
 
-Rings (`HE`) are the game's healing vector — the shopkeeper sells an
-iron ring, and loot can contain more:
+Rings (`HE`) are the game's healing vector — the merchant sells an
+iron ring once his shop opens, and loot can contain more:
 
 - In **attack**, a ring is a **joker**: any value 1-10, best tier kept.
   It deals 0 damage itself and heals its power on resolve.
