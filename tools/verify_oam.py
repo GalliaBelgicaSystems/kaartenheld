@@ -702,6 +702,63 @@ def verify_scene_transition(sess):
           True, same)
 
 
+def verify_restart_clears_boss_oam(sess):
+    """Regression (boss ghost after new game): the actor loader clears
+    only each runtime slot's `active` flag, leaving sprite_kind/ow_type
+    stale.  The sprite body's multi-tile ENEMY grid block used to ignore
+    `active`, so an inactive slot keeping the castle boss's 2x2 kind
+    redrew the boss every frame on maps without one -- visible at the
+    wake grove (here TEST_FIELD) after killing the end boss and starting
+    a new game, until some map overwrote the slot.  Fixed by gating the
+    grid block on active; stale kinds are now inert.
+    Drives the REAL game_restart() through the debugger (pause at the
+    game_render breakpoint connect() arms, where de already holds &g_game
+    from the main loop, then jump straight into game_restart): no
+    test-only shortcuts, the same code the ending screen runs."""
+    print("== Restart (boss castle -> new game): no boss ghost in OAM ==")
+    initial = load_scenario(sess, "boss_appears.json")["initial_state"]
+    sess.load_scenario(initial)
+    sess.step(2)
+
+    # Precondition (52.16: never assert on a state we did not reach): the
+    # castle boss must own entries 4-7 visibly, or the post-restart reads
+    # below would pass vacuously on a broken setup.
+    pre_tiles = [shadow_oam_slot_tile(sess, i) for i in range(4, 8)]
+    check("restart setup: castle boss owns OAM entries 4-7",
+          [108, 109, 110, 111], pre_tiles)
+    pre_y = [sess._memread(0xC000 + 4 * i) for i in range(4, 8)]
+    check("restart setup: boss entries visible", True,
+          all(y not in (None, 0) for y in pre_y))
+
+    # Call game_restart(&g_game) in place: `c` halts at the armed
+    # game_render breakpoint (de == &g_game from the main loop's call),
+    # so only the PC needs redirecting; the trailing `ret` lands back
+    # in the main loop and subsequent frames render the new game.
+    sess._cmd("c", timeout=15.0)
+    sess._cmd(f"w/r pc 0x{sess.get_symbol('game_restart'):04X}")
+    sess._cmd("c", timeout=15.0)
+    for _ in range(8):
+        sess.step(2)
+    check("restart lands in a boss-less map", "TEST_FIELD",
+          sess.snapshot().get("scene"))
+
+    # The boss footprint must be hidden.  Pin entry 4 precisely: with
+    # slot 3 inactive the body hides exactly that entry, so a visible
+    # entry 4 here is the resurrected boss grid (entries 5+ legitimately
+    # hold field statics -- see below -- so they are not pinned)...
+    post_y4 = sess._memread(0xC000 + 4 * 4)
+    check("restart: ex-boss OAM entry 4 hidden", 0, post_y4)
+    # ...and sweep the whole table: no boss tile (108-111) may be
+    # visible anywhere (stale tile bytes in hidden entries are harmless:
+    # y == 0 means the PPU skips them).
+    ghosts = [(i, sess._memread(0xC000 + 4 * i),
+               sess._memread(0xC000 + 4 * i + 2))
+              for i in range(27)
+              if (sess._memread(0xC000 + 4 * i + 2) or 0) in (108, 109, 110, 111)
+              and (sess._memread(0xC000 + 4 * i) or 0) != 0]
+    check("restart: no visible boss sprite anywhere in OAM", [], ghosts)
+
+
 def verify_portal_step_oam(sess):
     """Regression (point-exit walk target): a point exit used to stage its
     FAR destination as the move target, so the 8-frame walk animation slid
@@ -790,6 +847,7 @@ def main():
                       ("battle steady frame", verify_steady_battle_frame),
                       ("battle VRAM restore", verify_battle_vram_restore),
                       ("scene", verify_scene_transition),
+                      ("restart", verify_restart_clears_boss_oam),
                       ("portal step", verify_portal_step_oam),
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),

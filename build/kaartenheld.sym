@@ -29,7 +29,7 @@
 00:54000 00003655
 00:34000 00003BFF
 00:24000 00003E28
-00:44000 00003E2B
+00:44000 00003E3F
 00:64000 00003EEE
 00:0200 000069F5
 00:FF30 AUD3WAVE
@@ -239,9 +239,9 @@
 00:5F2C _actor_fi
 00:5F2C _actor_find_at
 00:5E6D _actor_find_hostile_slot
-00:479F6 _actor_lo
+00:47A0A _actor_lo
 00:5F98 _actor_load_scene
-00:479F6 _actor_load_scene_banked
+00:47A0A _actor_load_scene_banked
 00:5E61 _actor_re
 00:5E61 _actor_register_tables
 00:024F _add_VBL
@@ -1000,9 +1000,9 @@
 00:5F2C actor_fi
 00:5F2C actor_find_at
 00:5E6D actor_find_hostile_slot
-00:479F6 actor_lo
+00:47A0A actor_lo
 00:5F98 actor_load_scene
-00:479F6 actor_load_scene_banked
+00:47A0A actor_load_scene_banked
 00:5E61 actor_re
 00:5E61 actor_register_tables
 00:024F add_VBL
@@ -1471,7 +1471,7 @@
 00:69F5 l__CODE
 00:3E28 l__CODE_2
 00:3BFF l__CODE_3
-00:3E2B l__CODE_4
+00:3E3F l__CODE_4
 00:3655 l__CODE_5
 00:3EEE l__CODE_6
 00:24EE l__CODE_7
