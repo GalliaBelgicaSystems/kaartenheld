@@ -57,19 +57,22 @@ void ui_dialogue_box_banked(void)
         }
     }
     /* VRAM attr writes: PPU-safe so the box can be painted while the LCD
-     * stays on (overworld -> dialogue overlay path).  When the LCD is off the
-     * wait is skipped (STAT is idle and a wait would spin forever). */
+     * stays on (overworld -> dialogue overlay path).  When the LCD is off
+     * the wait is skipped (STAT is idle and a wait would spin forever).
+     * NO di/ei here: the banked-call trampoline runs this whole body with
+     * interrupts disabled, which is what keeps the timer ISR from firing
+     * mid-bank.  An ei() would admit the ISR, which switches in the music
+     * bank and restores home bank 1 -- this body would resume executing
+     * bank-1 bytes as its own code (flaky wild writes/hangs under
+     * real-timing emulators; invisible under the harness where IE is
+     * clear).  The wait->store window is inherently atomic as is. */
     VBK_REG = 1;
     i = 128;
     do {
         if (LCDC_REG & 0x80) {
-            __asm di __endasm;
             while (STAT_REG & 0x02);
-            *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
-            __asm ei __endasm;
-        } else {
-            *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
         }
+        *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
         dst++;
     } while (--i != 0);
     VBK_REG = 0;

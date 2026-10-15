@@ -2381,6 +2381,36 @@ hero_label_col), HP block at hero_hp_col (icon 2 cols left of "HP:"),
 DECK at deck_col (icon 1 left), AP at ap_col (icon 2 left).  VRAM BG
 tiles 117-127 are FULLY allocated (bar segments + card frames).
 
+### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026)
+
+The banked-call trampoline (`crt0.s` `_banked_call_tramp`) executes `di`
+before switching banks and only `ei` after the body returns and home bank
+1 is restored.  Interrupts are therefore OFF for the entire body: the
+256 Hz timer ISR cannot fire mid-bank, which is what makes every banked
+body safe.
+
+An `ei` (or SDCC `__critical`, which emits `di`/`ei`) inside a banked
+body breaks the invariant: the pending timer ISR fires immediately,
+switches in the music bank, and restores home bank 1 -- the body then
+resumes executing bank-1 bytes as its own code (wild VRAM writes, wedge,
+or hang).  Instance: the dialogue-box paper-attr loop gained per-byte
+`di`/`wait`/`ei` for the LCD-on overlay and flaked ~1-in-6 dialogue
+entries under real-timing emulators (PyBoy walkthrough: every dialogue
+check failed, tilemap reading back attr bytes through a stuck VBK),
+while the SameBoy/mGBA harness stayed green (IE is clear there, so `ei`
+is a no-op -- same masking family as 52.15).
+
+Rules:
+
+* Banked LCD-on VRAM waits need NO `di`: atomicity comes free with the
+  trampoline's held `di` (precedents: `sc_vram_sync_write`,
+  `anim_read_cell`/`anim_write_cell` bounded waits).  Fixed-bank
+  `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is always mapped.
+* `make lint` fails loudly on any bare `di`/`ei` asm instruction inside a
+  file containing `#pragma bank` (no grandfathered violations).
+* Banked render paths must be validated under real timing
+  (`make verify-walkthrough`); the harness cannot catch this class.
+
 ## 52.12 Scenario state ordering
 
 `scenario_begin()` (called by the declarative loader) resets

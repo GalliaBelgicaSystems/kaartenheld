@@ -26,7 +26,7 @@
 00:84000 000008C1
 00:C940 00000F83
 00:74000 000021A8
-00:54000 00002E9A
+00:54000 00002E94
 00:34000 00003A3F
 00:64000 00003BF8
 00:24000 00003DFD
@@ -1014,8 +1014,8 @@
 00:7D54 _world_on
 00:7C1D _world_on_battle_end
 00:7D54 _world_on_battle_fled
-00:5680D _world_pa
-00:5680D _world_patrol_slot_banked
+00:56807 _world_pa
+00:56807 _world_patrol_slot_banked
 00:7BF7 _world_pl
 00:7BD1 _world_player_px
 00:7BF7 _world_player_py
@@ -1535,7 +1535,7 @@
 00:3DFD l__CODE_2
 00:3A3F l__CODE_3
 00:3ECE l__CODE_4
-00:2E9A l__CODE_5
+00:2E94 l__CODE_5
 00:3BF8 l__CODE_6
 00:21A8 l__CODE_7
 00:08C1 l__CODE_8
@@ -1854,8 +1854,8 @@
 00:7D54 world_on
 00:7C1D world_on_battle_end
 00:7D54 world_on_battle_fled
-00:5680D world_pa
-00:5680D world_patrol_slot_banked
+00:56807 world_pa
+00:56807 world_patrol_slot_banked
 00:7BF7 world_pl
 00:7BD1 world_player_px
 00:7BF7 world_player_py

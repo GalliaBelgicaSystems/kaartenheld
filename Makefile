@@ -121,6 +121,13 @@ lint: gfx tiles sfx birds $(SRCS)
 		fi; \
 	done; \
 	CC="$(CC)" INCLUDES="$(INCLUDES)" sh tools/check_banked_copies.sh || ok=0; \
+	for f in $(SRCS); do \
+		if grep -q "#pragma bank" "$$f"; then \
+			if grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm' "$$f"; then \
+				echo "BANKED-DI-EI: $$f must not di/ei inside a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			fi; \
+		fi; \
+	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).
