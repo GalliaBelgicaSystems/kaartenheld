@@ -30,7 +30,7 @@
 00:34000 00003A3F
 00:24000 00003A4B
 00:64000 00003BF8
-00:44000 00003F01
+00:44000 00003F25
 00:0200 00007D36
 00:FF30 AUD3WAVE
 00:FF69 BCPD_REG
@@ -391,11 +391,11 @@
 00:203D _event_resolve_map_enter
 00:D71E _g_active
 00:D71E _g_active_tile_palette
-00:47F00 _g_actor_
+00:47F24 _g_actor_
 00:D8FC _g_actor_registry
 00:D8FE _g_actor_registry_count
-00:47F00 _g_actor_table_count
-00:47E8D _g_actor_tables
+00:47F24 _g_actor_table_count
+00:47EA8 _g_actor_tables
 00:47804 _g_all_ex
 00:47804 _g_all_exits
 00:D575 _g_anim_c
@@ -1207,11 +1207,11 @@
 00:203D event_resolve_map_enter
 00:D71E g_active
 00:D71E g_active_tile_palette
-00:47F00 g_actor_
+00:47F24 g_actor_
 00:D8FC g_actor_registry
 00:D8FE g_actor_registry_count
-00:47F00 g_actor_table_count
-00:47E8D g_actor_tables
+00:47F24 g_actor_table_count
+00:47EA8 g_actor_tables
 00:47804 g_all_ex
 00:47804 g_all_exits
 00:D575 g_anim_c
@@ -1572,7 +1572,7 @@
 00:7D36 l__CODE
 00:3A4B l__CODE_2
 00:3A3F l__CODE_3
-00:3F01 l__CODE_4
+00:3F25 l__CODE_4
 00:390B l__CODE_5
 00:3BF8 l__CODE_6
 00:21A8 l__CODE_7

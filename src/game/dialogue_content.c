@@ -66,8 +66,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_DOG_GREETING,
         "WILD DOG:",
-        2,
-        {"Meow.", "I mean, bark bark."},
+        4,
+        {"Meow.", "", "", "Bark, bark I mean."},
         0
     },
     {

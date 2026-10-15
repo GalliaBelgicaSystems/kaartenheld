@@ -67,6 +67,13 @@ static const WorldActorDefinition g_test_town_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 7, 0
     },
+    {
+        0, ENTITY_ID_DOG, 15, 14, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "WILD DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
 };
 
 static const WorldActorDefinition g_test_forest_actors[] = {
