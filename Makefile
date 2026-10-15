@@ -123,8 +123,10 @@ lint: gfx tiles sfx birds $(SRCS)
 	CC="$(CC)" INCLUDES="$(INCLUDES)" sh tools/check_banked_copies.sh || ok=0; \
 	for f in $(SRCS); do \
 		if grep -q "#pragma bank" "$$f"; then \
-			if grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|CRITICAL|enable_interrupts|disable_interrupts|set_interrupts' "$$f" | grep -vE '^[0-9]+:[[:space:]]*(\*|//)' | grep -q .; then \
-				echo "BANKED-DI-EI: $$f must not di/ei (or __critical/enable|disable|set_interrupts) inside a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			hits=$$(sed -e 's|//.*$$||' -e 's|/\*.*\*/||g' "$$f" | grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|\<CRITICAL\>|enable_interrupts|disable_interrupts|set_interrupts' | grep -vE '^[0-9]+:[[:space:]]*\*'); \
+			if [ -n "$$hits" ]; then \
+				echo "$$hits" | sed "s|^|$$f:|"; \
+				echo "BANKED-DI-EI: $$f has $$(echo "$$hits" | wc -l) forbidden interrupt op(s) in a banked body (AGENTS.md 52.11.3)"; ok=0; \
 			fi; \
 		fi; \
 	done; \

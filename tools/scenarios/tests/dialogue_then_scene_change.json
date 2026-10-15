@@ -150,6 +150,18 @@
    "col": 5,
    "row": 5,
    "expected": 134
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 9,
+   "row": 6,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 5,
+   "row": 5,
+   "expected": 5
   }
  ],
  "initial_state": {

@@ -87,6 +87,13 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         } else if (t == EVENT_ACTION_ADD_VARIABLE) {
             game_variable_add(&g->state, (VariableId)a0, a1);
         } else if (t == EVENT_ACTION_SCENE_CHANGE) {
+            /* Must not run in the same event as EVENT_ACTION_DIALOGUE:
+             * the new map is not rendered until the next overworld
+             * frame, so a same-frame dialogue would take the LCD-on
+             * overlay over stale VRAM.  Keep scene-changing and
+             * dialogue-starting events separate (no shipped event
+             * combines them; interaction_on_dialogue_end also never
+             * changes scenes for the same reason). */
             scene_load(g, (SceneId)a0, (uint8_t)a1, (uint8_t)a->arg2);
         } else if (t == EVENT_ACTION_ADD_ITEM) {
             ok = deck_collection_add(&g->state.cards, (CardId)a0, (uint8_t)a1);
