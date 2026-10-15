@@ -135,18 +135,18 @@ The **leading card** decides the action:
 
 - **Sword/bow/dagger lead** → damage. Base = sum of the
   non-shield, non-ring values. Shields in the mix add 0 damage but
-  still shape the hand — `SW1 SH2 SW3` is a straight (×150%) on a base
-  of just `1 + 3 = 4`, dealing 6.
+  still shape the hand — `SW1 SH1 DA1` is three-of-a-kind (×180%) on a base
+  of just `1 + 1 = 2`, dealing 3.
 - **Ring (`HE`) lead** → heal instead of damage. You gain the whole
   hand's scaled power **plus** the ring's own value. Put the ring
   *second* if you want the swords to hit and the ring to just top you up.
 - **Shield lead** → still deals the non-shield damage sum (shields are
   "fodder that counts"). Only a ring lead turns an attack into a heal.
 
-Worked example: `SW3 + SW3` is a PAIR — base 6 × 120% = **7 damage**.
+Worked example: `SW1 + SW1` is a PAIR — base 2 × 120% = **2 damage**.
 
 The COMBO row above your hand previews the tier live as you select.
-Playing junk that makes nothing still **eats the cards** — a lone `SH2`
+Playing junk that makes nothing still **eats the cards** — a lone `SH1`
 on attack does 0 and is gone. That trade (burn a shield for a bigger
 attack now vs save it to block next) is the core decision of the game.
 
@@ -163,7 +163,7 @@ net > 0  -> you take that much
 net <= 0 -> no damage; over-block heals you ONLY with a ring in the mix
 ```
 
-Worked example: incoming 3, you play `SH2` → take **1**.
+Worked example: incoming 3, you play `SH1` → take **2**.
 
 ## Rings and healing
 

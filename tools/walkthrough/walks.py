@@ -30,7 +30,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       MUSIC_DUNGEON)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
-MAX_BATTLE_ROUNDS = 14
+MAX_BATTLE_ROUNDS = 26
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
@@ -156,20 +156,35 @@ def _battle_round(s):
     """One full round: select attack cards + execute, then select shield
     cards + execute.  True when the battle reached a result banner.
     Phase waits are input-free (the game advances automatically after
-    each execute)."""
+    each execute).  Both executes are retried like the opening round
+    below: a press eaten by edge timing leaves the phase open instead
+    of advancing, and over a long fight (flat-1 opening pool needs
+    15+ rounds for Carl's 15 HP) a single desync cascades into rounds
+    of phase-mismatched presses dealing nothing."""
     # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
     # fallback literal PLAYER TURN).
     s.wait_for(lambda: s.text_has("TARGET ")
                or s.text_has("PICK CARDS")
                or s.text_has("PLAYER TURN"), ticks=180)
     _select_cards(s, ATTACK_TYPES)
-    s.press("select", settle=40)     # execute attack
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            return True
+        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+            break
     if s.text_has("VICTORY") or s.text_has("DEFEATED"):
         return True
     # Defense phase: <name>: DEFEND! banner.
-    s.wait_for(lambda: s.text_has("DEFEND"), ticks=240)
     _select_cards(s, (BT_SHIELD,))
-    s.press("select", settle=40)     # execute defense
+    for _ in range(4):
+        s.press("select", settle=40)     # execute defense
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            return True
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PICK CARDS")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
     return s.text_has("VICTORY") or s.text_has("DEFEATED")
 
 
@@ -526,8 +541,8 @@ def walk_b(planner, checks):
                HERO_START_GOLD + props.get("gold_reward", 0))
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool raised 2 -> 3",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("energy pool raised 0 -> 2",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     # Field cache east of Carl: bumping it opens the reward speech (first
     # poison dagger plus the AP unlock, idempotent with the spar reward),
     # then grants both.
@@ -730,7 +745,7 @@ def walk_d(checks):
             ("17-tutorial-slide1", "SW: SWORD"),
             ("18-tutorial-slide2", "CARD TYPES 2"),
             ("19-tutorial-slide3", "COMBOS"),
-            ("20-tutorial-slide4", "2/turn"),
+            ("20-tutorial-slide4", "1/turn"),
             ("21-tutorial-slide5", "DEFEND & STATUS"),
             ("22-tutorial-slide6", "SHIELD CARD")):
         s.check(label, s.press_until(

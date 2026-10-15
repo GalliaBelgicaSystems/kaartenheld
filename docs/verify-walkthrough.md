@@ -28,7 +28,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
 | Shop | merchant (shop_id=2, unlocked by the amulet delivery) sells CARD_IRON_SWORD, CARD_BOW_9, CARD_POISON_DAGGER, CARD_WOOD_RING; A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
-| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits Carl's `gold_reward` from `levels/field.json`; his defeat sets `ENERGY_POOL` 3 |
+| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits Carl's `gold_reward` from `levels/field.json`; his defeat sets `ENERGY_POOL` 2 |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
@@ -150,12 +150,13 @@ tools/walkthrough/
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
   (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
   1x15 HP practice spar (0-damage deck); his defeat raises ENERGY_POOL
-  2 -> 3 and shows his good-luck speech deferred at the battle exit.
+  0 -> 2 and shows his good-luck speech deferred at the battle exit.
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection
   must be verified against `combo_count` and retried (§52.10).
 * The starter hand is mostly swords/shields; combos of 3 swords deal
-  ~10 damage — trio dies in a handful of hand-aware rounds.
+  ~5 damage — Carl's 15 HP spar takes a dozen-plus single-card rounds
+  at the flat-1 starting pool.
 * `+429` in the Battle struct (mapped as `energy`) does not behave like
   a plain energy budget under scripted play; selection therefore keys
   off `combo_count`, not energy.

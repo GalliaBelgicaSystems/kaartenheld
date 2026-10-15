@@ -133,6 +133,9 @@
   "deck": {
    "IRON_SWORD": 4,
    "WOOD_RING": 2
+  },
+  "variables": {
+   "ENERGY_POOL": 2
   }
  }
 }

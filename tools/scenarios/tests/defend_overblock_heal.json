@@ -154,6 +154,9 @@
    }
   },
   "seed": 5002,
-  "start_battle": true
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
  }
 }

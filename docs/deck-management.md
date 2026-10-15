@@ -18,19 +18,19 @@ draw-pile CardIds), compiled by `battle_compile.py` into
 in the level editor's Hero view.  The default set is:
 
 ```text
-IRON_SWORD    ×4   → SW3   (max_copies 4)
-WOODEN_SHIELD ×3   → SH2   (max_copies 3)
-FIRE_SWORD    ×3   → SW4   (unlimited uses; BURN rider)
+IRON_SWORD    ×4   → SW1   (max_copies 4)
+WOODEN_SHIELD ×3   → SH1   (max_copies 3)
+FIRE_SWORD    ×3   → SW1   (unlimited uses; BURN rider)
 ```
 
 No daggers: the first POISON_DAGGER (DA1, max_copies 3) comes from the
 field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
 one-shot via `STORY_FLAG_ID_FIELD_CHEST`, announced by its own reward
-speech that also grants the +1 AP pool unlock) — and the Merchant sells
+speech that also grants +1 AP) — and the Merchant sells
 more for 8 gold.
 
 The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
-the opening battle hand is `SW3 SW3 SH2 SH2 SW4` and the draw pile starts at
+the opening battle hand is `SW1 SW1 SH1 SH1 SW1` and the draw pile starts at
 5. The original five-card grant was enlarged so a fresh file can actually
 cycle its deck (draw → discard → reshuffle) without shopping first.
 
@@ -43,10 +43,10 @@ Consequences:
   mirrors the granted set byte-for-byte (including the first-five deal
   order).
 - Healing is **not** free at the start. The only heal source is the shop's
-  IRON RING card — **RG5** (power 5, `uses_per_battle` 3, price 20g).
+  IRON RING card — **RG1** (power 1, `uses_per_battle` 3, price 20g).
   Buy it, then add it to the deck from the CARDS menu.
 - Shop rows render the ITEM code derived from the card definition
-  (`ui_card_code_str`: weapon-type code + power digit, e.g. `RG5`, `SW3` --
+  (`ui_card_code_str`: weapon-type code + power digit, e.g. `RG1`, `SW1` --
   a HEAL card is a ring, so the shop shows `RG` rather than its battle
   code `HE`) plus its `price` — no display strings are duplicated in the
   shop layer.
@@ -74,7 +74,7 @@ Each card occupies a **pair of rows**:
 
 - **Lore name**: `def->name`, the player-facing card name (e.g. `I SW`,
   `W SH`, `F SW`, `I RG`), shown in the CARDS tab and the detail page. The
-  combat hand keeps the short `<battle_type><power>` code (`SW3`, `HE5`, ...)
+  combat hand keeps the short `<battle_type><power>` code (`SW1`, `HE1`, ...)
   since that is where the abbreviation fits the HUD.
 - **Description**: `card_get_description(battle_type)` — the same string the
   battle HUD shows.
@@ -166,7 +166,7 @@ restated here because it constrains the menu's promises:
   enemy still attacks).
 - `uses_remaining` travels inside the `Card` copy through discard/draw/
   reshuffle, so **limited cards stay depleted across reshuffles** while
-  unlimited cards cycle freely. A depleted HE5 returns to the hand but is
+  unlimited cards cycle freely. A depleted HE1 returns to the hand but is
   unplayable (skipped by cursor movement and auto-select).
 
 ## 7. Telemetry contract
@@ -186,11 +186,11 @@ semantic assertion names.
 | Scenario | Proves |
 |---|---|
 | `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
-| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW3 SW3 SH2 SH2 SW4 from the 10-card table) |
+| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW1 SW1 SH1 SH1 SW1 from the 10-card table) |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
 | `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |
-| `reshuffle_preserves_limits` | HE5 (ring) depletes after 3 plays and stays dead across reshuffle; SW keeps cycling |
+| `reshuffle_preserves_limits` | HE1 (ring) depletes after 3 plays and stays dead across reshuffle; SW keeps cycling |
 | `herb_purchase_flow` | buy herb → add to deck → battle heal 5 |
 
 Existing scenarios bound to the old tab/filter/sort keybindings are updated

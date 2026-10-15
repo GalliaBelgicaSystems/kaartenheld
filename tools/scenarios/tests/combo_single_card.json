@@ -34,7 +34,7 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "SW3"
+   "contains": "SW1"
   },
   {
    "type": "battle_enemy_hp",

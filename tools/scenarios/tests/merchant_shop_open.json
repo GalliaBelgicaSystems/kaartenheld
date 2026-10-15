@@ -60,7 +60,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "SW3"
+   "contains": "SW1"
   },
   {
    "type": "screen_row",
@@ -70,7 +70,7 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "RG5"
+   "contains": "RG1"
   },
   {
    "type": "screen_row",

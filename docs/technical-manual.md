@@ -113,7 +113,7 @@ Battle and menus have their own controls, covered in §6 and §7.
 2. **CARD TYPES** — SW sword (damage), SH shield (block), BO bow (damage).
 3. **CARD TYPES 2** — HE heal (restore), DA dagger (dmg), F SW fire + BURN.
 4. **COMBOS** — played cards rank like poker hands, boosting effects.
-5. **ENERGY & COMBAT** — cards cost ENERGY; start with 2/turn.
+5. **ENERGY & COMBAT** — cards cost ENERGY; start with 1/turn.
 6. **DEFEND & STATUS** — only SH blocks dmg; SW/BO/DA block 0; POISON is a
    damage-over-time.
 7. **SHIELD CARD** — offense: 0 dmg, but still counts for combos.
@@ -297,9 +297,9 @@ Every tool in battle is a **card**.  Cards have several attributes
 | Field | Meaning |
 |---|---|
 | **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The descriptive name shown in menus. |
-| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW3`,
-`SH2`, `RG5`; the **battle hand** uses its own code set — `SW3`, `SH2`,
-`BO2`, **`HE5`** for a heal ring, `DA1`. |
+| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW1`,
+`SH1`, `RG1`; the **battle hand** uses its own code set — `SW1`, `SH1`,
+`BO2`, **`HE1`** for a heal ring, `DA1`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
 | **Cost** | Energy price to play in battle (most cards cost 1). |
@@ -315,7 +315,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG5`, battle hand label `HE5`. |
+| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG1`, battle hand label `HE1`. |
 | `DA` | Dagger | Attack | 1 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
@@ -327,10 +327,10 @@ All catalogue cards (`src/game/cards_content.c`):
 
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
-| Iron Sword | `I SW` | `SW3` | ATK | 3 | 1 | – | 4 | — | 10g |
-| Wooden Shield | `W SH` | `SH2` | DEF | 2 | 1 | – | 3 | — | — |
-| Ring (shop) | `I RG` | `RG5` | HEL | 5 | 1 | 3/battle | 3 | — | 20g |
-| Fire Sword | `F SW` | `SW4` | ATK | 4 | 1 | – | 3 | BURN 128 | — |
+| Iron Sword | `I SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | 10g |
+| Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 3 | — | — |
+| Ring (shop) | `I RG` | `RG1` | HEL | 1 | 1 | 3/battle | 3 | — | 20g |
+| Fire Sword | `F SW` | `SW1` | ATK | 1 | 1 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA1` | ATK | 1 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
@@ -356,7 +356,7 @@ Deck rules (`src/rpg/deck.h`):
 ### 5.5 Starter deck
 
 A new game grants this 12-card deck (`content.c`): **4× Iron Sword
-(`SW3`), 3× Wooden Shield (`SH2`), 3× Fire Sword (`SW4`), 2× Poison
+(`SW1`), 3× Wooden Shield (`SH1`), 3× Fire Sword (`SW1`), 2× Poison
 Dagger (`DA1`)**.  The opening hand is always `SW SW SH SH SW` (the first
 five copies are the two swords, two shields and a fire sword; the extras
 only deepen the draw pile).
@@ -389,8 +389,10 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 ### 6.2 Hand, energy, timer
 
 * **Hand**: 5 cards drawn from your deck at battle start.
-* **Energy**: **6 per decision phase** (attack and defend each get a
-  fresh 6).  Most cards cost 1; the Mythril Bow
+* **Energy**: the **pool** per decision phase (attack and defend each get a
+  fresh refill to full).  It starts at **1**; the tutorial, the field
+  cache and the Monster Hunt quest each grant **+1** (up to 4).  Most
+  cards cost 1; the Mythril Bow
   costs 2.  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
@@ -584,8 +586,8 @@ Selected cards are ranked **exactly like poker hands**
   pairs and kinds work with 2+.
 * **Rings are JOKER cards** (`combo_content.c` §34.3): in the hand
   evaluation, each ring's value may be any value **1..10** — the evaluator
-  tries every legal value and keeps the *best* tier.  A `SW3, SH2, RG5`
-  selection lets the ring become a 3 (a pair) so the tier improves.
+  tries every legal value and keeps the *best* tier.  A `SW1, SH1, RG1`
+  selection lets the ring become a 1 (a pair) so the tier improves.
   Crucially the joker substitutes **values only** — a ring's symbol is
   still `HE/RG`, so it still participates in (and can break) a suited
   bonus.  A lone ring is the best hand-add (wild value), but two rings
@@ -613,8 +615,8 @@ where multiplier is the tier percent, plus a **+25% suited bonus** when all
 cards that enter the hand evaluation share one symbol — in **attack** that
 means every selected card (a shield or ring you slot in can break a suited
 bonus); in **defend** it means every shield/ring you play.  Examples: a
-`SW3 + SW3` pair = 6 × 120% = 7 (truncated); a `SW3,SW3,SH2,SH2,SH2` full
-house (power 6) = 6 × 260% = 15.
+`SW1 + SW1` pair = 2 × 120% = 2 (truncated); a `SW1,SW1,SH1,SH1,SH1` full
+house (power 2) = 2 × 260% = 5.
 
 The **suited bonus** is the reason mixing too many card types dilutes your
 damage — a homogeneous hand punches well above its weight.
@@ -697,9 +699,9 @@ on the enemy type:
 One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
 * **Lost Merchant** (Town, (11,3)) — sells the **Iron Sword** (`I SW`,
-  `SW3`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
+  `SW1`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
   the **Poison Dagger** (`P DA`, `DA1`) for **8g** and the **Ring**
-  (`I RG`, `RG5`) for **20g** (a heal card; the game's only reliable
+  (`I RG`, `RG1`) for **20g** (a heal card; the game's only reliable
   healing, outside loot rings).  Reachable only after the Lost Amulet
   quest (§4.3): before the delivery he re-briefs instead of selling.
 
@@ -827,7 +829,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 * Hero: HP 10, gold 20, deck 12, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 2/round, timer 20s per decision.
+* Battle: hand 5, energy 1/round (tutorial/chest/mayor each grant +1, up to 4), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

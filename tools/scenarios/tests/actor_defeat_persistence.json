@@ -1,7 +1,7 @@
 {
  "name": "actor_defeat_persistence",
  "test": true,
- "description": "Beating Carl records SLIME_FIELD DEFEATED persistently and raises the pool to 3 with the victory speech (post-battle static checks live in field_chest_dagger/town flows: a pre-existing debug-only battle-turn wipe can drop statics, see roadmap)",
+ "description": "Beating Carl records SLIME_FIELD DEFEATED persistently and raises the pool to 2 with the victory speech (post-battle static checks live in field_chest_dagger/town flows: a pre-existing debug-only battle-turn wipe can drop statics, see roadmap)",
  "actions": [
   {
    "type": "wait",
@@ -193,7 +193,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 3
+   "expected": 2
   },
   {
    "type": "actor_state",

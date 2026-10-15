@@ -1699,7 +1699,7 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   IMPLEMENTED (selection gate, battle msg id 3).
 * Rings are THE healing vector of the game: every HEAL-type card is a
   ring by construction, and the Merchant sells a curated IRON RING
-  (`I RG`; shop label **RG5**, 20g) as the heal source once his shop
+  (`I RG`; shop label **RG1**, 20g) as the heal source once his shop
   opens.  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
@@ -1756,7 +1756,7 @@ The Lost Amulet merchant opens shop 2 as the CARD MERCHANT:
   loot at formula prices (an iron sword and the mythril bow
   `M BO`) plus POISON_DAGGER (8g) -- the only dagger source besides
   the field cache, now that the starter deck carries none -- and the
-  curated IRON RING (**RG5**, 20g).  Rings are THE healing vector, so
+  curated IRON RING (**RG1**, 20g).  Rings are THE healing vector, so
   healing is purchasable but never free.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying

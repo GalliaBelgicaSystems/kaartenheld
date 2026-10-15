@@ -1264,14 +1264,16 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   uncapped). Enforced in `src/rpg/deck.c`; capping the collection too keeps
   the fixed-size entry array honest at 12 slots.
 - **Energy model**: per-turn pool from the `ENERGY_POOL` variable
-  (default 2 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
+  (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
-  events raise the variable with `ADD_VARIABLE` (no cap); battles stage the
+  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +2,
+  chest +1, mayor +1 from the unset base, reaching 4 in any order);
+  battles stage the
   pool at entry and reuse it for the whole fight. Affordability is checked
   at selection time against `energy - combo_reserved_cost()` and paid at
   resolve time. The small default pool means combo scenarios select
-  cost-0 (or at most two cost-1) cards so the hand still fits the pool.
+  cost-0 (or a single cost-1) cards so the hand still fits the pool.
 - **Deck-size ceiling unreachable**: the 20-card deck limit cannot be hit by
   current content — total deckable copies across the catalog are 17
   (IRON_SWORD ×4 + WOODEN_SHIELD ×3 + WOOD_RING ×3 + FIRE_SWORD ×3 +
@@ -1279,7 +1281,7 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   gap; no synthetic content was added just to test it.
 - **Starter deck granted at new game**: a new game grants the collection
   IRON_SWORD ×4 + WOODEN_SHIELD ×3 + FIRE_SWORD ×3 + POISON_DAGGER ×2 (and decks all
-  twelve, deal order SW SW SH SH SW first so the opening hand is SW3 SW3 SH2 SH2 SW4),
+  twelve, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW1),
   so the first battle already draws from the real deck system. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:

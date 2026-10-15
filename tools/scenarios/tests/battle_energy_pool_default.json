@@ -1,7 +1,7 @@
 {
  "name": "battle_energy_pool_default",
  "test": true,
- "description": "Unset ENERGY_POOL (0, e.g. scenarios that do not stage it) falls back to the default pool of 2: two cost-1 cards select (AP 2 to 0) and the third is rejected, so the badge shows AP: 0/ 2 and battle_energy stays at 2 pre-resolve. Companion to battle_energy_pool_grows (raised pool) and card_cost_energy (rejection executes).",
+ "description": "Unset ENERGY_POOL (0, e.g. scenarios that do not stage it) falls back to the default pool of 1: one cost-1 card selects (AP 1 to 0) and the second is rejected, so the badge shows AP: 0/ 1 and battle_energy stays at 1 pre-resolve. Companion to battle_energy_pool_grows (raised pool) and card_cost_energy (rejection executes).",
  "actions": [
   {
    "type": "wait",
@@ -97,11 +97,11 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "AP: 0/ 2"
+   "contains": "AP: 0/ 1"
   },
   {
    "type": "battle_energy",
-   "expected": 2
+   "expected": 1
   }
  ],
  "initial_state": {
