@@ -64,7 +64,63 @@
         "y": 5,
         "width": 1,
         "height": 1,
-        "tile": "castle.castle_floor_with_debris"
+        "tile": "castle.castle_exit"
+      },
+      {
+        "x": 0,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_bottom_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 17,
+        "width": 8,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 11,
+        "y": 17,
+        "width": 8,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 19,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_bottom_right_corner_wall"
+      },
+      {
+        "x": 0,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_bottom_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 17,
+        "width": 8,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 11,
+        "y": 17,
+        "width": 8,
+        "height": 1,
+        "tile": "castle.castle_bottom_wall"
+      },
+      {
+        "x": 19,
+        "y": 17,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_bottom_right_corner_wall"
       }
     ]
   },
@@ -176,30 +232,6 @@
         "actors.actors_bats_frame_1",
         "actors.actors_bats_frame_2"
       ]
-    },
-    {
-      "id": "hall_knight",
-      "type": "signpost",
-      "position": {
-        "x": 6,
-        "y": 13
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SIGNPOST",
-        "display_name": "KNIGHT",
-        "dialogue": "DIALOGUE_ID_ADVICE_KNIGHT",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "?",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
     },
     {
       "id": "hall_slime",

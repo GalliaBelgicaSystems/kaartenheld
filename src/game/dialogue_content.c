@@ -108,8 +108,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MERCHANT_INTRO,
         "MERCHANT:",
-        3,
-        {"A thief stole my", "family heirloom!", "Search the Forest!"},
+        5,
+        {"A thief stole my", "family heirloom!", "Bandits settle", "north, in the", "mountains!"},
         0
     },
     {

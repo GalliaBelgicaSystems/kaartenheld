@@ -418,7 +418,7 @@
   "player": {
     "spawn": {
       "x": 10,
-      "y": 17,
+      "y": 16,
       "facing": "DOWN"
     }
   },

@@ -295,7 +295,7 @@ def emit_palette():
         pal = pal_tbl[tile_id - TILESET_BASE];
     No multiplication, no glyph intermediate, O(1).
 
-    Lengths (48/48/16/48) must match rpg_tile_lookup.h; a mismatch is a
+    Lengths (48/48/17/48) must match rpg_tile_lookup.h; a mismatch is a
     loud SDCC error, never silent wrong colors. There is no heuristic
     fallback (luminance guessing was deleted with the old pipeline).
     """

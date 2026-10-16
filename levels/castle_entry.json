@@ -194,7 +194,7 @@
         "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -216,7 +216,7 @@
         "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",

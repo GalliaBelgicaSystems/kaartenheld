@@ -3238,8 +3238,9 @@ the commit/PR without booting anything.
 * Five fresh sessions are used: Walk A (overworld → Town → dialogue → shop →
   quick screen), Walk B (slime battle on the Field), Walk C (Forest gate),
   Walk D (title-menu + tutorial slides), and Walk E (castle mimic battle:
-  FIELD → south → SOUTH_FIELD → south → MOUNTAIN_PASS → north → CASTLE
-  ENTRY → north → GREAT HALL → north → CASTLE, then into the mimic; the
+  FIELD → tunnel → FOREST → tunnel → GRASSY FOREST → north → DESOLATE
+  FIELD → tunnel → SOUTH RIDGE → tunnel → SOUTH FIELD → north → CASTLE
+  ENTRY → north → GREAT HALL → tunnel → CASTLE, then into the mimic; the
   planner routes through the expanded castle chain and all corridor
   columns avoid patrol boxes), so persistent state never bleeds
   between milestones.  Walk D stops at the boot title screen (START → menu,

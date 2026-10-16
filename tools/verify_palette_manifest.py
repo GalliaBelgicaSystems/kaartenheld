@@ -162,13 +162,23 @@ def main():
                 if "tile" in v and "index" in v}
         slot_colors = {p["index"]: p["colors"] for p in man["palettes"]}
 
+        # Castle loads a subset: VRAM slots 0..15 plus the exit stairs
+        # (vram index 26) at slot 16. Every other tileset packs slot i =
+        # vram index i, so only castle needs the explicit map.
+        slot_vram = list(range(n)) if ts != "castle" else list(range(16)) + [26]
+        if ts == "castle" and n != 17:
+            errors.append(f"{ts}: expected 17 loaded slots (0..15 + exit 26), got {n}")
+            continue
+
         for i in range(n):
-            v = vram.get(i)
+            v = vram.get(slot_vram[i])
             if v is None:
                 errors.append(f"{ts}: VRAM slot {i} has no vram_block entry")
                 continue
             cell = (v["x"], v["y"])
-            enc_cell = (i % w, i // w)
+            # Castle slot 16 holds vram index 26 (sheet (8,2)) by explicit
+            # gfx-rule coordinate, not row-major packing.
+            enc_cell = (8, 2) if (ts == "castle" and i == 16) else (i % w, i // w)
             if cell != enc_cell:
                 errors.append(
                     f"{ts}: VRAM slot {i} ('{v['tile']}') is vram_block cell {cell}, but the "
@@ -176,7 +186,8 @@ def main():
                 continue
             if ids[i] != v["tile"]:
                 errors.append(
-                    f"{ts}: tile_ids[{i}] = '{ids[i]}' but vram_block index {i} is '{v['tile']}' "
+                    f"{ts}: tile_ids[{i}] = '{ids[i]}' but VRAM slot {i} loads "
+                    f"vram_block index {slot_vram[i]} ('{v['tile']}') "
                     f"(manifest not in VRAM-slot order)")
             ramp_hex = shades.get("%d,%d" % cell)
             if ramp_hex is None:

@@ -57,7 +57,7 @@
         "y": 12,
         "width": 1,
         "height": 1,
-        "tile": "castle.castle_floor_with_debris"
+        "tile": "castle.castle_exit"
       }
     ]
   },

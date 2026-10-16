@@ -161,7 +161,14 @@ typedef enum {
     TILE_FOREST_68 = 140,
 
     /* Castle Landscape tiles: 16 tiles in sheet scan order (0..15),
-     * mapping 1:1 to the 16-tile castle VRAM block (RPG_TILE_BASE_WORLD). */
+     * mapping 1:1 to the first 16 castle VRAM slots (RPG_TILE_BASE_WORLD),
+     * plus the exit stairs (vram index 26, sheet (8,2)) at VRAM slot 16.
+     * The exit keeps TileType value 141 (gap between FOREST_68 and
+     * DESOLATE_WALL_00) because values 88..98 collide with VILLAGE_00..10;
+     * ui.c maps it to slot 16 explicitly. Its semantic glyph falls back
+     * to '.' (the ui.c landscape-glyph gate covers 00..15 only; extending
+     * it costs fixed-bank bytes the debug link doesn't have): exits stay
+     * observable via the exits table + tunnel ids + portal-art check. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -178,6 +185,7 @@ typedef enum {
     TILE_CASTLE_13 = 85,
     TILE_CASTLE_14 = 86,
     TILE_CASTLE_15 = 87,
+    TILE_CASTLE_26 = 141,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).

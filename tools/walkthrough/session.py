@@ -241,10 +241,14 @@ class Session:
     def walk_btn(self, btn, goal, budget=600):
         """Discrete one-tile presses until goal() holds; a press that
         produced no movement is retried, so the route converges
-        regardless of host timing (same mechanics as the old walk())."""
+        regardless of host timing (same mechanics as the old walk()).
+        Bails immediately on DECK: (ambush started) instead of burning
+        all 600 presses (~16,800 frames) into the battle screen."""
         for _ in range(budget):
             if goal():
                 return True
+            if self.text_has("DECK:"):
+                return False
             x0, y0 = self.pos()
             self.pb.button_press(btn)
             self.tick(4)
@@ -252,6 +256,8 @@ class Session:
             for _ in range(24):
                 self.tick()
                 if self.pos() != (x0, y0):
+                    break
+                if self.text_has("DECK:"):
                     break
         return bool(goal())
 

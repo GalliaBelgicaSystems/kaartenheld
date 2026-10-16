@@ -84,6 +84,20 @@ def god_mode(s):
     s.pb.memory[wbase + 3] = 99
 
 
+def ungod_mode(s):
+    """Restore base hero HP before saving (walk-a only): god-mode 99/99
+    must not persist into SRAM or walk-l would load a mutated save.
+    Transit loot gold stays (walk-a asserts >= for exactly this)."""
+    from walkthrough.state_reader import HERO_START_HP
+    r = s.reader
+    pbase = r.state + OFF_PARTY
+    s.pb.memory[pbase + CHARACTER_STATE_HP] = HERO_START_HP
+    s.pb.memory[pbase + CHARACTER_STATE_MAX_HP] = HERO_START_HP
+    wbase = r.world + 5
+    s.pb.memory[wbase + 2] = HERO_START_HP
+    s.pb.memory[wbase + 3] = HERO_START_HP
+
+
 def poke_hand_99(s):
     """Set every attack card in the live battle hand to 99 (one-shot).
     Transit fights only; intentional fights (walk-b Carl) never call
@@ -115,7 +129,10 @@ def transit_fight(s):
                    or s.text_has("PICK CARDS")
                    or s.text_has("PLAYER TURN"), ticks=180)
         poke_hand_99(s)
-        # Select exactly one attack card (first attack slot).
+        # Select exactly one attack card (first attack slot). If the
+        # 5-card draw holds no attack (all shields/heals), execute the
+        # empty turn anyway: the round advances and a fresh hand draws
+        # next round instead of stalling here forever.
         picked = False
         for idx in range(5):
             if not _cursor_to(s, idx):
@@ -129,8 +146,6 @@ def transit_fight(s):
                     picked = True
                     break
                 s.tick(2)
-            break
-        if not picked:
             break
         for _ in range(4):
             s.press("select", settle=40)
@@ -174,9 +189,20 @@ def follow(s, planner, from_scene, start, to_scene, goal,
             _walk_path(s, [step[1:]])
         else:
             _, direction, e = step
-            s.check("exit %s -> %s" % (direction, e["target_scene"]),
-                    s.cross_exit(direction,
-                                 planner.scenes[e["target_scene"]].scene_id),
+            res = s.cross_exit(direction,
+                               planner.scenes[e["target_scene"]].scene_id)
+            # Ambush on the exit step overrides the transition
+            # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight first,
+            # then retry the crossing once before logging the check, so
+            # a heroic transit win is not recorded as a failed exit.
+            if not res and s.text_has("DECK:"):
+                win = transit_fight(s)
+                s.check("transit fight victory", win,
+                        expected="VICTORY", actual="defeat" if not win else "win")
+                if win:
+                    res = s.cross_exit(
+                        direction, planner.scenes[e["target_scene"]].scene_id)
+            s.check("exit %s -> %s" % (direction, e["target_scene"]), res,
                     expected=e["target_scene"],
                     actual="scene %d" % s.reader.scene_state()["scene_id"])
             if s.text_has("DECK:"):
@@ -495,7 +521,9 @@ def walk_a(planner, checks, sram_out=None):
     # Wizard save (slot 1).  Capture only on a stable menu/message —
     # removes the known-unstable 12-wizard-save frame (§56.2).
     # The shop/quick screen ran in the village; return to town for the
-    # wizard (he never moved).
+    # wizard (he never moved). Drop god-mode first so SRAM keeps base
+    # 10/10 HP (town/village legs are ambush-free).
+    ungod_mode(s)
     follow(s, planner, "village_area", s.pos(), "town", (6, 11))
     s.settle_scene(expected_scene=SCENE_TOWN)
     _walk_path(s, planner.path("town", s.pos(), (6, 11)) or [])

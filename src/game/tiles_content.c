@@ -104,8 +104,9 @@ const uint8_t g_tileset_desolate[1024] = {
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
 
-const uint8_t g_tileset_castle[256] = {
-    /* 16 castle tiles (256 bytes), VRAM-slot order (see palette_compiler) */
+const uint8_t g_tileset_castle[272] = {
+    /* 17 castle tiles (272 bytes): VRAM slots 0..15 + exit stairs
+     * (vram index 26, sheet (8,2)) at slot 16 (see palette_compiler) */
 #include "gfx/rpg_castle_tiles.inc"
 };
 
@@ -156,7 +157,7 @@ void ui_load_tileset_banked(void)
         case WORLD_TILESET_CASTLE:
             src = g_tileset_castle;
             pal_src = g_tile_pal_castle;
-            tile_count = 16;
+            tile_count = 17;
             break;
         case WORLD_TILESET_VILLAGE:
             src = g_tileset_village;

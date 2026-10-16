@@ -179,9 +179,9 @@ gfx: manifest
 	# ── Castle tileset (assets/castle-tile.png, 9 cols × 3 rows) ─────────
 	# The sheet packs 9-wide but VRAM slots pack 8-wide (vram_block index
 	# order), so bytes AND palette entries follow vram-index order via
-	# --tile-coords (slots 0-15; see palette_compiler). Sized by the rule.
+	# --tile-coords (slots 0-15 + exit stairs vram 26 at slot 16; see palette_compiler). Sized by the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,2" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).

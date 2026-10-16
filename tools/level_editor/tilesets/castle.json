@@ -141,11 +141,12 @@
       "palette": "castle4",
       "label": "exit",
       "gb_constant": "TILE_CASTLE_26",
-      "walkable": true,
+      "walkable": false,
       "color": "#565656",
       "ascii": ".",
       "image_url": "/tiles/castle/castle_exit.png",
-      "category": "terrain"
+      "category": "terrain",
+      "glyph": "#"
     },
     {
       "id": "castle_top_left_throne",

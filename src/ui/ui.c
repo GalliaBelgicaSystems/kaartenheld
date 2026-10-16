@@ -539,8 +539,15 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
             if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
+        } else if (t == TILE_CASTLE_26) {
+            /* Castle exit stairs (value 141, VRAM slot 16). Checked
+             * without the tileset gate on purpose: no other tileset
+             * uses value 141 (forest ends at 140, desolate wall starts
+             * at 146), so this can't misrender foreign maps -- and one
+             * compare is all the fixed-bank budget has room for. */
+            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
-                   t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) {
+                   (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15)) {
             uint8_t c_idx = (uint8_t)(t - TILE_CASTLE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + c_idx);
         } else if (world->tileset_kind == WORLD_TILESET_VILLAGE &&
