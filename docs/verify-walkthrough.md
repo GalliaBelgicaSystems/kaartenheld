@@ -149,7 +149,7 @@ tools/walkthrough/
 
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
   (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
-  1x15 HP practice spar (0-damage deck); his defeat raises ENERGY_POOL
+  1x10 HP practice spar (0-damage deck); his defeat raises ENERGY_POOL
   0 -> 2 and shows his good-luck speech deferred at the battle exit.
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection

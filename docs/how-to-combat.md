@@ -35,7 +35,7 @@ it is him speaking.
 
 ![Carl's lesson](../screenshots/08-carl-tutor.png)
 
-Walk into him to spar: a solo fight against his 15 HP. His practice
+Walk into him to spar: a solo fight against his 10 HP. His practice
 deck deals **0 damage**, so you cannot lose — learn the round below at
 your own pace (the battle timer still runs, but nothing can hurt you).
 There is no target arrow over Carl: with a single foe there is nothing
