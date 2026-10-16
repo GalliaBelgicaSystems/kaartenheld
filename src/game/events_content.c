@@ -12,6 +12,10 @@
  * conditions must precede the default fallback.  ACTOR_DEFEATED events are
  * all-match: BOSS_DEFEATED below does NOT suppress MONSTER_DEFEATED, so the
  * boss kill also counts toward the global MONSTERS_DEFEATED counter.
+ * Never put SCENE_CHANGE and DIALOGUE actions in the same row: scene_load
+ * invalidates the render cache without reseeding it, so a dialogue opened
+ * on the new scene would misclassify as a dialogue exit (see screen.c).
+ * (No row uses SCENE_CHANGE today; keep it that way or split the row.)
  *
  * Mayor quest (MONSTER HUNT), expressed as data, not game code:
  *   QUEST_START    : first meeting (quest NOT_STARTED) starts the quest:
@@ -201,7 +205,10 @@ const EventDefinition g_events[] = {
      * player can own: starter deck carries none; the Merchant sells
      * more) and a +1 AP pool grant (ADD, pairing with the tutorial +2
      * and mayor +1 one-shots toward 4 in any order), announced by its
-     * own dialogue.  One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats
+     * own dialogue.  Opened before the tutorial the visible pool holds
+     * at 1 until the tutorial pays (variable 0+1=1 still maps to the
+     * default-1 pool); the end state is unaffected.  One-shot via
+     * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM
      * sprite: setting the flag flips it to the open frame (and it
      * stays open), no floor-paint stamp. */

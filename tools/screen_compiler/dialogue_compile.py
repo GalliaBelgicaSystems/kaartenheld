@@ -66,6 +66,15 @@ def validate_dialogue(data, path, story_flags):
             warnings.append(
                 f"{path}: line {i} is {len(line)} chars, wider than the "
                 f"{RENDER_WIDTH}-col box (clipped at render)")
+        # Third row of a non-final page: the continue chevron stamps col
+        # 19 after the text, so a 20-char line loses its last character
+        # whenever another page follows.  Fail loudly (a 20-char line is
+        # legal staging but unreadable here); use shorter lines or blank
+        # padding to place page breaks deliberately.
+        if i % 3 == 2 and i < len(lines) - 1 and len(line) > 19:
+            errors.append(
+                f"{path}: line {i} is {len(line)} chars but the continue "
+                f"chevron overwrites col 19 (cap these lines at 19)")
     flag = data.get("completion_flag")
     if flag is not None and flag not in story_flags:
         errors.append(

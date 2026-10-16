@@ -46,7 +46,7 @@ Consequences:
   IRON RING card — **RG1** (power 1, `uses_per_battle` 3, price 20g).
   Buy it, then add it to the deck from the CARDS menu.
 - Shop rows render the ITEM code derived from the card definition
-  (`ui_card_code_str`: weapon-type code + power digit, e.g. `RG1`, `SW1` --
+  (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG1`, `SW1` --
   a HEAL card is a ring, so the shop shows `RG` rather than its battle
   code `HE`) plus its `price` — no display strings are duplicated in the
   shop layer.
