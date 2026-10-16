@@ -85,6 +85,13 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_KNIGHT_SPLIT,
+        "KNIGHT:",
+        3,
+        {"Slime Knight was", "in fact 3 Slimes", "in an armor!"},
+        0
+    },
+    {
         DIALOGUE_ID_MAYOR_GREETING,
         "MAYOR:",
         2,

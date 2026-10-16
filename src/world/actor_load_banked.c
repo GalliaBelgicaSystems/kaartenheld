@@ -1,4 +1,12 @@
+/* Test fixtures keep their actor tables in bank 9 (GAME_TEST_ACTOR_BANK):
+ * debug bank 4 is full (battle art + actor tables + sprite bodies share
+ * it), while the loader body must share its tables' bank (direct reads,
+ * AGENTS.md §52.11.1).  Mirrors scene_load.c's TEST_LEVELS bank split. */
+#ifdef TEST_LEVELS
+#pragma bank 9
+#else
 #pragma bank 4
+#endif
 
 #include "actor.h"
 #include "world.h"

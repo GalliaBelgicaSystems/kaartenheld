@@ -168,12 +168,39 @@ def transit_fight(s):
                            or s.text_has("PLAYER TURN"), ticks=240):
                 break
     if s.text_has("VICTORY"):
-        s.press_until("a", lambda: not s.text_has("DECK:")
-                      and not s.text_has("VICTORY"),
-                      tries=6, settle=30, label="battle exit")
+        # Exit the result screen with exactly-one-press discipline: a
+        # second A would land in a just-opened single-page dialogue and
+        # close it before any reader sees it (the knight's 3-line
+        # briefing is one page).  One press, a long settle for the
+        # LCD-off transition redraw, then verify -- retry only if the
+        # result screen is STILL up (eaten press), never blindly.  The
+        # loop also stops for an open KNIGHT: box (never press into
+        # it); route followers drain aftermath dialogues themselves.
+        for _ in range(6):
+            if ((not s.text_has("DECK:") and not s.text_has("VICTORY"))
+                    or s.text_has("KNIGHT:")):
+                break
+            s.press("a", settle=30)
+            s.tick(120)
         s.tick(20)
         return True
     return False
+
+
+def drain_postvictory_dialogue(s, tries=8):
+    """Close a dialogue left open by a transit win (today: the knight's
+    armor-break briefing, which fires from its defeat event on the way
+    out of VICTORY).  Only follow()/_walk_path() call this, and only
+    right after transit_fight() wins -- so any dialogue open here is
+    causally the fight's aftermath, never an objective dialogue (those
+    open via bump_actor, never during a route step).  Bounded: never
+    spins a walk that is genuinely stuck.  A future aftermath dialogue
+    extends the marker tuple below."""
+    for _ in range(tries):
+        if not s.stable(lambda: s.text_has("KNIGHT:"), frames=10):
+            return True
+        s.press("a", settle=30)
+    return not s.text_has("KNIGHT:")
 
 
 def _walk_path(s, path):
@@ -187,6 +214,9 @@ def _walk_path(s, path):
             s.check("transit fight victory", win,
                     expected="VICTORY", actual="defeat" if not win else "win")
             if win:
+                s.check("transit aftermath drained",
+                        drain_postvictory_dialogue(s),
+                        expected="no KNIGHT: box", actual="stuck open")
                 ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
         banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
         s.check("route move %s" % btn, ok,
@@ -221,6 +251,9 @@ def follow(s, planner, from_scene, start, to_scene, goal,
                         expected="VICTORY", actual="defeat" if not win else "win")
                 if not win:
                     break
+                s.check("transit aftermath drained",
+                        drain_postvictory_dialogue(s),
+                        expected="no KNIGHT: box", actual="stuck open")
             s.check("exit %s -> %s" % (direction, e["target_scene"]), res,
                     expected=e["target_scene"],
                     actual="scene %d" % s.reader.scene_state()["scene_id"])
@@ -756,9 +789,75 @@ def walk_e(planner, checks):
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
     s.check_eq("castle music", s.reader.music_track(), MUSIC_DUNGEON)
-    s.check("mimic engaged",
-            engage_hostile(s, planner, "castle", mimic_xy),
+    # Slime-knight interlude (real-content regression for the armor
+    # split): the knight chases anywhere in the castle, so it may have
+    # ambushed en route already (transit win + drained briefing).  Either
+    # way, engaging at its tile now must open a battle, and the banner
+    # tells which encounter it is (armor or trio).
+    knight = next((o for o in castle["objects"]
+                   if (o.get("properties") or {}).get("entity_id")
+                   == "ENTITY_ID_SLIME_KNIGHT"), None)
+    knight_xy = (knight["position"]["x"], knight["position"]["y"])
+    s.check("knight engaged",
+            engage_hostile(s, planner, "castle", knight_xy),
             expected="DECK:", actual="none")
+    # Settle for the select banner, then branch on WHO engaged: armor
+    # (knight intact) or slimes (trio already spawned by an en-route
+    # ambush).  Never fight blind: an unrecognized banner fails loudly.
+    s.check("banner readable",
+            s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
+            expected="TARGET banner", actual=s.bg_text()[0].strip())
+    if s.text_has("TARGET ARMOR SLIME"):
+        # Armor intact: one-shot it, read the briefing, close it.
+        # No blind A presses here: the victory exit inside transit_fight
+        # already opened the box, and an extra edge would close the
+        # single-page dialogue before it renders.  Settle first, then
+        # read once.
+        s.check("knight armor fight",
+                transit_fight(s),
+                expected="VICTORY", actual="defeat")
+        s.tick(90)
+        s.check("armor reveal opened",
+                s.text_has("KNIGHT:"),
+                expected="KNIGHT:", actual=s.bg_text()[0].strip())
+        s.check("reveal closed",
+                close_dialogue(s, "KNIGHT:"),
+                expected="closed", actual="open")
+        # The tile now holds the trio: engage it, expect slimes.
+        # The trio chases (AI_CHASE, like kobolds), so the hostile
+        # sweep finds it wherever the knight fell.
+        s.check("trio tile engaged",
+                engage_hostile(s, planner, "castle", knight_xy),
+                expected="DECK:", actual="none")
+        s.check("trio banner readable",
+                s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
+                expected="TARGET banner", actual=s.bg_text()[0].strip())
+        s.check("trio banner readable",
+                s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
+                expected="TARGET banner", actual=s.bg_text()[0].strip())
+    s.check("trio engaged",
+            s.text_has("TARGET SLIME"),
+            expected="TARGET SLIME", actual=s.bg_text()[0].strip())
+    s.check("trio fight",
+            transit_fight(s),
+            expected="VICTORY", actual="defeat")
+    s.check("no second briefing",
+            s.press_until("a", lambda: not s.text_has("DECK:"),
+                          tries=4, label="battle exit"),
+            expected="closed", actual="open")
+    s.check("no briefing repeat", not s.text_has("KNIGHT:"),
+            expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
+    # The mimic never moves (AI_NONE) and nothing else patrols its
+    # tile: walk beside it and bump it directly.  Deterministic on
+    # purpose -- the sweep helper is for chasers, and a sweep here
+    # could catch the bat instead and then fight the walk's objective.
+    _walk_path(s, planner.path("castle", s.pos(), (mimic_xy[0] - 1, mimic_xy[1])) or [])
+    s.check("mimic engaged",
+            bump_actor(s, planner, "castle", (mimic_xy[0] - 1, mimic_xy[1]),
+                       "right", "DECK:"),
+            expected="DECK:", actual="none")
+    s.check("mimic banner", s.text_has("TARGET MIMIC"),
+            expected="MIMIC", actual=s.bg_text()[0].strip())
     s.tick(40)
     s.shoot("23-mimic-battle", need="MIMIC")
     s.close()

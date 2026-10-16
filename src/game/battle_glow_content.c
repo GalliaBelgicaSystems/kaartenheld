@@ -17,10 +17,10 @@ const uint8_t g_battle_glow_ramps[] = {
 /* Per art set (art_order): overlay eye-cell bitmask
  * (frame0-relative row-major indices, all < 6: one OAM
  * stride per enemy slot). */
-const uint8_t g_battle_art_glow_mask[] = {0x00, 0x00, 0x18, 0x00, 0x00, 0x00};
+const uint8_t g_battle_art_glow_mask[] = {0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00};
 /* Per art set (art_order): unlit/lit ramp indices into
  * g_battle_glow_ramps above (0xFF = no overlay). Programmed
  * into the battle scratch OBJ slots at battle entry. */
-const uint8_t g_battle_art_glow_unlit[] = {0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF};
-const uint8_t g_battle_art_glow_lit[] = {0xFF, 0xFF, 0x01, 0xFF, 0xFF, 0xFF};
+const uint8_t g_battle_art_glow_unlit[] = {0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
+const uint8_t g_battle_art_glow_lit[] = {0xFF, 0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0xFF};
 

@@ -610,6 +610,15 @@ def main():
                              "only (default: follow --bank, else 2).  The release "
                              "actors live in bank 4 (GAME_ACTOR_BANK) to free the "
                              "tight bank 2 for other content.")
+    parser.add_argument("--chest-in-scenes", action="store_true",
+                        help="Emit the chest-open resolver into the scenes "
+                             "output instead of the actors output.  The "
+                             "frozen test fixtures use this: their actor "
+                             "tables live apart (see --actors-bank) from "
+                             "the bank-4 sprite body that calls the "
+                             "resolver, so the resolver must stay in "
+                             "bank 4 with its caller.  Real content keeps "
+                             "the single-file layout.")
 
     args = parser.parse_args()
 
@@ -723,7 +732,15 @@ def main():
     if actors_bank is None:
         actors_bank = args.bank if args.bank is not None else 2
     actors_code = emit_actors_code(levels_by_id, bank=actors_bank,
-                                   registry=registry)
+                                   registry=registry,
+                                   with_chest=not args.chest_in_scenes)
+    if args.chest_in_scenes:
+        # TEST fixtures: the chest resolver stays in the bank-4 scenes
+        # file (same bank as its sprite-body caller) while the actor
+        # tables move to a roomier bank.  Real content keeps the
+        # resolver with the tables (single file, unchanged behavior).
+        c_code += "\n" + "\n".join(
+            emit_chest_code(levels_by_id, registry)) + "\n"
 
     actors_path = args.actors_output
     if not actors_path:
@@ -988,8 +1005,14 @@ def emit_actor_row(obj, enemy_ids, entity_types):
     return "    {\n" + "\n".join([line1, line2, line3, line4, line5]) + "\n    },"
 
 
-def emit_actors_code(levels_by_id, bank=2, registry=None):
-    """Generate complete src/game/actors_content.c."""
+def emit_actors_code(levels_by_id, bank=2, registry=None,
+                     with_chest=True):
+    """Generate complete src/game/actors_content.c.
+
+    with_chest=False omits the chest-open resolver (the caller routes
+    it elsewhere: the frozen TEST fixtures keep the resolver in the
+    bank-4 scenes file so the bank-4 sprite body keeps its same-bank
+    plain call while the actor tables move to a roomier bank)."""
     registry = registry or load_registry()
     map_enum, _ = scene_maps(registry)
     enemy_ids = load_enemy_types()
@@ -1044,6 +1067,27 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
     # count, no indexing mults -- a generic scan loop avalanched this
     # bank past the link budget before.  A new chest is still new JSON
     # props only (never an engine change); each costs ~one if (~30 B).
+    if with_chest:
+        out.extend(emit_chest_code(levels_by_id, registry))
+    # Generated table count: the fixed-bank registrar stages this byte via
+    # banked_copy (no header dependency, so a stale object cannot desync it
+    # from the linked table -- AGENTS.md 52.2).
+    out.append("")
+    out.append("const uint8_t g_actor_table_count = %d;" % len(ordered))
+    return "\n".join(out) + "\n"
+
+
+def emit_chest_code(levels_by_id, registry=None):
+    """Chest-open resolver lines (chest_is_open_banked): shared by the
+    actors output (default) and the scenes output (--chest-in-scenes,
+    for the TEST fixtures whose actor tables live apart from the
+    bank-4 sprite body that calls this).  Self-contained lines:
+    includes + comment + body."""
+    registry = registry or load_registry()
+    map_enum, _ = scene_maps(registry)
+    ordered, _ = scene_table_order(levels_by_id, registry)
+    ordered = [sid for sid in ordered if sid is not None]
+    out = []
     open_ifs = []
     for sid in ordered:
         for obj in levels_by_id[sid].get("objects", []):
@@ -1055,6 +1099,7 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
                 open_ifs.append(stmt)
     out.append("")
     out.append('#include "game.h"')
+    out.append('#include "banked.h"')
     out.append("/* Banked chest-open resolver: reports whether the chest at the")
     out.append(" * staged (x, y) was already looted (g_bk_byte_b = x,")
     out.append(" * g_bk_byte_c = y; the map comes from g_game.world, WRAM and")
@@ -1072,12 +1117,7 @@ def emit_actors_code(levels_by_id, bank=2, registry=None):
         out.extend(open_ifs)
     out.append("    return 0;")
     out.append("}")
-    # Generated table count: the fixed-bank registrar stages this byte via
-    # banked_copy (no header dependency, so a stale object cannot desync it
-    # from the linked table -- AGENTS.md 52.2).
-    out.append("")
-    out.append("const uint8_t g_actor_table_count = %d;" % len(ordered))
-    return "\n".join(out) + "\n"
+    return out
 
 
 if __name__ == "__main__":

@@ -38,7 +38,8 @@ typedef enum {
     BATTLE_MIMIC = 4,
     BATTLE_KOBOLD = 5,
     BATTLE_SPIDER = 6,
-    BATTLE_CARL = 7
+    BATTLE_CARL = 7,
+    BATTLE_SLIME_KNIGHT = 8
 } BattleId;
 
 /* Overworld autonomous patrol/AI behavior type. */
@@ -56,7 +57,10 @@ typedef enum {
                              * of an encounter, and stashes the spar for
                              * auto-start on close.  Patrol ignores it
                              * (see patrol_banked.c).  Co-location with a
-                             * dialogue static is enforced by validate.py. */
+                             * dialogue static is enforced by validate.py. */,
+    AI_CHASE_FAST     = 6    /* Twice-as-fast chaser (Slime Knight): same
+                             * greedy step as AI_CHASE but ticks at half
+                             * the interval (see patrol_banked.c). */
 } ActorAiType;
 
 /* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */

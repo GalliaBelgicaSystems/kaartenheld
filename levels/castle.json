@@ -229,16 +229,17 @@
       }
     },
     {
-      "id": "castle_kobold",
+      "id": "castle_slime_knight",
       "type": "enemy",
       "position": {
         "x": 5,
         "y": 12
       },
       "properties": {
-        "entity_id": "ENTITY_ID_KOBOLD",
-        "display_name": "KOBOLD",
-        "actor_id": 45,
+        "entity_id": "ENTITY_ID_SLIME_KNIGHT",
+        "enemy_type": "slime_knight",
+        "display_name": "ARMOR SLIME",
+        "actor_id": 65,
         "facing": "DOWN",
         "flags": [
           "HOSTILE",
@@ -248,11 +249,11 @@
         "visual": "K",
         "hp": 15,
         "max_hp": 15,
-        "gold_reward": 8,
+        "gold_reward": 12,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "battle": "BATTLE_KOBOLD",
-        "ai": "AI_CHASE",
-        "enemy_type": "kobold"
+        "battle": "BATTLE_SLIME_KNIGHT",
+        "ai": "AI_CHASE_FAST",
+        "solo": true
       }
     }
   ],

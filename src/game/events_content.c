@@ -219,6 +219,27 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
         }
+    },
+    /* ── Slime-knight armor split ──────────────────────────────────
+     * Felling the armor (ACTOR_DEFEATED, all-match: MONSTER_DEFEATED
+     * still counts the kill) reveals the crew inside: the full
+     * sentence in a dialogue box (no banner truncation), then the
+     * knight's runtime slot becomes a slime-trio encounter in place
+     * (EVENT_ACTION_SPAWN_SLIME_TRIO, arg0 = slime ow_type 8 --
+     * drift-checked by validate.py --spawn-refs, never hand-synced).
+     * One-shot by construction (the knight's defeat is persistent;
+     * trio kills never re-match this row).  The trio is dynamic
+     * (actor_id 0, untracked): it despawns on reload like all runtime
+     * state (AGENTS.md §53.1). */
+    {
+        EVENT_ID_KNIGHT_SPLIT, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_SLIME_KNIGHT, EVENT_MAP_ANY,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_KNIGHT_SPLIT, 0, 0 },
+            { EVENT_ACTION_SPAWN_SLIME_TRIO, 8, 0, 0 }
+        }
     }
 };
 

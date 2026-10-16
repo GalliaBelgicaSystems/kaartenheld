@@ -9,8 +9,8 @@ combat), downscales NEAREST to 8x8, and lays out 3 cols x N rows of cells:
   row 2: bat top_*         row 8: mimic bottom_*
   row 3: bat bottom_*      row 9-10: kobold top_*/bottom_*
   row 4: boss horns_*      row 11-12: spider top_*/bottom_*
-  row 5: boss head_*       row 13: blank
-  row 6: boss torso_*
+  row 5: boss head_*       row 13-14: slime-knight top_*/bottom_*
+  row 6: boss torso_*      row 15: blank
 
 The slime second anim frame was removed by the artist (single-frame
 slime); its curated PNGs are gone, so no row is reserved for it.
@@ -40,6 +40,8 @@ LAYOUT = [
     ['combat_bottom_left_kobold', 'combat_bottom_middle_kobold', 'combat_bottom_right_kobold'],
     ['combat_top_left_spider', 'combat_top_middle_spider', 'combat_top_right_spider'],
     ['combat_bottom_left_spider', 'combat_bottom_middle_spider', 'combat_bottom_right_spider'],
+    ['combat_top_left_slime_knight', 'combat_top_middle_slime_knight', 'combat_top_right_slime_knight'],
+    ['combat_bottom_left_slime_knight', 'combat_bottom_middle_slime_knight', 'combat_bottom_right_slime_knight'],
     [None, None, None],
 ]
 

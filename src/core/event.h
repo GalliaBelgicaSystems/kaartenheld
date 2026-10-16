@@ -65,7 +65,14 @@ typedef enum {
     EVENT_ACTION_SCENE_CHANGE = 6,
     EVENT_ACTION_ADD_ITEM = 7,
     EVENT_ACTION_ADD_CURRENCY = 8,
-    EVENT_ACTION_REMOVE_ITEM = 9
+    EVENT_ACTION_REMOVE_ITEM = 9,
+    /* Spawn the slime trio where the slime knight fell (slime-knight
+     * armor split): reuses the knight's runtime slot in place, so no
+     * scene rows and no actor cap are consumed.  arg0 = slime ow_type
+     * byte (compiled into the event row; drift-checked by
+     * validate.py --spawn-refs).  First spawn action; generalize when
+     * a second need appears (roadmap YAGNI). */
+    EVENT_ACTION_SPAWN_SLIME_TRIO = 10
 } EventActionType;
 
 typedef struct {

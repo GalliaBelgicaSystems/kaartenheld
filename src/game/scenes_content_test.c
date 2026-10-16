@@ -227,3 +227,24 @@ const SceneDefinition g_scenes[] = {
     { MAP_TEST_CASTLE,     MUSIC_DUNGEON,     20, 18, &g_all_exits[7],     1, WORLD_TILESET_CASTLE,    s_test_castle_terrain, 10, 10, DIRECTION_UP,    TILE_CASTLE_14, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
     { MAP_TEST_SOUTH_FIELD, MUSIC_DESOLATE,    20, 18, &g_all_exits[8],     2, WORLD_TILESET_DESOLATE,  s_test_south_field_terrain, 12, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 }
 };
+
+
+#include "game.h"
+#include "banked.h"
+/* Banked chest-open resolver: reports whether the chest at the
+ * staged (x, y) was already looted (g_bk_byte_b = x,
+ * g_bk_byte_c = y; the map comes from g_game.world, WRAM and
+ * always mapped).  Chests are OAM sprites:
+ * the sprite body shows the open frame once the loot flag or
+ * variable is set, so the opened chest stays open across scene
+ * loads with no floor-paint stamp.  Self-contained: g_game is
+ * WRAM (always mapped), everything else is literals -- no
+ * staging, no table, no fixed-bank calls while mapped.  Called
+ * directly by the banked sprite body (same bank: plain call,
+ * no trampoline). */
+uint8_t chest_is_open_banked(void)
+{
+    if (g_game.world.map_id == MAP_TEST_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
+    if (g_game.world.map_id == MAP_TEST_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    return 0;
+}
