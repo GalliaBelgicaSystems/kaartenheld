@@ -189,26 +189,25 @@ def follow(s, planner, from_scene, start, to_scene, goal,
             _walk_path(s, [step[1:]])
         else:
             _, direction, e = step
-            res = s.cross_exit(direction,
-                               planner.scenes[e["target_scene"]].scene_id)
             # Ambush on the exit step overrides the transition
-            # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight first,
-            # then retry the crossing once before logging the check, so
-            # a heroic transit win is not recorded as a failed exit.
-            if not res and s.text_has("DECK:"):
+            # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight, retry
+            # the crossing, and repeat while still ambushed (bounded, so
+            # back-to-back patrols can't spin forever). The check logs
+            # only the final outcome, never an intermediate ambush.
+            res = False
+            for _ in range(3):
+                res = s.cross_exit(
+                    direction, planner.scenes[e["target_scene"]].scene_id)
+                if res or not s.text_has("DECK:"):
+                    break
                 win = transit_fight(s)
                 s.check("transit fight victory", win,
                         expected="VICTORY", actual="defeat" if not win else "win")
-                if win:
-                    res = s.cross_exit(
-                        direction, planner.scenes[e["target_scene"]].scene_id)
+                if not win:
+                    break
             s.check("exit %s -> %s" % (direction, e["target_scene"]), res,
                     expected=e["target_scene"],
                     actual="scene %d" % s.reader.scene_state()["scene_id"])
-            if s.text_has("DECK:"):
-                win = transit_fight(s)
-                s.check("transit fight victory", win,
-                        expected="VICTORY", actual="defeat" if not win else "win")
         if capture_when and capture_label and capture_when():
             s.shoot(capture_label)
             capture_when, capture_label = None, None

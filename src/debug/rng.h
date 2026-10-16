@@ -13,4 +13,11 @@ extern uint16_t g_rng_state;
 uint16_t rng_next(void);
 void rng_set_seed(uint16_t seed);
 
+/* Banked bodies (src/rpg/rng_banked.c, ROM bank 2): same signatures as
+ * above minus args/returns, communicating only through g_bk_byte_a/b
+ * (seed in, random out).  Declared here so fixed-bank wrappers can take
+ * their addresses for the trampoline (see banked.h). */
+void rng_next_banked(void);
+void rng_set_seed_banked(void);
+
 #endif /* RNG_H */

@@ -29,13 +29,6 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
-        DIALOGUE_ID_ADVICE_KNIGHT,
-        "KNIGHT:",
-        5,
-        {"Beyond this hall", "the throne room", "waits. Steel your", "deck before you", "face the lord."},
-        0
-    },
-    {
         DIALOGUE_ID_ADVICE_SCOUT,
         "SCOUT:",
         4,

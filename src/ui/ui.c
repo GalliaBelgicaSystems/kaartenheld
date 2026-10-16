@@ -455,6 +455,7 @@ if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) ||
             (t >= TILE_FOREST_00 && t <= TILE_FOREST_63) ||
             (t >= TILE_FOREST_64 && t <= TILE_FOREST_68) ||
             (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) ||
+            t == TILE_CASTLE_26 ||
             (t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47))
         return tile_landscape_glyph(t);
     return (t < 8) ? g_sem_map[t] : '.';
@@ -540,11 +541,10 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
         } else if (t == TILE_CASTLE_26) {
-            /* Castle exit stairs (value 141, VRAM slot 16). Checked
-             * without the tileset gate on purpose: no other tileset
-             * uses value 141 (forest ends at 140, desolate wall starts
-             * at 146), so this can't misrender foreign maps -- and one
-             * compare is all the fixed-bank budget has room for. */
+            /* Castle tunnel stairs (VRAM slot 16). No tileset gate: value
+             * 141 is globally unique (forest ends at 140, desolate wall
+             * starts at 146, village ends at 135), so this row can only
+             * ever mean the castle exit, on any map. */
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
                    (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15)) {
