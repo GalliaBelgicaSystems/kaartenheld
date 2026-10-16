@@ -147,7 +147,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2",
+        "forest.forest_stairs",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_top_wall_1",
@@ -492,10 +492,21 @@
       ]
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 5,
+      "y": 5,
+      "target_scene": "forest",
+      "target_x": 5,
+      "target_y": 5,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_field_forest"
+    }
+  ],
   "neighbors": {
-    "north": "forest",
-    "south": "south_field",
+    "north": "",
+    "south": "",
     "east": "town",
     "west": "wake_grove"
   },

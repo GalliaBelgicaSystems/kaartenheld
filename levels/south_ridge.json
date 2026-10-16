@@ -12,7 +12,7 @@
     "north": "",
     "south": "",
     "east": "",
-    "west": "south_field"
+    "west": ""
   },
   "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
   "layers": {
@@ -156,6 +156,20 @@
         "width": 1,
         "height": 1,
         "tile": "desolate_landscape.desolate_landscape_bottom_right_rock"
+      },
+      {
+        "x": 5,
+        "y": 8,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_exit_desolate_landscape"
+      },
+      {
+        "x": 12,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "desolate_landscape.desolate_landscape_exit_desolate_landscape"
       }
     ]
   },
@@ -170,7 +184,28 @@
       ]
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 5,
+      "y": 8,
+      "target_scene": "desolate_field",
+      "target_x": 10,
+      "target_y": 5,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_desolate_field_south_ridge"
+    },
+    {
+      "x": 12,
+      "y": 10,
+      "target_scene": "south_field",
+      "target_x": 10,
+      "target_y": 5,
+      "direction": "SOUTH",
+      "tile_char": ">",
+      "tunnel": "tunnel_south_ridge_south_field"
+    }
+  ],
   "objects": [
     {
       "id": "ridge_kobold",

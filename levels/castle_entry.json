@@ -10,7 +10,7 @@
   },
   "neighbors": {
     "north": "castle_hall",
-    "south": "mountain_pass",
+    "south": "south_field",
     "east": "",
     "west": ""
   },

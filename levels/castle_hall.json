@@ -9,7 +9,7 @@
     "map_id": "MAP_CASTLE_HALL"
   },
   "neighbors": {
-    "north": "castle",
+    "north": "",
     "south": "castle_entry",
     "east": "",
     "west": ""
@@ -58,6 +58,13 @@
         "width": 1,
         "height": 1,
         "tile": "castle.castle_table"
+      },
+      {
+        "x": 10,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_floor_with_debris"
       }
     ]
   },
@@ -72,7 +79,18 @@
       ]
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 10,
+      "y": 5,
+      "target_scene": "castle",
+      "target_x": 8,
+      "target_y": 5,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_castle_hall_castle"
+    }
+  ],
   "objects": [
     {
       "id": "hall_kobold",

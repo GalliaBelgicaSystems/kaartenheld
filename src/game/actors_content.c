@@ -54,13 +54,6 @@ static const WorldActorDefinition g_town_actors[] = {
          SPRITE_KIND_ENEMY, 4, 0
     },
     {
-        0, ENTITY_ID_MERCHANT, 11, 3, DIRECTION_DOWN,
-        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "MERCHANT", INTERACTION_SHOP, 2, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
-        0, 0,
-         SPRITE_KIND_ENEMY, 6, 0
-    },
-    {
         0, ENTITY_ID_WIZARD, 6, 10, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'W', "WIZARD", INTERACTION_SAVE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
@@ -104,13 +97,6 @@ static const WorldActorDefinition g_forest_actors[] = {
         'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_CHASE, 15, 15, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 2, 0
-    },
-    {
-        0, ENTITY_ID_AMULET, 16, 10, DIRECTION_DOWN,
-        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
-        0, 0,
-         SPRITE_KIND_CHEST, 11, 0
     },
     {
         42, ENTITY_ID_SLIME, 14, 12, DIRECTION_DOWN,
@@ -507,6 +493,16 @@ static const WorldActorDefinition g_grassy_forest_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_village_area_actors[] = {
+    {
+        0, ENTITY_ID_MERCHANT, 10, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "MERCHANT", INTERACTION_SHOP, 2, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 6, 0
+    },
+};
+
 static const WorldActorDefinition g_desolate_field_actors[] = {
     {
         64, ENTITY_ID_BAT, 13, 7, DIRECTION_DOWN,
@@ -535,6 +531,13 @@ static const WorldActorDefinition g_desolate_field_actors[] = {
         'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_CHASE, 8, 8, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 0, 0
+    },
+    {
+        0, ENTITY_ID_AMULET, 10, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_CHEST, 11, 0
     },
 };
 
@@ -579,8 +582,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_throne_room_actors) / sizeof(g_throne_room_actors[0])) },
     { MAP_GRASSY_FOREST,   g_grassy_forest_actors,
         (uint8_t)(sizeof(g_grassy_forest_actors) / sizeof(g_grassy_forest_actors[0])) },
-    { MAP_VILLAGE_AREA,    0,
-        0 },
+    { MAP_VILLAGE_AREA,    g_village_area_actors,
+        (uint8_t)(sizeof(g_village_area_actors) / sizeof(g_village_area_actors[0])) },
     { MAP_DESOLATE_FIELD,  g_desolate_field_actors,
         (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
     { MAP_WAKE_GROVE,      g_wake_grove_actors,
@@ -602,7 +605,7 @@ const WorldActorTable g_actor_tables[] = {
 uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
-    if (g_game.world.map_id == MAP_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    if (g_game.world.map_id == MAP_DESOLATE_FIELD && g_bk_byte_b == 10 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 8)) return 1;
     return 0;
 }
 

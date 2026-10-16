@@ -381,7 +381,9 @@ class Planner:
         guard = 0
         while scene_name != to_scene:
             guard += 1
-            if guard > 8:
+            # Longest chain is wake->throne (10 transitions); 12 leaves
+            # margin for future levels without masking runaway BFS.
+            if guard > 12:
                 raise ValueError("route: too many transitions "
                                  "(%s -> %s)" % (from_scene, to_scene))
             next_scene = self._scene_next(scene_name, to_scene)

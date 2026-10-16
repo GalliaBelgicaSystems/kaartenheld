@@ -9,8 +9,8 @@
     "map_id": "MAP_CASTLE"
   },
   "neighbors": {
-    "north": "throne_room",
-    "south": "castle_hall",
+    "north": "",
+    "south": "",
     "east": "",
     "west": ""
   },
@@ -86,6 +86,20 @@
         "width": 1,
         "height": 1,
         "tile": "castle.castle_table"
+      },
+      {
+        "x": 8,
+        "y": 5,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_floor_with_debris"
+      },
+      {
+        "x": 10,
+        "y": 14,
+        "width": 1,
+        "height": 1,
+        "tile": "castle.castle_floor_with_debris"
       }
     ]
   },
@@ -100,7 +114,28 @@
       ]
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 8,
+      "y": 5,
+      "target_scene": "castle_hall",
+      "target_x": 10,
+      "target_y": 5,
+      "direction": "SOUTH",
+      "tile_char": ">",
+      "tunnel": "tunnel_castle_hall_castle"
+    },
+    {
+      "x": 10,
+      "y": 14,
+      "target_scene": "throne_room",
+      "target_x": 10,
+      "target_y": 12,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_castle_throne_room"
+    }
+  ],
   "objects": [
     {
       "id": "castle_bat",
