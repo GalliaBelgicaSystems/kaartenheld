@@ -40,9 +40,13 @@
 #define QUEST_VISIBLE_MAX 5   /* rows 5..13 step 2 (loop bound y < 15) */
 
 /* The quest list draws at most QUEST_VISIBLE_MAX entries: the nav caret
- * math assumes the visible list fits on screen.  Fail the build if the
- * registry outgrows the layout. */
-typedef char quest_list_fits_display[GAME_QUEST_COUNT <= QUEST_VISIBLE_MAX ? 1 : -1];
+ * math assumes the visible list fits on screen.  NOTE: a typedef
+ * negative-size check does NOT fire under this SDCC (it silently
+ * accepts char[-1]), so the bound uses #error, which the preprocessor
+ * enforces.  Extend the #if if the registry grows. */
+#if GAME_QUEST_COUNT > QUEST_VISIBLE_MAX
+#error "quest registry outgrew the quest-tab layout"
+#endif
 
 extern const QuestDefinition g_quests[];
 extern char g_ui_screen_buf[18][21];

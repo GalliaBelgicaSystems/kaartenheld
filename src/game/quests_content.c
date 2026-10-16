@@ -6,7 +6,7 @@
 
 /* ── Quest registry (game content, banked ROM) ─────────────────────
  * Progress counters render as a single digit ('0' + value in
- * item_quest_banked.c): keep every target ≤ 9.  The typedef below fails
+ * item_quest_banked.c): keep every target ≤ 9.  The #error below fails
  * the build otherwise -- extend it if the registry grows. */
 #define QUEST_MONSTERS_TARGET 5
 #define QUEST_AMULET_TARGET   0  /* inert: LOST AMULET has no counter */

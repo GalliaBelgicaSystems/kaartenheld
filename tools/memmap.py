@@ -202,6 +202,9 @@ def main():
         "_item_screen_render_banked": "item screen render (bank 2)",
         "_item_quest_render_banked": "quest tab render (bank 5)",
         "_item_quest_nav_banked": "quest tab nav (bank 5)",
+        "_credits_content_render": "credits screen render (bank 5)",
+        "_intro_content_render": "intro slides render (bank 4)",
+        "_title_menu_step_banked": "title menu caret step (bank 4)",
         "_ui_load_cram_banked": "CGB CRAM palette loader (bank 5)",
         "_ui_load_tileset_banked": "tileset VRAM & palette loader (bank 5)",
     }

@@ -104,6 +104,11 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
 #else
             (void)ok;
 #endif
+            /* A failed grant aborts the event: later actions (quest
+             * flags, loot state) must not apply for an item the player
+             * never received (e.g. opening a chest with a full
+             * collection would otherwise consume the one-shot). */
+            if (!ok) break;
         } else if (t == EVENT_ACTION_ADD_CURRENCY) {
             currency_add(&g->state, (CurrencyId)a0, a1);
         } else if (t == EVENT_ACTION_REMOVE_ITEM) {
@@ -169,6 +174,13 @@ void event_resolve_map_enter(Game *g, MapId to_map)
     const EventDefinition *def;
 
     if (!g) return;
+
+    /* Gate crossing ends any merchant engagement (same rule as
+     * scene_load, which gate walks bypass): selling stays doorstep-bound
+     * to the buying shop.  This runs only on MAP_CHANGED (sole caller is
+     * the overworld gate branch), before MAP_ENTER events, none of which
+     * read shop state. */
+    g->shop_id = 0;
 
     def = event_first_match(g, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, to_map);
     if (def) {

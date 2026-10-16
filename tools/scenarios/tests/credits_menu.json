@@ -60,6 +60,22 @@
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
   }
  ],
  "assertions": [
@@ -90,6 +106,14 @@
   {
    "type": "event_occurred",
    "event": "SCREEN_CHANGED"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 5
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
   }
  ]
 }

@@ -183,11 +183,9 @@ const EventDefinition g_events[] = {
      * debug fixed bank.  The static never
      * despawns by design: post-victory the spar is gone, so bumps
      * replay the lesson as a remedial with no fight (locked by the
-     * actor_defeat_initial scenario).  The grant is ADD 2 (not SET):
-     * the base pool is 1 with the variable unset, so ADD 2 lands the
-     * visible 2 right after the tutorial; combined with the chest (+1)
-     * and mayor (+1) one-shots the pool reaches 4 in ANY completion
-     * order (all six orders verified: 0+2+1+1).  Carl's defeat is
+     * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
+     * every milestone (tutorial, chest, mayor) adds exactly one to the
+     * base-1 pool, reaching 4 in any completion order.  Carl's defeat is
      * persistent (one-shot via GameState.world), so the reward fires
      * exactly once. */
     {
@@ -196,18 +194,16 @@ const EventDefinition g_events[] = {
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         2,
         {
-            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 2, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
         }
     },
     /* ── Field cache (first poison dagger + AP unlock) ───────────────
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
-     * more) and a +1 AP pool grant (ADD, pairing with the tutorial +2
-     * and mayor +1 one-shots toward 4 in any order), announced by its
-     * own dialogue.  Opened before the tutorial the visible pool holds
-     * at 1 until the tutorial pays (variable 0+1=1 still maps to the
-     * default-1 pool); the end state is unaffected.  One-shot via
+     * more) and a +1 AP pool grant (ADD, pairing with the tutorial and
+     * mayor +1 one-shots toward 4 in any order from the base-1 pool),
+     * announced by its own dialogue.  One-shot via
      * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM
      * sprite: setting the flag flips it to the open frame (and it
