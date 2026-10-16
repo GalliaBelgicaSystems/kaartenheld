@@ -1,7 +1,7 @@
 {
  "name": "field_chest_dagger",
  "test": true,
- "description": "Bumping the field cache (chest east of Carl) opens its reward speech (POISON DAGGER plus one action point), grants the first POISON_DAGGER and sets the energy pool to 3 with FIELD_CHEST; bumping again grants nothing (one-shot)",
+ "description": "Bumping the field cache (chest east of Carl) opens its reward speech (POISON DAGGER plus one action point), grants the first POISON_DAGGER and adds +1 to the base-1 energy pool (2) with FIELD_CHEST; bumping again grants nothing (one-shot)",
  "actions": [
   {
    "type": "press",
@@ -61,7 +61,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 3
+   "expected": 2
   },
   {
    "type": "flag",

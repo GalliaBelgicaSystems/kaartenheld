@@ -1,7 +1,7 @@
 {
  "name": "deck_summary",
  "test": true,
- "description": "The CARDS tab lists every owned card as a paired row (short code + combat description) with its deck membership in the rightmost column: the 12-card starter shows I SW x4, W SH x3, F SW x3",
+ "description": "The CARDS tab lists every owned card as a paired row (short code + combat description) with its deck membership in the rightmost column: the 10-card starter shows I SW x4, W SH x4, F SW x2",
  "actions": [
   {
    "type": "press",
@@ -48,7 +48,7 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "3"
+   "contains": "4"
   },
   {
    "type": "screen_row",
@@ -58,7 +58,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "3"
+   "contains": "2"
   }
  ],
  "initial_state": {

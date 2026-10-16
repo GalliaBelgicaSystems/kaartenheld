@@ -1,11 +1,11 @@
 {
  "name": "ring_shop_open",
  "test": true,
- "description": "The Shopkeeper's stock row renders the item code derived from the card definition (RG5 for the iron healing ring, price 20) \u2014 the shop layer duplicates no display strings",
+ "description": "The Merchant's merged stock row renders the item code derived from the card definition (RG1 for the healing ring, price 20) \u2014 the shop layer duplicates no display strings",
  "actions": [
   {
    "type": "interact",
-   "actor": "SHOPKEEPER"
+   "actor": "MERCHANT"
   },
   {
    "type": "wait",
@@ -19,21 +19,21 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "RG5"
+   "row": 8,
+   "contains": "RG1"
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 8,
    "contains": "20"
   }
  ],
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
-   "x": 9,
-   "y": 4,
-   "facing": "UP"
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
   },
   "seed": 8504,
   "flags": {
@@ -41,6 +41,9 @@
   },
   "currency": {
    "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
   }
  }
 }

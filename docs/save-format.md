@@ -9,12 +9,12 @@ Battery-backed SRAM persistence of the canonical `GameState`
 * MBC5 cart with RAM + battery (header cart type `0x1B`, RAM size 8 KB).
 * SRAM base `0xA000`.
 
-## Layout (version 1)
+## Layout (version 2)
 
 | Offset | Size | Field |
 |---|---|---|
 | 0xA000 | 2 | magic `0x5247` (`"GR"`) |
-| 0xA002 | 1 | format version (`SAVE_VERSION = 1`) |
+| 0xA002 | 1 | format version (`SAVE_VERSION = 2`) |
 | 0xA003 | 1 | checksum |
 | 0xA004 | `sizeof(GameState)` | the serialized `GameState` |
 

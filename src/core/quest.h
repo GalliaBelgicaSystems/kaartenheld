@@ -6,10 +6,11 @@
 #include "rpg/state.h"
 
 /* Quest content types.  Quests are data: the registry lives in
- * src/game/quests_content.c (bank 2) and the bank-2 item renderer derives
- * status directly from it; quest state itself is mutated by the generic
- * event system (quests are events, not engine code).  A quest tracks its
- * progress in ONE status variable with thresholds declared per quest. */
+ * src/game/quests_content.c (bank 5, shared with the bank-5 quest-tab
+ * renderer in src/screens/item_quest_banked.c); quest state itself is
+ * mutated by the generic event system (quests are events, not engine
+ * code).  A quest tracks its progress in ONE status variable with
+ * thresholds declared per quest. */
 
 /* Quest count (length of g_quests[] in quests_content.c).  Kept in sync by
  * the compile-time assert next to the table. */

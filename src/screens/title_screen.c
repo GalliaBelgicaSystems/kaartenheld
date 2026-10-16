@@ -106,9 +106,12 @@ void title_screen_update(Game *g)
             telemetry_emit(EVENT_SOUND_TOGGLED, g_sound_enabled, 0, 0, 0);
             g->render_cache.valid = false;
             break;
-        default: /* TUTORIAL */
+        case 3: /* TUTORIAL */
             g->tutorial_slide = 0;
             screen_change(g, SCREEN_TUTORIAL);
+            break;
+        default: /* CREDITS */
+            screen_change(g, SCREEN_CREDITS);
             break;
         }
     }

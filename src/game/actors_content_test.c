@@ -18,7 +18,7 @@ static const WorldActorDefinition g_test_field_actors[] = {
     {
         1, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 15, 15, 5, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 10, 10, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 1
     },
@@ -54,13 +54,6 @@ static const WorldActorDefinition g_test_town_actors[] = {
          SPRITE_KIND_ENEMY, 4, 0
     },
     {
-        0, ENTITY_ID_SHOPKEEPER, 9, 3, DIRECTION_DOWN,
-        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'S', "SHOPKEEPER", INTERACTION_SHOP, 1, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
-        0, 0,
-         SPRITE_KIND_TILE, 0xFF, 0
-    },
-    {
         0, ENTITY_ID_MERCHANT, 11, 3, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'C', "MERCHANT", INTERACTION_SHOP, 2, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
@@ -74,13 +67,20 @@ static const WorldActorDefinition g_test_town_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 7, 0
     },
+    {
+        0, ENTITY_ID_DOG, 15, 14, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "WILD DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
 };
 
 static const WorldActorDefinition g_test_forest_actors[] = {
     {
         2, ENTITY_ID_SLIME, 10, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_PATROL_CROSS, 12, 12, 5, CURRENCY_ID_GOLD,
+        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_PATROL_CROSS, 10, 10, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },
@@ -94,7 +94,7 @@ static const WorldActorDefinition g_test_forest_actors[] = {
     {
         9, ENTITY_ID_KOBOLD, 4, 10, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_CHASE, 12, 12, 8, CURRENCY_ID_GOLD,
+        'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_CHASE, 15, 15, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 2, 0
     },
@@ -111,7 +111,7 @@ static const WorldActorDefinition g_test_mountain_pass_actors[] = {
     {
         4, ENTITY_ID_SLIME, 14, 7, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME_TRIO, AI_PATROL_CROSS, 16, 16, 5, CURRENCY_ID_GOLD,
+        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME_TRIO, AI_PATROL_CROSS, 10, 10, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },
@@ -135,14 +135,14 @@ static const WorldActorDefinition g_test_castle_actors[] = {
     {
         10, ENTITY_ID_MIMIC, 12, 10, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'T', "MIMIC", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_MIMIC, AI_NONE, 30, 30, 0, CURRENCY_ID_GOLD,
+        'T', "MIMIC", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_MIMIC, AI_NONE, 50, 50, 0, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 3, 1
     },
     {
         11, ENTITY_ID_SPIDER, 17, 7, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 16, 16, 15, CURRENCY_ID_GOLD,
+        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 10, 10, 15, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 10, 0
     },
@@ -202,7 +202,7 @@ const WorldActorTable g_actor_tables[] = {
 uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_TEST_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
-    if (g_game.world.map_id == MAP_TEST_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && g_game.state.variables.values[4]) return 1;
+    if (g_game.world.map_id == MAP_TEST_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && (g_game.state.flags.bytes[0] & 8)) return 1;
     return 0;
 }
 

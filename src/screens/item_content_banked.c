@@ -10,7 +10,6 @@
 #include "rider_tiles_generated.h"
 #include "rpg/loot.h"
 #include "rpg/deck.h"
-#include "quest.h"
 #include "ui.h"
 #include "menu.h"
 #include "card.h"
@@ -19,7 +18,6 @@
 #include "rpg/loot.h"
 
 #define TAB_CARDS 0
-#define TAB_QUEST 1
 #define NUM_TABS  2
 
 #define ROW_TOP     0
@@ -28,7 +26,6 @@
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
-#define MODE_QUEST_DETAIL 2
 #define MODE_PICKER       3
 
 #define MSG_NONE       0
@@ -49,28 +46,29 @@ extern uint8_t s_view_count;
 
 extern const CardDefinition g_cards[];
 extern const uint8_t s_card_desc_blob[CARD_DESC_TYPES][CARD_DESC_STRIDE];
-extern const QuestDefinition g_quests[];
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
 
-static uint8_t s_ic_txt_i;
-static uint8_t s_ic_col_i;
+/* Shared draw scratch, also used by the bank-5 quest body
+ * (item_quest_banked.c): the trampoline is non-reentrant and only one
+ * tab renders at a time, so one copy serves both (AGENTS.md 52.18:
+ * no duplicate WRAM for bank-split mirrors). */
+uint8_t s_ic_txt_i;
+uint8_t s_ic_col_i;
 static uint8_t s_ic_def_i;
 static uint8_t s_ic_deck_i;
 static uint8_t s_ic_coll_i;
 static uint8_t s_ic_lst_pos;
-static uint8_t s_ic_qst_pos;
 
-static uint8_t s_ic_y;
+uint8_t s_ic_y;
 static uint8_t s_ic_tile_elem;
 static uint8_t s_ic_tile_wpn;
 static uint8_t s_ic_in_deck;
 static CardId s_ic_id;
 static const CardDefinition *s_ic_def;
-static const QuestDefinition *s_ic_q;
-static volatile uint8_t *s_ic_dst;
-static char *s_ic_buf;
+volatile uint8_t *s_ic_dst;
+char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
 
@@ -121,12 +119,12 @@ static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
     }
 }
 
-static uint8_t s_ic_arg_x;
-static uint8_t s_ic_arg_y;
-static uint8_t s_ic_arg_len;
+uint8_t s_ic_arg_x;
+uint8_t s_ic_arg_y;
+uint8_t s_ic_arg_len;
 static uint8_t s_ic_arg_val;
-static uint8_t s_ic_arg_palette;
-static const char *s_ic_arg_text;
+uint8_t s_ic_arg_palette;
+const char *s_ic_arg_text;
 
 static void ic_draw_text_fast(void)
 {
@@ -343,18 +341,6 @@ static uint8_t ic_collection_count(const CardState *cs, CardId id)
     return 0;
 }
 
-static QuestStatus ic_quest_status(const GameState *state, const QuestDefinition *q)
-{
-    int16_t v;
-    if (!state || !q || q->status_variable == 0) {
-        return QUEST_STATUS_NOT_STARTED;
-    }
-    v = game_variable_get(state, q->status_variable);
-    if (v == q->status_complete) return QUEST_STATUS_COMPLETE;
-    if (v == q->status_active) return QUEST_STATUS_ACTIVE;
-    return QUEST_STATUS_NOT_STARTED;
-}
-
 /* NOTE: the filtered/sorted view (s_view_indices/s_view_count) is built
  * by the fixed-bank side (item_screen.c: on every full redraw, plus
  * explicitly after picker filter/sort changes) and consumed here
@@ -477,67 +463,6 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
 }
 
-static void ic_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t y)
-{
-    QuestStatus st;
-    char b[6];
-    uint8_t val;
-    if (!q) return;
-    st = ic_quest_status(&g->state, q);
-
-    if (st == QUEST_STATUS_NOT_STARTED) {
-        IC_DRAW_TEXT(2, y, "not started", 11);
-    } else if (st == QUEST_STATUS_ACTIVE) {
-        if (q->progress_variable != 0) {
-            val = (uint8_t)game_variable_get(&g->state, q->progress_variable);
-            IC_DRAW_TEXT(2, y, q->progress_label ? q->progress_label : "", 8);
-            b[0] = ':';
-            b[1] = ' ';
-            b[2] = (char)('0' + val);
-            b[3] = '/';
-            b[4] = (char)('0' + (uint8_t)q->progress_target);
-            b[5] = '\0';
-            IC_DRAW_TEXT(10, y, b, 5);
-        } else {
-            IC_DRAW_TEXT(2, y, "active", 6);
-        }
-    } else {
-        IC_DRAW_TEXT(1, y, "complete - ", 11);
-        IC_DRAW_TEXT(12, y, q->complete_note ? q->complete_note : "", 8);
-    }
-}
-
-static void ic_draw_quest(Game *g)
-{
-    s_ic_y = 5;
-    for (s_ic_qst_pos = 0; s_ic_qst_pos < GAME_QUEST_COUNT && s_ic_y < 15; s_ic_qst_pos++) {
-        s_ic_q = &g_quests[s_ic_qst_pos];
-        if (g->item_menu_index == s_ic_qst_pos) IC_DRAW_TEXT(0, s_ic_y, ">", 1);
-        else IC_DRAW_TEXT(0, s_ic_y, " ", 1);
-        IC_DRAW_TEXT(2, s_ic_y, s_ic_q->name, 18);
-
-        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5) + 1);
-        VBK_REG = 0;
-        if (LCDC_REG & 0x80) {
-            while (STAT_REG & 0x02);
-        }
-        /* Quest marker as a font glyph ('!' active, '*' complete): the
-         * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
-         * loader now overwrites tile 116 with the combat deck art). */
-        if (ic_quest_status(&g->state, s_ic_q) == QUEST_STATUS_COMPLETE) {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
-            IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
-        } else {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
-            IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
-        }
-
-        s_ic_y++;
-        ic_quest_draw_status_line(g, s_ic_q, s_ic_y);
-        s_ic_y++;
-    }
-}
-
 static void ic_draw_card_detail_page(Game *g)
 {
     s_ic_y = 5;
@@ -638,22 +563,17 @@ void item_screen_render_banked(void)
     uint8_t e;
     if (!g) return;
 
-    /* Sweep rider entries first: quest/picker/emptied rows leave nothing
-     * behind, and list/detail set exactly what they show below. */
+    /* Sweep rider entries first: picker/emptied rows leave nothing
+     * behind, and list/detail set exactly what they show below.  (The
+     * QUEST tab dispatches to the bank-5 quest body, which sweeps for
+     * itself on entry.) */
     for (e = 1; e <= VISIBLE_CARDS; e++) {
         ic_rider_hide(e);
     }
 
-    if (g->item_menu_tab == TAB_QUEST) {
-        if (g->item_menu_mode == MODE_QUEST_DETAIL)
-            IC_DRAW_TEXT(0, 8, "no details yet", 14);
-        else
-            ic_draw_quest(g);
-    } else {
-        switch (g->item_menu_mode) {
-            case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;
-            case MODE_PICKER:      ic_draw_picker(g); break;
-            default:               ic_draw_cards_list(g); break;
-        }
+    switch (g->item_menu_mode) {
+        case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;
+        case MODE_PICKER:      ic_draw_picker(g); break;
+        default:               ic_draw_cards_list(g); break;
     }
 }

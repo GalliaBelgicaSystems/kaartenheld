@@ -5,15 +5,20 @@
 #include "battle/card.h"
 #include "game_ids.h"
 
-/* ── Card catalog (game content, banked ROM) ────────────────────── */
+/* ── Card catalog (game content, banked ROM) ──────────────────────
+ * Flat power curve: every card hits for 1 (block/heal 1) except the
+ * Mythril Bow at 9 -- poker hand multipliers provide the scaling, so
+ * combinations keep their bonuses on the small base.  Loot synthesis
+ * (battle_init_content.c weapon bases + material) is untouched: found
+ * gear keeps its material progression. */
 const CardDefinition g_cards[] = {
-    { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  3, 1,  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, STATUS_NONE,       0,   "I SW" },
-    { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 2, 1,  0, 3, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, STATUS_NONE,       0,   "W SH" },
-    { CARD_WOOD_RING,      CARD_TYPE_HEAL,    5, 1,  3, 3, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, STATUS_NONE,       0,   "I RG" },
-    /* Fire Sword (SW4 + fire rider): the fire element lives on a sword,
+    { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  2, 1,  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, STATUS_NONE,       0,   "I SW" },
+    { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 2, 1,  0, 4, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, STATUS_NONE,       0,   "W SH" },
+    { CARD_WOOD_RING,      CARD_TYPE_HEAL,    1, 1,  3, 3, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, STATUS_NONE,       0,   "I RG" },
+    /* Fire Sword (SW1 + fire rider): the fire element lives on a sword,
      * never a separate "tome" type (docs/loot.md §34).  Carries the BURN
      * on-hit rider exactly like a loot fire sword. */
-    { CARD_FIRE_SWORD,    CARD_TYPE_ATTACK,  4, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    0, STATUS_BURN,     128,  "F SW" },
+    { CARD_FIRE_SWORD,    CARD_TYPE_ATTACK,  1, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    0, STATUS_BURN,     128,  "F SW" },
     /* Poison Dagger (DA1): 1 physical damage; base 50% poison chance
      * scaled by the played hand's multiplier (docs/combo-system.md §13). */
     { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  1, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, STATUS_POISON,   128,  "P DA" },

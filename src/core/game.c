@@ -37,7 +37,7 @@ static void game_prepare_new_game(Game *g)
 {
     g->frame = 0;
     g->game_over_choice = 0;
-    g->shop_id = 1;
+    g->shop_id = 0;
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);
@@ -168,12 +168,15 @@ void game_render(Game *g)
      * black-wipe + invisible-load + row-reveal transition.  Every other
      * full redraw (battle, menus, boot) blanks via LCD-off.
      *
-     * Classification reads rc->prev_screen (the last RENDERED screen),
-     * never g->prev_screen (the last CHANGED-FROM screen, which stays
-     * stale across a whole overworld session): after closing any
+     * Exit classification reads rc->prev_screen (the last RENDERED
+     * screen), never g->prev_screen (the last CHANGED-FROM screen, which
+     * stays stale across a whole overworld session): after closing any
      * dialogue g->prev_screen remains DIALOGUE, which once misclassified
      * the next gate crossing as a dialogue overlay (sprites never
      * hidden) or -- after a menu -- forced ui_lcd_off (white flash).
+     * (Entry classification still reads g->prev_screen: entry always
+     * follows a synchronous screen_change, which refreshes it -- see
+     * the exemption disjunct below.)
      * A dialogue exit that somehow lands on a different map still takes
      * the LCD-on path: overworld_screen_render() routes any map mismatch
      * to the full transition repaint (which reloads the tileset), so no

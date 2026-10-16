@@ -963,7 +963,8 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
  * is tile 14 (VRAM 96), the dark select arrow is tile 15 (VRAM 110). */
-static const uint8_t s_card_tile_vram_ids[31] = {    118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
+static const uint8_t s_card_tile_vram_ids[31] = {
+    118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
     117, 127,                                     /* bar filled, empty */
     113, 114, 116,                                /* HUD: hp, ap, deck */
     96,                                           /* light select arrow */

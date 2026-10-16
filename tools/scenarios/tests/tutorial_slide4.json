@@ -99,7 +99,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "2/turn"
+   "contains": "1/turn"
   },
   {
    "type": "event_occurred",

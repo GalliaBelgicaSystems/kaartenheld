@@ -12,6 +12,10 @@
  * conditions must precede the default fallback.  ACTOR_DEFEATED events are
  * all-match: BOSS_DEFEATED below does NOT suppress MONSTER_DEFEATED, so the
  * boss kill also counts toward the global MONSTERS_DEFEATED counter.
+ * Never put SCENE_CHANGE and DIALOGUE actions in the same row: scene_load
+ * invalidates the render cache without reseeding it, so a dialogue opened
+ * on the new scene would misclassify as a dialogue exit (see screen.c).
+ * (No row uses SCENE_CHANGE today; keep it that way or split the row.)
  *
  * Mayor quest (MONSTER HUNT), expressed as data, not game code:
  *   QUEST_START    : first meeting (quest NOT_STARTED) starts the quest:
@@ -103,9 +107,15 @@ const EventDefinition g_events[] = {
     },
     /* ── Lost Merchant quest (data-driven fetch/deliver) ─────────────
      * Quest state is the MERCHANT_QUEST variable: 0 = not started,
-     * 1 = amulet found (ACTIVE), 2 = complete.  DELIVER must precede INTRO
-     * (more specific first).  After delivery no merchant event matches, so
-     * the interaction falls back to the merchant's SHOP interaction. */
+     * 1 = ACTIVE (accepted from the merchant, or amulet found first),
+     * 2 = complete.  Loot state is STORY_FLAG_ID_AMULET_CHEST (set
+     * atomically with the AMULET grant, like FIELD_CHEST): the chest
+     * sprite and the chest jingle key off the flag, never the quest
+     * variable, so accepting early neither opens the chest art nor
+     * plays the jingle.  DELIVER must precede INTRO (more specific
+     * first).  After delivery no merchant event matches, so the
+     * interaction falls back to the merchant's SHOP interaction; the
+     * same fallback is blocked mid-quest by REMINDER below. */
     {
         EVENT_ID_MERCHANT_DELIVER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         2,
@@ -125,18 +135,34 @@ const EventDefinition g_events[] = {
         EVENT_ID_MERCHANT_INTRO, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         1,
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_INTRO, 0, 0 },
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
+        }
+    },
+    {
+        /* Mid-quest talks re-brief (same INTRO text, distinct telemetry
+         * id) instead of falling through to the locked shop. */
+        EVENT_ID_MERCHANT_REMINDER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false },
+            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 0, false, false }
+        },
         1,
         {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_INTRO, 0, 0 }}
     },
     {
         EVENT_ID_AMULET_PICKUP, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
         1,
-        {{ EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 0, false, false }},
-        3,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, false, false }},
+        4,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 }
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, 0 }
         }
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────
@@ -157,11 +183,9 @@ const EventDefinition g_events[] = {
      * debug fixed bank.  The static never
      * despawns by design: post-victory the spar is gone, so bumps
      * replay the lesson as a remedial with no fight (locked by the
-     * actor_defeat_initial scenario).  The SET is
-     * unconditional (no pool==0 gate): the field cache SETs the same
-     * value, so whichever comes first wins and the second is a harmless
-     * no-op -- opening the chest first must not eat the victory speech.
-     * The pool write is idempotent either way, and Carl's defeat is
+     * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
+     * every milestone (tutorial, chest, mayor) adds exactly one to the
+     * base-1 pool, reaching 4 in any completion order.  Carl's defeat is
      * persistent (one-shot via GameState.world), so the reward fires
      * exactly once. */
     {
@@ -170,17 +194,18 @@ const EventDefinition g_events[] = {
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         2,
         {
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
         }
     },
     /* ── Field cache (first poison dagger + AP unlock) ───────────────
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
-     * more) and the +1 AP pool unlock, announced by its own dialogue.
-     * One-shot via STORY_FLAG_ID_FIELD_CHEST; repeats fall through to
-     * no interaction.  The pool SET mirrors TUTORIAL_COMPLETE (same
-     * value, order-safe in both directions).  The chest is an OAM
+     * more) and a +1 AP pool grant (ADD, pairing with the tutorial and
+     * mayor +1 one-shots toward 4 in any order from the base-1 pool),
+     * announced by its own dialogue.  One-shot via
+     * STORY_FLAG_ID_FIELD_CHEST; repeats
+     * fall through to no interaction.  The chest is an OAM
      * sprite: setting the flag flips it to the open frame (and it
      * stays open), no floor-paint stamp. */
     {
@@ -191,7 +216,7 @@ const EventDefinition g_events[] = {
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_FIELD_CHEST_AP, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENERGY_POOL, 3, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
         }
     }

@@ -17,17 +17,22 @@ void tutorial_screen_update(Game *g)
 {
     if (!g) return;
 
-    if (input_pressed(INPUT_LEFT)) {
-        if (g->tutorial_slide == 0) g->tutorial_slide = TUTORIAL_SLIDE_COUNT - 1;
-        else g->tutorial_slide--;
-        audio_play_sfx(SFX_CURSOR);
-        g->render_cache.valid = false;
-    }
-    if (input_pressed(INPUT_RIGHT)) {
-        if (g->tutorial_slide + 1 >= TUTORIAL_SLIDE_COUNT) g->tutorial_slide = 0;
-        else g->tutorial_slide++;
-        audio_play_sfx(SFX_CURSOR);
-        g->render_cache.valid = false;
+    /* Credits shares this updater (see credits_screen.c): it has no
+     * slides, so LEFT/RIGHT must not run here (cursor SFX + full
+     * LCD-off redraw + duplicate telemetry on a static page). */
+    if (g->screen == SCREEN_TUTORIAL) {
+        if (input_pressed(INPUT_LEFT)) {
+            if (g->tutorial_slide == 0) g->tutorial_slide = TUTORIAL_SLIDE_COUNT - 1;
+            else g->tutorial_slide--;
+            audio_play_sfx(SFX_CURSOR);
+            g->render_cache.valid = false;
+        }
+        if (input_pressed(INPUT_RIGHT)) {
+            if (g->tutorial_slide + 1 >= TUTORIAL_SLIDE_COUNT) g->tutorial_slide = 0;
+            else g->tutorial_slide++;
+            audio_play_sfx(SFX_CURSOR);
+            g->render_cache.valid = false;
+        }
     }
     if (input_pressed(INPUT_B) || input_pressed(INPUT_START) || input_pressed(INPUT_A)) {
         g->tutorial_slide = 0;

@@ -54,7 +54,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 16
+   "expected": 10
   },
   {
    "type": "event_count",

@@ -1,7 +1,7 @@
 {
  "name": "tutorial_carl_victory",
  "test": true,
- "description": "Beating Carl's 15 HP practice spar (0-damage deck) fires TUTORIAL_COMPLETE: energy pool goes 2 to 3, his good-luck speech shows deferred at the battle exit, and the field spar is recorded defeated",
+ "description": "Beating Carl's 10 HP practice spar (0-damage deck) fires TUTORIAL_COMPLETE: energy pool goes 0 to 2 (+2 grant on the unset base: visible 1 to 2), his good-luck speech shows deferred at the battle exit, and the field spar is recorded defeated",
  "actions": [
   {
    "type": "wait",
@@ -185,7 +185,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 3
+   "expected": 2
   },
   {
    "type": "actor_state",

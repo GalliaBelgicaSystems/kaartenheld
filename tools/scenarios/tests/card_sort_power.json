@@ -1,7 +1,7 @@
 {
  "name": "card_sort_power",
  "test": true,
- "description": "Power-desc sort shows strongest cards first in the CARDS tab: F SW, I SW, W SH for the granted starter collection",
+ "description": "Power-desc sort with a flattened catalog (all powers 1) keeps collection order: I SW, W SH, F SW for the granted starter collection (stable sort, no key differences)",
  "actions": [
   {
    "type": "press",
@@ -28,17 +28,17 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "F SW"
-  },
-  {
-   "type": "screen_row",
-   "row": 8,
    "contains": "I SW"
   },
   {
    "type": "screen_row",
-   "row": 10,
+   "row": 8,
    "contains": "W SH"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "F SW"
   }
  ],
  "initial_state": {

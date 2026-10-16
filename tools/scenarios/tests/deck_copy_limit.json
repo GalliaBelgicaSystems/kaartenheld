@@ -1,7 +1,7 @@
 {
  "name": "deck_copy_limit",
  "test": true,
- "description": "deck_add_card enforces CardDefinition.max_copies: 3 WOOD_RING copies deck successfully, the 4th is rejected; POISON_DAGGER (cap 3, none granted at new game since the starter carries no daggers) reaches cap through three add_item grants and decks twice, further copies rejected by add_item's cap. FIRE_SWORD is already saturated at cap 3 by the starter grant, so both add_item and deck_add reject it. Exactly 5 CARD_ADDED_TO_DECK events fire.",
+ "description": "deck_add_card enforces CardDefinition.max_copies: 3 WOOD_RING copies deck successfully, the 4th is rejected; POISON_DAGGER (cap 3, none granted at new game since the starter carries no daggers) reaches cap through three add_item grants and decks twice, further copies rejected by add_item's cap. WOODEN_SHIELD is already saturated at cap 4 by the starter grant, so both add_item and deck_add reject it. Exactly 5 CARD_ADDED_TO_DECK events fire.",
  "actions": [
   {
    "type": "wait",
@@ -93,7 +93,7 @@
   },
   {
    "type": "add_item",
-   "item": "FIRE_SWORD",
+   "item": "WOODEN_SHIELD",
    "quantity": 1
   },
   {
@@ -102,7 +102,7 @@
   },
   {
    "type": "deck_add",
-   "card": "FIRE_SWORD"
+   "card": "WOODEN_SHIELD"
   },
   {
    "type": "wait",
@@ -131,8 +131,8 @@
   },
   {
    "type": "inventory",
-   "item": "FIRE_SWORD",
-   "expected": 3
+   "item": "WOODEN_SHIELD",
+   "expected": 4
   }
  ],
  "initial_state": {

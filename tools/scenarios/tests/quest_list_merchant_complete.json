@@ -1,7 +1,7 @@
 {
  "name": "quest_list_merchant_complete",
  "test": true,
- "description": "A completed LOST AMULET quest stays listed in the QUEST tab as 'complete - MERCHANT'",
+ "description": "A completed LOST AMULET quest stays listed in the QUEST tab as 'complete - MERCHANT' (MONSTER HUNT NOT_STARTED stays hidden, so it sits at rows 5/6)",
  "actions": [
   {
    "type": "press",
@@ -27,12 +27,12 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 5,
    "contains": "LOST AMULET"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 6,
    "contains": "complete - MERCHANT"
   }
  ],

@@ -1,0 +1,77 @@
+{
+ "name": "quest_list_single",
+ "test": true,
+ "description": "Single tracked quest: LOST AMULET alone on the QUEST tab while MONSTER HUNT stays hidden; UP/DOWN wrap on the one entry without repainting",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "LOST AMULET"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": ">"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "active"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": "MONSTER HUNT"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "MERCHANT_QUEST": 1
+  }
+ }
+}

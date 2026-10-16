@@ -48,15 +48,16 @@ uint8_t const g_title_credits_x = 6;
 uint8_t const g_title_credits_y = 17;
 uint8_t const g_title_credits_enabled = 0;
 
-const char g_title_menu_options[4][20+1] = {
+const char g_title_menu_options[5][20+1] = {
 "> NEW GAME          ",
 "> CONTINUE          ",
 "> SOUND             ",
-"> TUTORIAL          "
+"> TUTORIAL          ",
+"> CREDITS           "
 };
 
 uint8_t const g_title_menu_x = 3;
 uint8_t const g_title_menu_caret_x = 3;
-uint8_t const g_title_menu_first_row = 10;
+uint8_t const g_title_menu_first_row = 9;
 uint8_t const g_title_menu_row_step = 2;
-uint8_t const g_title_menu_count = 4;
+uint8_t const g_title_menu_count = 5;

@@ -60,12 +60,22 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "SW3"
+   "contains": "SW2"
   },
   {
    "type": "screen_row",
    "row": 5,
    "contains": "10"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "RG1"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "20"
   },
   {
    "type": "variable",

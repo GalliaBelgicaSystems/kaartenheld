@@ -21,6 +21,6 @@ const uint8_t g_hero_starter_deck_ids[10] = {
     CARD_IRON_SWORD,
     CARD_WOODEN_SHIELD,
     CARD_FIRE_SWORD,
-    CARD_FIRE_SWORD,
+    CARD_WOODEN_SHIELD,
     CARD_IRON_SWORD
 };

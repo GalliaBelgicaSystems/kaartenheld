@@ -565,6 +565,21 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
 
+The Lost Amulet side quest follows the same shape (`MERCHANT_QUEST` =
+0/1/2), with loot state split out: `STORY_FLAG_ID_AMULET_CHEST` records
+the chest opening (set atomically with the AMULET grant), so the chest
+sprite and chest jingle key off loot, never quest state:
+
+* `MERCHANT_INTRO` (interact MERCHANT, NOT_STARTED) → briefing dialogue,
+  quest=ACTIVE (tracked immediately).
+* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the amulet) →
+  briefing again (shop stays locked until delivery).
+* `AMULET_PICKUP` (interact AMULET, chest unopened) → FOUND dialogue +
+  item + quest=ACTIVE + chest flag.  Finding it before talking counts;
+  after delivery the flag stays set so it never refires.
+* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the amulet) →
+  thanks + 15g, amulet removed, quest=COMPLETE; the shop opens.
+
 Scenario actions: `equip_item` (mechanic) and the quick-screen UI (START →
 SELECT tab-focus → arrows → A) are both testable.
 
@@ -1118,7 +1133,7 @@ RNG_USED
 ## World Actors
 
 **World Actor** is the canonical term for any character-like entity that
-exists in an overworld scene (Mayor, Guard, Shopkeeper, Slime, Bat, Boss,
+exists in an overworld scene (Mayor, Guard, Merchant, Slime, Bat, Boss,
 Villager, Monster). Friendly NPCs and hostile enemies share one data-driven
 structure; hostility, interaction type, dialogue ID, and battle ID decide
 what happens when the player engages an actor.

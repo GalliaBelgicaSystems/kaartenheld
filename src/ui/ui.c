@@ -227,6 +227,11 @@ void ui_sprite_hide(void)
     ui_sprite_begin_transition();
 }
 
+#ifdef DEBUG_BUILD
+/* See ui.h: execution evidence for verify-oam (no window breakpoints). */
+volatile uint8_t g_debug_hide_count;
+#endif
+
 /* Hide the player and actor sprites in real OAM right now, before the new
  * screen's full redraw runs.  Covers the hostile OAM region (slots grow
  * by w*h per actor for multi-tile enemy sprites) plus the static slots
@@ -234,6 +239,9 @@ void ui_sprite_hide(void)
 void ui_sprite_begin_transition(void)
 {
     uint8_t i;
+#ifdef DEBUG_BUILD
+    g_debug_hide_count++;
+#endif
     for (i = 0; i < OAM_MAX_ACTOR_ENTRIES; i++) {
         shadow_OAM[i].y = 0;
     }

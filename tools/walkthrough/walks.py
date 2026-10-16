@@ -21,14 +21,16 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
+                                      VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
                                       CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      CARD_AMULET,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
-MAX_BATTLE_ROUNDS = 14
+MAX_BATTLE_ROUNDS = 26
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
@@ -154,20 +156,36 @@ def _battle_round(s):
     """One full round: select attack cards + execute, then select shield
     cards + execute.  True when the battle reached a result banner.
     Phase waits are input-free (the game advances automatically after
-    each execute)."""
+    each execute).  Both executes are retried like the opening round
+    below: a press eaten by edge timing leaves the phase open instead
+    of advancing, and over a long fight (Carl's 10 HP still needs
+    10+ single-card rounds at the flat-1 opening pool) a single desync
+    cascades into rounds
+    of phase-mismatched presses dealing nothing."""
     # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
     # fallback literal PLAYER TURN).
     s.wait_for(lambda: s.text_has("TARGET ")
                or s.text_has("PICK CARDS")
                or s.text_has("PLAYER TURN"), ticks=180)
     _select_cards(s, ATTACK_TYPES)
-    s.press("select", settle=40)     # execute attack
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            return True
+        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+            break
     if s.text_has("VICTORY") or s.text_has("DEFEATED"):
         return True
     # Defense phase: <name>: DEFEND! banner.
-    s.wait_for(lambda: s.text_has("DEFEND"), ticks=240)
     _select_cards(s, (BT_SHIELD,))
-    s.press("select", settle=40)     # execute defense
+    for _ in range(4):
+        s.press("select", settle=40)     # execute defense
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            return True
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PICK CARDS")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
     return s.text_has("VICTORY") or s.text_has("DEFEATED")
 
 
@@ -265,14 +283,66 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("quest monster hunt active",
                s.reader.variable(VARIABLE_ID_QUEST_MONSTER_HUNT), 1)
 
-    # Shop purchase: shopkeeper at (9,3) bumped from (9,4) upwards.
+    # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
+    # then the amulet is fetched from the forest and delivered for +15g,
+    # unlocking the merchant's merged shop (ring included).  The INTRO is
+    # one page, like the mayor's.
+    s.check("merchant briefing opened",
+            bump_actor(s, planner, "town", (10, 3), "right", "MERCHANT:"),
+            expected="MERCHANT:", actual="none")
+    close_dialogue(s, "MERCHANT:")
+    s.check_eq("amulet quest active",
+               s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 1)
+
+    # Forest detour for the amulet (position from the level JSON; the
+    # planner routes around patrol boxes and blocking actors, goal
+    # exempt).  The amulet chest is blocking: bump from the west.
+    forest = _level("forest")
+    amulet = next(o for o in forest["objects"]
+                  if (o.get("properties") or {}).get("entity_id")
+                  == "ENTITY_ID_AMULET")
+    ax, ay = amulet["position"]["x"], amulet["position"]["y"]
+    follow(s, planner, "town", s.pos(), "forest", (ax - 1, ay))
+    s.settle_scene(expected_scene=SCENE_FOREST)
+    s.check("amulet found",
+            bump_actor(s, planner, "forest", (ax - 1, ay), "right",
+                       "FOUND AMULET"),
+            expected="FOUND AMULET", actual="none")
+    close_dialogue(s, "FOUND AMULET")
+    s.check_eq("amulet in collection",
+               s.reader.collection_count(CARD_AMULET), 1)
+
+    # Back to town: delivery opens the shop (thanks + 15g, amulet
+    # removed, quest COMPLETE).
+    follow(s, planner, "forest", s.pos(), "town", (10, 3))
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("deliver dialogue opened",
+            bump_actor(s, planner, "town", (10, 3), "right",
+                       "You found it!"),
+            expected="You found it!", actual="none")
+    close_dialogue(s, "You found it!")
+    s.check_eq("amulet quest complete",
+               s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 2)
+    s.check_eq("delivery gold",
+               s.reader.gold(), HERO_START_GOLD + 15)
+
+    # Merged shop (merchant, unlocked by the delivery): the ring is the
+    # fourth row (index 3).  Cursor down until its caret shows, then buy.
     s.check("shop opened",
-            bump_actor(s, planner, "town", (9, 4), "up", "SHOP"),
+            bump_actor(s, planner, "town", (10, 3), "right", "SHOP"),
             expected="SHOP", actual="none")
     s.shoot("05-shop", need="SHOP")
+    ring_row = False
+    for _ in range(8):
+        if s.bg_text()[8][:1] == ">":
+            ring_row = True
+            break
+        s.press("down", settle=20)
+    s.check("ring row caret", ring_row, expected="> at row 8",
+            actual=s.bg_text()[8])
     gold0 = s.reader.gold()
     price = s.reader.card_price(CARD_WOOD_RING)
-    s.check_eq("gold before purchase", gold0, HERO_START_GOLD)
+    s.check_eq("gold before purchase", gold0, HERO_START_GOLD + 15)
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
     s.check_eq("ring in collection", s.reader.collection_count(
@@ -472,8 +542,8 @@ def walk_b(planner, checks):
                HERO_START_GOLD + props.get("gold_reward", 0))
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool raised 2 -> 3",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("energy pool raised 0 -> 2",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     # Field cache east of Carl: bumping it opens the reward speech (first
     # poison dagger plus the AP unlock, idempotent with the spar reward),
     # then grants both.
@@ -676,7 +746,7 @@ def walk_d(checks):
             ("17-tutorial-slide1", "SW: SWORD"),
             ("18-tutorial-slide2", "CARD TYPES 2"),
             ("19-tutorial-slide3", "COMBOS"),
-            ("20-tutorial-slide4", "2/turn"),
+            ("20-tutorial-slide4", "1/turn"),
             ("21-tutorial-slide5", "DEFEND & STATUS"),
             ("22-tutorial-slide6", "SHIELD CARD")):
         s.check(label, s.press_until(

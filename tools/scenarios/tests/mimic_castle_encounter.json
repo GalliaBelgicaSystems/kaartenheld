@@ -41,7 +41,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 30
+   "expected": 50
   },
   {
    "type": "music_track",

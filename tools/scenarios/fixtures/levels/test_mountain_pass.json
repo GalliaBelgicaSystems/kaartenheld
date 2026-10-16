@@ -278,8 +278,8 @@
           "INTERACTABLE"
         ],
         "visual": "E",
-        "hp": 16,
-        "max_hp": 16,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME_TRIO",

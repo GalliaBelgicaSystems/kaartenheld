@@ -63,7 +63,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 10
+   "expected": 5
   }
  ],
  "initial_state": {
@@ -74,6 +74,9 @@
    "facing": "DOWN"
   },
   "seed": 3000,
-  "start_battle": true
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
  }
 }

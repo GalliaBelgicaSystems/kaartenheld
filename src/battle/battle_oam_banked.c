@@ -221,8 +221,12 @@ void battle_alt_load_banked(void)
         uint8_t gl = g_battle_art_glow_lit[ai];
         /* Glow sets blink on the battle clock via the OAM overlay pass,
          * which only re-runs on dirty frames: keep the 16-frame re-stamp
-         * alive even when the stamp art itself is single-frame. */
-        g_battle_multiframe = 1;
+         * alive even when the stamp art itself is single-frame.  OR, never
+         * assign: the art loader runs first and recomputes the flag from
+         * the stamp frames, so an assignment here would clobber it on a
+         * future reorder (the loaders run art-then-alt, once per battle
+         * entry -- see ui_draw_battle_full). */
+        g_battle_multiframe |= 1;
         if (gu != 0xFF && gl != 0xFF) {
             pal = &g_battle_glow_ramps[(uint16_t)gu << 3];
             OCPS_REG = (uint8_t)(0x80 | (BATTLE_OBJ_SCRATCH2 << 3));

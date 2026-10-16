@@ -71,11 +71,12 @@ testable, save/load works, and the memory budget is understood.
     (clones of the struck actor; the final boss stands alone), regular
     enemy HP doubled (slimes 10-16, bats 8), boss tuned to 50 HP with a
     SET_ENEMY_HP scenario hook pinning it to 20 for deterministic tests.
-  - Energy pool defaults to 2/phase (`BATTLE_ENERGY_PER_TURN`; was 6 —
-    combo scenarios now select cost-0 cards so a full hand still fits);
+  - Energy pool defaults to 1/phase (`BATTLE_ENERGY_PER_TURN`; was 6 —
+    combo scenarios select cost-0 or single cost-1 cards so the hand
+    still fits);
     the live pool is the uncapped `ENERGY_POOL` variable
-    (staged at battle entry), raised by story events (first: tutorial
-    completion); rejected selections flash NO ENERGY! / OUT OF USES! on
+    (staged at battle entry), raised by story events (+2 tutorial,
+    +1 chest, +1 mayor from the unset base); rejected selections flash NO ENERGY! / OUT OF USES! on
     the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
     resolution; executed results announce via the banner).  The Lost

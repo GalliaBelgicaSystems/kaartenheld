@@ -107,7 +107,8 @@ void world_anim_rebuild_banked(void);
 /* Bank-5 full-ring black wipe behind ui_draw_world_transition():
  * blackens CGB slot 4, then paints all 18 ring rows with blank tiles +
  * slot 4.  The fixed driver runs it once (the writes themselves span a
- * display frame); the reveal loop paces row-by-row with vsync. */
+ * display frame); there is no vsync pacing -- the ~1700 Mode-gated
+ * writes sweep top-down in write order by themselves. */
 void ui_wipe_black_banked(void);
 
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
@@ -176,6 +177,16 @@ void ui_sprite_hide(void);
 void ui_sprite_hide_actors_below(uint8_t screen_y);
 void ui_sprite_begin_transition(void);
 void ui_sprite_commit(void);
+#ifdef DEBUG_BUILD
+/* Transition-hide execution counter (verify-oam): incremented by
+ * ui_sprite_begin_transition().  Lets the OAM gate assert the hide RAN
+ * without halting inside a banked ROM window -- mGBA matches those
+ * breakpoints bank-agnostically (false hits) AND cannot resume past
+ * them (`c`/`frame` re-trap instantly), so window-address breaks are
+ * unusable here (AGENTS.md 52.26).  DEBUG-only: the release ROM carries
+ * no hook. */
+extern volatile uint8_t g_debug_hide_count;
+#endif
 void oam_dma_init(void);
 
 void ui_init(void);
@@ -250,8 +261,8 @@ void ui_dialogue_box_banked(void);
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world);
 /* LCD-safe page redraw (text rows + continue chevron, no paper paint):
  * used by the dialogue screen's line-change path while the LCD is on.
- * The full box (top/bottom/sides + paper) is drawn once by
- * ui_draw_dialogue while the LCD is off. */
+ * The full box (top bar + paper, no side or bottom borders) is drawn
+ * once by ui_draw_dialogue while the LCD is off. */
 void ui_draw_dialogue_page(const DialogueState *dialogue,
                            uint8_t scroll_x, uint8_t scroll_y);
 void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,

@@ -54,13 +54,14 @@
   "menu": {
     "x": 3,
     "caret_x": 3,
-    "first_row": 10,
+    "first_row": 9,
     "row_step": 2,
     "options": [
       "> NEW GAME",
       "> CONTINUE",
       "> SOUND",
-      "> TUTORIAL"
+      "> TUTORIAL",
+      "> CREDITS"
     ]
   }
 }

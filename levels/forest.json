@@ -451,8 +451,8 @@
      "INTERACTABLE"
     ],
     "visual": "E",
-    "hp": 12,
-    "max_hp": 12,
+    "hp": 10,
+    "max_hp": 10,
     "gold_reward": 5,
     "reward_currency": "CURRENCY_ID_GOLD",
     "battle": "BATTLE_SLIME",
@@ -509,8 +509,8 @@
      "INTERACTABLE"
     ],
     "visual": "K",
-    "hp": 12,
-    "max_hp": 12,
+    "hp": 15,
+    "max_hp": 15,
     "gold_reward": 8,
     "reward_currency": "CURRENCY_ID_GOLD",
     "battle": "BATTLE_KOBOLD",
@@ -539,7 +539,7 @@
     "max_hp": 0,
     "gold_reward": 0,
     "ai": "AI_NONE",
-    "open_variable": "VARIABLE_ID_MERCHANT_QUEST"
+    "open_flag": "STORY_FLAG_ID_AMULET_CHEST"
    }
   },
   {
@@ -560,8 +560,8 @@
      "INTERACTABLE"
     ],
     "visual": "E",
-    "hp": 20,
-    "max_hp": 20,
+    "hp": 10,
+    "max_hp": 10,
     "gold_reward": 10,
     "reward_currency": "CURRENCY_ID_GOLD",
     "battle": "BATTLE_SLIME",

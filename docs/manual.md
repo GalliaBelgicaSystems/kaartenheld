@@ -243,17 +243,16 @@ kind). And a Ring never hits the monster: it heals you instead.
 
 Win battles to earn **gold**. You start with **20 gold**.
 
-Talk to the **Shopkeeper** in town to spend it:
+Talk to the **Lost Merchant** in town to spend it — once you return
+his stolen amulet from the Forest, his shop opens for business:
 
 ![The shop](manual_images/shop.png)
 
 ![The shop up close](manual_images/detail-shop.png)
 
-Press **A** to buy and **B** to leave. The Shopkeeper sells a **Healing
-Ring** — your best friend when you are hurt.
-
-Later, the **Lost Merchant** opens a bigger shop with an **Iron Sword** and
-a powerful **Mythril Bow**.
+Press **A** to buy and **B** to leave. The Merchant sells an **Iron
+Sword**, a powerful **Mythril Bow**, and a **Healing Ring** — your best
+friend when you are hurt.
 
 ---
 

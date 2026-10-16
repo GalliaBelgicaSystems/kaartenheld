@@ -38,7 +38,7 @@ extern const char g_title_prompt_text[21];
 extern uint8_t g_title_prompt_x, g_title_prompt_y;
 extern const char g_title_credits_text[21];
 extern uint8_t const g_title_credits_x, g_title_credits_y, g_title_credits_enabled;
-extern const char g_title_menu_options[4][21];
+extern const char g_title_menu_options[5][21];
 extern uint8_t g_title_menu_x, g_title_menu_caret_x, g_title_menu_first_row, g_title_menu_row_step, g_title_menu_count;
 
 /* CGB calibration index (ui.c): palette programming is skipped on DMG. */
@@ -184,14 +184,15 @@ static void title_draw_graphic(void)
 
 static void title_draw_menu(uint8_t index)
 {
-    title_draw_text(3, 10, index == 0 ? "> NEW GAME" : "  NEW GAME", 11);
-    title_draw_text(3, 12, index == 1 ? "> CONTINUE" : "  CONTINUE", 11);
+    title_draw_text(3, 9, index == 0 ? "> NEW GAME" : "  NEW GAME", 11);
+    title_draw_text(3, 11, index == 1 ? "> CONTINUE" : "  CONTINUE", 11);
     if (g_sound_enabled) {
-        title_draw_text(3, 14, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
+        title_draw_text(3, 13, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
     } else {
-        title_draw_text(3, 14, index == 2 ? "> SOUND: OFF" : "  SOUND: OFF", 13);
+        title_draw_text(3, 13, index == 2 ? "> SOUND: OFF" : "  SOUND: OFF", 13);
     }
-    title_draw_text(3, 16, index == 3 ? "> TUTORIAL" : "  TUTORIAL", 10);
+    title_draw_text(3, 15, index == 3 ? "> TUTORIAL" : "  TUTORIAL", 10);
+    title_draw_text(3, 17, index == 4 ? "> CREDITS" : "  CREDITS", 10);
 }
 
 void title_content_render(void)
@@ -230,7 +231,7 @@ void title_content_render(void)
  * current index, writes it back through the staged Game* (WRAM always
  * mapped), and repaints only the two '>' cells -- mirroring
  * g_ui_screen_buf so the render cache stays valid and no full redraw
- * flickers on navigation.  Rows are 10, 12, 14, 16 for indices 0..3. */
+ * flickers on navigation.  Rows are 9, 11, 13, 15, 17 for indices 0..4. */
 void title_menu_step_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -238,7 +239,7 @@ void title_menu_step_banked(void)
     uint8_t new_index;
     uint8_t old_row;
     uint8_t new_row;
-    uint8_t max_idx = 3;
+    uint8_t max_idx = 4;
 
     if (!g) return;
     index = g->title_menu_index;
@@ -249,8 +250,8 @@ void title_menu_step_banked(void)
         if (index == 0) new_index = max_idx;
         else new_index = (uint8_t)(index - 1);
     }
-    old_row = (uint8_t)(10 + (index << 1));
-    new_row = (uint8_t)(10 + (new_index << 1));
+    old_row = (uint8_t)(9 + (index << 1));
+    new_row = (uint8_t)(9 + (new_index << 1));
     if (old_row != new_row) {
         title_put_char(3, old_row, ' ');
         title_put_char(3, new_row, '>');

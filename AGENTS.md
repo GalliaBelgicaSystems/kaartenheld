@@ -1373,7 +1373,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   emits `di`/`ei` -- an `ei()` executed while already inside the 256 Hz
   timer ISR re-enables nested timer interrupts, stacking ISR frames until
   the WRAM below the stack is smashed.  Observed symptom (Sep 2026):
-  ghost joypad input -- `pad_state`/`prev_pad_state` accumulate pressed
+  ghost joypad input -- `g_inp_pad`/`g_inp_prev` accumulate pressed
   bits and releases never register, freezing the intro screen in every
   real-timing emulator (mGBA, Gambatte) while PyBoy's frame pacing masked
   it.  `audio_update()`'s ISR-side unmute therefore calls
@@ -1425,8 +1425,8 @@ input_init()
 initialize both:
 
 ```text
-pad_state
-prev_pad_state
+g_inp_pad
+g_inp_prev
 ```
 
 to the current hardware:
@@ -1438,7 +1438,7 @@ joypad()
 Leaving:
 
 ```text
-prev_pad_state = 0
+g_inp_prev = 0
 ```
 
 can cause `input_pressed()` to incorrectly report a button press during boot.
@@ -2507,6 +2507,12 @@ loop order instead: `game_render()` runs before `vsync()`, so from a
 run checks that arm their own breakpoints in separate sessions (one per
 section) to avoid cross-pauses.
 
+`frame` advances the VBlank phase but does NOT reliably advance gameplay:
+from a step-paused state 40 `frame`s produced zero guest movement (held
+input never consumed) while `step()` crossed the gate in ~8 (§52.26).
+Drive input with `step()`/`hold()` (frame-accurate via the `game_render`
+breakpoint); reserve raw `frame` for VBlank-phase reads (`wait_vblank`).
+
 ## 52.18 Fixed-bank overflow presents as a mysterious "guest spin"
 
 The `_CODE`/`_HOME` fixed area sits hard against `0x8000` (§55.5).  When an
@@ -2727,6 +2733,43 @@ Rules:
   the walkthrough's exact-row `bg_text` assert at a proven-colliding
   position (`08-carl-tutor` row 16) is the canary, negative-tested
   (pre-fix it decodes `?`).
+
+## 52.26 mGBA window-address breakpoints stick and conflate (Oct 2026)
+
+mGBA matches breakpoints against the raw CPU PC with no bank awareness,
+and it cannot resume past a halt in the switchable window
+(`0x4000-0x7FFF`):
+
+* A `break` at a banked target's window address also fires when
+  fixed-bank `_HOME` code (or any other bank) executes at the same CPU
+  address. Instance: the OAM gate-after-dialogue check broke at the
+  bank-5 wipe body (`0x642E`) and halted 9 bytes into fixed-bank
+  `ui_invalidate_tileset` with live OAM -- a fixed-bank size change had
+  parked it exactly on the wipe address, failing the check with
+  plausible-but-wrong state. Proven by reading the halted bytes and
+  matching them against the ROM file (fixed bytes, not bank-5 bytes).
+* Worse, `c`/`frame` issued from such a halt re-trap instantly (DIV
+  advances ~10 ticks per command, the player never moves): the poll loop
+  can never reach the real target, so byte-verifying the halt is not
+  enough -- the loop must never halt there at all.
+
+Rules:
+
+* Never assert on state read at a window-address halt. Prove execution
+  with a WRAM execution counter instead (pattern: DEBUG-only
+  `g_debug_hide_count`, incremented by `ui_sprite_begin_transition()`,
+  reset via debugger write, delta asserted after frame-stepping) --
+  deterministic, layout-proof, race-proof.
+* Drive debugger sessions with `step()` (next + continue via the ROM0
+  `game_render` breakpoint), never raw `frame`: from a step-paused
+  state 40 `frame`s produced zero guest movement while `step()` crossed
+  the gate in ~8. Raw `frame` is only trustworthy where the suite
+  already proves it (VBlank-phase reads via `wait_vblank`).
+* A new execution check needs BOTH negative tests before it gates:
+  restore the bug it guards (counter stays 0 / grows -> FAIL) AND reach
+  the wrong screen (the steady-battle check once measured Carl's
+  dialogue instead of battle -- hide correctly skipped by the overlay
+  path -- so assert the screen first or the passage is vacuous).
 
 ---
 
