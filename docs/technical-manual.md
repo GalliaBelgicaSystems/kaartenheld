@@ -468,13 +468,15 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
   * **Bat** — bow and sword values up to 4; one bow swing carries a
     poison rider (60/255).
   * **Kobold** — `SW2/SW2/SW3` plus a heal worth 2.
-  * **Mimic** — `SW2`–`SW4` plus a heal worth 3.
+  * **Mimic** — `SW3`–`SW5` plus a heal worth 3.  Two shields block
+  every swing but the top one.
   * **Spider** — bow/sword up to 3 plus a healer; one webbing bow swing
     carries a poison rider (70/255).
   * **Team slimes** (the trio encounter) hit for 2–3 each round.
 * When the enemy deck is exhausted it **reshuffles** and keeps going.
 * Freeze / grey-out can make the enemy skip (see §8.5/§8.7).
-* The boss (no deck) simply telegraphs a flat 3-damage swing.
+* The boss (no deck) simply telegraphs a flat 4-damage swing: two
+  shields block it exactly.
 
 ### 6.7 Deck exhaustion — the reshuffle turn
 

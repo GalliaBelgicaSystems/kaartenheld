@@ -826,9 +826,11 @@ void battle_update(Battle *b)
                 /* The enemy swung -- play its strike sound. */
                 audio_play_sfx(SFX_HIT);
             } else {
-                vb->enemy_incoming_dmg = 3;
-                /* No enemy card: the fallback flat 3-damage swipe still
-                 * marks an inbound strike, so play the hit sound. */
+                vb->enemy_incoming_dmg = 4;
+                /* No enemy card: the fallback flat 4-damage swipe still
+                 * marks an inbound strike, so play the hit sound.  Only
+                 * deckless battlers (the Lord of Slimes) reach this: two
+                 * SH2 shields block it exactly. */
                 audio_play_sfx(SFX_HIT);
             }
             vb->delay_timer = 20;
