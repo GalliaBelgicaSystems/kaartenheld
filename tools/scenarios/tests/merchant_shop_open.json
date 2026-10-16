@@ -60,7 +60,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "SW1"
+   "contains": "SW2"
   },
   {
    "type": "screen_row",

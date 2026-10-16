@@ -1280,8 +1280,8 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not deckable). Recorded as a known
   gap; no synthetic content was added just to test it.
 - **Starter deck granted at new game**: a new game grants the collection
-  IRON_SWORD ×4 + WOODEN_SHIELD ×3 + FIRE_SWORD ×3 + POISON_DAGGER ×2 (and decks all
-  twelve, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW1),
+  IRON_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
+  ten, deal order SW SW SH SH SW first so the opening hand is SW2 SW2 SH1 SH1 SW1),
   so the first battle already draws from the real deck system. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:

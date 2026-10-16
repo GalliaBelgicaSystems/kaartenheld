@@ -143,7 +143,7 @@ The **leading card** decides the action:
 - **Shield lead** → still deals the non-shield damage sum (shields are
   "fodder that counts"). Only a ring lead turns an attack into a heal.
 
-Worked example: `SW1 + SW1` is a PAIR — base 2 × 120% = **2 damage**.
+Worked example: `SW2 + SW2` is a PAIR — base 4 × 120% = **4 damage**.
 
 The COMBO row above your hand previews the tier live as you select.
 Playing junk that makes nothing still **eats the cards** — a lone `SH1`

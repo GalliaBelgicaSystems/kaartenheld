@@ -1,7 +1,7 @@
 {
  "name": "battle_attack",
  "test": true,
- "description": "Enter battle with Carl and attack once: the starter deck's first card SW1 deals 1 damage, dropping him from 15 to 14 HP",
+ "description": "Enter battle with Carl and attack once: the starter deck's first card SW2 deals 2 damage, dropping him from 15 to 13 HP",
  "actions": [
   {
    "type": "wait",
@@ -115,12 +115,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 14
+   "expected": 13
   },
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "14/15"
+   "contains": "13/15"
   }
  ],
  "initial_state": {

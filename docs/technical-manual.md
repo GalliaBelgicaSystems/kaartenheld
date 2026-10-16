@@ -297,8 +297,8 @@ Every tool in battle is a **card**.  Cards have several attributes
 | Field | Meaning |
 |---|---|
 | **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The descriptive name shown in menus. |
-| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW1`,
-`SH1`, `RG1`; the **battle hand** uses its own code set — `SW1`, `SH1`,
+| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW2`,
+`SH1`, `RG1`; the **battle hand** uses its own code set — `SW2`, `SH1`,
 `BO2`, **`HE1`** for a heal ring, `DA1`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
@@ -327,8 +327,8 @@ All catalogue cards (`src/game/cards_content.c`):
 
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
-| Iron Sword | `I SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | 10g |
-| Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 3 | — | — |
+| Iron Sword | `I SW` | `SW2` | ATK | 2 | 1 | – | 4 | — | 10g |
+| Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
 | Ring (shop) | `I RG` | `RG1` | HEL | 1 | 1 | 3/battle | 3 | — | 20g |
 | Fire Sword | `F SW` | `SW1` | ATK | 1 | 1 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA1` | ATK | 1 | 1 | – | 3 | POISON 128 | — |
@@ -355,9 +355,9 @@ Deck rules (`src/rpg/deck.h`):
 
 ### 5.5 Starter deck
 
-A new game grants this 12-card deck (`content.c`): **4× Iron Sword
-(`SW1`), 3× Wooden Shield (`SH1`), 3× Fire Sword (`SW1`), 2× Poison
-Dagger (`DA1`)**.  The opening hand is always `SW SW SH SH SW` (the first
+A new game grants this 10-card deck (`content.c`, from `screens/hero.json`):
+**4× Iron Sword (`SW2`), 4× Wooden Shield (`SH1`), 2× Fire Sword
+(`SW1`)**.  The opening hand is always `SW SW SH SH SW` (the first
 five copies are the two swords, two shields and a fire sword; the extras
 only deepen the draw pile).
 
@@ -586,8 +586,9 @@ Selected cards are ranked **exactly like poker hands**
   pairs and kinds work with 2+.
 * **Rings are JOKER cards** (`combo_content.c` §34.3): in the hand
   evaluation, each ring's value may be any value **1..10** — the evaluator
-  tries every legal value and keeps the *best* tier.  A `SW1, SH1, RG1`
-  selection lets the ring become a 1 (a pair) so the tier improves.
+  tries every legal value and keeps the *best* tier.  A `SW2, SH1, RG1`
+  selection lets the ring become a 1 (a pair with the shield) so the
+  tier improves.
   Crucially the joker substitutes **values only** — a ring's symbol is
   still `HE/RG`, so it still participates in (and can break) a suited
   bonus.  A lone ring is the best hand-add (wild value), but two rings
@@ -615,8 +616,8 @@ where multiplier is the tier percent, plus a **+25% suited bonus** when all
 cards that enter the hand evaluation share one symbol — in **attack** that
 means every selected card (a shield or ring you slot in can break a suited
 bonus); in **defend** it means every shield/ring you play.  Examples: a
-`SW1 + SW1` pair = 2 × 120% = 2 (truncated); a `SW1,SW1,SH1,SH1,SH1` full
-house (power 2) = 2 × 260% = 5.
+`SW2 + SW2` pair = 4 × 120% = 4 (truncated); a `SW2,SW2,SH1,SH1,SH1` full
+house (power 4) = 4 × 260% = 10.
 
 The **suited bonus** is the reason mixing too many card types dilutes your
 damage — a homogeneous hand punches well above its weight.
@@ -699,7 +700,7 @@ on the enemy type:
 One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
 * **Lost Merchant** (Town, (11,3)) — sells the **Iron Sword** (`I SW`,
-  `SW1`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
+  `SW2`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
   the **Poison Dagger** (`P DA`, `DA1`) for **8g** and the **Ring**
   (`I RG`, `RG1`) for **20g** (a heal card; the game's only reliable
   healing, outside loot rings).  Reachable only after the Lost Amulet
