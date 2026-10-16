@@ -83,7 +83,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 15
+   "expected": 10
   },
   {
    "type": "battle_turn",

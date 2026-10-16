@@ -158,8 +158,9 @@ def _battle_round(s):
     Phase waits are input-free (the game advances automatically after
     each execute).  Both executes are retried like the opening round
     below: a press eaten by edge timing leaves the phase open instead
-    of advancing, and over a long fight (flat-1 opening pool needs
-    15+ rounds for Carl's 15 HP) a single desync cascades into rounds
+    of advancing, and over a long fight (Carl's 10 HP still needs
+    10+ single-card rounds at the flat-1 opening pool) a single desync
+    cascades into rounds
     of phase-mismatched presses dealing nothing."""
     # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
     # fallback literal PLAYER TURN).

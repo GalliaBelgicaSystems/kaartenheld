@@ -157,8 +157,8 @@
           "INTERACTABLE"
         ],
         "visual": "T",
-        "hp": 30,
-        "max_hp": 30,
+        "hp": 50,
+        "max_hp": 50,
         "gold_reward": 0,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_MIMIC",

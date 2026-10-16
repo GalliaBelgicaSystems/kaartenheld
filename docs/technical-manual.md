@@ -690,7 +690,7 @@ on the enemy type:
 | Bat | 8–12 | 8 |
 | Kobold | 15 | 8 |
 | Spider | 10 | 15 |
-| Mimic (solo) | 30 | 0 |
+| Mimic (solo) | 50 | 0 |
 | Lord of Slimes (solo boss) | 99 | 50 |
 
 ### 9.3 Shops

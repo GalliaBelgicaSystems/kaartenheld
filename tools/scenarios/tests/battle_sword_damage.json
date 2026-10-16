@@ -1,7 +1,7 @@
 {
  "name": "battle_sword_damage",
  "test": true,
- "description": "Selecting SW6+BO6 forms an unsuited PAIR (12 x 120% = 14 damage) against Carl the 15 HP sparring slime: no kill, enemy left at 1 HP",
+ "description": "Selecting SW4+BO4 forms an unsuited PAIR (8 x 120% = 9 damage) against Carl the 10 HP sparring slime: no kill, enemy left at 1 HP",
  "actions": [
   {
    "type": "wait",
@@ -11,7 +11,7 @@
    "type": "set_hand_card",
    "index": 0,
    "card_type": "SW",
-   "value": 6
+   "value": 4
   },
   {
    "type": "set_hand_card_meta",
@@ -23,7 +23,7 @@
    "type": "set_hand_card",
    "index": 2,
    "card_type": "BO",
-   "value": 6
+   "value": 4
   },
   {
    "type": "set_hand_card_meta",

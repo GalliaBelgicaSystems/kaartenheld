@@ -155,7 +155,7 @@ tools/walkthrough/
   auto-advance, and some A presses are eaten by edge timing — selection
   must be verified against `combo_count` and retried (§52.10).
 * The starter hand is mostly swords/shields; combos of 3 swords deal
-  ~5 damage — Carl's 15 HP spar takes a dozen-plus single-card rounds
+  ~5 damage — Carl's 10 HP spar takes about five single-card rounds
   at the flat-1 starting pool.
 * `+429` in the Battle struct (mapped as `energy`) does not behave like
   a plain energy budget under scripted play; selection therefore keys
