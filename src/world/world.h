@@ -165,10 +165,8 @@ typedef enum {
      * plus the exit stairs (vram index 26, sheet (8,2)) at VRAM slot 16.
      * The exit keeps TileType value 141 (gap between FOREST_68 and
      * DESOLATE_WALL_00) because values 88..98 collide with VILLAGE_00..10;
-     * ui.c maps it to slot 16 explicitly. Its semantic glyph falls back
-     * to '.' (the ui.c landscape-glyph gate covers 00..15 only; extending
-     * it costs fixed-bank bytes the debug link doesn't have): exits stay
-     * observable via the exits table + tunnel ids + portal-art check. */
+     * ui.c maps it to slot 16 explicitly, and its glyph resolves to '>'
+     * through tile_landscape_glyph like the other tilesets' exits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,

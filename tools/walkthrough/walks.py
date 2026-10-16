@@ -133,7 +133,6 @@ def transit_fight(s):
         # 5-card draw holds no attack (all shields/heals), execute the
         # empty turn anyway: the round advances and a fresh hand draws
         # next round instead of stalling here forever.
-        picked = False
         for idx in range(5):
             if not _cursor_to(s, idx):
                 continue
@@ -143,13 +142,30 @@ def transit_fight(s):
                 before = s.reader.battle_combo_count()
                 s.press("a", settle=12)
                 if s.reader.battle_combo_count() > before:
-                    picked = True
                     break
                 s.tick(2)
             break
         for _ in range(4):
             s.press("select", settle=40)
             if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+                break
+            # Synchronize phases like _battle_round: the attack execute
+            # runs an animation before DEFEND opens (~240 ticks). Firing
+            # blind selects into DEFEND (or into the next round before a
+            # card is picked) desyncs the whole fight.
+            if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+                break
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        # Defense phase: execute (empty or shield) to advance the round,
+        # then wait for the next select banner before redrawing cards.
+        for _ in range(4):
+            s.press("select", settle=40)
+            if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+                break
+            if s.wait_for(lambda: s.text_has("TARGET ")
+                           or s.text_has("PICK CARDS")
+                           or s.text_has("PLAYER TURN"), ticks=240):
                 break
     if s.text_has("VICTORY"):
         s.press_until("a", lambda: not s.text_has("DECK:")

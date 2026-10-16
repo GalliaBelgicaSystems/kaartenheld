@@ -93,34 +93,6 @@
         "width": 1,
         "height": 1,
         "tile": "castle.castle_bottom_right_corner_wall"
-      },
-      {
-        "x": 0,
-        "y": 17,
-        "width": 1,
-        "height": 1,
-        "tile": "castle.castle_bottom_left_corner_wall"
-      },
-      {
-        "x": 1,
-        "y": 17,
-        "width": 8,
-        "height": 1,
-        "tile": "castle.castle_bottom_wall"
-      },
-      {
-        "x": 11,
-        "y": 17,
-        "width": 8,
-        "height": 1,
-        "tile": "castle.castle_bottom_wall"
-      },
-      {
-        "x": 19,
-        "y": 17,
-        "width": 1,
-        "height": 1,
-        "tile": "castle.castle_bottom_right_corner_wall"
       }
     ]
   },

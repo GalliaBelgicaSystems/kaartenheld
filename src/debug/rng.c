@@ -1,5 +1,4 @@
 #include "rng.h"
-#include "rpg/loot.h"
 #include "banked.h"
 
 uint16_t g_rng_state = 1;
