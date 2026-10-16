@@ -162,8 +162,8 @@
           "INTERACTABLE"
         ],
         "visual": "E",
-        "hp": 12,
-        "max_hp": 12,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME",
@@ -248,8 +248,8 @@
           "INTERACTABLE"
         ],
         "visual": "K",
-        "hp": 12,
-        "max_hp": 12,
+        "hp": 15,
+        "max_hp": 15,
         "gold_reward": 8,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_KOBOLD",
@@ -275,8 +275,8 @@
           "INTERACTABLE"
         ],
         "visual": "E",
-        "hp": 20,
-        "max_hp": 20,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 10,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME",

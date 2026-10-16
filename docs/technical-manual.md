@@ -181,25 +181,24 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.
 
-**FOREST** — trees, stumps, a slime (12 HP), a bat (8 HP), a kobold
-(12 HP) and a tougher slime (20 HP), plus the Lost Amulet chest at
+**FOREST** — trees, stumps, slimes, a bat (8 HP) and a kobold, plus the Lost Amulet chest at
 (16,10).  An east gate opens onto the forest branch.
 
-**FOREST BRANCH** — MOSSY GLADE (slime, bat, kobold, tough slime; a
-hermit's advice), DEEP WOODS (kobold, spider, tough slime, bat; a
-signpost), SUNKEN GROVE (a solo Mimic, spider, bat and tough slime), and
-the OVERGROWN SHRINE (elite slime, spider, kobold, bat; a shrine
+**FOREST BRANCH** — MOSSY GLADE (slime, bat, kobold; a
+hermit's advice), DEEP WOODS (kobold, spider, slime, bat; a
+signpost), SUNKEN GROVE (a solo Mimic, spider, bat and slime), and
+the OVERGROWN SHRINE (slime, spider, kobold, bat; a shrine
 signpost).
 
 **SOUTH FIELD / HOWLING RIDGE** — desolate ground.  The south field
 holds a slime, a bat and a kobold; the ridge east of it is thick with a
-kobold, a bat, a tougher slime and a spider, plus a scout's advice.
+kobold, a bat, a slime and a spider, plus a scout's advice.
 
-**MOUNTAIN PASS** — a narrow walled corridor with a slime (16 HP), a bat
-(8 HP) and a tougher slime (20 HP).
+**MOUNTAIN PASS** — a narrow walled corridor with slimes and a bat
+(8 HP).
 
-**CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, tough slime), the
-GREAT HALL (kobold, spider, bat, tough slime; a knight's advice), CASTLE
+**CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, slime), the
+GREAT HALL (kobold, spider, bat, slime; a knight's advice), CASTLE
 (a bat, a spider, a kobold and the solo Mimic), and the THRONE ROOM,
 where the Lord of Slimes (99 HP, always present) waits with a bat and
 a spider.
@@ -682,16 +681,15 @@ selling loot.  Uses: shop purchases.
 ### 9.2 Battle rewards
 
 Defeating a monster grants gold **once per battle** (a trio pays the
-plain reward once, not per clone).  HP varies by placement; gold depends
+plain reward once, not per clone).  HP is flat per type; gold depends
 on the enemy type:
 
 | Enemy | HP | Gold |
 |---|---|---|
-| Slime | 10–16 | 5 |
-| Elite slime | 20 | 10 |
+| Slime | 10 | 5 |
 | Bat | 8–12 | 8 |
-| Kobold | 12–18 | 8 |
-| Spider | 16–18 | 15 |
+| Kobold | 15 | 8 |
+| Spider | 10 | 15 |
 | Mimic (solo) | 30 | 0 |
 | Lord of Slimes (solo boss) | 99 | 50 |
 

@@ -163,7 +163,7 @@ net > 0  -> you take that much
 net <= 0 -> no damage; over-block heals you ONLY with a ring in the mix
 ```
 
-Worked example: incoming 3, you play `SH1` → take **2**.
+Worked example: incoming 3, you play `SH2` → take **1**.
 
 ## Rings and healing
 

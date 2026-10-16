@@ -189,8 +189,8 @@
           "INTERACTABLE"
         ],
         "visual": "S",
-        "hp": 16,
-        "max_hp": 16,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 15,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SPIDER",
