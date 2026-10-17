@@ -22,13 +22,6 @@
 
 const DialogueDefinition g_dialogues[] = {
     {
-        DIALOGUE_ID_ADVICE_SCOUT,
-        "SCOUT:",
-        4,
-        {"The ridge is thick", "with kobolds and", "bats. Heal up in", "town first!"},
-        0
-    },
-    {
         DIALOGUE_ID_AMULET_FOUND,
         "",
         1,

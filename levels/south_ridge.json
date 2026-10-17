@@ -529,27 +529,28 @@
       ]
     },
     {
-      "id": "ridge_scout",
-      "type": "signpost",
+      "id": "ridge_guard",
+      "type": "npc",
       "position": {
         "x": 10,
         "y": 4
       },
       "properties": {
-        "entity_id": "ENTITY_ID_SIGNPOST",
-        "display_name": "SCOUT",
-        "dialogue": "DIALOGUE_ID_ADVICE_SCOUT",
+        "entity_id": "ENTITY_ID_GUARD",
+        "display_name": "GUARD",
+        "dialogue": "DIALOGUE_ID_GUARD_GREETING",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [
           "BLOCKING",
           "INTERACTABLE"
         ],
-        "visual": "?",
+        "visual": "G",
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
       }
     },
     {
