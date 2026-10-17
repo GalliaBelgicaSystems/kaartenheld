@@ -9,7 +9,7 @@
     "map_id": "MAP_TOWN"
   },
   "neighbors": {
-    "north": "",
+    "north": "forest",
     "south": "",
     "east": "village_area",
     "west": "field"
@@ -27,8 +27,8 @@
         "village.village_top_wall",
         "village.village_top_wall",
         "village.village_top_wall",
-        "village.village_top_wall",
-        "village.village_top_wall",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_top_wall",
         "village.village_top_wall",
         "village.village_top_wall",

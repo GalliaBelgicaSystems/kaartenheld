@@ -10,7 +10,7 @@
   },
   "neighbors": {
     "north": "desolate_field",
-    "south": "",
+    "south": "forest",
     "east": "",
     "west": ""
   },
@@ -401,8 +401,8 @@
         "forest.forest_bottom_left_corner_wall",
         "forest.forest_bottom_wall_4",
         "forest.forest_bottom_wall_1",
-        "forest.forest_bottom_wall_2",
-        "forest.forest_bottom_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
         "forest.forest_bottom_wall_4",
         "forest.forest_bottom_wall_1",
         "forest.forest_bottom_wall_2",
