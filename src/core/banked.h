@@ -17,13 +17,19 @@ extern volatile uint8_t g_rom_bank_live;
  * CRAM, wipes).  Bounded Mode-2/3 wait + di/ei around a single store: the
  * di window is microseconds (no music-clock stall), and the ei cannot
  * misroute -- the timer ISR saves/restores g_rom_bank_live.  LCD-off
- * skips the wait (STAT is idle).  Use for every banked VRAM/CRAM data
+ * skips the wait (STAT is idle).  Address and value stage into locals
+ * BEFORE the LCDC check/di: evaluating them after the STAT sample
+ * (array subscripts, ROM table loads) costs 84-124 T-states and exceeds
+ * the 80-T-state Mode-2 buffer, letting a late-Mode-0 sample roll into
+ * Mode 3.  Use for every banked VRAM/CRAM data
  * write that can execute with the LCD on (gate crossings repaint
  * with the LCD on: ui_draw_world_transition never blanks).  Rerun-
  * converged anim-swap cells use the same macro (a dropped access is
  * invisible, but atomicity is free). */
 #define BANKED_VRAM_WRITE(dst, v) \
     do { \
+        volatile uint8_t *_bvw_dst = (volatile uint8_t *)(dst); \
+        uint8_t _bvw_v = (uint8_t)(v); \
         uint8_t _bvw_t; \
         if (LCDC_REG & 0x80) { \
             __asm di __endasm; \
@@ -31,20 +37,21 @@ extern volatile uint8_t g_rom_bank_live;
             while (_bvw_t--) { \
                 if (!(STAT_REG & 0x02)) break; \
             } \
-            *((volatile uint8_t *)(dst)) = (uint8_t)(v); \
+            *_bvw_dst = _bvw_v; \
             __asm ei __endasm; \
         } else { \
-            *((volatile uint8_t *)(dst)) = (uint8_t)(v); \
+            *_bvw_dst = _bvw_v; \
         } \
     } while (0)
 
 /* PPU-safe VRAM data-read for banked bodies (map-entry animation-cell
- * scan).  Same window discipline as the write macro: without it the
- * 256 Hz timer ISR can eclipse the wait->sample window and the read
- * lands in Mode 3, returning 0xFF -- for the one-shot entry scan that
- * permanently loses the cell's animation for the whole map stay. */
+ * scan).  Same window discipline as the write macro -- including
+ * pre-staged address: a Mode-3-eclipsed read returns 0xFF, and for the
+ * one-shot entry scan that permanently loses the cell's animation for
+ * the whole map stay. */
 #define BANKED_VRAM_READ(dst, src) \
     do { \
+        volatile uint8_t *_bvr_src = (volatile uint8_t *)(src); \
         uint8_t _bvr_t; \
         if (LCDC_REG & 0x80) { \
             __asm di __endasm; \
@@ -52,10 +59,10 @@ extern volatile uint8_t g_rom_bank_live;
             while (_bvr_t--) { \
                 if (!(STAT_REG & 0x02)) break; \
             } \
-            (dst) = *((volatile uint8_t *)(src)); \
+            (dst) = *_bvr_src; \
             __asm ei __endasm; \
         } else { \
-            (dst) = *((volatile uint8_t *)(src)); \
+            (dst) = *_bvr_src; \
         } \
     } while (0)
 

@@ -120,7 +120,14 @@ def transit_fight(s):
     Single-card so energy 1 suffices; intentional fights (walk-b)
     never call this so base damage/rounds stay asserted."""
     for _round in range(5):
-        if not s.text_has("DECK:"):
+        # The DECK: row redraws over several frames after a phase change
+        # (full battle redraws span multiple emulator ticks); a tick-halt
+        # can land mid-redraw with TARGET already up but the deck row not
+        # yet repainted.  Wait briefly for the deck row instead of
+        # breaking on the first torn read, or a redraw-phase check
+        # abandons a healthy fight (same class as verify_oam's
+        # frame-halt hazard, AGENTS.md 52.26).
+        if not s.wait_for(lambda: s.text_has("DECK:"), ticks=30):
             break
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
