@@ -5,14 +5,8 @@
     "width": 20,
     "height": 18,
     "tileset": "forest",
-    "music": "MUSIC_OVERWORLD",
+    "music": "MUSIC_FOREST",
     "map_id": "MAP_GRASSY_FOREST"
-  },
-  "neighbors": {
-    "north": "desolate_field",
-    "south": "forest",
-    "east": "",
-    "west": ""
   },
   "default_walkable": "forest.forest_plain_floor_2",
   "layers": {
@@ -422,18 +416,13 @@
       "facing": "DOWN"
     }
   },
-  "exits": [
-    {
-      "x": 12,
-      "y": 5,
-      "target_scene": "forest",
-      "target_x": 12,
-      "target_y": 5,
-      "direction": "SOUTH",
-      "tile_char": ">",
-      "tunnel": "tunnel_forest_grassy_forest"
-    }
-  ],
+  "exits": [],
+  "neighbors": {
+    "north": "desolate_field",
+    "south": "forest",
+    "east": "",
+    "west": ""
+  },
   "objects": [
     {
       "id": "obj_6664",

@@ -5,16 +5,10 @@
     "width": 20,
     "height": 18,
     "tileset": "desolate_landscape",
-    "music": "MUSIC_OVERWORLD",
+    "music": "MUSIC_DESOLATE",
     "map_id": "MAP_DESOLATE_FIELD"
   },
   "default_walkable": "desolate_landscape.desolate_landscape_plain_floor_1",
-  "neighbors": {
-    "north": "",
-    "south": "grassy_forest",
-    "east": "mountain_pass",
-    "west": ""
-  },
   "layers": {
     "terrain": [
       [
@@ -434,6 +428,12 @@
       "tunnel": "tunnel_desolate_field_south_ridge"
     }
   ],
+  "neighbors": {
+    "north": "",
+    "south": "grassy_forest",
+    "east": "mountain_pass",
+    "west": ""
+  },
   "objects": [
     {
       "id": "obj_8593",

@@ -5,16 +5,10 @@
     "width": 20,
     "height": 18,
     "tileset": "village",
-    "music": "MUSIC_OVERWORLD",
+    "music": "MUSIC_TOWN",
     "map_id": "MAP_VILLAGE_AREA"
   },
   "default_walkable": "village.village_plain_floor_1",
-  "neighbors": {
-    "north": "south_field",
-    "south": "",
-    "east": "",
-    "west": "town"
-  },
   "layers": {
     "terrain": [
       [
@@ -423,6 +417,12 @@
     }
   },
   "exits": [],
+  "neighbors": {
+    "north": "south_field",
+    "south": "",
+    "east": "",
+    "west": "town"
+  },
   "objects": [
     {
       "id": "village_merchant",

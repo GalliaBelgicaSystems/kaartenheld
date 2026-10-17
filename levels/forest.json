@@ -53,7 +53,7 @@
         "forest.forest_top_wall_1",
         "forest.forest_top_wall_1",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -75,7 +75,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -97,7 +97,7 @@
         "forest.forest_top_right_tree_top",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -119,7 +119,7 @@
         "forest.forest_bottom_right_tree_trunk",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -134,14 +134,14 @@
         "forest.forest_plain_floor_2",
         "forest.forest_bottom_left_tree_stump",
         "forest.forest_bottom_right_tree_stump",
-        "forest.forest_stairs",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -163,7 +163,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -185,7 +185,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -207,7 +207,7 @@
         "forest.forest_top_right_tree_top",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -229,7 +229,7 @@
         "forest.forest_bottom_right_tree_trunk",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -251,7 +251,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -273,7 +273,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -295,7 +295,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -317,7 +317,7 @@
         "forest.forest_top_right_tree_top",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -339,7 +339,7 @@
         "forest.forest_bottom_right_tree_trunk",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -361,7 +361,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_left_wall_1",
@@ -383,7 +383,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_plain_floor_2"
+        "forest.forest_right_wall_1"
       ],
       [
         "forest.forest_bottom_left_corner_wall",
@@ -430,22 +430,12 @@
       "direction": "SOUTH",
       "tile_char": ">",
       "tunnel": "tunnel_field_forest"
-    },
-    {
-      "x": 12,
-      "y": 5,
-      "target_scene": "grassy_forest",
-      "target_x": 12,
-      "target_y": 5,
-      "direction": "NORTH",
-      "tile_char": "<",
-      "tunnel": "tunnel_forest_grassy_forest"
     }
   ],
   "neighbors": {
     "north": "grassy_forest",
     "south": "town",
-    "east": "forest_glade",
+    "east": "",
     "west": ""
   },
   "objects": [

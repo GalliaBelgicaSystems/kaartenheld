@@ -12,7 +12,7 @@
   "layers": {
     "terrain": [
       [
-        "desolate_landscape.desolate_landscape_top_wall_2",
+        "desolate_landscape.desolate_landscape_top_left_corner_wall",
         "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_top_wall_3",
         "desolate_landscape.desolate_landscape_top_wall_3",
@@ -31,7 +31,7 @@
         "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_top_wall_2",
-        "desolate_landscape.desolate_landscape_top_right_corner_wall"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -53,7 +53,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -75,7 +75,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -97,7 +97,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -119,7 +119,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -141,7 +141,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -163,7 +163,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -185,7 +185,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -207,7 +207,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -229,7 +229,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -251,7 +251,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -273,7 +273,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_fire_frame_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -295,7 +295,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -317,7 +317,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -339,7 +339,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -361,7 +361,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -383,7 +383,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
         "desolate_landscape.desolate_landscape_bottom_left_corner_wall",
@@ -405,13 +405,13 @@
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_right_corner_wall"
+        "desolate_landscape.desolate_landscape_plain_floor_1"
       ]
     ]
   },
   "player": {
     "spawn": {
-      "x": 12,
+      "x": 10,
       "y": 1,
       "facing": "DOWN",
       "animation_frames": [
@@ -420,22 +420,11 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 10,
-      "y": 5,
-      "target_scene": "south_ridge",
-      "target_x": 12,
-      "target_y": 10,
-      "direction": "NORTH",
-      "tile_char": "<",
-      "tunnel": "tunnel_south_ridge_south_field"
-    }
-  ],
+  "exits": [],
   "neighbors": {
-    "north": "castle_entry",
+    "north": "south_ridge",
     "south": "village_area",
-    "east": "",
+    "east": "castle_entry",
     "west": ""
   },
   "objects": [
