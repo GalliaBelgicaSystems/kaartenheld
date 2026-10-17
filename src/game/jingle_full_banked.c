@@ -56,15 +56,17 @@ extern volatile uint8_t g_harness_mode;
 
 /* Title-theme play-once clock (see audio.h MUSIC_TITLE): the ROM driver
  * loops whole songs, so the 6.0 s title song (384 tracker ticks @64 Hz
- * per `make music-size SONG=title`, i.e. ~358 game frames @59.73 fps)
- * would loop forever without an explicit stop.  TITLE_SONG_FRAMES stops
- * a hair early (inaudible 7 ms) so a lagging frame can never replay the
- * intro audibly.  Counted per game_update frame in this bank-8 body --
- * frame counting is exact here (title is static; no LCD-off redraw
- * stalls the update loop, unlike the chest restore path which must use
- * the tracker tick clock).  Main-thread only: no volatile needed.
+ * per `make music-size SONG=title`) would loop forever without an explicit stop.
+ * The active musical notes in song_title occupy only rows 0..26 (162 tracker
+ * ticks = ~2.53 s, ending around frame 135) followed by 37 rows of silence
+ * (rows 27..63) before hUGEDriver wraps back to row 0 at 384 tracker ticks
+ * (~331 game_update frames due to LCD-off splash/title redraws).
+ * Stopping at 200 frames halts playback cleanly in the silent tail after the
+ * final chord's decay has completed, leaving a wide safety margin (~130 frames)
+ * so the song never wraps or replays. Counted per game_update frame in this
+ * bank-8 body. Main-thread only: no volatile needed.
  * Reset on every MUSIC_TITLE dispatch (music_play_banked). */
-#define TITLE_SONG_FRAMES 358
+#define TITLE_SONG_FRAMES 200u
 uint16_t g_title_frames = 0;
 
 /* Tick/frame counter for the restore clock.  Shared with the timer ISR

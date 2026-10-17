@@ -10,9 +10,9 @@ typedef enum {
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
     MUSIC_TITLE,     /* title screen theme (title short.uge, bank 7):
-                         plays ONCE per title visit (~6 s), then stops
-                         in silence (TITLE_SONG_FRAMES game frames, timed
-                         in the bank-8 jingle body; replay on revisit) */
+                         plays ONCE per title visit (~2.5 s notes + decay),
+                         then stops in silence (TITLE_SONG_FRAMES game frames,
+                         timed in the bank-8 jingle body; replay on revisit) */
     MUSIC_TOWN,      /* town / hub theme (loops) */
     MUSIC_DUNGEON,   /* castle / dungeon theme (loops) */
     MUSIC_BOSS,      /* final-boss theme (loops) */
