@@ -550,7 +550,7 @@
       "properties": {
         "entity_id": "ENTITY_ID_SLIME_KNIGHT",
         "enemy_type": "slime_knight",
-        "display_name": "ARMOR SLIME",
+        "display_name": "SLIME KNIGHT",
         "actor_id": 65,
         "facing": "DOWN",
         "flags": [

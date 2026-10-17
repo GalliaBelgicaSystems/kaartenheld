@@ -103,7 +103,7 @@ static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
  * ANIM phase runs without an attack (freeze skip, empty combo) -- the
  * banner then falls back to "PLAYER ATTACK!".  WRAM (fixed bank stays
  * lean); read by the bank-3 renderer. */
-char g_battle_anim_target_name[12];
+char g_battle_anim_target_name[13];
 
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
@@ -121,7 +121,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     b->player.hp = player_hp;
     b->player.max_hp = player_max_hp;
 
-    { const char *s = enemy_name ? enemy_name : "Enemy"; uint8_t j; for (j = 0; j < 11 && s[j]; j++) b->enemies[0].name[j] = s[j]; b->enemies[0].name[j] = '\0'; }
+    { const char *s = enemy_name ? enemy_name : "Enemy"; uint8_t j; for (j = 0; j < 12 && s[j]; j++) b->enemies[0].name[j] = s[j]; b->enemies[0].name[j] = '\0'; }
     b->enemies[0].hp = enemy_hp;
     b->enemies[0].max_hp = enemy_max_hp;
     b->enemy_count = 1;
@@ -184,7 +184,7 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp)
     uint8_t idx;
     if (!b || b->enemy_count >= MAX_BATTLE_ENEMIES) return;
     idx = b->enemy_count++;
-    { const char *nm = name ? name : "Enemy"; uint8_t j; for (j = 0; j < 11 && nm[j]; j++) b->enemies[idx].name[j] = nm[j]; b->enemies[idx].name[j] = '\0'; }
+    { const char *nm = name ? name : "Enemy"; uint8_t j; for (j = 0; j < 12 && nm[j]; j++) b->enemies[idx].name[j] = nm[j]; b->enemies[idx].name[j] = '\0'; }
     b->enemies[idx].hp = hp;
     b->enemies[idx].max_hp = max_hp;
     b->dirty = BATTLE_DIRTY_ALL;
@@ -295,6 +295,12 @@ void battle_set_result(Battle *b, uint8_t res)
         /* One-shot victory fanfare; the exit path switches back to the
          * overworld track. */
         audio_play_music(MUSIC_VICTORY);
+    } else if (res == BATTLE_RESULT_DEFEAT) {
+        /* Game-over theme starts the instant the hero falls, so the
+         * DEFEATED! result screen already carries it; it keeps playing
+         * over the game-over choice menu until a map load restores the
+         * scene track (world_init plays it on every map load). */
+        audio_play_music(MUSIC_GAMEOVER);
     }
 }
 
@@ -524,7 +530,7 @@ void battle_execute_combo(Battle *b)
         /* Snapshot the victim for the ANIM banner: resolution may kill
          * it and auto-advance target_idx before the banner draws. */
         if (b->target_idx < b->enemy_count) {
-            for (j = 0; j < 11 && b->enemies[b->target_idx].name[j]; j++) {
+            for (j = 0; j < 12 && b->enemies[b->target_idx].name[j]; j++) {
                 g_battle_anim_target_name[j] =
                     b->enemies[b->target_idx].name[j];
             }

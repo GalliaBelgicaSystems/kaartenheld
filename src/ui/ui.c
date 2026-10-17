@@ -457,7 +457,7 @@ static char ui_get_world_tile_glyph(uint8_t t)
      * generated glyph table.  Values < 8 are generic sem tiles; 254+
      * stay '.'.  (This used to list every range explicitly; one bounds
      * chain per range avalanched the fixed bank, AGENTS.md 52.18.) */
-    if (t >= 8 && t <= 253) return tile_landscape_glyph(t);
+    if ((uint8_t)(t - 8) <= (uint8_t)(253 - 8)) return tile_landscape_glyph(t);
     return (t < 8) ? g_sem_map[t] : '.';
 }
 
@@ -552,13 +552,13 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
                    (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15)) {
             uint8_t c_idx = (uint8_t)(t - TILE_CASTLE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + c_idx);
-        } else if (t >= TILE_CASTLE_16 && t <= TILE_CASTLE_19) {
+        } else if ((uint8_t)(t - TILE_CASTLE_16) <= (uint8_t)(TILE_CASTLE_19 - TILE_CASTLE_16)) {
             /* Extension art, first cluster (VRAM slots 16..19): values
              * are globally unique (gap), so no tileset gate is needed
-             * -- like the exit row above.  Single folded add (the
-             * bracketed expression is a compile-time constant). */
+             * -- like the exit row above.  Single compare keeps the
+             * fixed bank within budget (AGENTS.md 52.18). */
             tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 16 - TILE_CASTLE_16));
-        } else if (t >= TILE_CASTLE_20 && t <= TILE_CASTLE_22) {
+        } else if ((uint8_t)(t - TILE_CASTLE_20) <= (uint8_t)(TILE_CASTLE_22 - TILE_CASTLE_20)) {
             /* Extension art, second cluster (VRAM slots 20..22):
              * top-of-range values, likewise gateless. */
             tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 20 - TILE_CASTLE_20));

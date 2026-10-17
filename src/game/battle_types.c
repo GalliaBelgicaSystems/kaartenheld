@@ -225,7 +225,7 @@ static const EnemyTypeDef g_enemy_type_slime_knight = {
     "slime_knight",
     "Slime Knight",
     0,
-    "ARMOR SLIME",
+    "SLIME KNIGHT",
     15,
     15,
     "BATTLE_SLIME_KNIGHT",

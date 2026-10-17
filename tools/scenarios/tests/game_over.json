@@ -1,7 +1,7 @@
 {
  "name": "game_over",
  "test": true,
- "description": "Hero is defeated in battle, confirming GAME_OVER state and the Continue? prompt renders",
+ "description": "Hero is defeated in battle, confirming GAME_OVER state, the Continue? prompt renders, and the game-over theme starts at defeat",
  "actions": [
   {
    "type": "wait",
@@ -52,6 +52,10 @@
   {
    "type": "game_state",
    "expected": "GAME_OVER"
+  },
+  {
+   "type": "music_track",
+   "expected": "GAMEOVER"
   },
   {
    "type": "battle_player_hp",

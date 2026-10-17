@@ -89,18 +89,18 @@ def world_size(name_ptr_size):
 NAME_PTR_CANDIDATES = (2, 3)
 
 # Battle player Combatant (src/battle/combatant.h): hp, max_hp,
-# name[12].  The hero's battle display name starts with 'H'.
+# name[13].  The hero's battle display name starts with 'H'.
 BATTLE_PLAYER_HP = 0
 BATTLE_PLAYER_MAX_HP = 1
-BATTLE_ENEMIES = 14        # enemies[0] offset (player Combatant = 14 B)
-BATTLE_ENEMY_STRIDE = 14   # Combatant size
+BATTLE_ENEMIES = 15        # enemies[0] offset (player Combatant = 15 B)
+BATTLE_ENEMY_STRIDE = 15   # Combatant size
 
 # Battle hand region (src/battle/battle.h, after player + enemies[3] +
 # enemy_count + target_idx + dirty): Deck deck; Card hand[5];
 # selected_indices[5]; combo_count; cursor_pos; energy.
 # Deck (src/battle/deck.h): cards[20]x8 + count + draw_idx +
 # discard[20]x8 + discard_count = 323.
-BATTLE_HAND = 14 + 3 * 14 + 3 + 323   # 382
+BATTLE_HAND = 15 + 3 * 15 + 3 + 323   # 391
 CARD_SIZE = 8                # src/battle/card.h
 CARD_TYPE = 0                # BattleCardType
 CARD_VALUE = 1

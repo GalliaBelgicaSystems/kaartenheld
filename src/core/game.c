@@ -116,6 +116,12 @@ void game_update(Game *g)
         } else if (g_bk_byte_b == 2) {
             def = scene_definition_for_map(g->world.map_id);
             audio_play_music(def ? def->music : MUSIC_OVERWORLD);
+        } else if (g_bk_byte_b == 3) {
+            /* Title theme played once (TITLE_SONG_FRAMES, timed in the
+             * bank-8 jingle body): stop in silence.  MUSIC_NONE emits
+             * MUSIC_CHANGED so the harness observes the stop, and a
+             * later play_music(TITLE) replays from the top. */
+            audio_play_music(MUSIC_NONE);
         }
     }
     scene_sync_from_world(g);

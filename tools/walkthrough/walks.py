@@ -807,7 +807,7 @@ def walk_e(planner, checks):
     s.check("banner readable",
             s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
             expected="TARGET banner", actual=s.bg_text()[0].strip())
-    if s.text_has("TARGET ARMOR SLIME"):
+    if s.text_has("TARGET SLIME KNIGHT"):
         # Armor intact: one-shot it, read the briefing, close it.
         # No blind A presses here: the victory exit inside transit_fight
         # already opened the box, and an extra edge would close the

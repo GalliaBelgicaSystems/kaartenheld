@@ -1596,3 +1596,21 @@ mechanism exists on that path. Prescription: do not read signal into pixel
 diffs confined to that frame; re-run the capture before hunting a rendering
 bug there.
 
+Game-over theme + title play-once + SLIME KNIGHT rename (Oct 2026):
+`game over.uge` wired as MUSIC_GAMEOVER (bank 7, loops) and played in
+`battle_set_result` DEFEAT so the DEFEATED! screen already carries it;
+map loads restore scene tracks, so no exit-path handling needed. Title
+`title short.uge` plays once via a bank-8 frame counter (358 frames =
+6.0 s song, stop with MUSIC_NONE so the harness observes it and a later
+visit replays): counting game frames, not ISR ticks, because the title
+screen never stalls the frame loop the way LCD-off transitions stall
+the jingle restore clock -- and it keeps the ISR (and its fixed-bank
+cost) untouched. Fixed-bank funding came from collapsing the glyph
+predicate to one range check (all values 8..253 are landscape; legacy
+desolate returns earlier) plus single-compare castle art branches;
+_HOME sits at 8 B headroom. Knight rename 11->12 chars widened
+Combatant.name/s_actor_names/g_battle_anim_target_name to 13 (banner
+"TARGET SLIME KNIGHT" is 19/20 cols; telegraph/defend banners clip the
+trailing "!" at 20, same as before with longer names); state_reader
+battle offsets +7/+1. Boss keeps "L.of Slimes".
+

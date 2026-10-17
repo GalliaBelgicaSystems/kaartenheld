@@ -32,7 +32,7 @@
  * Self-contained: same-bank reads (event table), WRAM
  * (g_game, s_actor_names), compile-time constants.  No fixed-bank
  * calls. */
-extern char s_actor_names[MAX_WORLD_ACTORS][12];
+extern char s_actor_names[MAX_WORLD_ACTORS][13];
 extern const EventDefinition g_events[];
 
 void game_slime_trio_spawn_banked(void)
