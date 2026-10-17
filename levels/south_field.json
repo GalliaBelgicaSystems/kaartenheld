@@ -31,7 +31,7 @@
         "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_top_wall_2",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_top_right_corner_wall"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -53,7 +53,95 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
+      ],
+      [
+        "desolate_landscape.desolate_landscape_left_wall_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_right_wall_1"
+      ],
+      [
+        "desolate_landscape.desolate_landscape_left_wall_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_right_wall_1"
+      ],
+      [
+        "desolate_landscape.desolate_landscape_left_wall_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_right_wall_1"
+      ],
+      [
+        "desolate_landscape.desolate_landscape_left_wall_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -132,7 +220,6 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_exit_desolate_landscape",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -141,7 +228,8 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -163,95 +251,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
-      ],
-      [
-        "desolate_landscape.desolate_landscape_left_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
-      ],
-      [
-        "desolate_landscape.desolate_landscape_left_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
-      ],
-      [
-        "desolate_landscape.desolate_landscape_left_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
-      ],
-      [
-        "desolate_landscape.desolate_landscape_left_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -273,7 +273,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_fire_frame_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -295,7 +295,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -317,7 +317,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -339,7 +339,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -361,7 +361,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_left_wall_1",
@@ -383,7 +383,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
         "desolate_landscape.desolate_landscape_bottom_left_corner_wall",
@@ -405,7 +405,7 @@
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_bottom_right_corner_wall"
       ]
     ]
   },

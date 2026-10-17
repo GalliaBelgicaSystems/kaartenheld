@@ -12,28 +12,29 @@
   "layers": {
     "terrain": [
       [
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_top_left_corner_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_wall",
+        "castle.castle_top_right_corner_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -52,10 +53,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -74,11 +75,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_left_wall",
@@ -97,10 +97,10 @@
         "castle.castle_right_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_left_wall",
@@ -119,10 +119,10 @@
         "castle.castle_right_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_left_wall",
@@ -141,10 +141,10 @@
         "castle.castle_right_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_left_wall",
@@ -163,9 +163,10 @@
         "castle.castle_right_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -184,10 +185,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -206,10 +207,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -228,10 +229,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -250,10 +251,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -272,10 +273,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -294,10 +295,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -316,10 +317,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -338,10 +339,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -360,10 +361,10 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
+        "castle.castle_left_wall",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -382,30 +383,29 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_right_wall"
       ],
       [
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
+        "castle.castle_bottom_left_corner_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
         "castle.castle_exit",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris"
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_wall",
+        "castle.castle_bottom_right_corner_wall"
       ]
     ]
   },

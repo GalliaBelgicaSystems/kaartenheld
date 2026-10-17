@@ -536,7 +536,9 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             /* Split range (see world.h): values 8..71 map slot (t - 8);
              * gap values 136..140 map slot (t - 72).  f_idx - 64 folds
              * 128..132 down to 64..68.  (No explicit 63/64 split test:
-             * t <= 68 already implies (t <= 63 || t >= 64).) */
+             * the tileset-kind gate already excludes castle/village
+             * values 72..135 that sit numerically between the two
+             * halves, so every value reaching here is a forest tile.) */
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
             if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);

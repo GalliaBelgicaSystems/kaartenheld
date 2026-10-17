@@ -420,8 +420,8 @@
   "neighbors": {
     "north": "",
     "south": "",
-    "east": "south_field",
-    "west": "castle_hall"
+    "east": "castle_hall",
+    "west": "south_field"
   },
   "objects": [
     {

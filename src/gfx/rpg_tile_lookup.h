@@ -19,10 +19,13 @@ extern const uint8_t g_tile_pal_village[48];
 static inline uint8_t rpg_lookup_tile_id(uint8_t tileset_kind, char glyph)
 {
     if (tileset_kind == 15 /* WORLD_TILESET_CASTLE */) {
-        if (glyph == '.') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 18); /* Plain solid stone floor (0,2) */
+        /* Slots follow the 24-tile VRAM window (base 0..15, extension
+         * 16..22, exit LAST at 23): plain floor is slot 22, stairs slot
+         * 23, chandelier (nearest prop art) slot 20. */
+        if (glyph == '.') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 22); /* Plain floor (4,2) */
         if (glyph == '#') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 10); /* Castle wall */
-        if (glyph == '>' || glyph == '<') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 13); /* Archway gate */
-        if (glyph == 'B' || glyph == '*') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 16); /* Torch / prop */
+        if (glyph == '>' || glyph == '<') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 23); /* Archway gate */
+        if (glyph == 'B' || glyph == '*') return (uint8_t)(RPG_TILE_BASE_DESOLATE + 20); /* Chandelier / prop */
         return 0;
     }
     if (tileset_kind == 14 /* WORLD_TILESET_DESOLATE */ && glyph == '.') {

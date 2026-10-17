@@ -28,8 +28,8 @@ from scene_registry import (
 )
 from collision import (
     derive_collision, edge_link_report, effective_actor_flags,
-    neighbor_pairing_issues, point_exit_issues, tunnel_id_valid,
-    tunnel_issues, cell_tile_info, level_default_tile,
+    neighbor_pairing_issues, edge_geometry_issues, point_exit_issues,
+    tunnel_id_valid, tunnel_issues, cell_tile_info, level_default_tile,
 )
 
 MAX_WORLD_WIDTH = 32
@@ -855,8 +855,11 @@ def neighbor_check_cli():
             print(json.dumps({"success": True, "links": links}))
         else:
             errors, warnings = neighbor_pairing_issues(levels_by_id, tilesets)
-            print(json.dumps({"success": True, "errors": errors,
-                              "warnings": warnings}))
+            geo_errors, geo_warnings = edge_geometry_issues(levels_by_id,
+                                                            tilesets)
+            print(json.dumps({"success": True,
+                              "errors": errors + geo_errors,
+                              "warnings": warnings + geo_warnings}))
     except SystemExit as exc:
         print(json.dumps({"success": False, "error": str(exc)}))
 
@@ -996,9 +999,11 @@ def main():
                 else:
                     seen_actor_ids[aid] = obj.get("id")
 
-    # Cross-file check: neighbor links should be reciprocal (walk back).
-    # One-sided links still compile (walk in works); warn so the missing
-    # return is a conscious choice, not an oversight.
+    # Cross-file check: neighbor links must be reciprocal (walk back).
+    # One-sided links used to warn; they now fail loudly -- a missing
+    # return silently strands the walk-back route (castle_entry's
+    # inverted east/west pair teleported players across the map), so a
+    # deliberate one-way link must go through a point exit instead.
     _OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
     _by_id = {}
     for _, data in loaded_levels:
@@ -1019,8 +1024,9 @@ def main():
                            if e.get("target_scene") == data.get("id")]
                 if returns:
                     continue
-                print(f"WARNING: {os.path.basename(p)} edge '{direction}' -> '{target}' "
+                print(f"ERROR: {os.path.basename(p)} edge '{direction}' -> '{target}' "
                       f"has no return link ({target} {_OPPOSITE[direction]} is '{back or 'unset'}')")
+                overall_success = False
 
     # Cross-file gate: whole-edge links must pair up geometrically so the
     # player can never land inside a wall or get trapped (collision.py is
@@ -1030,6 +1036,12 @@ def main():
         for warn in _pair_warnings:
             print(f"WARNING: {warn}")
         for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        _geo_errors, _geo_warnings = edge_geometry_issues(_by_id, tilesets)
+        for warn in _geo_warnings:
+            print(f"WARNING: {warn}")
+        for err in _geo_errors:
             print(f"ERROR: {err}")
             overall_success = False
         # Tunnels: linked exit pairs must have exactly two mutual mouths
