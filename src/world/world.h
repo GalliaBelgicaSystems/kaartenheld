@@ -149,24 +149,37 @@ typedef enum {
     TILE_FOREST_62 = 70,
     TILE_FOREST_63 = 71,
     /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
-     * 0xFF is the empty-cell sentinel and the enum must stay <= 250
-     * (g_tiletype_fits_u8), so these live in the free 136..145 gap, NOT
-     * contiguously after 71 (72+ belongs to castle/village).  The renderer
-     * maps them with (value - 72), not (value - TILE_FOREST_00): see
-     * ui_draw_world_cell.  value = 72 + VRAM slot. */
+     * 0xFF is the empty-cell sentinel and the enum must stay <= 0xFE
+     * (g_tiletype_fits_u8; 254 kept clear as buffer), so these live in
+     * the free 136..140 gap, NOT contiguously after 71 (72+ belongs to
+     * castle/village).  The renderer maps them with (value - 72), not
+     * (value - TILE_FOREST_00): see ui_draw_world_cell.
+     * value = 72 + VRAM slot.  (141..145 went to the castle exit +
+     * extension, 251..253 to the rest of the castle extension.) */
     TILE_FOREST_64 = 136,
     TILE_FOREST_65 = 137,
     TILE_FOREST_66 = 138,
     TILE_FOREST_67 = 139,
     TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 16 tiles in sheet scan order (0..15),
+    /* Castle Landscape tiles: 16 tiles in vram-block order (0..15),
      * mapping 1:1 to the first 16 castle VRAM slots (RPG_TILE_BASE_WORLD),
-     * plus the exit stairs (vram index 26, sheet (8,2)) at VRAM slot 16.
-     * The exit keeps TileType value 141 (gap between FOREST_68 and
+     * plus the exit stairs (vram index 26) at the LAST VRAM slot (23):
+     * the exit keeps TileType value 141 (gap between FOREST_68 and
      * DESOLATE_WALL_00) because values 88..98 collide with VILLAGE_00..10;
-     * ui.c maps it to slot 16 explicitly, and its glyph resolves to '>'
-     * through tile_landscape_glyph like the other tilesets' exits. */
+     * ui.c maps it to its slot explicitly, and its glyph resolves to '>'
+     * through tile_landscape_glyph like the other tilesets' exits.
+     *
+     * Castle extension (vram indices 16..22: thrones, rugs, chandeliers,
+     * plain floor): the value space is full to 250 (0xFF is the map
+     * sentinel, 254 kept clear), so these take the only free values --
+     * 142..145 (gap between the exit and DESOLATE_WALL_00) and
+     * 251..253 (top of the u8 range, still <= 0xFE per
+     * g_tiletype_fits_u8).  Suffixes stay vram-block indices (like the
+     * base set), NOT values: TILE_CASTLE_16..19 = 142..145 render VRAM
+     * slots 16..19, TILE_CASTLE_20..22 = 251..253 render slots 20..22.
+     * ui.c maps both clusters explicitly (one range branch each); the
+     * generated walk/glyph tables absorb them with no hand edits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -184,6 +197,13 @@ typedef enum {
     TILE_CASTLE_14 = 86,
     TILE_CASTLE_15 = 87,
     TILE_CASTLE_26 = 141,
+    TILE_CASTLE_16 = 142,
+    TILE_CASTLE_17 = 143,
+    TILE_CASTLE_18 = 144,
+    TILE_CASTLE_19 = 145,
+    TILE_CASTLE_20 = 251,
+    TILE_CASTLE_21 = 252,
+    TILE_CASTLE_22 = 253,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -348,9 +368,10 @@ typedef enum {
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
- * (empty/unset cell), so the enum must never reach it -- another 8-tile
- * block past 250 would overflow.  Enforced by g_tiletype_fits_u8 in
- * world.c (kept out of this header so the 2 bytes are emitted once). */
+ * (empty/unset cell), so the enum must never reach it -- only 254 is
+ * still clear past the castle extension (251..253), and it stays clear
+ * as buffer.  Enforced by g_tiletype_fits_u8 in world.c (kept out of
+ * this header so the 2 bytes are emitted once). */
 
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32

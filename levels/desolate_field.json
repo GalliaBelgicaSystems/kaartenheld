@@ -542,31 +542,6 @@
         "reward_currency": "CURRENCY_ID_GOLD",
         "actor_id": 63
       }
-    },
-    {
-      "id": "desolate_amulet",
-      "type": "item",
-      "position": {
-        "x": 10,
-        "y": 8
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_AMULET",
-        "display_name": "AMULET",
-        "dialogue": "DIALOGUE_ID_AMULET_NOTHING",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "A",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "open_flag": "STORY_FLAG_ID_AMULET_CHEST"
-      }
     }
   ],
   "regions": []

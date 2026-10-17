@@ -506,7 +506,7 @@ def main():
             # the castle gfx rule encodes with).
             ordered = sorted((v["index"], (v["x"], v["y"]), v["tile"])
                              for v in (ts_data.get("vram_block") or {}).get("tiles", [])
-                             if "tile" in v and (v.get("index", 99) < 16 or v.get("index") == 26))
+                             if "tile" in v and (v.get("index", 99) < 23 or v.get("index") == 26))
             cells = [c for _, c, _ in ordered]
             ids = [t for _, _, t in ordered]
         else:

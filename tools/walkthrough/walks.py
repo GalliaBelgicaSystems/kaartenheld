@@ -453,7 +453,7 @@ def walk_a(planner, checks, sram_out=None):
                s.reader.variable(VARIABLE_ID_QUEST_MONSTER_HUNT), 1)
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
-    # then the amulet is fetched from the desolate field and delivered
+    # then the amulet is fetched from the mountain pass and delivered
     # for +15g, unlocking the merchant's merged shop (ring included).
     # The merchant lives in the village area (east of town); the INTRO
     # is one page, like the mayor's.
@@ -466,18 +466,18 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("amulet quest active",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 1)
 
-    # Desolate detour for the amulet (position from the level JSON; the
+    # Mountain detour for the amulet (position from the level JSON; the
     # planner routes around patrol boxes and blocking actors, goal
     # exempt).  The amulet chest is blocking: bump from the west.
-    desolate = _level("desolate_field")
-    amulet = next(o for o in desolate["objects"]
+    mountain = _level("mountain_pass")
+    amulet = next(o for o in mountain["objects"]
                   if (o.get("properties") or {}).get("entity_id")
                   == "ENTITY_ID_AMULET")
     ax, ay = amulet["position"]["x"], amulet["position"]["y"]
-    follow(s, planner, "village_area", s.pos(), "desolate_field", (ax - 1, ay))
-    s.settle_scene(expected_scene=SCENE_DESOLATE_FIELD)
+    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax - 1, ay))
+    s.settle_scene(expected_scene=SCENE_MOUNTAIN_PASS)
     s.check("amulet found",
-            bump_actor(s, planner, "desolate_field", (ax - 1, ay), "right",
+            bump_actor(s, planner, "mountain_pass", (ax - 1, ay), "right",
                        "FOUND AMULET"),
             expected="FOUND AMULET", actual="none")
     close_dialogue(s, "FOUND AMULET")
@@ -486,7 +486,7 @@ def walk_a(planner, checks, sram_out=None):
 
     # Back to the village: delivery opens the shop (thanks + 15g, amulet
     # removed, quest COMPLETE).
-    follow(s, planner, "desolate_field", s.pos(), "village_area", (10, 4))
+    follow(s, planner, "mountain_pass", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
     s.check("deliver dialogue opened",
             bump_actor(s, planner, "village_area", (10, 4), "down",

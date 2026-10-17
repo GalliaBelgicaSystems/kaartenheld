@@ -1538,6 +1538,21 @@ needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
 (`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
 SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
 
+Castle tile-window extension (Oct 2026): the redone castle levels
+reference vram indices 16..22 (throne TR/BR, rugs, chandeliers, plain
+floor), which had no ROM encoding (build broke with undefined
+TILE_CASTLE_16..22; the Sep-2026 drop deliberately referenced only
+indices <16). Values 142..145 (gap) + 251..253 (top of u8, 254 kept
+clear, 0xFF sentinel) for TILE_CASTLE_16..19 / 20..22; VRAM slots
+16..22 hold vram 16..22, exit stairs move to the LAST slot 23
+(gfx --tile-coords + palette manifest + verifier slot map updated in
+lockstep). Renderer: two gateless art branches (values globally
+unique, like the exit row) + the glyph predicate collapsed from 7
+range clauses to one (all values 8..253 are landscape; legacy
+desolate returns earlier) to fund the fixed bank, which sits at 8 B
+headroom. TileType space is now effectively full (only 254 free):
+the next tileset growth needs a value-reclamation plan first.
+
 Castle art drop (same branch, Sep 2026): 9 new tiles (throne 2x2, floor
 debris, rugs, chandeliers) merged via `merge_tileset.py`, then hand-fixed
 — lessons for the next drop: (1) the merge never writes vram `(x,y)` and

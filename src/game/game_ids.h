@@ -63,7 +63,7 @@ typedef enum {
     STORY_FLAG_ID_ARRIVED_TOWN = 1,
     STORY_FLAG_ID_MET_MAYOR    = 2,
     STORY_FLAG_ID_FIELD_CHEST  = 3,
-    STORY_FLAG_ID_AMULET_CHEST = 4,   /* desolate amulet chest opened (loot
+    STORY_FLAG_ID_AMULET_CHEST = 4,   /* mountain amulet chest opened (loot
                                        * state, like FIELD_CHEST -- set
                                        * atomically with the AMULET grant) */
     STORY_FLAG_ID_COUNT        = 5
