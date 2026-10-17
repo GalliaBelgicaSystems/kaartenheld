@@ -129,6 +129,29 @@ static const EnemyTypeDef g_enemy_type_npc_guard = {
     7
 };
 
+static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
+    "npc_heal_mage",
+    "Heal Mage OW",
+    0,
+    "HEAL MAGE",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    117,
+    1,
+    1,
+    1,
+    7
+};
+
 static const EnemyTypeDef g_enemy_type_npc_mayor = {
     "npc_mayor",
     "Mayor OW",
@@ -145,7 +168,7 @@ static const EnemyTypeDef g_enemy_type_npc_mayor = {
     0,
     0,
     0,
-    117,
+    118,
     1,
     1,
     1,
@@ -168,7 +191,7 @@ static const EnemyTypeDef g_enemy_type_npc_merchant = {
     0,
     0,
     0,
-    118,
+    119,
     1,
     1,
     1,
@@ -191,7 +214,7 @@ static const EnemyTypeDef g_enemy_type_npc_wizard = {
     0,
     0,
     0,
-    119,
+    120,
     1,
     1,
     1,
@@ -237,7 +260,7 @@ static const EnemyTypeDef g_enemy_type_slime_knight = {
     3,
     2,
     78,
-    120,
+    121,
     1,
     1,
     1,
@@ -306,19 +329,20 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     0,
     0,
     0,
-    121,
+    122,
     1,
     1,
     2,
     1
 };
 
-const EnemyTypeDef* const g_enemy_types[13] = {
+const EnemyTypeDef* const g_enemy_types[14] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
     &g_enemy_type_kobold,
     &g_enemy_type_mimic,
     &g_enemy_type_npc_guard,
+    &g_enemy_type_npc_heal_mage,
     &g_enemy_type_npc_mayor,
     &g_enemy_type_npc_merchant,
     &g_enemy_type_npc_wizard,
@@ -328,4 +352,4 @@ const EnemyTypeDef* const g_enemy_types[13] = {
     &g_enemy_type_spider,
     &g_enemy_type_treasure_chest,
 };
-const uint8_t g_enemy_type_count = 13;
+const uint8_t g_enemy_type_count = 14;

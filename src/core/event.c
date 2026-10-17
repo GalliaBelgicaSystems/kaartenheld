@@ -10,6 +10,9 @@
  * ROM bank 2).  Declared here so the fixed-bank executor can take its
  * address for the trampoline. */
 void game_slime_trio_spawn_banked(void);
+/* Heal Mage full-restore body (src/game/heal_full_banked.c, ROM bank 2):
+ * same dispatch shape (branch + staging + call only in fixed bank). */
+void heal_full_banked(void);
 
 /* ── Event engine ──────────────────────────────────────────────────
  * The engine matches events against a table registered by the game layer
@@ -136,6 +139,24 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             g_bk_call_bank = 2;
             g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
             banked_call_run();
+        } else if (t == EVENT_ACTION_HEAL_FULL) {
+            /* Heal Mage (game content, bank 2): the body restores the
+             * party and stages the telemetry amount; the fixed bank
+             * pays just the branch + call + emit.  Keeps engine files
+             * free of game ids (AGENTS.md §55.1) and the fixed bank
+             * below 0x8000 (§52.18). */
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&heal_full_banked;
+            banked_call_run();
+#ifdef DEBUG_BUILD
+            telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
+#endif
+        } else if (t == EVENT_ACTION_PLAY_MUSIC) {
+            /* Heal Mage's chest-loot jingle (game content): play the
+             * staged track now.  Engine-generic (MusicTrack is engine
+             * audio vocabulary); the bank-8 jingle clock restores the
+             * scene track when the one-shot ends, as for chest loot. */
+            audio_play_music((MusicTrack)a0);
         }
     }
 }
