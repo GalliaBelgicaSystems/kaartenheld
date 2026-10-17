@@ -563,6 +563,102 @@
    "off_colors": [
     "#7d40bb"
    ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    0,
+    13
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    0,
+    14
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    1,
+    13
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    1,
+    14
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    2,
+    13
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "battle",
+   "tile": [
+    2,
+    14
+   ],
+   "declared": "fightslime",
+   "used_ramp": "fightslime",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    0,
+    8
+   ],
+   "declared": "sprites11",
+   "used_ramp": "sprites11",
+   "off_colors": [
+    "#3c5e26"
+   ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    1,
+    8
+   ],
+   "declared": null,
+   "used_ramp": "sprites11",
+   "off_colors": [
+    "#3c5e26"
+   ]
   }
  ]
 }

@@ -176,6 +176,7 @@
     {
       "id": "slime_knight_frame1",
       "label": "Slime knight frame1",
+      "palette": "sprites11",
       "gb_constant": "TILE_ENEMIES_SLIME_KNIGHT_FRAME1",
       "walkable": false,
       "color": "#3d6027",
@@ -186,6 +187,7 @@
     {
       "id": "slime_knight_frame2",
       "label": "Slime knight frame2",
+      "palette": "sprites11",
       "gb_constant": "TILE_ENEMIES_SLIME_KNIGHT_FRAME2",
       "walkable": false,
       "color": "#3d6027",
