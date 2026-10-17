@@ -170,10 +170,12 @@ deepest battle nesting) and returned the chirp species in register A
 while the fixed wrapper read the shared g_bk_byte_b staging byte --
 stale zero forever, so no chirp event ever emitted (plus untrustworthy
 window-address breakpoint forensics on top).  Lessons kept in code:
-* birds are ZERO-WRAM by design (timing from g_game.frame low bits,
+* birds were ZERO-WRAM by design (timing from g_game.frame low bits,
   one EVENT_BIRD_CHIRP per 128-frame window, no ISR work, bank-7 bodies
   so layout-pinned bank 5 stays byte-identical, WRAM map 5632 B
-  unchanged from green);
+  unchanged from green) -- the ambience has since been removed entirely,
+  but the zero-WRAM discipline it forced still holds for everything
+  that remains;
 * banked bodies return results through explicit g_bk_byte_b stores,
   never bare C returns (the staging byte is the protocol);
 * power-of-two cadences (mask/shift, never % or /) keep SDCC div/mod

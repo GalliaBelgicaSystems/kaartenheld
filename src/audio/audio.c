@@ -171,10 +171,6 @@ void audio_update(void)
         }
     }
 
-    /* Ambient birdsong needs no ISR work: the bank-7 overworld body
-     * streams wave frames at frame rate (see audio.h).  The timer ISR
-     * stays exactly as the green build had it. */
-
     if (g_audio_current_track == MUSIC_NONE) return;
 
     /* Mimic intro -> loop service (bank-7 body, same select-7/call

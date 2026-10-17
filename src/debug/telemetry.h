@@ -211,13 +211,6 @@ typedef enum {
      * a different schema (actor_id_lo/hi + lifecycle state) — one event
      * id must mean one payload shape. */
     EVENT_ACTOR_MOVED,
-    /* Ambient forest birdsong (bird_step.c): d0 = species (BIRD_1/BIRD_2).
-     * One event per chirp, fired at the chirp window start (the streamed
-     * wave frames themselves are not observable); the trigger cadence is
-     * low (one chirp per ~128 overworld frames), so the 32-entry ring is
-     * unaffected.  Appended last for wire stability (host EVENT_TYPE_MAP
-     * must add 66). */
-    EVENT_BIRD_CHIRP
 } GameEventType;
 
 typedef struct {

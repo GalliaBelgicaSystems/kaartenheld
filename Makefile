@@ -23,12 +23,11 @@ GB_LITE = $(BUILD_DIR)/gb_lite.lib
 SM83_LITE = $(BUILD_DIR)/sm83_lite.lib
 
 GENERATED_MUSIC_DIR = generated/music
-GENERATED_BIRDS_DIR = generated/birds
 RGBASM_HUGE ?= $(shell command -v rgbasm-huge 2>/dev/null || echo rgbasm)
 RGB2SDAS = python3 tools/rgb2sdas.py
 UGE2SOURCE = uge2source
 
-INCLUDES = -I$(SRC_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/world -I$(SRC_DIR)/battle -I$(SRC_DIR)/input -I$(SRC_DIR)/audio -I$(SRC_DIR)/ui -I$(SRC_DIR)/debug -I$(SRC_DIR)/screens -I$(SRC_DIR)/game -Ilib/hUGEDriver/include -I$(GENERATED_MUSIC_DIR) -I$(GENERATED_SFX_DIR) -I$(GENERATED_TILES_DIR) -I$(GENERATED_BIRDS_DIR)
+INCLUDES = -I$(SRC_DIR) -I$(SRC_DIR)/core -I$(SRC_DIR)/world -I$(SRC_DIR)/battle -I$(SRC_DIR)/input -I$(SRC_DIR)/audio -I$(SRC_DIR)/ui -I$(SRC_DIR)/debug -I$(SRC_DIR)/screens -I$(SRC_DIR)/game -Ilib/hUGEDriver/include -I$(GENERATED_MUSIC_DIR) -I$(GENERATED_SFX_DIR) -I$(GENERATED_TILES_DIR)
 
 ALL_SRCS = $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c)
 BANK5_EARLY_SRCS = $(SRC_DIR)/world/scene_load.c
@@ -90,8 +89,8 @@ HUGEDRIVER_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver.o
 HUGEDRIVER_B7_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b7.o
 HUGEDRIVER_B7_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b7.o
 
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(BIRD_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
-OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(BIRD_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
+OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
@@ -111,8 +110,7 @@ debug: $(TARGET_DEBUG)
 # sfx is a prerequisite: the banked sfx_step.c includes the transcribed
 # generated/sfx/sfx_tables.h, which does not exist on a fresh clone
 # (generated/ is untracked) -- without it the ABI guard below fails.
-# birds is the same hazard for bird_step.c / generated/birds/bird_data.h.
-lint: gfx tiles sfx birds $(SRCS)
+lint: gfx tiles sfx $(SRCS)
 	@ok=1; \
 	for f in $(SRCS); do \
 		out=$$($(CC) -S -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
@@ -562,7 +560,7 @@ build/debug/game/content.o: src/game/content.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD -DTEST_LEVELS $(INCLUDES) -o $@ $<
 
-music: $(MUSIC_SRCS) sfx birds
+music: $(MUSIC_SRCS) sfx
 
 # Tracker SFX -> synth step tables (Path C transcription). Deterministic:
 # rerunning reproduces generated/sfx/sfx_tables.c byte-identically.
@@ -573,27 +571,6 @@ $(SFX_TABLES) &: $(SFX_ALL_UGE) $(SFX_REGISTRY) tools/transcribe_sfx.py | $(GENE
 
 $(GENERATED_SFX_DIR):
 	mkdir -p $(GENERATED_SFX_DIR)
-
-# Bird-chirp PCM -> wave frames. Deterministic: rerunning reproduces
-# generated/birds/bird_data.c byte-identically.
-BIRD_DATA = $(GENERATED_BIRDS_DIR)/bird_data.c
-BIRD_OBJS = $(BUILD_DIR)/birds/bird_data.o
-BIRD_OBJS_DEBUG = $(BUILD_DIR)/debug/birds/bird_data.o
-birds: $(BIRD_DATA)
-
-$(BIRD_DATA) &: assets/music/bird1.pcm assets/music/bird2.pcm tools/bird_compile.py | $(GENERATED_BIRDS_DIR) doctor
-	python3 tools/bird_compile.py
-
-$(GENERATED_BIRDS_DIR):
-	mkdir -p $(GENERATED_BIRDS_DIR)
-
-$(BUILD_DIR)/birds/%.o: $(GENERATED_BIRDS_DIR)/%.c | $(BUILD_DIR)
-	@mkdir -p $(dir $@)
-	$(CC) -c $(INCLUDES) -o $@ $<
-
-$(BUILD_DIR)/debug/birds/%.o: $(GENERATED_BIRDS_DIR)/%.c | $(BUILD_DIR)
-	@mkdir -p $(dir $@)
-	$(CC) -c -DDEBUG_BUILD $(INCLUDES) -o $@ $<
 
 SFX_OBJS = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/sfx/%.o,$(SFX_TABLES))
 SFX_OBJS_DEBUG = $(patsubst $(GENERATED_SFX_DIR)/%.c,$(BUILD_DIR)/debug/sfx/%.o,$(SFX_TABLES))
@@ -614,11 +591,6 @@ $(BUILD_DIR)/debug/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 # also rebuild their consumers.
 $(BUILD_DIR)/audio/audio.o $(BUILD_DIR)/audio/sfx_step.o \
 $(BUILD_DIR)/debug/audio/audio.o $(BUILD_DIR)/debug/audio/sfx_step.o: $(SFX_TABLES)
-
-# bird_step.c includes generated/birds/bird_data.h (side product of one
-# bird_compile.py run). Same ordering hazard and fix as the SFX tables.
-$(BUILD_DIR)/audio/bird_step.o $(BUILD_DIR)/debug/audio/bird_step.o: $(BIRD_DATA)
-$(BUILD_DIR)/birds/bird_data.o $(BUILD_DIR)/debug/birds/bird_data.o: $(BIRD_DATA) | $(BUILD_DIR)
 
 $(GENERATED_MUSIC_DIR)/battle.c: assets/music/Battle\ BGM.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 6 song_battle "$@"

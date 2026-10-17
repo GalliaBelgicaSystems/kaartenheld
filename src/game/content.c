@@ -30,18 +30,6 @@ uint8_t game_loot_drop(uint8_t battle_type)
     return g_loot_id;
 }
 
-/* Birdsong lives only in the wake grove and on the plain field with
- * Carl.  TEST_FIELD is the harness fixture mirror of the field, so the
- * ambience stays observable to make test-harness (the debug ROM links
- * fixtures only, never the real maps). */
-uint8_t game_scene_has_birds(uint8_t map_id)
-{
-    if (map_id == MAP_FIELD) return 1;
-    if (map_id == MAP_WAKE_GROVE) return 1;
-    if (map_id == MAP_TEST_FIELD) return 1;
-    return 0;
-}
-
 void game_content_init(void)
 {
     story_init(STORY_FLAG_ID_COUNT);
