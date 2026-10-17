@@ -1437,27 +1437,29 @@ def main(args=None):
 
     if args.ow_coords:
         # Enemies only: the hero overworld sprite is loaded separately via
-        # HERO_DESOLATE_SPRITE_TILE_ID (not from this blob), so prepending
-        # hero cells here would shift every enemy OAM offset by the hero's
-        # tile count and break the ow_tile values in battle_types.c (which
-        # are computed hero-excluded by ow_blob_layout).  The blob order
+        # HERO_DESOLATE_SPRITE_TILE_ID (not from this blob), so the layout
+        # is computed hero-excluded (None) exactly like battle_types.c
+        # above -- passing hero_json here would still filter the hero
+        # cells out of the printed coords but leave their 2 tiles in the
+        # budget count, rejecting a blob that physically fits (the
+        # npc_heal_mage +1 cell overflowed exactly this way: the error
+        # was swallowed by the Makefile $(...) substitution and png2gb
+        # generated a sheet-order blob, scrambling every OAM sprite
+        # while all tile-id assertions stayed green).  The blob order
         # must match battle_types.c exactly: sorted enemy-id order, riders
         # appended at the tail (same tail rule as ow_blob_layout).
         _rider_types = load_rider_types()
         if _rider_types is None:
             return 1
-        _offsets, names = ow_blob_layout(enemy_types, hero_json, _rider_types)
+        _offsets, names = ow_blob_layout(enemy_types, None, _rider_types)
         if names is None:
             return 1
         coords = []
-        hero_cells = []
-        if hero_json is not None:
-            hero_ow = hero_json.get('overworld') or None
-            if hero_ow is not None:
-                hero_cells = hero_json['overworld'].get('cells', [])
         for n in names:
-            if n not in hero_cells:
-                coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --ow-coords produced no tiles", file=sys.stderr)
+            return 1
         print(" ".join(coords))
         return 0
 
