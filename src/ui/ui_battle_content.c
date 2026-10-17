@@ -37,30 +37,16 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 #endif
 
 /* VRAM is accessible in PPU Modes 0-2 and writes are IGNORED in Mode 3
- * (Pan Docs, Accessing_VRAM_and_OAM).  Wait while Mode is 2 or 3, so the
- * store lands in Mode 0 (HBlank) or 1 (VBlank); a store issued at the very
- * end of Mode 0 rolls into Mode 2, which is still accessible, so the store
- * cannot be eclipsed by the PPU.  The previous double-wait (wait UNTIL
- * Mode 2 starts, then UNTIL it ends) placed every store at the START of
- * Mode 3 on LCD-on frames -- writes silently dropped while
- * g_ui_screen_buf was still updated, and the put_char skip-guard then
- * never re-wrote the cell (battle hand cards stuck at "SW0" on real
- * boot; the SameBoy harness runs with the LCD off/vsync skipped and could
- * not see it).  NOTE: do NOT wrap the wait->store window in di/ei here
- * (unlike ui_vram_sync_write): the battle redraw issues dozens of these
- * stores per frame and a di/ei-guarded battle helper hangs the PyBoy
- * walkthrough (guest spins inside pb.tick(); mGBA is unaffected, but
- * make screenshots / verify-walkthrough gate on PyBoy).  The residual
- * ISR-eclipse race is accepted; cleared boxes are re-asserted by the
- * EMPTY early-out in battle_draw_battle_hand instead. */
+ * (Pan Docs, Accessing_VRAM_and_OAM).  BANKED_VRAM_WRITE waits while Mode
+ * is 2 or 3 (so the store lands in Mode 0/1) under a per-store di: the
+ * 256 Hz timer ISR can otherwise eclipse the wait->store window and drop
+ * the write into Mode 3 while g_ui_screen_buf claims it landed (the old
+ * "SW0" stuck-card class).  The di window is microseconds, and the ei
+ * cannot misroute: the ISR saves/restores the live bank.  Cleared boxes
+ * keep their EMPTY early-out re-assert in battle_draw_battle_hand. */
 static void battle_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = tile;
-    } else {
-        *dst = tile;
-    }
+    BANKED_VRAM_WRITE(dst, tile);
 }
 
 static void battle_put_char(uint8_t x, uint8_t y, char ch)

@@ -170,40 +170,36 @@ void world_anim_rebuild_banked(void)
  * LCD-off reads STAT idle (mode 0) and skips instantly; PyBoy, which
  * does not gate VRAM, exits at once too.
  *
- * Deliberately NO di/ei around the window (unlike fixed-bank
- * ui_vram_sync_write): rapid di/ei pairs inside the per-cell walk
- * freeze PyBoy outright (reproduced on field: stuck movement, 0 flips
- * in 160 ticks; byte-identical NOPs in the same layout run fine, so it
- * is the interrupt semantics, not code layout).  They are also
- * unnecessary here: an ISR-eclipsed access merely drops/skips one cell
- * for one run and the 4-frame reruns converge invisibly.  One-shot menu
- * writes cannot rely on reruns, hence the difference. */
+ * Deliberately di/ei around the window via BANKED_VRAM_WRITE /
+ * BANKED_VRAM_READ (like fixed-bank ui_vram_sync_write): the old
+ * no-di/ei rule died with the trampoline rework.  Pre-rework, any ei
+ * mid-body admitted the timer ISR, which restored home bank 1 and
+ * resumed the body on the wrong bank -- wild execution that looked
+ * exactly like the reported PyBoy freeze (rapid di/ei pairs wedge the
+ * guest; byte-identical NOPs run fine because they never enable
+ * interrupts).  The g_rom_bank_live save/restore removes the hazard,
+ * and the per-cell swap itself is still rerun-convergent on top.  The
+ * one-shot entry-scan rebuild additionally NEEDS the atomicity: a
+ * Mode-3-eclipsed read returns 0xFF and that cell never animates for
+ * the whole map stay. */
 static uint8_t anim_read_cell(uint16_t cell)
 {
     uint8_t v;
-    uint8_t t;
-    t = 200;
-    while (t--) {
-        if (!(STAT_REG & 0x02)) {
-            break;
-        }
-    }
+    /* The rebuild runs once per map entry -- including LCD-on gate
+     * crossings -- so a Mode-3-eclipsed read (0xFF) would permanently
+     * lose that cell's animation for the whole map stay.  The di window
+     * is safe now: the pre-rework PyBoy freeze was the old ISR restoring
+     * home bank 1 mid-body (misrouted execution that looked like a
+     * freeze), fixed by the g_rom_bank_live save/restore. */
     VBK_REG = 0;
-    v = ((volatile uint8_t *)0x9800)[cell];
+    BANKED_VRAM_READ(v, ((volatile uint8_t *)0x9800) + cell);
     return v;
 }
 
 static void anim_write_cell(uint16_t cell, uint8_t tile)
 {
-    uint8_t t;
-    t = 200;
-    while (t--) {
-        if (!(STAT_REG & 0x02)) {
-            break;
-        }
-    }
     VBK_REG = 0;
-    ((volatile uint8_t *)0x9800)[cell] = tile;
+    BANKED_VRAM_WRITE(((volatile uint8_t *)0x9800) + cell, tile);
 #ifdef DEBUG_BUILD
     g_tilemap_mirror[cell] = tile;
 #endif

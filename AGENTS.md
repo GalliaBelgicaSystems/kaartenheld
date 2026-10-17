@@ -1357,7 +1357,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
   * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.
-  * **Ambient birdsong is ZERO-WRAM by design** (`bird1.pcm`/`bird2.pcm` -> 4-bit wave frames in bank 7 via `tools/bird_compile.py`, streamed on CH3 by `bird_ambient_banked` at frame rate, one `EVENT_BIRD_CHIRP` per 128-frame window on birdsong maps (Wake Grove + Carl's field, via the game-layer `game_scene_has_birds` hook -- the engine never branches on map ids)).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`), so birds keep zero WRAM bytes (timing from `g_game.frame` bits, no ISR work, no song-wave save) and live in bank 7 so layout-pinned bank 5 stays byte-identical.  Measured branch-vs-master WRAM growth is `_DATA` +41 B (stack gap 158->133 B against the 126 B floor): the chest jingle's 2 BSS bytes (`g_jingle_frames`, `g_jingle_done` in `src/game/jingle_full_banked.c`), the forest row-4 extension (`g_active_tile_palette` 32->40 B) and the 8-entry animation index list (`g_anim_cells`/`g_anim_count`, 17 B).  `battle_boot` + `stack-budget` stay green; any further WRAM growth must re-run them first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
+  * Ambient birdsong was removed entirely (no `bird*.pcm`, no `bird_ambient_banked`, no `EVENT_BIRD_CHIRP`): Wake Grove and Carl's field are silent like every other map.  The removal changes no WRAM (birdsong was zero-WRAM by design), so the measured branch-vs-master growth stays `_DATA` +41 B (stack gap 158->133 B against the 126 B floor): the chest jingle's 2 BSS bytes, the forest row-4 extension (`g_active_tile_palette` 32->40 B) and the 8-entry animation index list (`g_anim_cells`/`g_anim_count`, 17 B).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`).  `battle_boot` + `stack-budget` stay green; any further WRAM growth must re-run them first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
   * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
 * **Tick Division (64 Hz from 256 Hz Timer)**:
@@ -2296,8 +2296,9 @@ mirror the `banked_copy` pattern:
   `banked_copy_init()` so it is resident under the harness too): it selects
   the bank, computes the runtime target `0x4000 | (addr & 0x3FFF)`, pushes
   the WRAM return address, and `jp`s to the target; the target's `ret` pops
-  back to WRAM, which restores home bank 1, `__current_bank`, and (unless
-  harness mode) `ei`.
+  back to WRAM, which restores home bank 1, records it in
+  `g_rom_bank_live`, and unconditionally `ei`s (safe under the harness:
+  `IE` is clear there since CRT0 is skipped, so it is a no-op).
 
 First user: `src/battle/combo.c` (`combo_evaluate` wrapper) →
 `src/battle/combo_content.c` (`combo_evaluate_banked`, bank 2).  This
@@ -2382,31 +2383,58 @@ hero_label_col), HP block at hero_hp_col (icon 2 cols left of "HP:"),
 DECK at deck_col (icon 1 left), AP at ap_col (icon 2 left).  VRAM BG
 tiles 117-127 are FULLY allocated (bar segments + card frames).
 
-### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026)
+### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026, reworked: music-clock stall fix)
 
-The banked-call trampoline (`crt0.s` `_banked_call_tramp`) executes `di`
-before switching banks and only `ei` after the body returns and home bank
-1 is restored.  Interrupts are therefore OFF for the entire body: the
-256 Hz timer ISR cannot fire mid-bank, which is what makes every banked
-body safe.
+Holding `di` across a whole banked body stalls the 256 Hz music clock:
+the trampoline used to `di` at entry and `ei` only after the body
+returned, so every long body (scene loads, full redraws) masked timer
+interrupts for whole frames -- IF showed the timer bit pending while
+TIMA kept counting, `g_audio_ticks` froze for 3-11 frame clusters, and
+`make verify-music` failed its no-stalled-frames + fixed-clock-rate
+checks (~3.78 ticks/frame instead of ~4.28).
 
-An `ei` (or SDCC `__critical`, which emits `di`/`ei`) inside a banked
-body breaks the invariant: the pending timer ISR fires immediately,
-switches in the music bank, and restores home bank 1 -- the body then
-resumes executing bank-1 bytes as its own code (wild VRAM writes, wedge,
-or hang).  Instance: the dialogue-box paper-attr loop gained per-byte
-`di`/`wait`/`ei` for the LCD-on overlay and flaked ~1-in-6 dialogue
-entries under real-timing emulators (PyBoy walkthrough: every dialogue
-check failed, tilemap reading back attr bytes through a stuck VBK),
-while the SameBoy/mGBA harness stayed green (IE is clear there, so `ei`
-is a no-op -- same masking family as 52.15).
+The trampoline now runs bodies with interrupts ENABLED (`ei` after the
+bank select, `di` before the restore) and the 256 Hz timer ISR
+saves/restores the *live* bank via `g_rom_bank_live` (`src/core/
+banked.h`, assigned `1` by `main()` before `enable_interrupts()`)
+instead of blindly restoring home bank 1 -- so the ISR can fire
+mid-body and the body resumes on its own bank.  Only the two MBC5
+switch sequences themselves run under `di`.
+
+Consequences:
+
+* A `di` (or SDCC `__critical`, which emits `di`/`ei`) held inside a
+  banked body reintroduces music-clock stalls; an `ei` alone is
+  harmless (interrupts are already enabled) but pointless.  The lint
+  gate still rejects every bare interrupt op in `#pragma bank` files.
+* Every banked VRAM/CRAM access that can execute with the LCD on must
+  use `BANKED_VRAM_WRITE` / `BANKED_VRAM_READ` (`banked.h`: bounded Mode
+  wait + per-access `di`, microsecond window, LCD-off fast path).  The
+  ISR can otherwise eclipse the wait->access window and drop a write
+  into Mode 3 (or return 0xFF for a read).  This covers overlays AND
+  gate-crossing loads (`tiles_content` tilesets/CRAM/wipes, anim-cell
+  rebuilds): overworld->overworld transitions repaint with the LCD on
+  (curtain path skips `ui_lcd_off`), and those loads are one-shot --
+  a dropped byte corrupts the tile/ramp for the entire map stay, and a
+  misread cell never animates.  Bare/non-atomic forms remain only on
+  provably LCD-off paths (splash/logo boot art, battle-entry palettes,
+  title logo palette), where STAT is idle and the ISR cannot eclipse.
+* Historical instances (pre-rework, when the trampoline held `di` and
+  the ISR restored home bank 1): the dialogue-box paper-attr loop
+  gained per-byte `di`/`wait`/`ei` and flaked ~1-in-6 dialogue entries
+  (the admitted ISR misrouted the body onto bank 1); per-cell `di`/`ei`
+  in the anim walk and the battle helper froze PyBoy outright, which is
+  why those paths stayed `di`-free and battle accepted the ISR-eclipse
+  race until this rework.  Same masking note as ever: the SameBoy/mGBA
+  harness stays green regardless (IE is clear there, so `ei` is a no-op
+  -- 52.15 family).
 
 Rules:
 
-* Banked LCD-on VRAM waits need NO `di`: atomicity comes free with the
-  trampoline's held `di` (precedents: `sc_vram_sync_write`,
-  `anim_read_cell`/`anim_write_cell` bounded waits).  Fixed-bank
-  `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is always mapped.
+* Banked LCD-on VRAM/CRAM data writes use `BANKED_VRAM_WRITE`, never
+  hand-rolled `di`/`wait`/`ei` (lint forbids the latter anyway).
+  Fixed-bank `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is
+  always mapped.
 * `make lint` fails loudly on any bare `di`/`ei` asm instruction inside a
   file containing `#pragma bank` (no grandfathered violations).
 * Banked render paths must be validated under real timing

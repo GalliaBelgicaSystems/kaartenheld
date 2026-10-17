@@ -46,12 +46,7 @@ extern uint8_t g_is_cgb;
 
 static void title_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = tile;
-    } else {
-        *dst = tile;
-    }
+    BANKED_VRAM_WRITE(dst, tile);
 }
 
 static void title_put_char(uint8_t x, uint8_t y, char ch)

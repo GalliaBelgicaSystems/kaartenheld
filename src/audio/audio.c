@@ -135,8 +135,18 @@ void audio_update(void)
 #ifdef DEBUG_BUILD
     g_audio_ticks++;
 #endif
+    /* ISR bank discipline: this runs inside the 256 Hz timer ISR, which
+     * can now interrupt a banked body (the trampolines run bodies with
+     * IME enabled so the music clock never stalls).  The SFX-branch
+     * restore and the tail restore read the live bank via
+     * g_rom_bank_live (banked.h) instead of home bank 1: restoring home
+     * would resume an interrupted body on the wrong bank.  The sub-calls
+     * (stepper/mute/driver/update) restore nothing; the tail covers them
+     * (this function and its fixed callees live in ROM0 <0x4000, always
+     * mapped -- enforced by the memmap ISR-ROM0 check; only WRAM/I-O is
+     * touched between the selects and the tail). */
     /* Step the transcribed SFX at the 64 Hz tracker rate through the
-     * bank-8 stepper body (inline select-8/call/restore-1; the music path
+     * bank-8 stepper body (inline select-8/call/restore-live; the music path
      * below selects bank 6 separately in the same ISR). At the table
      * end the used voices are silenced and their music channels unmuted. */
     if (sfx_id <= SFX_BLOCK) {
@@ -157,26 +167,22 @@ void audio_update(void)
                 sfx_muted = 0;
                 sfx_id = SFX_NONE;
             }
-            *(volatile uint8_t *)0x2000 = 1;
+            *(volatile uint8_t *)0x2000 = g_rom_bank_live;
         }
     }
 
-    /* Ambient birdsong needs no ISR work: the bank-7 overworld body
-     * streams wave frames at frame rate (see audio.h).  The timer ISR
-     * stays exactly as the green build had it. */
-
     if (g_audio_current_track == MUSIC_NONE) return;
 
-    /* Mimic intro -> loop service (bank-7 body, same select-7/call/
-     * restore-1 dispatch as the SFX stepper above; stays ISR-safe: no
-     * di/ei inside).  Guarded: the 256 Hz ISR skips the two bank switches
-     * + call on every non-mimic tick (the common case).  The counter arm
-     * covers the transient -- a mid-intro track switch leaves it nonzero,
+    /* Mimic intro -> loop service (bank-7 body, same select-7/call
+     * pattern as the SFX stepper above; stays ISR-safe: no di/ei
+     * inside).  No restore here either: the tail below covers it.
+     * Guarded: the 256 Hz ISR skips the two bank switches + call on
+     * every non-mimic tick (the common case).  The counter arm covers
+     * the transient -- a mid-intro track switch leaves it nonzero,
      * which re-arms exactly one body run that zeroes it. */
     if (g_audio_current_track == MUSIC_MIMIC || g_mimic_intro_left != 0) {
         *(volatile uint8_t *)0x2000 = HUGE_MUSIC_BANK_B7;
         mimic_chain_tick();
-        *(volatile uint8_t *)0x2000 = 1;
     }
 
     /* All playback is tracked now; tracks without a song (OVERWORLD,
@@ -184,4 +190,13 @@ void audio_update(void)
      * body re-checks it, so gating twice costs a call on every 256 Hz
      * tick for no reason. */
     huge_music_update();
+
+    /* ISR exit bank discipline: the inline selects above (SFX stepper,
+     * mimic chain, tracker update, ISR mutes) leave transient mappings;
+     * re-establish the interrupted live bank here, once, so a preempted
+     * banked body resumes on its own bank.  No 0x4000-window fetch can
+     * land between those selects and this restore (this function and its
+     * fixed callees live in ROM0 <0x4000 -- enforced by the memmap
+     * ISR-ROM0 check; only WRAM/I-O touched in between). */
+    *(volatile uint8_t *)0x2000 = g_rom_bank_live;
 }

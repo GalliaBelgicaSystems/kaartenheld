@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 #include "game.h"
 #include "audio.h"
+#include "banked.h"
 #include "input.h"
 #include "ui.h"
 #include "content.h"
@@ -41,6 +42,10 @@ int main(void)
     __endasm;
     *(volatile uint8_t *)0x2000 = 1;
     *(volatile uint8_t *)0x3000 = 0;
+    /* Live-bank mirror for the timer ISR (banked.h): the home bank is
+     * mapped here, before enable_interrupts() below.  Assigned (not
+     * initialized) so the harness path, which skips CRT0, agrees. */
+    g_rom_bank_live = 1;
     timer_isr_init();
     oam_dma_init();
     banked_copy_init();

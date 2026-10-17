@@ -1,7 +1,7 @@
 {
  "name": "title_music_once",
  "test": true,
- "description": "Title theme plays once then stops in silence: the 6 s song expires at 358 frames (bank-8 frame clock) and the track goes NONE with a MUSIC_CHANGED event. Proves play-once (no loop) without waiting on the timer ISR.",
+ "description": "Title theme plays once then stops in silence: stops at 200 frames (bank-8 frame clock) in the song's silent tail and the track goes NONE with a MUSIC_CHANGED event. Proves play-once (no loop) without waiting on the timer ISR.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

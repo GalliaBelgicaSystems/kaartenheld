@@ -18,6 +18,12 @@ uint8_t g_bank_copy_n;
  * hardcoded WRAM constant would collide with _INITIALIZED variables). */
 uint8_t g_banked_tramp[64];
 
+/* Live MBC5 ROM-bank mirror for the timer ISR (see banked.h).  Plain
+ * definition (BSS): main() assigns the home bank before interrupts are
+ * enabled, covering both the CRT0 boot path and the harness path (which
+ * skips CRT0, so an initializer would not be copied there anyway). */
+volatile uint8_t g_rom_bank_live;
+
 /* ── Banked-call staging (mirrors banked_copy) ──────────────────────
  * The fixed-bank wrapper stores the target bank/address and its arguments
  * here, then calls banked_call_run() so the WRAM trampoline (crt0.s) never
