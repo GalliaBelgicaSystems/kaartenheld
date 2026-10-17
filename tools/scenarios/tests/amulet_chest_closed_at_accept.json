@@ -38,7 +38,7 @@
   {
    "type": "oam_tile",
    "entry": 5,
-   "expected": 120
+   "expected": 121
   }
  ],
  "initial_state": {

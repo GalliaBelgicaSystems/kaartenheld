@@ -30,6 +30,7 @@ AI_NONE = 0
 AI_PATROL_CIRCLE = 1
 AI_PATROL_CROSS = 2
 AI_CHASE = 3              # steps toward the player every AI tick
+AI_CHASE_FAST = 6         # same greedy chase at half the interval (Slime Knight)
 AI_PATROL_VERT = 4
 AI_PATROL_VERT_TILES = 3
 
@@ -39,6 +40,7 @@ AI_NAMES = {
     "AI_PATROL_CIRCLE": AI_PATROL_CIRCLE,
     "AI_PATROL_CROSS": AI_PATROL_CROSS,
     "AI_CHASE": AI_CHASE,
+    "AI_CHASE_FAST": AI_CHASE_FAST,
     "AI_PATROL_VERT": AI_PATROL_VERT,
 }
 
@@ -52,9 +54,10 @@ def patrol_cells(ai, x, y):
         return {(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)}
     if ai == AI_PATROL_CIRCLE:
         return {(dx, dy) for dx in (x - 1, x) for dy in (y - 1, y)}
-    if ai == AI_CHASE:
+    if ai == AI_CHASE or ai == AI_CHASE_FAST:
         # Chasers close on the player from anywhere: block a generous
-        # halo so routes keep their distance.
+        # halo so routes keep their distance (FAST covers more ground
+        # per tick, so it shares the same halo).
         return {(dx, dy) for dx in range(x - 2, x + 3)
                 for dy in range(y - 2, y + 3)}
     return {(x, y)}
@@ -381,7 +384,9 @@ class Planner:
         guard = 0
         while scene_name != to_scene:
             guard += 1
-            if guard > 8:
+            # Longest chain is wake->throne (10 transitions); 12 leaves
+            # margin for future levels without masking runaway BFS.
+            if guard > 12:
                 raise ValueError("route: too many transitions "
                                  "(%s -> %s)" % (from_scene, to_scene))
             next_scene = self._scene_next(scene_name, to_scene)

@@ -153,7 +153,7 @@ extern const uint8_t g_battle_art_alt_mask[];
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
  * (freeze/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
-extern char g_battle_anim_target_name[12];
+extern char g_battle_anim_target_name[13];
 
 /* Banked battle-art loader (src/battle/battle_art_banked.c, ROM bank 4):
  * g_bk_ptr_a = Battle*.  Resolves the battle's enemy-type row through

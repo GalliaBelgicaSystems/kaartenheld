@@ -172,6 +172,26 @@
       "ascii": "T",
       "image_url": "/tiles/enemies/mimic_f1.png",
       "category": "enemy"
+    },
+    {
+      "id": "slime_knight_frame1",
+      "label": "Slime knight frame1",
+      "gb_constant": "TILE_ENEMIES_SLIME_KNIGHT_FRAME1",
+      "walkable": false,
+      "color": "#3d6027",
+      "ascii": "N",
+      "image_url": "/tiles/enemies/slime_knight_frame1.png",
+      "category": "enemy"
+    },
+    {
+      "id": "slime_knight_frame2",
+      "label": "Slime knight frame2",
+      "gb_constant": "TILE_ENEMIES_SLIME_KNIGHT_FRAME2",
+      "walkable": false,
+      "color": "#3d6027",
+      "ascii": "N",
+      "image_url": "/tiles/enemies/slime_knight_frame2.png",
+      "category": "enemy"
     }
   ]
 }

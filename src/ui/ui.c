@@ -54,7 +54,7 @@ extern uint8_t console_mode;
  * buffer must stay exact for harness text assertions. */
 extern volatile uint8_t g_harness_mode;
 
-/* Background-animation cell count (bank-5 anim_swap_banked.c, WRAM always
+/* Background-animation cell count (bank-7 anim_swap_banked.c, WRAM always
  * mapped): lets the caller skip the swap dispatch on frames with nothing
  * to swap (same throttle the body applies internally). */
 extern uint8_t g_anim_count;
@@ -451,12 +451,13 @@ static char ui_get_world_tile_glyph(uint8_t t)
         if ((t >= TILE_DESOLATE_FLOOR_00 && t <= TILE_DESOLATE_FLOOR_03) || t == TILE_DESOLATE_FLOOR_PLAIN) return '.';
         return '#';
     }
-if ((t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) ||
-            (t >= TILE_FOREST_00 && t <= TILE_FOREST_63) ||
-            (t >= TILE_FOREST_64 && t <= TILE_FOREST_68) ||
-            (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) ||
-            (t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47))
-        return tile_landscape_glyph(t);
+    /* Every TileType value 8..253 is a landscape tile (the legacy
+     * desolate block 146..186 returns above), so one range routes all
+     * of them -- including the castle extension values -- to the
+     * generated glyph table.  Values < 8 are generic sem tiles; 254+
+     * stay '.'.  (This used to list every range explicitly; one bounds
+     * chain per range avalanched the fixed bank, AGENTS.md 52.18.) */
+    if ((uint8_t)(t - 8) <= (uint8_t)(253 - 8)) return tile_landscape_glyph(t);
     return (t < 8) ? g_sem_map[t] : '.';
 }
 
@@ -531,18 +532,36 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_LANDSCAPE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_FOREST &&
-                   t >= TILE_FOREST_00 && t <= TILE_FOREST_68 &&
-                   (t <= TILE_FOREST_63 || t >= TILE_FOREST_64)) {
+                   t >= TILE_FOREST_00 && t <= TILE_FOREST_68) {
             /* Split range (see world.h): values 8..71 map slot (t - 8);
              * gap values 136..140 map slot (t - 72).  f_idx - 64 folds
-             * 128..132 down to 64..68. */
+             * 128..132 down to 64..68.  (No explicit 63/64 split test:
+             * the tileset-kind gate already excludes castle/village
+             * values 72..135 that sit numerically between the two
+             * halves, so every value reaching here is a forest tile.) */
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
             if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
+        } else if (t == TILE_CASTLE_26) {
+            /* Castle tunnel stairs (LAST VRAM slot, 23). No tileset gate:
+             * value 141 is globally unique (forest ends at 140, desolate
+             * wall starts at 146, village ends at 135), so this row can
+             * only ever mean the castle exit, on any map. */
+            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 23);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
-                   t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15) {
+                   (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15)) {
             uint8_t c_idx = (uint8_t)(t - TILE_CASTLE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + c_idx);
+        } else if ((uint8_t)(t - TILE_CASTLE_16) <= (uint8_t)(TILE_CASTLE_19 - TILE_CASTLE_16)) {
+            /* Extension art, first cluster (VRAM slots 16..19): values
+             * are globally unique (gap), so no tileset gate is needed
+             * -- like the exit row above.  Single compare keeps the
+             * fixed bank within budget (AGENTS.md 52.18). */
+            tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 16 - TILE_CASTLE_16));
+        } else if ((uint8_t)(t - TILE_CASTLE_20) <= (uint8_t)(TILE_CASTLE_22 - TILE_CASTLE_20)) {
+            /* Extension art, second cluster (VRAM slots 20..22):
+             * top-of-range values, likewise gateless. */
+            tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 20 - TILE_CASTLE_20));
         } else if (world->tileset_kind == WORLD_TILESET_VILLAGE &&
                    t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47) {
             uint8_t v_idx = (uint8_t)(t - TILE_VILLAGE_00);
@@ -611,7 +630,7 @@ void ui_draw_actors_sprites(const World *world)
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
     if ((((uint8_t)g_game.frame & 3) == 0) && g_anim_count != 0) {
-        g_bk_call_bank = 5;
+        g_bk_call_bank = 7;
         g_bk_call_target = (uint16_t)&world_anim_swap_banked;
         banked_call_run();
     }
@@ -691,11 +710,11 @@ void ui_draw_world_map(const World *world)
 static void ui_world_tail(const World *world)
 {
     uint8_t y;
-    /* Re-record animation-frame ring cells (fire/water) for the bank-5
+    /* Re-record animation-frame ring cells (fire/water) for the bank-7
      * swap pass: the ring is static until the next full redraw, so one
      * LCD-off scan here replaces every per-frame scan.  No staging (the
      * rebuild reads the ring only); ~12 B fixed for the dispatch. */
-    g_bk_call_bank = 5;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&world_anim_rebuild_banked;
     banked_call_run();
     for (y = 0; y < WORLD_VIEW_H; y++) {

@@ -1,4 +1,5 @@
 #pragma bank 8
+#pragma disable_warning 110
 
 #include <stdint.h>
 #include "banked.h"
@@ -53,6 +54,19 @@ extern volatile uint8_t g_harness_mode;
 #define CHEST_JINGLE_TICKS 80
 #define CHEST_JINGLE_BACKSTOP 240
 
+/* Title-theme play-once clock (see audio.h MUSIC_TITLE): the ROM driver
+ * loops whole songs, so the 6.0 s title song (384 tracker ticks @64 Hz
+ * per `make music-size SONG=title`, i.e. ~358 game frames @59.73 fps)
+ * would loop forever without an explicit stop.  TITLE_SONG_FRAMES stops
+ * a hair early (inaudible 7 ms) so a lagging frame can never replay the
+ * intro audibly.  Counted per game_update frame in this bank-8 body --
+ * frame counting is exact here (title is static; no LCD-off redraw
+ * stalls the update loop, unlike the chest restore path which must use
+ * the tracker tick clock).  Main-thread only: no volatile needed.
+ * Reset on every MUSIC_TITLE dispatch (music_play_banked). */
+#define TITLE_SONG_FRAMES 358
+uint16_t g_title_frames = 0;
+
 /* Tick/frame counter for the restore clock.  Shared with the timer ISR
  * (huge_music_update's divider branch increments while the jingle owns
  * the track): volatile
@@ -103,6 +117,15 @@ void jingle_full_banked(void)
         } else {
             g_jingle_done &= (uint8_t)~(1u << b);
         }
+    }
+    /* Title-theme play-once (see TITLE_SONG_FRAMES): runs after the
+     * chest logic so a loot edge on the same frame still wins the
+     * dispatch (a title screen never holds one, but the ordering costs
+     * nothing and keeps the jingle path untouched). */
+    if (g_bk_byte_b == 0 && g_audio_current_track == MUSIC_TITLE &&
+        ++g_title_frames >= TITLE_SONG_FRAMES) {
+        g_title_frames = 0;
+        g_bk_byte_b = 3;
     }
     if (g_audio_current_track != MUSIC_CHEST) {
         g_jingle_frames = 0;

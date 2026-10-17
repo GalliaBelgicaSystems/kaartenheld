@@ -1,4 +1,12 @@
+/* Test fixtures keep their actor tables in bank 9 (GAME_TEST_ACTOR_BANK):
+ * debug bank 4 is full (battle art + actor tables + sprite bodies share
+ * it), while the loader body must share its tables' bank (direct reads,
+ * AGENTS.md §52.11.1).  Mirrors scene_load.c's TEST_LEVELS bank split. */
+#ifdef TEST_LEVELS
+#pragma bank 9
+#else
 #pragma bank 4
+#endif
 
 #include "actor.h"
 #include "world.h"
@@ -8,7 +16,7 @@
 /* Fixed-WRAM per-slot display-name staging (defined in actor.c, always
  * mapped).  actor_spawn copies the bank-2 def literal here; fixed-bank
  * encounter code then dereferences it with any ROM bank mapped. */
-extern char s_actor_names[MAX_WORLD_ACTORS][12];
+extern char s_actor_names[MAX_WORLD_ACTORS][13];
 
 /* ── Scene actor loader, bank-2 body ────────────────────────────────
  * Dispatched by actor_load_scene() (src/world/actor.c) through the WRAM
@@ -122,9 +130,9 @@ void actor_load_scene_banked(void)
                         def->display_name : "Enemy";
                     actor_spawn(&world->actors[slot], def);
                     /* Stage the def name literal (bank 2 mapped here) into
-                     * fixed WRAM, capped like Combatant.name (11+NUL, same
+                     * fixed WRAM, capped like Combatant.name (12+NUL, same
                      * idiom as battle_start in battle.c). */
-                    for (j = 0; j < 11 && src[j]; j++) {
+                    for (j = 0; j < 12 && src[j]; j++) {
                         dst[j] = src[j];
                     }
                     dst[j] = 0;

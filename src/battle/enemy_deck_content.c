@@ -40,6 +40,12 @@ static const EnemyCard s_kobold_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
+static const EnemyCard s_slime_knight_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
+};
 static const EnemyCard s_mimic_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
@@ -76,12 +82,14 @@ void enemy_deck_setup_banked(void)
     case 1:  src = s_slime_deck;      count = 4; break;
     case 2:  src = s_bat_deck;        count = 5; break;
     case 3:  src = s_slime_trio_deck; count = 5; break;
-    /* BATTLE_MIMIC = 4, BATTLE_KOBOLD = 5, BATTLE_SPIDER = 6 (numeric
-     * cases match the BattleId enum; see actor.h). */
+    /* BATTLE_MIMIC = 4, BATTLE_KOBOLD = 5, BATTLE_SPIDER = 6,
+     * BATTLE_CARL = 7, BATTLE_SLIME_KNIGHT = 8 (numeric cases match the
+     * BattleId enum; see actor.h). */
     case 4:  src = s_mimic_deck;      count = 5; break;
     case 5:  src = s_kobold_deck;     count = 4; break;
     case 6:  src = s_spider_deck;     count = 5; break;
     case 7:  src = s_carl_deck;       count = 1; break;
+    case 8:  src = s_slime_knight_deck; count = 4; break;
     }
 
     if (!src) return;

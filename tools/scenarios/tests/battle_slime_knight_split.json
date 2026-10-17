@@ -1,0 +1,217 @@
+{
+ "name": "battle_slime_knight_split",
+ "test": true,
+ "description": "Felling the castle armor (solo 15 HP) breaks it open: VICTORY is skipped for the knight, the KNIGHT_SPLIT briefing opens instead (full sentence, no banner truncation), and the quest tracks the kill (+12 gold). The trio itself is covered by battle_slime_trio_spawn.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SW",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SH",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SH",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "wait",
+   "frames": 240
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "KNIGHT_SPLIT"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Slime Knight was"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "in fact 3 Slimes"
+  },
+  {
+   "type": "currency",
+   "expected": 32,
+   "currency": "GOLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 16,
+   "y": 15,
+   "facing": "RIGHT"
+  },
+  "seed": 4242
+ }
+}

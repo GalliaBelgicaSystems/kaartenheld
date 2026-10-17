@@ -70,7 +70,8 @@ void world_patrol_slot_banked(void)
             y_v = move_ty_v;
             move_state_v = MOVE_STATE_IDLE;
             move_progress_v = 0;
-            ai_timer_v = PATROL_STEP_INTERVAL;
+            ai_timer_v = (ai_type_v == AI_CHASE_FAST) ?
+                (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
             g_patrol_evt[0] = id_v;
             g_patrol_evt[1] = x_v;
             g_patrol_evt[2] = y_v;
@@ -92,10 +93,12 @@ void world_patrol_slot_banked(void)
         return;
     }
 
-    if (ai_type_v == AI_CHASE) {
+    if (ai_type_v == AI_CHASE || ai_type_v == AI_CHASE_FAST) {
         /* Chase: one greedy step toward the player each AI tick (whole
-         * scene is the zone).  Falls through to the shared walkability,
-         * encounter, and commit blocks below; ai_step is unused. */
+         * scene is the zone).  FAST chases twice as often: its timer
+         * resets to half the interval (see below).  Falls through to
+         * the shared walkability, encounter, and commit blocks below;
+         * ai_step is unused. */
         uint8_t px;
         uint8_t py;
         uint8_t dx;
@@ -105,7 +108,8 @@ void world_patrol_slot_banked(void)
         dx = (px >= x_v) ? (uint8_t)(px - x_v) : (uint8_t)(x_v - px);
         dy = (py >= y_v) ? (uint8_t)(py - y_v) : (uint8_t)(y_v - py);
         if (dx == 0 && dy == 0) {
-            bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+            bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+                (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
             return;
         }
         if (dx > dy) {
@@ -157,7 +161,8 @@ void world_patrol_slot_banked(void)
     if (target_x == x_v && target_y == y_v) {
         bp[ACTOR_OFFSET(facing)]   = facing_v;
         bp[ACTOR_OFFSET(ai_step)]  = (uint8_t)(ai_step_v + 1);
-        bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+        bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+            (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
         return;
     }
 
@@ -215,7 +220,8 @@ void world_patrol_slot_banked(void)
         bp[ACTOR_OFFSET(ai_step)] =
             (ai_type_v == AI_PATROL_VERT) ? (uint8_t)(ai_step_v ^ 1) :
             (uint8_t)(ai_step_v + 1);
-        bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+        bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+            (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
         return;
     }
 

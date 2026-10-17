@@ -10,7 +10,10 @@ Two halves (see docs/level-editor.md Phase 17):
    registry the editor renders from), load the map in the debug ROM, and
    compare every terrain cell against the WRAM tilemap mirror.  Actor-
    occupied cells are SKIPPED (actor overlay rules live with actor
-   scenarios, not here).  Any terrain mismatch fails loudly.
+   scenarios, not here).  Any terrain mismatch fails loudly.  The boot
+   half runs the frozen TEST fixtures (the only scenes the debug ROM
+   links -- tools/scenarios/fixtures/levels/); the static half below
+   covers the real levels.
 2. Animation frame-set parity (static cross-check, no boot): every
    animation_frames id in every level must resolve in its tileset manifest
    AND vram_block (a typo silently degrades to a fallback today), and the
@@ -53,7 +56,7 @@ def first_plain_tile(tileset_id, tileset):
 
 
 def level_default_index(level, tilesets):
-    """Resolve the level's default_walkable to a VRAM block index."""
+    """Resolve the level's default_walkable to a ROM VRAM slot."""
     tileset_id = level["map"]["tileset"]
     tileset = tilesets[tileset_id]
     dw = level.get("default_walkable") or ""
@@ -62,7 +65,10 @@ def level_default_index(level, tilesets):
     short = dw.split(".")[-1]
     for e in tileset.get("vram_block", {}).get("tiles", []):
         if e.get("tile") == short:
-            return VRAM_BASE + e.get("index")
+            slot = vram_slot(tileset_id, e.get("index"))
+            if slot is None:
+                break
+            return VRAM_BASE + slot
     raise ValueError("%s: default ground '%s' has no vram index" % (level["id"], dw))
 WALL_FALLBACK_INDEX = {
     "forest": 1,
@@ -111,11 +117,25 @@ def load_tilesets():
     return tilesets
 
 
-def manifest_index(tileset, tile_id):
-    """Manifest tile id -> VRAM block index via vram_block cross-refs."""
+def vram_slot(tileset_id, vram_index):
+    """vram_block index -> ROM VRAM load slot.
+
+    Must match the Makefile gfx rule --tile-coords and
+    verify_palette_manifest.py: dense vram-index order everywhere except
+    castle, which loads vram 0..22 then the exit (vram 26) LAST at
+    slot 23.  Returns None for indices the ROM never loads."""
+    if tileset_id == "castle":
+        order = list(range(23)) + [26]
+        return order.index(vram_index) if vram_index in order else None
+    return vram_index
+
+
+def manifest_index(tileset_id, tileset, tile_id):
+    """Manifest tile id -> ROM VRAM load slot (NOT the vram_block index:
+    the castle exit lives at vram index 26 but loads in slot 23)."""
     for e in tileset.get("vram_block", {}).get("tiles", []):
         if e.get("tile") == tile_id:
-            return e.get("index")
+            return vram_slot(tileset_id, e.get("index"))
     return None
 
 
@@ -187,7 +207,7 @@ def expected_grid(level, tilesets):
             if info is None:
                 fail("%s: unknown tile '%s' at (%d,%d)" % (level["id"], cell, x, y))
                 continue
-            idx = manifest_index(tileset, short)
+            idx = manifest_index(tileset_id, tileset, short)
             if idx is None:
                 fail("%s: tile '%s' has no vram_block index" % (level["id"], short))
                 continue
@@ -283,6 +303,9 @@ def check_map(sess, level, tilesets):
         print("FAIL %s: %d/%d terrain cells mismatch" % (sid, bad, len(grid) - len(skipped)))
 
 
+FIXTURES_DIR = REPO_ROOT / "tools" / "scenarios" / "fixtures" / "levels"
+
+
 def main(argv):
     only = set(argv[1:])
     tilesets = load_tilesets()
@@ -302,10 +325,26 @@ def main(argv):
     if failures:
         return 1
 
+    # Boot-backed terrain parity runs in the debug ROM, which links ONLY
+    # the frozen test fixtures (TEST_* scenes): real scene ids resolve on
+    # the host but load empty scenes on hardware. Check the fixtures
+    # instead -- same tilesets, same tile pipeline, actually loadable
+    # (a real id also matches its fixture via the test_ prefix).
+    fixtures_by_id = {}
+    for p in sorted(FIXTURES_DIR.glob("*.json")):
+        data = json.loads(p.read_text())
+        fixtures_by_id[data["id"]] = data
+    if only:
+        fixtures_by_id = {k: v for k, v in fixtures_by_id.items()
+                          if k in only or k.replace("test_", "", 1) in only}
+        if not fixtures_by_id:
+            print("no such levels: %s" % sorted(only))
+            return 2
+
     sess = EmulatorSession()
     try:
         sess.connect()
-        for sid, level in levels_by_id.items():
+        for sid, level in fixtures_by_id.items():
             check_map(sess, level, tilesets)
     finally:
         sess.disconnect()

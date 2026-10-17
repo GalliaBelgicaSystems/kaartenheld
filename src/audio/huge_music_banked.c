@@ -7,6 +7,11 @@
 #include "huge_music.h"
 #include "huge_music_data.h"
 
+/* Title-theme play-once counter (src/game/jingle_full_banked.c, bank 8
+ * BSS): reset here on every MUSIC_TITLE dispatch so replays start the
+ * 6 s window from the top.  Same bank: plain extern, no trampoline. */
+extern uint16_t g_title_frames;
+
 /* ── Track mapping body (bank-8) ────────────────────────────────────
  * Dispatched by audio_play_music() through the WRAM trampoline (the
  * fixed bank is full, §52.18).  PURE mapping: stop-inline (sound regs
@@ -55,6 +60,7 @@ void music_play_banked(void)
     uint8_t bank = HUGE_MUSIC_BANK;
     uint8_t track = g_bk_byte_a;
     huge_stop_inline();
+    if (track == MUSIC_TITLE) g_title_frames = 0;
     if (track == MUSIC_BATTLE) {
         song = &song_battle;
     } else if (track == MUSIC_OVERWORLD) {
@@ -82,6 +88,9 @@ void music_play_banked(void)
         song = &song_title;
     } else if (track == MUSIC_VICTORY) {
         song = &song_victory;
+        bank = HUGE_MUSIC_BANK_B7;
+    } else if (track == MUSIC_GAMEOVER) {
+        song = &song_game_over;
         bank = HUGE_MUSIC_BANK_B7;
     }
     g_audio_current_track = track;

@@ -324,6 +324,71 @@ def neighbor_pairing_issues(levels_by_id, tilesets):
     return errors, warnings
 
 
+def edge_geometry_issues(levels_by_id, tilesets):
+    """(errors, warnings) for border-cell geometry the pairing gate does
+    not cover.
+
+    - Walkable corner cells are rejected: the engine resolves N/S before
+      E/W, so a walkable corner on two linked edges silently routes one
+      way (e.g. (19,0) with north+east linked always exits north), while
+      a walkable corner on unlinked edges is a dead alcove that reads as
+      a gate.  Either way the map lies about where its holes are.
+    - Reciprocal links must open at exactly the same cross-coordinates:
+      a wide-open edge paired with a narrow doorway lets the player cross
+      at cells whose mirrored landing sits deep inside the neighbor
+      (or facing a wall), because the entry clamps -- it never mirrors
+      the gate.  Matched openings keep both directions predictable.
+    Scoped by the caller to real levels (test fixtures have no links)."""
+    errors, warnings = [], []
+    cache = {}
+    for name, lvl in levels_by_id.items():
+        w, h = lvl["map"]["width"], lvl["map"]["height"]
+        g = _grid(name, lvl, tilesets, cache)
+        for cx, cy in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+            if g[cy][cx]:
+                errors.append(
+                    f"{name}: corner cell ({cx},{cy}) is walkable -- "
+                    f"corners resolve N/S-before-E/W and dead-end alcoves "
+                    f"read as gates; wall it or move the opening inward.")
+    seen = set()
+    for name, lvl in levels_by_id.items():
+        try:
+            targets = neighbor_targets(lvl)
+        except SystemExit as exc:
+            errors.append(str(exc))
+            continue
+        for direction in NEIGHBOR_DIRS:
+            target = targets.get(direction)
+            if not target or target not in levels_by_id:
+                continue
+            if (target, _OPPOSITE[direction]) in seen:
+                continue
+            seen.add((name, direction))
+            back = neighbor_targets(levels_by_id[target]).get(
+                _OPPOSITE[direction])
+            if back != name:
+                continue  # one-sidedness is reported (as an error) elsewhere
+            w, h = lvl["map"]["width"], lvl["map"]["height"]
+            tw, th = (levels_by_id[target]["map"]["width"],
+                      levels_by_id[target]["map"]["height"])
+            g = _grid(name, lvl, tilesets, cache)
+            bg = _grid(target, levels_by_id[target], tilesets, cache)
+            mine = sorted(_cross_coord(direction, c)
+                          for c in edge_cells(direction, w, h)
+                          if g[c[1]][c[0]])
+            theirs = sorted(_cross_coord(_OPPOSITE[direction], c)
+                            for c in edge_cells(_OPPOSITE[direction], tw, th)
+                            if bg[c[1]][c[0]])
+            if mine != theirs:
+                errors.append(
+                    f"{name}: edge '{direction}' opens at {mine} but the "
+                    f"return edge '{target}'.{_OPPOSITE[direction]} opens at "
+                    f"{theirs} -- crossings outside the overlap land the "
+                    f"player off-gate (entry clamps, never mirrors); align "
+                    f"the holes on both sides.")
+    return errors, warnings
+
+
 # ── Point-exit triggers ──────────────────────────────────────────────
 # An exit keeps the terrain art painted on its cell; unpainted cells become
 # default ground.  A trigger on plain ground is invisible to the player, so

@@ -60,7 +60,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -96,7 +96,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -179,9 +179,11 @@ gfx: manifest
 	# ── Castle tileset (assets/castle-tile.png, 9 cols × 3 rows) ─────────
 	# The sheet packs 9-wide but VRAM slots pack 8-wide (vram_block index
 	# order), so bytes AND palette entries follow vram-index order via
-	# --tile-coords (slots 0-15; see palette_compiler). Sized by the rule.
+	# --tile-coords (slots 0-15 base art, slots 16-22 extension art vram
+	# 16..22, exit stairs vram 26 LAST at slot 23; see palette_compiler).
+	# Sized by the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,0 8,1 0,2 1,2 2,2 3,2 4,2 8,2" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
@@ -239,24 +241,29 @@ src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b
 
 # Frozen harness-test fixtures (tools/scenarios/fixtures/levels/): the
 # debug (harness) ROM links ONLY these, so real content edits can never
-# break the scenario suite.  Compiled with --bank 4 (GAME_TEST_CONTENT_BANK)
-# so the release budgets (banks 2/5) are untouched.  Committed C must equal
-# fresh compile (no hand edits, same convention as the real content).
+# break the scenario suite.  Scenes compile with --bank 4
+# (GAME_TEST_CONTENT_BANK) and actors with --actors-bank 9
+# (GAME_TEST_ACTOR_BANK): debug bank 4 is full, while the loader body
+# must share its tables' bank, so the actor tables (but not the chest
+# resolver, which stays in the bank-4 scenes file via --chest-in-scenes
+# for the sprite body's same-bank call) live in pristine bank 9.
+# Committed C must equal fresh compile (no hand edits, same convention
+# as the real content).
 LEVELS_TEST_DIR = tools/scenarios/fixtures/levels
 
 levels-test:
 	@python3 tools/level_compiler/validate.py $(LEVELS_TEST_DIR)/*.json
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c
 	@echo "All test fixture levels compiled to src/game/scenes_content_test.c"
 
 levels-test-check:
 	@python3 tools/level_compiler/validate.py $(LEVELS_TEST_DIR)/*.json
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c --check
 
 src/game/scenes_content_test.c src/game/actors_content_test.c &: $(wildcard $(LEVELS_TEST_DIR)/*.json)
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c
 
 # Screen content compiler (docs/level-editor.md Phase 17): screens/*.json is
@@ -295,6 +302,12 @@ shops:
 shops-check:
 	@python3 tools/screen_compiler/shops_compile.py --all --check
 	@python3 tools/level_compiler/validate.py --shop-refs
+
+# Spawn actions: EVENT_ACTION_SPAWN_* rows in src/game/events_content.c
+# carry compiled bytes (e.g. the slime ow_type); validate.py resolves
+# the live values and fails loudly on drift (never hand-synced).
+spawns-check:
+	@python3 tools/level_compiler/validate.py --spawn-refs
 
 # Entity types: screens/enemy_types/*.json + screens/entity_types/*.json are
 # the single source of truth for the ENTITY_ID_* game range.  Adding a type
@@ -661,12 +674,28 @@ $(GENERATED_MUSIC_DIR)/opening.c: assets/music/opening.uge tools/compile_music.p
 $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
 
+# Game-over theme (assets/music/game over.uge, loops).  Played the moment
+# the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
+# result screen already carries it; it keeps playing over the game-over
+# choice menu until a map load restores the scene track (world_init
+# plays it on every map load).  Bank 7 like the other late songs.
+$(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
+$(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+
+# Game-over theme (assets/music/game over.uge, loops).  Played the moment
+# the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
+# result screen already carries it; it keeps playing over the game-over
+# choice menu until a map load restores the scene track (world_init
+# plays it on every map load).  Bank 7 like the other late songs.
+
 # WAV previews for the level editor's BGM toggle (Inspector Map Info).
 # Rendered from the generated song C by tools/render_music_preview.py
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

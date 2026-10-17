@@ -68,6 +68,10 @@ LAYOUT = [
     # Pickup chests (SPRITE_KIND_CHEST statics, closed then open frame).
     # Appended last so no existing blob offset moves.
     ['chest_closed', 'chest_open', None, None],
+    # Slime-knight overworld frames (screens/enemy_types/slime_knight.json
+    # with the sprites11 slime OBJ ramp).  Appended last so no existing
+    # blob offset moves.
+    ['slime_knight_frame1', 'slime_knight_frame2', None, None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy

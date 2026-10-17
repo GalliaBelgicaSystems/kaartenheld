@@ -221,6 +221,29 @@ static const EnemyTypeDef g_enemy_type_slime = {
     3
 };
 
+static const EnemyTypeDef g_enemy_type_slime_knight = {
+    "slime_knight",
+    "Slime Knight",
+    0,
+    "SLIME KNIGHT",
+    15,
+    15,
+    "BATTLE_SLIME_KNIGHT",
+    12,
+    CURRENCY_ID_GOLD,
+    6,
+    1,
+    0,
+    3,
+    2,
+    78,
+    120,
+    1,
+    1,
+    1,
+    3
+};
+
 static const EnemyTypeDef g_enemy_type_slime_lord = {
     "slime_lord",
     "Lord of Slimes",
@@ -283,14 +306,14 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     0,
     0,
     0,
-    120,
+    121,
     1,
     1,
     2,
     1
 };
 
-const EnemyTypeDef* const g_enemy_types[12] = {
+const EnemyTypeDef* const g_enemy_types[13] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
     &g_enemy_type_kobold,
@@ -300,8 +323,9 @@ const EnemyTypeDef* const g_enemy_types[12] = {
     &g_enemy_type_npc_merchant,
     &g_enemy_type_npc_wizard,
     &g_enemy_type_slime,
+    &g_enemy_type_slime_knight,
     &g_enemy_type_slime_lord,
     &g_enemy_type_spider,
     &g_enemy_type_treasure_chest,
 };
-const uint8_t g_enemy_type_count = 12;
+const uint8_t g_enemy_type_count = 13;

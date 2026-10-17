@@ -9,7 +9,10 @@ typedef enum {
     MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
-    MUSIC_TITLE,     /* title screen theme (loops) */
+    MUSIC_TITLE,     /* title screen theme (title short.uge, bank 7):
+                         plays ONCE per title visit (~6 s), then stops
+                         in silence (TITLE_SONG_FRAMES game frames, timed
+                         in the bank-8 jingle body; replay on revisit) */
     MUSIC_TOWN,      /* town / hub theme (loops) */
     MUSIC_DUNGEON,   /* castle / dungeon theme (loops) */
     MUSIC_BOSS,      /* final-boss theme (loops) */
@@ -17,9 +20,14 @@ typedef enum {
                         ~0.9 s) then looping Mimic.uge; both bank 7 */
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
     MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
-    MUSIC_CHEST      /* chest-loot jingle (chest opening.uge, one-shot,
+    MUSIC_CHEST,     /* chest-loot jingle (chest opening.uge, one-shot,
                         bank 7); the overworld restores the scene track
                         when it ends (audio_jingle_frame) */
+    MUSIC_GAMEOVER,  /* game-over theme (game over.uge, loops, bank 7):
+                        starts the instant the hero falls
+                        (battle_set_result DEFEAT) and plays over the
+                        game-over choice menu until a map load restores
+                        the scene track */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE

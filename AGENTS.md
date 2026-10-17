@@ -1759,8 +1759,9 @@ map.  Two tiers enforce that:
 * **Tier 1 — test fixtures** (`tools/scenarios/fixtures/levels/test_*.json`):
   frozen copies of the levels as the scenarios know them (headline
   hostile last, no user-placed extras).  The **debug (harness) ROM links
-  ONLY these** (`scenes_content_test.c` / `actors_content_test.c`, bank 4,
-  `--bank 4`), selected at compile time by `-DTEST_LEVELS` + the
+  ONLY these** (`scenes_content_test.c` bank 4 / `actors_content_test.c`
+  bank 9, `--bank 4 --actors-bank 9 --chest-in-scenes`), selected at
+  compile time by `-DTEST_LEVELS` + the
   `TEST_*` scene ids (fixed block at 240+, never moves).  Scenarios stage
   `scene: TEST_FIELD` etc.
 * **Tier 2 — working content** (`levels/`): everything the editor, the
@@ -3238,8 +3239,9 @@ the commit/PR without booting anything.
 * Five fresh sessions are used: Walk A (overworld → Town → dialogue → shop →
   quick screen), Walk B (slime battle on the Field), Walk C (Forest gate),
   Walk D (title-menu + tutorial slides), and Walk E (castle mimic battle:
-  FIELD → south → SOUTH_FIELD → south → MOUNTAIN_PASS → north → CASTLE
-  ENTRY → north → GREAT HALL → north → CASTLE, then into the mimic; the
+  FIELD → tunnel → FOREST → tunnel → GRASSY FOREST → north → DESOLATE
+  FIELD → tunnel → SOUTH RIDGE → tunnel → SOUTH FIELD → north → CASTLE
+  ENTRY → north → GREAT HALL → tunnel → CASTLE, then into the mimic; the
   planner routes through the expanded castle chain and all corridor
   columns avoid patrol boxes), so persistent state never bleeds
   between milestones.  Walk D stops at the boot title screen (START → menu,

@@ -162,13 +162,35 @@ def main():
                 if "tile" in v and "index" in v}
         slot_colors = {p["index"]: p["colors"] for p in man["palettes"]}
 
+        # Castle loads base art (vram 0..15) + extension art (vram
+        # 16..22) + the exit stairs (vram index 26) LAST. Every other
+        # tileset packs slot i = vram index i, so only castle needs the
+        # explicit map. Slot order must match the Makefile gfx rule's
+        # --tile-coords verbatim (base row-major 8-wide, then the
+        # explicit extension + exit cells).
+        if ts == "castle":
+            slot_vram = list(range(23)) + [26]
+            if n != 24:
+                errors.append(f"{ts}: expected 24 loaded slots (0..22 + exit 26), got {n}")
+                continue
+            enc_cells = ([(x, 0) for x in range(8)] + [(x, 1) for x in range(8)] +
+                         [(8, 0), (8, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (8, 2)])
+        else:
+            slot_vram = list(range(n))
+            enc_cells = None
+
         for i in range(n):
-            v = vram.get(i)
+            v = vram.get(slot_vram[i])
             if v is None:
                 errors.append(f"{ts}: VRAM slot {i} has no vram_block entry")
                 continue
             cell = (v["x"], v["y"])
-            enc_cell = (i % w, i // w)
+            # Castle slot order follows the Makefile gfx rule (see the
+            # enc_cells table above), not row-major packing.
+            if ts == "castle":
+                enc_cell = enc_cells[i]
+            else:
+                enc_cell = (i % w, i // w)
             if cell != enc_cell:
                 errors.append(
                     f"{ts}: VRAM slot {i} ('{v['tile']}') is vram_block cell {cell}, but the "
@@ -176,7 +198,8 @@ def main():
                 continue
             if ids[i] != v["tile"]:
                 errors.append(
-                    f"{ts}: tile_ids[{i}] = '{ids[i]}' but vram_block index {i} is '{v['tile']}' "
+                    f"{ts}: tile_ids[{i}] = '{ids[i]}' but VRAM slot {i} loads "
+                    f"vram_block index {slot_vram[i]} ('{v['tile']}') "
                     f"(manifest not in VRAM-slot order)")
             ramp_hex = shades.get("%d,%d" % cell)
             if ramp_hex is None:

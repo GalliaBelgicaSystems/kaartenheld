@@ -437,6 +437,22 @@ export function levelDataToEditor(data: any): EditorLevel {
     }
     grid.push(row);
   }
+  // Unpainted perimeter renders as solid TILE_WALL in ROM (not default
+  // ground), so pre-fill the canvas border with a wall tile: otherwise an
+  // edited block-format level serializes border floor and silently opens
+  // every edge (this erased the castle/throne_room perimeters). Explicit
+  // paint from data.terrain below still wins, so gates stay open.
+  const wallTile = tileset.tiles.find((t) => t.category === 'wall' && !t.id.includes('corner'))?.id
+    || tileset.tiles.find((t) => t.category === 'wall')?.id
+    || tileset.tiles.find((t) => !t.walkable)?.id || defaultFloor;
+  for (let x = 0; x < w; x++) {
+    grid[0][x] = wallTile;
+    grid[h - 1][x] = wallTile;
+  }
+  for (let y = 0; y < h; y++) {
+    grid[y][0] = wallTile;
+    grid[y][w - 1] = wallTile;
+  }
 
   const rawTerrain = data.layers?.terrain;
   let terrainSource: 'blocks' | 'grid' = 'grid';

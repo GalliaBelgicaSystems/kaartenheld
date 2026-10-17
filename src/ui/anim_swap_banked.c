@@ -1,4 +1,4 @@
-#pragma bank 5
+#pragma bank 7
 
 #include <gb/gb.h>
 #include <stdint.h>
@@ -26,7 +26,7 @@ extern uint8_t g_tilemap_mirror[32 * 32];
 uint16_t g_anim_cells[ANIM_CELL_CAP];
 uint8_t g_anim_count;
 
-/* -- Background animation bodies (bank 5) ------------------------------
+/* -- Background animation bodies (bank 7) ------------------------------
  * Campfire flicker / water shimmer, data-driven (generated
  * anim_pairs.h): cells showing the step's other frame take this step's
  * frame (A on even steps, B on odd).  Dispatched from
@@ -39,7 +39,8 @@ uint8_t g_anim_count;
  * tilemap mirror is kept in sync for the harness.  VRAM bank is set
  * explicitly (tilemap ring lives in VRAM bank 0).
  *
- * Both bodies live in bank 5 (the world bank has room; debug bank 4,
+ * Both bodies live in bank 7 (bank 5 -- the world bank -- filled up when
+ * the castle tile window grew the tileset past 17 slots; debug bank 4,
  * where the OAM pass lives, is full, and bank 2 overflows with them),
  * and a banked body must never switch banks mid-function, so the
  * fixed-bank callers run these as separate passes instead.

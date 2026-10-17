@@ -762,6 +762,66 @@
       "ascii": "#",
       "image_url": "/tiles/combat/combat_black_emptyness_3.png",
       "category": "object"
+    },
+    {
+      "id": "combat_top_left_slime_knight",
+      "label": "top left slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#a2b396",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_slime_knight",
+      "label": "top middle slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#637e51",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_slime_knight",
+      "label": "top right slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#e1e6dd",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_left_slime_knight",
+      "label": "bottom left slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#9caf90",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_slime_knight",
+      "label": "bottom middle slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#50693f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_slime_knight",
+      "label": "bottom right slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#ced6c8",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_slime_knight.png",
+      "category": "enemy"
     }
   ]
 }

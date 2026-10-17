@@ -28,6 +28,8 @@ const char *game_battle_enemy_type_id(uint8_t battle_id)
             return "mimic";
         case BATTLE_KOBOLD:
             return "kobold";
+        case BATTLE_SLIME_KNIGHT:
+            return "slime_knight";
         case BATTLE_SPIDER:
             return "spider";
         default:

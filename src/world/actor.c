@@ -21,7 +21,7 @@ uint8_t g_static_actor_count = 0;
  * loader copies each hostile's def literal here at spawn; encounter code
  * dereferences it with any ROM bank mapped.  Data-driven: every hostile
  * shows its level-JSON display_name in battle (no fixed-bank table). */
-char s_actor_names[MAX_WORLD_ACTORS][12];
+char s_actor_names[MAX_WORLD_ACTORS][13];
 
 void actor_register_tables(const WorldActorTable *tables, uint8_t count, uint8_t bank)
 {
@@ -87,7 +87,11 @@ void actor_load_scene(World *world, MapId map_id, const GameState *state)
      * tables live in the same ROM bank, so the body reads them directly
      * with no staging copies (AGENTS.md 52.11.1).  Hostile display names
      * are staged into s_actor_names there (fixed WRAM). */
+#ifdef TEST_LEVELS
+    g_bk_call_bank = GAME_TEST_ACTOR_BANK;
+#else
     g_bk_call_bank = GAME_ACTOR_BANK;
+#endif
     g_bk_call_target = (uint16_t)&actor_load_scene_banked;
     g_bk_ptr_a = (void *)world;
     g_bk_ptr_b = (void *)state;

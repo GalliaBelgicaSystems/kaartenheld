@@ -89,18 +89,18 @@ def world_size(name_ptr_size):
 NAME_PTR_CANDIDATES = (2, 3)
 
 # Battle player Combatant (src/battle/combatant.h): hp, max_hp,
-# name[12].  The hero's battle display name starts with 'H'.
+# name[13].  The hero's battle display name starts with 'H'.
 BATTLE_PLAYER_HP = 0
 BATTLE_PLAYER_MAX_HP = 1
-BATTLE_ENEMIES = 14        # enemies[0] offset (player Combatant = 14 B)
-BATTLE_ENEMY_STRIDE = 14   # Combatant size
+BATTLE_ENEMIES = 15        # enemies[0] offset (player Combatant = 15 B)
+BATTLE_ENEMY_STRIDE = 15   # Combatant size
 
 # Battle hand region (src/battle/battle.h, after player + enemies[3] +
 # enemy_count + target_idx + dirty): Deck deck; Card hand[5];
 # selected_indices[5]; combo_count; cursor_pos; energy.
 # Deck (src/battle/deck.h): cards[20]x8 + count + draw_idx +
 # discard[20]x8 + discard_count = 323.
-BATTLE_HAND = 14 + 3 * 14 + 3 + 323   # 382
+BATTLE_HAND = 15 + 3 * 15 + 3 + 323   # 391
 CARD_SIZE = 8                # src/battle/card.h
 CARD_TYPE = 0                # BattleCardType
 CARD_VALUE = 1
@@ -134,6 +134,13 @@ SCENE_FOREST = 2
 SCENE_MOUNTAIN_PASS = 3
 SCENE_CASTLE = 4
 SCENE_SOUTH_FIELD = 5
+SCENE_SOUTH_RIDGE = 12
+SCENE_CASTLE_ENTRY = 13
+SCENE_CASTLE_HALL = 14
+SCENE_THRONE_ROOM = 15
+SCENE_GRASSY_FOREST = 16
+SCENE_VILLAGE_AREA = 17
+SCENE_DESOLATE_FIELD = 18
 SCENE_WAKE_GROVE = 19
 
 # MusicTrack (src/audio/audio.h)
@@ -319,15 +326,26 @@ class StateReader:
             cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
             head = self.rd(cand, 2)
             name = self.rd(cand + 2, 1)
-            if (head == bytes([HERO_START_HP, HERO_START_HP])
-                    and name == b"H"):
+            # Accept base (10) or god-mode (99) max, any hp<=max (transit
+            # fights take damage; probe must survive damaged heroes).
+            if (name == b"H" and head[1] in (HERO_START_HP, 99)
+                    and head[0] <= head[1]):
                 self._battle_base = cand
                 self._world_ptr_size = ptr
                 return cand
+        # Include observed bytes so god-mode (99/99) vs base (10/10)
+        # mismatches are diagnosable without a second run.
+        seen = []
+        for ptr in NAME_PTR_CANDIDATES:
+            cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
+            seen.append("ptr%d@%x head=%s name=%r" % (
+                ptr, cand, self.rd(cand, 2).hex(),
+                self.rd(cand + 2, 1)))
         raise BattleProbeError(
-            "could not locate g_game.battle with either const-char* "
-            "candidate; World mirror or Battle layout changed — update "
-            "tools/walkthrough/state_reader.py from src/world/world.h")
+            "could not locate g_game.battle (%s); World mirror or "
+            "Battle layout changed — update "
+            "tools/walkthrough/state_reader.py from src/world/world.h"
+            % "; ".join(seen))
 
     def world_hostile_count(self, tileset_kind):
         """Number of active hostile slots in the current scene

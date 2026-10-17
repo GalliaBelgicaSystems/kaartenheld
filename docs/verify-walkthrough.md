@@ -1,7 +1,8 @@
 # verify-walkthrough — Real-Content Semantic Verifier
 
 Status: **implemented** — `make verify-walkthrough`, required on push (CI).
-759 checks green (incl. the content sweep over 14 levels); PNG output
+1584 checks green (incl. the content sweep over 18 levels: 14 reworked
+overworld levels plus the 4 retained eastern forest levels); PNG output
 byte-stable across runs; negative tests (offset drift, route failure)
 verified to fail loudly.
 

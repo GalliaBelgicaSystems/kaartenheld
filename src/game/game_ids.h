@@ -48,6 +48,7 @@
 #define EVENT_ID_TUTORIAL_COMPLETE (EVENT_ID_FIRST_GAME + 12)
 #define EVENT_ID_FIELD_CHEST     (EVENT_ID_FIRST_GAME + 13)
 #define EVENT_ID_MERCHANT_REMINDER (EVENT_ID_FIRST_GAME + 14)
+#define EVENT_ID_KNIGHT_SPLIT    (EVENT_ID_FIRST_GAME + 15)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -62,7 +63,7 @@ typedef enum {
     STORY_FLAG_ID_ARRIVED_TOWN = 1,
     STORY_FLAG_ID_MET_MAYOR    = 2,
     STORY_FLAG_ID_FIELD_CHEST  = 3,
-    STORY_FLAG_ID_AMULET_CHEST = 4,   /* forest amulet chest opened (loot
+    STORY_FLAG_ID_AMULET_CHEST = 4,   /* mountain amulet chest opened (loot
                                        * state, like FIELD_CHEST -- set
                                        * atomically with the AMULET grant) */
     STORY_FLAG_ID_COUNT        = 5
@@ -95,15 +96,23 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 15
+#define GAME_EVENT_COUNT 16
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 
 /* Frozen harness-test content (TEST_LEVELS, debug build only): the test
- * scenes/actors compile into ROM bank 4 (battle-art bank, which has the
- * headroom) so the release budgets are untouched, the debug link stays
- * at 8 banks (-yo8), and the fixtures can diverge freely. */
+ * scenes compile into ROM bank 4 and the test actor tables into ROM
+ * bank 9 (GAME_TEST_ACTOR_BANK), so the release budgets are untouched,
+ * the debug link keeps the bank-4 sprite body's same-bank plain call
+ * to the chest resolver (which stays in the bank-4 scenes file via
+ * --chest-in-scenes), and the fixtures can diverge freely. */
 #define GAME_TEST_CONTENT_BANK 4
+/* Test actor-table bank (debug build only): debug bank 4 is full
+ * (battle art + actor tables + sprite bodies share it), while the
+ * loader body must share its tables' bank (direct reads, §52.11.1).
+ * Bank 9 is pristine (MBC5 low byte reaches banks 8-15 with no asm
+ * change, §55.5).  Mirrors scene_load.c's TEST_LEVELS bank split. */
+#define GAME_TEST_ACTOR_BANK 9
 
 /* Per-scene actor tables (actors_content.c) live in bank 4 in BOTH builds:
  * the debug build already links the fixture actor tables there

@@ -1,0 +1,15 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "slime_knight",
+  "label": "Slime Knight",
+  "category": "minion",
+  "sprite": { "art": "slime_knight", "frames": 1 },
+  "overworld": { "cells": ["slime_knight_frame1"], "palette": "sprites11" },
+  "name": "SLIME KNIGHT",
+  "hp": 15,
+  "max_hp": 15,
+  "battle_id": "BATTLE_SLIME_KNIGHT",
+  "ai_types": ["AI_CHASE_FAST"],
+  "gold_reward": 12,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

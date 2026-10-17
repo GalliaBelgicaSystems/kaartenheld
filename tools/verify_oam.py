@@ -279,10 +279,11 @@ def verify_hostile_sprites(sess):
     sess.load_scenario(forest_amulet)
     sess.step(2)
     # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
-    # Closed-chest frame (shared-blob tile 120); the floor cell stays
-    # plain floor (VRAM tile 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 120)",
-          120, shadow_oam_slot_tile(sess, 5))
+    # Closed-chest frame (shared-blob tile 121: 120 + the slime-knight
+    # overworld cell); the floor cell stays plain floor (VRAM tile
+    # 128 + 62 = 190), never chest paint.
+    check("forest amulet owns closed-chest OAM sprite (tile 121)",
+          121, shadow_oam_slot_tile(sess, 5))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
@@ -291,7 +292,7 @@ def verify_hostile_sprites(sess):
     # Loot it through the real interact path (amulet_open_sprite spawns
     # the player beside the amulet facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
-    # (121) and stay there across redraws.
+    # (122) and stay there across redraws.
     loot = load_scenario(sess, "amulet_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
@@ -299,8 +300,8 @@ def verify_hostile_sprites(sess):
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 121)",
-          121, shadow_oam_slot_tile(sess, 5))
+    check("looted amulet shows open-chest OAM sprite (tile 122)",
+          122, shadow_oam_slot_tile(sess, 5))
     check("looted amulet cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
@@ -615,12 +616,16 @@ def verify_dialogue_transition(sess):
     # Exit: closing the dialogue restores just the 4 box rows (no LCD-off
     # wipe).  The speaker bar ('-'/'+"'+'" row 14) must be gone -- world
     # glyphs never contain those -- while the map and sprite are intact.
-    sess.press("A")
-    sess.step(2)
-    if sess.snapshot().get("dialogue_active"):
-        sess.step(1)
+    # One A press per page (mayor intro is 3 pages); the step(3) settle
+    # after each press doubles as the reset frame consecutive same-button
+    # presses need (edge-triggered input, AGENTS.md 52.10), and the loop
+    # is bounded so a genuinely stuck box still fails loudly.
+    for _ in range(5):
         sess.press("A")
-        sess.step(2)
+        sess.step(3)
+        if not sess.snapshot().get("dialogue_active"):
+            break
+    sess.step(2)
     check("dialogue exit: back to overworld", "OVERWORLD",
           sess.snapshot().get("screen"))
     buf = sess.get_screen_buf().split("\n")

@@ -6,6 +6,11 @@
 #include "rpg/currency.h"
 #include "banked.h"
 
+/* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
+ * ROM bank 2).  Declared here so the fixed-bank executor can take its
+ * address for the trampoline. */
+void game_slime_trio_spawn_banked(void);
+
 /* ── Event engine ──────────────────────────────────────────────────
  * The engine matches events against a table registered by the game layer
  * (event_init, called from src/game/events.c).  First match wins; for
@@ -120,6 +125,17 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
 #else
             (void)ok;
 #endif
+        } else if (t == EVENT_ACTION_SPAWN_SLIME_TRIO) {
+            /* Slime-knight armor split (game content, bank 2): the
+             * felled knight's runtime slot becomes a slime-trio
+             * encounter in place.  Thin dispatch only -- the body
+             * resolves its own ow byte from the event row (same bank),
+             * so nothing is staged and the fixed bank pays just the
+             * branch + call.  Keeps engine files free of game ids
+             * (AGENTS.md §55.1). */
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
+            banked_call_run();
         }
     }
 }
