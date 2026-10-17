@@ -15,4 +15,4 @@
  * cells (they would shift every enemy ow_tile offset by 2).
  * Rider HUD icons ride the same stream at the blob tail, so
  * the count DOES include them. */
-const uint8_t g_enemy_ow_tile_count = 26;
+const uint8_t g_enemy_ow_tile_count = 27;

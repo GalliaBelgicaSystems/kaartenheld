@@ -1,0 +1,13 @@
+{
+  "id": "heal_mage",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "Let me heal your",
+    "wounds!",
+    "With a ring card,",
+    "you can get healed",
+    "during combat.",
+    "The merchant",
+    "sells one!"
+  ]
+}

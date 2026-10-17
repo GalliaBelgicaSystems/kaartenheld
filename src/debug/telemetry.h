@@ -160,7 +160,7 @@ typedef enum {
     /* d0 = HP restored; d1 = cause: 0 = heal card, 1 = ring resolving
      * with an offense hand (docs/loot.md §34.3), 2 = defense net
      * over-block WITH a ring (healing shield) in the defense combo
-     * (docs/loot.md §34.4). */
+     * (docs/loot.md §34.4), 3 = NPC full restore (Heal Mage event). */
     EVENT_HEALED,
     EVENT_ITEM_USED,
     EVENT_ITEM_USE_FAILED,

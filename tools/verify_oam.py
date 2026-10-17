@@ -233,9 +233,9 @@ def verify_battle_oam(sess):
 def verify_npc_sprites(sess):
     """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
     overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
-    (sprites9).  Blob offsets append-only: guard 116, mayor 117,
-    merchant 118.  Order-insensitive set match over entries 1-12 (spawn
-    order may vary; ASCII shopkeeper takes no OAM entry)."""
+    (sprites9).  Blob offsets append-only: guard 116, heal mage 117,
+    mayor 118, merchant 119.  Order-insensitive set match over entries
+    1-12 (spawn order may vary; ASCII shopkeeper takes no OAM entry)."""
     print("== Town NPC OAM sprites ==")
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
@@ -247,8 +247,8 @@ def verify_npc_sprites(sess):
         pal = shadow_oam_slot_pal(sess, slot)
         if tile is not None and pal is not None:
             found.add((tile, pal))
-    for label, tile, pal in (("mayor", 117, 7), ("guard", 116, 7),
-                             ("merchant", 118, 6)):
+    for label, tile, pal in (("mayor", 118, 7), ("guard", 116, 7),
+                             ("merchant", 119, 6)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
 
@@ -279,11 +279,11 @@ def verify_hostile_sprites(sess):
     sess.load_scenario(forest_amulet)
     sess.step(2)
     # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
-    # Closed-chest frame (shared-blob tile 121: 120 + the slime-knight
-    # overworld cell); the floor cell stays plain floor (VRAM tile
-    # 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 121)",
-          121, shadow_oam_slot_tile(sess, 5))
+    # Closed-chest frame (shared-blob tile 122: 120 + slime-knight and
+    # heal-mage overworld cells); the floor cell stays plain floor
+    # (VRAM tile 128 + 62 = 190), never chest paint.
+    check("forest amulet owns closed-chest OAM sprite (tile 122)",
+          122, shadow_oam_slot_tile(sess, 5))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
@@ -292,7 +292,7 @@ def verify_hostile_sprites(sess):
     # Loot it through the real interact path (amulet_open_sprite spawns
     # the player beside the amulet facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
-    # (122) and stay there across redraws.
+    # (123) and stay there across redraws.
     loot = load_scenario(sess, "amulet_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
@@ -300,8 +300,8 @@ def verify_hostile_sprites(sess):
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 122)",
-          122, shadow_oam_slot_tile(sess, 5))
+    check("looted amulet shows open-chest OAM sprite (tile 123)",
+          123, shadow_oam_slot_tile(sess, 5))
     check("looted amulet cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
