@@ -630,8 +630,8 @@ def walk_b(planner, checks):
     rows = s.bg_text()
     s.check("carl tutor rows exact",
             rows[14] == "+--CARL:-----------+"
-            and rows[15] == "Danger! I will      "
-            and rows[16] == "teach you to fight! "
+            and rows[15] == "Human? Here danger  "
+            and rows[16] == "I teach you fight!  "
             and rows[17] == "U/D choose target  ?",
             expected="exact box text",
             actual=" / ".join(rows[14:18]))

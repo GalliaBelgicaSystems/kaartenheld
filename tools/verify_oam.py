@@ -616,12 +616,16 @@ def verify_dialogue_transition(sess):
     # Exit: closing the dialogue restores just the 4 box rows (no LCD-off
     # wipe).  The speaker bar ('-'/'+"'+'" row 14) must be gone -- world
     # glyphs never contain those -- while the map and sprite are intact.
-    sess.press("A")
-    sess.step(2)
-    if sess.snapshot().get("dialogue_active"):
-        sess.step(1)
+    # One A press per page (mayor intro is 3 pages); the step(3) settle
+    # after each press doubles as the reset frame consecutive same-button
+    # presses need (edge-triggered input, AGENTS.md 52.10), and the loop
+    # is bounded so a genuinely stuck box still fails loudly.
+    for _ in range(5):
         sess.press("A")
-        sess.step(2)
+        sess.step(3)
+        if not sess.snapshot().get("dialogue_active"):
+            break
+    sess.step(2)
     check("dialogue exit: back to overworld", "OVERWORLD",
           sess.snapshot().get("screen"))
     buf = sess.get_screen_buf().split("\n")

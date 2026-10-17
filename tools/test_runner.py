@@ -14,6 +14,7 @@ import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
+                      DIALOGUE_NAME_TO_ID,
                       ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
                       VARIABLE_ID_MAP, ITEM_ID_MAP, ACTOR_ID_MAP,
                       ACTOR_STATE_NAME_MAP, CHARACTER_ID_MAP, SCENE_MAP,
@@ -98,6 +99,12 @@ def validate_scenario(data, filepath):
         actor = a.get("actor")
         if actor and actor not in VALID_ACTOR_NAMES:
             raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor '{actor}'. Valid actors: {sorted(list(VALID_ACTOR_NAMES))}")
+
+        # event_arg accepts a dialogue NAME as its value (resolved to the
+        # numeric id at eval time); unknown names fail here, not silently.
+        eval_arg = a.get("value") if a.get("type") == "event_arg" else None
+        if isinstance(eval_arg, str) and eval_arg not in VALID_DIALOGUE_IDS:
+            raise ValueError(f"SCENARIO ERROR in {filepath}: event_arg value '{eval_arg}' is not a known dialogue")
 
         astate = a.get("expected_state")
         if astate and astate not in VALID_ACTOR_STATES:
@@ -615,10 +622,20 @@ def run_scenario(scenario):
 
         elif a_type == "event_arg":
             # Payload assertion: passes when at least one emitted event of
-            # the given type carries data[index] == value.
+            # the given type carries data[index] == value.  A string value
+            # is a dialogue name resolved to its numeric id (renumber-safe:
+            # dialogue ids shift whenever screens/dialogue/*.json changes,
+            # so hardcoding numbers rots -- carl_remedial_lesson broke this
+            # way); unknown names fail loudly here, never silently.
             exp_event = a.get("event", expected)
             idx = int(a.get("index", 0))
-            exp_val = int(a.get("value", 0))
+            exp_val_raw = a.get("value", 0)
+            if isinstance(exp_val_raw, str):
+                if exp_val_raw not in DIALOGUE_NAME_TO_ID:
+                    raise ValueError(f"SCENARIO ERROR in '{scenario.get('name', 'unknown')}': event_arg value '{exp_val_raw}' is not a known dialogue")
+                exp_val = DIALOGUE_NAME_TO_ID[exp_val_raw]
+            else:
+                exp_val = int(exp_val_raw)
             expected = f"{exp_event} data[{idx}] == {exp_val}"
             matches = [ev for ev in telemetry if ev.get("type") == exp_event]
             hits = [ev.get("data") for ev in matches

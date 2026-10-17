@@ -606,8 +606,20 @@
         "y": 8
       },
       "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
         "display_name": "SIGNPOST",
-        "dialogue": "DIALOGUE_ID_FIELD_SIGNPOST"
+        "dialogue": "DIALOGUE_ID_FIELD_SIGNPOST",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
       }
     },
     {
@@ -618,8 +630,20 @@
         "y": 11
       },
       "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
         "display_name": "MAILBOX",
-        "dialogue": "DIALOGUE_ID_CARL_MAILBOX"
+        "dialogue": "DIALOGUE_ID_CARL_MAILBOX",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
       }
     }
   ],

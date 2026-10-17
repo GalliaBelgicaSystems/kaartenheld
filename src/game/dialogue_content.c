@@ -43,6 +43,13 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_CARL_MAILBOX,
+        "",
+        3,
+        {"Carl the Slime", "1, human ", "settlement road"},
+        0
+    },
+    {
         DIALOGUE_ID_DOG_GREETING,
         "WILD DOG:",
         4,
@@ -54,6 +61,13 @@ const DialogueDefinition g_dialogues[] = {
         "CHEST:",
         3,
         {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
+        0
+    },
+    {
+        DIALOGUE_ID_FIELD_SIGNPOST,
+        "",
+        4,
+        {"NORTH: Passage to", "forest", "EAST: Human ", "settlement"},
         0
     },
     {
@@ -87,8 +101,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
-        3,
-        {"I am the Mayor.", "Defeat 5 monsters!", "Gain extra AP!"},
+        8,
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
         0
     },
     {
@@ -130,7 +144,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
         8,
-        {"Danger! I will", "teach you to fight!", "U/D choose target", "SW sword, SH block", "BO bows hurt!", "HE rings hit 0!", "Heal, make poker!", "Fire, ice, poison!"},
+        {"Human? Here danger", "I teach you fight!", "U/D choose target", "Make Poker!", "Attack with Sword", "Dagger or Bow", "Defend with shield", "Fire, ice, poison!"},
         0
     },
     {

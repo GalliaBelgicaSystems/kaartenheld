@@ -54,7 +54,7 @@ extern uint8_t console_mode;
  * buffer must stay exact for harness text assertions. */
 extern volatile uint8_t g_harness_mode;
 
-/* Background-animation cell count (bank-5 anim_swap_banked.c, WRAM always
+/* Background-animation cell count (bank-7 anim_swap_banked.c, WRAM always
  * mapped): lets the caller skip the swap dispatch on frames with nothing
  * to swap (same throttle the body applies internally). */
 extern uint8_t g_anim_count;
@@ -630,7 +630,7 @@ void ui_draw_actors_sprites(const World *world)
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
     if ((((uint8_t)g_game.frame & 3) == 0) && g_anim_count != 0) {
-        g_bk_call_bank = 5;
+        g_bk_call_bank = 7;
         g_bk_call_target = (uint16_t)&world_anim_swap_banked;
         banked_call_run();
     }
@@ -710,11 +710,11 @@ void ui_draw_world_map(const World *world)
 static void ui_world_tail(const World *world)
 {
     uint8_t y;
-    /* Re-record animation-frame ring cells (fire/water) for the bank-5
+    /* Re-record animation-frame ring cells (fire/water) for the bank-7
      * swap pass: the ring is static until the next full redraw, so one
      * LCD-off scan here replaces every per-frame scan.  No staging (the
      * rebuild reads the ring only); ~12 B fixed for the dispatch. */
-    g_bk_call_bank = 5;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&world_anim_rebuild_banked;
     banked_call_run();
     for (y = 0; y < WORLD_VIEW_H; y++) {

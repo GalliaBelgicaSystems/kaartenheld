@@ -1,11 +1,27 @@
 {
  "name": "mayor_dialogue",
  "test": true,
- "description": "Full NPC dialogue sequence with Mayor: approach, close the single-page 3-line INTRO, and verify MET_MAYOR story flag",
+ "description": "Full NPC dialogue sequence with Mayor: approach, close the 3-page 8-line INTRO (3x A), and verify MET_MAYOR story flag",
  "actions": [
   {
    "type": "press",
    "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",

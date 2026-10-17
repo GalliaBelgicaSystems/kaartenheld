@@ -36,6 +36,20 @@ static const WorldActorDefinition g_field_actors[] = {
         0, 0,
          SPRITE_KIND_CHEST, 12, 0
     },
+    {
+        0, ENTITY_ID_SIGNPOST, 5, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_SIGNPOST, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_SIGNPOST, 16, 11, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "MAILBOX", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_CARL_MAILBOX, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
 };
 
 static const WorldActorDefinition g_town_actors[] = {
