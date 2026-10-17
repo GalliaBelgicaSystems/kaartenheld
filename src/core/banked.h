@@ -13,12 +13,15 @@
 extern volatile uint8_t g_rom_bank_live;
 
 /* PPU-safe VRAM/CRAM data-store for banked bodies (LCD-on overlays:
- * dialogue boxes, menus, battle HUD).  Bounded Mode-2/3 wait + di/ei
- * around a single store: the di window is microseconds (no music-clock
- * stall), and the ei cannot misroute -- the timer ISR saves/restores
- * g_rom_bank_live.  LCD-off skips the wait (STAT is idle).  Use for
- * every banked LCD-on data write; LCD-off bulk loaders and rerun-
- * converged anim cells keep their bare/bounded patterns. */
+ * dialogue boxes, menus, battle HUD; LCD-on gate-crossing loads: tilesets,
+ * CRAM, wipes).  Bounded Mode-2/3 wait + di/ei around a single store: the
+ * di window is microseconds (no music-clock stall), and the ei cannot
+ * misroute -- the timer ISR saves/restores g_rom_bank_live.  LCD-off
+ * skips the wait (STAT is idle).  Use for every banked VRAM/CRAM data
+ * write that can execute with the LCD on (gate crossings repaint
+ * with the LCD on: ui_draw_world_transition never blanks).  Rerun-
+ * converged anim-swap cells use the same macro (a dropped access is
+ * invisible, but atomicity is free). */
 #define BANKED_VRAM_WRITE(dst, v) \
     do { \
         uint8_t _bvw_t; \
@@ -32,6 +35,27 @@ extern volatile uint8_t g_rom_bank_live;
             __asm ei __endasm; \
         } else { \
             *((volatile uint8_t *)(dst)) = (uint8_t)(v); \
+        } \
+    } while (0)
+
+/* PPU-safe VRAM data-read for banked bodies (map-entry animation-cell
+ * scan).  Same window discipline as the write macro: without it the
+ * 256 Hz timer ISR can eclipse the wait->sample window and the read
+ * lands in Mode 3, returning 0xFF -- for the one-shot entry scan that
+ * permanently loses the cell's animation for the whole map stay. */
+#define BANKED_VRAM_READ(dst, src) \
+    do { \
+        uint8_t _bvr_t; \
+        if (LCDC_REG & 0x80) { \
+            __asm di __endasm; \
+            _bvr_t = 200; \
+            while (_bvr_t--) { \
+                if (!(STAT_REG & 0x02)) break; \
+            } \
+            (dst) = *((volatile uint8_t *)(src)); \
+            __asm ei __endasm; \
+        } else { \
+            (dst) = *((volatile uint8_t *)(src)); \
         } \
     } while (0)
 
@@ -78,15 +102,16 @@ void banked_copy_init(void);
  *     resumes on its own bank.  Do NOT add di/ei (or __critical) inside
  *     the target: a held di reintroduces music-clock stalls, and the
  *     lint gate rejects bare interrupt ops in banked files.  LCD-on
- *     VRAM/CRAM data writes must use BANKED_VRAM_WRITE (di + bounded
- *     Mode wait per store); the ISR can otherwise eclipse the
- *     wait->store window and drop the write into Mode 3.
+ *     VRAM/CRAM data accesses must use BANKED_VRAM_WRITE / BANKED_VRAM_READ
+ *     (di + bounded Mode wait per access); the ISR can otherwise eclipse
+ *     the wait->access window and drop the access into Mode 3.
  *   * The target runs with a CONTENT ROM BANK SELECTED, not the caller's
  *     bank.  It may access only (a) its own bank-local code/data and (b)
  *     the staged _DATA globals below.  It must NOT call any fixed-bank
  *     function or return through a fixed-bank pointer while executing.
- *   * On return the home bank (HOME_BANK, crt0.s) and __current_bank are
- *     restored, so the caller's execution ring is unchanged.
+ *   * On return the home bank (HOME_BANK, crt0.s) is restored and
+ *     g_rom_bank_live tracks it again, so the caller's execution ring
+ *     is unchanged.
  *
  * The fixed-bank wrapper stages the target bank + logical address and its
  * arguments into the _DATA globals below, then calls banked_call_run()

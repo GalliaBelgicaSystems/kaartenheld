@@ -39,7 +39,7 @@ static const int g_cram_keep_kind_ok[((int)WORLD_TILESET_FOREST < 0x80 &&
 
 void ui_load_cram_banked(void)
 {
-    uint8_t p, c, t, val;
+    uint8_t p, c;
     uint8_t kind;
     uint8_t keep;
     const uint8_t *pal_data;
@@ -75,18 +75,14 @@ void ui_load_cram_banked(void)
         if (keep && p == UI_COLOR_PAPER) continue;
         BCPS_REG = (uint8_t)(0x80 | (p << 3));
         for (c = 0; c < 8; c++) {
-            /* Value first, wait second, bare store last: only ~20
-             * T-states separate the last STAT sample from the store
-             * (inside the 80-T-state Mode-2 buffer), so a Mode-0 sample
-             * can never roll into Mode 3.  No di/ei: these bulk loads
-             * run LCD-off (transitions), where STAT is idle and VRAM is
-             * always accessible, so the timer ISR cannot eclipse them. */
-            val = ramp[c];
-            t = 200;
-            while (t--) {
-                if (!(STAT_REG & 0x02)) break;
-            }
-            BCPD_REG = val;
+            /* Per-store di + bounded Mode wait (BANKED_VRAM_WRITE):
+             * gate crossings repaint with the LCD ON (curtain wipe), so
+             * the timer ISR could otherwise eclipse the wait->store
+             * window into Mode 3 -- where the write drops while BCPS
+             * auto-increment still advances, splicing a stale byte
+             * into the ramp for the entire map stay.  LCD-off callers
+             * take the macro's direct-store fast path. */
+            BANKED_VRAM_WRITE(&BCPD_REG, ramp[c]);
         }
     }
 }
@@ -142,7 +138,6 @@ void ui_load_tileset_banked(void)
     const uint8_t *pal_src;
     uint8_t tile_count;
     uint8_t i;
-    uint8_t t;
     uint8_t val;
     uint16_t n;
     volatile uint8_t *dst;
@@ -179,13 +174,12 @@ void ui_load_tileset_banked(void)
     dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
     n = (uint16_t)tile_count << 4;
     while (n--) {
-        /* Value first, wait second, bare store last (see above). */
+        /* Same LCD-on hazard as the CRAM loop above: one-shot tile
+         * bitmap load, so a Mode-3-eclipsed byte corrupts the tile for
+         * the entire map stay. */
         val = *src++;
-        t = 200;
-        while (t--) {
-            if (!(STAT_REG & 0x02)) break;
-        }
-        *dst++ = val;
+        BANKED_VRAM_WRITE(dst, val);
+        dst++;
     }
     for (i = 0; i < 80; i++) {
         /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
@@ -210,12 +204,8 @@ void ui_load_tileset_banked(void)
     if (g_is_cgb) {
         OCPS_REG = (uint8_t)(0x80 | (5 << 3));
         for (i = 0; i < 24; i++) {
-            val = ((const uint8_t *)cgb_obj_palettes)[40 + i];
-            t = 200;
-            while (t--) {
-                if (!(STAT_REG & 0x02)) break;
-            }
-            OCPD_REG = val;
+            BANKED_VRAM_WRITE(&OCPD_REG,
+                              ((const uint8_t *)cgb_obj_palettes)[40 + i]);
         }
     }
 }
@@ -224,26 +214,20 @@ void ui_load_tileset_banked(void)
  * slot 4, then paints all 18 ring rows x 32 cols with blank tiles +
  * slot 4 so the viewport is covered whatever SCX shows.  Slot 4 (PAPER)
  * is free in every world tileset, so no map row can need it during the
- * reveal.  All writes PPU-synced LCD-off (transitions: STAT idle, VRAM
- * always accessible), so no di/ei is needed and the timer ISR cannot
- * eclipse them.  Sole caller is ui_draw_world_transition (always the
- * full ring). */
+ * reveal.  All writes go through BANKED_VRAM_WRITE: gate crossings run
+ * this wipe with the LCD ON (curtain path skips ui_lcd_off), where an
+ * ISR-eclipsed wait would drop the write into Mode 3.  Sole caller is
+ * ui_draw_world_transition (always the full ring). */
 void ui_wipe_black_banked(void)
 {
     uint8_t r;
     uint8_t c;
-    uint8_t t;
-    uint8_t val;
     uint16_t off;
     volatile uint8_t *dst;
     if (g_is_cgb) {
         BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_PAPER << 3));
         for (c = 0; c < 8; c++) {
-            t = 200;
-            while (t--) {
-                if (!(STAT_REG & 0x02)) break;
-            }
-            BCPD_REG = 0;
+            BANKED_VRAM_WRITE(&BCPD_REG, 0);
         }
     }
     for (r = 0; r < 18; r++) {
@@ -251,22 +235,15 @@ void ui_wipe_black_banked(void)
         VBK_REG = 0;
         dst = (volatile uint8_t *)(0x9800u + off);
         for (c = 0; c < 32; c++) {
-            t = 200;
-            while (t--) {
-                if (!(STAT_REG & 0x02)) break;
-            }
-            *dst++ = 0;
+            BANKED_VRAM_WRITE(dst, 0);
+            dst++;
         }
         if (g_is_cgb) {
             VBK_REG = 1;
             dst = (volatile uint8_t *)(0x9800u + off);
             for (c = 0; c < 32; c++) {
-                val = UI_COLOR_PAPER;
-                t = 200;
-                while (t--) {
-                    if (!(STAT_REG & 0x02)) break;
-                }
-                *dst++ = val;
+                BANKED_VRAM_WRITE(dst, (uint8_t)(UI_COLOR_PAPER & 0x07));
+                dst++;
             }
             VBK_REG = 0;
         }
@@ -291,7 +268,12 @@ void ui_title_logo_load_banked(void)
 
     VBK_REG = 0;
     while (n--) {
-        *dst++ = *src++;
+        /* Macro form even though title entry is LCD-off (direct-store
+         * fast path there): identical bytes, immune if ever reused
+         * with the LCD on. */
+        BANKED_VRAM_WRITE(dst, *src);
+        dst++;
+        src++;
     }
 }
 #endif

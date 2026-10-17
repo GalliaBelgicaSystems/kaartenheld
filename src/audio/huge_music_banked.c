@@ -31,11 +31,14 @@ extern uint16_t g_title_frames;
 static void huge_stop_inline(void)
 {
     /* Bank-8 twin of the fixed-bank huge_music_stop() below: identical
-     * register writes, minus the __critical (the WRAM trampoline already
-     * runs with interrupts disabled).  The banked mapping body calls this
-     * because it cannot call fixed-bank code while its own bank is
-     * unmapped.  Keep the two in sync -- if one gains a channel, so
-     * must the other. */
+     * register writes, minus the __critical.  Banked bodies must not emit
+     * di/ei (lint gate; a held di would stall the music clock), and none
+     * is needed: the banked mapping body stops playback first
+     * (g_huge_playing = 0) before resolving the new track, so a
+     * preempting timer ISR always sees either silence or a fully-switched
+     * song.  The banked mapping body calls this because it cannot call
+     * fixed-bank code while its own bank is unmapped.  Keep the two in
+     * sync -- if one gains a channel, so must the other. */
     g_huge_playing = 0;
     g_huge_current_song = 0;
     /* Silence active sound channels */

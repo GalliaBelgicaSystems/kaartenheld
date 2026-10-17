@@ -7,7 +7,9 @@
 /* Banked RNG bodies (see AGENTS.md 52.11.1): the xorshift step lives here
  * so the fixed-bank _CODE budget keeps room for rendering.  Self-contained:
  * WRAM globals + own arithmetic only -- no fixed-bank calls (the bank is
- * switched away while running), no di/ei (the trampoline holds di).
+ * switched away while running), no di/ei (bare interrupt ops are lint-
+ * forbidden in banked files, and a held di would stall the music clock;
+ * none is needed anyway since the timer ISR never touches RNG state).
  * Logic is identical to the old fixed-bank bodies (and to the inlined
  * xorshift steps in deck_shuffle_banked / battle_defend_content, which
  * cannot call across banks and stay duplicated by design). */

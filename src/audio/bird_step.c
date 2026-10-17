@@ -24,8 +24,10 @@ static const int g_bird_win_fits_gap[(BIRD_MAX_FRAMES < BIRD_GAP) ? 1 : 0];
  * what the driver call does (mask bit; the note-cut is redundant -- the
  * stepper owns CH3 outright from the next wave write).  Poking the
  * inactive copy's mask too is harmless (its driver never runs while
- * unselected) and keeps this body branch-free.  Muting runs under the
- * trampoline di...ei, so no teardown races. */
+ * unselected) and keeps this body branch-free.  No di/ei here: the
+ * pokes are single WRAM/IO stores (atomic against the timer ISR by
+ * construction), and the release path orders hardware-off before
+ * mask-clear so no note can start in the window. */
 extern volatile uint8_t hUGE_mute_mask_b7;
 
 /* ── Ambient bird-chirp body (bank-7) ─────────────────────────────────
@@ -132,8 +134,13 @@ void bird_ambient_banked(void)
      * read keeps this a no-op otherwise -- so any frame past the window
      * releases, never just the exact end frame. */
     if ((hUGE_mute_mask | hUGE_mute_mask_b7) & 0x04) {
+        /* Silence the hardware first, then clear the mute bits: if the
+         * timer ISR fires between the two and the tracker starts a CH3
+         * note, it would play one tick before the release below kills
+         * it.  Mask-still-set order keeps the handoff clean (the ISR
+         * skips CH3 while muted, so no note can start in the window). */
+        NR30_REG = 0x00;
         hUGE_mute_mask &= (uint8_t)~0x04;
         hUGE_mute_mask_b7 &= (uint8_t)~0x04;
-        NR30_REG = 0x00;
     }
 }

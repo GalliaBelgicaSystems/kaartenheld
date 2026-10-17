@@ -2296,8 +2296,9 @@ mirror the `banked_copy` pattern:
   `banked_copy_init()` so it is resident under the harness too): it selects
   the bank, computes the runtime target `0x4000 | (addr & 0x3FFF)`, pushes
   the WRAM return address, and `jp`s to the target; the target's `ret` pops
-  back to WRAM, which restores home bank 1, `__current_bank`, and (unless
-  harness mode) `ei`.
+  back to WRAM, which restores home bank 1, records it in
+  `g_rom_bank_live`, and unconditionally `ei`s (safe under the harness:
+  `IE` is clear there since CRT0 is skipped, so it is a no-op).
 
 First user: `src/battle/combo.c` (`combo_evaluate` wrapper) →
 `src/battle/combo_content.c` (`combo_evaluate_banked`, bank 2).  This
@@ -2406,12 +2407,18 @@ Consequences:
   banked body reintroduces music-clock stalls; an `ei` alone is
   harmless (interrupts are already enabled) but pointless.  The lint
   gate still rejects every bare interrupt op in `#pragma bank` files.
-* Every banked LCD-on VRAM/CRAM data write must use `BANKED_VRAM_WRITE`
-  (`banked.h`: bounded Mode wait + per-store `di`, microsecond window,
-  LCD-off fast path).  The ISR can otherwise eclipse the wait->store
-  window and drop the write into Mode 3.  LCD-off bulk loaders
-  (`tiles_content`, splash/logo, battle art/OAM palettes) and
-  rerun-converged anim cells keep their bare/bounded patterns.
+* Every banked VRAM/CRAM access that can execute with the LCD on must
+  use `BANKED_VRAM_WRITE` / `BANKED_VRAM_READ` (`banked.h`: bounded Mode
+  wait + per-access `di`, microsecond window, LCD-off fast path).  The
+  ISR can otherwise eclipse the wait->access window and drop a write
+  into Mode 3 (or return 0xFF for a read).  This covers overlays AND
+  gate-crossing loads (`tiles_content` tilesets/CRAM/wipes, anim-cell
+  rebuilds): overworld->overworld transitions repaint with the LCD on
+  (curtain path skips `ui_lcd_off`), and those loads are one-shot --
+  a dropped byte corrupts the tile/ramp for the entire map stay, and a
+  misread cell never animates.  Bare/non-atomic forms remain only on
+  provably LCD-off paths (splash/logo boot art, battle-entry palettes,
+  title logo palette), where STAT is idle and the ISR cannot eclipse.
 * Historical instances (pre-rework, when the trampoline held `di` and
   the ISR restored home bank 1): the dialogue-box paper-attr loop
   gained per-byte `di`/`wait`/`ei` and flaked ~1-in-6 dialogue entries
