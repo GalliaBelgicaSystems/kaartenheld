@@ -154,10 +154,7 @@ static void ic_draw_text_fast(void)
         }
         if (*s_ic_buf != ch) {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            if (LCDC_REG & 0x80) {
-                while (STAT_REG & 0x02);
-            }
-            *s_ic_dst = tile;
+            BANKED_VRAM_WRITE(s_ic_dst, tile);
             *s_ic_buf = ch;
         }
         s_ic_dst++;
@@ -208,10 +205,7 @@ static void ic_color_span_fast(void)
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     VBK_REG = 1;
     for (s_ic_col_i = 0; s_ic_col_i < len; s_ic_col_i++) {
-        if (LCDC_REG & 0x80) {
-            while (STAT_REG & 0x02);
-        }
-        s_ic_dst[s_ic_col_i] = pal;
+        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i], pal);
     }
     VBK_REG = 0;
 }
@@ -407,14 +401,8 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 2);
     VBK_REG = 0;
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-    }
-    *s_ic_dst = s_ic_tile_elem;
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-    }
-    *(s_ic_dst + 1) = s_ic_tile_wpn;
+    BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
+    BANKED_VRAM_WRITE(s_ic_dst + 1, s_ic_tile_wpn);
 
     IC_COLOR_SPAN(3, y, 1, UI_COLOR_WOOD);
     if (s_ic_def->status_id == STATUS_BURN)
@@ -498,14 +486,8 @@ static void ic_draw_card_detail_page(Game *g)
 
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5));
     VBK_REG = 0;
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-    }
-    *s_ic_dst = s_ic_tile_elem;
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-    }
-    *(s_ic_dst + 1) = s_ic_tile_wpn;
+    BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
+    BANKED_VRAM_WRITE(s_ic_dst + 1, s_ic_tile_wpn);
 
     IC_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
     if (s_ic_def->status_id == STATUS_BURN)

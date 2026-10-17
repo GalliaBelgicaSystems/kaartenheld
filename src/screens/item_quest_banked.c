@@ -99,10 +99,7 @@ static void iq_draw_text_fast(void)
         }
         if (*s_ic_buf != ch) {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            if (LCDC_REG & 0x80) {
-                while (STAT_REG & 0x02);
-            }
-            *s_ic_dst = tile;
+            BANKED_VRAM_WRITE(s_ic_dst, tile);
             *s_ic_buf = ch;
         }
         s_ic_dst++;
@@ -129,10 +126,7 @@ static void iq_color_span_fast(void)
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     VBK_REG = 1;
     for (s_ic_col_i = 0; s_ic_col_i < len; s_ic_col_i++) {
-        if (LCDC_REG & 0x80) {
-            while (STAT_REG & 0x02);
-        }
-        s_ic_dst[s_ic_col_i] = (uint8_t)(pal & 0x07);
+        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i], (uint8_t)(pal & 0x07));
     }
     VBK_REG = 0;
 }
@@ -228,17 +222,14 @@ static void iq_draw_quest(Game *g)
 
         s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5) + 1);
         VBK_REG = 0;
-        if (LCDC_REG & 0x80) {
-            while (STAT_REG & 0x02);
-        }
         /* Quest marker as a font glyph ('!' active, '*' complete): the
          * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
          * loader now overwrites tile 116 with the combat deck art). */
         if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_COMPLETE) {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' '));
+            BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' ')));
             IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
         } else {
-            *s_ic_dst = (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' '));
+            BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' ')));
             IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
         }
 

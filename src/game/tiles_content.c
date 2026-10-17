@@ -78,7 +78,9 @@ void ui_load_cram_banked(void)
             /* Value first, wait second, bare store last: only ~20
              * T-states separate the last STAT sample from the store
              * (inside the 80-T-state Mode-2 buffer), so a Mode-0 sample
-             * can never roll into Mode 3.  NO di/ei (52.11.3). */
+             * can never roll into Mode 3.  No di/ei: these bulk loads
+             * run LCD-off (transitions), where STAT is idle and VRAM is
+             * always accessible, so the timer ISR cannot eclipse them. */
             val = ramp[c];
             t = 200;
             while (t--) {
@@ -222,8 +224,10 @@ void ui_load_tileset_banked(void)
  * slot 4, then paints all 18 ring rows x 32 cols with blank tiles +
  * slot 4 so the viewport is covered whatever SCX shows.  Slot 4 (PAPER)
  * is free in every world tileset, so no map row can need it during the
- * reveal.  All writes PPU-synced, no di/ei (AGENTS.md 52.11.3).  Sole
- * caller is ui_draw_world_transition (always the full ring). */
+ * reveal.  All writes PPU-synced LCD-off (transitions: STAT idle, VRAM
+ * always accessible), so no di/ei is needed and the timer ISR cannot
+ * eclipse them.  Sole caller is ui_draw_world_transition (always the
+ * full ring). */
 void ui_wipe_black_banked(void)
 {
     uint8_t r;

@@ -226,6 +226,33 @@ def main():
             print(f"{sym:<28}: not found in .noi")
             ok = False
 
+    # ISR-ROM0 placement: every fixed-bank function reachable from the
+    # 256 Hz timer ISR must live in ROM0 (<0x4000, always mapped).  The
+    # trampolines run banked bodies with IME enabled, so the ISR can fire
+    # while another ROM bank is mapped; a _HOME (>0x4000) ISR callee would
+    # then fetch the wrong bank's bytes as its own code.  audio_update's
+    # tail restore relies on this (no 0x4000 fetch between the inline
+    # selects and the restore).  Fail loudly if link order ever pushes
+    # one of these past 0x4000.
+    print("Timer-ISR ROM0 placement checks")
+    print("-------------------------------")
+    isr_rom0 = {
+        "_audio_update": "music clock ISR entry",
+        "_huge_music_update": "tracker tick (ISR only caller)",
+        "_huge_music_mute_channel_isr": "SFX-end unmute (ISR only caller)",
+    }
+    for sym, desc in isr_rom0.items():
+        if sym in symbols:
+            addr = symbols[sym]
+            in_rom0 = addr < 0x4000
+            status = "OK" if in_rom0 else "VIOLATION (must live in ROM0 <0x4000)"
+            if not in_rom0:
+                ok = False
+            print(f"{sym:<28}: 0x{addr:05X}  ({desc})  [{status}]")
+        else:
+            print(f"{sym:<28}: not found in .noi")
+            ok = False
+    print()
     # No build-conditional trampoline targets remain: the last one
     # (lesson_sync_banked) was unified inline when the debug fixed bank
     # regained headroom.  The dict stays as the extension point.

@@ -2382,31 +2382,52 @@ hero_label_col), HP block at hero_hp_col (icon 2 cols left of "HP:"),
 DECK at deck_col (icon 1 left), AP at ap_col (icon 2 left).  VRAM BG
 tiles 117-127 are FULLY allocated (bar segments + card frames).
 
-### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026)
+### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026, reworked: music-clock stall fix)
 
-The banked-call trampoline (`crt0.s` `_banked_call_tramp`) executes `di`
-before switching banks and only `ei` after the body returns and home bank
-1 is restored.  Interrupts are therefore OFF for the entire body: the
-256 Hz timer ISR cannot fire mid-bank, which is what makes every banked
-body safe.
+Holding `di` across a whole banked body stalls the 256 Hz music clock:
+the trampoline used to `di` at entry and `ei` only after the body
+returned, so every long body (scene loads, full redraws) masked timer
+interrupts for whole frames -- IF showed the timer bit pending while
+TIMA kept counting, `g_audio_ticks` froze for 3-11 frame clusters, and
+`make verify-music` failed its no-stalled-frames + fixed-clock-rate
+checks (~3.78 ticks/frame instead of ~4.28).
 
-An `ei` (or SDCC `__critical`, which emits `di`/`ei`) inside a banked
-body breaks the invariant: the pending timer ISR fires immediately,
-switches in the music bank, and restores home bank 1 -- the body then
-resumes executing bank-1 bytes as its own code (wild VRAM writes, wedge,
-or hang).  Instance: the dialogue-box paper-attr loop gained per-byte
-`di`/`wait`/`ei` for the LCD-on overlay and flaked ~1-in-6 dialogue
-entries under real-timing emulators (PyBoy walkthrough: every dialogue
-check failed, tilemap reading back attr bytes through a stuck VBK),
-while the SameBoy/mGBA harness stayed green (IE is clear there, so `ei`
-is a no-op -- same masking family as 52.15).
+The trampoline now runs bodies with interrupts ENABLED (`ei` after the
+bank select, `di` before the restore) and the 256 Hz timer ISR
+saves/restores the *live* bank via `g_rom_bank_live` (`src/core/
+banked.h`, assigned `1` by `main()` before `enable_interrupts()`)
+instead of blindly restoring home bank 1 -- so the ISR can fire
+mid-body and the body resumes on its own bank.  Only the two MBC5
+switch sequences themselves run under `di`.
+
+Consequences:
+
+* A `di` (or SDCC `__critical`, which emits `di`/`ei`) held inside a
+  banked body reintroduces music-clock stalls; an `ei` alone is
+  harmless (interrupts are already enabled) but pointless.  The lint
+  gate still rejects every bare interrupt op in `#pragma bank` files.
+* Every banked LCD-on VRAM/CRAM data write must use `BANKED_VRAM_WRITE`
+  (`banked.h`: bounded Mode wait + per-store `di`, microsecond window,
+  LCD-off fast path).  The ISR can otherwise eclipse the wait->store
+  window and drop the write into Mode 3.  LCD-off bulk loaders
+  (`tiles_content`, splash/logo, battle art/OAM palettes) and
+  rerun-converged anim cells keep their bare/bounded patterns.
+* Historical instances (pre-rework, when the trampoline held `di` and
+  the ISR restored home bank 1): the dialogue-box paper-attr loop
+  gained per-byte `di`/`wait`/`ei` and flaked ~1-in-6 dialogue entries
+  (the admitted ISR misrouted the body onto bank 1); per-cell `di`/`ei`
+  in the anim walk and the battle helper froze PyBoy outright, which is
+  why those paths stayed `di`-free and battle accepted the ISR-eclipse
+  race until this rework.  Same masking note as ever: the SameBoy/mGBA
+  harness stays green regardless (IE is clear there, so `ei` is a no-op
+  -- 52.15 family).
 
 Rules:
 
-* Banked LCD-on VRAM waits need NO `di`: atomicity comes free with the
-  trampoline's held `di` (precedents: `sc_vram_sync_write`,
-  `anim_read_cell`/`anim_write_cell` bounded waits).  Fixed-bank
-  `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is always mapped.
+* Banked LCD-on VRAM/CRAM data writes use `BANKED_VRAM_WRITE`, never
+  hand-rolled `di`/`wait`/`ei` (lint forbids the latter anyway).
+  Fixed-bank `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is
+  always mapped.
 * `make lint` fails loudly on any bare `di`/`ei` asm instruction inside a
   file containing `#pragma bank` (no grandfathered violations).
 * Banked render paths must be validated under real timing

@@ -20,12 +20,7 @@ extern uint8_t ui_font_tile_base;
 
 static void tutorial_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = tile;
-    } else {
-        *dst = tile;
-    }
+    BANKED_VRAM_WRITE(dst, tile);
 }
 
 static void tutorial_put_char(uint8_t x, uint8_t y, char ch)

@@ -10,8 +10,9 @@
  * Dispatched inline from audio_update() with bank 7 selected (select-7/
  * call/restore-1), the same pattern as the SFX stepper (sfx_step.c): the
  * fixed bank cannot afford the swap code (§52.18), and the WRAM
- * banked-call trampoline is unusable here (its trailing ei would nest
- * the timer ISR).  Calls only the in-bank hUGE_init_b7.
+ * banked-call trampoline is unusable here (its mid-body ei would admit
+ * a nested timer ISR inside this ISR -- the same stacking hazard as
+ * __critical in ISR context).  Calls only the in-bank hUGE_init_b7.
  *
  * The tracker driver loops whole songs unconditionally (the ROM build
  * ignores loop_order), so the intro cannot live in the looping song.

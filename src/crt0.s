@@ -248,10 +248,13 @@ copy_isr_loop:
 ; four arguments into _DATA globals (g_bank_copy_bank/dst/src/n) before
 ; calling, so this trampoline never parses SDCC's stack layout.  The bank
 ; register is always restored to the project's home bank 1 before returning.
-; The body is wrapped in di/ei: the timer ISR (WRAM 0xC900) could otherwise
-; fire mid-copy while ROMB points at a content bank.  The ISR only calls the
-; fixed-bank audio code (safe today), but the guard removes the whole class
-; of future ISR/banked-content regressions at a sub-scanline cost.
+; Interrupts stay enabled across the copy: the timer ISR (WRAM 0xC900)
+; saves/restores the live bank via g_rom_bank_live (banked.h), so a tick
+; mid-copy resumes on the content bank.  Holding di for the whole copy
+; would stall the music clock (verify-music gate).  Only the two bank
+; switches themselves run under di.  ISR register safety comes from the
+; ISR's own push/pop (af/bc/de/hl); PPU-window atomicity for LCD-on
+; writers comes from BANKED_VRAM_WRITE's per-store di, not from here.
 ;
 ; Home bank is 1, NOT 0: the project links with -yo8, so the fixed-bank
 ; _CODE/_HOME area spans file 0x0000-0x7FFF and the second half (file
@@ -264,6 +267,7 @@ copy_isr_loop:
         .globl  _g_bank_copy_dst
         .globl  _g_bank_copy_src
         .globl  _g_bank_copy_n
+        .globl  _g_rom_bank_live
 ; The banked_copy_init byte-copy copies this whole body into the linker-
 ; allocated WRAM buffer g_banked_tramp[64] (banked.c).  These start/end
 ; symbols are exported so tools/memmap.py can verify at build time that the
@@ -274,11 +278,14 @@ copy_isr_loop:
 _banked_copy_tramp:
         push    bc
         push    de
-        di                            ; no ISR while the MBC5 bank is switched
-        xor     a
-        ld      (0x3000), a          ; MBC5 ROM bank high byte = 0
+        di                            ; protect the bank select + live store
         ld      a, (_g_bank_copy_bank)
-        ld      (0x2000), a          ; select ROM bank
+        ld      (0x2000), a          ; select ROM bank (low byte only; bit 9
+                                     ; stays 0 -- zeroed once at boot in
+                                     ; main(), nothing else touches 0x3000;
+                                     ; banks 16+ out of scope, AGENTS 55.5)
+        ld      (_g_rom_bank_live), a ; ISR restores this, not home
+        ei                            ; copy runs with the music clock live
         ld      hl, #_g_bank_copy_src
         ld      a, (hl)
         inc     hl
@@ -303,12 +310,10 @@ _banked_copy_tramp:
         dec     c
         jr      nz, banked_copy_loop
  banked_copy_done:
+        di                            ; protect the bank restore
         ld      a, #HOME_BANK
         ld      (0x2000), a          ; restore home bank (HOME_BANK, see below)
-        ld      (__current_bank), a
-        ld      a, (_g_harness_mode)
-        or      a
-        jr      nz, banked_copy_ret
+        ld      (_g_rom_bank_live), a ; a == HOME_BANK == 1
         ei                            ; home bank restored, interrupts safe again
  banked_copy_ret:
         pop     de
@@ -362,14 +367,20 @@ banked_copy_init_loop:
 ; `jp`s to the target.  When the target `ret`s it pops that WRAM address,
 ; so control returns to WRAM (always mapped) which restores the home bank.
 ;
-; Like banked_copy, the whole switch + execute + restore runs from WRAM
-; with interrupts disabled, and the home bank (1) is restored before
-; returning.  The wrappers push/pop caller registers around the call.
-; The target must be self-contained: it may read its own banked data and
-; the staged WRAM globals, but must NOT call any fixed-bank function (the
-; bank is switched away for the duration).
+; Like banked_copy, the switch + restore run from WRAM; the body itself
+; runs with interrupts ENABLED (ei after the select, di before the
+; restore) so the 256 Hz music clock never stalls across long bodies.
+; The timer ISR saves/restores the live bank via g_rom_bank_live, so the
+; body resumes on its own bank.  The wrappers push/pop caller registers
+; around the call.  The target must be self-contained: it may read its
+; own banked data and the staged WRAM globals, but must NOT call any
+; fixed-bank function (the bank is switched away for the duration).
+; LCD-on VRAM/CRAM data writes inside the target must use
+; BANKED_VRAM_WRITE (banked.h): the ISR can otherwise eclipse the
+; wait->store window.
         .globl  _g_bk_call_bank
         .globl  _g_bk_call_target
+        .globl  _g_rom_bank_live
         .globl  _g_banked_call_tramp
 ; _banked_call_tramp and _banked_call_tramp_end (both .globl below / above)
 ; bound the body copied into g_banked_call_tramp[64] (see the size contract
@@ -377,11 +388,12 @@ banked_copy_init_loop:
 _banked_call_tramp:
         push    bc
         push    de
-        di                            ; no ISR while the MBC5 bank is switched
-        xor     a
-        ld      (0x3000), a          ; MBC5 ROM bank high byte = 0
+        di                            ; protect the bank select + live store
         ld      a, (_g_bk_call_bank)
-        ld      (0x2000), a          ; select the target ROM bank
+        ld      (0x2000), a          ; select the target ROM bank (low byte
+                                     ; only; bit 9 stays 0, see copy tramp)
+        ld      (_g_rom_bank_live), a ; ISR restores this, not home
+        ei                            ; body runs with the music clock live
         ld      hl, #_g_bk_call_target
         ld      a, (hl)
         inc     hl
@@ -399,12 +411,10 @@ _banked_call_tramp:
         ld      l, e
         jp      (hl)                ; run the banked function
  banked_call_ret_wram:
+        di                            ; protect the bank restore
         ld      a, #HOME_BANK
         ld      (0x2000), a          ; restore home bank (HOME_BANK)
-        ld      (__current_bank), a
-        ld      a, (_g_harness_mode)
-        or      a
-        jr      nz, banked_call_ret
+        ld      (_g_rom_bank_live), a ; a == HOME_BANK == 1
         ei                            ; home bank restored, interrupts safe again
  banked_call_ret:
         pop     de

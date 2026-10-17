@@ -38,25 +38,10 @@ static const uint8_t s_dialogue_paper[8] = {
     0x00, 0x00  /* RGB8(0,0,0) */
 };
 
-/* Bounded PPU-window wait (same contract as the tiles_content.c loader
- * loops and the anim-swap cell accessors): NO di/ei -- the banked-call
- * trampoline already holds di for the whole body (AGENTS.md 52.11.3).
- * Local copy (not shared) because this body lives in bank 5 (debug) /
- * bank 4 (release) and must never call across ROM banks mid-function. */
-static void paper_wait_window(void)
-{
-    uint8_t t;
-    t = 200;
-    while (t--) {
-        if (!(STAT_REG & 0x02)) break;
-    }
-}
-
 void ui_dialogue_box_banked(void)
 {
     uint8_t sy = g_bk_byte_b;
     uint8_t i;
-    uint8_t v;
     volatile uint8_t *dst;
     /* First box row in tilemap space.  Rows are painted full-width (see
      * ui.h): sy shifts the base down on vertically scrolled maps.  The
@@ -68,36 +53,23 @@ void ui_dialogue_box_banked(void)
     if (g_is_cgb) {
         BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
         for (i = 0; i < 8; i++) {
-            /* Value first, wait second, bare store last: only ~20
-             * T-states separate the last STAT sample from the store
-             * (inside the 80-T-state Mode-2 buffer), so a Mode-0 sample
-             * can never roll into Mode 3 -- where the write would drop
-             * while BCPS auto-increment still advances, splicing a stale
-             * byte into the paper ramp (wrong box background color). */
-            v = s_dialogue_paper[i];
-            paper_wait_window();
-            BCPD_REG = v;
+            /* CRAM data store under BANKED_VRAM_WRITE (bounded Mode wait
+             * + per-store di): a write dropped into Mode 3 still advances
+             * BCPS auto-increment, splicing a stale byte into the paper
+             * ramp (wrong box background color). */
+            BANKED_VRAM_WRITE(&BCPD_REG, s_dialogue_paper[i]);
         }
     }
     /* VRAM attr writes: PPU-safe so the box can be painted while the LCD
-     * stays on (overworld -> dialogue overlay path).  When the LCD is off
-     * the wait is skipped (STAT is idle and a wait would spin forever).
-     * Bounded (a frozen PPU under the debugger times out instead of
-     * hanging).  NO di/ei here: the banked-call trampoline runs this
-     * whole body with interrupts disabled, which is what keeps the timer
-     * ISR from firing mid-bank.  An ei() would admit the ISR, which
-     * switches in the music bank and restores home bank 1 -- this body
-     * would resume executing bank-1 bytes as its own code (flaky wild
-     * writes/hangs under real-timing emulators; invisible under the
-     * harness where IE is clear).  The wait->store window is inherently
-     * atomic as is. */
+     * stays on (overworld -> dialogue overlay path).  BANKED_VRAM_WRITE
+     * skips the wait when the LCD is off (STAT idle) and holds a
+     * microsecond di per store when on, so the timer ISR (which now runs
+     * mid-body -- the trampoline keeps the music clock live) cannot
+     * eclipse the wait->store window into Mode 3. */
     VBK_REG = 1;
     i = 128;
     do {
-        if (LCDC_REG & 0x80) {
-            paper_wait_window();
-        }
-        *dst = (uint8_t)(UI_COLOR_PAPER & 0x07);
+        BANKED_VRAM_WRITE(dst, (uint8_t)(UI_COLOR_PAPER & 0x07));
         dst++;
     } while (--i != 0);
     VBK_REG = 0;

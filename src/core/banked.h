@@ -2,6 +2,38 @@
 #define BANKED_H
 
 #include <stdint.h>
+#include <gb/gb.h>
+
+/* Live MBC5 ROM-bank mirror (WRAM, always mapped).  The WRAM trampolines
+ * (crt0.s) maintain this: target bank on entry, HOME_BANK on exit.  The
+ * 256 Hz timer ISR (audio_update) reads it to restore the interrupted
+ * bank after its own selects, so banked bodies run with interrupts
+ * ENABLED and the music clock never stalls (the verify-music gate).
+ * Initialized to the home bank by main() before enable_interrupts(). */
+extern volatile uint8_t g_rom_bank_live;
+
+/* PPU-safe VRAM/CRAM data-store for banked bodies (LCD-on overlays:
+ * dialogue boxes, menus, battle HUD).  Bounded Mode-2/3 wait + di/ei
+ * around a single store: the di window is microseconds (no music-clock
+ * stall), and the ei cannot misroute -- the timer ISR saves/restores
+ * g_rom_bank_live.  LCD-off skips the wait (STAT is idle).  Use for
+ * every banked LCD-on data write; LCD-off bulk loaders and rerun-
+ * converged anim cells keep their bare/bounded patterns. */
+#define BANKED_VRAM_WRITE(dst, v) \
+    do { \
+        uint8_t _bvw_t; \
+        if (LCDC_REG & 0x80) { \
+            __asm di __endasm; \
+            _bvw_t = 200; \
+            while (_bvw_t--) { \
+                if (!(STAT_REG & 0x02)) break; \
+            } \
+            *((volatile uint8_t *)(dst)) = (uint8_t)(v); \
+            __asm ei __endasm; \
+        } else { \
+            *((volatile uint8_t *)(dst)) = (uint8_t)(v); \
+        } \
+    } while (0)
 
 /* RAM-resident MBC5 bank-switch + copy (src/crt0.s).  banked_copy() copies
  * `n` bytes from a banked ROM source into a WRAM destination, running the
@@ -39,10 +71,16 @@ void banked_copy_init(void);
  *     and a caller must not invoke banked_call_run() from within a
  *     banked target.  The staging globals are a one-shot transfer, not a
  *     persistent API — overwrite them before each call.
- *   * INTERRUPT-SAFE only because the WRAM trampoline runs with
- *     interrupts disabled (di at entry, ei on return) for the entire
- *     switch + execute + restore.  Do not re-enable interrupts inside
- *     the target.
+ *   * INTERRUPT-SAFE: the WRAM trampoline enables interrupts for the
+ *     body (ei after the bank select, di before the restore), so the
+ *     256 Hz music clock keeps running across long bodies.  The timer
+ *     ISR saves/restores the live bank via g_rom_bank_live, so the body
+ *     resumes on its own bank.  Do NOT add di/ei (or __critical) inside
+ *     the target: a held di reintroduces music-clock stalls, and the
+ *     lint gate rejects bare interrupt ops in banked files.  LCD-on
+ *     VRAM/CRAM data writes must use BANKED_VRAM_WRITE (di + bounded
+ *     Mode wait per store); the ISR can otherwise eclipse the
+ *     wait->store window and drop the write into Mode 3.
  *   * The target runs with a CONTENT ROM BANK SELECTED, not the caller's
  *     bank.  It may access only (a) its own bank-local code/data and (b)
  *     the staged _DATA globals below.  It must NOT call any fixed-bank

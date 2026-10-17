@@ -102,15 +102,15 @@ void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute)
      * (256 Hz), stacking ISR frames until the WRAM below the stack is
      * smashed (observed as ghost joypad input: g_inp_pad/g_inp_prev
      * accumulate pressed bits and releases never register).  Inside the
-     * ISR no user code can run concurrently, so no di is needed either;
-     * just switch banks, call the driver, restore home bank. */
+     * ISR no user code can run concurrently, so no di is needed either.
+     * No restore here: the caller (audio_update's tail) re-establishes
+     * the live bank once for the whole ISR (fixed-bank budget). */
     *(volatile uint8_t *)0x2000 = g_huge_music_bank;
     if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
         hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
     } else {
         hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
     }
-    *(volatile uint8_t *)0x2000 = 1;
 }
 
 void huge_music_update(void)
@@ -126,12 +126,13 @@ void huge_music_update(void)
         if (g_audio_current_track == MUSIC_CHEST) {
             ++g_jingle_frames;
         }
+        /* No restore here: audio_update's tail re-establishes the live
+         * bank once for the whole ISR (same contract as the ISR mute). */
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
         if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
             hUGE_dosound_b7();
         } else {
             hUGE_dosound();
         }
-        *(volatile uint8_t *)0x2000 = 1;
     }
 }

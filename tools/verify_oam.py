@@ -839,6 +839,12 @@ def verify_battle_vram_restore(sess):
 
     check("pre-battle VRAM read in VBlank", True, wait_vblank(sess))
     before = vram_tiles()
+    # Re-sync to the game_render-breakpoint phase: wait_vblank halts at
+    # VBlank via raw `frame`, and stepped inputs after a `frame`-halt
+    # slip (see AGENTS.md 52.26 -- `frame` does not reliably advance
+    # gameplay the way step() does).  One sacrificial step() re-anchors
+    # the phase so the walk below covers real frames.
+    sess.step(1)
     sess.hold("RIGHT", 10)
     # Carl teaches first: close the lesson so the spar (which clobbers
     # the world tiles with enemy art) actually starts.
@@ -852,10 +858,20 @@ def verify_battle_vram_restore(sess):
     during = vram_tiles()
     check("battle clobbers world VRAM tiles (test exercises the bug)",
           True, during != before)
+    # Re-sync again after the VBlank reads (same 52.26 hazard): the flee
+    # inputs below must land on whole game_render-stepped frames.
+    sess.step(1)
 
     # Flee (B with an empty hand) and leave the result screen, then let
-    # the overworld redraw + tileset reload settle.
-    for _ in range(6):
+    # the overworld redraw + tileset reload settle.  Two B presses per
+    # round: if a press lands while a card is selected (e.g. an A-loop
+    # over-press selected into the new battle, or a B landed outside the
+    # SELECT phase), the first B only unselects -- the second B then
+    # flees.  A single-B schedule toggle-traps forever in that state
+    # (B unselects, A reselects, B never sees an empty combo).
+    for _ in range(8):
+        sess.press("B")
+        sess.step(2)
         sess.press("B")
         sess.step(2)
         sess.press("A")
