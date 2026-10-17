@@ -29,7 +29,9 @@ const SceneTerrainBlock s_castle_terrain[] = {
 
 const SceneTerrainBlock s_village_area_terrain[] = {
     { 0, 0, 1, 1, TILE_VILLAGE_00 },
-    { 1, 0, 18, 1, TILE_VILLAGE_01 },
+    { 1, 0, 8, 1, TILE_VILLAGE_01 },
+    { 9, 0, 2, 2, TILE_VILLAGE_06 },
+    { 11, 0, 8, 1, TILE_VILLAGE_01 },
     { 19, 0, 1, 1, TILE_VILLAGE_02 },
     { 0, 1, 1, 7, TILE_VILLAGE_19 },
     { 19, 1, 1, 16, TILE_VILLAGE_03 },

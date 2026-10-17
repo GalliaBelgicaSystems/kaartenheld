@@ -395,8 +395,8 @@
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_wall_1",
@@ -434,7 +434,7 @@
   ],
   "neighbors": {
     "north": "castle_entry",
-    "south": "",
+    "south": "village_area",
     "east": "",
     "west": ""
   },
