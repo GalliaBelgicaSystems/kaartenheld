@@ -138,17 +138,23 @@ from compose_hero_sprites import TILE_COORDS as HERO_TILE_COORDS
 ENEMY_OW_BASE = 100
 ENEMY_OW_LIMIT = 128
 
-# Packing order for the shared overworld blob.  The six pre-dog/fire ids
-# are pinned in their committed positions (verify_oam.py asserts bat
-# 100-101, mimic 104-105, slime 106-107, boss 108-111): alphabetical
-# packing cannot provide append-only stability, so any id NOT in this
-# list is appended after it in sorted order and can never shift the
-# pinned prefix.  Never reorder this list; append-only.
-OW_ORDER_PINNED = ['bat', 'kobold', 'mimic', 'slime', 'slime_lord', 'spider']
+# Packing order for the shared overworld blob.
+# The pinned prefix covers the full shipped roster in its committed
+# positions (verify_oam.py asserts bat 100-101, mimic 104-105, slime
+# 106-107, boss 108-111; verify_vram.py asserts the NPC run 116-120):
+# alphabetical packing cannot provide append-only stability, so any id
+# NOT in this list appends after it in sorted order (shifting only the
+# rider tail, never an enemy).  The heal mage is pinned directly after
+# the wizard whose art it shares (dedup maps it onto the wizard slot),
+# so reskins never renumber anything.  Never reorder this list;
+# append-only.
+OW_ORDER_PINNED = ['bat', 'kobold', 'mimic', 'slime', 'slime_lord', 'spider',
+                   'dog', 'npc_guard', 'npc_mayor', 'npc_merchant',
+                   'npc_wizard', 'npc_heal_mage', 'slime_knight',
+                   'treasure_chest']
 
-# Hero overworld is always first in the OW blob at ENEMY_OW_BASE (100).
-# Hero has 1-2 frames; enemies follow after.
-HERO_OW_MAX_FRAMES = 2
+# Enemies precede riders in the shared OW blob (see ow_blob_layout);
+# riders append at the tail.  Never reorder the pinned list; append-only.
 
 
 def load_combat_art():
@@ -512,38 +518,38 @@ def build_battle_screens_output(battle_screens, enemy_types):
     return "\n".join(lines)
 
 
-def ow_blob_layout(enemy_types, hero_json=None, rider_types=None):
+def _find_cell_run(cells, names):
+    """Offset of an existing contiguous run of `names` in `cells`, or None.
+
+    Lets reskins share art bytes instead of spending a blob slot each:
+    npc_heal_mage reuses the npc_wizard tile with its own OBJ ramp, so
+    the sorted tail stays put and the 28-tile hard budget survives one
+    more reskin.  Only exact full-list runs match (same bytes, same
+    order); partial overlaps append normally.  Order-independent: the
+    later type reuses the earlier type's slot whichever sorts first."""
+    n = len(names)
+    if n == 0:
+        return None
+    for i in range(len(cells) - n + 1):
+        if cells[i:i + n] == names:
+            return i
+    return None
+
+
+def ow_blob_layout(enemy_types, rider_types=None):
     """Shared overworld blob layout: returns (offsets, cells) where offsets
     maps id -> blob tile offset and cells is the ordered tile-name
-    list (hero first, then the pinned prefix OW_ORDER_PINNED, then any
-    remaining ids in sorted order: append-only, pinned tiles never move).
+    list (pinned prefix OW_ORDER_PINNED, then any remaining ids in sorted
+    order: append-only, pinned tiles never move; identical cell runs are
+    shared, never duplicated).
     Overworld sprites may be multi-tile grids (width*height cells per frame,
     frame-major): each type contributes width*height*frames cells, and the
     per-type base is the cumulative tile offset.
     Returns (None, None) on budget overflow (error already printed)."""
-    # Hero always comes first
     offsets = {}
     cells = []
     at = 0
-    
-    if hero_json is not None:
-        hero_ow = hero_json.get('overworld') or None
-        if hero_ow is not None:
-            names = hero_ow.get('cells', [])
-            w = hero_ow.get('width', 1) or 1
-            h = hero_ow.get('height', 1) or 1
-            if len(names) % (w * h) != 0:
-                print("WARNING: hero: overworld.cells has %d entries, not a multiple of width*height=%d" % (len(names), w * h))
-            for name in names:
-                if name not in HERO_TILE_COORDS:
-                    print("WARNING: hero: unknown overworld tile '%s'" % name)
-            pal = hero_json['overworld'].get('palette', 0)
-            if isinstance(pal, int) and not (0 <= pal <= 7):
-                print("WARNING: hero: overworld.palette %s out of 0-7" % pal)
-            offsets['hero'] = at
-            cells.extend(names)
-            at += len(names)
-    
+
     # Enemies in pinned-prefix order, then any unlisted ids sorted:
     # new content appends at the tail and can never shift pinned tiles.
     # Rider HUD icons (screens/rider_icons.json: per-card OAM, not
@@ -575,6 +581,10 @@ def ow_blob_layout(enemy_types, hero_json=None, rider_types=None):
         pal = ow.get('palette', 0)
         if isinstance(pal, int) and not (0 <= pal <= 7):
             print("WARNING: %s: overworld.palette %s out of 0-7" % (et_id, pal))
+        reuse = _find_cell_run(cells, names)
+        if reuse is not None:
+            offsets[et_id] = reuse
+            continue
         offsets[et_id] = at
         cells.extend(names)
         at += len(names)
@@ -585,7 +595,7 @@ def ow_blob_layout(enemy_types, hero_json=None, rider_types=None):
     return offsets, cells
 
 
-def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json=None,
+def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
                            rider_types=None):
     """Generate C code for enemy type definitions + hero data."""
     lines = []
@@ -602,34 +612,18 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     lines.append('#include "game_ids.h"')
     lines.append("")
 
-    # Hero data (first in OW blob)
-    lines.append("/* Hero overworld sprite data (shared, type-owned) */")
-    if hero_json is not None:
-        hero_ow = hero_json.get('overworld') or None
-        if hero_ow is not None:
-            names = hero_ow.get('cells', [])
-            pal = hero_json['overworld'].get('palette', 0)
-            lines.append("const uint8_t g_hero_ow_tile = %d;" % ENEMY_OW_BASE)
-            lines.append("const uint8_t g_hero_ow_frames = %d;" % len(hero_ow.get('cells', [])))
-            lines.append("const uint8_t g_hero_ow_palette = %d;"
-                         % resolve_obj_palette(pal, "hero overworld.palette"))
-        else:
-            lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
-            lines.append("const uint8_t g_hero_ow_frames = 0;")
-            lines.append("const uint8_t g_hero_ow_palette = 0;")
-    else:
-        lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
-        lines.append("const uint8_t g_hero_ow_frames = 0;")
-        lines.append("const uint8_t g_hero_ow_palette = 0;")
-    lines.append("")
-
     # Enemy type definitions
+    # (No hero globals: the hero loads its own 2 tiles via
+    # HERO_DESOLATE_SPRITE_TILE_ID and never reads this blob, so the
+    # g_hero_ow_* row was dead -- and its vestigial hero-first layout
+    # path once over-counted the blob budget by 2 and shipped a
+    # sheet-order blob.  The blob is enemies + tail riders only.)
     cat_map = {'minion': 0, 'elite': 1, 'boss': 2}
 
     et_ids = sorted(enemy_types.keys())
-    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, None)  # hero handled separately
+    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
     if ow_offsets is None:
-        return None
+        return None, None
     for et_id in et_ids:
         ow = (enemy_types[et_id].get('overworld') or None)
         if ow is not None and et_id in ow_offsets:
@@ -704,16 +698,12 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     lines.append("")
     # Shared overworld blob size (tiles) for the ui_init OAM stream.
     # Enemies only: the hero overworld sprite is loaded separately via
-    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob, so the blob
-    # and g_enemy_ow_tile_count must not include hero cells (they would
-    # shift every enemy ow_tile offset in battle_types.c by 2).  Rider HUD
+    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob.  Rider HUD
     # icons ride the same stream at the blob tail, so the count DOES
-    # include them (enemy ow_tile values are rider-free and unaffected:
-    # riders append after every enemy).
-    _ow_all, _ow_all_cells = ow_blob_layout(enemy_types, None, rider_types)
-    if _ow_all is None:
-        return None, None
-    _ow_enemy = len(_ow_all_cells) if _ow_all_cells is not None else 0
+    # include them.  Reuses the single layout computed above (one call:
+    # riders append after every enemy, so enemy offsets are identical
+    # either way and a rider-driven overflow is still caught).
+    _ow_enemy = len(_ow_cells) if _ow_cells is not None else 0
     # NOTE: g_enemy_ow_tile_count is intentionally NOT emitted here.
     # battle_types.c lives in bank 4 while the blob (enemy_ow_tiles.h)
     # lives in bank 8; ui_sprite_init() reads the count through
@@ -798,7 +788,7 @@ def build_rider_output(enemy_types, rider_types):
     if not rider_types:
         sys.stderr.write("ERROR: missing rider HUD declaration\n")
         return None
-    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, None, rider_types)
+    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
     if ow_offsets is None:
         return None
     lines = []
@@ -1341,7 +1331,9 @@ def main(args=None):
     if hud is None:
         return 1
 
-    # Load hero.json for OW blob
+    # Load hero.json for the starter-deck table (hero_content.c) and the
+    # hero.json content checks below -- never for the OW blob (the hero
+    # loads its own tiles and shares no blob slots with enemies).
     hero_json = None
     hero_path = REPO_ROOT / "screens" / "hero.json"
     if hero_json is None and hero_path.exists():
@@ -1354,6 +1346,9 @@ def main(args=None):
             for frame in ['frame0', 'frame1']:
                 for (x, y) in set_frame_cells(art_sets[sid], frame):
                     coords.append("%d,%d" % (x, y))
+        if not coords:
+            print("ERROR: --gfx-coords produced no tiles", file=sys.stderr)
+            return 1
         print(" ".join(coords))
         return 0
 
@@ -1436,28 +1431,26 @@ def main(args=None):
         return 0
 
     if args.ow_coords:
-        # Enemies only: the hero overworld sprite is loaded separately via
-        # HERO_DESOLATE_SPRITE_TILE_ID (not from this blob), so prepending
-        # hero cells here would shift every enemy OAM offset by the hero's
-        # tile count and break the ow_tile values in battle_types.c (which
-        # are computed hero-excluded by ow_blob_layout).  The blob order
-        # must match battle_types.c exactly: sorted enemy-id order, riders
-        # appended at the tail (same tail rule as ow_blob_layout).
+        # Enemies + tail riders only: the hero overworld sprite is loaded
+        # separately via HERO_DESOLATE_SPRITE_TILE_ID and never from this
+        # blob (its vestigial hero-first layout path once over-counted the
+        # budget by 2 and, swallowed by the Makefile $(...) substitution,
+        # shipped a sheet-order blob that scrambled every OAM sprite while
+        # all tile-id assertions stayed green).  The blob order must match
+        # battle_types.c exactly: sorted enemy-id order, riders appended
+        # at the tail (same tail rule as ow_blob_layout).
         _rider_types = load_rider_types()
         if _rider_types is None:
             return 1
-        _offsets, names = ow_blob_layout(enemy_types, hero_json, _rider_types)
+        _offsets, names = ow_blob_layout(enemy_types, _rider_types)
         if names is None:
             return 1
         coords = []
-        hero_cells = []
-        if hero_json is not None:
-            hero_ow = hero_json.get('overworld') or None
-            if hero_ow is not None:
-                hero_cells = hero_json['overworld'].get('cells', [])
         for n in names:
-            if n not in hero_cells:
-                coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --ow-coords produced no tiles", file=sys.stderr)
+            return 1
         print(" ".join(coords))
         return 0
 
@@ -1467,7 +1460,7 @@ def main(args=None):
     if rider_types is None:
         return 1
     enemy_types_output, ow_count = build_enemy_types_output(
-        enemy_types, art_sets, art_order, art_offsets, hero_json,
+        enemy_types, art_sets, art_order, art_offsets,
         rider_types)
     if enemy_types_output is None:
         return 1
@@ -1521,6 +1514,25 @@ def main(args=None):
             if committed is None or committed != fresh:
                 print("DRIFT: fresh compile differs from %s" % path, file=sys.stderr)
                 return 1
+        # Cross-artifact guard: src/gfx/enemy_ow_tiles.h is emitted by
+        # png2gb (gfx rule), not here, so drift above cannot catch a blob
+        # generated with the wrong tile order/count (a swallowed
+        # --ow-coords error once shipped a sheet-order blob that
+        # scrambled every OAM sprite while every byte-check passed).
+        # The header must hold exactly ow_count tiles (16 bytes each).
+        _blob_path = REPO_ROOT / "src" / "gfx" / "enemy_ow_tiles.h"
+        try:
+            _blob_text = _blob_path.read_text(encoding="utf-8")
+            _m = re.search(r"enemy_ow_tiles\[(\d+)\]", _blob_text)
+            _blob_bytes = int(_m.group(1)) if _m else -1
+        except (OSError, ValueError):
+            _blob_bytes = -1
+        if _blob_bytes != ow_count * 16:
+            print("DRIFT: %s holds %d bytes, expected %d (ow_count %d tiles); "
+                  "re-run make gfx" % (_blob_path, _blob_bytes,
+                                        ow_count * 16, ow_count),
+                  file=sys.stderr)
+            return 1
         print("battle compile --check OK: %s, %s, %s, %s, %s, %s, %s and %s match fresh output"
               % (battle_obj_path, battle_glow_path, battle_screens_path, battle_types_path,
                  ow_count_path, hero_content_path, card_skin_path, hud_skin_path))

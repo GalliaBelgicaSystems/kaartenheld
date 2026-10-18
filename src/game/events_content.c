@@ -1,5 +1,6 @@
 #include "event.h"
 #include "game_ids.h"
+#include "audio.h"
 
 /* ── Event table (game content, banked ROM) ────────────────────────
  * Compiled into MBC5 ROM bank GAME_CONTENT_BANK (the `#pragma bank 2`
@@ -225,8 +226,13 @@ const EventDefinition g_events[] = {
      * still counts the kill) reveals the crew inside: the full
      * sentence in a dialogue box (no banner truncation), then the
      * knight's runtime slot becomes a slime-trio encounter in place
-     * (EVENT_ACTION_SPAWN_SLIME_TRIO, arg0 = slime ow_type 8 --
+     * (EVENT_ACTION_SPAWN_SLIME_TRIO, arg0 = slime ow_type 9 --
      * drift-checked by validate.py --spawn-refs, never hand-synced).
+     * NOTE: this is the g_enemy_types TABLE index (plain sorted order),
+     * not the blob tile -- the table has one row per type even when two
+     * types share art (heal mage shares the wizard tile but keeps its
+     * own red-ramp row), so table indices still shift on new types
+     * while blob tiles stay put.
      * One-shot by construction (the knight's defeat is persistent;
      * trio kills never re-match this row).  The trio is dynamic
      * (actor_id 0, untracked): it despawns on reload like all runtime
@@ -238,7 +244,26 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_KNIGHT_SPLIT, 0, 0 },
-            { EVENT_ACTION_SPAWN_SLIME_TRIO, 8, 0, 0 }
+            { EVENT_ACTION_SPAWN_SLIME_TRIO, 9, 0, 0 }
+        }
+    },
+    /* ── Village Heal Mage ─────────────────────────────────────────
+     * Talking to the red-robed mage restores the whole party to full
+     * HP, plays the chest-loot jingle, and briefs the player on ring
+     * healing (the merchant in the same village sells the wood ring).
+     * Unconditional: free repeatable healing, no flags consumed, so a
+     * hurt player can always walk back and top up.  The jingle is the
+     * stock MUSIC_CHEST one-shot and restores the town track through
+     * the normal bank-8 clock, exactly like a chest loot. */
+    {
+        EVENT_ID_HEAL_MAGE, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        3,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_HEAL_MAGE, 0, 0 },
+            { EVENT_ACTION_HEAL_FULL, 0, 0, 0 },
+            { EVENT_ACTION_PLAY_MUSIC, MUSIC_CHEST, 0, 0 }
         }
     }
 };

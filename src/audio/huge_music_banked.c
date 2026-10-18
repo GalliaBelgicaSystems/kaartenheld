@@ -12,6 +12,12 @@
  * 6 s window from the top.  Same bank: plain extern, no trampoline. */
 extern uint16_t g_title_frames;
 
+/* Chest-jingle edge clock (same bank-8 BSS): reset here on every
+ * MUSIC_CHEST dispatch so a re-triggered jingle (the repeatable Heal
+ * Mage replays it mid-tail) gets its full restore window instead of
+ * inheriting a stale count. */
+extern volatile uint8_t g_jingle_frames;
+
 /* ── Track mapping body (bank-8) ────────────────────────────────────
  * Dispatched by audio_play_music() through the WRAM trampoline (the
  * fixed bank is full, §52.18).  PURE mapping: stop-inline (sound regs
@@ -72,6 +78,7 @@ void music_play_banked(void)
     } else if (track == MUSIC_CHEST) {
         song = &song_chest_opening;
         bank = HUGE_MUSIC_BANK_B7;
+        g_jingle_frames = 0;
     } else if (track == MUSIC_DESOLATE) {
         song = &song_desolate_landscape;
     } else if (track == MUSIC_FOREST) {

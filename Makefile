@@ -154,16 +154,26 @@ gfx: manifest
 	# then frame1 per set); the compiler also emits per-set blob offsets
 	# into battle_types.c, so the loader needs no fixed set size.
 	# Sheet layout: see tools/compose_battle_sprites.py.
-	@python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
-		--shade-map generated/tiles/shades/battle.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
+	# The coords subshell must not fail silently: an erroring compiler
+	# prints to stderr but captures empty stdout, and png2gb would then
+	# generate a sheet-order blob (every OAM sprite wrong art, all
+	# tile-id assertions still green).  Fail loudly instead.
+	@BATTLE_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords) || { echo "FATAL: battle_compile --gfx-coords failed" >&2; exit 1; }; \
+	[ -n "$$BATTLE_COORDS" ] || { echo "FATAL: battle_compile --gfx-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
+		--shade-map generated/tiles/shades/battle.json --tile-coords "$$BATTLE_COORDS" \
 		-o $(GFX_OUT_DIR)/battle_enemy_art.h
 	# ── Shared overworld enemy sprites (assets/enemy_sprites.png) ──
 	# One transparent-background sprite per enemy type, shared by every
 	# world. Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
 	# Sheet layout: see tools/compose_enemy_sprites.py.
-	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+	# Same fail-loud rule as above (an over-budget blob once shipped a
+	# sheet-order enemy_ow_tiles.h that scrambled every OAM sprite).
+	@OW_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ow-coords) || { echo "FATAL: battle_compile --ow-coords failed" >&2; exit 1; }; \
+	[ -n "$$OW_COORDS" ] || { echo "FATAL: battle_compile --ow-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png) ──
 	# Full world sheet (g_tileset_desolate)
@@ -959,8 +969,9 @@ vram-dialogue: release
 
 # Print a reproducible memory budget (code/WRAM usage, _HOME headroom vs the
 # 0x8000 ceiling).  Exits non-zero if a documented invariant is violated.
-memmap: debug
+memmap: debug release
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld_debug.map
+	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
 
 clean:
 	rm -rf $(BUILD_DIR) $(GENERATED_MUSIC_DIR)

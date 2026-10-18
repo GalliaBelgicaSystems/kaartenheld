@@ -1,0 +1,118 @@
+{
+  "name": "heal_mage",
+  "test": true,
+  "description": "Village Heal Mage: talking to the red-robed mage (12,10) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), and briefs on ring healing. 8-line dialogue in 3 pages = interact A + 3 page advances. The mage shares the wizard's OAM blob tile (dedup) with its own red ramp: OAM entry 9 shows tile 119.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 240
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "party_hp",
+      "expected": 10
+    },
+    {
+      "type": "event_occurred",
+      "event": "SCRIPT_TRIGGERED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "HEALED"
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 0,
+      "value": 7
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 1,
+      "value": 3
+    },
+    {
+      "type": "oam_tile",
+      "entry": 9,
+      "expected": 119
+    },
+    {
+      "type": "tilemap_cell",
+      "row": 10,
+      "col": 12,
+      "expected": 134
+    },
+    {
+      "type": "event_occurred",
+      "event": "MUSIC_CHANGED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_STARTED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_ENDED"
+    },
+    {
+      "type": "music_track",
+      "expected": "TOWN"
+    },
+    {
+      "type": "dialogue_active",
+      "expected": false
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_TOWN",
+    "player": {
+      "x": 12,
+      "y": 9,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 3,
+        "max_hp": 10
+      }
+    },
+    "seed": 1007,
+    "flags": {
+      "ARRIVED_TOWN": true
+    }
+  }
+}

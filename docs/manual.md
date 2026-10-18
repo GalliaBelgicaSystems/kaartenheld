@@ -236,6 +236,8 @@ kind). And a Ring never hits the monster: it heals you instead.
 - **Freeze** is nasty: a frozen fighter **misses a whole turn!**
 - When you are **poisoned**, a couple of your cards turn grey and cannot be
   used until the poison wears off.
+- Badly hurt between fights? Find the red-robed **Heal Mage** in town —
+  talking to him restores all your HP for free, with a happy little jingle.
 
 ---
 

@@ -395,6 +395,13 @@
         "width": 1,
         "height": 1,
         "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 12,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
       }
     ]
   },
@@ -519,6 +526,30 @@
         "gold_reward": 0,
         "ai": "AI_NONE",
         "enemy_type": "npc_wizard"
+      }
+    },
+    {
+      "id": "town_heal_mage",
+      "type": "npc",
+      "position": {
+        "x": 12,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_HEAL_MAGE",
+        "display_name": "HEAL MAGE",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "W",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_heal_mage"
       }
     },
     {

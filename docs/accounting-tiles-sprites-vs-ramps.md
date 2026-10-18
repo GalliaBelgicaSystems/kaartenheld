@@ -85,6 +85,7 @@
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
+| npc_heal_mage | npc_wizard | sprites8 (7) | ✓ |
 | npc_mayor | npc_mayor | sprites8 (7) | ✓ |
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
 | npc_wizard | npc_wizard | sprites7 (5) | ✓ |

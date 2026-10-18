@@ -214,8 +214,10 @@ def main():
         # Blob order (battle_compile --ow-coords): bat 0, kobold 2, mimic 4,
         # slime 6, boss 8, spider 12, dog 14, NPC guard 16, mayor 17,
         # merchant 18, wizard 19 (append-only; pinned prefix never moves).
+        # The heal mage shares the wizard tile (deduped identical cells,
+        # own OBJ ramp), so it adds no blob slot.
         for blob_idx, vram_base, label in (
-                (2, 0x8660, "bat"), (16, 0x8740, "npc_guard"),
+                (2, 0x8660, "kobold"), (16, 0x8740, "npc_guard"),
                 (17, 0x8750, "npc_mayor"), (18, 0x8760, "npc_merchant"),
                 (19, 0x8770, "npc_wizard")):
             want = ow_blob_tile_bytes(blob_idx)

@@ -132,7 +132,9 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 11: "AMULET_PICKUP",
                 GAME_ID_BASE + 12: "TUTORIAL_COMPLETE",
                 GAME_ID_BASE + 13: "FIELD_CHEST",
-                GAME_ID_BASE + 14: "MERCHANT_REMINDER"}
+                GAME_ID_BASE + 14: "MERCHANT_REMINDER",
+                GAME_ID_BASE + 15: "KNIGHT_SPLIT",
+                GAME_ID_BASE + 16: "HEAL_MAGE"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -149,6 +151,14 @@ ACTOR_INFO_MAP = {
     "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
+    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE", "battle": "NONE"},
+    "CARL":        {"visual": "C", "hostile": True, "interaction": "COMBAT", "dialogue": "TUTORIAL_CARL_INTRO", "battle": "CARL"},
+    "CHEST":       {"visual": "T", "hostile": False, "interaction": "NONE", "dialogue": "NONE", "battle": "NONE"},
+    "DOG":         {"visual": "?", "hostile": False, "interaction": "NONE", "dialogue": "DOG_GREETING", "battle": "NONE"},
+    "KOBOLD":      {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "KOBOLD"},
+    "MIMIC":       {"visual": "T", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "MIMIC"},
+    "SPIDER":      {"visual": "S", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SPIDER"},
+    "SLIME_KNIGHT": {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME_KNIGHT"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's

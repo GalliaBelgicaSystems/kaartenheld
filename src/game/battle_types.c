@@ -9,11 +9,6 @@
 #include "battle_data.h"
 #include "game_ids.h"
 
-/* Hero overworld sprite data (shared, type-owned) */
-const uint8_t g_hero_ow_tile = 100;
-const uint8_t g_hero_ow_frames = 2;
-const uint8_t g_hero_ow_palette = 0;
-
 static const EnemyTypeDef g_enemy_type_bat = {
     "bat",
     "Bat",
@@ -123,6 +118,29 @@ static const EnemyTypeDef g_enemy_type_npc_guard = {
     0,
     0,
     116,
+    1,
+    1,
+    1,
+    7
+};
+
+static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
+    "npc_heal_mage",
+    "Heal Mage OW",
+    0,
+    "HEAL MAGE",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    119,
     1,
     1,
     1,
@@ -313,12 +331,13 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     1
 };
 
-const EnemyTypeDef* const g_enemy_types[13] = {
+const EnemyTypeDef* const g_enemy_types[14] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
     &g_enemy_type_kobold,
     &g_enemy_type_mimic,
     &g_enemy_type_npc_guard,
+    &g_enemy_type_npc_heal_mage,
     &g_enemy_type_npc_mayor,
     &g_enemy_type_npc_merchant,
     &g_enemy_type_npc_wizard,
@@ -328,4 +347,4 @@ const EnemyTypeDef* const g_enemy_types[13] = {
     &g_enemy_type_spider,
     &g_enemy_type_treasure_chest,
 };
-const uint8_t g_enemy_type_count = 13;
+const uint8_t g_enemy_type_count = 14;

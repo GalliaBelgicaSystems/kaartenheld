@@ -28,7 +28,8 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       CARD_AMULET,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
-                                      MUSIC_DUNGEON)
+                                      MUSIC_DUNGEON, MUSIC_TOWN,
+                                      MUSIC_CHEST)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 26
@@ -458,6 +459,27 @@ def walk_a(planner, checks, sram_out=None):
                True)
     s.check_eq("quest monster hunt active",
                s.reader.variable(VARIABLE_ID_QUEST_MONSTER_HUNT), 1)
+
+    # Heal Mage: red robe at (12,10), wizard sprite.  Hurt the hero via
+    # host poke (same pattern as god_mode: release ROM untouched), talk,
+    # page through, verify full restore + chest jingle + town-track
+    # restore.  Exercises the NPC on the release ROM (the harness covers
+    # the debug ROM in heal_mage.json).
+    r = s.reader
+    pbase = r.state + OFF_PARTY
+    s.pb.memory[pbase + CHARACTER_STATE_HP] = 5
+    s.check("heal mage dialogue opened",
+            bump_actor(s, planner, "town", (12, 9), "down", "HEAL MAGE:"),
+            expected="HEAL MAGE:", actual="none")
+    s.check_eq("chest jingle playing",
+               s.reader.music_track(), MUSIC_CHEST)
+    close_dialogue(s, "HEAL MAGE:")
+    _hero = s.reader.hero()
+    s.check_eq("heal mage restored HP", _hero["hp"], _hero["max_hp"])
+    s.check("town music restored",
+            s.wait_for(lambda: s.reader.music_track() == MUSIC_TOWN,
+                       ticks=400),
+            expected="MUSIC_TOWN", actual="restore")
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
     # then the amulet is fetched from the mountain pass and delivered

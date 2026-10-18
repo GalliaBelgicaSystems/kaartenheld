@@ -107,7 +107,11 @@ void audio_play_music(MusicTrack track)
     const hUGESong_t *song;
     uint8_t bank;
     extern void music_play_banked(void);
-    if (g_audio_current_track == track) return;
+    /* Loop tracks are idempotent, but one-shot tracks (chest jingle,
+     * title fanfare) restart when re-requested: the repeatable Heal
+     * Mage replays MUSIC_CHEST on every visit, even mid-jingle, and
+     * music_play_banked resets that jingle's restore clock. */
+    if (g_audio_current_track == track && track != MUSIC_CHEST && track != MUSIC_TITLE) return;
     if (!g_sound_enabled) return;
     /* Track -> (song, bank) resolves in the bank-8 body (fixed bank is
      * full); the MBC select + driver call stay fixed (a banked body

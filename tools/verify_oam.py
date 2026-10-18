@@ -233,9 +233,11 @@ def verify_battle_oam(sess):
 def verify_npc_sprites(sess):
     """Town NPCs render as OAM sprites with exact OBJ palettes, not BG
     overlay tiles: mayor/guard share OBJ 7 (sprites8), merchant OBJ 6
-    (sprites9).  Blob offsets append-only: guard 116, mayor 117,
-    merchant 118.  Order-insensitive set match over entries 1-12 (spawn
-    order may vary; ASCII shopkeeper takes no OAM entry)."""
+    (sprites9), heal mage OBJ 7 (sprites8) on the wizard's shared blob
+    slot.  Blob offsets append-only: guard 116, mayor 117, merchant
+    118, wizard + heal mage 119.  Order-insensitive set match over
+    entries 1-12 (spawn order may vary; ASCII shopkeeper takes no OAM
+    entry)."""
     print("== Town NPC OAM sprites ==")
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
@@ -248,7 +250,8 @@ def verify_npc_sprites(sess):
         if tile is not None and pal is not None:
             found.add((tile, pal))
     for label, tile, pal in (("mayor", 117, 7), ("guard", 116, 7),
-                             ("merchant", 118, 6)):
+                             ("merchant", 118, 6), ("heal_mage", 119, 7),
+                             ("wizard", 119, 5)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
 
