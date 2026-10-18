@@ -844,8 +844,12 @@ static uint8_t s_warned_blink;
 static void battle_combo_warn_text(const volatile Battle *battle)
 {
     uint8_t combo_row = g_battle_hud.combo_row;
+    uint8_t end;
     battle_draw_text_line(0, combo_row, "ENEMY DMG", 9);
-    battle_draw_num_compact(9, combo_row, battle->enemy_incoming_dmg);
+    end = (uint8_t)(9 + battle_draw_num_compact(9, combo_row, battle->enemy_incoming_dmg));
+    /* Tail blank (same hazard as the combo preview: the row is reused
+     * across phases with different content widths). */
+    battle_draw_text_line(end, combo_row, NULL, (uint8_t)(20 - end));
 }
 
 static void battle_draw_battle_combo(const volatile Battle *battle)
@@ -925,7 +929,19 @@ static void battle_combo_warn_blink(const volatile Battle *battle)
                 ui_font_tile_base);
         }
     } else {
+        /* Re-show: buffer and mirror still hold the text (deliberately
+         * untouched above), so the text path's skip-guard would swallow
+         * every write and the row would stay blank forever.  Paint the
+         * text (idempotent) then force VRAM from the buffer. */
+        char ch;
         battle_combo_warn_text(battle);
+        VBK_REG = 0;
+        for (r = 0; r < 20; r++) {
+            ch = g_ui_screen_buf[combo_row][r];
+            battle_vram_sync_write(
+                (volatile uint8_t *)(0x9800 + ((uint16_t)combo_row << 5) + r),
+                (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
+        }
     }
 }
 
