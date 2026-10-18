@@ -173,12 +173,15 @@ class Scene:
         return cells
 
     def breachable_cells(self):
-        """Stationary, non-solo hostile cells (waiting guardians like the
-        south slime knight): stepping on one starts a fight instead of
-        moving, which the walk ambush machinery (transit_fight + briefing
-        drain) wins through.  Solo bosses (the mimic) stay avoided: an
-        accidental boss pull would end the walk.  Patrol/chase halos and
-        non-hostile blockers are untouched."""
+        """Stationary hostile cells (waiting guardians like the south
+        slime knight): stepping on one starts a fight instead of
+        moving, which the walk ambush machinery (transit_fight +
+        briefing drain) wins through.  `solo` is presentation only
+        (single-enemy boss screen), not routability: even the solo
+        mimic is a safe transit fight (its victory ends nothing --
+        only SLIME_LORD sets ENDING_SHOWN), and Walk E engages it
+        deliberately anyway.  Patrol/chase halos and non-hostile
+        blockers are untouched."""
         cells = set()
         for obj in self.level.get("objects", []):
             props = obj.get("properties", {}) or {}
@@ -188,8 +191,6 @@ class Scene:
             if "HOSTILE" not in flags:
                 continue
             if props.get("ai", "AI_NONE") != "AI_NONE":
-                continue
-            if props.get("solo"):
                 continue
             pos = obj.get("position", {}) or {}
             cells.add((pos.get("x", -1), pos.get("y", -1)))

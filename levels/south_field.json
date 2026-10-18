@@ -545,7 +545,8 @@
         "gold_reward": 12,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME_KNIGHT",
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "solo": true
       }
     }
   ],

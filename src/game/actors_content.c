@@ -224,7 +224,7 @@ static const WorldActorDefinition g_south_field_actors[] = {
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'K', "SLIME KNIGHT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME_KNIGHT, AI_NONE, 15, 15, 12, CURRENCY_ID_GOLD,
         0, 0,
-         SPRITE_KIND_ENEMY, 10, 0
+         SPRITE_KIND_ENEMY, 10, 1
     },
 };
 
