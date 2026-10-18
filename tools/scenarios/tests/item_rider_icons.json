@@ -40,12 +40,12 @@
   {
    "type": "oam_tile",
    "entry": 3,
-   "expected": 124
+   "expected": 123
   },
   {
    "type": "oam_tile",
    "entry": 4,
-   "expected": 126
+   "expected": 125
   },
   {
    "type": "oam_tile",

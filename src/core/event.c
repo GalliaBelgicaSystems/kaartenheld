@@ -144,12 +144,15 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
              * party and stages the telemetry amount; the fixed bank
              * pays just the branch + call + emit.  Keeps engine files
              * free of game ids (AGENTS.md §55.1) and the fixed bank
-             * below 0x8000 (§52.18). */
+             * below 0x8000 (§52.18).  Emits only on a real restore,
+             * mirroring the battle HEALED sites (all gated on
+             * amount > 0): a full-HP visit still fires
+             * SCRIPT_TRIGGERED + DIALOGUE, just no HEALED. */
             g_bk_call_bank = 2;
             g_bk_call_target = (uint16_t)&heal_full_banked;
             banked_call_run();
 #ifdef DEBUG_BUILD
-            telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
+            if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
 #endif
         } else if (t == EVENT_ACTION_PLAY_MUSIC) {
             /* Heal Mage's chest-loot jingle (game content): play the

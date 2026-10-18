@@ -969,8 +969,9 @@ vram-dialogue: release
 
 # Print a reproducible memory budget (code/WRAM usage, _HOME headroom vs the
 # 0x8000 ceiling).  Exits non-zero if a documented invariant is violated.
-memmap: debug
+memmap: debug release
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld_debug.map
+	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
 
 clean:
 	rm -rf $(BUILD_DIR) $(GENERATED_MUSIC_DIR)

@@ -180,10 +180,11 @@ def main():
         "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
         "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
-        "_debug_snapshot_banked": "core snapshot builder (bank 2)",
+        "_heal_full_banked": "Heal Mage full restore (bank 2)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
         "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
-        "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
+        "_music_play_banked": "track -> song/bank resolve (bank 8)",
+        "_jingle_full_banked": "chest-jingle edge + restore clock (bank 8)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
         "_battle_card_undo_banked": "battle card undo (bank 3)",
@@ -257,10 +258,13 @@ def main():
             print(f"{sym:<28}: not found in .noi")
             ok = False
     print()
-    # No build-conditional trampoline targets remain: the last one
-    # (lesson_sync_banked) was unified inline when the debug fixed bank
-    # regained headroom.  The dict stays as the extension point.
+    # Debug-harness-only trampoline targets (absent from the release
+    # link): checked when present, skipped when absent, so the same
+    # gate runs against both build/kaartenheld_debug.map and
+    # build/kaartenheld.map.
     optional_banked_targets = {
+        "_debug_snapshot_banked": "core snapshot builder (bank 2)",
+        "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

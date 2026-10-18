@@ -228,6 +228,11 @@ const EventDefinition g_events[] = {
      * knight's runtime slot becomes a slime-trio encounter in place
      * (EVENT_ACTION_SPAWN_SLIME_TRIO, arg0 = slime ow_type 9 --
      * drift-checked by validate.py --spawn-refs, never hand-synced).
+     * NOTE: this is the g_enemy_types TABLE index (plain sorted order),
+     * not the blob tile -- the table has one row per type even when two
+     * types share art (heal mage shares the wizard tile but keeps its
+     * own red-ramp row), so table indices still shift on new types
+     * while blob tiles stay put.
      * One-shot by construction (the knight's defeat is persistent;
      * trio kills never re-match this row).  The trio is dynamic
      * (actor_id 0, untracked): it despawns on reload like all runtime

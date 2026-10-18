@@ -9,11 +9,6 @@
 #include "battle_data.h"
 #include "game_ids.h"
 
-/* Hero overworld sprite data (shared, type-owned) */
-const uint8_t g_hero_ow_tile = 100;
-const uint8_t g_hero_ow_frames = 2;
-const uint8_t g_hero_ow_palette = 0;
-
 static const EnemyTypeDef g_enemy_type_bat = {
     "bat",
     "Bat",
@@ -145,7 +140,7 @@ static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
     0,
     0,
     0,
-    117,
+    119,
     1,
     1,
     1,
@@ -168,7 +163,7 @@ static const EnemyTypeDef g_enemy_type_npc_mayor = {
     0,
     0,
     0,
-    118,
+    117,
     1,
     1,
     1,
@@ -191,7 +186,7 @@ static const EnemyTypeDef g_enemy_type_npc_merchant = {
     0,
     0,
     0,
-    119,
+    118,
     1,
     1,
     1,
@@ -214,7 +209,7 @@ static const EnemyTypeDef g_enemy_type_npc_wizard = {
     0,
     0,
     0,
-    120,
+    119,
     1,
     1,
     1,
@@ -260,7 +255,7 @@ static const EnemyTypeDef g_enemy_type_slime_knight = {
     3,
     2,
     78,
-    121,
+    120,
     1,
     1,
     1,
@@ -329,7 +324,7 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     0,
     0,
     0,
-    122,
+    121,
     1,
     1,
     2,

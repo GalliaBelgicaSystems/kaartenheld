@@ -251,11 +251,19 @@ def convert(path, name, palette_name="canonical", tile_coords=None, raw_inc=Fals
                                       f"not in the {palette_name} palette")
         return shades
 
-    if tile_coords:
+    # An explicitly passed --tile-coords (even "") means "this exact cell
+    # order": an empty list is a caller bug, never "encode everything".
+    # (A swallowed compiler error once piped "" here and silently emitted
+    # a sheet-order blob that scrambled every OAM sprite.)
+    if tile_coords is not None:
         coords_list = []
         for item in tile_coords.strip().split():
             parts = item.split(",")
             coords_list.append((int(parts[0]), int(parts[1])))
+        if not coords_list:
+            raise Png2GbError(asset, "tile-coords",
+                              "empty tile-coords list (tile-order compiler "
+                              "produced no tiles?)")
     else:
         coords_list = [(tx, ty) for ty in range(tiles_y) for tx in range(tiles_x)]
 

@@ -1,7 +1,7 @@
 {
   "name": "heal_mage",
   "test": true,
-  "description": "Village Heal Mage: talking to the red-robed mage (12,10) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), and briefs on ring healing. 7-line dialogue = interact A + 3 page advances. (The debug snapshot carries 4 actors max, so the 5th static's presence is unassertable here -- same as the save wizard in town_npc_sprites.)",
+  "description": "Village Heal Mage: talking to the red-robed mage (12,10) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), and briefs on ring healing. 8-line dialogue in 3 pages = interact A + 3 page advances. The mage shares the wizard's OAM blob tile (dedup) with its own red ramp: OAM entry 9 shows tile 119.",
   "actions": [
     {
       "type": "press",
@@ -52,6 +52,29 @@
     {
       "type": "event_occurred",
       "event": "HEALED"
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 0,
+      "value": 7
+    },
+    {
+      "type": "event_arg",
+      "event": "HEALED",
+      "index": 1,
+      "value": 3
+    },
+    {
+      "type": "oam_tile",
+      "entry": 9,
+      "expected": 119
+    },
+    {
+      "type": "tilemap_cell",
+      "row": 10,
+      "col": 12,
+      "expected": 134
     },
     {
       "type": "event_occurred",
