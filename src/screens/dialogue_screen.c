@@ -82,6 +82,15 @@ void dialogue_screen_render(Game *g)
         d->id == rc->prev_dialogue_id) {
         return;
     }
+    /* A follow-up dialogue opened in place (YES/NO decline path) changes
+     * the id without leaving the screen: take the full box path so the
+     * row-14 speaker header redraws too (same speaker today, but a
+     * future follow-up could rename it).  ui_draw_dialogue invalidates
+     * the covered buffer rows first, so the cross-domain skip hazard
+     * (AGENTS.md §52.25) does not apply. */
+    if (!first_enter && d->id != rc->prev_dialogue_id) {
+        first_enter = 1;
+    }
 
     if (first_enter) {
         /* From battle (or any non-overworld): full LCD-off redraw to

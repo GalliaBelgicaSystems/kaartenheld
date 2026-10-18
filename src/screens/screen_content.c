@@ -290,8 +290,8 @@ static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
     }
 }
 
-/* One-copy stock visible map (docs/loot.md §34.6): rebuilt every frame
- * (and right after a purchase) by shop_screen_update into WRAM; the
+/* One-copy stock visible map (docs/loot.md §34.6): rebuilt by the
+ * bank-2 render on every full redraw (entry, purchase) into WRAM; the
  * render and rider painters below only read it.  g_shop_vis_map[k] is
  * the stock position of the k-th visible (unowned) line,
  * g_shop_vis_count their number (0 = out of stock).  WRAM is always
@@ -445,9 +445,10 @@ void shop_content_render(void)
         sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
         sc_draw_text(12, s_sc_y, s_sc_str, 4);
         /* Gold price in plain font capitals (no coin tile): the semantic
-         * buffer keeps ASCII 'G' and VRAM shows the font glyph. */
+         * buffer keeps ASCII 'G' and VRAM shows the font glyph on the
+         * default paper slot, matching the price digits (the gold CRAM
+         * slot renders black ink, not the text brown). */
         sc_put_char(16, s_sc_y, 'G');
-        sc_color_span(16, s_sc_y, 1, UI_COLOR_GOLD);
     }
 
     sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);

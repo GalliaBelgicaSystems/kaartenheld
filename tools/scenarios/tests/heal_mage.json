@@ -59,6 +59,10 @@
       "event": "HEALED"
     },
     {
+      "type": "event_occurred",
+      "event": "STORY_FLAG_SET"
+    },
+    {
       "type": "event_arg",
       "event": "HEALED",
       "index": 0,

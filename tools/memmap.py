@@ -180,7 +180,7 @@ def main():
         "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
         "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
-        "_heal_full_banked": "Heal Mage full restore (bank 2)",
+        "_dialogue_choice_nav_banked": "dialogue YES/NO nav + resolve (bank 5)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
         "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_music_play_banked": "track -> song/bank resolve (bank 8)",
@@ -265,6 +265,7 @@ def main():
     optional_banked_targets = {
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
+        "_debug_action_leaf_banked": "debug-action leaf cases (bank 5)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

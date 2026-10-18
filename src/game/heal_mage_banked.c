@@ -16,17 +16,18 @@
  *
  * The engine owns the choice UI contract (last line "> YES   NO",
  * cursor cells 0/7); this game-owned body owns what an answer means.
- * UP/DOWN toggles the answer and repaints the cursor cells inline
+ * UP/DOWN/LEFT/RIGHT toggles the answer and repaints the cursor cells inline
  * (scroll-aware through the ring, exactly like ui_draw_dialogue_line,
  * with the buffer-checked skip).  A/START confirms:
  *   - ASK + NO  -> the mage declines (the fixed wrapper opens the
  *                  follow-up; nothing is set, so the mage asks again).
- *   - ASK + YES -> full-party restore (the heal_full_banked loop,
- *                  inlined: that body lives in bank 2 and a banked body
- *                  must never call across banks) + HEAL_MAGE_USED bit
- *                  (game_flag_set's bit math, inlined: fixed-bank call).
- *                  The fixed wrapper owes the jingle plus the HEALED /
- *                  STORY_FLAG_SET telemetry from the staged amounts.
+ *   - ASK + YES -> full-party restore loop (kept bank-local: a banked
+ *                  body must never call across banks).  The fixed wrapper
+ *                  marks HEAL_MAGE_USED through the real flag API (which
+ *                  owns both the bit and the STORY_FLAG_SET telemetry);
+ *                  the flag id is staged for it below.  The ASK row only
+ *                  matches while USED is clear, so reaching here with it
+ *                  set is unreachable.
  *   - other choice dialogue + either answer -> plain confirm (no game
  *                  effect; future choice dialogues reuse the UI free).
  *
@@ -65,7 +66,6 @@ void dialogue_choice_nav_banked(void)
     uint8_t row_y;
     uint8_t mi;
     uint8_t restored;
-    uint8_t f;
     uint8_t on_last_page;
 
     /* Choice UI is only live on the last page of an unconfirmed YES/NO
@@ -84,7 +84,9 @@ void dialogue_choice_nav_banked(void)
     }
     /* Pressed edges in one pass (item_quest_nav_banked idiom). */
     edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
-    if (edges & (uint8_t)((1u << INPUT_UP) | (1u << INPUT_DOWN))) {
+    /* The option row reads "> YES   NO" left-to-right: all four D-pad
+     * directions toggle (one compile-time immediate, no extra ROM). */
+    if (edges & (uint8_t)((1u << INPUT_UP) | (1u << INPUT_DOWN) | (1u << INPUT_LEFT) | (1u << INPUT_RIGHT))) {
         if (!g_game.dialogue.line_count) {
             g_bk_byte_a = 0;
             return;
@@ -113,15 +115,11 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_DECLINED;
             return;
         }
-        /* YES: full restore (heal_full_banked loop, same-bank inline)
-         * + USED bit (game_flag_set math, fixed-bank call inlined).
-         * The ASK row only matches while USED is clear, so a set bit
-         * here is unreachable; treat it as a plain confirm. */
-        f = (uint8_t)(STORY_FLAG_ID_HEAL_MAGE_USED - 1);
-        if (g_game.state.flags.bytes[(uint8_t)(f >> 3)] & (uint8_t)(1u << (f & 7))) {
-            g_bk_byte_a = 2;
-            return;
-        }
+        /* YES: full restore loop (bank-local: a banked body must never
+         * call across banks). USED is set by the fixed wrapper through
+         * game_flag_set (which owns the STORY_FLAG_SET telemetry);
+         * setting the bit here as well would make that call a silent
+         * no-op and lose the event (AGENTS.md §8). */
         restored = 0;
         for (mi = 0; mi < g_game.state.party.count; mi++) {
             if (g_game.state.party.members[mi].hp < g_game.state.party.members[mi].max_hp) {
@@ -131,7 +129,6 @@ void dialogue_choice_nav_banked(void)
                 g_game.state.party.members[mi].hp = g_game.state.party.members[mi].max_hp;
             }
         }
-        g_game.state.flags.bytes[(uint8_t)(f >> 3)] |= (uint8_t)(1u << (f & 7));
         g_bk_byte_a = 4;
         g_bk_byte_b = restored;
         g_bk_byte_c = STORY_FLAG_ID_HEAL_MAGE_USED;

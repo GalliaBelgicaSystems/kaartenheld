@@ -113,33 +113,20 @@ const EventDefinition g_events[] = {
      * atomically with the AMULET grant, like FIELD_CHEST): the chest
      * sprite and the chest jingle key off the flag, never the quest
      * variable, so accepting early neither opens the chest art nor
-     * plays the jingle.
-     *
-     * Finding the amulet unlocks the shop: the first talk while
-     * holding it matches SEEN (more specific first), which sets
-     * AMULET_SHOWN and starts NO dialogue -- so the interaction falls
-     * through to the merchant's SHOP.  The next talk matches DELIVER
-     * (thanks, +15 gold, amulet removed, quest complete); after that
-     * no merchant event matches and the shop stays open.  The same
-     * fallback is blocked mid-quest by REMINDER below.  (AMULET_PICKUP
-     * always sets QUEST=1, so the QUEST cond is redundant on the
-     * amulet rows and the 2-cond cap holds.) */
-    {
-        EVENT_ID_MERCHANT_SEEN, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
-        2,
-        {
-            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 1, false, true },
-            { EVENT_COND_FLAG, STORY_FLAG_ID_AMULET_SHOWN, 0, false, false }
-        },
-        1,
-        {{ EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_SHOWN, 0, 0 }}
-    },
+     * plays the jingle.  DELIVER must precede INTRO (more specific
+     * first): the first talk holding the amulet delivers it (thanks,
+     * +15 gold, amulet removed, quest complete) before any shop
+     * opens.  After delivery no merchant event matches, so the
+     * interaction falls back to the merchant's SHOP interaction; the
+     * same fallback is blocked mid-quest by REMINDER below.  Finding
+     * the amulet is what unlocks the shop: pickup sets QUEST=1, so no
+     * briefing detour stands between the find and the delivery. */
     {
         EVENT_ID_MERCHANT_DELIVER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         2,
         {
             { EVENT_COND_ITEM_COUNT, CARD_AMULET, 1, false, true },
-            { EVENT_COND_FLAG, STORY_FLAG_ID_AMULET_SHOWN, 0, true, false }
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false }
         },
         4,
         {

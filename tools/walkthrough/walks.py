@@ -487,9 +487,9 @@ def walk_a(planner, checks, sram_out=None):
             expected="MUSIC_TOWN", actual="restore")
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
-    # then the amulet is fetched from the mountain pass.  Finding it
-    # unlocks the merchant's merged shop (ring included); delivering it
-    # on the talk after completes the quest for +15g.  The merchant
+    # then the amulet is fetched from the mountain pass.  Delivering it
+    # completes the quest for +15g and opens the merchant's merged shop
+    # (ring included).  The merchant
     # lives in the village area (east of town); the INTRO is one page,
     # like the mayor's.
     follow(s, planner, "town", s.pos(), "village_area", (10, 4))
@@ -519,17 +519,11 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("amulet in collection",
                s.reader.collection_count(CARD_AMULET), 1)
 
-    # Back to the village: the first talk holding the amulet opens the
-    # shop (SEEN); the talk after delivers (thanks + 15g, amulet
-    # removed, quest COMPLETE).
+    # Back to the village: the talk holding the amulet delivers it
+    # (thanks + 15g, amulet removed, quest COMPLETE), which opens the
+    # shop on the talk after.
     follow(s, planner, "mountain_pass", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
-    s.check("shop opens on find",
-            bump_actor(s, planner, "village_area", (10, 4), "down", "SHOP"),
-            expected="SHOP", actual="none")
-    s.press_until("b", lambda: s.stable(
-        lambda: not s.text_has("SHOP"), frames=30),
-        label="shop close pre-delivery")
     s.check("deliver dialogue opened",
             bump_actor(s, planner, "village_area", (10, 4), "down",
                        "You found it!"),
@@ -543,8 +537,8 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15),
             actual=str(s.reader.gold()))
 
-    # Merged shop (village merchant, unlocked by finding the amulet and
-    # completed by the delivery): one-copy ring + bow stock.  The ring
+    # Merged shop (village merchant, opened by delivering the amulet):
+    # one-copy ring + bow stock.  The ring
     # is the first row; buying hides it and the bow slides up.
     s.check("shop opened",
             bump_actor(s, planner, "village_area", (10, 4), "down", "SHOP"),

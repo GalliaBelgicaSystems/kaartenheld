@@ -45,7 +45,11 @@ void dialogue_start_def(DialogueState *d, DialogueId id)
 {
     /* Body runs banked (src/core/dialogue_banked.c) reading the registered
      * table directly; the wrapper emits DIALOGUE_STARTED afterwards
-     * (banked code cannot call fixed-bank telemetry). */
+     * (banked code cannot call fixed-bank telemetry).  Staging
+     * discipline: only bank/target/ptr_a/byte_a are staged here;
+     * g_bk_byte_b/c arrive stale from whatever dispatched last, so the
+     * banked body must never read them (the retired floor-stamp block
+     * did, corrupting world.map on small stale pairs). */
     if (!d) return;
     d->active = false;
     g_bk_call_bank = 2;

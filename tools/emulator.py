@@ -48,7 +48,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "AMULET_SHOWN"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -135,8 +135,7 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 14: "MERCHANT_REMINDER",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
-                GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
-                GAME_ID_BASE + 18: "MERCHANT_SEEN"}
+                GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -153,7 +152,7 @@ ACTOR_INFO_MAP = {
     "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
-    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE", "battle": "NONE"},
+    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE_ASK", "battle": "NONE"},
     "CARL":        {"visual": "C", "hostile": True, "interaction": "COMBAT", "dialogue": "TUTORIAL_CARL_INTRO", "battle": "CARL"},
     "CHEST":       {"visual": "T", "hostile": False, "interaction": "NONE", "dialogue": "NONE", "battle": "NONE"},
     "DOG":         {"visual": "?", "hostile": False, "interaction": "NONE", "dialogue": "DOG_GREETING", "battle": "NONE"},
@@ -221,7 +220,7 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "AMULET_SHOWN": 6}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}

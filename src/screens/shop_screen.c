@@ -23,8 +23,9 @@ static const ShopDefinition *shop_active(const Game *g)
 }
 
 /* One-copy stock (docs/loot.md §34.6): a line is visible only while the
- * player owns no copy of its card.  Buying the ring/bow hides its row;
- * selling it back (card merchant) re-opens the row.  The cursor
+ * player owns no copy of its card.  Buying the ring/bow hides its row
+ * for good (curated shop cards are not loot-sellable, so no sell-back
+ * re-opens it).  The cursor
  * addresses VISIBLE positions (dense from row 5).  The visible map is
  * rebuilt by the bank-2 render on every full redraw (entry, purchase)
  * into WRAM (g_shop_vis_map, owned by screen_content.c); this update
@@ -67,7 +68,7 @@ void shop_screen_update(Game *g)
             shop_menu_step(g, (uint8_t)(g->item_menu_index - 1));
         } else if (input_pressed(INPUT_DOWN) && (uint8_t)(g->item_menu_index + 1) < vis_count) {
             shop_menu_step(g, (uint8_t)(g->item_menu_index + 1));
-        } else if (input_pressed(INPUT_A) && g->item_menu_index < vis_count) {
+        } else if (input_pressed(INPUT_A) && def && g->item_menu_index < vis_count) {
             CardId card_id = def->items[g_shop_vis_map[g->item_menu_index]];
             const CardDefinition *card = card_get_def(card_id);
             uint8_t price = card ? card->price : 0;

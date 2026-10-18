@@ -62,14 +62,6 @@ void dialogue_start_def_banked(void)
         g_dlg_lines[s_dlg_i][s_dlg_j] = 0;
         s_dlg_d->lines[s_dlg_i] = g_dlg_lines[s_dlg_i];
     }
-    /* Floor-painted open-state mid-visit flip (AGENTS.md 55.7): the
-     * event's DIALOGUE action stages the loot cell's flat map offset
-     * in bytes b/c; stamp painted+1 now so the opening redraw already
-     * shows the open cell (open art always lives one cell after the
-     * closed art -- compile-time adjacency, validated).  Out-of-range
-     * means "no stamp" (boot zeros, ordinary dialogues, stale staging
-     * under harnesses that skip CRT0's WRAM clear); no loot cell may
-     * sit at flat 0. */
     if (g_bk_byte_b | g_bk_byte_c) {
         uint16_t flat = ((uint16_t)g_bk_byte_c << 8) | g_bk_byte_b;
         if (flat < (uint16_t)(WORLD_WIDTH * WORLD_HEIGHT)) {

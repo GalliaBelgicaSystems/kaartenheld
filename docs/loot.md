@@ -1750,9 +1750,9 @@ same as the battle-hand cards and the CARDS-tab list.  Regression:
 
 ## 34.6 Economy (Merchant = Card Merchant)
 
-The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Finding the
-amulet unlocks the shop (first talk while holding it); delivering it on
-the next talk completes the quest (+15g, amulet removed):
+The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
+the amulet completes the quest (+15g, amulet removed) and opens the
+shop; finding it is what makes the delivery (and the shop) available:
 
 * BUY: one-copy stock -- the curated IRON RING (**RG1**, 20g) and the
   mythril bow (**BO9**, 30g), one of each.  A row shows only while the

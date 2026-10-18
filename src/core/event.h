@@ -72,22 +72,16 @@ typedef enum {
      * byte (compiled into the event row; drift-checked by
      * validate.py --spawn-refs).  First spawn action; generalize when
      * a second need appears (roadmap YAGNI). */
-    EVENT_ACTION_SPAWN_SLIME_TRIO = 10,
-    /* Restore the whole party to full HP (the village Heal Mage).
-     * No args.  Emits EVENT_HEALED with cause 3 (NPC heal) under the
-     * debug harness so the restore stays observable like every other
-     * gameplay transition (AGENTS.md 8); silent in release. */
-    EVENT_ACTION_HEAL_FULL = 11,
-    /* Play a music track immediately (the Heal Mage's chest-loot
-     * jingle).  arg0 = MusicTrack (engine audio vocabulary, never a
-     * game id).  The one-shot restores the scene track through the
-     * normal bank-8 jingle clock, exactly like a chest loot. */
-    EVENT_ACTION_PLAY_MUSIC = 12
+    EVENT_ACTION_SPAWN_SLIME_TRIO = 10
+    /* Heal-full and play-music actions were retired with the Heal Mage
+     * YES/NO rework (the choice resolve heals + jingles through the
+     * bank-5 body and the fixed dialogue-screen wrapper instead); their
+     * ids stay unassigned. */
 } EventActionType;
 
 typedef struct {
     EventActionType type;
-    uint8_t arg0;   /* DialogueId / StoryFlagId / VariableId / SceneId / ItemId / MusicTrack */
+    uint8_t arg0;   /* DialogueId / StoryFlagId / VariableId / SceneId / ItemId */
     int16_t arg1;   /* value / spawn x / delta / quantity */
     int16_t arg2;   /* spawn y */
 } EventAction;

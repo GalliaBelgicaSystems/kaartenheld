@@ -1,24 +1,8 @@
 {
  "name": "merchant_shop_open",
  "test": true,
- "description": "Finding the amulet unlocks the shop: first talk holding it opens SHOP directly (SEEN sets AMULET_SHOWN, no dialogue); leaving and talking again delivers (THANKS, +15 gold, amulet removed, quest COMPLETE); a third talk reopens the shop with the one-copy ring+bow stock",
+ "description": "Finding the amulet unlocks the shop via delivery: first talk holding it fires THANKS (+15 gold, amulet removed, quest COMPLETE); closing and talking again opens the shop with the one-copy ring+bow stock",
  "actions": [
-  {
-   "type": "interact",
-   "actor": "MERCHANT"
-  },
-  {
-   "type": "wait",
-   "frames": 10
-  },
-  {
-   "type": "press",
-   "button": "B"
-  },
-  {
-   "type": "wait",
-   "frames": 10
-  },
   {
    "type": "interact",
    "actor": "MERCHANT"
@@ -68,11 +52,6 @@
    "type": "screen_row",
    "row": 6,
    "contains": "30"
-  },
-  {
-   "type": "flag",
-   "flag": "AMULET_SHOWN",
-   "expected": true
   },
   {
    "type": "event_arg",
