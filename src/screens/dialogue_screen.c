@@ -18,11 +18,12 @@ void dialogue_screen_update(Game *g)
     /* YES/NO choice arbitration lives in the game-owned banked body
      * (fixed-bank cost: staging + call -- the fixed bank sits hard
      * against 0x8000, AGENTS.md §52.18).  It reports 3 to open the
-     * staged follow-up (stay), 2/4 to confirm (advance; 4 healed, so
-     * the jingle plus the staged HEALED / STORY_FLAG_SET telemetry are
-     * still owed here -- banked code cannot reach the fixed-bank
-     * audio/telemetry), and 0/1 to stay.  The staged ids are opaque
-     * data to the engine (never game branches). */
+     * staged follow-up (stay), 2 to confirm (advance), 6 for a
+     * confirmed heal (jingle plus the staged HEALED / STORY_FLAG_SET
+     * telemetry are still owed here -- banked code cannot reach the
+     * fixed-bank audio/telemetry -- then the staged thanks opens
+     * instead of advancing), and 0/1/5 to stay/advance plainly.  The
+     * staged ids are opaque data to the engine (never game branches). */
     g_bk_call_bank = 8;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
@@ -36,7 +37,7 @@ void dialogue_screen_update(Game *g)
             dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_c);
             return;
         }
-        if (g_bk_byte_a == 4) {
+        if (g_bk_byte_a == 6) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
 #endif
@@ -45,6 +46,9 @@ void dialogue_screen_update(Game *g)
              * like the event engine's action args, never a game branch. */
             game_flag_set(&g->state, (FlagId)g_bk_byte_c);
             audio_play_music(MUSIC_CHEST);
+            /* Healed: open the ring-tip thanks instead of advancing. */
+            dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
+            return;
         }
     }
 

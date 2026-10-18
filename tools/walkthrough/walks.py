@@ -24,7 +24,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
-                                      CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      CARD_IRON_RING, CARD_POISON_DAGGER,
                                       CARD_AMULET,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
@@ -547,13 +547,13 @@ def walk_a(planner, checks, sram_out=None):
     s.check("ring row caret", s.bg_text()[5][:1] == ">",
             expected="> at row 5", actual=s.bg_text()[5])
     gold0 = s.reader.gold()
-    price = s.reader.card_price(CARD_WOOD_RING)
+    price = s.reader.card_price(CARD_IRON_RING)
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
     s.check_eq("ring in collection", s.reader.collection_count(
-        CARD_WOOD_RING), 1)
+        CARD_IRON_RING), 1)
     s.check("bow row slides up", "BO9" in s.bg_text()[5],
             expected="BO9 at row 5", actual=s.bg_text()[5])
     s.press_until("b", lambda: s.stable(
@@ -626,7 +626,7 @@ def walk_a(planner, checks, sram_out=None):
         sram_out.append((s.stop_save_ram(), dict(
             scene=SCENE_TOWN, pos=(6, 11),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
-            ring=s.reader.collection_count(CARD_WOOD_RING))))
+            ring=s.reader.collection_count(CARD_IRON_RING))))
     else:
         s.close()
 
@@ -1071,7 +1071,7 @@ def walk_l(checks, saved):
     st = s.reader.scene_state()
     s.check_eq("restored scene", st["scene_id"], exp["scene"])
     s.check_eq("restored gold", s.reader.gold(), exp["gold"])
-    s.check_eq("restored ring", s.reader.collection_count(CARD_WOOD_RING),
+    s.check_eq("restored ring", s.reader.collection_count(CARD_IRON_RING),
                exp["ring"])
     s.check_eq("restored deck", s.reader.deck_count(), exp["deck"])
     s.close()

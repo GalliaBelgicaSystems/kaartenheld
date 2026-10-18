@@ -25,7 +25,7 @@
 /* ── Cards (engine range: NONE=0; game range >= CARD_FIRST_GAME) ── */
 #define CARD_IRON_SWORD    (CARD_FIRST_GAME + 0)
 #define CARD_WOODEN_SHIELD (CARD_FIRST_GAME + 1)
-#define CARD_WOOD_RING     (CARD_FIRST_GAME + 2)   /* curated shop ring (docs/loot.md §34.6) */
+#define CARD_IRON_RING      (CARD_FIRST_GAME + 2)   /* curated shop ring (docs/loot.md §34.6) */
 #define CARD_FIRE_SWORD    (CARD_FIRST_GAME + 3)
 #define CARD_POISON_DAGGER (CARD_FIRST_GAME + 4)
 #define CARD_AMULET        (CARD_FIRST_GAME + 5)
@@ -52,6 +52,7 @@
 #define EVENT_ID_HEAL_MAGE       (EVENT_ID_FIRST_GAME + 16)
 #define EVENT_ID_HEAL_MAGE_REFUSED (EVENT_ID_FIRST_GAME + 17)
 #define EVENT_ID_CARL_CHEST_FIRST (EVENT_ID_FIRST_GAME + 18)
+#define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -102,7 +103,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 19
+#define GAME_EVENT_COUNT 20
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

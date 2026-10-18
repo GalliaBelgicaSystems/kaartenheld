@@ -1,0 +1,93 @@
+{
+ "name": "ring_uses_counter",
+ "test": true,
+ "description": "Finite-use HEAL rings draw the shared remaining-uses arrow counter on the floor row like the bow (4 uses -> tile 97, 1 use -> tile 99) while the power row keeps the power digit; semantic rows read RG4/RG1",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7002,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 4
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "HE4"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "HE1"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 13,
+   "col": 1,
+   "expected": 17
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 14,
+   "col": 1,
+   "expected": 97
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 13,
+   "col": 5,
+   "expected": 17
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 14,
+   "col": 5,
+   "expected": 99
+  }
+ ]
+}

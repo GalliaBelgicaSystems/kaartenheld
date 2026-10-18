@@ -508,10 +508,11 @@ screen dispatches a game-owned banked body
 (`src/game/heal_mage_banked.c`, bank 8) that evaluates the pad edges,
 toggles/confirms, repaints the cursor, and reports an out code
 (`0` nothing, `1` toggled, `2` confirmed, `3` open the staged
-follow-up, `4` confirmed with a heal). The engine only acts on the
+follow-up, `6` confirmed with a heal, `5` plain advance). The engine only acts on the
 code (and staged telemetry/jingle amounts as opaque data); it never
 branches on game ids. E.g. the Heal Mage heals + jingles + marks its
-one-shot used on `YES`, and opens the decline follow-up on `NO`.
+one-shot used on `YES` and opens the ring-tip thanks, and opens the
+decline follow-up on `NO`.
 Scenarios drive the choice with `press` actions (`DOWN` to reach `NO`).
 
 ### Battle setup helpers

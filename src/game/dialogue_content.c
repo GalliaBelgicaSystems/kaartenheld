@@ -112,8 +112,16 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_HEAL_MAGE_REFUSED,
         "HEAL MAGE:",
-        3,
-        {"You need another", "heal? Are you", "the hero or what?"},
+        8,
+        {"You need another", "heal? Are you", "the hero or what?", "If you want to", "heal during", "combat, buy the", "ring from the", "merchant!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_THANKS,
+        "HEAL MAGE:",
+        5,
+        {"All healed!", "Rings can heal", "you as well.", "The merchant", "sells one!"},
         0,
         0
     },

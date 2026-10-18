@@ -40,8 +40,10 @@
  * Out: g_bk_byte_a = 0 (not a choice situation and no advance input),
  *      1 (toggled, repainted), 2 (confirmed, no game effect),
  *      3 (NO: open the follow-up staged in g_bk_byte_c),
- *      4 (YES: healed; g_bk_byte_b = restored HP, g_bk_byte_c = flag id
- *      for the STORY_FLAG_SET telemetry),
+ *      6 (YES: healed; g_bk_byte_b = restored HP, g_bk_byte_c = flag id
+ *      for the STORY_FLAG_SET telemetry, g_bk_byte_d = follow-up id:
+ *      the fixed wrapper owes the jingle plus the staged telemetry,
+ *      then opens the thanks instead of advancing),
  *      5 (plain advance: A/START edge outside any live choice).
  * The engine dispatches unconditionally while a dialogue is open; non-choice
  * dialogues (or choice dialogues off the last page / already confirmed)
@@ -129,9 +131,10 @@ void dialogue_choice_nav_banked(void)
                 g_game.state.party.members[mi].hp = g_game.state.party.members[mi].max_hp;
             }
         }
-        g_bk_byte_a = 4;
+        g_bk_byte_a = 6;
         g_bk_byte_b = restored;
         g_bk_byte_c = STORY_FLAG_ID_HEAL_MAGE_USED;
+        g_bk_byte_d = (uint8_t)DIALOGUE_ID_HEAL_MAGE_THANKS;
         return;
     }
     g_bk_byte_a = 0;

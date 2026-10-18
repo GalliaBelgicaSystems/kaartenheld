@@ -18,6 +18,22 @@
     {
       "type": "wait",
       "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
     }
   ],
   "assertions": [

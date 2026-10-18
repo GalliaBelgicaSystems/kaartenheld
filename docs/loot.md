@@ -1723,7 +1723,8 @@ what varies, not presence):
 
 ```text
 archetype weapon <- enemy profile bias (game layer, docs/loot.md §17)
-material         <- weighted roll (wood-heavy)
+material         <- weighted roll (wood-heavy; rings always wood --
+                    the merchant's ring is the metal one)
 effect           <- legal-for-weapon weighted roll (plain/poison-heavy)
 ```
 

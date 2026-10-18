@@ -268,7 +268,9 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     uint8_t digit_tile;
     /* Arrow-counter type (the bow): finite-use cards draw the power icon
      * on the middle row and the remaining-uses glyph on the floor row.
-     * Weapon icon and power digit stay exactly like every other card. */
+     * HEAL rings share the floor counter (same glyphs) but keep their
+     * power digit on the middle row.  Weapon icon and power digit stay
+     * exactly like every other card. */
     uint8_t limited;
     char *buf;
 
@@ -292,10 +294,12 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
      * (see battle_rider_content.c): the top border always stamps the
      * plain TR frame corner. */
     (void)status;
-    /* Finite-use cards of the skin's arrow-counter type draw the
-     * remaining-uses glyph (0..3, clamped) on the floor row; unlimited
+    /* Finite-use cards of the skin's arrow-counter type -- and HEAL-type
+     * rings, which share its remaining-uses glyphs -- draw the
+     * remaining-uses glyph (0..4, clamped) on the floor row; unlimited
      * cards keep the frame center. */
-    limited = (uses != 0xFF && type == g_card_skin_wram.uses_type);
+    limited = (uses != 0xFF && (type == g_card_skin_wram.uses_type ||
+                                type == BATTLE_CARD_TYPE_HEAL));
     if (limited) {
         digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
     } else {
@@ -350,7 +354,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                 g_tilemap_mirror[(top + r) * 32 + x + 1] = tile_wpn;
 #endif
             } else if (r == (uint8_t)(bh - 2)) {
-                if (limited) {
+                if (limited && type == g_card_skin_wram.uses_type) {
                     battle_vram_sync_write(&dst[1],
                         g_card_skin_wram.uses_power_tile);
 #ifdef DEBUG_BUILD
@@ -358,6 +362,11 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                         g_card_skin_wram.uses_power_tile;
 #endif
                 } else {
+                    /* Rings share the floor counter but keep their power
+                     * digit here (the skin power icon is the bow's nine). */
+                    if (limited) {
+                        digit_tile = (uint8_t)('0' - ' ' + value);
+                    }
                     battle_vram_sync_write(&dst[1], digit_tile);
 #ifdef DEBUG_BUILD
                     g_tilemap_mirror[(top + r) * 32 + x + 1] = digit_tile;
@@ -864,11 +873,13 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
          * from the stamped weapon icon, element from the per-card OAM
          * rider HUD. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
-         * of the arrow-counter type grey out too once their uses are
-         * spent (matches the unplayable nav rule). */
+         * of the arrow-counter type -- and rings, which share its floor
+         * counter -- grey out too once their uses are spent (matches
+         * the unplayable nav rule). */
         ccolor = UI_COLOR_NONE;
         if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
-            (ctype == g_card_skin_wram.uses_type && cuses == 0)) {
+            ((ctype == g_card_skin_wram.uses_type ||
+              ctype == BATTLE_CARD_TYPE_HEAL) && cuses == 0)) {
             ccolor = UI_COLOR_DIM;
         }
         for (r = 0; r < bh; r++) {

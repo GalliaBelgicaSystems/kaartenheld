@@ -136,7 +136,8 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
                 GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
-                GAME_ID_BASE + 18: "CARL_CHEST_FIRST"}
+                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 19: "MIMIC_REWARD"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -228,7 +229,7 @@ VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "WOOD_RING": 0x42, "FIRE_SWORD": 0x43,
+               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
                "BOW_9": 0x46}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,

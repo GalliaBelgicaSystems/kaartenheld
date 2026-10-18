@@ -28,7 +28,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | Enums | SceneId 0..N real (registry-assigned) / TEST fixed at 240+; MusicTrack NONE0 OVERWORLD1 BATTLE2 VICTORY3 TITLE4 TOWN5 DUNGEON6 BOSS7 MIMIC8 DESOLATE9 FOREST10; flags bit-packed (N → byte (N-1)/8 bit (N-1)%8): ARRIVED_TOWN=1, MET_MAYOR=2; CURRENCY_ID_GOLD=1 → amount[0]; HERO_START gold=20 hp=10 |
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
-| Shop | merchant (shop_id=2, unlocked by the amulet delivery) sells CARD_IRON_SWORD, CARD_BOW_9, CARD_POISON_DAGGER, CARD_WOOD_RING; A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
+| Shop | merchant (shop_id=2, opened by delivering the amulet) sells one CARD_IRON_RING + one CARD_BOW_9 (one-copy rows, then out of stock); A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
 | Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits Carl's `gold_reward` from `levels/field.json`; his defeat sets `ENERGY_POOL` 2 |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
@@ -84,7 +84,7 @@ tools/walkthrough/
 
 ### Phase 4 — Expanded milestones (expected values read from `levels/*.json`)
 
-1. **Shop purchase** (Walk A): buy WOOD_RING → assert
+1. **Shop purchase** (Walk A): buy IRON_RING → assert
    gold==20−cost, `shop_message==BOUGHT`, collection gained the card.
 2. **Mayor flag**: interact mayor → assert STORY_FLAG MET_MAYOR set.
 3. **Battle victory** (Walk B): loop select+execute (bounded;

@@ -314,7 +314,7 @@ void battle_card_undo(Battle *b)
 #ifdef DEBUG_BUILD
     prev_result = b->result;
 #endif
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 3;
     g_bk_call_target = (uint16_t)&battle_card_undo_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();

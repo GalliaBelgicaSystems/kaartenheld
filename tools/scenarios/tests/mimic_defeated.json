@@ -122,6 +122,11 @@
    "type": "variable",
    "variable": "MONSTERS_DEFEATED",
    "expected": 1
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 2
   }
  ],
  "initial_state": {
