@@ -1,0 +1,73 @@
+{
+ "name": "battle_spent_exile",
+ "test": true,
+ "description": "A finite-use card played down to 0 leaves combat instead of entering the discard pile: injected ring at 1 use resolves (CARD_PLAYED carries uses 0), draw pile stays 5 and discard stays 0, so it can never pop up again",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7002,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PLAYED"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PLAYED",
+   "index": 3,
+   "value": 0
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 4
+  },
+  {
+   "type": "battle_discard_count",
+   "expected": 0
+  }
+ ]
+}

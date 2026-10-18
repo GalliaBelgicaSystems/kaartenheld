@@ -535,13 +535,15 @@ AND
 uses_remaining == 0
 ```
 
-The card remains in the deck.
-
 It simply cannot currently be played.
 
 This distinction is important.
 
-The deck does not shrink during combat.
+When a played card reaches 0 uses it leaves combat entirely instead
+of entering the discard pile: a spent card would otherwise take up a
+hand slot it can never play from, cycling back through every future
+draw and reshuffle. Exiled cards never re-enter the draw pile, so
+later draws and reshuffles only see playable cards.
 
 ---
 
