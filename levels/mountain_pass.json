@@ -117,8 +117,8 @@
         "desolate_landscape.desolate_landscape_bottom_right_rock",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
         "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
@@ -161,8 +161,8 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
         "desolate_landscape.desolate_landscape_right_wall_1"
       ],
       [
@@ -525,8 +525,8 @@
       "id": "mountain_amulet",
       "type": "item",
       "position": {
-        "x": 10,
-        "y": 8
+        "x": 18,
+        "y": 5
       },
       "properties": {
         "entity_id": "ENTITY_ID_AMULET",
@@ -544,6 +544,33 @@
         "gold_reward": 0,
         "ai": "AI_NONE",
         "open_flag": "STORY_FLAG_ID_AMULET_CHEST"
+      }
+    },
+    {
+      "id": "mountain_kobold",
+      "type": "enemy",
+      "position": {
+        "x": 17,
+        "y": 5
+      },
+      "properties": {
+        "display_name": "KOBOLD",
+        "battle": "BATTLE_KOBOLD",
+        "ai": "AI_NONE",
+        "enemy_type": "kobold",
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 15,
+        "max_hp": 15,
+        "gold_reward": 8,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "actor_id": 66
       }
     }
   ],
