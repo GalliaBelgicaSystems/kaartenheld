@@ -5,6 +5,7 @@
 #include "battle.h"
 #include "battle_data.h"
 #include "card.h"
+#include "combo.h"
 #include "banked.h"
 #include "world/actor.h"
 #include "rpg/status.h"
@@ -709,14 +710,21 @@ static const char *battle_combo_tier_name(uint8_t tier)
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
 
-static const char *battle_combo_pending_name(const volatile Battle *battle)
+static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg)
 {
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
     uint8_t has_ring = 0;
     uint8_t tier, best, v;
     uint8_t idx[BATTLE_HAND_SIZE];
+    uint16_t base;
+    uint8_t suited;
+    uint16_t mult;
+    uint16_t r;
+    uint16_t a;
+    uint16_t b;
 
+    *dmg = 0;
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
         uint8_t s = battle->selected_indices[i];
@@ -747,18 +755,113 @@ static const char *battle_combo_pending_name(const volatile Battle *battle)
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
+    /* Damage mirror of combo_resolve_banked + effect_scale_power: base
+     * sums the effective set with the same per-card rules (attack skips
+     * shield/ring values, defend already holds shields+rings only),
+     * suited adds 25 over the shared tier table, amount = base x mult
+     * / 100 via shift-add + subtract loops (effects_content idiom: no
+     * libcall while bank 3 is mapped).  Whatever this computes, the
+     * resolver computes too. */
+    base = 0;
+    for (i = 0; i < w; i++) {
+        const volatile Card *c = &battle->hand[idx[i]];
+        if (!defend && (c->type == BATTLE_CARD_TYPE_SHIELD || c->ring)) continue;
+        base += c->value;
+    }
+    suited = 0;
+    if (tier != HAND_NONE) {
+        suited = 1;
+        for (i = 1; i < w; i++) {
+            if (battle->hand[idx[i]].type != battle->hand[idx[0]].type) {
+                suited = 0;
+                break;
+            }
+        }
+    }
+    mult = g_combo_tier_mult[tier];
+    if (suited) mult += 25;
+    r = 0;
+    a = base;
+    b = mult;
+    while (b != 0) {
+        if (b & 1) r += a;
+        a <<= 1;
+        b >>= 1;
+    }
+    while (r >= 100) {
+        r -= 100;
+        (*dmg)++;
+    }
     return battle_combo_tier_name(tier);
+}
+
+/* Compact decimal without padding (DMG5, DMG12, DMG191):
+ * battle_draw_num2 space-pads to two cells, which would leave gaps
+ * after DMG.  Buffer, VRAM and mirror all stay truthful.  Returns the
+ * digit count so callers can blank the row tail. */
+static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
+{
+    char digit[4];
+    uint8_t n = 0;
+    uint8_t h = 0;
+    uint8_t d = 0;
+#ifdef DEBUG_BUILD
+    uint8_t i;
+#endif
+    while (val >= 100) { val -= 100; h++; }
+    while (val >= 10) { val -= 10; d++; }
+    if (h != 0) {
+        digit[0] = (char)('0' + h);
+        digit[1] = (char)('0' + d);
+        digit[2] = (char)('0' + val);
+        n = 3;
+    } else if (d != 0) {
+        digit[0] = (char)('0' + d);
+        digit[1] = (char)('0' + val);
+        n = 2;
+    } else {
+        digit[0] = (char)('0' + val);
+        n = 1;
+    }
+    digit[n] = '\0';
+    battle_draw_text_line(x, y, digit, n);
+#ifdef DEBUG_BUILD
+    for (i = 0; i < n; i++) {
+        g_tilemap_mirror[(uint16_t)y * 32 + x + i] =
+            (uint8_t)(ui_font_tile_base + (uint8_t)(digit[i] - ' '));
+    }
+#endif
+    return n;
+}
+
+/* Blink phase for the defend warning below (WRAM BSS: render context
+ * only, never gameplay state).  Flipped on every BLINK-dirty repaint;
+ * the COMBO-dirty path always paints visible and re-arms. */
+static uint8_t s_warned_blink;
+
+/* Enemy incoming-damage warning ("ENEMY DMG<n>") through the normal
+ * text path, so buffer, mirror and VRAM stay truthful for asserts. */
+static void battle_combo_warn_text(const volatile Battle *battle)
+{
+    uint8_t combo_row = g_battle_hud.combo_row;
+    battle_draw_text_line(0, combo_row, "ENEMY DMG", 9);
+    battle_draw_num_compact(9, combo_row, battle->enemy_incoming_dmg);
 }
 
 static void battle_draw_battle_combo(const volatile Battle *battle)
 {
     /* Real-time preview: the row tracks the PENDING selection as cards
      * are added/removed and blanks once the hand resolves -- executed
-     * results announce via the banner instead of sticking around. */
-    const char *name = battle_combo_pending_name(battle);
+     * results announce via the banner instead of sticking around.
+     * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
+     * a 3-digit amount still fits 20 cols); the number mirrors the
+     * resolve math, so preview and result agree. */
+    const char *name;
+    uint8_t dmg = 0;
     /* Staged row (WRAM copy of the active BattleScreenDef). */
     uint8_t combo_row = g_battle_hud.combo_row;
     uint8_t r;
+    uint8_t n;
 
     /* Blank the whole row first -- UNCONDITIONAL direct writes (the
      * battle_draw_text_line skip-guard would skip cells whose semantic
@@ -777,12 +880,52 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 #endif
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
-    battle_draw_text_line(0, combo_row, "COMBO:", 6);
-    if (name[0] != '\0') {
-        battle_draw_text_line(7, combo_row, " ", 1);
-        battle_draw_text_line(8, combo_row, name, 12);
+    /* Enemy warning owns the row while a strike is incoming (defend
+     * phase, telegraphed damage): steady here, blinking via the BLINK
+     * repaints below. */
+    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND && battle->enemy_incoming_dmg > 0) {
+        s_warned_blink = 0;
+        battle_combo_warn_text(battle);
+        return;
+    }
+    name = battle_combo_pending_preview(battle, &dmg);
+    if (name[0] == '\0') {
+        battle_draw_text_line(0, combo_row, NULL, 20);
+        return;
+    }
+    n = 0;
+    while (name[n] != '\0') n++;
+    battle_draw_text_line(0, combo_row, name, n);
+    battle_draw_text_line(n, combo_row, " DMG", 4);
+    n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    /* Tail cells past the content keep stale buffer text while VRAM
+     * above was cleared: blank the buffer tail explicitly (the VRAM
+     * skip-guard would otherwise never rewrite them). */
+    battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
+}
+
+/* BLINK-dirty repaint of the combo row: the defend warning toggles
+ * visible/hidden on the existing telegraph cadence (no new fixed-bank
+ * input reads, no new dispatches).  The hidden half writes VRAM blanks
+ * ONLY -- buffer and mirror keep the text, so harness asserts never
+ * flake on blink phase (same contract as the '^'/arrow caret). */
+static void battle_combo_warn_blink(const volatile Battle *battle)
+{
+    uint8_t combo_row;
+    uint8_t r;
+    if (battle->phase != BATTLE_PHASE_PLAYER_DEFEND ||
+        battle->enemy_incoming_dmg == 0) return;
+    combo_row = g_battle_hud.combo_row;
+    s_warned_blink ^= 1;
+    if (s_warned_blink) {
+        VBK_REG = 0;
+        for (r = 0; r < 20; r++) {
+            battle_vram_sync_write(
+                (volatile uint8_t *)(0x9800 + ((uint16_t)combo_row << 5) + r),
+                ui_font_tile_base);
+        }
     } else {
-        battle_draw_text_line(7, combo_row, NULL, 13);
+        battle_combo_warn_text(battle);
     }
 }
 
@@ -1219,6 +1362,7 @@ void ui_update_battle_banked(void)
         }
     }
     if (d & (BATTLE_DIRTY_ENEMIES | BATTLE_DIRTY_BLINK)) battle_draw_enemy_columns(battle);
+    if (d & BATTLE_DIRTY_BLINK) battle_combo_warn_blink(battle);
     if (d & BATTLE_DIRTY_HERO) {
         battle_draw_hero_row(battle);
         battle_draw_deck_line(battle);

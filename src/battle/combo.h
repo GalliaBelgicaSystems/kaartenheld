@@ -92,4 +92,9 @@ void combo_resolve_banked(void);
 uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
                              uint8_t n, uint8_t ring_sub);
 
+/* Tier percent table (combo_content.c, bank 3): index by HandTier.  Shared
+ * read-only between the resolver and the damage preview so both scale by
+ * the same numbers; never duplicated. */
+extern const uint16_t g_combo_tier_mult[HAND_TIER_COUNT];
+
 #endif /* COMBO_H */

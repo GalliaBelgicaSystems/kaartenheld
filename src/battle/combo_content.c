@@ -28,7 +28,7 @@
  * them to __mulint/__divuint, which link into the FIXED bank -- an
  * illegal call while bank 3 is mapped (AGENTS.md 52.11.1). */
 
-static const uint16_t s_tier_mult[HAND_TIER_COUNT] = {    100, /* NONE */
+const uint16_t g_combo_tier_mult[HAND_TIER_COUNT] = {    100, /* NONE */
     120, /* PAIR */
     150, /* TWO PAIR */
     180, /* THREE KIND */
@@ -212,7 +212,7 @@ void combo_resolve_banked(void)
                 out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }
             out_result->multiplier =
-                s_tier_mult[out_result->tier];
+                g_combo_tier_mult[out_result->tier];
             if (out_result->tier == HAND_NONE) {
                 out_result->suited = 0;
             } else {

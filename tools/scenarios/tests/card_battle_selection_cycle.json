@@ -130,9 +130,9 @@
    "expected": 114
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 10,
-   "contains": "COMBO:"
+   "contains": "DMG"
   },
   {
    "type": "screen_row",
