@@ -2331,8 +2331,8 @@ hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
 (`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` pending
 combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
 classifier plus the resolve-mirror damage, no `COMBO:` label; during a
-telegraphed enemy strike it shows blinking `ENEMY DMG<n>` instead, buffer
-stable while VRAM blanks; drawn with a full 20-col row clear -- the combo
+telegraphed enemy strike it shows steady red `ENEMY DMG<n>` instead
+(FIRE palette span, no blink); drawn with a full 20-col row clear -- the combo
 draw owns the row the old blank band above the hand occupied), `11-14`
 boxed hand cards (`cards_row`=14 is the BOTTOM
 row; each card is a 3-wide x `box_h`-tall frame from the compiled

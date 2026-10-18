@@ -834,13 +834,9 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
     return n;
 }
 
-/* Blink phase for the defend warning below (WRAM BSS: render context
- * only, never gameplay state).  Flipped on every BLINK-dirty repaint;
- * the COMBO-dirty path always paints visible and re-arms. */
-static uint8_t s_warned_blink;
-
 /* Enemy incoming-damage warning ("ENEMY DMG<n>") through the normal
- * text path, so buffer, mirror and VRAM stay truthful for asserts. */
+ * text path, so buffer, mirror and VRAM stay truthful for asserts.
+ * Painted FIRE (red) via the attribute span by the caller. */
 static void battle_combo_warn_text(const volatile Battle *battle)
 {
     uint8_t combo_row = g_battle_hud.combo_row;
@@ -885,11 +881,10 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
     /* Enemy warning owns the row while a strike is incoming (defend
-     * phase, telegraphed damage): steady here, blinking via the BLINK
-     * repaints below. */
+     * phase, telegraphed damage): steady red text, no blink. */
     if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND && battle->enemy_incoming_dmg > 0) {
-        s_warned_blink = 0;
         battle_combo_warn_text(battle);
+        battle_color_span(0, combo_row, 20, UI_COLOR_FIRE);
         return;
     }
     name = battle_combo_pending_preview(battle, &dmg);
@@ -906,43 +901,6 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * above was cleared: blank the buffer tail explicitly (the VRAM
      * skip-guard would otherwise never rewrite them). */
     battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
-}
-
-/* BLINK-dirty repaint of the combo row: the defend warning toggles
- * visible/hidden on the existing telegraph cadence (no new fixed-bank
- * input reads, no new dispatches).  The hidden half writes VRAM blanks
- * ONLY -- buffer and mirror keep the text, so harness asserts never
- * flake on blink phase (same contract as the '^'/arrow caret). */
-static void battle_combo_warn_blink(const volatile Battle *battle)
-{
-    uint8_t combo_row;
-    uint8_t r;
-    if (battle->phase != BATTLE_PHASE_PLAYER_DEFEND ||
-        battle->enemy_incoming_dmg == 0) return;
-    combo_row = g_battle_hud.combo_row;
-    s_warned_blink ^= 1;
-    if (s_warned_blink) {
-        VBK_REG = 0;
-        for (r = 0; r < 20; r++) {
-            battle_vram_sync_write(
-                (volatile uint8_t *)(0x9800 + ((uint16_t)combo_row << 5) + r),
-                ui_font_tile_base);
-        }
-    } else {
-        /* Re-show: buffer and mirror still hold the text (deliberately
-         * untouched above), so the text path's skip-guard would swallow
-         * every write and the row would stay blank forever.  Paint the
-         * text (idempotent) then force VRAM from the buffer. */
-        char ch;
-        battle_combo_warn_text(battle);
-        VBK_REG = 0;
-        for (r = 0; r < 20; r++) {
-            ch = g_ui_screen_buf[combo_row][r];
-            battle_vram_sync_write(
-                (volatile uint8_t *)(0x9800 + ((uint16_t)combo_row << 5) + r),
-                (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
-        }
-    }
 }
 
 static void battle_draw_battle_hand(const volatile Battle *battle)
@@ -1378,7 +1336,6 @@ void ui_update_battle_banked(void)
         }
     }
     if (d & (BATTLE_DIRTY_ENEMIES | BATTLE_DIRTY_BLINK)) battle_draw_enemy_columns(battle);
-    if (d & BATTLE_DIRTY_BLINK) battle_combo_warn_blink(battle);
     if (d & BATTLE_DIRTY_HERO) {
         battle_draw_hero_row(battle);
         battle_draw_deck_line(battle);
