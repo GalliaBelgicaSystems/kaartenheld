@@ -62,11 +62,4 @@ void dialogue_start_def_banked(void)
         g_dlg_lines[s_dlg_i][s_dlg_j] = 0;
         s_dlg_d->lines[s_dlg_i] = g_dlg_lines[s_dlg_i];
     }
-    if (g_bk_byte_b | g_bk_byte_c) {
-        uint16_t flat = ((uint16_t)g_bk_byte_c << 8) | g_bk_byte_b;
-        if (flat < (uint16_t)(WORLD_WIDTH * WORLD_HEIGHT)) {
-            ((uint8_t *)g_game.world.map)[flat] =
-                (uint8_t)(((uint8_t *)g_game.world.map)[flat] + 1);
-        }
-    }
 }

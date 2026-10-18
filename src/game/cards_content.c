@@ -14,7 +14,7 @@
 const CardDefinition g_cards[] = {
     { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  2, 1,  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, STATUS_NONE,       0,   "I SW" },
     { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 2, 1,  0, 4, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, STATUS_NONE,       0,   "W SH" },
-    { CARD_WOOD_RING,      CARD_TYPE_HEAL,    1, 1,  3, 3, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, STATUS_NONE,       0,   "I RG" },
+    { CARD_WOOD_RING,      CARD_TYPE_HEAL,    1, 1,  3, 1, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, STATUS_NONE,       0,   "I RG" },
     /* Fire Sword (SW1 + fire rider): the fire element lives on a sword,
      * never a separate "tome" type (docs/loot.md §34).  Carries the BURN
      * on-hit rider exactly like a loot fire sword. */

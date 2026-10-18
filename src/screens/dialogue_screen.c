@@ -6,7 +6,7 @@
 #include "ui.h"
 #include "banked.h"
 
-/* Bank-5 choice nav body (src/game/heal_mage_banked.c): evaluates pad
+/* Bank-8 choice nav body (src/game/heal_mage_banked.c): evaluates pad
  * edges, toggles/confirms, and repaints the cursor cells inline, so the
  * fixed bank pays just the dispatch (AGENTS.md 52.11.1/52.18). */
 void dialogue_choice_nav_banked(void);
@@ -23,7 +23,7 @@ void dialogue_screen_update(Game *g)
      * still owed here -- banked code cannot reach the fixed-bank
      * audio/telemetry), and 0/1 to stay.  The staged ids are opaque
      * data to the engine (never game branches). */
-    g_bk_call_bank = 5;
+    g_bk_call_bank = 8;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
     if (g_bk_byte_a == 5) {
@@ -82,15 +82,6 @@ void dialogue_screen_render(Game *g)
         d->id == rc->prev_dialogue_id) {
         return;
     }
-    /* A follow-up dialogue opened in place (YES/NO decline path) changes
-     * the id without leaving the screen: take the full box path so the
-     * row-14 speaker header redraws too (same speaker today, but a
-     * future follow-up could rename it).  ui_draw_dialogue invalidates
-     * the covered buffer rows first, so the cross-domain skip hazard
-     * (AGENTS.md §52.25) does not apply. */
-    if (!first_enter && d->id != rc->prev_dialogue_id) {
-        first_enter = 1;
-    }
 
     if (first_enter) {
         /* From battle (or any non-overworld): full LCD-off redraw to
@@ -118,6 +109,12 @@ void dialogue_screen_render(Game *g)
         rc->valid = true;
         rc->prev_screen = SCREEN_DIALOGUE;
         rc->prev_dialogue_active = true;
+    } else if (d->id != rc->prev_dialogue_id) {
+        /* In-place follow-up dialogue (YES/NO decline path): same screen,
+         * new id.  Redraw the box (header + page) over the live world
+         * with the LCD on -- never the LCD-off full redraw above, which
+         * is only for entering the screen. */
+        ui_draw_dialogue(d, w);
     } else {
         ui_draw_dialogue_page(d, w->scroll_x, w->scroll_y);
     }

@@ -1,4 +1,4 @@
-#pragma bank 5
+#pragma bank 8
 
 #include <gb/gb.h>
 #include "game.h"
@@ -6,7 +6,7 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── Heal-mage YES/NO choice navigation + resolve, bank-5 body ─────
+/* ── Heal-mage YES/NO choice navigation + resolve, bank-8 body ─────
  * Dispatched from dialogue_screen_update() when a choice dialogue sits
  * on its last page unconfirmed (fixed-bank cost: one predicate +
  * staging + call -- the fixed bank sits hard against 0x8000, AGENTS.md

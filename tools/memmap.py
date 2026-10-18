@@ -180,7 +180,7 @@ def main():
         "_world_gate_check_banked": "edge predicate + walkability (bank 2)",
         "_world_edge_spawn_banked": "edge-crossing entry spawn (bank 2)",
         "_dialogue_start_def_banked": "dialogue start (bank 2)",
-        "_dialogue_choice_nav_banked": "dialogue YES/NO nav + resolve (bank 5)",
+        "_dialogue_choice_nav_banked": "dialogue YES/NO nav + resolve (bank 8)",
         "_deck_init_default_banked": "starter deck unpacker (bank 2)",
         "_deck_reshuffle_banked": "discard reshuffle (bank 7)",
         "_music_play_banked": "track -> song/bank resolve (bank 8)",

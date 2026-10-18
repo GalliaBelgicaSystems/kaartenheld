@@ -327,8 +327,14 @@ static void sc_shop_remap(void)
             g_shop_vis_count++;
         }
     }
-    if (s_sc_game->item_menu_index >= g_shop_vis_count && g_shop_vis_count > 0) {
-        s_sc_game->item_menu_index = (uint8_t)(g_shop_vis_count - 1);
+    if (s_sc_game->item_menu_index >= g_shop_vis_count) {
+        s_sc_game->item_menu_index = g_shop_vis_count > 0 ? (uint8_t)(g_shop_vis_count - 1) : 0;
+    }
+    if (s_sc_game->item_menu_scroll > s_sc_game->item_menu_index) {
+        s_sc_game->item_menu_scroll = s_sc_game->item_menu_index;
+    }
+    if (g_shop_vis_count == 0) {
+        s_sc_game->item_menu_scroll = 0;
     }
 }
 
