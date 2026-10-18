@@ -735,10 +735,14 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         idx[w++] = s;
         if (c->ring) has_ring = 1;
     }
-    /* Fewer than 2 effective cards can never form a poker hand (same
-     * early-out as combo_resolve_banked): skip the ring trial entirely. */
-    if (w < 2) return "";
-    if (has_ring) {
+    /* No effective cards (e.g. only attack cards staged on the defend
+     * screen): nothing pending, keep the row blank.  A single effective
+     * card still hits for face value (resolve tiers NONE / mult 100),
+     * so w == 1 previews base damage instead of blanking. */
+    if (w == 0) return "";
+    if (w < 2) {
+        tier = HAND_NONE;
+    } else if (has_ring) {
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
          * value range, which covers the ring's raw value, so no separate
@@ -854,7 +858,9 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * are added/removed and blanks once the hand resolves -- executed
      * results announce via the banner instead of sticking around.
      * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
-     * a 3-digit amount still fits 20 cols); the number mirrors the
+     * a 3-digit amount still fits 20 cols); with no poker tier the row
+     * still shows the inflicted damage as bare "DMG<n>" (face-value
+     * sum, same math the resolver applies).  The number mirrors the
      * resolve math, so preview and result agree. */
     const char *name;
     uint8_t dmg = 0;
@@ -889,7 +895,16 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     }
     name = battle_combo_pending_preview(battle, &dmg);
     if (name[0] == '\0') {
-        battle_draw_text_line(0, combo_row, NULL, 20);
+        /* No tier: pending cards still inflict face value, so show it
+         * bare.  Zero effective damage (nothing staged, or only inert
+         * fodder) keeps the row blank instead of "DMG0" noise. */
+        if (dmg == 0) {
+            battle_draw_text_line(0, combo_row, NULL, 20);
+            return;
+        }
+        battle_draw_text_line(0, combo_row, "DMG", 3);
+        n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
         return;
     }
     n = 0;

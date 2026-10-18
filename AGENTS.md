@@ -2330,7 +2330,9 @@ draw-pile count at columns 13-19, `battle_draw_deck_line`, drawn with the
 hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
 (`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` pending
 combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
-classifier plus the resolve-mirror damage, no `COMBO:` label; during a
+classifier plus the resolve-mirror damage, no `COMBO:` label; with no poker
+tier the row still shows the inflicted face value as bare `DMG<n>`, blank
+only when nothing effective is staged; during a
 telegraphed enemy strike it shows steady red `ENEMY DMG<n>` instead
 (FIRE palette span, no blink); drawn with a full 20-col row clear -- the combo
 draw owns the row the old blank band above the hand occupied), `11-14`
