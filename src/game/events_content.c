@@ -177,6 +177,15 @@ const EventDefinition g_events[] = {
      * DIALOGUE_ID_TUTORIAL_CARL_INTRO).  Both share ENTITY_ID_CARL;
      * only the runtime hostile slot can be defeated, so
      * TUTORIAL_COMPLETE below fires exactly once on the spar win.
+     * The spar is gated on the field cache: talking or bumping the
+     * tile while STORY_FLAG_ID_FIELD_CHEST is clear matches
+     * CARL_CHEST_FIRST instead ("Open chest, then come back!"), which
+     * returns ENGAGE_DIALOGUE without stashing the spar slot
+     * (interaction.c syncs the slot only on the actor-dialogue path),
+     * so closing it returns to the overworld with no fight -- and the
+     * hero enters the spar with the chest's +1 AP (pool 2).  Once the
+     * chest is open no event matches and the ordinary lesson path
+     * (lesson + stashed spar + auto-start on close) runs.
      * Bumping or facing-talking the tile opens the static's lesson
      * through the ordinary dialogue path while the spar slot stays
      * stashed (synced when the dialogue opens, interaction.c);
@@ -193,6 +202,13 @@ const EventDefinition g_events[] = {
      * base-1 pool, reaching 4 in any completion order.  Carl's defeat is
      * persistent (one-shot via GameState.world), so the reward fires
      * exactly once. */
+    {
+        EVENT_ID_CARL_CHEST_FIRST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CARL, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_CARL_CHEST_FIRST, 0, 0 }}
+    },
     {
         EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
         0,

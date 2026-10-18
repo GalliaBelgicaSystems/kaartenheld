@@ -149,6 +149,9 @@
    "facing": "DOWN"
   },
   "seed": 8601,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "currency": {
    "GOLD": 0
   }

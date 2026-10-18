@@ -1,7 +1,7 @@
 {
  "name": "loot_drop_victory",
  "test": true,
- "description": "Victory loot drop hook (docs/loot.md 34.5): defeating Carl's solo spar always rolls one combat card from the isolated loot RNG. Seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W P DA). Two-line pages: 3-line victory closes in 1 press.",
+ "description": "Victory loot drop hook (docs/loot.md 34.5): defeating Carl's solo spar always rolls one combat card from the isolated loot RNG. Seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W P DA). Two-line pages: 5-line victory closes in 2 presses.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -10,6 +10,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "party": {
    "HERO": {
     "hp": 60,
@@ -150,6 +153,14 @@
   {
    "type": "wait",
    "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   },
   {
    "type": "press",

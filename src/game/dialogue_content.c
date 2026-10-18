@@ -38,6 +38,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_CARL_CHEST_FIRST,
+        "CARL:",
+        2,
+        {"Open chest,", "then come back!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
         3,
@@ -184,8 +192,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
-        3,
-        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!"},
+        5,
+        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
         0,
         0
     },

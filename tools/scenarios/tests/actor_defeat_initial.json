@@ -52,6 +52,9 @@
    "facing": "DOWN"
   },
   "seed": 7005,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "world": {
    "SLIME_FIELD": "DEFEATED"
   }

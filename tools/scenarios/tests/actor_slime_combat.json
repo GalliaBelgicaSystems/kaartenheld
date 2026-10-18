@@ -105,6 +105,9 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 12345
+  "seed": 12345,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

@@ -641,6 +641,21 @@ def walk_b(planner, checks):
                 None)
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
     props = carl["properties"]
+    # Field cache east of Carl first: Carl withholds the spar until it
+    # is opened ("Open chest, then come back!"), so the hero opens it
+    # (first poison dagger plus the AP unlock: pool 1 -> 2) and only
+    # then walks to the lesson.
+    s.check("chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.shoot("11-chest", need="CHEST:")
+    s.check("cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("first poison dagger",
+               s.reader.collection_count(CARD_POISON_DAGGER), 1)
+    s.check_eq("energy pool 1 -> 2",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
@@ -681,6 +696,8 @@ def walk_b(planner, checks):
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
+    s.check_eq("spar starts at 2 AP (chest opened first)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
 
     # Fight with hand-aware selection until the solo spar drops
     # (variance-safe: enemy HP strictly decreases per landed hit; never
@@ -756,21 +773,7 @@ def walk_b(planner, checks):
                HERO_START_GOLD + props.get("gold_reward", 0))
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool raised 0 -> 2",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
-    # Field cache east of Carl: bumping it opens the reward speech (first
-    # poison dagger plus the AP unlock, idempotent with the spar reward),
-    # then grants both.
-    s.check("chest bump",
-            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
-            expected="CHEST:", actual="none")
-    s.shoot("11-chest", need="CHEST:")
-    s.check("cache closed",
-            close_dialogue(s, "CHEST:"),
-            expected="closed", actual="open")
-    s.check_eq("first poison dagger",
-               s.reader.collection_count(CARD_POISON_DAGGER), 1)
-    s.check_eq("energy pool still 3",
+    s.check_eq("energy pool 2 -> 3",
                s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)

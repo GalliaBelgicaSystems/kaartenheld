@@ -115,6 +115,9 @@
    "y": 8,
    "facing": "RIGHT"
   },
-  "seed": 4242
+  "seed": 4242,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

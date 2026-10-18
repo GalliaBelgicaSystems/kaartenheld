@@ -547,6 +547,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "variables": {
    "QUEST_MONSTER_HUNT": 1,
    "MONSTERS_DEFEATED": 0

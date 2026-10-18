@@ -543,6 +543,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "variables": {
    "MONSTERS_DEFEATED": 0
   },

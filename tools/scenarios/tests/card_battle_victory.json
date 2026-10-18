@@ -541,6 +541,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "party": {
    "HERO": {
     "hp": 60,
