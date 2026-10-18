@@ -445,8 +445,9 @@ void ui_invalidate_tileset(void)
 
 static char ui_get_world_tile_glyph(uint8_t t)
 {
-    if (t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_STAIRCASE) {
-        if (t == TILE_DESOLATE_STAIRCASE) return '>';
+    /* Legacy desolate block ends at FIRE_02: values 185..186 are evicted
+     * (now TILE_CASTLE_27/28) and flow to the generated table below. */
+    if (t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_FIRE_02) {
         if (t == TILE_DESOLATE_FIRE_01 || t == TILE_DESOLATE_FIRE_02) return '*';
         if ((t >= TILE_DESOLATE_FLOOR_00 && t <= TILE_DESOLATE_FLOOR_03) || t == TILE_DESOLATE_FLOOR_PLAIN) return '.';
         return '#';
@@ -524,7 +525,7 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
          * the loader never stamps TILE_EXIT anymore, so gate cells render
          * their underlying terrain art through the ranges below. */
         if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
-            t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_STAIRCASE) {
+            t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_FIRE_02) {
             uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_WALL_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
@@ -562,6 +563,10 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             /* Extension art, second cluster (VRAM slots 20..22):
              * top-of-range values, likewise gateless. */
             tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 20 - TILE_CASTLE_20));
+        } else if ((uint8_t)(t - TILE_CASTLE_27) <= (uint8_t)(TILE_CASTLE_28 - TILE_CASTLE_27)) {
+            /* Rotated rugs (VRAM slots 24..25): evicted legacy values,
+             * likewise gateless. */
+            tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 24 - TILE_CASTLE_27));
         } else if (world->tileset_kind == WORLD_TILESET_VILLAGE &&
                    t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47) {
             uint8_t v_idx = (uint8_t)(t - TILE_VILLAGE_00);

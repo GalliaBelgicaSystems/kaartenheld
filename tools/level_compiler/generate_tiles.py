@@ -10,8 +10,10 @@ patrol_banked.c, and ui.c.
 
 What stays hand-written (frozen legacy, predates manifests): the generic
 tiles (FLOOR/WALL/EXIT), the old desolate set (DESOLATE_FLOOR_*,
-DESOLATE_FLOOR_PLAIN, DESOLATE_STAIRCASE), stumps, and the t<8 semantic
-map. Those never change; only manifest-covered ranges are generated.
+DESOLATE_FLOOR_PLAIN), stumps, and the t<8 semantic map. Those never
+change; only manifest-covered ranges are generated. (Values 185..186,
+ex-TILE_DESOLATE_MERCHANT/_STAIRCASE, were evicted for castle TILE_CASTLE_27/28;
+the legacy engine ranges now end at DESOLATE_FIRE_02.)
 The patrol replica dissolves into the same generated table (one source,
 two call sites) instead of a hand-kept copy.
 
@@ -44,7 +46,7 @@ GENERATED_TILES_DIR = REPO_ROOT / "generated" / "tiles"
 
 # Frozen legacy walkables (no manifest covers them; never change).
 LEGACY_WALK_DOC = "TILE_FLOOR, TILE_EXIT, TILE_DESOLATE_FLOOR_00..03, " \
-    "TILE_DESOLATE_FLOOR_PLAIN, TILE_DESOLATE_STAIRCASE (kept in ROM code)"
+    "TILE_DESOLATE_FLOOR_PLAIN (kept in ROM code)"
 
 
 def load_palette_manifest(tileset_id: str):
@@ -353,6 +355,18 @@ def main(argv):
     if not entries:
         print("generate_tiles: no landscape entries derived", file=sys.stderr)
         return 1
+    # Legacy desolate gap 146..184: no manifest covers it (frozen legacy,
+    # hand-ruled in ROM -- walkability in the edge/patrol legacy checks,
+    # glyphs in the ui.c legacy branch, which catches 146..184 before the
+    # generated table). Explicit '#'/solid entries keep the glyph Hi-only
+    # scan gap-safe now that castle 185..186 sit right after the gap.
+    # Behavior-preserving: no caller reaches the generated tables for
+    # these values with other expectations (walkability callers check the
+    # legacy ranges first; the '*' of FIRE_01/02 stays live in ui.c).
+    value_to_const = {v: k for k, v in const_by_value.items()}
+    for value in range(146, 185):
+        entries.append((value_to_const[value], value, False, "#"))
+    entries.sort(key=lambda e: e[1])
     ranges = to_ranges(entries)
     # exit indices per tileset kind (WORLD_TILESET_* numbering lives in
     # scene.h; 2 = FOREST, 14 = DESOLATE, 15 = CASTLE).

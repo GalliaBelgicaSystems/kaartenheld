@@ -163,18 +163,19 @@ def main():
         slot_colors = {p["index"]: p["colors"] for p in man["palettes"]}
 
         # Castle loads base art (vram 0..15) + extension art (vram
-        # 16..22) + the exit stairs (vram index 26) LAST. Every other
-        # tileset packs slot i = vram index i, so only castle needs the
-        # explicit map. Slot order must match the Makefile gfx rule's
-        # --tile-coords verbatim (base row-major 8-wide, then the
-        # explicit extension + exit cells).
+        # 16..22) + the exit stairs (vram index 26) LAST + the rotated
+        # rugs (vram 27..28). Every other tileset packs slot i = vram
+        # index i, so only castle needs the explicit map. Slot order must
+        # match the Makefile gfx rule's --tile-coords verbatim (base
+        # row-major 8-wide, then the explicit extension + exit + rug cells).
         if ts == "castle":
-            slot_vram = list(range(23)) + [26]
-            if n != 24:
-                errors.append(f"{ts}: expected 24 loaded slots (0..22 + exit 26), got {n}")
+            slot_vram = list(range(23)) + [26, 27, 28]
+            if n != 26:
+                errors.append(f"{ts}: expected 26 loaded slots (0..22 + exit 26 + rugs 27..28), got {n}")
                 continue
             enc_cells = ([(x, 0) for x in range(8)] + [(x, 1) for x in range(8)] +
-                         [(8, 0), (8, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (8, 2)])
+                         [(8, 0), (8, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (8, 2),
+                          (0, 3), (1, 3)])
         else:
             slot_vram = list(range(n))
             enc_cells = None

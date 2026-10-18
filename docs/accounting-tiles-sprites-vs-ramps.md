@@ -38,7 +38,7 @@
 | ramp (slot) | tiles |
 |---|---|
 | castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table, castle_top_left_throne, castle_top_right_throne |
-| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_right_rug, castle_top_chandelier |
+| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
 | castle4 (0) | castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_floor_with_debris, castle_left_wall, castle_plain_floor, castle_right_wall, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_window |
 
 ### desolate_landscape (set `desolate_landscape`)

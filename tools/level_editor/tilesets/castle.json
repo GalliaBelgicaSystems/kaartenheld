@@ -267,6 +267,28 @@
       "image_url": "/tiles/castle/castle_bottom_chandelier.png",
       "category": "terrain",
       "palette": "castle3"
+    },
+    {
+      "id": "castle_left_rug_rotated",
+      "label": "left rug rotated",
+      "gb_constant": "TILE_CASTLE_27",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_left_rug_rotated.png",
+      "category": "terrain",
+      "palette": "castle3"
+    },
+    {
+      "id": "castle_right_rug_rotated",
+      "label": "right rug rotated",
+      "gb_constant": "TILE_CASTLE_28",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_right_rug_rotated.png",
+      "category": "terrain",
+      "palette": "castle3"
     }
   ],
   "vram_block": {
@@ -435,6 +457,60 @@
         "index": 26,
         "tile": "castle_exit",
         "exit": true
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "index": 27,
+        "tile": "castle_left_rug_rotated"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "index": 28,
+        "tile": "castle_right_rug_rotated"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "index": 29,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "index": 30,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "index": 31,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "index": 32,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "index": 33,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "index": 34,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "index": 35,
+        "tile": "castle_plain_floor"
       }
     ]
   }

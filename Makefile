@@ -184,14 +184,15 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
 		--shade-map generated/tiles/shades/hero_ow.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-	# ── Castle tileset (assets/castle-tile.png, 9 cols × 3 rows) ─────────
+	# ── Castle tileset (assets/castle-tile.png, 9 cols × 4 rows) ─────────
 	# The sheet packs 9-wide but VRAM slots pack 8-wide (vram_block index
 	# order), so bytes AND palette entries follow vram-index order via
 	# --tile-coords (slots 0-15 base art, slots 16-22 extension art vram
-	# 16..22, exit stairs vram 26 LAST at slot 23; see palette_compiler).
+	# 16..22, exit stairs vram 26 LAST at slot 23, rotated rugs vram 27..28
+	# at slots 24..25; see palette_compiler).
 	# Sized by the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,0 8,1 0,2 1,2 2,2 3,2 4,2 8,2" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,0 8,1 0,2 1,2 2,2 3,2 4,2 8,2 0,3 1,3" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
