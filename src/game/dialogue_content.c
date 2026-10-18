@@ -160,8 +160,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_QUEST_COMPLETE,
         "MAYOR:",
-        6,
-        {"You did it!", "Take this power:", "one more AP!", "I feel a darkness", "at the Castle.", "Steel yourself!"},
+        8,
+        {"I see you hate", "these monsters as", "much as we do!", "They have", "tormented us", "enough!", "Take this power:", "one more AP!"},
         0,
         0
     },

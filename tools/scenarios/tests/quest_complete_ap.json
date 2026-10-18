@@ -1,7 +1,7 @@
 {
  "name": "quest_complete_ap",
  "test": true,
- "description": "With 5 monsters defeated and the quest ACTIVE, talking to the Mayor completes MONSTER HUNT: QUEST_COMPLETE dialogue, quest=COMPLETE, ENERGY_POOL +1",
+ "description": "With 5 monsters defeated and the quest ACTIVE, talking to the Mayor completes MONSTER HUNT: QUEST_COMPLETE dialogue (I see you hate these monsters...), quest=COMPLETE, ENERGY_POOL +1",
  "actions": [
   {
    "type": "interact",
@@ -12,6 +12,21 @@
   {
    "type": "dialogue_id",
    "expected": "QUEST_COMPLETE"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "I see you hate"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "these monsters as"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "much as we do!"
   },
   {
    "type": "variable",
