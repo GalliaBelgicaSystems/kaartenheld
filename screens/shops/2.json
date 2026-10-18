@@ -2,9 +2,7 @@
   "label": "Merchant",
   "buys": 1,
   "items": [
-    "CARD_IRON_SWORD",
-    "CARD_BOW_9",
-    "CARD_POISON_DAGGER",
-    "CARD_WOOD_RING"
+    "CARD_WOOD_RING",
+    "CARD_BOW_9"
   ]
 }

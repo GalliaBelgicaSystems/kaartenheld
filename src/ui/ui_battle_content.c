@@ -936,15 +936,15 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
 /* Battle UI tile loader (bank-3 body behind the fixed-bank
  * ui_card_tiles_load() wrapper, dispatched once from ui_init with the LCD
  * off): streams the card frame tiles, the turn-timer bar segments, the
- * HUD hp/ap/deck icons, the light/dark select arrows and the gold-coin
- * tile from THIS bank's data (generated card_frame_tiles.h + s_coin_tile
- * below) into VRAM block 1.  Reads its own bank-local data
- * directly (no banked_copy, which would restore the home bank mid-body --
- * banked.h ABI) and writes VRAM at the SIGNED BG tile addresses
- * (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
+ * HUD hp/ap/deck icons and the light/dark select arrows from THIS bank's
+ * data (generated card_frame_tiles.h) into VRAM block 1.  Reads its own
+ * bank-local data directly (no banked_copy, which would restore the home
+ * bank mid-body -- banked.h ABI) and writes VRAM at the SIGNED BG tile
+ * addresses (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
  * AGENTS.md 52.22).  VRAM: frames 118-126, bar filled 117 / empty 127,
  * HUD icons at 113 (hp), 114 (ap) and 116 (deck), light arrow at 96,
- * dark arrow at 110, weapons at 104-108, coin at 115. */
+ * dark arrow at 110, weapons at 104-108.  (Gold prices render as the
+ * plain font capital 'G'; the old coin tile 115 is retired.) */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
@@ -965,14 +965,6 @@ static const uint8_t s_card_tile_vram_ids[31] = {
      * block — a different physical address, AGENTS.md 52.22). */
     98, 99, 100, 101, 102, 103,                   /* arrows 0, 1, 2, 3, nine, blank */
     97,                                           /* arrows 4 (appended cell) */
-};
-
-/* Gold-coin UI tile (VRAM 115, shop gold rows): the only icon not owned
- * by the card-frames sheet.  Lives here so the fixed bank pays nothing
- * for it (this loader already runs LCD-off at boot). */
-static const uint8_t s_coin_tile[16] = {
-    0x70, 0xFF, 0x98, 0xAF, 0x4C, 0xF7, 0x6A, 0xD7,
-    0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
 };
 
 /* Dialogue continue chevron (VRAM 109, UI_TILE_DIALOGUE_CONTINUE): the
@@ -1012,11 +1004,6 @@ void ui_card_tiles_load_banked(void)
         for (j = 0; j < 16; j++) {
             dst[j] = src[j];
         }
-    }
-    /* Gold-coin tile (VRAM 115): same signed addressing as above. */
-    dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_COIN << 4));
-    for (j = 0; j < 16; j++) {
-        dst[j] = s_coin_tile[j];
     }
     /* Dialogue continue chevron (VRAM 109): same signed addressing. */
     dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_DIALOGUE_CONTINUE << 4));

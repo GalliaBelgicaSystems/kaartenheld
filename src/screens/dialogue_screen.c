@@ -26,24 +26,26 @@ void dialogue_screen_update(Game *g)
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
-    if (g_bk_byte_a == 3) {
+    if (g_bk_byte_a == 5) {
+        /* Plain advance outside any live choice. */
+    } else {
+        if (g_bk_byte_a < 2) return;
         telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
                        g->dialogue.choice_index, 0, 0);
-        dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_c);
-        return;
-    }
-    if (g_bk_byte_a == 2 || g_bk_byte_a == 4) {
-        telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
-                       g->dialogue.choice_index, 0, 0);
+        if (g_bk_byte_a == 3) {
+            dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_c);
+            return;
+        }
         if (g_bk_byte_a == 4) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
 #endif
-            telemetry_emit(EVENT_STORY_FLAG_SET, g_bk_byte_c, 0, 0, 0);
+            /* Mark the one-shot used through the real flag API (which
+             * owns the STORY_FLAG_SET telemetry); the id arrives staged
+             * like the event engine's action args, never a game branch. */
+            game_flag_set(&g->state, (FlagId)g_bk_byte_c);
             audio_play_music(MUSIC_CHEST);
         }
-    } else if (g_bk_byte_a != 5) {
-        return;
     }
 
     if (!dialogue_next(&g->dialogue)) {

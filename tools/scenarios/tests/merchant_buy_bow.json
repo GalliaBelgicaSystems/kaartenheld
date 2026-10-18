@@ -1,7 +1,7 @@
 {
- "name": "merchant_buy_dagger",
+ "name": "merchant_buy_bow",
  "test": true,
- "description": "The Merchant sells POISON_DAGGER (8 gold, new since the starter deck carries none): buying the third list row adds it to the collection and spends gold",
+ "description": "The Merchant sells the mythril bow (30 gold, second list row): moving down once and buying adds it to the collection and spends gold",
  "actions": [
   {
    "type": "interact",
@@ -17,15 +17,7 @@
   },
   {
    "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
+   "frames": 10
   },
   {
    "type": "press",
@@ -43,12 +35,12 @@
   },
   {
    "type": "inventory",
-   "item": "POISON_DAGGER",
+   "item": "BOW_9",
    "expected": 1
   },
   {
    "type": "currency",
-   "expected": 12,
+   "expected": 20,
    "currency": "GOLD"
   }
  ],
@@ -62,6 +54,9 @@
   "seed": 8504,
   "flags": {
    "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
   },
   "variables": {
    "MERCHANT_QUEST": 2

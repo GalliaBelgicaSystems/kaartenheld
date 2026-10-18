@@ -1,0 +1,80 @@
+{
+ "name": "shop_out_of_stock",
+ "test": true,
+ "description": "One-copy stock: buying the ring hides its row (bow slides up to the cursor) and buying the bow empties the shop into (out of stock); gold spent exactly",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "(out of stock)"
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_RING",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "BOW_9",
+   "expected": 1
+  },
+  {
+   "type": "currency",
+   "expected": 10,
+   "currency": "GOLD"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_PURCHASED",
+   "count": 2
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 60
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

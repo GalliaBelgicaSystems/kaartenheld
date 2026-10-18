@@ -1,7 +1,7 @@
 {
  "name": "shop_rider_sweep",
  "test": true,
- "description": "Merged merchant stock shows exactly one rider icon (POISON_DAGGER row) and hides the rest: no phantom icons leak onto riderless rows",
+ "description": "Two-line ring+bow stock carries no element riders (both cards are STATUS_NONE): no rider icon shows on either row and no phantom icons leak onto any entry",
  "actions": [
   {
    "type": "interact",
@@ -30,7 +30,7 @@
   {
    "type": "oam_tile",
    "entry": 3,
-   "expected": 125
+   "expected": 0
   },
   {
    "type": "oam_tile",
@@ -78,6 +78,9 @@
   "seed": 6001,
   "flags": {
    "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
   },
   "variables": {
    "MERCHANT_QUEST": 2

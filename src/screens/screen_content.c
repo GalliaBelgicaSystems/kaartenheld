@@ -52,6 +52,7 @@ static uint8_t s_sc_shop_i;
 static uint8_t s_sc_shop_scroll;
 static uint8_t s_sc_def_i;
 static uint8_t s_sc_shop_pos;
+static uint8_t s_sc_stock_pos;
 static uint8_t s_sc_save_pos;
 
 static uint8_t s_sc_y;
@@ -289,6 +290,48 @@ static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
     }
 }
 
+/* One-copy stock visible map (docs/loot.md §34.6): rebuilt every frame
+ * (and right after a purchase) by shop_screen_update into WRAM; the
+ * render and rider painters below only read it.  g_shop_vis_map[k] is
+ * the stock position of the k-th visible (unowned) line,
+ * g_shop_vis_count their number (0 = out of stock).  WRAM is always
+ * mapped, so no staging is needed -- this is what keeps the fixed bank
+ * under 0x8000 (AGENTS.md §52.11.1/§52.18). */
+uint8_t g_shop_vis_map[SHOP_MAX_ITEMS];
+uint8_t g_shop_vis_count;
+
+/* Visible-map rebuild (one-copy stock): runs at every full shop redraw
+ * (entry, purchase) -- the only moments ownership can have changed, so
+ * the map the cursor reads is never stale.  The scan mirrors
+ * collection_find (rpg/deck.c): a line shows only while the player owns
+ * no copy (banked bodies cannot call the fixed-bank counter).  Clamps
+ * the cursor into the visible list (a purchase can hide the row under
+ * it) before anything paints. */
+static void sc_shop_remap(void)
+{
+    uint8_t i;
+    uint8_t e;
+    uint8_t owned;
+    g_shop_vis_count = 0;
+    if (!s_sc_game || !s_sc_shop_def) return;
+    for (i = 0; i < s_sc_shop_def->count; i++) {
+        owned = 0;
+        for (e = 0; e < s_sc_game->state.cards.collection.count; e++) {
+            if (s_sc_game->state.cards.collection.entries[e].id == s_sc_shop_def->items[i]) {
+                owned = s_sc_game->state.cards.collection.entries[e].count;
+                break;
+            }
+        }
+        if (!owned) {
+            g_shop_vis_map[g_shop_vis_count] = i;
+            g_shop_vis_count++;
+        }
+    }
+    if (s_sc_game->item_menu_index >= g_shop_vis_count && g_shop_vis_count > 0) {
+        s_sc_game->item_menu_index = (uint8_t)(g_shop_vis_count - 1);
+    }
+}
+
 static void shop_rider_draw(void)
 {
     uint8_t k;
@@ -300,9 +343,9 @@ static void shop_rider_draw(void)
         tile = 0;
         slot = 0;
         if (s_sc_shop_def != 0 &&
-            (uint8_t)(s_sc_shop_scroll + k) < s_sc_shop_def->count) {
+            (uint8_t)(s_sc_shop_scroll + k) < g_shop_vis_count) {
             s_sc_card_def = sc_card_get_def(
-                s_sc_shop_def->items[(uint8_t)(s_sc_shop_scroll + k)]);
+                s_sc_shop_def->items[g_shop_vis_map[(uint8_t)(s_sc_shop_scroll + k)]]);
             if (s_sc_card_def != 0) {
                 shop_rider_tile(s_sc_card_def->status_id, &tile, &slot);
             }
@@ -325,16 +368,12 @@ void shop_content_render(void)
 
     if (!s_sc_game) return;
     s_sc_shop_def = sc_shop_active(s_sc_game);
+    sc_shop_remap();
     s_sc_gold = (uint16_t)s_sc_game->state.currency.amount[0];
 
     sc_draw_text(0, 3, "  GOLD: ", 8);
     sc_format_uint(s_sc_gold, s_sc_str);
     sc_draw_text(8, 3, s_sc_str, 10);
-
-    s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)3 << 5) + 0);
-    VBK_REG = 0;
-    sc_vram_sync_write(s_sc_dst, UI_TILE_COIN);
-    sc_color_span(0, 3, 1, UI_COLOR_GOLD);
 
     if (!s_sc_shop_def) {
         sc_draw_text(0, 5, "(nothing)", 9);
@@ -343,12 +382,20 @@ void shop_content_render(void)
         return;
     }
 
+    if (g_shop_vis_count == 0) {
+        sc_draw_text(0, 5, "(out of stock)", 14);
+        sc_draw_text(0, 7, "[B] Leave", 9);
+        shop_rider_draw();
+        return;
+    }
+
     s_sc_shop_scroll = s_sc_game->item_menu_scroll;
     for (s_sc_shop_pos = s_sc_shop_scroll;
-         s_sc_shop_pos < s_sc_shop_def->count &&
+         s_sc_shop_pos < g_shop_vis_count &&
          s_sc_shop_pos < (uint8_t)(s_sc_shop_scroll + SHOP_VISIBLE);
          s_sc_shop_pos++) {
-        s_sc_card_def = sc_card_get_def(s_sc_shop_def->items[s_sc_shop_pos]);
+        s_sc_stock_pos = g_shop_vis_map[s_sc_shop_pos];
+        s_sc_card_def = sc_card_get_def(s_sc_shop_def->items[s_sc_stock_pos]);
         s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         if (s_sc_card_def) {
@@ -397,10 +444,9 @@ void shop_content_render(void)
         }
         sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
         sc_draw_text(12, s_sc_y, s_sc_str, 4);
+        /* Gold price in plain font capitals (no coin tile): the semantic
+         * buffer keeps ASCII 'G' and VRAM shows the font glyph. */
         sc_put_char(16, s_sc_y, 'G');
-        s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 16);
-        VBK_REG = 0;
-        sc_vram_sync_write(s_sc_dst, UI_TILE_COIN);
         sc_color_span(16, s_sc_y, 1, UI_COLOR_GOLD);
     }
 

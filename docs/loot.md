@@ -1750,14 +1750,17 @@ same as the battle-hand cards and the CARDS-tab list.  Regression:
 
 ## 34.6 Economy (Merchant = Card Merchant)
 
-The Lost Amulet merchant opens shop 2 as the CARD MERCHANT:
+The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Finding the
+amulet unlocks the shop (first talk while holding it); delivering it on
+the next talk completes the quest (+15g, amulet removed):
 
-* BUY: the Lost Amulet merchant's merged shop stocks curated iron/mythril
-  loot at formula prices (an iron sword and the mythril bow
-  `M BO`) plus POISON_DAGGER (8g) -- the only dagger source besides
-  the field cache, now that the starter deck carries none -- and the
-  curated IRON RING (**RG1**, 20g).  Rings are THE healing vector, so
-  healing is purchasable but never free.
+* BUY: one-copy stock -- the curated IRON RING (**RG1**, 20g) and the
+  mythril bow (**BO9**, 30g), one of each.  A row shows only while the
+  player owns no copy; buying both empties the shop into `(out of
+  stock)`.  Rings are THE healing vector, so healing is purchasable but
+  never free.  The iron sword / poison dagger are gone from the stock:
+  swords come from the starter deck and loot, daggers from the field
+  cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one
