@@ -212,20 +212,34 @@ def drain_postvictory_dialogue(s, tries=8):
 
 
 def _walk_path(s, path):
-    """Execute a BFS cell path as discrete one-tile presses."""
+    """Execute a BFS cell path as discrete one-tile presses.  Ambushes
+    (including stationary guardians routed through on purpose) fight
+    via transit_fight and retry: a knight-armor kill opens its briefing
+    instead of VICTORY, so drain that too and keep going (the spawned
+    trio either chases off the tile or falls to the next retry)."""
     for dx, dy in path:
         btn = _BTNS[(dx, dy)]
         fx, fy = s.pos()
-        ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
-        if not ok and s.text_has("DECK:"):
+        ok = False
+        for _ in range(3):
+            ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
+            if ok or not s.text_has("DECK:"):
+                break
             win = transit_fight(s)
-            s.check("transit fight victory", win,
-                    expected="VICTORY", actual="defeat" if not win else "win")
-            if win:
+            knight = (not win) and s.text_has("KNIGHT:")
+            s.check("transit fight victory", win or knight,
+                    expected="VICTORY or KNIGHT: box",
+                    actual="defeat" if not (win or knight) else "win")
+            if knight:
+                s.check("transit knight briefing drained",
+                        drain_postvictory_dialogue(s),
+                        expected="no KNIGHT: box", actual="stuck open")
+            elif win:
                 s.check("transit aftermath drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
-                ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
+            else:
+                break
         banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
         s.check("route move %s" % btn, ok,
                 expected="tile commit",
@@ -255,8 +269,17 @@ def follow(s, planner, from_scene, start, to_scene, goal,
                 if res or not s.text_has("DECK:"):
                     break
                 win = transit_fight(s)
-                s.check("transit fight victory", win,
-                        expected="VICTORY", actual="defeat" if not win else "win")
+                knight = (not win) and s.text_has("KNIGHT:")
+                s.check("transit fight victory", win or knight,
+                        expected="VICTORY or KNIGHT: box",
+                        actual="defeat" if not (win or knight) else "win")
+                if knight:
+                    # Armor kill (no VICTORY screen): drain the reveal
+                    # briefing, then retry past whatever it spawned.
+                    s.check("transit knight briefing drained",
+                            drain_postvictory_dialogue(s),
+                            expected="no KNIGHT: box", actual="stuck open")
+                    continue
                 if not win:
                     break
                 s.check("transit aftermath drained",
@@ -818,8 +841,51 @@ def walk_e(planner, checks):
     mimic_xy = (mimic["position"]["x"], mimic["position"]["y"])
     # One multi-hop BFS route: field -> forest -> grassy -> desolate ->
     # south_ridge -> south_field -> castle_entry -> castle_hall -> castle;
-    # per-exit scene asserts run inside follow().
-    follow(s, planner, "field", spawn, "castle",
+    # per-exit scene asserts run inside follow().  The south leg stops
+    # at the waiting knight's doorstep (12,7): the corridor east runs
+    # through its tile, so the guardian is fought deliberately below
+    # instead of ambushing mid-route.
+    follow(s, planner, "field", spawn, "south_field", (12, 7))
+    s.settle_scene(expected_scene=SCENE_SOUTH_FIELD)
+    s.check_eq("south scene", s.reader.scene_state()["scene_id"],
+               SCENE_SOUTH_FIELD)
+    # South waiting knight (13,7): guardian of the castle corridor
+    # (stationary, bump-to-combat).  Engage it directly, win the armor
+    # fight, drain the reveal briefing, then beat the trio it spawns --
+    # mirroring the castle-knight interlude below.  Proves the real-map
+    # guardian end to end (the harness covers the fixture twin).
+    s.check("south guardian engaged",
+            engage_hostile(s, planner, "south_field", (13, 7)),
+            expected="DECK:", actual="none")
+    s.check("south guardian banner readable",
+            s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
+            expected="TARGET banner", actual=s.bg_text()[0].strip())
+    s.check("south guardian armor fight",
+            transit_fight(s),
+            expected="VICTORY", actual="defeat")
+    s.tick(90)
+    s.check("south guardian reveal opened",
+            s.text_has("KNIGHT:"),
+            expected="KNIGHT:", actual=s.bg_text()[0].strip())
+    s.check("south guardian reveal closed",
+            close_dialogue(s, "KNIGHT:"),
+            expected="closed", actual="open")
+    s.check("south guardian trio engaged",
+            engage_hostile(s, planner, "south_field", (13, 7)),
+            expected="DECK:", actual="none")
+    s.check("south guardian trio banner",
+            s.text_has("TARGET SLIME"),
+            expected="TARGET SLIME", actual=s.bg_text()[0].strip())
+    s.check("south guardian trio fight",
+            transit_fight(s),
+            expected="VICTORY", actual="defeat")
+    s.check("south guardian trio exit",
+            s.press_until("a", lambda: not s.text_has("DECK:"),
+                          tries=4, label="battle exit"),
+            expected="closed", actual="open")
+    s.check("south no briefing repeat", not s.text_has("KNIGHT:"),
+            expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
+    follow(s, planner, "south_field", s.pos(), "castle",
            (mimic_xy[0] - 1, mimic_xy[1]))
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
