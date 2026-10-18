@@ -484,6 +484,36 @@ dialogue + sets `MET_MAYOR`), `MAYOR_GREETING` (already met),
 `GUARD_AFTER_MAYOR` / `GUARD_GREETING` (Guard reacts differently once
 `MET_MAYOR`).
 
+### Dialogue YES/NO choice
+
+A dialogue row may carry `"choice": "yes_no"` (`screens/dialogue/*.json`,
+validated and compiled by `dialogue_compile.py` into
+`DialogueDefinition.choice`). On the dialogue's last page the choice UI is
+active: `UP`/`DOWN` move the cursor between `YES` (default)
+and `NO`, `A`/`START` confirms (and then advances). The option row is the
+dialogue's last line and must read exactly `> YES   NO` (cursor cells at
+columns 0 and 7); only those cells repaint on a cursor move.
+
+Confirming emits:
+
+```text
+DIALOGUE_CHOICE
+  dialogue: HEAL_MAGE_ASK
+  choice: 0 (= YES) or 1 (= NO)
+```
+
+(`EVENT_DIALOGUE_CHOICE`; `data[0]` is the `DialogueId`, `data[1]` the
+choice index.) What an answer *means* is game content: the dialogue
+screen dispatches a game-owned banked body
+(`src/game/heal_mage_banked.c`, bank 5) that evaluates the pad edges,
+toggles/confirms, repaints the cursor, and reports an out code
+(`0` nothing, `1` toggled, `2` confirmed, `3` open the staged
+follow-up, `4` confirmed with a heal). The engine only acts on the
+code (and staged telemetry/jingle amounts as opaque data); it never
+branches on game ids. E.g. the Heal Mage heals + jingles + marks its
+one-shot used on `YES`, and opens the decline follow-up on `NO`.
+Scenarios drive the choice with `press` actions (`DOWN` to reach `NO`).
+
 ### Battle setup helpers
 
 `set_enemy_hp` (`DBG_ACT_SET_ENEMY_HP`) pins an enemy combatant's current HP

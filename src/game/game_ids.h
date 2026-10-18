@@ -50,6 +50,7 @@
 #define EVENT_ID_MERCHANT_REMINDER (EVENT_ID_FIRST_GAME + 14)
 #define EVENT_ID_KNIGHT_SPLIT    (EVENT_ID_FIRST_GAME + 15)
 #define EVENT_ID_HEAL_MAGE       (EVENT_ID_FIRST_GAME + 16)
+#define EVENT_ID_HEAL_MAGE_REFUSED (EVENT_ID_FIRST_GAME + 17)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -67,7 +68,10 @@ typedef enum {
     STORY_FLAG_ID_AMULET_CHEST = 4,   /* mountain amulet chest opened (loot
                                        * state, like FIELD_CHEST -- set
                                        * atomically with the AMULET grant) */
-    STORY_FLAG_ID_COUNT        = 5
+    STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
+                                       * its one free heal (later talks get
+                                       * the refusal, no heal, no jingle) */
+    STORY_FLAG_ID_COUNT        = 6
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -97,7 +101,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 17
+#define GAME_EVENT_COUNT 18
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

@@ -80,6 +80,18 @@ def validate_dialogue(data, path, story_flags):
         errors.append(
             f"{path}: unknown completion_flag '{flag}' (not a "
             f"STORY_FLAG_ID_* in game_ids.h; flags stay LLM-driven)")
+    choice = data.get("choice")
+    if choice is not None and choice != "yes_no":
+        errors.append(
+            f"{path}: unknown choice '{choice}' (only 'yes_no' is supported)")
+    if choice == "yes_no":
+        # Engine contract (dialogue_screen.c): the choice cursor only
+        # repaints the option row's two cursor cells (cols 0 and 7), so a
+        # choice dialogue must end with the exact option row.
+        if not lines or lines[-1] != "> YES   NO":
+            errors.append(
+                f"{path}: choice dialogue must end with the option row "
+                f"'> YES   NO' (cursor cols 0/7)")
     return errors, warnings
 
 
@@ -143,13 +155,15 @@ def build_content_output(rows, id_map):
         r = by_id[name]
         flag = r.get("completion_flag")
         flag_c = flag if flag else "0"
+        choice_c = "1" if r.get("choice") == "yes_no" else "0"
         lines.append("    {")
         lines.append(f"        {name},")
         lines.append(f'        "{c_escape(r["speaker"])}",')
         lines.append(f"        {len(r['lines'])},")
         lits = ", ".join(f'"{c_escape(t)}"' for t in r["lines"])
         lines.append(f"        {{{lits}}},")
-        lines.append(f"        {flag_c}")
+        lines.append(f"        {flag_c},")
+        lines.append(f"        {choice_c}")
         lines.append("    },")
     lines.append("};")
     lines.append("")

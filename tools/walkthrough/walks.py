@@ -462,15 +462,20 @@ def walk_a(planner, checks, sram_out=None):
 
     # Heal Mage: red robe at (12,10), wizard sprite.  Hurt the hero via
     # host poke (same pattern as god_mode: release ROM untouched), talk,
-    # page through, verify full restore + chest jingle + town-track
-    # restore.  Exercises the NPC on the release ROM (the harness covers
-    # the debug ROM in heal_mage.json).
+    # confirm YES on the ask (default cursor), verify full restore +
+    # chest jingle + town-track restore.  Exercises the NPC on the
+    # release ROM (the harness covers the debug ROM in heal_mage.json).
     r = s.reader
     pbase = r.state + OFF_PARTY
     s.pb.memory[pbase + CHARACTER_STATE_HP] = 5
     s.check("heal mage dialogue opened",
             bump_actor(s, planner, "town", (12, 9), "down", "HEAL MAGE:"),
             expected="HEAL MAGE:", actual="none")
+    s.check("heal mage YES confirmed",
+            s.press_until("a",
+                          lambda: s.reader.music_track() == MUSIC_CHEST,
+                          tries=6, settle=30, label="mage YES"),
+            expected="MUSIC_CHEST", actual="confirm")
     s.check_eq("chest jingle playing",
                s.reader.music_track(), MUSIC_CHEST)
     close_dialogue(s, "HEAL MAGE:")

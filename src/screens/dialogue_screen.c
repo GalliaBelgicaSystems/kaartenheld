@@ -6,25 +6,59 @@
 #include "ui.h"
 #include "banked.h"
 
+/* Bank-5 choice nav body (src/game/heal_mage_banked.c): evaluates pad
+ * edges, toggles/confirms, and repaints the cursor cells inline, so the
+ * fixed bank pays just the dispatch (AGENTS.md 52.11.1/52.18). */
+void dialogue_choice_nav_banked(void);
+
 void dialogue_screen_update(Game *g)
 {
     if (!g || !g->dialogue.active) return;
 
-    if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
-        if (!dialogue_next(&g->dialogue)) {
-            interaction_on_dialogue_end(&g->dialogue, &g->state);
-            /* Stashed spar: closing a lesson that detoured from an
-             * encounter (Carl) starts the battle instead of returning
-             * to the overworld.  The slot is set only by the encounter
-             * path (movement/patrol bump or hostile interaction) and
-             * cleared by every battle exit, so no other dialogue can
-             * trip this. */
-            if (g->world.encounter_actor_index != NO_ACTOR_INDEX) {
-                start_battle_from_world(g);
-                return;
-            }
-            screen_change(g, SCREEN_OVERWORLD);
+    /* YES/NO choice arbitration lives in the game-owned banked body
+     * (fixed-bank cost: staging + call -- the fixed bank sits hard
+     * against 0x8000, AGENTS.md §52.18).  It reports 3 to open the
+     * staged follow-up (stay), 2/4 to confirm (advance; 4 healed, so
+     * the jingle plus the staged HEALED / STORY_FLAG_SET telemetry are
+     * still owed here -- banked code cannot reach the fixed-bank
+     * audio/telemetry), and 0/1 to stay.  The staged ids are opaque
+     * data to the engine (never game branches). */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
+    banked_call_run();
+    if (g_bk_byte_a == 3) {
+        telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
+                       g->dialogue.choice_index, 0, 0);
+        dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_c);
+        return;
+    }
+    if (g_bk_byte_a == 2 || g_bk_byte_a == 4) {
+        telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
+                       g->dialogue.choice_index, 0, 0);
+        if (g_bk_byte_a == 4) {
+#ifdef DEBUG_BUILD
+            if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
+#endif
+            telemetry_emit(EVENT_STORY_FLAG_SET, g_bk_byte_c, 0, 0, 0);
+            audio_play_music(MUSIC_CHEST);
         }
+    } else if (g_bk_byte_a != 5) {
+        return;
+    }
+
+    if (!dialogue_next(&g->dialogue)) {
+        interaction_on_dialogue_end(&g->dialogue, &g->state);
+        /* Stashed spar: closing a lesson that detoured from an
+         * encounter (Carl) starts the battle instead of returning
+         * to the overworld.  The slot is set only by the encounter
+         * path (movement/patrol bump or hostile interaction) and
+         * cleared by every battle exit, so no other dialogue can
+         * trip this. */
+        if (g->world.encounter_actor_index != NO_ACTOR_INDEX) {
+            start_battle_from_world(g);
+            return;
+        }
+        screen_change(g, SCREEN_OVERWORLD);
     }
 }
 

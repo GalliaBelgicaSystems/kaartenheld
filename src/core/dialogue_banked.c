@@ -39,6 +39,9 @@ void dialogue_start_def_banked(void)
     s_dlg_d->current_line = 0;
     s_dlg_d->line_count = (s_dlg_def->line_count > MAX_DIALOGUE_LINES) ? MAX_DIALOGUE_LINES : s_dlg_def->line_count;
     s_dlg_d->completion_flag = s_dlg_def->completion_flag;
+    s_dlg_d->choice = s_dlg_def->choice;
+    s_dlg_d->choice_index = 0;
+    s_dlg_d->choice_made = 0;
 
     if (s_dlg_def->speaker) {
         for (s_dlg_i = 0; s_dlg_i < 11 && s_dlg_def->speaker[s_dlg_i]; s_dlg_i++) {

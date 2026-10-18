@@ -36,6 +36,9 @@ void dialogue_init(DialogueState *d)
     d->line_count = 0;
     d->speaker = "";
     d->completion_flag = 0;
+    /* choice/index/made need no init: dialogue_start_def_banked stages
+     * all three on every activation (the sole writer), and update
+     * early-returns unless active. */
 }
 
 void dialogue_start_def(DialogueState *d, DialogueId id)

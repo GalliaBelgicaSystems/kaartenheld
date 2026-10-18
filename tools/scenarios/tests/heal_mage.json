@@ -1,24 +1,8 @@
 {
   "name": "heal_mage",
   "test": true,
-  "description": "Village Heal Mage: talking to the red-robed mage (12,10) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), and briefs on ring healing. 8-line dialogue in 3 pages = interact A + 3 page advances. The mage shares the wizard's OAM blob tile (dedup) with its own red ramp: OAM entry 9 shows tile 119.",
+  "description": "Village Heal Mage YES path: talking to the red-robed mage (12,10) opens the YES/NO ask; confirming YES (default cursor) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), and marks HEAL_MAGE_USED. The mage shares the wizard's OAM blob tile (dedup) with its own red ramp: OAM entry 9 shows tile 119.",
   "actions": [
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 120
-    },
     {
       "type": "press",
       "button": "A"
@@ -48,6 +32,27 @@
     {
       "type": "event_occurred",
       "event": "SCRIPT_TRIGGERED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 0,
+      "value": "HEAL_MAGE_ASK"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 1,
+      "value": 0
+    },
+    {
+      "type": "flag",
+      "flag": "HEAL_MAGE_USED",
+      "expected": true
     },
     {
       "type": "event_occurred",

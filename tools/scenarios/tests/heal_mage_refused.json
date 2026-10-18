@@ -1,0 +1,83 @@
+{
+  "name": "heal_mage_refused",
+  "test": true,
+  "description": "Village Heal Mage after the one free heal: talking again shows the 'another heal?' refusal with no heal and no jingle (HEAL_MAGE_USED stays set).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "party_hp",
+      "expected": 3
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "HEAL_MAGE_REFUSED"
+    },
+    {
+      "type": "flag",
+      "flag": "HEAL_MAGE_USED",
+      "expected": true
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "HEALED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_ENDED"
+    },
+    {
+      "type": "music_track",
+      "expected": "TOWN"
+    },
+    {
+      "type": "dialogue_active",
+      "expected": false
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_TOWN",
+    "player": {
+      "x": 12,
+      "y": 9,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 3,
+        "max_hp": 10
+      }
+    },
+    "seed": 1007,
+    "flags": {
+      "ARRIVED_TOWN": true,
+      "HEAL_MAGE_USED": true
+    }
+  }
+}

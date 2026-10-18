@@ -26,6 +26,7 @@ const DialogueDefinition g_dialogues[] = {
         "",
         1,
         {"FOUND AMULET!!"},
+        0,
         0
     },
     {
@@ -33,6 +34,7 @@ const DialogueDefinition g_dialogues[] = {
         "",
         1,
         {"Nothing here now."},
+        0,
         0
     },
     {
@@ -40,6 +42,7 @@ const DialogueDefinition g_dialogues[] = {
         "",
         3,
         {"Carl the Slime", "1, human ", "settlement road"},
+        0,
         0
     },
     {
@@ -47,6 +50,7 @@ const DialogueDefinition g_dialogues[] = {
         "WILD DOG:",
         4,
         {"Meow.", "", "", "Bark, bark I mean."},
+        0,
         0
     },
     {
@@ -54,6 +58,7 @@ const DialogueDefinition g_dialogues[] = {
         "CHEST:",
         3,
         {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
+        0,
         0
     },
     {
@@ -61,6 +66,7 @@ const DialogueDefinition g_dialogues[] = {
         "",
         4,
         {"NORTH: Passage to", "forest", "EAST: Human ", "settlement"},
+        0,
         0
     },
     {
@@ -68,6 +74,7 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Mayor trusts you.", "Welcome, hero!"},
+        0,
         0
     },
     {
@@ -75,13 +82,31 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Halt! Keep peace.", "Watch for slimes."},
+        0,
         0
     },
     {
-        DIALOGUE_ID_HEAL_MAGE,
+        DIALOGUE_ID_HEAL_MAGE_ASK,
         "HEAL MAGE:",
-        8,
-        {"Let me heal your", "wounds!", "", "With a ring card,", "you can get healed", "during combat.", "The merchant", "sells one!"},
+        3,
+        {"Do you want me to", "heal your wounds?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_DECLINED,
+        "HEAL MAGE:",
+        2,
+        {"Come back when", "you're hurt."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_REFUSED,
+        "HEAL MAGE:",
+        3,
+        {"You need another", "heal? Are you", "the hero or what?"},
+        0,
         0
     },
     {
@@ -89,6 +114,7 @@ const DialogueDefinition g_dialogues[] = {
         "KNIGHT:",
         3,
         {"Slime Knight was", "in fact 3 Slimes", "in an armor!"},
+        0,
         0
     },
     {
@@ -96,6 +122,7 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Hello! I am Mayor.", "Welcome to town!"},
+        0,
         0
     },
     {
@@ -103,6 +130,7 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         8,
         {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
+        0,
         0
     },
     {
@@ -110,6 +138,7 @@ const DialogueDefinition g_dialogues[] = {
         "MERCHANT:",
         5,
         {"A thief stole my", "family heirloom!", "Bandits settle", "north, in the", "mountains!"},
+        0,
         0
     },
     {
@@ -117,6 +146,7 @@ const DialogueDefinition g_dialogues[] = {
         "MERCHANT:",
         3,
         {"You found it!", "Thank you, hero!", "My shop is open now."},
+        0,
         0
     },
     {
@@ -124,6 +154,7 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Defeat 5 monsters!", "Return for power!"},
+        0,
         0
     },
     {
@@ -131,6 +162,7 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         6,
         {"You did it!", "Take this power:", "one more AP!", "I feel a darkness", "at the Castle.", "Steel yourself!"},
+        0,
         0
     },
     {
@@ -138,6 +170,7 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Use your power.", "Go forth, hero!"},
+        0,
         0
     },
     {
@@ -145,6 +178,7 @@ const DialogueDefinition g_dialogues[] = {
         "CARL:",
         8,
         {"Human? Here danger", "I teach you fight!", "U/D choose target", "Make Poker!", "Attack with Sword", "Dagger or Bow", "Defend with shield", "Fire, ice, poison!"},
+        0,
         0
     },
     {
@@ -152,6 +186,7 @@ const DialogueDefinition g_dialogues[] = {
         "CARL:",
         3,
         {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!"},
+        0,
         0
     },
     {
@@ -159,6 +194,7 @@ const DialogueDefinition g_dialogues[] = {
         "",
         2,
         {"I'm not going", "back down there."},
+        0,
         0
     },
 };
