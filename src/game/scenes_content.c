@@ -295,6 +295,8 @@ static const SceneTerrainBlock s_mountain_pass_terrain[] = {
     { 7, 4, 1, 1, TILE_DESOLATE_LANDSCAPE_31 },
     { 13, 4, 1, 1, TILE_DESOLATE_LANDSCAPE_30 },
     { 14, 4, 1, 1, TILE_DESOLATE_LANDSCAPE_31 },
+    { 17, 4, 2, 1, TILE_DESOLATE_LANDSCAPE_37 },
+    { 17, 6, 2, 1, TILE_DESOLATE_LANDSCAPE_37 },
     { 6, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_14 },
     { 7, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_15 },
     { 14, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_14 },
