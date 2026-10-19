@@ -132,7 +132,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "DMG3"
+   "contains": "HCARD DMG3"
   },
   {
    "type": "screen_row",

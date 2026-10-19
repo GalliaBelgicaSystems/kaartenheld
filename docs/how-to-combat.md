@@ -117,7 +117,7 @@ whole play:
 
 | Hand | Needs | Multiplier |
 |---|---|---|
-| high card | anything / 1 card | 100% |
+| high card (`HCARD`) | anything / 1 card, scores highest only | 100% |
 | PAIR | 2 same value | 120% |
 | TWO PAIR | 2 pairs | 150% |
 | THREE KIND | 3 same value | 180% |

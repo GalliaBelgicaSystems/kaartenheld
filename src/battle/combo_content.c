@@ -144,15 +144,12 @@ uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
 /* Participating-hand base: only cards forming the hand count.
  * See combo.h for the contract.  Bank-local (same bank as resolve and
  * the HUD preview): no trampoline, no fixed-bank calls, no mul/div.
- *
- * Single pass over the effective set.  Kinds/pairs tiers locate the hand
- * values with one scan of the classifier's s_hist -- which the caller
- * leaves filled for (cards, idx, n, ring_sub): the no-ring tier search
- * leaves the raw histogram behind, and ring hands refresh it with one
- * shared classify call before invoking this (see resolve/preview).
- * HIGH CARD and all-participate tiers never touch s_hist.  This stays a
- * leaf (it calls nothing) so the deepest battle chain gains no nesting
- * (AGENTS.md 52.24). */
+ * No-ring kinds locate the hand values with one scan of the
+ * classifier's s_hist (left behind by the tier search); a ringed kind
+ * uses its substituted value directly (the joker always sits in the
+ * hand it completes).  HIGH CARD tracks the max; all-five tiers sum.
+ * This stays a leaf (it calls nothing) so the deepest battle chain
+ * gains no nesting (AGENTS.md 52.24). */
 uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
                                  uint8_t n, uint8_t tier, uint8_t ring_sub,
                                  uint8_t phase, uint8_t count_ring)
@@ -172,10 +169,18 @@ uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
     pv1 = 0;
     pv2 = 0;
     if (need != 0) {
-        for (i = 0; i < 10; i++) {
-            if (s_hist[i] == need) {
-                if (pv1 == 0) pv1 = (uint8_t)(i + 1);
-                else pv2 = (uint8_t)(i + 1);
+        if (ring_sub != 0) {
+            /* Ringed kinds need no histogram: the joker always sits in
+             * the hand it completes, so its substituted value IS the
+             * hand value (a ringed TWO_PAIR is always outbid by trips,
+             * so pv2 never matters with a ring). */
+            pv1 = ring_sub;
+        } else {
+            for (i = 0; i < 10; i++) {
+                if (s_hist[i] == need) {
+                    if (pv1 == 0) pv1 = (uint8_t)(i + 1);
+                    else pv2 = (uint8_t)(i + 1);
+                }
             }
         }
     }
@@ -288,11 +293,6 @@ void combo_resolve_banked(void)
                     }
                 }
                 out_result->tier = best;
-                /* Refresh the substituted histogram for the
-                 * participating-base helper below (any ring in a 2+
-                 * hand always makes at least a pair, so best_v is set;
-                 * HIGH CARD and all-five tiers ignore s_hist). */
-                combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, best_v);
             } else {
                 out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }

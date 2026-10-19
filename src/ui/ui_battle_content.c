@@ -702,6 +702,7 @@ static const char *battle_combo_tier_name(uint8_t tier)
         case HAND_FOUR_KIND:      return "FOUR KIND";
         case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
         case HAND_FIVE_KIND:      return "FIVE KIND";
+        case HAND_NONE:           return "HCARD";
         default:                  return "";
     }
 }
@@ -762,11 +763,6 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
             }
         }
         tier = best;
-        /* The participating-base helper reads the substituted histogram
-         * straight from s_hist: refresh it once here (any ring in a 2+
-         * hand always makes at least a pair; HIGH CARD and all-five
-         * tiers ignore s_hist). Same rule as combo_resolve_banked. */
-        combo_classify_loot(battle->hand, idx, w, best_v);
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
@@ -799,6 +795,9 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         r -= 100;
         (*dmg)++;
     }
+    /* HIGH CARD with no damage (lone shield, lone ring, all-fodder) keeps
+     * the row blank instead of "HCARD DMG0" noise -- same rule as before. */
+    if (tier == HAND_NONE && *dmg == 0) return "";
     return battle_combo_tier_name(tier);
 }
 
