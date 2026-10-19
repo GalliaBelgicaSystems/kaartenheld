@@ -695,6 +695,18 @@ def walk_b(planner, checks):
     # sprite now: bumping him opens the lesson first, and closing it
     # auto-starts the spar from the stashed encounter (no second bump).
     # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
+    # Walk adjacent first and capture the quest "?" floating over him
+    # (milestone 08-carl-mark): the field cache above already opened his
+    # lesson, and the spar is still unwon.  The bump below opens the
+    # lesson, so the mark must be shot BEFORE it.
+    if s.pos() != (14, 12):
+        _carl_path = planner.path("field", s.pos(), (14, 12))
+        if _carl_path is None:
+            s.check("path to carl", False,
+                    expected="bfs path", actual="none")
+        else:
+            _walk_path(s, _carl_path)
+    s.shoot("08-carl-mark")
     s.check("carl lesson bump",
             bump_actor(s, planner, "field", (14, 12), "right", "CARL:"),
             expected="CARL:", actual="none")

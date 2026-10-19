@@ -3305,6 +3305,7 @@ the commit/PR without booting anything.
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
 08-carl-field        overworld beside Carl (single field slime)
+08-carl-mark         Carl with the quest "?" overhead (pre-lesson)
 08-carl-tutor        Carl's lesson dialogue (name + warning)
 09-battle            Carl spar opens (select hints on rows 5/9)
 10-battle-attack     after a player attack (damage dealt)

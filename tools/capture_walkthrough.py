@@ -34,7 +34,7 @@ CLASSIC_MILESTONES = [
     "00-boot-grove", "00-stairs-refusal", "01-field-scrolled", "02-town-arrived",
     "02-mayor-mark", "03-guard-dialogue", "04-dialogue-next", "05-shop",
     "06-cards-menu", "07-filter-picker", "08-quests-tab",
-    "08-carl-field", "08-carl-tutor",
+    "08-carl-field", "08-carl-mark", "08-carl-tutor",
     "09-battle", "10-battle-attack", "10-battle-defend",
     "11-battle-aftermath",
     "11-battle-victory", "11-victory-speech", "11-chest", "12-wizard-save", "13-wizard-saved",
