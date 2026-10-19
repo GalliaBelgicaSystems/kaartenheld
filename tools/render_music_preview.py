@@ -33,7 +33,7 @@ OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio")
 
 SONGS = ["battle", "desolate_landscape", "forest", "boss_fight",
          "village", "castle", "mimic", "mimic_intro",
-         "opening", "chest_opening"]
+         "opening", "chest_opening", "game_over", "demo_complete"]
 
 SR = 22050          # output sample rate
 TICK_HZ = 64        # hUGE_dosound rate (256 Hz timer / 4)

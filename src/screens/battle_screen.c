@@ -65,6 +65,12 @@ void battle_screen_update(Game *g)
                      * world_on_battle_end): show it before leaving. */
                     screen_change(g, vg->dialogue.active ? SCREEN_DIALOGUE :
                         game_screen_after_victory(g));
+                    /* Final-boss victory exits to the ending screen (THE
+                     * END credits): switch from the area track to the
+                     * end-credits theme (demo complete.uge, loops). */
+                    if (g->screen == SCREEN_ENDING) {
+                        audio_play_music(MUSIC_ENDING);
+                    }
                 } else {
                     world_on_battle_fled(g);
                     screen_change(g, SCREEN_OVERWORLD);

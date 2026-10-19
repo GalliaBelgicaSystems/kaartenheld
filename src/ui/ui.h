@@ -92,14 +92,15 @@ void ui_actors_sprites_banked(void);
  * (fire flicker / water shimmer, data-driven from generated
  * anim_pairs.h).  Staged inputs ride along (g_bk_ptr_a = World,
  * g_bk_byte_b = anim_step).  Walks the recorded index list (see
- * g_anim_cells), NOT a viewport scan.  Lives in bank 7 for both builds
- * (the release world bank filled up when the castle tile window grew
- * past 17 slots; bank 4, where its caller lives, is full, and bank 2
- * overflows with it); dispatched as a second pass from fixed code
+ * g_anim_cells), NOT a viewport scan.  Lives in bank 8 for both builds
+ * (bank 7 filled up with the end-credits theme; the release world bank
+ * filled up when the castle tile window grew past 17 slots; bank 4,
+ * where its caller lives, is full, and bank 2 overflows with it);
+ * dispatched as a second pass from fixed code
  * because a banked body must never switch banks mid-function. */
 void world_anim_swap_banked(void);
 
-/* Bank-7 no-arg rebuild behind ui_draw_world_map(): re-records the ring
+/* Bank-8 no-arg rebuild behind ui_draw_world_map(): re-records the ring
  * indices of animation-frame cells after every full world redraw (the
  * ring's only writer).  Needs no staging.  Same bank/why as the swap. */
 void world_anim_rebuild_banked(void);
