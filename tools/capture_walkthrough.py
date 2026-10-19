@@ -32,7 +32,7 @@ from walkthrough.walks import WALK_SECONDS            # noqa: E402
 # must match a Session.shoot() call in tools/walkthrough/walks.py.
 CLASSIC_MILESTONES = [
     "00-boot-grove", "00-stairs-refusal", "01-field-scrolled", "02-town-arrived",
-    "03-guard-dialogue", "04-dialogue-next", "05-shop",
+    "02-mayor-mark", "03-guard-dialogue", "04-dialogue-next", "05-shop",
     "06-cards-menu", "07-filter-picker", "08-quests-tab",
     "08-carl-field", "08-carl-tutor",
     "09-battle", "10-battle-attack", "10-battle-defend",

@@ -472,9 +472,19 @@ def walk_a(planner, checks, sram_out=None):
     # Mayor: interact event sets MET_MAYOR + starts the quest.
     # The 3-line INTRO fits on one page (all three lines, no chevron);
     # milestone 04 captures that page (the next dialogue after the guard).
+    # Walk adjacent first and capture the quest "?" floating over him
+    # (milestone 02-mayor-mark) BEFORE the bump opens his dialogue.
+    if s.pos() != (9, 5):
+        _mayor_path = planner.path("town", s.pos(), (9, 5))
+        if _mayor_path is None:
+            s.check("path to mayor", False,
+                    expected="bfs path", actual="none")
+        else:
+            _walk_path(s, _mayor_path)
+    s.shoot("02-mayor-mark")
     s.check("mayor dialogue opened",
-            bump_actor(s, planner, "town", (9, 5), "right", "MAYOR:",
-                       tries=6),
+            s.press_until("right", lambda: s.text_has("MAYOR:"),
+                          tries=6, label="MAYOR:"),
             expected="MAYOR:", actual="none")
     s.shoot("04-dialogue-next", need="MAYOR:")
     close_dialogue(s, "MAYOR:")

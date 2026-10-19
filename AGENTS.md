@@ -3297,6 +3297,7 @@ the commit/PR without booting anything.
 00-stairs-refusal    staircase refusal dialogue ("back down there")
 01-field-scrolled    FIELD with the camera scrolled (SCX > 0)
 02-town-arrived      TOWN just inside the east gate (camera at origin)
+02-mayor-mark        mayor with the quest "?" overhead (pre-dialogue)
 03-guard-dialogue    dialogue box over the scrolled town (camera offset)
 04-dialogue-next     second dialogue line
 05-shop              shopkeeper shop screen
