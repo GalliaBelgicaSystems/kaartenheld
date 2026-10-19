@@ -95,9 +95,10 @@ LAYOUT = [
     # offset moves.
     ['ap_1', 'ap_2', 'ap_3', None],
     # Battle OAM mark glyphs (! and ?, owned by screens/mark_icons.json
-    # with the sprites2 OBJ ramp: solid black glyphs on battle-proof
-    # slot 4, which battle never reprograms (it uses scratch slots 6/7).
-    # Appended last so no existing blob offset moves.
+    # with the wizard's sprites7 OBJ ramp: beard-gray bubble + dark
+    # face-brown detailing on slot 5.  Battle scratch is slots 6/7 and
+    # tileset loads restore 5-7, so slot 5 survives fights.  Appended
+    # last so no existing blob offset moves.
     ['exclaim', 'question', None, None],
 ]
 

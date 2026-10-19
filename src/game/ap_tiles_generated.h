@@ -14,8 +14,8 @@
 #define AP_TILE_2 97
 #define AP_OBJ_2 4
 #define EXCLAIM_TILE 126
-#define EXCLAIM_OBJ 4
+#define EXCLAIM_OBJ 5
 #define QUESTION_TILE 127
-#define QUESTION_OBJ 4
+#define QUESTION_OBJ 5
 
 #endif /* AP_TILES_GENERATED_H */
