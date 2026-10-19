@@ -169,13 +169,13 @@ def main():
         # match the Makefile gfx rule's --tile-coords verbatim (base
         # row-major 8-wide, then the explicit extension + exit + rug cells).
         if ts == "castle":
-            slot_vram = list(range(23)) + [26, 27, 28]
-            if n != 26:
-                errors.append(f"{ts}: expected 26 loaded slots (0..22 + exit 26 + rugs 27..28), got {n}")
+            slot_vram = list(range(23)) + [26, 27, 28, 36]
+            if n != 27:
+                errors.append(f"{ts}: expected 27 loaded slots (0..22 + exit 26 + rugs 27..28 + red 36), got {n}")
                 continue
             enc_cells = ([(x, 0) for x in range(8)] + [(x, 1) for x in range(8)] +
                          [(8, 0), (8, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (8, 2),
-                          (0, 3), (1, 3)])
+                          (0, 3), (1, 3), (0, 4)])
         else:
             slot_vram = list(range(n))
             enc_cells = None

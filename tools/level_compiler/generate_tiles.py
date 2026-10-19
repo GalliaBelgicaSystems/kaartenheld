@@ -11,9 +11,9 @@ patrol_banked.c, and ui.c.
 What stays hand-written (frozen legacy, predates manifests): the generic
 tiles (FLOOR/WALL/EXIT), the old desolate set (DESOLATE_FLOOR_*,
 DESOLATE_FLOOR_PLAIN), stumps, and the t<8 semantic map. Those never
-change; only manifest-covered ranges are generated. (Values 185..186,
-ex-TILE_DESOLATE_MERCHANT/_STAIRCASE, were evicted for castle TILE_CASTLE_27/28;
-the legacy engine ranges now end at DESOLATE_FIRE_02.)
+change; only manifest-covered ranges are generated. (Values 184..186,
+ex-TILE_DESOLATE_FIRE_02/_MERCHANT/_STAIRCASE, were evicted for castle
+TILE_CASTLE_36/27/28; the legacy engine ranges now end at DESOLATE_FIRE_01.)
 The patrol replica dissolves into the same generated table (one source,
 two call sites) instead of a hand-kept copy.
 
@@ -355,16 +355,16 @@ def main(argv):
     if not entries:
         print("generate_tiles: no landscape entries derived", file=sys.stderr)
         return 1
-    # Legacy desolate gap 146..184: no manifest covers it (frozen legacy,
+    # Legacy desolate gap 146..183: no manifest covers it (frozen legacy,
     # hand-ruled in ROM -- walkability in the edge/patrol legacy checks,
-    # glyphs in the ui.c legacy branch, which catches 146..184 before the
+    # glyphs in the ui.c legacy branch, which catches 146..183 before the
     # generated table). Explicit '#'/solid entries keep the glyph Hi-only
-    # scan gap-safe now that castle 185..186 sit right after the gap.
+    # scan gap-safe now that castle 184..186 sit right after the gap.
     # Behavior-preserving: no caller reaches the generated tables for
     # these values with other expectations (walkability callers check the
-    # legacy ranges first; the '*' of FIRE_01/02 stays live in ui.c).
+    # legacy ranges first; the '*' of FIRE_01 stays live in ui.c).
     value_to_const = {v: k for k, v in const_by_value.items()}
-    for value in range(146, 185):
+    for value in range(146, 184):
         entries.append((value_to_const[value], value, False, "#"))
     entries.sort(key=lambda e: e[1])
     ranges = to_ranges(entries)

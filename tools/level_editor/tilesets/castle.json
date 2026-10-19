@@ -289,6 +289,17 @@
       "image_url": "/tiles/castle/castle_right_rug_rotated.png",
       "category": "terrain",
       "palette": "castle3"
+    },
+    {
+      "id": "castle_red_square",
+      "label": "red square",
+      "gb_constant": "TILE_CASTLE_36",
+      "walkable": false,
+      "color": "#8b1b1b",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_red_square.png",
+      "category": "terrain",
+      "palette": "castle3"
     }
   ],
   "vram_block": {
@@ -510,6 +521,60 @@
         "x": 8,
         "y": 3,
         "index": 35,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 0,
+        "y": 4,
+        "index": 36,
+        "tile": "castle_red_square"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "index": 37,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "index": 38,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "index": 39,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "index": 40,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "index": 41,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "index": 42,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 7,
+        "y": 4,
+        "index": 43,
+        "tile": "castle_plain_floor"
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "index": 44,
         "tile": "castle_plain_floor"
       }
     ]

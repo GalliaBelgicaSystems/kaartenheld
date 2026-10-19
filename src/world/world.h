@@ -213,6 +213,10 @@ typedef enum {
      * edge/patrol).  Suffixes stay grid indices, like the rest. */
     TILE_CASTLE_27 = 185,
     TILE_CASTLE_28 = 186,
+    /* Solid red square (sheet row 4, grid index 36, VRAM slot 26):
+     * value 184 is another evicted legacy desolate id
+     * (TILE_DESOLATE_FIRE_02), unreferenced by every level. */
+    TILE_CASTLE_36 = 184,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -304,7 +308,9 @@ typedef enum {
     TILE_DESOLATE_KOBOLD_01  = 181,
     TILE_DESOLATE_KOBOLD_02  = 182,
     TILE_DESOLATE_FIRE_01    = 183,
-    TILE_DESOLATE_FIRE_02    = 184,
+    /* Value 184 (ex-TILE_DESOLATE_FIRE_02) is evicted: reused as
+     * TILE_CASTLE_36 above.  The legacy engine ranges now end at
+     * TILE_DESOLATE_FIRE_01. */
     /* Values 185..186 (ex-TILE_DESOLATE_MERCHANT/_STAIRCASE) are evicted:
      * reused as TILE_CASTLE_27/28 above.  The legacy engine ranges now
      * end at TILE_DESOLATE_FIRE_02. */
