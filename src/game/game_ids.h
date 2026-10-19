@@ -53,6 +53,7 @@
 #define EVENT_ID_HEAL_MAGE_REFUSED (EVENT_ID_FIRST_GAME + 17)
 #define EVENT_ID_CARL_CHEST_FIRST (EVENT_ID_FIRST_GAME + 18)
 #define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
+#define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -73,7 +74,9 @@ typedef enum {
     STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
                                        * its one free heal (later talks get
                                        * the refusal, no heal, no jingle) */
-    STORY_FLAG_ID_COUNT        = 6
+    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 5-kill "return to the mayor"
+                                       * notice already showed (one-shot) */
+    STORY_FLAG_ID_COUNT        = 7
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -103,7 +106,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 20
+#define GAME_EVENT_COUNT 21
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

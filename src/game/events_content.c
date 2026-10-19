@@ -110,6 +110,29 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 1, 0 }}
     },
+    /* ── 5-kill "return to the mayor" notice ─────────────────────────
+     * The 5th victorious battle (any hostile: ACTOR_DEFEATED is
+     * all-match, and this row sits right after MONSTER_DEFEATED so the
+     * counter already includes this kill) pops a speakerless next-step
+     * box.  No quest precondition: kills before the accept still count,
+     * so the notice doubles as pre-quest guidance toward the mayor.
+     * One-shot via STORY_FLAG_ID_HUNT_NOTIFIED.  Overlap note: a defeat
+     * that also carries its own reward dialogue (Carl's speech, the
+     * mimic box) stages that text last, swallowing this one -- grants
+     * and the flag are unaffected either way. */
+    {
+        EVENT_ID_QUEST_NUDGE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_NONE, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, true },
+            { EVENT_COND_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, false, false }
+        },
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MONSTERS_SLAIN, 0, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, 0 }
+        }
+    },
     {
         EVENT_ID_GUARD_AFTER_MAYOR, EVENT_TRIGGER_INTERACT, ENTITY_ID_GUARD, EVENT_MAP_ANY,
         1,

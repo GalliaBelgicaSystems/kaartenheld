@@ -147,7 +147,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
         8,
-        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Slay them, then", "return to the", "mayor!"},
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
         0,
         0
     },
@@ -172,6 +172,14 @@ const DialogueDefinition g_dialogues[] = {
         "",
         2,
         {"Your power has", "grown! AP up!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MONSTERS_SLAIN,
+        "",
+        4,
+        {"You have killed", "many monsters,", "return to the", "mayor!"},
         0,
         0
     },
