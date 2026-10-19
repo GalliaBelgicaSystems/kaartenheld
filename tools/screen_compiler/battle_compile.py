@@ -134,7 +134,9 @@ from compose_hero_sprites import TILE_COORDS as HERO_TILE_COORDS
 # Shared overworld enemy OAM base (must match ENEMY_OW_BASE in src/ui/ui.h).
 # Blob: concatenated per-enemy frames in pinned order (see OW_ORDER_PINNED
 # below); OAM ids 128+ alias BG tiles, so the blob must stay below 128
-# (clear error below).
+# (clear error below).  OAM 126-127 are additionally reserved for the
+# battle HUD pips (AP cost, !/? marks, streamed separately), so the blob
+# is capped at 26 tiles (separate loud error below).
 ENEMY_OW_BASE = 100
 ENEMY_OW_LIMIT = 128
 
@@ -592,6 +594,15 @@ def ow_blob_layout(enemy_types, rider_types=None):
         print("ERROR: overworld blob needs %d OAM tiles, budget is %d (base %d, limit %d)"
               % (at, ENEMY_OW_LIMIT - ENEMY_OW_BASE, ENEMY_OW_BASE, ENEMY_OW_LIMIT), file=sys.stderr)
         return None, None
+    # OAM 126-127 are reserved for battle HUD pips (AP cost + !/? marks,
+    # streamed separately -- see build_ap_output): the blob must stop at 26
+    # so a future enemy addition fails loudly here instead of silently
+    # clobbering them.  (128+ is BG world/enemy art and equally hard.)
+    if at > 26:
+        print("ERROR: overworld blob needs %d tiles but OAM 126-127 are reserved"
+              " for battle HUD pips (AP cost, !/? marks); move or drop a blob"
+              " cell first" % at, file=sys.stderr)
+        return None, None
     return offsets, cells
 
 
@@ -752,8 +763,19 @@ def load_rider_types():
     sheet (compose_enemy_sprites.TILE_COORDS); ramps must be real artist
     ramps (palette.txt).  Slotted-ness resolves later via
     resolve_obj_palette (unknown slot = loud compile error)."""
+    return _load_icon_table("rider_icons.json",
+                            ["rider_fire", "rider_ice", "rider_poison"])
+
+
+def _load_icon_table(filename, required):
+    """Load + validate a battle OAM icon table (screens/*.json).
+
+    Returns {cell: ramp} or None on error.  Cells must exist on the enemy
+    sheet (compose_enemy_sprites.TILE_COORDS); ramps must be real artist
+    ramps (palette.txt).  Keys must match `required` exactly so renames
+    and typos fail loudly instead of silently dropping an icon."""
     from palette_parse import parse_palette as _parse_palette
-    path = REPO_ROOT / "screens" / "rider_icons.json"
+    path = REPO_ROOT / "screens" / filename
     try:
         with open(path) as f:
             data = json.load(f)
@@ -761,18 +783,36 @@ def load_rider_types():
         sys.stderr.write("ERROR: missing %s\n" % path)
         return None
     cells = data.get("cells") or {}
-    if sorted(cells.keys()) != ["rider_fire", "rider_ice", "rider_poison"]:
-        sys.stderr.write("ERROR: rider_icons.cells must hold exactly rider_fire/ice/poison\n")
+    if sorted(cells.keys()) != sorted(required):
+        sys.stderr.write("ERROR: %s cells must hold exactly %s\n"
+                         % (filename, "/".join(required)))
         return None
     _, _ramps = _parse_palette()
     for _cell, _ramp in cells.items():
         if _cell not in ENEMY_TILE_COORDS:
-            sys.stderr.write("ERROR: rider_icons cell '%s' not on the enemy sheet\n" % _cell)
+            sys.stderr.write("ERROR: %s cell '%s' not on the enemy sheet\n" % (filename, _cell))
             return None
         if _ramp not in _ramps:
-            sys.stderr.write("ERROR: rider_icons.%s unknown ramp '%s'\n" % (_cell, _ramp))
+            sys.stderr.write("ERROR: %s.%s unknown ramp '%s'\n" % (filename, _cell, _ramp))
             return None
     return cells
+
+
+def load_ap_types():
+    """Load + validate screens/ap_icons.json (battle AP-cost OAM pips).
+
+    Returns {cell: ramp} or None on error.  One icon per energy cost 1-2
+    (cost 0 shows none); the three-ap art stays staged in the sheet until
+    a 3-cost card exists (no free OAM tile below the BG-art aliasing)."""
+    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2"])
+
+
+def load_mark_types():
+    """Load + validate screens/mark_icons.json (battle OAM !/? glyphs).
+
+    Returns {cell: ramp} or None on error.  Wired through the same
+    pipeline as the riders/AP pips; placement follows separately."""
+    return _load_icon_table("mark_icons.json", ["exclaim", "question"])
 
 
 def build_rider_output(enemy_types, rider_types):
@@ -813,6 +853,63 @@ def build_rider_output(enemy_types, rider_types):
         lines.append("#define RIDER_OBJ_%s %d" % (_elem, _slot))
     lines.append("")
     lines.append("#endif /* RIDER_TILES_GENERATED_H */")
+    lines.append("")
+    return "\n".join(lines)
+
+
+# Fixed OAM tile ids for the battle HUD pips.  Below the BG-art aliasing
+# (OAM 128+ shares physical tiles with BG 128+), clear of the font dup
+# (OAM 0-95) and the hero tiles (98-99); the enemy blob streams to 100+.
+# AP_1/2 sit at 96-97, the marks at 126-127 (blob-adjacent spare); the
+# blob is capped at 26 tiles so growth fails loudly instead of
+# clobbering them (see ow_blob_layout).
+AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "exclaim": 126, "question": 127}
+
+
+def build_ap_output(ap_types, mark_types):
+    """Generate src/game/ap_tiles_generated.h: battle HUD OAM pips.
+
+    Per-card AP-cost pips (top-left of each hand card, selected by energy
+    cost; cost 0 shows none) plus the !/? mark glyphs (wired, placement
+    follows separately).  Tiles are fixed OAM ids (AP_TILE_IDS above --
+    NOT blob offsets); OBJ slots come from the ap/mark_icons.json ramps
+    (slotted OBJ ramps only, resolved here so a typo fails the compile,
+    not the battle).  Compile-time constants: zero ROM/RAM cost, no
+    cross-bank reads, no staging.
+    """
+    if not ap_types or not mark_types:
+        sys.stderr.write("ERROR: missing AP/mark HUD declaration\n")
+        return None
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py --all.")
+    lines.append(" * Do not edit directly -- edit screens/ap_icons.json /")
+    lines.append(" * screens/mark_icons.json and re-run.")
+    lines.append(" * Battle HUD OAM pips: fixed VRAM tile ids (AP_TILE_IDS) +")
+    lines.append(" * OBJ palette slots for AP-cost pips and !/? marks.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#ifndef AP_TILES_GENERATED_H")
+    lines.append("#define AP_TILES_GENERATED_H")
+    lines.append("")
+    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2")):
+        _ramp = ap_types.get(_cell)
+        if _ramp is None:
+            sys.stderr.write("ERROR: ap_icons.json missing '%s'\n" % _cell)
+            return None
+        _slot = resolve_obj_palette(_ramp, "ap_icons.%s" % _cell)
+        lines.append("#define AP_TILE_%s %d" % (_vid, AP_TILE_IDS[_cell]))
+        lines.append("#define AP_OBJ_%s %d" % (_vid, _slot))
+    for _cell, _vid in (("exclaim", "EXCLAIM"), ("question", "QUESTION")):
+        _ramp = mark_types.get(_cell)
+        if _ramp is None:
+            sys.stderr.write("ERROR: mark_icons.json missing '%s'\n" % _cell)
+            return None
+        _slot = resolve_obj_palette(_ramp, "mark_icons.%s" % _cell)
+        lines.append("#define %s_TILE %d" % (_vid, AP_TILE_IDS[_cell]))
+        lines.append("#define %s_OBJ %d" % (_vid, _slot))
+    lines.append("")
+    lines.append("#endif /* AP_TILES_GENERATED_H */")
     lines.append("")
     return "\n".join(lines)
 
@@ -1310,6 +1407,8 @@ def main(args=None):
                         help="Print the png2gb --tile-coords string for battle_enemy_art.h (set order, frame0 then frame1 per set) and exit")
     parser.add_argument("--ow-coords", action="store_true",
                         help="Print the png2gb --tile-coords string for enemy_ow_tiles.h (sorted enemy-id order) and exit")
+    parser.add_argument("--ap-coords", action="store_true",
+                        help="Print the png2gb --tile-coords string for ap_tiles.h (AP cost pips + !/? marks, fixed order) and exit")
 
     args = parser.parse_args(args)
 
@@ -1454,6 +1553,26 @@ def main(args=None):
         print(" ".join(coords))
         return 0
 
+    if args.ap_coords:
+        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1,
+        # ap_2, then the marks -- matches AP_TILE_IDS; ap_3 stays staged
+        # until a 3-cost card exists and is deliberately excluded here).
+        _ap_types = load_ap_types()
+        _mark_types = load_mark_types()
+        if _ap_types is None or _mark_types is None:
+            return 1
+        coords = []
+        for n in ["ap_1", "ap_2", "exclaim", "question"]:
+            if n not in ENEMY_TILE_COORDS:
+                print("ERROR: --ap-coords: '%s' not on the enemy sheet" % n, file=sys.stderr)
+                return 1
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --ap-coords produced no tiles", file=sys.stderr)
+            return 1
+        print(" ".join(coords))
+        return 0
+
 # Generate outputs
     battle_screens_output = build_battle_screens_output(battle_screens, {})
     rider_types = load_rider_types()
@@ -1477,6 +1596,15 @@ def main(args=None):
     rider_output = build_rider_output(enemy_types, rider_types)
     if rider_output is None:
         return 1
+    ap_types = load_ap_types()
+    if ap_types is None:
+        return 1
+    mark_types = load_mark_types()
+    if mark_types is None:
+        return 1
+    ap_output = build_ap_output(ap_types, mark_types)
+    if ap_output is None:
+        return 1
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
@@ -1496,6 +1624,8 @@ def main(args=None):
     hud_skin_path = output_dir / "hud_skin.c"
     # Write rider_tiles_generated.h (battle per-card OAM rider icons)
     rider_path = output_dir / "rider_tiles_generated.h"
+    # Write ap_tiles_generated.h (battle HUD OAM pips: AP cost + !/?)
+    ap_path = output_dir / "ap_tiles_generated.h"
 
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
@@ -1506,7 +1636,8 @@ def main(args=None):
                             (hero_content_path, hero_output),
                             (card_skin_path, card_skin_output),
                             (hud_skin_path, hud_skin_output),
-                            (rider_path, rider_output)):
+                            (rider_path, rider_output),
+                            (ap_path, ap_output)):
             try:
                 committed = path.read_text(encoding="utf-8")
             except FileNotFoundError:
@@ -1573,6 +1704,9 @@ def main(args=None):
     with open(rider_path, "w") as f:
         f.write(rider_output)
     print("Wrote %s" % rider_path)
+    with open(ap_path, "w") as f:
+        f.write(ap_output)
+    print("Wrote %s" % ap_path)
 
     return 0
 

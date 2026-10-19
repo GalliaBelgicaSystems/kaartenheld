@@ -60,7 +60,10 @@ enum {
     SFX_BACK = 3,
     SFX_ATTACK = 4,
     SFX_HIT = 5,
-    SFX_BLOCK = 6
+    SFX_BLOCK = 6,
+    /* Alert sting for pursuer levels (kobolds, slime knights): plays once
+     * on entry, then the level track resumes (screens/sfx.json ALERT). */
+    SFX_ALERT = 7
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

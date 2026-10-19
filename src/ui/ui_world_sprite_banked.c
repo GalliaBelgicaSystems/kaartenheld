@@ -7,6 +7,49 @@
 #include "banked.h"
 #include "battle_data.h"
 #include "gfx/rpg_tile_lookup.h"
+#include "ap_tiles_generated.h"
+
+/* HUD marker state owned by the bank-8 tick (marks_banked.c, WRAM BSS):
+ * per-actor marks recomputed every frame. */
+extern uint8_t g_actor_marks[];
+extern uint8_t g_static_marks[];
+
+/* Fixed OAM entries for HUD markers (see ACTOR_MARK_* in actor.h):
+ * quest "?" / pursuer "!" above actors.  Fixed slots (never the running
+ * actor cursor) so markers never shift actor entries (verify-oam asserts
+ * absolute slots).  Slots 30-37 cover up to 8 markers; additional marked
+ * actors are skipped.  ui_sprite_begin_transition() hides the whole table
+ * on screen changes so markers never leak into battle. */
+#define MARK_OAM_BASE 30u
+#define MARK_OAM_LAST 37u
+
+/* Draw one HUD marker above (px, py) (actor top-left pixel, camera
+ * already subtracted) and advance the fixed slot.  Skips (without
+ * consuming a slot) when kind is NONE, slots are exhausted, or the
+ * marker would sit off-screen.  Stale slots are cleared by the
+ * hide-remainder loop at the end of the pass, so a disappearing marker
+ * never leaves a ghost sprite. */
+static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
+{
+    volatile uint8_t *e;
+    if (kind == ACTOR_MARK_NONE || *slot > MARK_OAM_LAST) return;
+    e = (volatile uint8_t *)(0xC000u + ((uint16_t)*slot << 2));
+    (*slot)++;
+    if (px >= 160 || py < 8 || py >= 144) {
+        e[0] = 0;
+        e[2] = 0;
+        return;
+    }
+    e[0] = (uint8_t)(py + 8); /* one cell above the head + OAM offset */
+    e[1] = (uint8_t)(px + 8);
+    if (kind == ACTOR_MARK_QUEST) {
+        e[2] = QUESTION_TILE;
+        e[3] = QUESTION_OBJ;
+    } else {
+        e[2] = EXCLAIM_TILE;
+        e[3] = EXCLAIM_OBJ;
+    }
+}
 
 /* ── Overworld actor sprites + castle boss background (bank-3 body) ──
  * The data-driven SPRITE_KIND_* OAM choice, the per-actor shadow-OAM write
@@ -114,6 +157,7 @@ void ui_actors_sprites_banked(void)
     uint8_t slot;
     uint8_t i;
     uint8_t oam_slot = OAM_SLOT_ACTOR0;  /* running OAM entry cursor */
+    uint8_t mark_slot = MARK_OAM_BASE;   /* fixed HUD-marker entries */
 
     if (!w) return;
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
@@ -182,6 +226,8 @@ void ui_actors_sprites_banked(void)
                 }
                 /* w*h entries (no mult: w,h <= 2) */
                 oam_slot = (uint8_t)(oam_slot + (gh == 2 ? (gw == 2 ? 4 : 2) : gw));
+                /* HUD marker ("?" quest / "!" pursuer) above this actor. */
+                mark_draw(px, py, g_actor_marks[slot], &mark_slot);
                 continue;
             }
         }
@@ -241,9 +287,19 @@ void ui_actors_sprites_banked(void)
             e[1] = (uint8_t)(px + 8);
             e[2] = tile;
             e[3] = prop;
+            /* HUD marker ("?" quest / "!" pursuer) above this actor. */
+            mark_draw(px, py, g_static_marks[i], &mark_slot);
             continue;
         }
         e[0] = 0;  /* hidden */
+    }
+    /* Hide unused marker slots so a disappearing "?" / "!" never leaves
+     * a stale sprite from an earlier frame (mark_draw only consumes
+     * slots for live markers). */
+    while (mark_slot <= MARK_OAM_LAST) {
+        ((volatile uint8_t *)(0xC000u + ((uint16_t)mark_slot << 2)))[0] = 0;
+        ((volatile uint8_t *)(0xC000u + ((uint16_t)mark_slot << 2)))[2] = 0;
+        mark_slot++;
     }
     /* Castle boss is drawn directly into the background tilemap as a 2x2
      * block (castle tile indexes 7,8,16,17), not an OAM sprite. */

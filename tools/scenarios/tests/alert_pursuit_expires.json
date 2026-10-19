@@ -1,0 +1,35 @@
+{
+ "name": "alert_pursuit_expires",
+ "test": true,
+ "description": "The pursuer ! marker clears when the entry alert TTL (150 frames) drains: after a 170-frame wait the kobold's entry 30 is hidden again (tile 0). The alert sting played exactly once (sfx_count == 1).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 170
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 1
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 0
+  }
+ ]
+}

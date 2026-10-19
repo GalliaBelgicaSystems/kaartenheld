@@ -66,6 +66,14 @@ typedef enum {
 /* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */
 #define AI_PATROL_VERT_TILES 3
 
+/* Overworld HUD marker kinds (OAM icons drawn above actors by the
+ * bank-4 sprite pass, fixed entries 30+): 0 = none, 1 = quest "?"
+ * (talk to advance/turn in), 2 = pursuer "!" (alert active).
+ * Decided per frame by game_update_actor_marks_banked (bank 8). */
+#define ACTOR_MARK_NONE  0
+#define ACTOR_MARK_QUEST 1
+#define ACTOR_MARK_ALERT 2
+
 /* Static, scene-owned actor configuration.  No mutable gameplay state.
  * actor_id is the stable persistent instance id (ActorId) used to track
  * defeat/lifecycle in GameState.world; it must be unique across scenes. */

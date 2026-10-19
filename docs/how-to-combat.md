@@ -112,6 +112,8 @@ Each card has a **value** (its power) and a **symbol** (its type):
 | `SH` Shield | **0 damage** — but counts for combos | **blocks** its value (only if in the hand) |
 | `HE` Heal (rings) | converts the hand to healing (see below) | 0 block — but wildcards the hand + gates over-block heal |
 
+Every card shows its energy cost as a pip in its top-left corner (one pip per AP; free cards show none).
+
 Your selection ranks **like a poker hand**. Better hands multiply the
 whole play:
 

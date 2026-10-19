@@ -52,7 +52,7 @@ void audio_play_sfx(uint8_t s)
     uint8_t voices;
 
     if (!g_sound_enabled) return;
-    if (s > SFX_BLOCK) return;
+    if (s > SFX_ALERT) return;
     sfx_id = s;
     sfx_tick = 0;
     sfx_tone_idx = 0;

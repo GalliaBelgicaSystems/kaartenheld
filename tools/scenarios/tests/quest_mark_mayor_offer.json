@@ -1,0 +1,35 @@
+{
+ "name": "quest_mark_mayor_offer",
+ "test": true,
+ "description": "Quest marker ? over the mayor while MONSTER_HUNT is NOT_STARTED: entry 30 shows QUESTION_TILE (127). No execute; the marker is part of the pending overworld render.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 127
+  }
+ ]
+}

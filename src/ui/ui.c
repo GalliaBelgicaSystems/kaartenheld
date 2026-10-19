@@ -235,14 +235,18 @@ volatile uint8_t g_debug_hide_count;
 /* Hide the player and actor sprites in real OAM right now, before the new
  * screen's full redraw runs.  Covers the hostile OAM region (slots grow
  * by w*h per actor for multi-tile enemy sprites) plus the static slots
- * behind them (see the running-cursor layout in ui_world_sprite_banked). */
+ * behind them (see the running-cursor layout in ui_world_sprite_banked).
+ * Clears the WHOLE table (not just the actor range): battle HUD sprites
+ * (riders 19-23, AP pips 24-28) and overworld markers (fixed slots 30+)
+ * must not leak across screen changes, and no entry outside 0-39 exists
+ * to preserve. */
 void ui_sprite_begin_transition(void)
 {
     uint8_t i;
 #ifdef DEBUG_BUILD
     g_debug_hide_count++;
 #endif
-    for (i = 0; i < OAM_MAX_ACTOR_ENTRIES; i++) {
+    for (i = 0; i < 40; i++) {
         shadow_OAM[i].y = 0;
     }
     refresh_OAM();

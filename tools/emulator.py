@@ -234,7 +234,7 @@ ITEM_ID_MAP = {"NONE": 0,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
                "BOW_9": 0x46}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
-                "SPIDER_FIELD": 12,
+                "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
 ACTOR_STATE_NAME_MAP = {"ALIVE": 0, "DEFEATED": 1}
 # Status IDs (mirrors src/rpg/status.h StatusId enum)

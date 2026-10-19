@@ -1,0 +1,37 @@
+{
+ "name": "quest_mark_carl_done",
+ "test": true,
+ "description": "No quest marker over Carl once the spar is won (Carl tutor actor defeated): entry 30 stays cleared (tile 0).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  },
+  "world": {
+   "CARL_FIELD": "DEFEATED"
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 0
+  }
+ ]
+}

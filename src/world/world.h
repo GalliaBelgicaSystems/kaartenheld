@@ -34,6 +34,11 @@ typedef enum {
 
 /* Maximum concurrent hostile actors in a scene (compile-time constant). */
 #define MAX_WORLD_ACTORS 4
+
+/* Pursuit-alert display length (frames at 60 fps) after entering a map
+ * with live chasers.  Set by world_load_map, drained per frame by the
+ * marks refresh; the "!" OAM marks show while it runs. */
+#define ALERT_TTL_FRAMES 150
 #define NO_ACTOR_INDEX   0xFF
 
 /* Frames to walk a single tile (1 px/frame of an 8px tile).  Movement is

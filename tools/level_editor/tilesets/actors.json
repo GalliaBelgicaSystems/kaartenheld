@@ -304,6 +304,36 @@
       "category": "object"
     },
     {
+      "id": "actors_one_ap",
+      "label": "one ap",
+      "gb_constant": "TILE_ACTORS_ONE_AP",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_one_ap.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_two_ap",
+      "label": "two ap",
+      "gb_constant": "TILE_ACTORS_TWO_AP",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_two_ap.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_three_ap",
+      "label": "three ap",
+      "gb_constant": "TILE_ACTORS_THREE_AP",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_three_ap.png",
+      "category": "object"
+    },
+    {
       "id": "actors_black_emptyness_1",
       "label": "empty",
       "gb_constant": "TILE_ACTORS_BLACK_EMPTYNESS",
@@ -391,6 +421,26 @@
       "color": "#000000",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_black_emptyness_7.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_exclamation_point",
+      "label": "exclamation point",
+      "gb_constant": "TILE_ACTORS_EXCLAMATION_POINT",
+      "walkable": false,
+      "color": "#dbdbdb",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_exclamation_point.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_question_mark",
+      "label": "question mark",
+      "gb_constant": "TILE_ACTORS_QUESTION_MARK",
+      "walkable": false,
+      "color": "#dbdbdb",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_question_mark.png",
       "category": "object"
     }
   ]

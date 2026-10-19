@@ -5,6 +5,19 @@
 #include "battle.h"
 #include "battle_data.h"
 #include "banked.h"
+#include "ap_tiles_generated.h"
+
+/* Per-card AP-cost OAM pips (this bank-5 body, same dispatch as the enemy
+ * strides above: no new trampoline call).  Every non-empty hand card
+ * shows its energy cost as an OAM sprite inset over its own top-LEFT
+ * frame corner (mirroring the top-right element riders in
+ * battle_rider_content.c): cost 1 -> one-ap pip, cost 2 -> two-ap pip.
+ * Cost 0 (free) and costs above 2 show nothing -- no 3-cost card exists
+ * (the three-ap art stays staged in the enemy sheet until one does).
+ * Hand slot i owns OAM entry 24+i (entries 24-28: the rider pass owns
+ * 19-23, enemy strides 1-18, nothing else writes OAM during battle).
+ * Loot reveal (msg_id 4) hides all five, like the rider tail.  No
+ * multiply/div/mod anywhere (AGENTS.md 52.18): shifts and adds only. */
 
 /* Battle enemy OAM sprites (Florent's model), bank-5 body.  Dispatch from
  * the fixed-bank ui_update_battle wrapper right after the bank-3 render
@@ -28,6 +41,8 @@
  * survives); battle enemies take fixed strides below. */
 #define BATTLE_OAM_BASE 1u
 #define BATTLE_OAM_STRIDE 6u
+
+static void battle_ap_draw(const volatile Battle *battle);
 
 static uint8_t battle_oam_x(uint8_t x, uint8_t w)
 {
@@ -172,6 +187,52 @@ void battle_oam_draw_banked(void)
                 gt++;
                 gn++;
             }
+        }
+    }
+    battle_ap_draw(battle);
+}
+
+/* Per-card AP-cost OAM pips (same bank-5 dispatch as the enemy pass
+ * above: g_bk_ptr_a = Battle*.  Hand slot i owns entry 24+i, drawn
+ * inset over its own top-LEFT frame corner (mirroring the rider pass's
+ * top-right): cost 1 -> AP_TILE_1, cost 2 -> AP_TILE_2, cost 0 or
+ * above 2 (no such card exists) -> hidden.  Loot reveal (msg_id 4)
+ * hides all five: the hand is cleared there, like the rider tail. */
+static void battle_ap_draw(const volatile Battle *battle)
+{
+    uint8_t cards_row = g_battle_hud.cards_row;
+    uint8_t bh = g_card_skin_wram.box_h;
+    uint8_t top;
+    uint8_t i;
+    uint8_t hide;
+    volatile uint8_t *re;
+
+    if (bh < 3 || bh > 5) bh = 4;
+    top = (uint8_t)(cards_row - (bh - 1));
+    /* Loot reveal (msg_id 4): the hand is cleared, so every pip hides --
+     * same gate as the rider tail, folded into the single pass. */
+    hide = (uint8_t)(battle->msg_id == 4);
+    for (i = 0; i < BATTLE_HAND_SIZE; i++) {
+        uint8_t tile = 0;
+        uint8_t slot = 0;
+        if (!hide && battle->hand[i].type != BATTLE_CARD_TYPE_EMPTY) {
+            if (battle->hand[i].cost == 1) {
+                tile = AP_TILE_1;
+                slot = AP_OBJ_1;
+            } else if (battle->hand[i].cost == 2) {
+                tile = AP_TILE_2;
+                slot = AP_OBJ_2;
+            }
+        }
+        re = (volatile uint8_t *)(0xC000u + ((uint16_t)(24 + i) << 2));
+        if (tile) {
+            re[0] = (uint8_t)((top << 3) + 16);
+            re[1] = (uint8_t)(((uint8_t)(i << 2) << 3) + 8);
+            re[2] = tile;
+            re[3] = slot;
+        } else {
+            re[0] = 0;
+            re[2] = 0;
         }
     }
 }

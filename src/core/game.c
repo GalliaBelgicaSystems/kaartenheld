@@ -97,19 +97,23 @@ void game_update(Game *g)
     g->frame++;
 
     screen_update(g);
-    /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot): one bank-8
-     * round-trip per frame through the game-layer body
-     * (jingle_full_banked: mask from game story state, so the engine
-     * never branches on game ids).  Ticks here rather than in the
-     * overworld screen so menus, dialogue and shops don't freeze the
-     * restore timer while the driver loops the one-shot song.
-     * Engine-generic restore (scene track lookup); action codes come
-     * back through g_bk_byte_b. */
+    /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
+     * overworld HUD marker refresh (quest "?" / pursuer "!"): one
+     * bank-8 round-trip per frame through the game-layer bodies
+     * (game_frame_tick_banked runs the jingle then the marks refresh).
+     * Same position as the old standalone jingle dispatch (after
+     * screen_update): the edge sees this frame's state, which the
+     * 240-frame harness backstop race depends on.  Ticks here rather
+     * than in the overworld screen so menus, dialogue and shops don't
+     * freeze the restore timer while the driver loops the one-shot
+     * song.  Engine-generic restore (scene track lookup); action codes
+     * come back through g_bk_byte_b (jingle) and the pursuit alert
+     * through g_bk_byte_c (marks). */
     {
         const SceneDefinition *def;
-        extern void jingle_full_banked(void);
+        extern void game_frame_tick_banked(void);
         g_bk_call_bank = 8;
-        g_bk_call_target = (uint16_t)&jingle_full_banked;
+        g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
         if (g_bk_byte_b == 1) {
             audio_play_music(MUSIC_CHEST);
@@ -122,6 +126,9 @@ void game_update(Game *g)
              * MUSIC_CHANGED so the harness observes the stop, and a
              * later play_music(TITLE) replays from the top. */
             audio_play_music(MUSIC_NONE);
+        }
+        if (g_bk_byte_c == 1) {
+            audio_play_sfx(SFX_ALERT);
         }
     }
     scene_sync_from_world(g);
