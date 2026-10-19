@@ -127,6 +127,16 @@
    "type": "screen_row",
    "row": 10,
    "contains": "DEF 3"
+  },
+  {
+   "type": "vram_row",
+   "row": 10,
+   "contains": "DMG 2"
+  },
+  {
+   "type": "vram_row",
+   "row": 10,
+   "contains": "DEF 3"
   }
  ]
 }

@@ -2767,6 +2767,13 @@ Rules:
   the walkthrough's exact-row `bg_text` assert at a proven-colliding
   position (`08-carl-tutor` row 16) is the canary, negative-tested
   (pre-fix it decodes `?`).
+* Same for battle HUD rows: the combo row (row 10) clear loop wiped VRAM
+  without invalidating the buffer, so staging a shield blanked VRAM while
+  the buffer stayed truthful (Oct 2026: user saw only the DEF digit, all
+  buffer asserts green).  The row now invalidates its buffer cells in the
+  clear loop, and `vram_row` (real-VRAM `0x9800` read, tile+32 decode)
+  gates it in `defend_warn_block` -- negative-tested (pre-fix VRAM reads
+  just `3`).
 
 ## 52.26 mGBA window-address breakpoints stick and conflate (Oct 2026)
 

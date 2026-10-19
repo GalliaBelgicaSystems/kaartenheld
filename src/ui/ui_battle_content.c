@@ -899,7 +899,13 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * battle_draw_text_line skip-guard would skip cells whose semantic
      * buffer already holds spaces, letting stale overworld/wipe tiles
      * survive in VRAM and the mirror; same reason the old band clear
-     * above the hand was unconditional).  The combo preview shares row
+     * above the hand was unconditional).  The buffer row is invalidated
+     * alongside (NUL never equals text): without this, a redraw whose
+     * text matches the buffer -- e.g. staging a shield while "DMG 2"
+     * already shows -- skips every VRAM rewrite and the row goes blank
+     * on real hardware while the buffer (and every harness assert
+     * reading it) stays truthful.  RAM truth vs VRAM lie, AGENTS.md
+     * 52.25 family.  The combo preview shares row
      * 10 with the hand zone now; the full-width clear also covers the
      * col-6 gap the old two-segment draw left behind. */
     VBK_REG = 0;
@@ -910,6 +916,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 #ifdef DEBUG_BUILD
         g_tilemap_mirror[(uint16_t)combo_row * 32 + r] = ui_font_tile_base;
 #endif
+        g_ui_screen_buf[combo_row][r] = '\0';
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
     /* Enemy forecast owns the row while a strike is incoming (defend

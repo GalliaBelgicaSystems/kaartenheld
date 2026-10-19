@@ -1185,10 +1185,10 @@ class EmulatorSession:
 
     def get_screen_dump(self):
         """Read 20x18 VRAM background tilemap from 0x9800.
-        
-        Assumes GBDK font_ibm loaded at tile base 0 (identity tile-to-ASCII
-        mapping).  For custom fonts the tile-base offset from the font handle
-        would need to be subtracted first.
+
+        Text tiles decode as tile_id + 32 (ui_font_tile_base is 0, so
+        the PPU fetches ch - ' '; see battle_draw_text_line).  Non-text
+        tiles (art, icons) decode to whatever bytes they are; pass '.'.
         """
         rows = []
         for y in range(18):
@@ -1196,8 +1196,8 @@ class EmulatorSession:
             row_bytes = []
             for x in range(20):
                 b = self._memread(0x9800 + y * 32 + x)
-                if b is not None:
-                    row_bytes.append(chr(b) if 32 <= b <= 126 else '.')
+                if b is not None and 0 <= b <= 95:
+                    row_bytes.append(chr(b + 32))
                 else:
                     row_bytes.append('.')
             rows.append(''.join(row_bytes))
