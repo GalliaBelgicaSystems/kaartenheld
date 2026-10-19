@@ -3,7 +3,7 @@
   "id": "mark_icons",
   "label": "Battle OAM mark glyphs (! and ?)",
   "cells": {
-    "exclaim": "sprites8",
-    "question": "sprites8"
+    "exclaim": "sprites2",
+    "question": "sprites2"
   }
 }
