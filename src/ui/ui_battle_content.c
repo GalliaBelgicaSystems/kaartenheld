@@ -838,18 +838,44 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
     return n;
 }
 
-/* Enemy incoming-damage warning ("ENEMY DMG<n>") through the normal
- * text path, so buffer, mirror and VRAM stay truthful for asserts.
- * Painted FIRE (red) via the attribute span by the caller. */
+/* Enemy-strike forecast: left "DMG <incoming>" in red, right "DEF <block>"
+ * in green, so the player sees the incoming hit next to what the staged
+ * shields block.  <block> is the defend-mode preview over the staged
+ * shields (0 while none are staged).  Text path throughout, so buffer,
+ * mirror and VRAM stay truthful for asserts; colors ride attribute
+ * spans (attr mirror included). */
+static uint8_t battle_num_width(uint8_t val)
+{
+    if (val >= 100) return 3;
+    if (val >= 10) return 2;
+    return 1;
+}
+
 static void battle_combo_warn_text(const volatile Battle *battle)
 {
     uint8_t combo_row = g_battle_hud.combo_row;
-    uint8_t end;
-    battle_draw_text_line(0, combo_row, "ENEMY DMG", 9);
-    end = (uint8_t)(9 + battle_draw_num_compact(9, combo_row, battle->enemy_incoming_dmg));
-    /* Tail blank (same hazard as the combo preview: the row is reused
-     * across phases with different content widths). */
-    battle_draw_text_line(end, combo_row, NULL, (uint8_t)(20 - end));
+    uint8_t dmg_n;
+    uint8_t block = 0;
+    uint8_t bw;
+    uint8_t dx;
+
+    battle_combo_pending_preview(battle, &block);
+    battle_draw_text_line(0, combo_row, "DMG ", 4);
+    dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
+    /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
+     * digit blocks all right-align; worst case DMG191 + DEF191 = 13
+     * cols, never overlapping the left side). */
+    bw = battle_num_width(block);
+    dx = (uint8_t)(20 - 4 - bw);
+    battle_draw_text_line(dx, combo_row, "DEF ", 4);
+    battle_draw_num_compact((uint8_t)(dx + 4), combo_row, block);
+    /* Middle gap keeps stale buffer text while the top clear wiped VRAM:
+     * blank the buffer gap explicitly (same skip-guard hazard as the
+     * preview tail). */
+    battle_draw_text_line((uint8_t)(4 + dmg_n), combo_row, NULL,
+                          (uint8_t)(dx - (4 + dmg_n)));
+    battle_color_span(0, combo_row, (uint8_t)(4 + dmg_n), UI_COLOR_FIRE);
+    battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
 }
 
 static void battle_draw_battle_combo(const volatile Battle *battle)
@@ -886,11 +912,11 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 #endif
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
-    /* Enemy warning owns the row while a strike is incoming (defend
-     * phase, telegraphed damage): steady red text, no blink. */
+    /* Enemy forecast owns the row while a strike is incoming (defend
+     * phase, telegraphed damage): "DMG <n>" red on the left, "DEF <m>"
+     * green on the right (warn text paints its own spans). */
     if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND && battle->enemy_incoming_dmg > 0) {
         battle_combo_warn_text(battle);
-        battle_color_span(0, combo_row, 20, UI_COLOR_FIRE);
         return;
     }
     name = battle_combo_pending_preview(battle, &dmg);
@@ -1034,7 +1060,11 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             if (drow != (uint8_t)(top + 1)) {
                 battle_color_span((uint8_t)(col + 1), drow, 1, icell);
             }
-            if (cuses != 0xFF && ctype == g_card_skin_wram.uses_type) {
+            if (cuses != 0xFF && (ctype == g_card_skin_wram.uses_type ||
+                                 ctype == BATTLE_CARD_TYPE_HEAL)) {
+                /* Floor counter rides the weapon slot like the bow's:
+                 * rings share the counter glyphs, so a bare box span
+                 * would leave the counter on the paper (white) ramp. */
                 battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
             }
         }

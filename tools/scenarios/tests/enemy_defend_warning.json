@@ -1,7 +1,7 @@
 {
  "name": "enemy_defend_warning",
  "test": true,
- "description": "Defend phase shows the telegraphed incoming damage on the hand line: after one attack vs the mountain slime trio (lead card power 2), the row reads ENEMY DMG2 while defending",
+ "description": "Defend phase forecasts the telegraphed incoming damage and the staged block side by side: after one attack vs the mountain slime trio (lead card power 2), the row reads DMG 2 in red on the left and DEF 0 in green on the right while defending with nothing staged",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -45,7 +45,24 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "ENEMY DMG2"
+   "contains": "DMG 2"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "DEF 0"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 0,
+   "expected": 1
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 19,
+   "expected": 3
   }
  ]
 }

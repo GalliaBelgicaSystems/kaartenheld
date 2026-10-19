@@ -92,8 +92,8 @@ typedef enum {
 } CurrencyIdNamed;
 
 /* ── Banked content ────────────────────────────────────────────────
- * The event and dialogue content tables are compiled into MBC5 ROM bank
- * GAME_CONTENT_BANK (see events_content.c / dialogue_content.c, which use
+ * The event/card/shop content tables are compiled into MBC5 ROM bank
+ * GAME_CONTENT_BANK (see events_content.c / cards_content.c, which use
  * `#pragma bank 2`).  Bank 2 is used because the project links with -yo8:
  * bank 0 legitimately spans the full 32 KB (file 0x0000-0x7FFF), so bank 1
  * (file 0x4000-0x7FFF) overlaps bank 0's second half and sdldgb's

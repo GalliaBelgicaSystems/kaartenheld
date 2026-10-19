@@ -42,6 +42,21 @@
    "type": "currency",
    "expected": 20,
    "currency": "GOLD"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Don't forget to"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "equip your cards"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "from the START menu!"
   }
  ],
  "initial_state": {

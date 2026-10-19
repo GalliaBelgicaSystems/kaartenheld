@@ -3,7 +3,7 @@
 
 /* ── Dialogue table registration (game layer) ──────────────────────
  * The dialogue content table itself lives in a banked ROM region
- * (dialogue_content.c, `#pragma bank GAME_CONTENT_BANK`).  This file stays
+ * (dialogue_content.c, `#pragma bank 7`).  This file stays
  * in the fixed bank and hands the table + count + bank to the engine; the
  * engine copies the matching row + its text into WRAM staging in
  * dialogue_start_def(), so the banked layout is invisible everywhere else.

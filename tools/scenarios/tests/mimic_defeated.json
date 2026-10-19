@@ -127,6 +127,18 @@
    "type": "variable",
    "variable": "ENERGY_POOL",
    "expected": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MIMIC_REWARD"
   }
  ],
  "initial_state": {

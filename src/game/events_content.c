@@ -89,15 +89,19 @@ const EventDefinition g_events[] = {
      * Felling the mimic (a solo miniboss with a persistent actor_id,
      * so this fires exactly once like the knight split) grants +1
      * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
-     * tutorial/chest/mayor milestones.  No dialogue: the dead mimic
-     * gives no speech; the grant is observable through VARIABLE_SET
-     * plus the snapshot. */
+     * tutorial/chest/mayor milestones, and narrates the next step
+     * (speakerless box, like FOUND AMULET: the dead mimic gives no
+     * speech).  The grant is observable through VARIABLE_SET plus
+     * the snapshot. */
     {
         EVENT_ID_MIMIC_REWARD, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_MIMIC, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
-        1,
-        {{ EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 }}
+        2,
+        {
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MIMIC_REWARD, 0, 0 }
+        }
     },
     {
         EVENT_ID_MONSTER_DEFEATED, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_NONE, EVENT_MAP_ANY,

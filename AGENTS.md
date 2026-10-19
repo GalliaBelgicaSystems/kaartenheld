@@ -2332,9 +2332,10 @@ hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
 combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
 classifier plus the resolve-mirror damage, no `COMBO:` label; with no poker
 tier the row still shows the inflicted face value as bare `DMG<n>`, blank
-only when nothing effective is staged; during a
-telegraphed enemy strike it shows steady red `ENEMY DMG<n>` instead
-(FIRE palette span, no blink); drawn with a full 20-col row clear -- the combo
+only when nothing effective is staged; during a telegraphed enemy strike
+the row splits into a forecast -- `DMG <n>` red on the left (incoming)
+plus `DEF <m>` green right-aligned (current staged block, 0 while none
+staged), no `ENEMY` prefix; drawn with a full 20-col row clear -- the combo
 draw owns the row the old blank band above the hand occupied), `11-14`
 boxed hand cards (`cards_row`=14 is the BOTTOM
 row; each card is a 3-wide x `box_h`-tall frame from the compiled

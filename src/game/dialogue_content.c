@@ -7,8 +7,10 @@
 #include "game_ids.h"
 
 /* ── Dialogue table (game content, banked ROM) ─────────────────────
- * Compiled into MBC5 ROM bank GAME_CONTENT_BANK (the `#pragma bank 2`
- * below) so the fixed bank 0 / _HOME area stays small.  The engine never
+ * Compiled into MBC5 ROM bank 7 (the `#pragma bank 7`
+ * below) so the fixed bank 0 / _HOME area stays small.  Bank 7
+ * has room (bank 2, home of the event/card/shop tables, is full).
+ * The engine never
  * reads this table directly: core/dialogue.c copies the matching row and
  * its text into WRAM staging in dialogue_start_def(), so the banked layout
  * is transparent to the dialogue screen and the bank register is restored
@@ -18,14 +20,14 @@
  * render 18 chars wide.  Unused line slots are left NULL by the
  * partial initializer; dialogue_start_def() only reads the first
  * line_count slots. */
-#pragma bank 2
+#pragma bank 7
 
 const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_AMULET_FOUND,
         "",
-        1,
-        {"FOUND AMULET!!"},
+        3,
+        {"FOUND AMULET!!", "Return to the", "merchant!"},
         0,
         0
     },
@@ -145,7 +147,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
         8,
-        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Slay them, then", "return to the", "mayor!"},
         0,
         0
     },
@@ -162,6 +164,14 @@ const DialogueDefinition g_dialogues[] = {
         "MERCHANT:",
         3,
         {"You found it!", "Thank you, hero!", "My shop is open now."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MIMIC_REWARD,
+        "",
+        2,
+        {"Your power has", "grown! AP up!"},
         0,
         0
     },
