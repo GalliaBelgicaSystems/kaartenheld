@@ -1,7 +1,7 @@
 {
  "name": "defend_ring_joker_fodder",
  "test": true,
- "description": "Ring joker in defend with inert fodder selected first (docs/loot.md 34.3, manual 8.2): defend selection [SW9 fodder, SH3, SH3, RING5] must classify the effective set {SH3, SH3, RING} with the ring substituting 3 => THREE KIND (tier 3, eff_count 3). Pre-fix the joker scan reads cards[] in selection order instead of effective order, so the fodder shifts the ring out of the scanned window and the tier stays PAIR.",
+ "description": "Ring joker in defend with inert fodder selected first (docs/loot.md 34.3, manual 8.2): defend selection [SW9 fodder, SH3, SH3, RING5] classifies the effective set {SH3, SH3, RING} with the ring substituting 3 => THREE KIND (tier 3, eff_count 3). Poker-hands-only block counts participating shields only (ring adds 0): (3+3) x 180% = 10 (was 19 with the ring's raw 5 in the sum). Pre-fix the joker scan reads cards[] in selection order instead of effective order, so the fodder shifts the ring out of the scanned window and the tier stays PAIR.",
  "actions": [
   {
    "type": "wait",
@@ -187,7 +187,7 @@
    "type": "event_arg",
    "event": "EFFECT_RESOLVED",
    "index": 0,
-   "value": 19
+   "value": 10
   }
  ],
  "initial_state": {

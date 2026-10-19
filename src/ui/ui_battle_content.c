@@ -715,7 +715,7 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
     uint8_t has_ring = 0;
-    uint8_t tier, best, v;
+    uint8_t tier, best, v, best_v;
     uint8_t idx[BATTLE_HAND_SIZE];
     uint16_t base;
     uint8_t suited;
@@ -725,6 +725,7 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     uint16_t b;
 
     *dmg = 0;
+    best_v = 0;
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
         uint8_t s = battle->selected_indices[i];
@@ -746,41 +747,43 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
          * value range, which covers the ring's raw value, so no separate
-         * baseline classify is needed.  Gameplay allows at most one ring
-         * per selection (battle_card_select), so one flag is exact.
-         * Classifier shared with combo_resolve_banked (same bank, direct
-         * call -- no trampoline, no duplicate ladder). */
+         * baseline classify is needed.  Ties keep the LARGER value so the
+         * joker maximizes the hand (same rule as combo_resolve_banked).
+         * Gameplay allows at most one ring per selection
+         * (battle_card_select), so one flag is exact.  Classifier shared
+         * with combo_resolve_banked (same bank, direct call -- no
+         * trampoline, no duplicate ladder). */
         best = HAND_NONE;
-        for (v = 1; v <= 10; v++) {
+        for (v = 10; v != 0; v--) {
             tier = combo_classify_loot(battle->hand, idx, w, v);
-            if (tier > best) best = tier;
+            if (tier > best) {
+                best = tier;
+                best_v = v;
+            }
         }
         tier = best;
+        /* The participating-base helper reads the substituted histogram
+         * straight from s_hist: refresh it once here (any ring in a 2+
+         * hand always makes at least a pair; HIGH CARD and all-five
+         * tiers ignore s_hist). Same rule as combo_resolve_banked. */
+        combo_classify_loot(battle->hand, idx, w, best_v);
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
-    /* Damage mirror of combo_resolve_banked + effect_scale_power: base
-     * sums the effective set with the same per-card rules (attack skips
-     * shield/ring values, defend already holds shields+rings only),
-     * suited adds 25 over the shared tier table, amount = base x mult
-     * / 100 via shift-add + subtract loops (effects_content idiom: no
-     * libcall while bank 3 is mapped).  Whatever this computes, the
-     * resolver computes too. */
-    base = 0;
-    for (i = 0; i < w; i++) {
-        const volatile Card *c = &battle->hand[idx[i]];
-        if (!defend && (c->type == BATTLE_CARD_TYPE_SHIELD || c->ring)) continue;
-        base += c->value;
+    /* Poker-hands-only mirror of combo_resolve_banked: only hand cards
+     * count (extras 0).  Attack ring hands convert to healing, so their
+     * damage preview is 0 (matching the resolver's 0 damage); the heal
+     * itself is not previewed on the DMG row. */
+    if (!defend && has_ring) {
+        base = 0;
+    } else {
+        base = combo_participating_base(battle->hand, idx, w, tier, best_v,
+                                        defend ? COMBO_PHASE_DEFEND
+                                               : COMBO_PHASE_ATTACK, 0);
     }
     suited = 0;
     if (tier != HAND_NONE) {
-        suited = 1;
-        for (i = 1; i < w; i++) {
-            if (battle->hand[idx[i]].type != battle->hand[idx[0]].type) {
-                suited = 0;
-                break;
-            }
-        }
+        suited = combo_same_type(battle->hand, idx, w);
     }
     mult = g_combo_tier_mult[tier];
     if (suited) mult += 25;

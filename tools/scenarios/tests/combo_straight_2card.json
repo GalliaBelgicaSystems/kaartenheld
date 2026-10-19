@@ -1,7 +1,7 @@
 {
  "name": "combo_straight_2card",
  "test": true,
- "description": "Two consecutive-value cards (SW2 + BO3, different types): under STRICT poker sizes a straight needs all five effective cards, so this is HIGH CARD x100 -- 5 damage, enemy survives.  Locks the strict-sizing boundary.",
+ "description": "Two consecutive-value cards (SW2 + BO3, different types): under STRICT poker sizes a straight needs all five effective cards, so this is HIGH CARD x100 -- only the highest card counts (3 damage), enemy survives at 7 HP.  Locks the strict-sizing boundary and the high-card-single-score rule.",
  "actions": [
   {
    "type": "set_hand_card",
@@ -63,7 +63,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 5
+   "expected": 7
   }
  ],
  "initial_state": {

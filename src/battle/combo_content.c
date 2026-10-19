@@ -129,6 +129,84 @@ uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
 static const int g_combo_unpack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
 static const int g_combo_unpack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
 
+/* All effective cards share one symbol (bank-local, shared by resolve
+ * and the HUD preview so the suited rule lives in one place). */
+uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
+                        uint8_t n)
+{
+    uint8_t i;
+    for (i = 1; i < n; i++) {
+        if (cards[idx[i]].type != cards[idx[0]].type) return 0;
+    }
+    return 1;
+}
+
+/* Participating-hand base: only cards forming the hand count.
+ * See combo.h for the contract.  Bank-local (same bank as resolve and
+ * the HUD preview): no trampoline, no fixed-bank calls, no mul/div.
+ *
+ * Single pass over the effective set.  Kinds/pairs tiers locate the hand
+ * values with one scan of the classifier's s_hist -- which the caller
+ * leaves filled for (cards, idx, n, ring_sub): the no-ring tier search
+ * leaves the raw histogram behind, and ring hands refresh it with one
+ * shared classify call before invoking this (see resolve/preview).
+ * HIGH CARD and all-participate tiers never touch s_hist.  This stays a
+ * leaf (it calls nothing) so the deepest battle chain gains no nesting
+ * (AGENTS.md 52.24). */
+uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
+                                 uint8_t n, uint8_t tier, uint8_t ring_sub,
+                                 uint8_t phase, uint8_t count_ring)
+{
+    uint8_t i;
+    uint8_t acc;
+    uint8_t need;
+    uint8_t pv1;
+    uint8_t pv2;
+
+    /* Callers guarantee 1 <= n <= 5 (resolve caps count; preview stages
+     * at most a 5-card hand; w == 0 returns above). */
+    if (n == 0) return 0;
+    need = (tier == HAND_FOUR_KIND) ? 4
+         : (tier == HAND_THREE_KIND) ? 3
+         : (tier == HAND_PAIR || tier == HAND_TWO_PAIR) ? 2 : 0;
+    pv1 = 0;
+    pv2 = 0;
+    if (need != 0) {
+        for (i = 0; i < 10; i++) {
+            if (s_hist[i] == need) {
+                if (pv1 == 0) pv1 = (uint8_t)(i + 1);
+                else pv2 = (uint8_t)(i + 1);
+            }
+        }
+    }
+    acc = 0;
+    for (i = 0; i < n; i++) {
+        const volatile Card *c = &cards[idx[i]];
+        uint8_t t = c->type;
+        uint8_t rg = c->ring;
+        uint8_t raw = c->value;
+        uint8_t mv = (rg && ring_sub != 0) ? ring_sub : raw;
+        uint8_t contrib = 0;
+        if (phase == COMBO_PHASE_ATTACK) {
+            if (rg) {
+                if (count_ring) contrib = mv;
+            } else if (t != BATTLE_CARD_TYPE_SHIELD) {
+                contrib = raw;
+            }
+        } else {
+            if (!rg && t == BATTLE_CARD_TYPE_SHIELD) contrib = raw;
+        }
+        if (tier == HAND_NONE) {
+            if (contrib > acc) acc = contrib;
+        } else if (need == 0) {
+            acc += contrib;
+        } else if (mv == pv1 || mv == pv2) {
+            acc += contrib;
+        }
+    }
+    return acc;
+}
+
 void combo_resolve_banked(void)
 {
     uint8_t count = g_bk_byte_a;
@@ -162,71 +240,85 @@ void combo_resolve_banked(void)
     if (count > 5) count = 5;
     out_result->count = count;
 
-    /* Phase rules (docs/loot.md §34.3/§34.4): attack sums every
-     * non-SHIELD, non-RING value (rings deal 0 attack -- they heal
-     * instead); defend sums SHIELD values AND rings (a ring is a
-     * wild-card shield worth its power).  Classification runs on the
-     * effective set either way (attack: every selected card; defend:
-     * shields + rings -- inert non-shields contribute 0 block, 0 combo). */
+    /* Poker-hands-only scoring: only cards forming the hand count --
+     * extras deal/block 0 (HIGH CARD scores the single highest eligible
+     * card).  Attack rings deal 0 damage: with a ring present the whole
+     * hand converts to healing (scaled participating value, ring at its
+     * substituted value); a lone ring heals its face value.  Defend rings
+     * add 0 block but enable the tier (wildcard) and the over-block heal. */
     out_result->base_power = 0;
     {
+        uint8_t has_ring;
+        uint8_t best_v;
+        has_ring = 0;
         for (i = 0; i < count; i++) {
             uint8_t t = ((const Card *)g_bk_ptr_a)[i].type;
+            if (((const Card *)g_bk_ptr_a)[i].ring) has_ring = 1;
             if (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK) {
-                if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[i].ring)
-                    out_result->base_power += ((const Card *)g_bk_ptr_a)[i].value;
+                idx[w] = i;
+                w++;
             } else {
                 if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[i].ring) continue;
-                out_result->base_power += ((const Card *)g_bk_ptr_a)[i].value;
+                idx[w] = i;
+                w++;
             }
-            idx[w] = i;
-            w++;
         }
 
+        best_v = 0;
         if (w < 2) {
             out_result->tier = HAND_NONE;
-            out_result->suited = 0;
-            out_result->multiplier = 100;
         } else {
-            /* Ring JOKER (§34.3): a ring's value substitutes freely --
-             * try every legal value (1..10) and keep the best tier (types are
-             * untouched, so the suited bonus is unaffected).  The map keeps
-             * effective order: the selection may lead with inert fodder
-             * that never enters idx[], so indexing cards[] directly would
-             * test the wrong cards. */
-            uint8_t has_ring = 0;
-            for (i = 0; i < w; i++) {
-                if (((const Card *)g_bk_ptr_a)[idx[i]].ring) has_ring = 1;
-            }
+            /* Ring JOKER: a ring's value substitutes freely -- try every
+             * legal value and keep the best tier (types are untouched,
+             * so the suited bonus is unaffected).  The scan runs 10..1
+             * so ties keep the LARGER value (highest pair, not lowest).
+             * The map keeps effective order.  The participating-base
+             * helper below reads the substituted histogram straight from
+             * s_hist, so a kinds/pairs win refreshes it once here (HIGH
+             * CARD and all-five tiers never touch s_hist). */
+            uint8_t best;
+            uint8_t v, t2;
             if (has_ring) {
-                uint8_t best = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
-                uint8_t v, t2;
-                /* Card values are 1..10 (BOW 10): the joker tries the
-                 * full legal range. */
-                for (v = 1; v <= 10; v++) {
+                best = HAND_NONE;
+                for (v = 10; v != 0; v--) {
                     t2 = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, v);
-                    if (t2 > best) best = t2;
+                    if (t2 > best) {
+                        best = t2;
+                        best_v = v;
+                    }
                 }
                 out_result->tier = best;
+                /* Refresh the substituted histogram for the
+                 * participating-base helper below (any ring in a 2+
+                 * hand always makes at least a pair, so best_v is set;
+                 * HIGH CARD and all-five tiers ignore s_hist). */
+                combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, best_v);
             } else {
                 out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }
-            out_result->multiplier =
-                g_combo_tier_mult[out_result->tier];
-            if (out_result->tier == HAND_NONE) {
-                out_result->suited = 0;
-            } else {
-                uint8_t same = 1;
-                for (i = 1; i < w; i++) {
-                    if (((const Card *)g_bk_ptr_a)[idx[i]].type != ((const Card *)g_bk_ptr_a)[idx[0]].type) { same = 0; break; }
-                }
-                out_result->suited = same ? 1 : 0;
-                if (same) out_result->multiplier += 25;
-            }
         }
+        out_result->multiplier =
+            g_combo_tier_mult[out_result->tier];
+        if (out_result->tier == HAND_NONE) {
+            out_result->suited = 0;
+        } else {
+            out_result->suited = combo_same_type((const Card *)g_bk_ptr_a,
+                                                 idx, w);
+            if (out_result->suited) out_result->multiplier += 25;
+        }
+            /* Attack + ring converts to healing: the ring counts at its
+             * substituted value (count_ring=1); otherwise rings add 0. */
+            out_result->base_power = combo_participating_base(
+                (const Card *)g_bk_ptr_a, idx, w, out_result->tier,
+                best_v, COMBO_UNPACK_PHASE(g_bk_byte_b),
+                (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK && has_ring) ? 1 : 0);
         out_result->eff_count = w;
-    }
 
-    /* Effect resolution consumes the evaluated hand (bank-local call). */
-    effect_resolve_into(COMBO_UNPACK_EFFECT(g_bk_byte_b), (ComboResult *)g_bk_ptr_b, &g_effect_last);
+        /* Attack + ring converts the whole hand to healing: force the
+         * HEAL effect so EFFECT_RESOLVED reports healing, not damage. */
+        effect_resolve_into(
+            (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK && has_ring) ? CARD_EFFECT_HEAL_HP
+                                                      : COMBO_UNPACK_EFFECT(g_bk_byte_b),
+            (ComboResult *)g_bk_ptr_b, &g_effect_last);
+    }
 }

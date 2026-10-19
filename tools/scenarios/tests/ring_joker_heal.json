@@ -1,7 +1,7 @@
 {
  "name": "ring_joker_heal",
  "test": true,
- "description": "Ring joker (docs/loot.md 34.3): a selected RING substitutes its value freely for classification -- SW5 + RING2 becomes a PAIR of fives -- deals the sword's damage only (ring excluded from the attack sum) and heals its power (EVENT_HEALED amount 2)",
+ "description": "Ring conversion (poker-hands-only): SW5 + RING2 becomes a PAIR of fives via the joker -- the ring converts the whole hand to healing, so NO damage is dealt (no DAMAGE_DEALT); the hero heals the scaled pair value (5 + 5) x 120% = 12 (EVENT_HEALED amount 12, cause 1)",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -129,7 +129,7 @@
    "value": 1
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "DAMAGE_DEALT"
   },
   {
@@ -140,7 +140,7 @@
    "type": "event_arg",
    "event": "HEALED",
    "index": 0,
-   "value": 2
+   "value": 12
   },
   {
    "type": "event_arg",

@@ -547,31 +547,35 @@ void battle_execute_combo(Battle *b)
             g_battle_anim_target_name[0] = '\0';
         }
         battle_play_hand(b, true, &res);
-        /* Rings heal their power as the combo resolves, whatever the
-         * hand's leading effect (docs/loot.md §34.3/§34.4). */
+        /* Ring conversion (poker-hands-only): any ring in the attack
+         * selection converts the whole hand to healing -- no damage to
+         * the enemy.  res.amount is the scaled participating heal
+         * (ring at its substituted value); a lone ring heals its face
+         * value.  Cause d1=1 marks ring healing. */
         {
             uint8_t ri;
-            uint8_t ring_heal = 0;
+            uint8_t has_ring = 0;
             for (ri = 0; ri < b->combo_count; ri++) {
                 if (b->last_combo.cards[ri].ring) {
-                    ring_heal += b->last_combo.cards[ri].value;
+                    has_ring = 1;
+                    break;
                 }
             }
-            if (ring_heal != 0) {
-                uint16_t nh = (uint16_t)b->player.hp + ring_heal;
-                b->player.hp = (nh > b->player.max_hp) ? b->player.max_hp
-                                                       : (uint8_t)nh;
-                telemetry_emit(EVENT_HEALED, ring_heal, 1, 0, 0);
-            }
-        }
-        if (res.type == CARD_EFFECT_HEAL_HP) {
-            uint16_t new_hp = (uint16_t)b->player.hp + res.amount;
-            b->player.hp = (new_hp > b->player.max_hp) ? b->player.max_hp : (uint8_t)new_hp;
-            telemetry_emit(EVENT_HEALED, res.amount, 0, 0, 0);
-        } else {
-            /* Damage hand: shield-led fodder deals the non-shield sum,
-             * exactly as before -- only HEAL_HP heals.  The slash sound
-             * plays when the player lands a damaging attack. */
+            if (has_ring) {
+                if (res.amount != 0) {
+                    uint16_t nh = (uint16_t)b->player.hp + res.amount;
+                    b->player.hp = (nh > b->player.max_hp) ? b->player.max_hp
+                                                           : (uint8_t)nh;
+                    telemetry_emit(EVENT_HEALED, res.amount, 1, 0, 0);
+                }
+            } else if (res.type == CARD_EFFECT_HEAL_HP) {
+                uint16_t new_hp = (uint16_t)b->player.hp + res.amount;
+                b->player.hp = (new_hp > b->player.max_hp) ? b->player.max_hp : (uint8_t)new_hp;
+                telemetry_emit(EVENT_HEALED, res.amount, 0, 0, 0);
+            } else {
+            /* Damage hand: only poker-hand cards deal (extras add 0) --
+             * only HEAL_HP heals.  The slash sound plays when the player
+             * lands a damaging attack. */
             audio_play_sfx(SFX_ATTACK);
             combatant_take_damage(&b->enemies[b->target_idx], res.amount);
             telemetry_emit(EVENT_DAMAGE_DEALT, res.amount, 0, 0, 0);
@@ -618,6 +622,7 @@ void battle_execute_combo(Battle *b)
                                        tslot, 0, 0);
                     }
                 }
+            }
             }
         }
         battle_resolve_hand_discard(b);

@@ -106,11 +106,11 @@ Each card has a **value** (its power) and a **symbol** (its type):
 
 | Card | Attack does | Defend does |
 |---|---|---|
-| `SW` Sword | damage | nothing (0) |
-| `BO` Bow | damage | nothing (0) |
-| `DA` Dagger | damage (may poison) | nothing (0) |
-| `SH` Shield | **0 damage** — but counts for combos | **blocks** its value |
-| `HE` Heal (rings) | heals (see below) | blocks like a shield |
+| `SW` Sword | damage (only if in the poker hand) | nothing (0) |
+| `BO` Bow | damage (only if in the poker hand) | nothing (0) |
+| `DA` Dagger | damage (may poison, only if in the hand) | nothing (0) |
+| `SH` Shield | **0 damage** — but counts for combos | **blocks** its value (only if in the hand) |
+| `HE` Heal (rings) | converts the hand to healing (see below) | 0 block — but wildcards the hand + gates over-block heal |
 
 Your selection ranks **like a poker hand**. Better hands multiply the
 whole play:
@@ -129,19 +129,27 @@ whole play:
 | FIVE KIND | all 5 same value | 400% |
 
 Same-symbol hands get **+25%** on top. Final effect, always rounded
-down: `base × multiplier / 100`.
+down: `base × multiplier / 100`, where **base counts only the cards
+forming the poker hand** — extras deal/block 0. A lone high card scores
+just itself (`SW2 + BO3` with no pair hits for 3, not 5); a
+`SW1 + SW1 + SW2` pair hits for (1 + 1) × 120% = 2, the `SW2` adding
+nothing.
 
 The **leading card** decides the action:
 
 - **Sword/bow/dagger lead** → damage. Base = sum of the
-  non-shield, non-ring values. Shields in the mix add 0 damage but
-  still shape the hand — `SW1 SH1 DA1` is three-of-a-kind (×180%) on a base
-  of just `1 + 1 = 2`, dealing 3.
-- **Ring (`HE`) lead** → heal instead of damage. You gain the whole
-  hand's scaled power **plus** the ring's own value. Put the ring
-  *second* if you want the swords to hit and the ring to just top you up.
-- **Shield lead** → still deals the non-shield damage sum (shields are
-  "fodder that counts"). Only a ring lead turns an attack into a heal.
+  *participating* non-shield, non-ring values. Shields in the mix add 0
+  damage but still shape the hand — `SW1 SH1 DA1` is three-of-a-kind
+  (×180%) on a base of just `1 + 1 = 2`, dealing 3.
+- **Ring (`HE`) lead (or any ring in the mix)** → the whole hand
+  converts to healing: no damage at all. You gain the scaled
+  *participating* value with the ring counting as its joker value — a
+  `SW1` + ring PAIR heals (1 + 1) × 120% = **2 HP**. A lone ring heals
+  its face value. There is no way to mix damage and healing in one
+  play: ring in, damage out.
+- **Shield lead** → still deals the participating non-shield damage sum
+  (shields are "fodder that counts"). Only a ring turns an attack into
+  a heal.
 
 Worked example: `SW2 + SW2` is a PAIR — base 4 × 120% = **4 damage**.
 
@@ -158,10 +166,13 @@ inert — 0 block, 0 combo — though the game still lets you select them
 (and still eats them, so don't).
 
 ```
-net = incoming - (shields + rings)
+net = incoming - (participating shields, scaled)
 net > 0  -> you take that much
 net <= 0 -> no damage; over-block heals you ONLY with a ring in the mix
 ```
+
+Shields outside the poker hand block 0: `SH2 + SH2 + SH5` (pair of
+twos, five kicker) blocks (2 + 2) × 120% = 4, the `SH5` adding nothing.
 
 Worked example: incoming 3, you play `SH2` → take **1**.
 
@@ -170,12 +181,16 @@ Worked example: incoming 3, you play `SH2` → take **1**.
 Rings (`HE`) are the game's healing vector — the merchant sells an
 iron ring once his shop opens, and loot can contain more:
 
-- In **attack**, a ring is a **joker**: any value 1-10, best tier kept.
-  It deals 0 damage itself and heals its power on resolve.
-  Example: `SW5 + RING2` reads as a PAIR of fives — 5 × 120% = **6
-  damage dealt**, plus **2 HP healed**.
-- In **defend**, a ring is a **wild shield** worth its power, counting
-  for block *and* for pairs/straights.
+- In **attack**, a ring is a **joker**: any value 1-10, best tier kept
+  (ties go to the higher value). It converts the whole hand to healing
+  — no damage is dealt. The heal is the scaled participating value with
+  the ring counting as its joker value.
+  Example: `SW5 + RING2` reads as a PAIR of fives — (5 + 5) × 120% =
+  **12 HP healed**, 0 damage.
+- In **defend**, a ring is a **wildcard** for the hand (enabling pairs,
+  kinds, straights) and gates the over-block heal — but it adds **0
+  block** itself. Example: `SH3 + SH3 + RING` reads as THREE KIND and
+  blocks (3 + 3) × 180% = **10**, the ring adding nothing to the sum.
 - **Max one ring per selection** — a second attempt flashes `ONE RING!`.
 
 ## Status effects

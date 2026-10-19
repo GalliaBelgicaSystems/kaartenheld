@@ -53,10 +53,20 @@ from Phase C/D: HEAL ALL; per-effect scaling refinements.
 
 # 0.1 Hand table (implemented)
 
+**Poker-hands-only scoring.** Only the cards forming the poker hand
+count toward the effect magnitude -- every extra card deals/blocks 0.
+HIGH CARD scores the single highest eligible card; pairs/kinds score
+only the paired cards; five-card hands (straights, flushes, full houses
+and up) score all five. Rings never add attack damage or block (0), but
+count as wildcards for the tier: an attack ring converts the whole hand
+to healing (scaled participating value, ring at its substituted value --
+`SW1` + ring is a PAIR healing (1 + 1) x 120% = 2).
+
 Strict poker sizing: pairs and kinds need >= 2 effective cards;
 STRAIGHT, FLUSH, STRAIGHT_FLUSH and FIVE KIND require all five
 effective cards (attack phase: every selected card; defend: SHIELDs
-only).  Values classify order-independently.  Suited bonus: +25
+only -- other selected cards are inert for classification AND block).
+Values classify order-independently.  Suited bonus: +25
 percent when every effective card shares one symbol and a tier was
 made.  Effective multiplier scales base_power into the effect amount,
 and scales on-hit status rider chances (capped ~100%):

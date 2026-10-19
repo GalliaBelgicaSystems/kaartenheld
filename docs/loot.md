@@ -1689,12 +1689,15 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   role: plain shields never restore HP, so any defense over-block heal must
   come from a ring in the combo (see §34.4).
 * Attack phase: a selected ring is a JOKER for the offense hand -- it
-  substitutes as whatever value produces the best poker tier, deals 0
-  attack damage (excluded from the attack sum), and heals its power when
-  the combo resolves.  IMPLEMENTED.
-* Defense phase: a selected ring is a wild-card SHIELD (value = its heal
-  power), counting into the block sum and the hand classification --
-  enabling shield kinds/straights/flushes.  IMPLEMENTED.
+  substitutes as whatever value produces the best poker tier -- and
+  CONVERTS the whole hand to healing: no damage is dealt (no
+  `DAMAGE_DEALT`).  The heal is the scaled participating value with the
+  ring counting at its substituted value (a lone ring heals its face
+  value).  Example: `SW1` + ring reads as a PAIR -- (1 + 1) x 120% = 2
+  HP.  IMPLEMENTED.
+* Defense phase: a selected ring is a wild-card for the hand
+  classification (enabling shield kinds/straights/flushes) and the
+  over-block-heal gate, but adds 0 block itself.  IMPLEMENTED.
 * MAX ONE RING PER SELECTION; a second attempt flashes "ONE RING!".
   IMPLEMENTED (selection gate, battle msg id 3).
 * Rings are THE healing vector of the game: every HEAL-type card is a
@@ -1706,13 +1709,18 @@ Illegal combinations are unrepresentable: the generator only rolls legal
 ## 34.4 Combat resolution rules
 
 * Defense: hero always takes the NET --
-  `net = attack - sum(shield block) - sum(ring/heal)`.  Positive net
-  damages; negative net (over-block) is CLAMPED to zero — a plain-shield
+  `net = incoming - scaled participating-shield block` (rings add 0
+  block, extras outside the poker hand add 0).  Positive net damages;
+  negative net (over-block) is CLAMPED to zero — a plain-shield
   over-block never restores HP.  Over-block heals (restored by `-net`,
   capped at max HP) ONLY when a ring (healing shield) is in the defense
   combo (`EVENT_HEALED` cause d1=2).  IMPLEMENTED.
-* Attack: rings count toward poker hands, deal 0 attack damage, and heal
-  their value as the combo resolves.  IMPLEMENTED.
+* Attack: only the cards forming the poker hand deal damage (extras add
+  0; HIGH CARD scores the single highest eligible card).  A ring in the
+  selection converts the whole hand to healing (no damage): the heal is
+  the scaled participating value with the ring at its substituted value
+  (`EVENT_HEALED` cause d1=1); a lone ring heals its face value.
+  IMPLEMENTED.
 * Poison rider: poison-effect daggers carry the on-hit status rider
   (existing status system); chance tuned like DA1.  IMPLEMENTED.
 

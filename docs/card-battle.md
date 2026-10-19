@@ -796,29 +796,44 @@ Use integer percentages.
 For example:
 
 ```text
-Base value = sum of the active cards' values
+Base value = sum of the participating cards' values
 ```
 
-In the attack phase, "active" cards are the attack cards (`SW/BO/FI`) plus heals
-(`HE`) when they resolve as healing. Shields contribute **0** to the base.
+Only the cards forming the poker hand count -- extras deal/block 0
+(HIGH CARD scores the single highest eligible card).
+
+In the attack phase, "active" cards are the attack cards (`SW/BO/DA`)
+that form the hand, plus heals (`HE`) when the hand resolves as healing
+(any ring in the mix converts the whole hand to healing -- no damage).
+Shields contribute **0** to the base (but still shape the hand).
 
 Then apply a combo multiplier.
 
-Examples (attack phase):
+Examples (attack phase, strict poker sizes -- straights need all five):
 
 ```text
-SW2 + BO3 + SW4            base = 9
-3-card straight = ×150%    final damage = 13
+SW2 + SW2                base = 4   (pair, both participate)
+PAIR = ×120%             final damage = 4
 ```
 
 ```text
-SW1 + SH2 + SW3            base = 4   (shield adds 0)
-3-card straight = ×150%    final damage = 6
+SW1 + SH2 + SW3          base = 2   (shield adds 0; three-of-a-kind)
+THREE KIND = ×180%       final damage = 3
 ```
 
 ```text
-SH2 alone                  base = 0
-no straight                final damage = 0  (card consumed, no effect)
+SW2 + BO3                base = 3   (HIGH CARD: highest only)
+HIGH CARD = ×100%        final damage = 3
+```
+
+```text
+SW1 + RING               base = 2   (pair of 1s, ring as 1)
+PAIR = ×120%             HEALED 2, damage 0 (ring converts)
+```
+
+```text
+SH2 alone                base = 0
+no hand                  final damage = 0  (card consumed, no effect)
 ```
 
 Use integer arithmetic:
@@ -830,10 +845,16 @@ value = base * multiplier / 100
 Possible initial multipliers:
 
 ```text
-Normal combo:    100
-3-card straight: 150
-4-card straight: 175
-5-card straight: 200
+HIGH CARD:     100
+PAIR:          120
+TWO PAIR:      150
+THREE KIND:    180
+STRAIGHT:      210 (all 5)
+FLUSH:         240 (all 5)
+FULL HOUSE:    260
+FOUR KIND:     280
+STRAIGHT FLUSH:350 (all 5)
+FIVE KIND:     400 (all 5)
 ```
 
 These numbers can be tuned later.
