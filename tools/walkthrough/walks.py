@@ -24,7 +24,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
-                                      CARD_WOOD_RING, CARD_POISON_DAGGER,
+                                      CARD_IRON_RING, CARD_POISON_DAGGER,
                                       CARD_AMULET,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
@@ -212,20 +212,34 @@ def drain_postvictory_dialogue(s, tries=8):
 
 
 def _walk_path(s, path):
-    """Execute a BFS cell path as discrete one-tile presses."""
+    """Execute a BFS cell path as discrete one-tile presses.  Ambushes
+    (including stationary guardians routed through on purpose) fight
+    via transit_fight and retry: a knight-armor kill opens its briefing
+    instead of VICTORY, so drain that too and keep going (the spawned
+    trio either chases off the tile or falls to the next retry)."""
     for dx, dy in path:
         btn = _BTNS[(dx, dy)]
         fx, fy = s.pos()
-        ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
-        if not ok and s.text_has("DECK:"):
+        ok = False
+        for _ in range(3):
+            ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
+            if ok or not s.text_has("DECK:"):
+                break
             win = transit_fight(s)
-            s.check("transit fight victory", win,
-                    expected="VICTORY", actual="defeat" if not win else "win")
-            if win:
+            knight = (not win) and s.text_has("KNIGHT:")
+            s.check("transit fight victory", win or knight,
+                    expected="VICTORY or KNIGHT: box",
+                    actual="defeat" if not (win or knight) else "win")
+            if knight:
+                s.check("transit knight briefing drained",
+                        drain_postvictory_dialogue(s),
+                        expected="no KNIGHT: box", actual="stuck open")
+            elif win:
                 s.check("transit aftermath drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
-                ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
+            else:
+                break
         banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
         s.check("route move %s" % btn, ok,
                 expected="tile commit",
@@ -255,8 +269,17 @@ def follow(s, planner, from_scene, start, to_scene, goal,
                 if res or not s.text_has("DECK:"):
                     break
                 win = transit_fight(s)
-                s.check("transit fight victory", win,
-                        expected="VICTORY", actual="defeat" if not win else "win")
+                knight = (not win) and s.text_has("KNIGHT:")
+                s.check("transit fight victory", win or knight,
+                        expected="VICTORY or KNIGHT: box",
+                        actual="defeat" if not (win or knight) else "win")
+                if knight:
+                    # Armor kill (no VICTORY screen): drain the reveal
+                    # briefing, then retry past whatever it spawned.
+                    s.check("transit knight briefing drained",
+                            drain_postvictory_dialogue(s),
+                            expected="no KNIGHT: box", actual="stuck open")
+                    continue
                 if not win:
                     break
                 s.check("transit aftermath drained",
@@ -462,15 +485,20 @@ def walk_a(planner, checks, sram_out=None):
 
     # Heal Mage: red robe at (12,10), wizard sprite.  Hurt the hero via
     # host poke (same pattern as god_mode: release ROM untouched), talk,
-    # page through, verify full restore + chest jingle + town-track
-    # restore.  Exercises the NPC on the release ROM (the harness covers
-    # the debug ROM in heal_mage.json).
+    # confirm YES on the ask (default cursor), verify full restore +
+    # chest jingle + town-track restore.  Exercises the NPC on the
+    # release ROM (the harness covers the debug ROM in heal_mage.json).
     r = s.reader
     pbase = r.state + OFF_PARTY
     s.pb.memory[pbase + CHARACTER_STATE_HP] = 5
     s.check("heal mage dialogue opened",
             bump_actor(s, planner, "town", (12, 9), "down", "HEAL MAGE:"),
             expected="HEAL MAGE:", actual="none")
+    s.check("heal mage YES confirmed",
+            s.press_until("a",
+                          lambda: s.reader.music_track() == MUSIC_CHEST,
+                          tries=6, settle=30, label="mage YES"),
+            expected="MUSIC_CHEST", actual="confirm")
     s.check_eq("chest jingle playing",
                s.reader.music_track(), MUSIC_CHEST)
     close_dialogue(s, "HEAL MAGE:")
@@ -482,10 +510,11 @@ def walk_a(planner, checks, sram_out=None):
             expected="MUSIC_TOWN", actual="restore")
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
-    # then the amulet is fetched from the mountain pass and delivered
-    # for +15g, unlocking the merchant's merged shop (ring included).
-    # The merchant lives in the village area (east of town); the INTRO
-    # is one page, like the mayor's.
+    # then the amulet is fetched from the mountain pass.  Delivering it
+    # completes the quest for +15g and opens the merchant's merged shop
+    # (ring included).  The merchant
+    # lives in the village area (east of town); the INTRO is one page,
+    # like the mayor's.
     follow(s, planner, "town", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
     s.check("merchant briefing opened",
@@ -513,8 +542,9 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("amulet in collection",
                s.reader.collection_count(CARD_AMULET), 1)
 
-    # Back to the village: delivery opens the shop (thanks + 15g, amulet
-    # removed, quest COMPLETE).
+    # Back to the village: the talk holding the amulet delivers it
+    # (thanks + 15g, amulet removed, quest COMPLETE), which opens the
+    # shop on the talk after.
     follow(s, planner, "mountain_pass", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
     s.check("deliver dialogue opened",
@@ -530,29 +560,25 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15),
             actual=str(s.reader.gold()))
 
-    # Merged shop (village merchant, unlocked by the delivery): the ring
-    # is the fourth row (index 3).  Cursor down until its caret shows,
-    # then buy.
+    # Merged shop (village merchant, opened by delivering the amulet):
+    # one-copy ring + bow stock.  The ring
+    # is the first row; buying hides it and the bow slides up.
     s.check("shop opened",
             bump_actor(s, planner, "village_area", (10, 4), "down", "SHOP"),
             expected="SHOP", actual="none")
     s.shoot("05-shop", need="SHOP")
-    ring_row = False
-    for _ in range(8):
-        if s.bg_text()[8][:1] == ">":
-            ring_row = True
-            break
-        s.press("down", settle=20)
-    s.check("ring row caret", ring_row, expected="> at row 8",
-            actual=s.bg_text()[8])
+    s.check("ring row caret", s.bg_text()[5][:1] == ">",
+            expected="> at row 5", actual=s.bg_text()[5])
     gold0 = s.reader.gold()
-    price = s.reader.card_price(CARD_WOOD_RING)
+    price = s.reader.card_price(CARD_IRON_RING)
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
     s.check_eq("ring in collection", s.reader.collection_count(
-        CARD_WOOD_RING), 1)
+        CARD_IRON_RING), 1)
+    s.check("bow row slides up", "BO9" in s.bg_text()[5],
+            expected="BO9 at row 5", actual=s.bg_text()[5])
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("SHOP"), frames=30), label="shop close")
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
@@ -623,7 +649,7 @@ def walk_a(planner, checks, sram_out=None):
         sram_out.append((s.stop_save_ram(), dict(
             scene=SCENE_TOWN, pos=(6, 11),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
-            ring=s.reader.collection_count(CARD_WOOD_RING))))
+            ring=s.reader.collection_count(CARD_IRON_RING))))
     else:
         s.close()
 
@@ -638,6 +664,21 @@ def walk_b(planner, checks):
                 None)
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
     props = carl["properties"]
+    # Field cache east of Carl first: Carl withholds the spar until it
+    # is opened ("Open chest, then come back!"), so the hero opens it
+    # (first poison dagger plus the AP unlock: pool 1 -> 2) and only
+    # then walks to the lesson.
+    s.check("chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.shoot("11-chest", need="CHEST:")
+    s.check("cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("first poison dagger",
+               s.reader.collection_count(CARD_POISON_DAGGER), 1)
+    s.check_eq("energy pool 1 -> 2",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
@@ -678,6 +719,8 @@ def walk_b(planner, checks):
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
+    s.check_eq("spar starts at 2 AP (chest opened first)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
 
     # Fight with hand-aware selection until the solo spar drops
     # (variance-safe: enemy HP strictly decreases per landed hit; never
@@ -753,21 +796,7 @@ def walk_b(planner, checks):
                HERO_START_GOLD + props.get("gold_reward", 0))
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool raised 0 -> 2",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
-    # Field cache east of Carl: bumping it opens the reward speech (first
-    # poison dagger plus the AP unlock, idempotent with the spar reward),
-    # then grants both.
-    s.check("chest bump",
-            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
-            expected="CHEST:", actual="none")
-    s.shoot("11-chest", need="CHEST:")
-    s.check("cache closed",
-            close_dialogue(s, "CHEST:"),
-            expected="closed", actual="open")
-    s.check_eq("first poison dagger",
-               s.reader.collection_count(CARD_POISON_DAGGER), 1)
-    s.check_eq("energy pool still 3",
+    s.check_eq("energy pool 2 -> 3",
                s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
@@ -812,8 +841,51 @@ def walk_e(planner, checks):
     mimic_xy = (mimic["position"]["x"], mimic["position"]["y"])
     # One multi-hop BFS route: field -> forest -> grassy -> desolate ->
     # south_ridge -> south_field -> castle_entry -> castle_hall -> castle;
-    # per-exit scene asserts run inside follow().
-    follow(s, planner, "field", spawn, "castle",
+    # per-exit scene asserts run inside follow().  The south leg stops
+    # at the waiting knight's doorstep (12,7): the corridor east runs
+    # through its tile, so the guardian is fought deliberately below
+    # instead of ambushing mid-route.
+    follow(s, planner, "field", spawn, "south_field", (12, 7))
+    s.settle_scene(expected_scene=SCENE_SOUTH_FIELD)
+    s.check_eq("south scene", s.reader.scene_state()["scene_id"],
+               SCENE_SOUTH_FIELD)
+    # South waiting knight (13,7): guardian of the castle corridor
+    # (stationary, bump-to-combat).  Engage it directly, win the armor
+    # fight, drain the reveal briefing, then beat the trio it spawns --
+    # mirroring the castle-knight interlude below.  Proves the real-map
+    # guardian end to end (the harness covers the fixture twin).
+    s.check("south guardian engaged",
+            engage_hostile(s, planner, "south_field", (13, 7)),
+            expected="DECK:", actual="none")
+    s.check("south guardian banner readable",
+            s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
+            expected="TARGET banner", actual=s.bg_text()[0].strip())
+    s.check("south guardian armor fight",
+            transit_fight(s),
+            expected="VICTORY", actual="defeat")
+    s.tick(90)
+    s.check("south guardian reveal opened",
+            s.text_has("KNIGHT:"),
+            expected="KNIGHT:", actual=s.bg_text()[0].strip())
+    s.check("south guardian reveal closed",
+            close_dialogue(s, "KNIGHT:"),
+            expected="closed", actual="open")
+    s.check("south guardian trio engaged",
+            engage_hostile(s, planner, "south_field", (13, 7)),
+            expected="DECK:", actual="none")
+    s.check("south guardian trio banner",
+            s.text_has("TARGET SLIME"),
+            expected="TARGET SLIME", actual=s.bg_text()[0].strip())
+    s.check("south guardian trio fight",
+            transit_fight(s),
+            expected="VICTORY", actual="defeat")
+    s.check("south guardian trio exit",
+            s.press_until("a", lambda: not s.text_has("DECK:"),
+                          tries=4, label="battle exit"),
+            expected="closed", actual="open")
+    s.check("south no briefing repeat", not s.text_has("KNIGHT:"),
+            expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
+    follow(s, planner, "south_field", s.pos(), "castle",
            (mimic_xy[0] - 1, mimic_xy[1]))
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
@@ -1065,7 +1137,7 @@ def walk_l(checks, saved):
     st = s.reader.scene_state()
     s.check_eq("restored scene", st["scene_id"], exp["scene"])
     s.check_eq("restored gold", s.reader.gold(), exp["gold"])
-    s.check_eq("restored ring", s.reader.collection_count(CARD_WOOD_RING),
+    s.check_eq("restored ring", s.reader.collection_count(CARD_IRON_RING),
                exp["ring"])
     s.check_eq("restored deck", s.reader.deck_count(), exp["deck"])
     s.close()

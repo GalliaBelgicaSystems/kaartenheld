@@ -1723,7 +1723,8 @@ what varies, not presence):
 
 ```text
 archetype weapon <- enemy profile bias (game layer, docs/loot.md §17)
-material         <- weighted roll (wood-heavy)
+material         <- weighted roll (wood-heavy; rings always wood --
+                    the merchant's ring is the metal one)
 effect           <- legal-for-weapon weighted roll (plain/poison-heavy)
 ```
 
@@ -1750,14 +1751,17 @@ same as the battle-hand cards and the CARDS-tab list.  Regression:
 
 ## 34.6 Economy (Merchant = Card Merchant)
 
-The Lost Amulet merchant opens shop 2 as the CARD MERCHANT:
+The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
+the amulet completes the quest (+15g, amulet removed) and opens the
+shop; finding it is what makes the delivery (and the shop) available:
 
-* BUY: the Lost Amulet merchant's merged shop stocks curated iron/mythril
-  loot at formula prices (an iron sword and the mythril bow
-  `M BO`) plus POISON_DAGGER (8g) -- the only dagger source besides
-  the field cache, now that the starter deck carries none -- and the
-  curated IRON RING (**RG1**, 20g).  Rings are THE healing vector, so
-  healing is purchasable but never free.
+* BUY: one-copy stock -- the curated IRON RING (**RG1**, 20g) and the
+  mythril bow (**BO9**, 30g), one of each.  A row shows only while the
+  player owns no copy; buying both empties the shop into `(out of
+  stock)`.  Rings are THE healing vector, so healing is purchasable but
+  never free.  The iron sword / poison dagger are gone from the stock:
+  swords come from the starter deck and loot, daggers from the field
+  cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one

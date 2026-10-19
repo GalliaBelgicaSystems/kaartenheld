@@ -22,6 +22,19 @@ static const ShopDefinition *shop_active(const Game *g)
     return game_shop_for_id(g ? g->shop_id : 2);
 }
 
+/* One-copy stock (docs/loot.md §34.6): a line is visible only while the
+ * player owns no copy of its card.  Buying the ring/bow hides its row
+ * for good (curated shop cards are not loot-sellable, so no sell-back
+ * re-opens it).  The cursor
+ * addresses VISIBLE positions (dense from row 5).  The visible map is
+ * rebuilt by the bank-2 render on every full redraw (entry, purchase)
+ * into WRAM (g_shop_vis_map, owned by screen_content.c); this update
+ * only reads it, so the fixed bank pays no scan (AGENTS.md §52.11.1).
+ * A purchase hides its own row: the redraw rebuilds + clamps before
+ * painting, so no stale row is ever addressable. */
+extern uint8_t g_shop_vis_map[];
+extern uint8_t g_shop_vis_count;
+
 /* Full shop content draw lives in the bank-2 body (screen_content.c) so the
  * fixed _CODE/_HOME area stays under 0x8000 (AGENTS.md 52.11.1). */
 void shop_content_render(void);
@@ -44,19 +57,19 @@ static void shop_menu_step(Game *g, uint8_t new_index)
 void shop_screen_update(Game *g)
 {
     const ShopDefinition *def;
-    uint8_t count;
+    uint8_t vis_count;
 
     if (!g) return;
     def = shop_active(g);
-    count = def ? def->count : 0;
+    vis_count = g_shop_vis_count;
 
-    if (count > 0) {
+    if (vis_count > 0) {
         if (input_pressed(INPUT_UP) && g->item_menu_index > 0) {
             shop_menu_step(g, (uint8_t)(g->item_menu_index - 1));
-        } else if (input_pressed(INPUT_DOWN) && (uint8_t)(g->item_menu_index + 1) < count) {
+        } else if (input_pressed(INPUT_DOWN) && (uint8_t)(g->item_menu_index + 1) < vis_count) {
             shop_menu_step(g, (uint8_t)(g->item_menu_index + 1));
-        } else if (input_pressed(INPUT_A) && g->item_menu_index < count) {
-            CardId card_id = def->items[g->item_menu_index];
+        } else if (input_pressed(INPUT_A) && def && g->item_menu_index < vis_count) {
+            CardId card_id = def->items[g_shop_vis_map[g->item_menu_index]];
             const CardDefinition *card = card_get_def(card_id);
             uint8_t price = card ? card->price : 0;
             if (currency_get(&g->state, CURRENCY_ID_GOLD) < price) {

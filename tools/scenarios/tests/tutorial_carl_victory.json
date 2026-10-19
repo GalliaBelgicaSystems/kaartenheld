@@ -185,7 +185,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 2
+   "expected": 3
   },
   {
    "type": "actor_state",
@@ -201,11 +201,17 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "party": {
    "HERO": {
     "hp": 60,
     "max_hp": 60
    }
+  },
+  "variables": {
+   "ENERGY_POOL": 2
   }
  }
 }

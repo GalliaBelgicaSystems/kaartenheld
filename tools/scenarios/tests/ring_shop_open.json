@@ -19,13 +19,23 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": "RG1"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": "20"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "BO9"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "30"
   }
  ],
  "initial_state": {

@@ -2,6 +2,8 @@
   "id": "amulet_found",
   "speaker": "",
   "lines": [
-    "FOUND AMULET!!"
+    "FOUND AMULET!!",
+    "Return to the",
+    "merchant!"
   ]
 }

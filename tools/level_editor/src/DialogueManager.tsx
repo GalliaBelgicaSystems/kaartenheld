@@ -6,8 +6,8 @@ import {
 
 /** Dialogue text editor: speaker tag + lines for each
  *  screens/dialogue/*.json record.  Text ONLY — story flags, events, and
- *  scenarios stay LLM-authored (the completion_flag field is preserved
- *  untouched on save, never shown).
+ *  scenarios stay LLM-authored (the completion_flag and choice fields are
+ *  preserved untouched on save, never shown).
  *
  *  Ids assign by sorted filename at compile time (dialogue_compile.py);
  *  nothing references a numeric dialogue id persistently, so renaming a
@@ -45,6 +45,7 @@ export const DialogueManager: React.FC<{ initialId?: string }> = ({ initialId })
         speaker: data.speaker || '',
         lines: (data.lines || []).slice(),
         completion_flag: (data as any).completion_flag,
+        choice: (data as any).choice,
       });
       setDirty(false);
       setStatus('');
@@ -59,13 +60,14 @@ export const DialogueManager: React.FC<{ initialId?: string }> = ({ initialId })
   const save = async () => {
     if (!draft) return;
     try {
-      // Preserve the LLM-authored flag field verbatim; never edit it here.
+      // Preserve the LLM-authored flag/choice fields verbatim; never edit here.
       const out: any = {
         id: draft.id,
         speaker: draft.speaker,
         lines: draft.lines.filter((l, i) => l !== '' || i < draft.lines.length),
       };
       if (raw && raw.completion_flag) out.completion_flag = raw.completion_flag;
+      if (raw && raw.choice) out.choice = raw.choice;
       // Drop trailing empty lines (compiler pads with "" anyway).
       while (out.lines.length > 1 && out.lines[out.lines.length - 1] === '') {
         out.lines.pop();

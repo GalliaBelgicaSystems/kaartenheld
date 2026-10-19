@@ -29,7 +29,7 @@ VALID_ASSERTION_TYPES = {
     "battle_energy", "battle_draw_remaining", "battle_discard_count",
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
-    "screen_row", "screen_row_not_contains", "actor_at",
+    "screen_row", "screen_row_not_contains", "vram_row", "actor_at",
     "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
@@ -348,6 +348,14 @@ def run_scenario(scenario):
         if has_screen_assert:
             screen_buf = session.get_screen_buf()
             screen_lines = screen_buf.split('\n')
+        # vram_row reads REAL VRAM (0x9800) instead of the semantic
+        # buffer: the gate for RAM-truth-vs-VRAM-lie rendering bugs
+        # (AGENTS.md 52.25 family), where the buffer is correct but the
+        # pixels are not. Same font mapping as the walkthrough bg_text.
+        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        vram_lines = []
+        if has_vram_assert:
+            vram_lines = session.get_screen_dump().split('\n')
     finally:
         session.disconnect()
 
@@ -571,6 +579,17 @@ def run_scenario(scenario):
             actual_row = screen_lines[row_idx] if row_idx < len(screen_lines) and screen_lines[row_idx] else ""
             passed = contains_str in actual_row
             actual = f"row {row_idx}: '{actual_row.strip()}'"
+
+        elif a_type == "vram_row":
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"vram_row assertion row {row_idx} requires 'contains'")
+            expected = f"VRAM row {row_idx} contains '{contains_str}'"
+            actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
+            passed = contains_str in actual_row
+            actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
 
         elif a_type == "screen_row_not_contains":
             row_idx = a.get("row", 0)

@@ -1,0 +1,72 @@
+{
+ "name": "ring_uses_iron_detail",
+ "test": true,
+ "description": "The merchant's iron ring carries 4 uses per battle (card definition): its CARDS detail page shows USES 4 and MXCP 1",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "inventory": {
+   "IRON_RING": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "4"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "MXCP"
+  }
+ ]
+}

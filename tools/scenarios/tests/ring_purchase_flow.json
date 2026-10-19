@@ -1,7 +1,7 @@
 {
  "name": "ring_purchase_flow",
  "test": true,
- "description": "The Merchant's merged shop sells WOOD_RING as the I RG card (20 gold, fourth row): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), it appears in CARDS as an undecked row, and A decks it",
+ "description": "The Merchant's one-copy shop sells IRON_RING as the I RG card (20 gold, first row): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), it appears in CARDS as an undecked row, and A decks it",
  "actions": [
   {
    "type": "interact",
@@ -10,30 +10,6 @@
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",
@@ -103,7 +79,7 @@
  "assertions": [
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "IRON_RING",
    "expected": 1
   },
   {

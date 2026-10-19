@@ -48,7 +48,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -116,7 +116,7 @@ EVENT_TYPE_MAP = {
     59: "NEW_GAME_STARTED", 60: "GAME_CONTINUED", 61: "SOUND_TOGGLED",
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
-    65: "ACTOR_MOVED",
+    65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -134,7 +134,10 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 13: "FIELD_CHEST",
                 GAME_ID_BASE + 14: "MERCHANT_REMINDER",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
-                GAME_ID_BASE + 16: "HEAL_MAGE"}
+                GAME_ID_BASE + 16: "HEAL_MAGE",
+                GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
+                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 19: "MIMIC_REWARD"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -151,7 +154,7 @@ ACTOR_INFO_MAP = {
     "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
-    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE", "battle": "NONE"},
+    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE_ASK", "battle": "NONE"},
     "CARL":        {"visual": "C", "hostile": True, "interaction": "COMBAT", "dialogue": "TUTORIAL_CARL_INTRO", "battle": "CARL"},
     "CHEST":       {"visual": "T", "hostile": False, "interaction": "NONE", "dialogue": "NONE", "battle": "NONE"},
     "DOG":         {"visual": "?", "hostile": False, "interaction": "NONE", "dialogue": "DOG_GREETING", "battle": "NONE"},
@@ -219,14 +222,14 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "WOOD_RING": 0x42, "FIRE_SWORD": 0x43,
+               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
                "BOW_9": 0x46}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
@@ -1182,10 +1185,10 @@ class EmulatorSession:
 
     def get_screen_dump(self):
         """Read 20x18 VRAM background tilemap from 0x9800.
-        
-        Assumes GBDK font_ibm loaded at tile base 0 (identity tile-to-ASCII
-        mapping).  For custom fonts the tile-base offset from the font handle
-        would need to be subtracted first.
+
+        Text tiles decode as tile_id + 32 (ui_font_tile_base is 0, so
+        the PPU fetches ch - ' '; see battle_draw_text_line).  Non-text
+        tiles (art, icons) decode to whatever bytes they are; pass '.'.
         """
         rows = []
         for y in range(18):
@@ -1193,8 +1196,8 @@ class EmulatorSession:
             row_bytes = []
             for x in range(20):
                 b = self._memread(0x9800 + y * 32 + x)
-                if b is not None:
-                    row_bytes.append(chr(b) if 32 <= b <= 126 else '.')
+                if b is not None and 0 <= b <= 95:
+                    row_bytes.append(chr(b + 32))
                 else:
                     row_bytes.append('.')
             rows.append(''.join(row_bytes))
@@ -1242,7 +1245,7 @@ class EmulatorSession:
             }
             if ev_type_str in ("STORY_FLAG_SET", "STORY_FLAG_CLEARED"):
                 ev_obj["flag_name"] = STORY_FLAG_ID_MAP.get(data[0], f"FLAG_{data[0]}")
-            elif ev_type_str in ("DIALOGUE_STARTED", "DIALOGUE_NEXT", "DIALOGUE_ENDED"):
+            elif ev_type_str in ("DIALOGUE_STARTED", "DIALOGUE_NEXT", "DIALOGUE_ENDED", "DIALOGUE_CHOICE"):
                 ev_obj["dialogue_id_name"] = DIALOGUE_ID_MAP.get(data[0], f"UNKNOWN_{data[0]}")
             elif ev_type_str == "INTERACTION_ATTEMPT":
                 ev_obj["target_entity"] = ENTITY_ID_MAP.get(data[3], f"UNKNOWN_{data[3]}")

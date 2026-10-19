@@ -25,7 +25,7 @@
 /* ── Cards (engine range: NONE=0; game range >= CARD_FIRST_GAME) ── */
 #define CARD_IRON_SWORD    (CARD_FIRST_GAME + 0)
 #define CARD_WOODEN_SHIELD (CARD_FIRST_GAME + 1)
-#define CARD_WOOD_RING     (CARD_FIRST_GAME + 2)   /* curated shop ring (docs/loot.md §34.6) */
+#define CARD_IRON_RING      (CARD_FIRST_GAME + 2)   /* curated shop ring (docs/loot.md §34.6) */
 #define CARD_FIRE_SWORD    (CARD_FIRST_GAME + 3)
 #define CARD_POISON_DAGGER (CARD_FIRST_GAME + 4)
 #define CARD_AMULET        (CARD_FIRST_GAME + 5)
@@ -50,6 +50,10 @@
 #define EVENT_ID_MERCHANT_REMINDER (EVENT_ID_FIRST_GAME + 14)
 #define EVENT_ID_KNIGHT_SPLIT    (EVENT_ID_FIRST_GAME + 15)
 #define EVENT_ID_HEAL_MAGE       (EVENT_ID_FIRST_GAME + 16)
+#define EVENT_ID_HEAL_MAGE_REFUSED (EVENT_ID_FIRST_GAME + 17)
+#define EVENT_ID_CARL_CHEST_FIRST (EVENT_ID_FIRST_GAME + 18)
+#define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
+#define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -67,7 +71,12 @@ typedef enum {
     STORY_FLAG_ID_AMULET_CHEST = 4,   /* mountain amulet chest opened (loot
                                        * state, like FIELD_CHEST -- set
                                        * atomically with the AMULET grant) */
-    STORY_FLAG_ID_COUNT        = 5
+    STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
+                                       * its one free heal (later talks get
+                                       * the refusal, no heal, no jingle) */
+    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 5-kill "return to the mayor"
+                                       * notice already showed (one-shot) */
+    STORY_FLAG_ID_COUNT        = 7
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -86,8 +95,8 @@ typedef enum {
 } CurrencyIdNamed;
 
 /* ── Banked content ────────────────────────────────────────────────
- * The event and dialogue content tables are compiled into MBC5 ROM bank
- * GAME_CONTENT_BANK (see events_content.c / dialogue_content.c, which use
+ * The event/card/shop content tables are compiled into MBC5 ROM bank
+ * GAME_CONTENT_BANK (see events_content.c / cards_content.c, which use
  * `#pragma bank 2`).  Bank 2 is used because the project links with -yo8:
  * bank 0 legitimately spans the full 32 KB (file 0x0000-0x7FFF), so bank 1
  * (file 0x4000-0x7FFF) overlaps bank 0's second half and sdldgb's
@@ -97,7 +106,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 17
+#define GAME_EVENT_COUNT 21
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

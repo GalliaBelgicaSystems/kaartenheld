@@ -314,7 +314,7 @@ void battle_card_undo(Battle *b)
 #ifdef DEBUG_BUILD
     prev_result = b->result;
 #endif
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 3;
     g_bk_call_target = (uint16_t)&battle_card_undo_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -387,7 +387,15 @@ static void battle_resolve_hand_discard(Battle *b)
             b->hand[idx].uses_remaining--;
         }
         telemetry_emit(EVENT_CARD_PLAYED, idx, b->hand[idx].type, b->hand[idx].value, b->hand[idx].uses_remaining);
-        deck_discard(&b->deck, &b->hand[idx]);
+        /* Spent finite-use cards leave combat entirely instead of entering
+         * the discard pile: a 0-use card would otherwise take up a hand
+         * slot it can never play from, cycling back through every future
+         * draw and reshuffle.  Exiled cards never re-enter the pile, so
+         * later draws and reshuffles only see playable cards (the
+         * pile+hand+discard conservation below counts live cards). */
+        if (b->hand[idx].uses_remaining != 0) {
+            deck_discard(&b->deck, &b->hand[idx]);
+        }
         /* Played cards leave an empty slot; the turn-start draw refills the
          * hand (deck.md: no mid-turn instant redraw). */
         b->hand[idx].type = BATTLE_CARD_TYPE_EMPTY;
@@ -409,11 +417,11 @@ static void battle_resolve_hand_discard(Battle *b)
  * and baked into the redealt pile permanently.
  *
  * No per-iteration dry check is needed: with DECK_MIN_CARDS >=
- * BATTLE_HAND_SIZE (statically asserted above), cards are conserved
- * (pile + hand + discard == total deck size; the reshuffle preserves
- * the undrawn remainder), so an empty discard pile implies the pile
- * covers every open slot.  The only dry-pile loop entry is the fully-dry
- * case handled by the early return above. */
+ * BATTLE_HAND_SIZE (statically asserted above), live cards are conserved
+ * (pile + hand + discard == total deck size minus exiled spent cards, and
+ * the reshuffle preserves the undrawn remainder), so an empty discard
+ * pile implies the pile covers every open slot.  The only dry-pile loop
+ * entry is the fully-dry case handled by the early return above. */
 static bool battle_turn_draw(Battle *b)
 {
     uint8_t i, need = 0;

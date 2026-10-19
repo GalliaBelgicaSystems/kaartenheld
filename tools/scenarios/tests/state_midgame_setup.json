@@ -48,7 +48,7 @@
   },
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "POISON_DAGGER",
    "expected": 2
   },
   {
@@ -95,7 +95,7 @@
    }
   },
   "inventory": {
-   "WOOD_RING": 2
+   "POISON_DAGGER": 2
   },
   "world": {
    "SLIME_FOREST": "DEFEATED",

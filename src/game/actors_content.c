@@ -151,11 +151,18 @@ static const WorldActorDefinition g_mountain_pass_actors[] = {
          SPRITE_KIND_ENEMY, 9, 0
     },
     {
-        0, ENTITY_ID_AMULET, 10, 8, DIRECTION_DOWN,
+        0, ENTITY_ID_AMULET, 18, 5, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_CHEST, 13, 0
+    },
+    {
+        66, ENTITY_ID_KOBOLD, 17, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_NONE, 15, 15, 8, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 2, 0
     },
 };
 
@@ -199,18 +206,11 @@ static const WorldActorDefinition g_south_field_actors[] = {
          SPRITE_KIND_ENEMY, 9, 0
     },
     {
-        8, ENTITY_ID_BAT, 14, 10, DIRECTION_DOWN,
+        8, ENTITY_ID_BAT, 2, 10, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'V', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_PATROL_CIRCLE, 8, 8, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 0, 0
-    },
-    {
-        13, ENTITY_ID_KOBOLD, 17, 1, DIRECTION_DOWN,
-        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'K', "KOBOLD", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_KOBOLD, AI_CHASE, 15, 15, 8, CURRENCY_ID_GOLD,
-        0, 0,
-         SPRITE_KIND_ENEMY, 2, 0
     },
     {
         46, ENTITY_ID_SLIME, 7, 14, DIRECTION_DOWN,
@@ -218,6 +218,13 @@ static const WorldActorDefinition g_south_field_actors[] = {
         'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_PATROL_CROSS, 10, 10, 10, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 9, 0
+    },
+    {
+        67, ENTITY_ID_SLIME_KNIGHT, 13, 7, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'K', "SLIME KNIGHT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME_KNIGHT, AI_NONE, 15, 15, 12, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 10, 1
     },
 };
 
@@ -453,7 +460,7 @@ const WorldActorTable g_actor_tables[] = {
 uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
-    if (g_game.world.map_id == MAP_MOUNTAIN_PASS && g_bk_byte_b == 10 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    if (g_game.world.map_id == MAP_MOUNTAIN_PASS && g_bk_byte_b == 18 && g_bk_byte_c == 5 && (g_game.state.flags.bytes[0] & 8)) return 1;
     return 0;
 }
 

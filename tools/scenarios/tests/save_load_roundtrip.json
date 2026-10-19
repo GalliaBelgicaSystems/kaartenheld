@@ -32,7 +32,7 @@
   },
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "IRON_RING",
    "expected": 1
   },
   {
@@ -67,7 +67,7 @@
    }
   },
   "inventory": {
-   "WOOD_RING": 1
+   "IRON_RING": 1
   },
   "currency": {
    "GOLD": 50

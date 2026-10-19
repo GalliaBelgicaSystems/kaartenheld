@@ -1,0 +1,73 @@
+{
+ "name": "ring_uses_loot_detail",
+ "test": true,
+ "description": "Wild loot rings are single-use per battle: a plain wood loot ring (derived id 132) shows USES 1 on its CARDS detail page",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "1"
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "monsters_slain",
+  "speaker": "",
+  "lines": [
+    "You have killed",
+    "many monsters,",
+    "return to the",
+    "mayor!"
+  ]
+}

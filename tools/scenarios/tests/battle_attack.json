@@ -130,6 +130,9 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 3000
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

@@ -1,0 +1,95 @@
+{
+ "name": "heal_mage_thanks_close",
+ "test": true,
+ "description": "Closing the post-heal thanks returns to the overworld without healing twice: exactly one HEALED fires and the one-shot stays used",
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "party_hp",
+   "expected": 10
+  },
+  {
+   "type": "flag",
+   "flag": "HEAL_MAGE_USED",
+   "expected": true
+  },
+  {
+   "type": "event_count",
+   "event": "HEALED",
+   "count": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "HEAL_MAGE_THANKS"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_ENDED"
+  },
+  {
+   "type": "music_track",
+   "expected": "TOWN"
+  },
+  {
+   "type": "dialogue_active",
+   "expected": false
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 12,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 3,
+    "max_hp": 10
+   }
+  },
+  "seed": 1007,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
+}

@@ -85,12 +85,53 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_ENDING_SHOWN, 1, 0 }}
     },
+    /* ── Castle mimic reward ─────────────────────────────────────────
+     * Felling the mimic (a solo miniboss with a persistent actor_id,
+     * so this fires exactly once like the knight split) grants +1
+     * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
+     * tutorial/chest/mayor milestones, and narrates the next step
+     * (speakerless box, like FOUND AMULET: the dead mimic gives no
+     * speech).  The grant is observable through VARIABLE_SET plus
+     * the snapshot. */
+    {
+        EVENT_ID_MIMIC_REWARD, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_MIMIC, EVENT_MAP_ANY,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        2,
+        {
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MIMIC_REWARD, 0, 0 }
+        }
+    },
     {
         EVENT_ID_MONSTER_DEFEATED, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_NONE, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
         {{ EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 1, 0 }}
+    },
+    /* ── 5-kill "return to the mayor" notice ─────────────────────────
+     * The 5th victorious battle (any hostile: ACTOR_DEFEATED is
+     * all-match, and this row sits right after MONSTER_DEFEATED so the
+     * counter already includes this kill) pops a speakerless next-step
+     * box.  No quest precondition: kills before the accept still count,
+     * so the notice doubles as pre-quest guidance toward the mayor.
+     * One-shot via STORY_FLAG_ID_HUNT_NOTIFIED.  Overlap note: a defeat
+     * that also carries its own reward dialogue (Carl's speech, the
+     * mimic box) stages that text last, swallowing this one -- grants
+     * and the flag are unaffected either way. */
+    {
+        EVENT_ID_QUEST_NUDGE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_NONE, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, true },
+            { EVENT_COND_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, false, false }
+        },
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MONSTERS_SLAIN, 0, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, 0 }
+        }
     },
     {
         EVENT_ID_GUARD_AFTER_MAYOR, EVENT_TRIGGER_INTERACT, ENTITY_ID_GUARD, EVENT_MAP_ANY,
@@ -114,9 +155,13 @@ const EventDefinition g_events[] = {
      * sprite and the chest jingle key off the flag, never the quest
      * variable, so accepting early neither opens the chest art nor
      * plays the jingle.  DELIVER must precede INTRO (more specific
-     * first).  After delivery no merchant event matches, so the
+     * first): the first talk holding the amulet delivers it (thanks,
+     * +15 gold, amulet removed, quest complete) before any shop
+     * opens.  After delivery no merchant event matches, so the
      * interaction falls back to the merchant's SHOP interaction; the
-     * same fallback is blocked mid-quest by REMINDER below. */
+     * same fallback is blocked mid-quest by REMINDER below.  Finding
+     * the amulet is what unlocks the shop: pickup sets QUEST=1, so no
+     * briefing detour stands between the find and the delivery. */
     {
         EVENT_ID_MERCHANT_DELIVER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         2,
@@ -173,6 +218,15 @@ const EventDefinition g_events[] = {
      * DIALOGUE_ID_TUTORIAL_CARL_INTRO).  Both share ENTITY_ID_CARL;
      * only the runtime hostile slot can be defeated, so
      * TUTORIAL_COMPLETE below fires exactly once on the spar win.
+     * The spar is gated on the field cache: talking or bumping the
+     * tile while STORY_FLAG_ID_FIELD_CHEST is clear matches
+     * CARL_CHEST_FIRST instead ("Open chest, then come back!"), which
+     * returns ENGAGE_DIALOGUE without stashing the spar slot
+     * (interaction.c syncs the slot only on the actor-dialogue path),
+     * so closing it returns to the overworld with no fight -- and the
+     * hero enters the spar with the chest's +1 AP (pool 2).  Once the
+     * chest is open no event matches and the ordinary lesson path
+     * (lesson + stashed spar + auto-start on close) runs.
      * Bumping or facing-talking the tile opens the static's lesson
      * through the ordinary dialogue path while the spar slot stays
      * stashed (synced when the dialogue opens, interaction.c);
@@ -189,6 +243,13 @@ const EventDefinition g_events[] = {
      * base-1 pool, reaching 4 in any completion order.  Carl's defeat is
      * persistent (one-shot via GameState.world), so the reward fires
      * exactly once. */
+    {
+        EVENT_ID_CARL_CHEST_FIRST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CARL, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_CARL_CHEST_FIRST, 0, 0 }}
+    },
     {
         EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
         0,
@@ -247,24 +308,32 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_SPAWN_SLIME_TRIO, 9, 0, 0 }
         }
     },
-    /* ── Village Heal Mage ─────────────────────────────────────────
-     * Talking to the red-robed mage restores the whole party to full
-     * HP, plays the chest-loot jingle, and briefs the player on ring
-     * healing (the merchant in the same village sells the wood ring).
-     * Unconditional: free repeatable healing, no flags consumed, so a
-     * hurt player can always walk back and top up.  The jingle is the
-     * stock MUSIC_CHEST one-shot and restores the town track through
-     * the normal bank-8 clock, exactly like a chest loot. */
+    /* ── Village Heal Mage (one free heal, YES/NO ask) ───────────────
+     * The mage asks once ("do you want me to heal your wounds?") with a
+     * YES/NO choice prompt (DIALOGUE_CHOICE_YES_NO, last line "> YES   NO").
+     * The dialogue screen dispatches the game-owned bank-5 body
+     * (src/game/heal_mage_banked.c), which owns what the answer means:
+     * YES heals the whole party, stages the jingle + telemetry the
+     * fixed wrapper owes, and sets HEAL_MAGE_USED; NO stages the
+     * "come back when you're hurt" follow-up and sets nothing, so the
+     * mage asks again next time.  Once used, talks match REFUSED first
+     * (more specific first): the "another heal?" line, no heal, no
+     * jingle.  The jingle is the stock MUSIC_CHEST one-shot and restores
+     * the town track through the normal bank-8 clock, exactly like a
+     * chest loot. */
+    {
+        EVENT_ID_HEAL_MAGE_REFUSED, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_HEAL_MAGE_USED, 0, true, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_HEAL_MAGE_REFUSED, 0, 0 }}
+    },
     {
         EVENT_ID_HEAL_MAGE, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
-        0,
-        {{ EVENT_COND_NONE, 0, 0, false, false }},
-        3,
-        {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_HEAL_MAGE, 0, 0 },
-            { EVENT_ACTION_HEAL_FULL, 0, 0, 0 },
-            { EVENT_ACTION_PLAY_MUSIC, MUSIC_CHEST, 0, 0 }
-        }
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_HEAL_MAGE_USED, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_HEAL_MAGE_ASK, 0, 0 }}
     }
 };
 

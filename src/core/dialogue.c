@@ -36,16 +36,23 @@ void dialogue_init(DialogueState *d)
     d->line_count = 0;
     d->speaker = "";
     d->completion_flag = 0;
+    /* choice/index/made need no init: dialogue_start_def_banked stages
+     * all three on every activation (the sole writer), and update
+     * early-returns unless active. */
 }
 
 void dialogue_start_def(DialogueState *d, DialogueId id)
 {
-    /* Body runs banked (src/core/dialogue_banked.c) reading the registered
-     * table directly; the wrapper emits DIALOGUE_STARTED afterwards
-     * (banked code cannot call fixed-bank telemetry). */
+    /* Body runs banked (src/core/dialogue_banked.c, bank 7) reading the
+     * registered table directly; the wrapper emits DIALOGUE_STARTED afterwards
+     * (banked code cannot call fixed-bank telemetry).  Staging
+     * discipline: only bank/target/ptr_a/byte_a are staged here;
+     * g_bk_byte_b/c arrive stale from whatever dispatched last, so the
+     * banked body must never read them (the retired floor-stamp block
+     * did, corrupting world.map on small stale pairs). */
     if (!d) return;
     d->active = false;
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 7;
     g_bk_call_target = (uint16_t)&dialogue_start_def_banked;
     g_bk_ptr_a = (void *)d;
     g_bk_byte_a = id;

@@ -16,7 +16,7 @@ static uint8_t edge_walkable(const World *w, uint8_t x, uint8_t y)
     tile = w->map[y][x];
     if (tile == TILE_FLOOR) return 1;
     if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) return 1;
-    if (tile == TILE_DESOLATE_FLOOR_PLAIN || tile == TILE_DESOLATE_STAIRCASE) return 1;
+    if (tile == TILE_DESOLATE_FLOOR_PLAIN) return 1;
     if (tile_landscape_walkable(tile)) return 1;
     return 0;
 }

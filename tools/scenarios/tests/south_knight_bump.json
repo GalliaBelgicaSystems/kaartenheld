@@ -1,0 +1,46 @@
+{
+ "name": "south_knight_bump",
+ "test": true,
+ "description": "The waiting slime knight (AI_NONE) starts combat on bump: stepping into its tile opens the knight battle (no patrol, no lesson, no pre-fight dialogue)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_COMBAT_START"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 15
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 16,
+   "y": 15,
+   "facing": "RIGHT"
+  },
+  "seed": 7009
+ }
+}

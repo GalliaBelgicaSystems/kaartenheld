@@ -172,6 +172,30 @@ class Scene:
             cells |= patrol_cells(ai, x, y)
         return cells
 
+    def breachable_cells(self):
+        """Stationary hostile cells (waiting guardians like the south
+        slime knight): stepping on one starts a fight instead of
+        moving, which the walk ambush machinery (transit_fight +
+        briefing drain) wins through.  `solo` is presentation only
+        (single-enemy boss screen), not routability: even the solo
+        mimic is a safe transit fight (its victory ends nothing --
+        only SLIME_LORD sets ENDING_SHOWN), and Walk E engages it
+        deliberately anyway.  Patrol/chase halos and non-hostile
+        blockers are untouched."""
+        cells = set()
+        for obj in self.level.get("objects", []):
+            props = obj.get("properties", {}) or {}
+            if not props.get("entity_id"):
+                continue
+            flags = effective_actor_flags(obj.get("type"), props)
+            if "HOSTILE" not in flags:
+                continue
+            if props.get("ai", "AI_NONE") != "AI_NONE":
+                continue
+            pos = obj.get("position", {}) or {}
+            cells.add((pos.get("x", -1), pos.get("y", -1)))
+        return cells
+
 
 class Planner:
     def __init__(self, levels_dir=LEVELS_DIR):
@@ -250,6 +274,17 @@ class Planner:
         raise KeyError("no scene with id %d" % scene_id)
 
     # ── BFS ──────────────────────────────────────────────────────────
+    def _bfs_breach(self, scene, start, goal, avoid=None):
+        """BFS that falls back to routing through stationary, non-solo
+        hostile cells (Scene.breachable_cells) when the strict avoid-set
+        leaves no path: the walk bumps the guardian and fights through
+        via the standard ambush machinery instead of failing loudly."""
+        path = self._bfs(scene, start, goal, avoid)
+        if path is None and avoid:
+            path = self._bfs(scene, start, goal,
+                             avoid - scene.breachable_cells())
+        return path
+
     def _bfs(self, scene, start, goal, avoid=None):
         """Shortest walkable path start->goal as a list of (dx, dy)
         moves.  Exit tiles are ordinary cells here; the caller decides
@@ -292,7 +327,7 @@ class Planner:
             avoid |= (set(scene.edge_cells) - {(start[0], start[1]), (goal[0], goal[1])})
         avoid.discard(start)
         avoid.discard(goal)
-        return self._bfs(scene, start, goal, avoid)
+        return self._bfs_breach(scene, start, goal, avoid)
 
     def path_to_exit(self, scene_name, start, target_scene_name):
         """Path to the exit tile whose target_scene is target_scene_name.
@@ -338,7 +373,7 @@ class Planner:
                 if safe_only and entry in halo:
                     continue
                 avoid.discard(goal)
-                epath = self._bfs(scene, start, goal, avoid)
+                epath = self._bfs_breach(scene, start, goal, avoid)
                 avoid.add(goal)
                 if epath is not None and (best is None or len(epath) < len(best)):
                     best, best_dir, best_goal = epath, direction, goal

@@ -131,7 +131,7 @@
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
-        "castle.castle_floor_with_debris",
+        "castle.castle_exit",
         "castle.castle_exit",
         "castle.castle_floor_with_debris",
         "castle.castle_floor_with_debris",
@@ -430,6 +430,16 @@
       "direction": "NORTH",
       "tile_char": "<",
       "tunnel": "tunnel_castle_hall_castle"
+    },
+    {
+      "x": 9,
+      "y": 5,
+      "target_scene": "castle",
+      "target_x": 9,
+      "target_y": 16,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_castle_hall_castle_2"
     }
   ],
   "neighbors": {

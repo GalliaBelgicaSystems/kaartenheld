@@ -55,9 +55,9 @@
    "contains": "HERO        HP:10/10"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 10,
-   "contains": "COMBO:"
+   "contains": "DMG"
   }
  ],
  "initial_state": {

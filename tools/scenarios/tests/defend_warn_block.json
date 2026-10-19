@@ -1,0 +1,142 @@
+{
+ "name": "defend_warn_block",
+ "test": true,
+ "description": "Forecast and block share the hand line: defending the mountain slime trio's telegraphed 2 with one staged SH3 shows DMG 2 in red on the left and DEF 3 in green on the right",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 240
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "DMG 2"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "DEF 3"
+  },
+  {
+   "type": "vram_row",
+   "row": 10,
+   "contains": "DMG 2"
+  },
+  {
+   "type": "vram_row",
+   "row": 10,
+   "contains": "DEF 3"
+  }
+ ]
+}

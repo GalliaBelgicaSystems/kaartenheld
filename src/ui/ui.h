@@ -20,7 +20,6 @@ extern uint8_t g_is_cgb;
 #define UI_TILE_CARD_BOW         106u
 #define UI_TILE_CARD_DAGGER      107u
 #define UI_TILE_CARD_RING        108u
-#define UI_TILE_COIN             115u
 /* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
  * sheet row 3, loaded explicitly at these ids by ui_init).  Together with
  * the card frames these fully allocate the 117-127 BG window between the

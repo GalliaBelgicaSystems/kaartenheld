@@ -8,12 +8,6 @@
     "music": "MUSIC_TOWN",
     "map_id": "MAP_TOWN"
   },
-  "neighbors": {
-    "north": "forest",
-    "south": "",
-    "east": "village_area",
-    "west": "field"
-  },
   "default_walkable": "village.village_plain_floor_1",
   "layers": {
     "terrain": [
@@ -427,6 +421,12 @@
     }
   },
   "exits": [],
+  "neighbors": {
+    "north": "forest",
+    "south": "",
+    "east": "village_area",
+    "west": "field"
+  },
   "objects": [
     {
       "id": "town_mayor",

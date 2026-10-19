@@ -19,6 +19,8 @@ export interface DialogueDraft {
   lines: string[];
   /** LLM-authored only; preserved by the editor, never edited. */
   completion_flag?: string;
+  /** LLM-authored only; preserved by the editor, never edited. */
+  choice?: string;
 }
 
 export interface TutorialSlide {

@@ -179,7 +179,9 @@ typedef enum {
      * base set), NOT values: TILE_CASTLE_16..19 = 142..145 render VRAM
      * slots 16..19, TILE_CASTLE_20..22 = 251..253 render slots 20..22.
      * ui.c maps both clusters explicitly (one range branch each); the
-     * generated walk/glyph tables absorb them with no hand edits. */
+     * generated walk/glyph tables absorb them with no hand edits.
+     * The rotated rugs (TILE_CASTLE_27/28, grid row 3) reuse the
+     * evicted legacy values 185..186 the same way (VRAM slots 24..25). */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -204,6 +206,17 @@ typedef enum {
     TILE_CASTLE_20 = 251,
     TILE_CASTLE_21 = 252,
     TILE_CASTLE_22 = 253,
+    /* Rotated rugs (sheet row 3, grid indices 27..28, VRAM slots 24..25):
+     * values 185..186 are evicted legacy desolate ids
+     * (TILE_DESOLATE_MERCHANT / TILE_DESOLATE_STAIRCASE), unreferenced
+     * by every level and carved out of the legacy engine ranges (ui.c,
+     * edge/patrol).  Suffixes stay grid indices, like the rest. */
+    TILE_CASTLE_27 = 185,
+    TILE_CASTLE_28 = 186,
+    /* Solid red square (sheet row 4, grid index 36, VRAM slot 26):
+     * value 184 is another evicted legacy desolate id
+     * (TILE_DESOLATE_FIRE_02), unreferenced by every level. */
+    TILE_CASTLE_36 = 184,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -295,9 +308,12 @@ typedef enum {
     TILE_DESOLATE_KOBOLD_01  = 181,
     TILE_DESOLATE_KOBOLD_02  = 182,
     TILE_DESOLATE_FIRE_01    = 183,
-    TILE_DESOLATE_FIRE_02    = 184,
-    TILE_DESOLATE_MERCHANT   = 185,
-    TILE_DESOLATE_STAIRCASE  = 186,
+    /* Value 184 (ex-TILE_DESOLATE_FIRE_02) is evicted: reused as
+     * TILE_CASTLE_36 above.  The legacy engine ranges now end at
+     * TILE_DESOLATE_FIRE_01. */
+    /* Values 185..186 (ex-TILE_DESOLATE_MERCHANT/_STAIRCASE) are evicted:
+     * reused as TILE_CASTLE_27/28 above.  The legacy engine ranges now
+     * end at TILE_DESOLATE_FIRE_02. */
     /* Desolate Landscape (level-editor) tiles: 64 tiles in sheet scan order,
      * mapping 1:1 to the 64-tile desolate VRAM block (RPG_TILE_BASE_DESOLATE).
      * TILE_DESOLATE_LANDSCAPE_<i> renders VRAM block i. value = 187 + i. */

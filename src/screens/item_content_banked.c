@@ -267,6 +267,9 @@ static const CardDefinition *ic_loot_synth(CardId id)
         g_card_scratch.type = CARD_TYPE_HEAL;
         g_card_scratch.battle_type = BATTLE_CARD_TYPE_HEAL;
         g_card_scratch.effect = CARD_EFFECT_HEAL_HP;
+        /* Wild rings are single-use per battle (mirrors the synth
+         * ring branch). */
+        g_card_scratch.uses_per_battle = 1;
     }
     g_card_scratch.power = (uint8_t)(s_ic_loot_base[weapon] + material);
     g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;

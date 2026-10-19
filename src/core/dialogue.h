@@ -20,7 +20,21 @@ typedef struct {
     uint8_t line_count;
     const char *lines[MAX_DIALOGUE_LINES];
     uint8_t completion_flag;   /* FlagId set when this dialogue ends (0 = none) */
+    /* YES/NO choice prompt (0 = none, DIALOGUE_CHOICE_YES_NO = the player
+     * picks YES or NO on the last page with UP/DOWN/LEFT/RIGHT + A).
+     * The last line MUST be the option row "> YES   NO" (validated by
+     * dialogue_compile.py); the choice UI only repaints its cursor cells. */
+    uint8_t choice;
 } DialogueDefinition;
+
+/* Choice prompt kinds.  Only YES/NO exists today; generalize when a second
+ * need appears (roadmap YAGNI). */
+#define DIALOGUE_CHOICE_NONE   0
+#define DIALOGUE_CHOICE_YES_NO 1
+
+/* Choice answers. */
+#define DIALOGUE_CHOICE_YES 0
+#define DIALOGUE_CHOICE_NO  1
 
 typedef struct {
     bool active;
@@ -30,6 +44,9 @@ typedef struct {
     const char *speaker;
     const char *lines[MAX_DIALOGUE_LINES];
     uint8_t completion_flag;
+    uint8_t choice;         /* staged DIALOGUE_CHOICE_* kind */
+    uint8_t choice_index;   /* staged answer (YES default) */
+    uint8_t choice_made;    /* set once the player confirms (0/1) */
 } DialogueState;
 
 void dialogue_init(DialogueState *d);

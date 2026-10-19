@@ -133,40 +133,6 @@ def validate_dialogue_refs(levels_dir=None):
     for name in sorted(set(known) - referenced):
         warnings.append(
             f"Dialogue '{name}' is referenced by no actor or event.")
-    errors2, warnings2 = validate_set_tile_refs(events_text)
-    return errors + errors2, warnings + warnings2
-
-
-def validate_set_tile_refs(events_text):
-    """EVENT DIALOGUE loot-stamp args must be sane (AGENTS.md 55.7):
-    loot events carry the open cell as (flat map offset, tile) in the
-    DIALOGUE action's spare args for the banked dialogue body to stamp
-    on open.  Flat must land inside the world map, tile must be a known
-    TILE_* const.  A bad row would write outside world->map (WRAM
-    corruption), and the executor trusts content -- so fail loudly
-    here.  Plain dialogues carry (0, 0) and stamp nothing."""
-    import re
-    errors, warnings = [], []
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    try:
-        world_h = (repo_root / "src" / "world" / "world.h").read_text()
-    except OSError:
-        world_h = ""
-    known_tiles = set(re.findall(r"\b(TILE_[A-Z0-9_]+)\s*=", world_h))
-    m2 = re.search(r"#define\s+WORLD_WIDTH\s+(\d+)", world_h)
-    m3 = re.search(r"#define\s+WORLD_HEIGHT\s+(\d+)", world_h)
-    cells = (int(m2.group(1)) * int(m3.group(1)) if m2 and m3 else 960)
-    for m in re.finditer(
-            r"EVENT_ACTION_DIALOGUE\s*,\s*[A-Z0-9_]+\s*,\s*(-?\d+)\s*,\s*([A-Z0-9_]+)",
-            events_text):
-        flat, tile = int(m.group(1)), m.group(2)
-        if flat == 0:
-            continue
-        if not (0 <= flat < cells):
-            errors.append(
-                f"DIALOGUE stamp offset {flat} outside the world map")
-        if tile not in known_tiles:
-            errors.append(f"DIALOGUE stamp tile '{tile}' is not a TILE_* const")
     return errors, warnings
 
 

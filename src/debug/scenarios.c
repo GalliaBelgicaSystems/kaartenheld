@@ -18,6 +18,7 @@
 #include "game_ids.h"
 #include "ui.h"
 #include "battle.h"
+#include "banked.h"
 
 extern Game g_game;
 
@@ -26,29 +27,6 @@ volatile uint8_t g_scen_load_state = 0;
 volatile uint8_t g_debug_action[6];
 volatile uint8_t g_debug_action_pending = 0;
 uint8_t g_scen_state_buf[STATE_LOAD_DESC_SIZE];
-
-enum {
-    DBG_ACT_ADD_ITEM = 1,
-    DBG_ACT_REMOVE_ITEM = 2,
-    DBG_ACT_ADD_CURRENCY = 3,
-    DBG_ACT_ADD_PROGRESS = 4,
-    DBG_ACT_BUY_ITEM = 5,
-    DBG_ACT_USE_ITEM = 6,
-    DBG_ACT_EQUIP_ITEM = 7,
-    DBG_ACT_SAVE = 8,
-    DBG_ACT_LOAD = 9,
-    DBG_ACT_SET_HAND_CARD = 10,
-    DBG_ACT_SET_FILTER = 11,
-    DBG_ACT_SET_SORT = 12,
-    DBG_ACT_DECK_ADD = 13,
-    DBG_ACT_SET_HAND_CARD_META = 14,
-    DBG_ACT_START_BATTLE = 15,
-    DBG_ACT_DECK_REMOVE = 16,
-    DBG_ACT_SET_HAND_CARD_STATUS = 17,
-    DBG_ACT_SET_ENEMY_HP = 18,
-    DBG_ACT_APPLY_STATUS = 19,
-    DBG_ACT_SET_HAND_RING = 20
-};
 
 static void scenario_begin(uint16_t seed)
 {
@@ -241,6 +219,11 @@ static void scenario_load_state(void)
     debug_snapshot();
 }
 
+/* Pure state-write leaf cases live in the bank-5 body
+ * (dbg_action_banked.c) so the fixed bank stays under 0x8000
+ * (AGENTS.md §52.11.1/§52.18). */
+void debug_action_leaf_banked(void);
+
 static void debug_run_action(void)
 {
     uint8_t action = g_debug_action[0];
@@ -250,6 +233,14 @@ static void debug_run_action(void)
     uint8_t i;
     ProgressionTarget target;
     ProgressionAddResult pres;
+
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&debug_action_leaf_banked;
+    banked_call_run();
+    if (g_bk_byte_a) {
+        debug_snapshot();
+        return;
+    }
 
     switch (action) {
         case DBG_ACT_ADD_ITEM:
@@ -294,48 +285,6 @@ static void debug_run_action(void)
                 g_game.world.player.facing = (Direction)g_game.state.scene.player_facing;
             }
             break;
-        case DBG_ACT_SET_HAND_CARD:
-            if (a0 < BATTLE_HAND_SIZE) {
-                uint8_t t = (uint8_t)((uint16_t)a1 & 0xFF);
-                uint8_t fx = CARD_EFFECT_DAMAGE_TARGET;
-                /* Injected cards bypass CardDefinition lookup; give them
-                 * the default effect for their type so effect resolution
-                 * sees a complete card.  Debug-only mapping (this file is
-                 * excluded from the release ROM). */
-                if (t == BATTLE_CARD_TYPE_SHIELD) {
-                    fx = CARD_EFFECT_BLOCK_DAMAGE;
-                } else if (t == BATTLE_CARD_TYPE_HEAL) {
-                    fx = CARD_EFFECT_HEAL_HP;
-                }
-                g_game.battle.hand[a0].type = (BattleCardType)t;
-                g_game.battle.hand[a0].value = a2;
-                g_game.battle.hand[a0].effect = fx;
-                /* Injected cards carry no status rider; reset both fields
-                 * so a previously injected rider cannot leak into a slot
-                 * that was played earlier in the same battle. */
-                g_game.battle.hand[a0].status_id = STATUS_NONE;
-                g_game.battle.hand[a0].status_chance = 0;
-                g_game.battle.hand[a0].ring = 0;
-            }
-            break;
-
-        case DBG_ACT_SET_HAND_CARD_STATUS:
-            /* Pin the injected hand card's on-hit status rider (Phase C
-             * scenarios).  a1 = StatusId, a2 = roll chance (1/255). */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].status_id = a1;
-                g_game.battle.hand[a0].status_chance = a2;
-            }
-            break;
-        case DBG_ACT_SET_ENEMY_HP:
-            /* Pin an enemy combatant's current HP (battle must be active).
-             * Direct state write, no telemetry: scenario setup semantics
-             * (AGENTS.md §53.3). */
-            if (g_game.battle.enemy_count > a0) {
-                g_game.battle.enemies[a0].hp = a1;
-            }
-            break;
-
         case DBG_ACT_APPLY_STATUS:
             /* Apply a status through the real mechanic (status_apply,
              * STATUS_APPLIED telemetry included): a0 = combatant slot
@@ -358,15 +307,6 @@ static void debug_run_action(void)
                     g_game.battle.dirty |= (a0 == 0) ? BATTLE_DIRTY_HERO
                                                      : BATTLE_DIRTY_ENEMIES;
                 }
-            }
-            break;
-
-        case DBG_ACT_SET_HAND_RING:
-            /* Mark an injected hand card as a loot RING (docs/loot.md
-             * §34.3) so joker/gate scenarios don't depend on the dealt
-             * deck contents. */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].ring = 1;
             }
             break;
 
@@ -393,15 +333,6 @@ static void debug_run_action(void)
             (void)deck_remove_card(&g_game.state.cards, (CardId)a0);
 #endif
             break;
-        case DBG_ACT_SET_HAND_CARD_META:
-            /* Companion to SET_HAND_CARD: pins the injected hand card's
-             * energy cost and remaining uses so combo/energy scenarios are
-             * independent of the dealt deck contents. */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].cost = a1;
-                g_game.battle.hand[a0].uses_remaining = a2;
-            }
-            break;
         case DBG_ACT_START_BATTLE:
             /* Re-arm an encounter against the first living active actor
              * (mirrors the loader's start_battle path) and enter through the
@@ -415,14 +346,10 @@ static void debug_run_action(void)
             }
             start_battle_from_world(&g_game);
             break;
-        case DBG_ACT_SET_FILTER:
-            g_game.item_menu_filter = a0;
-            g_game.render_cache.valid = false;
-            break;
-        case DBG_ACT_SET_SORT:
-            g_game.item_menu_sort = a0;
-            g_game.render_cache.valid = false;
-            break;
+        /* SET_HAND_CARD / SET_HAND_CARD_META / SET_HAND_CARD_STATUS /
+         * SET_HAND_RING / SET_ENEMY_HP / SET_FILTER / SET_SORT are pure
+         * state writes handled by the bank-5 leaf body above; no case
+         * here (the body's out code short-circuits before the switch). */
         default:
             break;
     }

@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab renders each battle card type's banked description under its row. Regression lock for s_card_desc_blob: a flat multi-literal array initializer is silently miscompiled by SDCC to 'first row + zero fill', which blanked every non-sword description while all tests stayed green. Grants WOOD_RING so the HEAL row renders too. BOW is deliberately uncovered: no catalog card maps to BATTLE_CARD_TYPE_BOW (attacks are SWORD-typed; BOW exists only in enemy deck tables, which never render descriptions).",
+ "description": "CARDS tab renders each battle card type's banked description under its row. Regression lock for s_card_desc_blob: a flat multi-literal array initializer is silently miscompiled by SDCC to 'first row + zero fill', which blanked every non-sword description while all tests stayed green. Grants IRON_RING so the HEAL row renders too. BOW is deliberately uncovered: no catalog card maps to BATTLE_CARD_TYPE_BOW (attacks are SWORD-typed; BOW exists only in enemy deck tables, which never render descriptions).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -11,7 +11,7 @@
   },
   "seed": 8410,
   "inventory": {
-   "WOOD_RING": 1,
+   "IRON_RING": 1,
    "POISON_DAGGER": 1
   }
  },

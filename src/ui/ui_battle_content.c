@@ -5,6 +5,7 @@
 #include "battle.h"
 #include "battle_data.h"
 #include "card.h"
+#include "combo.h"
 #include "banked.h"
 #include "world/actor.h"
 #include "rpg/status.h"
@@ -268,7 +269,9 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     uint8_t digit_tile;
     /* Arrow-counter type (the bow): finite-use cards draw the power icon
      * on the middle row and the remaining-uses glyph on the floor row.
-     * Weapon icon and power digit stay exactly like every other card. */
+     * HEAL rings share the floor counter (same glyphs) but keep their
+     * power digit on the middle row.  Weapon icon and power digit stay
+     * exactly like every other card. */
     uint8_t limited;
     char *buf;
 
@@ -292,10 +295,12 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
      * (see battle_rider_content.c): the top border always stamps the
      * plain TR frame corner. */
     (void)status;
-    /* Finite-use cards of the skin's arrow-counter type draw the
-     * remaining-uses glyph (0..3, clamped) on the floor row; unlimited
+    /* Finite-use cards of the skin's arrow-counter type -- and HEAL-type
+     * rings, which share its remaining-uses glyphs -- draw the
+     * remaining-uses glyph (0..4, clamped) on the floor row; unlimited
      * cards keep the frame center. */
-    limited = (uses != 0xFF && type == g_card_skin_wram.uses_type);
+    limited = (uses != 0xFF && (type == g_card_skin_wram.uses_type ||
+                                type == BATTLE_CARD_TYPE_HEAL));
     if (limited) {
         digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
     } else {
@@ -350,7 +355,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                 g_tilemap_mirror[(top + r) * 32 + x + 1] = tile_wpn;
 #endif
             } else if (r == (uint8_t)(bh - 2)) {
-                if (limited) {
+                if (limited && type == g_card_skin_wram.uses_type) {
                     battle_vram_sync_write(&dst[1],
                         g_card_skin_wram.uses_power_tile);
 #ifdef DEBUG_BUILD
@@ -358,6 +363,11 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                         g_card_skin_wram.uses_power_tile;
 #endif
                 } else {
+                    /* Rings share the floor counter but keep their power
+                     * digit here (the skin power icon is the bow's nine). */
+                    if (limited) {
+                        digit_tile = (uint8_t)('0' - ' ' + value);
+                    }
                     battle_vram_sync_write(&dst[1], digit_tile);
 #ifdef DEBUG_BUILD
                     g_tilemap_mirror[(top + r) * 32 + x + 1] = digit_tile;
@@ -700,14 +710,21 @@ static const char *battle_combo_tier_name(uint8_t tier)
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
 
-static const char *battle_combo_pending_name(const volatile Battle *battle)
+static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg)
 {
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
     uint8_t has_ring = 0;
     uint8_t tier, best, v;
     uint8_t idx[BATTLE_HAND_SIZE];
+    uint16_t base;
+    uint8_t suited;
+    uint16_t mult;
+    uint16_t r;
+    uint16_t a;
+    uint16_t b;
 
+    *dmg = 0;
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
         uint8_t s = battle->selected_indices[i];
@@ -718,10 +735,14 @@ static const char *battle_combo_pending_name(const volatile Battle *battle)
         idx[w++] = s;
         if (c->ring) has_ring = 1;
     }
-    /* Fewer than 2 effective cards can never form a poker hand (same
-     * early-out as combo_resolve_banked): skip the ring trial entirely. */
-    if (w < 2) return "";
-    if (has_ring) {
+    /* No effective cards (e.g. only attack cards staged on the defend
+     * screen): nothing pending, keep the row blank.  A single effective
+     * card still hits for face value (resolve tiers NONE / mult 100),
+     * so w == 1 previews base damage instead of blanking. */
+    if (w == 0) return "";
+    if (w < 2) {
+        tier = HAND_NONE;
+    } else if (has_ring) {
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
          * value range, which covers the ring's raw value, so no separate
@@ -738,24 +759,153 @@ static const char *battle_combo_pending_name(const volatile Battle *battle)
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
+    /* Damage mirror of combo_resolve_banked + effect_scale_power: base
+     * sums the effective set with the same per-card rules (attack skips
+     * shield/ring values, defend already holds shields+rings only),
+     * suited adds 25 over the shared tier table, amount = base x mult
+     * / 100 via shift-add + subtract loops (effects_content idiom: no
+     * libcall while bank 3 is mapped).  Whatever this computes, the
+     * resolver computes too. */
+    base = 0;
+    for (i = 0; i < w; i++) {
+        const volatile Card *c = &battle->hand[idx[i]];
+        if (!defend && (c->type == BATTLE_CARD_TYPE_SHIELD || c->ring)) continue;
+        base += c->value;
+    }
+    suited = 0;
+    if (tier != HAND_NONE) {
+        suited = 1;
+        for (i = 1; i < w; i++) {
+            if (battle->hand[idx[i]].type != battle->hand[idx[0]].type) {
+                suited = 0;
+                break;
+            }
+        }
+    }
+    mult = g_combo_tier_mult[tier];
+    if (suited) mult += 25;
+    r = 0;
+    a = base;
+    b = mult;
+    while (b != 0) {
+        if (b & 1) r += a;
+        a <<= 1;
+        b >>= 1;
+    }
+    while (r >= 100) {
+        r -= 100;
+        (*dmg)++;
+    }
     return battle_combo_tier_name(tier);
+}
+
+/* Compact decimal without padding (DMG5, DMG12, DMG191):
+ * battle_draw_num2 space-pads to two cells, which would leave gaps
+ * after DMG.  Buffer, VRAM and mirror all stay truthful.  Returns the
+ * digit count so callers can blank the row tail. */
+static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
+{
+    char digit[4];
+    uint8_t n = 0;
+    uint8_t h = 0;
+    uint8_t d = 0;
+#ifdef DEBUG_BUILD
+    uint8_t i;
+#endif
+    while (val >= 100) { val -= 100; h++; }
+    while (val >= 10) { val -= 10; d++; }
+    if (h != 0) {
+        digit[0] = (char)('0' + h);
+        digit[1] = (char)('0' + d);
+        digit[2] = (char)('0' + val);
+        n = 3;
+    } else if (d != 0) {
+        digit[0] = (char)('0' + d);
+        digit[1] = (char)('0' + val);
+        n = 2;
+    } else {
+        digit[0] = (char)('0' + val);
+        n = 1;
+    }
+    digit[n] = '\0';
+    battle_draw_text_line(x, y, digit, n);
+#ifdef DEBUG_BUILD
+    for (i = 0; i < n; i++) {
+        g_tilemap_mirror[(uint16_t)y * 32 + x + i] =
+            (uint8_t)(ui_font_tile_base + (uint8_t)(digit[i] - ' '));
+    }
+#endif
+    return n;
+}
+
+/* Enemy-strike forecast: left "DMG <incoming>" in red, right "DEF <block>"
+ * in green, so the player sees the incoming hit next to what the staged
+ * shields block.  <block> is the defend-mode preview over the staged
+ * shields (0 while none are staged).  Text path throughout, so buffer,
+ * mirror and VRAM stay truthful for asserts; colors ride attribute
+ * spans (attr mirror included). */
+static uint8_t battle_num_width(uint8_t val)
+{
+    if (val >= 100) return 3;
+    if (val >= 10) return 2;
+    return 1;
+}
+
+static void battle_combo_warn_text(const volatile Battle *battle)
+{
+    uint8_t combo_row = g_battle_hud.combo_row;
+    uint8_t dmg_n;
+    uint8_t block = 0;
+    uint8_t bw;
+    uint8_t dx;
+
+    battle_combo_pending_preview(battle, &block);
+    battle_draw_text_line(0, combo_row, "DMG ", 4);
+    dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
+    /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
+     * digit blocks all right-align; worst case DMG191 + DEF191 = 13
+     * cols, never overlapping the left side). */
+    bw = battle_num_width(block);
+    dx = (uint8_t)(20 - 4 - bw);
+    battle_draw_text_line(dx, combo_row, "DEF ", 4);
+    battle_draw_num_compact((uint8_t)(dx + 4), combo_row, block);
+    /* Middle gap keeps stale buffer text while the top clear wiped VRAM:
+     * blank the buffer gap explicitly (same skip-guard hazard as the
+     * preview tail). */
+    battle_draw_text_line((uint8_t)(4 + dmg_n), combo_row, NULL,
+                          (uint8_t)(dx - (4 + dmg_n)));
+    battle_color_span(0, combo_row, (uint8_t)(4 + dmg_n), UI_COLOR_FIRE);
+    battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
 }
 
 static void battle_draw_battle_combo(const volatile Battle *battle)
 {
     /* Real-time preview: the row tracks the PENDING selection as cards
      * are added/removed and blanks once the hand resolves -- executed
-     * results announce via the banner instead of sticking around. */
-    const char *name = battle_combo_pending_name(battle);
+     * results announce via the banner instead of sticking around.
+     * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
+     * a 3-digit amount still fits 20 cols); with no poker tier the row
+     * still shows the inflicted damage as bare "DMG<n>" (face-value
+     * sum, same math the resolver applies).  The number mirrors the
+     * resolve math, so preview and result agree. */
+    const char *name;
+    uint8_t dmg = 0;
     /* Staged row (WRAM copy of the active BattleScreenDef). */
     uint8_t combo_row = g_battle_hud.combo_row;
     uint8_t r;
+    uint8_t n;
 
     /* Blank the whole row first -- UNCONDITIONAL direct writes (the
      * battle_draw_text_line skip-guard would skip cells whose semantic
      * buffer already holds spaces, letting stale overworld/wipe tiles
      * survive in VRAM and the mirror; same reason the old band clear
-     * above the hand was unconditional).  The combo preview shares row
+     * above the hand was unconditional).  The buffer row is invalidated
+     * alongside (NUL never equals text): without this, a redraw whose
+     * text matches the buffer -- e.g. staging a shield while "DMG 2"
+     * already shows -- skips every VRAM rewrite and the row goes blank
+     * on real hardware while the buffer (and every harness assert
+     * reading it) stays truthful.  RAM truth vs VRAM lie, AGENTS.md
+     * 52.25 family.  The combo preview shares row
      * 10 with the hand zone now; the full-width clear also covers the
      * col-6 gap the old two-segment draw left behind. */
     VBK_REG = 0;
@@ -766,15 +916,39 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 #ifdef DEBUG_BUILD
         g_tilemap_mirror[(uint16_t)combo_row * 32 + r] = ui_font_tile_base;
 #endif
+        g_ui_screen_buf[combo_row][r] = '\0';
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
-    battle_draw_text_line(0, combo_row, "COMBO:", 6);
-    if (name[0] != '\0') {
-        battle_draw_text_line(7, combo_row, " ", 1);
-        battle_draw_text_line(8, combo_row, name, 12);
-    } else {
-        battle_draw_text_line(7, combo_row, NULL, 13);
+    /* Enemy forecast owns the row while a strike is incoming (defend
+     * phase, telegraphed damage): "DMG <n>" red on the left, "DEF <m>"
+     * green on the right (warn text paints its own spans). */
+    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND && battle->enemy_incoming_dmg > 0) {
+        battle_combo_warn_text(battle);
+        return;
     }
+    name = battle_combo_pending_preview(battle, &dmg);
+    if (name[0] == '\0') {
+        /* No tier: pending cards still inflict face value, so show it
+         * bare.  Zero effective damage (nothing staged, or only inert
+         * fodder) keeps the row blank instead of "DMG0" noise. */
+        if (dmg == 0) {
+            battle_draw_text_line(0, combo_row, NULL, 20);
+            return;
+        }
+        battle_draw_text_line(0, combo_row, "DMG", 3);
+        n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
+        return;
+    }
+    n = 0;
+    while (name[n] != '\0') n++;
+    battle_draw_text_line(0, combo_row, name, n);
+    battle_draw_text_line(n, combo_row, " DMG", 4);
+    n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    /* Tail cells past the content keep stale buffer text while VRAM
+     * above was cleared: blank the buffer tail explicitly (the VRAM
+     * skip-guard would otherwise never rewrite them). */
+    battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
 }
 
 static void battle_draw_battle_hand(const volatile Battle *battle)
@@ -864,11 +1038,13 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
          * from the stamped weapon icon, element from the per-card OAM
          * rider HUD. Poison grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
-         * of the arrow-counter type grey out too once their uses are
-         * spent (matches the unplayable nav rule). */
+         * of the arrow-counter type -- and rings, which share its floor
+         * counter -- grey out too once their uses are spent (matches
+         * the unplayable nav rule). */
         ccolor = UI_COLOR_NONE;
         if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
-            (ctype == g_card_skin_wram.uses_type && cuses == 0)) {
+            ((ctype == g_card_skin_wram.uses_type ||
+              ctype == BATTLE_CARD_TYPE_HEAL) && cuses == 0)) {
             ccolor = UI_COLOR_DIM;
         }
         for (r = 0; r < bh; r++) {
@@ -891,7 +1067,11 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             if (drow != (uint8_t)(top + 1)) {
                 battle_color_span((uint8_t)(col + 1), drow, 1, icell);
             }
-            if (cuses != 0xFF && ctype == g_card_skin_wram.uses_type) {
+            if (cuses != 0xFF && (ctype == g_card_skin_wram.uses_type ||
+                                 ctype == BATTLE_CARD_TYPE_HEAL)) {
+                /* Floor counter rides the weapon slot like the bow's:
+                 * rings share the counter glyphs, so a bare box span
+                 * would leave the counter on the paper (white) ramp. */
                 battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
             }
         }
@@ -936,15 +1116,15 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
 /* Battle UI tile loader (bank-3 body behind the fixed-bank
  * ui_card_tiles_load() wrapper, dispatched once from ui_init with the LCD
  * off): streams the card frame tiles, the turn-timer bar segments, the
- * HUD hp/ap/deck icons, the light/dark select arrows and the gold-coin
- * tile from THIS bank's data (generated card_frame_tiles.h + s_coin_tile
- * below) into VRAM block 1.  Reads its own bank-local data
- * directly (no banked_copy, which would restore the home bank mid-body --
- * banked.h ABI) and writes VRAM at the SIGNED BG tile addresses
- * (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
+ * HUD hp/ap/deck icons and the light/dark select arrows from THIS bank's
+ * data (generated card_frame_tiles.h) into VRAM block 1.  Reads its own
+ * bank-local data directly (no banked_copy, which would restore the home
+ * bank mid-body -- banked.h ABI) and writes VRAM at the SIGNED BG tile
+ * addresses (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
  * AGENTS.md 52.22).  VRAM: frames 118-126, bar filled 117 / empty 127,
  * HUD icons at 113 (hp), 114 (ap) and 116 (deck), light arrow at 96,
- * dark arrow at 110, weapons at 104-108, coin at 115. */
+ * dark arrow at 110, weapons at 104-108.  (Gold prices render as the
+ * plain font capital 'G'; the old coin tile 115 is retired.) */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
@@ -965,14 +1145,6 @@ static const uint8_t s_card_tile_vram_ids[31] = {
      * block — a different physical address, AGENTS.md 52.22). */
     98, 99, 100, 101, 102, 103,                   /* arrows 0, 1, 2, 3, nine, blank */
     97,                                           /* arrows 4 (appended cell) */
-};
-
-/* Gold-coin UI tile (VRAM 115, shop gold rows): the only icon not owned
- * by the card-frames sheet.  Lives here so the fixed bank pays nothing
- * for it (this loader already runs LCD-off at boot). */
-static const uint8_t s_coin_tile[16] = {
-    0x70, 0xFF, 0x98, 0xAF, 0x4C, 0xF7, 0x6A, 0xD7,
-    0x34, 0xEF, 0x1E, 0xFB, 0x0E, 0xFB, 0x04, 0xFF
 };
 
 /* Dialogue continue chevron (VRAM 109, UI_TILE_DIALOGUE_CONTINUE): the
@@ -1012,11 +1184,6 @@ void ui_card_tiles_load_banked(void)
         for (j = 0; j < 16; j++) {
             dst[j] = src[j];
         }
-    }
-    /* Gold-coin tile (VRAM 115): same signed addressing as above. */
-    dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_COIN << 4));
-    for (j = 0; j < 16; j++) {
-        dst[j] = s_coin_tile[j];
     }
     /* Dialogue continue chevron (VRAM 109): same signed addressing. */
     dst = (volatile uint8_t *)(0x9000u + ((uint16_t)UI_TILE_DIALOGUE_CONTINUE << 4));

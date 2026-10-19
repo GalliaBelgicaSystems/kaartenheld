@@ -1,0 +1,83 @@
+{
+ "name": "combo_damage_preview",
+ "test": true,
+ "description": "Pending combo previews damage: pair of SW2 (base 4, suited PAIR 120+25=145%) resolves 4x145/100 = 5, shown as PAIR DMG5 on the hand line",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "variables": {
+   "ENERGY_POOL": 2
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "PAIR DMG5"
+  }
+ ]
+}

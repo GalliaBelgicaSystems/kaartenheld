@@ -14,6 +14,6 @@
 #pragma bank 2
 
 const ShopDefinition g_shops[] = {
-    { 2, 4, 1, { CARD_IRON_SWORD, CARD_BOW_9, CARD_POISON_DAGGER, CARD_WOOD_RING } },
+    { 2, 2, 1, { CARD_IRON_RING, CARD_BOW_9 } },
 };
 const uint8_t g_shop_count = 1;

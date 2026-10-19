@@ -211,6 +211,9 @@ typedef enum {
      * a different schema (actor_id_lo/hi + lifecycle state) — one event
      * id must mean one payload shape. */
     EVENT_ACTOR_MOVED,
+    /* Dialogue YES/NO answer (dialogue_screen.c): d0 = DialogueId,
+     * d1 = choice index (0 = YES, 1 = NO), d2/d3 = 0. */
+    EVENT_DIALOGUE_CHOICE,
 } GameEventType;
 
 typedef struct {

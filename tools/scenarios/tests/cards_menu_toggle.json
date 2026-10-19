@@ -11,13 +11,13 @@
   },
   "seed": 8410,
   "inventory": {
-   "WOOD_RING": 3
+   "IRON_RING": 3
   },
   "deck": {
    "IRON_SWORD": 4,
    "WOODEN_SHIELD": 3,
    "FIRE_SWORD": 3,
-   "WOOD_RING": 3
+   "IRON_RING": 3
   }
  },
  "actions": [

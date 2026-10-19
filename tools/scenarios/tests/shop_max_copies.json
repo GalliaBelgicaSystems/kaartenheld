@@ -1,34 +1,34 @@
 {
  "name": "shop_max_copies",
  "test": true,
- "description": "Buying a card up to its max_copies limit succeeds; a 4th purchase is rejected with ITEM_PURCHASE_FAILED and gold unchanged",
+ "description": "Buying a card up to its max_copies limit succeeds; a 4th POISON_DAGGER purchase is rejected with ITEM_PURCHASE_FAILED and gold unchanged",
  "actions": [
   {
    "type": "buy_item",
-   "item": "WOOD_RING"
+   "item": "POISON_DAGGER"
   },
   {
    "type": "buy_item",
-   "item": "WOOD_RING"
+   "item": "POISON_DAGGER"
   },
   {
    "type": "buy_item",
-   "item": "WOOD_RING"
+   "item": "POISON_DAGGER"
   },
   {
    "type": "buy_item",
-   "item": "WOOD_RING"
+   "item": "POISON_DAGGER"
   }
  ],
  "assertions": [
   {
    "type": "currency",
    "currency": "GOLD",
-   "expected": 10
+   "expected": 46
   },
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "POISON_DAGGER",
    "expected": 3
   },
   {

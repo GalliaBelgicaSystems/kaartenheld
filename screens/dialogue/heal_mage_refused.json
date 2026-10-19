@@ -1,0 +1,14 @@
+{
+  "id": "heal_mage_refused",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "You need another",
+    "heal? Are you",
+    "the hero or what?",
+    "If you want to",
+    "heal during",
+    "combat, buy the",
+    "ring from the",
+    "merchant!"
+  ]
+}

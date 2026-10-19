@@ -1,7 +1,7 @@
 {
- "name": "merchant_buy_dagger",
+ "name": "shop_out_of_stock",
  "test": true,
- "description": "The Merchant sells POISON_DAGGER (8 gold, new since the starter deck carries none): buying the third list row adds it to the collection and spends gold",
+ "description": "One-copy stock: buying the ring hides its row (bow slides up to the cursor) and buying the bow empties the shop into (out of stock); gold spent exactly",
  "actions": [
   {
    "type": "interact",
@@ -13,19 +13,11 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
+   "button": "A"
   },
   {
    "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
+   "frames": 10
   },
   {
    "type": "press",
@@ -38,18 +30,33 @@
  ],
  "assertions": [
   {
-   "type": "event_occurred",
-   "event": "CARD_PURCHASED"
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "(out of stock)"
   },
   {
    "type": "inventory",
-   "item": "POISON_DAGGER",
+   "item": "IRON_RING",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "BOW_9",
    "expected": 1
   },
   {
    "type": "currency",
-   "expected": 12,
+   "expected": 10,
    "currency": "GOLD"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_PURCHASED",
+   "count": 2
   }
  ],
  "initial_state": {
@@ -62,6 +69,9 @@
   "seed": 8504,
   "flags": {
    "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 60
   },
   "variables": {
    "MERCHANT_QUEST": 2

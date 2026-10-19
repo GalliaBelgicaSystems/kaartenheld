@@ -179,7 +179,7 @@ void world_patrol_slot_banked(void)
             blocked = 0;
         } else if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) {
             blocked = 0;
-        } else if (tile == TILE_DESOLATE_FLOOR_PLAIN || tile == TILE_DESOLATE_STAIRCASE) {
+        } else if (tile == TILE_DESOLATE_FLOOR_PLAIN) {
             blocked = 0;
         } else if (tile_landscape_walkable(tile)) {
             blocked = 0;

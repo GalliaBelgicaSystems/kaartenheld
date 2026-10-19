@@ -8,6 +8,9 @@
    "facing": "DOWN"
   },
   "seed": 9100,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "deck": {}
  },
  "actions": [

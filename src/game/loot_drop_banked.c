@@ -51,14 +51,17 @@ void game_loot_drop_banked(void)
 
     /* Roll material + legal effect for the weapon (weighted wood-heavy;
      * legal non-plain effects per §34.2: daggers poison, swords burn or
-     * chill, everything else stays plain). */
+     * chill, everything else stays plain).  Demo scope: wild rings come
+     * in wood only (the merchant's ring is the metal one) -- the stream
+     * still steps above so later draws keep their historical positions. */
     g_loot_rng_state ^= g_loot_rng_state << 7;
     g_loot_rng_state ^= g_loot_rng_state >> 9;
     g_loot_rng_state ^= g_loot_rng_state << 8;
     {
         uint8_t mat_roll = (uint8_t)g_loot_rng_state;
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);
-        uint8_t material = (mat_roll < 128) ? MAT_WOOD :
+        uint8_t material = (weapon == WPN_RING) ? MAT_WOOD :
+                           (mat_roll < 128) ? MAT_WOOD :
                            (mat_roll < 192) ? MAT_BRONZE :
                            (mat_roll < 224) ? MAT_IRON : MAT_MYTHRIL;
         uint8_t effect = EFF_PLAIN;
