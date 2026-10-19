@@ -95,8 +95,8 @@ LAYOUT = [
     # offset moves.
     ['ap_1', 'ap_2', 'ap_3', None],
     # Battle OAM mark glyphs (! and ?, owned by screens/mark_icons.json
-    # with the sprites2 OBJ ramp).  Appended last so no existing blob
-    # offset moves.
+    # with the sprites8 OBJ ramp: beard-gray bubble + dark glyph on
+    # slot 7).  Appended last so no existing blob offset moves.
     ['exclaim', 'question', None, None],
 ]
 

@@ -92,9 +92,8 @@ static void marks_load_ap_tiles(void)
         dst = (volatile uint8_t *)(0x8000u + ((uint16_t)s_ap_vram_ids[i] << 4));
         src = ap_tiles + ((uint16_t)i << 4);
         for (j = 0; j < 16; j++) {
-            BANKED_VRAM_WRITE(dst, src[j]);
+            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
             dst++;
-            src++;
         }
     }
 }
