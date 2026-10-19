@@ -9,12 +9,12 @@ const SceneExit g_all_exits[] = {
     { 10, 16, 10,  5, SCENE_CASTLE_HALL,   '>' },
     { 10,  1, 10, 17, SCENE_THRONE_ROOM,   '<' },
     {  9, 16,  9,  5, SCENE_CASTLE_HALL,   '>' },
-    {  9,  2,  9, 17, SCENE_THRONE_ROOM,   '<' },
+    {  9,  1,  9, 17, SCENE_THRONE_ROOM,   '<' },
     {  5,  8, 10,  5, SCENE_DESOLATE_FIELD, '<' },
     { 10,  5, 10, 16, SCENE_CASTLE,        '<' },
     {  9,  5,  9, 16, SCENE_CASTLE,        '<' },
     { 10, 17, 10,  1, SCENE_CASTLE,        '>' },
-    {  9, 17,  9,  2, SCENE_CASTLE,        '>' },
+    {  9, 17,  9,  1, SCENE_CASTLE,        '>' },
     { 10,  5,  5,  8, SCENE_SOUTH_RIDGE,   '>' }
 };
 
