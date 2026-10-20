@@ -112,11 +112,13 @@ static void marks_load_ap_tiles(void)
  *   Hidden while its quest is in progress and once its reward is
  *   claimed.  The mimic
  *   grants AP but is a hostile, never a quest NPC: no mark by design.
- * - Pursuer "!": live AI_CHASE/AI_CHASE_FAST hostiles while
- *   alert_ttl runs.  The TTL starts on the first tick after a map entry
- *   with live chasers (self-detected below; the fixed bank has no room
- *   for the scan); the track holds at entry, the sting fires once the
- *   level is loaded and pursuers move, and the scene track resumes
+ * - Pursuer "!": live AI_CHASE/AI_CHASE_FAST hostiles from the sting
+ *   edge (ttl 120) until the entry alert runs out.  The bubble debuts
+ *   with the alert, never before it.  The TTL starts on the first tick
+ *   after a map entry with live chasers (self-detected below; the
+ *   fixed bank has no room for the scan); the track holds at entry,
+ *   the sting fires once the level is loaded and pursuers move, and
+ *   the scene track resumes
  *   after it (fixed wrapper: byte_c codes + byte_d replay).
  * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
@@ -191,11 +193,14 @@ static void marks_refresh(void)
     has_amulet = marks_has_amulet(&g_game.state);
     carl_done = marks_carl_defeated(&g_game.state);
 
-    /* Hostiles: pursuer "!" while the entry alert runs. */
+    /* Hostiles: pursuer "!" once the entry sting has fired (ttl at or
+     * below the sting edge) until the entry alert runs out.  The bubble
+     * debuts with the alert, never before it. */
     for (i = 0; i < MAX_WORLD_ACTORS; i++) {
         const WorldActorRuntime *a = &g_game.world.actors[i];
         uint8_t m = ACTOR_MARK_NONE;
         if (a->active && g_alert_ttl != 0 &&
+            g_alert_ttl <= ALERT_STING_TTL &&
             (a->ai_type == AI_CHASE || a->ai_type == AI_CHASE_FAST)) {
             m = ACTOR_MARK_ALERT;
         }
