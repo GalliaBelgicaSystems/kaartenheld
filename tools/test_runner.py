@@ -538,14 +538,14 @@ def run_scenario(scenario):
             # bytes come from the generated ap_tiles.h so art changes
             # update both sides while a runtime clobber still fails.
             addr = a.get("addr", 0)
-            name = a.get("tile", "")
-            live = oam_entries.get((addr, name))
-            want = ap_tiles.get(name)
+            tile_name = a.get("tile", "")
+            live = oam_entries.get((addr, tile_name))
+            want = ap_tiles.get(tile_name)
             if live is None or any(b is None for b in live):
                 actual = "oam-bytes unreadable"
                 passed = False
             elif want is None:
-                actual = f"unknown ap_tiles entry {name!r}"
+                actual = f"unknown ap_tiles entry {tile_name!r}"
                 passed = False
             else:
                 actual = " ".join("%02X" % b for b in live)
