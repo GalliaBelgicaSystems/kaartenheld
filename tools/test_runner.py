@@ -61,19 +61,22 @@ def _load_ap_tiles():
     AP_TILE_IDS: ap_1, ap_2, exclaim, question.  Comparing live OAM tile
     data against this file (rather than hand-written hex) keeps one
     source of truth: art changes update both sides together, while a
-    runtime VRAM clobber still fails loudly.
+    runtime VRAM clobber still fails loudly.  Anchored to the repo root
+    (not the cwd): a missing file is a loud error, never a silent {} that
+    misreads as 'unknown ap_tiles entry'.
     """
     global _AP_TILES_CACHE
     if _AP_TILES_CACHE is not None:
         return _AP_TILES_CACHE
     names = ["ap_1", "ap_2", "exclaim", "question"]
     tiles = {}
+    ap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "..", "src", "gfx", "ap_tiles.h")
     try:
-        # Relative to the repo root, like the scenarios dir below.
-        text = open(os.path.join("src", "gfx", "ap_tiles.h")).read()
-    except OSError:
-        _AP_TILES_CACHE = tiles
-        return tiles
+        with open(ap_path) as f:
+            text = f.read()
+    except OSError as e:
+        raise FileNotFoundError(f"ap_tiles.h not found at {ap_path}: {e}")
     blocks = re.findall(r"/\* tile \d+ \*/(.*?)(?=/\* tile \d+ \*/|\Z)", text, re.S)
     for name, block in zip(names, blocks):
         vals = [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{2})", block)]
@@ -344,7 +347,18 @@ def run_scenario(scenario):
                                      int(act.get("card_id", 0)) & 0xFF,
                                      0, int(act.get("quantity", 1)) & 0xFF)
 
-        # Read final snapshot, canonical state buffer and telemetry
+        # Read final snapshot, canonical state buffer and telemetry.
+        # VRAM pinning (vram_row / oam_bytes) needs a PPU-accessible halt;
+        # sync ONCE here, before the snapshot, so the state and the VRAM
+        # reads below share the same halt.  Syncing later (e.g. inside
+        # get_screen_dump) would step game time after the snapshot was
+        # taken and skew the two.  The guard is a no-op when the halt
+        # already landed in HBlank/VBlank.
+        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        oam_needs_vblank = any(a.get("type") == "oam_bytes"
+                               for a in scenario.get("assertions", []))
+        if has_vram_assert or oam_needs_vblank:
+            session.ensure_vram_readable()
         snap = session.snapshot()
         state_snap = session.state_snapshot()
         telemetry = session.get_telemetry()
@@ -373,10 +387,6 @@ def run_scenario(scenario):
         ap_tiles = {}
         if has_oam_assert:
             ap_tiles = _load_ap_tiles()
-            oam_needs_vblank = any(a.get("type") == "oam_bytes"
-                                   for a in scenario.get("assertions", []))
-            if oam_needs_vblank:
-                session.ensure_vram_readable()
             for a in scenario.get("assertions", []):
                 if a.get("type") == "oam_tile":
                     entry = a.get("entry", 0)
@@ -398,7 +408,7 @@ def run_scenario(scenario):
         # buffer: the gate for RAM-truth-vs-VRAM-lie rendering bugs
         # (AGENTS.md 52.25 family), where the buffer is correct but the
         # pixels are not. Same font mapping as the walkthrough bg_text.
-        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        # Readability was ensured once before the snapshot above.
         vram_lines = []
         if has_vram_assert:
             vram_lines = session.get_screen_dump().split('\n')

@@ -1230,12 +1230,14 @@ class EmulatorSession:
         the PPU fetches ch - ' '; see battle_draw_text_line).  Non-text
         tiles (art, icons) decode to whatever bytes they are; pass '.'.
         The halt point of a frame-stepped session is scanout-phase
-        dependent, so VBlank-gate first: an ungated read mid-scanout
-        returns 0xFF and looks exactly like unwritten VRAM (the
-        52.25 blind spot -- buffer truthful, VRAM read blank).  The
-        guard is a no-op when the halt already landed in an accessible
-        window, so clean halts cost nothing extra."""
-        self.ensure_vram_readable()
+        dependent: an ungated read mid-scanout returns 0xFF and looks
+        exactly like unwritten VRAM (the 52.25 blind spot -- buffer
+        truthful, VRAM read blank).  The CALLER must ensure readability
+        first (test_runner hoists one ensure_vram_readable() before the
+        snapshot, so state and VRAM share the same halt instead of the
+        dump stepping game time after the snapshot was taken).  No sync
+        of its own here on purpose: a dump must never advance frames."""
+
         rows = []
         for y in range(18):
             # VRAM tilemap stride is 32 tiles (20 visible + 12 off-screen)

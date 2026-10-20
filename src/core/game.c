@@ -100,8 +100,9 @@ void game_update(Game *g)
     /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
      * overworld HUD marker refresh (quest "?" / pursuer "!"): one
      * bank-8 round-trip per frame through the game-layer bodies
-     * (game_frame_tick_banked runs the jingle then the marks refresh).
-     * Same position as the old standalone jingle dispatch (after
+     * (game_frame_tick_banked runs the marks refresh then the jingle:
+     * marks must observe the jingle's pre-seed edge to re-arm the
+     * entry alert on real loads).  Same position as the old standalone jingle dispatch (after
      * screen_update): the edge sees this frame's state, which the
      * 240-frame harness backstop race depends on.  Ticks here rather
      * than in the overworld screen so menus, dialogue and shops don't

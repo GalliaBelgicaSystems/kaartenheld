@@ -55,6 +55,11 @@ uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
 
+/* Jingle edge bits (jingle_full_banked.c, same bank): bit 7 is the
+ * seeded flag.  load_game_slot clears the whole byte on a real load;
+ * the re-arm check above reads the pre-seed value (marks runs first). */
+extern uint8_t g_jingle_done;
+
 static uint8_t marks_has_amulet(const GameState *st)
 {
     uint8_t i;
@@ -135,16 +140,30 @@ static void marks_refresh(void)
     g_bk_byte_d = 0;
     marks_load_ap_tiles();
 
-    /* Same-map reloads (death -> continue, title -> continue, SELECT ->
-     * load the same slot) never change map_id, so the entry edge below
-     * would miss them and the alert would stay silent.  Re-arm while on
-     * any screen that can originate a load: the next overworld tick
-     * then scans as a fresh entry.  Browsing those menus without
-     * loading also re-arms, so returning plays the sting + hold again
-     * -- same re-entry treatment, harmless and consistent. */
+    /* Fresh-load re-arm: load_game_slot clears g_jingle_done's seeded
+     * bit (bit 7); the jingle body re-seeds from the live mask later
+     * this same tick (marks runs first), so an unseeded jingle here
+     * means a real load landed since the last tick -- same-map reloads
+     * included.  Browsing SAVE_LOAD without loading leaves the seed
+     * intact, so returning from the menu stays silent.  TITLE and
+     * GAME_OVER keep the always-re-arm poll below: leaving them always
+     * means a reload by construction.  Battle/ending screens are
+     * excluded: the entry scan's track-hold must never cut their music
+     * (loads always land on the overworld anyway). */
+    if (g_game.screen != SCREEN_BATTLE &&
+        g_game.screen != SCREEN_GAME_OVER &&
+        g_game.screen != SCREEN_ENDING &&
+        !(g_jingle_done & 0x80)) {
+        s_last_map = 0xFF;
+    }
+
+    /* Same-map reloads (death -> continue, title -> continue) never
+     * change map_id, so the entry edge below would miss them and the
+     * alert would stay silent.  Re-arm while on any screen that can
+     * originate a load: the next overworld tick then scans as a fresh
+     * entry. */
     if (g_game.screen == SCREEN_TITLE ||
-        g_game.screen == SCREEN_GAME_OVER ||
-        g_game.screen == SCREEN_SAVE_LOAD) {
+        g_game.screen == SCREEN_GAME_OVER) {
         s_last_map = 0xFF;
     } else if (!s_last_map_init) {
         /* Map entry edge: scan once for live pursuers.  s_last_map
@@ -258,6 +277,13 @@ extern void jingle_full_banked(void);
 
 void game_frame_tick_banked(void)
 {
-    jingle_full_banked();
+    /* Marks first: the re-arm edge below observes the jingle's unseeded
+     * state (g_jingle_done without bit 7), which a real load clears via
+     * load_game_slot.  The jingle seeds from the live mask later this
+     * same tick, so running it first would hide the edge.  The two
+     * bodies touch disjoint staging bytes (marks: c/d, jingle: b) and
+     * the fixed side reads all three after the return, so the order is
+     * otherwise irrelevant. */
     marks_refresh();
+    jingle_full_banked();
 }

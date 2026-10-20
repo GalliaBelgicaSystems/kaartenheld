@@ -864,9 +864,13 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     uint8_t block = 0;
     uint8_t bw;
     uint8_t dx;
-    uint8_t no_heal;
+    /* Warn path shows staged block value, not heal: the pending preview's
+     * is_heal flag is discarded here (naming it no_heal hid that it
+     * actually receives is_heal). */
+    uint8_t heal_ignored;
 
-    battle_combo_pending_preview(battle, &block, &no_heal);
+    battle_combo_pending_preview(battle, &block, &heal_ignored);
+    (void)heal_ignored;
     battle_draw_text_line(0, combo_row, "DMG ", 4);
     dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
     /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
@@ -1381,6 +1385,12 @@ void ui_update_battle_banked(void)
             /* Enemy turn: the whole FOE ATTACKS! DEFEND! banner reads
              * as a warning (same red as the incoming-DMG forecast). */
             battle_color_span(0, banner_row, timer_w, UI_COLOR_FIRE);
+        } else {
+            /* Reset: the row keeps whatever palette was painted last,
+             * so without this the enemy-turn red would bleed into the
+             * player's own banners.  Placed before the Carl overrides
+             * below so Carl's select banner still ends up FIELD. */
+            battle_color_span(0, banner_row, timer_w, UI_COLOR_NONE);
         }
         if (battle->enemy_battle_id == BATTLE_CARL && battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
             battle_color_span(0, banner_row, timer_w, UI_COLOR_FIELD);
