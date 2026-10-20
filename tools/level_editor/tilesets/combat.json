@@ -188,7 +188,7 @@
       "label": "ap icon",
       "gb_constant": "TILE_COMBAT_AP_ICON",
       "walkable": false,
-      "color": "#c3b6a3",
+      "color": "#ded8ce",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_ap_icon.png",
       "category": "terrain"

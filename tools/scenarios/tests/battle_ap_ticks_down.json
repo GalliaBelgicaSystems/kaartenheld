@@ -64,7 +64,7 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "AP: 0/"
+   "contains": "0/"
   },
   {
    "type": "battle_energy",

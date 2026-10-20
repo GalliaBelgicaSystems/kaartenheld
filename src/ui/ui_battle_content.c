@@ -596,7 +596,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     volatile uint8_t *dst;
     /* Staged rows/cols (WRAM copy of the active BattleScreenDef): label
      * at (hero_label_row, hero_label_col); the HP block at (hero_hp_row,
-     * hero_hp_col) with the icon two cells left of "HP:". */
+     * hero_hp_col); the heart icon two cells left is the label. */
     uint8_t label_row = g_battle_hud.hero_label_row;
     uint8_t label_col = g_battle_hud.hero_label_col;
     uint8_t hp_row = g_battle_hud.hero_hp_row;
@@ -611,10 +611,10 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_text_line(label_col, label_row, "HERO", 4);
     battle_color_span(label_col, label_row, 4, battle_status_color(&s_battle_status[0]));
 
-    battle_draw_text_line((uint8_t)(hp_col - 1), hp_row, "HP:", 3);
-    battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
-    battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
-    battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
+    /* No HP label: the heart icon two cells left is the label. */
+    battle_draw_num2(hp_col, hp_row, battle->player.hp);
+    battle_put_char((uint8_t)(hp_col + 2), hp_row, '/');
+    battle_draw_num2((uint8_t)(hp_col + 3), hp_row, battle->player.max_hp);
 
     /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + (hp_col - 2));
@@ -645,13 +645,13 @@ static uint8_t battle_energy_display(const volatile Battle *b)
 
 /* Draw-pile & Energy/Action-Points counter line (under the hero HP):
  * Left side: [🎴]DECK: count (with card stack icon at col 0)
- * Right side (under HP): [⚡]AP: energy/max (with lightning bolt icon at col 11) */
+ * Right side (under HP): [bolt icon] energy/max (no text label) */
 static void battle_draw_deck_line(const volatile Battle *battle)
 {
     volatile uint8_t *dst;
     /* Staged rows/cols (WRAM copy of the active BattleScreenDef): deck
      * icon + count at (deck_row, deck_col); AP block at (ap_row, ap_col)
-     * with the bolt icon two cells left of "AP:". */
+     * with the bolt icon two cells left as the label. */
     uint8_t deck_row = g_battle_hud.deck_row;
     uint8_t deck_col = g_battle_hud.deck_col;
     uint8_t ap_row = g_battle_hud.ap_row;
@@ -667,10 +667,10 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(deck_col + 6), deck_row,
                      (uint8_t)(battle->deck.count - battle->deck.draw_idx));
 
-    battle_draw_text_line((uint8_t)(ap_col - 1), ap_row, "AP:", 3);
-    battle_draw_num2((uint8_t)(ap_col + 2), ap_row, battle_energy_display(battle));
-    battle_put_char((uint8_t)(ap_col + 4), ap_row, '/');
-    battle_draw_num2((uint8_t)(ap_col + 5), ap_row, g_battle_pool_max);
+    /* No AP label: the bolt icon two cells left is the label. */
+    battle_draw_num2(ap_col, ap_row, battle_energy_display(battle));
+    battle_put_char((uint8_t)(ap_col + 2), ap_row, '/');
+    battle_draw_num2((uint8_t)(ap_col + 3), ap_row, g_battle_pool_max);
 
     /* Icon tiles + palettes come from the staged HUD skin (battle_hud.json). */
     VBK_REG = 0;
