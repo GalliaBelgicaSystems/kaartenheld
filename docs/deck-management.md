@@ -164,8 +164,10 @@ QUEST (example: MONSTER HUNT):
 MONSTER HUNT
 MAYOR IN TOWN           <- who gave the quest
 KILL 5 MONSTERS         <- the condition
-3/5 monsters            <- where you stand (DONE <note> when complete,
+3/5 monsters            <- where you stand (DONE when complete,
                          ACTIVE for counter-less quests)
+GOT +1 AP               <- what the reward was (completed quests only;
+                         e.g. GOT SHOP OPENED for LOST AMULET)
 SEL:BACK
 ```
 

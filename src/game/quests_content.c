@@ -15,12 +15,12 @@ const QuestDefinition g_quests[] = {
     {
         1, "MONSTER HUNT", "MAYOR IN TOWN", "KILL 5 MONSTERS",
         VARIABLE_ID_QUEST_MONSTER_HUNT, 1, 2,
-        VARIABLE_ID_MONSTERS_DEFEATED, QUEST_MONSTERS_TARGET, "monsters", "+1 AP"
+        VARIABLE_ID_MONSTERS_DEFEATED, QUEST_MONSTERS_TARGET, "monsters", "+1 AP", "+1 AP"
     },
     {
         2, "LOST AMULET", "MERCHANT IN TOWN", "FIND THE AMULET",
         VARIABLE_ID_MERCHANT_QUEST, 1, 2,
-        0, QUEST_AMULET_TARGET, "", "MERCHANT"
+        0, QUEST_AMULET_TARGET, "", "MERCHANT", "SHOP OPENED"
     }
 };
 

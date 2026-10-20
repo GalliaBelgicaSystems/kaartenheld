@@ -33,6 +33,9 @@ typedef struct {
     int16_t progress_target;
     char progress_label[10];    /* e.g. "monsters" -> "monsters: X/3" */
     char complete_note[10];     /* reward shown as "complete - <note>" */
+    char reward[12];            /* what the reward WAS, shown as "GOT <reward>"
+                                 * on the completed detail page (e.g. "+1 AP",
+                                 * "SHOP OPENED") */
 } QuestDefinition;
 
 #define GAME_QUEST_COUNT 2

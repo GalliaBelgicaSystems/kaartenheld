@@ -1,0 +1,74 @@
+{
+ "name": "quest_detail_amulet_complete",
+ "test": true,
+ "description": "SELECT on a completed LOST AMULET row shows DONE plus what the reward was: GOT SHOP OPENED (the merchant shop opens)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "LOST AMULET"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "MERCHANT IN TOWN"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "DONE"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "GOT"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "SHOP OPENED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

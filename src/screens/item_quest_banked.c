@@ -279,8 +279,9 @@ static void iq_draw_quest(Game *g)
  *   row 3: quest name
  *   row 5: who gave it (giver)
  *   row 6: the condition (objective)
- *   row 7: where you stand (progress "v/t label", "DONE note", or
+ *   row 7: where you stand (progress "v/t label", "DONE", or
  *           "ACTIVE" for counter-less quests)
+ *   row 8: what the reward was ("GOT <reward>", completed quests only)
  *   row 9: "SEL:BACK" */
 static void iq_draw_quest_detail(Game *g)
 {
@@ -295,8 +296,9 @@ static void iq_draw_quest_detail(Game *g)
     IQ_DRAW_TEXT(0, 6, q->objective, 19);
     st = iq_quest_status(&g->state, q);
     if (st == QUEST_STATUS_COMPLETE) {
-        IQ_DRAW_TEXT(2, 7, "DONE ", 5);
-        IQ_DRAW_TEXT(7, 7, q->complete_note, 10);
+        IQ_DRAW_TEXT(2, 7, "DONE", 4);
+        IQ_DRAW_TEXT(2, 8, "GOT ", 4);
+        IQ_DRAW_TEXT(6, 8, q->reward, 12);
     } else if (q->progress_variable != 0) {
         val = (uint8_t)iq_variable_get(&g->state, q->progress_variable);
         b[0] = (char)('0' + val);
