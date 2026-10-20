@@ -64,13 +64,13 @@ list entry showing its deck membership.
 
 Row 0 holds the tab labels (`CARDS QUEST STATUS`); row 1 the `^` caret
 under the active tab. The CARDS list starts at row 2 with a column
-header (`AP NAME #`) at row 3:
+header (`AP MATERIAL TYPE`) at row 3:
 
 ```text
 CARDS QUEST STATUS          <- row 0 (tabs)
 ^                           <- row 1 (caret under CARDS)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
-   AP NAME             #  <- row 3 (column header)
+   AP MATERIAL TYPE     <- row 3 (column header)
 >   1 IRON SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
     1 WOOD SHIELD        4     element-colored full name, decked count
     1 IRON SWORD         2

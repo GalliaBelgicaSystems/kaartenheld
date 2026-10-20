@@ -524,7 +524,7 @@ collection is full (12 distinct types), no card is granted.
 Three tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**CARDS tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP NAME #` column header, cards follow one per row:
+**CARDS tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP MATERIAL TYPE` column header, cards follow one per row:
 
 * The `* FILTER/SORT *` row opens a picker with `A`.
 * Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`

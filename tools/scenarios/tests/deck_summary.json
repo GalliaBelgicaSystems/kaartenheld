@@ -33,7 +33,12 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "NAME"
+   "contains": "MATERIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "TYPE"
   },
   {
    "type": "screen_row",

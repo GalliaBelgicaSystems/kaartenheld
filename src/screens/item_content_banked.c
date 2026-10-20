@@ -540,8 +540,8 @@ static void ic_draw_cards_list(Game *g)
     /* View is fixed-bank-built (see note above); the render only walks it.
      * Row 3 is the column header (always drawn in list mode). */
     IC_DRAW_TEXT(3, 3, "AP", 2);
-    IC_DRAW_TEXT(6, 3, "NAME", 4);
-    IC_DRAW_TEXT(19, 3, "#", 1);
+    IC_DRAW_TEXT(6, 3, "MATERIAL", 8);
+    IC_DRAW_TEXT(15, 3, "TYPE", 4);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)
