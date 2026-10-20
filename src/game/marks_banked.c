@@ -37,10 +37,14 @@ static uint8_t s_last_map_init;
 static uint8_t s_last_map;
 
 /* Alert-first music hold (frames): on a pursuer-map entry the scene
- * track stops for the sting, then restarts here.  ALERT is 55 tracker
- * ticks (~0.86 s); 60 frames clears it with margin.  Bank-8 static: no
- * WRAM layout shift (AGENTS.md 52.19). */
+ * track stops at once, the sting fires once the level is loaded and
+ * pursuers start moving (first patrol steps run at 16-32f cadence), and
+ * the track resumes after the sting clears (55 tracker ticks ≈ 0.86 s;
+ * 60 frames clears it with margin).  Bank-8 statics: no WRAM layout
+ * shift (AGENTS.md 52.19). */
+#define ALERT_STING_DELAY_FRAMES 30
 #define ALERT_MUSIC_DELAY_FRAMES 60
+static uint8_t s_sting_delay;
 static uint8_t s_music_delay;
 
 /* Overworld HUD marker state (WRAM BSS globals, NOT World fields: growing
@@ -53,12 +57,6 @@ static uint8_t s_music_delay;
 uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
-
-static uint8_t marks_flag_set(const GameState *st, uint8_t flag)
-{
-    uint8_t f = (uint8_t)(flag - 1u);
-    return (uint8_t)((st->flags.bytes[(uint8_t)(f >> 3)] >> (uint8_t)(f & 7)) & 1u);
-}
 
 static uint8_t marks_has_amulet(const GameState *st)
 {
@@ -110,14 +108,17 @@ static void marks_load_ap_tiles(void)
  * - Quest "?": an NPC whose talk advances or turns in a quest.
  *   Mayor: quest NOT_STARTED, or ACTIVE with 5+ monsters slain
  *   (turn-in ready).  Merchant: quest NOT_STARTED, or ACTIVE while
- *   holding the amulet (delivery ready).  Carl: the tutorial lesson
- *   is available (field chest open, spar not yet won).  Hidden while a
- *   quest is in progress and once its reward is claimed.  The mimic
+ *   holding the amulet (delivery ready).  Carl: always, until the
+ *   tutorial spar is won (talking early just points at the chest).
+ *   Hidden while its quest is in progress and once its reward is
+ *   claimed.  The mimic
  *   grants AP but is a hostile, never a quest NPC: no mark by design.
  * - Pursuer "!": live AI_CHASE/AI_CHASE_FAST hostiles while
  *   alert_ttl runs.  The TTL starts on the first tick after a map entry
  *   with live chasers (self-detected below; the fixed bank has no room
- *   for the scan) -- the fixed wrapper plays SFX_ALERT on that tick.
+ *   for the scan); the track holds at entry, the sting fires once the
+ *   level is loaded and pursuers move, and the scene track resumes
+ *   after it (fixed wrapper: byte_c codes + byte_d replay).
  * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
 static void marks_refresh(void)
@@ -130,7 +131,6 @@ static void marks_refresh(void)
     int16_t merchant_quest;
     uint8_t has_amulet;
     uint8_t carl_done;
-    uint8_t field_chest;
 
     g_bk_byte_c = 0;
     g_bk_byte_d = 0;
@@ -156,16 +156,34 @@ static void marks_refresh(void)
         }
         g_alert_ttl = pursuers ? ALERT_TTL_FRAMES : 0;
         if (pursuers) {
+            /* Alert-first: hold the scene track at once (the fixed
+             * wrapper stops it); the sting fires once the level is
+             * loaded and pursuers start moving, and the track resumes
+             * after the sting clears.  Cancelled by any map change
+             * without chasers. */
             g_bk_byte_c = 1;
-            /* Alert-first: hold the scene track until the sting clears
-             * (the fixed wrapper stops it; the countdown below replays
-             * it).  Cancelled by any map change without chasers. */
-            s_music_delay = ALERT_MUSIC_DELAY_FRAMES;
+            s_sting_delay = ALERT_STING_DELAY_FRAMES;
+            s_music_delay = 0;
         } else {
+            s_sting_delay = 0;
             s_music_delay = 0;
         }
     } else if (g_alert_ttl != 0) {
         g_alert_ttl--;
+    }
+
+    /* Sting countdown: fires once the level is loaded and pursuers
+     * start moving -- never inside a battle / game-over / ending that
+     * owns the music (the entry hold already silenced the track). */
+    if (s_sting_delay != 0) {
+        s_sting_delay--;
+        if (s_sting_delay == 0 &&
+            g_game.screen != SCREEN_BATTLE &&
+            g_game.screen != SCREEN_GAME_OVER &&
+            g_game.screen != SCREEN_ENDING) {
+            g_bk_byte_c = 2;
+            s_music_delay = ALERT_MUSIC_DELAY_FRAMES;
+        }
     }
 
     /* Held-track countdown: when it lapses the fixed wrapper replays
@@ -191,7 +209,6 @@ static void marks_refresh(void)
         g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1];
     has_amulet = marks_has_amulet(&g_game.state);
     carl_done = marks_carl_defeated(&g_game.state);
-    field_chest = marks_flag_set(&g_game.state, STORY_FLAG_ID_FIELD_CHEST);
 
     /* Hostiles: pursuer "!" while the entry alert runs. */
     for (i = 0; i < MAX_WORLD_ACTORS; i++) {
@@ -215,7 +232,10 @@ static void marks_refresh(void)
                     m = ACTOR_MARK_QUEST;
                 }
             } else if (d->id == ENTITY_ID_CARL) {
-                if (field_chest && !carl_done) {
+                /* Tutorial lesson available until the spar is won:
+                 * always shown, even before the field chest is opened
+                 * (talking early just points at the chest). */
+                if (!carl_done) {
                     m = ACTOR_MARK_QUEST;
                 }
             } else if (d->id == ENTITY_ID_MERCHANT) {

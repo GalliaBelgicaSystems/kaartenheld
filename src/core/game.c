@@ -107,10 +107,11 @@ void game_update(Game *g)
      * than in the overworld screen so menus, dialogue and shops don't
      * freeze the restore timer while the driver loops the one-shot
      * song.  Engine-generic restore (scene track lookup); action codes
-     * come back through g_bk_byte_b (jingle), the pursuit alert through
-     * g_bk_byte_c (marks: sting + hold) and the held-track replay through
-     * g_bk_byte_d (marks: scene track restarts ~1 s after the sting so
-     * the alert is heard first, then the music as pursuers approach). */
+     * come back through g_bk_byte_b (jingle) and the pursuit alert through
+     * g_bk_byte_c (1 = entry: hold the scene track; 2 = sting now, once
+     * the level is loaded and pursuers start moving) and the held-track
+     * replay through g_bk_byte_d (scene track restarts after the sting
+     * so the alert is heard first, then the music). */
     {
         const SceneDefinition *def;
         extern void game_frame_tick_banked(void);
@@ -126,11 +127,11 @@ void game_update(Game *g)
             audio_play_music(def ? def->music : MUSIC_OVERWORLD);
         } else if (g_bk_byte_b == 3 || g_bk_byte_c == 1) {
             /* Title play-once stop, or the pursuit-alert hold: stop
-             * in silence (the sting plays below; the byte_d replay
-             * restarts the track from the top). */
+             * in silence (the sting fires later via byte_c == 2; the
+             * byte_d replay restarts the track from the top). */
             audio_play_music(MUSIC_NONE);
         }
-        if (g_bk_byte_c == 1) {
+        if (g_bk_byte_c == 2) {
             audio_play_sfx(SFX_ALERT);
         }
     }

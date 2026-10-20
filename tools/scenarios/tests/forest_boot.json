@@ -5,7 +5,7 @@
  "actions": [
   {
    "type": "wait",
-   "frames": 90
+   "frames": 130
   }
  ],
  "assertions": [

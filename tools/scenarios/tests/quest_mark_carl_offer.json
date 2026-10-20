@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_carl_offer",
  "test": true,
- "description": "Quest marker ? over Carl while the tutorial lesson is available (field chest opened, spar not yet won): entry 30 shows QUESTION_TILE (127).",
+ "description": "Quest marker ? over Carl from the start (lesson available until the spar is won, chest or not): entry 30 shows QUESTION_TILE (127).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -9,10 +9,7 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 3000,
-  "flags": {
-   "FIELD_CHEST": true
-  }
+  "seed": 3000
  },
  "actions": [
   {

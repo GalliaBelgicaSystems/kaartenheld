@@ -1,7 +1,7 @@
 {
  "name": "alert_pursuit_forest",
  "test": true,
- "description": "Entering a map with live chasers (TEST_FOREST kobold, AI_CHASE) plays the alert sting (sfx_last == 7) and shows the ! marker over the kobold (entry 30 == EXCLAIM_TILE 126).",
+ "description": "Entering a map with live chasers (TEST_FOREST kobold, AI_CHASE) holds the track, then plays the alert sting once the level loads (~30 frames, sfx_last == 7) and shows the ! marker over the kobold (entry 30 == EXCLAIM_TILE 126).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -14,7 +14,7 @@
  "actions": [
   {
    "type": "wait",
-   "frames": 10
+   "frames": 40
   }
  ],
  "assertions": [
