@@ -25,10 +25,10 @@
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
-/* One card per row: filter at row 2, cards at rows 3-7. */
+/* One card per row: filter at row 2, cards at rows 3-14. */
 #define ROW_FILTER  2
 #define ROW_CARDS_TOP 3
-#define VISIBLE_CARDS 5
+#define VISIBLE_CARDS 12
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -545,7 +545,7 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
         s_ic_y = ROW_CARDS_TOP;
     }
-    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 7; s_ic_lst_pos++) {
+    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 14; s_ic_lst_pos++) {
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);

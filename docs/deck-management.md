@@ -86,7 +86,7 @@ CARDS QUEST STATUS          <- row 0 (tabs)
   4x IRON SWORD / 4x WOOD SHIELD / 2x FIRE SWORD, ring up to 3) are visible
   at a glance.
 - SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
-- 5 cards visible; scrolling shifts the window (the FILTER/SORT row scrolls
+- up to 12 cards visible (rows 3-14); scrolling shifts the window (the FILTER/SORT row scrolls
   off once the caret leaves the first window).
 
 ### Actions

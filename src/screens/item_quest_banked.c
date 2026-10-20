@@ -374,8 +374,8 @@ void item_quest_render_banked(void)
     if (!g) return;
 
     /* Sweep the card rider entries: the CARDS list paints element icons
-     * per row, and the quest tab must leave none behind. */
-    for (e = 1; e <= QUEST_VISIBLE_MAX; e++) {
+     * per row (entries 1-12), and the quest tab must leave none behind. */
+    for (e = 1; e <= 12; e++) {
         iq_rider_hide(e);
     }
 

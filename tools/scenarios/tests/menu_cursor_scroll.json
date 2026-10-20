@@ -1,7 +1,7 @@
 {
  "name": "menu_cursor_scroll",
  "test": true,
- "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw) for in-window moves, and takes the rare full-redraw path when the caret crosses the visible-window boundary. Six collection cards plus the FILTER/SORT row make the 7-row list; six DOWN presses drive the caret to the last row, which shifts the window (scroll 0 -> 1) and drops the FILTER/SORT row. Assertions check the shifted semantic layout (FILTER/SORT gone from row 2, caret on row 7, help text unchanged).",
+ "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw). The full-height list shows the FILTER/SORT row plus all six collection cards at once (rows 2-8, no window shift); six DOWN presses drive the caret to the last row. Assertions check the caret position (row 8, off the top rows, help text unchanged).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -85,21 +85,16 @@
   {
    "type": "screen_row_not_contains",
    "row": 2,
-   "contains": "FILTER/SORT"
-  },
-  {
-   "type": "screen_row_not_contains",
-   "row": 2,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 8,
    "contains": ">"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 8,
+   "row": 9,
    "contains": ">"
   },
   {

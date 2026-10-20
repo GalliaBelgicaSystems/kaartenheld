@@ -633,7 +633,7 @@ content area.  Harness-relevant details:
 * Assert menu content with `screen_row` (row = absolute screen row).  The
   quick screen layout is: row 0 tab labels (`CARDS QUEST STATUS`), row 1 `^`
   marker under the active tab, content from row 2 (CARDS: FILTER/SORT row
-  at 2, one card row each at 3-7; QUEST: tracked entries from row 3);
+  at 2, one card row each at 3-14; QUEST: tracked entries from row 3);
   the shop uses row 0 title, content from row 3.
 * Titles and tab labels are direct literals (never a const pointer table),
   so asserting row 0 text proves the labels actually render.

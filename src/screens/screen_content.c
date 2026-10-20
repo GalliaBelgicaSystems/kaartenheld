@@ -44,7 +44,7 @@ extern const uint8_t g_shop_count;
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define ITEM_FIRST_CARD 1
-#define ITEM_VISIBLE_CARD 5
+#define ITEM_VISIBLE_CARD 12
 
 static uint8_t s_sc_txt_i;
 static uint8_t s_sc_col_i;
@@ -342,7 +342,10 @@ static void shop_rider_draw(void)
     uint8_t tile, slot;
     volatile uint8_t *re;
 
-    for (k = 0; k < SHOP_VISIBLE; k++) {
+    /* Entries 1-12: shop rows 1-10 plus the CARDS-only 11-12 (stale
+     * card riders must not survive entering the shop, so out-of-range
+     * entries hide). */
+    for (k = 0; k < 12; k++) {
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
         tile = 0;
         slot = 0;
