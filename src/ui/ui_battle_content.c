@@ -1376,6 +1376,12 @@ void ui_update_battle_banked(void)
 
     if (d & BATTLE_DIRTY_BANNER) {
         battle_draw_banner_line(banner_row, turn_banner, timer_w);
+        if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+            battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
+            /* Enemy turn: the whole FOE ATTACKS! DEFEND! banner reads
+             * as a warning (same red as the incoming-DMG forecast). */
+            battle_color_span(0, banner_row, timer_w, UI_COLOR_FIRE);
+        }
         if (battle->enemy_battle_id == BATTLE_CARL && battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
             battle_color_span(0, banner_row, timer_w, UI_COLOR_FIELD);
             battle_draw_banner_line(1, "DO POKER HANDS.", 20);

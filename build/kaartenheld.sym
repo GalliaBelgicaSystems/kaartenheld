@@ -27,7 +27,7 @@
 00:84000 00001296
 00:24000 00003666
 00:74000 00003C29
-00:34000 00003E46
+00:34000 00003E63
 00:64000 00003EEE
 00:44000 00003F0C
 00:54000 00003FEA
@@ -956,8 +956,8 @@
 00:5B12 _ui_calc_timer_bar
 00:36ED5 _ui_card_
 00:36ED5 _ui_card_tiles_load_banked
-00:37838 _ui_clear
-00:37838 _ui_clear_atts_banked
+00:37855 _ui_clear
+00:37855 _ui_clear_atts_banked
 00:514E _ui_clear_screen
 00:46E8B _ui_dialo
 00:46E8B _ui_dialogue_box_banked
@@ -1029,8 +1029,8 @@
 00:6B01 _world_on
 00:69AD _world_on_battle_end
 00:6B01 _world_on_battle_fled
-00:37899 _world_pa
-00:37899 _world_patrol_slot_banked
+00:378B6 _world_pa
+00:378B6 _world_patrol_slot_banked
 00:6987 _world_pl
 00:6961 _world_player_px
 00:6987 _world_player_py
@@ -1534,7 +1534,7 @@
 00:0000 l__CABS
 00:6A60 l__CODE
 00:3666 l__CODE_2
-00:3E46 l__CODE_3
+00:3E63 l__CODE_3
 00:3F0C l__CODE_4
 00:3FEA l__CODE_5
 00:3EEE l__CODE_6
@@ -1807,8 +1807,8 @@
 00:5B12 ui_calc_timer_bar
 00:36ED5 ui_card_
 00:36ED5 ui_card_tiles_load_banked
-00:37838 ui_clear
-00:37838 ui_clear_atts_banked
+00:37855 ui_clear
+00:37855 ui_clear_atts_banked
 00:514E ui_clear_screen
 00:46E8B ui_dialo
 00:46E8B ui_dialogue_box_banked
@@ -1880,8 +1880,8 @@
 00:6B01 world_on
 00:69AD world_on_battle_end
 00:6B01 world_on_battle_fled
-00:37899 world_pa
-00:37899 world_patrol_slot_banked
+00:378B6 world_pa
+00:378B6 world_patrol_slot_banked
 00:6987 world_pl
 00:6961 world_player_px
 00:6987 world_player_py

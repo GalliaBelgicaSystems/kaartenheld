@@ -30,7 +30,7 @@
 00:74000 000038CA
 00:54000 0000393D
 00:64000 00003BF8
-00:34000 00003D5F
+00:34000 00003D7C
 00:0200 00007D43
 00:FF30 AUD3WAVE
 00:FF69 BCPD_REG
@@ -990,12 +990,12 @@
 00:6D0E _ui_calc_timer_bar
 00:372DC _ui_card_
 00:372DC _ui_card_tiles_load_banked
-00:37D43 _ui_clear
-00:37D43 _ui_clear_atts_banked
+00:37D60 _ui_clear
+00:37D60 _ui_clear_atts_banked
 00:616B _ui_clear_screen
 00:572AD _ui_dialo
 00:572AD _ui_dialogue_box_banked
-00:37C64 _ui_draw_
+00:37C81 _ui_draw_
 00:6895 _ui_draw_actors_sprites
 00:6D4F _ui_draw_battle_full
 00:6D2D _ui_draw_battle_timer
@@ -1004,7 +1004,7 @@
 00:6352 _ui_draw_dialogue_line
 00:6DC8 _ui_draw_dialogue_page
 00:70C7 _ui_draw_font_test
-00:37C64 _ui_draw_font_test_banked
+00:37C81 _ui_draw_font_test_banked
 00:6C49 _ui_draw_hline
 00:627B _ui_draw_text_line
 00:6CF4 _ui_draw_world_full
@@ -1606,7 +1606,7 @@
 00:0000 l__CABS
 00:7D43 l__CODE
 00:363B l__CODE_2
-00:3D5F l__CODE_3
+00:3D7C l__CODE_3
 00:38CA l__CODE_4
 00:393D l__CODE_5
 00:3BF8 l__CODE_6
@@ -1879,12 +1879,12 @@
 00:6D0E ui_calc_timer_bar
 00:372DC ui_card_
 00:372DC ui_card_tiles_load_banked
-00:37D43 ui_clear
-00:37D43 ui_clear_atts_banked
+00:37D60 ui_clear
+00:37D60 ui_clear_atts_banked
 00:616B ui_clear_screen
 00:572AD ui_dialo
 00:572AD ui_dialogue_box_banked
-00:37C64 ui_draw_
+00:37C81 ui_draw_
 00:6895 ui_draw_actors_sprites
 00:6D4F ui_draw_battle_full
 00:6D2D ui_draw_battle_timer
@@ -1893,7 +1893,7 @@
 00:6352 ui_draw_dialogue_line
 00:6DC8 ui_draw_dialogue_page
 00:70C7 ui_draw_font_test
-00:37C64 ui_draw_font_test_banked
+00:37C81 ui_draw_font_test_banked
 00:6C49 ui_draw_hline
 00:627B ui_draw_text_line
 00:6CF4 ui_draw_world_full
