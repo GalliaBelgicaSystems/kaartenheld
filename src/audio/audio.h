@@ -52,7 +52,10 @@ void audio_play_music(MusicTrack track);
  * is a distinct blip for battle hand / card management selects; SFX_BACK is
  * a low downward "bloup" for cancel / going back; SFX_ATTACK / SFX_HIT are
  * channel-4 noise bursts (player slash / enemy strike); SFX_BLOCK is a low
- * CH2 thump for a successful defend. */
+ * CH2 thump for a successful defend; SFX_ALERT is the pursuer-entry sting
+ * (stepped by the same 64 Hz ISR path -- the sfx_id range check in
+ * audio_update must admit it, or the trigger mutes music CH2 forever
+ * with no sound). */
 enum {
     SFX_CURSOR = 0,
     SFX_CONFIRM = 1,

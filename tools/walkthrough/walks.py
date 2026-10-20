@@ -29,7 +29,8 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON, MUSIC_TOWN,
-                                      MUSIC_CHEST)
+                                      MUSIC_CHEST, MUSIC_NONE,
+                                      SFX_ALERT, SFX_NONE)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 26
@@ -845,10 +846,19 @@ def walk_c(planner, checks):
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
     # Alert-first: the kobold entry sting holds the track, so right
-    # after arrival the music is NONE; the forest track resumes ~1 s
-    # later as the kobold approaches.
+    # after arrival the music is NONE; the checks below pin the sting
+    # actually stepping (sfx 7 while it rings, idle after) and the
+    # forest track coming back as the kobold approaches.
     s.check_eq("forest music held for sting", s.reader.music_track(),
                MUSIC_NONE)
+    s.check("forest alert sting playing",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
+                       ticks=90, label="sting start"),
+            expected=SFX_ALERT, actual="silent")
+    s.check("forest alert sting done",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
+                       ticks=150, label="sting end"),
+            expected=SFX_NONE, actual="stuck")
     s.check("forest music resumes",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
                        ticks=150, label="forest music"),

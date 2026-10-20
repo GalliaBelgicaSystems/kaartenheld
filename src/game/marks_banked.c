@@ -36,16 +36,15 @@ static uint8_t s_ap_loaded;
 static uint8_t s_last_map_init;
 static uint8_t s_last_map;
 
-/* Alert-first music hold (frames): on a pursuer-map entry the scene
- * track stops at once, the sting fires once the level is loaded and
- * pursuers start moving (first patrol steps run at 16-32f cadence), and
- * the track resumes after the sting clears (55 tracker ticks ≈ 0.86 s;
- * 60 frames clears it with margin).  Bank-8 statics: no WRAM layout
- * shift (AGENTS.md 52.19). */
-#define ALERT_STING_DELAY_FRAMES 30
-#define ALERT_MUSIC_DELAY_FRAMES 60
-static uint8_t s_sting_delay;
-static uint8_t s_music_delay;
+/* Alert-first music sequencing, derived from the running alert_ttl
+ * countdown (150 at entry on pursuer maps, drained per frame): the
+ * track holds at entry, the sting fires at ttl 120 (~30 f later, once
+ * the level is loaded and pursuers start moving), and the track resumes
+ * at ttl 60 (60 f after the sting; ALERT is 55 tracker ticks ≈ 0.86 s).
+ * Zero new WRAM: added BSS bytes shift 256 globals and flip
+ * layout-sensitive codegen (AGENTS.md 52.19/52.24, defend_warn_block). */
+#define ALERT_STING_TTL 120
+#define ALERT_MUSIC_TTL 60
 
 /* Overworld HUD marker state (WRAM BSS globals, NOT World fields: growing
  * World shifts every later Game field and trips the layout-sensitive
@@ -157,43 +156,25 @@ static void marks_refresh(void)
         g_alert_ttl = pursuers ? ALERT_TTL_FRAMES : 0;
         if (pursuers) {
             /* Alert-first: hold the scene track at once (the fixed
-             * wrapper stops it); the sting fires once the level is
-             * loaded and pursuers start moving, and the track resumes
-             * after the sting clears.  Cancelled by any map change
-             * without chasers. */
+             * wrapper stops it; the sting + resume below ride the
+             * running ttl).  Cancelled by any map change. */
             g_bk_byte_c = 1;
-            s_sting_delay = ALERT_STING_DELAY_FRAMES;
-            s_music_delay = 0;
-        } else {
-            s_sting_delay = 0;
-            s_music_delay = 0;
         }
     } else if (g_alert_ttl != 0) {
         g_alert_ttl--;
-    }
-
-    /* Sting countdown: fires once the level is loaded and pursuers
-     * start moving -- never inside a battle / game-over / ending that
-     * owns the music (the entry hold already silenced the track). */
-    if (s_sting_delay != 0) {
-        s_sting_delay--;
-        if (s_sting_delay == 0 &&
+        /* Sting edge at 120 (~30 f after entry: level loaded, pursuers
+         * moving) -- never inside a battle / game-over / ending that
+         * owns the music (the entry hold already silenced the track).
+         * Music resumes at 60, same screen rule (battle exit restores
+         * the area track itself; the jingle path owns the title).
+         * Menus, dialogue and shops are overworld-attached: the sting
+         * and the track resume under them. */
+        if (g_alert_ttl == ALERT_STING_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
             g_game.screen != SCREEN_ENDING) {
             g_bk_byte_c = 2;
-            s_music_delay = ALERT_MUSIC_DELAY_FRAMES;
-        }
-    }
-
-    /* Held-track countdown: when it lapses the fixed wrapper replays
-     * the current scene track -- unless a battle / game-over / ending
-     * took over the music meanwhile (battle exit restores the area
-     * track itself; the jingle path owns the title).  Menus, dialogue
-     * and shops are overworld-attached: the track resumes under them. */
-    if (s_music_delay != 0) {
-        s_music_delay--;
-        if (s_music_delay == 0 &&
+        } else if (g_alert_ttl == ALERT_MUSIC_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
             g_game.screen != SCREEN_ENDING) {
