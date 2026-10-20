@@ -60,6 +60,11 @@
    "type": "screen_row_not_contains",
    "row": 3,
    "contains": ">"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "SEL:INFO"
   }
  ]
 }

@@ -272,6 +272,7 @@ static void iq_draw_quest(Game *g)
     if (vis == 0) {
         IQ_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
     }
+    IQ_DRAW_TEXT(0, 16, "SEL:INFO", 8);
 }
 
 /* ── Quest detail (SELECT on a quest row) ─────────────────────────
