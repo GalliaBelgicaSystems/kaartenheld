@@ -1322,35 +1322,12 @@ static const char *battle_banner_text(const volatile Battle *battle)
         }
         return "PLAYER ATTACK!";
     }
-    if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) {
-        if (battle->attacking_enemy_idx < battle->enemy_count &&
-            battle->enemies[battle->attacking_enemy_idx].name[0]) {
-            name = battle->enemies[battle->attacking_enemy_idx].name;
-            for (j = 0; *name && j < 19; j++) s_banner_text[j] = *name++;
-            s_banner_text[j++] = ' ';
-            s_banner_text[j++] = 'A'; s_banner_text[j++] = 'T';
-            s_banner_text[j++] = 'T'; s_banner_text[j++] = 'A';
-            s_banner_text[j++] = 'C'; s_banner_text[j++] = 'K';
-            s_banner_text[j++] = 'S'; s_banner_text[j++] = '!';
-            s_banner_text[j] = '\0';
-            return s_banner_text;
-        }
-        return "ENEMY ATTACK!";
-    }
-    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
-        if (battle->attacking_enemy_idx < battle->enemy_count &&
-            battle->enemies[battle->attacking_enemy_idx].name[0]) {
-            name = battle->enemies[battle->attacking_enemy_idx].name;
-            for (j = 0; *name && j < 18; j++) s_banner_text[j] = *name++;
-            s_banner_text[j++] = ':'; s_banner_text[j++] = ' ';
-            s_banner_text[j++] = 'D'; s_banner_text[j++] = 'E';
-            s_banner_text[j++] = 'F'; s_banner_text[j++] = 'E';
-            s_banner_text[j++] = 'N'; s_banner_text[j++] = 'D';
-            s_banner_text[j++] = '!';
-            s_banner_text[j] = '\0';
-            return s_banner_text;
-        }
-        return "DEFENSE TURN";
+    /* Enemy turn: one static banner across the telegraph + defend
+     * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
+     * 20 chars, filling the centered row-0 banner in one screen. */
+    if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+        battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
+        return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) return "BLOCKED ATTACK!";
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
