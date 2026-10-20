@@ -667,10 +667,11 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(deck_col + 6), deck_row,
                      (uint8_t)(battle->deck.count - battle->deck.draw_idx));
 
-    /* No AP label: the bolt icon two cells left is the label. */
+    /* No AP label: the AP icon two cells left is the label; energy and
+     * max each carry a trailing dot (UI_TILE_AP_DOT). */
     battle_draw_num2(ap_col, ap_row, battle_energy_display(battle));
-    battle_put_char((uint8_t)(ap_col + 2), ap_row, '/');
-    battle_draw_num2((uint8_t)(ap_col + 3), ap_row, g_battle_pool_max);
+    battle_put_char((uint8_t)(ap_col + 3), ap_row, '/');
+    battle_draw_num2((uint8_t)(ap_col + 4), ap_row, g_battle_pool_max);
 
     /* Icon tiles + palettes come from the staged HUD skin (battle_hud.json). */
     VBK_REG = 0;
@@ -678,13 +679,21 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_vram_sync_write(dst, g_hud_skin_wram.deck_icon_tile);
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col - 2));
     battle_vram_sync_write(dst, g_hud_skin_wram.ap_icon_tile);
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 2));
+    battle_vram_sync_write(dst, UI_TILE_AP_DOT);
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 6));
+    battle_vram_sync_write(dst, UI_TILE_AP_DOT);
 #ifdef DEBUG_BUILD
     g_tilemap_mirror[deck_row * 32 + (deck_col - 1)] = g_hud_skin_wram.deck_icon_tile;
     g_tilemap_mirror[ap_row * 32 + (ap_col - 2)] = g_hud_skin_wram.ap_icon_tile;
+    g_tilemap_mirror[ap_row * 32 + (ap_col + 2)] = UI_TILE_AP_DOT;
+    g_tilemap_mirror[ap_row * 32 + (ap_col + 6)] = UI_TILE_AP_DOT;
 #endif
 
     battle_color_span((uint8_t)(deck_col - 1), deck_row, 1, g_hud_skin_wram.deck_icon_color);
     battle_color_span((uint8_t)(ap_col - 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
+    battle_color_span((uint8_t)(ap_col + 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
+    battle_color_span((uint8_t)(ap_col + 6), ap_row, 1, g_hud_skin_wram.ap_icon_color);
 }
 
 /* Tier display names (docs/combo-system.md hand table).  Rows live in

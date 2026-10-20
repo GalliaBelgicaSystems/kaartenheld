@@ -1,7 +1,7 @@
 {
  "name": "battle_energy_pool_default",
  "test": true,
- "description": "Explicitly-staged ENERGY_POOL 0 (e.g. a legacy state that never set it) falls back to the default pool of 1: one cost-1 card selects (AP 1 to 0) and the second is rejected, so the badge shows 0/ 1 (no text label, bolt icon only) and battle_energy stays at 1 pre-resolve. Companion to battle_energy_pool_grows (raised pool) and card_cost_energy (rejection executes).",
+ "description": "Explicitly-staged ENERGY_POOL 0 (e.g. a legacy state that never set it) falls back to the default pool of 1: one cost-1 card selects (AP 1 to 0) and the second is rejected, so the badge shows 0 / 1 (no text label, bolt icon only) and battle_energy stays at 1 pre-resolve. Companion to battle_energy_pool_grows (raised pool) and card_cost_energy (rejection executes).",
  "actions": [
   {
    "type": "wait",
@@ -97,7 +97,19 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "0/ 1"
+   "contains": "0 / 1"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 15,
+   "row": 8,
+   "expected": 111
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 19,
+   "row": 8,
+   "expected": 111
   },
   {
    "type": "battle_energy",

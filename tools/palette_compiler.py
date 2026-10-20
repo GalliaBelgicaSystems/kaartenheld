@@ -185,6 +185,14 @@ def card_display_slots(skin, hud):
         hdef = hud.get(key) or {}
         if hdef.get("icon") in coord_of:
             slots[coord_of[hdef["icon"]]] = skin_slot(hdef["color"])
+    # AP-badge dots (combat_ap_dot): part of the AP badge, so they take
+    # the hud AP color -- the same slot the AP icon renders in. (A plain
+    # name rule, not skin data: the dot is fixed UI chrome, and growing
+    # the WRAM skin struct for it is not worth the layout risk.)
+    if "combat_ap_dot" in coord_of:
+        _apdef = hud.get("ap") or {}
+        if "color" in _apdef:
+            slots[coord_of["combat_ap_dot"]] = skin_slot(_apdef["color"])
     bar = hud.get("bar") or {}
     for key in ("filled", "empty"):
         if bar.get(key) in coord_of:

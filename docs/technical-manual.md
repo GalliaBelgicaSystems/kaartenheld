@@ -375,7 +375,7 @@ The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
 | 2 | Enemy HP line. |
 | 3–4 | Enemy art + target caret. Up to 3 enemies. |
 | 7 | Hero row: `HERO` label + heart icon + `n/m` (no text label). |
-| 8 | Deck counter: `DECK: n` (cards left in the draw pile) + AP icon + `energy/max` (no text label). |
+| 8 | Deck counter: `DECK: n` (cards left in the draw pile) + AP icon + `energy/max`, each number with a trailing dot tile (no text label). |
 | 9 | Transient gameplay messages (`NO ENERGY!`, `OUT OF USES!`, `ONE RING!`). |
 | 10 | Live combo row: `COMBO:` + current hand name while you select. |
 | 11–14 | Your boxed hand cards (up to 5). |

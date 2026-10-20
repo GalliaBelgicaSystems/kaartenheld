@@ -120,6 +120,7 @@ overlay is deleted.
 | (1,4) | combat_deck_icon | 3 → fight3 | ✓ |
 | (2,4) | combat_arrow_pointing_up_light | 3 → fight3 | ✓ |
 | (0,5) | combat_arrow_pointing_up_dark | 3 → fight3 | ✓ |
+| (1,5) | combat_ap_dot | 3 → fight3 | ✓ |
 | (0,6) | combat_sword_icon | 5 → fight2 | ✓ |
 | (1,6) | combat_shield_icon | 5 → fight2 | ✓ |
 | (2,6) | combat_bow_icon | 5 → fight2 | ✓ |
