@@ -842,12 +842,42 @@ def walk_c(planner, checks):
     forest = _level("forest")
     goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
     # Assert the alert sequence AT the crossing, not at the goal: the
-    # sting + resume windows elapse during the walk to spawn, so a
-    # settle-then-assert here would observe only the resumed track.
-    entry = planner.arrival_pos("forest")
-    s.check("forest has an arrival tile", entry is not None,
-            expected="portal landing", actual="none")
-    follow(s, planner, "field", spawn, "forest", entry)
+    # sting + resume windows elapse during any post-crossing walk, and
+    # cross_exit's own settling eats them too, so a settle-then-assert
+    # observes only the resumed track.  Walk to the tunnel mouth (same
+    # scene, no warp), cross explicitly, and assert immediately:
+    # cross_exit returns ~25 f after the flip, well inside every window
+    # (hold to +90, sting +30..+81, resume +90).
+    _mouth_path = planner.path("field", spawn, (16, 1), avoid_exits=True)
+    s.check("path to forest tunnel", _mouth_path is not None,
+            expected="bfs path", actual="none")
+    if _mouth_path:
+        _walk_path(s, _mouth_path)
+    # Cross onto the gate and anchor every assert to the flip itself:
+    # cross_exit's settling (~25 f) plus any dropped-press retries eat
+    # the sting windows, so a settle-then-assert observes only the
+    # resumed track.  Flip-anchored waits have huge margins (hold to
+    # +90, sting +30..+81, resume +90).  The kobold spawns 6 tiles away,
+    # so no ambush can interrupt the crossing; a DECK box here still
+    # fights through like follow()'s exit path.
+    _crossed = False
+    for _ in range(4):
+        s.press("left", settle=12)
+        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_FOREST,
+                      ticks=90):
+            _crossed = True
+            break
+        if s.text_has("DECK:"):
+            _win = transit_fight(s)
+            s.check("transit fight victory", _win,
+                    expected="VICTORY", actual="defeat")
+            if not _win:
+                break
+            s.check("transit aftermath drained",
+                    drain_postvictory_dialogue(s),
+                    expected="no KNIGHT: box", actual="stuck open")
+    s.check("forest tunnel crossed", _crossed,
+            expected="forest", actual="no crossing")
     # Alert-first: the kobold entry sting holds the track, so right
     # after arrival the music is NONE; the checks below pin the sting
     # actually stepping (sfx 7 while it rings, idle after) and the
@@ -866,8 +896,10 @@ def walk_c(planner, checks):
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
                        ticks=150, label="forest music"),
             expected="MUSIC_FOREST", actual="held")
-    # Continue to the spawn for the arrival milestone.
-    _entry_path = planner.path("forest", entry, goal)
+    # Continue to the spawn for the arrival milestone.  avoid_exits:
+    # the tunnel gate sits right on the path -- stepping back onto it
+    # would warp out to the field.
+    _entry_path = planner.path("forest", s.pos(), goal, avoid_exits=True)
     s.check("path to forest spawn", _entry_path is not None,
             expected="bfs path", actual="none")
     if _entry_path:
@@ -875,24 +907,6 @@ def walk_c(planner, checks):
     s.settle_scene(expected_scene=SCENE_FOREST)
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
-    # Alert-first: the kobold entry sting holds the track, so right
-    # after arrival the music is NONE; the checks below pin the sting
-    # actually stepping (sfx 7 while it rings, idle after) and the
-    # forest track coming back as the kobold approaches.
-    s.check_eq("forest music held for sting", s.reader.music_track(),
-               MUSIC_NONE)
-    s.check("forest alert sting playing",
-            s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
-                       ticks=90, label="sting start"),
-            expected=SFX_ALERT, actual="silent")
-    s.check("forest alert sting done",
-            s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
-                       ticks=150, label="sting end"),
-            expected=SFX_NONE, actual="stuck")
-    s.check("forest music resumes",
-            s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
-                       ticks=150, label="forest music"),
-            expected="MUSIC_FOREST", actual="held")
     s.shoot("14-forest-arrived")
     s.close()
 
