@@ -619,12 +619,12 @@ def walk_a(planner, checks, sram_out=None):
             expected="closed", actual="open")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[3][6] == "^":
+        if s.bg_text()[1][6] == "^":
             tabbed = True
             break
         s.press("right", settle=30)
     s.check("quest tab caret", tabbed, expected="^ at col 6",
-            actual=s.bg_text()[3])
+            actual=s.bg_text()[1])
     s.shoot("08-quests-tab")
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("CARDS QUEST"), frames=30),

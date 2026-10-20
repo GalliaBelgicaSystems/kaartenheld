@@ -296,7 +296,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 
 | Field | Meaning |
 |---|---|
-| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The descriptive name shown in menus. |
+| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The short code shown in the shop; the CARDS menu instead shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
 | **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW2`,
 `SH1`, `RG1`; the **battle hand** uses its own code set — `SW2`, `SH1`,
 `BO2`, **`HE1`** for a heal ring, `DA1`. |
@@ -519,22 +519,27 @@ collection is full (12 distinct types), no card is granted.
 * Facing an actor and pressing `A` → dialogue, shop, save, or battle,
   depending on the actor.
 
-### 7.2 The quick screen (CARDS / QUESTS)
+### 7.2 The quick screen (CARDS / QUEST / STATUS)
 
-Two tabs, switched with `LEFT`/`RIGHT`.  A `^` marks the active tab.
+Three tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
+Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**CARDS tab** — the collection/deck manager:
+**CARDS tab** — the collection/deck manager (list starts at row 2):
 
-* The top row (`* FILTER/SORT *`) opens a picker with `A`.
-* Each card row shows its identity name (e.g. `I SW`) and, at the far
-  right, the **decked-copy count** (0..n).
+* The `* FILTER/SORT *` row opens a picker with `A`.
+* Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`
+  name (`IRON SWORD`, `WOOD SHIELD`, `MYTHRIL BOW`), element-colored (red for
+  fire, blue for ice, purple for poison), and at the far right the
+  **decked-copy count** (0..n).
 * `A` on a card adds **one copy** to your battle deck; pressing `A` again
   once the card is fully decked **clears all its copies** from the deck
   (all-or-nothing — it refuses if that would drop you below the 5-card
   minimum).  Rejections show a transient message: `DECK FULL`, `DECK MIN
   5`, or `QUEST ITEM` (for special quest items).
-* `SELECT` on a card opens the **detail page**: name, type, power, cost,
-  uses/battle, max copies, owned, decked, price.
+* `SELECT` on a card opens the **detail page**: full name, on-hit rider
+  (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
+  / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),
+  `OWN`/`DECK` counts, and the `SELL` value.
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
 * `A` on a loot card's **detail page** sells one copy while you have a
@@ -546,15 +551,21 @@ rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
 * Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
 * Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
 
-**QUEST tab** — the tracked-quest list.  Only accepted quests appear:
-entries with status `not started` stay hidden, so the tab starts empty
-(`no quests yet`) and fills as quests are accepted.  Each tracked entry
-shows the quest name and a status line:
+**QUEST tab** — the tracked-quest list (entries from row 3). Only accepted
+quests appear: entries with status `not started` stay hidden, so the tab
+starts empty (`no quests yet`) and fills as quests are accepted.  Each tracked
+entry shows the quest name and a status line:
 
 * `status var: X/T` while active (e.g. `monsters: 2/3`)
 * `complete - SWORD` when done.
 
-`SELECT` on a quest opens a placeholder detail page.
+`SELECT` on a quest opens its **detail page**: the quest name, who gave it
+(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 5 MONSTERS`), and where
+you stand (e.g. `3/5 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
+counter-less quests).
+
+**STATUS tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
+(battle energy pool), `GOLD <n>`, `CARDS <n>` (total owned copies).
 
 ---
 

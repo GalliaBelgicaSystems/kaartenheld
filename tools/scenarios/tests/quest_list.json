@@ -28,21 +28,21 @@
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "QUESTS"
-  },
-  {
-   "type": "screen_row",
-   "row": 2,
    "contains": "QUEST"
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 1,
+   "contains": "^"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
    "contains": "MONSTER HUNT"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 4,
    "contains": "monsters: 1/5"
   }
  ],

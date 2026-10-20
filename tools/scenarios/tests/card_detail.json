@@ -1,7 +1,7 @@
 {
  "name": "card_detail",
  "test": true,
- "description": "SELECT on a card row opens the detail page showing type, power/cost, uses/max-copies, owned/decked counts and price",
+ "description": "SELECT on a card row opens the detail page: name, rider, type, AP cost, power, uses, owned/decked counts and sell value",
  "actions": [
   {
    "type": "press",
@@ -35,28 +35,53 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "I SW"
+   "row": 3,
+   "contains": "IRON SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "POWER"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "AP COST"
   },
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "PWR"
-  },
-  {
-   "type": "screen_row",
-   "row": 9,
-   "contains": "COST"
-  },
-  {
-   "type": "screen_row",
-   "row": 11,
    "contains": "USES"
   },
   {
    "type": "screen_row",
-   "row": 13,
+   "row": 10,
    "contains": "OWN"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "NO RIDER"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "TYPE ATTACK"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "INF"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "DECK"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "SELL"
   },
   {
    "type": "oam_tile",

@@ -1,4 +1,4 @@
-#pragma bank 5
+#pragma bank 8
 #pragma disable_warning 110
 
 #include <gb/gb.h>
@@ -8,17 +8,17 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── Quest-tab content, bank-5 body ────────────────────────────────
+/* ── Quest-tab content, bank-8 body ────────────────────────────────
  * The quest list renderer + input navigator live here (not bank 2 with
  * the cards renderer) for two structural reasons (AGENTS.md 52.18):
  *
  * 1. The quest registry (g_quests[]) is banked content: a banked body
  *    must share its table's bank (AGENTS.md 52.11.1), and the registry
  *    outgrew bank 2 alongside the event table.  quests_content.c carries
- *    `#pragma bank 5` for the same reason.
- * 2. Bank 2 sits hard against 16 KB; the two merchant-table rows alone
- *    overflowed it.  Bank 5 has room for the feature to grow (more
- *    quests, per-quest detail).
+ *    `#pragma bank 8` for the same reason.
+ * 2. Banks 2 and 5 sit hard against 16 KB; bank 8 is the overflow bank
+ *    (AGENTS.md 55.5) with room for the feature to grow (more quests,
+ *    per-quest detail).
  *
  * ABI: fixed-bank wrappers in item_screen.c dispatch here (QUEST tab)
  * and to item_content_banked.c (CARDS tab) through the WRAM trampoline:
@@ -136,6 +136,37 @@ static void iq_color_span_fast(void)
     iq_color_span_fast(); \
 } while(0)
 
+/* Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) --
+ * same rows as the bank-2 CARDS/STATUS header: row 0 tabs, row 1
+ * caret under QUEST (col 6). */
+static void iq_draw_header(void)
+{
+    IQ_DRAW_TEXT(0, 0, "CARDS QUEST STATUS", 18);
+    IQ_DRAW_TEXT(6, 1, "^", 1);
+}
+
+/* Visible-to-table index map: item_menu_index addresses the VISIBLE
+ * list (NOT_STARTED quests hidden), so detail/navigate needs the
+ * table position of the n-th tracked quest. */
+static QuestStatus iq_quest_status(const GameState *state,
+                                   const QuestDefinition *q);
+static const QuestDefinition *iq_visible_quest(Game *g, uint8_t vis,
+                                              uint8_t *total_out)
+{
+    uint8_t vis_count = 0;
+    uint8_t i;
+    const QuestDefinition *found = NULL;
+    for (i = 0; i < GAME_QUEST_COUNT; i++) {
+        if (iq_quest_status(&g->state, &g_quests[i]) ==
+            QUEST_STATUS_NOT_STARTED)
+            continue;
+        if (vis_count == vis) found = &g_quests[i];
+        vis_count++;
+    }
+    if (total_out) *total_out = vis_count;
+    return found;
+}
+
 /* Rider OAM sweep for the quest tab (entries 1-5): the CARDS list paints
  * element icons over per-row cells, so entering the quest tab must hide
  * them (the cards body sweeps on its own renders the same way).  WRAM
@@ -210,7 +241,7 @@ static void iq_draw_quest(Game *g)
      * "not started" rows).  item_menu_index addresses the VISIBLE list,
      * so the caret compares against the visible position, not the table
      * position. */
-    s_ic_y = 5;
+    s_ic_y = 3;
     vis = 0;
     for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT && s_ic_y < 15; s_iq_qst_pos++) {
         s_iq_q = &g_quests[s_iq_qst_pos];
@@ -241,6 +272,42 @@ static void iq_draw_quest(Game *g)
     if (vis == 0) {
         IQ_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
     }
+}
+
+/* ── Quest detail (SELECT on a quest row) ─────────────────────────
+ *   row 3: quest name
+ *   row 5: who gave it (giver)
+ *   row 6: the condition (objective)
+ *   row 7: where you stand (progress "v/t label", "DONE note", or
+ *           "ACTIVE" for counter-less quests)
+ *   row 9: "SEL:BACK" */
+static void iq_draw_quest_detail(Game *g)
+{
+    const QuestDefinition *q;
+    QuestStatus st;
+    uint8_t val;
+    char b[6];
+    q = iq_visible_quest(g, g->item_menu_index, 0);
+    if (!q) return;
+    IQ_DRAW_TEXT(0, 3, q->name, 14);
+    IQ_DRAW_TEXT(0, 5, q->giver, 16);
+    IQ_DRAW_TEXT(0, 6, q->objective, 19);
+    st = iq_quest_status(&g->state, q);
+    if (st == QUEST_STATUS_COMPLETE) {
+        IQ_DRAW_TEXT(2, 7, "DONE ", 5);
+        IQ_DRAW_TEXT(7, 7, q->complete_note, 10);
+    } else if (q->progress_variable != 0) {
+        val = (uint8_t)iq_variable_get(&g->state, q->progress_variable);
+        b[0] = (char)('0' + val);
+        b[1] = '/';
+        b[2] = (char)('0' + (uint8_t)q->progress_target);
+        b[3] = '\0';
+        IQ_DRAW_TEXT(2, 7, b, 3);
+        IQ_DRAW_TEXT(6, 7, q->progress_label, 10);
+    } else {
+        IQ_DRAW_TEXT(2, 7, "ACTIVE", 6);
+    }
+    IQ_DRAW_TEXT(0, 9, "SEL:BACK", 8);
 }
 
 /* Quest-tab input behind the thin fixed dispatch in item_screen.c.
@@ -274,8 +341,8 @@ void item_quest_nav_banked(void)
     if (g->item_menu_index >= total)
         g->item_menu_index = 0;
     if (edges & (uint8_t)(1u << INPUT_SELECT)) {
-        /* Future per-quest detail needs a visible-to-table index map:
-         * item_menu_index addresses the VISIBLE list, not g_quests. */
+        /* Detail resolves the visible position through
+         * iq_visible_quest (index addresses the VISIBLE list). */
         g->item_menu_mode = MODE_QUEST_DETAIL;
         g->render_cache.valid = false;
         return;
@@ -289,8 +356,8 @@ void item_quest_nav_banked(void)
         return;
     }
     g->item_menu_index = new_index;
-    old_row = (uint8_t)(5 + (old_index << 1));
-    new_row = (uint8_t)(5 + (new_index << 1));
+    old_row = (uint8_t)(3 + (old_index << 1));
+    new_row = (uint8_t)(3 + (new_index << 1));
     if (old_row != new_row) {
         IQ_DRAW_TEXT(0, old_row, " ", 1);
         IQ_DRAW_TEXT(0, new_row, ">", 1);
@@ -309,8 +376,10 @@ void item_quest_render_banked(void)
         iq_rider_hide(e);
     }
 
+    iq_draw_header();
+
     if (g->item_menu_mode == MODE_QUEST_DETAIL)
-        IQ_DRAW_TEXT(0, 8, "no details yet", 14);
+        iq_draw_quest_detail(g);
     else
         iq_draw_quest(g);
 }

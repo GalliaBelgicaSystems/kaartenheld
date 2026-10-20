@@ -1,7 +1,7 @@
 {
  "name": "card_sort_power",
  "test": true,
- "description": "Power-desc sort with a flattened catalog (all powers 1) keeps collection order: I SW, W SH, F SW for the granted starter collection (stable sort, no key differences)",
+ "description": "Power-desc sort with a flattened catalog (all powers 1) keeps collection order: IRON SWORD, WOOD SHIELD, IRON SWORD for the granted starter collection (stable sort, no key differences)",
  "actions": [
   {
    "type": "press",
@@ -27,18 +27,18 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "I SW"
+   "row": 3,
+   "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "W SH"
+   "row": 4,
+   "contains": "WOOD SHIELD"
   },
   {
    "type": "screen_row",
-   "row": 10,
-   "contains": "F SW"
+   "row": 5,
+   "contains": "IRON SWORD"
   }
  ],
  "initial_state": {

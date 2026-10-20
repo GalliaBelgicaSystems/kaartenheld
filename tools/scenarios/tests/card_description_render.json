@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab renders each battle card type's banked description under its row. Regression lock for s_card_desc_blob: a flat multi-literal array initializer is silently miscompiled by SDCC to 'first row + zero fill', which blanked every non-sword description while all tests stayed green. Grants IRON_RING so the HEAL row renders too. BOW is deliberately uncovered: no catalog card maps to BATTLE_CARD_TYPE_BOW (attacks are SWORD-typed; BOW exists only in enemy deck tables, which never render descriptions).",
+ "description": "CARDS tab lists one row per owned card (full name + deck count): sword, shield, fire sword, ring and dagger render on rows 3-7 with the granted ring and dagger",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -32,28 +32,28 @@
   },
   {
    "type": "screen_row",
+   "row": 3,
+   "contains": "IRON SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 4,
+   "contains": "WOOD SHIELD"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "IRON SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "IRON RING"
+  },
+  {
+   "type": "screen_row",
    "row": 7,
-   "contains": "Sword: physical"
-  },
-  {
-   "type": "screen_row",
-   "row": 9,
-   "contains": "Shield: block dmg"
-  },
-  {
-   "type": "screen_row",
-   "row": 11,
-   "contains": "Sword: physical"
-  },
-  {
-   "type": "screen_row",
-   "row": 13,
-   "contains": "Heal: restore HP"
-  },
-  {
-   "type": "screen_row",
-   "row": 15,
-   "contains": "Dagger: poison"
+   "contains": "IRON DAGGER"
   }
  ]
 }

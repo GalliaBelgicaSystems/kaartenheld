@@ -249,18 +249,18 @@
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 6,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 11,
-   "contains": "P DA"
+   "row": 6,
+   "contains": "IRON DAGGER"
   },
   {
    "type": "screen_row",
-   "row": 13,
-   "contains": "M BO"
+   "row": 7,
+   "contains": "MYTHRIL BOW"
   }
  ]
 }

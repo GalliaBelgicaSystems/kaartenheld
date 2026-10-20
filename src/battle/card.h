@@ -39,10 +39,4 @@ typedef struct {
     uint8_t ring;
 } Card;
 
-/* Packed description table geometry for the bank-2 blob
- * (card_content.c, read directly by item_content_banked.c).
- * Stride = longest text + NUL, padded. */
-#define CARD_DESC_STRIDE 18
-#define CARD_DESC_TYPES  5
-
 #endif /* CARD_H */

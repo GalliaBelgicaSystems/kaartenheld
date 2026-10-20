@@ -208,13 +208,11 @@ static uint8_t bm_mode(const Game *g)
 static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
 {
     if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* No mode-1 (QUEST) branch: the quest tab repaints its caret inline
-     * in item_quest_nav_banked (item_quest_banked.c, bank 5), so this body
-     * never sees a quest index. */
-    if (index == 0) return 5;
+    /* CARDS tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, rows 3-7
+     * one card per row (was paired rows 6,8,10,12,14). */
+    if (index == 0) return 2;
     s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
-    if (scroll == 0) return (uint8_t)(6 + (s_sc_pos << 1));
-    return (uint8_t)(5 + ((s_sc_pos - scroll) << 1));
+    return (uint8_t)(3u + (uint8_t)(s_sc_pos - scroll));
 }
 
 void item_menu_cursor_banked(void)
