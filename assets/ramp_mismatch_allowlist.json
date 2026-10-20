@@ -659,6 +659,42 @@
    "off_colors": [
     "#3c5e26"
    ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    0,
+    9
+   ],
+   "declared": "sprites2",
+   "used_ramp": "sprites2",
+   "off_colors": [
+    "#b09266"
+   ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    1,
+    9
+   ],
+   "declared": "sprites2",
+   "used_ramp": "sprites2",
+   "off_colors": [
+    "#b09266"
+   ]
+  },
+  {
+   "sheet": "enemy_ow",
+   "tile": [
+    2,
+    9
+   ],
+   "declared": null,
+   "used_ramp": "sprites5",
+   "off_colors": [
+    "#b09266"
+   ]
   }
  ]
 }
