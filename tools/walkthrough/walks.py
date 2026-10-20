@@ -841,7 +841,37 @@ def walk_c(planner, checks):
         "walk_c expects a field->forest tunnel exit"
     forest = _level("forest")
     goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
-    follow(s, planner, "field", spawn, "forest", goal)
+    # Assert the alert sequence AT the crossing, not at the goal: the
+    # sting + resume windows elapse during the walk to spawn, so a
+    # settle-then-assert here would observe only the resumed track.
+    entry = planner.arrival_pos("forest")
+    s.check("forest has an arrival tile", entry is not None,
+            expected="portal landing", actual="none")
+    follow(s, planner, "field", spawn, "forest", entry)
+    # Alert-first: the kobold entry sting holds the track, so right
+    # after arrival the music is NONE; the checks below pin the sting
+    # actually stepping (sfx 7 while it rings, idle after) and the
+    # forest track coming back as the kobold approaches.
+    s.check_eq("forest music held for sting", s.reader.music_track(),
+               MUSIC_NONE)
+    s.check("forest alert sting playing",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
+                       ticks=90, label="sting start"),
+            expected=SFX_ALERT, actual="silent")
+    s.check("forest alert sting done",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
+                       ticks=150, label="sting end"),
+            expected=SFX_NONE, actual="stuck")
+    s.check("forest music resumes",
+            s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
+                       ticks=150, label="forest music"),
+            expected="MUSIC_FOREST", actual="held")
+    # Continue to the spawn for the arrival milestone.
+    _entry_path = planner.path("forest", entry, goal)
+    s.check("path to forest spawn", _entry_path is not None,
+            expected="bfs path", actual="none")
+    if _entry_path:
+        _walk_path(s, _entry_path)
     s.settle_scene(expected_scene=SCENE_FOREST)
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
