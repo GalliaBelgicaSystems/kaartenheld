@@ -249,17 +249,17 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 8,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 8,
    "contains": "IRON DAGGER"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 9,
    "contains": "MYTHRIL BOW"
   }
  ]

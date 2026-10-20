@@ -25,10 +25,10 @@
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
-/* One card per row: filter at row 2, cards at rows 3-14. */
+/* Header at row 3, one card per row at rows 4-14. */
 #define ROW_FILTER  2
-#define ROW_CARDS_TOP 3
-#define VISIBLE_CARDS 12
+#define ROW_CARDS_TOP 4
+#define VISIBLE_CARDS 11
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -225,6 +225,8 @@ static void ic_color_span_fast(void)
 /* ── Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) ──────
  * Row 0: the three tabs; row 1: the caret under the active tab.
  * No multiply (would pull the SDCC mult lib into fixed _CODE). */
+static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
+
 static void ic_draw_header(Game *g)
 {
     uint8_t cx = 0;
@@ -535,7 +537,11 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 
 static void ic_draw_cards_list(Game *g)
 {
-    /* View is fixed-bank-built (see note above); the render only walks it. */
+    /* View is fixed-bank-built (see note above); the render only walks it.
+     * Row 3 is the column header (always drawn in list mode). */
+    IC_DRAW_TEXT(3, 3, "AP", 2);
+    IC_DRAW_TEXT(6, 3, "NAME", 4);
+    IC_DRAW_TEXT(19, 3, "#", 1);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)
@@ -640,32 +646,32 @@ static void ic_draw_card_detail_page(Game *g)
         IC_DRAW_TEXT(0, 6, "TYPE HEAL", 9);
     else
         IC_DRAW_TEXT(0, 6, "TYPE ATTACK", 11);
-    /* Row 7: AP cost. */
-    IC_DRAW_TEXT(0, 7, "AP COST ", 8);
-    IC_DRAW_NUM2(8, 7, s_ic_def->cost);
-    /* Row 8: power. */
-    IC_DRAW_TEXT(0, 8, "POWER ", 6);
-    IC_DRAW_NUM2(6, 8, s_ic_def->power);
+    /* Row 7: AP cost (right-aligned). */
+    IC_DRAW_TEXT(0, 7, "AP COST", 7);
+    ic_draw_rjust(7, 18, s_ic_def->cost);
+    /* Row 8: power (right-aligned). */
+    IC_DRAW_TEXT(0, 8, "POWER", 5);
+    ic_draw_rjust(8, 18, s_ic_def->power);
     /* Row 9: uses per battle (INF = unlimited, never depletes). */
     detail_uses = s_ic_def->uses_per_battle;
-    IC_DRAW_TEXT(0, 9, "USES ", 5);
+    IC_DRAW_TEXT(0, 9, "USES", 4);
     if (detail_uses) {
-        IC_DRAW_NUM2(5, 9, detail_uses);
+        ic_draw_rjust(9, 18, detail_uses);
     } else {
-        IC_DRAW_TEXT(5, 9, "INF", 3);
+        IC_DRAW_TEXT(16, 9, "INF", 3);
     }
-    /* Row 10: collection vs deck counts. */
-    IC_DRAW_TEXT(0, 10, "OWN ", 4);
-    IC_DRAW_NUM2(4, 10, ic_collection_count(&g->state.cards, s_ic_id));
-    IC_DRAW_TEXT(7, 10, "DECK ", 5);
-    IC_DRAW_NUM2(12, 10, ic_deck_count(&g->state.cards.deck, s_ic_id));
+    /* Row 10: collection vs deck counts (both right-aligned). */
+    IC_DRAW_TEXT(0, 10, "OWN", 3);
+    ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
+    IC_DRAW_TEXT(9, 10, "DECK", 4);
+    ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
     /* Row 11: merchant sell value (price 0 = not buyable). */
-    IC_DRAW_TEXT(0, 11, "SELL ", 5);
+    IC_DRAW_TEXT(0, 11, "SELL", 4);
     if (s_ic_def->price) {
-        IC_DRAW_NUM2(5, 11, s_ic_def->price);
-        IC_DRAW_TEXT(7, 11, "G", 1);
+        ic_draw_rjust(11, 17, s_ic_def->price);
+        IC_DRAW_TEXT(18, 11, "G", 1);
     } else {
-        IC_DRAW_TEXT(5, 11, "--", 2);
+        IC_DRAW_TEXT(17, 11, "--", 2);
     }
     /* Row 13: hints (SELL only at a buying merchant). */
     if (loot_is_loot_id(s_ic_id) && ic_merchant_buys(g))
@@ -709,6 +715,17 @@ static void ic_format_uint(uint16_t uval, char *out)
  *   AP <pool>        (battle energy pool variable)
  *   GOLD <n>         (currency slot 0)
  *   CARDS <n>        (total owned copies) */
+/* Draw an unsigned value right-aligned ending at col end_col
+ * (labels sit at col 0; all detail numbers share the right edge). */
+static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
+{
+    uint8_t len = 0;
+    ic_format_uint(v, s_ic_big_num);
+    while (s_ic_big_num[len] != (char)0) len++;
+    if (len == 0) len = 1;
+    IC_DRAW_TEXT((uint8_t)(end_col - len + 1), y, s_ic_big_num, len);
+}
+
 static void ic_draw_status_page(Game *g)
 {
     uint8_t i;

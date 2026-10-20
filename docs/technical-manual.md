@@ -524,7 +524,7 @@ collection is full (12 distinct types), no card is granted.
 Three tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**CARDS tab** — the collection/deck manager (list starts at row 2):
+**CARDS tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP NAME #` column header, cards follow one per row:
 
 * The `* FILTER/SORT *` row opens a picker with `A`.
 * Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`
@@ -539,7 +539,7 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 * `SELECT` on a card opens the **detail page**: full name, on-hit rider
   (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
   / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),
-  `OWN`/`DECK` counts, and the `SELL` value.
+  `OWN`/`DECK` counts, and the `SELL` value (numbers right-aligned).
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
 * `A` on a loot card's **detail page** sells one copy while you have a

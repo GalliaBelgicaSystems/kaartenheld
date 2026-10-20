@@ -27,17 +27,17 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "IRON SWORD"
-  },
-  {
-   "type": "screen_row",
    "row": 4,
    "contains": "IRON SWORD"
   },
   {
-   "type": "screen_row_not_contains",
+   "type": "screen_row",
    "row": 5,
+   "contains": "IRON SWORD"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 6,
    "contains": "WOOD SHIELD"
   }
  ],

@@ -79,12 +79,12 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 4,
    "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 4,
    "contains": "2"
   }
  ]

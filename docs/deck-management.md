@@ -63,13 +63,15 @@ list entry showing its deck membership.
 ### Layout
 
 Row 0 holds the tab labels (`CARDS QUEST STATUS`); row 1 the `^` caret
-under the active tab. The CARDS list starts at row 2:
+under the active tab. The CARDS list starts at row 2 with a column
+header (`AP NAME #`) at row 3:
 
 ```text
 CARDS QUEST STATUS          <- row 0 (tabs)
 ^                           <- row 1 (caret under CARDS)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
->   1 IRON SWORD         4  <- row 3: caret, weapon icon, AP cost,
+   AP NAME             #  <- row 3 (column header)
+>   1 IRON SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
     1 WOOD SHIELD        4     element-colored full name, decked count
     1 IRON SWORD         2
 ```
@@ -86,7 +88,8 @@ CARDS QUEST STATUS          <- row 0 (tabs)
   4x IRON SWORD / 4x WOOD SHIELD / 2x FIRE SWORD, ring up to 3) are visible
   at a glance.
 - SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
-- up to 12 cards visible (rows 3-14); scrolling shifts the window (the FILTER/SORT row scrolls
+- up to 11 cards visible (rows 4-14) under the row-3 column header;
+  scrolling shifts the window (the FILTER/SORT row scrolls
   off once the caret leaves the first window).
 
 ### Actions
@@ -150,11 +153,11 @@ CARDS (example: IRON SWORD with a fire rider):
   IRON SWORD            <- element-colored full name + weapon icon
 FIRE RIDER              <- on-hit element rider (or NO RIDER)
 TYPE ATTACK             <- ATTACK / DEFEND / HEAL combat role
-AP COST  1
-POWER    2
-USES     INF            <- per-battle uses (INF = unlimited)
-OWN      4  DECK     3
-SELL     10G            <- merchant sell value (-- when not buyable)
+AP COST             1   <- numbers right-aligned to col 18
+POWER               9
+USES              INF   <- per-battle uses (INF = unlimited)
+OWN     1 DECK        0
+SELL              30G   <- merchant sell value (-- when not buyable)
 SEL:BACK                <- A:SELL SEL:BACK at a buying merchant
 ```
 

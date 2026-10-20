@@ -27,37 +27,47 @@
   },
   {
    "type": "screen_row",
+   "row": 3,
+   "contains": "AP"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "NAME"
+  },
+  {
+   "type": "screen_row",
    "row": 0,
    "contains": "CARDS"
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 4,
    "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 4,
    "contains": "4"
   },
   {
    "type": "screen_row",
-   "row": 4,
+   "row": 5,
    "contains": "WOOD SHIELD"
   },
   {
    "type": "screen_row",
-   "row": 4,
+   "row": 5,
    "contains": "4"
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 6,
    "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 6,
    "contains": "2"
   }
  ],
