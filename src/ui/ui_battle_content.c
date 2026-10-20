@@ -711,7 +711,8 @@ static const char *battle_combo_tier_name(uint8_t tier)
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
 
-static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg)
+static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
+                                                uint8_t *is_heal)
 {
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
@@ -726,6 +727,7 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     uint16_t b;
 
     *dmg = 0;
+    *is_heal = 0;
     best_v = 0;
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
@@ -767,11 +769,13 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
     /* Poker-hands-only mirror of combo_resolve_banked: only hand cards
-     * count (extras 0).  Attack ring hands convert to healing, so their
-     * damage preview is 0 (matching the resolver's 0 damage); the heal
-     * itself is not previewed on the DMG row. */
+     * count (extras 0).  Attack ring hands convert to healing, so show
+     * "HEAL n" (same participating-base math, count_ring=1) instead of
+     * a misleading "DMG0" -- preview and result agree. */
     if (!defend && has_ring) {
-        base = 0;
+        base = combo_participating_base(battle->hand, idx, w, tier, best_v,
+                                        COMBO_PHASE_ATTACK, 1);
+        *is_heal = 1;
     } else {
         base = combo_participating_base(battle->hand, idx, w, tier, best_v,
                                         defend ? COMBO_PHASE_DEFEND
@@ -860,8 +864,9 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     uint8_t block = 0;
     uint8_t bw;
     uint8_t dx;
+    uint8_t no_heal;
 
-    battle_combo_pending_preview(battle, &block);
+    battle_combo_pending_preview(battle, &block, &no_heal);
     battle_draw_text_line(0, combo_row, "DMG ", 4);
     dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
     /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
@@ -888,10 +893,12 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
      * a 3-digit amount still fits 20 cols); with no poker tier the row
      * still shows the inflicted damage as bare "DMG<n>" (face-value
-     * sum, same math the resolver applies).  The number mirrors the
-     * resolve math, so preview and result agree. */
+     * sum, same math the resolver applies).  Attack ring hands convert
+     * to healing: same layout with "HEAL" ("<tier> HEAL<n>", bare
+     * "HEAL<n>"), so preview and result agree. */
     const char *name;
     uint8_t dmg = 0;
+    uint8_t heal = 0;
     /* Staged row (WRAM copy of the active BattleScreenDef). */
     uint8_t combo_row = g_battle_hud.combo_row;
     uint8_t r;
@@ -928,25 +935,36 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_combo_warn_text(battle);
         return;
     }
-    name = battle_combo_pending_preview(battle, &dmg);
+    name = battle_combo_pending_preview(battle, &dmg, &heal);
     if (name[0] == '\0') {
         /* No tier: pending cards still inflict face value, so show it
-         * bare.  Zero effective damage (nothing staged, or only inert
-         * fodder) keeps the row blank instead of "DMG0" noise. */
+         * bare ("DMG<n>", or "HEAL<n>" for a lone converting ring).
+         * Zero effective damage (nothing staged, or only inert fodder)
+         * keeps the row blank instead of "DMG0" noise. */
         if (dmg == 0) {
             battle_draw_text_line(0, combo_row, NULL, 20);
             return;
         }
-        battle_draw_text_line(0, combo_row, "DMG", 3);
-        n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        if (heal) {
+            battle_draw_text_line(0, combo_row, "HEAL", 4);
+            n = (uint8_t)(4 + battle_draw_num_compact(4, combo_row, dmg));
+        } else {
+            battle_draw_text_line(0, combo_row, "DMG", 3);
+            n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        }
         battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
         return;
     }
     n = 0;
     while (name[n] != '\0') n++;
     battle_draw_text_line(0, combo_row, name, n);
-    battle_draw_text_line(n, combo_row, " DMG", 4);
-    n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    if (heal) {
+        battle_draw_text_line(n, combo_row, " HEAL", 5);
+        n = (uint8_t)(n + 5 + battle_draw_num_compact((uint8_t)(n + 5), combo_row, dmg));
+    } else {
+        battle_draw_text_line(n, combo_row, " DMG", 4);
+        n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    }
     /* Tail cells past the content keep stale buffer text while VRAM
      * above was cleared: blank the buffer tail explicitly (the VRAM
      * skip-guard would otherwise never rewrite them). */

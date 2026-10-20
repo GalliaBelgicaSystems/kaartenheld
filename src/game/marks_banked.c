@@ -11,8 +11,6 @@
 /* AP tile bytes (png2gb --ap-coords, same order as AP_TILE_IDS). */
 #include "gfx/ap_tiles.h"
 
-extern void jingle_full_banked(void);
-
 /* ── Per-frame game tick (bank-8 body) ──────────────────────────────
  * Single trampoline target replacing game_update()'s old standalone
  * jingle dispatch: runs the chest-jingle body, then the overworld HUD
@@ -137,14 +135,25 @@ static void marks_refresh(void)
     g_bk_byte_d = 0;
     marks_load_ap_tiles();
 
-    /* Map entry edge: scan once for live pursuers.  s_last_map starts
-     * 0, which is a valid map id (MAP_FIELD), so the first tick arms
-     * explicitly -- a boot directly onto a pursuer map must alert. */
-    if (!s_last_map_init) {
+    /* Same-map reloads (death -> continue, title -> continue, SELECT ->
+     * load the same slot) never change map_id, so the entry edge below
+     * would miss them and the alert would stay silent.  Re-arm while on
+     * any screen that can originate a load: the next overworld tick
+     * then scans as a fresh entry.  Browsing those menus without
+     * loading also re-arms, so returning plays the sting + hold again
+     * -- same re-entry treatment, harmless and consistent. */
+    if (g_game.screen == SCREEN_TITLE ||
+        g_game.screen == SCREEN_GAME_OVER ||
+        g_game.screen == SCREEN_SAVE_LOAD) {
+        s_last_map = 0xFF;
+    } else if (!s_last_map_init) {
+        /* Map entry edge: scan once for live pursuers.  s_last_map
+         * starts 0, which is a valid map id (MAP_FIELD), so the first
+         * tick arms explicitly -- a boot directly onto a pursuer map
+         * must alert. */
         s_last_map_init = 1;
         s_last_map = 0xFF;
-    }
-    if (g_game.world.map_id != s_last_map) {
+    } else if (g_game.world.map_id != s_last_map) {
         s_last_map = g_game.world.map_id;
         pursuers = 0;
         for (k = 0; k < MAX_WORLD_ACTORS; k++) {
@@ -179,7 +188,10 @@ static void marks_refresh(void)
         } else if (g_alert_ttl == ALERT_MUSIC_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
-            g_game.screen != SCREEN_ENDING) {
+            g_game.screen != SCREEN_ENDING &&
+            /* Don't clobber an active chest jingle with the resume:
+             * its own restore replays the scene track when it ends. */
+            g_audio_current_track != MUSIC_CHEST) {
             g_bk_byte_d = 1;
         }
     }
@@ -190,7 +202,14 @@ static void marks_refresh(void)
         g_game.state.variables.values[VARIABLE_ID_MONSTERS_DEFEATED - 1];
     merchant_quest =
         g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1];
-    has_amulet = marks_has_amulet(&g_game.state);
+    has_amulet = 0;
+    /* The collection scan is the most expensive part of this refresh
+     * (up to MAX_CARD_COLLECTION entries); skip it unless the merchant
+     * quest is actually waiting on the amulet -- otherwise the result
+     * is unused by every branch below. */
+    if (merchant_quest == 1) {
+        has_amulet = marks_has_amulet(&g_game.state);
+    }
     carl_done = marks_carl_defeated(&g_game.state);
 
     /* Hostiles: pursuer "!" once the entry sting has fired (ttl at or

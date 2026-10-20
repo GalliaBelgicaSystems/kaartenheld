@@ -187,16 +187,6 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
 		-o $(GFX_OUT_DIR)/ap_tiles.h
-	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
-	# Four single-cell icons streamed once at boot to fixed OAM ids
-	# (96/97 AP, 126/127 marks; see AP_TILE_IDS in battle_compile.py).
-	# Order comes from battle_compile --ap-coords (NOT ow-coords: these
-	# cells ride their own stream outside the enemy blob budget).
-	@AP_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ap-coords) || { echo "FATAL: battle_compile --ap-coords failed" >&2; exit 1; }; \
-	[ -n "$$AP_COORDS" ] || { echo "FATAL: battle_compile --ap-coords produced no tiles" >&2; exit 1; }; \
-	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
-		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
-		-o $(GFX_OUT_DIR)/ap_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png) ──
 	# Full world sheet (g_tileset_desolate)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \

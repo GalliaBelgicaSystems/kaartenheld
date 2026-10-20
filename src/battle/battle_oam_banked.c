@@ -192,12 +192,8 @@ void battle_oam_draw_banked(void)
     battle_ap_draw(battle);
 }
 
-/* Per-card AP-cost OAM pips (same bank-5 dispatch as the enemy pass
- * above: g_bk_ptr_a = Battle*.  Hand slot i owns entry 24+i, drawn
- * inset over its own top-LEFT frame corner (mirroring the rider pass's
- * top-right): cost 1 -> AP_TILE_1, cost 2 -> AP_TILE_2, cost 0 or
- * above 2 (no such card exists) -> hidden.  Loot reveal (msg_id 4)
- * hides all five: the hand is cleared there, like the rider tail. */
+/* Per-card AP-cost OAM pips (entry 24+i, top-LEFT frame corner; full
+ * layout contract lives on the file-header comment above). */
 static void battle_ap_draw(const volatile Battle *battle)
 {
     uint8_t cards_row = g_battle_hud.cards_row;

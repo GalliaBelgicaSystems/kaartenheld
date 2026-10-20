@@ -236,6 +236,12 @@ ITEM_ID_MAP = {"NONE": 0,
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
+# NOTE: SLIME_FIELD and CARL_FIELD intentionally share id 1. The test
+# fixtures use one persistent id per spawned hostile, and TEST_FIELD's
+# only hostile is Carl's tutor spar (the field slime lives in the south
+# map).  Forward lookup (name -> id) is unambiguous; the reverse map
+# below keeps the LAST name (CARL_FIELD).  Do not "fix" by renumbering:
+# scenario initial_state world blocks use both spellings.
 ACTOR_STATE_NAME_MAP = {"ALIVE": 0, "DEFEATED": 1}
 # Status IDs (mirrors src/rpg/status.h StatusId enum)
 STATUS_ID_MAP = {"NONE": 0, "POISON": 1, "BURN": 2, "FREEZE": 3}
@@ -1086,6 +1092,39 @@ class EmulatorSession:
         base = 0xC000 + (entry & 0xFF) * 4
         return tuple(self._memread(base + i) for i in range(4))
 
+    def ensure_vram_readable(self, max_frames=8):
+        """Halt-phase VRAM guard: VRAM is unreadable mid-scanout (mGBA
+        serves 0xFF while the PPU is in mode 2/3, and halting at a
+        breakpoint freezes the PPU wherever it was).  Check STAT first:
+        if already in HBlank/VBlank there is nothing to wait for and no
+        game time advances.  Otherwise step whole frames until an
+        accessible window, capped so a stuck phase can't spin the run.
+        Returns True when VRAM should be readable (best effort after
+        the cap -- callers compare against expected content anyway)."""
+        try:
+            stat = self._memread(0xFF41)
+        except Exception:
+            stat = None
+        if stat is not None and (stat & 0x03) <= 1:
+            return True
+        for _ in range(max_frames):
+            self._cmd("frame")
+            try:
+                stat = self._memread(0xFF41)
+            except Exception:
+                continue
+            if stat is not None and (stat & 0x03) <= 1:
+                return True
+        return False
+
+    def read_vram_block(self, addr, length):
+        """Read length raw VRAM bytes with NO sync of its own: call
+        ensure_vram_readable() first (one sync covers all blocks a
+        scenario needs, and it skips stepping entirely when the halt
+        already landed in an accessible window).  Returns a list of
+        ints (None for failed reads)."""
+        return [self._memread(addr + i) for i in range(length)]
+
     def get_sfx_state(self):
         """Read the SFX trigger log: (total count, last SFX id).
         Per-trigger SFX telemetry would flood the 32-entry gameplay ring
@@ -1190,7 +1229,13 @@ class EmulatorSession:
         Text tiles decode as tile_id + 32 (ui_font_tile_base is 0, so
         the PPU fetches ch - ' '; see battle_draw_text_line).  Non-text
         tiles (art, icons) decode to whatever bytes they are; pass '.'.
-        """
+        The halt point of a frame-stepped session is scanout-phase
+        dependent, so VBlank-gate first: an ungated read mid-scanout
+        returns 0xFF and looks exactly like unwritten VRAM (the
+        52.25 blind spot -- buffer truthful, VRAM read blank).  The
+        guard is a no-op when the halt already landed in an accessible
+        window, so clean halts cost nothing extra."""
+        self.ensure_vram_readable()
         rows = []
         for y in range(18):
             # VRAM tilemap stride is 32 tiles (20 visible + 12 off-screen)

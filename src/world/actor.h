@@ -69,7 +69,7 @@ typedef enum {
 /* Overworld HUD marker kinds (OAM icons drawn above actors by the
  * bank-4 sprite pass, fixed entries 30+): 0 = none, 1 = quest "?"
  * (talk to advance/turn in), 2 = pursuer "!" (alert active).
- * Decided per frame by game_update_actor_marks_banked (bank 8). */
+ * Decided per frame by game_frame_tick_banked's marks refresh (bank 8). */
 #define ACTOR_MARK_NONE  0
 #define ACTOR_MARK_QUEST 1
 #define ACTOR_MARK_ALERT 2

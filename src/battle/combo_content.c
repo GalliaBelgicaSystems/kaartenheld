@@ -277,10 +277,12 @@ void combo_resolve_banked(void)
              * legal value and keep the best tier (types are untouched,
              * so the suited bonus is unaffected).  The scan runs 10..1
              * so ties keep the LARGER value (highest pair, not lowest).
-             * The map keeps effective order.  The participating-base
-             * helper below reads the substituted histogram straight from
-             * s_hist, so a kinds/pairs win refreshes it once here (HIGH
-             * CARD and all-five tiers never touch s_hist). */
+             * The map keeps effective order.  Each trial rebuilds s_hist
+             * from scratch, so after the loop it holds the v=1 trial;
+             * participating_base only consumes that leftover for no-ring
+             * kinds (identical across trials when no ring is present) and
+             * takes ringed values straight from ring_sub -- see the
+             * precondition in combo.h. */
             uint8_t best;
             uint8_t v, t2;
             if (has_ring) {

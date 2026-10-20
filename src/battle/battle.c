@@ -573,56 +573,56 @@ void battle_execute_combo(Battle *b)
                 b->player.hp = (new_hp > b->player.max_hp) ? b->player.max_hp : (uint8_t)new_hp;
                 telemetry_emit(EVENT_HEALED, res.amount, 0, 0, 0);
             } else {
-            /* Damage hand: only poker-hand cards deal (extras add 0) --
-             * only HEAL_HP heals.  The slash sound plays when the player
-             * lands a damaging attack. */
-            audio_play_sfx(SFX_ATTACK);
-            combatant_take_damage(&b->enemies[b->target_idx], res.amount);
-            telemetry_emit(EVENT_DAMAGE_DEALT, res.amount, 0, 0, 0);
-            /* On-hit status rider (Phase C): the leading card's data
-             * decides; the deterministic RNG roll decides landing
-             * (docs/combo-system.md §13/§17). */
-            if (b->enemies[b->target_idx].hp != 0 &&
-                b->last_combo.cards[0].status_id != STATUS_NONE) {
-                /* Combo-scaled rider (docs/combo-system.md §10): the
-                 * hand's effective multiplier scales the card's base
-                 * chance; capped at ~100%.  Add/subtract loops give the
-                 * exact same floor(chance*mult/100) as the original
-                 * expression while keeping the SDCC 16-bit mul/div
-                 * library out of the tight fixed bank (SM83 has no
-                 * hardware multiply). */
-                {
-                    uint16_t eff = 0;
-                    uint16_t k = (uint8_t)b->last_combo.multiplier;
-                    uint8_t tslot = (uint8_t)(b->target_idx + 1);
-                    while (k--) {
-                        eff = (uint16_t)(eff +
-                             b->last_combo.cards[0].status_chance);
-                    }
-                    k = 0;
-                    while (eff >= 100) {
-                        eff = (uint16_t)(eff - 100);
-                        k++;
-                    }
-                    if (k > 255) k = 255;
-                    if ((uint8_t)rng_next() < (uint8_t)k) {
-                        if (status_apply(status_slots(tslot), tslot,
-                                         b->last_combo.cards[0].status_id,
-                                         1, 0) &&
-                            /* Poison also greys the victim's pool (Phase D):
-                             * the enemy's deck positions become unplayable
-                             * for POISON_GREY_TURNS rounds. */
-                            b->last_combo.cards[0].status_id == STATUS_POISON) {
-                            status_grey_apply(tslot, b->enemy_deck.count);
+                /* Damage hand: only poker-hand cards deal (extras add 0) --
+                 * only HEAL_HP heals.  The slash sound plays when the player
+                 * lands a damaging attack. */
+                audio_play_sfx(SFX_ATTACK);
+                combatant_take_damage(&b->enemies[b->target_idx], res.amount);
+                telemetry_emit(EVENT_DAMAGE_DEALT, res.amount, 0, 0, 0);
+                /* On-hit status rider (Phase C): the leading card's data
+                 * decides; the deterministic RNG roll decides landing
+                 * (docs/combo-system.md §13/§17). */
+                if (b->enemies[b->target_idx].hp != 0 &&
+                    b->last_combo.cards[0].status_id != STATUS_NONE) {
+                    /* Combo-scaled rider (docs/combo-system.md §10): the
+                     * hand's effective multiplier scales the card's base
+                     * chance; capped at ~100%.  Add/subtract loops give the
+                     * exact same floor(chance*mult/100) as the original
+                     * expression while keeping the SDCC 16-bit mul/div
+                     * library out of the tight fixed bank (SM83 has no
+                     * hardware multiply). */
+                    {
+                        uint16_t eff = 0;
+                        uint16_t k = (uint8_t)b->last_combo.multiplier;
+                        uint8_t tslot = (uint8_t)(b->target_idx + 1);
+                        while (k--) {
+                            eff = (uint16_t)(eff +
+                                 b->last_combo.cards[0].status_chance);
                         }
-                    } else {
-                        /* Roll failed: resisted (docs/combo-system.md §19). */
-                        telemetry_emit(EVENT_STATUS_RESISTED,
-                                       b->last_combo.cards[0].status_id,
-                                       tslot, 0, 0);
+                        k = 0;
+                        while (eff >= 100) {
+                            eff = (uint16_t)(eff - 100);
+                            k++;
+                        }
+                        if (k > 255) k = 255;
+                        if ((uint8_t)rng_next() < (uint8_t)k) {
+                            if (status_apply(status_slots(tslot), tslot,
+                                             b->last_combo.cards[0].status_id,
+                                             1, 0) &&
+                                /* Poison also greys the victim's pool (Phase D):
+                                 * the enemy's deck positions become unplayable
+                                 * for POISON_GREY_TURNS rounds. */
+                                b->last_combo.cards[0].status_id == STATUS_POISON) {
+                                status_grey_apply(tslot, b->enemy_deck.count);
+                            }
+                        } else {
+                            /* Roll failed: resisted (docs/combo-system.md §19). */
+                            telemetry_emit(EVENT_STATUS_RESISTED,
+                                           b->last_combo.cards[0].status_id,
+                                           tslot, 0, 0);
+                        }
                     }
                 }
-            }
             }
         }
         battle_resolve_hand_discard(b);

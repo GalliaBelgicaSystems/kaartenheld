@@ -36,8 +36,10 @@ typedef enum {
 #define MAX_WORLD_ACTORS 4
 
 /* Pursuit-alert display length (frames at 60 fps) after entering a map
- * with live chasers.  Set by world_load_map, drained per frame by the
- * marks refresh; the "!" OAM marks show while it runs. */
+ * with live chasers.  Set by the bank-8 marks refresh on entry (it
+ * self-detects the map change; world_load_map only spawns the actors),
+ * drained per frame by the same refresh; the "!" OAM marks show while
+ * it runs. */
 #define ALERT_TTL_FRAMES 150
 #define NO_ACTOR_INDEX   0xFF
 
