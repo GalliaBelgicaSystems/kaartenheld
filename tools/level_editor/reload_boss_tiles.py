@@ -87,6 +87,22 @@ RIDER_MAP = [
     (5, 2, "actors_rider_poison"),
 ]
 
+# (col, row, actors tile id). AP-cost pips (OAM HUD): the one/two/three
+# ap sprites.png cells are the battle top-left OAM, one per hand card,
+# selected by its energy cost (cost 0 shows none).
+AP_MAP = [
+    (10, 2, "actors_one_ap"),
+    (11, 2, "actors_two_ap"),
+    (0, 3, "actors_three_ap"),
+]
+
+# (col, row, actors tile id). Battle OAM mark glyphs (! and ?), same
+# pipeline as the AP pips above (reserved for card/actor markers).
+MARK_MAP = [
+    (1, 3, "actors_exclamation_point"),
+    (2, 3, "actors_question_mark"),
+]
+
 # (col, row, combat tile id). Card-cursor arrows: the single
 # combat_arrow_pointing_up split into light (unselected cursor) and dark
 # (cursor sitting on an already-selected card).
@@ -132,6 +148,12 @@ for _tid in [t for _, _, t in ARROW_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in RIDER_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
+                        "tools/level_editor/public/tiles/actors")
+for _tid in [t for _, _, t in AP_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
+                        "tools/level_editor/public/tiles/actors")
+for _tid in [t for _, _, t in MARK_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
 for _tid in [t for _, _, t in DOG_MAP]:
@@ -198,6 +220,16 @@ def main():
         if eid is not None:
             jobs.append((sprites_img, col, row, eid))
     for col, row, tid in RIDER_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "actors_" + slugify(label) == tid, \
+            "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in AP_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "actors_" + slugify(label) == tid, \
+            "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in MARK_MAP:
         label = sprites_csv[row][col].strip()
         assert "actors_" + slugify(label) == tid, \
             "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)

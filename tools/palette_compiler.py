@@ -359,6 +359,20 @@ def main():
         if ramp not in ramps:
             raise ValueError(f"rider_icons.json: unknown ramp '{ramp}'")
         ow_declared[cell] = ramp
+    # Battle top-left OAM AP-cost pips (screens/ap_icons.json): explicit
+    # per-cell OBJ ramps, same channel as the riders above.
+    ap_data = json.loads((REPO_ROOT / "screens" / "ap_icons.json").read_text())
+    for cell, ramp in (ap_data.get("cells") or {}).items():
+        if ramp not in ramps:
+            raise ValueError(f"ap_icons.json: unknown ramp '{ramp}'")
+        ow_declared[cell] = ramp
+    # Battle OAM mark icons (screens/mark_icons.json: ! and ? glyphs):
+    # explicit per-cell OBJ ramps, same channel as above.
+    mark_data = json.loads((REPO_ROOT / "screens" / "mark_icons.json").read_text())
+    for cell, ramp in (mark_data.get("cells") or {}).items():
+        if ramp not in ramps:
+            raise ValueError(f"mark_icons.json: unknown ramp '{ramp}'")
+        ow_declared[cell] = ramp
 
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     SHADES_DIR.mkdir(parents=True, exist_ok=True)

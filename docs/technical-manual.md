@@ -598,13 +598,20 @@ Selected cards are ranked **exactly like poker hands**
 * The whole selected hand contributes to the classification, but only the
   **effective** cards contribute to the base magnitude (see §8.3).
 
-### 8.3 Base power
+### 8.3 Base power (poker-hands-only)
 
-* **Attack phase**: base power = sum of all non-shield, non-ring values.
-  (Shields and rings deal 0 in attack but still count toward the hand
-  shape.)
-* **Defend phase**: base power = sum of **shield values and rings**
-  (rings are wild shields worth their power).
+Only the cards forming the poker hand count -- extras deal/block 0:
+
+* **Attack phase**: base power = sum of the *participating*
+  damage-card values (swords/bows/daggers count; shields add 0; rings
+  add 0; a HEAL-type card counts its value in a healing hand). HIGH
+  CARD scores the single highest eligible card. A ring in the selection
+  converts the whole hand to healing instead: base = participating
+  damage values + the ring at its substituted (joker) value, resolved
+  as healing (no damage); a lone ring heals its face value.
+* **Defend phase**: base power = sum of the *participating* **shield
+  values** (rings and non-shields add 0 but rings still count as
+  wildcards for the tier and gate the over-block heal).
 
 ### 8.4 Effect scaling
 

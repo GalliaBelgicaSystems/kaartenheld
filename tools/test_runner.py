@@ -10,6 +10,7 @@ import json
 import glob
 import multiprocessing
 import os
+import re
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
@@ -34,7 +35,7 @@ VALID_ASSERTION_TYPES = {
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
-    "oam_tile",
+    "oam_tile", "oam_bytes",
     "sfx_count", "sfx_last",
     "stack_margin_min",
 }
@@ -48,6 +49,41 @@ VALID_VARIABLE_NAMES = set(VARIABLE_ID_MAP)
 VALID_ITEM_NAMES = set(ITEM_ID_MAP) - {"NONE"}
 VALID_ACTOR_NAMES = set(ACTOR_ID_MAP)
 VALID_ACTOR_STATES = set(ACTOR_STATE_NAME_MAP)
+
+
+_AP_TILES_CACHE = None
+
+
+def _load_ap_tiles():
+    """Parse generated src/gfx/ap_tiles.h into {name: [16 bytes]}.
+
+    Tile order in the file is the png2gb --ap-coords order, which matches
+    AP_TILE_IDS: ap_1, ap_2, exclaim, question.  Comparing live OAM tile
+    data against this file (rather than hand-written hex) keeps one
+    source of truth: art changes update both sides together, while a
+    runtime VRAM clobber still fails loudly.  Anchored to the repo root
+    (not the cwd): a missing file is a loud error, never a silent {} that
+    misreads as 'unknown ap_tiles entry'.
+    """
+    global _AP_TILES_CACHE
+    if _AP_TILES_CACHE is not None:
+        return _AP_TILES_CACHE
+    names = ["ap_1", "ap_2", "exclaim", "question"]
+    tiles = {}
+    ap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "..", "src", "gfx", "ap_tiles.h")
+    try:
+        with open(ap_path) as f:
+            text = f.read()
+    except OSError as e:
+        raise FileNotFoundError(f"ap_tiles.h not found at {ap_path}: {e}")
+    blocks = re.findall(r"/\* tile \d+ \*/(.*?)(?=/\* tile \d+ \*/|\Z)", text, re.S)
+    for name, block in zip(names, blocks):
+        vals = [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{2})", block)]
+        if len(vals) == 16:
+            tiles[name] = vals
+    _AP_TILES_CACHE = tiles
+    return tiles
 VALID_CURRENCY_NAMES = set(CURRENCY_ID_MAP)
 VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 
@@ -311,7 +347,18 @@ def run_scenario(scenario):
                                      int(act.get("card_id", 0)) & 0xFF,
                                      0, int(act.get("quantity", 1)) & 0xFF)
 
-        # Read final snapshot, canonical state buffer and telemetry
+        # Read final snapshot, canonical state buffer and telemetry.
+        # VRAM pinning (vram_row / oam_bytes) needs a PPU-accessible halt;
+        # sync ONCE here, before the snapshot, so the state and the VRAM
+        # reads below share the same halt.  Syncing later (e.g. inside
+        # get_screen_dump) would step game time after the snapshot was
+        # taken and skew the two.  The guard is a no-op when the halt
+        # already landed in HBlank/VBlank.
+        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        oam_needs_vblank = any(a.get("type") == "oam_bytes"
+                               for a in scenario.get("assertions", []))
+        if has_vram_assert or oam_needs_vblank:
+            session.ensure_vram_readable()
         snap = session.snapshot()
         state_snap = session.state_snapshot()
         telemetry = session.get_telemetry()
@@ -333,14 +380,23 @@ def run_scenario(scenario):
             canary_depth, canary_margin = None, None
         # OAM HUD assertions (battle top-right rider sprites) must pre-read
         # before disconnect: evaluation runs after the session closes.
-        has_oam_assert = any(a.get("type") == "oam_tile" for a in scenario.get("assertions", []))
+        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_bytes") for a in scenario.get("assertions", []))
         oam_entries = {}
+        # Expected AP/mark tile bytes come from the generated ap_tiles.h
+        # (same file the ROM links): tile order is the --ap-coords order.
+        ap_tiles = {}
         if has_oam_assert:
+            ap_tiles = _load_ap_tiles()
             for a in scenario.get("assertions", []):
                 if a.get("type") == "oam_tile":
                     entry = a.get("entry", 0)
                     if entry not in oam_entries:
                         oam_entries[entry] = session.get_oam_entry(entry)
+                elif a.get("type") == "oam_bytes":
+                    key = (a.get("addr", 0), a.get("tile", ""))
+                    if key not in oam_entries:
+                        oam_entries[key] = session.read_vram_block(
+                            a.get("addr", 0), 16)
 
         # Check if any assertion needs logical screen buffer
         has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
@@ -352,7 +408,7 @@ def run_scenario(scenario):
         # buffer: the gate for RAM-truth-vs-VRAM-lie rendering bugs
         # (AGENTS.md 52.25 family), where the buffer is correct but the
         # pixels are not. Same font mapping as the walkthrough bg_text.
-        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        # Readability was ensured once before the snapshot above.
         vram_lines = []
         if has_vram_assert:
             vram_lines = session.get_screen_dump().split('\n')
@@ -484,6 +540,30 @@ def run_scenario(scenario):
             actual = oam[2] if oam is not None and oam[2] is not None else None
             passed = (actual == int(expected))
             actual = f"oam[{entry}].tile={actual}"
+
+        elif a_type == "oam_bytes":
+            # Live OAM tile DATA (not just the tile id): gates VRAM-truth
+            # vs tile-id-truth rendering bugs (AGENTS.md 52.22 family --
+            # same class as vram_row).  Reads happen in VBlank; expected
+            # bytes come from the generated ap_tiles.h so art changes
+            # update both sides while a runtime clobber still fails.
+            addr = a.get("addr", 0)
+            tile_name = a.get("tile", "")
+            live = oam_entries.get((addr, tile_name))
+            want = ap_tiles.get(tile_name)
+            if live is None or any(b is None for b in live):
+                actual = "oam-bytes unreadable"
+                passed = False
+            elif want is None:
+                actual = f"unknown ap_tiles entry {tile_name!r}"
+                passed = False
+            else:
+                actual = " ".join("%02X" % b for b in live)
+                passed = (list(live) == list(want))
+                if not passed:
+                    actual = (f"oam-bytes@{addr:#06x} mismatch: "
+                              f"got {actual} want "
+                              + " ".join("%02X" % b for b in want))
 
         elif a_type == "sfx_count":
             actual = sfx_count

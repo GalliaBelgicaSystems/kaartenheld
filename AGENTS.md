@@ -1356,7 +1356,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
-  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.
+  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.  The eleventh song (`demo complete.uge` -> `generated/music/demo_complete.c`, symbol `song_demo_complete`, `MUSIC_ENDING`) shares bank 7 too (loops over the THE END credits after a final-boss victory); fitting it moved the world-anim bodies (`anim_swap_banked.c`: pure, trampoline-dispatched, no same-bank data) to bank 8, which has room.
   * Ambient birdsong was removed entirely (no `bird*.pcm`, no `bird_ambient_banked`, no `EVENT_BIRD_CHIRP`): Wake Grove and Carl's field are silent like every other map.  The removal changes no WRAM (birdsong was zero-WRAM by design), so the measured branch-vs-master growth stays `_DATA` +41 B (stack gap 158->133 B against the 126 B floor): the chest jingle's 2 BSS bytes, the forest row-4 extension (`g_active_tile_palette` 32->40 B) and the 8-entry animation index list (`g_anim_cells`/`g_anim_count`, 17 B).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`).  `battle_boot` + `stack-budget` stay green; any further WRAM growth must re-run them first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
   * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
@@ -1630,11 +1630,19 @@ The test should fail before the fix and pass after it whenever practical.
 
 ## Step 6 — Validate
 
-Build parallel (`-j` is safe; the Makefile is parallel-clean) and run the
-whole gate in one invocation so agent sessions pay a single `nix develop`
-entry:
+While working (fast feedback loop): build and run ONLY the scenarios
+touched by the change, never the full gate.  Full `validate` is slow;
+run it once at the end of the session, before merging — never
+mid-session:
 
 ```bash
+# during work: touched scenarios only, e.g.
+make test-scenario SCENARIO=forest_boot
+```
+
+```bash
+# end of session, before merge: the whole gate in one invocation
+# (single `nix develop` entry; `-j` is safe, the Makefile is parallel-clean)
 make -j$(nproc) validate
 ```
 
@@ -3297,6 +3305,7 @@ the commit/PR without booting anything.
 00-stairs-refusal    staircase refusal dialogue ("back down there")
 01-field-scrolled    FIELD with the camera scrolled (SCX > 0)
 02-town-arrived      TOWN just inside the east gate (camera at origin)
+02-mayor-mark        mayor with the quest "?" overhead (pre-dialogue)
 03-guard-dialogue    dialogue box over the scrolled town (camera offset)
 04-dialogue-next     second dialogue line
 05-shop              shopkeeper shop screen
@@ -3304,6 +3313,7 @@ the commit/PR without booting anything.
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
 08-carl-field        overworld beside Carl (single field slime)
+08-carl-mark         Carl with the quest "?" overhead (pre-lesson)
 08-carl-tutor        Carl's lesson dialogue (name + warning)
 09-battle            Carl spar opens (select hints on rows 5/9)
 10-battle-attack     after a player attack (damage dealt)

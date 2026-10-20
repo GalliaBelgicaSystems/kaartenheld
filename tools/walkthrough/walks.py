@@ -29,7 +29,8 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON, MUSIC_TOWN,
-                                      MUSIC_CHEST)
+                                      MUSIC_CHEST, MUSIC_NONE,
+                                      SFX_ALERT, SFX_NONE)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
 MAX_BATTLE_ROUNDS = 26
@@ -472,9 +473,19 @@ def walk_a(planner, checks, sram_out=None):
     # Mayor: interact event sets MET_MAYOR + starts the quest.
     # The 3-line INTRO fits on one page (all three lines, no chevron);
     # milestone 04 captures that page (the next dialogue after the guard).
+    # Walk adjacent first and capture the quest "?" floating over him
+    # (milestone 02-mayor-mark) BEFORE the bump opens his dialogue.
+    if s.pos() != (9, 5):
+        _mayor_path = planner.path("town", s.pos(), (9, 5))
+        if _mayor_path is None:
+            s.check("path to mayor", False,
+                    expected="bfs path", actual="none")
+        else:
+            _walk_path(s, _mayor_path)
+    s.shoot("02-mayor-mark")
     s.check("mayor dialogue opened",
-            bump_actor(s, planner, "town", (9, 5), "right", "MAYOR:",
-                       tries=6),
+            s.press_until("right", lambda: s.text_has("MAYOR:"),
+                          tries=6, label="MAYOR:"),
             expected="MAYOR:", actual="none")
     s.shoot("04-dialogue-next", need="MAYOR:")
     close_dialogue(s, "MAYOR:")
@@ -685,6 +696,18 @@ def walk_b(planner, checks):
     # sprite now: bumping him opens the lesson first, and closing it
     # auto-starts the spar from the stashed encounter (no second bump).
     # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
+    # Walk adjacent first and capture the quest "?" floating over him
+    # (milestone 08-carl-mark): the field cache above already opened his
+    # lesson, and the spar is still unwon.  The bump below opens the
+    # lesson, so the mark must be shot BEFORE it.
+    if s.pos() != (14, 12):
+        _carl_path = planner.path("field", s.pos(), (14, 12))
+        if _carl_path is None:
+            s.check("path to carl", False,
+                    expected="bfs path", actual="none")
+        else:
+            _walk_path(s, _carl_path)
+    s.shoot("08-carl-mark")
     s.check("carl lesson bump",
             bump_actor(s, planner, "field", (14, 12), "right", "CARL:"),
             expected="CARL:", actual="none")
@@ -818,11 +841,72 @@ def walk_c(planner, checks):
         "walk_c expects a field->forest tunnel exit"
     forest = _level("forest")
     goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
-    follow(s, planner, "field", spawn, "forest", goal)
+    # Assert the alert sequence AT the crossing, not at the goal: the
+    # sting + resume windows elapse during any post-crossing walk, and
+    # cross_exit's own settling eats them too, so a settle-then-assert
+    # observes only the resumed track.  Walk to the tunnel mouth (same
+    # scene, no warp), cross explicitly, and assert immediately:
+    # cross_exit returns ~25 f after the flip, well inside every window
+    # (hold to +90, sting +30..+81, resume +90).
+    _mouth_path = planner.path("field", spawn, (16, 1), avoid_exits=True)
+    s.check("path to forest tunnel", _mouth_path is not None,
+            expected="bfs path", actual="none")
+    if _mouth_path:
+        _walk_path(s, _mouth_path)
+    # Cross onto the gate and anchor every assert to the flip itself:
+    # cross_exit's settling (~25 f) plus any dropped-press retries eat
+    # the sting windows, so a settle-then-assert observes only the
+    # resumed track.  Flip-anchored waits have huge margins (hold to
+    # +90, sting +30..+81, resume +90).  The kobold spawns 6 tiles away,
+    # so no ambush can interrupt the crossing; a DECK box here still
+    # fights through like follow()'s exit path.
+    _crossed = False
+    for _ in range(4):
+        s.press("left", settle=12)
+        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_FOREST,
+                      ticks=90):
+            _crossed = True
+            break
+        if s.text_has("DECK:"):
+            _win = transit_fight(s)
+            s.check("transit fight victory", _win,
+                    expected="VICTORY", actual="defeat")
+            if not _win:
+                break
+            s.check("transit aftermath drained",
+                    drain_postvictory_dialogue(s),
+                    expected="no KNIGHT: box", actual="stuck open")
+    s.check("forest tunnel crossed", _crossed,
+            expected="forest", actual="no crossing")
+    # Alert-first: the kobold entry sting holds the track, so right
+    # after arrival the music is NONE; the checks below pin the sting
+    # actually stepping (sfx 7 while it rings, idle after) and the
+    # forest track coming back as the kobold approaches.
+    s.check_eq("forest music held for sting", s.reader.music_track(),
+               MUSIC_NONE)
+    s.check("forest alert sting playing",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
+                       ticks=90, label="sting start"),
+            expected=SFX_ALERT, actual="silent")
+    s.check("forest alert sting done",
+            s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
+                       ticks=150, label="sting end"),
+            expected=SFX_NONE, actual="stuck")
+    s.check("forest music resumes",
+            s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
+                       ticks=150, label="forest music"),
+            expected="MUSIC_FOREST", actual="held")
+    # Continue to the spawn for the arrival milestone.  avoid_exits:
+    # the tunnel gate sits right on the path -- stepping back onto it
+    # would warp out to the field.
+    _entry_path = planner.path("forest", s.pos(), goal, avoid_exits=True)
+    s.check("path to forest spawn", _entry_path is not None,
+            expected="bfs path", actual="none")
+    if _entry_path:
+        _walk_path(s, _entry_path)
     s.settle_scene(expected_scene=SCENE_FOREST)
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
-    s.check_eq("forest music", s.reader.music_track(), MUSIC_FOREST)
     s.shoot("14-forest-arrived")
     s.close()
 
@@ -889,7 +973,11 @@ def walk_e(planner, checks):
            (mimic_xy[0] - 1, mimic_xy[1]))
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
-    s.check_eq("castle music", s.reader.music_track(), MUSIC_DUNGEON)
+    # Alert-first: the slime-knight entry sting holds the track here
+    # too (the restart is pinned by walk-c/the sweep; the knight flow
+    # below replays DUNGEON through battle exit anyway).
+    s.check_eq("castle music held for sting", s.reader.music_track(),
+               MUSIC_NONE)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have
     # ambushed en route already (transit win + drained briefing).  Either
@@ -1063,8 +1151,13 @@ def walk_sweep(planner, checks):
         s.settle_scene(expected_scene=scene.scene_id)
         st = s.reader.scene_state()
         s.check_eq("sweep %s scene" % name, st["scene_id"], scene.scene_id)
-        s.check_eq("sweep %s music" % name, s.reader.music_track(),
-                   want_music)
+        # Alert-first: pursuer maps hold the track for the entry sting,
+        # so the track assert waits it out (wait_for returns immediately
+        # where the track is already playing).
+        s.check("sweep %s music" % name,
+                s.wait_for(lambda: s.reader.music_track() == want_music,
+                           ticks=150, label="sweep music"),
+                expected=want_music, actual="held")
         if _hostile_floor(scene.level):
             _check_hostiles(s, name, scene.level)
         s.shoot("sweep-%s" % name)

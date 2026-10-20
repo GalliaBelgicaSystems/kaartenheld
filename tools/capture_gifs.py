@@ -107,12 +107,23 @@ def capture_battle():
     planner = Planner()
     s = Session(checks, "gif-battle")
     try:
+        # Transit god-mode (walkthrough convention): 99 HP so a patrol
+        # ambush on the way to the forest can't derail the scripted
+        # fight.  The kobold lives in the forest now (the field is
+        # Carl's solo spar); walk the walk-c gate first, then engage.
+        W.god_mode(s)
         field = W._level("field")
-        kobold = next(o for o in field["objects"]
+        spawn = W._boot_to_field(s, planner)
+        forest = W._level("forest")
+        fspawn = (forest["player"]["spawn"]["x"],
+                  forest["player"]["spawn"]["y"])
+        W.follow(s, planner, "field", spawn, "forest", fspawn)
+        s.settle_scene(expected_scene=W.SCENE_FOREST)
+        kobold = next(o for o in forest["objects"]
                       if (o.get("properties") or {}).get("entity_id")
                       == "ENTITY_ID_KOBOLD")
         kxy = (kobold["position"]["x"], kobold["position"]["y"])
-        if not W.engage_hostile(s, planner, "field", kxy):
+        if not W.engage_hostile(s, planner, "forest", kxy):
             raise SystemExit("kobold battle did not engage")
         # Settle into the player select phase (TARGET banner).
         s.wait_for(lambda: s.text_has("TARGET ")
@@ -146,16 +157,15 @@ def capture_battle():
 
 
 def capture_overworld():
-    """Field spawn -> forest gate -> wander to the amulet chest."""
+    """Field spawn -> forest gate -> wander east through the trees."""
     checks = []
     planner = Planner()
     s = Session(checks, "gif-overworld")
     try:
-        field = W._level("field")
-        sp = field["player"]["spawn"]
-        spawn = (sp["x"], sp["y"])
-        # Whole-edge neighbor links (no point exits since the neighbor
-        # migration): goal is the forest arrival, as in Walk C.
+        # Transit god-mode (walkthrough convention): 99 HP so a patrol
+        # ambush can't derail the scripted walk.
+        W.god_mode(s)
+        field_pos = W._boot_to_field(s, planner)
         forest = W._level("forest")
         goal = (forest["player"]["spawn"]["x"],
                 forest["player"]["spawn"]["y"])
@@ -170,16 +180,15 @@ def capture_overworld():
         s.tick = cap_tick
 
         # Walk the Field to the north gate; the crossing wipes to the Forest.
-        W.follow(s, planner, "field", spawn, "forest", goal)
+        W.follow(s, planner, "field", field_pos, "forest", goal)
         s.settle_scene(expected_scene=W.SCENE_FOREST)
         s.tick(20)
 
-        # Wander east to the Lost Amulet chest and stop facing it.
-        chest = next(o for o in W._level("forest")["objects"]
-                     if (o.get("properties") or {}).get("entity_id")
-                     == "ENTITY_ID_AMULET")
-        cxy = (chest["position"]["x"], chest["position"]["y"])
-        path = planner.path("forest", goal, (cxy[0] - 1, cxy[1]))
+        # Wander east a few tiles and stop facing the trees (short and
+        # far from the kobold's chase range so no battle interrupts the
+        # recording; the amulet chest this used to visit moved to the
+        # mountain pass).
+        path = planner.path("forest", goal, (16, 10), avoid_exits=True)
         if path:
             W._walk_path(s, path)
         s.tick(40)
@@ -198,6 +207,11 @@ def capture_boss():
     planner = Planner()
     s = Session(checks, "gif-boss")
     try:
+        # Transit god-mode + boot out of the grove first (walkthrough
+        # convention): follow() trusts its start position, and a fresh
+        # boot lands in the grove, not the field.
+        W.god_mode(s)
+        field_entry = W._boot_to_field(s, planner)
         field = W._level("field")
         spawn = (field["player"]["spawn"]["x"],
                  field["player"]["spawn"]["y"])
@@ -205,7 +219,7 @@ def capture_boss():
         # tile (NOT the throne portal edge: stepping onto it would cross
         # into the throne room early).
         castle_arrival = planner.arrival_pos("castle") or spawn
-        W.follow(s, planner, "field", spawn, "castle", castle_arrival)
+        W.follow(s, planner, "field", field_entry, "castle", castle_arrival)
         # Cross into the throne room and stop south of the boss at (10,7).
         W.follow(s, planner, "castle", s.pos(), "throne_room", (10, 8))
         throne_id = planner.scenes["throne_room"].scene_id

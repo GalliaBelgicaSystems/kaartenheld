@@ -28,6 +28,9 @@ typedef enum {
                         (battle_set_result DEFEAT) and plays over the
                         game-over choice menu until a map load restores
                         the scene track */
+    MUSIC_ENDING,    /* end-credits theme (demo complete.uge, loops,
+                        bank 7): starts when a final-boss victory exits
+                        to the ending screen (THE END) */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -49,7 +52,10 @@ void audio_play_music(MusicTrack track);
  * is a distinct blip for battle hand / card management selects; SFX_BACK is
  * a low downward "bloup" for cancel / going back; SFX_ATTACK / SFX_HIT are
  * channel-4 noise bursts (player slash / enemy strike); SFX_BLOCK is a low
- * CH2 thump for a successful defend. */
+ * CH2 thump for a successful defend; SFX_ALERT is the pursuer-entry sting
+ * (stepped by the same 64 Hz ISR path -- the sfx_id range check in
+ * audio_update must admit it, or the trigger mutes music CH2 forever
+ * with no sound). */
 enum {
     SFX_CURSOR = 0,
     SFX_CONFIRM = 1,
@@ -57,7 +63,10 @@ enum {
     SFX_BACK = 3,
     SFX_ATTACK = 4,
     SFX_HIT = 5,
-    SFX_BLOCK = 6
+    SFX_BLOCK = 6,
+    /* Alert sting for pursuer levels (kobolds, slime knights): plays once
+     * on entry, then the level track resumes (screens/sfx.json ALERT). */
+    SFX_ALERT = 7
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

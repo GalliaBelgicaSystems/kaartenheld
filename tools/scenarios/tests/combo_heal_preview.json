@@ -1,0 +1,87 @@
+{
+ "name": "combo_heal_preview",
+ "test": true,
+ "description": "Ring attack converts to healing: SW5 + RING2 becomes a PAIR of fives, and the pending row previews PAIR HEAL12 (not PAIR DMG0) -- preview and resolver agree",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "variables": {
+   "ENERGY_POOL": 2
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "PAIR HEAL12"
+  }
+ ]
+}

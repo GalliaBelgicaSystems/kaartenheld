@@ -137,6 +137,12 @@
    "type": "vram_row",
    "row": 10,
    "contains": "DEF 3"
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 0,
+   "row": 0,
+   "expected": 1
   }
  ]
 }

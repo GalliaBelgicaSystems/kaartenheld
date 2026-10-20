@@ -221,7 +221,9 @@ can!
 **Rings are clever helpers.** When you make a combo, a Ring can count as
 any *number* you need — super for making pairs or straights. But it is
 still a heal card, so it will **break** a "flush" (five cards of the same
-kind). And a Ring never hits the monster: it heals you instead.
+kind). And a Ring never hits the monster: any attack with a Ring in it
+heals you instead of dealing damage (the more the hand is worth, the
+more you heal).
 
 ---
 
@@ -229,8 +231,9 @@ kind). And a Ring never hits the monster: it heals you instead.
 
 - **Shields** only block. They do not hurt the monster, but they keep you
   safe — and they still count toward your combo.
-- **Rings** heal you, count as any number in a combo, or act as wild
-  shields on defence.
+- **Rings** heal you, count as any number in a combo, or act as
+  wildcards on defence (0 block themselves, but they complete your hand
+  and let over-block healing trigger).
 - **Poison** and **Burn** hurt a little every turn. Watch the little marks
   beside a fighter.
 - **Freeze** is nasty: a frozen fighter **misses a whole turn!**

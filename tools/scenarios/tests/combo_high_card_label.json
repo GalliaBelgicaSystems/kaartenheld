@@ -1,0 +1,75 @@
+{
+ "name": "combo_high_card_label",
+ "test": true,
+ "description": "HIGH CARD preview label: two non-pairing cards (SW2 staged first, BO5 second) read HCARD on the COMBO row with the HIGHEST value (DMG5) -- never the first-selected card's value. No execute: the pin is the pending label.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "HCARD DMG5"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
+}

@@ -1,4 +1,4 @@
-#pragma bank 7
+#pragma bank 8
 
 #include <gb/gb.h>
 #include <stdint.h>
@@ -39,7 +39,11 @@ uint8_t g_anim_count;
  * tilemap mirror is kept in sync for the harness.  VRAM bank is set
  * explicitly (tilemap ring lives in VRAM bank 0).
  *
- * Both bodies live in bank 7 (bank 5 -- the world bank -- filled up when
+ * Both bodies live in bank 8 (moved from bank 7 for the end-credits
+ * theme: bank 7 filled up with the seventh song; bank 8 has room, and
+ * these bodies are pure trampoline-dispatched code with no same-bank
+ * data dependencies -- kAnimPairs travels with them via anim_pairs.h.
+ * Previously bank 7 (bank 5 -- the world bank -- filled up when
  * the castle tile window grew the tileset past 17 slots; debug bank 4,
  * where the OAM pass lives, is full, and bank 2 overflows with them),
  * and a banked body must never switch banks mid-function, so the

@@ -43,6 +43,24 @@ RIDER_FILES = {
     'rider_poison': 'actors_rider_poison',
 }
 
+# AP-cost pips (battle top-left OAM HUD, one per hand card by energy
+# cost): curated from assets/sprites.png via reload_boss_tiles.py
+# AP_MAP, same as the riders above. Appended last so no existing blob
+# offset moves.
+AP_FILES = {
+    'ap_1': 'actors_one_ap',
+    'ap_2': 'actors_two_ap',
+    'ap_3': 'actors_three_ap',
+}
+
+# Battle OAM mark glyphs (! and ?): curated from assets/sprites.png
+# via reload_boss_tiles.py MARK_MAP. Appended last so no existing blob
+# offset moves.
+MARK_FILES = {
+    'exclaim': 'actors_exclamation_point',
+    'question': 'actors_question_mark',
+}
+
 # OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
 OAM_KEY = (241, 235, 3)
 LAYOUT = [
@@ -72,6 +90,16 @@ LAYOUT = [
     # with the sprites11 slime OBJ ramp).  Appended last so no existing
     # blob offset moves.
     ['slime_knight_frame1', 'slime_knight_frame2', None, None],
+    # AP-cost pips (battle top-left OAM HUD, owned by screens/ap_icons.json
+    # with the sprites2 OBJ ramp).  Appended last so no existing blob
+    # offset moves.
+    ['ap_1', 'ap_2', 'ap_3', None],
+    # Battle OAM mark glyphs (! and ?, owned by screens/mark_icons.json
+    # with the wizard's sprites7 OBJ ramp: beard-gray bubble + dark
+    # face-brown detailing on slot 5.  Battle scratch is slots 6/7 and
+    # tileset loads restore 5-7, so slot 5 survives fights.  Appended
+    # last so no existing blob offset moves.
+    ['exclaim', 'question', None, None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy
@@ -98,6 +126,10 @@ def main():
                 src = '%s/%s.png' % (ACTORS_PUB, NPC_FILES[name])
             elif name in RIDER_FILES:
                 src = '%s/%s.png' % (ACTORS_PUB, RIDER_FILES[name])
+            elif name in AP_FILES:
+                src = '%s/%s.png' % (ACTORS_PUB, AP_FILES[name])
+            elif name in MARK_FILES:
+                src = '%s/%s.png' % (ACTORS_PUB, MARK_FILES[name])
             elif name in CHEST_FILES:
                 src = '%s/%s.png' % (PUB, CHEST_FILES[name])
             else:

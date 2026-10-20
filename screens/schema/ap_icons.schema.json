@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "screens/schema/ap_icons.schema.json",
+  "title": "Battle Top-Left OAM AP-Cost HUD",
+  "description": "Selected-card AP-cost pips (OAM sprites, not BG tiles): one icon per energy cost, shown top-left of each hand card (cost 0 shows none). Cells are enemy_sprites sheet names (compose_enemy_sprites.py TILE_COORDS); values are slotted OBJ ramps (palette.txt) used both to encode the tile bytes and to program the battle OBJ slot the icon renders with (ap_tiles_generated.h). The three-ap art stays staged in the sheet until a 3-cost card exists (no free OAM tile below the BG-art aliasing today).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "cells"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "const": "ap_icons"
+    },
+    "label": {
+      "type": "string",
+      "maxLength": 40
+    },
+    "cells": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ap_1", "ap_2"],
+      "properties": {
+        "ap_1": { "type": "string" },
+        "ap_2": { "type": "string" }
+      }
+    }
+  }
+}

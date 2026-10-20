@@ -1,0 +1,34 @@
+{
+ "name": "quest_mark_merchant_offer",
+ "test": true,
+ "description": "Quest marker ? over the merchant while LOST AMULET is NOT_STARTED (mayor quest done to isolate the marker): entry 30 shows QUESTION_TILE (127).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 127
+  }
+ ]
+}

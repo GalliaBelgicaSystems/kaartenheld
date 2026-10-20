@@ -92,6 +92,33 @@ void combo_resolve_banked(void);
 uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
                              uint8_t n, uint8_t ring_sub);
 
+/* All effective cards share one symbol (bank-local, shared by the
+ * resolver and the HUD preview so the suited rule lives in one place). */
+uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
+                        uint8_t n);
+
+/* Participating-hand base (same bank, shared by resolve + preview):
+ * ONLY poker-hand cards count -- extras deal/block 0.  HIGH CARD scores
+ * the single highest eligible card; PAIR/TWO_PAIR/kinds score only the
+ * paired cards; 5-card hands score all five.  With count_ring=0 rings
+ * count as 0 (damage/block); the attack ring-heal passes count_ring=1
+ * so the ring counts at its substituted value.  Shields never count in
+ * attack; non-shields never count in defend.
+ *
+ * Precondition: call combo_classify_loot on the SAME (cards, idx, n)
+ * selection first -- this reads the histogram that call leaves behind
+ * in the shared s_hist scratch (same-bank WRAM, never re-entered).  A
+ * ringed kind bypasses the histogram entirely (its value comes from
+ * ring_sub); HIGH CARD tracks max and all-five tiers sum directly, so
+ * the leftover histogram is only consumed for no-ring kinds -- but the
+ * classify call is still required every time, since it also validates
+ * values and detects the tier.  Callers (combo_resolve_banked and the
+ * HUD preview) both classify immediately before, so preview and
+ * resolve can never disagree. */
+uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
+                                 uint8_t n, uint8_t tier, uint8_t ring_sub,
+                                 uint8_t phase, uint8_t count_ring);
+
 /* Tier percent table (combo_content.c, bank 3): index by HandTier.  Shared
  * read-only between the resolver and the damage preview so both scale by
  * the same numbers; never duplicated. */

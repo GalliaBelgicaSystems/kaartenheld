@@ -1,7 +1,7 @@
 {
  "name": "battle_discard_ring",
  "test": true,
- "description": "Ring-flag conservation across the discard step (pins deck_discard_banked; sibling battle_reshuffle_ring pins the fold and copy-back): a 6-card deck [SW SW SW SW R R] attacks with a sword (T1), defends with the pristine pile ring plus a sword (T2, ring-gated overblock heal in all versions), then defends with both refill-redealt slots (T3). The T2 refill reshuffles the T2-played ring back into the hand, so T3's combo contains a discard-cycled ring exactly when the redeal covers it. The wounded hero (20/30) overblocks the trio incoming a second time only through the ring-gated defense path (HEALED d1=2, twice total). If the discard step drops the flag, the cycled ring defends as a ringless card and the second heal never fires.",
+ "description": "Ring-flag conservation across the discard step (pins deck_discard_banked; sibling battle_reshuffle_ring pins the fold and copy-back): a 6-card deck [SW SW SW SW R R] attacks with a sword (T1), defends with the pristine pile ring plus a sword (T2, ring blocks 0 under poker-hands-only scoring), then defends with both refill-redealt slots (T3). The T2 refill reshuffles the T2-played ring back into the hand, so T3's combo contains a discard-cycled ring. T4 is a single-sword defend that advances past the reshuffle-skip to the next attack turn; T5 stages the twice-cycled ring with a sword: with the flag intact the joker makes a PAIR of 2s that converts to healing (HEALED amount 4, cause 1). If the discard step drops the flag, the cycled ring attacks as a flagless heal card for 2 unscaled damage instead (no cause-1 heal).",
  "actions": [
   {
    "type": "wait",
@@ -149,6 +149,62 @@
   {
    "type": "wait",
    "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
   }
  ],
  "assertions": [
@@ -158,14 +214,24 @@
   },
   {
    "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_arg",
    "event": "HEALED",
-   "count": 2
+   "index": 0,
+   "value": 4
   },
   {
    "type": "event_arg",
    "event": "HEALED",
    "index": 1,
-   "value": 2
+   "value": 1
   }
  ],
  "initial_state": {

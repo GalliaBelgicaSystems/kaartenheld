@@ -54,7 +54,7 @@ extern uint8_t console_mode;
  * buffer must stay exact for harness text assertions. */
 extern volatile uint8_t g_harness_mode;
 
-/* Background-animation cell count (bank-7 anim_swap_banked.c, WRAM always
+/* Background-animation cell count (bank-8 anim_swap_banked.c, WRAM always
  * mapped): lets the caller skip the swap dispatch on frames with nothing
  * to swap (same throttle the body applies internally). */
 extern uint8_t g_anim_count;
@@ -235,14 +235,18 @@ volatile uint8_t g_debug_hide_count;
 /* Hide the player and actor sprites in real OAM right now, before the new
  * screen's full redraw runs.  Covers the hostile OAM region (slots grow
  * by w*h per actor for multi-tile enemy sprites) plus the static slots
- * behind them (see the running-cursor layout in ui_world_sprite_banked). */
+ * behind them (see the running-cursor layout in ui_world_sprite_banked).
+ * Clears the WHOLE table (not just the actor range): battle HUD sprites
+ * (riders 19-23, AP pips 24-28) and overworld markers (fixed slots 30+)
+ * must not leak across screen changes, and no entry outside 0-39 exists
+ * to preserve. */
 void ui_sprite_begin_transition(void)
 {
     uint8_t i;
 #ifdef DEBUG_BUILD
     g_debug_hide_count++;
 #endif
-    for (i = 0; i < OAM_MAX_ACTOR_ENTRIES; i++) {
+    for (i = 0; i < 40; i++) {
         shadow_OAM[i].y = 0;
     }
     refresh_OAM();
@@ -638,7 +642,7 @@ void ui_draw_actors_sprites(const World *world)
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
     if ((((uint8_t)g_game.frame & 3) == 0) && g_anim_count != 0) {
-        g_bk_call_bank = 7;
+        g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&world_anim_swap_banked;
         banked_call_run();
     }
@@ -722,7 +726,7 @@ static void ui_world_tail(const World *world)
      * swap pass: the ring is static until the next full redraw, so one
      * LCD-off scan here replaces every per-frame scan.  No staging (the
      * rebuild reads the ring only); ~12 B fixed for the dispatch. */
-    g_bk_call_bank = 7;
+    g_bk_call_bank = 8;
     g_bk_call_target = (uint16_t)&world_anim_rebuild_banked;
     banked_call_run();
     for (y = 0; y < WORLD_VIEW_H; y++) {

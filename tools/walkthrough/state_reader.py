@@ -144,6 +144,7 @@ SCENE_DESOLATE_FIELD = 18
 SCENE_WAKE_GROVE = 19
 
 # MusicTrack (src/audio/audio.h)
+MUSIC_NONE = 0
 MUSIC_OVERWORLD = 1
 MUSIC_BATTLE = 2
 MUSIC_VICTORY = 3
@@ -155,6 +156,12 @@ MUSIC_MIMIC = 8
 MUSIC_DESOLATE = 9
 MUSIC_FOREST = 10
 MUSIC_CHEST = 11
+MUSIC_GAMEOVER = 12
+MUSIC_ENDING = 13
+
+# SFX ids (src/audio/audio.h) + engine idle value (audio.c SFX_NONE)
+SFX_ALERT = 7
+SFX_NONE = 0xFF
 
 # Story flags (src/game/game_ids.h)
 STORY_FLAG_ID_ARRIVED_TOWN = 1
@@ -250,6 +257,7 @@ class StateReader:
         self.sym = SymTable(os.path.splitext(rom_path)[0] + ".sym")
         self.g_game = self.sym.wram("g_game")
         self.g_audio = self.sym.wram("g_audio_current_track")
+        self.sfx_id = self.sym.wram("sfx_id")
         self.state = self.g_game + OFF_STATE
         self.world = self.state + STATE_SIZE   # sizeof(GameState), see above
         self._battle_base = None           # resolved at first battle read
@@ -424,6 +432,13 @@ class StateReader:
     # ── audio ────────────────────────────────────────────────────────
     def music_track(self):
         return self.rd(self.g_audio, 1)[0]
+
+    def sfx_voice(self):
+        """Live SFX engine id (sfx_id in audio.c, NOT the debug-only
+        sfx_last): 0xFF when idle, the SfxId while a sting steps.
+        Real-play execution proof that a triggered SFX actually runs
+        to completion (the harness only observes the trigger call)."""
+        return self.rd(self.sfx_id, 1)[0]
 
     # ── ROM-image content reads (const tables in banked ROM) ─────────
     def card_price(self, card_id):

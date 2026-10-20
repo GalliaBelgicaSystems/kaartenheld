@@ -1,0 +1,35 @@
+{
+ "name": "quest_mark_merchant_active",
+ "test": true,
+ "description": "No quest marker over the merchant while LOST AMULET is ACTIVE but the amulet is not held (mid-quest reminder): entry 30 stays cleared (tile 0).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2,
+   "MERCHANT_QUEST": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 0
+  }
+ ]
+}

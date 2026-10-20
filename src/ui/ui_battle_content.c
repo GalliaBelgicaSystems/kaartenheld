@@ -702,6 +702,7 @@ static const char *battle_combo_tier_name(uint8_t tier)
         case HAND_FOUR_KIND:      return "FOUR KIND";
         case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
         case HAND_FIVE_KIND:      return "FIVE KIND";
+        case HAND_NONE:           return "HCARD";
         default:                  return "";
     }
 }
@@ -710,12 +711,13 @@ static const char *battle_combo_tier_name(uint8_t tier)
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
 
-static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg)
+static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
+                                                uint8_t *is_heal)
 {
     uint8_t i, w = 0;
     uint8_t defend = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND);
     uint8_t has_ring = 0;
-    uint8_t tier, best, v;
+    uint8_t tier, best, v, best_v;
     uint8_t idx[BATTLE_HAND_SIZE];
     uint16_t base;
     uint8_t suited;
@@ -725,6 +727,8 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     uint16_t b;
 
     *dmg = 0;
+    *is_heal = 0;
+    best_v = 0;
     if (battle->combo_count == 0) return "";
     for (i = 0; i < battle->combo_count; i++) {
         uint8_t s = battle->selected_indices[i];
@@ -746,41 +750,40 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         /* Ring JOKER (docs/loot.md §34.3): the ring substitutes freely,
          * so preview the BEST tier over values 1..10 -- the full legal
          * value range, which covers the ring's raw value, so no separate
-         * baseline classify is needed.  Gameplay allows at most one ring
-         * per selection (battle_card_select), so one flag is exact.
-         * Classifier shared with combo_resolve_banked (same bank, direct
-         * call -- no trampoline, no duplicate ladder). */
+         * baseline classify is needed.  Ties keep the LARGER value so the
+         * joker maximizes the hand (same rule as combo_resolve_banked).
+         * Gameplay allows at most one ring per selection
+         * (battle_card_select), so one flag is exact.  Classifier shared
+         * with combo_resolve_banked (same bank, direct call -- no
+         * trampoline, no duplicate ladder). */
         best = HAND_NONE;
-        for (v = 1; v <= 10; v++) {
+        for (v = 10; v != 0; v--) {
             tier = combo_classify_loot(battle->hand, idx, w, v);
-            if (tier > best) best = tier;
+            if (tier > best) {
+                best = tier;
+                best_v = v;
+            }
         }
         tier = best;
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }
-    /* Damage mirror of combo_resolve_banked + effect_scale_power: base
-     * sums the effective set with the same per-card rules (attack skips
-     * shield/ring values, defend already holds shields+rings only),
-     * suited adds 25 over the shared tier table, amount = base x mult
-     * / 100 via shift-add + subtract loops (effects_content idiom: no
-     * libcall while bank 3 is mapped).  Whatever this computes, the
-     * resolver computes too. */
-    base = 0;
-    for (i = 0; i < w; i++) {
-        const volatile Card *c = &battle->hand[idx[i]];
-        if (!defend && (c->type == BATTLE_CARD_TYPE_SHIELD || c->ring)) continue;
-        base += c->value;
+    /* Poker-hands-only mirror of combo_resolve_banked: only hand cards
+     * count (extras 0).  Attack ring hands convert to healing, so show
+     * "HEAL n" (same participating-base math, count_ring=1) instead of
+     * a misleading "DMG0" -- preview and result agree. */
+    if (!defend && has_ring) {
+        base = combo_participating_base(battle->hand, idx, w, tier, best_v,
+                                        COMBO_PHASE_ATTACK, 1);
+        *is_heal = 1;
+    } else {
+        base = combo_participating_base(battle->hand, idx, w, tier, best_v,
+                                        defend ? COMBO_PHASE_DEFEND
+                                               : COMBO_PHASE_ATTACK, 0);
     }
     suited = 0;
     if (tier != HAND_NONE) {
-        suited = 1;
-        for (i = 1; i < w; i++) {
-            if (battle->hand[idx[i]].type != battle->hand[idx[0]].type) {
-                suited = 0;
-                break;
-            }
-        }
+        suited = combo_same_type(battle->hand, idx, w);
     }
     mult = g_combo_tier_mult[tier];
     if (suited) mult += 25;
@@ -796,6 +799,9 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         r -= 100;
         (*dmg)++;
     }
+    /* HIGH CARD with no damage (lone shield, lone ring, all-fodder) keeps
+     * the row blank instead of "HCARD DMG0" noise -- same rule as before. */
+    if (tier == HAND_NONE && *dmg == 0) return "";
     return battle_combo_tier_name(tier);
 }
 
@@ -858,8 +864,13 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     uint8_t block = 0;
     uint8_t bw;
     uint8_t dx;
+    /* Warn path shows staged block value, not heal: the pending preview's
+     * is_heal flag is discarded here (naming it no_heal hid that it
+     * actually receives is_heal). */
+    uint8_t heal_ignored;
 
-    battle_combo_pending_preview(battle, &block);
+    battle_combo_pending_preview(battle, &block, &heal_ignored);
+    (void)heal_ignored;
     battle_draw_text_line(0, combo_row, "DMG ", 4);
     dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
     /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
@@ -886,10 +897,12 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
      * a 3-digit amount still fits 20 cols); with no poker tier the row
      * still shows the inflicted damage as bare "DMG<n>" (face-value
-     * sum, same math the resolver applies).  The number mirrors the
-     * resolve math, so preview and result agree. */
+     * sum, same math the resolver applies).  Attack ring hands convert
+     * to healing: same layout with "HEAL" ("<tier> HEAL<n>", bare
+     * "HEAL<n>"), so preview and result agree. */
     const char *name;
     uint8_t dmg = 0;
+    uint8_t heal = 0;
     /* Staged row (WRAM copy of the active BattleScreenDef). */
     uint8_t combo_row = g_battle_hud.combo_row;
     uint8_t r;
@@ -926,25 +939,36 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_combo_warn_text(battle);
         return;
     }
-    name = battle_combo_pending_preview(battle, &dmg);
+    name = battle_combo_pending_preview(battle, &dmg, &heal);
     if (name[0] == '\0') {
         /* No tier: pending cards still inflict face value, so show it
-         * bare.  Zero effective damage (nothing staged, or only inert
-         * fodder) keeps the row blank instead of "DMG0" noise. */
+         * bare ("DMG<n>", or "HEAL<n>" for a lone converting ring).
+         * Zero effective damage (nothing staged, or only inert fodder)
+         * keeps the row blank instead of "DMG0" noise. */
         if (dmg == 0) {
             battle_draw_text_line(0, combo_row, NULL, 20);
             return;
         }
-        battle_draw_text_line(0, combo_row, "DMG", 3);
-        n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        if (heal) {
+            battle_draw_text_line(0, combo_row, "HEAL", 4);
+            n = (uint8_t)(4 + battle_draw_num_compact(4, combo_row, dmg));
+        } else {
+            battle_draw_text_line(0, combo_row, "DMG", 3);
+            n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
+        }
         battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
         return;
     }
     n = 0;
     while (name[n] != '\0') n++;
     battle_draw_text_line(0, combo_row, name, n);
-    battle_draw_text_line(n, combo_row, " DMG", 4);
-    n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    if (heal) {
+        battle_draw_text_line(n, combo_row, " HEAL", 5);
+        n = (uint8_t)(n + 5 + battle_draw_num_compact((uint8_t)(n + 5), combo_row, dmg));
+    } else {
+        battle_draw_text_line(n, combo_row, " DMG", 4);
+        n = (uint8_t)(n + 4 + battle_draw_num_compact((uint8_t)(n + 4), combo_row, dmg));
+    }
     /* Tail cells past the content keep stale buffer text while VRAM
      * above was cleared: blank the buffer tail explicitly (the VRAM
      * skip-guard would otherwise never rewrite them). */
@@ -1320,35 +1344,12 @@ static const char *battle_banner_text(const volatile Battle *battle)
         }
         return "PLAYER ATTACK!";
     }
-    if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) {
-        if (battle->attacking_enemy_idx < battle->enemy_count &&
-            battle->enemies[battle->attacking_enemy_idx].name[0]) {
-            name = battle->enemies[battle->attacking_enemy_idx].name;
-            for (j = 0; *name && j < 19; j++) s_banner_text[j] = *name++;
-            s_banner_text[j++] = ' ';
-            s_banner_text[j++] = 'A'; s_banner_text[j++] = 'T';
-            s_banner_text[j++] = 'T'; s_banner_text[j++] = 'A';
-            s_banner_text[j++] = 'C'; s_banner_text[j++] = 'K';
-            s_banner_text[j++] = 'S'; s_banner_text[j++] = '!';
-            s_banner_text[j] = '\0';
-            return s_banner_text;
-        }
-        return "ENEMY ATTACK!";
-    }
-    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
-        if (battle->attacking_enemy_idx < battle->enemy_count &&
-            battle->enemies[battle->attacking_enemy_idx].name[0]) {
-            name = battle->enemies[battle->attacking_enemy_idx].name;
-            for (j = 0; *name && j < 18; j++) s_banner_text[j] = *name++;
-            s_banner_text[j++] = ':'; s_banner_text[j++] = ' ';
-            s_banner_text[j++] = 'D'; s_banner_text[j++] = 'E';
-            s_banner_text[j++] = 'F'; s_banner_text[j++] = 'E';
-            s_banner_text[j++] = 'N'; s_banner_text[j++] = 'D';
-            s_banner_text[j++] = '!';
-            s_banner_text[j] = '\0';
-            return s_banner_text;
-        }
-        return "DEFENSE TURN";
+    /* Enemy turn: one static banner across the telegraph + defend
+     * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
+     * 20 chars, filling the centered row-0 banner in one screen. */
+    if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+        battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
+        return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) return "BLOCKED ATTACK!";
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
@@ -1379,6 +1380,18 @@ void ui_update_battle_banked(void)
 
     if (d & BATTLE_DIRTY_BANNER) {
         battle_draw_banner_line(banner_row, turn_banner, timer_w);
+        if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+            battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
+            /* Enemy turn: the whole FOE ATTACKS! DEFEND! banner reads
+             * as a warning (same red as the incoming-DMG forecast). */
+            battle_color_span(0, banner_row, timer_w, UI_COLOR_FIRE);
+        } else {
+            /* Reset: the row keeps whatever palette was painted last,
+             * so without this the enemy-turn red would bleed into the
+             * player's own banners.  Placed before the Carl overrides
+             * below so Carl's select banner still ends up FIELD. */
+            battle_color_span(0, banner_row, timer_w, UI_COLOR_NONE);
+        }
         if (battle->enemy_battle_id == BATTLE_CARL && battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
             battle_color_span(0, banner_row, timer_w, UI_COLOR_FIELD);
             battle_draw_banner_line(1, "DO POKER HANDS.", 20);

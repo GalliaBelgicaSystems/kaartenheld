@@ -59,13 +59,14 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
 SFX_UGE = assets/sfx/sfx\ accept.uge assets/sfx/sfx\ back.uge \
           assets/sfx/sfx\ block.uge assets/sfx/sfx\ cursor.uge \
-          assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge
+          assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge \
+          assets/sfx/alert.uge
 # screens/sfx.json may map any SFX id to any .uge (assets/sfx or
 # assets/music), so the tables depend on the registry plus both pools.
 SFX_REGISTRY = screens/sfx.json
@@ -175,6 +176,17 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
+	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
+	# Four single-cell icons streamed once at boot to fixed OAM ids
+	# (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
+	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
+	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
+	# untouched (these ride their own stream, not the enemy blob).
+	@AP_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ap-coords) || { echo "FATAL: battle_compile --ap-coords failed" >&2; exit 1; }; \
+	[ -n "$$AP_COORDS" ] || { echo "FATAL: battle_compile --ap-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
+		-o $(GFX_OUT_DIR)/ap_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png) ──
 	# Full world sheet (g_tileset_desolate)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
@@ -664,6 +676,12 @@ $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/co
 # plays it on every map load).  Bank 7 like the other late songs.
 $(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
+
+# End-credits theme (assets/music/demo complete.uge, loops).  Played when
+# the final-boss victory exits to the ending screen (THE END).  Bank 7
+# like the other late songs.
+$(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
 $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
 
@@ -678,7 +696,7 @@ $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/co
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"
