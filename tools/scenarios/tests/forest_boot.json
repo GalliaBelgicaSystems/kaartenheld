@@ -1,8 +1,13 @@
 {
  "name": "forest_boot",
  "test": true,
- "description": "Boot directly into the overworld on the Forest scene",
- "actions": [],
+ "description": "Boot directly into the overworld on the Forest scene (kobold pursuers: entry sting holds the track, FOREST resumes ~1 s later)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 90
+  }
+ ],
  "assertions": [
   {
    "type": "screen",

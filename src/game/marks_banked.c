@@ -36,6 +36,13 @@ static uint8_t s_ap_loaded;
 static uint8_t s_last_map_init;
 static uint8_t s_last_map;
 
+/* Alert-first music hold (frames): on a pursuer-map entry the scene
+ * track stops for the sting, then restarts here.  ALERT is 55 tracker
+ * ticks (~0.86 s); 60 frames clears it with margin.  Bank-8 static: no
+ * WRAM layout shift (AGENTS.md 52.19). */
+#define ALERT_MUSIC_DELAY_FRAMES 60
+static uint8_t s_music_delay;
+
 /* Overworld HUD marker state (WRAM BSS globals, NOT World fields: growing
  * World shifts every later Game field and trips the layout-sensitive
  * miscompile family, AGENTS.md 52.19.  Appending globals only costs BSS
@@ -126,6 +133,7 @@ static void marks_refresh(void)
     uint8_t field_chest;
 
     g_bk_byte_c = 0;
+    g_bk_byte_d = 0;
     marks_load_ap_tiles();
 
     /* Map entry edge: scan once for live pursuers.  s_last_map starts
@@ -149,9 +157,30 @@ static void marks_refresh(void)
         g_alert_ttl = pursuers ? ALERT_TTL_FRAMES : 0;
         if (pursuers) {
             g_bk_byte_c = 1;
+            /* Alert-first: hold the scene track until the sting clears
+             * (the fixed wrapper stops it; the countdown below replays
+             * it).  Cancelled by any map change without chasers. */
+            s_music_delay = ALERT_MUSIC_DELAY_FRAMES;
+        } else {
+            s_music_delay = 0;
         }
     } else if (g_alert_ttl != 0) {
         g_alert_ttl--;
+    }
+
+    /* Held-track countdown: when it lapses the fixed wrapper replays
+     * the current scene track -- unless a battle / game-over / ending
+     * took over the music meanwhile (battle exit restores the area
+     * track itself; the jingle path owns the title).  Menus, dialogue
+     * and shops are overworld-attached: the track resumes under them. */
+    if (s_music_delay != 0) {
+        s_music_delay--;
+        if (s_music_delay == 0 &&
+            g_game.screen != SCREEN_BATTLE &&
+            g_game.screen != SCREEN_GAME_OVER &&
+            g_game.screen != SCREEN_ENDING) {
+            g_bk_byte_d = 1;
+        }
     }
 
     quest_monster_hunt =

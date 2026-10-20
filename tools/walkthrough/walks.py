@@ -844,7 +844,15 @@ def walk_c(planner, checks):
     s.settle_scene(expected_scene=SCENE_FOREST)
     st = s.reader.scene_state()
     s.check_eq("forest scene", st["scene_id"], SCENE_FOREST)
-    s.check_eq("forest music", s.reader.music_track(), MUSIC_FOREST)
+    # Alert-first: the kobold entry sting holds the track, so right
+    # after arrival the music is NONE; the forest track resumes ~1 s
+    # later as the kobold approaches.
+    s.check_eq("forest music held for sting", s.reader.music_track(),
+               MUSIC_NONE)
+    s.check("forest music resumes",
+            s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
+                       ticks=150, label="forest music"),
+            expected="MUSIC_FOREST", actual="held")
     s.shoot("14-forest-arrived")
     s.close()
 
@@ -911,7 +919,11 @@ def walk_e(planner, checks):
            (mimic_xy[0] - 1, mimic_xy[1]))
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
-    s.check_eq("castle music", s.reader.music_track(), MUSIC_DUNGEON)
+    # Alert-first: the slime-knight entry sting holds the track here
+    # too (the restart is pinned by walk-c/the sweep; the knight flow
+    # below replays DUNGEON through battle exit anyway).
+    s.check_eq("castle music held for sting", s.reader.music_track(),
+               MUSIC_NONE)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have
     # ambushed en route already (transit win + drained briefing).  Either
@@ -1085,8 +1097,13 @@ def walk_sweep(planner, checks):
         s.settle_scene(expected_scene=scene.scene_id)
         st = s.reader.scene_state()
         s.check_eq("sweep %s scene" % name, st["scene_id"], scene.scene_id)
-        s.check_eq("sweep %s music" % name, s.reader.music_track(),
-                   want_music)
+        # Alert-first: pursuer maps hold the track for the entry sting,
+        # so the track assert waits it out (wait_for returns immediately
+        # where the track is already playing).
+        s.check("sweep %s music" % name,
+                s.wait_for(lambda: s.reader.music_track() == want_music,
+                           ticks=150, label="sweep music"),
+                expected=want_music, actual="held")
         if _hostile_floor(scene.level):
             _check_hostiles(s, name, scene.level)
         s.shoot("sweep-%s" % name)

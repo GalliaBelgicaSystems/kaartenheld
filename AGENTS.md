@@ -1630,11 +1630,19 @@ The test should fail before the fix and pass after it whenever practical.
 
 ## Step 6 — Validate
 
-Build parallel (`-j` is safe; the Makefile is parallel-clean) and run the
-whole gate in one invocation so agent sessions pay a single `nix develop`
-entry:
+While working (fast feedback loop): build and run ONLY the scenarios
+touched by the change, never the full gate.  Full `validate` is slow;
+run it once at the end of the session, before merging — never
+mid-session:
 
 ```bash
+# during work: touched scenarios only, e.g.
+make test-scenario SCENARIO=forest_boot
+```
+
+```bash
+# end of session, before merge: the whole gate in one invocation
+# (single `nix develop` entry; `-j` is safe, the Makefile is parallel-clean)
 make -j$(nproc) validate
 ```
 

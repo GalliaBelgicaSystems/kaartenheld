@@ -107,24 +107,27 @@ void game_update(Game *g)
      * than in the overworld screen so menus, dialogue and shops don't
      * freeze the restore timer while the driver loops the one-shot
      * song.  Engine-generic restore (scene track lookup); action codes
-     * come back through g_bk_byte_b (jingle) and the pursuit alert
-     * through g_bk_byte_c (marks). */
+     * come back through g_bk_byte_b (jingle), the pursuit alert through
+     * g_bk_byte_c (marks: sting + hold) and the held-track replay through
+     * g_bk_byte_d (marks: scene track restarts ~1 s after the sting so
+     * the alert is heard first, then the music as pursuers approach). */
     {
         const SceneDefinition *def;
         extern void game_frame_tick_banked(void);
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
+        /* byte_b == 2 (jingle restore) and byte_d == 1 (held-track
+         * replay) are the same action: restart the scene track. */
         if (g_bk_byte_b == 1) {
             audio_play_music(MUSIC_CHEST);
-        } else if (g_bk_byte_b == 2) {
+        } else if (g_bk_byte_b == 2 || g_bk_byte_d == 1) {
             def = scene_definition_for_map(g->world.map_id);
             audio_play_music(def ? def->music : MUSIC_OVERWORLD);
-        } else if (g_bk_byte_b == 3) {
-            /* Title theme played once (TITLE_SONG_FRAMES, timed in the
-             * bank-8 jingle body): stop in silence.  MUSIC_NONE emits
-             * MUSIC_CHANGED so the harness observes the stop, and a
-             * later play_music(TITLE) replays from the top. */
+        } else if (g_bk_byte_b == 3 || g_bk_byte_c == 1) {
+            /* Title play-once stop, or the pursuit-alert hold: stop
+             * in silence (the sting plays below; the byte_d replay
+             * restarts the track from the top). */
             audio_play_music(MUSIC_NONE);
         }
         if (g_bk_byte_c == 1) {
