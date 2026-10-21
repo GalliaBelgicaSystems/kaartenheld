@@ -611,19 +611,21 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_text_line(label_col, label_row, "HERO", 4);
     battle_color_span(label_col, label_row, 4, battle_status_color(&s_battle_status[0]));
 
-    /* No HP label: the heart icon two cells left is the label. */
-    battle_draw_num2(hp_col, hp_row, battle->player.hp);
-    battle_put_char((uint8_t)(hp_col + 2), hp_row, '/');
-    battle_draw_num2((uint8_t)(hp_col + 3), hp_row, battle->player.max_hp);
+    /* Badge, last number ends at col 19. */
+    battle_put_char(hp_col, hp_row, ':');
+    battle_put_char((uint8_t)(hp_col + 1), hp_row, ' ');
+    battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
+    battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
+    battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
 
     /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + (hp_col - 2));
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + (hp_col - 1));
     VBK_REG = 0;
     battle_vram_sync_write(dst, g_hud_skin_wram.hp_icon_tile);
 #ifdef DEBUG_BUILD
-    g_tilemap_mirror[hp_row * 32 + (hp_col - 2)] = g_hud_skin_wram.hp_icon_tile;
+    g_tilemap_mirror[hp_row * 32 + (hp_col - 1)] = g_hud_skin_wram.hp_icon_tile;
 #endif
-    battle_color_span((uint8_t)(hp_col - 2), hp_row, 1, g_hud_skin_wram.hp_icon_color);
+    battle_color_span((uint8_t)(hp_col - 1), hp_row, 1, g_hud_skin_wram.hp_icon_color);
 }
 
 /* AP shown in the badge during a decision phase: the phase pool minus the
@@ -667,8 +669,10 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(deck_col + 6), deck_row,
                      (uint8_t)(battle->deck.count - battle->deck.draw_idx));
 
-    /* No AP label: the AP icon two cells left is the label; energy and
-     * max each carry a trailing dot (UI_TILE_AP_DOT). */
+    /* Badge, last number ends at col 19.
+     * (dots drawn with the icon writes below). */
+    battle_put_char((uint8_t)(ap_col - 2), ap_row, ':');
+    battle_put_char((uint8_t)(ap_col - 1), ap_row, ' ');
     battle_draw_num2(ap_col, ap_row, battle_energy_display(battle));
     battle_put_char((uint8_t)(ap_col + 3), ap_row, '/');
     battle_draw_num2((uint8_t)(ap_col + 4), ap_row, g_battle_pool_max);
@@ -677,7 +681,7 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     VBK_REG = 0;
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)deck_row << 5) + (deck_col - 1));
     battle_vram_sync_write(dst, g_hud_skin_wram.deck_icon_tile);
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col - 2));
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col - 3));
     battle_vram_sync_write(dst, g_hud_skin_wram.ap_icon_tile);
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 2));
     battle_vram_sync_write(dst, UI_TILE_AP_DOT);
@@ -685,13 +689,13 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_vram_sync_write(dst, UI_TILE_AP_DOT);
 #ifdef DEBUG_BUILD
     g_tilemap_mirror[deck_row * 32 + (deck_col - 1)] = g_hud_skin_wram.deck_icon_tile;
-    g_tilemap_mirror[ap_row * 32 + (ap_col - 2)] = g_hud_skin_wram.ap_icon_tile;
+    g_tilemap_mirror[ap_row * 32 + (ap_col - 3)] = g_hud_skin_wram.ap_icon_tile;
     g_tilemap_mirror[ap_row * 32 + (ap_col + 2)] = UI_TILE_AP_DOT;
     g_tilemap_mirror[ap_row * 32 + (ap_col + 6)] = UI_TILE_AP_DOT;
 #endif
 
     battle_color_span((uint8_t)(deck_col - 1), deck_row, 1, g_hud_skin_wram.deck_icon_color);
-    battle_color_span((uint8_t)(ap_col - 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
+    battle_color_span((uint8_t)(ap_col - 3), ap_row, 1, g_hud_skin_wram.ap_icon_color);
     battle_color_span((uint8_t)(ap_col + 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
     battle_color_span((uint8_t)(ap_col + 6), ap_row, 1, g_hud_skin_wram.ap_icon_color);
 }
