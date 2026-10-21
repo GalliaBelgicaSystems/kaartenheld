@@ -137,10 +137,6 @@ void overworld_screen_update(Game *g)
             screen_change(g, SCREEN_DIALOGUE);
         } else if (engage == ENGAGE_BATTLE) {
             start_battle_from_world(g);
-        } else if (engage == ENGAGE_GAMBLE) {
-            /* The banked frame body auto-initializes on its first
-             * frame (fixed budget: no start call here). */
-            screen_change(g, SCREEN_GAMBLE);
         } else if (engage == ENGAGE_SHOP) {
             g->item_menu_index = 0;
             g->item_menu_scroll = 0;

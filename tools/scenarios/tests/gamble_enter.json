@@ -1,7 +1,7 @@
 {
   "name": "gamble_enter",
   "test": true,
-  "description": "Say YES on the rules screen: the table opens on CHOOSE BET / CHOOSE NUMBER / GOLD OWNED with hidden dice.",
+  "description": "Say YES on Nis's invite: the table opens on CHOOSE BET / CHOOSE NUMBER / GOLD OWNED with hidden dice.",
   "actions": [
     {
       "type": "press",
@@ -9,7 +9,23 @@
     },
     {
       "type": "wait",
-      "frames": 8
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
     },
     {
       "type": "press",
@@ -33,7 +49,7 @@
     {
       "type": "screen_row",
       "row": 2,
-      "contains": "KOBOLD"
+      "contains": "Nis"
     },
     {
       "type": "screen_row",

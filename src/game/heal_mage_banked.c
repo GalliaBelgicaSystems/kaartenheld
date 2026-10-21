@@ -108,6 +108,20 @@ void dialogue_choice_nav_banked(void)
     }
     if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         g_game.dialogue.choice_made = 1;
+        if (g_game.dialogue.id == DIALOGUE_ID_KOBOLD_INVITE) {
+            /* Chuck-a-luck invite: YES opens the table (fixed handoff
+             * via code 7; the dialogue is closed here since the fixed
+             * side switches screens without running dialogue_end).
+             * NO confirms plainly (code 2): the dialogue advances,
+             * closes, and returns to the overworld -- a walk-away. */
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_bk_byte_a = 2;
+            } else {
+                g_game.dialogue.active = 0;
+                g_bk_byte_a = 7;
+            }
+            return;
+        }
         if (g_game.dialogue.id != DIALOGUE_ID_HEAL_MAGE_ASK) {
             g_bk_byte_a = 2;
             return;

@@ -232,7 +232,7 @@ static const WorldActorDefinition g_test_gamble_actors[] = {
     {
         0, ENTITY_ID_KOBOLD, 5, 7, DIRECTION_LEFT,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'K', "KOBOLD", INTERACTION_GAMBLE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        'K', "Nis", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_KOBOLD_INVITE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ENEMY, 2, 0
     },

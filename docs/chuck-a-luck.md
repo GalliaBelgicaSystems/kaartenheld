@@ -16,13 +16,17 @@ never refuses a covered bet.
 
 ## Where it lives
 
-* Entry: talk (or bump) into the gambler kobold. Town (`levels/town.json`
-  `town_gambler`, east corridor) and the frozen harness fixture
-  (`tools/scenarios/fixtures/levels/test_gamble.json`
-  `test_gamble_gambler`, next to spawn) each carry one. The actor uses
-  `INTERACTION_GAMBLE` (compiled from the `gamble: true` level prop by
-  `tools/level_compiler/compile.py`), which `actor_engage` maps to
-  `ENGAGE_GAMBLE` and the overworld screen turns into `SCREEN_GAMBLE`.
+* Entry: talk to (or bump into) Nis, the gambler kobold. Town
+  (`levels/town.json` `town_gambler`, east corridor) and the frozen
+  harness fixture (`tools/scenarios/fixtures/levels/test_gamble.json`
+  `test_gamble_gambler`, next to spawn) each carry one as an ordinary
+  `INTERACTION_DIALOGUE` actor (`dialogue:
+  DIALOGUE_ID_KOBOLD_INVITE`). Nis explains the rules in a YES/NO
+  dialogue (the game-owned bank-8 choice nav handles the cursor); YES
+  is handed to `SCREEN_GAMBLE` by a small fixed dispatch on the staged
+  action code, NO advances plainly and the dialogue closes back to the
+  overworld. No separate INTERACTION_GAMBLE engage path exists -- the
+  dialogue owns the invitation.
 * Screen: `SCREEN_GAMBLE` (14). It is deliberately NOT a battle mode:
   the engine stays generic (AGENTS.md 55.1) and the game owns the dice
   rules in `src/game/gamble_content.c` (ROM bank 8) behind the single
@@ -35,12 +39,12 @@ never refuses a covered bet.
   2/8/14), controls row 16. The `>` caret marks the active choose row
   (UP/DOWN switches BET/NUMBER, LEFT/RIGHT changes the value: number
   wraps 1-6, bet cycles 1/5/10 clamped to owned gold), A rolls (SELECT
-  also works), B leaves. There is no separate hint row: the PROPOSE
-  screen teaches the controls.
-* Flow: bump the kobold -> PROPOSE (rules + YES/NO, default YES) ->
-  CHOOSE (A to confirm) -> RESULT (A for another round with fresh
-  hidden dice, B to leave). NO (DOWN + A) or B walks away with gold
-  untouched.
+  also works), B leaves.
+* Flow: bump Nis -> his rules dialogue (3 pages, YES/NO choice,
+  default YES) -> CHOOSE on YES (A to confirm) -> RESULT (A for another
+  round with fresh hidden dice, B to leave). NO (DOWN + A) advances the
+  dialogue closed and walks away with gold untouched; B anywhere walks
+  away too.
 
 ## Dice art (reusable battle chrome)
 
@@ -65,14 +69,16 @@ the script loudly.
 
 The fixed bank had ~50 B headroom when this feature landed. The fixed
 side is exactly: the `screen.c` update dispatch case, the update stub
-(dispatch only), the overworld engage branch, and the actor engage
-branch (~50 B total). There is deliberately NO render function (the
-screen renders during update; `screen_render` falls through to
-`default`), NO start/settle helpers, NO SFX, and NO exit call -- the
-banked frame body even replicates `screen_change`'s overworld-target
-effects with WRAM writes. Any new fixed byte must be paid for by moving
-an old one to a bank (AGENTS.md 52.18 family). `make memmap` is the
-gate; the debug build is the tight one.
+(dispatch only), and the dialogue YES handoff in
+`dialogue_screen_update` (a staged-action-code branch, same pattern as
+the heal-mage 3/6 codes). The direct `INTERACTION_GAMBLE` engage
+branches were removed to pay for the handoff. There is deliberately NO
+render function (the screen renders during update; `screen_render`
+falls through to `default`), NO start/settle helpers, NO SFX, and NO
+exit call -- the banked frame body even replicates `screen_change`'s
+overworld-target effects with WRAM writes. Any new fixed byte must be
+paid for by moving an old one to a bank (AGENTS.md 52.18 family).
+`make memmap` is the gate; the debug build is the tight one.
 
 ## Observability contract
 
@@ -91,17 +97,16 @@ gate; the debug build is the tight one.
   at 0 and every roll was [1,1,1]). Harness scenarios seed explicitly,
   so the primer never fires there.
 * Other v1 gaps: silent (no SFX), no CRAM re-check beyond entry (the
-  entry programs the base set itself), no dialogue invite (the table
-  screen IS the proposal; a talk-first flow needs a new event action).
+  entry programs the base set itself).
 
 ## Scenarios (all deterministic, seeded RNG)
 
-`tools/scenarios/tests/gamble_*.json` (14): propose rules screen,
-decline (NO walks away), enter (YES to the table), lose, 1:1 / 2:1 /
-3:1 wins (seeds 12345 / 21 / 579 pin dice [2,6,3] / [1,4,1] / [1,1,1]),
-bet cycling, high-stakes win (bet 10 -> +10), clamp-to-gold, exit,
-roundtrip (dice clear to '?' + LEAVEE-tail regression), two-rolls
-(stream advance), OAM placement. The ×2/×3 seeds were found by replicating the ROM xorshift
+`tools/scenarios/tests/gamble_*.json` (16): invite (rules + YES/NO
+prompt), invite-decline (NO walks away), invite-accept (YES opens the
+table), enter, lose, 1:1 / 2:1 / 3:1 wins (seeds 12345 / 21 / 579 pin
+dice [2,6,3] / [1,4,1] / [1,1,1]), bet cycling, high-stakes win
+(bet 10 -> +10), clamp-to-gold, exit, roundtrip (dice clear to '?' +
+LEAVEE-tail regression), two-rolls (stream advance), OAM placement. The ×2/×3 seeds were found by replicating the ROM xorshift
 (`rng_next_banked` step + 252-reject + subtraction fold) in Python and
 are pinned by the assertions -- same determinism contract as combat.
 The RNG stream is proven clean: no consumer sits between scenario start

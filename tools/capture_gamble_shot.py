@@ -25,7 +25,7 @@ from capture_walkthrough import REVIEW_DIR, REVIEW_MANIFEST  # noqa: E402
 
 SHOTS = [
     ("gamble-table.png", "CHUCK-A-LUCK",
-     "Chuck-a-luck table (kobold art, G OWNED / G BET rows, dice boxes)"),
+     "Chuck-a-luck table (Nis art, CHOOSE BET / CHOOSE NUMBER / GOLD OWNED rows, dice boxes)"),
     ("gamble-roll.png", "MATCH",
      "After one roll: kobold dice, match line, settled gold"),
 ]
@@ -49,15 +49,23 @@ def main():
         field_pos = W._boot_to_field(s, planner)
         W.follow(s, planner, "field", field_pos, "town", (15, 7))
         s.settle_scene(expected_scene=SCENE_TOWN)
-        # Bump right into the gambler kobold (16,7): the rules screen
-        # opens first; say YES to reach the table.
-        s.check("gamble table opened",
-                s.press_until("right", lambda: s.text_has("CHUCK-A-LUCK"),
-                              tries=8, settle=30, label="CHUCK-A-LUCK"),
-                expected="CHUCK-A-LUCK", actual="none")
-        s.check("rules accepted",
+        # Bump right into Nis (16,7): his rules dialogue opens (3 A's
+        # turn the pages to the YES/NO choice); YES opens the table.
+        s.check("Nis dialogue opened",
+                s.press_until("right", lambda: s.text_has("Nis:"),
+                              tries=8, settle=30, label="Nis:"),
+                expected="Nis:", actual="none")
+        s.check("rules page 2",
+                s.press_until("a", lambda: s.text_has("2:1 OR 3:1"),
+                              tries=6, settle=30, label="page 2"),
+                expected="2:1 OR 3:1", actual="none")
+        s.check("choice page",
+                s.press_until("a", lambda: s.text_has("> YES"),
+                              tries=6, settle=30, label="choice"),
+                expected="> YES", actual="none")
+        s.check("table opened",
                 s.press_until("a", lambda: s.text_has("CHOOSE BET"),
-                              tries=8, settle=30, label="CHOOSE BET"),
+                              tries=6, settle=30, label="CHOOSE BET"),
                 expected="CHOOSE BET", actual="none")
         os.makedirs(REVIEW_DIR, exist_ok=True)
         try:

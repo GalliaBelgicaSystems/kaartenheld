@@ -9,9 +9,10 @@
  * The bank (kobold) has infinite cash: payouts never run out.
  *
  * FIXED-BANK BUDGET NOTE (AGENTS.md 52.18 family): the fixed bank has
- * ~50 B headroom, so the fixed side of this feature is exactly two
- * items -- the screen.c dispatch case and the update stub (~30 B
- * total).  Entry, paint, input, dice, OAM, gold AND the overworld exit
+ * ~50 B headroom, so the fixed side of this feature is exactly three
+ * small items -- the screen.c dispatch case, the update stub, and the
+ * dialogue YES handoff in dialogue_screen_update (paid for by removing
+ * the direct INTERACTION_GAMBLE engage paths).  Entry, paint, input, dice, OAM, gold AND the overworld exit
  * all live in ROM bank 8 behind the single frame body: even the
  * screen_change exit call does not fit in fixed, so the frame body
  * replicates screen_change's overworld-target effects with WRAM
@@ -25,9 +26,8 @@
  * (lose the bet on zero matches). */
 
 typedef enum {
-    GAMBLE_PHASE_PROPOSE = 0,   /* rules + YES/NO (explicit opt-in) */
-    GAMBLE_PHASE_CHOOSE = 1,    /* pick bet + number */
-    GAMBLE_PHASE_RESULT = 2     /* dice shown, payout settled */
+    GAMBLE_PHASE_CHOOSE = 0,
+    GAMBLE_PHASE_RESULT = 1
 } GamblePhase;
 
 /* Bet steps (fixed, per design): 1 / 5 / 10 gold. */

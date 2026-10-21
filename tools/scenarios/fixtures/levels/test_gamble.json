@@ -586,8 +586,7 @@
       },
       "properties": {
         "entity_id": "ENTITY_ID_KOBOLD",
-        "display_name": "KOBOLD",
-        "gamble": true,
+        "display_name": "Nis",
         "actor_id": 0,
         "facing": "LEFT",
         "flags": [
@@ -599,7 +598,8 @@
         "max_hp": 0,
         "gold_reward": 0,
         "ai": "AI_NONE",
-        "enemy_type": "kobold"
+        "enemy_type": "kobold",
+        "dialogue": "DIALOGUE_ID_KOBOLD_INVITE"
       }
     }
   ],

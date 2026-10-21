@@ -9,7 +9,23 @@
     },
     {
       "type": "wait",
-      "frames": 8
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
     },
     {
       "type": "press",
@@ -32,6 +48,11 @@
     {
       "type": "screen",
       "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 2,
+      "contains": "Nis"
     },
     {
       "type": "screen_row",

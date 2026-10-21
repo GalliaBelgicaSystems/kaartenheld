@@ -1,8 +1,32 @@
 {
   "name": "gamble_oam",
   "test": true,
-  "description": "The kobold renders as OAM sprites on entries 1-6 (tiles 128-133, the battle-art block base).",
+  "description": "Nis renders as OAM sprites on entries 1-6 (tiles 128-133, the battle-art block base).",
   "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
     {
       "type": "press",
       "button": "A"

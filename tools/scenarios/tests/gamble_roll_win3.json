@@ -9,7 +9,23 @@
     },
     {
       "type": "wait",
-      "frames": 8
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
     },
     {
       "type": "press",
