@@ -1,0 +1,29 @@
+{
+  "name": "heal_mage_ring_lesson_text",
+  "test": true,
+  "description": "The ring lesson's final page teaches the defense rule: a ring adds no block but converts over-block into healing. Stops with page 3 open to assert the exact wording.",
+  "initial_state": {
+    "scene": "TEST_TOWN",
+    "player": {"x": 12, "y": 9, "facing": "DOWN"},
+    "seed": 1007,
+    "flags": {"ARRIVED_TOWN": true},
+    "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
+    "world": {"CARL_FIELD": "DEFEATED"},
+    "inventory": {"IRON_RING": 1},
+    "party": {"HERO": {"hp": 10, "max_hp": 10}}
+  },
+  "actions": [
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10}
+  ],
+  "assertions": [
+    {"type": "dialogue_active", "expected": true},
+    {"type": "dialogue_id", "expected": "HEAL_MAGE_RING"},
+    {"type": "screen_row", "row": 15, "contains": "adds no block"},
+    {"type": "screen_row", "row": 16, "contains": "over-block"}
+  ]
+}

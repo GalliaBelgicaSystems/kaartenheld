@@ -120,6 +120,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_HEAL_MAGE_RING,
+        "HEAL MAGE:",
+        8,
+        {"Bought the ring?", "Good! Then listen:", "On attack, a ring", "is a joker: the", "whole hand heals.", "On defense, it", "adds no block, but", "heals over-block."},
+        STORY_FLAG_ID_RING_LESSON,
+        0
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_THANKS,
         "HEAL MAGE:",
         5,

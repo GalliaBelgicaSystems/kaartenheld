@@ -1,0 +1,15 @@
+{
+  "id": "heal_mage_ring",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "Bought the ring?",
+    "Good! Then listen:",
+    "On attack, a ring",
+    "is a joker: the",
+    "whole hand heals.",
+    "On defense, it",
+    "adds no block, but",
+    "heals over-block."
+  ],
+  "completion_flag": "STORY_FLAG_ID_RING_LESSON"
+}

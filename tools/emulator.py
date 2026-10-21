@@ -49,7 +49,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -223,7 +223,7 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}
@@ -1122,7 +1122,12 @@ class EmulatorSession:
         ensure_vram_readable() first (one sync covers all blocks a
         scenario needs, and it skips stepping entirely when the halt
         already landed in an accessible window).  Returns a list of
-        ints (None for failed reads)."""
+        ints (None for failed reads).  Forces the tile bank first (same
+        VBK=1 halt-phase hazard as get_screen_dump)."""
+        try:
+            self._memwrite(0xFF4F, 0)
+        except Exception:
+            pass
         return [self._memread(addr + i) for i in range(length)]
 
     def get_sfx_state(self):
@@ -1236,7 +1241,19 @@ class EmulatorSession:
         first (test_runner hoists one ensure_vram_readable() before the
         snapshot, so state and VRAM share the same halt instead of the
         dump stepping game time after the snapshot was taken).  No sync
-        of its own here on purpose: a dump must never advance frames."""
+        of its own here on purpose: a dump must never advance frames.
+        VBK is forced to the tile bank first: the deterministic halt can
+        land mid palette-span (VBK=1) inside an HBlank window the
+        readability guard accepts, and an mGBA read then serves the
+        attribute bank instead of tiles.  Forcing tile-bank select makes
+        the dump immune to halt-phase alignment (any ROM cycle shift can
+        move the halt into or out of a span window).  Safe: nothing
+        advances game time after the dump before disconnect, so no span
+        can resume on the wrong bank."""
+        try:
+            self._memwrite(0xFF4F, 0)
+        except Exception:
+            pass
 
         rows = []
         for y in range(18):
