@@ -80,6 +80,10 @@ gate; the debug build is the tight one.
   transitions. Scenarios assert gold values + screen rows instead.
   Follow-up: stage amounts/sfx in `g_bk_*` and emit from a fixed stub
   once the fixed budget allows (~30 B).
+* RNG: the shared stream is primed from DIV by `game_frame_tick_banked`
+  (AGENTS.md 52.27 -- without it the release ROM booted the xorshift
+  at 0 and every roll was [1,1,1]). Harness scenarios seed explicitly,
+  so the primer never fires there.
 * Other v1 gaps: silent (no SFX), no CRAM re-check beyond entry (the
   entry programs the base set itself), no dialogue invite (the table
   screen IS the proposal; a talk-first flow needs a new event action).

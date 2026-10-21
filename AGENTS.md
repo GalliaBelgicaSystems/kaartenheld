@@ -2820,6 +2820,36 @@ Rules:
   dialogue instead of battle -- hide correctly skipped by the overlay
   path -- so assert the screen first or the passage is vacuous).
 
+## 52.27 Custom CRT0 performs NO _INITIALIZER copy (Oct 2026)
+
+`src/crt0.s` `init` clears WRAM (`0xC000-0xDFFF`) and jumps to `_main`
+without ever copying the linker's `_INITIALIZER` table to `_DATA`.
+Every explicitly-initialized WRAM global therefore boots as ZERO:
+
+* `g_rng_state = 1` booted 0 -- the xorshift fixed point, so every
+  release-ROM "random" roll was constant (chuck-a-luck dice stuck at
+  [1,1,1], loot quality never varied, on-hit statuses always landed).
+* `g_loot_rng_state = 0x1234` booted 0 -- same degenerate stream.
+* `= 0` initializers are unaffected (zero is zero).
+
+The harness never caught it: it skips CRT0 and every scenario seeds
+explicitly (`scenario_begin` -> `rng_set_seed`), and battles/loot still
+complete deterministically. The old `loot.c` comment claiming "CRT0
+initializes" was the same wrong assumption -- corrected when found.
+
+Rules:
+
+* NEVER rely on a non-zero WRAM initializer. Either zero-init (BSS) +
+  explicit runtime init, or lazy-prime at first consumption (the
+  pattern: `game_frame_tick_banked` primes both RNG streams from DIV
+  when zero -- runs every frame in both builds, zero fixed-bank cost,
+  harness-immune because scenarios pre-seed nonzero).
+* The verbose symptom for this class: release-only constant "random"
+  behavior that the harness cannot reproduce (its explicit seeds mask
+  the zero boot state). Diagnose with a WRAM state dump across rolls
+  (PyBoy `memory[]` reads at the `.sym` addresses), not with more
+  scenarios.
+
 ---
 
 # 53. State Ownership

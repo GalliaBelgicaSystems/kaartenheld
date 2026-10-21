@@ -1,11 +1,14 @@
 #pragma bank 8
 
 #include <stdint.h>
+#include <gb/gb.h>
 #include "banked.h"
 #include "game.h"
 #include "game_ids.h"
 #include "actor.h"
 #include "rpg/state.h"
+#include "rng.h"
+#include "rpg/loot.h"
 #include "ap_tiles_generated.h"
 
 /* AP tile bytes (png2gb --ap-coords, same order as AP_TILE_IDS). */
@@ -318,6 +321,24 @@ extern void jingle_full_banked(void);
 
 void game_frame_tick_banked(void)
 {
+    /* RNG priming (AGENTS.md 52.x: the custom CRT0 clears WRAM but never
+     * copies _INITIALIZER, so g_rng_state/g_loot_rng_state boot as zero
+     * -- the xorshift fixed point, which would make every "random" roll
+     * in the release ROM constant, e.g. eternal chuck-a-luck [1,1,1]).
+     * Prime both from the free-running divider on the first tick with a
+     * nonzero stream (same derivation as rng_set_seed_banked); the
+     * harness pre-seeds nonzero, so this never fires there and scenario
+     * determinism is untouched.  Zero fixed-bank cost: this dispatch
+     * already runs every frame. */
+    if (!g_rng_state) {
+        uint16_t seed;
+        seed = (uint16_t)(((uint16_t)LY_REG << 8) | (uint16_t)DIV_REG);
+        if (!seed) seed = 0xACE1;
+        g_rng_state = seed;
+        seed = (uint16_t)(seed ^ 0x1B3C);
+        if (!seed) seed = 1;
+        g_loot_rng_state = seed;
+    }
     /* Marks first: the re-arm edge below observes the jingle's unseeded
      * state (g_jingle_done without bit 7), which a real load clears via
      * load_game_slot.  The jingle seeds from the live mask later this
