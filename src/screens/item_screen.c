@@ -8,7 +8,6 @@
 #include "rpg/currency.h"
 #include "quest.h"
 #include "ui.h"
-#include "menu.h"
 #include "card.h"
 #include "shops.h"
 #include "banked.h"
@@ -26,7 +25,8 @@ void item_quest_nav_banked(void);
 
 #define TAB_CARDS 0
 #define TAB_QUEST 1
-#define NUM_TABS  2
+#define TAB_STATUS 2
+#define NUM_TABS  3
 
 /* Cursor index 0 on the CARDS tab is the FILTER/SORT row; card entries
  * start at 1. */
@@ -199,9 +199,20 @@ static void cycle_sort(Game *g)
         SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
 }
 
+/* RIGHT advances, LEFT goes back (CARDS <-> QUEST <-> STATUS).
+ * Directional: with three tabs a forward-only cycle would strand
+ * LEFT presses on the wrong tab. The direction is read here so the
+ * two call sites keep their original single-call shape (fixed-bank
+ * _HOME headroom, AGENTS.md 52.18). */
 static void switch_tab(Game *g)
 {
-    g->item_menu_tab = (g->item_menu_tab == TAB_CARDS) ? TAB_QUEST : TAB_CARDS;
+    if (input_pressed(INPUT_RIGHT)) {
+        if (g->item_menu_tab == TAB_STATUS) g->item_menu_tab = TAB_CARDS;
+        else g->item_menu_tab++;
+    } else {
+        if (g->item_menu_tab == TAB_CARDS) g->item_menu_tab = TAB_STATUS;
+        else g->item_menu_tab--;
+    }
     g->item_menu_index = ROW_TOP;
     g->item_menu_scroll = 0;
     g->render_cache.valid = false;
@@ -294,16 +305,18 @@ void item_screen_update(Game *g)
         return;
     }
 
-    if (g->item_menu_tab == TAB_QUEST) {
+    /* QUEST and STATUS tabs share the pre-CARDS branch (LR switches
+     * tabs from LIST mode; STATUS is read-only otherwise).  Cursor/
+     * detail input for QUEST lives in bank 8 with the quest registry
+     * (fixed-bank headroom: AGENTS.md 52.18). */
+    if (g->item_menu_tab != TAB_CARDS) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
-        /* LR-before-SELECT, like the CARDS tab below.  Cursor/detail
-         * input lives in bank 5 with the quest registry (fixed-bank
-         * headroom: AGENTS.md 52.18). */
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             switch_tab(g);
             return;
         }
-        g_bk_call_bank = 5;
+        if (g->item_menu_tab == TAB_STATUS) return;
+        g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&item_quest_nav_banked;
         g_bk_ptr_a = (void *)g;
         banked_call_run();
@@ -427,18 +440,18 @@ void item_screen_render(Game *g)
     if (!g) return;
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_ITEM) {
-        if (g->item_menu_tab == TAB_QUEST)
-            menu_draw_frame("QUESTS");
-        else
-            menu_draw_frame("CARDS");
+        /* The tab header (row 0 tabs + row 1 caret) is drawn by the
+         * banked bodies below (fixed-bank _HOME is nearly full,
+         * AGENTS.md 52.18): ui_clear_screen + CRAM here, then the
+         * dispatched body paints header + content. */
+
+        ui_clear_screen();
         /* UI-mode CRAM (base set): card icons are encoded with the battle
          * display ramps (card_display_slots.json); the world tileset's
          * CRAM would show wrong colors.  Overworld/battle full redraws
          * restore their own CRAM on exit.  No-op when opened from battle
          * (already base). */
         ui_set_cram_palette(0);
-        ui_draw_text_line(0, 2, "CARDS QUEST", 11);
-        ui_draw_text_line((uint8_t)(g->item_menu_tab * 6), 3, "^", 1);
 
         /* The banked body consumes the view read-only (single shared
          * view; see build_view).  The update no longer rebuilds it every
@@ -449,11 +462,12 @@ void item_screen_render(Game *g)
          * Detail-page sells also mutate and redraw in the same frame. */
         build_view(g);
 
-        /* CARDS content renders in bank 2; the QUEST tab renders in
-         * bank 5 with the quest registry (AGENTS.md 52.11.1: code
-         * shares its tables' bank; bank 2 is full). */
+        /* CARDS + STATUS content renders in bank 2; the QUEST tab
+         * renders in bank 8 with the quest registry (AGENTS.md
+         * 52.11.1: code shares its tables' bank; banks 2 and 5 are
+         * full, bank 8 is the overflow bank per AGENTS.md 55.5). */
         if (g->item_menu_tab == TAB_QUEST) {
-            g_bk_call_bank = 5;
+            g_bk_call_bank = 8;
             g_bk_call_target = (uint16_t)&item_quest_render_banked;
         } else {
             g_bk_call_bank = 2;

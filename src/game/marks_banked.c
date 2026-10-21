@@ -72,6 +72,30 @@ static uint8_t marks_has_amulet(const GameState *st)
     return 0;
 }
 
+/* Bank-local flag read (a banked body must never call fixed-bank
+ * game_flag_is_set -- AGENTS.md 52.11.1; same bit math as rpg/state.c:
+ * flag N lives in bit (N-1)%8 of flags.bytes[(N-1)/8]). */
+static uint8_t marks_flag_is_set(const GameState *st, uint8_t flag)
+{
+    uint8_t f;
+    if (!st || flag < 1) return 0;
+    f = (uint8_t)(flag - 1);
+    return (st->flags.bytes[(uint8_t)(f >> 3)] &
+            (uint8_t)(1u << (f & 7))) != 0;
+}
+
+static uint8_t marks_has_ring(const GameState *st)
+{
+    uint8_t i;
+    for (i = 0; i < st->cards.collection.count; i++) {
+        if (st->cards.collection.entries[i].id == CARD_IRON_RING &&
+            st->cards.collection.entries[i].count != 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static uint8_t marks_carl_defeated(const GameState *st)
 {
     uint8_t i;
@@ -110,7 +134,9 @@ static void marks_load_ap_tiles(void)
  * - Quest "?": an NPC whose talk advances or turns in a quest.
  *   Mayor: quest NOT_STARTED, or ACTIVE with 5+ monsters slain
  *   (turn-in ready).  Merchant: quest NOT_STARTED, or ACTIVE while
- *   holding the amulet (delivery ready).  Carl: always, until the
+ *   holding the amulet (delivery ready).  Heal Mage: owns the Iron
+ *   Ring and hasn't heard the ring-tactics lesson yet.  Carl: always,
+ *   until the
  *   tutorial spar is won (talking early just points at the chest).
  *   Hidden while its quest is in progress and once its reward is
  *   claimed.  The mimic
@@ -134,6 +160,8 @@ static void marks_refresh(void)
     int16_t monsters_defeated;
     int16_t merchant_quest;
     uint8_t has_amulet;
+    uint8_t has_ring;
+    uint8_t lesson_shown;
     uint8_t carl_done;
 
     g_bk_byte_c = 0;
@@ -229,6 +257,13 @@ static void marks_refresh(void)
     if (merchant_quest == 1) {
         has_amulet = marks_has_amulet(&g_game.state);
     }
+    lesson_shown =
+        marks_flag_is_set(&g_game.state, STORY_FLAG_ID_RING_LESSON);
+    has_ring = 0;
+    /* Same gate for the ring scan: pointless once the lesson played. */
+    if (!lesson_shown) {
+        has_ring = marks_has_ring(&g_game.state);
+    }
     carl_done = marks_carl_defeated(&g_game.state);
 
     /* Hostiles: pursuer "!" once the entry sting has fired (ttl at or
@@ -265,6 +300,12 @@ static void marks_refresh(void)
             } else if (d->id == ENTITY_ID_MERCHANT) {
                 if (merchant_quest == 0 ||
                     (merchant_quest == 1 && has_amulet)) {
+                    m = ACTOR_MARK_QUEST;
+                }
+            } else if (d->id == ENTITY_ID_HEAL_MAGE) {
+                /* Ring tactics lesson available once the player owns
+                 * the Iron Ring and hasn't heard it yet. */
+                if (has_ring && !lesson_shown) {
                     m = ACTOR_MARK_QUEST;
                 }
             }

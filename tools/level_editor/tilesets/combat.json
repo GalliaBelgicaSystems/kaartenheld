@@ -164,6 +164,16 @@
       "category": "terrain"
     },
     {
+      "id": "combat_ap_dot",
+      "label": "ap dot",
+      "gb_constant": "TILE_COMBAT_AP_DOT",
+      "walkable": false,
+      "color": "#f6f4f2",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_ap_dot.png",
+      "category": "terrain"
+    },
+    {
       "id": "combat_arrow_pointing_up_light",
       "label": "arrow pointing up light",
       "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_LIGHT",
@@ -188,7 +198,7 @@
       "label": "ap icon",
       "gb_constant": "TILE_COMBAT_AP_ICON",
       "walkable": false,
-      "color": "#c3b6a3",
+      "color": "#ded8ce",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_ap_icon.png",
       "category": "terrain"

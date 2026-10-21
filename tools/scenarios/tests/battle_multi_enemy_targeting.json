@@ -52,7 +52,12 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "HERO        HP:10/10"
+   "contains": "HERO"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "10/10"
   },
   {
    "type": "screen_row_not_contains",

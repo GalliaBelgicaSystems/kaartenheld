@@ -1,7 +1,7 @@
 {
  "name": "ring_uses_iron_detail",
  "test": true,
- "description": "The merchant's iron ring carries 4 uses per battle (card definition): its CARDS detail page shows USES 4 and MXCP 1",
+ "description": "The merchant's iron ring carries 4 uses per battle (card definition): its CARDS detail page shows USES 4",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -55,18 +55,13 @@
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 9,
    "contains": "USES"
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 9,
    "contains": "4"
-  },
-  {
-   "type": "screen_row",
-   "row": 11,
-   "contains": "MXCP"
   }
  ]
 }

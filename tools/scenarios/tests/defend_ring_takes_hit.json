@@ -1,0 +1,38 @@
+{
+  "name": "defend_ring_takes_hit",
+  "test": true,
+  "description": "A lone ring in defense adds 0 block and heals nothing against a real hit (docs/loot.md 34.4): ring vs the knight's telegraphed SWORD(3) takes full damage (hero 10 -> 7, DAMAGE_RECEIVED 3, no HEALED). Rings only convert an over-block into healing (see defend_overblock_heal); without overblock there is nothing to convert.",
+  "initial_state": {
+    "scene": "TEST_SOUTH_FIELD",
+    "player": {"x": 16, "y": 15, "facing": "RIGHT"},
+    "party": {"HERO": {"hp": 10, "max_hp": 10}},
+    "seed": 7009
+  },
+  "actions": [
+    {"type": "press", "button": "RIGHT"},
+    {"type": "wait", "frames": 30},
+    {"type": "set_hand_card", "index": 0, "card_type": "SW", "value": 3},
+    {"type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 255},
+    {"type": "set_hand_card", "index": 1, "card_type": "HE", "value": 2},
+    {"type": "set_hand_card_meta", "index": 1, "cost": 1, "uses": 255},
+    {"type": "set_hand_card_ring", "index": 1},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 6},
+    {"type": "press", "button": "SELECT"},
+    {"type": "wait", "frames": 70},
+    {"type": "press", "button": "RIGHT"},
+    {"type": "wait", "frames": 6},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 6},
+    {"type": "press", "button": "SELECT"},
+    {"type": "wait", "frames": 120}
+  ],
+  "assertions": [
+    {"type": "screen", "expected": "BATTLE"},
+    {"type": "battle_player_hp", "expected": 7},
+    {"type": "event_arg", "event": "ENEMY_CARD_PLAYED", "index": 2, "value": 3},
+    {"type": "event_occurred", "event": "DAMAGE_RECEIVED"},
+    {"type": "event_arg", "event": "DAMAGE_RECEIVED", "index": 0, "value": 3},
+    {"type": "event_not_occurred", "event": "HEALED"}
+  ]
+}

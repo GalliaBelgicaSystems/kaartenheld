@@ -54,6 +54,7 @@
 #define EVENT_ID_CARL_CHEST_FIRST (EVENT_ID_FIRST_GAME + 18)
 #define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
 #define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
+#define EVENT_ID_HEAL_MAGE_RING_LESSON (EVENT_ID_FIRST_GAME + 21)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -76,7 +77,10 @@ typedef enum {
                                        * the refusal, no heal, no jingle) */
     STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 5-kill "return to the mayor"
                                        * notice already showed (one-shot) */
-    STORY_FLAG_ID_COUNT        = 7
+    STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
+                                       * (shown once, on first talk while
+                                       * owning the Iron Ring) */
+    STORY_FLAG_ID_COUNT        = 8
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -106,7 +110,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 21
+#define GAME_EVENT_COUNT 22
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

@@ -35,6 +35,9 @@ extern uint8_t g_is_cgb;
  * referenced them before. */
 #define UI_TILE_SELECT_ARROW     96u
 #define UI_TILE_SELECT_ARROW_DARK 110u
+/* Battle AP-badge dot (combat_ap_dot, card-frames sheet cell 16): tiny
+ * brown square stamped after each AP number (energy and max). */
+#define UI_TILE_AP_DOT 111u
 /* Dialogue continue chevron (down-pointing): the intrepid ">" glyph
  * (font tile 30) rotated 90 degrees clockwise, loaded at boot by the
  * bank-3 card-tile loader into this free BG slot.  Shown at the far

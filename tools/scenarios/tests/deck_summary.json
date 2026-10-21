@@ -1,7 +1,7 @@
 {
  "name": "deck_summary",
  "test": true,
- "description": "The CARDS tab lists every owned card as a paired row (short code + combat description) with its deck membership in the rightmost column: the 10-card starter shows I SW x4, W SH x4, F SW x2",
+ "description": "The CARDS tab lists every owned card as one row per card (weapon icon, AP cost, full name) with its deck membership in the rightmost column: the 10-card starter shows IRON SWORD x4, WOOD SHIELD x4, IRON SWORD x2",
  "actions": [
   {
    "type": "press",
@@ -27,37 +27,52 @@
   },
   {
    "type": "screen_row",
+   "row": 3,
+   "contains": "AP"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "MATERIAL"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "TYPE"
+  },
+  {
+   "type": "screen_row",
    "row": 0,
    "contains": "CARDS"
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "I SW"
+   "row": 4,
+   "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 4,
    "contains": "4"
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "W SH"
+   "row": 5,
+   "contains": "WOOD SHIELD"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": "4"
   },
   {
    "type": "screen_row",
-   "row": 10,
-   "contains": "F SW"
+   "row": 6,
+   "contains": "IRON SWORD"
   },
   {
    "type": "screen_row",
-   "row": 10,
+   "row": 6,
    "contains": "2"
   }
  ],

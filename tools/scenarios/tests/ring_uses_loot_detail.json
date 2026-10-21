@@ -61,12 +61,12 @@
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 9,
    "contains": "USES"
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 9,
    "contains": "1"
   }
  ]

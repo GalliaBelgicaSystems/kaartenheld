@@ -1,7 +1,7 @@
 {
  "name": "battle_energy_pool_grows",
  "test": true,
- "description": "Raised energy pool (ENERGY_POOL variable = 4, as a story unlock like tutorial completion grants): three cost-1 cards select (3 <= 4) where the default pool of 2 would reject the third, the badge shows AP: 1/ 4, and battle_energy stays at 4 pre-resolve (reservation is display-level). Proves the pool variable drives selection gating, the badge total, and the phase pool.",
+ "description": "Raised energy pool (ENERGY_POOL variable = 4, as a story unlock like tutorial completion grants): three cost-1 cards select (3 <= 4) where the default pool of 2 would reject the third, the badge shows 1 / 4 (colon + dots, AP icon only), and battle_energy stays at 4 pre-resolve (reservation is display-level). Proves the pool variable drives selection gating, the badge total, and the phase pool.",
  "actions": [
   {
    "type": "wait",
@@ -97,7 +97,7 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "AP: 1/ 4"
+   "contains": "1 /4"
   },
   {
    "type": "battle_energy",

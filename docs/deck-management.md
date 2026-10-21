@@ -55,47 +55,56 @@ Consequences:
 
 ## 2. The CARDS menu
 
-START opens the quick screen. It has two tabs: **CARDS** and **QUEST**
-(LEFT/RIGHT switches). The former separate DECK tab is merged into CARDS:
-every owned, deckable card is one list entry showing its deck membership.
+START opens the quick screen. It has three tabs: **CARDS**, **QUEST** and
+**STATUS** (LEFT/RIGHT switches: RIGHT advances, LEFT goes back). The former
+separate DECK tab is merged into CARDS: every owned, deckable card is one
+list entry showing its deck membership.
 
 ### Layout
 
-Each card occupies a **pair of rows**:
+Row 0 holds the tab labels (`CARDS QUEST STATUS`); row 1 the `^` caret
+under the active tab. The CARDS list starts at row 2 with a column
+header (`AP MATERIAL TYPE`) at row 3:
 
 ```text
-  * FILTER/SORT *            ← top row (see §4)
-> I SW                    4      ← name row: cursor + lore name + membership
-  Sword: physical               ← description row (combat description)
-  W SH                    3
-  Shield: block dmg
-  ...
+CARDS QUEST STATUS          <- row 0 (tabs)
+^                           <- row 1 (caret under CARDS)
+  * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
+   AP MATERIAL TYPE     <- row 3 (column header)
+>   1 IRON SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
+    1 WOOD SHIELD        4     element-colored full name, decked count
+    1 IRON SWORD         2
 ```
 
-- **Lore name**: `def->name`, the player-facing card name (e.g. `I SW`,
-  `W SH`, `F SW`, `I RG`), shown in the CARDS tab and the detail page. The
-  combat hand keeps the short `<battle_type><power>` code (`SW1`, `HE1`, ...)
-  since that is where the abbreviation fits the HUD.
-- **Description**: `card_get_description(battle_type)` — the same string the
-  battle HUD shows.
+- **Full name**: `<MATERIAL> <WEAPON>` (e.g. `IRON SWORD`, `WOOD SHIELD`,
+  `MYTHRIL BOW`), element-colored: red for fire-rider cards, blue for ice,
+  purple for poison; plain cards stay default ink. The combat hand keeps the
+  short `<battle_type><power>` code (`SW1`, `HE1`, ...) since that is where
+  the abbreviation fits the HUD.
+- **Icons**: weapon tile at col 2 (wood palette), element rider OAM over the
+  col-1 elem cell plus its element color span; **AP cost** digit at cols 3-4.
 - **Membership column** (rightmost): the decked-copy count as a digit
   (`0` = none, `1`..`n` = copies in the deck), so partial stacks (starter
-  4x I SW / 3x W SH / 3x F SW, ring up to 3) are visible at a glance.
+  4x IRON SWORD / 4x WOOD SHIELD / 2x FIRE SWORD, ring up to 3) are visible
+  at a glance.
 - SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
-- ~6 pairs visible; scrolling moves by pair.
+- up to 11 cards visible (rows 4-14) under the row-3 column header;
+  scrolling shifts the window (the FILTER/SORT row scrolls
+  off once the caret leaves the first window).
 
 ### Actions
 
 | Input | Context | Effect |
 |---|---|---|
 | START | overworld / menu | open / close the menu |
-| LEFT / RIGHT | menu | switch tab |
-| UP / DOWN | card rows | move cursor by entry (UP from first card reaches the top row) |
+| LEFT / RIGHT | menu | switch tab (RIGHT advances, LEFT goes back) |
+| UP / DOWN | card rows | move cursor by entry (UP from first card reaches the FILTER/SORT row) |
+| UP / DOWN | quest rows | move cursor by entry (wraps around) |
 | A | card row | add one copy; clear all copies when fully decked (§3) |
 | SELECT | CARDS row | detail submenu (§5) |
-| SELECT | QUEST row | placeholder quest detail text |
-| B | main list, not on top row | jump to first card row (**step 1**) |
-| B | on top FILTER/SORT row | close the menu (**step 2**) |
+| SELECT | QUEST row | quest detail: giver, objective, progress (§5) |
+| B | main list, not on top row | jump to the top row (**step 1**) |
+| B | on top row | close the menu (**step 2**) |
 | B | any submenu | back out one level |
 
 The two-step B is deliberate: B never closes the menu directly from the card
@@ -138,19 +147,35 @@ values; A validates and applies them to the list; B backs out unchanged.
 
 SELECT on a highlighted entry opens a full-property view; B returns.
 
-CARDS:
+CARDS (example: IRON SWORD with a fire rider):
 
 ```text
-NAME   WD RING
-TYPE   HEAL
-PWR    5        COST   1
-USES   3/battle (- = unlimited)
-MAX CP 3        PRICE  20
-OWNED  x1       IN DECK x0
+  IRON SWORD            <- element-colored full name + weapon icon
+FIRE RIDER              <- on-hit element rider (or NO RIDER)
+TYPE ATTACK             <- ATTACK / DEFEND / HEAL combat role
+AP COST             1   <- numbers right-aligned to col 18
+POWER               9
+USES              INF   <- per-battle uses (INF = unlimited)
+OWN     1 DECK        0
+SELL              30G   <- merchant sell value (-- when not buyable)
+SEL:BACK                <- A:SELL SEL:BACK at a buying merchant
 ```
 
-QUEST: a one-line placeholder (`no details yet`); per-quest detail is future
-work.
+QUEST (example: MONSTER HUNT):
+
+```text
+MONSTER HUNT
+MAYOR IN TOWN           <- who gave the quest
+KILL 5 MONSTERS         <- the condition
+3/5 monsters            <- where you stand (DONE when complete,
+                         ACTIVE for counter-less quests)
+GOT +1 AP               <- what the reward was (completed quests only;
+                         e.g. GOT SHOP OPENED for LOST AMULET)
+SEL:BACK
+```
+
+STATUS is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
+`GOLD <n>`, `CARDS <n>` (total owned copies).
 
 ## 6. Reshuffle semantics (combat)
 

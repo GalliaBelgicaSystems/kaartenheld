@@ -1,0 +1,70 @@
+{
+ "name": "quest_detail_monster",
+ "test": true,
+ "description": "SELECT on the MONSTER HUNT quest row opens its detail page: the quest name, the giver (Mayor in Town), the objective (kill 5 monsters) and the live progress (3/5)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "MONSTER HUNT"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "MAYOR IN TOWN"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "KILL 5 MONSTERS"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "3/5"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MONSTERS_DEFEATED": 3
+  }
+ }
+}

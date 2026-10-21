@@ -1,0 +1,32 @@
+{
+  "name": "heal_mage_ring_lesson",
+  "test": true,
+  "description": "Talking to the Heal Mage while owning the Iron Ring (lesson not yet heard) plays the one-shot ring-tactics lesson instead of the heal ask: attack joker + defense overblock heal. Advancing through all pages sets RING_LESSON via the dialogue completion_flag (STORY_FLAG_SET) and clears the mage bubble.",
+  "initial_state": {
+    "scene": "TEST_TOWN",
+    "player": {"x": 12, "y": 9, "facing": "DOWN"},
+    "seed": 1007,
+    "flags": {"ARRIVED_TOWN": true},
+    "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
+    "world": {"CARL_FIELD": "DEFEATED"},
+    "inventory": {"IRON_RING": 1},
+    "party": {"HERO": {"hp": 10, "max_hp": 10}}
+  },
+  "actions": [
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10},
+    {"type": "press", "button": "A"},
+    {"type": "wait", "frames": 10}
+  ],
+  "assertions": [
+    {"type": "screen", "expected": "OVERWORLD"},
+    {"type": "event_occurred", "event": "SCRIPT_TRIGGERED"},
+    {"type": "event_occurred", "event": "STORY_FLAG_SET"},
+    {"type": "flag", "flag": "RING_LESSON", "expected": true},
+    {"type": "oam_tile", "entry": 30, "expected": 0}
+  ]
+}

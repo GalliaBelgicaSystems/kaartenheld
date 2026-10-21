@@ -1081,6 +1081,7 @@ ICON_TILES = {
     'combat_ring_icon': 108, 'amulet': 109,
     'combat_hp_icon': 113, 'combat_ap_icon': 114,
     'combat_deck_icon': 116,
+    'combat_ap_dot': 111,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
     # Limited-use arrow counters (bow floor row): remaining-uses glyphs
     # 0/1/2/3, plus the power-row nine icon.  VRAM ids must match the tail

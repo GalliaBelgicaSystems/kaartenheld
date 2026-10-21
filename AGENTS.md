@@ -2993,10 +2993,13 @@ reset on exit.  A screen must never become the home of gameplay state
 (quest progress, HP, etc.).
 
 The quick screen (`SCREEN_ITEM`) is a tabbed menu: CARDS (collection/deck
-management: paired rows whose membership glyph is the decked-copy count,
-A adds one copy and clears every copy once the card is fully decked, all
-through the real `deck_add_card`/`deck_remove_card`; SELECT opens a detailpage whose FILTER/SORT entry opens an inline picker) and QUEST (ongoing
-quests; SELECT shows a placeholder detail line).  START is the universal
+management: one row per card (weapon icon, AP-cost digit, element-colored
+full name, decked-copy count), A adds one copy and clears every copy once
+the card is fully decked, all through the real `deck_add_card`/`deck_remove_card`;
+SELECT opens a detail page (rider, role, AP cost, power, uses, own/deck,
+sell); the FILTER/SORT row opens an inline picker), QUEST (ongoing quests;
+SELECT opens a detail page with giver, objective and progress) and STATUS
+(read-only hero/wallet summary).  START is the universal
 open key (overworld and battle player-turn).  Inside, LEFT/RIGHT switches
 tabs, UP/DOWN moves the list, A confirms/toggles, B backs out (two-step on
 the CARDS list: first B jumps to the first card row, B again on the top row

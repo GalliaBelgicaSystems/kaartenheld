@@ -56,12 +56,12 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 3,
    "contains": "LOST AMULET"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 4,
    "contains": "active"
   }
  ],

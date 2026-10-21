@@ -321,6 +321,21 @@ const EventDefinition g_events[] = {
      * jingle.  The jingle is the stock MUSIC_CHEST one-shot and restores
      * the town track through the normal bank-8 clock, exactly like a
      * chest loot. */
+    /* -- Heal Mage ring lesson (one-shot tutorial) ------------------
+     * First talk while owning the Iron Ring: the mage explains ring
+     * tactics (attack joker + defense overblock heal) and the dialogue's
+     * completion flag retires the row, so later talks fall through to
+     * the ASK/REFUSED flow below.  Placed before both (first-match). */
+    {
+        EVENT_ID_HEAL_MAGE_RING_LESSON, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
+        2,
+        {
+            { EVENT_COND_ITEM_COUNT, CARD_IRON_RING, 1, false, true },
+            { EVENT_COND_FLAG, STORY_FLAG_ID_RING_LESSON, 0, false, false }
+        },
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_HEAL_MAGE_RING, 0, 0 }}
+    },
     {
         EVENT_ID_HEAL_MAGE_REFUSED, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
         1,
