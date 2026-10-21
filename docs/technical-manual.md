@@ -374,8 +374,8 @@ The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
 | 0 | Turn banner, centered (`PLAYER TURN`, `ENEMY ATTACK!`, `DEFENSE TURN`, `VICTORY!`, `DEFEATED!`, `FLED!`, ...). |
 | 2 | Enemy HP line. |
 | 3–4 | Enemy art + target caret. Up to 3 enemies. |
-| 7 | Hero row: `HERO` label + heart icon + `: n/m`, max ends col 19.  |
-| 8 | Deck counter: `DECK: n` (cards left in the draw pile) + AP icon + `: energy./max.`, last dot on col 19.  |
+| 7 | Hero row: `HERO` label (status color) + heart icon + `: n/m` in card-glyph brown, max ends col 19.  |
+| 8 | Deck counter: `DECK: n` + AP icon + `: energy./max.`, labels and numbers in card-glyph brown, last dot on col 19.  |
 | 9 | Transient gameplay messages (`NO ENERGY!`, `OUT OF USES!`, `ONE RING!`). |
 | 10 | Live combo row: `COMBO:` + current hand name while you select. |
 | 11–14 | Your boxed hand cards (up to 5). |

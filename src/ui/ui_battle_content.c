@@ -617,6 +617,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
+    battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
 
     /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + hp_col);
@@ -668,14 +669,18 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_text_line(deck_col, deck_row, "DECK:", 5);
     battle_draw_num2((uint8_t)(deck_col + 6), deck_row,
                      (uint8_t)(battle->deck.count - battle->deck.draw_idx));
+    battle_color_span(deck_col, deck_row, 8, UI_COLOR_FIELD);
 
     /* Badge, last dot ends at col 19: icon and colon share columns
      * 13/14 with the HP badge; single-digit energy/max (pool never
      * exceeds 9) keep every glyph glued to its separator. */
+    /* Badge text (colon, energy, slash, max) in the card-glyph brown;
+     * icon and dots keep the AP skin color. */
     battle_put_char((uint8_t)(ap_col + 1), ap_row, ':');
     battle_put_char((uint8_t)(ap_col + 2), ap_row, (char)('0' + battle_energy_display(battle)));
     battle_put_char((uint8_t)(ap_col + 4), ap_row, '/');
     battle_put_char((uint8_t)(ap_col + 5), ap_row, (char)('0' + g_battle_pool_max));
+    battle_color_span((uint8_t)(ap_col + 1), ap_row, 5, UI_COLOR_FIELD);
 
     /* Icon tiles + palettes come from the staged HUD skin (battle_hud.json). */
     VBK_REG = 0;
@@ -969,6 +974,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
             battle_draw_text_line(0, combo_row, "DMG", 3);
             n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
         }
+        battle_color_span(0, combo_row, n, UI_COLOR_FIELD);
         battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
         return;
     }
@@ -985,6 +991,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Tail cells past the content keep stale buffer text while VRAM
      * above was cleared: blank the buffer tail explicitly (the VRAM
      * skip-guard would otherwise never rewrite them). */
+    battle_color_span(0, combo_row, n, UI_COLOR_FIELD);
     battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
 }
 
@@ -1420,7 +1427,10 @@ void ui_update_battle_banked(void)
     }
     if (d & BATTLE_DIRTY_COMBO) battle_draw_battle_combo(battle);
     if (d & BATTLE_DIRTY_HAND) battle_draw_battle_hand(battle);
-    if (d & BATTLE_DIRTY_DESC) battle_draw_text_line(0, desc_row, desc_msg, timer_w);
+    if (d & BATTLE_DIRTY_DESC) {
+        battle_draw_text_line(0, desc_row, desc_msg, timer_w);
+        battle_color_span(0, desc_row, timer_w, UI_COLOR_FIELD);
+    }
     if (d & BATTLE_DIRTY_MSG) {
         /* Carl's stepwise sparring hints (tutorial): lesson lines on the
          * otherwise-blank rows 5 (headline), 6 (A-button lesson) and 9
@@ -1521,6 +1531,7 @@ void ui_update_battle_banked(void)
                 (battle->msg_id == 1) ? "NO ENERGY!" :
                 (battle->msg_id == 2) ? "OUT OF USES!" :
                 (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
+            battle_color_span(0, 9, 12, UI_COLOR_FIELD);
             /* A stale sparring hint never survives its battle: rows 5 and 6
              * are blanked here on Carl's fights whenever the hints above
              * do not draw (other phases, victory loot).  Trio screens
