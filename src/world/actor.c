@@ -78,6 +78,10 @@ ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState
         return ENGAGE_SAVE;
     }
 
+    if (actor->interaction == INTERACTION_GAMBLE) {
+        return ENGAGE_GAMBLE;
+    }
+
     return ENGAGE_NONE;
 }
 

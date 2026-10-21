@@ -1,0 +1,55 @@
+{
+  "name": "gamble_enter",
+  "test": true,
+  "description": "Face the friendly village kobold (TEST_TOWN gambler at 5,7) and press A: the chuck-a-luck table opens on its own screen (kobold art, OWNED/BET rows, dice boxes).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "CHUCK-A-LUCK"
+    },
+    {
+      "type": "screen_row",
+      "row": 2,
+      "contains": "KOBOLD"
+    },
+    {
+      "type": "screen_row",
+      "row": 7,
+      "contains": "OWNED:20"
+    },
+    {
+      "type": "screen_row",
+      "row": 8,
+      "contains": "BET:1"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "A:ROLL B:LEAVE"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345
+  }
+}

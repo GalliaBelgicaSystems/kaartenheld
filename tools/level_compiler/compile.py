@@ -876,6 +876,8 @@ def actor_interaction(obj):
         return "INTERACTION_SHOP"
     if "save" in props:
         return "INTERACTION_SAVE"
+    if "gamble" in props:
+        return "INTERACTION_GAMBLE"
     if "dialogue" in props and props["dialogue"]:
         return "INTERACTION_DIALOGUE"
     return "INTERACTION_NONE"

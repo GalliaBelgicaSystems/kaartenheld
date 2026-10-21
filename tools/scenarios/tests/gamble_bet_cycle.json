@@ -1,0 +1,72 @@
+{
+  "name": "gamble_bet_cycle",
+  "test": true,
+  "description": "DOWN moves the caret to the BET row; RIGHT cycles the bet 1 -> 5 -> 10 -> 1 (fixed steps, clamped to owned gold).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 8,
+      "contains": ">BET:1"
+    },
+    {
+      "type": "screen_row",
+      "row": 7,
+      "contains": "NUM:1"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 7
+  }
+}

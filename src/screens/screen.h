@@ -25,7 +25,8 @@ typedef enum {
     SCREEN_INTRO     = 10,
     SCREEN_TUTORIAL  = 11,
     SCREEN_SPLASH    = 12,
-    SCREEN_CREDITS   = 13
+    SCREEN_CREDITS   = 13,
+    SCREEN_GAMBLE    = 14
 } ScreenId;
 
 /*
@@ -62,6 +63,9 @@ void thanks_screen_update(Game *g);
 void thanks_screen_render(Game *g);
 void shop_screen_update(Game *g);
 void shop_screen_render(Game *g);
+/* Chuck-a-luck update stub (fixed, thin): the render half is an empty
+ * screen.c case (the banked frame body paints during update). */
+void gamble_screen_update(Game *g);
 void item_screen_update(Game *g);
 void item_screen_render(Game *g);
 void item_screen_reset(Game *g);

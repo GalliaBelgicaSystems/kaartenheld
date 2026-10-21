@@ -25,7 +25,8 @@ typedef enum {
     INTERACTION_DIALOGUE = 1,
     INTERACTION_COMBAT = 2,
     INTERACTION_SHOP = 3,
-    INTERACTION_SAVE = 4
+    INTERACTION_SAVE = 4,
+    INTERACTION_GAMBLE = 5
 } InteractionId;
 
 /* Which battle configuration a hostile actor starts.  The battle system
@@ -135,7 +136,8 @@ typedef enum {
     ENGAGE_DIALOGUE = 1,
     ENGAGE_BATTLE = 2,
     ENGAGE_SHOP = 3,
-    ENGAGE_SAVE = 4
+    ENGAGE_SAVE = 4,
+    ENGAGE_GAMBLE = 5
 } ActorEngageResult;
 
 /* Registered static actor table (WRAM copy, banked_copy pattern).  Read

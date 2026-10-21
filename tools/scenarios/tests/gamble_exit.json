@@ -1,0 +1,48 @@
+{
+  "name": "gamble_exit",
+  "test": true,
+  "description": "B leaves the table back to the overworld with the player unmoved and gold untouched.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "player_position",
+      "expected_x": 4,
+      "expected_y": 7
+    },
+    {
+      "type": "currency",
+      "expected": 20,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 99
+  }
+}

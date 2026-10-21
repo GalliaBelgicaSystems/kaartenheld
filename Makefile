@@ -216,6 +216,18 @@ gfx: manifest
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
+	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
+	# Encoded with the wood ramp (brown on tan); streamed on demand by
+	# the bank-8 dice body to UI_TILE_DICE_BASE (246-255).  Reusable
+	# battle chrome, not gamble-only.
+	@python3 tools/compose_dice.py
+	@python3 tools/png2gb.py assets/dice.png --name dice_tiles \
+		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
+	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
+	# Regenerated every build from the live battle sources (never
+	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
+	# BG CRAM slots for the bank-8 gamble entry body.
+	@python3 tools/gamble_art_compile.py
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
@@ -430,6 +442,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
 	@python3 tools/compose_card_frames.py
+	@python3 tools/compose_dice.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 

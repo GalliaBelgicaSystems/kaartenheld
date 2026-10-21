@@ -832,6 +832,46 @@
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_right_slime_knight.png",
       "category": "enemy"
+    },
+    {
+      "id": "combat_five_icon",
+      "label": "five icon",
+      "gb_constant": "TILE_COMBAT_FIVE_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_five_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_six_icon",
+      "label": "six icon",
+      "gb_constant": "TILE_COMBAT_SIX_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_six_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_seven_icon",
+      "label": "seven icon",
+      "gb_constant": "TILE_COMBAT_SEVEN_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_seven_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_eight_icon",
+      "label": "eight icon",
+      "gb_constant": "TILE_COMBAT_EIGHT_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_eight_icon.png",
+      "category": "terrain"
     }
   ]
 }

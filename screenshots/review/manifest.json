@@ -1,19 +1,29 @@
 {
- "shots": [
-  {
-   "file": "bow-card-uses2.png",
-   "description": "Bow hand card, 2 uses left: power '10' row + 2-arrows counter",
-   "taken_from": "bd9c0a4"
-  },
-  {
-   "file": "bow-card-depleted.png",
-   "description": "Bow hand card depleted: zero-arrows glyph + grey tint",
-   "taken_from": "bd9c0a4"
-  },
-  {
-   "file": "rider-hand-fire-ice.png",
-   "description": "Rider icons inset over their cards' top-right corners (SW3+BURN, SW4+FREEZE)",
-   "taken_from": "260a399"
-  }
- ]
+  "shots": [
+    {
+      "file": "bow-card-uses2.png",
+      "description": "Bow hand card, 2 uses left: power '10' row + 2-arrows counter",
+      "taken_from": "bd9c0a4"
+    },
+    {
+      "file": "bow-card-depleted.png",
+      "description": "Bow hand card depleted: zero-arrows glyph + grey tint",
+      "taken_from": "bd9c0a4"
+    },
+    {
+      "file": "rider-hand-fire-ice.png",
+      "description": "Rider icons inset over their cards' top-right corners (SW3+BURN, SW4+FREEZE)",
+      "taken_from": "260a399"
+    },
+    {
+      "file": "gamble-table.png",
+      "description": "Chuck-a-luck table (kobold art, G OWNED / G BET rows, dice boxes)",
+      "taken_from": "6f8ef02f"
+    },
+    {
+      "file": "gamble-roll.png",
+      "description": "After one roll: kobold dice, match line, settled gold",
+      "taken_from": "6f8ef02f"
+    }
+  ]
 }

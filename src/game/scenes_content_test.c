@@ -13,7 +13,8 @@ const SceneExit g_all_exits[] = {
     { 12,  0, 10, 10, SCENE_TEST_CASTLE,   '>' },
     { 12, 11, 12,  1, SCENE_TEST_MOUNTAIN_PASS, '<' },
     { 12,  0, 12, 16, SCENE_TEST_FIELD,    '<' },
-    { 12, 11, 12, 10, SCENE_TEST_MOUNTAIN_PASS, '>' }
+    { 12, 11, 12, 10, SCENE_TEST_MOUNTAIN_PASS, '>' },
+    {  1,  7, 17,  7, SCENE_TEST_FIELD,    '<' }
 };
 
 static const SceneTerrainBlock s_test_field_terrain[] = {
@@ -219,13 +220,66 @@ static const SceneTerrainBlock s_test_south_field_terrain[] = {
     { 0, 0, 0, 0, 0 }
 };
 
+static const SceneTerrainBlock s_test_gamble_terrain[] = {
+    { 0, 0, 1, 1, TILE_VILLAGE_00 },
+    { 1, 0, 18, 1, TILE_VILLAGE_01 },
+    { 19, 0, 1, 1, TILE_VILLAGE_02 },
+    { 19, 1, 1, 16, TILE_VILLAGE_03 },
+    { 0, 1, 1, 16, TILE_VILLAGE_19 },
+    { 0, 17, 1, 1, TILE_VILLAGE_16 },
+    { 1, 17, 18, 1, TILE_VILLAGE_17 },
+    { 19, 17, 1, 1, TILE_VILLAGE_18 },
+    { 2, 1, 1, 1, TILE_VILLAGE_10 },
+    { 3, 1, 1, 1, TILE_VILLAGE_11 },
+    { 4, 1, 1, 1, TILE_VILLAGE_12 },
+    { 2, 2, 1, 2, TILE_VILLAGE_42 },
+    { 3, 2, 1, 2, TILE_VILLAGE_43 },
+    { 4, 2, 1, 2, TILE_VILLAGE_44 },
+    { 15, 1, 1, 1, TILE_VILLAGE_13 },
+    { 16, 1, 1, 1, TILE_VILLAGE_14 },
+    { 17, 1, 1, 1, TILE_VILLAGE_15 },
+    { 15, 2, 1, 2, TILE_VILLAGE_42 },
+    { 16, 2, 1, 2, TILE_VILLAGE_43 },
+    { 17, 2, 1, 2, TILE_VILLAGE_44 },
+    { 15, 13, 1, 1, TILE_VILLAGE_10 },
+    { 16, 13, 1, 1, TILE_VILLAGE_11 },
+    { 17, 13, 1, 1, TILE_VILLAGE_12 },
+    { 15, 14, 1, 2, TILE_VILLAGE_42 },
+    { 16, 14, 1, 2, TILE_VILLAGE_43 },
+    { 17, 14, 1, 2, TILE_VILLAGE_44 },
+    { 2, 13, 1, 1, TILE_VILLAGE_13 },
+    { 3, 13, 1, 1, TILE_VILLAGE_14 },
+    { 4, 13, 1, 1, TILE_VILLAGE_15 },
+    { 2, 14, 1, 2, TILE_VILLAGE_42 },
+    { 3, 14, 1, 2, TILE_VILLAGE_43 },
+    { 4, 14, 1, 2, TILE_VILLAGE_44 },
+    { 15, 10, 1, 1, TILE_VILLAGE_07 },
+    { 16, 10, 1, 1, TILE_VILLAGE_08 },
+    { 15, 11, 1, 1, TILE_VILLAGE_23 },
+    { 16, 11, 1, 1, TILE_VILLAGE_24 },
+    { 2, 11, 1, 1, TILE_VILLAGE_07 },
+    { 3, 11, 1, 1, TILE_VILLAGE_08 },
+    { 2, 12, 1, 1, TILE_VILLAGE_23 },
+    { 3, 12, 1, 1, TILE_VILLAGE_24 },
+    { 2, 5, 1, 1, TILE_VILLAGE_22 },
+    { 15, 4, 1, 1, TILE_VILLAGE_22 },
+    { 2, 9, 1, 1, TILE_VILLAGE_22 },
+    { 17, 10, 1, 1, TILE_VILLAGE_22 },
+    { 4, 5, 1, 1, TILE_VILLAGE_37 },
+    { 17, 5, 1, 1, TILE_VILLAGE_37 },
+    { 4, 9, 1, 1, TILE_VILLAGE_37 },
+    { 1, 7, 1, 1, TILE_VILLAGE_06 },
+    { 0, 0, 0, 0, 0 }
+};
+
 const SceneDefinition g_scenes[] = {
     { MAP_TEST_FIELD,      MUSIC_FOREST,      32, 18, &g_all_exits[0],     3, WORLD_TILESET_FOREST,    s_test_field_terrain, 17, 7, DIRECTION_LEFT,  TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
     { MAP_TEST_TOWN,       MUSIC_TOWN,        20, 18, &g_all_exits[3],     1, WORLD_TILESET_VILLAGE,   s_test_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
     { MAP_TEST_FOREST,     MUSIC_FOREST,      20, 18, &g_all_exits[4],     1, WORLD_TILESET_FOREST,    s_test_forest_terrain, 12, 10, DIRECTION_UP,    TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
     { MAP_TEST_MOUNTAIN_PASS, MUSIC_DESOLATE,    20, 18, &g_all_exits[5],     2, WORLD_TILESET_DESOLATE,  s_test_mountain_pass_terrain, 12, 10, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
     { MAP_TEST_CASTLE,     MUSIC_DUNGEON,     20, 18, &g_all_exits[7],     1, WORLD_TILESET_CASTLE,    s_test_castle_terrain, 10, 10, DIRECTION_UP,    TILE_CASTLE_14, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
-    { MAP_TEST_SOUTH_FIELD, MUSIC_DESOLATE,    20, 18, &g_all_exits[8],     2, WORLD_TILESET_DESOLATE,  s_test_south_field_terrain, 12, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 }
+    { MAP_TEST_SOUTH_FIELD, MUSIC_DESOLATE,    20, 18, &g_all_exits[8],     2, WORLD_TILESET_DESOLATE,  s_test_south_field_terrain, 12, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_GAMBLE,     MUSIC_TOWN,        20, 18, &g_all_exits[10],    1, WORLD_TILESET_VILLAGE,   s_test_gamble_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 }
 };
 
 
