@@ -669,33 +669,34 @@ static void battle_draw_deck_line(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(deck_col + 6), deck_row,
                      (uint8_t)(battle->deck.count - battle->deck.draw_idx));
 
-    /* Badge, last dot ends at col 19: icon immediately followed by
-     * colon, then the numbers (no space cell). */
-    battle_put_char((uint8_t)(ap_col - 1), ap_row, ':');
-    battle_draw_num2(ap_col, ap_row, battle_energy_display(battle));
-    battle_put_char((uint8_t)(ap_col + 3), ap_row, '/');
-    battle_draw_num2((uint8_t)(ap_col + 4), ap_row, g_battle_pool_max);
+    /* Badge, last dot ends at col 19: icon and colon share columns
+     * 13/14 with the HP badge; single-digit energy/max (pool never
+     * exceeds 9) keep every glyph glued to its separator. */
+    battle_put_char((uint8_t)(ap_col + 1), ap_row, ':');
+    battle_put_char((uint8_t)(ap_col + 2), ap_row, (char)('0' + battle_energy_display(battle)));
+    battle_put_char((uint8_t)(ap_col + 4), ap_row, '/');
+    battle_put_char((uint8_t)(ap_col + 5), ap_row, (char)('0' + g_battle_pool_max));
 
     /* Icon tiles + palettes come from the staged HUD skin (battle_hud.json). */
     VBK_REG = 0;
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)deck_row << 5) + (deck_col - 1));
     battle_vram_sync_write(dst, g_hud_skin_wram.deck_icon_tile);
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col - 2));
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + ap_col);
     battle_vram_sync_write(dst, g_hud_skin_wram.ap_icon_tile);
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 2));
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 3));
     battle_vram_sync_write(dst, UI_TILE_AP_DOT);
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 6));
     battle_vram_sync_write(dst, UI_TILE_AP_DOT);
 #ifdef DEBUG_BUILD
     g_tilemap_mirror[deck_row * 32 + (deck_col - 1)] = g_hud_skin_wram.deck_icon_tile;
-    g_tilemap_mirror[ap_row * 32 + (ap_col - 2)] = g_hud_skin_wram.ap_icon_tile;
-    g_tilemap_mirror[ap_row * 32 + (ap_col + 2)] = UI_TILE_AP_DOT;
+    g_tilemap_mirror[ap_row * 32 + ap_col] = g_hud_skin_wram.ap_icon_tile;
+    g_tilemap_mirror[ap_row * 32 + (ap_col + 3)] = UI_TILE_AP_DOT;
     g_tilemap_mirror[ap_row * 32 + (ap_col + 6)] = UI_TILE_AP_DOT;
 #endif
 
     battle_color_span((uint8_t)(deck_col - 1), deck_row, 1, g_hud_skin_wram.deck_icon_color);
-    battle_color_span((uint8_t)(ap_col - 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
-    battle_color_span((uint8_t)(ap_col + 2), ap_row, 1, g_hud_skin_wram.ap_icon_color);
+    battle_color_span(ap_col, ap_row, 1, g_hud_skin_wram.ap_icon_color);
+    battle_color_span((uint8_t)(ap_col + 3), ap_row, 1, g_hud_skin_wram.ap_icon_color);
     battle_color_span((uint8_t)(ap_col + 6), ap_row, 1, g_hud_skin_wram.ap_icon_color);
 }
 

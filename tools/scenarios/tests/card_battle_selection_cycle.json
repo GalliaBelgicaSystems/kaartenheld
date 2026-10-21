@@ -126,7 +126,7 @@
   {
    "type": "tilemap_cell",
    "row": 8,
-   "col": 11,
+   "col": 13,
    "expected": 114
   },
   {

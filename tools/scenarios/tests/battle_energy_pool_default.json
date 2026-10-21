@@ -97,11 +97,11 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "0 / 1"
+   "contains": "0 /1"
   },
   {
    "type": "tilemap_cell",
-   "col": 15,
+   "col": 16,
    "row": 8,
    "expected": 111
   },
