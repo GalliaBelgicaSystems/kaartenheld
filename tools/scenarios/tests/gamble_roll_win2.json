@@ -18,6 +18,14 @@
     {
       "type": "wait",
       "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
     }
   ],
   "assertions": [
@@ -27,7 +35,7 @@
     },
     {
       "type": "screen_row",
-      "row": 0,
+      "row": 5,
       "contains": "YOU WIN +2"
     },
     {

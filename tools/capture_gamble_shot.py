@@ -49,11 +49,16 @@ def main():
         field_pos = W._boot_to_field(s, planner)
         W.follow(s, planner, "field", field_pos, "town", (15, 7))
         s.settle_scene(expected_scene=SCENE_TOWN)
-        # Bump right into the gambler kobold (16,7).
+        # Bump right into the gambler kobold (16,7): the rules screen
+        # opens first; say YES to reach the table.
         s.check("gamble table opened",
                 s.press_until("right", lambda: s.text_has("CHUCK-A-LUCK"),
                               tries=8, settle=30, label="CHUCK-A-LUCK"),
                 expected="CHUCK-A-LUCK", actual="none")
+        s.check("rules accepted",
+                s.press_until("a", lambda: s.text_has("CHOOSE BET"),
+                              tries=8, settle=30, label="CHOOSE BET"),
+                expected="CHOOSE BET", actual="none")
         os.makedirs(REVIEW_DIR, exist_ok=True)
         try:
             manifest = json.load(open(REVIEW_MANIFEST))

@@ -18,8 +18,8 @@ never refuses a covered bet.
 
 * Entry: talk (or bump) into the gambler kobold. Town (`levels/town.json`
   `town_gambler`, east corridor) and the frozen harness fixture
-  (`tools/scenarios/fixtures/levels/test_town.json`
-  `test_town_gambler`, next to spawn) each carry one. The actor uses
+  (`tools/scenarios/fixtures/levels/test_gamble.json`
+  `test_gamble_gambler`, next to spawn) each carry one. The actor uses
   `INTERACTION_GAMBLE` (compiled from the `gamble: true` level prop by
   `tools/level_compiler/compile.py`), which `actor_engage` maps to
   `ENGAGE_GAMBLE` and the overworld screen turns into `SCREEN_GAMBLE`.
@@ -28,13 +28,19 @@ never refuses a covered bet.
   rules in `src/game/gamble_content.c` (ROM bank 8) behind the single
   banked frame body `gamble_frame_banked()`.
 * Look: kobold combat art (OAM, entries 1-6, battle-art block base 128),
-  banner row 0, identity row 2, `G OWNED` / `G BET` rows 7-8 (replacing
-  the battle HP/AP rows), hint/outcome row 10, three card-frame dice
-  boxes (rows 11-14, cols 2/8/14), controls row 16. Number choice and
-  the bet share rows 7-8 with a `>` caret (`UPDN ROW LR VAL` hint):
-  UP/DOWN switches the caret row, LEFT/RIGHT changes the value
-  (number wraps 1-6, bet cycles 1/5/10 clamped to owned gold), A rolls
-  (SELECT also works), B leaves.
+  title banner row 0, identity row 2, outcome row 5 (result
+  announcement directly below the kobold), `CHOOSE BET` / `CHOOSE
+  NUMBER` / `GOLD OWNED` rows 7-9 (replacing the battle HP/AP rows),
+  match-detail row 10, three card-frame dice boxes (rows 11-14, cols
+  2/8/14), controls row 16. The `>` caret marks the active choose row
+  (UP/DOWN switches BET/NUMBER, LEFT/RIGHT changes the value: number
+  wraps 1-6, bet cycles 1/5/10 clamped to owned gold), A rolls (SELECT
+  also works), B leaves. There is no separate hint row: the PROPOSE
+  screen teaches the controls.
+* Flow: bump the kobold -> PROPOSE (rules + YES/NO, default YES) ->
+  CHOOSE (A to confirm) -> RESULT (A for another round with fresh
+  hidden dice, B to leave). NO (DOWN + A) or B walks away with gold
+  untouched.
 
 ## Dice art (reusable battle chrome)
 
@@ -90,10 +96,12 @@ gate; the debug build is the tight one.
 
 ## Scenarios (all deterministic, seeded RNG)
 
-`tools/scenarios/tests/gamble_*.json` (10): enter, lose, 1:1 / 2:1 /
+`tools/scenarios/tests/gamble_*.json` (14): propose rules screen,
+decline (NO walks away), enter (YES to the table), lose, 1:1 / 2:1 /
 3:1 wins (seeds 12345 / 21 / 579 pin dice [2,6,3] / [1,4,1] / [1,1,1]),
-bet cycling, high-stakes win (bet 10 -> +10), clamp-to-gold, exit, OAM
-placement. The ×2/×3 seeds were found by replicating the ROM xorshift
+bet cycling, high-stakes win (bet 10 -> +10), clamp-to-gold, exit,
+roundtrip (dice clear to '?' + LEAVEE-tail regression), two-rolls
+(stream advance), OAM placement. The ×2/×3 seeds were found by replicating the ROM xorshift
 (`rng_next_banked` step + 252-reject + subtraction fold) in Python and
 are pinned by the assertions -- same determinism contract as combat.
 The RNG stream is proven clean: no consumer sits between scenario start

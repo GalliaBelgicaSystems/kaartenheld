@@ -1,7 +1,7 @@
 {
   "name": "gamble_bet_cycle",
   "test": true,
-  "description": "DOWN moves the caret to the BET row; RIGHT cycles the bet 1 -> 5 -> 10 -> 1 (fixed steps, clamped to owned gold).",
+  "description": "RIGHT on the CHOOSE BET row cycles the bet 1 -> 5 -> 10 -> 1 (fixed steps, clamped to owned gold).",
   "actions": [
     {
       "type": "press",
@@ -13,7 +13,7 @@
     },
     {
       "type": "press",
-      "button": "DOWN"
+      "button": "A"
     },
     {
       "type": "wait",
@@ -51,13 +51,13 @@
     },
     {
       "type": "screen_row",
-      "row": 8,
-      "contains": ">BET:1"
+      "row": 7,
+      "contains": ">CHOOSE BET:1"
     },
     {
       "type": "screen_row",
-      "row": 7,
-      "contains": "NUM:1"
+      "row": 8,
+      "contains": "CHOOSE NUMBER:1"
     }
   ],
   "initial_state": {

@@ -1,7 +1,7 @@
 {
   "name": "gamble_exit",
   "test": true,
-  "description": "B leaves the table back to the overworld with the player unmoved and gold untouched.",
+  "description": "B on the rules screen walks away: back to overworld with the player unmoved and gold untouched.",
   "actions": [
     {
       "type": "press",

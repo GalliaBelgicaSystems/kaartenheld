@@ -18,12 +18,12 @@
     {
       "file": "gamble-table.png",
       "description": "Chuck-a-luck table (kobold art, G OWNED / G BET rows, dice boxes)",
-      "taken_from": "6f8ef02f"
+      "taken_from": "a2c7f04c"
     },
     {
       "file": "gamble-roll.png",
       "description": "After one roll: kobold dice, match line, settled gold",
-      "taken_from": "6f8ef02f"
+      "taken_from": "a2c7f04c"
     }
   ]
 }

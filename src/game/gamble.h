@@ -25,8 +25,9 @@
  * (lose the bet on zero matches). */
 
 typedef enum {
-    GAMBLE_PHASE_CHOOSE = 0,
-    GAMBLE_PHASE_RESULT = 1
+    GAMBLE_PHASE_PROPOSE = 0,   /* rules + YES/NO (explicit opt-in) */
+    GAMBLE_PHASE_CHOOSE = 1,    /* pick bet + number */
+    GAMBLE_PHASE_RESULT = 2     /* dice shown, payout settled */
 } GamblePhase;
 
 /* Bet steps (fixed, per design): 1 / 5 / 10 gold. */

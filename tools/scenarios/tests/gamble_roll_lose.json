@@ -1,8 +1,16 @@
 {
   "name": "gamble_roll_lose",
   "test": true,
-  "description": "Seeded loss: NUM=1 BET=1 rolls dice 2/6/3 (seed 12345), zero matches, loses the 1-gold bet (20 -> 19).",
+  "description": "Seeded loss: NUM=1 BET=1 rolls dice 2/6/3 (seed 12345), zero matches, loses the 1-gold bet (20 -> 19). Result shows under the kobold.",
   "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
     {
       "type": "press",
       "button": "A"
@@ -27,7 +35,7 @@
     },
     {
       "type": "screen_row",
-      "row": 0,
+      "row": 5,
       "contains": "NO LUCK"
     },
     {
@@ -42,8 +50,8 @@
     },
     {
       "type": "screen_row",
-      "row": 7,
-      "contains": "OWNED:19"
+      "row": 9,
+      "contains": "GOLD OWNED:19"
     },
     {
       "type": "screen_row",

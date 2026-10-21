@@ -302,8 +302,22 @@ static uint8_t gamble_draw_num(uint8_t x, uint8_t y, int16_t val)
 
 static void gamble_draw_banner(void)
 {
-    const char *text;
-    char winbuf[13];
+    const char *text = "CHUCK-A-LUCK";
+    uint8_t len = 0;
+    uint8_t x;
+
+    while (len < 20 && text[len] != '\0') len++;
+    x = (uint8_t)((20 - len) >> 1);
+    gamble_draw_text_line(0, 0, 0, 20);
+    gamble_draw_text_line(x, 0, text, (uint8_t)(20 - x));
+    gamble_color_span(0, 0, 20, UI_COLOR_NONE);
+}
+
+/* Row 5: RESULT announcement directly below the kobold art (more
+ * visible than the old row-0 banner spot), blank otherwise. */
+static void gamble_draw_outcome(void)
+{
+    char winbuf[12];
     uint8_t len = 0;
     uint8_t x;
     uint8_t i;
@@ -311,51 +325,57 @@ static void gamble_draw_banner(void)
     uint8_t profit;
     uint8_t tens;
     uint8_t ones;
+    const char *text;
 
-    if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
-        if (g_gamble.won) {
-            /* Inline bet map (banked bodies must not call fixed-bank
-             * functions): idx 0->1, 1->5, 2->10.  Tens by subtraction
-             * (no / or %: div lib would land in fixed _CODE, 52.18).
-             * Profit tops at 30 (10 x 3 matches). */
-            bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
-            profit = 0;
-            for (i = 0; i < g_gamble.matches; i++) profit = (uint8_t)(profit + bet);
-            tens = 0;
-            ones = profit;
-            while (ones >= 10) {
-                ones = (uint8_t)(ones - 10);
-                tens++;
-            }
-            winbuf[0] = 'Y';
-            winbuf[1] = 'O';
-            winbuf[2] = 'U';
-            winbuf[3] = ' ';
-            winbuf[4] = 'W';
-            winbuf[5] = 'I';
-            winbuf[6] = 'N';
-            winbuf[7] = ' ';
-            winbuf[8] = '+';
-            if (tens != 0) {
-                winbuf[9] = (char)('0' + tens);
-                winbuf[10] = (char)('0' + ones);
-                winbuf[11] = '\0';
-            } else {
-                winbuf[9] = (char)('0' + ones);
-                winbuf[10] = '\0';
-            }
-            text = winbuf;
-        } else {
-            text = "NO LUCK";
+    gamble_draw_text_line(0, 5, 0, 20);
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_text_line(0, 5, "ROLL 3 DICE TO MATCH", 20);
+        gamble_color_span(0, 5, 20, UI_COLOR_NONE);
+        return;
+    }
+    if (g_gamble.phase != GAMBLE_PHASE_RESULT) {
+        gamble_color_span(0, 5, 20, UI_COLOR_NONE);
+        return;
+    }
+    if (g_gamble.won) {
+        /* Inline bet map (banked bodies must not call fixed-bank
+         * functions): idx 0->1, 1->5, 2->10.  Tens by subtraction
+         * (no / or %: div lib would land in fixed _CODE, 52.18).
+         * Profit tops at 30 (10 x 3 matches). */
+        bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
+        profit = 0;
+        for (i = 0; i < g_gamble.matches; i++) profit = (uint8_t)(profit + bet);
+        tens = 0;
+        ones = profit;
+        while (ones >= 10) {
+            ones = (uint8_t)(ones - 10);
+            tens++;
         }
+        winbuf[0] = 'Y';
+        winbuf[1] = 'O';
+        winbuf[2] = 'U';
+        winbuf[3] = ' ';
+        winbuf[4] = 'W';
+        winbuf[5] = 'I';
+        winbuf[6] = 'N';
+        winbuf[7] = ' ';
+        winbuf[8] = '+';
+        if (tens != 0) {
+            winbuf[9] = (char)('0' + tens);
+            winbuf[10] = (char)('0' + ones);
+            winbuf[11] = '\0';
+        } else {
+            winbuf[9] = (char)('0' + ones);
+            winbuf[10] = '\0';
+        }
+        text = winbuf;
     } else {
-        text = "CHUCK-A-LUCK";
+        text = "NO LUCK";
     }
     while (len < 20 && text[len] != '\0') len++;
     x = (uint8_t)((20 - len) >> 1);
-    gamble_draw_text_line(0, 0, 0, 20);
-    gamble_draw_text_line(x, 0, text, (uint8_t)(20 - x));
-    gamble_color_span(0, 0, 20, UI_COLOR_NONE);
+    gamble_draw_text_line(x, 5, text, (uint8_t)(20 - x));
+    gamble_color_span(0, 5, 20, UI_COLOR_NONE);
 }
 
 /* Row 2: kobold identity (replaces the battle enemy-HP row). */
@@ -366,33 +386,54 @@ static void gamble_draw_kobold_row(void)
     gamble_color_span(0, 2, 20, UI_COLOR_NONE);
 }
 
-/* Rows 7-8: G OWNED / G BET (+NUM choice on row 7).  Col 0 carries the
- * '>' caret on the active field during CHOOSE (harness-readable). */
+/* Info rows (7-10): phase content.  PROPOSE shows the kobold's rules
+ * (controls included, so CHOOSE needs no separate hint row).  CHOOSE
+ * and RESULT show CHOOSE BET / CHOOSE NUMBER / GOLD OWNED with the '>'
+ * caret on the active row during CHOOSE only.  Every row is fully
+ * cleared first (stale-tail hazard, 52.25 family). */
 static void gamble_draw_gold_rows(void)
 {
     int16_t gold;
     uint8_t n;
     uint8_t bet;
 
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_text_line(0, 7, 0, 20);
+        gamble_draw_text_line(0, 7, "YOUR NUMBER, WIN", 16);
+        gamble_color_span(0, 7, 16, UI_COLOR_FIELD);
+        gamble_draw_text_line(0, 8, 0, 20);
+        gamble_draw_text_line(0, 8, "1:1 2:1 OR 3:1", 14);
+        gamble_color_span(0, 8, 14, UI_COLOR_FIELD);
+        gamble_draw_text_line(0, 9, 0, 20);
+        gamble_draw_text_line(0, 9, "BET 1, 5 OR 10 GOLD", 19);
+        gamble_color_span(0, 9, 19, UI_COLOR_FIELD);
+        return;
+    }
+
     gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
     bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
 
     gamble_draw_text_line(0, 7, 0, 20);
     gamble_draw_text_line(0, 8, 0, 20);
+    gamble_draw_text_line(0, 9, 0, 20);
     gamble_put_char(0, 7, (g_gamble.phase == GAMBLE_PHASE_CHOOSE && g_gamble.field == 0) ? '>' : ' ');
     gamble_put_char(0, 8, (g_gamble.phase == GAMBLE_PHASE_CHOOSE && g_gamble.field == 1) ? '>' : ' ');
-    gamble_draw_text_line(1, 7, "OWNED:", 6);
-    n = gamble_draw_num(7, 7, gold);
-    gamble_draw_text_line((uint8_t)(7 + n), 7, " NUM:", 5);
-    gamble_put_char((uint8_t)(7 + n + 5), 7, (char)('0' + g_gamble.chosen));
-    gamble_draw_text_line(1, 8, "BET:", 4);
-    n = gamble_draw_num(5, 8, (int16_t)bet);
-    gamble_draw_text_line((uint8_t)(5 + n), 8, " (1/5/10)", 9);
+    gamble_put_char(0, 9, ' ');
+    gamble_draw_text_line(1, 7, "CHOOSE BET:", 11);
+    n = gamble_draw_num((uint8_t)(1 + 11), 7, (int16_t)bet);
+    (void)n;
+    gamble_draw_text_line(1, 8, "CHOOSE NUMBER:", 14);
+    gamble_put_char((uint8_t)(1 + 14), 8, (char)('0' + g_gamble.chosen));
+    gamble_draw_text_line(0, 9, "GOLD OWNED:", 11);
+    gamble_draw_num(11, 9, gold);
     gamble_color_span(0, 7, 20, UI_COLOR_FIELD);
     gamble_color_span(0, 8, 20, UI_COLOR_FIELD);
+    gamble_color_span(0, 9, 20, UI_COLOR_FIELD);
 }
 
-/* Row 10: hint during CHOOSE, outcome during RESULT. */
+/* Row 10: kobold's controls line during PROPOSE (the rules teach the
+ * buttons, so CHOOSE needs no separate hint row), match detail during
+ * RESULT, blank during CHOOSE. */
 static void gamble_draw_mid_row(void)
 {
     char buf[17];
@@ -461,9 +502,11 @@ static void gamble_draw_mid_row(void)
         }
         gamble_draw_text_line(0, 10, buf, 17);
         gamble_color_span(0, 10, 17, UI_COLOR_FIELD);
+    } else if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_text_line(0, 10, "UPDN ROW, LR CHANGE", 19);
+        gamble_color_span(0, 10, 19, UI_COLOR_NONE);
     } else {
-        gamble_draw_text_line(0, 10, "UPDN ROW LR VAL", 15);
-        gamble_color_span(0, 10, 15, UI_COLOR_NONE);
+        gamble_color_span(0, 10, 20, UI_COLOR_NONE);
     }
 }
 
@@ -556,14 +599,33 @@ static void gamble_draw_dice(void)
     }
 }
 
+/* Row 16 controls.  The row is fully cleared first: RESULT text is
+ * longer than CHOOSE text, so a shorter redraw would leave a stale
+ * tail ("A:ROLL B:LEAVE" over "A:AGAIN B:LEAVE" read "LEAVEE"). */
 static void gamble_draw_controls(void)
 {
-    if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
+    gamble_draw_text_line(0, 16, 0, 20);
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_text_line(0, 16, "A:OK B:LEAVE", 13);
+    } else if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
         gamble_draw_text_line(0, 16, "A:AGAIN B:LEAVE", 15);
     } else {
         gamble_draw_text_line(0, 16, "A:ROLL B:LEAVE", 14);
     }
     gamble_color_span(0, 16, 20, UI_COLOR_NONE);
+}
+
+/* Row 12 YES/NO selector (PROPOSE only; the dice boxes own rows 11-14
+ * in CHOOSE/RESULT).  Harness reads '>YES' vs '>NO'. */
+static void gamble_draw_yesno(void)
+{
+    gamble_draw_text_line(0, 12, 0, 20);
+    if (g_gamble.field == 0) {
+        gamble_draw_text_line(6, 12, ">YES  NO", 8);
+    } else {
+        gamble_draw_text_line(6, 12, " YES >NO", 8);
+    }
+    gamble_color_span(6, 12, 8, UI_COLOR_ARROW);
 }
 
 /* Full paint (entry): clear everything, then draw all rows. */
@@ -584,9 +646,14 @@ static void gamble_paint_full(void)
     }
     gamble_draw_banner();
     gamble_draw_kobold_row();
+    gamble_draw_outcome();
     gamble_draw_gold_rows();
     gamble_draw_mid_row();
-    gamble_draw_dice();
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_yesno();
+    } else {
+        gamble_draw_dice();
+    }
     gamble_draw_controls();
 }
 
@@ -596,9 +663,14 @@ static void gamble_paint_full(void)
 static void gamble_paint_dynamic(void)
 {
     gamble_draw_banner();
+    gamble_draw_outcome();
     gamble_draw_gold_rows();
     gamble_draw_mid_row();
-    gamble_draw_dice();
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        gamble_draw_yesno();
+    } else {
+        gamble_draw_dice();
+    }
     gamble_draw_controls();
 }
 
@@ -707,9 +779,33 @@ static void gamble_update(void)
 
     pressed = (uint8_t)(g_inp_pad & (uint8_t)(~g_inp_prev));
 
+    /* PROPOSE: the kobold's rules + explicit opt-in.  Any direction
+     * toggles YES/NO; A confirms, B walks away. */
+    if (g_gamble.phase == GAMBLE_PHASE_PROPOSE) {
+        if (pressed & (uint8_t)((1 << INPUT_UP) | (1 << INPUT_DOWN) |
+                                (1 << INPUT_LEFT) | (1 << INPUT_RIGHT))) {
+            g_gamble.field = (uint8_t)(g_gamble.field ^ 1);
+        } else if (pressed & (uint8_t)((1 << INPUT_A) | (1 << INPUT_START))) {
+            if (g_gamble.field == 0) {
+                g_gamble.phase = GAMBLE_PHASE_CHOOSE;
+                gamble_clamp_bet();
+            } else {
+                gamble_exit_to_overworld();
+            }
+        } else if (pressed & (uint8_t)(1 << INPUT_B)) {
+            gamble_exit_to_overworld();
+        }
+        return;
+    }
+
     if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
         if (pressed & (uint8_t)((1 << INPUT_A) | (1 << INPUT_START))) {
+            /* Fresh hidden dice for the next round: the boxes show '?'
+             * again instead of keeping the previous values. */
             g_gamble.phase = GAMBLE_PHASE_CHOOSE;
+            g_gamble.dice[0] = 0;
+            g_gamble.dice[1] = 0;
+            g_gamble.dice[2] = 0;
             gamble_clamp_bet();
         } else if (pressed & (uint8_t)(1 << INPUT_B)) {
             gamble_exit_to_overworld();
@@ -717,23 +813,24 @@ static void gamble_update(void)
         return;
     }
 
+    /* CHOOSE: field 0 = CHOOSE BET row, field 1 = CHOOSE NUMBER row. */
     if (pressed & (uint8_t)((1 << INPUT_UP) | (1 << INPUT_DOWN))) {
         g_gamble.field = (uint8_t)(g_gamble.field ^ 1);
     } else if (pressed & (uint8_t)(1 << INPUT_LEFT)) {
         if (g_gamble.field == 0) {
-            g_gamble.chosen = (g_gamble.chosen <= 1) ? 6 : (uint8_t)(g_gamble.chosen - 1);
-        } else {
             g_gamble.bet_idx = (g_gamble.bet_idx == 0) ? (GAMBLE_BET_COUNT - 1) : (uint8_t)(g_gamble.bet_idx - 1);
             gamble_clamp_bet();
+        } else {
+            g_gamble.chosen = (g_gamble.chosen <= 1) ? 6 : (uint8_t)(g_gamble.chosen - 1);
         }
     } else if (pressed & (uint8_t)(1 << INPUT_RIGHT)) {
         if (g_gamble.field == 0) {
-            g_gamble.chosen = (g_gamble.chosen >= 6) ? 1 : (uint8_t)(g_gamble.chosen + 1);
-        } else {
             /* No % (it pulls the div library into fixed _CODE even
              * from a banked body, 52.18): idx cycles 0->1->2->0. */
             g_gamble.bet_idx = (g_gamble.bet_idx >= 2) ? 0 : (uint8_t)(g_gamble.bet_idx + 1);
             gamble_clamp_bet();
+        } else {
+            g_gamble.chosen = (g_gamble.chosen >= 6) ? 1 : (uint8_t)(g_gamble.chosen + 1);
         }
     } else if (pressed & (uint8_t)((1 << INPUT_A) | (1 << INPUT_START))) {
         bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
@@ -750,13 +847,15 @@ static void gamble_update(void)
 
 void gamble_frame_banked(void)
 {
+    uint8_t old_phase;
+
     if (!g_gamble.entered) {
         g_gamble.chosen = 1;
         g_gamble.bet_idx = 0;
         g_gamble.dice[0] = 0;
         g_gamble.dice[1] = 0;
         g_gamble.dice[2] = 0;
-        g_gamble.phase = GAMBLE_PHASE_CHOOSE;
+        g_gamble.phase = GAMBLE_PHASE_PROPOSE;
         g_gamble.field = 0;
         g_gamble.matches = 0;
         g_gamble.won = 0;
@@ -764,8 +863,20 @@ void gamble_frame_banked(void)
         gamble_entry();
         return;
     }
+    old_phase = s_gprev_phase;
     gamble_update();
-    if (gamble_changed()) {
+    if (!g_gamble.entered) {
+        /* Exited to the overworld (banked screen_change replica): its
+         * render path takes over from here (full redraw + OAM hide). */
+        return;
+    }
+    if (g_gamble.phase != old_phase) {
+        /* Phase switch changes the row layout itself (YES/NO selector
+         * vs dice boxes): repaint fully so no stale row survives on
+         * real VRAM while the buffer claims text (52.25 family). */
+        gamble_paint_full();
+        gamble_mark_seen();
+    } else if (gamble_changed()) {
         gamble_paint_dynamic();
         gamble_mark_seen();
     }

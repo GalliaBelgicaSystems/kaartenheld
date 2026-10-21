@@ -1,8 +1,16 @@
 {
   "name": "gamble_two_rolls",
   "test": true,
-  "description": "The RNG stream advances across rolls: first roll deals 2/6/3, second roll deals 5/5/4 (seed 12345). Regression for the zero-state xorshift stall (AGENTS.md 52.27).",
+  "description": "The RNG stream advances across rolls: first roll deals 2/6/3, second deals 5/5/4 (seed 12345). Regression for the zero-state xorshift stall (AGENTS.md 52.27).",
   "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
     {
       "type": "press",
       "button": "A"
@@ -43,7 +51,7 @@
     },
     {
       "type": "screen_row",
-      "row": 0,
+      "row": 5,
       "contains": "NO LUCK"
     },
     {

@@ -13,7 +13,7 @@
     },
     {
       "type": "press",
-      "button": "DOWN"
+      "button": "A"
     },
     {
       "type": "wait",
@@ -43,8 +43,8 @@
     },
     {
       "type": "screen_row",
-      "row": 8,
-      "contains": "BET:1"
+      "row": 7,
+      "contains": "CHOOSE BET:1"
     },
     {
       "type": "screen_row",
