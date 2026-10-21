@@ -13,6 +13,13 @@ extern void hUGE_init_b7(const hUGESong_t *song);
 extern void hUGE_dosound_b7(void);
 extern void hUGE_mute_channel_b7(enum hUGE_channel_t ch, enum hUGE_mute_t mute);
 
+/* Third driver copy for bank 9 (the casino track: bank 7 cannot fit it).
+ * Same renamed-export scheme; driver + song must share a bank. */
+#define HUGE_MUSIC_BANK_B9 9
+extern void hUGE_init_b9(const hUGESong_t *song);
+extern void hUGE_dosound_b9(void);
+extern void hUGE_mute_channel_b9(enum hUGE_channel_t ch, enum hUGE_mute_t mute);
+
 void huge_music_init(void);
 void huge_music_play_banked(const hUGESong_t *song, uint8_t bank);
 void huge_music_stop(void);

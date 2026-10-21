@@ -83,6 +83,14 @@
       "type": "currency",
       "expected": 19,
       "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
+    },
+    {
+      "type": "sfx_last",
+      "expected": 6
     }
   ],
   "initial_state": {

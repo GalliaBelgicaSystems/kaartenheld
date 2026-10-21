@@ -74,6 +74,14 @@
       "type": "screen_row",
       "row": 8,
       "contains": "CHOOSE NUMBER:1"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
+    },
+    {
+      "type": "sfx_last",
+      "expected": 0
     }
   ],
   "initial_state": {

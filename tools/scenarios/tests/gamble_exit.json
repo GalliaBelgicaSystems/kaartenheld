@@ -58,6 +58,10 @@
       "type": "currency",
       "expected": 20,
       "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "TOWN"
     }
   ],
   "initial_state": {

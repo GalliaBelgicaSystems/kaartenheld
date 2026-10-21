@@ -8,6 +8,7 @@
 #include "rng.h"
 #include "game/game_ids.h"
 #include "input.h"
+#include "audio.h"
 #include "gfx/gamble_art.h"
 #include <gb/gb.h>
 
@@ -27,14 +28,30 @@
  * battle sources -- never hand-copied, so the artist cannot silently
  * desync it).
  *
- * v1 gaps (fixed-bank budget; follow-ups in docs/chuck-a-luck.md):
- * silent (no SFX), and gold moves by direct WRAM writes so no
- * CURRENCY_SPENT/ADDED telemetry (the extended snapshot still shows
- * every gold delta). */
+ * Audio: casino theme while the table is up, cursor blips on moves, the
+ * block thump on a loss and the chest jingle on a win.  Requests are
+ * staged in WRAM (g_gamble_sfx / g_gamble_jingle / g_bk_byte_b) and
+ * consumed by the fixed bank, because a banked body cannot call the
+ * audio API (52.11.1); no fixed-bank bytes are spent on the gamble
+ * feature for this.
+ *
+ * v1 gap: gold moves by direct WRAM writes, so no CURRENCY_SPENT/ADDED
+ * telemetry (the extended snapshot still shows every gold delta). */
 
 /* Canonical gamble state (WRAM BSS: no _INITIALIZER cost, AGENTS.md
  * 52.24 -- the frame body resets every field on entry). */
 GambleState g_gamble;
+
+/* Audio staging (WRAM BSS).  Banked bodies cannot call the fixed-bank
+ * audio API, so requests ride these bytes out to game_update():
+ *  - g_gamble_sfx: one-shot SFX id + 1 (0 = none; BSS-safe because
+ *    the custom CRT0 never copies _INITIALIZER), consumed there.
+ *  - g_gamble_jingle: set on a winning roll; the tick body turns it
+ *    into the shared chest-jingle request (byte_b == 1), which already
+ *    has a fixed consumer. */
+uint8_t g_gamble_sfx;
+uint8_t g_gamble_jingle;
+uint8_t g_gamble_enter;
 
 /* Prev-state snapshot (WRAM BSS): the dynamic path repaints only on
  * change.  Uninitialized by design: the entry paint runs
@@ -136,6 +153,14 @@ static void gamble_do_roll(void)
     }
     g_game.state.currency.amount[CURRENCY_ID_GOLD - 1] = gold;
     g_gamble.phase = GAMBLE_PHASE_RESULT;
+    /* Result audio: a win rings the chest-loot jingle (the shared
+     * one-shot, queued as g_gamble_jingle for the tick body); a loss
+     * gets the same thump a blocked attack uses. */
+    if (m != 0) {
+        g_gamble_jingle = 1;
+    } else {
+        g_gamble_sfx = (uint8_t)(SFX_BLOCK + 1);
+    }
 }
 
 /* ── Paint helpers (self-contained copies of the bank-3 battle VRAM
@@ -749,7 +774,9 @@ static void gamble_update(void)
     /* CHOOSE: field 0 = CHOOSE BET row, field 1 = CHOOSE NUMBER row. */
     if (pressed & (uint8_t)((1 << INPUT_UP) | (1 << INPUT_DOWN))) {
         g_gamble.field = (uint8_t)(g_gamble.field ^ 1);
+        g_gamble_sfx = (uint8_t)(SFX_CURSOR + 1);
     } else if (pressed & (uint8_t)(1 << INPUT_LEFT)) {
+        g_gamble_sfx = (uint8_t)(SFX_CURSOR + 1);
         if (g_gamble.field == 0) {
             g_gamble.bet_idx = (g_gamble.bet_idx == 0) ? (GAMBLE_BET_COUNT - 1) : (uint8_t)(g_gamble.bet_idx - 1);
             gamble_clamp_bet();
@@ -757,6 +784,7 @@ static void gamble_update(void)
             g_gamble.chosen = (g_gamble.chosen <= 1) ? 6 : (uint8_t)(g_gamble.chosen - 1);
         }
     } else if (pressed & (uint8_t)(1 << INPUT_RIGHT)) {
+        g_gamble_sfx = (uint8_t)(SFX_CURSOR + 1);
         if (g_gamble.field == 0) {
             /* No % (it pulls the div library into fixed _CODE even
              * from a banked body, 52.18): idx cycles 0->1->2->0. */
@@ -769,10 +797,74 @@ static void gamble_update(void)
         bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
         gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
         if (gold >= (int16_t)bet && gold > 0) {
+            g_gamble_sfx = (uint8_t)(SFX_SELECT + 1);
             gamble_do_roll();
         }
     } else if (pressed & (uint8_t)(1 << INPUT_B)) {
         gamble_exit_to_overworld();
+    }
+}
+
+/* Enter the table (banked): replicates screen_change(g, SCREEN_GAMBLE)
+ * with WRAM/register writes -- a non-overworld target hides the sprite
+ * set and parks the camera, then the screen fields flip.  The entry
+ * paint on the next frame fills OAM with Nis, so no refresh_OAM() here
+ * (the main-loop commit does it once per frame). */
+void gamble_enter_screen(void)
+{
+    uint8_t i;
+    for (i = 0; i < 40; i++) {
+        ((volatile uint8_t *)0xC000u)[(uint16_t)i << 2] = 0;
+    }
+    SCX_REG = 0;
+    SCY_REG = 0;
+    g_game.prev_screen = g_game.screen;
+    g_game.screen = SCREEN_GAMBLE;
+    g_game.render_cache.valid = false;
+    g_gamble_enter = 0;
+}
+
+/* ── Audio tick (banked, called from game_frame_tick_banked) ─────────
+ * Runs AFTER gamble_frame_banked and the shared jingle body, so it owns
+ * the final g_bk_byte_b value for this frame:
+ *   1 -> chest jingle (win), 4 -> casino theme, 2 -> scene-track
+ * restore (left the table).  Codes 1 and 2 already have fixed consumers;
+ * 4 is the one casino branch. */
+void gamble_audio_tick(void)
+{
+    /* Table blips ride the shared one-shot SFX slot (byte_c == 2 with
+     * the id in byte_d), which the fixed side already consumes.  Only
+     * when nothing else claimed it this frame (the pursuit alert never
+     * fires at the table, but stay defensive). */
+    if (g_gamble_sfx != 0 && g_bk_byte_c == 0) {
+        g_bk_byte_c = 2;
+        g_bk_byte_d = (uint8_t)(g_gamble_sfx - 1);
+        g_gamble_sfx = 0;
+    }
+
+    if (g_game.screen == SCREEN_GAMBLE) {
+        if (g_gamble_jingle) {
+            g_gamble_jingle = 0;
+            g_bk_byte_b = 1;
+            return;
+        }
+        if (g_bk_byte_b == 2) {
+            /* The jingle's restore clock fired, but we are still at the
+             * table: go straight to the casino theme instead of the
+             * scene track (no stray one-frame town track). */
+            g_bk_byte_b = 4;
+            return;
+        }
+        if (g_audio_current_track != MUSIC_CASINO &&
+            g_audio_current_track != MUSIC_CHEST) {
+            g_bk_byte_b = 4;
+        }
+        return;
+    }
+    /* Left the table (B / overworld exit): hand the scene track back
+     * through the existing restore code, no new fixed branch. */
+    if (g_audio_current_track == MUSIC_CASINO) {
+        g_bk_byte_b = 2;
     }
 }
 
@@ -792,6 +884,8 @@ void gamble_frame_banked(void)
         g_gamble.field = 0;
         g_gamble.matches = 0;
         g_gamble.won = 0;
+        g_gamble_sfx = 0;         /* no queued blip on entry */
+        g_gamble_jingle = 0;
         g_gamble.entered = 1;
         gamble_entry();
         return;

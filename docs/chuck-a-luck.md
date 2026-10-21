@@ -16,17 +16,20 @@ never refuses a covered bet.
 
 ## Where it lives
 
-* Entry: talk to (or bump into) Nis, the gambler kobold. Town
-  (`levels/town.json` `town_gambler`, east corridor) and the frozen
-  harness fixture (`tools/scenarios/fixtures/levels/test_gamble.json`
-  `test_gamble_gambler`, next to spawn) each carry one as an ordinary
-  `INTERACTION_DIALOGUE` actor (`dialogue:
+* Entry: talk to (or bump into) Nis, the gambler kobold. He stands in
+  the Village Area (`levels/village_area.json` `village_area_gambler`,
+  open floor east of the merchant) and in the frozen harness fixture
+  (`tools/scenarios/fixtures/levels/test_gamble.json`
+  `test_gamble_gambler`, next to spawn). Both are ordinary
+  `INTERACTION_DIALOGUE` actors (`dialogue:
   DIALOGUE_ID_KOBOLD_INVITE`). Nis explains the rules in a YES/NO
-  dialogue (the game-owned bank-8 choice nav handles the cursor); YES
-  is handed to `SCREEN_GAMBLE` by a small fixed dispatch on the staged
-  action code, NO advances plainly and the dialogue closes back to the
-  overworld. No separate INTERACTION_GAMBLE engage path exists -- the
-  dialogue owns the invitation.
+  dialogue (the game-owned bank-8 choice nav handles the cursor). On
+  YES the nav closes the dialogue and raises `g_gamble_enter`; the
+  per-frame tick opens `SCREEN_GAMBLE` itself, so the fixed bank pays
+  nothing for the handoff beyond recording the choice. NO advances
+  plainly and the dialogue closes back to the overworld. No separate
+  INTERACTION_GAMBLE engage path exists -- the dialogue owns the
+  invitation.
 * Screen: `SCREEN_GAMBLE` (14). It is deliberately NOT a battle mode:
   the engine stays generic (AGENTS.md 55.1) and the game owns the dice
   rules in `src/game/gamble_content.c` (ROM bank 8) behind the single
@@ -96,8 +99,35 @@ paid for by moving an old one to a bank (AGENTS.md 52.18 family).
   (AGENTS.md 52.27 -- without it the release ROM booted the xorshift
   at 0 and every roll was [1,1,1]). Harness scenarios seed explicitly,
   so the primer never fires there.
-* Other v1 gaps: silent (no SFX), no CRAM re-check beyond entry (the
-  entry programs the base set itself).
+* Other v1 gaps: no CRAM re-check beyond entry (the entry programs the
+  base set itself).
+
+## Audio
+
+* **Music**: `MUSIC_CASINO` (`assets/music/casino.uge`) plays while the
+  table is up; the scene track is restored on exit. The track needs
+  ~2.8 KB and bank 7 is down to ~1.5 KB, so the song lives in **bank 9**
+  next to its own driver copy (`hUGEDriver_b9.o`, renamed `_b9`
+  exports): the hUGE driver reads song bytes through the mapped ROM
+  window, so driver + song must share a bank. `huge_music.c` gained a
+  third dispatch leg (bank 9) for init / dosound / mute; the two mute
+  entry points share one `huge_mute_dispatch()` ladder to keep the
+  fixed-bank cost down.
+* **SFX**: `SFX_CURSOR` blips on every caret / bet / number move,
+  `SFX_SELECT` on the roll, `SFX_BLOCK` (the defend thump) on a loss,
+  and the chest-loot jingle (`MUSIC_CHEST`) on a win.
+* **Staging (no fixed bytes added)**: a banked body cannot call the
+  audio API (AGENTS.md 52.11.1), so requests ride WRAM out to
+  `game_update()`: `g_gamble_sfx` (id + 1; 0 = none, BSS-safe because
+  the custom CRT0 never copies `_INITIALIZER`) folds into the existing
+  one-shot SFX slot (`g_bk_byte_c == 2`, id in `g_bk_byte_d` -- the
+  same slot the pursuit alert uses), the win jingle reuses the existing
+  chest code (`g_bk_byte_b == 1`), the casino theme is the one new code
+  (`g_bk_byte_b == 4`), and leaving the table reuses the existing
+  scene-track restore code (`g_bk_byte_b == 2`).
+* When the win jingle's restore clock fires while the player is still at
+  the table, the tick overrides the restore with the casino code, so
+  the music never dips through the town track for a frame.
 
 ## Scenarios (all deterministic, seeded RNG)
 
@@ -116,5 +146,6 @@ and the roll (the seeded dice match the replica exactly).
 
 `screenshots/review/gamble-table.png` (CHOOSE screen) and
 `screenshots/review/gamble-roll.png` (result screen) via
-`tools/capture_gamble_shot.py` (release ROM, real path: walk to the
-town kobold, bump in, roll). Registered in `review/manifest.json`.
+`tools/capture_gamble_shot.py` (release ROM, real path: walk to Nis in
+the Village Area, bump in, say YES, roll). Registered in
+`review/manifest.json`.

@@ -20,7 +20,8 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 from walkthrough.route import Planner                 # noqa: E402
 from walkthrough import walks as W                    # noqa: E402
 from walkthrough.session import Session               # noqa: E402
-from walkthrough.state_reader import SCENE_TOWN       # noqa: E402
+from walkthrough.state_reader import (SCENE_TOWN,   # noqa: E402
+                                      SCENE_VILLAGE_AREA)
 from capture_walkthrough import REVIEW_DIR, REVIEW_MANIFEST  # noqa: E402
 
 SHOTS = [
@@ -47,12 +48,12 @@ def main():
     try:
         W.god_mode(s)
         field_pos = W._boot_to_field(s, planner)
-        W.follow(s, planner, "field", field_pos, "town", (15, 7))
-        s.settle_scene(expected_scene=SCENE_TOWN)
-        # Bump right into Nis (16,7): his rules dialogue opens (3 A's
-        # turn the pages to the YES/NO choice); YES opens the table.
+        W.follow(s, planner, "field", field_pos, "village_area", (15, 10))
+        s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
+        # Bump up into Nis (15,9): his rules dialogue opens (3 A's turn
+        # the pages to the YES/NO choice); YES opens the table.
         s.check("Nis dialogue opened",
-                s.press_until("right", lambda: s.text_has("Nis:"),
+                s.press_until("up", lambda: s.text_has("Nis:"),
                               tries=8, settle=30, label="Nis:"),
                 expected="Nis:", actual="none")
         s.check("rules page 2",

@@ -84,6 +84,14 @@
       "type": "currency",
       "expected": 21,
       "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "CHEST"
+    },
+    {
+      "type": "sfx_last",
+      "expected": 2
     }
   ],
   "initial_state": {

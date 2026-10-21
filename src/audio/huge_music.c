@@ -50,7 +50,9 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
         g_huge_current_song = song;
         g_huge_music_bank = bank;
         *(volatile uint8_t *)0x2000 = bank;
-        if (bank == HUGE_MUSIC_BANK_B7) {
+        if (bank == HUGE_MUSIC_BANK_B9) {
+            hUGE_init_b9(song);
+        } else if (bank == HUGE_MUSIC_BANK_B7) {
             hUGE_init_b7(song);
         } else {
             hUGE_init(song);
@@ -81,15 +83,26 @@ void huge_music_stop(void)
     }
 }
 
+/* Bank -> driver-copy mute dispatch.  One shared chain keeps the fixed
+ * bank cost to a single compare ladder instead of duplicating it in the
+ * user-context and ISR mute entry points (AGENTS.md 52.18).  The caller
+ * has already mapped g_huge_music_bank. */
+static void huge_mute_dispatch(uint8_t ch, uint8_t mute)
+{
+    if (g_huge_music_bank == HUGE_MUSIC_BANK_B9) {
+        hUGE_mute_channel_b9((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
+    } else if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
+        hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
+    } else {
+        hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
+    }
+}
+
 void huge_music_mute_channel(uint8_t ch, uint8_t mute)
 {
     __critical {
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-        if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
-            hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-        } else {
-            hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-        }
+        huge_mute_dispatch(ch, mute);
         *(volatile uint8_t *)0x2000 = 1;
     }
 }
@@ -106,11 +119,7 @@ void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute)
      * No restore here: the caller (audio_update's tail) re-establishes
      * the live bank once for the whole ISR (fixed-bank budget). */
     *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-    if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
-        hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-    } else {
-        hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-    }
+    huge_mute_dispatch(ch, mute);
 }
 
 void huge_music_update(void)
@@ -129,7 +138,9 @@ void huge_music_update(void)
         /* No restore here: audio_update's tail re-establishes the live
          * bank once for the whole ISR (same contract as the ISR mute). */
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-        if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
+        if (g_huge_music_bank == HUGE_MUSIC_BANK_B9) {
+            hUGE_dosound_b9();
+        } else if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
             hUGE_dosound_b7();
         } else {
             hUGE_dosound();

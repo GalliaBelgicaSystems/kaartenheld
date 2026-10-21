@@ -34,11 +34,10 @@ void dialogue_screen_update(Game *g)
         telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
                        g->dialogue.choice_index, 0, 0);
         if (g_bk_byte_a == 7) {
-            /* Kobold's table invitation accepted (the banked choice
-             * body closed the dialogue and staged this code): open the
-             * chuck-a-luck table.  The code is staged data from the
-             * game-owned body, never a fixed-bank game branch (55.1). */
-            screen_change(g, SCREEN_GAMBLE);
+            /* Table invitation accepted: the banked choice body already
+             * closed the dialogue and raised g_gamble_enter; the
+             * per-frame tick opens SCREEN_GAMBLE, so the fixed bank only
+             * records the choice (telemetry above) and returns. */
             return;
         }
         if (g_bk_byte_a == 3) {

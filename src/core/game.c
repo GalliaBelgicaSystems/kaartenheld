@@ -1,5 +1,6 @@
 #include "game.h"
 #include "screen.h"
+#include "game/gamble.h"
 #include "story.h"
 #include "dialogue.h"
 #include "interaction.h"
@@ -132,8 +133,17 @@ void game_update(Game *g)
              * byte_d replay restarts the track from the top). */
             audio_play_music(MUSIC_NONE);
         }
+        /* byte_c == 2 is the one-shot SFX slot: the id rides byte_d.
+         * The pursuit-alert body stages SFX_ALERT there; the bank-8
+         * gamble tick stages its cursor/roll/loss blips the same way,
+         * so the fixed bank pays no second consumer branch for the
+         * table (AGENTS.md 52.18). */
         if (g_bk_byte_c == 2) {
-            audio_play_sfx(SFX_ALERT);
+            audio_play_sfx(g_bk_byte_d);
+        }
+        /* Chuck-a-luck table theme (staged by the bank-8 gamble tick). */
+        if (g_bk_byte_b == 4) {
+            audio_play_music(MUSIC_CASINO);
         }
     }
     scene_sync_from_world(g);

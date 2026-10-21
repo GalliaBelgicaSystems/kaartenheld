@@ -9,6 +9,7 @@
 #include "rpg/state.h"
 #include "rng.h"
 #include "rpg/loot.h"
+#include "game/gamble.h"
 #include "ap_tiles_generated.h"
 
 /* AP tile bytes (png2gb --ap-coords, same order as AP_TILE_IDS). */
@@ -235,6 +236,7 @@ static void marks_refresh(void)
             g_game.screen != SCREEN_GAME_OVER &&
             g_game.screen != SCREEN_ENDING) {
             g_bk_byte_c = 2;
+            g_bk_byte_d = SFX_ALERT;
         } else if (g_alert_ttl == ALERT_MUSIC_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
@@ -348,4 +350,18 @@ void game_frame_tick_banked(void)
      * otherwise irrelevant. */
     marks_refresh();
     jingle_full_banked();
+    /* Chuck-a-luck: the table's whole frame body (entry paint, input,
+     * dice, gold, OAM) plus its audio request live in bank 8 too, so
+     * both are plain same-bank calls.  The gamble frame runs after the
+     * jingle body so its win-edge can override the restore code, and
+     * the audio tick runs last so it owns the final g_bk_byte_b value
+     * for this frame.  Skipped entirely off-screen: zero cost on every
+     * other map/screen. */
+    if (g_gamble_enter) {
+        gamble_enter_screen();
+    }
+    if (g_game.screen == SCREEN_GAMBLE) {
+        gamble_frame_banked();
+    }
+    gamble_audio_tick();
 }

@@ -5,6 +5,7 @@
 #include "game_ids.h"
 #include "ui.h"
 #include "banked.h"
+#include "game/gamble.h"
 
 /* ── Heal-mage YES/NO choice navigation + resolve, bank-8 body ─────
  * Dispatched from dialogue_screen_update() when a choice dialogue sits
@@ -117,7 +118,12 @@ void dialogue_choice_nav_banked(void)
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_bk_byte_a = 2;
             } else {
+                /* YES: close the dialogue and raise the enter request.
+                 * The bank-8 tick opens SCREEN_GAMBLE itself, so the
+                 * fixed bank needs no gamble branch here at all
+                 * (AGENTS.md 52.18). */
                 g_game.dialogue.active = 0;
+                g_gamble_enter = 1;
                 g_bk_byte_a = 7;
             }
             return;

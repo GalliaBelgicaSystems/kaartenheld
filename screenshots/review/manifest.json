@@ -18,12 +18,12 @@
     {
       "file": "gamble-table.png",
       "description": "Chuck-a-luck table (Nis art, CHOOSE BET / CHOOSE NUMBER / GOLD OWNED rows, dice boxes)",
-      "taken_from": "6743a42c"
+      "taken_from": "47fae097"
     },
     {
       "file": "gamble-roll.png",
       "description": "After one roll: kobold dice, match line, settled gold",
-      "taken_from": "6743a42c"
+      "taken_from": "47fae097"
     }
   ]
 }

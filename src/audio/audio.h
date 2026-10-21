@@ -31,6 +31,10 @@ typedef enum {
     MUSIC_ENDING,    /* end-credits theme (demo complete.uge, loops,
                         bank 7): starts when a final-boss victory exits
                         to the ending screen (THE END) */
+    MUSIC_CASINO,    /* chuck-a-luck table theme (casino.uge, loops,
+                        bank 9 with its own driver copy): plays on
+                        Nis's table; the gamble body restores the scene
+                        track on exit */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE

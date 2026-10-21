@@ -75,6 +75,10 @@
       "type": "screen_row",
       "row": 16,
       "contains": "A:ROLL B:LEAVE"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
     }
   ],
   "initial_state": {

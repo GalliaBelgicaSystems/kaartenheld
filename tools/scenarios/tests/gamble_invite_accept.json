@@ -91,6 +91,10 @@
       "event": "DIALOGUE_CHOICE",
       "index": 1,
       "value": 0
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
     }
   ],
   "initial_state": {

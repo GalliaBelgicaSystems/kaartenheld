@@ -46,6 +46,26 @@ typedef struct {
 
 extern GambleState g_gamble;
 
+/* Staged audio requests (WRAM): the banked body cannot call the audio
+ * API, so game_update() consumes these.  g_gamble_sfx is an SFX id
+ * (0xFF = none); g_gamble_jingle queues the shared chest jingle. */
+extern uint8_t g_gamble_sfx;
+extern uint8_t g_gamble_jingle;
+/* Enter request: raised by the bank-8 dialogue choice body when the
+ * player says YES; the per-frame tick opens SCREEN_GAMBLE and clears
+ * it.  Keeps the fixed bank out of the gamble handoff entirely. */
+extern uint8_t g_gamble_enter;
+
+/* Bank-8 audio tick (src/game/gamble_content.c), called from the
+ * per-frame tick body after the gamble frame + jingle bodies: decides
+ * the frame's music request (casino while at the table, scene-track
+ * restore after leaving) via g_bk_byte_b. */
+void gamble_audio_tick(void);
+
+/* Bank-8 screen switch used by the tick body when g_gamble_enter is
+ * raised (replicates screen_change for the table). */
+void gamble_enter_screen(void);
+
 /* Bank-8 frame body (src/game/gamble_content.c): entry on the first
  * frame (LCD off, CRAM + kobold art + dice stream + full paint + OAM),
  * input + dynamic repaint on later frames, direct overworld exit on B
