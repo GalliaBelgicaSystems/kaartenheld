@@ -14,8 +14,8 @@ const CardSkinDef g_card_skin = {
     { 104, 105, 106, 108, 107 },
     /* weapon_color: sword shield bow heal dagger */
     { 5, 5, 5, 5, 5 },
-    /* uses_type (0xFF = none), uses_tile: uses 0..4, uses_power_tile */
+    /* uses_type (0xFF = none), uses_tile: uses 0..5, uses_power_tile */
     2,
-    { 98, 99, 100, 101, 97 },
+    { 98, 99, 100, 101, 97, 103 },
     102
 };

@@ -91,19 +91,33 @@ void shop_screen_update(Game *g)
     if (input_pressed(INPUT_B) || input_pressed(INPUT_START)) {
         /* Leaving after a purchase stages the merchant's equip tip for
          * the post-tick dialogue slot (docs/loot.md 34.6): the tip opens
-         * as a normal dialogue box over the overworld instead of the
-         * old in-shop hint lines, and fires once per buying visit.
-         * Staged, not opened here: the fixed bank sits hard against
-         * 0x8000, and a dialogue_start_def + screen_change pair here
-         * overflows it into bank 2 (AGENTS.md 52.18).  Dialogue close
-         * returns to the overworld through the standard exit path (no
-         * stashed encounter here, unlike Carl's lesson). */
+         * as a normal dialogue box instead of the old in-shop hint
+         * lines, and fires once per buying visit.  Staged, not opened
+         * here: the fixed bank sits hard against 0x8000, and a
+         * dialogue_start_def + screen_change pair here overflows it
+         * into bank 2 (AGENTS.md 52.18).  Target DIALOGUE directly (not
+         * OVERWORLD): the tilemap still holds the shop screen when the
+         * post-tick opens the dialogue the same frame, and the dialogue
+         * renderer only does its full LCD-off world redraw when
+         * prev_screen != OVERWORLD -- routing through OVERWORLD first
+         * leaves the stale SHOP title in VRAM row 0 under the box and
+         * on the overworld after (walk-a shop-closed regression).
+         * screen_change is idempotent, so the post-tick's own
+         * screen_change(DIALOGUE) is a no-op.  Dialogue close returns
+         * to the overworld through the standard exit path (no stashed
+         * encounter here, unlike Carl's lesson). */
         if (g->shop_message == SHOP_MSG_BOUGHT)
             g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
         g->shop_message = SHOP_MSG_NONE;
         g->item_menu_index = 0;
         audio_play_sfx(SFX_BACK);
-        screen_change(g, SCREEN_OVERWORLD);
+        /* Single call site: the ternary keeps the fixed bank small
+         * (two call sites cost ~8 B the 0x8000-ceilinged bank cannot
+         * spare -- debug headroom is 10 B with this shape).  Reading
+         * back g_bk_dlg_id is safe: no other shop-frame producer
+         * stages the post-tick dialogue slot, so nonzero here means
+         * this exit staged the tip. */
+        screen_change(g, (g_bk_dlg_id != 0) ? SCREEN_DIALOGUE : SCREEN_OVERWORLD);
     }
 }
 

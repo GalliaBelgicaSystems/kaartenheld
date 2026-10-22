@@ -1,7 +1,7 @@
 {
  "name": "battle_health_ring_uses5",
  "test": true,
- "description": "Mythril ring uses display (docs/loot.md 34.1): a 5-use heal card shows a font '5' (not a clamped arrow glyph) on the floor row, power digit on the middle row; the semantic row reads HE5.",
+ "description": "Mythril ring uses display (docs/loot.md 34.1): a 5-use heal card shows the 5_arrows_left glyph (VRAM 103) on the floor row, power digit on the middle row; the semantic row reads HE5.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -62,7 +62,7 @@
    "type": "tilemap_cell",
    "row": 14,
    "col": 1,
-   "expected": 21
+   "expected": 103
   }
  ]
 }

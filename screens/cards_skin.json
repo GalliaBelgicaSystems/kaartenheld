@@ -7,9 +7,9 @@
    "sword":  { "icon": "combat_sword_icon",  "color": "wood"   },
    "shield": { "icon": "combat_shield_icon", "color": "wood"   },
    "bow":    { "icon": "combat_bow_icon",    "color": "wood",
-               "uses_icons": ["combat_4_arrows_left", "combat_3_arrows_left",
-                              "combat_2_arrows_left", "combat_1_arrow_left",
-                              "combat_0_arrows_left"],
+               "uses_icons": ["combat_5_arrows_left", "combat_4_arrows_left",
+                              "combat_3_arrows_left", "combat_2_arrows_left",
+                              "combat_1_arrow_left", "combat_0_arrows_left"],
                "uses_power_icon": "combat_nine_icon" },
    "heal":   { "icon": "combat_ring_icon",     "color": "wood"   },
    "dagger": { "icon": "combat_dagger_icon",   "color": "wood" }

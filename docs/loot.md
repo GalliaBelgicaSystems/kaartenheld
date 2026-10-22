@@ -1729,8 +1729,9 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   while higher tiers hold more charges instead of healing more per
   charge.  The curated shop ring follows the same band as loot iron
   (3 uses).  The battle deck, the CARDS detail page and the battle HUD
-  counter all read the same value; a 5-count has no arrow glyph, so the
-  floor counter and the semantic row show the font digit instead.
+  counter all read the same value; a 5-count shows the 5_arrows_left
+  glyph on the floor counter (VRAM 103, same overwrite trick as 4_arrows
+  on 97) while the semantic row still reads the digit (HE5).
   IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 

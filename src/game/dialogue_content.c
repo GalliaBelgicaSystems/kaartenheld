@@ -179,7 +179,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MERCHANT_EQUIP_TIP,
         "MERCHANT:",
         3,
-        {"Don't forget to", "equip your cards", "from the START menu!"},
+        {"Don't forget to", "equip your cards", "from START menu!"},
         0,
         0
     },
