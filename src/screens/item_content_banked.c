@@ -247,7 +247,8 @@ static const char *ic_mat_str(uint8_t m, uint8_t *len)
     switch (m) {
         case 1: *len = 6; return "BRONZE";
         case 2: *len = 4; return "IRON";
-        case 3: *len = 7; return "MYTHRIL";
+        case 3: *len = 5; return "STEEL";
+        case 4: *len = 7; return "MYTHRIL";
         default: *len = 4; return "WOOD";
     }
 }
@@ -280,11 +281,13 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
         return;
     }
     switch (id) {
+        case CARD_WOOD_SWORD: *mat = 0; *wpn = 0; break;
         case CARD_WOODEN_SHIELD: *mat = 0; *wpn = 1; break;
+        case CARD_IRON_SWORD: *mat = 2; *wpn = 0; break;
         case CARD_IRON_RING: *mat = 2; *wpn = 4; break;
-        case CARD_FIRE_SWORD: *mat = 2; *wpn = 0; break;
-        case CARD_POISON_DAGGER: *mat = 2; *wpn = 3; break;
-        case CARD_BOW_9: *mat = 3; *wpn = 2; break;
+        case CARD_FIRE_SWORD: *mat = 1; *wpn = 0; break;
+        case CARD_POISON_DAGGER: *mat = 1; *wpn = 3; break;
+        case CARD_BOW_9: *mat = 4; *wpn = 2; break;
         case CARD_AMULET: *is_amulet = 1; *mat = 2; *wpn = 0; break;
         default: *mat = 2; *wpn = 0; break;
     }
@@ -342,9 +345,18 @@ static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
  * (name format, power, cost, price, rider legality): the SELL price and
  * the detail page read through here, and a mismatch would show one
  * price and charge another. */
-static const char s_ic_loot_mat[4] = { 'W', 'B', 'I', 'M' };
+static const char s_ic_loot_mat[LOOT_NMATERIALS] =
+    { 'W', 'B', 'I', 'S', 'M' };
 static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
-static const uint8_t s_ic_loot_base[8] = { 3, 2, 2, 1, 2, 0, 0, 0 };
+/* Material x weapon power bands (docs/loot.md §34.1): the same table as
+ * src/rpg/loot_banked.c and src/battle/battle_init_content.c. */
+static const uint8_t s_ic_loot_power[LOOT_NMATERIALS][5] = {
+    { 1, 1, 1, 1, 1 },   /* wood    */
+    { 3, 2, 3, 2, 2 },   /* bronze  */
+    { 5, 4, 5, 4, 4 },   /* iron    */
+    { 7, 6, 7, 6, 6 },   /* steel   */
+    { 9, 8, 9, 8, 8 }    /* mythril */
+};
 static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
@@ -354,6 +366,7 @@ static const CardDefinition *ic_loot_synth(CardId id)
     uint8_t material = loot_id_material(id);
     uint8_t effect = loot_id_effect(id);
     uint8_t weapon = loot_id_weapon(id);
+    uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
     uint8_t has_rider;
     uint8_t i;
     uint8_t *d;
@@ -387,12 +400,13 @@ static const CardDefinition *ic_loot_synth(CardId id)
          * ring branch). */
         g_card_scratch.uses_per_battle = 1;
     }
-    g_card_scratch.power = (uint8_t)(s_ic_loot_base[weapon] + material);
+    g_card_scratch.power = s_ic_loot_power[material][wi];
     g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;
-    g_card_scratch.price = (uint8_t)(s_ic_loot_base[weapon] +
+    g_card_scratch.price = (uint8_t)(g_card_scratch.power +
         (uint8_t)(material << 1) +
         ((effect == EFF_POISON && weapon == WPN_DAGGER) ? 2 : 0));
-    has_rider = (s_ic_loot_status[effect] != STATUS_NONE &&
+    has_rider = (material >= MAT_BRONZE &&
+        s_ic_loot_status[effect] != STATUS_NONE &&
         ((effect == EFF_POISON) ? (weapon == WPN_DAGGER) :
          ((effect == EFF_FIRE || effect == EFF_ICE) ?
              (weapon == WPN_SWORD) : 0)));

@@ -108,7 +108,7 @@ Introduce:
 typedef uint8_t CardId;
 
 #define CARD_NONE       0
-#define CARD_FIRST_GAME 0x80
+#define CARD_FIRST_GAME 0x40
 ```
 
 Follow the existing ID convention used by `ItemId`.
@@ -1276,14 +1276,14 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   at selection time against `energy - combo_reserved_cost()` and paid at
   resolve time. The small default pool means combo scenarios select
   cost-0 (or a single cost-1) cards so the hand still fits the pool.
-- **Deck-size ceiling unreachable**: the 20-card deck limit cannot be hit by
-  current content — total deckable copies across the catalog are 15
-  (IRON_SWORD ×4 + WOODEN_SHIELD ×3 + IRON_RING ×1 + FIRE_SWORD ×3 +
-  POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not deckable). Recorded as a known
-  gap; no synthetic content was added just to test it.
+- **Deck-size ceiling**: the 20-card deck limit is exactly reachable by
+  current content — total deckable copies across the catalog are 20
+  (WOOD_SWORD ×4 + IRON_SWORD ×4 + WOODEN_SHIELD ×4 + IRON_RING ×1 +
+  FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not
+  deckable).
 - **Starter deck granted at new game**: a new game grants the collection
-  IRON_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
-  ten, deal order SW SW SH SH SW first so the opening hand is SW2 SW2 SH1 SH1 SW1),
+  WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
+  ten, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW3),
   so the first battle already draws from the real deck system. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:

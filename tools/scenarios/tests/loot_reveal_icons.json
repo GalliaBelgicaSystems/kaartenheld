@@ -1,7 +1,7 @@
 {
  "name": "loot_reveal_icons",
  "test": true,
- "description": "Loot reveal regression (docs/loot.md 34.5): seed 5002 deterministically yields a WOOD POISON DAGGER (derived id 0x8B = 139). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name W P DA on row 11, and full English description WOOD POISON DAGGER on row 12.",
+ "description": "Loot reveal regression (docs/loot.md 34.5): at AP 1 seed 5002 deterministically yields a WOOD PLAIN DAGGER (derived id 0x63 = 99; wood carries no rider). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name W DA on row 11, and full English description WOOD DAGGER on row 12.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -278,17 +278,17 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "W P DA"
+   "contains": "W DA"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "WOOD POISON DAGGER"
+   "contains": "WOOD DAGGER"
   },
   {
    "type": "oam_tile",
    "entry": 19,
-   "expected": 125
+   "expected": 0
   }
  ]
 }

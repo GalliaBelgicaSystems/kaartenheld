@@ -1288,6 +1288,7 @@ static void loot_build_full_name(const CardDefinition *card)
         case 'W': s = "WOOD"; break;
         case 'B': s = "BRONZE"; break;
         case 'I': s = "IRON"; break;
+        case 'S': s = "STEEL"; break;
         case 'M': s = "MYTHRIL"; break;
         default:  s = ""; break;
     }

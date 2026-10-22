@@ -81,10 +81,10 @@ testable, save/load works, and the memory budget is understood.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
     resolution; executed results announce via the banner).  The Lost
     Amulet now renders in the CARDS tab as a non-deckable QUEST ITEM, and
-    the Merchant sells a heavy BOW 10 (30g).
+    the Merchant sells a heavy BOW 9 (30g).
   - Poker hand tiers implemented (strict sizes; PAIR..FIVE KIND, FLUSH,
     STRAIGHT, FULL HOUSE, STRAIGHT FLUSH with tier multipliers + suited
-    bonus), combo-scaled on-hit riders, and the DA1 POISON DAGGER starter
+    bonus), combo-scaled on-hit riders, and the DA2 POISON DAGGER field-cache
     card with flat 1-HP poison ticks.  Open: more statuses, finer-grained
     status telemetry.
 

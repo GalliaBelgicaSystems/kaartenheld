@@ -21,42 +21,42 @@
  "actions": [
   {
    "type": "collection_add",
-   "card_id": 128,
+   "card_id": 96,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 129,
+   "card_id": 97,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 130,
+   "card_id": 98,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 131,
+   "card_id": 100,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 132,
+   "card_id": 101,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 133,
+   "card_id": 102,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 134,
+   "card_id": 103,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 135,
+   "card_id": 104,
    "quantity": 1
   },
   {

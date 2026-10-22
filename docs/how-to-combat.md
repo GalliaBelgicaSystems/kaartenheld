@@ -52,8 +52,8 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
 Beat him and he gives a graduation speech: real fights begin, AP
-limits how many cards you can play (yours grows from **2 to 3 AP** per
-phase for every later battle — have one more!). Bumping into him
+limits how many cards you can play (your pool starts at **1 AP** per
+phase and grows by story rewards, up to **5**). Bumping into him
 afterwards repeats the whole field guide from his lesson (swords,
 shields, bows, rings that hit for 0 but heal and build poker hands,
 riders) — but never the extra AP.

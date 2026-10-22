@@ -159,10 +159,10 @@ export const HeroManager: React.FC<{
               setHero((prev) => ({ ...prev!, starter_deck: cards }));
               setDirty(true);
             }}
-            placeholder="CARD_IRON_SWORD,&#10;CARD_IRON_SWORD,&#10;CARD_WOODEN_SHIELD..."
+            placeholder="CARD_WOOD_SWORD,&#10;CARD_WOOD_SWORD,&#10;CARD_WOODEN_SHIELD..."
           />
           <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>
-            Valid card IDs: CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
+            Valid card IDs: CARD_WOOD_SWORD, CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
           </div>
         </div>
 

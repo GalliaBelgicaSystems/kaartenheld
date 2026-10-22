@@ -11,21 +11,31 @@
  * existing count-based collection/deck hold derived ids like any other
  * card. */
 
-#define LOOT_ID_BASE 0x80          /* above CARD_FIRST_GAME content ids */
+/* 0x60..0xFF: 5 materials x 4 effects x 8 weapons = 160 ids.  The base
+ * is 32-aligned and its bits 3-4 are clear, so effect/weapon masks work
+ * directly on the id while material subtracts the base. */
+#define LOOT_ID_BASE 0x60
 
 /* Axis counts — id-decode uses shifts/masks because banked code
  * cannot call the SDCC div/mod library (AGENTS.md 52.11.1).
- * Bit layout (7 bits, 128 IDs fitting 0x80..0xFF):
- *   bits 5-6: material (4 values)
+ * Bit layout (8 bits, 160 IDs fitting 0x60..0xFF):
+ *   bits 5-7: material (5 values, 32 ids each)
  *   bits 3-4: effect   (4 values)
  *   bits 0-2: weapon   (8 values)  */
-#define LOOT_NMATERIALS 4          /* WOOD BRONZE IRON MYTHRIL */
+#define LOOT_NMATERIALS 5          /* WOOD BRONZE IRON STEEL MYTHRIL */
 #define LOOT_NEFFECTS   4          /* PLAIN POISON FIRE ICE (+ reserved) */
 #define LOOT_NWEAPONS   8          /* SWORD SHIELD BOW DAGGER RING + rsv */
 
 enum {
-    MAT_WOOD = 0, MAT_BRONZE, MAT_IRON, MAT_MYTHRIL
+    MAT_WOOD = 0, MAT_BRONZE, MAT_IRON, MAT_STEEL, MAT_MYTHRIL
 };
+
+/* AP (VARIABLE_ID_ENERGY_POOL) gates which material tiers can drop.
+ * Steel and above only appear at AP 5+; the weighted roll keeps them
+ * rare even then.  docs/loot.md §34.5. */
+#define LOOT_AP_BRONZE 2
+#define LOOT_AP_IRON   4
+#define LOOT_AP_STEEL  5
 
 enum {
     EFF_PLAIN = 0, EFF_POISON, EFF_FIRE, EFF_ICE

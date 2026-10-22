@@ -3,26 +3,28 @@
 Reproducible numbers from `make memmap` (parses the debug linker map and fails
 on a `_HOME` >= 0x8000 violation).
 
-## Current budget (2026-09-27, `make memmap` on the debug map)
+## Current budget (2026-10-22, `make memmap` on the debug map)
 
 ```text
 Game Boy ROM memory budget
 --------------------------
-_CODE (fixed bank code/data) :  32047 B  @ 0x0200-0x7F2F
-_HOME (non-bankable)          :    125 B  @ 0x7F2F-0x7FF1  headroom to 0x8000: 15 B  [OK]
-  (includes 69 B _INITIALIZER table after _HOME)
-_DATA (WRAM)                  :   5613 B  @ 0xC940-0xDF2D  headroom to 0xE000: 211 B
+_CODE (fixed bank code/data) :  32078 B  @ 0x0200-0x7F4E
+_HOME (non-bankable)          :    125 B  @ 0x7F4E-0x7FD2  headroom to 0x8000: 46 B  [OK]
+  (includes 7 B _INITIALIZER table after _HOME)
+_DATA (WRAM)                  :   4250 B  @ 0xC940-0xD9DA  headroom to 0xE000: 1574 B
 
 Switchable ROM bank size checks (16 KB each)
-_CODE_2 : 16080 B  headroom:  304 B  [OK]
-_CODE_3 : 15654 B  headroom:  730 B  [OK]
-_CODE_4 : 16213 B  headroom:  171 B  [OK]
-_CODE_5 : 15888 B  headroom:  496 B  [OK]
+_CODE_2 : 15603 B  headroom:  781 B  [OK]
+_CODE_3 : 16157 B  headroom:  227 B  [OK]
+_CODE_4 : 14808 B  headroom: 1576 B  [OK]
+_CODE_5 : 12707 B  headroom: 3677 B  [OK]
 _CODE_6 : 15352 B  headroom: 1032 B  [OK]
-_CODE_7 : 15534 B  headroom:  850 B  [OK]
+_CODE_7 : 14882 B  headroom: 1502 B  [OK]
+_CODE_8 : 12390 B  headroom: 3994 B  [OK]
+_CODE_9 :  7866 B  headroom: 8518 B  [OK]
 ```
 
-> Fixed bank 0 is essentially full (15 B to `0x8000`): any fixed-bank
+> Fixed bank 0 is essentially full (46 B to `0x8000`): any fixed-bank
 > addition risks the silent bank-1→2 overflow (§52.18 — the Makefile
 > link rules fail loudly on it). The remaining fixed `_CODE` is almost
 > entirely code — the content-table migration waves already moved scenes
@@ -30,12 +32,13 @@ _CODE_7 : 15534 B  headroom:  850 B  [OK]
 > title (bank 4), terrain overflow (banks 6/7) out. No mult/div/mod
 > library routines link into fixed (only `___memcpy`); flag math is
 > shift/mask. The next substantial feature must plan banked placement
-> (§52.11.1) up front — bank 6 (1032 B) and bank 7 (850 B) have the most
-> room; bank 4 (171 B) fits almost nothing more.
+> (§52.11.1) up front — bank 3 is now the tightest (227 B); bank 8
+> (3994 B), bank 9 (8518 B), bank 5 (3677 B) and bank 4 (1576 B) have the
+> most room.
 
 ## Where the bytes go
 
-### ROM (128 KB MBC5, 8 banks)
+### ROM (256 KB MBC5, 16 banks)
 
 * **`_CODE`** (~32 KB): game + engine code.  The `static const` content
   tables have all moved to banked ROM (scenes → bank 5, actors → bank 4,
@@ -44,19 +47,19 @@ _CODE_7 : 15534 B  headroom:  850 B  [OK]
 * **`_HOME`** (125 B): boot-critical code that must stay below `0x8000` —
   `_joypad`, `_set_bkg_data`/`_set_tile_data` and other non-bankable
   library routines.  This is the tightest budget:
-  only 15 B of headroom.  Keep it there; do not grow it casually.
-* Banked ROM (banks 1-7): scenes, actors, dialogue, events, shops,
+  only 46 B of headroom.  Keep it there; do not grow it casually.
+* Banked ROM (banks 1-9): scenes, actors, dialogue, events, shops,
   quests, cards, title, terrain overflow, the hUGE driver + songs
-  (bank 6 + bank-7 copy), SFX tables, and ~30 banked logic bodies live
+  (banks 6/7/9), SFX tables, and ~30 banked logic bodies live
   here (see `make memmap` banked-target validation).  Free room:
-  bank 2 ~304 B, bank 3 ~730 B, bank 4 ~171 B, bank 5 ~496 B,
-  bank 6 ~1032 B, bank 7 ~850 B.
+  bank 2 ~781 B, bank 3 ~227 B, bank 4 ~1576 B, bank 5 ~3677 B,
+  bank 6 ~1032 B, bank 7 ~1502 B, bank 8 ~3994 B, bank 9 ~8518 B.
 
 ### WRAM (8 KB, `0xC000-0xDFFF`)
 
-* `_DATA` (5613 B @ `0xC940-0xDFFF`): GBDK globals + the fixed-size
+* `_DATA` (4250 B @ `0xC940-0xD9DA`): GBDK globals + the fixed-size
   runtime structs + the WRAM-resident timer ISR (`0xC900`) and banked-call
-  trampolines.  Only ~211 B headroom to `0xE000` (stack base) — keep new
+  trampolines.  Only ~1574 B headroom to `0xE000` (stack base) — keep new
   WRAM statics tiny (an 800 B staging static once flipped hostile
   spawning under the harness, §52.19 family).  The big fixed consumers
   (approximate):
@@ -65,7 +68,7 @@ _CODE_7 : 15534 B  headroom:  850 B  [OK]
   * `World` ~ 300 B (20x12 tile map = 240 B + player + 4 actor slots)
   * `Game` aggregates the above plus `Battle`, `DialogueState`,
     `RenderCache`, telemetry buffers.
-* The remaining WRAM (`0xDF2D-0xE000`, ~211 B) is the stack headroom —
+* The remaining WRAM (`0xD9DA-0xE000`, ~1574 B) is the stack headroom —
   see AGENTS.md §52.14 (harness `SP = 0xFFFE` leaves ~254 B before I/O
   mirrors; no stack locals > ~64 B in harness-exercised code).
 
