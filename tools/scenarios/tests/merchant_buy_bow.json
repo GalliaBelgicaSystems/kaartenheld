@@ -45,18 +45,18 @@
   },
   {
    "type": "screen_row",
+   "row": 16,
+   "contains": "[A] Buy  [B] Leave"
+  },
+  {
+   "type": "screen_row_not_contains",
    "row": 15,
    "contains": "Don't forget to"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 16,
    "contains": "equip your cards"
-  },
-  {
-   "type": "screen_row",
-   "row": 17,
-   "contains": "from the START menu!"
   }
  ],
  "initial_state": {

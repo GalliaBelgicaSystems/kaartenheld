@@ -128,7 +128,7 @@ typedef struct CardSkinDef {
     uint8_t weapon_color[5];   /* per-type box/icon CGB palette (UI_COLOR_*) */
     uint8_t uses_type;         /* BATTLE_CARD_TYPE whose finite-use cards draw
                                   the arrow counter on the floor row; 0xFF = none */
-    uint8_t uses_tile[5];      /* remaining uses 0..4 (clamped) -> arrow icon tile */
+    uint8_t uses_tile[6];      /* remaining uses 0..5 -> arrow icon tile */
     uint8_t uses_power_tile;   /* power-row glyph for the uses_type (nine icon) */
 } CardSkinDef;
 

@@ -13,14 +13,14 @@
  * grant and the battle fallback deck read this table. */
 const uint8_t g_hero_starter_deck_count = 10;
 const uint8_t g_hero_starter_deck_ids[10] = {
-    CARD_IRON_SWORD,
-    CARD_IRON_SWORD,
+    CARD_WOOD_SWORD,
+    CARD_WOOD_SWORD,
     CARD_WOODEN_SHIELD,
     CARD_WOODEN_SHIELD,
     CARD_FIRE_SWORD,
-    CARD_IRON_SWORD,
+    CARD_WOOD_SWORD,
     CARD_WOODEN_SHIELD,
     CARD_FIRE_SWORD,
     CARD_WOODEN_SHIELD,
-    CARD_IRON_SWORD
+    CARD_WOOD_SWORD
 };

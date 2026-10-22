@@ -255,9 +255,9 @@ his stolen amulet from the Forest, his shop opens for business:
 
 ![The shop up close](manual_images/detail-shop.png)
 
-Press **A** to buy and **B** to leave. The Merchant sells an **Iron
-Sword**, a powerful **Mythril Bow**, and a **Healing Ring** — your best
-friend when you are hurt.
+Press **A** to buy and **B** to leave. The Merchant sells a powerful
+**Mythril Bow** and an **Iron Ring** — your best friend when you are
+hurt.
 
 ---
 
@@ -324,7 +324,7 @@ ending. The land is saved, thanks to you!
 
 | | |
 |---|---|
-| Your health | **10 HP** |
+| Your health | **15 HP** |
 | Starting gold | **20** |
 | Cards in hand | **5** |
 | Energy each round | **2** |

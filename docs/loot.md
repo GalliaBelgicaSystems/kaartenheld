@@ -1637,27 +1637,46 @@ Every loot card is fully defined by three axes; the assembled name is
 letters for the weapon (effect omitted when plain):
 
 ```text
-MATERIALS (power bonus)      EFFECTS                WEAPONS
-wood   W   +0                plain (no rider, no code)   sword  SW
-bronze B   +1                poison P                    bow    BO
-iron   I   +2                fire   F                    dagger DA
-mythril M   +3               ice    I                    shield SH
-                                                         ring   RG (battle code HE)
+MATERIALS (power band)       EFFECTS                WEAPONS
+wood   W   1                 plain (no rider, no code)   sword  SW
+bronze B   2-3               poison P                    bow    BO
+iron   I   4-5               fire   F                    dagger DA
+steel  S   6-7               ice    I                    shield SH
+mythril M  8-9                                           ring   RG (battle code HE)
 ```
 
 Names look like `W SW` (plain wood sword), `M P DA` (mythril poison
-dagger), `W F SW` (wood fire sword).
+dagger), `B F SW` (bronze fire sword).  Wood+rider names cannot occur:
+wood is always plain.
 
-* Weapon base powers: sword 3, shield 2, bow 2, ring 2 (heals), dagger 1.
-* Material bonus stacks on top: mythril sword = 6.
+* **Material bands, not base+bonus:** sword/bow take the high end of a
+  band, shield/dagger/ring the low end.  Wood is 1 for every weapon;
+  bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same bands power
+  attack, defense (shield block) and healing (ring heal).
+* **Wood never carries a rider.**  The generator forces `plain` at wood,
+  and synthesis strips hand-encoded wood+rider ids.  Rider cards
+  (poison/fire/ice) are therefore bronze and above.
+* **Health rider (display-only).**  Every healing card -- wood included,
+  since only rings heal and only rings ever will -- shows a green `+`
+  OAM icon plus a HEALTH RIDER detail line: on CARDS list rows and the
+  detail page, on battle hand cards, on the victory loot reveal, and on
+  the merchant's ring stock row.  The icon is the boot-resident font `+`
+  glyph as OAM tile 11 with OBJ slot 3 (sprites11 greens, never
+  reprogrammed after boot): the shared blob is full (100-125) and
+  126-127 are reserved, so no new VRAM tile exists for a fourth rider.
+  Display-only by design: it keys off the heal role, never a status --
+  no on-hit roll, no mechanic change.  Real status riders
+  (fire/ice/poison) keep precedence wherever both could apply.
 * Fire/ice rows are LIVE (Phase D): fire swords carry a BURN rider
   (2 dmg/round, 2 rounds) and ice swords a FREEZE rider (the target
   skips its next attack); chances tuned like DA1 in 1/255 units.
   Adding future effects later = filling in their table rows.
 * Every combination maps to a **derived CardId** in the loot id range
-  (`LOOT_ID_BASE`..0xFF): `id = BASE + (material*Neff + effect)*Nwpn + wpn`.
+  (`LOOT_ID_BASE` = `0x60` .. `0xFF`; 5 materials x 4 effects x 8
+  weapons = 160 ids): `id = BASE + (material*Neff + effect)*Nwpn + wpn`.
   `card_get_def()` synthesizes definitions for these ids from the tables --
   name (abbreviated), battle symbol, power, cost, effect/rider fields.
+  The catalog (`cards_content.c`) uses the same bands for curated cards.
 
 **Consequence**: the deck, collection, shops, CARDS tab, battle init, and
 save format all treat loot cards as ordinary cards via derived ids.  No
@@ -1702,8 +1721,18 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   IMPLEMENTED (selection gate, battle msg id 3).
 * Rings are THE healing vector of the game: every HEAL-type card is a
   ring by construction, and the Merchant sells a curated IRON RING
-  (`I RG`; shop label **RG1**, 20g) as the heal source once his shop
+  (`I RG`; shop label **RG4**, 20g) as the heal source once his shop
   opens.  IMPLEMENTED.
+* Uses per battle follow the material band (`LOOT_RING_USES` = tier + 1):
+  wood 1, bronze 2, iron 3, steel 4, mythril 5.  A wood ring is
+  single-use -- a free repeatable heal would trivialize attrition --
+  while higher tiers hold more charges instead of healing more per
+  charge.  The curated shop ring follows the same band as loot iron
+  (3 uses).  The battle deck, the CARDS detail page and the battle HUD
+  counter all read the same value; a 5-count shows the 5_arrows_left
+  glyph on the floor counter (VRAM 103, same overwrite trick as 4_arrows
+  on 97) while the semantic row still reads the digit (HE5).
+  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
 ## 34.4 Combat resolution rules
@@ -1731,28 +1760,49 @@ what varies, not presence):
 
 ```text
 archetype weapon <- enemy profile bias (game layer, docs/loot.md §17)
-material         <- weighted roll (wood-heavy; rings always wood --
-                    the merchant's ring is the metal one)
-effect           <- legal-for-weapon weighted roll (plain/poison-heavy)
+material         <- AP-gated weighted roll (see the table below)
+effect           <- legal-for-weapon weighted roll (plain/poison-heavy);
+                    forced plain at wood (§34.1)
 ```
+
+**AP gate (demo scope).**  The roll reads the live battle energy pool
+(`VARIABLE_ID_ENERGY_POOL`) and maps it to a maximum material tier.  AP
+above 5 clamps to 5.  The demo ships no new AP-earning content; the
+existing tutorial/chest/Monster Hunt/mimic +1 grants are the whole ladder, and
+this table is the contract future AP sources plug into:
+
+| AP | Highest material | Approx. weights |
+|---|---|---|
+| 1 | wood | wood 100% |
+| 2 | bronze | wood 80 / bronze 20 |
+| 3 | bronze | wood 65 / bronze 35 |
+| 4 | iron | wood 50 / bronze 30 / iron 20 |
+| 5+ | mythril | wood 35 / bronze 30 / iron 25 / steel 8 / mythril 2 |
+
+Steel and mythril therefore **never** drop below AP 5; even at AP 5 they
+stay low-probability.  Higher AP broadens the pool, it does not
+guarantee a high tier.
 
 Deterministic per seed (§26).  Telemetry: LOOT_CARD_ADDED
 (d0=derived id, d1=count after) -- the id itself identifies the
-material/effect/weapon roll via the §34.1 macros.
+material/effect/weapon roll via the §34.1 macros (the id range also
+proves the AP gate's lower bound: at AP 1 every drop is `0x60..0x7F`).
 
 Implementation: the whole decision (profile pick + roll + encode)
-is ONE bank-2 body (`src/game/loot_drop_banked.c`) behind the thin
+is ONE bank-9 body (`src/game/loot_drop_banked.c`) behind the thin
 `game_loot_drop()` wrapper; it steps the ISOLATED loot stream
 (`g_loot_rng_state`, seeded from the main seed by `rng_set_seed`) so drops
 never shift shared-RNG scenario outcomes.  The drop path must stay nearly
 fixed-bank-free — overflowing `_CODE`/`_HOME` past 0x8000 corrupts bank 2
 and hangs the guest (AGENTS.md §52.18).  Regression:
-`tools/scenarios/tests/loot_drop_victory.json`.
+`tools/scenarios/tests/loot_drop_victory.json` (AP 1 wood/no rider),
+`loot_ap_iron_cap.json` (AP 4 cap) and `loot_ap_steel.json` (AP 5
+unlock; seed 76 is a clean per-AP ladder).
 
 The reveal is a three-line centered block on the otherwise-blank rows 10-12
 of the battle victory banner: row 10 shows "YOU FOUND:", row 11 shows the
 card's `[element][weapon]` icon tiles ahead of its identity name, and
-row 12 shows the full English description (e.g. "WOOD POISON DAGGER").
+row 12 shows the full English description (e.g. "STEEL SWORD").
 All three lines share the card's effect color.  The icon mapping is the
 same as the battle-hand cards and the CARDS-tab list.  Regression:
 `tools/scenarios/tests/loot_reveal_icons.json`.
@@ -1763,27 +1813,33 @@ The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
 the amulet completes the quest (+15g, amulet removed) and opens the
 shop; finding it is what makes the delivery (and the shop) available:
 
-* BUY: one-copy stock -- the curated IRON RING (**RG1**, 20g) and the
+* BUY: one-copy stock -- the curated IRON RING (**RG4**, 20g) and the
   mythril bow (**BO9**, 30g), one of each.  A row shows only while the
   player owns no copy; buying both empties the shop into `(out of
   stock)`.  Rings are THE healing vector, so healing is purchasable but
-  never free.  The iron sword / poison dagger are gone from the stock:
-  swords come from the starter deck and loot, daggers from the field
-  cache and loot.
+  never free.  Leaving the shop after a purchase opens the merchant's
+  equip tip as a normal dialogue box (the in-shop hint lines are gone);
+  browsing without buying quits straight back to the overworld.  The
+  iron sword / poison dagger are gone from the stock:
+  the starter deck carries a wood sword, iron and better swords come
+  from loot as derived ids (iron unlocks at AP 4; the catalog
+  `CARD_IRON_SWORD` is test-only and never drops), and daggers come
+  from the field cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one
   copy for its synthesized `price` (§16 formula) and emits CARD_SOLD.
   A fully decked card cannot be sold (ownership must stay backed).
 
-Wood gear needs no purchase: the hero starts with an all-wood deck
-(sword/shield/dagger/bow/ring).
+Wood gear needs no purchase: the hero starts with a wood sword and wood
+shield plus two bronze fire swords (the starter rider exception).
 
 ## 34.7 Implementation status
 
 * DONE: identity tables + derived-id synthesis; joker rings (both phases,
   one-ring gate -- battle Cards carry a `ring` flag set at deck init from
-  the derived id); net-damage defense; generation roll + profiles; wood
-  starter; merchant buy stock; sell via CARDS-tab detail page (§34.6).
+  the derived id); net-damage defense; AP-gated generation roll +
+  profiles; wood/bronze starter; merchant buy stock; sell via CARDS-tab
+  detail page (§34.6).
 * FOLLOW-UP increments: affix catalogue growth; fire/ice statuses
   (DONE, see §34.1); HEAL ALL.

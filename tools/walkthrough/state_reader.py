@@ -178,6 +178,7 @@ CURRENCY_ID_GOLD = 1
 # Cards (src/rpg/cards.h + src/game/game_ids.h)
 CARD_FIRST_GAME = 0x40
 CARD_IRON_SWORD = CARD_FIRST_GAME + 0
+CARD_WOOD_SWORD = CARD_FIRST_GAME + 7
 CARD_WOODEN_SHIELD = CARD_FIRST_GAME + 1
 CARD_IRON_RING = CARD_FIRST_GAME + 2
 CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
@@ -185,7 +186,7 @@ CARD_AMULET = CARD_FIRST_GAME + 5
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
-HERO_START_HP = 10
+HERO_START_HP = 15
 # Spawn-facing bytes (Direction enum, src/world/entity.h: UP=0, DOWN=1,
 # LEFT=2, RIGHT=3).  Keyed by the level JSON player.spawn facing string;
 # the boot anchor derives the expectation from the JSON, never a constant.
@@ -334,14 +335,14 @@ class StateReader:
             cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
             head = self.rd(cand, 2)
             name = self.rd(cand + 2, 1)
-            # Accept base (10) or god-mode (99) max, any hp<=max (transit
+            # Accept base (15) or god-mode (99) max, any hp<=max (transit
             # fights take damage; probe must survive damaged heroes).
             if (name == b"H" and head[1] in (HERO_START_HP, 99)
                     and head[0] <= head[1]):
                 self._battle_base = cand
                 self._world_ptr_size = ptr
                 return cand
-        # Include observed bytes so god-mode (99/99) vs base (10/10)
+        # Include observed bytes so god-mode (99/99) vs base (15/15)
         # mismatches are diagnosable without a second run.
         seen = []
         for ptr in NAME_PTR_CANDIDATES:

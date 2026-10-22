@@ -15,7 +15,7 @@
   },
   {
    "type": "player_hp",
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "player_position",

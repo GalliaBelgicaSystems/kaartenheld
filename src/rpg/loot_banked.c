@@ -16,10 +16,9 @@
 #define STATUS_POISON  1
 
 static const struct {
-    uint8_t power_bonus;   /* stacked onto weapon base power */
     char code[4];          /* 1-letter material initial (§34.1) */
 } s_materials[LOOT_NMATERIALS] = {
-    { 0, "W"  }, { 1, "B" }, { 2, "I" }, { 3, "M" }
+    { "W" }, { "B" }, { "I" }, { "S" }, { "M" }
 };
 
 /* Effect rows: on-hit status rider applied by battle (docs/combo-system.md
@@ -37,18 +36,17 @@ static const struct {
 };
 
 static const struct {
-    uint8_t base_power;
     uint8_t cost;
     char symbol[3];        /* 2-letter weapon code (§34.1) */
 } s_weapons[LOOT_NWEAPONS] = {
-    { 3, 1, "SW" },   /* sword */
-    { 2, 1, "SH" },   /* shield */
-    { 2, 1, "BO" },   /* bow */
-    { 1, 1, "DA" },   /* dagger */
-    { 2, 1, "RG" },   /* ring (heal amount = power) */
-    { 0, 0, "??" },   /* reserved */
-    { 0, 0, "??" },   /* reserved */
-    { 0, 0, "??" }    /* reserved */
+    { 1, "SW" },   /* sword */
+    { 1, "SH" },   /* shield */
+    { 1, "BO" },   /* bow */
+    { 1, "DA" },   /* dagger */
+    { 1, "RG" },   /* ring (heal amount = power) */
+    { 0, "??" },   /* reserved */
+    { 0, "??" },   /* reserved */
+    { 0, "??" }    /* reserved */
 };
 
 /* Build the compact identity name "[material][ effect] weapon" into the
@@ -91,22 +89,20 @@ void loot_synth_banked(void)
     uint8_t weapon = loot_id_weapon(id);
     uint8_t *dst = (uint8_t *)&g_card_scratch;
     uint8_t n = sizeof(CardDefinition);
-    uint8_t bonus;
+    uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
     uint8_t has_rider;
-
-    bonus = s_materials[material].power_bonus;
 
     while (n--) *dst++ = 0;   /* zero-fill, then set fields */
 
     g_card_scratch.id = id;
     g_card_scratch.type = CARD_TYPE_ATTACK;
-    g_card_scratch.power = s_weapons[weapon].base_power + bonus;
+    g_card_scratch.power = LOOT_POWER(material, wi);
     g_card_scratch.cost = s_weapons[weapon].cost;
-    /* Centralized sell value (docs/loot.md §16/§34.6): weapon base +
-     * material tier*2 (+2 poison rider).  Stored in the def's price
-     * field so every consumer (shop SELL mode) reads it like any other
-     * card price -- no separate formula anywhere else in the game. */
-    g_card_scratch.price = (uint8_t)(s_weapons[weapon].base_power +
+    /* Centralized sell value (docs/loot.md §16/§34.6): synthesized
+     * power + material tier*2 (+2 poison rider).  Stored in the def's
+     * price field so every consumer (shop SELL mode) reads it like any
+     * other card price -- no separate formula anywhere else in the game. */
+    g_card_scratch.price = (uint8_t)(g_card_scratch.power +
                                      ((uint8_t)material << 1) +
                                      ((effect == EFF_POISON &&
                                        weapon == WPN_DAGGER) ? 2 : 0));
@@ -135,9 +131,9 @@ void loot_synth_banked(void)
             g_card_scratch.type = CARD_TYPE_HEAL;
             g_card_scratch.battle_type = BATTLE_CARD_TYPE_HEAL;
             g_card_scratch.effect = CARD_EFFECT_HEAL_HP;
-            /* Demo scope: wild rings are single-use per battle (the
-             * merchant's iron ring carries 4). */
-            g_card_scratch.uses_per_battle = 1;
+            /* Rings hold material-tier uses per battle (LOOT_RING_USES):
+             * wood single-use, mythril five. */
+            g_card_scratch.uses_per_battle = LOOT_RING_USES(material);
             break;
     }
 
@@ -147,7 +143,11 @@ void loot_synth_banked(void)
      * construct e.g. SWORD+POISON, which must carry no rider and no
      * effect infix.  Written into the def so the existing battle
      * on-hit path consumes it unchanged. */
-    has_rider = (s_effects[effect].status_id != STATUS_NONE &&
+    /* Rider gate: wood carries no riders (docs/loot.md §34.1); the
+     * generator never rolls one there, and synth strips hand-encoded
+     * wood+rider ids too. */
+    has_rider = (material >= MAT_BRONZE &&
+                 s_effects[effect].status_id != STATUS_NONE &&
                  rider_legal(effect, weapon));
     if (has_rider) {
         g_card_scratch.status_id = s_effects[effect].status_id;

@@ -26,12 +26,12 @@ const SceneTerrainBlock s_castle_terrain[] = {
     { 13, 3, 1, 6, TILE_CASTLE_03 },
     { 14, 3, 2, 1, TILE_CASTLE_01 },
     { 16, 3, 1, 6, TILE_CASTLE_04 },
-    { 4, 8, 2, 1, TILE_CASTLE_09 },
-    { 14, 8, 2, 1, TILE_CASTLE_09 },
+    { 4, 8, 2, 1, TILE_CASTLE_10 },
+    { 14, 8, 2, 1, TILE_CASTLE_10 },
     { 9, 16, 2, 1, TILE_CASTLE_26 },
-    { 0, 17, 1, 1, TILE_CASTLE_08 },
-    { 1, 17, 18, 1, TILE_CASTLE_09 },
-    { 19, 17, 1, 1, TILE_CASTLE_10 },
+    { 0, 17, 1, 1, TILE_CASTLE_09 },
+    { 1, 17, 18, 1, TILE_CASTLE_10 },
+    { 19, 17, 1, 1, TILE_CASTLE_11 },
     { 0, 0, 0, 0, 0 }
 };
 

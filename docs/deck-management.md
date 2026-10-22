@@ -18,19 +18,18 @@ draw-pile CardIds), compiled by `battle_compile.py` into
 in the level editor's Hero view.  The default set is:
 
 ```text
-IRON_SWORD    ×4   → SW2   (max_copies 4)
+WOOD_SWORD    ×4   → SW1   (max_copies 4)
 WOODEN_SHIELD ×4   → SH1   (max_copies 4)
-FIRE_SWORD    ×2   → SW1   (unlimited uses; BURN rider)
+FIRE_SWORD    ×2   → SW3   (unlimited uses; BURN rider, bronze tier)
 ```
 
-No daggers: the first POISON_DAGGER (DA1, max_copies 3) comes from the
+No daggers: the first POISON_DAGGER (DA2, max_copies 3) comes from the
 field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
 one-shot via `STORY_FLAG_ID_FIELD_CHEST`, announced by its own reward
-speech that also grants +1 AP) — and the Merchant sells
-more for 8 gold.
+speech that also grants +1 AP).
 
 The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
-the opening battle hand is `SW2 SW2 SH1 SH1 SW1` and the draw pile starts at
+the opening battle hand is `SW1 SW1 SH1 SH1 SW3` and the draw pile starts at
 5. The original five-card grant was enlarged so a fresh file can actually
 cycle its deck (draw → discard → reshuffle) without shopping first.
 
@@ -42,11 +41,11 @@ Consequences:
   `g_hero_starter_deck` table through the card catalog, so it always
   mirrors the granted set byte-for-byte (including the first-five deal
   order).
-- Healing is **not** free at the start. The only heal source is the shop's
-  IRON RING card — **RG1** (power 1, `uses_per_battle` 3, price 20g).
-  Buy it, then add it to the deck from the CARDS menu.
+- Healing is **not** free at the start. The only guaranteed heal source is
+  the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 3,
+  price 20g).  Buy it, then add it to the deck from the CARDS menu.
 - Shop rows render the ITEM code derived from the card definition
-  (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG1`, `SW1` --
+  (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG4`, `SW5` --
   a HEAL card is a ring, so the shop shows `RG` rather than its battle
   code `HE`) plus its `price` — no display strings are duplicated in the
   shop layer.
@@ -71,9 +70,9 @@ CARDS QUEST STATUS          <- row 0 (tabs)
 ^                           <- row 1 (caret under CARDS)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
    AP MATERIAL TYPE     <- row 3 (column header)
->   1 IRON SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
+>   1 WOOD SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
     1 WOOD SHIELD        4     element-colored full name, decked count
-    1 IRON SWORD         2
+    1 BRONZE SWORD       2
 ```
 
 - **Full name**: `<MATERIAL> <WEAPON>` (e.g. `IRON SWORD`, `WOOD SHIELD`,
@@ -85,7 +84,7 @@ CARDS QUEST STATUS          <- row 0 (tabs)
   col-1 elem cell plus its element color span; **AP cost** digit at cols 3-4.
 - **Membership column** (rightmost): the decked-copy count as a digit
   (`0` = none, `1`..`n` = copies in the deck), so partial stacks (starter
-  4x IRON SWORD / 4x WOOD SHIELD / 2x FIRE SWORD, ring up to 3) are visible
+  4x WOOD SWORD / 4x WOOD SHIELD / 2x BRONZE SWORD, one shop ring) are visible
   at a glance.
 - SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
 - up to 11 cards visible (rows 4-14) under the row-3 column header;
@@ -147,17 +146,17 @@ values; A validates and applies them to the list; B backs out unchanged.
 
 SELECT on a highlighted entry opens a full-property view; B returns.
 
-CARDS (example: IRON SWORD with a fire rider):
+CARDS (example: BRONZE SWORD with a fire rider):
 
 ```text
-  IRON SWORD            <- element-colored full name + weapon icon
+  BRONZE SWORD          <- element-colored full name + weapon icon
 FIRE RIDER              <- on-hit element rider (or NO RIDER)
 TYPE ATTACK             <- ATTACK / DEFEND / HEAL combat role
 AP COST             1   <- numbers right-aligned to col 18
-POWER               9
+POWER               3
 USES              INF   <- per-battle uses (INF = unlimited)
 OWN     1 DECK        0
-SELL              30G   <- merchant sell value (-- when not buyable)
+SELL               5G   <- merchant sell value (-- when not buyable)
 SEL:BACK                <- A:SELL SEL:BACK at a buying merchant
 ```
 
@@ -211,7 +210,7 @@ semantic assertion names.
 | Scenario | Proves |
 |---|---|
 | `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
-| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW2 SW2 SH1 SH1 SW1 from the 10-card table) |
+| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW1 SW1 SH1 SH1 SW3 from the 10-card table) |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
 | `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |

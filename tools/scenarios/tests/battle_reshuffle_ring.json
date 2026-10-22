@@ -1,7 +1,7 @@
 {
  "name": "battle_reshuffle_ring",
  "test": true,
- "description": "Ring-flag conservation across discard + reshuffle (card_copy_banked / deck_discard_banked must carry Card.ring): a 6-card deck [SW SW SW SW R R] plays two swords on attack (no ring involved), then defends with the redealt ring (the second staged ring is refused by the ONE RING gate). Under poker-hands-only scoring the lone ring blocks 0, so no overblock heal fires. A final attack turn stages the reshuffle-cycled ring (slot 0) with a sword: with the flag intact the joker makes a PAIR of 2s that converts to healing (HEALED amount 4, cause 1). If the reshuffle fold drops the flag, the cycled ring attacks as a flagless heal card instead (heal 2, cause 0).",
+ "description": "Ring-flag conservation across discard + reshuffle (card_copy_banked / deck_discard_banked must carry Card.ring): a 6-card deck [SW SW SW SW R R] plays two swords on attack (no ring involved), then defends with the redealt ring (the second staged ring is refused by the ONE RING gate). Under poker-hands-only scoring the lone ring blocks 0, so no overblock heal fires. A final attack turn stages the reshuffle-cycled ring (slot 0) with a sword: with the flag intact the joker makes a PAIR of 5s that converts to healing (base 10 x 120% = HEALED amount 12, cause 1). If the reshuffle fold drops the flag, the cycled ring attacks as a flagless heal card instead (heal 4, cause 0).",
  "actions": [
   {
    "type": "wait",
@@ -148,7 +148,7 @@
    "type": "event_arg",
    "event": "HEALED",
    "index": 0,
-   "value": 4
+   "value": 12
   },
   {
    "type": "event_arg",
@@ -160,7 +160,7 @@
    "type": "event_arg",
    "event": "EFFECT_RESOLVED",
    "index": 0,
-   "value": 4
+   "value": 12
   }
  ],
  "initial_state": {

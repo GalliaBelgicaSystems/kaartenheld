@@ -13,17 +13,17 @@
 #include "battle_data.h"
 #include "audio.h"
 
-#define HERO_START_HP    10
+#define HERO_START_HP    15
 #define HERO_START_GOLD  20
 
 /* ── Victory loot drop (docs/loot.md §17/§34.5) ─────────────────────
  * Thin fixed-bank wrapper: the whole decision (profile pick, roll,
- * encode) runs as ONE bank-3 body (loot_drop_banked.c); only this
+ * encode) runs as ONE bank-9 body (loot_drop_banked.c); only this
  * staging call stays fixed.  Returns the derived CardId (always drops
  * -- quality varies, not presence). */
 uint8_t game_loot_drop(uint8_t battle_type)
 {
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 9;
     g_bk_call_target = (uint16_t)&game_loot_drop_banked;
     g_bk_byte_a = battle_type;
     banked_call_run();
@@ -66,8 +66,9 @@ void game_new_game(GameState *state)
     state->party.members[0].max_hp = HERO_START_HP;
 
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
-    /* Base energy pool: every milestone (tutorial, chest, mayor) grants
-     * a uniform ADD 1 from here, reaching 4 in any completion order.
+    /* Base energy pool: every milestone (tutorial, chest, Monster Hunt,
+     * mimic) grants a uniform ADD 1 from here, reaching 5 in any
+     * completion order.
      * Initializing (not relying on the stager's < 1 fallback) keeps the
      * variable equal to the visible pool, so staged values, snapshots
      * and the debugger never disagree about what a fight will stage. */

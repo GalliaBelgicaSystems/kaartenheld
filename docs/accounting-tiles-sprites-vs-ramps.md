@@ -37,9 +37,9 @@
 
 | ramp (slot) | tiles |
 |---|---|
-| castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table, castle_top_left_throne, castle_top_right_throne |
-| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_square, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
-| castle4 (0) | castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_floor_with_debris, castle_left_wall, castle_plain_floor, castle_right_wall, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_window |
+| castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table_left_half, castle_table_right_half, castle_table_top_empty, castle_table_with_plate_1, castle_table_with_plate_2, castle_top_left_throne, castle_top_right_throne |
+| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
+| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
 
 ### desolate_landscape (set `desolate_landscape`)
 
@@ -54,13 +54,13 @@
 
 | ramp (slot) | tiles |
 |---|---|
-| town1 (5) | village_bottom_left_corner_wall, village_bottom_right_corner_wall, village_bottom_wall, village_dog_frame_1, village_dog_frame_2, village_floor_with_stuff_on_it, village_guard, village_hero_frame_1, village_hero_frame_2, village_left_wall, village_mayor, village_merchant, village_plain_floor_1, village_right_wall, village_save_wizard, village_top_left_corner_wall, village_top_right_corner_wall, village_top_wall |
+| town1 (5) | village_bottom_left_corner_wall, village_bottom_right_corner_wall, village_bottom_wall, village_destination_signpost, village_dog_frame_1, village_dog_frame_2, village_floor_with_stuff_on_it, village_guard, village_hero_frame_1, village_hero_frame_2, village_left_wall, village_merchant, village_plain_floor_1, village_right_wall, village_save_wizard, village_top_left_corner_wall, village_top_right_corner_wall, village_top_wall |
 | town2 (6) | village_bottom_left_roof, village_bottom_left_roof_2, village_bottom_middle_roof, village_bottom_middle_roof_2, village_bottom_right_roof, village_bottom_right_roof_2, village_left_house, village_right_house, village_top_left_roof, village_top_left_roof_2, village_top_middle_roof, village_top_middle_roof_2, village_top_right_roof, village_top_right_roof_2 |
 | town3 (1) | village_fire_frame_1, village_fire_frame_2, village_stairs |
 | town4 (0) | village_bottom_left_well, village_bottom_right_well, village_floor_with_puddle_on_it |
 | town5 (2) | village_top_left_well, village_top_right_well |
 | town6 (3) | village_barrel |
-| town7 (7) | village_middle_house |
+| town7 (7) | village_middle_house_closed_door (≈ #8d754a), village_middle_house_open_door |
 
 ## Battle sprites (display ramp + draw path)
 
@@ -132,6 +132,7 @@ overlay is deleted.
 | (0,9) | combat_3_arrows_left | 5 → fight2 | ✓ |
 | (1,9) | combat_nine_icon | 5 → fight2 | ✓ |
 | (0,10) | combat_4_arrows_left | 5 → fight2 | ✓ |
+| (1,10) | combat_5_arrows_left | 5 → fight2 | ✓ |
 
 Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + uses icons and the power digit use the type's `weapon_color` slot(s) 5 fight2; the box is paper and the DIM grey-out override applies to the icon/digit cells too.
 
@@ -144,6 +145,7 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
 | forest | [15, 2] | field3 | #2a4f1a, #5ea4c8 |
+| village | [14, 2] | town7 | #8d754a |
 | battle | [0, 13] | fightslime | #3c5e26 |
 | battle | [0, 14] | fightslime | #3c5e26 |
 | battle | [1, 13] | fightslime | #3c5e26 |

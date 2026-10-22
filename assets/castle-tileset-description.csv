@@ -1,5 +1,4 @@
 "top left corner wall","top wall","top right corner wall","left wall","right wall",window,curtain,"top left throne","top right throne"
-"bottom left corner wall","bottom wall","bottom right corner wall","chair facing left",table,"chair facing right","floor with debris","bottom left throne","bottom right throne"
-"left rug","right rug","top chandelier","bottom chandelier","plain floor"," ""plain floor""","plain floor","plain floor",exit
-"left rug rotated","right rug rotated","plain floor","plain floor","plain floor","plain floor","plain floor","plain floor","plain floor"
-"red square","plain floor","plain floor","plain floor","plain floor","plain floor","plain floor","plain floor","plain floor"
+"bottom left corner wall","bottom wall","bottom right corner wall","chair facing left","table left half","chair facing right","floor with debris","bottom left throne","bottom right throne"
+"left rug","right rug","top chandelier","bottom chandelier",vase,"table right half","table with plate 1","table with plate 2",exit
+"table top empty","vase 2","roman column base","roman column top","right rug rotated","left rug rotated","red carpet",empty,empty

@@ -279,8 +279,7 @@ reachable — it is not gated behind this quest.
    Returning to the spot afterwards says "Nothing here now."
 4. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his shop (Iron Sword, Mythril Bow, Poison
-   Dagger and Ring, §9.3):
+   **15 gold**, and opens his shop (Iron Ring and Mythril Bow, §9.3):
 
    > You found it! Thank you, hero!
    > My shop is open now.
@@ -297,9 +296,9 @@ Every tool in battle is a **card**.  Cards have several attributes
 | Field | Meaning |
 |---|---|
 | **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The short code shown in the shop; the CARDS menu instead shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
-| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW2`,
-`SH1`, `RG1`; the **battle hand** uses its own code set — `SW2`, `SH1`,
-`BO2`, **`HE1`** for a heal ring, `DA1`. |
+| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW5`,
+`SH1`, `RG4`; the **battle hand** uses its own code set — `SW5`, `SH1`,
+`BO9`, **`HE4`** for a heal ring, `DA2`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
 | **Cost** | Energy price to play in battle (most cards cost 1). |
@@ -315,8 +314,8 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG1`, battle hand label `HE1`. |
-| `DA` | Dagger | Attack | 1 damage plus a poison rider. |
+| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
+| `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
 `UTL` utility, `SPL` special (quest items that cannot be decked).
@@ -327,13 +326,20 @@ All catalogue cards (`src/game/cards_content.c`):
 
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
-| Iron Sword | `I SW` | `SW2` | ATK | 2 | 1 | – | 4 | — | 10g |
+| Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
+| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (test) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
-| Ring (shop) | `I RG` | `RG1` | HEL | 1 | 1 | 3/battle | 3 | — | 20g |
-| Fire Sword | `F SW` | `SW1` | ATK | 1 | 1 | – | 3 | BURN 128 | — |
-| Poison Dagger | `P DA` | `DA1` | ATK | 1 | 1 | – | 3 | POISON 128 | — |
+| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 3/battle | 1 | — | 20g |
+| Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
+| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
+
+The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
+entry: it has no shop row, is not in the starter deck, and never drops.
+Scenarios use it as a convenient power-5 sword.  In normal play iron
+swords come from loot as derived ids (e.g. `0xA0` for a plain iron
+sword), which start dropping at AP 4 (loot.md §34.5).
 
 Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
 multiplier (§8.4).
@@ -356,8 +362,8 @@ Deck rules (`src/rpg/deck.h`):
 ### 5.5 Starter deck
 
 A new game grants this 10-card deck (`content.c`, from `screens/hero.json`):
-**4× Iron Sword (`SW2`), 4× Wooden Shield (`SH1`), 2× Fire Sword
-(`SW1`)**.  The opening hand is always `SW SW SH SH SW` (the first
+**4× Wood Sword (`SW1`), 4× Wooden Shield (`SH1`), 2× Fire Sword
+(`SW3`)**.  The opening hand is always `SW SW SH SH SW` (the first
 five copies are the two swords, two shields and a fire sword; the extras
 only deepen the draw pile).
 
@@ -391,7 +397,7 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 * **Hand**: 5 cards drawn from your deck at battle start.
 * **Energy**: the **pool** per decision phase (attack and defend each get a
   fresh refill to full).  It starts at **1**; the tutorial, the field
-  cache and the Monster Hunt quest each grant **+1** (up to 4).  Most
+  cache, the Monster Hunt quest and the mimic each grant **+1** (up to 5).  Most
   cards cost 1; the Mythril Bow
   costs 2.  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
@@ -599,7 +605,7 @@ Selected cards are ranked **exactly like poker hands**
   pairs and kinds work with 2+.
 * **Rings are JOKER cards** (`combo_content.c` §34.3): in the hand
   evaluation, each ring's value may be any value **1..10** — the evaluator
-  tries every legal value and keeps the *best* tier.  A `SW2, SH1, RG1`
+  tries every legal value and keeps the *best* tier.  A `SW5, SH1, RG4`
   selection lets the ring become a 1 (a pair with the shield) so the
   tier improves.
   Crucially the joker substitutes **values only** — a ring's symbol is
@@ -718,11 +724,10 @@ on the enemy type:
 
 One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
-* **Lost Merchant** (Town, (11,3)) — sells the **Iron Sword** (`I SW`,
-  `SW2`) for **10g**, the **Mythril Bow** (`M BO`, `BO9`) for **30g**,
-  the **Poison Dagger** (`P DA`, `DA1`) for **8g** and the **Ring**
-  (`I RG`, `RG1`) for **20g** (a heal card; the game's only reliable
-  healing, outside loot rings).  Reachable only after the Lost Amulet
+* **Lost Merchant** (Town, (11,3)) — sells the **Iron Ring** (`I RG`,
+  `RG4`) for **20g** (a heal card; the game's only reliable healing
+  outside loot rings) and the **Mythril Bow** (`M BO`, `BO9`) for
+  **30g**, one copy of each.  Reachable only after the Lost Amulet
   quest (§4.3): before the delivery he re-briefs instead of selling.
 
 Shopping: `A` buys the hovered item if you have enough gold and room in
@@ -734,15 +739,20 @@ your **collection**; deck them from the CARDS menu to use them.
 
 Victory loot cards are **procedurally generated** with a derived identity
 name `[material] [effect] weapon` (`loot_banked.c`, `loot.md §34`) — e.g.
-`W SW` (wood sword), `M P DA` (mythril poison dagger), `W F SW` (wood fire
+`W SW` (wood sword), `M P DA` (mythril poison dagger), `S SW` (steel
 sword).
 
-* Materials raise power: **W**ood +0, **B**ronze +1, **I**ron +2,
-  **M**ythril +3 (weighted wood-heavy).
+* Material bands: **W**ood 1, **B**ronze 2–3, **I**ron 4–5, **S**teel
+  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/dagger/ring
+  the low end.  The same bands power attack, shield block and ring heal.
+* **Wood never carries a rider**; the generator forces plain at wood and
+  synthesis strips wood+rider ids.  Rider cards are bronze and above.
 * Effects are legal per weapon: daggers may carry **P**oison, swords may
   carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
   plain.  Illegal pairs carry no rider.
-* Weapon bases: sword 3, shield 2, bow 2, ring 2 (heals), dagger 1.
+* Loot material is **AP-gated** (docs/loot.md §34.5): AP 1 is wood-only,
+  AP 2–3 bronze, AP 4 iron, AP 5+ steel/mythril.  Steel and mythril stay
+  low-probability even at AP 5.
 
 Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
@@ -752,8 +762,8 @@ the shop actor; only the Lost Merchant buys), you can sell **loot** cards
 from the CARDS tab: open a loot card's detail page (`SELECT`) and press
 `A` to sell one copy (no `SELL` label is shown — the sale is silent; the
 `CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
-the card's price field, synthesized as `base power + material tier×2 (+2
-for a poison dagger)`.  You cannot sell a copy that would strand a decked
+the card's price field, synthesized as `power + material tier×2 (+2 for
+a poison dagger)`.  You cannot sell a copy that would strand a decked
 card without ownership backing (rejected with the `DECK FULL` message).
 
 ---
@@ -847,9 +857,9 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 ## 13. Reference: quick numbers
 
-* Hero: HP 10, gold 20, deck 12, opening hand `SW SW SH SH SW`.
+* Hero: HP 15, gold 20, deck 10, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 1/round (tutorial/chest/mayor each grant +1, up to 4), timer 20s per decision.
+* Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

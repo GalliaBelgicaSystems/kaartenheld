@@ -33,7 +33,7 @@
   {
    "type": "screen_row",
    "row": 4,
-   "contains": "IRON SWORD"
+   "contains": "WOOD SWORD"
   },
   {
    "type": "screen_row",
@@ -43,7 +43,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "IRON SWORD"
+   "contains": "BRONZE SWORD"
   },
   {
    "type": "screen_row",
@@ -53,7 +53,7 @@
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "IRON DAGGER"
+   "contains": "BRONZE DAGGER"
   }
  ]
 }

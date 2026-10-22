@@ -233,7 +233,7 @@ ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_9": 0x46}
+               "BOW_9": 0x46, "WOOD_SWORD": 0x47}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
@@ -497,6 +497,17 @@ class EmulatorSession:
     def _memwrite(self, addr, val):
         """Write single byte to GB memory address."""
         self._cmd(f'w/1 0x{addr:04X} 0x{val:02X}')
+
+    def write_mem(self, addr, val):
+        """Raw single-byte write (harness-only pokes, e.g. SRAM blobs).
+
+        SRAM (0xA000-0xBFFF) sits behind the MBC5 RAM gate: the ROM
+        closes it after every save/load, so open it first with 0x0A to
+        rRAMG (0x0000), otherwise the poke is silently ignored."""
+        addr &= 0xFFFF
+        if 0xA000 <= addr < 0xC000:
+            self._memwrite(0x0000, 0x0A)
+        self._memwrite(addr, val & 0xFF)
 
     def _set_pc(self, addr):
         """Set the CPU program counter."""

@@ -1,7 +1,7 @@
 {
  "name": "shop_rider_sweep",
  "test": true,
- "description": "Two-line ring+bow stock carries no element riders (both cards are STATUS_NONE): no rider icon shows on either row and no phantom icons leak onto any entry",
+ "description": "Two-line ring+bow stock carries no element riders (both cards are STATUS_NONE): the bow row and empty entries show no rider icon and no phantom icons leak. The iron ring row shows the green health '+' (tile 11): every healing ring carries the health rider (docs/loot.md 34.1).",
  "actions": [
   {
    "type": "interact",
@@ -20,7 +20,7 @@
   {
    "type": "oam_tile",
    "entry": 1,
-   "expected": 0
+   "expected": 11
   },
   {
    "type": "oam_tile",
@@ -66,6 +66,11 @@
    "type": "oam_tile",
    "entry": 10,
    "expected": 0
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
   }
  ],
  "initial_state": {

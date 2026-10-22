@@ -68,6 +68,9 @@ void battle_rider_draw(const volatile Battle *battle)
         } else if (cstat == STATUS_POISON) {
             tile = RIDER_TILE_POISON;
             slot = RIDER_OBJ_POISON;
+        } else if (g_card_scratch.battle_type == BATTLE_CARD_TYPE_HEAL) {
+            tile = RIDER_TILE_HEALTH;
+            slot = RIDER_OBJ_HEALTH;
         }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)19 << 2));
         if (tile) {
@@ -101,6 +104,9 @@ void battle_rider_draw(const volatile Battle *battle)
             } else if (cstat == STATUS_POISON) {
                 tile = RIDER_TILE_POISON;
                 slot = RIDER_OBJ_POISON;
+            } else if (ctype == BATTLE_CARD_TYPE_HEAL) {
+                tile = RIDER_TILE_HEALTH;
+                slot = RIDER_OBJ_HEALTH;
             }
         }
         col = (uint8_t)(i << 2);

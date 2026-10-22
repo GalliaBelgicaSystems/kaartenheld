@@ -32,7 +32,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "music_track",

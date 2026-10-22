@@ -2,7 +2,7 @@
 
 /* Fixed-bank home for the loot module's shared WRAM state only.
  *
- * Everything else about drops lives in bank 3
+ * Everything else about drops lives in bank 9
  * (src/game/loot_drop_banked.c -- gate/profile/roll) or behind the
  * synth trampoline dispatched by card_get_def() (src/rpg/loot_banked.c
  * -- identity tables).  The fixed bank sits hard against the 0x8000

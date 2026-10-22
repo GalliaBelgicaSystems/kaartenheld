@@ -534,7 +534,7 @@ value, one-ring selection gate.  See `ring_one_ring_gate` /
 `ring_joker_heal`.
 
 `collection_add` (`DBG_ACT_ADD_ITEM`) grants cards to the collection by
-RAW id: `{"type": "collection_add", "card_id": 139, "quantity": 1}` --
+RAW id: `{"type": "collection_add", "card_id": 99, "quantity": 1}` --
 raw ids let scenarios reach derived loot-range CardIds that have no name
 in the host maps (docs/loot.md §34).
 
@@ -1496,8 +1496,9 @@ TARGET_CHANGED
 
 ```text
 LOOT_CARD_ADDED
-  data[0] = derived CardId (0x80..0xFF; decode via the §34.1 macros:
-            material = (id-0x80)>>5, effect = (id>>3)&3, weapon = id&7)
+  data[0] = derived CardId (0x60..0xFF; decode via the §34.1 macros:
+            material = (id-0x60)>>5, effect = (id>>3)&3, weapon = id&7;
+            material 0=wood 1=bronze 2=iron 3=steel 4=mythril)
   data[1] = collection count after the add
 
 CARD_SOLD (docs/loot.md §34.6)

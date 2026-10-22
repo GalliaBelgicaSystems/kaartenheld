@@ -1,7 +1,7 @@
 {
  "name": "card_sort_power",
  "test": true,
- "description": "Power-desc sort with a flattened catalog (all powers 1) keeps collection order: IRON SWORD, WOOD SHIELD, IRON SWORD for the granted starter collection (stable sort, no key differences)",
+ "description": "Power-desc sort orders the granted starter collection by material band: BRONZE SWORD (3), WOOD SWORD (1), WOOD SHIELD (1); equal-power cards keep collection order",
  "actions": [
   {
    "type": "press",
@@ -28,17 +28,17 @@
   {
    "type": "screen_row",
    "row": 4,
-   "contains": "IRON SWORD"
+   "contains": "BRONZE SWORD"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD SHIELD"
+   "contains": "WOOD SWORD"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "IRON SWORD"
+   "contains": "WOOD SHIELD"
   }
  ],
  "initial_state": {

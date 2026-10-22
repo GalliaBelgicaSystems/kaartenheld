@@ -35,7 +35,7 @@ VALID_ASSERTION_TYPES = {
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
-    "oam_tile", "oam_bytes",
+    "oam_tile", "oam_attr", "oam_bytes",
     "sfx_count", "sfx_last",
     "stack_margin_min",
 }
@@ -98,7 +98,7 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 # scenarios that never ran NEW_GAME would under-report inventory by these
 # starter amounts.  If that use ever broadens, gate the delta on the
 # snapshot's actual origin instead.
-NEW_GAME_COLLECTION = {"IRON_SWORD": 4, "WOODEN_SHIELD": 3, "FIRE_SWORD": 3, "POISON_DAGGER": 2}
+NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "FIRE_SWORD": 2}
 
 def validate_scenario(data, filepath):
     for act in data.get("actions", []):
@@ -268,6 +268,14 @@ def run_scenario(scenario):
             elif act_type == "load":
                 slot = act.get("slot", 1) - 1 if "slot" in act else 0
                 session.debug_action(session.DBG_ACT_LOAD, slot, 0, 0)
+            elif act_type == "sram_write":
+                # Raw single-byte SRAM poke (harness-only: no ROM debug
+                # command involved).  Used to craft blobs the ROM would
+                # never write itself -- e.g. backdating the save version
+                # byte to prove old versions are rejected.  Address is
+                # an absolute GB address (save slot N base = 0xA000 +
+                # N*0x400; version byte at base+2).
+                session.write_mem(act.get("addr", 0), act.get("value", 0))
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by
@@ -380,7 +388,7 @@ def run_scenario(scenario):
             canary_depth, canary_margin = None, None
         # OAM HUD assertions (battle top-right rider sprites) must pre-read
         # before disconnect: evaluation runs after the session closes.
-        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_bytes") for a in scenario.get("assertions", []))
+        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_attr", "oam_bytes") for a in scenario.get("assertions", []))
         oam_entries = {}
         # Expected AP/mark tile bytes come from the generated ap_tiles.h
         # (same file the ROM links): tile order is the --ap-coords order.
@@ -388,7 +396,7 @@ def run_scenario(scenario):
         if has_oam_assert:
             ap_tiles = _load_ap_tiles()
             for a in scenario.get("assertions", []):
-                if a.get("type") == "oam_tile":
+                if a.get("type") in ("oam_tile", "oam_attr"):
                     entry = a.get("entry", 0)
                     if entry not in oam_entries:
                         oam_entries[entry] = session.get_oam_entry(entry)
@@ -540,6 +548,17 @@ def run_scenario(scenario):
             actual = oam[2] if oam is not None and oam[2] is not None else None
             passed = (actual == int(expected))
             actual = f"oam[{entry}].tile={actual}"
+
+        elif a_type == "oam_attr":
+            # OAM entry attribute byte (CGB palette in bits 0-2): pins
+            # which palette a sprite actually renders with, e.g. that a
+            # health-rider icon rides OBJ slot 3 (sprites11 greens) and
+            # not some reprogrammed slot.
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[3] if oam is not None and oam[3] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].attr={actual}"
 
         elif a_type == "oam_bytes":
             # Live OAM tile DATA (not just the tile id): gates VRAM-truth
@@ -960,8 +979,8 @@ def build_initial_state_from_snapshot(snap, state_snap):
         if not iname:
             continue
         # Emit only the delta over the new-game starter grants
-        # (game_new_game in src/game/content.c adds IRON_SWORD x2,
-        # WOODEN_SHIELD x2, FIRE_SWORD x1 to the collection): the loader
+        # (game_new_game in src/game/content.c adds WOOD_SWORD x4,
+        # WOODEN_SHIELD x4, FIRE_SWORD x2 to the collection): the loader
         # applies inventory additively, so re-emitting the full observed
         # collection would double-add the starters on reload.
         qty = it.get("quantity", 0) - NEW_GAME_COLLECTION.get(iname, 0)

@@ -20,12 +20,12 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "IRON SWORD"
+   "contains": "BRONZE SWORD"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "IRON DAGGER"
+   "contains": "BRONZE DAGGER"
   },
   {
    "type": "oam_tile",

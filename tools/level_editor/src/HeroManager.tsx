@@ -139,7 +139,7 @@ export const HeroManager: React.FC<{
           </div>
           <div style={{ marginBottom: 6 }}>
             <label>Start HP: <input type="number" min={1} max={255} style={{ width: 60 }}
-              value={hero?.start_hp || 10}
+              value={hero?.start_hp || 15}
               onChange={(e) => { setHero((prev) => ({ ...prev!, start_hp: Math.max(1, Math.min(255, parseInt(e.target.value) || 1)) })); setDirty(true); }} /></label>
             {'  '}
             <label>Start Gold: <input type="number" min={0} max={65535} style={{ width: 80 }}
@@ -159,10 +159,10 @@ export const HeroManager: React.FC<{
               setHero((prev) => ({ ...prev!, starter_deck: cards }));
               setDirty(true);
             }}
-            placeholder="CARD_IRON_SWORD,&#10;CARD_IRON_SWORD,&#10;CARD_WOODEN_SHIELD..."
+            placeholder="CARD_WOOD_SWORD,&#10;CARD_WOOD_SWORD,&#10;CARD_WOODEN_SHIELD..."
           />
           <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>
-            Valid card IDs: CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
+            Valid card IDs: CARD_WOOD_SWORD, CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
           </div>
         </div>
 

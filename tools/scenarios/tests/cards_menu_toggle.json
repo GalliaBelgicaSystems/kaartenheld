@@ -1,7 +1,7 @@
 {
  "name": "cards_menu_toggle",
  "test": true,
- "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter sword (glyph 4 -> 0), then single adds walk the count back up (1, 2). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 sword / 3 shield / 3 fire + 3 herbs = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5",
+ "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter wood sword (glyph 4 -> 0), then single adds walk the count back up (1, 2). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 wood sword / 3 shield / 3 fire + 3 rings = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -14,7 +14,7 @@
    "IRON_RING": 3
   },
   "deck": {
-   "IRON_SWORD": 4,
+   "WOOD_SWORD": 4,
    "WOODEN_SHIELD": 3,
    "FIRE_SWORD": 3,
    "IRON_RING": 3
@@ -80,7 +80,7 @@
   {
    "type": "screen_row",
    "row": 4,
-   "contains": "IRON SWORD"
+   "contains": "WOOD SWORD"
   },
   {
    "type": "screen_row",

@@ -67,10 +67,10 @@
         },
         "uses_icons": {
           "type": "array",
-          "minItems": 5,
-          "maxItems": 5,
+          "minItems": 6,
+          "maxItems": 6,
           "items": { "type": "string" },
-          "description": "Optional, at most one card type: remaining-uses floor glyphs, ordered uses 4,3,2,1,0. Slot 4 doubles as the clamp target for uses above 4."
+          "description": "Optional, at most one card type: remaining-uses floor glyphs, ordered uses 5,4,3,2,1,0."
         },
         "uses_power_icon": {
           "type": "string",

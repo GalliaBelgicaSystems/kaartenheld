@@ -9,13 +9,22 @@ typedef enum {
     BATTLE_CARD_TYPE_SHIELD = 1, /* SH: Defense / block */
     BATTLE_CARD_TYPE_BOW = 2,    /* BO: Ranged physical attack */
     BATTLE_CARD_TYPE_HEAL = 3,   /* HE: Restore HP (rings) */
-    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: 1 dmg, poison rider (POISON DAGGER) */
+    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider */
 } BattleCardType;
 
 /* Sentinel for an empty hand slot (played cards stay empty until the turn-
  * start draw refills them).  Must not collide with any BattleCardType; kept
  * as a #define because SDCC enums are signed 8-bit (0x80+ would wrap). */
 #define BATTLE_CARD_TYPE_EMPTY 0xFF
+
+/* Health-rider marker (docs/loot.md §34.1): every healing card shows a
+ * green '+' OAM icon (font glyph tile, boot-resident in the OAM block via
+ * the ui_init font duplicate; OBJ slot 3 = sprites11 greens, never
+ * reprogrammed after boot).  The shared blob is full (100-125) and
+ * 126-127 are reserved, so no blob tile exists for a fourth rider.
+ * Display-only: keyed off the heal role, never a status. */
+#define RIDER_TILE_HEALTH 11
+#define RIDER_OBJ_HEALTH  3
 
 typedef struct {
     uint8_t type;           /* BattleCardType */

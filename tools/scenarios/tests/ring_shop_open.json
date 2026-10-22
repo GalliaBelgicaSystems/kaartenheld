@@ -1,7 +1,7 @@
 {
  "name": "ring_shop_open",
  "test": true,
- "description": "The Merchant's merged stock row renders the item code derived from the card definition (RG1 for the healing ring, price 20) \u2014 the shop layer duplicates no display strings",
+ "description": "The Merchant's merged stock row renders the item code derived from the card definition (RG4 for the iron healing ring, price 20) \u2014 the shop layer duplicates no display strings",
  "actions": [
   {
    "type": "interact",
@@ -20,7 +20,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "RG1"
+   "contains": "RG4"
   },
   {
    "type": "screen_row",

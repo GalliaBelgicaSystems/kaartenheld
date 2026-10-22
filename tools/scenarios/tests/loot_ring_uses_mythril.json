@@ -1,0 +1,93 @@
+{
+ "name": "loot_ring_uses_mythril",
+ "test": true,
+ "description": "Loot ring uses: material tier + 1 (docs/loot.md 34.1). Derived id 228 (0xE4: material 4 MYTHRIL, plain, ring) is A MYTHRIL RING and shows USES 5 plus HEALTH RIDER and the green '+' icon on its CARDS detail page.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 228,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "5"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "MYTHRIL RING"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "HEALTH RIDER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
+  }
+ ]
+}

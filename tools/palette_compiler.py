@@ -539,12 +539,12 @@ def main():
         vram_id = world_vram[ts]
         if ts == "castle":
             ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
-            # Sort by vram `index` (NOT by (x, y): that is column-major and
-            # scrambles slots 1..14 against the row-major --tile-coords
-            # the castle gfx rule encodes with).
+            # Sort by vram `index`: the 9x4 sheet maps 1:1 to 36 VRAM
+            # slots in scan order (slot == index), matching the gfx
+            # rule's --tile-coords and ui.c.
             ordered = sorted((v["index"], (v["x"], v["y"]), v["tile"])
                              for v in (ts_data.get("vram_block") or {}).get("tiles", [])
-                             if "tile" in v and (v.get("index", 99) < 23 or v.get("index") in (26, 27, 28, 36)))
+                             if "tile" in v and v.get("index", 99) < 36)
             cells = [c for _, c, _ in ordered]
             ids = [t for _, _, t in ordered]
         else:

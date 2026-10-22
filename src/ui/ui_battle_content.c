@@ -297,12 +297,15 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     (void)status;
     /* Finite-use cards of the skin's arrow-counter type -- and HEAL-type
      * rings, which share its remaining-uses glyphs -- draw the
-     * remaining-uses glyph (0..4, clamped) on the floor row; unlimited
-     * cards keep the frame center. */
+     * remaining-uses glyph (0..5: 5_arrows_left covers mythril rings
+     * and any 5-use bow) on the floor row; unlimited cards keep
+     * the frame center.  Counts above 5 cannot occur (mythril is the
+     * top band) but clamp defensively to the font digit. */
     limited = (uses != 0xFF && (type == g_card_skin_wram.uses_type ||
                                 type == BATTLE_CARD_TYPE_HEAL));
     if (limited) {
-        digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
+        digit_tile = (uses > 5) ? (uint8_t)('0' - ' ' + uses)
+                                : g_card_skin_wram.uses_tile[uses];
     } else {
         digit_tile = (uint8_t)('0' - ' ' + value);
     }
@@ -328,7 +331,8 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
              * glyph and keeps the BL/BR corners. */
             battle_vram_sync_write(&dst[0], (uint8_t)(frame + 6));
             if (limited) {
-                digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
+                digit_tile = (uses > 5) ? (uint8_t)('0' - ' ' + uses)
+                                         : g_card_skin_wram.uses_tile[uses];
                 battle_vram_sync_write(&dst[1], digit_tile);
             } else {
                 battle_vram_sync_write(&dst[1], (uint8_t)(frame + 7));
@@ -396,7 +400,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     buf[0] = code[0];
     buf[1] = code[1];
     if (limited) {
-        buf[2] = (char)('0' + (uses > 4 ? 4 : uses));
+        buf[2] = (char)('0' + uses);
     } else {
         buf[2] = (char)('0' + value);
     }
@@ -1173,7 +1177,7 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
  * is tile 14 (VRAM 96), the dark select arrow is tile 15 (VRAM 110). */
-static const uint8_t s_card_tile_vram_ids[31] = {
+static const uint8_t s_card_tile_vram_ids[32] = {
     118, 119, 120, 121, 122, 123, 124, 125, 126,  /* card frame TL..BR */
     117, 127,                                     /* bar filled, empty */
     113, 114, 116,                                /* HUD: hp, ap, deck */
@@ -1181,14 +1185,16 @@ static const uint8_t s_card_tile_vram_ids[31] = {
     110, 111, 112,                                /* dark arrow + 2 blanks (grid cells 15-17) */
     104, 105, 106, 107, 108,                      /* weapons: sword, shield, bow, dagger, ring */
     97,                                           /* spare blank (unused scratch) */
-    /* Limited-use arrow counters (bow floor row): uses 0/1/2/3, power
-     * icon, plus the trailing blank cell mapped to the unused BG fetch
-     * slot 103.  Ids 98-103 are free BG fetch slots: the font covers
-     * 0-95 and no tilemap ever references
-     * 98-103 (their same-numbered OAM ids live in the 0x8000 sprite
-     * block — a different physical address, AGENTS.md 52.22). */
+    /* Limited-use arrow counters (bow floor row, shared by HEAL rings):
+     * uses 0/1/2/3, power icon, trailing blank at the unused BG fetch
+     * slot 103, then the appended 4- and 5-arrow cells.  Ids 97/98-103
+     * are free BG fetch slots: the font covers 0-95 and no tilemap ever
+     * references them (their same-numbered OAM ids live in the 0x8000
+     * sprite block — a different physical address, AGENTS.md 52.22).
+     * The row-7/row-9 blanks load white first; the appended cells
+     * overwrite VRAM 97/103 right after (nothing reads the blanks). */
     98, 99, 100, 101, 102, 103,                   /* arrows 0, 1, 2, 3, nine, blank */
-    97,                                           /* arrows 4 (appended cell) */
+    97, 103,                                      /* arrows 4, 5 (appended cells) */
 };
 
 /* Dialogue continue chevron (VRAM 109, UI_TILE_DIALOGUE_CONTINUE): the
@@ -1214,11 +1220,11 @@ void ui_card_tiles_load_banked(void)
     volatile uint8_t *dst;
     const uint8_t *src;
 
-    for (i = 0; i < 31; i++) {
+    for (i = 0; i < 32; i++) {
         /* Signed BG tile addressing (LCDC.4 = 0, set in ui_init and never
          * restored): BG tile ids < 128 are fetched by the PPU from
          * 0x9000 + id*16, NOT from the sprite-addressable 0x8000 block.
-         * All 24 ids are <= 127, so the physical address is 0x9000-based.
+         * All 32 ids are <= 127, so the physical address is 0x9000-based.
          * Raw writes to 0x8000 + id*16 land in VRAM the BG never reads
          * (mGBA watchpoint regression: AGENTS.md 52.22).  Ids >= 128
          * (world/enemy art) map to 0x8800 + (id-128)*16, which their own
@@ -1288,6 +1294,7 @@ static void loot_build_full_name(const CardDefinition *card)
         case 'W': s = "WOOD"; break;
         case 'B': s = "BRONZE"; break;
         case 'I': s = "IRON"; break;
+        case 'S': s = "STEEL"; break;
         case 'M': s = "MYTHRIL"; break;
         default:  s = ""; break;
     }

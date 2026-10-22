@@ -89,7 +89,7 @@ const EventDefinition g_events[] = {
      * Felling the mimic (a solo miniboss with a persistent actor_id,
      * so this fires exactly once like the knight split) grants +1
      * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
-     * tutorial/chest/mayor milestones, and narrates the next step
+     * tutorial/chest/Monster Hunt milestones, and narrates the next step
      * (speakerless box, like FOUND AMULET: the dead mimic gives no
      * speech).  The grant is observable through VARIABLE_SET plus
      * the snapshot. */
@@ -239,8 +239,8 @@ const EventDefinition g_events[] = {
      * despawns by design: post-victory the spar is gone, so bumps
      * replay the lesson as a remedial with no fight (locked by the
      * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
-     * every milestone (tutorial, chest, mayor) adds exactly one to the
-     * base-1 pool, reaching 4 in any completion order.  Carl's defeat is
+     * every milestone (tutorial, chest, Monster Hunt) adds exactly one to the
+     * base-1 pool, reaching 5 in any completion order.  Carl's defeat is
      * persistent (one-shot via GameState.world), so the reward fires
      * exactly once. */
     {
@@ -264,7 +264,7 @@ const EventDefinition g_events[] = {
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
      * more) and a +1 AP pool grant (ADD, pairing with the tutorial and
-     * mayor +1 one-shots toward 4 in any order from the base-1 pool),
+     * Monster Hunt +1 one-shots toward 5 in any order from the base-1 pool),
      * announced by its own dialogue.  One-shot via
      * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM

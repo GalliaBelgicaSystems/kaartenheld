@@ -1,7 +1,7 @@
 {
  "name": "deck_summary",
  "test": true,
- "description": "The CARDS tab lists every owned card as one row per card (weapon icon, AP cost, full name) with its deck membership in the rightmost column: the 10-card starter shows IRON SWORD x4, WOOD SHIELD x4, IRON SWORD x2",
+ "description": "The CARDS tab lists every owned card as one row per card (weapon icon, AP cost, full name) with its deck membership in the rightmost column: the 10-card starter shows WOOD SWORD x4, WOOD SHIELD x4, BRONZE SWORD x2",
  "actions": [
   {
    "type": "press",
@@ -48,7 +48,7 @@
   {
    "type": "screen_row",
    "row": 4,
-   "contains": "IRON SWORD"
+   "contains": "WOOD SWORD"
   },
   {
    "type": "screen_row",
@@ -68,7 +68,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "IRON SWORD"
+   "contains": "BRONZE SWORD"
   },
   {
    "type": "screen_row",

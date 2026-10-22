@@ -1,0 +1,51 @@
+{
+ "name": "save_version_accept",
+ "test": true,
+ "description": "Save/load control (docs/save-format.md): a v3 save in slot 1 restores state. Save with GOLD 50, gain 25, load -- GOLD must read 50 again. Pairs with save_version_reject, which proves a backdated version byte is refused.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7003,
+  "currency": {
+   "GOLD": 50
+  }
+ },
+ "actions": [
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 25
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "load",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  }
+ ]
+}

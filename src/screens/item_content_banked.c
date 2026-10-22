@@ -247,7 +247,8 @@ static const char *ic_mat_str(uint8_t m, uint8_t *len)
     switch (m) {
         case 1: *len = 6; return "BRONZE";
         case 2: *len = 4; return "IRON";
-        case 3: *len = 7; return "MYTHRIL";
+        case 3: *len = 5; return "STEEL";
+        case 4: *len = 7; return "MYTHRIL";
         default: *len = 4; return "WOOD";
     }
 }
@@ -280,14 +281,40 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
         return;
     }
     switch (id) {
+        case CARD_WOOD_SWORD: *mat = 0; *wpn = 0; break;
         case CARD_WOODEN_SHIELD: *mat = 0; *wpn = 1; break;
+        case CARD_IRON_SWORD: *mat = 2; *wpn = 0; break;
         case CARD_IRON_RING: *mat = 2; *wpn = 4; break;
-        case CARD_FIRE_SWORD: *mat = 2; *wpn = 0; break;
-        case CARD_POISON_DAGGER: *mat = 2; *wpn = 3; break;
-        case CARD_BOW_9: *mat = 3; *wpn = 2; break;
+        case CARD_FIRE_SWORD: *mat = 1; *wpn = 0; break;
+        case CARD_POISON_DAGGER: *mat = 1; *wpn = 3; break;
+        case CARD_BOW_9: *mat = 4; *wpn = 2; break;
         case CARD_AMULET: *is_amulet = 1; *mat = 2; *wpn = 0; break;
         default: *mat = 2; *wpn = 0; break;
     }
+}
+
+/* Health-rider display (docs/loot.md §34.1): every healing card (only
+ * rings heal, and only rings ever will) shows a green '+' OAM icon over
+ * the elem cell plus a HEALTH RIDER detail line.  Display-only by
+ * design: it keys off the heal role, never a status -- no on-hit roll, no
+ * mechanic change.  Tile/slot shared with battle + shop via battle/card.h.
+ * Real status riders (fire/ice/poison) keep precedence wherever both
+ * could apply. */
+static uint8_t ic_is_health_rider(void)
+{
+    if (!s_ic_def) return 0;
+    return (uint8_t)(s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+                     s_ic_def->effect == CARD_EFFECT_HEAL_HP);
+}
+
+static void ic_health_show(uint8_t entry, uint8_t x, uint8_t y)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = (uint8_t)((y << 3) + 16);
+    re[1] = (uint8_t)((x << 3) + 8);
+    re[2] = RIDER_TILE_HEALTH;
+    re[3] = RIDER_OBJ_HEALTH;
 }
 
 /* Name color by on-hit element: fire red, ice blue, poison purple;
@@ -342,9 +369,9 @@ static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
  * (name format, power, cost, price, rider legality): the SELL price and
  * the detail page read through here, and a mismatch would show one
  * price and charge another. */
-static const char s_ic_loot_mat[4] = { 'W', 'B', 'I', 'M' };
+static const char s_ic_loot_mat[LOOT_NMATERIALS] =
+    { 'W', 'B', 'I', 'S', 'M' };
 static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
-static const uint8_t s_ic_loot_base[8] = { 3, 2, 2, 1, 2, 0, 0, 0 };
 static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
@@ -354,6 +381,7 @@ static const CardDefinition *ic_loot_synth(CardId id)
     uint8_t material = loot_id_material(id);
     uint8_t effect = loot_id_effect(id);
     uint8_t weapon = loot_id_weapon(id);
+    uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
     uint8_t has_rider;
     uint8_t i;
     uint8_t *d;
@@ -383,16 +411,17 @@ static const CardDefinition *ic_loot_synth(CardId id)
         g_card_scratch.type = CARD_TYPE_HEAL;
         g_card_scratch.battle_type = BATTLE_CARD_TYPE_HEAL;
         g_card_scratch.effect = CARD_EFFECT_HEAL_HP;
-        /* Wild rings are single-use per battle (mirrors the synth
-         * ring branch). */
-        g_card_scratch.uses_per_battle = 1;
+        /* Wild rings hold material-tier uses per battle (mirrors the
+         * synth ring branch: wood 1 .. mythril 5). */
+        g_card_scratch.uses_per_battle = LOOT_RING_USES(material);
     }
-    g_card_scratch.power = (uint8_t)(s_ic_loot_base[weapon] + material);
+    g_card_scratch.power = LOOT_POWER(material, wi);
     g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;
-    g_card_scratch.price = (uint8_t)(s_ic_loot_base[weapon] +
+    g_card_scratch.price = (uint8_t)(g_card_scratch.power +
         (uint8_t)(material << 1) +
         ((effect == EFF_POISON && weapon == WPN_DAGGER) ? 2 : 0));
-    has_rider = (s_ic_loot_status[effect] != STATUS_NONE &&
+    has_rider = (material >= MAT_BRONZE &&
+        s_ic_loot_status[effect] != STATUS_NONE &&
         ((effect == EFF_POISON) ? (weapon == WPN_DAGGER) :
          ((effect == EFF_FIRE || effect == EFF_ICE) ?
              (weapon == WPN_SWORD) : 0)));
@@ -557,6 +586,9 @@ static void ic_draw_cards_list(Game *g)
         ic_draw_card_pair(g, s_ic_y, vpos);
         ic_rider_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y,
                       s_ic_def ? s_ic_def->status_id : 0);
+        if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
+            ic_is_health_rider())
+            ic_health_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
 
@@ -599,6 +631,8 @@ static void ic_draw_card_detail_page(Game *g)
      * the list is not drawn in detail mode, and the dispatch sweep hid
      * the rest). */
     ic_rider_show(1, 1, 3, s_ic_def->status_id);
+    if (s_ic_def->status_id == STATUS_NONE && ic_is_health_rider())
+        ic_health_show(1, 1, 3);
 
     s_ic_tile_elem = 0;
 
@@ -629,13 +663,16 @@ static void ic_draw_card_detail_page(Game *g)
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_ICE);
 
-    /* Row 5: on-hit element rider. */
+    /* Row 5: on-hit element rider, else the health-rider display for
+     * heal cards of any material (display-only, no on-hit roll). */
     if (s_ic_def->status_id == STATUS_BURN)
         IC_DRAW_TEXT(0, 5, "FIRE RIDER", 10);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_DRAW_TEXT(0, 5, "ICE RIDER", 9);
     else if (s_ic_def->status_id == STATUS_POISON)
         IC_DRAW_TEXT(0, 5, "POISON RIDER", 12);
+    else if (ic_is_health_rider())
+        IC_DRAW_TEXT(0, 5, "HEALTH RIDER", 12);
     else
         IC_DRAW_TEXT(0, 5, "NO RIDER", 8);
     /* Row 6: combat role (shields Defend, everything else Attacks;

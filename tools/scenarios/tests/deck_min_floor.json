@@ -1,7 +1,7 @@
 {
  "name": "deck_min_floor",
  "test": true,
- "description": "deck_remove_card enforces DECK_MIN_CARDS=5 on the 10-card starter deck (SW4 SH3 SW3, no daggers): two removals succeed (10 -> 8); after decking 3 daggers (deck=11) six more single-copy removals reach the floor (11 -> 5); remaining attempts are rejected by the floor guard (no CARD_REMOVED_FROM_DECK event -- pinned by the exact success count of 8 despite 11 attempts).",
+ "description": "deck_remove_card enforces DECK_MIN_CARDS=5 on the 10-card starter deck (SW4 SH4 SW2, no daggers): two removals succeed (10 -> 8); after decking 3 daggers (deck=11) six more single-copy removals reach the floor (11 -> 5); remaining attempts are rejected by the floor guard (no CARD_REMOVED_FROM_DECK event -- pinned by the exact success count of 8 despite 11 attempts).",
  "actions": [
   {
    "type": "wait",
@@ -17,7 +17,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "IRON_SWORD"
+   "card": "WOOD_SWORD"
   },
   {
    "type": "wait",
@@ -82,7 +82,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "IRON_SWORD"
+   "card": "WOOD_SWORD"
   },
   {
    "type": "wait",
@@ -118,7 +118,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "IRON_SWORD"
+   "card": "WOOD_SWORD"
   },
   {
    "type": "wait",
@@ -126,7 +126,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "IRON_SWORD"
+   "card": "WOOD_SWORD"
   },
   {
    "type": "wait",

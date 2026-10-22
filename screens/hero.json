@@ -2,19 +2,19 @@
   "$schema": "./schema/hero.schema.json",
   "id": "hero",
   "name": "Hero",
-  "start_hp": 10,
+  "start_hp": 15,
   "start_gold": 20,
   "starter_deck": [
-    "CARD_IRON_SWORD",
-    "CARD_IRON_SWORD",
+    "CARD_WOOD_SWORD",
+    "CARD_WOOD_SWORD",
     "CARD_WOODEN_SHIELD",
     "CARD_WOODEN_SHIELD",
     "CARD_FIRE_SWORD",
-    "CARD_IRON_SWORD",
+    "CARD_WOOD_SWORD",
     "CARD_WOODEN_SHIELD",
     "CARD_FIRE_SWORD",
     "CARD_WOODEN_SHIELD",
-    "CARD_IRON_SWORD"
+    "CARD_WOOD_SWORD"
   ],
   "overworld": {
     "cells": ["hero_f0", "hero_f1"],

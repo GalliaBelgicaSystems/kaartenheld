@@ -11,9 +11,8 @@ Checks, per world tileset (forest, desolate_landscape, castle, village):
 
   1. Length equals the C array size declared in src/gfx/rpg_tile_lookup.h.
   2. VRAM slot i sits at the sheet cell the gfx rule encodes into slot i:
-     row-major over the sheet width, except castle (9-wide sheet, 8-wide
-     VRAM packing: slot i = cell (i % 8, i // 8), see the Makefile
-     --tile-coords). A tileset whose vram_block index disagrees fails.
+     row-major over the sheet width (castle is 9x4 = 36 slots, scan order
+     like the rest). A tileset whose vram_block index disagrees fails.
   3. tile_ids[i] is the tile the vram_block puts at index i.
   4. tile_palettes[i] is a slot whose colors equal the shade-map ramp that
      png2gb encodes slot i's bytes with (alias slots holding the same colors
@@ -50,11 +49,11 @@ LOOKUP_H = REPO_ROOT / "src" / "gfx" / "rpg_tile_lookup.h"
 PAPER_SLOT = 4  # UI_COLOR_PAPER in src/ui/ui.h
 
 # tileset -> (sheet png, C array suffix in rpg_tile_lookup.h, VRAM pack width)
-# pack width None = the sheet's own width (forest/desolate/village scan order).
+# pack width None = the sheet's own width (all four sets scan order).
 WORLD = {
     "forest": ("forest-tile.png", "forest", None),
     "desolate_landscape": ("desolate-tile.png", "desolate", None),
-    "castle": ("castle-tile.png", "castle", 8),
+    "castle": ("castle-tile.png", "castle", None),
     "village": ("village-tile.png", "village", None),
 }
 
@@ -162,20 +161,16 @@ def main():
                 if "tile" in v and "index" in v}
         slot_colors = {p["index"]: p["colors"] for p in man["palettes"]}
 
-        # Castle loads base art (vram 0..15) + extension art (vram
-        # 16..22) + the exit stairs (vram index 26) LAST + the rotated
-        # rugs (vram 27..28). Every other tileset packs slot i = vram
-        # index i, so only castle needs the explicit map. Slot order must
-        # match the Makefile gfx rule's --tile-coords verbatim (base
-        # row-major 8-wide, then the explicit extension + exit + rug cells).
+        # All four sets pack slot i = vram index i in sheet scan order
+        # (castle is 9x4 = 36 slots; the gfx rule encodes the same scan
+        # order). Slot order must match the Makefile gfx rule's
+        # --tile-coords verbatim.
         if ts == "castle":
-            slot_vram = list(range(23)) + [26, 27, 28, 36]
-            if n != 27:
-                errors.append(f"{ts}: expected 27 loaded slots (0..22 + exit 26 + rugs 27..28 + red 36), got {n}")
+            if n != 36:
+                errors.append(f"{ts}: expected 36 loaded slots (9x4 scan order), got {n}")
                 continue
-            enc_cells = ([(x, 0) for x in range(8)] + [(x, 1) for x in range(8)] +
-                         [(8, 0), (8, 1), (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (8, 2),
-                          (0, 3), (1, 3), (0, 4)])
+            slot_vram = list(range(n))
+            enc_cells = [(x, y) for y in range(4) for x in range(9)]
         else:
             slot_vram = list(range(n))
             enc_cells = None
