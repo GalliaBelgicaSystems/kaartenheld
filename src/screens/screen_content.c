@@ -208,7 +208,7 @@ static uint8_t bm_mode(const Game *g)
 static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
 {
     if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* CARDS tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3
+    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3
      * column header, one card per row at rows 4-14. */
     if (index == 0) return 2;
     s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
@@ -342,7 +342,7 @@ static void shop_rider_draw(void)
     uint8_t tile, slot;
     volatile uint8_t *re;
 
-    /* Entries 1-12: shop rows 1-10 plus the CARDS-only 11-12 (stale
+    /* Entries 1-12: shop rows 1-10 plus the DECK-only 11-12 (stale
      * card riders must not survive entering the shop, so out-of-range
      * entries hide). */
     for (k = 0; k < 12; k++) {

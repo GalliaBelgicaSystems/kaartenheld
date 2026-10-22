@@ -98,6 +98,29 @@ farewell hook. Any new fixed byte must be paid for by moving an old one
 to a bank (AGENTS.md 52.18 family). `make memmap` is the gate; the debug
 build is the tight one (~50 B).
 
+## Gem prize (STRAIGHT gem)
+
+Nis's invite teases it (`+20 NET WINS A GEM`): leaving the table **+20
+net or more up in one sitting** (exit purse minus entry purse) wins the
+STRAIGHT gem -- once.  Winning only sets OWNED; the hero equips it
+manually on the GEM tab, which unlocks short straights in battle
+(docs/short-straight.md).
+
+* Tracking: `GambleState.entry_gold` is recorded on table entry; on B
+  exit the banked body compares the net and, when the bar is met and the
+  gem is not yet owned, sets the `VARIABLE_ID_GEM_OWNED` bit directly
+  (same v1 gap as the table's gold moves: no `VARIABLE_SET` event) and
+  stages the prize dialogue instead of the farewell.
+* Grant signal: the distinct prize dialogue (`screens/dialogue/kobold_prize.json`,
+  `DIALOGUE_STARTED KOBOLD_PRIZE`) IS the observable grant -- a second
+  +20 sitting with the gem already owned gets the ordinary farewell, so
+  the dialogue id alone distinguishes grant from no-grant.  The owned bit
+  itself is snapshot-assertable (`GEM_OWNED`).
+* No auto-equip anywhere on this path (manual equip is the rule).
+* Scenarios: `gem_grant_net20` (+30 net → prize + owned bit), 
+  `gem_grant_norepeat` (owned already → farewell), `gem_no_grant`
+  (net loss → farewell, no bit).
+
 ## Observability contract
 
 * Snapshot: gold deltas are visible in the extended snapshot currency

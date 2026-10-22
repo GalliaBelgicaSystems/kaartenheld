@@ -1,0 +1,69 @@
+{
+  "name": "gem_empty",
+  "test": true,
+  "description": "The GEM tab starts empty: RIGHT x3 from DECK reaches the fourth tab (new DECK QUEST HERO GEM header) showing the empty pocket and the Nis hint.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "DECK QUEST HERO GEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "NO GEMS YET"
+    },
+    {
+      "type": "screen_row",
+      "row": 5,
+      "contains": "WIN +20 AT NIS"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8410
+  }
+}

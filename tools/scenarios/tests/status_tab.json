@@ -1,7 +1,7 @@
 {
  "name": "status_tab",
  "test": true,
- "description": "The STATUS tab (RIGHT twice from CARDS) shows hero HP, battle AP pool, gold and total owned cards; LEFT returns to the QUEST tab",
+ "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold and total owned cards; LEFT returns to the QUEST tab",
  "actions": [
   {
    "type": "press",
@@ -36,7 +36,7 @@
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "STATUS"
+   "contains": "DECK QUEST HERO GEM"
   },
   {
    "type": "screen_row",

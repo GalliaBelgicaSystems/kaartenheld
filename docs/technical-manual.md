@@ -520,17 +520,17 @@ collection is full (12 distinct types), no card is granted.
 
 ### 7.1 Opening menus
 
-* Overworld `START` → **CARDS** quick screen.
+* Overworld `START` → **DECK** quick screen.
 * Overworld `SELECT` → **LOAD GAME**.
 * Facing an actor and pressing `A` → dialogue, shop, save, or battle,
   depending on the actor.
 
-### 7.2 The quick screen (CARDS / QUEST / STATUS)
+### 7.2 The quick screen (DECK / QUEST / HERO / GEM)
 
-Three tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
+Four tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**CARDS tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP MATERIAL TYPE` column header, cards follow one per row:
+**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP MATERIAL TYPE` column header, cards follow one per row:
 
 * The `* FILTER/SORT *` row opens a picker with `A`.
 * Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`
@@ -570,8 +570,16 @@ entry shows the quest name and a status line:
 you stand (e.g. `3/5 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
 counter-less quests).
 
-**STATUS tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
+**HERO tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
 (battle energy pool), `GOLD <n>`, `CARDS <n>` (total owned copies).
+
+**GEM tab** — owned gems, one row per gem with `ON`/`OFF` equip state and
+the skill line below (`STRAIGHT GEM` → `SHORT STRAIGHT`).  Starts empty
+(`NO GEMS YET` / `WIN +20 AT NIS`).  `A` toggles equip manually (at most
+3 equipped at once); owning alone does nothing.  Gem 0 is won at Nis's
+chuck-a-luck table by leaving +20 net up in one sitting
+(docs/chuck-a-luck.md); while
+equipped, 3-card runs score as SHORT STRAIGHT (§8.2).
 
 ---
 
@@ -600,6 +608,14 @@ Selected cards are ranked **exactly like poker hands**
 | 7 | FOUR KIND | 4 same value | 280% |
 | 8 | STRAIGHT FLUSH | 5 sequential, same symbol | 350% |
 | 9 | FIVE KIND | all 5 same value | 400% |
+| 10 | SHORT STRAIGHT | longest run of distinct sequential values ≥ 3 at any staged count ≥ 3 (**STRAIGHT gem equipped**; slots below THREE KIND, above TWO PAIR; only the highest three of the run count) | 130% |
+
+* Straights/flushes/straight-flushes/five-kind require **all five** cards;
+  pairs and kinds work with 2+; the SHORT STRAIGHT works at any staged
+  count ≥ 3 and never appears without its gem (the ladder is otherwise
+  exactly the old one, so bare pairs and high cards are unchanged).  A
+  4-run scores its top three (1,2,3,4 → 2+3+4); a paired duplicate shares
+  its value but is not part of the run (3,3,4,5 → 3+4+5).
 
 * Straights/flushes/straight-flushes/five-kind require **all five** cards;
   pairs and kinds work with 2+.
@@ -759,7 +775,7 @@ Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 
 **Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
 the shop actor; only the Lost Merchant buys), you can sell **loot** cards
-from the CARDS tab: open a loot card's detail page (`SELECT`) and press
+from the DECK tab: open a loot card's detail page (`SELECT`) and press
 `A` to sell one copy (no `SELL` label is shown — the sale is silent; the
 `CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
 the card's price field, synthesized as `power + material tier×2 (+2 for

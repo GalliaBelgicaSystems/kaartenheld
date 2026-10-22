@@ -3,6 +3,8 @@
 #include "combo.h"
 #include "rpg/effects.h"
 #include "banked.h"
+#include "game.h"
+#include "game/game_ids.h"
 
 /* ── Banked combo evaluation + effect dispatch ──────────────────────
  * The fixed-bank wrapper (src/battle/combo.c) stages its arguments into
@@ -37,7 +39,8 @@ const uint16_t g_combo_tier_mult[HAND_TIER_COUNT] = {    100, /* NONE */
     260, /* FULL HOUSE */
     280, /* FOUR KIND */
     350, /* STRAIGHT FLUSH */
-    400  /* FIVE KIND */
+    400, /* FIVE KIND */
+    130  /* SHORT STRAIGHT (gem-gated, docs/short-straight.md) */
 };
 
 /* Classify n card values (order-independent).  vals are 1..10,
@@ -51,7 +54,19 @@ static uint8_t s_hist[10]; /* values are 1..10 */
 
 /* Shared tier ladder: both classifiers fill s_hist, min/max, and the
  * suited flag, then resolve here.  One copy keeps bank-3 ROM small
- * (the release bank sits ~260 B under its ceiling). */
+ * (the release bank sits ~260 B under its ceiling).
+ *
+ * Short-straight gate (docs/short-straight.md): the tier only classifies
+ * while the STRAIGHT gem is equipped.  The check is an inline expression
+ * (never a helper call): this ladder sits at the bottom of the deepest
+ * battle chain and every extra call edge eats the stack budget
+ * (AGENTS.md 52.24).  It reads the canonical equipped bitmask straight
+ * out of GameState (WRAM, always mapped): both the resolve dispatch and
+ * the HUD preview classify through combo_classify_loot, so the gate
+ * applies to both with no duplicated check.  Bank-local read (never a
+ * fixed-bank call, AGENTS.md 52.11.1); the ids it names are game-layer
+ * data (same pattern as the bank-5 quest bodies reading the quest
+ * registry). */
 static uint8_t combo_tier_from_hist(uint8_t n, uint8_t all_same_type,
                                     uint8_t min, uint8_t max)
 {
@@ -87,6 +102,29 @@ static uint8_t combo_tier_from_hist(uint8_t n, uint8_t all_same_type,
     if (quads != 0) return HAND_FOUR_KIND;
     if (trips != 0 && pairs != 0) return HAND_FULL_HOUSE;
     if (trips != 0) return HAND_THREE_KIND;
+    /* Short straight (docs/short-straight.md): the longest run of distinct
+     * sequential values has length >= 3 at any staged count >= 3.  Slots
+     * below THREE_KIND, above TWO_PAIR: single-pair/two-pair/high-card
+     * hands with a 3-run upgrade to it (a bare pair with no run falls
+     * through to PAIR, unchanged), and the 5-card straight above keeps
+     * its own tier (checked first).  Gem-gated: unequipped, the ladder is
+     * exactly today's (inline expression, never a call -- stack budget,
+     * see above). */
+    if (n >= 3 &&
+        (g_game.state.variables.values[VARIABLE_ID_GEM_EQUIPPED - 1] &
+         (int16_t)(1 << GEM_STRAIGHT)) != 0) {
+        uint8_t run = 0;
+        uint8_t best_run = 0;
+        for (i = 0; i < 10; i++) {
+            if (s_hist[i] != 0) {
+                run++;
+                if (run > best_run) best_run = run;
+            } else {
+                run = 0;
+            }
+        }
+        if (best_run >= 3) return HAND_SHORT_STRAIGHT;
+    }
     if (pairs >= 2) return HAND_TWO_PAIR;
     if (pairs == 1) return HAND_PAIR;
     return HAND_NONE;
@@ -147,7 +185,9 @@ uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
  * No-ring kinds locate the hand values with one scan of the
  * classifier's s_hist (left behind by the tier search); a ringed kind
  * uses its substituted value directly (the joker always sits in the
- * hand it completes).  HIGH CARD tracks the max; all-five tiers sum.
+ * hand it completes).  HIGH CARD tracks the max; all-five tiers sum;
+ * the short straight counts one best-eligible card per run value (a
+ * paired duplicate shares the value but is not part of the run).
  * This stays a leaf (it calls nothing) so the deepest battle chain
  * gains no nesting (AGENTS.md 52.24). */
 uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
@@ -168,7 +208,55 @@ uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
          : (tier == HAND_PAIR || tier == HAND_TWO_PAIR) ? 2 : 0;
     pv1 = 0;
     pv2 = 0;
-    if (need != 0) {
+    if (tier == HAND_SHORT_STRAIGHT) {
+        /* Longest run wins; ties go to the higher run.  s_hist holds the
+         * classifying trial (callers re-run the best ring trial first).
+         * Scratch discipline (AGENTS.md 52.24): `need` doubles as the
+         * best-length cell, then as the run-value offset below -- it is
+         * never read as a kind-count for this tier. */
+        uint8_t run = 0;
+        need = 0;
+        for (i = 0; i < 10; i++) {
+            if (s_hist[i] != 0) {
+                run++;
+                if (run > need) {
+                    need = run;
+                    if (run >= 3) pv1 = (uint8_t)(i + 1);
+                } else if (run == need && run >= 3) {
+                    pv1 = (uint8_t)(i + 1);
+                }
+            } else {
+                run = 0;
+            }
+        }
+        /* One card per run value (pv1, pv1-1, pv1-2): the best ELIGIBLE
+         * card at each value counts.  A paired duplicate shares its value
+         * but is not part of the run -- it scores 0, like any extra. */
+        acc = 0;
+        for (need = 0; need < 3; need++) {
+            run = 0;
+            for (i = 0; i < n; i++) {
+                const volatile Card *c = &cards[idx[i]];
+                uint8_t t = c->type;
+                uint8_t rg = c->ring;
+                uint8_t raw = c->value;
+                uint8_t mv = (rg && ring_sub != 0) ? ring_sub : raw;
+                uint8_t contrib = 0;
+                if (phase == COMBO_PHASE_ATTACK) {
+                    if (rg) {
+                        if (count_ring) contrib = mv;
+                    } else if (t != BATTLE_CARD_TYPE_SHIELD) {
+                        contrib = raw;
+                    }
+                } else {
+                    if (!rg && t == BATTLE_CARD_TYPE_SHIELD) contrib = raw;
+                }
+                if (mv == (uint8_t)(pv1 - need) && contrib > run) run = contrib;
+            }
+            acc = (uint8_t)(acc + run);
+        }
+        return acc;
+    } else if (need != 0) {
         if (ring_sub != 0) {
             /* Ringed kinds need no histogram: the joker always sits in
              * the hand it completes, so its substituted value IS the
@@ -295,6 +383,13 @@ void combo_resolve_banked(void)
                     }
                 }
                 out_result->tier = best;
+                if (best_v != 0) {
+                    /* Leave s_hist holding the BEST trial, not the v=1
+                     * leftovers: participating_base scans s_hist for the
+                     * short straight (ringed kinds read ring_sub
+                     * directly, so they never cared which trial is left). */
+                    combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, best_v);
+                }
             } else {
                 out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }

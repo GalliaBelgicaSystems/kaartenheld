@@ -614,14 +614,14 @@ def walk_a(planner, checks, sram_out=None):
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
             actual=s.bg_text()[0].strip())
 
-    # Quick screen: CARDS tab, toggle the first card's deck membership,
+    # Quick screen: DECK tab, toggle the first card's deck membership,
     # open the filter picker from the top row, then the QUEST tab.
     # NOTE: the starter deck holds every owned copy, so A on a fully
     # decked card CLEARS it (docs/deck-management.md) — the assert is
     # "membership toggled", never "+1".
-    s.press_until("start", lambda: s.text_has("CARDS QUEST"),
+    s.press_until("start", lambda: s.text_has("DECK QUEST"),
                   label="quick screen")
-    s.shoot("06-cards-menu", need="CARDS QUEST")
+    s.shoot("06-cards-menu", need="DECK QUEST")
     deck0 = s.reader.deck_count()
     s.press("down", settle=20)      # FILTER/SORT row -> first card row
     s.press("a", settle=30)         # toggle deck membership
@@ -638,17 +638,17 @@ def walk_a(planner, checks, sram_out=None):
             expected="closed", actual="open")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][6] == "^":
+        if s.bg_text()[1][5] == "^":
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 6",
+    s.check("quest tab caret", tabbed, expected="^ at col 5",
             actual=s.bg_text()[1])
     s.shoot("08-quests-tab")
     s.press_until("b", lambda: s.stable(
-        lambda: not s.text_has("CARDS QUEST"), frames=30),
+        lambda: not s.text_has("DECK QUEST"), frames=30),
         label="quick close")
-    s.check("quick screen closed", not s.text_has("CARDS QUEST"),
+    s.check("quick screen closed", not s.text_has("DECK QUEST"),
             expected="closed", actual="open")
 
     # Wizard save (slot 1).  Capture only on a stable menu/message —

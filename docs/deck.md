@@ -645,7 +645,7 @@ B BACK
 
 # 17. Phase 15 — Collection UI ✅ DONE
 
-> Note: implemented as the CARDS tab in `src/screens/item_screen.c`. Selecting a
+> Note: implemented as the DECK tab in `src/screens/item_screen.c`. Selecting a
 > card shows a single inline PWR/COST/U row (row 14) rather than a full detail
 > screen; `A` adds the selected card to the deck.
 

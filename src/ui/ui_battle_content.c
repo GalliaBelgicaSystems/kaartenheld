@@ -724,6 +724,7 @@ static const char *battle_combo_tier_name(uint8_t tier)
         case HAND_FOUR_KIND:      return "FOUR KIND";
         case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
         case HAND_FIVE_KIND:      return "FIVE KIND";
+        case HAND_SHORT_STRAIGHT: return "SHORT";
         case HAND_NONE:           return "HCARD";
         default:                  return "";
     }
@@ -787,6 +788,12 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
             }
         }
         tier = best;
+        if (best_v != 0) {
+            /* Same s_hist discipline as combo_resolve_banked: the
+             * short-straight participation scans the classifying
+             * trial's leftovers, not the v=1 trial's. */
+            combo_classify_loot(battle->hand, idx, w, best_v);
+        }
     } else {
         tier = combo_classify_loot(battle->hand, idx, w, 0);
     }

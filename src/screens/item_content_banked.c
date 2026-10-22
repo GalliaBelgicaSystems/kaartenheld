@@ -18,10 +18,11 @@
 #include "rpg/loot.h"
 #include "shops.h"
 
-#define TAB_CARDS 0
+#define TAB_DECK 0
 #define TAB_QUEST 1
-#define TAB_STATUS 2
-#define NUM_TABS  3
+#define TAB_HERO 2
+#define TAB_GEM 3
+#define NUM_TABS  4
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
@@ -230,9 +231,9 @@ static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
 static void ic_draw_header(Game *g)
 {
     uint8_t cx = 0;
-    if (g->item_menu_tab == TAB_QUEST) cx = 6;
-    else if (g->item_menu_tab == TAB_STATUS) cx = 12;
-    IC_DRAW_TEXT(0, 0, "CARDS QUEST STATUS", 18);
+    if (g->item_menu_tab == TAB_HERO) cx = 11;
+    /* QUEST and GEM never reach this body (bank 8 renders them). */
+    IC_DRAW_TEXT(0, 0, "DECK QUEST HERO GEM", 19);
     IC_DRAW_TEXT(cx, 1, "^", 1);
 }
 
@@ -747,7 +748,7 @@ static void ic_format_uint(uint16_t uval, char *out)
     *out = '\0';
 }
 
-/* ── STATUS tab: hero + wallet summary ───────────────────────────
+/* ── HERO tab: hero + wallet summary ───────────────────────────
  *   HP <hp>/<max>   (party slot 0, the hero)
  *   AP <pool>        (battle energy pool variable)
  *   GOLD <n>         (currency slot 0)
@@ -811,7 +812,7 @@ void item_screen_render_banked(void)
 
     ic_draw_header(g);
 
-    if (g->item_menu_tab == TAB_STATUS) {
+    if (g->item_menu_tab == TAB_HERO) {
         ic_draw_status_page(g);
         return;
     }

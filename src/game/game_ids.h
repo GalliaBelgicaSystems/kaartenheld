@@ -91,13 +91,27 @@ typedef enum {
     VARIABLE_ID_QUEST_MONSTER_HUNT = 3,   /* 0 = NOT_STARTED, 1 = ACTIVE, 2 = COMPLETE */
     VARIABLE_ID_ENDING_SHOWN       = 4,   /* set when the final boss is defeated */
     VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = ACTIVE (accepted or found), 2 = complete */
-    VARIABLE_ID_ENERGY_POOL        = 6    /* battle energy pool: story events raise it, no cap */
+    VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
+    VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
+    VARIABLE_ID_GEM_EQUIPPED       = 8    /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */
 typedef enum {
     CURRENCY_ID_GOLD = 1
 } CurrencyIdNamed;
+
+/* ── Gems (quick-screen GEM tab, docs/short-straight.md) ──────────
+ * Passive skills: owning a gem does nothing; equipping it (manual, A on
+ * the GEM tab) unlocks its skill.  State lives in the generic variables
+ * above (VARIABLE_ID_GEM_OWNED / _EQUIPPED bitmasks) so snapshots,
+ * descriptors, saves and the roundtrip cover gems with no transport
+ * churn; the registry below names this game's gems.  Only gem 0 is
+ * winnable for now (chuck-a-luck net +20 in one sitting); the bitmasks
+ * and the equip cap already make room for more. */
+#define GEM_STRAIGHT        0   /* short-straight combo tier (docs/short-straight.md) */
+#define GEM_COUNT             1   /* gems defined by this game (bits 0..GEM_COUNT-1) */
+#define MAX_EQUIPPED_GEMS     3   /* at most this many gems equipped at once */
 
 /* ── Banked content ────────────────────────────────────────────────
  * The event/card/shop content tables are compiled into MBC5 ROM bank

@@ -1,20 +1,41 @@
-# Short Straight — Design Proposal (not yet implemented)
+# Short Straight — Implemented (gem-gated)
 
-A new poker tier for three cards in sequence (e.g. 1,2,3). Brainstormed
-2026-10-22; probability analysis below. **Status: proposal only, no ROM
-changes.** Open decision: multiplier 130 (recommended) vs 120 fallback.
+A new poker tier for three cards in sequence (e.g. 4,5,6). Brainstormed
+2026-10-22; **implemented 2026-10-23, multiplier locked at 130**.
+Deviations from the proposal below: the tier is **gem-gated** (it only
+classifies while the STRAIGHT gem is equipped -- see §Gem gate), and
+**paired duplicates score 0** (one best-eligible card per run value).
+
+## Gem gate
+
+The tier lives behind the GEM tab: it only classifies while
+`VARIABLE_ID_GEM_EQUIPPED` has the `GEM_STRAIGHT` bit (the STRAIGHT gem,
+won at the chuck-a-luck table by leaving +20 net up in one sitting,
+docs/chuck-a-luck.md; equipped manually on the GEM tab).  Unequipped,
+the ladder is exactly the old one -- bare pairs and high cards are
+unchanged (scenario `gem_combo_locked`).
+
+State: owned/equipped are generic-variable bitmasks (no GameState /
+snapshot / descriptor churn); the registry is `src/game/gems_content.c`
+(bank 8).  Observability: the skill itself through `COMBO_RESOLVED`
+(tier 10), the grant through `DIALOGUE_STARTED KOBOLD_PRIZE` + the owned
+bit, the tab through `screen_row`.
 
 ## Rules (proposed)
 
 * **Trigger**: the longest run of distinct sequential values among the
   effective cards has length ≥ 3. Works at any staged count ≥ 3 (like
   pairs work at any count ≥ 2, not just 5-card hands).
-* **Participation (base)**: the run cards count, everything else 0 --
-  the "total of the cards", consistent with pairs (only paired cards
-  count) and HIGH CARD (max only). For a run of 4, only the **highest
-  three** count (e.g. staged 1,2,3,4 scores 2+3+4 = 9; the extra card
-  is dead weight that still costs energy, so optimal play stages exactly
-  the scoring three -- the live COMBO-row preview already guides this).
+* **Participation (base)**: one best-eligible card per run value counts,
+  everything else 0 -- the "total of the cards", consistent with pairs
+  (only paired cards count) and HIGH CARD (max only).  For a run of 4,
+  only the **highest three values** count (e.g. staged 1,2,3,4 scores
+  2+3+4 = 9; the extra card is dead weight that still costs energy, so
+  optimal play stages exactly the scoring three -- the live COMBO-row
+  preview already guides this).  A paired duplicate shares its value but
+  is NOT part of the run: staged 3,3,4,5 scores 3+4+5 = 12 (the second 3
+  scores 0).  Eligibility is per-card as usual (phase/ring rules apply:
+  e.g. a shield at a run value contributes 0 on attack).
 * **Precedence**: insert below THREE_KIND, above TWO_PAIR. A 5-card
   sequential hand stays STRAIGHT (210, checked first as today). Kinds
   keep precedence (a pair + run stages as the pair unless the player
@@ -38,6 +59,9 @@ changes.** Open decision: multiplier 130 (recommended) vs 120 fallback.
 * **Starter decks can never make one** (only 1s and 3s). The tier comes
   online with loot -- e.g. the field-cache poison dagger (bronze DA2)
   completes SW1 + DA2 + SW3. Nice progression beat; keep it.
+
+(Status: implemented 2026-10-23, gem-gated, multiplier locked at 130 --
+see "Implementation (done)" at the end.)
 
 ## Balance analysis
 
@@ -97,30 +121,36 @@ player-only -- same as every other tier.
   3,4,5 = SW3 + DA4 + SW5 → base 12 → DMG 15.
 * High end: 7,8,9 = steel sword + mythril dagger + mythril bow → base 24 → DMG 31.
 
-## Implementation notes (for later)
+## Implementation (done 2026-10-23)
 
-* Append `HAND_SHORT_STRAIGHT = 10` at the END of the `HandTier` enum
-  (do not renumber: `COMBO_RESOLVED` d0 carries tier ids and scenarios
-  pin them). Update the "mirrors ranking" comment -- the ladder if-chain
-  already evaluates rank position explicitly, so order in the enum is
-  cosmetic.
-* Add the multiplier to `g_combo_tier_mult[11]`; no other table changes.
-* Detection + participation must live in ONE shared banked helper used
-  by both `combo_resolve_banked` and the HUD preview (same contract as
-  `combo_classify_loot` / `combo_participating_base`): longest run from
-  the shared `s_hist` leftovers, top three values participate. The n==5
-  straight check and the kind checks keep running first, unchanged.
-* Tests to add: tier classification (3-run basic, 4-run top-three,
-  pair+run precedence, 5-run still STRAIGHT, no-run HIGH CARD unchanged),
-  preview == resolve agreement (DMG number), a `--check`-style deck seed
-  where the cache dagger unlocks the first straight.
-* Fixed-bank budget: detection lives in bank 3 with the rest; the
-  `make memmap` + `make stack-budget` gates must stay green (debug fixed
-  bank has ~34 B headroom as of Oct 2026).
+* `HAND_SHORT_STRAIGHT = 10` appended at the END of the `HandTier` enum
+  (no renumber: `COMBO_RESOLVED` d0 carries tier ids and scenarios pin
+  them).
+* Multiplier `130` in `g_combo_tier_mult[11]`; no other table changes.
+* Detection + participation live in ONE shared banked ladder used by both
+  `combo_resolve_banked` and the HUD preview: longest run from the shared
+  `s_hist` leftovers; top three values participate, one best-eligible
+  card each (a paired duplicate scores 0). The n==5 straight check and
+  the kind checks keep running first, unchanged. The gem gate is an
+  inline expression in the ladder (never a helper call -- the ladder sits
+  at the bottom of the deepest battle chain and every extra call edge
+  eats the `make stack-budget` baseline). Callers re-run the best ring
+  trial before participating-base so `s_hist` holds the classifying
+  values.
+* Fixed-bank budget: detection lives in bank 3; the fixed-side cost of
+  the whole feature is a widened tab condition + target swap (~6 B; the
+  GEM nav/render bodies forward to the quest bodies in-bank so the fixed
+  dispatch needs no new branches). `make memmap` + `make stack-budget`
+  stay green (release `_HOME` 4 B, debug bank 3 ~7 B headroom, Oct 2026).
+* Tests: `gem_combo_short` (3-run + 130-vs-120 pin: 4,5,6 gives 19),
+  `gem_combo_4run` (top-three: 1,2,3,4 gives 11),
+  `gem_combo_pair_run` (pair+run: 3,3,4,5 gives 15, duplicate 0),
+  `gem_combo_locked` (no gem: HIGH CARD unchanged), plus GEM-tab and
+  grant scenarios.
 
-## Open questions
+## Open questions (all decided)
 
-1. Multiplier 130 vs the 120 fallback (recommendation: 130).
-2. (Decided) 4-runs count the top three, not all four.
-3. (Decided) Base = sum of the run cards; 3-card minimum, any staged
-   count ≥ 3.
+1. Multiplier locked at 130 (`gem_combo_short` pins 4,5,6 to 19).
+2. 4-runs count the top three, not all four.
+3. Base is one best-eligible card per run value; 3-card minimum, any
+   staged count of 3 or more.

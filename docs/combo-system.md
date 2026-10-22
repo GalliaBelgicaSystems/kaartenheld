@@ -65,7 +65,9 @@ to healing (scaled participating value, ring at its substituted value --
 Strict poker sizing: pairs and kinds need >= 2 effective cards;
 STRAIGHT, FLUSH, STRAIGHT_FLUSH and FIVE KIND require all five
 effective cards (attack phase: every selected card; defend: SHIELDs
-only -- other selected cards are inert for classification AND block).
+only -- other selected cards are inert for classification AND block);
+the SHORT STRAIGHT needs a 3+ run at any staged count >= 3
+(gem-gated, docs/short-straight.md).
 Values classify order-independently.  Suited bonus: +25
 percent when every effective card shares one symbol and a tier was
 made.  Effective multiplier scales base_power into the effect amount,
@@ -78,6 +80,13 @@ and scales on-hit status rider chances (capped ~100%):
 | TWO PAIR        | 150  | FOUR KIND      | 280  |
 | THREE KIND      | 180  | STRAIGHT FLUSH | 350  |
 | STRAIGHT        | 210  | FIVE KIND      | 400  |
+| SHORT STRAIGHT  | 130  |                |      |
+
+The SHORT STRAIGHT (tier 10, docs/short-straight.md) needs a run of 3+
+distinct sequential values at any staged count ≥ 3 and only classifies
+while the STRAIGHT gem is equipped (GEM tab); it slots below THREE KIND,
+above TWO PAIR.  Only the highest three run values count, one
+best-eligible card each.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
 damage, base poison chance 50% scaled by the hand multiplier.  Poison

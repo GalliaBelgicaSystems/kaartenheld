@@ -33,7 +33,7 @@ void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
     g->state.scene.player_x = spawn_x;
     g->state.scene.player_y = spawn_y;
     world_change_map(&g->world, scene_id_to_map(scene), spawn_x, spawn_y, &g->state);
-    /* A scene change ends any merchant engagement: the CARDS tab's
+    /* A scene change ends any merchant engagement: the DECK tab's
      * SELL action is only available at a buying shop's doorstep. */
     g->shop_id = 0;
 #ifdef DEBUG_BUILD
