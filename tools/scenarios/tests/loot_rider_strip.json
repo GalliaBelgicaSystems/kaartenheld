@@ -84,6 +84,11 @@
    "type": "screen_row",
    "row": 5,
    "contains": "NO RIDER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
   }
  ]
 }

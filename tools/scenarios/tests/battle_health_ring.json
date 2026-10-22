@@ -1,0 +1,99 @@
+{
+ "name": "battle_health_ring",
+ "test": true,
+ "description": "Health rider in battle (docs/loot.md 34.1): a hand HEAL card shows the green '+' OAM icon (tile 11, slot 3) on its box from deal, and playing a lone ring heals its face value. Two wood rings staged (one played, one held): the held slot keeps icon 11 on OAM entry 20 while the played ring heals 1 HP (5/10 -> 6/10, HEALED cause 1).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "party": {
+   "HERO": {
+    "hp": 5,
+    "max_hp": 10
+   }
+  },
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 0
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 1
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "oam_tile",
+   "entry": 20,
+   "expected": 11
+  }
+ ]
+}

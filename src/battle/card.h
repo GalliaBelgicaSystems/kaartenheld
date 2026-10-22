@@ -17,6 +17,15 @@ typedef enum {
  * as a #define because SDCC enums are signed 8-bit (0x80+ would wrap). */
 #define BATTLE_CARD_TYPE_EMPTY 0xFF
 
+/* Health-rider marker (docs/loot.md §34.1): every healing card shows a
+ * green '+' OAM icon (font glyph tile, boot-resident in the OAM block via
+ * the ui_init font duplicate; OBJ slot 3 = sprites11 greens, never
+ * reprogrammed after boot).  The shared blob is full (100-125) and
+ * 126-127 are reserved, so no blob tile exists for a fourth rider.
+ * Display-only: keyed off the heal role, never a status. */
+#define RIDER_TILE_HEALTH 11
+#define RIDER_OBJ_HEALTH  3
+
 typedef struct {
     uint8_t type;           /* BattleCardType */
     uint8_t value;          /* Number 1 - 9 */

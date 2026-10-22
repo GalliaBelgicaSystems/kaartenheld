@@ -1,7 +1,7 @@
 {
  "name": "loot_health_ring_list",
  "test": true,
- "description": "Health-rider list marker (docs/loot.md 34.1): a bronze plain ring (id 132) shows the red '+' marker in the CARDS list elem cell (row 4, col 1). The detail page is pinned separately by loot_health_ring; this pins the list call site (including scroll-row repaint).",
+ "description": "Health-rider list icon (docs/loot.md 34.1): a bronze plain ring (id 132) shows the green '+' OAM icon (tile 11) over the CARDS list elem cell. The detail page is pinned separately by loot_health_ring; this pins the list call site (including scroll-row repaint).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -49,9 +49,9 @@
    "contains": "BRONZE RING"
   },
   {
-   "type": "screen_row",
-   "row": 4,
-   "contains": "+"
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
   }
  ]
 }

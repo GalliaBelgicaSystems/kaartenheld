@@ -1,7 +1,7 @@
 {
  "name": "loot_health_ring",
  "test": true,
- "description": "Health-rider display (docs/loot.md 34.1): a bronze plain ring (derived id 132 = 0x64: material 1, plain, weapon ring) shows a red '+' marker in the elem cell and a HEALTH RIDER line on its detail page. Display-only: no status, no on-hit roll, wood rings stay plain (see loot_rider_strip and ring_uses_loot_detail).",
+ "description": "Health-rider display (docs/loot.md 34.1): a bronze plain ring (derived id 132 = 0x64: material 1, plain, weapon ring) shows a green '+' OAM icon (font glyph tile 11, OBJ slot 3 -- no blob tile is free) plus a HEALTH RIDER detail line. Display-only: no status, no on-hit roll. Wood rings show it too (see ring_uses_loot_detail); on-hit riders still strip at wood (see loot_rider_strip).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -66,13 +66,13 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "+"
-  },
-  {
-   "type": "screen_row",
    "row": 5,
    "contains": "HEALTH RIDER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
   }
  ]
 }

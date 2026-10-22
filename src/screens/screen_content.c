@@ -355,6 +355,12 @@ static void shop_rider_draw(void)
                 s_sc_shop_def->items[g_shop_vis_map[(uint8_t)(s_sc_shop_scroll + k)]]);
             if (s_sc_card_def != 0) {
                 shop_rider_tile(s_sc_card_def->status_id, &tile, &slot);
+                if (tile == 0 &&
+                    (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+                     s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)) {
+                    tile = RIDER_TILE_HEALTH;
+                    slot = RIDER_OBJ_HEALTH;
+                }
             }
         }
         if (tile) {

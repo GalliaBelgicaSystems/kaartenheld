@@ -293,24 +293,28 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
     }
 }
 
-/* Health-rider display (docs/loot.md §34.1): bronze-and-above healing
- * cards (loot rings mat>=1, the curated iron ring) show a red '+' marker
- * in the elem cell plus a HEALTH RIDER detail line.  Display-only by
- * design: it keys off the heal role + material band, never a status --
- * no on-hit roll, no mechanic change, and wood heal cards stay plain
- * like everything wooden.  A font glyph (not an OAM sprite: the shared
- * blob is full and 126-127 are reserved) keeps pixels, the semantic
- * buffer and VRAM reads in agreement.  Real status riders
- * (fire/ice/poison) keep precedence wherever both could apply. */
+/* Health-rider display (docs/loot.md §34.1): every healing card (only
+ * rings heal, and only rings ever will) shows a green '+' OAM icon over
+ * the elem cell plus a HEALTH RIDER detail line.  Display-only by
+ * design: it keys off the heal role, never a status -- no on-hit roll, no
+ * mechanic change.  Tile/slot shared with battle + shop via battle/card.h.
+ * Real status riders (fire/ice/poison) keep precedence wherever both
+ * could apply. */
 static uint8_t ic_is_health_rider(void)
 {
-    uint8_t m, w, am;
     if (!s_ic_def) return 0;
-    if (s_ic_def->battle_type != BATTLE_CARD_TYPE_HEAL &&
-        s_ic_def->effect != CARD_EFFECT_HEAL_HP) return 0;
-    ic_card_mat_wpn(s_ic_id, &m, &w, &am);
-    if (am) return 0;
-    return (uint8_t)(m >= MAT_BRONZE);
+    return (uint8_t)(s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+                     s_ic_def->effect == CARD_EFFECT_HEAL_HP);
+}
+
+static void ic_health_show(uint8_t entry, uint8_t x, uint8_t y)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = (uint8_t)((y << 3) + 16);
+    re[1] = (uint8_t)((x << 3) + 8);
+    re[2] = RIDER_TILE_HEALTH;
+    re[3] = RIDER_OBJ_HEALTH;
 }
 
 /* Name color by on-hit element: fire red, ice blue, poison purple;
@@ -523,14 +527,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 
     /* Element rider OAM is painted per row by the list loop below (over
      * the col-1 elem cell): the cell itself stays blank and the element
-     * also reads from the color span below (FIRE/POISON/ICE slots).
-     * Bronze-and-above heal cards print a red '+' marker instead (always
-     * repainted: scrolled rows are reused, so a stale marker must never
-     * survive onto a plain card). */
-    if (ic_is_health_rider())
-        IC_DRAW_TEXT(1, y, "+", 1);
-    else
-        IC_DRAW_TEXT(1, y, " ", 1);
+     * also reads from the color span below (FIRE/POISON/ICE slots). */
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -560,10 +557,6 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         IC_COLOR_SPAN(1, y, 1, UI_COLOR_POISON);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(1, y, 1, UI_COLOR_ICE);
-    else if (ic_is_health_rider())
-        IC_COLOR_SPAN(1, y, 1, UI_COLOR_FIRE);
-    else
-        IC_COLOR_SPAN(1, y, 1, UI_COLOR_NONE);
 
     s_ic_in_deck = ic_deck_count(&g->state.cards.deck, s_ic_id);
     s_ic_code[0] = (char)('0' + s_ic_in_deck);
@@ -593,6 +586,9 @@ static void ic_draw_cards_list(Game *g)
         ic_draw_card_pair(g, s_ic_y, vpos);
         ic_rider_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y,
                       s_ic_def ? s_ic_def->status_id : 0);
+        if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
+            ic_is_health_rider())
+            ic_health_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
 
@@ -635,13 +631,8 @@ static void ic_draw_card_detail_page(Game *g)
      * the list is not drawn in detail mode, and the dispatch sweep hid
      * the rest). */
     ic_rider_show(1, 1, 3, s_ic_def->status_id);
-
-    /* Health marker prints over the same elem cell the OAM rider would
-     * occupy (always repainted: detail re-renders per card). */
-    if (ic_is_health_rider())
-        IC_DRAW_TEXT(1, 3, "+", 1);
-    else
-        IC_DRAW_TEXT(1, 3, " ", 1);
+    if (s_ic_def->status_id == STATUS_NONE && ic_is_health_rider())
+        ic_health_show(1, 1, 3);
 
     s_ic_tile_elem = 0;
 
@@ -671,10 +662,6 @@ static void ic_draw_card_detail_page(Game *g)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_POISON);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_ICE);
-    else if (ic_is_health_rider())
-        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_FIRE);
-    else
-        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_NONE);
 
     /* Row 5: on-hit element rider, else the health-rider display for
      * bronze-and-above heal cards (display-only, no on-hit roll). */
