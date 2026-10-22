@@ -1,7 +1,7 @@
 {
  "name": "loot_ap_iron_cap",
  "test": true,
- "description": "AP cap below the Steel unlock (docs/loot.md 34.5): seed 76 is a clean per-AP ladder. At AP 4 the SAME seed rolls an IRON SWORD (derived id 0xA0 = 160, material 2); Steel/Mithril must not appear below AP 5. The AP 5 counterpart (same seed) is loot_ap_steel.",
+ "description": "AP cap below the Steel unlock (docs/loot.md 34.5): seed 76 is a clean per-AP ladder. At AP 4 the SAME seed rolls an IRON SWORD (derived id 0xA0 = 160, material 2); Steel/Mythril must not appear below AP 5. The AP 5 counterpart (same seed) is loot_ap_steel.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

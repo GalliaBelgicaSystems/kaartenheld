@@ -32,7 +32,7 @@
       "5": "castle2",
       "6": "castle3",
       "7": "castle4",
-      "_why": "0/3/7 stone-ground=castle4 (14 tiles, floor slot 0); 1/6 curtain-gold=castle3; 5 wood=castle2; 2/4 stairs=castle1 (0 tiles, real colors)"
+      "_why": "0/3/7 stone-ground=castle4 (16 tiles incl. vase/columns/empty); 1/6 curtain-gold=castle3 (8 tiles incl. rugs/carpet); 5 wood=castle2 (11 tiles incl. table set); 2/4 stairs=castle1 (0 tiles, real colors)"
     },
     "village": {
       "0": "town4",

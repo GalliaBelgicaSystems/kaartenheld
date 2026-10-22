@@ -169,26 +169,23 @@ typedef enum {
     TILE_FOREST_67 = 139,
     TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 16 tiles in vram-block order (0..15),
-     * mapping 1:1 to the first 16 castle VRAM slots (RPG_TILE_BASE_WORLD),
-     * plus the exit stairs (vram index 26) at the LAST VRAM slot (23):
-     * the exit keeps TileType value 141 (gap between FOREST_68 and
-     * DESOLATE_WALL_00) because values 88..98 collide with VILLAGE_00..10;
-     * ui.c maps it to its slot explicitly, and its glyph resolves to '>'
-     * through tile_landscape_glyph like the other tilesets' exits.
+    /* Castle Landscape tiles: 36 tiles in sheet scan order (0..35),
+     * mapping 1:1 to the 36 castle VRAM slots (RPG_TILE_BASE_WORLD):
+     * TILE_CASTLE_<i> renders VRAM block slot i.  Suffixes stay scan
+     * indices, NOT values.
      *
-     * Castle extension (vram indices 16..22: thrones, rugs, chandeliers,
-     * plain floor): the value space is full to 250 (0xFF is the map
-     * sentinel, 254 kept clear), so these take the only free values --
-     * 142..145 (gap between the exit and DESOLATE_WALL_00) and
-     * 251..253 (top of the u8 range, still <= 0xFE per
-     * g_tiletype_fits_u8).  Suffixes stay vram-block indices (like the
-     * base set), NOT values: TILE_CASTLE_16..19 = 142..145 render VRAM
-     * slots 16..19, TILE_CASTLE_20..22 = 251..253 render slots 20..22.
-     * ui.c maps both clusters explicitly (one range branch each); the
-     * generated walk/glyph tables absorb them with no hand edits.
-     * The rotated rugs (TILE_CASTLE_27/28, grid row 3) reuse the
-     * evicted legacy values 185..186 the same way (VRAM slots 24..25). */
+     * The base set 00..07 keeps 72..79; the exit keeps value 141 (gap
+     * between FOREST_68 and the legacy desolate block).  Everything else
+     * takes a contiguous freed block 142..156: the gap values plus
+     * evicted legacy desolate WALL_00..WALL_10 (unreferenced by every
+     * level; the legacy engine ranges in ui.c now start at WALL_11).
+     * 251..253 (top of the u8 range, still <= 0xFE per g_tiletype_fits_u8)
+     * stay with the chandelier/vase row as before.  Values 184..186
+     * (ex-red-square/MERCHANT/STAIRCASE) are free again.  Both empty
+     * cells share one tile id.  ui.c maps the 141..156 block through a
+     * 16-byte slot table (one range check instead of a branch ladder);
+     * the generated walk/glyph tables absorb the values with no hand
+     * edits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -197,33 +194,33 @@ typedef enum {
     TILE_CASTLE_05 = 77,
     TILE_CASTLE_06 = 78,
     TILE_CASTLE_07 = 79,
-    TILE_CASTLE_08 = 80,
-    TILE_CASTLE_09 = 81,
-    TILE_CASTLE_10 = 82,
-    TILE_CASTLE_11 = 83,
-    TILE_CASTLE_12 = 84,
-    TILE_CASTLE_13 = 85,
-    TILE_CASTLE_14 = 86,
-    TILE_CASTLE_15 = 87,
-    TILE_CASTLE_26 = 141,
-    TILE_CASTLE_16 = 142,
+    TILE_CASTLE_08 = 142,
+    TILE_CASTLE_09 = 80,
+    TILE_CASTLE_10 = 81,
+    TILE_CASTLE_11 = 82,
+    TILE_CASTLE_12 = 83,
+    TILE_CASTLE_13 = 84,
+    TILE_CASTLE_14 = 85,
+    TILE_CASTLE_15 = 86,
+    TILE_CASTLE_16 = 87,
     TILE_CASTLE_17 = 143,
     TILE_CASTLE_18 = 144,
     TILE_CASTLE_19 = 145,
     TILE_CASTLE_20 = 251,
     TILE_CASTLE_21 = 252,
     TILE_CASTLE_22 = 253,
-    /* Rotated rugs (sheet row 3, grid indices 27..28, VRAM slots 24..25):
-     * values 185..186 are evicted legacy desolate ids
-     * (TILE_DESOLATE_MERCHANT / TILE_DESOLATE_STAIRCASE), unreferenced
-     * by every level and carved out of the legacy engine ranges (ui.c,
-     * edge/patrol).  Suffixes stay grid indices, like the rest. */
-    TILE_CASTLE_27 = 185,
-    TILE_CASTLE_28 = 186,
-    /* Solid red square (sheet row 4, grid index 36, VRAM slot 26):
-     * value 184 is another evicted legacy desolate id
-     * (TILE_DESOLATE_FIRE_02), unreferenced by every level. */
-    TILE_CASTLE_36 = 184,
+    TILE_CASTLE_23 = 146,
+    TILE_CASTLE_24 = 147,
+    TILE_CASTLE_25 = 148,
+    TILE_CASTLE_26 = 141,
+    TILE_CASTLE_27 = 149,
+    TILE_CASTLE_28 = 150,
+    TILE_CASTLE_29 = 151,
+    TILE_CASTLE_30 = 152,
+    TILE_CASTLE_31 = 153,
+    TILE_CASTLE_32 = 154,
+    TILE_CASTLE_33 = 155,
+    TILE_CASTLE_34 = 156,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -277,17 +274,10 @@ typedef enum {
     TILE_VILLAGE_46 = 134,
     TILE_VILLAGE_47 = 135,
     /* Desolate landscape */
-    TILE_DESOLATE_WALL_00    = 146,
-    TILE_DESOLATE_WALL_01    = 147,
-    TILE_DESOLATE_WALL_02    = 148,
-    TILE_DESOLATE_WALL_03    = 149,
-    TILE_DESOLATE_WALL_04    = 150,
-    TILE_DESOLATE_WALL_05    = 151,
-    TILE_DESOLATE_WALL_06    = 152,
-    TILE_DESOLATE_WALL_07    = 153,
-    TILE_DESOLATE_WALL_08    = 154,
-    TILE_DESOLATE_WALL_09    = 155,
-    TILE_DESOLATE_WALL_10    = 156,
+    /* Values 146..156 (ex-TILE_DESOLATE_WALL_00..WALL_10) are evicted:
+     * reused as the TILE_CASTLE_23..34 extension block above.
+     * Unreferenced by every level; the legacy engine ranges in ui.c
+     * now start at TILE_DESOLATE_WALL_11. */
     TILE_DESOLATE_WALL_11    = 157,
     TILE_DESOLATE_TREE_TL    = 158,
     TILE_DESOLATE_TREE_TR    = 159,

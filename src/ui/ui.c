@@ -454,9 +454,10 @@ void ui_invalidate_tileset(void)
 
 static char ui_get_world_tile_glyph(uint8_t t)
 {
-    /* Legacy desolate block ends at FIRE_01: values 184..186 are evicted
-     * (now TILE_CASTLE_36/27/28) and flow to the generated table below. */
-    if (t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_FIRE_01) {
+    /* Legacy desolate block ends at FIRE_01: values 146..156 and 184..186
+     * are evicted (now castle tiles) and flow to the generated table
+     * below.  The surviving legacy range starts at WALL_11. */
+    if (t >= TILE_DESOLATE_WALL_11 && t <= TILE_DESOLATE_FIRE_01) {
         if (t == TILE_DESOLATE_FIRE_01) return '*';
         if ((t >= TILE_DESOLATE_FLOOR_00 && t <= TILE_DESOLATE_FLOOR_03) || t == TILE_DESOLATE_FLOOR_PLAIN) return '.';
         return '#';
@@ -506,6 +507,12 @@ static uint8_t ui_cell_palette(uint8_t tile_idx, uint8_t glyph, uint8_t kind)
     return UI_COLOR_NONE;
 }
 
+/* Castle extension slot table (fixed bank, 16 bytes): VRAM slot for
+ * value 141 + i (exit plus the contiguous 142..156 freed block). */
+static const uint8_t s_castle_ext_slot[16] = {
+    26, 8, 17, 18, 19, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34
+};
+
 static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
 {
     uint8_t t;
@@ -534,8 +541,8 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
          * the loader never stamps TILE_EXIT anymore, so gate cells render
          * their underlying terrain art through the ranges below. */
         if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
-            t >= TILE_DESOLATE_WALL_00 && t <= TILE_DESOLATE_FIRE_01) {
-            uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_WALL_00);
+            t >= TILE_DESOLATE_WALL_11 && t <= TILE_DESOLATE_FIRE_01) {
+            uint8_t des_idx = (uint8_t)(t - TILE_DESOLATE_WALL_11);
             tile_idx = (uint8_t)(RPG_TILE_BASE_DESOLATE + des_idx);
         } else if (world->tileset_kind == WORLD_TILESET_DESOLATE &&
                    t >= TILE_DESOLATE_LANDSCAPE_00 && t <= TILE_DESOLATE_LANDSCAPE_63) {
@@ -552,33 +559,28 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t f_idx = (uint8_t)(t - TILE_FOREST_00);
             if (f_idx >= 64) f_idx = (uint8_t)(f_idx - 64);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + f_idx);
-        } else if (t == TILE_CASTLE_26) {
-            /* Castle tunnel stairs (LAST VRAM slot, 23). No tileset gate:
-             * value 141 is globally unique (forest ends at 140, desolate
-             * wall starts at 146, village ends at 135), so this row can
-             * only ever mean the castle exit, on any map. */
-            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 23);
         } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
-                   (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_15)) {
+                   (t >= TILE_CASTLE_00 && t <= TILE_CASTLE_07)) {
+            /* Base walls (VRAM slots 0..7, 1:1). */
             uint8_t c_idx = (uint8_t)(t - TILE_CASTLE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + c_idx);
-        } else if ((uint8_t)(t - TILE_CASTLE_16) <= (uint8_t)(TILE_CASTLE_19 - TILE_CASTLE_16)) {
-            /* Extension art, first cluster (VRAM slots 16..19): values
-             * are globally unique (gap), so no tileset gate is needed
-             * -- like the exit row above.  Single compare keeps the
-             * fixed bank within budget (AGENTS.md 52.18). */
-            tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 16 - TILE_CASTLE_16));
+        } else if (world->tileset_kind == WORLD_TILESET_CASTLE &&
+                   (t >= TILE_CASTLE_09 && t <= TILE_CASTLE_16)) {
+            /* Row-1 walls/furniture + debris (VRAM slots 9..16). */
+            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 9 + (t - TILE_CASTLE_09));
+        } else if ((uint8_t)(t - TILE_CASTLE_26) <= (uint8_t)(TILE_CASTLE_34 - TILE_CASTLE_26)) {
+            /* Exit + extension block (values 141..154, VRAM slots 26, 8,
+             * 17..19, 23..25, 27..30, 33..34): one contiguous freed-value
+             * run, so a single range check plus a 16-byte slot table
+             * replaces a branch ladder (fixed bank budget, AGENTS.md
+             * 52.18).  Values are globally unique (forest ends at 140,
+             * legacy desolate now starts at WALL_11=157, village ends
+             * at 135), so no tileset gate is needed. */
+            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + s_castle_ext_slot[(uint8_t)(t - TILE_CASTLE_26)]);
         } else if ((uint8_t)(t - TILE_CASTLE_20) <= (uint8_t)(TILE_CASTLE_22 - TILE_CASTLE_20)) {
-            /* Extension art, second cluster (VRAM slots 20..22):
-             * top-of-range values, likewise gateless. */
+            /* Chandelier + vase row (VRAM slots 20..22): top-of-range
+             * values, likewise gateless. */
             tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 20 - TILE_CASTLE_20));
-        } else if ((uint8_t)(t - TILE_CASTLE_27) <= (uint8_t)(TILE_CASTLE_28 - TILE_CASTLE_27)) {
-            /* Rotated rugs (VRAM slots 24..25): evicted legacy values,
-             * likewise gateless. */
-            tile_idx = (uint8_t)(t + (RPG_TILE_BASE_WORLD + 24 - TILE_CASTLE_27));
-        } else if (t == TILE_CASTLE_36) {
-            /* Solid red square (VRAM slot 26): single evicted value. */
-            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 26);
         } else if (world->tileset_kind == WORLD_TILESET_VILLAGE &&
                    t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47) {
             uint8_t v_idx = (uint8_t)(t - TILE_VILLAGE_00);

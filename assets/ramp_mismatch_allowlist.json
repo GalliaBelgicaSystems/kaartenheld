@@ -1,700 +1,713 @@
 {
- "_doc": "Allowlisted ramp fallbacks (nearest-shade encoding of off-ramp pixels). Generated entries that MUST stay failing-free: any generated/tiles/ramp_mismatches.json entry not listed here fails `make ramp-check`. To allow a new deliberate fallback, add its entry and commit. Regenerate candidates with: python3 -c (see tools/verify_ramp_tags.py mismatch_key). DO NOT hand-edit entries to match; repaint the art instead.",
- "allow": [
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    0,
-    4
-   ],
-   "declared": "sprites9",
-   "used_ramp": "sprites9",
-   "off_colors": [
-    "#8b1b1b"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    1,
-    4
-   ],
-   "declared": "sprites9",
-   "used_ramp": "sprites9",
-   "off_colors": [
-    "#8b1b1b"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    0,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    1,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    2,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    3,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    4,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    5,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    6,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    7,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    8,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    9,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    9,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    10,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    10,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    11,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    11,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    12,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    12,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#408cb3",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    13,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    13,
-    3
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#408cb3",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    14,
-    2
-   ],
-   "declared": "field5",
-   "used_ramp": "field5",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "forest",
-   "tile": [
-    15,
-    2
-   ],
-   "declared": "field3",
-   "used_ramp": "field3",
-   "off_colors": [
-    "#2a4f1a",
-    "#5ea4c8"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    0,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    1,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    2,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    3,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    4,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    5,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    6,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    7,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    8,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    9,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    9,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    10,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    10,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    11,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    11,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    12,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    12,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#602a98",
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    13,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    13,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#602a98",
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    14,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    14,
-    3
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "desolate_landscape",
-   "tile": [
-    15,
-    2
-   ],
-   "declared": "desolate2",
-   "used_ramp": "desolate2",
-   "off_colors": [
-    "#7d40bb"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    0,
-    13
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    0,
-    14
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    1,
-    13
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    1,
-    14
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    2,
-    13
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "battle",
-   "tile": [
-    2,
-    14
-   ],
-   "declared": "fightslime",
-   "used_ramp": "fightslime",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    0,
-    8
-   ],
-   "declared": "sprites11",
-   "used_ramp": "sprites11",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    1,
-    8
-   ],
-   "declared": null,
-   "used_ramp": "sprites11",
-   "off_colors": [
-    "#3c5e26"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    0,
-    9
-   ],
-   "declared": "sprites2",
-   "used_ramp": "sprites2",
-   "off_colors": [
-    "#b09266"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    1,
-    9
-   ],
-   "declared": "sprites2",
-   "used_ramp": "sprites2",
-   "off_colors": [
-    "#b09266"
-   ]
-  },
-  {
-   "sheet": "enemy_ow",
-   "tile": [
-    2,
-    9
-   ],
-   "declared": null,
-   "used_ramp": "sprites5",
-   "off_colors": [
-    "#b09266"
-   ]
-  }
- ]
+  "_doc": "Allowlisted ramp fallbacks (nearest-shade encoding of off-ramp pixels). Generated entries that MUST stay failing-free: any generated/tiles/ramp_mismatches.json entry not listed here fails `make ramp-check`. To allow a new deliberate fallback, add its entry and commit. Regenerate candidates with: python3 -c (see tools/verify_ramp_tags.py mismatch_key). DO NOT hand-edit entries to match; repaint the art instead.",
+  "allow": [
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        0,
+        4
+      ],
+      "declared": "sprites9",
+      "used_ramp": "sprites9",
+      "off_colors": [
+        "#8b1b1b"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        1,
+        4
+      ],
+      "declared": "sprites9",
+      "used_ramp": "sprites9",
+      "off_colors": [
+        "#8b1b1b"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        0,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        1,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        2,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        3,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        4,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        5,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        6,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        7,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        8,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        9,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        9,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        10,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        10,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        11,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        11,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        12,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        12,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#408cb3",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        13,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        13,
+        3
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#408cb3",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        14,
+        2
+      ],
+      "declared": "field5",
+      "used_ramp": "field5",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "forest",
+      "tile": [
+        15,
+        2
+      ],
+      "declared": "field3",
+      "used_ramp": "field3",
+      "off_colors": [
+        "#2a4f1a",
+        "#5ea4c8"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        0,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        1,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        2,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        3,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        4,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        5,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        6,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        7,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        8,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        9,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        9,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        10,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        10,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        11,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        11,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        12,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        12,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#602a98",
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        13,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        13,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#602a98",
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        14,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        14,
+        3
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "desolate_landscape",
+      "tile": [
+        15,
+        2
+      ],
+      "declared": "desolate2",
+      "used_ramp": "desolate2",
+      "off_colors": [
+        "#7d40bb"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        0,
+        13
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        0,
+        14
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        1,
+        13
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        1,
+        14
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        2,
+        13
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "battle",
+      "tile": [
+        2,
+        14
+      ],
+      "declared": "fightslime",
+      "used_ramp": "fightslime",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        0,
+        8
+      ],
+      "declared": "sprites11",
+      "used_ramp": "sprites11",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        1,
+        8
+      ],
+      "declared": null,
+      "used_ramp": "sprites11",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        0,
+        9
+      ],
+      "declared": "sprites2",
+      "used_ramp": "sprites2",
+      "off_colors": [
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        1,
+        9
+      ],
+      "declared": "sprites2",
+      "used_ramp": "sprites2",
+      "off_colors": [
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        2,
+        9
+      ],
+      "declared": null,
+      "used_ramp": "sprites5",
+      "off_colors": [
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "village",
+      "tile": [
+        14,
+        2
+      ],
+      "declared": "town7",
+      "used_ramp": "town7",
+      "reason": "tagged ramp stands; off-ramp pixels use nearest shade",
+      "off_colors": [
+        "#8d754a"
+      ]
+    }
+  ]
 }

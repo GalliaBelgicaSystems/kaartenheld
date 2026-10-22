@@ -48,22 +48,14 @@ enum {
 /* Material power bands (docs/loot.md §34.1).  One shared definition so
  * the synth, battle-init and display paths cannot drift: sword/bow take
  * the high end of a band, shield/dagger/ring the low end.
- * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9. */
-#define LOOT_MATERIAL_LOW(mat) ((uint8_t)( \
-    (mat) == MAT_WOOD   ? 1 : \
-    (mat) == MAT_BRONZE ? 2 : \
-    (mat) == MAT_IRON   ? 4 : \
-    (mat) == MAT_STEEL  ? 6 : 8))
-
-#define LOOT_MATERIAL_HIGH(mat) ((uint8_t)( \
-    (mat) == MAT_WOOD   ? 1 : \
-    (mat) == MAT_BRONZE ? 3 : \
-    (mat) == MAT_IRON   ? 5 : \
-    (mat) == MAT_STEEL  ? 7 : 9))
-
-#define LOOT_POWER(mat, wpn) ((uint8_t)( \
-    ((wpn) == WPN_SWORD || (wpn) == WPN_BOW) ? \
-        LOOT_MATERIAL_HIGH(mat) : LOOT_MATERIAL_LOW(mat)))
+ * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9.
+ * Closed form (no compare chains: `mat` is a runtime value, so nested
+ * ternaries compile to branch ladders in every banked copy): low is
+ * `mat ? mat<<1 : 1`, high adds one for non-wood. */
+#define LOOT_MATERIAL_LOW(mat) ((uint8_t)(((mat) == 0) ? 1 : ((uint8_t)(mat) << 1)))
+#define LOOT_MATERIAL_HIGH(mat) ((uint8_t)(LOOT_MATERIAL_LOW(mat) + (((mat) == 0) ? 0 : 1)))
+#define LOOT_POWER(mat, wpn) ((uint8_t)(((mat) == 0) ? 1 : \
+    (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0))))
 
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)
@@ -75,7 +67,7 @@ enum {
  * g_loot_id       -- derived-id result byte written by the banked
  *                    drop/synth bodies, read by fixed-bank wrappers.
  * g_loot_rng_state -- isolated xorshift stream (seeded from the main
- *                    seed by rng_set_seed); bank-3 bodies step it
+ *                    seed by rng_set_seed); banked bodies step it
  *                    inline -- a banked body must never call a
  *                    fixed-bank function (AGENTS.md 52.11.1). */
 extern uint8_t g_loot_id;

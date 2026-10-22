@@ -14,15 +14,15 @@ it carries the harness/scenario tables; the release build is what ships.
 Game Boy ROM memory budget
 Map: kaartenheld_debug.map
 --------------------------
-_CODE (fixed bank code/data) :  32078 B  @ 0x0200-0x7F4E
-_HOME (non-bankable)          :    125 B  @ 0x7F4E-0x7FD2  headroom to 0x8000: 46 B  [OK]
+_CODE (fixed bank code/data) :  32090 B  @ 0x0200-0x7F5A
+_HOME (non-bankable)          :    125 B  @ 0x7F4E-0x7FD2  headroom to 0x8000: 34 B  [OK]
 _DATA (WRAM)                  :   4250 B  @ 0xC940-0xD9DA  headroom to 0xE000: 1574 B
 
 Switchable ROM bank size checks (16 KB each)
-_CODE_2 : 15876 B  headroom:  508 B  [OK]
-_CODE_3 : 15838 B  headroom:  546 B  [OK]
+_CODE_2 : 15553 B  headroom:  831 B  [OK]
+_CODE_3 : 15775 B  headroom:  609 B  [OK]
 _CODE_4 : 14808 B  headroom: 1576 B  [OK]
-_CODE_5 : 12707 B  headroom: 3677 B  [OK]
+_CODE_5 : 12858 B  headroom: 3526 B  [OK]
 _CODE_6 : 15352 B  headroom: 1032 B  [OK]
 _CODE_7 : 14882 B  headroom: 1502 B  [OK]
 _CODE_8 : 12390 B  headroom: 3994 B  [OK]
@@ -35,28 +35,31 @@ _CODE_9 :  8218 B  headroom: 8166 B  [OK]
 Game Boy ROM memory budget
 Map: kaartenheld.map
 --------------------------
-_CODE (fixed bank code/data) :  27233 B  @ 0x0200-0x6C61
-_HOME (non-bankable)          :    125 B  @ 0x6C61-0x6CE1  headroom to 0x8000: 4895 B  [OK]
+_CODE (fixed bank code/data) :  27245 B  @ 0x0200-0x6C6D
+_HOME (non-bankable)          :    125 B  @ 0x6C6D-0x6CED  headroom to 0x8000: 4883 B  [OK]
 _DATA (WRAM)                  :   3310 B  @ 0xC940-0xD62E  headroom to 0xE000: 2514 B
 
 Switchable ROM bank size checks (16 KB each)
-_CODE_2 : 15919 B  headroom:  465 B  [OK]
-_CODE_3 : 15986 B  headroom:  398 B  [OK]
+_CODE_2 : 15598 B  headroom:  786 B  [OK]
+_CODE_3 : 15921 B  headroom:  463 B  [OK]
 _CODE_4 : 16171 B  headroom:  213 B  [OK]
-_CODE_5 : 14416 B  headroom: 1968 B  [OK]
+_CODE_5 : 14564 B  headroom: 1820 B  [OK]
 _CODE_6 : 16110 B  headroom:  274 B  [OK]
 _CODE_7 : 15745 B  headroom:  639 B  [OK]
 _CODE_8 : 12124 B  headroom: 4260 B  [OK]
 _CODE_9 :  5700 B  headroom: 10684 B  [OK]
 ```
 
-> The **debug** fixed bank is the tight one (46 B to `0x8000`); release has
-> 4,895 B.  Any fixed-bank addition still risks the silent bank-1→2
+> The **debug** fixed bank is the tight one (34 B to `0x8000`; the castle
+> 36-slot mapping costs 12 B net via a 16-byte slot table); release has
+> 4,883 B.  Any fixed-bank addition still risks the silent bank-1→2
 > overflow (§52.18 — the Makefile link rules fail loudly on it).
 > In the **release** map, bank 4 is now the tightest switchable bank
-> (213 B), ahead of bank 6 (274 B) and bank 3 (398 B).  Moving the loot
-> drop body to bank 9 restored bank 3 from 79 B to 398 B of release
-> headroom.  Plan new banked content against both maps, and prefer bank 8
+> (213 B), ahead of bank 6 (274 B) and bank 3 (463 B).  Moving the loot
+> drop body to bank 9 restored bank 3 from 79 B to 463 B of release
+> headroom (the shared `LOOT_POWER` closed-form macro saved another ~60 B
+> there and ~320 B in debug bank 2 versus per-file compare chains).
+> Plan new banked content against both maps, and prefer bank 8
 > (4,260 B), bank 9 (10,684 B) or bank 5 (1,968 B).
 
 ## Where the bytes go
@@ -69,16 +72,16 @@ _CODE_9 :  5700 B  headroom: 10684 B  [OK]
   overflow → banks 6/7).  `_CODE` grows with every feature.
 * **`_HOME`** (125 B): boot-critical code that must stay below `0x8000` —
   `_joypad`, `_set_bkg_data`/`_set_tile_data` and other non-bankable
-  library routines.  The debug map has only 46 B of headroom; release
-  has 4,895 B.  Keep the debug build there; do not grow it casually.
+  library routines.  The debug map has only 34 B of headroom; release
+  has 4,883 B.  Keep the debug build there; do not grow it casually.
 * Banked ROM (banks 1-9): scenes, actors, dialogue, events, shops,
   quests, cards, title, terrain overflow, the hUGE driver + songs
   (banks 6/7/9), SFX tables, and ~30 banked logic bodies live
   here (see `make memmap` banked-target validation).  Release free
-  room: bank 2 465 B, bank 3 398 B, bank 4 213 B, bank 5 1968 B,
+  room: bank 2 786 B, bank 3 461 B, bank 4 213 B, bank 5 1820 B,
   bank 6 274 B, bank 7 639 B, bank 8 4260 B, bank 9 10684 B.
   Release's tightest bank is bank 4 (213 B), then bank 6 (274 B) and
-  bank 3 (398 B).
+  bank 3 (463 B).
 
 ### WRAM (8 KB, `0xC000-0xDFFF`)
 

@@ -1,0 +1,60 @@
+{
+ "name": "save_version_reject",
+ "test": true,
+ "description": "Save compatibility (docs/save-format.md): the loader rejects any version != SAVE_VERSION (equality check in save_valid_at_slot), so v2 and older saves never decode stale loot ids. Save with GOLD 50, gain 25, backdate slot 1's version byte (0xA002) to 2, load -- GOLD must stay 75: the load is refused and state is untouched. Pairs with save_version_accept.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7003,
+  "currency": {
+   "GOLD": 50
+  }
+ },
+ "actions": [
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 25
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "sram_write",
+   "addr": 40962,
+   "value": 2
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "load",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 75
+  }
+ ]
+}

@@ -1269,8 +1269,9 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
-  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +2,
-  chest +1, Monster Hunt +1 from the unset base, reaching 4 in any order);
+  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1,
+  chest +1, Monster Hunt +1, mimic +1 from the base-1 pool, reaching 5
+  in any order);
   battles stage the
   pool at entry and reuse it for the whole fight. Affordability is checked
   at selection time against `energy - combo_reserved_cost()` and paid at
@@ -1278,9 +1279,11 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   cost-0 (or a single cost-1) cards so the hand still fits the pool.
 - **Deck-size ceiling**: the 20-card deck limit is reachable by stacking
   repeated loot drops (loot cards have no copy limit).  The fixed catalog
-  alone provides 16 guaranteed copies without the loot-only Iron Sword
-  (WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + IRON_RING ×1 + FIRE_SWORD ×3 +
-  POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not deckable).
+  alone provides 16 guaranteed copies (WOOD_SWORD ×4 + WOODEN_SHIELD ×4 +
+  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; AMULET is
+  SPECIAL and not deckable).  The catalog `CARD_IRON_SWORD` is excluded
+  from that count: it is a test/legacy entry that never appears in normal
+  play (in-play iron swords are derived loot ids, e.g. `0xA0`).
 - **Starter deck granted at new game**: a new game grants the collection
   WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
   ten, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW3),

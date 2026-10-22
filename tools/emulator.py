@@ -498,6 +498,17 @@ class EmulatorSession:
         """Write single byte to GB memory address."""
         self._cmd(f'w/1 0x{addr:04X} 0x{val:02X}')
 
+    def write_mem(self, addr, val):
+        """Raw single-byte write (harness-only pokes, e.g. SRAM blobs).
+
+        SRAM (0xA000-0xBFFF) sits behind the MBC5 RAM gate: the ROM
+        closes it after every save/load, so open it first with 0x0A to
+        rRAMG (0x0000), otherwise the poke is silently ignored."""
+        addr &= 0xFFFF
+        if 0xA000 <= addr < 0xC000:
+            self._memwrite(0x0000, 0x0A)
+        self._memwrite(addr, val & 0xFF)
+
     def _set_pc(self, addr):
         """Set the CPU program counter."""
         self._cmd(f'w/r pc 0x{addr:04X}')

@@ -423,17 +423,6 @@
       "category": "exit"
     },
     {
-      "id": "village_mayor",
-      "palette": "town1",
-      "label": "mayor",
-      "gb_constant": "TILE_VILLAGE_41",
-      "walkable": true,
-      "color": "#8a7459",
-      "ascii": "#",
-      "image_url": "/tiles/village/village_mayor.png",
-      "category": "npc"
-    },
-    {
       "id": "village_left_house",
       "palette": "town2",
       "label": "left house",
@@ -445,14 +434,14 @@
       "category": "terrain"
     },
     {
-      "id": "village_middle_house",
+      "id": "village_middle_house_open_door",
       "palette": "town7",
-      "label": "middle house",
+      "label": "middle house open door",
       "gb_constant": "TILE_VILLAGE_43",
       "walkable": false,
       "color": "#262014",
       "ascii": "#",
-      "image_url": "/tiles/village/village_middle_house.png",
+      "image_url": "/tiles/village/village_middle_house_open_door.png",
       "category": "terrain"
     },
     {
@@ -464,6 +453,28 @@
       "color": "#b89f72",
       "ascii": "#",
       "image_url": "/tiles/village/village_right_house.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_destination_signpost",
+      "palette": "town1",
+      "label": "destination signpost",
+      "gb_constant": "TILE_VILLAGE_41",
+      "walkable": true,
+      "color": "#a4906d",
+      "ascii": ".",
+      "image_url": "/tiles/village/village_destination_signpost.png",
+      "category": "terrain"
+    },
+    {
+      "id": "village_middle_house_closed_door",
+      "palette": "town7",
+      "label": "middle house closed door",
+      "gb_constant": "TILE_VILLAGE_46",
+      "walkable": false,
+      "color": "#77623e",
+      "ascii": "#",
+      "image_url": "/tiles/village/village_middle_house_closed_door.png",
       "category": "terrain"
     }
   ],
@@ -722,7 +733,7 @@
         "x": 9,
         "y": 2,
         "index": 41,
-        "tile": "village_mayor"
+        "tile": "village_destination_signpost"
       },
       {
         "x": 10,
@@ -734,7 +745,7 @@
         "x": 11,
         "y": 2,
         "index": 43,
-        "tile": "village_middle_house"
+        "tile": "village_middle_house_open_door"
       },
       {
         "x": 12,
@@ -752,7 +763,7 @@
         "x": 14,
         "y": 2,
         "index": 46,
-        "tile": "village_plain_floor_1"
+        "tile": "village_middle_house_closed_door"
       },
       {
         "x": 15,

@@ -121,18 +121,15 @@ def vram_slot(tileset_id, vram_index):
     """vram_block index -> ROM VRAM load slot.
 
     Must match the Makefile gfx rule --tile-coords and
-    verify_palette_manifest.py: dense vram-index order everywhere except
-    castle, which loads vram 0..22 then the exit (vram 26) LAST at
-    slot 23.  Returns None for indices the ROM never loads."""
-    if tileset_id == "castle":
-        order = list(range(23)) + [26]
-        return order.index(vram_index) if vram_index in order else None
+    verify_palette_manifest.py: every tileset (castle included, 9x4 = 36
+    slots in scan order) packs slot i = vram index i.  Returns None for
+    indices the ROM never loads."""
     return vram_index
 
 
 def manifest_index(tileset_id, tileset, tile_id):
-    """Manifest tile id -> ROM VRAM load slot (NOT the vram_block index:
-    the castle exit lives at vram index 26 but loads in slot 23)."""
+    """Manifest tile id -> ROM VRAM load slot (== vram_block index: every
+    tileset packs slot i = index i, castle included)."""
     for e in tileset.get("vram_block", {}).get("tiles", []):
         if e.get("tile") == tile_id:
             return vram_slot(tileset_id, e.get("index"))

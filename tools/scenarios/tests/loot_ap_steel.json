@@ -1,7 +1,7 @@
 {
  "name": "loot_ap_steel",
  "test": true,
- "description": "AP-gated loot unlock (docs/loot.md 34.5): the same isolated loot stream yields different material tiers by AP. At AP 5 seed 76 deterministically rolls a STEEL SWORD (derived id 0xC0 = 192, material 3); asserts LOOT_CARD_ADDED and the reveal name. The AP 1 counterpart is loot_drop_victory (wood plain dagger).",
+ "description": "AP-gated loot unlock (docs/loot.md 34.5): the same isolated loot stream yields different material tiers by AP. At AP 5 seed 76 deterministically rolls a STEEL SWORD (derived id 0xC0 = 192, material 3); asserts LOOT_CARD_ADDED and the reveal name. The same seed at AP 1 rolls a wood sword (id 96); loot_drop_victory covers the AP 1 wood/no-rider case with seed 5002.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

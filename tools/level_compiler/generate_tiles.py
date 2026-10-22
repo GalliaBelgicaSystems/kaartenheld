@@ -184,7 +184,7 @@ def emit_glyph(ranges, exit_idx, const_by_value):
     check below proves it for all 256 inputs and fails generation
     otherwise (so a future tileset layout that breaks the property can
     never silently ship wrong glyphs)."""
-    vals = [(const_by_value[lo], const_by_value[hi], g)
+    vals = [(int(const_by_value.get(lo, lo)), int(const_by_value.get(hi, hi)), g)
             for lo, hi, w, g in ranges]
 
     def classic(t):
@@ -364,8 +364,16 @@ def main(argv):
     # these values with other expectations (walkability callers check the
     # legacy ranges first; the '*' of FIRE_01 stays live in ui.c).
     value_to_const = {v: k for k, v in const_by_value.items()}
-    for value in range(146, 184):
-        entries.append((value_to_const[value], value, False, "#"))
+    covered = {v for _, v, _, _ in entries}
+    for value in range(146, 185):
+        if value in covered:
+            continue  # manifest-owned now (castle 146..154 reuse the
+                      # evicted legacy ids, with real walk/glyph rows)
+        # Free values (155 legacy WALL_09, 184 ex-red-square) have no
+        # TILE_ name: use the numeric literal, which is valid C wherever
+        # a constant name would go.
+        entries.append((value_to_const.get(value, str(value)),
+                        value, False, "#"))
     entries.sort(key=lambda e: e[1])
     ranges = to_ranges(entries)
     # exit indices per tileset kind (WORLD_TILESET_* numbering lives in

@@ -44,5 +44,12 @@ Battery-backed SRAM persistence of the canonical `GameState`
 mutates it, loads it back, and asserts the state is byte-identical at the
 semantic level (currency, variables, inventory, party HP, story flags).
 
+Version gating is pinned by a scenario pair using the harness `sram_write`
+poke (raw SRAM byte write with the MBC5 RAM gate opened first):
+`save_version_accept` saves GOLD 50, gains 25 and loads -- GOLD reads 50
+again (control: the save path works); `save_version_reject` does the same
+but backdates slot 1's version byte (`0xA002`) to 2 before loading --
+GOLD stays 75, proving the load is refused and state untouched.
+
 Power-cycle persistence (writing SRAM to a `.sav` file on hardware/mGBA) is
 emulator/hardware behavior and is not covered by the in-session harness test.

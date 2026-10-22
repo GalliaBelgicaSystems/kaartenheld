@@ -1798,8 +1798,9 @@ shop; finding it is what makes the delivery (and the shop) available:
   stock)`.  Rings are THE healing vector, so healing is purchasable but
   never free.  The iron sword / poison dagger are gone from the stock:
   the starter deck carries a wood sword, iron and better swords come
-  from loot (iron unlocks at AP 4), and daggers come from the field
-  cache and loot.
+  from loot as derived ids (iron unlocks at AP 4; the catalog
+  `CARD_IRON_SWORD` is test-only and never drops), and daggers come
+  from the field cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one

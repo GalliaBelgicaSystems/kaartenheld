@@ -268,6 +268,14 @@ def run_scenario(scenario):
             elif act_type == "load":
                 slot = act.get("slot", 1) - 1 if "slot" in act else 0
                 session.debug_action(session.DBG_ACT_LOAD, slot, 0, 0)
+            elif act_type == "sram_write":
+                # Raw single-byte SRAM poke (harness-only: no ROM debug
+                # command involved).  Used to craft blobs the ROM would
+                # never write itself -- e.g. backdating the save version
+                # byte to prove old versions are rejected.  Address is
+                # an absolute GB address (save slot N base = 0xA000 +
+                # N*0x400; version byte at base+2).
+                session.write_mem(act.get("addr", 0), act.get("value", 0))
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by

@@ -66,8 +66,9 @@ void game_new_game(GameState *state)
     state->party.members[0].max_hp = HERO_START_HP;
 
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
-    /* Base energy pool: every milestone (tutorial, chest, Monster Hunt) grants
-     * a uniform ADD 1 from here, reaching 4 in any completion order.
+    /* Base energy pool: every milestone (tutorial, chest, Monster Hunt,
+     * mimic) grants a uniform ADD 1 from here, reaching 5 in any
+     * completion order.
      * Initializing (not relying on the stager's < 1 fallback) keeps the
      * variable equal to the visible pool, so staged values, snapshots
      * and the debugger never disagree about what a fight will stage. */

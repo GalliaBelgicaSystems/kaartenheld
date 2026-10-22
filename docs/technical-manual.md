@@ -327,7 +327,7 @@ All catalogue cards (`src/game/cards_content.c`):
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
 | Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
-| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (loot) |
+| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (test) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 4/battle | 1 | — | 20g |
 | Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
@@ -335,8 +335,11 @@ All catalogue cards (`src/game/cards_content.c`):
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
 
-The Iron Sword is loot-only now: it has no shop row and is not in the
-starter deck.  Iron swords start dropping at AP 4 (loot.md §34.5).
+The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
+entry: it has no shop row, is not in the starter deck, and never drops.
+Scenarios use it as a convenient power-5 sword.  In normal play iron
+swords come from loot as derived ids (e.g. `0xA0` for a plain iron
+sword), which start dropping at AP 4 (loot.md §34.5).
 
 Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
 multiplier (§8.4).
