@@ -110,19 +110,19 @@ void dialogue_choice_nav_banked(void)
     if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         g_game.dialogue.choice_made = 1;
         if (g_game.dialogue.id == DIALOGUE_ID_KOBOLD_INVITE) {
-            /* Chuck-a-luck invite: YES opens the table (fixed handoff
-             * via code 7; the dialogue is closed here since the fixed
-             * side switches screens without running dialogue_end).
-             * NO confirms plainly (code 2): the dialogue advances,
-             * closes, and returns to the overworld -- a walk-away. */
+            /* Chuck-a-luck invite: YES reports code 7 and leaves the
+             * dialogue ACTIVE (the fixed side ends it through
+             * dialogue_end()) while raising g_gamble_enter for the tick
+             * body.  NO confirms plainly (code 2): the dialogue
+             * advances, closes, and returns to the overworld -- a
+             * walk-away. */
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_bk_byte_a = 2;
             } else {
-                /* YES: raise the enter request and report code 7.  The
-                 * dialogue stays ACTIVE here so the fixed side can close
-                 * it through dialogue_end() -- that keeps the
-                 * DIALOGUE_ENDED telemetry paired with the choice event
-                 * (a raw active = 0 would silently skip it).  The bank-8
+                /* YES path: raising the enter request and reporting
+                 * code 7 keeps DIALOGUE_ENDED paired with the choice
+                 * event (a raw active = 0 here would silently skip it).
+                 * The bank-8
                  * tick then opens SCREEN_GAMBLE. */
                 g_gamble_enter = 1;
                 g_bk_byte_a = 7;

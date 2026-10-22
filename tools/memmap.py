@@ -105,6 +105,9 @@ def main():
                 nonzero = [i for i, b in enumerate(image) if b]
             except OSError:
                 print("  (note: ROM image not found; cannot verify initializer bytes)")
+            if init_size and not nonzero:
+                print("  (initializer image is all zero: harmless, but it still "
+                      "costs fixed-bank bytes)")
             if nonzero:
                 print(f"  [VIOLATION] _INITIALIZER holds {len(nonzero)} non-zero byte(s) "
                       f"(first at +{nonzero[0]}): the custom CRT0 never copies it "

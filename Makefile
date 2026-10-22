@@ -225,8 +225,8 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
 	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
-	# The sheet is composed by the manifest prerequisite (compose_dice.py),
-	# which also writes its shade map; only the tile encode belongs here.
+	# The sheet is composed by the manifest prerequisite (compose_dice.py);
+	# palette_compiler.py writes the shade map.  Only the encode belongs here.
 	# Encoded with the wood ramp (brown on tan); streamed on demand by
 	# the bank-8 dice body to UI_TILE_DICE_BASE (246-255).  Reusable
 	# battle chrome, not gamble-only.

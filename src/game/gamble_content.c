@@ -13,10 +13,11 @@
 #include <gb/gb.h>
 
 /* Chuck-a-luck banked bodies (ROM bank 8, overflow bank with room;
- * AGENTS.md 55.5).  The fixed bank has ~50 B headroom, so the fixed
- * side of this feature is only the screen.c dispatch case and the
- * update stub (~30 B): entry loads, paint, input, dice, OAM and gold
- * all live here behind the single frame body.
+ * AGENTS.md 55.5).  The fixed bank runs close to 0x8000, so the fixed
+ * side of this feature is only the dialogue YES branch, the post-tick
+ * dialogue hook and the casino music code; entry loads, paint, input,
+ * dice, OAM, gold and both screen switches live here behind the frame
+ * body, called from the per-frame tick (no screen.c dispatch case).
  *
  * Banked-body rules (52.11.1/52.11.3): never call fixed-bank functions
  * (no input_pressed/audio/currency/telemetry here), never hold di.
@@ -200,23 +201,6 @@ static void gamble_put_char(uint8_t x, uint8_t y, char ch)
             gamble_vram_sync_write(dst, tile);
             g_ui_screen_buf[y][x] = ch;
         }
-    }
-}
-
-/* Unconditional tile stamp (dice / card frames): art cells bypass the
- * semantic buffer's skip-guard like the battle stamper (the blank path
- * clears the same footprint, so unconditional writes are safe).  The
- * buffer keeps a representative char for harness text assertions. */
-static void gamble_put_tile(uint8_t x, uint8_t y, char buf_char, uint8_t tile)
-{
-    if (y < 18 && x < 20) {
-        volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-        VBK_REG = 0;
-        gamble_vram_sync_write(dst, tile);
-        g_ui_screen_buf[y][x] = buf_char;
-#ifdef DEBUG_BUILD
-        g_tilemap_mirror[y * 32 + x] = tile;
-#endif
     }
 }
 
@@ -838,9 +822,11 @@ void gamble_enter_screen(void)
 void gamble_audio_tick(void)
 {
     /* Table blips ride the shared one-shot SFX slot (byte_c == 2 with
-     * the id in byte_d), which the fixed side already consumes.  Only
-     * when nothing else claimed it this frame (the pursuit alert never
-     * fires at the table, but stay defensive). */
+     * the id in byte_d), which the fixed side already consumes.  Both
+     * bytes are reset to 0 by marks_refresh() at the top of every tick,
+     * so they cannot carry a stale value across frames; the guards only
+     * yield to a same-frame claimant (pursuit alert sting, held-track
+     * replay flag). */
     if (g_gamble_sfx != 0 && g_bk_byte_c == 0 && g_bk_byte_d == 0) {
         g_bk_byte_c = 2;
         g_bk_byte_d = (uint8_t)(g_gamble_sfx - 1);
@@ -884,8 +870,6 @@ void gamble_audio_tick(void)
 
 void gamble_frame_banked(void)
 {
-    uint8_t old_phase;
-
     if (!g_gamble.entered) {
         g_gamble.chosen = 1;
         g_gamble.bet_idx = 0;
@@ -903,22 +887,17 @@ void gamble_frame_banked(void)
         gamble_entry();
         return;
     }
-    old_phase = s_gprev_phase;
     gamble_update();
     if (!g_gamble.entered) {
-        /* Exited to the overworld (banked screen_change replica): its
-         * render path takes over from here (full redraw + OAM hide). */
+        /* Left the table: the fixed post-tick hook opens Nis's farewell
+         * dialogue, whose render path takes over from here. */
         return;
     }
-    if (g_gamble.phase != old_phase) {
-        /* Phase switch changes the row content (outcome banner, carets,
-         * dice, controls).  Every dynamic painter fully clears the rows
-         * it draws (52.25 family), so the LCD-on repaint stays small --
-         * a full paint here would be ~720 mode-gated writes and could
-         * overrun VBlank. */
-        gamble_paint_dynamic();
-        gamble_mark_seen();
-    } else if (gamble_changed()) {
+    /* One repaint path: gamble_changed() already compares the phase (and
+     * every other visible field), so a phase switch lands here too.  The
+     * dynamic painters fully clear each row they draw (52.25 family), so
+     * no full LCD-on repaint is needed. */
+    if (gamble_changed()) {
         gamble_paint_dynamic();
         gamble_mark_seen();
     }

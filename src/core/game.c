@@ -1,6 +1,5 @@
 #include "game.h"
 #include "screen.h"
-#include "game/gamble.h"
 #include "story.h"
 #include "dialogue.h"
 #include "interaction.h"

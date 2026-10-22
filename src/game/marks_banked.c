@@ -353,9 +353,17 @@ void game_frame_tick_banked(void)
      * scenarios pre-seed and injected presses must not perturb their
      * determinism (g_harness_mode is 1 there). */
     if (!s_rng_mixed && !g_harness_mode && g_inp_pad != 0) {
+        uint16_t entropy;
         s_rng_mixed = 1;
-        g_rng_state ^= (uint16_t)(((uint16_t)LY_REG << 8) | (uint16_t)DIV_REG);
+        entropy = (uint16_t)(((uint16_t)LY_REG << 8) | (uint16_t)DIV_REG);
+        if (!entropy) entropy = 0x5A5A;
+        /* Both streams: the loot stream is seeded as seed ^ 0x1B3C, so
+         * mixing only g_rng_state would leave loot rolls repeatable per
+         * cold boot. */
+        g_rng_state ^= entropy;
         if (!g_rng_state) g_rng_state = 0xACE1;
+        g_loot_rng_state ^= (uint16_t)(entropy ^ 0x1B3C);
+        if (!g_loot_rng_state) g_loot_rng_state = 1;
     }
     /* Marks first: the re-arm edge below observes the jingle's unseeded
      * state (g_jingle_done without bit 7), which a real load clears via

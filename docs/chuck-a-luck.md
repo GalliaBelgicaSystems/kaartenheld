@@ -157,14 +157,15 @@ build is the tight one (~50 B).
 
 ## Scenarios (all deterministic, seeded RNG)
 
-`tools/scenarios/tests/gamble_*.json` (17): invite (rules + YES/NO
+`tools/scenarios/tests/gamble_*.json` (18): invite (rules + YES/NO
 prompt), invite-decline (NO walks away), invite-accept (YES opens the
 table), enter, lose, 1:1 / 2:1 / 3:1 wins (seeds 12345 / 21 / 579 pin
 dice [2,6,3] / [1,4,1] / [1,1,1]), bet cycling, high-stakes win
-(bet 10 -> +10), clamp-to-gold, exit (Nis's farewell box), farewell-close
-(box closes back to the overworld with the scene track), roundtrip (dice
-clear to '?' + LEAVEE-tail regression), two-rolls (stream advance), OAM
-placement. The ×2/×3 seeds were found by replicating the ROM xorshift
+(bet 10 -> +10), clamp-to-gold, rich-bet (260 gold: the bet keeps
+cycling 1 -> 5 -> 10; regression for the old uint8 clamp), exit (Nis's
+farewell box), farewell-close (box closes back to the overworld with the
+scene track), roundtrip (dice clear to '?' + LEAVEE-tail regression),
+two-rolls (stream advance), OAM placement. The ×2/×3 seeds were found by replicating the ROM xorshift
 (`rng_next_banked` step + 252-reject + subtraction fold) in Python and
 are pinned by the assertions -- same determinism contract as combat.
 The RNG stream is proven clean: no consumer sits between scenario start
