@@ -1,40 +1,63 @@
 # Memory Budget
 
-Reproducible numbers from `make memmap` (parses the debug linker map and fails
-on a `_HOME` >= 0x8000 violation).
+Reproducible numbers from `make memmap` (parses both the debug and release
+linker maps and fails on a `_HOME` >= 0x8000 violation).
 
-## Current budget (2026-10-22, `make memmap` on the debug map)
+## Current budget (2026-10-22, `make memmap` on both maps)
+
+`make memmap` runs both link maps.  The debug build is much larger because
+it carries the harness/scenario tables; the release build is what ships.
+
+### Debug
 
 ```text
 Game Boy ROM memory budget
+Map: kaartenheld_debug.map
 --------------------------
 _CODE (fixed bank code/data) :  32078 B  @ 0x0200-0x7F4E
 _HOME (non-bankable)          :    125 B  @ 0x7F4E-0x7FD2  headroom to 0x8000: 46 B  [OK]
-  (includes 7 B _INITIALIZER table after _HOME)
 _DATA (WRAM)                  :   4250 B  @ 0xC940-0xD9DA  headroom to 0xE000: 1574 B
 
 Switchable ROM bank size checks (16 KB each)
-_CODE_2 : 15603 B  headroom:  781 B  [OK]
-_CODE_3 : 16157 B  headroom:  227 B  [OK]
+_CODE_2 : 15876 B  headroom:  508 B  [OK]
+_CODE_3 : 15838 B  headroom:  546 B  [OK]
 _CODE_4 : 14808 B  headroom: 1576 B  [OK]
 _CODE_5 : 12707 B  headroom: 3677 B  [OK]
 _CODE_6 : 15352 B  headroom: 1032 B  [OK]
 _CODE_7 : 14882 B  headroom: 1502 B  [OK]
 _CODE_8 : 12390 B  headroom: 3994 B  [OK]
-_CODE_9 :  7866 B  headroom: 8518 B  [OK]
+_CODE_9 :  8218 B  headroom: 8166 B  [OK]
 ```
 
-> Fixed bank 0 is essentially full (46 B to `0x8000`): any fixed-bank
-> addition risks the silent bank-1→2 overflow (§52.18 — the Makefile
-> link rules fail loudly on it). The remaining fixed `_CODE` is almost
-> entirely code — the content-table migration waves already moved scenes
-> (bank 5), actors (bank 4), dialogue/events/shops/quests/cards (bank 2),
-> title (bank 4), terrain overflow (banks 6/7) out. No mult/div/mod
-> library routines link into fixed (only `___memcpy`); flag math is
-> shift/mask. The next substantial feature must plan banked placement
-> (§52.11.1) up front — bank 3 is now the tightest (227 B); bank 8
-> (3994 B), bank 9 (8518 B), bank 5 (3677 B) and bank 4 (1576 B) have the
-> most room.
+### Release
+
+```text
+Game Boy ROM memory budget
+Map: kaartenheld.map
+--------------------------
+_CODE (fixed bank code/data) :  27233 B  @ 0x0200-0x6C61
+_HOME (non-bankable)          :    125 B  @ 0x6C61-0x6CE1  headroom to 0x8000: 4895 B  [OK]
+_DATA (WRAM)                  :   3310 B  @ 0xC940-0xD62E  headroom to 0xE000: 2514 B
+
+Switchable ROM bank size checks (16 KB each)
+_CODE_2 : 15919 B  headroom:  465 B  [OK]
+_CODE_3 : 15986 B  headroom:  398 B  [OK]
+_CODE_4 : 16171 B  headroom:  213 B  [OK]
+_CODE_5 : 14416 B  headroom: 1968 B  [OK]
+_CODE_6 : 16110 B  headroom:  274 B  [OK]
+_CODE_7 : 15745 B  headroom:  639 B  [OK]
+_CODE_8 : 12124 B  headroom: 4260 B  [OK]
+_CODE_9 :  5700 B  headroom: 10684 B  [OK]
+```
+
+> The **debug** fixed bank is the tight one (46 B to `0x8000`); release has
+> 4,895 B.  Any fixed-bank addition still risks the silent bank-1→2
+> overflow (§52.18 — the Makefile link rules fail loudly on it).
+> In the **release** map, bank 4 is now the tightest switchable bank
+> (213 B), ahead of bank 6 (274 B) and bank 3 (398 B).  Moving the loot
+> drop body to bank 9 restored bank 3 from 79 B to 398 B of release
+> headroom.  Plan new banked content against both maps, and prefer bank 8
+> (4,260 B), bank 9 (10,684 B) or bank 5 (1,968 B).
 
 ## Where the bytes go
 
@@ -46,20 +69,23 @@ _CODE_9 :  7866 B  headroom: 8518 B  [OK]
   overflow → banks 6/7).  `_CODE` grows with every feature.
 * **`_HOME`** (125 B): boot-critical code that must stay below `0x8000` —
   `_joypad`, `_set_bkg_data`/`_set_tile_data` and other non-bankable
-  library routines.  This is the tightest budget:
-  only 46 B of headroom.  Keep it there; do not grow it casually.
+  library routines.  The debug map has only 46 B of headroom; release
+  has 4,895 B.  Keep the debug build there; do not grow it casually.
 * Banked ROM (banks 1-9): scenes, actors, dialogue, events, shops,
   quests, cards, title, terrain overflow, the hUGE driver + songs
   (banks 6/7/9), SFX tables, and ~30 banked logic bodies live
-  here (see `make memmap` banked-target validation).  Free room:
-  bank 2 ~781 B, bank 3 ~227 B, bank 4 ~1576 B, bank 5 ~3677 B,
-  bank 6 ~1032 B, bank 7 ~1502 B, bank 8 ~3994 B, bank 9 ~8518 B.
+  here (see `make memmap` banked-target validation).  Release free
+  room: bank 2 465 B, bank 3 398 B, bank 4 213 B, bank 5 1968 B,
+  bank 6 274 B, bank 7 639 B, bank 8 4260 B, bank 9 10684 B.
+  Release's tightest bank is bank 4 (213 B), then bank 6 (274 B) and
+  bank 3 (398 B).
 
 ### WRAM (8 KB, `0xC000-0xDFFF`)
 
-* `_DATA` (4250 B @ `0xC940-0xD9DA`): GBDK globals + the fixed-size
-  runtime structs + the WRAM-resident timer ISR (`0xC900`) and banked-call
-  trampolines.  Only ~1574 B headroom to `0xE000` (stack base) — keep new
+* `_DATA` (debug: 4250 B @ `0xC940-0xD9DA`; release: 3310 B): GBDK
+  globals + the fixed-size runtime structs + the WRAM-resident timer ISR
+  (`0xC900`) and banked-call trampolines.  Debug has ~1574 B headroom to
+  `0xE000` (stack base) — keep new
   WRAM statics tiny (an 800 B staging static once flipped hostile
   spawning under the harness, §52.19 family).  The big fixed consumers
   (approximate):

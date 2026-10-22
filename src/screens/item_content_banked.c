@@ -348,15 +348,6 @@ static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
 static const char s_ic_loot_mat[LOOT_NMATERIALS] =
     { 'W', 'B', 'I', 'S', 'M' };
 static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
-/* Material x weapon power bands (docs/loot.md §34.1): the same table as
- * src/rpg/loot_banked.c and src/battle/battle_init_content.c. */
-static const uint8_t s_ic_loot_power[LOOT_NMATERIALS][5] = {
-    { 1, 1, 1, 1, 1 },   /* wood    */
-    { 3, 2, 3, 2, 2 },   /* bronze  */
-    { 5, 4, 5, 4, 4 },   /* iron    */
-    { 7, 6, 7, 6, 6 },   /* steel   */
-    { 9, 8, 9, 8, 8 }    /* mythril */
-};
 static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
@@ -400,7 +391,7 @@ static const CardDefinition *ic_loot_synth(CardId id)
          * ring branch). */
         g_card_scratch.uses_per_battle = 1;
     }
-    g_card_scratch.power = s_ic_loot_power[material][wi];
+    g_card_scratch.power = LOOT_POWER(material, wi);
     g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;
     g_card_scratch.price = (uint8_t)(g_card_scratch.power +
         (uint8_t)(material << 1) +

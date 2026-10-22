@@ -13,17 +13,6 @@
  * Self-contained: reads only the staged Battle/DeckState pointers and its
  * own bank-local data; writes through the staged pointer. */
 
-/* Material x weapon power bands (docs/loot.md §34.1).  Must match
- * src/rpg/loot_banked.c and src/screens/item_content_banked.c exactly:
- * deck init, display and synth all resolve the same derived id. */
-static const uint8_t s_loot_power[LOOT_NMATERIALS][5] = {
-    { 1, 1, 1, 1, 1 },   /* wood    */
-    { 3, 2, 3, 2, 2 },   /* bronze  */
-    { 5, 4, 5, 4, 4 },   /* iron    */
-    { 7, 6, 7, 6, 6 },   /* steel   */
-    { 9, 8, 9, 8, 8 }    /* mythril */
-};
-
 void battle_init_deck_banked(void)
 {
     Battle *b = (Battle *)g_bk_ptr_a;
@@ -70,7 +59,7 @@ void battle_init_deck_banked(void)
             uint8_t wpn = loot_id_weapon(lid);
             uint8_t wi = (wpn <= WPN_RING) ? wpn : WPN_SWORD;
 
-            b->deck.cards[i].value = s_loot_power[mat][wi];
+            b->deck.cards[i].value = LOOT_POWER(mat, wi);
             b->deck.cards[i].uses_remaining = 0xFF;
             b->deck.cards[i].cost = (wpn <= WPN_RING) ? 1 : 0;
             b->deck.cards[i].status_id = STATUS_NONE;

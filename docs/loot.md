@@ -1747,7 +1747,7 @@ effect           <- legal-for-weapon weighted roll (plain/poison-heavy);
 **AP gate (demo scope).**  The roll reads the live battle energy pool
 (`VARIABLE_ID_ENERGY_POOL`) and maps it to a maximum material tier.  AP
 above 5 clamps to 5.  The demo ships no new AP-earning content; the
-existing tutorial/chest/mayor/mimic +1 grants are the whole ladder, and
+existing tutorial/chest/Monster Hunt/mimic +1 grants are the whole ladder, and
 this table is the contract future AP sources plug into:
 
 | AP | Highest material | Approx. weights |
@@ -1768,7 +1768,7 @@ material/effect/weapon roll via the §34.1 macros (the id range also
 proves the AP gate's lower bound: at AP 1 every drop is `0x60..0x7F`).
 
 Implementation: the whole decision (profile pick + roll + encode)
-is ONE bank-3 body (`src/game/loot_drop_banked.c`) behind the thin
+is ONE bank-9 body (`src/game/loot_drop_banked.c`) behind the thin
 `game_loot_drop()` wrapper; it steps the ISOLATED loot stream
 (`g_loot_rng_state`, seeded from the main seed by `rng_set_seed`) so drops
 never shift shared-RNG scenario outcomes.  The drop path must stay nearly
@@ -1797,7 +1797,8 @@ shop; finding it is what makes the delivery (and the shop) available:
   player owns no copy; buying both empties the shop into `(out of
   stock)`.  Rings are THE healing vector, so healing is purchasable but
   never free.  The iron sword / poison dagger are gone from the stock:
-  swords come from the starter deck and loot, daggers from the field
+  the starter deck carries a wood sword, iron and better swords come
+  from loot (iron unlocks at AP 4), and daggers come from the field
   cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying

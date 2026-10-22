@@ -279,8 +279,7 @@ reachable — it is not gated behind this quest.
    Returning to the spot afterwards says "Nothing here now."
 4. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his shop (Iron Sword, Mythril Bow, Poison
-   Dagger and Ring, §9.3):
+   **15 gold**, and opens his shop (Iron Ring and Mythril Bow, §9.3):
 
    > You found it! Thank you, hero!
    > My shop is open now.
@@ -328,13 +327,16 @@ All catalogue cards (`src/game/cards_content.c`):
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
 | Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
-| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | 10g |
+| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (loot) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 4/battle | 1 | — | 20g |
 | Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
+
+The Iron Sword is loot-only now: it has no shop row and is not in the
+starter deck.  Iron swords start dropping at AP 4 (loot.md §34.5).
 
 Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
 multiplier (§8.4).
@@ -854,7 +856,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 * Hero: HP 10, gold 20, deck 10, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 1/round (tutorial/chest/mayor/mimic each grant +1, up to 5), timer 20s per decision.
+* Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

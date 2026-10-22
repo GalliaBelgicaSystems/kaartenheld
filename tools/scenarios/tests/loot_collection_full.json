@@ -1,7 +1,7 @@
 {
  "name": "loot_collection_full",
  "test": true,
- "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'.",
+ "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'. The filler set uses eight legal, distinct wood/bronze combos (96,97,98,100,107,112,120,128) plus the bow, deliberately excluding seed 5002's id 99 so the drop must ask for a new slot.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -41,22 +41,22 @@
   },
   {
    "type": "collection_add",
-   "card_id": 101,
+   "card_id": 107,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 102,
+   "card_id": 112,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 103,
+   "card_id": 120,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 104,
+   "card_id": 128,
    "quantity": 1
   },
   {

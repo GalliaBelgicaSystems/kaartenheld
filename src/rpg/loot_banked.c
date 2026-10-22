@@ -21,18 +21,6 @@ static const struct {
     { "W" }, { "B" }, { "I" }, { "S" }, { "M" }
 };
 
-/* Material x weapon power bands (docs/loot.md §34.1): sword/bow take the
- * high end of the band, shield/dagger/ring the low end.  Every synth
- * copy (battle_init_content.c, item_content_banked.c) must match this
- * table; it is the single balance contract for found gear. */
-static const uint8_t s_loot_power[LOOT_NMATERIALS][5] = {
-    { 1, 1, 1, 1, 1 },   /* wood    */
-    { 3, 2, 3, 2, 2 },   /* bronze  */
-    { 5, 4, 5, 4, 4 },   /* iron    */
-    { 7, 6, 7, 6, 6 },   /* steel   */
-    { 9, 8, 9, 8, 8 }    /* mythril */
-};
-
 /* Effect rows: on-hit status rider applied by battle (docs/combo-system.md
  * §13 pipeline; legality per weapon in docs/loot.md §34.2).  chance is in
  * 1/255 units, tuned like the catalog's DA1 (128 ~= 50%). */
@@ -108,7 +96,7 @@ void loot_synth_banked(void)
 
     g_card_scratch.id = id;
     g_card_scratch.type = CARD_TYPE_ATTACK;
-    g_card_scratch.power = s_loot_power[material][wi];
+    g_card_scratch.power = LOOT_POWER(material, wi);
     g_card_scratch.cost = s_weapons[weapon].cost;
     /* Centralized sell value (docs/loot.md §16/§34.6): synthesized
      * power + material tier*2 (+2 poison rider).  Stored in the def's

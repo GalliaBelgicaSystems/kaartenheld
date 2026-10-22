@@ -62,6 +62,7 @@ def main():
     ok = True
 
     print("Game Boy ROM memory budget")
+    print(f"Map: {os.path.basename(sys.argv[1])}")
     print("--------------------------")
 
     if "_CODE" in areas:
@@ -215,7 +216,7 @@ def main():
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",
         "_loot_synth_banked": "loot def synthesis (bank 3)",
-        "_game_loot_drop_banked": "victory drop roll (bank 3)",
+        "_game_loot_drop_banked": "victory drop roll (bank 9)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",
         "_battle_nav_banked": "battle hand/target nav cluster (bank 4)",
         "_title_content_render": "title screen render (bank 4)",

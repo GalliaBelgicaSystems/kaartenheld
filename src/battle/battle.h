@@ -18,7 +18,7 @@
  * Selecting a card whose cost exceeds the remaining energy is rejected;
  * the pool refreshes at battle start and at every transition into a
  * decision phase (deck.md Phase 10: check affordability at select, pay
- * at resolve).  Flat 1 AP start: tutorial/chest/mayor/mimic each grant
+ * at resolve).  Flat 1 AP start: tutorial/chest/Monster Hunt/mimic each grant
  * +1 (visible 1 -> 2 -> 3 -> 4 -> 5), and poker multipliers scale the
  * material-band card powers from there. */
 #define BATTLE_ENERGY_PER_TURN 1

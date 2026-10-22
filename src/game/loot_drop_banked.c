@@ -1,4 +1,4 @@
-#pragma bank 3
+#pragma bank 9
 
 #include "rpg/loot.h"
 #include "banked.h"
@@ -6,13 +6,13 @@
 #include "core/game.h"
 #include "game_ids.h"
 
-/* ── Victory loot drop, bank-3 body (docs/loot.md §8/§17/§34.5) ─────
+/* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5) ─────
  * SINGLE banked entry for the whole drop decision: archetype weapon
  * pick from the enemy family's profile, material + legal-effect roll,
  * derived-id encode.  Every victory drops exactly one card -- quality
  * (material/effect) is what varies.
  *
- * Runs from ROM bank 3 via the WRAM trampoline.  Self-contained: reads
+ * Runs from ROM bank 9 via the WRAM trampoline.  Self-contained: reads
  * the battle id from g_bk_byte_a, steps g_loot_rng_state inline (never
  * a fixed-bank call), and reports through g_loot_id.
  *
@@ -25,7 +25,7 @@
  * AP 4 = iron; AP 5+ = steel/mythril).  s_ap_cut is the cumulative
  * 1/255 threshold for each material: the roll walks up while it exceeds
  * the current cut.  High tiers stay rare even at AP 5 (steel ~8%,
- * mythril ~2%).  AP above 5 clamps to 5; see LOOT_AP_* in loot.h. */
+ * mythril ~2%).  AP 5 and above share row 4; see LOOT_AP_* in loot.h. */
 static const uint8_t s_ap_cap[5] = {
     MAT_WOOD, MAT_BRONZE, MAT_BRONZE, MAT_IRON, MAT_MYTHRIL
 };
@@ -81,15 +81,26 @@ void game_loot_drop_banked(void)
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);
         uint8_t ap = (uint8_t)g_game.state.variables.values[
             VARIABLE_ID_ENERGY_POOL - 1];
+        uint8_t row;
         uint8_t cap;
         uint8_t material = MAT_WOOD;
         uint8_t effect = EFF_PLAIN;
 
-        if (ap < 1) ap = 1;
-        if (ap > 5) ap = 5;
-        cap = s_ap_cap[ap - 1];
+        /* Map AP to the weighted-roll row.  The LOOT_AP_* thresholds are
+         * the unlock contract (docs/loot.md §34.5): AP 1 wood; AP 2-3
+         * bronze; AP 4 iron; AP 5+ steel/mythril. */
+        if (ap < LOOT_AP_BRONZE) {
+            row = 0;
+        } else if (ap < LOOT_AP_IRON) {
+            row = (uint8_t)(1 + (ap - LOOT_AP_BRONZE));
+        } else if (ap < LOOT_AP_STEEL) {
+            row = 3;
+        } else {
+            row = 4;
+        }
+        cap = s_ap_cap[row];
         while (material < cap &&
-               mat_roll > s_ap_cut[ap - 1][material]) {
+               mat_roll > s_ap_cut[row][material]) {
             material++;
         }
 

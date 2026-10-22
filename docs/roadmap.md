@@ -76,7 +76,7 @@ testable, save/load works, and the memory budget is understood.
     still fits);
     the live pool is the uncapped `ENERGY_POOL` variable
     (staged at battle entry), raised by story events (+2 tutorial,
-    +1 chest, +1 mayor from the unset base); rejected selections flash NO ENERGY! / OUT OF USES! on
+    +1 chest, +1 Monster Hunt from the unset base); rejected selections flash NO ENERGY! / OUT OF USES! on
     the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
     resolution; executed results announce via the banner).  The Lost

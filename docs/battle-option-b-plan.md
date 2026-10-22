@@ -80,7 +80,7 @@ Candidates for bank 3/4/5:
 | ui_battle_content.c | bank 3 | bank 4 | 732 | Low |
 | battle.c | fixed | bank 3 | 725 | Medium |
 | battle_init_content.c | bank 2 | bank 3 | 129 | Low |
-| loot_drop_banked.c | bank 3 | bank 3 | ~100 | Low |
+| loot_drop_banked.c | bank 3 | bank 9 | ~100 | Low |
 | game_render_reset_banked.c | bank 3 | bank 3 | ~100 | Low |
 
 **Action:** Update Makefile bank assignments, rebuild, verify `make memmap` passes.

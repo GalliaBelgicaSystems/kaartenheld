@@ -29,7 +29,9 @@ Battery-backed SRAM persistence of the canonical `GameState`
   `GameState` layout or field semantics change in a way that breaks old
   saves.
 * A loader must reject a version it does not understand (it already does).
-  Future migrations (v1 -> v2) should read v1 and upgrade in place before
+  Version 2 and older saves are rejected outright; the demo ships no
+  migration while the loot CardId space is still changing.
+* Future migrations should read the old version and upgrade in place before
   writing back.
 * `GameState` is the *only* persistent payload: scene, party, inventory,
   flags, variables, currency, persistent world actor state, progression,

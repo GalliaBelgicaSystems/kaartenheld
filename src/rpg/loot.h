@@ -45,6 +45,26 @@ enum {
     WPN_SWORD = 0, WPN_SHIELD, WPN_BOW, WPN_DAGGER, WPN_RING
 };
 
+/* Material power bands (docs/loot.md §34.1).  One shared definition so
+ * the synth, battle-init and display paths cannot drift: sword/bow take
+ * the high end of a band, shield/dagger/ring the low end.
+ * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9. */
+#define LOOT_MATERIAL_LOW(mat) ((uint8_t)( \
+    (mat) == MAT_WOOD   ? 1 : \
+    (mat) == MAT_BRONZE ? 2 : \
+    (mat) == MAT_IRON   ? 4 : \
+    (mat) == MAT_STEEL  ? 6 : 8))
+
+#define LOOT_MATERIAL_HIGH(mat) ((uint8_t)( \
+    (mat) == MAT_WOOD   ? 1 : \
+    (mat) == MAT_BRONZE ? 3 : \
+    (mat) == MAT_IRON   ? 5 : \
+    (mat) == MAT_STEEL  ? 7 : 9))
+
+#define LOOT_POWER(mat, wpn) ((uint8_t)( \
+    ((wpn) == WPN_SWORD || (wpn) == WPN_BOW) ? \
+        LOOT_MATERIAL_HIGH(mat) : LOOT_MATERIAL_LOW(mat)))
+
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)
 #define loot_id_material(id)         ((uint8_t)(((id) - LOOT_ID_BASE) >> 5))
@@ -52,7 +72,7 @@ enum {
 #define loot_id_weapon(id)           ((id) & 7)
 
 /* Shared WRAM results (defined in src/rpg/loot.c):
- * g_loot_id       -- derived-id result byte written by the bank-3
+ * g_loot_id       -- derived-id result byte written by the banked
  *                    drop/synth bodies, read by fixed-bank wrappers.
  * g_loot_rng_state -- isolated xorshift stream (seeded from the main
  *                    seed by rng_set_seed); bank-3 bodies step it
@@ -66,12 +86,14 @@ extern uint16_t g_loot_rng_state;
  * docs/loot.md §16/§34.6); read via card_get_def() like any price.
  * Catalog (non-loot) prices come from the game's card table. */
 
-/* Bank-3 bodies:
+/* Banked bodies:
  * game_loot_drop_banked   -- always-drop + profile pick + roll
- *                            (src/game/loot_drop_banked.c), dispatched
- *                            by game_loot_drop() in src/game/content.c.
- * loot_synth_banked       -- fills g_card_scratch for a derived id,
- *                            dispatched by card_get_def(). */
+ *                            (src/game/loot_drop_banked.c, bank 9),
+ *                            dispatched by game_loot_drop() in
+ *                            src/game/content.c.
+ * loot_synth_banked       -- fills g_card_scratch for a derived id
+ *                            (src/rpg/loot_banked.c, bank 3), dispatched
+ *                            by card_get_def(). */
 void game_loot_drop_banked(void);
 void loot_synth_banked(void);
 
