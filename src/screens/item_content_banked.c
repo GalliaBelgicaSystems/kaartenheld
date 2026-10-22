@@ -664,7 +664,7 @@ static void ic_draw_card_detail_page(Game *g)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_ICE);
 
     /* Row 5: on-hit element rider, else the health-rider display for
-     * bronze-and-above heal cards (display-only, no on-hit roll). */
+     * heal cards of any material (display-only, no on-hit roll). */
     if (s_ic_def->status_id == STATUS_BURN)
         IC_DRAW_TEXT(0, 5, "FIRE RIDER", 10);
     else if (s_ic_def->status_id == STATUS_FREEZE)

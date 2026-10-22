@@ -13,7 +13,7 @@
 #include "battle_data.h"
 #include "audio.h"
 
-#define HERO_START_HP    10
+#define HERO_START_HP    15
 #define HERO_START_GOLD  20
 
 /* ── Victory loot drop (docs/loot.md §17/§34.5) ─────────────────────

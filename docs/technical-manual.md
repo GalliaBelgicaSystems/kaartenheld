@@ -857,7 +857,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 ## 13. Reference: quick numbers
 
-* Hero: HP 10, gold 20, deck 10, opening hand `SW SW SH SH SW`.
+* Hero: HP 15, gold 20, deck 10, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
 * Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.

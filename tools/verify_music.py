@@ -123,7 +123,7 @@ def main():
     # (17,7) per levels/field.json, facing LEFT)
     WRAM_BASE = 0xC000
     WRAM_SIZE = 0x2000
-    PLAYER_BOOT = bytes([17, 7, 10, 10, 1, 2, 1])
+    PLAYER_BOOT = bytes([17, 7, 15, 15, 1, 2, 1])
 
     pos_addr = [game_addr + 204]
 

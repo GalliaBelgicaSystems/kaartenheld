@@ -138,10 +138,10 @@ def main():
 
     # Locate the player Entity in WRAM by its boot pattern (robust to
     # struct-layout drift -- the same technique as verify_music.py):
-    # TEST_FIELD spawn (17,7) facing LEFT, 10/10 HP, active, id 1.
+    # TEST_FIELD spawn (17,7) facing LEFT, 15/15 HP, active, id 1.
     WRAM_BASE = 0xC000
     WRAM_SIZE = 0x2000
-    PLAYER_BOOT = bytes([17, 7, 10, 10, 1, 2, 1])
+    PLAYER_BOOT = bytes([17, 7, 15, 15, 1, 2, 1])
     wram = bytes(pb.memory[i]
                  for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
     idx = wram.find(PLAYER_BOOT)

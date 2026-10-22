@@ -94,6 +94,11 @@
    "type": "oam_tile",
    "entry": 20,
    "expected": 11
+  },
+  {
+   "type": "oam_attr",
+   "entry": 20,
+   "expected": 3
   }
  ]
 }

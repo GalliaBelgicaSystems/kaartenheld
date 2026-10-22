@@ -324,7 +324,7 @@ ending. The land is saved, thanks to you!
 
 | | |
 |---|---|
-| Your health | **10 HP** |
+| Your health | **15 HP** |
 | Starting gold | **20** |
 | Cards in hand | **5** |
 | Energy each round | **2** |

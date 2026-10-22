@@ -66,6 +66,11 @@
    "type": "oam_tile",
    "entry": 10,
    "expected": 0
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
   }
  ],
  "initial_state": {

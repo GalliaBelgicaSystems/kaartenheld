@@ -35,7 +35,7 @@ VALID_ASSERTION_TYPES = {
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
-    "oam_tile", "oam_bytes",
+    "oam_tile", "oam_attr", "oam_bytes",
     "sfx_count", "sfx_last",
     "stack_margin_min",
 }
@@ -388,7 +388,7 @@ def run_scenario(scenario):
             canary_depth, canary_margin = None, None
         # OAM HUD assertions (battle top-right rider sprites) must pre-read
         # before disconnect: evaluation runs after the session closes.
-        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_bytes") for a in scenario.get("assertions", []))
+        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_attr", "oam_bytes") for a in scenario.get("assertions", []))
         oam_entries = {}
         # Expected AP/mark tile bytes come from the generated ap_tiles.h
         # (same file the ROM links): tile order is the --ap-coords order.
@@ -396,7 +396,7 @@ def run_scenario(scenario):
         if has_oam_assert:
             ap_tiles = _load_ap_tiles()
             for a in scenario.get("assertions", []):
-                if a.get("type") == "oam_tile":
+                if a.get("type") in ("oam_tile", "oam_attr"):
                     entry = a.get("entry", 0)
                     if entry not in oam_entries:
                         oam_entries[entry] = session.get_oam_entry(entry)
@@ -548,6 +548,17 @@ def run_scenario(scenario):
             actual = oam[2] if oam is not None and oam[2] is not None else None
             passed = (actual == int(expected))
             actual = f"oam[{entry}].tile={actual}"
+
+        elif a_type == "oam_attr":
+            # OAM entry attribute byte (CGB palette in bits 0-2): pins
+            # which palette a sprite actually renders with, e.g. that a
+            # health-rider icon rides OBJ slot 3 (sprites11 greens) and
+            # not some reprogrammed slot.
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[3] if oam is not None and oam[3] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].attr={actual}"
 
         elif a_type == "oam_bytes":
             # Live OAM tile DATA (not just the tile id): gates VRAM-truth

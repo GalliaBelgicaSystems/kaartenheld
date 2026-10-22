@@ -1,0 +1,94 @@
+{
+ "name": "loot_rider_strip_fire",
+ "test": true,
+ "description": "Wood-rider stripping, FIRE case (docs/loot.md 34.1): id 112 is a hand-encoded WOOD FIRE SWORD (material 0, fire effect) -- an illegal combo the generator never rolls. Synthesis must strip it: the detail page shows WOOD SWORD with NO RIDER (an unstripped card would show FIRE RIDER) and the OAM rider slot stays hidden (entry 1 == 0). Same last-line-of-defense path as the poison case (loot_rider_strip).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 112,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "WOOD SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "NO RIDER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 0
+  }
+ ]
+}

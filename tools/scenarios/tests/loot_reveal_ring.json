@@ -196,6 +196,11 @@
    "type": "oam_tile",
    "entry": 19,
    "expected": 11
+  },
+  {
+   "type": "oam_attr",
+   "entry": 19,
+   "expected": 3
   }
  ]
 }

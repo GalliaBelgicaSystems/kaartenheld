@@ -2,7 +2,7 @@
   "$schema": "./schema/hero.schema.json",
   "id": "hero",
   "name": "Hero",
-  "start_hp": 10,
+  "start_hp": 15,
   "start_gold": 20,
   "starter_deck": [
     "CARD_WOOD_SWORD",

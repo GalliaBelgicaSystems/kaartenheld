@@ -57,7 +57,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "10/10"
+   "contains": "15/15"
   },
   {
    "type": "screen_row_not_contains",

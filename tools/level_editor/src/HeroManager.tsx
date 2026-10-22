@@ -139,7 +139,7 @@ export const HeroManager: React.FC<{
           </div>
           <div style={{ marginBottom: 6 }}>
             <label>Start HP: <input type="number" min={1} max={255} style={{ width: 60 }}
-              value={hero?.start_hp || 10}
+              value={hero?.start_hp || 15}
               onChange={(e) => { setHero((prev) => ({ ...prev!, start_hp: Math.max(1, Math.min(255, parseInt(e.target.value) || 1)) })); setDirty(true); }} /></label>
             {'  '}
             <label>Start Gold: <input type="number" min={0} max={65535} style={{ width: 80 }}
