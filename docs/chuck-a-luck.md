@@ -46,8 +46,16 @@ never refuses a covered bet.
 * Flow: bump Nis -> his rules dialogue (3 pages, YES/NO choice,
   default YES) -> CHOOSE on YES (A to confirm) -> RESULT (A for another
   round with fresh hidden dice, B to leave). NO (DOWN + A) advances the
-  dialogue closed and walks away with gold untouched; B anywhere walks
-  away too.
+  dialogue closed and walks away with gold untouched.
+* Leaving the table (B) puts Nis's goodbye box on screen -- `Nis: Come
+  back anytime!` (`screens/dialogue/kobold_farewell.json`) -- over the
+  overworld; A closes it and returns control. The banked body cannot
+  call `dialogue_start_def`, so it stages the id in the generic
+  `g_bk_dlg_id` request and the fixed post-tick hook in `game_update()`
+  starts the dialogue + `screen_change(SCREEN_DIALOGUE)`; that path
+  keeps `DIALOGUE_STARTED`/`DIALOGUE_ENDED` telemetry honest. The hook
+  was funded by deleting the fixed-bank `huge_music_stop()` twin (the
+  bank-8 resolver already stops the previous song inline).
 
 ## Dice art (reusable battle chrome)
 
@@ -128,15 +136,21 @@ paid for by moving an old one to a bank (AGENTS.md 52.18 family).
 * When the win jingle's restore clock fires while the player is still at
   the table, the tick overrides the restore with the casino code, so
   the music never dips through the town track for a frame.
+* `huge_music_stop()` (the fixed-bank stop twin) was deleted: the bank-8
+  resolver already calls `huge_stop_inline()` before every track
+  resolution, including the NONE path, so the fixed copy was dead code.
+  Its bytes fund the post-tick dialogue hook.
 
 ## Scenarios (all deterministic, seeded RNG)
 
-`tools/scenarios/tests/gamble_*.json` (16): invite (rules + YES/NO
+`tools/scenarios/tests/gamble_*.json` (17): invite (rules + YES/NO
 prompt), invite-decline (NO walks away), invite-accept (YES opens the
 table), enter, lose, 1:1 / 2:1 / 3:1 wins (seeds 12345 / 21 / 579 pin
 dice [2,6,3] / [1,4,1] / [1,1,1]), bet cycling, high-stakes win
-(bet 10 -> +10), clamp-to-gold, exit, roundtrip (dice clear to '?' +
-LEAVEE-tail regression), two-rolls (stream advance), OAM placement. The ×2/×3 seeds were found by replicating the ROM xorshift
+(bet 10 -> +10), clamp-to-gold, exit (Nis's farewell box), farewell-close
+(box closes back to the overworld with the scene track), roundtrip (dice
+clear to '?' + LEAVEE-tail regression), two-rolls (stream advance), OAM
+placement. The ×2/×3 seeds were found by replicating the ROM xorshift
 (`rng_next_banked` step + 252-reject + subtraction fold) in Python and
 are pinned by the assertions -- same determinism contract as combat.
 The RNG stream is proven clean: no consumer sits between scenario start
@@ -144,8 +158,9 @@ and the roll (the seeded dice match the replica exactly).
 
 ## Review shots
 
-`screenshots/review/gamble-table.png` (CHOOSE screen) and
-`screenshots/review/gamble-roll.png` (result screen) via
-`tools/capture_gamble_shot.py` (release ROM, real path: walk to Nis in
-the Village Area, bump in, say YES, roll). Registered in
-`review/manifest.json`.
+`screenshots/review/gamble-table.png` (CHOOSE screen),
+`screenshots/review/gamble-roll.png` (result screen) and
+`screenshots/review/gamble-farewell.png` (Nis's goodbye box) via
+`tools/capture_gamble_shot.py` / `tools/capture_farewell_shot.py`
+(release ROM, real path: walk to Nis in the Village Area, bump in, say
+YES, roll / leave). Registered in `review/manifest.json`.

@@ -24,6 +24,11 @@
       "file": "gamble-roll.png",
       "description": "After one roll: kobold dice, match line, settled gold",
       "taken_from": "47fae097"
+    },
+    {
+      "file": "gamble-farewell.png",
+      "description": "Nis says goodbye ('Come back anytime!') after leaving the table",
+      "taken_from": "96dbc3ae"
     }
   ]
 }

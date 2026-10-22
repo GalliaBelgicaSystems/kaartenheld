@@ -55,6 +55,9 @@ extern uint8_t g_gamble_jingle;
  * player says YES; the per-frame tick opens SCREEN_GAMBLE and clears
  * it.  Keeps the fixed bank out of the gamble handoff entirely. */
 extern uint8_t g_gamble_enter;
+/* Farewell request: raised on exit; the audio tick hands the scene track
+ * back while the fixed hook opens Nis's goodbye dialogue. */
+extern uint8_t g_gamble_bye;
 
 /* Bank-8 audio tick (src/game/gamble_content.c), called from the
  * per-frame tick body after the gamble frame + jingle bodies: decides

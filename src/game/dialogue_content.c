@@ -144,6 +144,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_KOBOLD_FAREWELL,
+        "Nis:",
+        1,
+        {"Come back anytime!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_KOBOLD_INVITE,
         "Nis:",
         8,

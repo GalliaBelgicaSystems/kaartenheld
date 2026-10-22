@@ -145,6 +145,15 @@ void game_update(Game *g)
         if (g_bk_byte_b == 4) {
             audio_play_music(MUSIC_CASINO);
         }
+        /* Post-tick dialogue request (e.g. Nis's farewell after leaving
+         * the table): the banked producer cannot call dialogue_start_def,
+         * so it stages the id here.  Generic engine data -- the id is an
+         * opaque value, never a fixed-bank game branch (AGENTS.md 55.1). */
+        if (g_bk_dlg_id != 0) {
+            dialogue_start_def(&g->dialogue, (DialogueId)g_bk_dlg_id);
+            g_bk_dlg_id = 0;
+            screen_change(g, SCREEN_DIALOGUE);
+        }
     }
     scene_sync_from_world(g);
     /* The world player entity mirrors the canonical party HP so the

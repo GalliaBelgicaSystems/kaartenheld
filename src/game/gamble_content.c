@@ -52,6 +52,7 @@ GambleState g_gamble;
 uint8_t g_gamble_sfx;
 uint8_t g_gamble_jingle;
 uint8_t g_gamble_enter;
+uint8_t g_gamble_bye;
 
 /* Prev-state snapshot (WRAM BSS): the dynamic path repaints only on
  * change.  Uninitialized by design: the entry paint runs
@@ -729,22 +730,18 @@ static void gamble_entry(void)
 
 /* ── Update (banked) ───────────────────────────────────────────────── */
 
-/* Overworld exit (banked): replicates screen_change(g, SCREEN_OVERWORLD)
- * with WRAM writes (the fixed bank cannot afford even the exit call).
- * For the OVERWORLD target screen_change hides nothing, touches no
- * SCX/SCY, and only sets prev/screen + resets the render cache -- all
- * replicated here.  The next game_render sees valid=false and takes
- * the full path: sprite hide, LCD cycle, and the overworld transition,
- * which reloads the world tileset + CRAM unconditionally
- * (ui_draw_world_transition), so no invalidation flag is needed.
- * Telemetry SCREEN_CHANGED is skipped (v1 gap, see gamble.h). */
+/* Leaving the table: stage Nis's farewell dialogue and let the fixed
+ * post-tick hook open it.  The banked body cannot call dialogue_start_def
+ * (fixed) nor screen_change, so it raises the enter-style request and
+ * stops processing frames; the fixed side starts the dialogue and
+ * switches SCREEN_GAMBLE -> SCREEN_DIALOGUE, whose first render does the
+ * LCD-off world repaint (prev_screen != OVERWORLD) and reloads the
+ * tileset.  Closing the box returns to the overworld through the normal
+ * dialogue path. */
 static void gamble_exit_to_overworld(void)
 {
-    g_game.prev_screen = SCREEN_GAMBLE;
-    g_game.screen = SCREEN_OVERWORLD;
-    g_game.render_cache.valid = false;
-    g_game.render_cache.prev_screen = SCREEN_GAMBLE;
-    g_game.render_cache.prev_map_id = g_game.world.map_id;
+    g_bk_dlg_id = (uint8_t)DIALOGUE_ID_KOBOLD_FAREWELL;
+    g_gamble_bye = 1;      /* audio tick: hand the scene track back */
     g_gamble.entered = 0;
 }
 
@@ -842,6 +839,13 @@ void gamble_audio_tick(void)
         g_gamble_sfx = 0;
     }
 
+    if (g_gamble_bye) {
+        /* Leaving: restore the scene track now; the table is gone. */
+        if (g_audio_current_track == MUSIC_CASINO) {
+            g_bk_byte_b = 2;
+        }
+        return;
+    }
     if (g_game.screen == SCREEN_GAMBLE) {
         if (g_gamble_jingle) {
             g_gamble_jingle = 0;
@@ -861,7 +865,7 @@ void gamble_audio_tick(void)
         }
         return;
     }
-    /* Left the table (B / overworld exit): hand the scene track back
+    /* Left the table (B / farewell exit): hand the scene track back
      * through the existing restore code, no new fixed branch. */
     if (g_audio_current_track == MUSIC_CASINO) {
         g_bk_byte_b = 2;
@@ -885,6 +889,7 @@ void gamble_frame_banked(void)
         g_gamble.matches = 0;
         g_gamble.won = 0;
         g_gamble_sfx = 0;         /* no queued blip on entry */
+        g_gamble_bye = 0;
         g_gamble_jingle = 0;
         g_gamble.entered = 1;
         gamble_entry();

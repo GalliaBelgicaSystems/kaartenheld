@@ -22,7 +22,9 @@ extern void hUGE_mute_channel_b9(enum hUGE_channel_t ch, enum hUGE_mute_t mute);
 
 void huge_music_init(void);
 void huge_music_play_banked(const hUGESong_t *song, uint8_t bank);
-void huge_music_stop(void);
+/* huge_music_stop() was removed: music_play_banked (bank 8) stops the
+ * previous song inline (huge_stop_inline) before every
+ * resolution, including the NONE/stop path. */
 void huge_music_update(void);
 void huge_music_mute_channel(uint8_t ch, uint8_t mute);
 void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute); /* timer-ISR context: no di/ei */

@@ -1,7 +1,7 @@
 {
   "name": "gamble_exit",
   "test": true,
-  "description": "B on the table leaves back to the overworld with the player unmoved and gold untouched.",
+  "description": "B at the table makes Nis say goodbye ('Come back anytime!') in a dialogue box; closing it returns to the overworld with gold untouched and the scene track restored.",
   "actions": [
     {
       "type": "press",
@@ -33,7 +33,7 @@
     },
     {
       "type": "wait",
-      "frames": 8
+      "frames": 30
     },
     {
       "type": "press",
@@ -41,27 +41,36 @@
     },
     {
       "type": "wait",
-      "frames": 8
+      "frames": 30
     }
   ],
   "assertions": [
     {
       "type": "screen",
-      "expected": "OVERWORLD"
+      "expected": "DIALOGUE"
     },
     {
-      "type": "player_position",
-      "expected_x": 4,
-      "expected_y": 7
+      "type": "dialogue_active",
+      "expected": true
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "KOBOLD_FAREWELL"
+    },
+    {
+      "type": "screen_row",
+      "row": 14,
+      "contains": "Nis:"
+    },
+    {
+      "type": "screen_row",
+      "row": 15,
+      "contains": "Come back anytime!"
     },
     {
       "type": "currency",
       "expected": 20,
       "currency": "GOLD"
-    },
-    {
-      "type": "music_track",
-      "expected": "TOWN"
     }
   ],
   "initial_state": {

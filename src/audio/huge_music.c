@@ -41,7 +41,9 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
      * remaps (bank 0 never remaps); a banked body must never switch
      * away its own bank mid-function. */
     if (!song) {
-        huge_music_stop();
+        /* Nothing to start: the bank-8 resolver already stopped the old
+         * song inline (huge_stop_inline), so the fixed stop twin is not
+         * needed here -- and its bytes are better spent elsewhere. */
         return;
     }
 
@@ -63,25 +65,6 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
     }
 }
 
-void huge_music_stop(void)
-{
-    /* Fixed-bank twin of huge_stop_inline() in huge_music_banked.c
-     * (bank 8): identical register writes.  The banked copy exists
-     * because a banked body cannot call fixed-bank code while its own
-     * bank is unmapped -- keep the two in sync. */
-    __critical {
-        g_huge_playing = 0;
-        g_huge_current_song = 0;
-        /* Silence active sound channels */
-        NR12_REG = 0x00;
-        NR14_REG = 0x80;
-        NR22_REG = 0x00;
-        NR24_REG = 0x80;
-        NR32_REG = 0x00;
-        NR42_REG = 0x00;
-        NR44_REG = 0x80;
-    }
-}
 
 /* Bank -> driver-copy mute dispatch.  One shared chain keeps the fixed
  * bank cost to a single compare ladder instead of duplicating it in the

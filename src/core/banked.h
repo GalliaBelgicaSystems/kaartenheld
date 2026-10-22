@@ -137,6 +137,10 @@ extern uint8_t g_bk_byte_a;
 extern uint8_t g_bk_byte_b;
 extern uint8_t g_bk_byte_c;
 extern uint8_t g_bk_byte_d;
+/* Generic post-tick request: a non-zero value asks game_update() to open
+ * that dialogue (the banked producer cannot call dialogue_start_def).
+ * Consumed and cleared by the fixed side in the same frame. */
+extern uint8_t g_bk_dlg_id;
 
 /* Linker-allocated home for the banked-call trampoline (WRAM), copied by
  * banked_call_init() at boot (game_init calls it, like banked_copy_init). */
