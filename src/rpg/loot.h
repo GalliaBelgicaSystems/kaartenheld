@@ -50,10 +50,8 @@ enum {
  * the high end of a band, shield/dagger/ring the low end.
  * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9.
  * Closed form (no compare chains: `mat` is a runtime value, so nested
- * ternaries compile to branch ladders in every banked copy): low is
- * `mat ? mat<<1 : 1`, high adds one for non-wood. */
-#define LOOT_MATERIAL_LOW(mat) ((uint8_t)(((mat) == 0) ? 1 : ((uint8_t)(mat) << 1)))
-#define LOOT_MATERIAL_HIGH(mat) ((uint8_t)(LOOT_MATERIAL_LOW(mat) + (((mat) == 0) ? 0 : 1)))
+ * ternaries compile to branch ladders in every banked copy): base is
+ * `mat ? mat<<1 : 1`, sword/bow take one more on non-wood. */
 #define LOOT_POWER(mat, wpn) ((uint8_t)(((mat) == 0) ? 1 : \
     (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0))))
 

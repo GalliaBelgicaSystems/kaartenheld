@@ -315,7 +315,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
 | `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
-| `DA` | Dagger | Attack | 1 damage plus a poison rider. |
+| `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
 `UTL` utility, `SPL` special (quest items that cannot be decked).

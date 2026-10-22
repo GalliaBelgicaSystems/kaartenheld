@@ -293,6 +293,26 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
     }
 }
 
+/* Health-rider display (docs/loot.md §34.1): bronze-and-above healing
+ * cards (loot rings mat>=1, the curated iron ring) show a red '+' marker
+ * in the elem cell plus a HEALTH RIDER detail line.  Display-only by
+ * design: it keys off the heal role + material band, never a status --
+ * no on-hit roll, no mechanic change, and wood heal cards stay plain
+ * like everything wooden.  A font glyph (not an OAM sprite: the shared
+ * blob is full and 126-127 are reserved) keeps pixels, the semantic
+ * buffer and VRAM reads in agreement.  Real status riders
+ * (fire/ice/poison) keep precedence wherever both could apply. */
+static uint8_t ic_is_health_rider(void)
+{
+    uint8_t m, w, am;
+    if (!s_ic_def) return 0;
+    if (s_ic_def->battle_type != BATTLE_CARD_TYPE_HEAL &&
+        s_ic_def->effect != CARD_EFFECT_HEAL_HP) return 0;
+    ic_card_mat_wpn(s_ic_id, &m, &w, &am);
+    if (am) return 0;
+    return (uint8_t)(m >= MAT_BRONZE);
+}
+
 /* Name color by on-hit element: fire red, ice blue, poison purple;
  * plain cards stay on the default paper slot. */
 static void ic_name_color(uint8_t x, uint8_t y, uint8_t len, uint8_t status)
@@ -503,7 +523,14 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 
     /* Element rider OAM is painted per row by the list loop below (over
      * the col-1 elem cell): the cell itself stays blank and the element
-     * also reads from the color span below (FIRE/POISON/ICE slots). */
+     * also reads from the color span below (FIRE/POISON/ICE slots).
+     * Bronze-and-above heal cards print a red '+' marker instead (always
+     * repainted: scrolled rows are reused, so a stale marker must never
+     * survive onto a plain card). */
+    if (ic_is_health_rider())
+        IC_DRAW_TEXT(1, y, "+", 1);
+    else
+        IC_DRAW_TEXT(1, y, " ", 1);
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -533,6 +560,10 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         IC_COLOR_SPAN(1, y, 1, UI_COLOR_POISON);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(1, y, 1, UI_COLOR_ICE);
+    else if (ic_is_health_rider())
+        IC_COLOR_SPAN(1, y, 1, UI_COLOR_FIRE);
+    else
+        IC_COLOR_SPAN(1, y, 1, UI_COLOR_NONE);
 
     s_ic_in_deck = ic_deck_count(&g->state.cards.deck, s_ic_id);
     s_ic_code[0] = (char)('0' + s_ic_in_deck);
@@ -605,6 +636,13 @@ static void ic_draw_card_detail_page(Game *g)
      * the rest). */
     ic_rider_show(1, 1, 3, s_ic_def->status_id);
 
+    /* Health marker prints over the same elem cell the OAM rider would
+     * occupy (always repainted: detail re-renders per card). */
+    if (ic_is_health_rider())
+        IC_DRAW_TEXT(1, 3, "+", 1);
+    else
+        IC_DRAW_TEXT(1, 3, " ", 1);
+
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -633,14 +671,21 @@ static void ic_draw_card_detail_page(Game *g)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_POISON);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_ICE);
+    else if (ic_is_health_rider())
+        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_FIRE);
+    else
+        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_NONE);
 
-    /* Row 5: on-hit element rider. */
+    /* Row 5: on-hit element rider, else the health-rider display for
+     * bronze-and-above heal cards (display-only, no on-hit roll). */
     if (s_ic_def->status_id == STATUS_BURN)
         IC_DRAW_TEXT(0, 5, "FIRE RIDER", 10);
     else if (s_ic_def->status_id == STATUS_FREEZE)
         IC_DRAW_TEXT(0, 5, "ICE RIDER", 9);
     else if (s_ic_def->status_id == STATUS_POISON)
         IC_DRAW_TEXT(0, 5, "POISON RIDER", 12);
+    else if (ic_is_health_rider())
+        IC_DRAW_TEXT(0, 5, "HEALTH RIDER", 12);
     else
         IC_DRAW_TEXT(0, 5, "NO RIDER", 8);
     /* Row 6: combat role (shields Defend, everything else Attacks;

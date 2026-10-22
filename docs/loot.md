@@ -1656,6 +1656,14 @@ wood is always plain.
 * **Wood never carries a rider.**  The generator forces `plain` at wood,
   and synthesis strips hand-encoded wood+rider ids.  Rider cards
   (poison/fire/ice) are therefore bronze and above.
+* **Health rider (display-only).**  Bronze-and-above healing cards show a
+  red `+` marker in the CARDS list elem cell and a HEALTH RIDER line on
+  the detail page -- the ring counterpart of the element rider icons.
+  It keys off the heal role + material band, never a status: no on-hit
+  roll, no mechanic change, and wood heal cards stay plain.  Real status
+  riders keep precedence wherever both could apply.  No OAM tile was free
+  for a sprite (shared blob fills 100-125, 126-127 are reserved), so the
+  marker is a font glyph; pixels, buffer and VRAM reads all agree.
 * Fire/ice rows are LIVE (Phase D): fire swords carry a BURN rider
   (2 dmg/round, 2 rounds) and ice swords a FREEZE rider (the target
   skips its next attack); chances tuned like DA1 in 1/255 units.

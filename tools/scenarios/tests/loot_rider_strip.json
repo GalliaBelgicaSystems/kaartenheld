@@ -1,7 +1,7 @@
 {
  "name": "loot_rider_strip",
  "test": true,
- "description": "Wood-rider stripping (docs/loot.md 34.1): id 104 is a hand-encoded WOOD FIRE SWORD (material 0, fire effect) -- an illegal combo the generator never rolls. Synthesis must strip it: the CARDS list shows plain WOOD SWORD and the detail page shows NO RIDER (an unstripped card would show FIRE RIDER). Covers the synth last line of defense.",
+ "description": "Wood-rider stripping (docs/loot.md 34.1): id 107 is a hand-encoded WOOD POISON DAGGER (material 0, poison effect, dagger) -- a LEGAL pair the generator never rolls at wood. Synthesis must strip it: the detail page shows WOOD DAGGER (proving the right card is selected, not the starter wood sword) with NO RIDER (an unstripped card would show POISON RIDER plus a rider icon). Covers the synth last line of defense.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -14,7 +14,7 @@
  "actions": [
   {
    "type": "collection_add",
-   "card_id": 104,
+   "card_id": 107,
    "quantity": 1
   },
   {
@@ -78,7 +78,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "WOOD SWORD"
+   "contains": "WOOD DAGGER"
   },
   {
    "type": "screen_row",

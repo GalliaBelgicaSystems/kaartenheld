@@ -1,0 +1,78 @@
+{
+ "name": "loot_health_ring",
+ "test": true,
+ "description": "Health-rider display (docs/loot.md 34.1): a bronze plain ring (derived id 132 = 0x64: material 1, plain, weapon ring) shows a red '+' marker in the elem cell and a HEALTH RIDER line on its detail page. Display-only: no status, no on-hit roll, wood rings stay plain (see loot_rider_strip and ring_uses_loot_detail).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "BRONZE RING"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "+"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "HEALTH RIDER"
+  }
+ ]
+}

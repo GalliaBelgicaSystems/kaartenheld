@@ -194,6 +194,11 @@
    "type": "screen_row",
    "row": 12,
    "contains": "BRONZE POISON DAGGER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 19,
+   "expected": 125
   }
  ]
 }

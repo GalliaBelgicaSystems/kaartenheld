@@ -13,7 +13,7 @@
       "color": "#606060",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_top_left_corner_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_top_wall",
@@ -24,7 +24,7 @@
       "color": "#818181",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_top_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_top_right_corner_wall",
@@ -35,7 +35,7 @@
       "color": "#606060",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_top_right_corner_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_left_wall",
@@ -46,7 +46,7 @@
       "color": "#767676",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_left_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_right_wall",
@@ -57,7 +57,7 @@
       "color": "#767676",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_right_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_window",
@@ -112,7 +112,7 @@
       "color": "#5a5a5a",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_bottom_left_corner_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_bottom_wall",
@@ -123,7 +123,7 @@
       "color": "#666666",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_bottom_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_bottom_right_corner_wall",
@@ -134,7 +134,7 @@
       "color": "#5a5a5a",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_bottom_right_corner_wall.png",
-      "category": "terrain"
+      "category": "wall"
     },
     {
       "id": "castle_chair_facing_left",

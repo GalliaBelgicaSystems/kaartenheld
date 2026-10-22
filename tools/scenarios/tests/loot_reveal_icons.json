@@ -1,7 +1,7 @@
 {
  "name": "loot_reveal_icons",
  "test": true,
- "description": "Loot reveal regression (docs/loot.md 34.5): at AP 1 seed 5002 deterministically yields a WOOD PLAIN DAGGER (derived id 0x63 = 99; wood carries no rider). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name W DA on row 11, and full English description WOOD DAGGER on row 12.",
+ "description": "Loot reveal regression with a rider card (docs/loot.md 34.5): at AP 2 seed 29 deterministically yields a BRONZE POISON DAGGER (derived id 0x8B = 139). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name B P DA on row 11, full English description BRONZE POISON DAGGER on row 12, and the poison rider OAM icon. The riderless wood case is pinned by loot_drop_victory instead.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -9,9 +9,12 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 5002,
+  "seed": 29,
   "flags": {
    "FIELD_CHEST": true
+  },
+  "variables": {
+   "ENERGY_POOL": 2
   },
   "party": {
    "HERO": {
@@ -278,17 +281,17 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "W DA"
+   "contains": "B P DA"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "WOOD DAGGER"
+   "contains": "BRONZE POISON DAGGER"
   },
   {
    "type": "oam_tile",
    "entry": 19,
-   "expected": 0
+   "expected": 125
   }
  ]
 }

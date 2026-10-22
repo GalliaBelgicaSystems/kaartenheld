@@ -704,7 +704,6 @@
       ],
       "declared": "town7",
       "used_ramp": "town7",
-      "reason": "tagged ramp stands; off-ramp pixels use nearest shade",
       "off_colors": [
         "#8d754a"
       ]

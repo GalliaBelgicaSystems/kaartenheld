@@ -569,9 +569,9 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             /* Row-1 walls/furniture + debris (VRAM slots 9..16). */
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + 9 + (t - TILE_CASTLE_09));
         } else if ((uint8_t)(t - TILE_CASTLE_26) <= (uint8_t)(TILE_CASTLE_34 - TILE_CASTLE_26)) {
-            /* Exit + extension block (values 141..154, VRAM slots 26, 8,
-             * 17..19, 23..25, 27..30, 33..34): one contiguous freed-value
-             * run, so a single range check plus a 16-byte slot table
+            /* Exit + extension block (values 141..156, VRAM slots 26, 8,
+             * 17..19, 23..25, 27..34): one contiguous freed-value run,
+             * so a single range check plus a 16-byte slot table
              * replaces a branch ladder (fixed bank budget, AGENTS.md
              * 52.18).  Values are globally unique (forest ends at 140,
              * legacy desolate now starts at WALL_11=157, village ends

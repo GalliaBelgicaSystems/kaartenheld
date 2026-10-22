@@ -367,11 +367,11 @@ def main(argv):
     covered = {v for _, v, _, _ in entries}
     for value in range(146, 185):
         if value in covered:
-            continue  # manifest-owned now (castle 146..154 reuse the
+            continue  # manifest-owned now (castle 146..156 reuse the
                       # evicted legacy ids, with real walk/glyph rows)
-        # Free values (155 legacy WALL_09, 184 ex-red-square) have no
-        # TILE_ name: use the numeric literal, which is valid C wherever
-        # a constant name would go.
+        # Free values (184 ex-red-square, 185..186 ex-MERCHANT/STAIRCASE)
+        # have no TILE_ name: use the numeric literal, which is valid C
+        # wherever a constant name would go.
         entries.append((value_to_const.get(value, str(value)),
                         value, False, "#"))
     entries.sort(key=lambda e: e[1])
