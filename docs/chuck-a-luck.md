@@ -133,23 +133,29 @@ build is the tight one (~50 B).
   entry points share one `huge_mute_dispatch()` ladder to keep the
   fixed-bank cost down.
 * **SFX**: `SFX_CURSOR` blips on every caret / bet / number move,
-  `SFX_SELECT` on the roll, `SFX_BLOCK` (the defend thump) on a loss,
-  and the chest-loot jingle (`MUSIC_CHEST`) on a win. Note the loss
-  replaces the roll's `SFX_SELECT` with `SFX_BLOCK` in the same frame,
-  so only the thump is heard; a win keeps the select blip plus the
-  jingle.
+  `SFX_SELECT` on the roll, `SFX_BLOCK` (the defend thump) on a loss and
+  `SFX_WIN` on a win.  Both result cues are SFX, so the casino theme
+  keeps playing across a result: only the cue's audio channel is muted
+  for its duration, then restored (the same mechanism as the loss
+  thump).  `SFX_WIN` is the chest-opening arpeggio (`assets/music/chest
+  opening.uge`) transcribed by the SFX pipeline (`screens/sfx.json` maps
+  the `WIN` id to it; the transcriber needs only CH1, and the jingle is
+  3 tone steps / 55 ticks).  Using the `MUSIC_CHEST` *track* here
+  instead stops the table theme, plays the jingle and restarts the theme
+  from the top -- which is why the win cue is an SFX.
+  A result cue replaces the roll's `SFX_SELECT` in the same frame, so
+  the roll blip is not heard on a scoring roll.
 * **Staging (no fixed bytes added)**: a banked body cannot call the
   audio API (AGENTS.md 52.11.1), so requests ride WRAM out to
   `game_update()`: `g_gamble_sfx` (id + 1; 0 = none, BSS-safe because
   the custom CRT0 never copies `_INITIALIZER`) folds into the existing
   one-shot SFX slot (`g_bk_byte_c == 2`, id in `g_bk_byte_d` -- the
-  same slot the pursuit alert uses), the win jingle reuses the existing
-  chest code (`g_bk_byte_b == 1`), the casino theme is the one new code
-  (`g_bk_byte_b == 4`), and leaving the table reuses the existing
+  same slot the pursuit alert uses), the casino theme is the one new
+  code (`g_bk_byte_b == 4`), and leaving the table reuses the existing
   scene-track restore code (`g_bk_byte_b == 2`).
-* When the win jingle's restore clock fires while the player is still at
-  the table, the tick overrides the restore with the casino code, so
-  the music never dips through the town track for a frame.
+* No result starts a music track, so there is no jingle-restore override
+  at the table: the theme runs from table entry until the player
+  leaves.
 * `huge_music_stop()` (the fixed-bank stop twin) was deleted: the bank-8
   resolver already calls `huge_stop_inline()` before every track
   resolution, including the NONE path, so the fixed copy was dead code.

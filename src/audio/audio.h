@@ -70,7 +70,12 @@ enum {
     SFX_BLOCK = 6,
     /* Alert sting for pursuer levels (kobolds, slime knights): plays once
      * on entry, then the level track resumes (screens/sfx.json ALERT). */
-    SFX_ALERT = 7
+    SFX_ALERT = 7,
+    /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
+     * transcribes to 3 CH2 tone steps), so the table theme keeps playing
+     * instead of being replaced by the MUSIC_CHEST track.  Must stay the
+     * LAST id: audio.c range-checks against it. */
+    SFX_WIN = 8
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

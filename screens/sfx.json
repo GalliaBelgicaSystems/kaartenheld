@@ -6,5 +6,6 @@
   "ATTACK": "assets/sfx/sfx hit2.uge",
   "HIT": "assets/sfx/sfx hit.uge",
   "BLOCK": "assets/sfx/sfx block.uge",
-  "ALERT": "assets/sfx/alert.uge"
+  "ALERT": "assets/sfx/alert.uge",
+  "WIN": "assets/music/chest opening.uge"
 }

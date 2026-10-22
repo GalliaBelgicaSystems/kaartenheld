@@ -48,10 +48,10 @@ extern GambleState g_gamble;
 /* Staged audio requests (WRAM): the banked body cannot call the audio
  * API, so game_update() consumes these.  g_gamble_sfx is an SFX id + 1
  * (0 = none, BSS-safe: the CRT0 never copies _INITIALIZER, so 0xFF
- * would not survive boot until a table entry); g_gamble_jingle queues
- * the shared chest jingle. */
+ * would not survive boot until a table entry).  Wins and losses are both
+ * SFX (SFX_WIN / SFX_BLOCK), never a music track, so the casino theme
+ * keeps playing across a result. */
 extern uint8_t g_gamble_sfx;
-extern uint8_t g_gamble_jingle;
 /* Enter request: raised by the bank-8 dialogue choice body when the
  * player says YES; the per-frame tick opens SCREEN_GAMBLE and clears
  * it.  Keeps the fixed bank out of the gamble handoff entirely. */

@@ -87,11 +87,11 @@
     },
     {
       "type": "music_track",
-      "expected": "CHEST"
+      "expected": "CASINO"
     },
     {
       "type": "sfx_last",
-      "expected": 2
+      "expected": 8
     }
   ],
   "initial_state": {

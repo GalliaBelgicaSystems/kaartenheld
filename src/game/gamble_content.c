@@ -31,7 +31,7 @@
  *
  * Audio: casino theme while the table is up, cursor blips on moves, the
  * block thump on a loss and the chest jingle on a win.  Requests are
- * staged in WRAM (g_gamble_sfx / g_gamble_jingle / g_bk_byte_b) and
+ * staged in WRAM (g_gamble_sfx / g_gamble_bye / g_bk_byte_b) and
  * consumed by the fixed bank, because a banked body cannot call the
  * audio API (52.11.1); no fixed-bank bytes are spent on the gamble
  * feature for this.
@@ -47,11 +47,9 @@ GambleState g_gamble;
  * audio API, so requests ride these bytes out to game_update():
  *  - g_gamble_sfx: one-shot SFX id + 1 (0 = none; BSS-safe because
  *    the custom CRT0 never copies _INITIALIZER), consumed there.
- *  - g_gamble_jingle: set on a winning roll; the tick body turns it
- *    into the shared chest-jingle request (byte_b == 1), which already
- *    has a fixed consumer. */
+ *  - the win cue is SFX_WIN (see SFX staging below), so the casino theme
+ *    keeps playing: a MUSIC_CHEST track would replace it and restart. */
 uint8_t g_gamble_sfx;
-uint8_t g_gamble_jingle;
 uint8_t g_gamble_enter;
 uint8_t g_gamble_bye;
 
@@ -164,11 +162,13 @@ static void gamble_do_roll(void)
     }
     g_game.state.currency.amount[CURRENCY_ID_GOLD - 1] = gold;
     g_gamble.phase = GAMBLE_PHASE_RESULT;
-    /* Result audio: a win rings the chest-loot jingle (the shared
-     * one-shot, queued as g_gamble_jingle for the tick body); a loss
-     * gets the same thump a blocked attack uses. */
+    /* Result audio: both outcomes are SFX, so the table theme plays
+     * through.  A win uses SFX_WIN (the chest-opening arpeggio
+     * transcribed as SFX -- as a MUSIC_CHEST track it would replace the
+     * casino theme and restart it afterwards); a loss gets the same
+     * thump a blocked attack uses. */
     if (m != 0) {
-        g_gamble_jingle = 1;
+        g_gamble_sfx = (uint8_t)(SFX_WIN + 1);
     } else {
         g_gamble_sfx = (uint8_t)(SFX_BLOCK + 1);
     }
@@ -841,20 +841,10 @@ void gamble_audio_tick(void)
         return;
     }
     if (g_game.screen == SCREEN_GAMBLE) {
-        if (g_gamble_jingle) {
-            g_gamble_jingle = 0;
-            g_bk_byte_b = 1;
-            return;
-        }
-        if (g_bk_byte_b == 2) {
-            /* The jingle's restore clock fired, but we are still at the
-             * table: go straight to the casino theme instead of the
-             * scene track (no stray one-frame town track). */
-            g_bk_byte_b = 4;
-            return;
-        }
-        if (g_audio_current_track != MUSIC_CASINO &&
-            g_audio_current_track != MUSIC_CHEST) {
+        /* The table never starts a music track of its own beyond the
+         * casino theme (results are SFX), so no jingle-restore override
+         * is needed here any more. */
+        if (g_audio_current_track != MUSIC_CASINO) {
             g_bk_byte_b = 4;
         }
         return;
@@ -882,7 +872,6 @@ void gamble_frame_banked(void)
         g_gamble.won = 0;
         g_gamble_sfx = 0;         /* no queued blip on entry */
         g_gamble_bye = 0;
-        g_gamble_jingle = 0;
         g_gamble.entered = 1;
         gamble_entry();
         return;

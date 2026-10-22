@@ -68,6 +68,10 @@
       "type": "currency",
       "expected": 22,
       "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
     }
   ],
   "initial_state": {
