@@ -60,7 +60,10 @@ void battle_init_deck_banked(void)
             uint8_t wi = (wpn <= WPN_RING) ? wpn : WPN_SWORD;
 
             b->deck.cards[i].value = LOOT_POWER(mat, wi);
-            b->deck.cards[i].uses_remaining = 0xFF;
+            /* Rings deplete per the material band (LOOT_RING_USES);
+             * every other loot card is unlimited-use. */
+            b->deck.cards[i].uses_remaining =
+                (wpn == WPN_RING) ? LOOT_RING_USES(mat) : 0xFF;
             b->deck.cards[i].cost = (wpn <= WPN_RING) ? 1 : 0;
             b->deck.cards[i].status_id = STATUS_NONE;
             b->deck.cards[i].status_chance = 0;

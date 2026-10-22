@@ -55,6 +55,14 @@ enum {
 #define LOOT_POWER(mat, wpn) ((uint8_t)(((mat) == 0) ? 1 : \
     (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0))))
 
+/* Ring uses per battle (docs/loot.md §34.6): wood 1, bronze 2, iron 3,
+ * steel 4, mythril 5 -- material tier + 1.  A wood ring stays
+ * single-use per battle (a free repeatable heal would trivialize
+ * attrition); higher tiers hold more charges instead of healing more
+ * per charge.  The curated shop ring follows the same band as loot
+ * iron (3 uses). */
+#define LOOT_RING_USES(mat) ((uint8_t)((mat) + 1))
+
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)
 #define loot_id_material(id)         ((uint8_t)(((id) - LOOT_ID_BASE) >> 5))

@@ -464,19 +464,16 @@ void shop_content_render(void)
         sc_put_char(16, s_sc_y, 'G');
     }
 
-    if (s_sc_game->shop_message == SC_SHOP_MSG_BOUGHT) {
-        /* Merchant's equip tip, exact words split 15/16/20: replaces the
-         * hints while the bought message shows (cleared on leave). */
-        sc_draw_text(0, 15, "Don't forget to", 15);
-        sc_draw_text(0, 16, "equip your cards", 16);
-        sc_draw_text(0, 17, "from the START menu!", 20);
-    } else {
-        sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
-        if (s_sc_game->shop_message != SC_SHOP_MSG_NONE) {
-            sc_draw_text(0, 17,
-                         (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) ? "Too many!" : "Not enough!",
-                         12);
-        }
+    /* Hints always show: the post-shop equip tip moved to a normal
+     * dialogue box on exit (docs/loot.md §34.6), so buying no longer
+     * changes these lines.  Only failures print a message row: a buy
+     * leaves it blank (the bought row vanishing + gold dropping is
+     * the confirmation). */
+    sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
+    if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
+        sc_draw_text(0, 17, "Not enough!", 12);
+    } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
+        sc_draw_text(0, 17, "Too many!", 12);
     }
     shop_rider_draw();
 }

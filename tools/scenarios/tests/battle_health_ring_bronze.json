@@ -1,7 +1,7 @@
 {
  "name": "battle_health_ring_bronze",
  "test": true,
- "description": "Health rider in battle, bronze ring (docs/loot.md 34.1): a hand HEAL card shows the green '+' OAM icon (tile 11, slot 3) on its box from deal, and playing a lone ring heals its face value. Two bronze rings staged (one played, one held): the held slot keeps icon 11 on OAM entry 20 while the played ring heals 2 HP (5/10 -> 7/10, HEALED cause 1). Pairs with battle_health_ring (wood, heals 1).",
+ "description": "Health rider in battle, bronze ring (docs/loot.md 34.1): a hand HEAL card shows the green '+' OAM icon (tile 11, slot 3) on its box from deal, and playing a lone ring heals its face value. Two bronze rings staged (2 uses each; one played, one held): the held slot keeps icon 11 on OAM entry 20 while the played ring heals 2 HP (5/10 -> 7/10, HEALED cause 1) and its uses drop 2 -> 1 (CARD_PLAYED). Pairs with battle_health_ring (wood, heals 1).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -36,7 +36,7 @@
    "type": "set_hand_card_meta",
    "index": 0,
    "cost": 1,
-   "uses": 255
+   "uses": 2
   },
   {
    "type": "set_hand_card_ring",
@@ -89,6 +89,12 @@
    "event": "HEALED",
    "index": 0,
    "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PLAYED",
+   "index": 3,
+   "value": 1
   },
   {
    "type": "oam_tile",

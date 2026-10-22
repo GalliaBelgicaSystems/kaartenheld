@@ -329,7 +329,7 @@ All catalogue cards (`src/game/cards_content.c`):
 | Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
 | Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (test) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
-| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 4/battle | 1 | — | 20g |
+| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 3/battle | 1 | — | 20g |
 | Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |

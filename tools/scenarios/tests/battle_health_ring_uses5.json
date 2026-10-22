@@ -1,0 +1,68 @@
+{
+ "name": "battle_health_ring_uses5",
+ "test": true,
+ "description": "Mythril ring uses display (docs/loot.md 34.1): a 5-use heal card shows a font '5' (not a clamped arrow glyph) on the floor row, power digit on the middle row; the semantic row reads HE5.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7002,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 8
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 5
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 0
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "HE5"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 13,
+   "col": 1,
+   "expected": 24
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 14,
+   "col": 1,
+   "expected": 21
+  }
+ ]
+}

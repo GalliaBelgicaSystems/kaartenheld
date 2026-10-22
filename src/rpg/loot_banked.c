@@ -131,9 +131,9 @@ void loot_synth_banked(void)
             g_card_scratch.type = CARD_TYPE_HEAL;
             g_card_scratch.battle_type = BATTLE_CARD_TYPE_HEAL;
             g_card_scratch.effect = CARD_EFFECT_HEAL_HP;
-            /* Demo scope: wild rings are single-use per battle (the
-             * merchant's iron ring carries 4). */
-            g_card_scratch.uses_per_battle = 1;
+            /* Rings hold material-tier uses per battle (LOOT_RING_USES):
+             * wood single-use, mythril five. */
+            g_card_scratch.uses_per_battle = LOOT_RING_USES(material);
             break;
     }
 

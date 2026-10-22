@@ -42,7 +42,7 @@ Consequences:
   mirrors the granted set byte-for-byte (including the first-five deal
   order).
 - Healing is **not** free at the start. The only guaranteed heal source is
-  the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 4,
+  the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 3,
   price 20g).  Buy it, then add it to the deck from the CARDS menu.
 - Shop rows render the ITEM code derived from the card definition
   (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG4`, `SW5` --

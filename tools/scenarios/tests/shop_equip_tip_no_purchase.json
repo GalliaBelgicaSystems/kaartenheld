@@ -1,0 +1,51 @@
+{
+ "name": "shop_equip_tip_no_purchase",
+ "test": true,
+ "description": "Browsing without buying shows no equip tip (docs/loot.md 34.6): leaving the merchant shop with no purchase goes straight back to the overworld with no dialogue. Guards the tip against firing on every shop exit.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DIALOGUE_STARTED"
+  }
+ ]
+}

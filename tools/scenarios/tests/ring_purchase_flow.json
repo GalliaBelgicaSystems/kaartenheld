@@ -1,7 +1,7 @@
 {
  "name": "ring_purchase_flow",
  "test": true,
- "description": "The Merchant's one-copy shop sells IRON_RING as the IRON RING card (20 gold, first row): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), it appears in CARDS as an undecked row, and A decks it",
+ "description": "The Merchant's one-copy shop sells IRON_RING as the IRON RING card (20 gold, first row): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), quitting opens the equip-tip dialogue (DIALOGUE_STARTED), closing it returns to the overworld where START opens CARDS, and A decks the ring row",
  "actions": [
   {
    "type": "interact",
@@ -26,6 +26,14 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   },
   {
    "type": "press",
@@ -94,6 +102,10 @@
   {
    "type": "event_occurred",
    "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
   },
   {
    "type": "event_occurred",

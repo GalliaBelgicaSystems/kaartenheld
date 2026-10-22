@@ -1,0 +1,68 @@
+{
+ "name": "shop_equip_tip",
+ "test": true,
+ "description": "Post-shop equip tip (docs/loot.md 34.6): buying the iron ring then leaving the shop opens the merchant's equip tip as a normal dialogue box (DIALOGUE_MERCHANT_EQUIP_TIP), not in-shop text. The CARDS list row and detail page already proved the ring itself (see ring_uses_loot_detail for the loot twin).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MERCHANT_EQUIP_TIP"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Don't forget to"
+  }
+ ]
+}

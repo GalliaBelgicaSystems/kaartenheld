@@ -89,6 +89,17 @@ void shop_screen_update(Game *g)
         }
     }
     if (input_pressed(INPUT_B) || input_pressed(INPUT_START)) {
+        /* Leaving after a purchase stages the merchant's equip tip for
+         * the post-tick dialogue slot (docs/loot.md 34.6): the tip opens
+         * as a normal dialogue box over the overworld instead of the
+         * old in-shop hint lines, and fires once per buying visit.
+         * Staged, not opened here: the fixed bank sits hard against
+         * 0x8000, and a dialogue_start_def + screen_change pair here
+         * overflows it into bank 2 (AGENTS.md 52.18).  Dialogue close
+         * returns to the overworld through the standard exit path (no
+         * stashed encounter here, unlike Carl's lesson). */
+        if (g->shop_message == SHOP_MSG_BOUGHT)
+            g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
         g->shop_message = SHOP_MSG_NONE;
         g->item_menu_index = 0;
         audio_play_sfx(SFX_BACK);

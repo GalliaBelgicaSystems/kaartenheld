@@ -297,12 +297,15 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     (void)status;
     /* Finite-use cards of the skin's arrow-counter type -- and HEAL-type
      * rings, which share its remaining-uses glyphs -- draw the
-     * remaining-uses glyph (0..4, clamped) on the floor row; unlimited
-     * cards keep the frame center. */
+     * remaining-uses glyph (0..4) on the floor row; unlimited cards keep
+     * the frame center.  A 5-count (mythril rings) has no arrow glyph,
+     * so the floor center shows the font digit instead -- same digit
+     * the semantic buffer reports below. */
     limited = (uses != 0xFF && (type == g_card_skin_wram.uses_type ||
                                 type == BATTLE_CARD_TYPE_HEAL));
     if (limited) {
-        digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
+        digit_tile = (uses > 4) ? (uint8_t)('0' - ' ' + uses)
+                                : g_card_skin_wram.uses_tile[uses];
     } else {
         digit_tile = (uint8_t)('0' - ' ' + value);
     }
@@ -328,7 +331,8 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
              * glyph and keeps the BL/BR corners. */
             battle_vram_sync_write(&dst[0], (uint8_t)(frame + 6));
             if (limited) {
-                digit_tile = g_card_skin_wram.uses_tile[uses > 4 ? 4 : uses];
+                digit_tile = (uses > 4) ? (uint8_t)('0' - ' ' + uses)
+                                         : g_card_skin_wram.uses_tile[uses];
                 battle_vram_sync_write(&dst[1], digit_tile);
             } else {
                 battle_vram_sync_write(&dst[1], (uint8_t)(frame + 7));
@@ -396,7 +400,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     buf[0] = code[0];
     buf[1] = code[1];
     if (limited) {
-        buf[2] = (char)('0' + (uses > 4 ? 4 : uses));
+        buf[2] = (char)('0' + uses);
     } else {
         buf[2] = (char)('0' + value);
     }

@@ -605,6 +605,12 @@ def walk_a(planner, checks, sram_out=None):
             expected="BO9 at row 5", actual=s.bg_text()[5])
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("SHOP"), frames=30), label="shop close")
+    # Post-purchase the merchant's equip tip opens as a dialogue box on
+    # exit (docs/loot.md §34.6): close it before asserting overworld.
+    s.press_until("a", lambda: s.stable(
+        lambda: s.text_has("MERCHANT:"), frames=30), label="equip tip")
+    s.press_until("a", lambda: s.stable(
+        lambda: not s.text_has("MERCHANT:"), frames=30), label="tip close")
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
             actual=s.bg_text()[0].strip())
 

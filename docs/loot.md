@@ -1723,6 +1723,15 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   ring by construction, and the Merchant sells a curated IRON RING
   (`I RG`; shop label **RG4**, 20g) as the heal source once his shop
   opens.  IMPLEMENTED.
+* Uses per battle follow the material band (`LOOT_RING_USES` = tier + 1):
+  wood 1, bronze 2, iron 3, steel 4, mythril 5.  A wood ring is
+  single-use -- a free repeatable heal would trivialize attrition --
+  while higher tiers hold more charges instead of healing more per
+  charge.  The curated shop ring follows the same band as loot iron
+  (3 uses).  The battle deck, the CARDS detail page and the battle HUD
+  counter all read the same value; a 5-count has no arrow glyph, so the
+  floor counter and the semantic row show the font digit instead.
+  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
 ## 34.4 Combat resolution rules
@@ -1807,7 +1816,10 @@ shop; finding it is what makes the delivery (and the shop) available:
   mythril bow (**BO9**, 30g), one of each.  A row shows only while the
   player owns no copy; buying both empties the shop into `(out of
   stock)`.  Rings are THE healing vector, so healing is purchasable but
-  never free.  The iron sword / poison dagger are gone from the stock:
+  never free.  Leaving the shop after a purchase opens the merchant's
+  equip tip as a normal dialogue box (the in-shop hint lines are gone);
+  browsing without buying quits straight back to the overworld.  The
+  iron sword / poison dagger are gone from the stock:
   the starter deck carries a wood sword, iron and better swords come
   from loot as derived ids (iron unlocks at AP 4; the catalog
   `CARD_IRON_SWORD` is test-only and never drops), and daggers come
