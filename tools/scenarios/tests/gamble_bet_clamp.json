@@ -1,0 +1,88 @@
+{
+  "name": "gamble_bet_clamp",
+  "test": true,
+  "description": "Bet clamps to owned gold: with 3 gold, stepping the bet up from 1 snaps back to 1 (5 unaffordable); the roll still settles (lose -> 2).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 7,
+      "contains": "CHOOSE BET:1"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "0 MATCH LOSE -1"
+    },
+    {
+      "type": "currency",
+      "expected": 2,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345,
+    "currency": {
+      "GOLD": 3
+    }
+  }
+}

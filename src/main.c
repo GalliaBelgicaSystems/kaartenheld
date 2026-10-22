@@ -16,7 +16,7 @@ Game g_game;
  *
  * Core subsystem initialisation (input, UI, fonts) always runs.
  */
-volatile uint8_t g_harness_mode = 0;
+volatile uint8_t g_harness_mode;  /* BSS zero (AGENTS.md 52.27) */
 
 /*
  * Boot-phase breadcrumb for the test harness.  Incremented at each
@@ -27,7 +27,7 @@ volatile uint8_t g_harness_mode = 0;
  *  3 = game_init() complete
  *  4 = first game_render() complete
  */
-volatile uint8_t g_boot_phase = 0;
+volatile uint8_t g_boot_phase;  /* BSS zero (AGENTS.md 52.27) */
 
 extern void timer_isr_init(void);
 extern void oam_dma_init(void);

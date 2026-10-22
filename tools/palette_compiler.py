@@ -54,6 +54,7 @@ SHEETS = {
     "enemy_ow": ("enemy_sprites.png", "obj"),
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
+    "dice": ("dice.png", "base"),
     "title": ("title-red.png", "title"),
 }
 
@@ -197,6 +198,16 @@ def card_display_slots(skin, hud):
     for key in ("filled", "empty"):
         if bar.get(key) in coord_of:
             slots[coord_of[bar[key]]] = skin_slot(bar["color"])
+    # Chuck-a-luck dice digits 0-9: brown on tan, same as the arrow
+    # counters (wood slot).  Not part of the card skin (they are shared
+    # battle chrome, loadable on demand to UI_TILE_DICE_BASE), so they
+    # need an explicit name rule here like the AP dot above.
+    for _dice in ("combat_zero_icon", "combat_one_icon", "combat_two_icon",
+                  "combat_three_icon", "combat_four_icon", "combat_five_icon",
+                  "combat_six_icon", "combat_seven_icon", "combat_eight_icon",
+                  "combat_nine_icon"):
+        if _dice in coord_of:
+            slots[coord_of[_dice]] = skin_slot("wood")
     return slots
 
 
@@ -505,6 +516,11 @@ def main():
     card_declared = {c: slot_ramp("base", s) for c, s in display_slots.items()}
 
     compile_sheet("card_frames", card_declared)
+    # Chuck-a-luck dice (dice.png, 10x1 cells, digit order 0-9): every
+    # cell encodes with the wood ramp (brown on tan, like the arrow
+    # counters).  Base slot 5 is wood (fight2) per palette_slots.json.
+    compile_sheet("dice", { (x, 0): "fight2" for x in range(10) },
+                  require_slot=False)
     compile_sheet("title", "title")
 
     # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*

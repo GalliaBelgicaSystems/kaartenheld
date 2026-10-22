@@ -22,10 +22,10 @@
 
 extern Game g_game;
 
-volatile uint8_t g_scen_load = 0;
-volatile uint8_t g_scen_load_state = 0;
+volatile uint8_t g_scen_load;  /* BSS zero (AGENTS.md 52.27) */
+volatile uint8_t g_scen_load_state;  /* BSS zero (AGENTS.md 52.27) */
 volatile uint8_t g_debug_action[6];
-volatile uint8_t g_debug_action_pending = 0;
+volatile uint8_t g_debug_action_pending;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_scen_state_buf[STATE_LOAD_DESC_SIZE];
 
 static void scenario_begin(uint16_t seed)
@@ -213,6 +213,11 @@ static void scenario_load_state(void)
         g_game.prev_screen = SCREEN_SPLASH;
         audio_play_music(MUSIC_TITLE);
     }
+    /* NOTE: no SCREEN_GAMBLE boot branch (fixed budget, 52.18):
+     * gamble scenarios reach the table through the real path (walk into
+     * the fixture kobold, press A through the invite, answer YES), so no
+     * loader support is needed.  The banked frame body auto-initializes
+     * on entry.  The farewell dialogue is exercised by pressing B. */
 
     game_render_reset(&g_game);
 

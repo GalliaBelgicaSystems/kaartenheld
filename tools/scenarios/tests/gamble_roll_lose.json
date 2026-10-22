@@ -1,0 +1,105 @@
+{
+  "name": "gamble_roll_lose",
+  "test": true,
+  "description": "Seeded loss: NUM=1 BET=1 rolls dice 2/6/3 (seed 12345), zero matches, loses the 1-gold bet (20 -> 19). Result shows under the kobold.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 2,
+      "contains": "Nis"
+    },
+    {
+      "type": "screen_row",
+      "row": 5,
+      "contains": "NO LUCK"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "0 MATCH LOSE -1"
+    },
+    {
+      "type": "screen_row",
+      "row": 12,
+      "contains": "2     6     3"
+    },
+    {
+      "type": "screen_row",
+      "row": 9,
+      "contains": "GOLD OWNED:19"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "A:AGAIN B:LEAVE"
+    },
+    {
+      "type": "currency",
+      "expected": 19,
+      "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
+    },
+    {
+      "type": "sfx_last",
+      "expected": 6
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345
+  }
+}

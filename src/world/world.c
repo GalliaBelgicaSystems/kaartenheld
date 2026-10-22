@@ -369,7 +369,7 @@ void world_on_battle_fled(Game *g)
     }
 }
 
-uint8_t g_patrol_outcome = 0;
+uint8_t g_patrol_outcome;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_patrol_evt[4];
 World *g_patrol_world;
 uint8_t g_patrol_slot;

@@ -91,6 +91,29 @@ def main():
               f"headroom to 0x8000: {headroom} B  [{status}]")
         if init_size:
             print(f"  (includes {init_size} B _INITIALIZER table after _HOME)")
+            # AGENTS.md 52.27: the custom CRT0 empties WRAM but never copies
+            # this table, so every byte in it is silently IGNORED at boot.
+            # `= 0` entries are harmless (WRAM is already zero), so judge the
+            # IMAGE, not its size: the table lives in the bank-0 file area
+            # (address == ROM file offset) and can be read back.
+            rom = os.path.splitext(sys.argv[1])[0] + ".gb"
+            nonzero = []
+            try:
+                with open(rom, "rb") as fh:
+                    fh.seek(init_start)
+                    image = fh.read(init_size)
+                nonzero = [i for i, b in enumerate(image) if b]
+            except OSError:
+                print("  (note: ROM image not found; cannot verify initializer bytes)")
+            if init_size and not nonzero:
+                print("  (initializer image is all zero: harmless, but it still "
+                      "costs fixed-bank bytes)")
+            if nonzero:
+                print(f"  [VIOLATION] _INITIALIZER holds {len(nonzero)} non-zero byte(s) "
+                      f"(first at +{nonzero[0]}): the custom CRT0 never copies it "
+                      f"(AGENTS.md 52.27). Zero-init the global (BSS) and set it "
+                      f"explicitly at runtime.")
+                ok = False
     else:
         print("_HOME : (not found)")
         ok = False

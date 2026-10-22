@@ -448,6 +448,31 @@
         "ai": "AI_NONE",
         "enemy_type": "npc_merchant"
       }
+    },
+    {
+      "id": "village_area_gambler",
+      "type": "npc",
+      "position": {
+        "x": 15,
+        "y": 9
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_KOBOLD",
+        "display_name": "Nis",
+        "actor_id": 0,
+        "facing": "LEFT",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "kobold",
+        "dialogue": "DIALOGUE_ID_KOBOLD_INVITE"
+      }
     }
   ],
   "regions": []

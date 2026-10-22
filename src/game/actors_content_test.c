@@ -186,6 +186,58 @@ static const WorldActorDefinition g_test_south_field_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_test_gamble_actors[] = {
+    {
+        0, ENTITY_ID_MAYOR, 10, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'M', "MAYOR", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_MAYOR_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 6, 0
+    },
+    {
+        0, ENTITY_ID_GUARD, 10, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'G', "GUARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_GUARD_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 4, 0
+    },
+    {
+        0, ENTITY_ID_MERCHANT, 11, 3, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "MERCHANT", INTERACTION_SHOP, 2, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 7, 0
+    },
+    {
+        0, ENTITY_ID_WIZARD, 6, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "WIZARD", INTERACTION_SAVE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 8, 0
+    },
+    {
+        0, ENTITY_ID_HEAL_MAGE, 12, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "HEAL MAGE", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 5, 0
+    },
+    {
+        0, ENTITY_ID_DOG, 15, 14, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "WILD DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_KOBOLD, 5, 7, DIRECTION_LEFT,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'K', "Nis", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_KOBOLD_INVITE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 2, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_TEST_FIELD,      g_test_field_actors,
         (uint8_t)(sizeof(g_test_field_actors) / sizeof(g_test_field_actors[0])) },
@@ -199,6 +251,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_castle_actors) / sizeof(g_test_castle_actors[0])) },
     { MAP_TEST_SOUTH_FIELD, g_test_south_field_actors,
         (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
+    { MAP_TEST_GAMBLE,     g_test_gamble_actors,
+        (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])) },
 };
 
-const uint8_t g_actor_table_count = 6;
+const uint8_t g_actor_table_count = 7;

@@ -21,7 +21,7 @@ void game_slime_trio_spawn_banked(void);
  * it is read, so callers never touch banked data and the bank register is
  * always restored to 0.  event_get_row() returns the scratch copy; a
  * returned pointer is only valid until the next row access. */
-static const EventDefinition *g_events = NULL;
+static const EventDefinition *g_events;  /* BSS (52.27) */
 static uint8_t g_event_count = 0;
 /* BSS: event_init() (via game_content_init() at every boot) sets the home
  * bank before any row is read. */

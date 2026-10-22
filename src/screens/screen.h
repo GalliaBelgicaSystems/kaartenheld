@@ -25,7 +25,8 @@ typedef enum {
     SCREEN_INTRO     = 10,
     SCREEN_TUTORIAL  = 11,
     SCREEN_SPLASH    = 12,
-    SCREEN_CREDITS   = 13
+    SCREEN_CREDITS   = 13,
+    SCREEN_GAMBLE    = 14
 } ScreenId;
 
 /*

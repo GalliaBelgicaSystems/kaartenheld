@@ -132,8 +132,26 @@ void game_update(Game *g)
              * byte_d replay restarts the track from the top). */
             audio_play_music(MUSIC_NONE);
         }
+        /* byte_c == 2 is the one-shot SFX slot: the id rides byte_d.
+         * The pursuit-alert body stages SFX_ALERT there; the bank-8
+         * gamble tick stages its cursor/roll/loss blips the same way,
+         * so the fixed bank pays no second consumer branch for the
+         * table (AGENTS.md 52.18). */
         if (g_bk_byte_c == 2) {
-            audio_play_sfx(SFX_ALERT);
+            audio_play_sfx(g_bk_byte_d);
+        }
+        /* Chuck-a-luck table theme (staged by the bank-8 gamble tick). */
+        if (g_bk_byte_b == 4) {
+            audio_play_music(MUSIC_CASINO);
+        }
+        /* Post-tick dialogue request (e.g. Nis's farewell after leaving
+         * the table): the banked producer cannot call dialogue_start_def,
+         * so it stages the id here.  Generic engine data -- the id is an
+         * opaque value, never a fixed-bank game branch (AGENTS.md 55.1). */
+        if (g_bk_dlg_id != 0) {
+            dialogue_start_def(&g->dialogue, (DialogueId)g_bk_dlg_id);
+            g_bk_dlg_id = 0;
+            screen_change(g, SCREEN_DIALOGUE);
         }
     }
     scene_sync_from_world(g);

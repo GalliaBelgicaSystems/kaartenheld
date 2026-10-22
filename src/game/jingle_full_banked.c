@@ -67,7 +67,7 @@ extern volatile uint8_t g_harness_mode;
  * bank-8 body. Main-thread only: no volatile needed.
  * Reset on every MUSIC_TITLE dispatch (music_play_banked). */
 #define TITLE_SONG_FRAMES 200u
-uint16_t g_title_frames = 0;
+uint16_t g_title_frames;  /* BSS zero (AGENTS.md 52.27) */
 
 /* Tick/frame counter for the restore clock.  Shared with the timer ISR
  * (huge_music_update's divider branch increments while the jingle owns
@@ -76,12 +76,12 @@ uint16_t g_title_frames = 0;
  * harmless either way (worst case a ±1-tick restore against 20+ ticks
  * of margin).  Same BSS slot as the old frame-only counter, so the WRAM
  * layout does not move a byte. */
-volatile uint8_t g_jingle_frames = 0;
+volatile uint8_t g_jingle_frames;  /* BSS zero (AGENTS.md 52.27) */
 /* Per-chest done bits (bit 7 = seeded flag).  Global (not file-static)
  * so load_game_slot() can re-arm the edge when a save replaces the
  * whole canonical state mid-session.  Written only here and in save.c
  * (re-arm); read only here. */
-uint8_t g_jingle_done = 0;
+uint8_t g_jingle_done;  /* BSS zero (AGENTS.md 52.27) */
 
 void jingle_full_banked(void)
 {

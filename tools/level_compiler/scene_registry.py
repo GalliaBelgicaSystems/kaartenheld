@@ -25,7 +25,8 @@ REGISTRY_VERSION = 1
 # Fixed harness-test fixture names.  Values come from the registry's
 # _test_base (a fixed block that never moves); only the NAMES live here.
 TEST_SCENE_ORDER = ["test_field", "test_town", "test_forest",
-                    "test_mountain_pass", "test_castle", "test_south_field"]
+                    "test_mountain_pass", "test_castle", "test_south_field",
+                    "test_gamble"]
 
 
 def registry_path():

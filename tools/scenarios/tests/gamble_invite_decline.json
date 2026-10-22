@@ -1,0 +1,88 @@
+{
+  "name": "gamble_invite_decline",
+  "test": true,
+  "description": "Answering NO on Nis's invite (RIGHT then A) walks away: back to overworld, gold untouched, NO choice recorded.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "player_position",
+      "expected_x": 4,
+      "expected_y": 7
+    },
+    {
+      "type": "currency",
+      "expected": 20,
+      "currency": "GOLD"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 0,
+      "value": "KOBOLD_INVITE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 1,
+      "value": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12
+  }
+}

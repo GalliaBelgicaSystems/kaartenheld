@@ -16,9 +16,9 @@ extern volatile uint8_t g_jingle_frames;
  * (§52.18); the swap site uses the same select-7/call/restore-1 pattern
  * huge_music_update() already uses.  Same precedent as
  * g_audio_current_track in audio.h. */
-const hUGESong_t *g_huge_current_song = 0;
-uint8_t g_huge_playing = 0;
-uint8_t g_huge_tick_divider = 0;
+const hUGESong_t *g_huge_current_song;  /* BSS (52.27) */
+uint8_t g_huge_playing;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_huge_tick_divider;  /* BSS zero (AGENTS.md 52.27) */
 /* ROM bank holding the active song + its driver copy.  Bank 6 holds the
  * driver and the six original songs; bank 7 holds the second driver copy
  * and the mimic/victory/opening/chest songs (bank 6 is full -- the SFX
@@ -41,7 +41,9 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
      * remaps (bank 0 never remaps); a banked body must never switch
      * away its own bank mid-function. */
     if (!song) {
-        huge_music_stop();
+        /* Nothing to start: the bank-8 resolver already stopped the old
+         * song inline (huge_stop_inline), so the fixed stop twin is not
+         * needed here -- and its bytes are better spent elsewhere. */
         return;
     }
 
@@ -50,7 +52,9 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
         g_huge_current_song = song;
         g_huge_music_bank = bank;
         *(volatile uint8_t *)0x2000 = bank;
-        if (bank == HUGE_MUSIC_BANK_B7) {
+        if (bank == HUGE_MUSIC_BANK_B9) {
+            hUGE_init_b9(song);
+        } else if (bank == HUGE_MUSIC_BANK_B7) {
             hUGE_init_b7(song);
         } else {
             hUGE_init(song);
@@ -61,23 +65,19 @@ void huge_music_play_banked(const hUGESong_t *song, uint8_t bank)
     }
 }
 
-void huge_music_stop(void)
+
+/* Bank -> driver-copy mute dispatch.  One shared chain keeps the fixed
+ * bank cost to a single compare ladder instead of duplicating it in the
+ * user-context and ISR mute entry points (AGENTS.md 52.18).  The caller
+ * has already mapped g_huge_music_bank. */
+static void huge_mute_dispatch(uint8_t ch, uint8_t mute)
 {
-    /* Fixed-bank twin of huge_stop_inline() in huge_music_banked.c
-     * (bank 8): identical register writes.  The banked copy exists
-     * because a banked body cannot call fixed-bank code while its own
-     * bank is unmapped -- keep the two in sync. */
-    __critical {
-        g_huge_playing = 0;
-        g_huge_current_song = 0;
-        /* Silence active sound channels */
-        NR12_REG = 0x00;
-        NR14_REG = 0x80;
-        NR22_REG = 0x00;
-        NR24_REG = 0x80;
-        NR32_REG = 0x00;
-        NR42_REG = 0x00;
-        NR44_REG = 0x80;
+    if (g_huge_music_bank == HUGE_MUSIC_BANK_B9) {
+        hUGE_mute_channel_b9((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
+    } else if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
+        hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
+    } else {
+        hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
     }
 }
 
@@ -85,11 +85,7 @@ void huge_music_mute_channel(uint8_t ch, uint8_t mute)
 {
     __critical {
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-        if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
-            hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-        } else {
-            hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-        }
+        huge_mute_dispatch(ch, mute);
         *(volatile uint8_t *)0x2000 = 1;
     }
 }
@@ -106,11 +102,7 @@ void huge_music_mute_channel_isr(uint8_t ch, uint8_t mute)
      * No restore here: the caller (audio_update's tail) re-establishes
      * the live bank once for the whole ISR (fixed-bank budget). */
     *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-    if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
-        hUGE_mute_channel_b7((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-    } else {
-        hUGE_mute_channel((enum hUGE_channel_t)ch, (enum hUGE_mute_t)mute);
-    }
+    huge_mute_dispatch(ch, mute);
 }
 
 void huge_music_update(void)
@@ -129,7 +121,9 @@ void huge_music_update(void)
         /* No restore here: audio_update's tail re-establishes the live
          * bank once for the whole ISR (same contract as the ISR mute). */
         *(volatile uint8_t *)0x2000 = g_huge_music_bank;
-        if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
+        if (g_huge_music_bank == HUGE_MUSIC_BANK_B9) {
+            hUGE_dosound_b9();
+        } else if (g_huge_music_bank == HUGE_MUSIC_BANK_B7) {
             hUGE_dosound_b7();
         } else {
             hUGE_dosound();

@@ -11,11 +11,11 @@
  * directly and spawns hostiles into World.actors runtime slots and
  * friendlies into g_static_actors[].  Gameplay lookups are pure WRAM. */
 
-const WorldActorTable *g_actor_registry = NULL;
-uint8_t g_actor_registry_count = 0;
+const WorldActorTable *g_actor_registry;  /* BSS (52.27) */
+uint8_t g_actor_registry_count;  /* BSS zero (AGENTS.md 52.27) */
 
 StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
-uint8_t g_static_actor_count = 0;
+uint8_t g_static_actor_count;  /* BSS zero (AGENTS.md 52.27) */
 
 /* Per-slot display-name staging (fixed WRAM, always mapped).  The banked
  * loader copies each hostile's def literal here at spawn; encounter code

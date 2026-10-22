@@ -1,0 +1,88 @@
+{
+  "name": "gamble_bet_rich",
+  "test": true,
+  "description": "Bet steps are not truncated to 8 bits: with 260 gold (which wraps to 4 in a uint8_t) the bet still cycles 1 -> 5 -> 10 and stays there. Regression for the (uint8_t)gold clamp.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 7,
+      "contains": "CHOOSE BET:10"
+    },
+    {
+      "type": "screen_row",
+      "row": 9,
+      "contains": "GOLD OWNED:260"
+    },
+    {
+      "type": "currency",
+      "expected": 260,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 4242,
+    "currency": {
+      "GOLD": 260
+    }
+  }
+}

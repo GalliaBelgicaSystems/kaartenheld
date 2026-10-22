@@ -6,10 +6,10 @@
 uint8_t g_snap_buf[SNAPSHOT_TOTAL_SIZE];
 uint8_t g_state_snap_buf[STATE_SNAP_TOTAL_SIZE];
 GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
-uint8_t g_telemetry_count = 0;
-uint8_t g_telemetry_head = 0;
+uint8_t g_telemetry_count;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_telemetry_head;  /* BSS zero (AGENTS.md 52.27) */
 static uint32_t event_seq = 0;
-static const uint32_t *telemetry_frame_ptr = NULL;
+static const uint32_t *telemetry_frame_ptr;  /* BSS (52.27) */
 
 void telemetry_init(void)
 {

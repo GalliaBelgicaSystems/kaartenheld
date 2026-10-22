@@ -20,14 +20,14 @@ static const int g_input_bit_layout_ok[
     (1 << INPUT_START) == J_START ? 1 : 0
 ];
 
-volatile uint8_t g_inp_mask = 0;
+volatile uint8_t g_inp_mask;  /* BSS zero (AGENTS.md 52.27) */
 /* Current/previous raw button bits (1 << InputButton).  Non-static so the
  * bank-2 quest navigator can derive pressed edges in-bank: the fixed bank
  * has no headroom left for a staged edge mask (AGENTS.md 52.18), and WRAM
  * is always mapped.  Written by input_init(), input_reset(), and
  * input_update(). */
-uint8_t g_inp_pad = 0;
-uint8_t g_inp_prev = 0;
+uint8_t g_inp_pad;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_inp_prev;  /* BSS zero (AGENTS.md 52.27) */
 static uint8_t injected_pad_state = 0;
 
 #ifdef DEBUG_BUILD
@@ -38,7 +38,7 @@ static uint8_t injected_pad_state = 0;
  * P1 sampling stays GBDK's joypad() (which ends with both rows
  * deselected); a local reimplementation that leaves a row selected
  * returns stale data on the next call in strict emulators. */
-volatile uint8_t g_input_probe[4] = {0, 0, 0, 0};
+volatile uint8_t g_input_probe[4];  /* BSS zero (AGENTS.md 52.27) */
 #endif
 
 const uint8_t g_input_button_bits[8] = {

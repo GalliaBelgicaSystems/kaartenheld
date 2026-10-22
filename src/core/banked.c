@@ -34,6 +34,8 @@ void *g_bk_ptr_a;
 void *g_bk_ptr_b;
 uint8_t g_bk_byte_a;
 uint8_t g_bk_byte_b;
+/* BSS (zero = no pending dialogue).  See banked.h. */
+uint8_t g_bk_dlg_id;
 
 /* Linker-allocated home for the RAM-resident banked-call trampoline. */
 uint8_t g_banked_call_tramp[64];

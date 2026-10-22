@@ -31,6 +31,10 @@ typedef enum {
     MUSIC_ENDING,    /* end-credits theme (demo complete.uge, loops,
                         bank 7): starts when a final-boss victory exits
                         to the ending screen (THE END) */
+    MUSIC_CASINO,    /* chuck-a-luck table theme (casino.uge, loops,
+                        bank 9 with its own driver copy): plays on
+                        Nis's table; the gamble body restores the scene
+                        track on exit */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -66,7 +70,12 @@ enum {
     SFX_BLOCK = 6,
     /* Alert sting for pursuer levels (kobolds, slime knights): plays once
      * on entry, then the level track resumes (screens/sfx.json ALERT). */
-    SFX_ALERT = 7
+    SFX_ALERT = 7,
+    /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
+     * transcribes to 3 CH2 tone steps), so the table theme keeps playing
+     * instead of being replaced by the MUSIC_CHEST track.  Must stay the
+     * LAST id: audio.c range-checks against it. */
+    SFX_WIN = 8
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

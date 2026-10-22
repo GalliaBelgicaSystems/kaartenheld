@@ -1353,6 +1353,8 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
   * Bank 6 is full (16224/16384 B): the opening theme, chest jingle, mimic loop + intro and victory (`generated/music/*.c`, `#pragma bank 7`) live in **ROM Bank 7** next to a **second copy of the hUGE driver**.  The transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 8`) live in **ROM Bank 8** alongside the icon table and the shared overworld sprite blob.  The timer ISR selects bank 8 around `sfx_step_tick()` and bank 6/7 around `hUGE_dosound()`; muting targets the song's bank (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
   * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * **ROM Bank 9 (casino theme)**: the chuck-a-luck table track (`assets/music/casino.uge` -> `generated/music/casino.c`, symbol `song_casino`, `MUSIC_CASINO`) needs ~3.3 KB and bank 7 has only ~640 B free in the release layout
+  (~1.5 KB in debug), so it lives in **bank 9** next to its own **third copy of the hUGE driver** (`hUGEDriver_b9.o`, all exports renamed `_b9`).  `huge_music.c` therefore carries a three-legged bank dispatch (init / dosound / mute: bank 9 then bank 7 then the bank-6 default); the two mute entry points share one `huge_mute_dispatch()` ladder because each extra leg costs fixed-bank ROM.  Bank 9 is otherwise the debug build's test-actor bank (`GAME_TEST_ACTOR_BANK`), and it still has >8 KB free -- check `make memmap` before adding a second song there, and remember a new song bank always needs its own driver copy.
   * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
@@ -2819,6 +2821,36 @@ Rules:
   the wrong screen (the steady-battle check once measured Carl's
   dialogue instead of battle -- hide correctly skipped by the overlay
   path -- so assert the screen first or the passage is vacuous).
+
+## 52.27 Custom CRT0 performs NO _INITIALIZER copy (Oct 2026)
+
+`src/crt0.s` `init` clears WRAM (`0xC000-0xDFFF`) and jumps to `_main`
+without ever copying the linker's `_INITIALIZER` table to `_DATA`.
+Every explicitly-initialized WRAM global therefore boots as ZERO:
+
+* `g_rng_state = 1` booted 0 -- the xorshift fixed point, so every
+  release-ROM "random" roll was constant (chuck-a-luck dice stuck at
+  [1,1,1], loot quality never varied, on-hit statuses always landed).
+* `g_loot_rng_state = 0x1234` booted 0 -- same degenerate stream.
+* `= 0` initializers are unaffected (zero is zero).
+
+The harness never caught it: it skips CRT0 and every scenario seeds
+explicitly (`scenario_begin` -> `rng_set_seed`), and battles/loot still
+complete deterministically. The old `loot.c` comment claiming "CRT0
+initializes" was the same wrong assumption -- corrected when found.
+
+Rules:
+
+* NEVER rely on a non-zero WRAM initializer. Either zero-init (BSS) +
+  explicit runtime init, or lazy-prime at first consumption (the
+  pattern: `game_frame_tick_banked` primes both RNG streams from DIV
+  when zero -- runs every frame in both builds, zero fixed-bank cost,
+  harness-immune because scenarios pre-seed nonzero).
+* The verbose symptom for this class: release-only constant "random"
+  behavior that the harness cannot reproduce (its explicit seeds mask
+  the zero boot state). Diagnose with a WRAM state dump across rolls
+  (PyBoy `memory[]` reads at the `.sym` addresses), not with more
+  scenarios.
 
 ---
 

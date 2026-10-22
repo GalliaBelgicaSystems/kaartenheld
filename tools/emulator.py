@@ -26,7 +26,8 @@ def _scene_id_maps():
     except (OSError, ValueError):
         scenes, base = {}, 240
     test_names = ["test_field", "test_town", "test_forest",
-                  "test_mountain_pass", "test_castle", "test_south_field"]
+                  "test_mountain_pass", "test_castle", "test_south_field",
+                  "test_gamble"]
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
@@ -40,12 +41,12 @@ TELEMETRY_EVENT_SIZE = 13
 GAME_STATE_MAP = {0: "OVERWORLD", 1: "BATTLE", 2: "GAME_OVER", 3: "THANKS"}
 SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "THANKS",
               5: "SHOP", 6: "ITEM", 7: "ENDING", 8: "SAVE_LOAD", 9: "TITLE", 10: "INTRO",
-              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS"}
+              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS", 14: "GAMBLE"}
 SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
                    9: "DESOLATE", 10: "FOREST", 11: "CHEST", 12: "GAMEOVER",
-                   13: "ENDING"}
+                   13: "ENDING", 14: "CASINO"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)

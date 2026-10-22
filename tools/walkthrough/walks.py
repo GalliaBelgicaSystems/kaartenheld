@@ -416,6 +416,19 @@ def walk_a(planner, checks, sram_out=None):
     god_mode(s)
     s.shoot("00-boot-grove")
 
+    # Cold-boot RNG (AGENTS.md 52.27): the release ROM never copies
+    # _INITIALIZER, so the xorshift used to boot at 0 -- its fixed point,
+    # which made every "random" outcome constant.  The per-frame tick
+    # primes both streams from DIV; assert that here, on the real release
+    # ROM, because no harness scenario can see it (they pre-seed).
+    r = s.reader
+    rng = int.from_bytes(r.rd(r.sym.wram("g_rng_state"), 2), "little")
+    loot = int.from_bytes(r.rd(r.sym.wram("g_loot_rng_state"), 2), "little")
+    s.check("cold-boot game RNG primed", rng != 0,
+            expected="g_rng_state != 0", actual=str(rng))
+    s.check("cold-boot loot RNG primed", loot != 0,
+            expected="g_loot_rng_state != 0", actual=str(loot))
+
     # Staircase refusal: the stairs stand north of the wake clearing;
     # bumping them opens the refusal line (dialogue, no map change).
     # Three-line pages show both refusal lines at once plus a blank third

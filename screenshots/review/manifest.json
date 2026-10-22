@@ -1,19 +1,34 @@
 {
- "shots": [
-  {
-   "file": "bow-card-uses2.png",
-   "description": "Bow hand card, 2 uses left: power '10' row + 2-arrows counter",
-   "taken_from": "bd9c0a4"
-  },
-  {
-   "file": "bow-card-depleted.png",
-   "description": "Bow hand card depleted: zero-arrows glyph + grey tint",
-   "taken_from": "bd9c0a4"
-  },
-  {
-   "file": "rider-hand-fire-ice.png",
-   "description": "Rider icons inset over their cards' top-right corners (SW3+BURN, SW4+FREEZE)",
-   "taken_from": "260a399"
-  }
- ]
+  "shots": [
+    {
+      "file": "bow-card-uses2.png",
+      "description": "Bow hand card, 2 uses left: power '10' row + 2-arrows counter",
+      "taken_from": "bd9c0a4"
+    },
+    {
+      "file": "bow-card-depleted.png",
+      "description": "Bow hand card depleted: zero-arrows glyph + grey tint",
+      "taken_from": "bd9c0a4"
+    },
+    {
+      "file": "rider-hand-fire-ice.png",
+      "description": "Rider icons inset over their cards' top-right corners (SW3+BURN, SW4+FREEZE)",
+      "taken_from": "260a399"
+    },
+    {
+      "file": "gamble-table.png",
+      "description": "Chuck-a-luck table (Nis art, CHOOSE BET / CHOOSE NUMBER / GOLD OWNED rows, dice boxes)",
+      "taken_from": "47fae097"
+    },
+    {
+      "file": "gamble-roll.png",
+      "description": "After one roll: kobold dice, match line, settled gold",
+      "taken_from": "47fae097"
+    },
+    {
+      "file": "gamble-farewell.png",
+      "description": "Nis says goodbye ('Come back anytime!') after leaving the table",
+      "taken_from": "96dbc3ae"
+    }
+  ]
 }

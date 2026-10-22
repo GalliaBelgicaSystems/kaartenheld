@@ -59,7 +59,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -89,9 +89,17 @@ HUGEDRIVER_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver.o
 # bytes through the mapped ROM window, so driver + song must share a bank.
 HUGEDRIVER_B7_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b7.o
 HUGEDRIVER_B7_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b7.o
+# Third hUGE driver copy in bank 9 (renamed exports) for the casino song:
+# bank 7 has only ~640 B free in the release layout (the debug build has
+# ~1.5 KB) and the casino track's data is ~3.3 KB, so the song moves to
+# the pristine bank 9 (MBC5 low byte reaches 8-15 with the high byte 0)
+# together with its own driver copy (~1.9 KB; driver + song must share a
+# bank -- the driver reads song bytes through the mapped window).
+HUGEDRIVER_B9_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b9.o
+HUGEDRIVER_B9_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b9.o
 
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
-OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
+OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG) $(HUGEDRIVER_B9_OBJ_DEBUG)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
@@ -216,6 +224,19 @@ gfx: manifest
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
+	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
+	# The sheet is composed by the manifest prerequisite (compose_dice.py);
+	# palette_compiler.py writes the shade map.  Only the encode belongs here.
+	# Encoded with the wood ramp (brown on tan); streamed on demand by
+	# the bank-8 dice body to UI_TILE_DICE_BASE (246-255).  Reusable
+	# battle chrome, not gamble-only.
+	@python3 tools/png2gb.py assets/dice.png --name dice_tiles \
+		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
+	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
+	# Regenerated every build from the live battle sources (never
+	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
+	# BG CRAM slots for the bank-8 gamble entry body.
+	@python3 tools/gamble_art_compile.py
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
@@ -430,6 +451,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
 	@python3 tools/compose_card_frames.py
+	@python3 tools/compose_dice.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 
@@ -682,6 +704,14 @@ $(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_mu
 # like the other late songs.
 $(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
+
+# Chuck-a-luck table theme (assets/music/casino.uge, loops) for Nis's
+# table.  Bank 7 has ~640 B free (release) and this track is ~3.3 KB, so it lives
+# in the pristine bank 9 next to its own driver copy
+# (hUGEDriver_b9.o): the driver reads song bytes through the mapped ROM
+# window, so driver + song must share a bank.
+$(GENERATED_MUSIC_DIR)/casino.c: assets/music/casino.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 9 song_casino "$@"
 $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
 
@@ -791,6 +821,46 @@ $(HUGEDRIVER_B7_OBJ_DEBUG): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py 
 		-r _hUGE_mute_mask=_hUGE_mute_mask_b7 \
 		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B7 \
 		-o $@ $(BUILD_DIR)/debug/lib/hUGEDriver_b7.obj
+
+# Third hUGE driver copy in bank 9 (renamed exports, same list as b7) for
+# the casino song: driver + song must share a bank (see the casino.c rule).
+$(HUGEDRIVER_B9_OBJ): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(RGBASM_HUGE) -I lib/hUGEDriver/ -DGBDK -o $(BUILD_DIR)/lib/hUGEDriver_b9.obj $<
+	$(RGB2SDAS) -b 9 \
+		-r hUGE_init=hUGE_init_b9 \
+		-r _hUGE_init=_hUGE_init_b9 \
+		-r hUGE_dosound=hUGE_dosound_b9 \
+		-r _hUGE_dosound=_hUGE_dosound_b9 \
+		-r hUGE_mute_channel=hUGE_mute_channel_b9 \
+		-r _hUGE_mute_channel=_hUGE_mute_channel_b9 \
+		-r hUGE_set_position=hUGE_set_position_b9 \
+		-r _hUGE_set_position=_hUGE_set_position_b9 \
+		-r hUGE_current_wave=hUGE_current_wave_b9 \
+		-r _hUGE_current_wave=_hUGE_current_wave_b9 \
+		-r hUGE_mute_mask=hUGE_mute_mask_b9 \
+		-r _hUGE_mute_mask=_hUGE_mute_mask_b9 \
+		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B9 \
+		-o $@ $(BUILD_DIR)/lib/hUGEDriver_b9.obj
+
+$(HUGEDRIVER_B9_OBJ_DEBUG): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(RGBASM_HUGE) -I lib/hUGEDriver/ -DGBDK -o $(BUILD_DIR)/debug/lib/hUGEDriver_b9.obj $<
+	$(RGB2SDAS) -b 9 \
+		-r hUGE_init=hUGE_init_b9 \
+		-r _hUGE_init=_hUGE_init_b9 \
+		-r hUGE_dosound=hUGE_dosound_b9 \
+		-r _hUGE_dosound=_hUGE_dosound_b9 \
+		-r hUGE_mute_channel=hUGE_mute_channel_b9 \
+		-r _hUGE_mute_channel=_hUGE_mute_channel_b9 \
+		-r hUGE_set_position=hUGE_set_position_b9 \
+		-r _hUGE_set_position=_hUGE_set_position_b9 \
+		-r hUGE_current_wave=hUGE_current_wave_b9 \
+		-r _hUGE_current_wave=_hUGE_current_wave_b9 \
+		-r hUGE_mute_mask=hUGE_mute_mask_b9 \
+		-r _hUGE_mute_mask=_hUGE_mute_mask_b9 \
+		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B9 \
+		-o $@ $(BUILD_DIR)/debug/lib/hUGEDriver_b9.obj
 
 # Grouped targets (&:): the lite libs come from ONE make_lite_libs.py run.
 # A plain multi-target rule runs its recipe once PER TARGET, which under

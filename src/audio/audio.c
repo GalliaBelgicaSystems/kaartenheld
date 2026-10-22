@@ -6,7 +6,7 @@
 #include "scene.h"
 #include "banked.h"
 
-MusicTrack g_audio_current_track = MUSIC_NONE;
+MusicTrack g_audio_current_track;  /* BSS zero == MUSIC_NONE (52.27) */
 /* BSS (no _INITIALIZER cost): game_init() re-asserts the sound-on default
  * before any audio_play_music() call (the harness skips CRT0's .data copy,
  * so the initializer never reached it anyway). */
@@ -33,15 +33,19 @@ uint8_t g_sound_enabled;
  * instead: total count + last id, read by name from host tools.
  * Debug-only: the release ROM never reads them. */
 #ifdef DEBUG_BUILD
-uint16_t g_sfx_played_count = 0;
-uint8_t g_sfx_last_id = SFX_NONE;
+uint16_t g_sfx_played_count;  /* BSS zero (AGENTS.md 52.27) */
+/* BSS zero, then audio_init() sets SFX_NONE: a non-zero initializer is
+ * never copied by the custom CRT0 (AGENTS.md 52.27), and the stale 0
+ * would look like SFX_CURSOR -- the ISR stepped a phantom cursor blip at
+ * every boot. */
+uint8_t g_sfx_last_id;
 #endif
-uint8_t sfx_id = SFX_NONE;
-uint8_t sfx_tick = 0;
-uint8_t sfx_tone_idx = 0;
-uint8_t sfx_noise_idx = 0;
-static uint8_t sfx_div = 0;
-static uint8_t sfx_muted = 0;
+uint8_t sfx_id;
+uint8_t sfx_tick;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t sfx_tone_idx;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t sfx_noise_idx;  /* BSS zero (AGENTS.md 52.27) */
+static uint8_t sfx_div;  /* BSS (52.27) */
+static uint8_t sfx_muted;  /* BSS (52.27) */
 
 extern uint8_t sfx_step_tick(void);
 extern void mimic_chain_tick(void);
@@ -52,7 +56,7 @@ void audio_play_sfx(uint8_t s)
     uint8_t voices;
 
     if (!g_sound_enabled) return;
-    if (s > SFX_ALERT) return;
+    if (s > SFX_WIN) return;  /* SFX_WIN is the last id (audio.h) */
     sfx_id = s;
     sfx_tick = 0;
     sfx_tone_idx = 0;
@@ -75,7 +79,7 @@ void audio_play_sfx(uint8_t s)
 }
 
 #ifdef DEBUG_BUILD
-volatile uint16_t g_audio_ticks = 0;
+volatile uint16_t g_audio_ticks;  /* BSS zero (AGENTS.md 52.27) */
 #endif
 
 /* All music is tracked (hUGEDriver) now: the old hardcoded chiptune
@@ -91,6 +95,12 @@ void audio_init(void)
     NR51_REG = 0xFF;
     g_audio_current_track = MUSIC_NONE;
     huge_music_init();
+    /* Explicit init (AGENTS.md 52.27): CRT0 does not copy _INITIALIZER. */
+    sfx_id = SFX_NONE;
+#ifdef DEBUG_BUILD
+    g_sfx_last_id = SFX_NONE;
+    g_sfx_played_count = 0;
+#endif
 
     TAC_REG = 0x00;
     TMA_REG = 0x00;
@@ -153,7 +163,7 @@ void audio_update(void)
      * bank-8 stepper body (inline select-8/call/restore-live; the music path
      * below selects bank 6 separately in the same ISR). At the table
      * end the used voices are silenced and their music channels unmuted. */
-    if (sfx_id <= SFX_ALERT) {
+    if (sfx_id <= SFX_WIN) {  /* last id; see audio_play_sfx's guard */
         if (++sfx_div >= 4) {
             sfx_div = 0;
             *(volatile uint8_t *)0x2000 = SFX_STEP_BANK;

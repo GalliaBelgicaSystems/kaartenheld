@@ -1,11 +1,15 @@
 #pragma bank 8
 
 #include <stdint.h>
+#include <gb/gb.h>
 #include "banked.h"
 #include "game.h"
 #include "game_ids.h"
 #include "actor.h"
 #include "rpg/state.h"
+#include "rng.h"
+#include "rpg/loot.h"
+#include "game/gamble.h"
 #include "ap_tiles_generated.h"
 
 /* AP tile bytes (png2gb --ap-coords, same order as AP_TILE_IDS). */
@@ -232,6 +236,7 @@ static void marks_refresh(void)
             g_game.screen != SCREEN_GAME_OVER &&
             g_game.screen != SCREEN_ENDING) {
             g_bk_byte_c = 2;
+            g_bk_byte_d = SFX_ALERT;
         } else if (g_alert_ttl == ALERT_MUSIC_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
@@ -314,10 +319,52 @@ static void marks_refresh(void)
     }
 }
 
+/* BSS: one-shot flag for the input-timed RNG re-mix. */
+static uint8_t s_rng_mixed;
+extern volatile uint8_t g_harness_mode;
+
 extern void jingle_full_banked(void);
 
 void game_frame_tick_banked(void)
 {
+    /* RNG priming (AGENTS.md 52.x: the custom CRT0 clears WRAM but never
+     * copies _INITIALIZER, so g_rng_state/g_loot_rng_state boot as zero
+     * -- the xorshift fixed point, which would make every "random" roll
+     * in the release ROM constant, e.g. eternal chuck-a-luck [1,1,1]).
+     * Prime both from the free-running divider on the first tick with a
+     * nonzero stream (same derivation as rng_set_seed_banked); the
+     * harness pre-seeds nonzero, so this never fires there and scenario
+     * determinism is untouched.  Zero fixed-bank cost: this dispatch
+     * already runs every frame. */
+    if (!g_rng_state) {
+        uint16_t seed;
+        seed = (uint16_t)(((uint16_t)LY_REG << 8) | (uint16_t)DIV_REG);
+        if (!seed) seed = 0xACE1;
+        g_rng_state = seed;
+        seed = (uint16_t)(seed ^ 0x1B3C);
+        if (!seed) seed = 1;
+        g_loot_rng_state = seed;
+    }
+    /* One-shot re-mix on the first real input.  The first-tick seed above
+     * comes from DIV/LY at a fixed boot offset, i.e. it is the SAME every
+     * session -- a player repeating the same actions would see the same
+     * dice.  A button press lands at an arbitrary DIV offset, so folding
+     * it in buys genuine entropy.  Deliberately skipped under the harness:
+     * scenarios pre-seed and injected presses must not perturb their
+     * determinism (g_harness_mode is 1 there). */
+    if (!s_rng_mixed && !g_harness_mode && g_inp_pad != 0) {
+        uint16_t entropy;
+        s_rng_mixed = 1;
+        entropy = (uint16_t)(((uint16_t)LY_REG << 8) | (uint16_t)DIV_REG);
+        if (!entropy) entropy = 0x5A5A;
+        /* Both streams: the loot stream is seeded as seed ^ 0x1B3C, so
+         * mixing only g_rng_state would leave loot rolls repeatable per
+         * cold boot. */
+        g_rng_state ^= entropy;
+        if (!g_rng_state) g_rng_state = 0xACE1;
+        g_loot_rng_state ^= (uint16_t)(entropy ^ 0x1B3C);
+        if (!g_loot_rng_state) g_loot_rng_state = 1;
+    }
     /* Marks first: the re-arm edge below observes the jingle's unseeded
      * state (g_jingle_done without bit 7), which a real load clears via
      * load_game_slot.  The jingle seeds from the live mask later this
@@ -327,4 +374,18 @@ void game_frame_tick_banked(void)
      * otherwise irrelevant. */
     marks_refresh();
     jingle_full_banked();
+    /* Chuck-a-luck: the table's whole frame body (entry paint, input,
+     * dice, gold, OAM) plus its audio request live in bank 8 too, so
+     * both are plain same-bank calls.  The gamble frame runs after the
+     * jingle body so its win-edge can override the restore code, and
+     * the audio tick runs last so it owns the final g_bk_byte_b value
+     * for this frame.  Skipped entirely off-screen: zero cost on every
+     * other map/screen. */
+    if (g_gamble_enter) {
+        gamble_enter_screen();
+    }
+    if (g_game.screen == SCREEN_GAMBLE) {
+        gamble_frame_banked();
+    }
+    gamble_audio_tick();
 }

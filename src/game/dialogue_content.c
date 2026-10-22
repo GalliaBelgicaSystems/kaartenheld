@@ -144,6 +144,22 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_KOBOLD_FAREWELL,
+        "Nis:",
+        1,
+        {"Come back anytime!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_KOBOLD_INVITE,
+        "Nis:",
+        8,
+        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "PLAY FOR GOLD?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_MAYOR_GREETING,
         "MAYOR:",
         2,
