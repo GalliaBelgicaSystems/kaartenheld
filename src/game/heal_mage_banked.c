@@ -118,11 +118,12 @@ void dialogue_choice_nav_banked(void)
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_bk_byte_a = 2;
             } else {
-                /* YES: close the dialogue and raise the enter request.
-                 * The bank-8 tick opens SCREEN_GAMBLE itself, so the
-                 * fixed bank needs no gamble branch here at all
-                 * (AGENTS.md 52.18). */
-                g_game.dialogue.active = 0;
+                /* YES: raise the enter request and report code 7.  The
+                 * dialogue stays ACTIVE here so the fixed side can close
+                 * it through dialogue_end() -- that keeps the
+                 * DIALOGUE_ENDED telemetry paired with the choice event
+                 * (a raw active = 0 would silently skip it).  The bank-8
+                 * tick then opens SCREEN_GAMBLE. */
                 g_gamble_enter = 1;
                 g_bk_byte_a = 7;
             }

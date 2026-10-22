@@ -34,7 +34,7 @@
  * scenarios only ever observe MUSIC_MIMIC. */
 #define MIMIC_INTRO_ISR_TICKS 224
 
-uint16_t g_mimic_intro_left = 0;
+uint16_t g_mimic_intro_left;  /* BSS zero (AGENTS.md 52.27) */
 
 void mimic_chain_tick(void)
 {

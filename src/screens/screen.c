@@ -116,11 +116,8 @@ void screen_update(Game *g)
     case SCREEN_INTRO: intro_screen_update(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_update(g); break;
     case SCREEN_CREDITS: tutorial_screen_update(g); break; /* shared: see credits_screen.c */
-    /* Gamble paints inside its banked update (frame body, LCD-off
-     * entry): render intentionally has no case (default: break) so
-     * the fixed bank pays nothing for a render stub (52.18). */
-    /* SCREEN_GAMBLE has no update/render case: the bank-8 per-frame
-     * tick body runs the whole table (entry paint + input + audio) so
+    /* SCREEN_GAMBLE has no update OR render case: the bank-8 per-frame
+     * tick body runs the whole table (entry paint + input + audio), so
      * the fixed bank spends nothing here (AGENTS.md 52.18). */
     default: break;
     }

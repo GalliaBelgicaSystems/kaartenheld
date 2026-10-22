@@ -5,8 +5,8 @@
 
 /* The card catalog is game content, registered at boot via
  * card_register_defs() (see src/game/cards.c). */
-const CardDefinition *g_card_defs = NULL;
-uint8_t g_card_defs_count = 0;
+const CardDefinition *g_card_defs;  /* BSS zero = not registered yet */
+uint8_t g_card_defs_count;  /* BSS zero (AGENTS.md 52.27) */
 /* BSS: card_register_defs() (via game_content_init() at every boot) sets
  * the home bank before any def is read. */
 static uint8_t g_card_bank;

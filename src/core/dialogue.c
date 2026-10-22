@@ -10,8 +10,8 @@
  * it directly (same bank) and stages speaker + lines into the WRAM buffers
  * (g_dlg_speaker / g_dlg_lines) so DialogueState points at WRAM, never at
  * banked ROM. */
-const DialogueDefinition *g_dialogue_table = NULL;
-uint8_t g_dialogue_table_count = 0;
+const DialogueDefinition *g_dialogue_table;  /* BSS (52.27) */
+uint8_t g_dialogue_table_count;  /* BSS zero (AGENTS.md 52.27) */
 
 /* Single-flight WRAM staging (not reentrant): a nested banked row/text
  * lookup would silently corrupt the outer one.  Safe today because only one

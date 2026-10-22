@@ -62,7 +62,11 @@ extern uint8_t g_anim_count;
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
 static void ui_world_tail(const World *world);
-static int8_t s_loaded_tileset = -1;
+/* BSS (0), explicitly set to -1 by ui_init() before the first tileset
+ * load: a non-zero initializer is never copied by the custom CRT0
+ * (AGENTS.md 52.27), so  would boot as 0 (a valid tileset id) and
+ * could skip the boot load. */
+static int8_t s_loaded_tileset;
 
 /* First VRAM tile the font occupies.  Tile 0 is space (0x20), so the tile
  * for char `ch` is base + (ch - ' ').  Also read by the banked battle

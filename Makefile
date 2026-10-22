@@ -90,10 +90,11 @@ HUGEDRIVER_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver.o
 HUGEDRIVER_B7_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b7.o
 HUGEDRIVER_B7_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b7.o
 # Third hUGE driver copy in bank 9 (renamed exports) for the casino song:
-# bank 7 is down to ~1.5 KB and the casino track needs ~3.5 KB, so the
-# song moves to the pristine bank 9 (MBC5 low byte reaches 8-15 with the
-# high byte 0) together with its own driver copy (driver + song must
-# share a bank -- the driver reads song bytes through the mapped window).
+# bank 7 has only ~640 B free in the release layout (the debug build has
+# ~1.5 KB) and the casino track's data is ~3.3 KB, so the song moves to
+# the pristine bank 9 (MBC5 low byte reaches 8-15 with the high byte 0)
+# together with its own driver copy (~1.9 KB; driver + song must share a
+# bank -- the driver reads song bytes through the mapped window).
 HUGEDRIVER_B9_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b9.o
 HUGEDRIVER_B9_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b9.o
 
@@ -224,10 +225,11 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
 	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
+	# The sheet is composed by the manifest prerequisite (compose_dice.py),
+	# which also writes its shade map; only the tile encode belongs here.
 	# Encoded with the wood ramp (brown on tan); streamed on demand by
 	# the bank-8 dice body to UI_TILE_DICE_BASE (246-255).  Reusable
 	# battle chrome, not gamble-only.
-	@python3 tools/compose_dice.py
 	@python3 tools/png2gb.py assets/dice.png --name dice_tiles \
 		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
@@ -704,7 +706,7 @@ $(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/co
 	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
 
 # Chuck-a-luck table theme (assets/music/casino.uge, loops) for Nis's
-# table.  Bank 7 is down to ~1.5 KB and this track is ~3.5 KB, so it lives
+# table.  Bank 7 has ~640 B free (release) and this track is ~3.3 KB, so it lives
 # in the pristine bank 9 next to its own driver copy
 # (hUGEDriver_b9.o): the driver reads song bytes through the mapped ROM
 # window, so driver + song must share a bank.

@@ -78,12 +78,12 @@ def main():
         assert name in TILE_COORDS, "gamble: unknown combat cell %r" % name
         cx, cy = TILE_COORDS[name]
         tile = sheet.crop((cx * 8, cy * 8, (cx + 1) * 8, (cy + 1) * 8))
-        px = list(tile.getdata())
+        px = tile.load()
         for yy in range(8):
             byte0 = 0
             byte1 = 0
             for xx in range(8):
-                r, g, b = px[yy * 8 + xx]
+                r, g, b = px[xx, yy]
                 best, best_d = 0, None
                 for i, c in enumerate(obj_ramp):
                     d = (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2
@@ -115,7 +115,18 @@ def main():
     out.append("")
     out.append("#endif /* GAMBLE_ART_H */")
     out.append("")
-    (REPO_ROOT / "src" / "gfx" / "gamble_art.h").write_text("\n".join(out))
+    header = REPO_ROOT / "src" / "gfx" / "gamble_art.h"
+    text = "\n".join(out)
+    # Write only on change: the header is a build prerequisite, so
+    # rewriting it unconditionally would retrigger the gamble objects on
+    # every build.
+    try:
+        if header.read_text() == text:
+            print("src/gfx/gamble_art.h unchanged")
+            return
+    except OSError:
+        pass
+    header.write_text(text)
     print("wrote src/gfx/gamble_art.h")
 
 

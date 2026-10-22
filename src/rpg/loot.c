@@ -23,4 +23,5 @@ uint8_t g_loot_id;
  * g_rng_state (src/debug/rng.h).  Harness scenarios reseed from the
  * main seed via rng_set_seed() (src/debug/rng.c); victory drops must
  * NOT consume the shared game RNG (docs/loot.md §34.5). */
-uint16_t g_loot_rng_state = 0x1234;
+uint16_t g_loot_rng_state;  /* BSS zero; primed with the main stream
+                             * (AGENTS.md 52.27: no non-zero initializers) */

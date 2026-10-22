@@ -16,9 +16,9 @@ extern volatile uint8_t g_jingle_frames;
  * (§52.18); the swap site uses the same select-7/call/restore-1 pattern
  * huge_music_update() already uses.  Same precedent as
  * g_audio_current_track in audio.h. */
-const hUGESong_t *g_huge_current_song = 0;
-uint8_t g_huge_playing = 0;
-uint8_t g_huge_tick_divider = 0;
+const hUGESong_t *g_huge_current_song;  /* BSS (52.27) */
+uint8_t g_huge_playing;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_huge_tick_divider;  /* BSS zero (AGENTS.md 52.27) */
 /* ROM bank holding the active song + its driver copy.  Bank 6 holds the
  * driver and the six original songs; bank 7 holds the second driver copy
  * and the mimic/victory/opening/chest songs (bank 6 is full -- the SFX

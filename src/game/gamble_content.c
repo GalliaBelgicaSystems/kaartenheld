@@ -101,7 +101,9 @@ static void gamble_clamp_bet(void)
 
     gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
     bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
-    while (bet > (uint8_t)gold && g_gamble.bet_idx > 0) {
+    /* int16 compare: (uint8_t)gold would wrap for gold 256-265 and
+     * clamp an affordable bet for no reason. */
+    while ((int16_t)bet > gold && g_gamble.bet_idx > 0) {
         g_gamble.bet_idx--;
         bet = (g_gamble.bet_idx == 1) ? 5 : ((g_gamble.bet_idx == 2) ? 10 : 1);
     }
@@ -147,7 +149,14 @@ static void gamble_do_roll(void)
     if (m != 0) {
         profit = 0;
         for (k = 0; k < m; k++) profit = (uint8_t)(profit + bet);
-        gold = (int16_t)(gold + bet + profit);
+        /* Saturate instead of wrapping: the state field is int16_t and
+         * currency_add() does not clamp either, so a hero near the
+         * ceiling would gain a negative purse.  bet + profit <= 40. */
+        if (gold > (int16_t)(32767 - (int16_t)(bet + profit))) {
+            gold = 32767;
+        } else {
+            gold = (int16_t)(gold + bet + profit);
+        }
         g_gamble.won = 1;
     } else {
         g_gamble.won = 0;
@@ -730,15 +739,14 @@ static void gamble_entry(void)
 
 /* ── Update (banked) ───────────────────────────────────────────────── */
 
-/* Leaving the table: stage Nis's farewell dialogue and let the fixed
- * post-tick hook open it.  The banked body cannot call dialogue_start_def
- * (fixed) nor screen_change, so it raises the enter-style request and
- * stops processing frames; the fixed side starts the dialogue and
- * switches SCREEN_GAMBLE -> SCREEN_DIALOGUE, whose first render does the
- * LCD-off world repaint (prev_screen != OVERWORLD) and reloads the
- * tileset.  Closing the box returns to the overworld through the normal
- * dialogue path. */
-static void gamble_exit_to_overworld(void)
+/* Leaving the table: stage Nis's farewell dialogue (g_bk_dlg_id) and let
+ * the fixed post-tick hook in game_update() start it and switch
+ * SCREEN_GAMBLE -> SCREEN_DIALOGUE.  Banked code can call neither
+ * dialogue_start_def nor screen_change; the dialogue screen's first
+ * render does the LCD-off world repaint (prev_screen != OVERWORLD) and
+ * reloads the tileset.  Closing the box returns to the overworld through
+ * the normal dialogue path. */
+static void gamble_exit(void)
 {
     g_bk_dlg_id = (uint8_t)DIALOGUE_ID_KOBOLD_FAREWELL;
     g_gamble_bye = 1;      /* audio tick: hand the scene track back */
@@ -763,7 +771,7 @@ static void gamble_update(void)
             g_gamble.dice[2] = 0;
             gamble_clamp_bet();
         } else if (pressed & (uint8_t)(1 << INPUT_B)) {
-            gamble_exit_to_overworld();
+            gamble_exit();
         }
         return;
     }
@@ -798,7 +806,7 @@ static void gamble_update(void)
             gamble_do_roll();
         }
     } else if (pressed & (uint8_t)(1 << INPUT_B)) {
-        gamble_exit_to_overworld();
+        gamble_exit();
     }
 }
 
@@ -833,7 +841,7 @@ void gamble_audio_tick(void)
      * the id in byte_d), which the fixed side already consumes.  Only
      * when nothing else claimed it this frame (the pursuit alert never
      * fires at the table, but stay defensive). */
-    if (g_gamble_sfx != 0 && g_bk_byte_c == 0) {
+    if (g_gamble_sfx != 0 && g_bk_byte_c == 0 && g_bk_byte_d == 0) {
         g_bk_byte_c = 2;
         g_bk_byte_d = (uint8_t)(g_gamble_sfx - 1);
         g_gamble_sfx = 0;
@@ -903,11 +911,12 @@ void gamble_frame_banked(void)
         return;
     }
     if (g_gamble.phase != old_phase) {
-        /* Phase switch changes the row layout itself (outcome banner,
-         * carets, dice, controls): repaint fully so no stale row
-         * survives on real VRAM while the buffer claims text (52.25
-         * family). */
-        gamble_paint_full();
+        /* Phase switch changes the row content (outcome banner, carets,
+         * dice, controls).  Every dynamic painter fully clears the rows
+         * it draws (52.25 family), so the LCD-on repaint stays small --
+         * a full paint here would be ~720 mode-gated writes and could
+         * overrun VBlank. */
+        gamble_paint_dynamic();
         gamble_mark_seen();
     } else if (gamble_changed()) {
         gamble_paint_dynamic();

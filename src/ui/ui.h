@@ -64,18 +64,18 @@ extern uint8_t g_is_cgb;
 #define UI_TILE_CARD_FRAME_BM    125u
 #define UI_TILE_CARD_FRAME_BR    126u
 
-/* Chuck-a-luck / battle dice digits 0-9 (card_frames.png tail rows,
- * NOT boot-loaded: the fixed block has only 115 free).  Bytes ride
- * card_frame_tiles.h; the gamble screen + future battle callers load
- * them on demand to this high end of the battle-art block (246-255),
- * clear of the 128+ enemy-art growth (max ~36 tiles for 3 enemies).
- * Tile id = UI_TILE_DICE_BASE + digit (0-9). */
+/* Chuck-a-luck / battle dice digits 0-9 (assets/dice.png, digit order
+ * 0-9; NOT boot-loaded -- those ids sit in the battle-art block).  The
+ * bank-8 gamble body streams them on demand to the high end of the
+ * battle-art block (246-255), clear of the 128+ enemy-art growth (max
+ * ~36 tiles for 3 enemies).  Tile id = UI_TILE_DICE_BASE + digit. */
 #define UI_TILE_DICE_BASE        246u
 #define UI_TILE_DICE_COUNT       10u
 
-/* Bank-8 no-arg body streaming dice_tiles.h (assets/dice.png, digit
- * order 0-9) to UI_TILE_DICE_BASE (246-255).  Same-bank data (bank 8);
- * LCD-off caller.  Dispatched via banked_call_run(). */
+/* Bank-8 body streaming gfx/dice_tiles.h (assets/dice.png, digit order
+ * 0-9) to UI_TILE_DICE_BASE (246-255).  Same-bank data; called by the
+ * gamble entry body while the LCD is off (plain same-bank call, no
+ * trampoline). */
 void dice_tiles_load_banked(void);
 
 /* Overworld actor OAM sprite tile bases (VRAM Block 0, 0x8000).  Collision

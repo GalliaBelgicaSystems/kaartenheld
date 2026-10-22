@@ -8,20 +8,19 @@
 /* Chuck-a-luck (friendly kobold dice game, docs/chuck-a-luck.md).
  * The bank (kobold) has infinite cash: payouts never run out.
  *
- * FIXED-BANK BUDGET NOTE (AGENTS.md 52.18 family): the fixed bank has
- * ~50 B headroom, so the fixed side of this feature is exactly three
- * small items -- the screen.c dispatch case, the update stub, and the
- * dialogue YES handoff in dialogue_screen_update (paid for by removing
- * the direct INTERACTION_GAMBLE engage paths).  Entry, paint, input, dice, OAM, gold AND the overworld exit
- * all live in ROM bank 8 behind the single frame body: even the
- * screen_change exit call does not fit in fixed, so the frame body
- * replicates screen_change's overworld-target effects with WRAM
- * writes (see gamble_exit_to_overworld).  Consequences, all documented
- * as v1 gaps with follow-ups in docs/chuck-a-luck.md:
- *  - silent (no SFX);
- *  - gold moves by direct WRAM writes + no screen-change call, so no
- *    currency or screen-change telemetry (the extended snapshot still
- *    shows every gold delta and the screen id).
+ * FIXED-BANK BUDGET NOTE (AGENTS.md 52.18 family): the fixed bank runs
+ * close to 0x8000, so the fixed side of this feature is only three small
+ * items -- the dialogue YES branch in dialogue_screen_update (records the
+ * choice, closes the dialogue), the post-tick dialogue hook in
+ * game_update() (opens Nis's farewell) and the casino music code.  Entry,
+ * paint, input, dice, OAM, gold, the screen switches AND both dialogue
+ * starts triggered from the table live in ROM bank 8, called from the
+ * existing per-frame tick body -- the feature has no screen.c dispatch
+ * case at all.  Consequences, documented in docs/chuck-a-luck.md:
+ *  - no currency or screen-change telemetry for the table's own gold
+ *    moves / screen switches (the extended snapshot still shows every
+ *    gold delta and the screen id); dialogue and music telemetry are
+ *    complete because those run through the fixed APIs.
  * Bet steps are fixed 1/5/10; payouts 1:1 / 2:1 / 3:1 by match count
  * (lose the bet on zero matches). */
 
@@ -71,9 +70,9 @@ void gamble_enter_screen(void);
 
 /* Bank-8 frame body (src/game/gamble_content.c): entry on the first
  * frame (LCD off, CRAM + kobold art + dice stream + full paint + OAM),
- * input + dynamic repaint on later frames, direct overworld exit on B
- * (replicated screen_change, see above).  Dispatched via
- * banked_call_run(). */
+ * input + dynamic repaint on later frames, and on B stages Nis's
+ * farewell dialogue (g_bk_dlg_id) for the fixed hook.  Called from the
+ * bank-8 per-frame tick body (same bank: plain call). */
 void gamble_frame_banked(void);
 
 #endif /* GAME_GAMBLE_H */

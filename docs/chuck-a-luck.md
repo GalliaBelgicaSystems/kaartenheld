@@ -74,22 +74,29 @@ The kobold art + base CRAM bundle (`src/gfx/gamble_art.h`) is generated
 by `tools/gamble_art_compile.py` from the live battle sources every
 build (blob bytes + fightgoblin OBJ ramp + 8 base BG slots), so the
 artist can never silently desync the bank-8 copy: geometry changes fail
-the script loudly.
+the script loudly.  (The fightgoblin ramp itself repeats its shade at
+indices 2 and 3, so nearest-shade ties in the encoder all resolve to the
+same colour -- the battle pipeline uses the identical ramp.)
 
 ## Fixed-bank budget (read before touching)
 
-The fixed bank had ~50 B headroom when this feature landed. The fixed
-side is exactly: the `screen.c` update dispatch case, the update stub
-(dispatch only), and the dialogue YES handoff in
-`dialogue_screen_update` (a staged-action-code branch, same pattern as
-the heal-mage 3/6 codes). The direct `INTERACTION_GAMBLE` engage
-branches were removed to pay for the handoff. There is deliberately NO
-render function (the screen renders during update; `screen_render`
-falls through to `default`), NO start/settle helpers, NO SFX, and NO
-exit call -- the banked frame body even replicates `screen_change`'s
-overworld-target effects with WRAM writes. Any new fixed byte must be
-paid for by moving an old one to a bank (AGENTS.md 52.18 family).
-`make memmap` is the gate; the debug build is the tight one.
+There is **no `screen.c` dispatch case** for `SCREEN_GAMBLE`: the whole
+table (entry paint, input, dice, OAM, gold, both screen switches) runs in
+the bank-8 per-frame tick body. What stays in the fixed bank is only:
+
+* the dialogue YES branch in `dialogue_screen_update` (records the
+  choice, ends the dialogue, returns -- the tick opens the table);
+* the post-tick hook in `game_update()` that opens a staged dialogue id
+  (`g_bk_dlg_id`, used for Nis's farewell) and the casino-music code;
+* the one-shot SFX pull (the shared `byte_c == 2` slot).
+
+Everything else is banked. The direct `INTERACTION_GAMBLE` /
+`ENGAGE_GAMBLE` engage paths were removed, `gamble_frame_banked()` is a
+plain same-bank call from the tick, and the fixed `huge_music_stop()`
+twin was deleted (the bank-8 resolver already stops inline) to fund the
+farewell hook. Any new fixed byte must be paid for by moving an old one
+to a bank (AGENTS.md 52.18 family). `make memmap` is the gate; the debug
+build is the tight one (~50 B).
 
 ## Observability contract
 
@@ -97,33 +104,40 @@ paid for by moving an old one to a bank (AGENTS.md 52.18 family).
   section; the `screen` field reads `GAMBLE`; dice digits live in the
   semantic screen buffer (row 12 centers), OAM tiles 128-133 hold the
   kobold art (entries 1-6).
+* Dialogue telemetry is complete (`DIALOGUE_STARTED` / `CHOICE` /
+  `ENDED`): both the invite accept and the farewell run through the real
+  `dialogue_start_def` / `dialogue_end` APIs from the fixed side.
 * Telemetry v1 gap (documented, not accidental): gold moves by direct
-  WRAM writes and the exit replicates `screen_change`, so no
-  `CURRENCY_SPENT/ADDED` or `SCREEN_CHANGED` events fire for gamble
-  transitions. Scenarios assert gold values + screen rows instead.
-  Follow-up: stage amounts/sfx in `g_bk_*` and emit from a fixed stub
-  once the fixed budget allows (~30 B).
-* RNG: the shared stream is primed from DIV by `game_frame_tick_banked`
-  (AGENTS.md 52.27 -- without it the release ROM booted the xorshift
-  at 0 and every roll was [1,1,1]). Harness scenarios seed explicitly,
-  so the primer never fires there.
-* Other v1 gaps: no CRAM re-check beyond entry (the entry programs the
-  base set itself).
+  WRAM writes and the table's own screen switches are banked, so no
+  `CURRENCY_SPENT/ADDED` or `SCREEN_CHANGED` events fire for them.
+  Scenarios assert gold values + screen rows instead.
+* RNG (AGENTS.md 52.27): the shared stream is primed from DIV by
+  `game_frame_tick_banked` and re-mixed once on the first real input, so
+  two sessions do not share a stream. The release-ROM cold-boot
+  non-zero check lives in `verify-walkthrough` (no harness scenario can
+  see it: they pre-seed, and the harness skips the re-mix).
+* Known gap: no CRAM re-check beyond entry (the entry programs the base
+  set itself; the dialogue render that follows the farewell reprograms
+  the village set through `ui_draw_world_full`).
 
 ## Audio
 
 * **Music**: `MUSIC_CASINO` (`assets/music/casino.uge`) plays while the
-  table is up; the scene track is restored on exit. The track needs
-  ~2.8 KB and bank 7 is down to ~1.5 KB, so the song lives in **bank 9**
-  next to its own driver copy (`hUGEDriver_b9.o`, renamed `_b9`
-  exports): the hUGE driver reads song bytes through the mapped ROM
+  table is up; the scene track is restored on exit. The track's data is
+  ~3.3 KB and bank 7 has only ~640 B free in the release layout (~1.5 KB
+  in debug), so the song lives in **bank 9** next to its own driver copy
+  (`hUGEDriver_b9.o`, ~1.9 KB, renamed `_b9` exports): the hUGE driver
+  reads song bytes through the mapped ROM
   window, so driver + song must share a bank. `huge_music.c` gained a
   third dispatch leg (bank 9) for init / dosound / mute; the two mute
   entry points share one `huge_mute_dispatch()` ladder to keep the
   fixed-bank cost down.
 * **SFX**: `SFX_CURSOR` blips on every caret / bet / number move,
   `SFX_SELECT` on the roll, `SFX_BLOCK` (the defend thump) on a loss,
-  and the chest-loot jingle (`MUSIC_CHEST`) on a win.
+  and the chest-loot jingle (`MUSIC_CHEST`) on a win. Note the loss
+  replaces the roll's `SFX_SELECT` with `SFX_BLOCK` in the same frame,
+  so only the thump is heard; a win keeps the select blip plus the
+  jingle.
 * **Staging (no fixed bytes added)**: a banked body cannot call the
   audio API (AGENTS.md 52.11.1), so requests ride WRAM out to
   `game_update()`: `g_gamble_sfx` (id + 1; 0 = none, BSS-safe because

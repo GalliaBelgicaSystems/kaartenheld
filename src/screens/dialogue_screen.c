@@ -34,10 +34,11 @@ void dialogue_screen_update(Game *g)
         telemetry_emit(EVENT_DIALOGUE_CHOICE, (uint8_t)g->dialogue.id,
                        g->dialogue.choice_index, 0, 0);
         if (g_bk_byte_a == 7) {
-            /* Table invitation accepted: the banked choice body already
-             * closed the dialogue and raised g_gamble_enter; the
-             * per-frame tick opens SCREEN_GAMBLE, so the fixed bank only
-             * records the choice (telemetry above) and returns. */
+            /* Table invitation accepted: close the dialogue through the
+             * real API (emits DIALOGUE_ENDED, runs end-of-dialogue hooks)
+             * and return.  The bank-8 per-frame tick opens SCREEN_GAMBLE
+             * from the staged enter request, so no screen call here. */
+            dialogue_end(&g->dialogue);
             return;
         }
         if (g_bk_byte_a == 3) {

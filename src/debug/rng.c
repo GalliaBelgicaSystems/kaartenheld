@@ -1,7 +1,12 @@
 #include "rng.h"
 #include "banked.h"
 
-uint16_t g_rng_state = 1;
+/* BSS zero on purpose: the custom CRT0 empties WRAM but never copies
+ * _INITIALIZER (AGENTS.md 52.27), so an initializer here would still
+ * boot 0 -- the xorshift fixed point.  game_frame_tick_banked() primes
+ * the stream from DIV on the first tick and re-mixes it on the first
+ * input edge. */
+uint16_t g_rng_state;
 
 /* Thin fixed-bank wrappers: stage args/target into the g_bk_call_*
  * globals, then run the WRAM trampoline (see banked.h / AGENTS.md
