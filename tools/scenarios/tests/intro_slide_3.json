@@ -1,0 +1,73 @@
+{
+ "name": "intro_slide_3",
+ "test": true,
+ "description": "NEW GAME intro slide 3: advancing three times from slide 0 shows magic cards.../world. (last slide).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "INTRO"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "magic cards..."
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "world."
+  }
+ ]
+}

@@ -175,16 +175,16 @@ static void battle_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette
  * (WRAM) directly -- banked code may not call the fixed-bank status_slots()
  * helper.
  *
- * Text-only mapping (the HERO label): FREEZE paints FIELD brown, NOT the
- * ICE slot -- ICE ink (#7ae3f3 on white, ~1.5:1) is illegible as text.
- * The ice identity still reads from the ICE-slot rider icon; BURN/POISON
- * inks (red/purple) stay legible on paper. */
+ * Frozen names read the ICE slot (light cyan ink on white -- low
+ * contrast by design, but the freeze must read blue like burn reads
+ * red; the ICE-slot rider icon carries the at-a-glance identity and
+ * hero HP numbers always stay on the green slot). */
 static uint8_t battle_status_color(const StatusSlots *slots)
 {
     uint8_t i;
     if (slots == (const StatusSlots *)0) return UI_COLOR_NONE;
     for (i = 0; i < slots->count; i++) {
-        if (slots->slot[i].id == STATUS_FREEZE) return UI_COLOR_FIELD;
+        if (slots->slot[i].id == STATUS_FREEZE) return UI_COLOR_ICE;
     }
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_BURN) return UI_COLOR_FIRE;

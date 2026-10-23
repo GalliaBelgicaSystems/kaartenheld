@@ -254,25 +254,33 @@ void title_menu_step_banked(void)
     g->title_menu_index = new_index;
 }
 
-/* ── Intro: three scripted ASCII slides ───────────────────────────── */
+/* ── Intro: four scripted ASCII slides ─────────────────────────────
+ * Shown from columns 3 to 18 inclusive (16 wide; longest line is 14).
+ * A/START advances; the final slide drops into a fresh playthrough. */
 
 static const char s_intro_0[4][20] = {
-    "A troubled land",
-    "calls out for a",
-    "hero of a new",
-    "kind.",
+    "Mankind has",
+    "fallen from",
+    "grace and now",
+    "fades away...",
 };
 static const char s_intro_1[4][20] = {
-    "Your strength is",
-    "not in steel,",
-    "but in the cards",
-    "you carry.",
+    "The Lord of",
+    "Slimes rules",
+    "lands once",
+    "peaceful...",
 };
 static const char s_intro_2[4][20] = {
-    "Only the Lord of",
-    "Slimes stands",
-    "between all that",
-    "lives and the end.",
+    "But from the",
+    "ashes, a hero",
+    "rises, armed",
+    "with ancient",
+};
+static const char s_intro_3[4][20] = {
+    "magic cards...",
+    "The last hope",
+    "of a dying",
+    "world.",
 };
 
 void intro_content_render(void)
@@ -284,10 +292,11 @@ void intro_content_render(void)
 
     if (slide == 0) lines = s_intro_0;
     else if (slide == 1) lines = s_intro_1;
-    else lines = s_intro_2;
+    else if (slide == 2) lines = s_intro_2;
+    else lines = s_intro_3;
 
     for (i = 0; i < count; i++) {
-        title_draw_text(3, (uint8_t)(6 + i), lines[i], 18);
+        title_draw_text(3, (uint8_t)(6 + i), lines[i], 16);
     }
     title_draw_text(5, 16, "[A] NEXT", 10);
 }
