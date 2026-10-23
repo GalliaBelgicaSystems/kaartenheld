@@ -168,6 +168,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_MAYOR_EARLY,
+        "MAYOR:",
+        6,
+        {"You've already", "slain 5 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_MAYOR_GREETING,
         "MAYOR:",
         2,

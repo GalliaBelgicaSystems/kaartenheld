@@ -1,7 +1,7 @@
 {
  "name": "ring_uses_counter",
  "test": true,
- "description": "Finite-use HEAL rings draw the shared remaining-uses arrow counter on the floor row like the bow (4 uses -> tile 97, 1 use -> tile 99) while the power row keeps the power digit; semantic rows read RG4/RG1",
+ "description": "Finite-use HEAL rings draw the shared remaining-uses arrow counter on the floor row like the bow (4 uses -> tile 97, 1 use -> tile 99) while the power row shows the X joker glyph (VRAM 115); semantic rows read HEX",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -58,18 +58,18 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "HE4"
+   "contains": "HEX"
   },
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "HE1"
+   "contains": "HEX"
   },
   {
    "type": "tilemap_cell",
    "row": 13,
    "col": 1,
-   "expected": 17
+   "expected": 115
   },
   {
    "type": "tilemap_cell",
@@ -81,7 +81,7 @@
    "type": "tilemap_cell",
    "row": 13,
    "col": 5,
-   "expected": 17
+   "expected": 115
   },
   {
    "type": "tilemap_cell",

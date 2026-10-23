@@ -1,0 +1,56 @@
+{
+ "name": "heal_green_font",
+ "test": true,
+ "description": "Healing cards read field green on the CARDS tab: the IRON RING name row carries palette 3 while the poison BRONZE DAGGER keeps its element purple (4).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8412,
+  "inventory": {
+   "IRON_RING": 1,
+   "POISON_DAGGER": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "IRON RING"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "BRONZE DAGGER"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 5,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 8,
+   "col": 5,
+   "expected": 4
+  }
+ ]
+}

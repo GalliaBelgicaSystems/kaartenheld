@@ -179,11 +179,33 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
 #define GEM_TAB_QUEST 1
 #define GEM_TAB_GEM 3
 
+/* Detail mode shares the fixed-bank MODE_QUEST_DETAIL value (2): the
+ * fixed dispatch early-returns for it (no LR interference) and the fixed
+ * B-handler closes it back to LIST -- so the GEM detail page costs the
+ * fixed bank nothing (AGENTS.md 52.18). */
+#define GEM_MODE_DETAIL 2
+
 /* QUEST-tab bodies (same bank: direct call, no trampoline).  The fixed
  * dispatch routes both side tabs here; GEM handles its own tab and
  * forwards QUEST back, so the fixed bank pays no extra branch. */
 void item_quest_nav_banked(void);
 void item_quest_render_banked(void);
+
+/* ── Gem detail (SELECT on a gem row) ─────────────────────────────
+ *   row 3: gem name
+ *   row 5: what it unlocks (skill)
+ *   rows 6-8: the short-straight rules it gates
+ *   row 9: "SEL:BACK" (B closes via the fixed handler, same as quests) */
+static void gem_draw_detail(uint8_t bit)
+{
+    uint8_t reg = gem_ptr_bit(bit);
+    GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 12);
+    GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 15);
+    GEM_DRAW_TEXT(0, 6, "3 IN A ROW SCORES", 17);
+    GEM_DRAW_TEXT(0, 7, "BEST 3 COUNT", 12);
+    GEM_DRAW_TEXT(0, 8, "RINGS FILL GAPS", 15);
+    GEM_DRAW_TEXT(0, 9, "SEL:BACK", 8);
+}
 
 /* GEM-tab input behind the thin fixed dispatch in item_screen.c.
  * Pad edges come straight from WRAM (always mapped, like the staged
@@ -219,6 +241,13 @@ void item_gem_nav_banked(void)
     }
     /* Pressed edges in one pass (same pattern as the quest nav). */
     edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
+    if (edges & (uint8_t)(1u << INPUT_SELECT)) {
+        /* Detail resolves the visible position through gem_owned_bit
+         * (index addresses the OWNED list, like the equip toggle). */
+        g->item_menu_mode = GEM_MODE_DETAIL;
+        g->render_cache.valid = false;
+        return;
+    }
     if (edges & (uint8_t)(1u << INPUT_A)) {
         equipped = g->state.variables.values[VARIABLE_ID_GEM_EQUIPPED - 1];
         if ((equipped & (int16_t)(1 << bit)) != 0) {
@@ -277,13 +306,18 @@ void item_gem_render_banked(void)
 
     gem_draw_header();
 
+    if (g->item_menu_mode == GEM_MODE_DETAIL) {
+        bit = gem_owned_bit(g, g->item_menu_index, &total);
+        if (total != 0) gem_draw_detail(bit);
+        return;
+    }
+
     owned = g->state.variables.values[VARIABLE_ID_GEM_OWNED - 1];
     for (v = 0; v < GEM_COUNT; v++) {
         if ((owned & (int16_t)(1 << v)) != 0) total++;
     }
     if (total == 0) {
         GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
-        GEM_DRAW_TEXT(2, 5, "WIN +20 AT NIS", 14);
     } else {
         v = 0;
         for (bit = 0; bit < GEM_COUNT; bit++) {
@@ -296,5 +330,5 @@ void item_gem_render_banked(void)
     if (g->item_menu_message == GEM_MSG_MAX)
         GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
     else
-        GEM_DRAW_TEXT(0, 16, "A:EQUIP B:BACK", 14);
+        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
 }

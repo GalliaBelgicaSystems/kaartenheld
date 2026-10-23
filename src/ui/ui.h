@@ -38,6 +38,11 @@ extern uint8_t g_is_cgb;
 /* Battle AP-badge dot (combat_ap_dot, card-frames sheet cell 16): tiny
  * brown square stamped after each AP number (energy and max). */
 #define UI_TILE_AP_DOT 111u
+/* Ring power-slot X (combat_x_icon, card-frames sheet tile 23): rings are
+ * jokers with no fixed value, so the hand-card middle row shows X while
+ * the floor row keeps the remaining-uses counter (material-band uses).
+ * Slot 115 is the retired coin tile (gold prices render as font 'G'). */
+#define UI_TILE_RING_X 115u
 /* Dialogue continue chevron (down-pointing): the intrepid ">" glyph
  * (font tile 30) rotated 90 degrees clockwise, loaded at boot by the
  * bank-3 card-tile loader into this free BG slot.  Shown at the far

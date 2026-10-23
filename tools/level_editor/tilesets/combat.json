@@ -764,6 +764,16 @@
       "category": "terrain"
     },
     {
+      "id": "combat_x_icon",
+      "label": "X icon",
+      "gb_constant": "TILE_COMBAT_X_ICON",
+      "walkable": false,
+      "color": "#b39467",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_x_icon.png",
+      "category": "terrain"
+    },
+    {
       "id": "combat_black_emptyness_2",
       "label": "empty",
       "gb_constant": "TILE_COMBAT_BLACK_EMPTYNESS",

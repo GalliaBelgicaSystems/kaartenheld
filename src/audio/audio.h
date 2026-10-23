@@ -56,7 +56,9 @@ void audio_play_music(MusicTrack track);
  * is a distinct blip for battle hand / card management selects; SFX_BACK is
  * a low downward "bloup" for cancel / going back; SFX_ATTACK / SFX_HIT are
  * channel-4 noise bursts (player slash / enemy strike); SFX_BLOCK is a low
- * CH2 thump for a successful defend; SFX_ALERT is the pursuer-entry sting
+ * CH2 thump for a *fully blocked* defend (no net damage); SFX_HURT is the
+ * player-takes-damage cue (any net damage, even behind staged shields);
+ * SFX_HEAL is the ring-heal cue; SFX_ALERT is the pursuer-entry sting
  * (stepped by the same 64 Hz ISR path -- the sfx_id range check in
  * audio_update must admit it, or the trigger mutes music CH2 forever
  * with no sound). */
@@ -73,9 +75,16 @@ enum {
     SFX_ALERT = 7,
     /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
      * transcribes to 3 CH2 tone steps), so the table theme keeps playing
-     * instead of being replaced by the MUSIC_CHEST track.  Must stay the
-     * LAST id: audio.c range-checks against it. */
-    SFX_WIN = 8
+     * instead of being replaced by the MUSIC_CHEST track. */
+    SFX_WIN = 8,
+    /* Player-takes-damage cue (assets/sfx/sfx hurt.uge): played whenever
+     * net damage lands on the hero -- including behind staged shields.
+     * Replaces the old always-on defend thump for those cases. */
+    SFX_HURT = 9,
+    /* Ring-heal cue (assets/sfx/sfx heal.uge): played when a ring
+     * converts an attack hand to healing.  Must stay the LAST id:
+     * audio.c range-checks against it. */
+    SFX_HEAL = 10
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

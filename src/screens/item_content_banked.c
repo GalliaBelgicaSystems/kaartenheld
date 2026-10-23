@@ -199,6 +199,13 @@ static void ic_draw_num2_fast(void)
     ic_draw_num2_fast(); \
 } while(0)
 
+/* WRAM attribute mirror (ui.c): the harness asserts CGB palette
+ * bytes via tilemap_attr.  ic_color_span_fast keeps it in sync
+ * (DEBUG only, like the battle/gamble spans). */
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
 static void ic_color_span_fast(void)
 {
     uint8_t x = s_ic_arg_x;
@@ -214,6 +221,9 @@ static void ic_color_span_fast(void)
     VBK_REG = 1;
     for (s_ic_col_i = 0; s_ic_col_i < len; s_ic_col_i++) {
         BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i], pal);
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[(uint16_t)y * 32 + s_ic_col_i + x] = pal;
+#endif
     }
     VBK_REG = 0;
 }
@@ -318,15 +328,20 @@ static void ic_health_show(uint8_t entry, uint8_t x, uint8_t y)
     re[3] = RIDER_OBJ_HEALTH;
 }
 
-/* Name color by on-hit element: fire red, ice blue, poison purple;
- * plain cards stay on the default paper slot. */
-static void ic_name_color(uint8_t x, uint8_t y, uint8_t len, uint8_t status)
+/* Name color by role: healing cards read field green; on-hit
+ * elements read fire red / ice blue / poison purple; plain cards stay
+ * on the default paper slot. */
+static void ic_name_color(uint8_t x, uint8_t y, uint8_t len,
+                          const CardDefinition *def)
 {
-    if (status == STATUS_BURN)
+    if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+        def->effect == CARD_EFFECT_HEAL_HP)
+        IC_COLOR_SPAN(x, y, len, UI_COLOR_FIELD);
+    else if (def->status_id == STATUS_BURN)
         IC_COLOR_SPAN(x, y, len, UI_COLOR_FIRE);
-    else if (status == STATUS_FREEZE)
+    else if (def->status_id == STATUS_FREEZE)
         IC_COLOR_SPAN(x, y, len, UI_COLOR_ICE);
-    else if (status == STATUS_POISON)
+    else if (def->status_id == STATUS_POISON)
         IC_COLOR_SPAN(x, y, len, UI_COLOR_POISON);
 }
 
@@ -355,7 +370,7 @@ static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
     IC_DRAW_TEXT((uint8_t)(x + s_ic_mlen), y, " ", 1);
     IC_DRAW_TEXT((uint8_t)(x + s_ic_mlen + 1), y, s_ic_wstr, s_ic_wlen);
     total = (uint8_t)(s_ic_mlen + 1 + s_ic_wlen);
-    ic_name_color(x, y, total, def->status_id);
+    ic_name_color(x, y, total, def);
     return total;
 }
 

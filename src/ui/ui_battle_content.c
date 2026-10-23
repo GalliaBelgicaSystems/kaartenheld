@@ -269,9 +269,10 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     uint8_t digit_tile;
     /* Arrow-counter type (the bow): finite-use cards draw the power icon
      * on the middle row and the remaining-uses glyph on the floor row.
-     * HEAL rings share the floor counter (same glyphs) but keep their
-     * power digit on the middle row.  Weapon icon and power digit stay
-     * exactly like every other card. */
+     * HEAL rings share the floor counter (same glyphs) but show X on
+     * the middle row: rings are jokers with no fixed value, so the
+     * power digit is meaningless; the uses (material band) are what
+     * matter and stay on the floor. */
     uint8_t limited;
     char *buf;
 
@@ -366,9 +367,18 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                     g_tilemap_mirror[(top + r) * 32 + x + 1] =
                         g_card_skin_wram.uses_power_tile;
 #endif
+                } else if (type == BATTLE_CARD_TYPE_HEAL) {
+                    /* Rings are jokers (no fixed value): the middle row
+                     * shows the X glyph (VRAM 115, retired coin slot)
+                     * while the floor row keeps the remaining-uses
+                     * counter (material-band uses are what matter). */
+                    battle_vram_sync_write(&dst[1], UI_TILE_RING_X);
+#ifdef DEBUG_BUILD
+                    g_tilemap_mirror[(top + r) * 32 + x + 1] = UI_TILE_RING_X;
+#endif
                 } else {
-                    /* Rings share the floor counter but keep their power
-                     * digit here (the skin power icon is the bow's nine). */
+                    /* Plain cards show their power digit here (the skin
+                     * power icon branch above is the bow's nine). */
                     if (limited) {
                         digit_tile = (uint8_t)('0' - ' ' + value);
                     }
@@ -393,13 +403,16 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     }
     /* Element riders show as inset status icons (mockup layout), not tint. */
 
-    /* Semantic screen buffer keeps the type code + the digit that the
-     * row represents (arrow-counter cards show their remaining uses;
-     * harness/LLM assertions read text, not art tiles). */
+    /* Semantic screen buffer keeps the type code + the glyph the row
+     * represents (arrow-counter cards show their remaining uses, rings
+     * show X for the joker middle row; harness/LLM assertions read
+     * text, not art tiles). */
     buf = &g_ui_screen_buf[y - 1][x];
     buf[0] = code[0];
     buf[1] = code[1];
-    if (limited) {
+    if (type == BATTLE_CARD_TYPE_HEAL) {
+        buf[2] = 'X';
+    } else if (limited) {
         buf[2] = (char)('0' + uses);
     } else {
         buf[2] = (char)('0' + value);
@@ -724,7 +737,7 @@ static const char *battle_combo_tier_name(uint8_t tier)
         case HAND_FOUR_KIND:      return "FOUR KIND";
         case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
         case HAND_FIVE_KIND:      return "FIVE KIND";
-        case HAND_SHORT_STRAIGHT: return "SHORT";
+        case HAND_SHORT_STRAIGHT: return "SHORT STRAIGHT";
         case HAND_NONE:           return "HCARD";
         default:                  return "";
     }
@@ -937,8 +950,9 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Real-time preview: the row tracks the PENDING selection as cards
      * are added/removed and blanks once the hand resolves -- executed
      * results announce via the banner instead of sticking around.
-     * Format "<tier> DMG<n>" (no COMBO: label: longest tier (10) plus
-     * a 3-digit amount still fits 20 cols); with no poker tier the row
+     * Format "<tier> DMG<n>" (no COMBO: label: longest tier (14, SHORT
+     * STRAIGHT) plus a 2-digit amount still fits 20 cols; with no poker
+     * tier the row still shows the inflicted damage as bare "DMG<n>"
      * still shows the inflicted damage as bare "DMG<n>" (face-value
      * sum, same math the resolver applies).  Attack ring hands convert
      * to healing: same layout with "HEAL" ("<tier> HEAL<n>", bare
@@ -1192,8 +1206,9 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
  * addresses (0x9000 + id*16 -- LCDC.4 = 0, see the loop comment below and
  * AGENTS.md 52.22).  VRAM: frames 118-126, bar filled 117 / empty 127,
  * HUD icons at 113 (hp), 114 (ap) and 116 (deck), light arrow at 96,
- * dark arrow at 110, weapons at 104-108.  (Gold prices render as the
- * plain font capital 'G'; the old coin tile 115 is retired.) */
+ * dark arrow at 110, weapons at 104-108, ring X at 115.  (Gold prices
+ * render as the plain font capital 'G'; the old coin tile 115 is now
+ * the ring X.) */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
  * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
@@ -1205,7 +1220,7 @@ static const uint8_t s_card_tile_vram_ids[32] = {
     96,                                           /* light select arrow */
     110, 111, 112,                                /* dark arrow + 2 blanks (grid cells 15-17) */
     104, 105, 106, 107, 108,                      /* weapons: sword, shield, bow, dagger, ring */
-    97,                                           /* spare blank (unused scratch) */
+    115,                                          /* ring power-slot X (retired coin slot) */
     /* Limited-use arrow counters (bow floor row, shared by HEAL rings):
      * uses 0/1/2/3, power icon, trailing blank at the unused BG fetch
      * slot 103, then the appended 4- and 5-arrow cells.  Ids 97/98-103

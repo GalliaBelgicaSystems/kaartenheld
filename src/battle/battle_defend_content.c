@@ -13,6 +13,7 @@
 #include "rpg/effects.h"
 #include "rpg/status.h"
 #include "rng.h"
+#include "audio.h"
 #include "banked.h"
 
 /* Banked body of battle_defend_resolve (src/battle/battle.c).  Computes
@@ -81,9 +82,26 @@ void battle_defend_resolve_banked(void)
         b->player.hp = (uint8_t)nh;
     }
 
+    /* Block vs hurt cue (player feedback contract): an exact block plays
+     * the block thump; ANY net damage -- even behind staged shields --
+     * plays the hurt cue instead.  An over-block that heals (ring-gated)
+     * plays the heal cue.  Staged as a plain SFX id in g_bk_byte_d so the
+     * fixed wrapper below spends a single unconditional call (fixed-bank
+     * budget, AGENTS.md 52.18); the tick's one-shot SFX slot never sees
+     * it (marks_refresh clears the staging bytes every tick before the
+     * bank-8 bodies run, and the wrapper consumes it in the same frame).
+     */
+    if (g_bk_byte_a != 0) {
+        g_bk_byte_d = SFX_HURT;
+    } else if (g_bk_byte_b != 0) {
+        g_bk_byte_d = SFX_HEAL;
+    } else {
+        g_bk_byte_d = SFX_BLOCK;
+    }
+
     /* Organic enemy status rider (Phase D): the enemy's telegraphed card
-     * may carry a status (e.g. the bat's poison).  The rider only lands if
-     * the swing actually deals damage (net > 0) AND the deterministic roll
+     * may carry a status (e.g. the bat's poison).  The rider only lands
+     * if the swing actually deals damage (net > 0) AND the deterministic roll
      * succeeds; g_bk_byte_c = status id to apply through the fixed wrapper
      * (0 = none).  The roll inlines the xorshift step of rng_next() -- a
      * banked body must not call fixed-bank functions (AGENTS.md §52.11.1);

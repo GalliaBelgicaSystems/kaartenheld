@@ -56,7 +56,7 @@ void audio_play_sfx(uint8_t s)
     uint8_t voices;
 
     if (!g_sound_enabled) return;
-    if (s > SFX_WIN) return;  /* SFX_WIN is the last id (audio.h) */
+    if (s > SFX_HEAL) return;  /* SFX_HEAL is the last id (audio.h) */
     sfx_id = s;
     sfx_tick = 0;
     sfx_tone_idx = 0;
@@ -163,7 +163,7 @@ void audio_update(void)
      * bank-8 stepper body (inline select-8/call/restore-live; the music path
      * below selects bank 6 separately in the same ISR). At the table
      * end the used voices are silenced and their music channels unmuted. */
-    if (sfx_id <= SFX_WIN) {  /* last id; see audio_play_sfx's guard */
+    if (sfx_id <= SFX_HEAL) {  /* last id; see audio_play_sfx's guard */
         if (++sfx_div >= 4) {
             sfx_div = 0;
             *(volatile uint8_t *)0x2000 = SFX_STEP_BANK;

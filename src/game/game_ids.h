@@ -56,6 +56,7 @@
 #define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
 #define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
 #define EVENT_ID_HEAL_MAGE_RING_LESSON (EVENT_ID_FIRST_GAME + 21)
+#define EVENT_ID_QUEST_EARLY_DONE (EVENT_ID_FIRST_GAME + 22)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -125,7 +126,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 22
+#define GAME_EVENT_COUNT 23
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

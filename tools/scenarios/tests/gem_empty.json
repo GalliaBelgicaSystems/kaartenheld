@@ -1,7 +1,7 @@
 {
   "name": "gem_empty",
   "test": true,
-  "description": "The GEM tab starts empty: RIGHT x3 from DECK reaches the fourth tab (new DECK QUEST HERO GEM header) showing the empty pocket and the Nis hint.",
+  "description": "The GEM tab starts empty: RIGHT x3 from DECK reaches the fourth tab (new DECK QUEST HERO GEM header) showing only NO GEMS YET (no shop hint here; the +20 invite lives at the chuck-a-luck table).",
   "actions": [
     {
       "type": "press",
@@ -53,8 +53,8 @@
     },
     {
       "type": "screen_row",
-      "row": 5,
-      "contains": "WIN +20 AT NIS"
+      "row": 16,
+      "contains": "SEL:INFO"
     }
   ],
   "initial_state": {

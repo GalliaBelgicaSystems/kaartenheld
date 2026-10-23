@@ -1,7 +1,7 @@
 {
  "name": "quest_fifth_kill_nudge",
  "test": true,
- "description": "The 5th victorious battle pops the next-step notice: with MONSTERS_DEFEATED staged at 4, beating Carl (count 5) sets HUNT_NOTIFIED and opens a dialogue (Carl's own victory speech wins the modal; the flag proves the nudge row ran)",
+ "description": "The 5th victorious battle pops the next-step notice: with the quest ACTIVE and MONSTERS_DEFEATED staged at 4, beating Carl (count 5) sets HUNT_NOTIFIED and opens a dialogue (Carl's own victory speech wins the modal; the flag proves the nudge row ran)",
  "actions": [
   {
    "type": "wait",
@@ -211,6 +211,7 @@
    }
   },
   "variables": {
+   "QUEST_MONSTER_HUNT": 1,
    "MONSTERS_DEFEATED": 4
   }
  }

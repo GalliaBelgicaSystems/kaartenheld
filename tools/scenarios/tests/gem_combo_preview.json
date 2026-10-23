@@ -1,7 +1,7 @@
 {
   "name": "gem_combo_preview",
   "test": true,
-  "description": "Preview == resolve agreement for the short straight: staged SW4 + BO5 + SW6 (gem equipped, unsuited) reads SHORT DMG19 on the COMBO row before confirming.",
+  "description": "Preview == resolve agreement for the short straight: staged SW4 + BO5 + SW6 (gem equipped, unsuited) reads SHORT STRAIGHT DMG19 on the COMBO row before confirming.",
   "initial_state": {
    "scene": "TEST_FIELD",
    "player": {
@@ -105,7 +105,7 @@
    {
     "type": "screen_row",
     "row": 10,
-    "contains": "SHORT DMG19"
+    "contains": "SHORT STRAIGHT DMG19"
    }
   ]
 }

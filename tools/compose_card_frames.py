@@ -35,10 +35,11 @@ LAYOUT = [
     ['combat_ap_icon', 'combat_deck_icon', 'combat_arrow_pointing_up_light'],
     ['combat_arrow_pointing_up_dark', 'combat_ap_dot', None],
     # Card weapon icons (skin weapon_tile VRAM ids 104-108): sword,
-    # shield, bow, dagger, ring.  The 6th cell stays blank (None); the
-    # loader maps it to the unused VRAM 97 scratch tile.
+    # shield, bow, dagger, ring, then the ring power-slot X glyph
+    # (VRAM 115, the retired coin slot): rings are jokers, so the
+    # middle row shows X while the floor row keeps the uses counter.
     ['combat_sword_icon', 'combat_shield_icon', 'combat_bow_icon'],
-    ['combat_dagger_icon', 'combat_ring_icon', None],
+    ['combat_dagger_icon', 'combat_ring_icon', 'combat_x_icon'],
     # Limited-use arrow counters (bow floor row, shared by HEAL rings):
     # remaining-uses glyphs 0-5 plus the power-row nine icon.  VRAM:
     # floor states at 98-101 (uses 0..3), 97 (uses 4) and 103 (uses 5),

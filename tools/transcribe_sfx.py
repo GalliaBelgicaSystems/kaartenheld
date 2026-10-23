@@ -59,7 +59,7 @@ SFX_BANK_BUDGET = 3072
 
 # SFX id order must match the SFX_* enum in src/audio/audio.h
 SFX_IDS = ["CURSOR", "CONFIRM", "SELECT", "BACK", "ATTACK", "HIT", "BLOCK",
-           "ALERT", "WIN"]
+           "ALERT", "WIN", "HURT", "HEAL"]
 # Which .uge voices each SFX id is DATA, not code: screens/sfx.json maps
 # each fixed SFX id to a .uge path (assets/sfx/* or assets/music/*).  The
 # editor's Sound view edits that registry; this tool reads it so the two
@@ -225,6 +225,9 @@ class Voice:
         self.step_width = 0
         self.go = 0x80
         self.events = []
+        # note-cut ticks (driver fx E): trim_voice clamps the table end
+        # at the first cut after the last audible tick
+        self.cut_ticks = []
         # length-timer state (NRx1 writes reload it; runs at 256 Hz)
         self.len_n = 0
         self.len_enable = False
@@ -380,6 +383,18 @@ class Emu:
         voice.emit(tick, {"FREQ_LO": voice.period & 0xFF,
                           "FREQ_HI": ((voice.period >> 8) & 0x07)})
 
+    def apply_cut(self, tick):
+        """Note-cut event (driver note_cut, verbatim): zero the envelope
+        and retrigger with a zeroed envelope, which silences the voice.
+        Mirrors the driver register writes (NR22 <- 0, NR24 trigger);
+        the retrigger's length reload is inaudible on a silenced voice
+        and the length model (like the attack path) does not track it."""
+        v = self.tone
+        hi = v.regs.get("FREQ_HI", 0) & 0x07
+        v.emit(tick, {"NR22": 0, "FREQ_HI": hi | 0x80, "_trig": True},
+               force=True)
+        v.cut_ticks.append(tick)
+
     def sweep_step(self, tick):
         v = self.tone
         pace = (v.sweep >> 4) & 0x07
@@ -445,8 +460,11 @@ class Emu:
         # (arp), then play/trigger. Play runs last, so its length-enable
         # bit wins over an arp-cleared one.
         arp = fx == 0 and param != 0
-        if fx != 0:
+        if fx != 0 and fx != 0xE:
             raise TranscribeError(f"pattern effect {fx} unsupported")
+        # Note-cut (E) is a no-op on the row tick itself: the driver
+        # skips process_effects on tick zero, so an E row only acts on
+        # inner ticks (see pattern_tick).
         if note < LAST_NOTE:
             if instr == 0:
                 raise TranscribeError("note attack with no instrument")
@@ -485,6 +503,16 @@ class Emu:
         if fx == 0:
             if param != 0:
                 self.apply_arp(tick, param, is_noise=(ch != 0))
+        elif fx == 0xE:
+            # Note cut (driver fx_note_cut + note_cut, verbatim): fires
+            # when the row-relative tick equals the param.  Inner ticks
+            # only, so param 0 can never match (same as the driver, whose
+            # process_effects is skipped on tick zero).  Only the tone
+            # voice is observed; a cut on noise stays a loud error.
+            if ch != 0:
+                raise TranscribeError(f"pattern effect {fx} on noise unsupported")
+            if tick % self.tempo == param:
+                self.apply_cut(tick)
         else:
             raise TranscribeError(f"pattern effect {fx} on inner tick unsupported")
         self.table_step(tick, voice, tables, ch == 3)
@@ -527,17 +555,25 @@ def trim_voice(voice):
     if not audible:
         return [], 0
     last_tick, _ = audible[-1]
-    vol, pace, direction, t0 = voice.env_at(last_tick)
-    if direction == 1:
-        raise TranscribeError("increasing envelope has no natural end")
-    if vol == 0:
-        tail = 0
-    elif pace == 0:
-        raise TranscribeError("constant-volume tail never ends; trim rule needed")
+    # A note-cut after the last audible tick silences the voice at its
+    # tick: it moots the natural tail AND the infinite-envelope guard
+    # (an increasing envelope behind a cut is finite -- it ends at the
+    # cut).  Without this, increasing envelopes could never be cut.
+    post_cuts = [c for c in voice.cut_ticks if c > last_tick]
+    if post_cuts:
+        end = min(post_cuts)
     else:
-        # volume already decayed for (last_tick - t0) ticks since the write
-        tail = max(0, vol * pace - (last_tick - t0))
-    end = last_tick + tail
+        vol, pace, direction, t0 = voice.env_at(last_tick)
+        if direction == 1:
+            raise TranscribeError("increasing envelope has no natural end")
+        if vol == 0:
+            tail = 0
+        elif pace == 0:
+            raise TranscribeError("constant-volume tail never ends; trim rule needed")
+        else:
+            # volume already decayed for (last_tick - t0) ticks since the write
+            tail = max(0, vol * pace - (last_tick - t0))
+        end = last_tick + tail
     # the hardware length timer cuts sound even mid-decay; the engine
     # must unmute there, not at the envelope's natural end
     if voice.len_enable:
