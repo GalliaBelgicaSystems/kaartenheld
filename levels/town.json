@@ -461,9 +461,9 @@
         "y": 8
       },
       "properties": {
-        "entity_id": "ENTITY_ID_GUARD",
+        "entity_id": "ENTITY_ID_TOWN_GUARD",
         "display_name": "GUARD",
-        "dialogue": "DIALOGUE_ID_GUARD_GREETING",
+        "dialogue": "DIALOGUE_ID_GUARD_KOBOLD_WARNING",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [

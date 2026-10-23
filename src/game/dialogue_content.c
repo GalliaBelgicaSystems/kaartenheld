@@ -96,6 +96,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_GUARD_KOBOLD_WARNING,
+        "GUARD:",
+        5,
+        {"Be very careful", "of Kobolds. They", "are very", "aggressive. Only", "Nis here is okay."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_ASK,
         "HEAL MAGE:",
         3,

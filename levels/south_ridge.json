@@ -529,31 +529,6 @@
       ]
     },
     {
-      "id": "ridge_guard",
-      "type": "npc",
-      "position": {
-        "x": 10,
-        "y": 4
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_GUARD",
-        "display_name": "GUARD",
-        "dialogue": "DIALOGUE_ID_GUARD_GREETING",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "G",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "enemy_type": "npc_guard"
-      }
-    },
-    {
       "id": "ridge_spider",
       "type": "enemy",
       "position": {
