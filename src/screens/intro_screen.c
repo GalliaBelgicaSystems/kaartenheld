@@ -6,12 +6,12 @@
 #include "banked.h"
 
 /* ASCII intro sequence shown when starting a NEW GAME from the title
- * screen.  Three scripted slides (a hero of a new kind, cards as your
- * strength, the slime blight); A/START advances, the final slide drops
+ * screen.  Four scripted slides (mankind fallen, the Slime Lord, a
+ * hero rising, the magic cards); A/START advances, the final slide drops
  * into a fresh overworld playthrough.  Rendering lives in the bank-4
  * intro_content body (title_content.c) to keep the fixed bank small. */
 
-#define INTRO_SLIDE_COUNT 3
+#define INTRO_SLIDE_COUNT 4
 
 /* Shared slide-show renderer used by the intro, tutorial and splash
  * screens: a full clear, a banked content-body call staged on the address

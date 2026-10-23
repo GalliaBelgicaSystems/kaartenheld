@@ -105,10 +105,13 @@ MARK_MAP = [
 
 # (col, row, combat tile id). Card-cursor arrows: the single
 # combat_arrow_pointing_up split into light (unselected cursor) and dark
-# (cursor sitting on an already-selected card).
+# (cursor sitting on an already-selected card).  The X icon (col 8, row 5)
+# is the ring power-slot glyph: rings are jokers (no fixed value), so the
+# middle row shows X while the floor row keeps the remaining-uses counter.
 ARROW_MAP = [
     (1, 1, "combat_arrow_pointing_up_dark"),
     (15, 4, "combat_arrow_pointing_up_light"),
+    (8, 5, "combat_x_icon"),
 ]
 
 # (col, row, enemies tile id). Town dogs: sheet truth (tan art) refreshes

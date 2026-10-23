@@ -1,0 +1,111 @@
+{
+  "name": "gem_combo_preview",
+  "test": true,
+  "description": "Preview == resolve agreement for the short straight: staged SW4 + BO5 + SW6 (gem equipped, unsuited) reads SHORT STR DMG19 on the COMBO row before confirming.",
+  "initial_state": {
+   "scene": "TEST_FIELD",
+   "player": {
+    "x": 13,
+    "y": 8,
+    "facing": "DOWN"
+   },
+   "seed": 3000,
+   "start_battle": true,
+   "variables": {
+    "GEM_EQUIPPED": 1
+   }
+  },
+  "actions": [
+   {
+    "type": "wait",
+    "frames": 5
+   },
+   {
+    "type": "set_hand_card",
+    "index": 0,
+    "card_type": "SW",
+    "value": 4
+   },
+   {
+    "type": "set_hand_card_meta",
+    "index": 0,
+    "cost": 0,
+    "uses": 255
+   },
+   {
+    "type": "set_hand_card",
+    "index": 1,
+    "card_type": "BO",
+    "value": 5
+   },
+   {
+    "type": "set_hand_card_meta",
+    "index": 1,
+    "cost": 0,
+    "uses": 255
+   },
+   {
+    "type": "set_hand_card",
+    "index": 2,
+    "card_type": "SW",
+    "value": 6
+   },
+   {
+    "type": "set_hand_card_meta",
+    "index": 2,
+    "cost": 0,
+    "uses": 255
+   },
+   {
+    "type": "press",
+    "button": "A"
+   },
+   {
+    "type": "wait",
+    "frames": 6
+   },
+   {
+    "type": "press",
+    "button": "RIGHT"
+   },
+   {
+    "type": "wait",
+    "frames": 6
+   },
+   {
+    "type": "press",
+    "button": "A"
+   },
+   {
+    "type": "wait",
+    "frames": 6
+   },
+   {
+    "type": "press",
+    "button": "RIGHT"
+   },
+   {
+    "type": "wait",
+    "frames": 6
+   },
+   {
+    "type": "press",
+    "button": "A"
+   },
+   {
+    "type": "wait",
+    "frames": 10
+   }
+  ],
+  "assertions": [
+   {
+    "type": "screen",
+    "expected": "BATTLE"
+   },
+   {
+    "type": "screen_row",
+    "row": 10,
+    "contains": "SHORT STR DMG19"
+   }
+  ]
+}

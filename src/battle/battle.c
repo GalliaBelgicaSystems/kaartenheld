@@ -335,12 +335,12 @@ void battle_card_undo(Battle *b)
  * The banked body (src/battle/battle_defend_content.c) computes and applies
  * the HP change from staged WRAM state, then stages back the two possible
  * magnitudes (g_bk_byte_a = net damage, g_bk_byte_b = net heal).  The
- * defend-resolve wrapper runs on every hero defend, so it plays the block
- * thump (a successful block reduces or nulls the incoming strike). */
+ * block thump plays ONLY on an exact block (no net damage); any damage
+ * that gets through -- even behind staged shields -- plays the hurt cue
+ * instead. */
 void battle_defend_resolve(Battle *b)
 {
     if (!b) return;
-    audio_play_sfx(SFX_BLOCK);
 #ifdef DEBUG_BUILD
     g_bk_call_bank = 5;
 #else
@@ -349,6 +349,12 @@ void battle_defend_resolve(Battle *b)
     g_bk_call_target = (uint16_t)&battle_defend_resolve_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
+
+    /* Block vs hurt cue (player feedback contract): the banked body
+     * staged the SFX id in g_bk_byte_d (HURT on any net damage, HEAL on
+     * an over-block heal, BLOCK on an exact block), so this stays a
+     * single unconditional call. */
+    audio_play_sfx(g_bk_byte_d);
 
 #ifdef DEBUG_BUILD
     if (g_bk_byte_a != 0) {
@@ -476,6 +482,7 @@ static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
     g_bk_ptr_b = (void *)&b->last_combo;
     g_bk_byte_a = b->combo_count;
     g_bk_byte_b = COMBO_PACK(phase, fx);
+    g_bk_byte_d = 0;
     banked_call_run();
     telemetry_emit(EVENT_COMBO_RESOLVED,
                    b->last_combo.tier,
@@ -566,6 +573,7 @@ void battle_execute_combo(Battle *b)
                     uint16_t nh = (uint16_t)b->player.hp + res.amount;
                     b->player.hp = (nh > b->player.max_hp) ? b->player.max_hp
                                                            : (uint8_t)nh;
+                    audio_play_sfx(SFX_HEAL);
                     telemetry_emit(EVENT_HEALED, res.amount, 1, 0, 0);
                 }
             } else if (res.type == CARD_EFFECT_HEAL_HP) {
@@ -584,28 +592,14 @@ void battle_execute_combo(Battle *b)
                  * (docs/combo-system.md §13/§17). */
                 if (b->enemies[b->target_idx].hp != 0 &&
                     b->last_combo.cards[0].status_id != STATUS_NONE) {
-                    /* Combo-scaled rider (docs/combo-system.md §10): the
-                     * hand's effective multiplier scales the card's base
-                     * chance; capped at ~100%.  Add/subtract loops give the
-                     * exact same floor(chance*mult/100) as the original
-                     * expression while keeping the SDCC 16-bit mul/div
-                     * library out of the tight fixed bank (SM83 has no
-                     * hardware multiply). */
+                    /* Combo-scaled rider (docs/combo-system.md §10):
+                     * effect_resolve_into() (bank 3, called inside
+                     * battle_play_hand above) scaled cards[0].status_chance
+                     * by the full 16-bit multiplier (capped at 255) and
+                     * staged the threshold into g_bk_byte_c. */
                     {
-                        uint16_t eff = 0;
-                        uint16_t k = (uint8_t)b->last_combo.multiplier;
                         uint8_t tslot = (uint8_t)(b->target_idx + 1);
-                        while (k--) {
-                            eff = (uint16_t)(eff +
-                                 b->last_combo.cards[0].status_chance);
-                        }
-                        k = 0;
-                        while (eff >= 100) {
-                            eff = (uint16_t)(eff - 100);
-                            k++;
-                        }
-                        if (k > 255) k = 255;
-                        if ((uint8_t)rng_next() < (uint8_t)k) {
+                        if ((uint8_t)rng_next() < g_bk_byte_c) {
                             if (status_apply(status_slots(tslot), tslot,
                                              b->last_combo.cards[0].status_id,
                                              1, 0) &&
@@ -641,8 +635,9 @@ void battle_execute_combo(Battle *b)
         /* STATUS_FREEZE on the player (see the attack gate above): a frozen
          * player cannot defend either.  The enemy's already-telegraphed
          * swing lands unblocked (full enemy_incoming_dmg), the defend hand
-         * is skipped, and we move straight to DEFENSE_RESOLVE.  Test-only,
-         * never consumes bit 0 -- the tick body re-arms it each round. */
+         * is skipped, and we move straight to DEFENSE_RESOLVE.  An
+         * undefended hit plays the hurt cue.  Test-only, never consumes
+         * bit 0 -- the tick body re-arms it each round. */
         if ((g_status_frozen_mask & 1u) != 0) {
             uint8_t dmg = b->enemy_incoming_dmg;
             telemetry_emit(EVENT_TURN_SKIPPED, 0, STATUS_FREEZE, 0, 0);
@@ -651,6 +646,7 @@ void battle_execute_combo(Battle *b)
                 combatant_take_damage(&b->player, dmg);
                 uint8_t hp_after = b->player.hp;
                 dmg = hp_before - hp_after;
+                audio_play_sfx(SFX_HURT);
             }
             telemetry_emit(EVENT_DAMAGE_RECEIVED, dmg, 0, 0, 0);
             b->combo_count = 0;
@@ -842,16 +838,16 @@ void battle_update(Battle *b)
                 if (vb->enemy_deck.draw_idx >= vb->enemy_deck.count) {
                     vb->enemy_deck.draw_idx = 0;
                 }
-                /* The enemy swung -- play its strike sound. */
-                audio_play_sfx(SFX_HIT);
             } else {
                 vb->enemy_incoming_dmg = 4;
                 /* No enemy card: the fallback flat 4-damage swipe still
-                 * marks an inbound strike, so play the hit sound.  Only
-                 * deckless battlers (the Lord of Slimes) reach this: two
-                 * SH2 shields block it exactly. */
-                audio_play_sfx(SFX_HIT);
+                 * marks an inbound strike.  Only deckless battlers (the
+                 * Lord of Slimes) reach this: two SH2 shields block it
+                 * exactly. */
             }
+            /* The enemy swung -- play its strike sound (shared tail:
+             * both branches above mark an inbound strike). */
+            audio_play_sfx(SFX_HIT);
             vb->delay_timer = 20;
         } else {
             vb->phase = (vb->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) ? BATTLE_PHASE_PLAYER_DEFEND : BATTLE_PHASE_PLAYER_SELECT;

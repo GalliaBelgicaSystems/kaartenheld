@@ -1,7 +1,7 @@
 {
  "name": "card_battle_selection_cycle",
  "test": true,
- "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact",
+ "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact (heal cards show the X joker glyph: HE7 reads HEX)",
  "actions": [
   {
    "type": "wait",
@@ -137,7 +137,7 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "SW3 SH2 BO4 SW4 HE7"
+   "contains": "SW3 SH2 BO4 SW4 HEX"
   },
   {
    "type": "screen_row",

@@ -104,7 +104,7 @@ class Session:
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
     def quick_open(self):
-        return self.text_has("CARDS QUEST")
+        return self.text_has("DECK QUEST")
 
     def on_overworld(self):
         return (not self.quick_open()) and not self.on_title_or_intro()

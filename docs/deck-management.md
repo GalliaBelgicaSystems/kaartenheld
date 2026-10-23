@@ -1,7 +1,7 @@
-# Deck Management — CARDS Menu & Starter Deck
+# Deck Management — DECK Menu & Starter Deck
 
 Authoritative spec for the deck-management feature: the starter deck grant,
-the unified CARDS menu, and the input contract around it. Semantics of the
+the unified DECK menu, and the input contract around it. Semantics of the
 underlying collection/deck engine live in `docs/deck.md`; this document owns
 the *player-facing* management layer.
 
@@ -43,7 +43,7 @@ Consequences:
   order).
 - Healing is **not** free at the start. The only guaranteed heal source is
   the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 3,
-  price 20g).  Buy it, then add it to the deck from the CARDS menu.
+  price 20g).  Buy it, then add it to the deck from the DECK menu.
 - Shop rows render the ITEM code derived from the card definition
   (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG4`, `SW5` --
   a HEAL card is a ring, so the shop shows `RG` rather than its battle
@@ -52,22 +52,22 @@ Consequences:
 - The old 20-card starter table is gone; the deck grows toward the 20-card
   cap through play.
 
-## 2. The CARDS menu
+## 2. The DECK menu
 
-START opens the quick screen. It has three tabs: **CARDS**, **QUEST** and
-**STATUS** (LEFT/RIGHT switches: RIGHT advances, LEFT goes back). The former
-separate DECK tab is merged into CARDS: every owned, deckable card is one
-list entry showing its deck membership.
+START opens the quick screen. It has four tabs: **DECK**, **QUEST**,
+**HERO** and **GEM** (LEFT/RIGHT switches: RIGHT advances, LEFT goes
+back). The DECK tab lists every owned, deckable card as one entry showing
+its deck membership.
 
 ### Layout
 
-Row 0 holds the tab labels (`CARDS QUEST STATUS`); row 1 the `^` caret
-under the active tab. The CARDS list starts at row 2 with a column
+Row 0 holds the tab labels (`DECK QUEST HERO GEM`); row 1 the `^` caret
+under the active tab. The DECK list starts at row 2 with a column
 header (`AP MATERIAL TYPE`) at row 3:
 
 ```text
-CARDS QUEST STATUS          <- row 0 (tabs)
-^                           <- row 1 (caret under CARDS)
+DECK QUEST HERO GEM        <- row 0 (tabs)
+^                          <- row 1 (caret under DECK)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
    AP MATERIAL TYPE     <- row 3 (column header)
 >   1 WOOD SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
@@ -100,7 +100,7 @@ CARDS QUEST STATUS          <- row 0 (tabs)
 | UP / DOWN | card rows | move cursor by entry (UP from first card reaches the FILTER/SORT row) |
 | UP / DOWN | quest rows | move cursor by entry (wraps around) |
 | A | card row | add one copy; clear all copies when fully decked (§3) |
-| SELECT | CARDS row | detail submenu (§5) |
+| SELECT | DECK row | detail submenu (§5) |
 | SELECT | QUEST row | quest detail: giver, objective, progress (§5) |
 | B | main list, not on top row | jump to the top row (**step 1**) |
 | B | on top row | close the menu (**step 2**) |
@@ -146,7 +146,7 @@ values; A validates and applies them to the list; B backs out unchanged.
 
 SELECT on a highlighted entry opens a full-property view; B returns.
 
-CARDS (example: BRONZE SWORD with a fire rider):
+DECK (example: BRONZE SWORD with a fire rider):
 
 ```text
   BRONZE SWORD          <- element-colored full name + weapon icon
@@ -173,8 +173,24 @@ GOT +1 AP               <- what the reward was (completed quests only;
 SEL:BACK
 ```
 
-STATUS is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
+HERO is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
 `GOLD <n>`, `CARDS <n>` (total owned copies).
+
+## 5b. GEM tab (gems)
+
+The fourth tab lists owned gems, one row per gem (`STRAIGHT GEM` + `ON` /
+`OFF` equip state, skill line below).  Empty pocket: `NO GEMS YET` /
+`WIN +20 AT NIS`.  Gems start at zero owned; gem 0 is won at the
+chuck-a-luck table by leaving +20 net up in one sitting
+(docs/chuck-a-luck.md).  Owning alone does nothing -- A toggles the
+equipped bit manually (never auto-equipped), at most MAX_EQUIPPED_GEMS=3
+equipped at once (`MAX 3 GEMS` refusal otherwise).  Equipped state lives
+in `VARIABLE_ID_GEM_EQUIPPED` (owned in `VARIABLE_ID_GEM_OWNED`), so the
+snapshot, descriptor, saves and the roundtrip cover gems with no
+transport churn; the grant itself is observable through the prize
+dialogue (`DIALOGUE_STARTED KOBOLD_PRIZE`) and the skill through
+`COMBO_RESOLVED` (tier 10).  Scenarios: `gem_empty`, `gem_equip`,
+`gem_unequip`, `gem_grant_net20`, `gem_grant_norepeat`, `gem_no_grant`.
 
 ## 6. Reshuffle semantics (combat)
 

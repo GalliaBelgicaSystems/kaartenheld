@@ -3024,17 +3024,18 @@ lives in `GameState`.  Transient UI state (`game_over_choice`,
 reset on exit.  A screen must never become the home of gameplay state
 (quest progress, HP, etc.).
 
-The quick screen (`SCREEN_ITEM`) is a tabbed menu: CARDS (collection/deck
+The quick screen (`SCREEN_ITEM`) is a tabbed menu: DECK (collection/deck
 management: one row per card (weapon icon, AP-cost digit, element-colored
 full name, decked-copy count), A adds one copy and clears every copy once
 the card is fully decked, all through the real `deck_add_card`/`deck_remove_card`;
 SELECT opens a detail page (rider, role, AP cost, power, uses, own/deck,
 sell); the FILTER/SORT row opens an inline picker), QUEST (ongoing quests;
-SELECT opens a detail page with giver, objective and progress) and STATUS
-(read-only hero/wallet summary).  START is the universal
+SELECT opens a detail page with giver, objective and progress), HERO
+(read-only hero/wallet summary) and GEM (owned gems; A toggles equip,
+at most 3 equipped at once -- owning alone unlocks nothing).  START is the universal
 open key (overworld and battle player-turn).  Inside, LEFT/RIGHT switches
 tabs, UP/DOWN moves the list, A confirms/toggles, B backs out (two-step on
-the CARDS list: first B jumps to the first card row, B again on the top row
+the DECK list: first B jumps to the first card row, B again on the top row
 closes), SELECT opens the detail submenu.  Rejections (`DECK FULL`) show a
 transient message cleared by a frame TTL, never a silent no-op.  On a loot
 card's detail page, A sells one copy while the player has engaged a buying
@@ -3305,7 +3306,7 @@ the commit/PR without booting anything.
     visible tilemap through SCX/SCY; the font lives at tile base 0, so
     cells read directly as ASCII): guard dialogue by the `GUARD:` speaker
     tag, shop/save menu by their row-0 titles, the quick screen by the
-    `CARDS QUEST` tab labels, the filter/sort picker by its
+    `DECK QUEST` tab labels, the filter/sort picker by its
     `LR CYCLE  A:OK B:NO` footer.  Pixel heuristics are NOT usable here:
     an earlier LCDC-bit-5 check was vacuous (nothing in the ROM ever sets
     bit 5), and a dark-pixel caret scan false-positived on terrain glyphs,
@@ -3314,7 +3315,7 @@ the commit/PR without booting anything.
     substrings — always use `any("X" in r ...)` / `all("X" not in r ...)`;
     a bare `in` made a close condition fire instantly and poisoned the run.
   * the quick screen's active tab is verified by the `^` caret column read
-    from BG text row 3 (column 0 = CARDS, 6 = QUEST) and `RIGHT` is repeated
+    from BG text row 3 (column 0 = DECK, 5 = QUEST) and `RIGHT` is repeated
     until the target caret appears.
 * Frames are saved with PyBoy's `screen.image` (headless framebuffer render);
   each save prints the first non-blank `bg_text` row so a mislabeled frame
@@ -3344,7 +3345,7 @@ the commit/PR without booting anything.
 03-guard-dialogue    dialogue box over the scrolled town (camera offset)
 04-dialogue-next     second dialogue line
 05-shop              shopkeeper shop screen
-06-cards-menu        START quick screen (CARDS tab)
+06-cards-menu        START quick screen (DECK tab)
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
 08-carl-field        overworld beside Carl (single field slime)

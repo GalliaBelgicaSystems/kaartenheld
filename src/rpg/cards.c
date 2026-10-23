@@ -26,9 +26,9 @@ const CardDefinition *card_get_def(CardId id)
     if (!g_card_defs) return NULL;
 
     /* Loot-range ids synthesize from the material/effect/weapon tables
-     * (docs/loot.md §34): bank-3 body fills the shared scratch. */
+     * (docs/loot.md §34): bank-8 body fills the shared scratch. */
     if (loot_is_loot_id(id)) {
-        g_bk_call_bank = 3;
+        g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&loot_synth_banked;
         g_bk_byte_a = id;
         banked_call_run();

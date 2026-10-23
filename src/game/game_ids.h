@@ -56,6 +56,7 @@
 #define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
 #define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
 #define EVENT_ID_HEAL_MAGE_RING_LESSON (EVENT_ID_FIRST_GAME + 21)
+#define EVENT_ID_QUEST_EARLY_DONE (EVENT_ID_FIRST_GAME + 22)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -91,13 +92,27 @@ typedef enum {
     VARIABLE_ID_QUEST_MONSTER_HUNT = 3,   /* 0 = NOT_STARTED, 1 = ACTIVE, 2 = COMPLETE */
     VARIABLE_ID_ENDING_SHOWN       = 4,   /* set when the final boss is defeated */
     VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = ACTIVE (accepted or found), 2 = complete */
-    VARIABLE_ID_ENERGY_POOL        = 6    /* battle energy pool: story events raise it, no cap */
+    VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
+    VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
+    VARIABLE_ID_GEM_EQUIPPED       = 8    /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */
 typedef enum {
     CURRENCY_ID_GOLD = 1
 } CurrencyIdNamed;
+
+/* ── Gems (quick-screen GEM tab, docs/short-straight.md) ──────────
+ * Passive skills: owning a gem does nothing; equipping it (manual, A on
+ * the GEM tab) unlocks its skill.  State lives in the generic variables
+ * above (VARIABLE_ID_GEM_OWNED / _EQUIPPED bitmasks) so snapshots,
+ * descriptors, saves and the roundtrip cover gems with no transport
+ * churn; the registry below names this game's gems.  Only gem 0 is
+ * winnable for now (chuck-a-luck net +20 in one sitting); the bitmasks
+ * and the equip cap already make room for more. */
+#define GEM_STRAIGHT        0   /* short-straight combo tier (docs/short-straight.md) */
+#define GEM_COUNT             1   /* gems defined by this game (bits 0..GEM_COUNT-1) */
+#define MAX_EQUIPPED_GEMS     3   /* at most this many gems equipped at once */
 
 /* ── Banked content ────────────────────────────────────────────────
  * The event/card/shop content tables are compiled into MBC5 ROM bank
@@ -111,7 +126,7 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
-#define GAME_EVENT_COUNT 22
+#define GAME_EVENT_COUNT 23
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

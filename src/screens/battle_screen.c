@@ -89,18 +89,12 @@ void battle_screen_update(Game *g)
         if (input_pressed(INPUT_START)) {
             item_screen_reset(g);
             screen_change(g, SCREEN_ITEM);
-        } else if (input_pressed(INPUT_LEFT)) {
+        } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, -1);
-        } else if (input_pressed(INPUT_RIGHT)) {
+            battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
+        } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
             audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, 1);
-        } else if (input_pressed(INPUT_UP)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, -1);
-        } else if (input_pressed(INPUT_DOWN)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, 1);
+            battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
         } else if (input_pressed(INPUT_A)) {
             battle_card_select((Battle *)&vg->battle);
         } else if (input_pressed(INPUT_B)) {

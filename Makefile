@@ -65,6 +65,7 @@ GENERATED_SFX_DIR = generated/sfx
 # would split. Escaped following the assets/music rules' convention.
 SFX_UGE = assets/sfx/sfx\ accept.uge assets/sfx/sfx\ back.uge \
           assets/sfx/sfx\ block.uge assets/sfx/sfx\ cursor.uge \
+          assets/sfx/sfx\ heal.uge assets/sfx/sfx\ hurt.uge \
           assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge \
           assets/sfx/alert.uge
 # screens/sfx.json may map any SFX id to any .uge (assets/sfx or

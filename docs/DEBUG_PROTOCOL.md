@@ -616,13 +616,16 @@ SELECT tab-focus → arrows → A) are both testable.
 
 ### Quick screen (tabbed)
 
-`SCREEN_ITEM` is the quick screen: tabs CARDS | QUEST | STATUS.
+`SCREEN_ITEM` is the quick screen: tabs DECK | QUEST | HERO | GEM.
 START opens it in both the overworld and battle (player turn).
 LEFT/RIGHT switches tabs directly (RIGHT advances, LEFT goes back) with a
-`^` marking the active tab on row 1; B closes.  The STATUS tab shows hero
+`^` marking the active tab on row 1; B closes.  The HERO tab shows hero
 HP, battle AP pool, gold and total owned cards; the QUEST tab lists ongoing
 quests and their progress; SELECT on a quest row opens its detail page
-(giver, objective, progress).
+(giver, objective, progress).  The GEM tab lists owned gems (empty at
+start); A on a gem toggles its equipped bit manually (at most
+MAX_EQUIPPED_GEMS=3 equipped at once).  Owning alone does nothing --
+equipping unlocks the gem's skill (gem 0: short-straight combo tier).
 
 ### Menu screens (`MenuFrame`)
 
@@ -631,9 +634,10 @@ shared `MenuFrame` (`src/ui/menu.{h,c}`): a centered title plus a bounded
 content area.  Harness-relevant details:
 
 * Assert menu content with `screen_row` (row = absolute screen row).  The
-  quick screen layout is: row 0 tab labels (`CARDS QUEST STATUS`), row 1 `^`
-  marker under the active tab, content from row 2 (CARDS: FILTER/SORT row
-  at 2, one header row at 3 plus one card row each at 4-14; QUEST: tracked entries from row 3);
+  quick screen layout is: row 0 tab labels (`DECK QUEST HERO GEM`), row 1 `^`
+  marker under the active tab, content from row 2 (DECK: FILTER/SORT row
+  at 2, one header row at 3 plus one card row each at 4-14; QUEST: tracked entries from row 3;
+  GEM: owned gems from row 3, `ON`/`OFF` equip state);
   the shop uses row 0 title, content from row 3.
 * Titles and tab labels are direct literals (never a const pointer table),
   so asserting row 0 text proves the labels actually render.

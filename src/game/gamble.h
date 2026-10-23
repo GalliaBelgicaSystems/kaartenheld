@@ -41,6 +41,8 @@ typedef struct {
     uint8_t matches;    /* 0..3 matches of chosen in dice */
     uint8_t won;        /* nonzero when the last roll paid */
     uint8_t entered;    /* nonzero once the entry paint has run */
+    int16_t entry_gold; /* purse on table entry: the gem prize keys off
+                         * net profit (exit gold - entry gold) */
 } GambleState;
 
 extern GambleState g_gamble;

@@ -17,18 +17,21 @@
  * (AGENTS.md 52.18). */
 void item_menu_cursor_banked(void);
 
-/* Bank-5 quest-tab navigator (item_quest_banked.c): the fixed bank
- * sits hard against 0x8000 (AGENTS.md 52.18), so quest cursor/detail
- * input lives in-bank with the quest registry.  Thin dispatch only;
- * LEFT/RIGHT tab-switching stays fixed-bank with the CARDS tab path. */
-void item_quest_nav_banked(void);
+/* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
+ * through here; non-GEM tabs forward to the quest bodies in the same
+ * bank (direct call, no trampoline), so the fixed dispatch below needs
+ * no extra branches for the fourth tab (fixed _HOME headroom: AGENTS.md
+ * 52.18). */
+void item_gem_nav_banked(void);
+void item_gem_render_banked(void);
 
-#define TAB_CARDS 0
+#define TAB_DECK  0
 #define TAB_QUEST 1
-#define TAB_STATUS 2
-#define NUM_TABS  3
+#define TAB_HERO  2
+#define TAB_GEM   3
+#define NUM_TABS  4
 
-/* Cursor index 0 on the CARDS tab is the FILTER/SORT row; card entries
+/* Cursor index 0 on the DECK tab is the FILTER/SORT row; card entries
  * start at 1. */
 #define ROW_TOP     0
 #define FIRST_CARD  1
@@ -199,18 +202,18 @@ static void cycle_sort(Game *g)
         SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
 }
 
-/* RIGHT advances, LEFT goes back (CARDS <-> QUEST <-> STATUS).
- * Directional: with three tabs a forward-only cycle would strand
+/* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <-> GEM).
+ * Directional: with four tabs a forward-only cycle would strand
  * LEFT presses on the wrong tab. The direction is read here so the
  * two call sites keep their original single-call shape (fixed-bank
  * _HOME headroom, AGENTS.md 52.18). */
 static void switch_tab(Game *g)
 {
     if (input_pressed(INPUT_RIGHT)) {
-        if (g->item_menu_tab == TAB_STATUS) g->item_menu_tab = TAB_CARDS;
+        if (g->item_menu_tab == TAB_GEM) g->item_menu_tab = TAB_DECK;
         else g->item_menu_tab++;
     } else {
-        if (g->item_menu_tab == TAB_CARDS) g->item_menu_tab = TAB_STATUS;
+        if (g->item_menu_tab == TAB_DECK) g->item_menu_tab = TAB_GEM;
         else g->item_menu_tab--;
     }
     g->item_menu_index = ROW_TOP;
@@ -240,7 +243,7 @@ static void item_menu_step(Game *g, uint8_t new_index)
 void item_screen_reset(Game *g)
 {
     g->item_menu_index = ROW_TOP;
-    g->item_menu_tab = TAB_CARDS;
+    g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
     g->item_menu_filter = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
@@ -290,7 +293,7 @@ void item_screen_update(Game *g)
                 g->item_menu_mode = MODE_LIST;
                 break;
             default:
-                if (g->item_menu_tab == TAB_CARDS &&
+                if (g->item_menu_tab == TAB_DECK &&
                     g->item_menu_index > ROW_TOP) {
                     /* Two-step close: first B jumps to the top row. */
                     g->item_menu_index = ROW_TOP;
@@ -305,25 +308,27 @@ void item_screen_update(Game *g)
         return;
     }
 
-    /* QUEST and STATUS tabs share the pre-CARDS branch (LR switches
-     * tabs from LIST mode; STATUS is read-only otherwise).  Cursor/
+    /* QUEST, HERO and GEM tabs share the pre-DECK branch (LR switches
+     * tabs from LIST mode; HERO is read-only otherwise).  Cursor/
      * detail input for QUEST lives in bank 8 with the quest registry
-     * (fixed-bank headroom: AGENTS.md 52.18). */
-    if (g->item_menu_tab != TAB_CARDS) {
+     * and GEM input routes through the bank-8 gem body (which forwards
+     * QUEST back to the quest nav in-bank, so this dispatch needs no
+     * tab branch of its own -- fixed-bank headroom: AGENTS.md 52.18). */
+    if (g->item_menu_tab != TAB_DECK) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             switch_tab(g);
             return;
         }
-        if (g->item_menu_tab == TAB_STATUS) return;
+        if (g->item_menu_tab == TAB_HERO) return;
         g_bk_call_bank = 8;
-        g_bk_call_target = (uint16_t)&item_quest_nav_banked;
+        g_bk_call_target = (uint16_t)&item_gem_nav_banked;
         g_bk_ptr_a = (void *)g;
         banked_call_run();
         return;
     }
 
-    /* ── CARDS tab ─────────────────────────────────────────────── */
+    /* ── DECK tab ─────────────────────────────────────────────── */
     switch (g->item_menu_mode) {
         case MODE_CARD_DETAIL:
             if (input_pressed(INPUT_SELECT)) {
@@ -432,7 +437,6 @@ void item_screen_update(Game *g)
 }
 
 void item_screen_render_banked(void);
-void item_quest_render_banked(void);
 
 void item_screen_render(Game *g)
 {
@@ -462,13 +466,15 @@ void item_screen_render(Game *g)
          * Detail-page sells also mutate and redraw in the same frame. */
         build_view(g);
 
-        /* CARDS + STATUS content renders in bank 2; the QUEST tab
-         * renders in bank 8 with the quest registry (AGENTS.md
-         * 52.11.1: code shares its tables' bank; banks 2 and 5 are
-         * full, bank 8 is the overflow bank per AGENTS.md 55.5). */
-        if (g->item_menu_tab == TAB_QUEST) {
+        /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
+         * both render in bank 8 with their registries (AGENTS.md
+         * 52.11.1: code shares its tables' bank; bank 8 is the overflow
+         * bank per AGENTS.md 55.5).  GEM routes through
+         * item_gem_render_banked, which forwards QUEST to the quest
+         * renderer in-bank, so this dispatch needs no extra branch. */
+        if (g->item_menu_tab == TAB_QUEST || g->item_menu_tab == TAB_GEM) {
             g_bk_call_bank = 8;
-            g_bk_call_target = (uint16_t)&item_quest_render_banked;
+            g_bk_call_target = (uint16_t)&item_gem_render_banked;
         } else {
             g_bk_call_bank = 2;
             g_bk_call_target = (uint16_t)&item_screen_render_banked;

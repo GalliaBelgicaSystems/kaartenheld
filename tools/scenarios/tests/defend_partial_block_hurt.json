@@ -1,0 +1,107 @@
+{
+ "name": "defend_partial_block_hurt",
+ "test": true,
+ "description": "Defend feedback contract: a 0-block defend hand (SW staged on attack, BO on defend) vs the forest slime's 2 incoming takes net 2 (hero 10 -> 8) and plays the HURT cue (sfx_last 9), not the block thump.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 8
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 9
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

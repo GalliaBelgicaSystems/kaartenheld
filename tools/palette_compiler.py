@@ -208,6 +208,16 @@ def card_display_slots(skin, hud):
                   "combat_nine_icon"):
         if _dice in coord_of:
             slots[coord_of[_dice]] = skin_slot("wood")
+    # Ring joker X (combat_x_icon): the middle-row glyph for HEAL-type
+    # cards.  Rings are jokers with no fixed value, so the X replaces
+    # the power digit; it rides the heal type's (wood) slot like the
+    # ring icon itself.  Explicit name rule like the AP dot above: the
+    # skin has no field for it and growing the WRAM skin struct for one
+    # tile is not worth the layout risk.
+    if "combat_x_icon" in coord_of:
+        _heal = (skin.get("types") or {}).get("heal") or {}
+        if "color" in _heal:
+            slots[coord_of["combat_x_icon"]] = skin_slot(_heal["color"])
     return slots
 
 

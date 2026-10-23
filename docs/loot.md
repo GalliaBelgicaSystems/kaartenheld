@@ -1678,7 +1678,7 @@ wood is always plain.
   name (abbreviated), battle symbol, power, cost, effect/rider fields.
   The catalog (`cards_content.c`) uses the same bands for curated cards.
 
-**Consequence**: the deck, collection, shops, CARDS tab, battle init, and
+**Consequence**: the deck, collection, shops, DECK tab, battle init, and
 save format all treat loot cards as ordinary cards via derived ids.  No
 instance layer, no save migration beyond the existing count-based
 collection.  Owning two identical combos = two copies in the collection.
@@ -1825,7 +1825,7 @@ shop; finding it is what makes the delivery (and the shop) available:
   from loot as derived ids (iron unlocks at AP 4; the catalog
   `CARD_IRON_SWORD` is test-only and never drops), and daggers come
   from the field cache and loot.
-* TRADE/SELL (implemented): pick an owned loot card in the CARDS tab ->
+* TRADE/SELL (implemented): pick an owned loot card in the DECK tab ->
   its detail page shows `[A]SELL` while the player has engaged a buying
   shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one
   copy for its synthesized `price` (§16 formula) and emits CARD_SOLD.

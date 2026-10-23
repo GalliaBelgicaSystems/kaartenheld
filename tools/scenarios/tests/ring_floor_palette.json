@@ -1,7 +1,7 @@
 {
  "name": "ring_floor_palette",
  "test": true,
- "description": "A finite-use ring's floor remaining-uses counter rides the weapon (wood) palette like the bow's: HE1 ring with 1 use shows HE1 on the semantic row and palette 5 on both the digit row and the floor row (bare box span would leave the counter paper-white)",
+ "description": "A finite-use ring's floor remaining-uses counter rides the weapon (wood) palette like the bow's: HE1 ring with 1 use shows HEX on the semantic row and palette 5 on both the X row and the floor row (bare box span would leave the counter paper-white)",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -50,7 +50,7 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "HE1"
+   "contains": "HEX"
   },
   {
    "type": "tilemap_attr",

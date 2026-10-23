@@ -155,9 +155,25 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_KOBOLD_INVITE,
         "Nis:",
         8,
-        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "PLAY FOR GOLD?", "> YES   NO"},
+        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "+20 NET WINS A GEM", "> YES   NO"},
         0,
         1
+    },
+    {
+        DIALOGUE_ID_KOBOLD_PRIZE,
+        "Nis:",
+        4,
+        {"YOU WON A GEM!", "EQUIP IT: GEM TAB.", "SHORT STRAIGHTS", "ARE YOURS NOW!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MAYOR_EARLY,
+        "MAYOR:",
+        6,
+        {"You've already", "slain 5 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
+        0,
+        0
     },
     {
         DIALOGUE_ID_MAYOR_GREETING,

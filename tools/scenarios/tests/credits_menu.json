@@ -91,17 +91,22 @@
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "Jonas Bryan"
+   "contains": "Game design by"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 3,
    "contains": "Bruno Rodrigues"
   },
   {
    "type": "screen_row",
-   "row": 12,
+   "row": 4,
    "contains": "Florent Berault"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "Jonas Bryan"
   },
   {
    "type": "event_occurred",

@@ -8,7 +8,7 @@
     "2:1 OR 3:1.",
     "BET 1, 5 OR 10.",
     "UPDN ROW LR CHANGE",
-    "PLAY FOR GOLD?",
+    "+20 NET WINS A GEM",
     "> YES   NO"
   ],
   "choice": "yes_no"

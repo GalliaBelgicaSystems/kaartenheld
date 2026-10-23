@@ -181,7 +181,7 @@ typedef enum {
     EVENT_DECK_RESHUFFLED,
     /* Append-only: these byte values are a wire contract with
      * tools/emulator.py EVENT_TYPE_MAP (AGENTS.md §53.4). */
-    EVENT_COMBO_RESOLVED,   /* d0=multiplier d1=eff_count d2=flags(straight|suited<<1) d3=phase */
+    EVENT_COMBO_RESOLVED,   /* d0=tier d1=eff_count d2=suited d3=phase */
     EVENT_EFFECT_RESOLVED,  /* d0=amount d1=effect type d2=phase d3=target slot */
     /* Phase C statuses (docs/combo-system.md §12-§19). */
     EVENT_STATUS_APPLIED,   /* d0=status id d1=stacks d2=duration */

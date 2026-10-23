@@ -139,7 +139,10 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
                 GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
                 GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
-                GAME_ID_BASE + 19: "MIMIC_REWARD"}
+                GAME_ID_BASE + 19: "MIMIC_REWARD",
+                GAME_ID_BASE + 20: "QUEST_NUDGE",
+                GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
+                GAME_ID_BASE + 22: "QUEST_EARLY_DONE"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -227,7 +230,8 @@ DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
 STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
-                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6}
+                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
+                   "GEM_OWNED": 7, "GEM_EQUIPPED": 8}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,

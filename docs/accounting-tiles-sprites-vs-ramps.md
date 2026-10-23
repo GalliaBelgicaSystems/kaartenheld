@@ -126,6 +126,7 @@ overlay is deleted.
 | (2,6) | combat_bow_icon | 5 → fight2 | ✓ |
 | (0,7) | combat_dagger_icon | 5 → fight2 | ✓ |
 | (1,7) | combat_ring_icon | 5 → fight2 | ✓ |
+| (2,7) | combat_x_icon | 5 → fight2 | ✓ |
 | (0,8) | combat_0_arrows_left | 5 → fight2 | ✓ |
 | (1,8) | combat_1_arrow_left | 5 → fight2 | ✓ |
 | (2,8) | combat_2_arrows_left | 5 → fight2 | ✓ |

@@ -1,0 +1,57 @@
+{
+ "name": "intro_slide_1",
+ "test": true,
+ "description": "NEW GAME intro slide 1: advancing once from slide 0 shows The Lord of.../peaceful....",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "INTRO"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "The Lord of"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "peaceful..."
+  }
+ ]
+}

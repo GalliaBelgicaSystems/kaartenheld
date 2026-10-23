@@ -1,0 +1,81 @@
+{
+  "name": "gem_equip_max",
+  "test": true,
+  "description": "Equip cap (staged): with three foreign bits already equipped, equipping the owned STRAIGHT gem is refused with MAX 3 GEMS and the equipped mask is untouched.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "MAX 3 GEMS"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_EQUIPPED",
+      "expected": 14
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8410,
+    "variables": {
+      "GEM_OWNED": 1,
+      "GEM_EQUIPPED": 14
+    }
+  }
+}

@@ -7,5 +7,7 @@
   "HIT": "assets/sfx/sfx hit.uge",
   "BLOCK": "assets/sfx/sfx block.uge",
   "ALERT": "assets/sfx/alert.uge",
-  "WIN": "assets/music/chest opening.uge"
+  "WIN": "assets/music/chest opening.uge",
+  "HURT": "assets/sfx/sfx hurt.uge",
+  "HEAL": "assets/sfx/sfx heal.uge"
 }

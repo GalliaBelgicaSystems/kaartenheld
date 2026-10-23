@@ -732,7 +732,24 @@ static void gamble_entry(void)
  * the normal dialogue path. */
 static void gamble_exit(void)
 {
-    g_bk_dlg_id = (uint8_t)DIALOGUE_ID_KOBOLD_FAREWELL;
+    int16_t gold;
+    int16_t owned;
+    /* Gem prize (docs/chuck-a-luck.md): leaving +20 net (or more) up in
+     * one sitting wins the STRAIGHT gem -- once.  Direct variable write
+     * (same v1 gap as the table's own gold moves: no VARIABLE_SET event
+     * fires); the observable grant signal is the distinct prize dialogue
+     * staged below (DIALOGUE_STARTED KOBOLD_PRIZE), and the owned bit is
+     * snapshot-assertable. */
+    gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
+    owned = g_game.state.variables.values[VARIABLE_ID_GEM_OWNED - 1];
+    if ((int16_t)(gold - g_gamble.entry_gold) >= 20 &&
+        (owned & (int16_t)(1 << GEM_STRAIGHT)) == 0) {
+        g_game.state.variables.values[VARIABLE_ID_GEM_OWNED - 1] =
+            (int16_t)(owned | (int16_t)(1 << GEM_STRAIGHT));
+        g_bk_dlg_id = (uint8_t)DIALOGUE_ID_KOBOLD_PRIZE;
+    } else {
+        g_bk_dlg_id = (uint8_t)DIALOGUE_ID_KOBOLD_FAREWELL;
+    }
     g_gamble_bye = 1;      /* audio tick: hand the scene track back */
     g_gamble.entered = 0;
 }
@@ -873,6 +890,7 @@ void gamble_frame_banked(void)
         g_gamble_sfx = 0;         /* no queued blip on entry */
         g_gamble_bye = 0;
         g_gamble.entered = 1;
+        g_gamble.entry_gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
         gamble_entry();
         return;
     }

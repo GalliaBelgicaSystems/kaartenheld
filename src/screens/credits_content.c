@@ -61,13 +61,13 @@ static void credits_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t ma
 void credits_content_render(void)
 {
     credits_draw_text(6, 0, "CREDITS", 7);
-    credits_draw_text(0, 2, "Music by Jonas Bryan", 20);
-    credits_draw_text(0, 4, "Art by Florent", 14);
-    credits_draw_text(0, 5, "Berault", 7);
-    credits_draw_text(0, 7, "Programming by", 14);
-    credits_draw_text(0, 8, "Bruno Rodrigues", 15);
-    credits_draw_text(0, 10, "Game design by", 14);
-    credits_draw_text(0, 11, "Bruno Rodrigues", 15);
-    credits_draw_text(0, 12, "and Florent Berault", 19);
+    credits_draw_text(0, 2, "Game design by", 14);
+    credits_draw_text(0, 3, "Bruno Rodrigues", 15);
+    credits_draw_text(0, 4, "and Florent Berault", 19);
+    credits_draw_text(0, 6, "Programming by", 14);
+    credits_draw_text(0, 7, "Bruno Rodrigues", 15);
+    credits_draw_text(0, 9, "Art by Florent", 14);
+    credits_draw_text(0, 10, "Berault", 7);
+    credits_draw_text(0, 12, "Music by Jonas Bryan", 20);
     credits_draw_text(5, 16, "[A] BACK", 8);
 }

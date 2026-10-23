@@ -21,7 +21,7 @@
  *    per-quest detail).
  *
  * ABI: fixed-bank wrappers in item_screen.c dispatch here (QUEST tab)
- * and to item_content_banked.c (CARDS tab) through the WRAM trampoline:
+ * and to item_content_banked.c (DECK tab) through the WRAM trampoline:
  * g_bk_ptr_a = Game*.  Reads only this bank's code/data, the staged
  * Game*, and always-mapped WRAM; calls no fixed-bank functions (the
  * variable lookup below is a bank-local replica, same pattern as
@@ -137,12 +137,12 @@ static void iq_color_span_fast(void)
 } while(0)
 
 /* Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) --
- * same rows as the bank-2 CARDS/STATUS header: row 0 tabs, row 1
- * caret under QUEST (col 6). */
+ * same rows as the bank-2 DECK/HERO header: row 0 tabs, row 1
+ * caret under QUEST (col 5). */
 static void iq_draw_header(void)
 {
-    IQ_DRAW_TEXT(0, 0, "CARDS QUEST STATUS", 18);
-    IQ_DRAW_TEXT(6, 1, "^", 1);
+    IQ_DRAW_TEXT(0, 0, "DECK QUEST HERO GEM", 19);
+    IQ_DRAW_TEXT(5, 1, "^", 1);
 }
 
 /* Visible-to-table index map: item_menu_index addresses the VISIBLE
@@ -167,7 +167,7 @@ static const QuestDefinition *iq_visible_quest(Game *g, uint8_t vis,
     return found;
 }
 
-/* Rider OAM sweep for the quest tab (entries 1-5): the CARDS list paints
+/* Rider OAM sweep for the quest tab (entries 1-5): the DECK list paints
  * element icons over per-row cells, so entering the quest tab must hide
  * them (the cards body sweeps on its own renders the same way).  WRAM
  * shadow OAM only, like its bank-2 twin. */
@@ -315,7 +315,7 @@ static void iq_draw_quest_detail(Game *g)
 
 /* Quest-tab input behind the thin fixed dispatch in item_screen.c.
  * Pad edges are read directly from WRAM (always mapped, like the
- * staged Game*).  LR-before-SELECT, like the CARDS tab.  The cursor
+ * staged Game*).  LR-before-SELECT, like the DECK tab.  The cursor
  * repaint is inline (two buffer-checked cells -- the quest list never
  * scrolls), so there is no cross-file banked call. */
 void item_quest_nav_banked(void)
@@ -373,7 +373,7 @@ void item_quest_render_banked(void)
     uint8_t e;
     if (!g) return;
 
-    /* Sweep the card rider entries: the CARDS list paints element icons
+    /* Sweep the card rider entries: the DECK list paints element icons
      * per row (entries 1-12), and the quest tab must leave none behind. */
     for (e = 1; e <= 12; e++) {
         iq_rider_hide(e);

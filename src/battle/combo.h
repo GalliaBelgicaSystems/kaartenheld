@@ -24,7 +24,9 @@ typedef enum {
 
 /* Poker hand tiers (docs/combo-system.md hand table).  Strict sizes:
  * STRAIGHT / FLUSH / STRAIGHT_FLUSH / FIVE_KIND require all five
- * selected cards; pairs and kinds work at any count >= 2.  Order here
+ * selected cards; pairs and kinds work at any count >= 2; the SHORT
+ * STRAIGHT (docs/short-straight.md) needs a 3+ run at any staged count
+ * >= 3 and only classifies while its gem is equipped.  Order here
  * mirrors ranking; the scored multiplier table lives in
  * combo_content.c (bank 3). */
 typedef enum {
@@ -37,10 +39,11 @@ typedef enum {
     HAND_FULL_HOUSE = 6,     /* 260% (trips + pair) */
     HAND_FOUR_KIND = 7,      /* 280% */
     HAND_STRAIGHT_FLUSH = 8, /* 350% (all 5, sequential + same symbol) */
-    HAND_FIVE_KIND = 9       /* 400% (all 5, same value) */
+    HAND_FIVE_KIND = 9,      /* 400% (all 5, same value) */
+    HAND_SHORT_STRAIGHT = 10 /* 130% (3+ run, gem-gated; below THREE_KIND) */
 } HandTier;
 
-#define HAND_TIER_COUNT 10
+#define HAND_TIER_COUNT 11
 
 typedef struct {
     Card cards[5];
@@ -110,11 +113,13 @@ uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
  * in the shared s_hist scratch (same-bank WRAM, never re-entered).  A
  * ringed kind bypasses the histogram entirely (its value comes from
  * ring_sub); HIGH CARD tracks max and all-five tiers sum directly, so
- * the leftover histogram is only consumed for no-ring kinds -- but the
- * classify call is still required every time, since it also validates
- * values and detects the tier.  Callers (combo_resolve_banked and the
- * HUD preview) both classify immediately before, so preview and
- * resolve can never disagree. */
+ * the leftover histogram is only consumed for no-ring kinds and the
+ * (ringed or plain) short straight -- which is why callers re-run the
+ * best ring trial before calling (so s_hist holds the classifying
+ * values, not the v=1 leftovers).  The classify call is still required
+ * every time, since it also validates values and detects the tier.
+ * Callers (combo_resolve_banked and the HUD preview) both classify
+ * immediately before, so preview and resolve can never disagree. */
 uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
                                  uint8_t n, uint8_t tier, uint8_t ring_sub,
                                  uint8_t phase, uint8_t count_ring);
@@ -123,5 +128,17 @@ uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
  * read-only between the resolver and the damage preview so both scale by
  * the same numbers; never duplicated. */
 extern const uint16_t g_combo_tier_mult[HAND_TIER_COUNT];
+
+/* Best-subset resolution for SHORT STRAIGHT (combo_content.c, bank 3):
+ * when the ladder classifies the full staged set as SHORT STRAIGHT, a
+ * pair subset or a single card can score higher.  Ringless only (caller
+ * checks: ringed hands convert to healing, and the joker trial already
+ * explores ring-assisted kinds; dropping the ring is an explicit
+ * unstage).  tier/base/suited are in/out: on entry the full-set outcome,
+ * on return the winning play (untouched on ties).  Leaf (calls
+ * nothing). */
+void combo_short_best(const volatile Card *cards, const uint8_t *idx,
+                      uint8_t n, uint8_t phase,
+                      uint8_t *tier_io, uint16_t *base_io, uint8_t *suited_io);
 
 #endif /* COMBO_H */
