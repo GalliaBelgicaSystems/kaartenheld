@@ -67,11 +67,6 @@ static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max
     }
 }
 
-void thanks_content_render(void)
-{
-    simple_draw_text(1, 8, "THANKS FOR PLAYING!", 19);
-}
-
 void ending_content_render(void)
 {
     uint8_t i;
