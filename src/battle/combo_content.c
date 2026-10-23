@@ -50,7 +50,11 @@ const uint16_t g_combo_tier_mult[HAND_TIER_COUNT] = {    100, /* NONE */
  * ghost-firing menu confirms), so scratch lives in WRAM, never on the
  * stack.  Fully rewritten on every call; single-threaded, shared with
  * combo_classify_loot below but never nested. */
-static uint8_t s_hist[10]; /* values are 1..10 */
+/* Shared histogram scratch (AGENTS.md 52.14): WRAM, always mapped, so
+ * every bank-3 classifier/consumer shares it.  Fully rewritten on every
+ * classify call; single-threaded, never re-entered: the HUD preview and
+ * the resolve dispatch never nest. */
+uint8_t s_hist[10]; /* values are 1..10 */
 
 /* Shared tier ladder: both classifiers fill s_hist, min/max, and the
  * suited flag, then resolve here.  One copy keeps bank-3 ROM small
@@ -177,6 +181,131 @@ uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
         if (cards[idx[i]].type != cards[idx[0]].type) return 0;
     }
     return 1;
+}
+
+/* Best-subset scratch (WRAM BSS, same discipline as s_hist above):
+ * the subset comparison needs more simultaneous state than any
+ * battle-chain stack frame has room for (AGENTS.md 52.24 -- the worst
+ * chain sits exactly at its budget), so every helper temporary lives
+ * here instead of on the stack.  Fully rewritten on every
+ * combo_short_best call; single-threaded, never re-entered. */
+static uint8_t s_ss_n;
+static uint8_t s_ss_pair;
+static uint8_t s_ss_single;
+static uint8_t s_ss_st;
+static uint8_t s_ss_i;
+static uint8_t s_ss_t;
+static uint8_t s_ss_raw;
+static uint16_t s_ss_m;
+static uint16_t s_ss_a;
+static uint16_t s_ss_best;
+static uint16_t s_ss_sub;
+
+/* Best-subset resolution for SHORT STRAIGHT (docs/short-straight.md) ──
+ * The ladder classifies the full staged set, but a pair subset or a
+ * single card can score higher: SHORT outranks pairs yet can deal less
+ * (3,3,4,4,5 stages SHORT for 15 while its two pairs deal 21), and a lone
+ * high card can beat a low run.  Ringless only: ringed hands convert to
+ * healing (amounts incomparable across natures), the joker trial already
+ * explores ring-assisted kinds, and dropping the ring is an explicit
+ * unstage.  The caller resolved the full set first (tier == SHORT, base
+ * and suited set); on return the IO tier/base/suited name the winning
+ * play, or are untouched when the full set already wins (ties keep the
+ * full set).  Amounts compare as raw products (division by 100 is
+ * monotonic, so it never changes the order -- and there is no divide
+ * instruction to spend).  Leaf (calls nothing): keeps the battle stack
+ * shallow (AGENTS.md 52.24). */
+void combo_short_best(const volatile Card *cards, const uint8_t *idx,
+                      uint8_t n, uint8_t phase,
+                      uint8_t *tier_io, uint16_t *base_io, uint8_t *suited_io)
+{
+    if (!tier_io || !base_io || !suited_io) return;
+    if (*tier_io != HAND_SHORT_STRAIGHT) return;
+
+    /* Pair values present (ringless: s_hist counts are real; SHORT
+     * implies no trips, so count == 2 marks exactly the paired values).
+     * TWO_PAIR when two values pair, else PAIR. */
+    s_ss_n = 0;
+    for (s_ss_i = 0; s_ss_i < 10; s_ss_i++) {
+        if (s_hist[s_ss_i] == 2) s_ss_n++;
+    }
+
+    /* Full-set amount via shared shift-add below (mult in s_ss_m,
+     * base in s_ss_a, result in s_ss_best). */
+    s_ss_m = (*suited_io) ? 155 : 130;
+    s_ss_a = *base_io;
+    s_ss_best = 0;
+    while (s_ss_m != 0) {
+        if (s_ss_m & 1u) s_ss_best = (uint16_t)(s_ss_best + s_ss_a);
+        s_ss_a <<= 1;
+        s_ss_m >>= 1;
+    }
+
+    /* One pass over the staged cards.  Ringless: every card counts at
+     * its face value when phase-eligible (no ring branch: the caller
+     * only runs this with no ring staged). */
+    s_ss_pair = 0;
+    s_ss_single = 0;
+    s_ss_st = 0xFF;
+    for (s_ss_i = 0; s_ss_i < n; s_ss_i++) {
+        s_ss_t = cards[idx[s_ss_i]].type;
+        s_ss_raw = cards[idx[s_ss_i]].value;
+        if (phase == COMBO_PHASE_ATTACK) {
+            if (s_ss_t != BATTLE_CARD_TYPE_SHIELD && s_ss_raw > s_ss_single)
+                s_ss_single = s_ss_raw;
+        } else {
+            if (s_ss_t == BATTLE_CARD_TYPE_SHIELD && s_ss_raw > s_ss_single)
+                s_ss_single = s_ss_raw;
+        }
+        /* Paired cards feed the pair subset (base) and vote on its
+         * suitedness (same symbol on every PAIRED card -- extras must not
+         * vote; a 0-contrib paired card still votes its symbol). */
+        if (s_hist[s_ss_raw - 1] == 2) {
+            if ((phase == COMBO_PHASE_ATTACK && s_ss_t != BATTLE_CARD_TYPE_SHIELD) ||
+                (phase == COMBO_PHASE_DEFEND && s_ss_t == BATTLE_CARD_TYPE_SHIELD))
+                s_ss_pair = (uint8_t)(s_ss_pair + s_ss_raw);
+            if (s_ss_st == 0xFF) s_ss_st = s_ss_t;
+            else if (s_ss_st != s_ss_t) s_ss_st = 0xFE;
+        }
+    }
+
+    /* Pair subset vs the full set (only when a pair exists): TWO_PAIR
+     * for two paired values (150 unsuited / 175 suited), else PAIR
+     * (120 / 145).  Shared shift-add loop: no 8-bit * or /. */
+    if (s_ss_n != 0) {
+        if (s_ss_n >= 2)
+            s_ss_m = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 150 : 175;
+        else
+            s_ss_m = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 120 : 145;
+        s_ss_a = s_ss_pair;
+        s_ss_sub = 0;
+        while (s_ss_m != 0) {
+            if (s_ss_m & 1u) s_ss_sub = (uint16_t)(s_ss_sub + s_ss_a);
+            s_ss_a <<= 1;
+            s_ss_m >>= 1;
+        }
+        if (s_ss_sub > s_ss_best) {
+            s_ss_best = s_ss_sub;
+            *tier_io = (s_ss_n >= 2) ? HAND_TWO_PAIR : HAND_PAIR;
+            *base_io = s_ss_pair;
+            *suited_io = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 1;
+        }
+    }
+
+    /* Lone high card vs the winner so far (mult 100, never suited). */
+    s_ss_m = 100;
+    s_ss_a = s_ss_single;
+    s_ss_sub = 0;
+    while (s_ss_m != 0) {
+        if (s_ss_m & 1u) s_ss_sub = (uint16_t)(s_ss_sub + s_ss_a);
+        s_ss_a <<= 1;
+        s_ss_m >>= 1;
+    }
+    if (s_ss_sub > s_ss_best) {
+        *tier_io = HAND_NONE;
+        *base_io = s_ss_single;
+        *suited_io = 0;
+    }
 }
 
 /* Participating-hand base: only cards forming the hand count.
@@ -377,7 +506,15 @@ void combo_resolve_banked(void)
                 best = HAND_NONE;
                 for (v = 10; v != 0; v--) {
                     t2 = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, v);
-                    if (t2 > best) {
+                    /* Rank-aware max (docs/short-straight.md): enum order
+                     * matches rank EXCEPT SHORT STRAIGHT (10), which slots
+                     * between TWO_PAIR and THREE_KIND -- a raw max would let
+                     * it outrank straights and better (e.g. a ringed 4-run
+                     * plus straight completion must stay STRAIGHT). */
+                    if (t2 == HAND_SHORT_STRAIGHT) {
+                        if (best < HAND_THREE_KIND) { best = t2; best_v = v; }
+                    } else if (t2 > best || (best == HAND_SHORT_STRAIGHT &&
+                                             t2 >= HAND_THREE_KIND)) {
                         best = t2;
                         best_v = v;
                     }
@@ -394,14 +531,11 @@ void combo_resolve_banked(void)
                 out_result->tier = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, 0);
             }
         }
-        out_result->multiplier =
-            g_combo_tier_mult[out_result->tier];
         if (out_result->tier == HAND_NONE) {
             out_result->suited = 0;
         } else {
             out_result->suited = combo_same_type((const Card *)g_bk_ptr_a,
                                                  idx, w);
-            if (out_result->suited) out_result->multiplier += 25;
         }
             /* Attack + ring converts to healing: the ring counts at its
              * substituted value (count_ring=1); otherwise rings add 0. */
@@ -409,6 +543,21 @@ void combo_resolve_banked(void)
                 (const Card *)g_bk_ptr_a, idx, w, out_result->tier,
                 best_v, COMBO_UNPACK_PHASE(g_bk_byte_b),
                 (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK && has_ring) ? 1 : 0);
+        /* Dynamic best-subset (docs/short-straight.md): the ladder
+         * proposes SHORT, but a pair subset or a lone card can score
+         * higher -- resolve the winner, not just the rank.  Ringless
+         * only (healing amounts are incomparable). */
+        if (out_result->tier == HAND_SHORT_STRAIGHT && !has_ring) {
+            combo_short_best((const Card *)g_bk_ptr_a, idx, w,
+                             COMBO_UNPACK_PHASE(g_bk_byte_b),
+                             &out_result->tier, &out_result->base_power,
+                             &out_result->suited);
+        }
+        /* Multiplier recomputes from the (possibly updated) tier: the
+         * subset above can downgrade SHORT to a pair tier or HIGH CARD. */
+        out_result->multiplier =
+            g_combo_tier_mult[out_result->tier];
+        if (out_result->suited) out_result->multiplier += 25;
         out_result->eff_count = w;
 
         /* Attack + ring converts the whole hand to healing: force the

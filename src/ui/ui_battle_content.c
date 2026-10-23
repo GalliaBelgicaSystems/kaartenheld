@@ -782,7 +782,13 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         best = HAND_NONE;
         for (v = 10; v != 0; v--) {
             tier = combo_classify_loot(battle->hand, idx, w, v);
-            if (tier > best) {
+            /* Rank-aware max: same rule as combo_resolve_banked -- enum
+             * order matches rank except SHORT STRAIGHT (10), which slots
+             * between TWO_PAIR and THREE_KIND. */
+            if (tier == HAND_SHORT_STRAIGHT) {
+                if (best < HAND_THREE_KIND) { best = tier; best_v = v; }
+            } else if (tier > best || (best == HAND_SHORT_STRAIGHT &&
+                                       tier >= HAND_THREE_KIND)) {
                 best = tier;
                 best_v = v;
             }
@@ -813,6 +819,14 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     suited = 0;
     if (tier != HAND_NONE) {
         suited = combo_same_type(battle->hand, idx, w);
+    }
+    /* Dynamic best-subset (docs/short-straight.md): same rule as
+     * combo_resolve_banked -- resolve the winning subset, not just the
+     * ladder rank, so preview and result agree. */
+    if (tier == HAND_SHORT_STRAIGHT && !has_ring) {
+        combo_short_best(battle->hand, idx, w,
+                         defend ? COMBO_PHASE_DEFEND : COMBO_PHASE_ATTACK,
+                         &tier, &base, &suited);
     }
     mult = g_combo_tier_mult[tier];
     if (suited) mult += 25;

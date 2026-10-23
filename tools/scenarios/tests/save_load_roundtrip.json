@@ -31,6 +31,16 @@
    "expected": 3
   },
   {
+   "type": "variable",
+   "variable": "GEM_OWNED",
+   "expected": 1
+  },
+  {
+   "type": "variable",
+   "variable": "GEM_EQUIPPED",
+   "expected": 1
+  },
+  {
    "type": "inventory",
    "item": "IRON_RING",
    "expected": 1
@@ -58,7 +68,9 @@
    "MET_MAYOR": true
   },
   "variables": {
-   "MONSTERS_DEFEATED": 3
+    "MONSTERS_DEFEATED": 3,
+    "GEM_OWNED": 1,
+    "GEM_EQUIPPED": 1
   },
   "party": {
    "HERO": {

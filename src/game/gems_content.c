@@ -14,10 +14,10 @@ const GemDefinition g_gems[] = {
     { GEM_STRAIGHT, "STRAIGHT GEM", "SHORT STRAIGHT" },
 };
 
-/* Keep the registry length in sync with GEM_COUNT (game_ids.h).  NOTE: a
- * typedef negative-size check does NOT fire under this SDCC (it silently
- * accepts char[-1]), so this is documentation only -- the GEM tab
- * iterates GEM_COUNT and would read past a short table. */
-typedef char gem_table_count_ok[
-    sizeof(g_gems) / sizeof(g_gems[0]) == GAME_GEM_COUNT ? 1 : -1
-];
+/* Registry length is GAME_GEM_COUNT == GEM_COUNT by construction (see
+ * gems.h).  GEM rows are 2 tall from row 3 and the message sits at row
+ * 16, so more than 7 gems would collide with it -- fail loudly instead
+ * of painting over the hints. */
+#if GEM_COUNT > 7
+#error "gem registry outgrew the GEM-tab layout"
+#endif

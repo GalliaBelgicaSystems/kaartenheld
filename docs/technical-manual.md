@@ -579,7 +579,10 @@ the skill line below (`STRAIGHT GEM` → `SHORT STRAIGHT`).  Starts empty
 3 equipped at once); owning alone does nothing.  Gem 0 is won at Nis's
 chuck-a-luck table by leaving +20 net up in one sitting
 (docs/chuck-a-luck.md); while
-equipped, 3-card runs score as SHORT STRAIGHT (§8.2).
+equipped, 3-card runs score as SHORT STRAIGHT (§8.2).  Resolution is
+best-subset: the game automatically plays the highest-scoring subset of
+the staged cards (a pair subset or lone high card can beat the run --
+see §8.2), and the preview shows that winning play.
 
 ---
 
@@ -610,12 +613,12 @@ Selected cards are ranked **exactly like poker hands**
 | 9 | FIVE KIND | all 5 same value | 400% |
 | 10 | SHORT STRAIGHT | longest run of distinct sequential values ≥ 3 at any staged count ≥ 3 (**STRAIGHT gem equipped**; slots below THREE KIND, above TWO PAIR; only the highest three of the run count) | 130% |
 
-* Straights/flushes/straight-flushes/five-kind require **all five** cards;
-  pairs and kinds work with 2+; the SHORT STRAIGHT works at any staged
-  count ≥ 3 and never appears without its gem (the ladder is otherwise
-  exactly the old one, so bare pairs and high cards are unchanged).  A
-  4-run scores its top three (1,2,3,4 → 2+3+4); a paired duplicate shares
-  its value but is not part of the run (3,3,4,5 → 3+4+5).
+* The SHORT STRAIGHT works at any staged count ≥ 3 and never appears
+  without its gem.  Resolution is best-subset: the game plays the
+  highest-scoring subset (the run, a pair subset, or a lone high card)
+  and the preview shows it.  A 4-run scores its top three (1,2,3,4 →
+  2+3+4); a paired duplicate shares its value but is not part of any
+  run (3,3,4,5 → 3+4+5).
 
 * Straights/flushes/straight-flushes/five-kind require **all five** cards;
   pairs and kinds work with 2+.

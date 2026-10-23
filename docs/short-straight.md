@@ -21,7 +21,7 @@ snapshot / descriptor churn); the registry is `src/game/gems_content.c`
 (tier 10), the grant through `DIALOGUE_STARTED KOBOLD_PRIZE` + the owned
 bit, the tab through `screen_row`.
 
-## Rules (proposed)
+## Rules
 
 * **Trigger**: the longest run of distinct sequential values among the
   effective cards has length ≥ 3. Works at any staged count ≥ 3 (like
@@ -41,6 +41,14 @@ bit, the tab through `screen_row`.
   keep precedence (a pair + run stages as the pair unless the player
   drops a card), so no existing classification changes: the tier only
   upgrades hands that are currently HIGH_CARD or pairs.
+* **Best-subset resolution (implemented)**: classification picks the
+  ladder tier, but resolution plays the highest-scoring subset of the
+  staged cards -- a pair subset or a lone high card can beat the
+  ladder's SHORT (3,3,4,4,5 resolves as TWO_PAIR 21, not SHORT 15;
+  1,2,3 + 9 resolves as HIGH CARD 9, not SHORT 7).  Ringless only
+  (ringed hands convert to healing: amounts are incomparable, and the
+  joker trial already explores ring-assisted kinds).  The preview shows
+  the winning play, so preview and result agree.
 * **Suited bonus**: N/A in practice. Single-weapon values skip by two
   (swords/bows 1,3,5,7,9; daggers/shields/rings 1,2,4,6,8), so no
   three same-suit cards can ever be sequential. The existing +25% rule
@@ -48,7 +56,9 @@ bit, the tab through `screen_row`.
   special-casing needed.
 * **Rings (joker)**: free synergy. The existing best-tier trial loop
   (v = 1..10, keep best) completes runs automatically, e.g. SW4 + SW6
-  + ring→5. No new code path.
+  + ring→5.  The trial max is rank-aware (SHORT, enum 10, slots between
+  TWO_PAIR and THREE_KIND -- a raw enum-max would let it outrank
+  straights and better). No new code path beyond that comparison.
 * **Defend phase**: the classifier is phase-agnostic, but current shield
   bands (1,2,4,6,8) contain no 3-run, so the tier is attack-only in
   practice until bands change.
@@ -100,13 +110,15 @@ Concrete damage at 130% (truncated): 1,2,3→7 · 2,3,4→11 · 3,4,5→15 ·
 4,5,6→19 · 5,6,7→23 · 6,7,8→27 · 7,8,9→31. For reference: pair of 5s
 (base 10) is 12 unsuited / 14 suited; three-kind of 5s is 27.
 
-One known quirk (same class as flush-beats-full-house today): a 5-card
-stage of two-pair + run (e.g. 2,3,3,4,4) classifies SHORT_STRAIGHT (11)
-instead of TWO_PAIR (15). The preview shows the tier live and staging
-4 cards keeps the 15, so optimal play routes around it -- but the
-default 5-card read can surprise. Accept (precedent exists); alternative
-is slotting the tier below TWO_PAIR, which strands pair+run hands on
-PAIR instead (worse feel, since the run is the salient feature).
+One former quirk is gone by construction: a 5-card stage of two-pair +
+run (e.g. 2,3,3,4,4) resolves as TWO_PAIR (via the best-subset rule
+above), not SHORT_STRAIGHT -- the amount comparison picks the winning
+play, so the ladder slot is moot where pairs are involved.  What remains
+is single-pair + disjoint low run (e.g. a lone high pair beside a cheap
+run) and lone-high-card staging, where the ladder's SHORT stands but a
+subset would score higher: the preview shows SHORT and the player routes
+around it by staging fewer cards (same philosophy as the old quirk's
+mitigation).
 
 Enemy side: enemies play single cards, never combos, so the tier is
 player-only -- same as every other tier.
@@ -121,7 +133,7 @@ player-only -- same as every other tier.
   3,4,5 = SW3 + DA4 + SW5 → base 12 → DMG 15.
 * High end: 7,8,9 = steel sword + mythril dagger + mythril bow → base 24 → DMG 31.
 
-## Implementation (done 2026-10-23)
+## Implementation (done 2026-10-23, best-subset 2026-10-24)
 
 * `HAND_SHORT_STRAIGHT = 10` appended at the END of the `HandTier` enum
   (no renumber: `COMBO_RESOLVED` d0 carries tier ids and scenarios pin
@@ -134,19 +146,38 @@ player-only -- same as every other tier.
   the kind checks keep running first, unchanged. The gem gate is an
   inline expression in the ladder (never a helper call -- the ladder sits
   at the bottom of the deepest battle chain and every extra call edge
-  eats the `make stack-budget` baseline). Callers re-run the best ring
+  eats the `make stack-budget` baseline).  Callers re-run the best ring
   trial before participating-base so `s_hist` holds the classifying
   values.
-* Fixed-bank budget: detection lives in bank 3; the fixed-side cost of
-  the whole feature is a widened tab condition + target swap (~6 B; the
-  GEM nav/render bodies forward to the quest bodies in-bank so the fixed
-  dispatch needs no new branches). `make memmap` + `make stack-budget`
-  stay green (release `_HOME` 4 B, debug bank 3 ~7 B headroom, Oct 2026).
+* Rank-aware ring trials (both sites): the max compares rank, not raw
+  enum, since SHORT (10) outranks only the pair ladder.  Without this a
+  ringed 4-run + straight completion stages SHORT instead of STRAIGHT
+  (pinned by `gem_combo_ring_straight`: 52, not 19).
+* Best-subset resolution (`combo_short_best`, bank 3, called by both
+  resolve and preview when the full set is a ringless SHORT): compares
+  the full amount against the best pair subset and the best single card
+  (raw products -- division by 100 is monotonic, and there is no divide
+  instruction to spend) and downgrades tier/base/suited to the winner
+  (ties keep the full set).  All scratch is WRAM-static: the worst
+  battle chain has zero stack slack, so no new locals (AGENTS.md
+  52.24).  Ringless only (healing amounts are incomparable).
+* Fixed-bank budget: detection + subset live in bank 3; the fixed-side
+  cost of the whole feature is a widened tab condition + target swap
+  (~6 B; the GEM nav/render bodies forward to the quest bodies in-bank
+  so the fixed dispatch needs no new branches).  Bank-3 pressure funded
+  two evictions to the overflow bank: `save_op_banked` and
+  `loot_synth_banked` (both self-contained, single fixed dispatch each).
+  `make memmap` + `make stack-budget` gates stay green.
 * Tests: `gem_combo_short` (3-run + 130-vs-120 pin: 4,5,6 gives 19),
   `gem_combo_4run` (top-three: 1,2,3,4 gives 11),
   `gem_combo_pair_run` (pair+run: 3,3,4,5 gives 15, duplicate 0),
-  `gem_combo_locked` (no gem: HIGH CARD unchanged), plus GEM-tab and
-  grant scenarios.
+  `gem_combo_two_pair` (pair-subset wins: 3,3,4,4,5 gives TWO_PAIR 21),
+  `gem_combo_singleton` (lone 9 beats SHORT 7),
+  `gem_combo_ring_short` (ring completes the run: SHORT 19 healing),
+  `gem_combo_ring_straight` (rank-aware trials: STRAIGHT 52, not 19),
+  `gem_combo_locked` (no gem: HIGH CARD unchanged),
+  `gem_combo_preview` (preview == resolve), plus GEM-tab, grant, equip
+  and save-roundtrip scenarios.
 
 ## Open questions (all decided)
 
@@ -154,3 +185,8 @@ player-only -- same as every other tier.
 2. 4-runs count the top three, not all four.
 3. Base is one best-eligible card per run value; 3-card minimum, any
    staged count of 3 or more.
+4. Resolution is best-subset, not ladder-rank: the ladder still slots
+   SHORT between THREE_KIND and TWO_PAIR (classification), but resolve
+   and preview play the highest-scoring subset (pair subset, lone card,
+   or the full run).  Ringless only; ties keep the full set.  This
+   supersedes the middle-slot debate -- no ladder move was needed.

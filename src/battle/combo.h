@@ -129,4 +129,16 @@ uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
  * the same numbers; never duplicated. */
 extern const uint16_t g_combo_tier_mult[HAND_TIER_COUNT];
 
+/* Best-subset resolution for SHORT STRAIGHT (combo_content.c, bank 3):
+ * when the ladder classifies the full staged set as SHORT STRAIGHT, a
+ * pair subset or a single card can score higher.  Ringless only (caller
+ * checks: ringed hands convert to healing, and the joker trial already
+ * explores ring-assisted kinds; dropping the ring is an explicit
+ * unstage).  tier/base/suited are in/out: on entry the full-set outcome,
+ * on return the winning play (untouched on ties).  Leaf (calls
+ * nothing). */
+void combo_short_best(const volatile Card *cards, const uint8_t *idx,
+                      uint8_t n, uint8_t phase,
+                      uint8_t *tier_io, uint16_t *base_io, uint8_t *suited_io);
+
 #endif /* COMBO_H */

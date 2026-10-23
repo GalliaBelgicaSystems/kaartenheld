@@ -20,7 +20,10 @@ typedef struct {
     char skill[16];     /* what it unlocks, e.g. "SHORT STRAIGHT" */
 } GemDefinition;
 
-#define GAME_GEM_COUNT 1
+/* Gem registry length.  Single source of truth for the table size:
+ * every gem bit (0..GEM_COUNT-1) has exactly one registry row.  The GEM
+ * tab iterates GEM_COUNT, so a short table would read past it. */
+#define GAME_GEM_COUNT GEM_COUNT
 
 extern const GemDefinition g_gems[];
 
