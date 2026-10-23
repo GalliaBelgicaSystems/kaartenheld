@@ -272,6 +272,22 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_VILLAGE_GUARDS,
+        "GUARD:",
+        6,
+        {"Careful! North of", "here you'll find", "the castle of the", "Lord of Slimes and", "its desolate", "surroundings!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_SIGNPOST,
+        "",
+        8,
+        {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_WAKE_STAIRS,
         "",
         2,

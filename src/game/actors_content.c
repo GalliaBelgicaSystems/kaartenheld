@@ -377,6 +377,27 @@ static const WorldActorDefinition g_village_area_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 2, 0
     },
+    {
+        0, ENTITY_ID_GUARD, 11, 1, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'G', "GUARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_VILLAGE_GUARDS, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 4, 0
+    },
+    {
+        0, ENTITY_ID_GUARD, 8, 1, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'G', "GUARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_VILLAGE_GUARDS, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 4, 0
+    },
+    {
+        0, ENTITY_ID_SIGNPOST, 6, 15, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_VILLAGE_SIGNPOST, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
 };
 
 static const WorldActorDefinition g_desolate_field_actors[] = {

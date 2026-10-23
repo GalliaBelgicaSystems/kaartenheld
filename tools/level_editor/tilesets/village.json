@@ -460,9 +460,9 @@
       "palette": "town1",
       "label": "destination signpost",
       "gb_constant": "TILE_VILLAGE_41",
-      "walkable": true,
+      "walkable": false,
       "color": "#a4906d",
-      "ascii": ".",
+      "ascii": "#",
       "image_url": "/tiles/village/village_destination_signpost.png",
       "category": "terrain"
     },

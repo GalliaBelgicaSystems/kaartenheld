@@ -482,14 +482,22 @@
         "y": 1
       },
       "properties": {
-        "display_name": "VILLAGER",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
+        "entity_id": "ENTITY_ID_GUARD",
+        "display_name": "GUARD",
+        "dialogue": "DIALOGUE_ID_VILLAGE_GUARDS",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "G",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
         "enemy_type": "npc_guard"
-      },
-      "overworld_sprite": "actors.actors_guard"
+      }
     },
     {
       "id": "village_guard_2",
@@ -499,14 +507,46 @@
         "y": 1
       },
       "properties": {
-        "display_name": "VILLAGER",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
+        "entity_id": "ENTITY_ID_GUARD",
+        "display_name": "GUARD",
+        "dialogue": "DIALOGUE_ID_VILLAGE_GUARDS",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "G",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
         "enemy_type": "npc_guard"
+      }
+    },
+    {
+      "id": "village_signpost",
+      "type": "signpost",
+      "position": {
+        "x": 6,
+        "y": 15
       },
-      "overworld_sprite": "actors.actors_guard"
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "SIGNPOST",
+        "dialogue": "DIALOGUE_ID_VILLAGE_SIGNPOST",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
     }
   ],
   "regions": []
