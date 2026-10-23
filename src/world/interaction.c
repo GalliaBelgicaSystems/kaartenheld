@@ -22,7 +22,7 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
      * spawns every HOSTILE-flagged def into the runtime slots; only
      * non-hostiles reach g_static_actors).  Hostile bumps resolve as
      * movement encounters, never here. */
-    result = event_engage_actor(g, actor);
+    result = event_engage_actor(g, actor, g->world.map_id);
     if (result != ENGAGE_NONE) {
         return result;
     }

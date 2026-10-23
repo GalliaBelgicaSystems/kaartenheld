@@ -1,7 +1,7 @@
 {
  "name": "game_over_quit",
  "test": true,
- "description": "On the Game Over Continue? prompt, choosing NO shows the terminal Thanks for playing! screen. The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the forest slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat after ~2520 frames.",
+ "description": "On the Game Over Continue? prompt, choosing NO shows the battle-demo Thanks screen (which auto-restarts after ~5 s; this scenario asserts the text well before the timeout). The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the forest slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat after ~2520 frames.",
  "actions": [
   {
    "type": "wait",
@@ -91,8 +91,13 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "THANKS FOR PLAYING!"
+   "row": 4,
+   "contains": "Thanks for playing"
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "Full game in 2027!"
   },
   {
    "type": "stack_margin_min",

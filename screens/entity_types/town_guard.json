@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "town_guard",
+  "label": "Town Guard",
+  "kind": "npc",
+  "name": "GUARD",
+  "visual": "G",
+  "sprite_kind": "tile"
+}
