@@ -37,5 +37,5 @@ void thanks_content_render(void)
     thanks_draw_line(1, 4, "Thanks for playing", 18);
     thanks_draw_line(1, 6, "the battle demo of", 17);
     thanks_draw_line(4, 8, "Kaartenheld!", 12);
-    thanks_draw_line(0, 11, "Full game out! 2027", 19);
+    thanks_draw_line(1, 11, "Full game in 2027!", 18);
 }
