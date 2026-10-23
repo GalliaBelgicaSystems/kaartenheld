@@ -46,17 +46,16 @@ bit, the tab through `screen_row`.
   ladder tier, but resolution plays the highest-scoring subset of the
   staged cards -- a pair subset or a lone high card can beat the
   ladder's SHORT (3,3,4,4,5 resolves as TWO_PAIR 21, not SHORT 15;
-  1,2,3 + 9 resolves as HIGH CARD 9, not SHORT 7).  Ringless only
-  (ringed hands convert to healing: amounts are incomparable, and the
-  joker trial already explores ring-assisted kinds).  The preview shows
-  the winning play, so preview and result agree.
-* **Ring-trial amount limitation (known)**: the joker trial loop picks
-  by rank, not amount: every ring trial heals so the amounts ARE
-  comparable, but the loop keeps the rank-best trial (a poorer SHORT
-  beats a richer PAIR; the first-found SHORT trial wins over a richer
-  one).  An amount-aware selection needs a participating-base product
-  per trial -- ~1.2 KB of bank-3 code against 45 B of release
-  headroom -- so this waits on a bank-3 diet first.
+  1,2,3 + 9 resolves as HIGH CARD 9, not SHORT 7). Ringed hands convert
+  to healing; the best-subset evaluation also lets a richer ringed pair
+  beat a lower short straight. The preview shows the winning play, so
+  preview and result agree.
+* **Ring-trial amount resolution (implemented)**: enabled by a Bank-3 diet
+  (sharing the resolver between the HUD preview and resolve dispatch). The
+  joker trial loop tracks participating base across SHORT trials, keeping
+  the trial that maximizes the healed amount (extending runs instead of
+  sitting idle at v=10), and combo_short_best lets a richer ringed pair
+  beat a low short straight.
 * **Suited bonus**: N/A in practice. Single-weapon values skip by two
   (swords/bows 1,3,5,7,9; daggers/shields/rings 1,2,4,6,8), so no
   three same-suit cards can ever be sequential. The existing +25% rule

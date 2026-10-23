@@ -92,10 +92,11 @@ best-eligible card each.
 resolution plays the highest-scoring subset of the staged cards: a
 pair subset or a lone high card can beat the ladder's SHORT STRAIGHT
 (`gem_combo_two_pair`, `gem_combo_singleton`), and a SHORT run can
-beat the ladder's PAIR (`gem_combo_pair_run`).  Ringless only; the
-live COMBO-row preview shows the winning play (`gem_combo_preview`,
-reads `SHORT STR`), so preview and result agree.  Full rules and the
-known ring-trial amount limitation live in docs/short-straight.md.
+beat the ladder's PAIR (`gem_combo_pair_run`).  Ringed hands convert
+to healing, where best-subset evaluation and trial-amount tracking
+maximize the resulting play.  The live COMBO-row preview shows the
+winning play (`gem_combo_preview`, reads `SHORT STR`), so preview and
+result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
 damage, base poison chance 50% scaled by the hand multiplier.  Poison

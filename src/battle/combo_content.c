@@ -77,22 +77,18 @@ static uint8_t combo_tier_from_hist(uint8_t n, uint8_t all_same_type,
     uint8_t i, distinct, pairs, trips;
     uint8_t quads = 0, fives = 0;
 
-    /* FIVE KIND: all five share one value (beats everything). */
-    if (n == 5 && s_hist[min - 1] == 5) return HAND_FIVE_KIND;
-
-    /* Sequential with no duplicates: straight / straight flush (5 only). */
-    if ((uint8_t)(max - min) == (uint8_t)(n - 1)) {
+    if (n == 5) {
         distinct = 0;
         for (i = 0; i < 10; i++) {
             if (s_hist[i] != 0) distinct++;
         }
-        if (distinct == n && n == 5) {
+        if (distinct == 5 && (uint8_t)(max - min) == 4) {
             return all_same_type ? HAND_STRAIGHT_FLUSH : HAND_STRAIGHT;
         }
+        /* Flush: all five same symbol, not sequential, and not
+         * FIVE_KIND (1 distinct), FOUR_KIND (2), or FULL_HOUSE (2). */
+        if (all_same_type && distinct > 2) return HAND_FLUSH;
     }
-
-    /* Flush: all five same symbol, not sequential (checked above). */
-    if (n == 5 && all_same_type) return HAND_FLUSH;
 
     pairs = 0;
     trips = 0;
@@ -231,11 +227,11 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     }
 
     /* Full-set amount via shared shift-add below (mult in s_ss_m,
-     * base in s_ss_a, result in s_ss_best).  Mults mirror
-     * g_combo_tier_mult (+25 when suited, like the resolver): table
-     * reads don't fit bank 3 (45 B release headroom), so a balance
-     * tweak must update both -- grep HAND_SHORT_STRAIGHT here. */
-    s_ss_m = (*suited_io) ? 155 : 130;
+     * base in s_ss_a, result in s_ss_best).  Mults read
+     * g_combo_tier_mult (+25 when suited, like the resolver) so a
+     * balance tweak can never desync this comparison. */
+    s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_SHORT_STRAIGHT] +
+                        ((*suited_io) ? 25 : 0));
     s_ss_a = *base_io;
     s_ss_best = 0;
     while (s_ss_m != 0) {
@@ -245,12 +241,17 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     }
 
     /* One pass over the staged cards.  Ringless: every card counts at
-     * its face value when phase-eligible (no ring branch: the caller
-     * only runs this with no ring staged). */
+     * its face value when phase-eligible.  Ringed: the ring marks
+     * s_ss_n = 0x80 and is skipped so s_ss_single tracks the highest
+     * phase-eligible non-ring card (which the joker pairs with below). */
     s_ss_pair = 0;
     s_ss_single = 0;
     s_ss_st = 0xFF;
     for (s_ss_i = 0; s_ss_i < n; s_ss_i++) {
+        if (cards[idx[s_ss_i]].ring) {
+            s_ss_n = 0x80;
+            continue;
+        }
         s_ss_t = cards[idx[s_ss_i]].type;
         s_ss_raw = cards[idx[s_ss_i]].value;
         if (phase == COMBO_PHASE_ATTACK) {
@@ -271,16 +272,27 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
             else if (s_ss_st != s_ss_t) s_ss_st = 0xFE;
         }
     }
+    if (s_ss_n == 0x80) {
+        /* Ringed SHORT: any non-ring pair would have classified as
+         * THREE_KIND in the trial loop, so the best lower-tier ring
+         * trial pairs the joker with s_ss_single (attack heals count
+         * both card and ring; defend blocks count the shield only). */
+        s_ss_n = (s_ss_single != 0) ? 1 : 0;
+        s_ss_pair = (phase == COMBO_PHASE_ATTACK)
+                    ? (uint8_t)(s_ss_single + s_ss_single) : s_ss_single;
+        s_ss_st = (*suited_io) ? 0 : 0xFE;
+    }
 
     /* Pair subset vs the full set (only when a pair exists): TWO_PAIR
-     * for two paired values (150 unsuited / 175 suited), else PAIR
-     * (120 / 145) -- mirrors g_combo_tier_mult, see above.  Shared
+     * or PAIR from g_combo_tier_mult (+25 when suited).  Shared
      * shift-add loop: no 8-bit * or /. */
     if (s_ss_n != 0) {
         if (s_ss_n >= 2)
-            s_ss_m = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 150 : 175;
+            s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_TWO_PAIR] +
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 25));
         else
-            s_ss_m = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 120 : 145;
+            s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_PAIR] +
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 25));
         s_ss_a = s_ss_pair;
         s_ss_sub = 0;
         while (s_ss_m != 0) {
@@ -296,8 +308,8 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
         }
     }
 
-    /* Lone high card vs the winner so far (mult 100, never suited). */
-    s_ss_m = 100;
+    /* Lone high card vs the winner so far (table mult, never suited). */
+    s_ss_m = g_combo_tier_mult[HAND_NONE];
     s_ss_a = s_ss_single;
     s_ss_sub = 0;
     while (s_ss_m != 0) {
@@ -342,22 +354,14 @@ uint8_t combo_participating_base(const volatile Card *cards, const uint8_t *idx,
     pv1 = 0;
     pv2 = 0;
     if (tier == HAND_SHORT_STRAIGHT) {
-        /* Longest run wins; ties go to the higher run.  s_hist holds the
-         * classifying trial (callers re-run the best ring trial first).
-         * Scratch discipline (AGENTS.md 52.24): `need` doubles as the
-         * best-length cell, then as the run-value offset below -- it is
-         * never read as a kind-count for this tier. */
+        /* At most 5 cards exist (3 + 3 > 5), so at most one run of
+         * length >= 3 can appear in s_hist; its highest value is simply
+         * the last index where run >= 3. */
         uint8_t run = 0;
-        need = 0;
         for (i = 0; i < 10; i++) {
             if (s_hist[i] != 0) {
                 run++;
-                if (run > need) {
-                    need = run;
-                    if (run >= 3) pv1 = (uint8_t)(i + 1);
-                } else if (run == need && run >= 3) {
-                    pv1 = (uint8_t)(i + 1);
-                }
+                if (run >= 3) pv1 = (uint8_t)(i + 1);
             } else {
                 run = 0;
             }
@@ -478,17 +482,19 @@ void combo_resolve_banked(void)
         uint8_t best_v;
         has_ring = 0;
         for (i = 0; i < count; i++) {
-            uint8_t t = ((const Card *)g_bk_ptr_a)[i].type;
-            if (((const Card *)g_bk_ptr_a)[i].ring) has_ring = 1;
+            uint8_t s = g_bk_byte_d ? g_game.battle.selected_indices[i] : i;
+            uint8_t t = ((const Card *)g_bk_ptr_a)[s].type;
+            if (((const Card *)g_bk_ptr_a)[s].ring) has_ring = 1;
             if (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK) {
-                idx[w] = i;
+                idx[w] = s;
                 w++;
             } else {
-                if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[i].ring) continue;
-                idx[w] = i;
+                if (t != BATTLE_CARD_TYPE_SHIELD && !((const Card *)g_bk_ptr_a)[s].ring) continue;
+                idx[w] = s;
                 w++;
             }
         }
+        g_bk_byte_d = 0;
 
         best_v = 0;
         if (w < 2) {
@@ -504,34 +510,45 @@ void combo_resolve_banked(void)
              * kinds (identical across trials when no ring is present) and
              * takes ringed values straight from ring_sub -- see the
              * precondition in combo.h. */
-            uint8_t best;
-            uint8_t v, t2;
+            /* Reuse s_ss_n/s_ss_i/s_ss_t as best/v/t2 so the added
+             * participating_base call inside the loop does not spill an
+             * extra byte onto combo_resolve_banked's stack frame
+             * (AGENTS.md 52.24 -- combo_short_best only runs after this
+             * loop finishes). */
             if (has_ring) {
-                best = HAND_NONE;
-                for (v = 10; v != 0; v--) {
-                    t2 = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, v);
+                s_ss_n = HAND_NONE;
+                s_ss_pair = 0;
+                for (s_ss_i = 10; s_ss_i != 0; s_ss_i--) {
+                    s_ss_t = combo_classify_loot((const Card *)g_bk_ptr_a, idx, w, s_ss_i);
                     /* Rank-aware max (docs/short-straight.md): enum order
                      * matches rank EXCEPT SHORT STRAIGHT (10), which slots
                      * between TWO_PAIR and THREE_KIND -- a raw max would let
                      * it outrank straights and better (e.g. a ringed 4-run
-                     * plus straight completion must stay STRAIGHT).
-                     *
-                     * KNOWN LIMITATION (bank-3 budget, short-straight.md):
-                     * every ring trial heals so amounts are comparable, but
-                     * the loop picks by rank: a poorer SHORT can beat a
-                     * richer PAIR, and the first-found SHORT trial wins over
-                     * a richer one.  An amount-aware selection needs a
-                     * participating-base product per trial -- ~1.2 KB of
-                     * bank-3 code against 45 B of headroom. */
-                    if (t2 == HAND_SHORT_STRAIGHT) {
-                        if (best < HAND_THREE_KIND) { best = t2; best_v = v; }
-                    } else if (t2 > best || (best == HAND_SHORT_STRAIGHT &&
-                                             t2 >= HAND_THREE_KIND)) {
-                        best = t2;
-                        best_v = v;
+                     * plus straight completion must stay STRAIGHT).  Among
+                     * SHORT trials, keep the one with the largest
+                     * participating base so the ring extends the run instead
+                     * of sitting idle at v=10; combo_short_best below then
+                     * lets a richer ringed PAIR beat a low SHORT. */
+                    if (s_ss_t == HAND_SHORT_STRAIGHT) {
+                        if (s_ss_n < HAND_THREE_KIND) {
+                            s_ss_raw = combo_participating_base(
+                                (const Card *)g_bk_ptr_a, idx, w,
+                                HAND_SHORT_STRAIGHT, s_ss_i,
+                                COMBO_UNPACK_PHASE(g_bk_byte_b),
+                                (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK) ? 1 : 0);
+                            if (s_ss_n != HAND_SHORT_STRAIGHT || s_ss_raw > s_ss_pair) {
+                                s_ss_n = s_ss_t;
+                                best_v = s_ss_i;
+                                s_ss_pair = s_ss_raw;
+                            }
+                        }
+                    } else if (s_ss_t > s_ss_n || (s_ss_n == HAND_SHORT_STRAIGHT &&
+                                                   s_ss_t >= HAND_THREE_KIND)) {
+                        s_ss_n = s_ss_t;
+                        best_v = s_ss_i;
                     }
                 }
-                out_result->tier = best;
+                out_result->tier = s_ss_n;
                 if (best_v != 0) {
                     /* Leave s_hist holding the BEST trial, not the v=1
                      * leftovers: participating_base scans s_hist for the
@@ -556,10 +573,10 @@ void combo_resolve_banked(void)
                 best_v, COMBO_UNPACK_PHASE(g_bk_byte_b),
                 (COMBO_UNPACK_PHASE(g_bk_byte_b) == COMBO_PHASE_ATTACK && has_ring) ? 1 : 0);
         /* Dynamic best-subset (docs/short-straight.md): the ladder
-         * proposes SHORT, but a pair subset or a lone card can score
-         * higher -- resolve the winner, not just the rank.  Ringless
-         * only (healing amounts are incomparable). */
-        if (out_result->tier == HAND_SHORT_STRAIGHT && !has_ring) {
+         * proposes SHORT, but a pair subset (including a ringed pair)
+         * or a lone card can score higher -- resolve the winner, not
+         * just the rank. */
+        if (out_result->tier == HAND_SHORT_STRAIGHT) {
             combo_short_best((const Card *)g_bk_ptr_a, idx, w,
                              COMBO_UNPACK_PHASE(g_bk_byte_b),
                              &out_result->tier, &out_result->base_power,

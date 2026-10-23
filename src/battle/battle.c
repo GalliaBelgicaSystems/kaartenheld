@@ -482,6 +482,7 @@ static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
     g_bk_ptr_b = (void *)&b->last_combo;
     g_bk_byte_a = b->combo_count;
     g_bk_byte_b = COMBO_PACK(phase, fx);
+    g_bk_byte_d = 0;
     banked_call_run();
     telemetry_emit(EVENT_COMBO_RESOLVED,
                    b->last_combo.tier,
@@ -591,28 +592,14 @@ void battle_execute_combo(Battle *b)
                  * (docs/combo-system.md §13/§17). */
                 if (b->enemies[b->target_idx].hp != 0 &&
                     b->last_combo.cards[0].status_id != STATUS_NONE) {
-                    /* Combo-scaled rider (docs/combo-system.md §10): the
-                     * hand's effective multiplier scales the card's base
-                     * chance; capped at ~100%.  Add/subtract loops give the
-                     * exact same floor(chance*mult/100) as the original
-                     * expression while keeping the SDCC 16-bit mul/div
-                     * library out of the tight fixed bank (SM83 has no
-                     * hardware multiply). */
+                    /* Combo-scaled rider (docs/combo-system.md §10):
+                     * effect_resolve_into() (bank 3, called inside
+                     * battle_play_hand above) scaled cards[0].status_chance
+                     * by the full 16-bit multiplier (capped at 255) and
+                     * staged the threshold into g_bk_byte_c. */
                     {
-                        uint16_t eff = 0;
-                        uint16_t k = (uint8_t)b->last_combo.multiplier;
                         uint8_t tslot = (uint8_t)(b->target_idx + 1);
-                        while (k--) {
-                            eff = (uint16_t)(eff +
-                                 b->last_combo.cards[0].status_chance);
-                        }
-                        k = 0;
-                        while (eff >= 100) {
-                            eff = (uint16_t)(eff - 100);
-                            k++;
-                        }
-                        if (k > 255) k = 255;
-                        if ((uint8_t)rng_next() < (uint8_t)k) {
+                        if ((uint8_t)rng_next() < g_bk_byte_c) {
                             if (status_apply(status_slots(tslot), tslot,
                                              b->last_combo.cards[0].status_id,
                                              1, 0) &&
