@@ -1,7 +1,7 @@
 {
   "name": "gem_empty",
   "test": true,
-  "description": "The GEM tab starts empty: RIGHT x3 from DECK reaches the fourth tab (new DECK QUEST HERO GEM header) showing only NO GEMS YET (no shop hint here; the +20 invite lives at the chuck-a-luck table).",
+  "description": "The GEM tab starts empty: RIGHT x3 from DECK reaches the fourth tab (new DECK QUEST HERO GEM header) showing only NO GEMS YET with a B:BACK footer (no equip/info actions with an empty pocket).",
   "actions": [
     {
       "type": "press",
@@ -54,7 +54,7 @@
     {
       "type": "screen_row",
       "row": 16,
-      "contains": "SEL:INFO"
+      "contains": "B:BACK"
     }
   ],
   "initial_state": {

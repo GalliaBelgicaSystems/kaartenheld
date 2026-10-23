@@ -737,7 +737,7 @@ static const char *battle_combo_tier_name(uint8_t tier)
         case HAND_FOUR_KIND:      return "FOUR KIND";
         case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
         case HAND_FIVE_KIND:      return "FIVE KIND";
-        case HAND_SHORT_STRAIGHT: return "SHORT STRAIGHT";
+        case HAND_SHORT_STRAIGHT: return "SHORT STR";
         case HAND_NONE:           return "HCARD";
         default:                  return "";
     }
@@ -795,9 +795,10 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         best = HAND_NONE;
         for (v = 10; v != 0; v--) {
             tier = combo_classify_loot(battle->hand, idx, w, v);
-            /* Rank-aware max: same rule as combo_resolve_banked -- enum
+            /* Rank-aware max, same rule as combo_resolve_banked (enum
              * order matches rank except SHORT STRAIGHT (10), which slots
-             * between TWO_PAIR and THREE_KIND. */
+             * between TWO_PAIR and THREE_KIND).  Same known limitation
+             * as the resolver: rank picks, amounts don't vote. */
             if (tier == HAND_SHORT_STRAIGHT) {
                 if (best < HAND_THREE_KIND) { best = tier; best_v = v; }
             } else if (tier > best || (best == HAND_SHORT_STRAIGHT &&
@@ -950,13 +951,13 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Real-time preview: the row tracks the PENDING selection as cards
      * are added/removed and blanks once the hand resolves -- executed
      * results announce via the banner instead of sticking around.
-     * Format "<tier> DMG<n>" (no COMBO: label: longest tier (14, SHORT
-     * STRAIGHT) plus a 2-digit amount still fits 20 cols; with no poker
-     * tier the row still shows the inflicted damage as bare "DMG<n>"
-     * still shows the inflicted damage as bare "DMG<n>" (face-value
-     * sum, same math the resolver applies).  Attack ring hands convert
-     * to healing: same layout with "HEAL" ("<tier> HEAL<n>", bare
-     * "HEAL<n>"), so preview and result agree. */
+     * Format "<tier> DMG<n>" (no COMBO: label: longest tier is 10
+     * ("FULL HOUSE", "THREE KIND"; SHORT reads "SHORT STR"), so even
+     * a 3-digit amount fits 20 cols.  With no poker tier the row shows
+     * the inflicted damage as bare "DMG<n>" (face-value sum, same math
+     * the resolver applies).  Attack ring hands convert to healing:
+     * same layout with "HEAL" ("<tier> HEAL<n>", bare "HEAL<n>"), so
+     * preview and result agree. */
     const char *name;
     uint8_t dmg = 0;
     uint8_t heal = 0;

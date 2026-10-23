@@ -38,9 +38,10 @@ bit, the tab through `screen_row`.
   e.g. a shield at a run value contributes 0 on attack).
 * **Precedence**: insert below THREE_KIND, above TWO_PAIR. A 5-card
   sequential hand stays STRAIGHT (210, checked first as today). Kinds
-  keep precedence (a pair + run stages as the pair unless the player
-  drops a card), so no existing classification changes: the tier only
-  upgrades hands that are currently HIGH_CARD or pairs.
+  keep precedence over the ladder SHORT (a pair + run classifies as the
+  pair unless the player drops a card) -- but the best-subset rule
+  below can still resolve that hand as the SHORT when the run outscores
+  the pair (3,3,4,5 resolves SHORT 15, not PAIR 7).
 * **Best-subset resolution (implemented)**: classification picks the
   ladder tier, but resolution plays the highest-scoring subset of the
   staged cards -- a pair subset or a lone high card can beat the
@@ -49,6 +50,13 @@ bit, the tab through `screen_row`.
   (ringed hands convert to healing: amounts are incomparable, and the
   joker trial already explores ring-assisted kinds).  The preview shows
   the winning play, so preview and result agree.
+* **Ring-trial amount limitation (known)**: the joker trial loop picks
+  by rank, not amount: every ring trial heals so the amounts ARE
+  comparable, but the loop keeps the rank-best trial (a poorer SHORT
+  beats a richer PAIR; the first-found SHORT trial wins over a richer
+  one).  An amount-aware selection needs a participating-base product
+  per trial -- ~1.2 KB of bank-3 code against 45 B of release
+  headroom -- so this waits on a bank-3 diet first.
 * **Suited bonus**: N/A in practice. Single-weapon values skip by two
   (swords/bows 1,3,5,7,9; daggers/shields/rings 1,2,4,6,8), so no
   three same-suit cards can ever be sequential. The existing +25% rule

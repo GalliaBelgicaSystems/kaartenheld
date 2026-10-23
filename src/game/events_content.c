@@ -148,7 +148,11 @@ const EventDefinition g_events[] = {
      * silent: the first talk then takes the EARLY_DONE path above
      * instead of a stale "return" prompt.  Exact ==5 (not >=5) keeps
      * the 2-cond limit (quest + count) and is one-shot by
-     * construction: the counter passes through 5 exactly once.
+     * construction: the counter passes through 5 exactly once in real
+     * gameplay (every defeat adds exactly 1).  Artificial staging that
+     * skips 5 (debug descriptors, future +2 rewards) never fires this
+     * -- that is the accepted cost of the 2-cond cap; widening
+     * MAX_EVENT_CONDS would recover it.
      * STORY_FLAG_ID_HUNT_NOTIFIED is still set for observability.
      * Overlap note: a defeat that also carries its own reward dialogue
      * (Carl's speech, the mimic box) stages that text last, swallowing

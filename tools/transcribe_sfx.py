@@ -556,24 +556,25 @@ def trim_voice(voice):
         return [], 0
     last_tick, _ = audible[-1]
     # A note-cut after the last audible tick silences the voice at its
-    # tick: it moots the natural tail AND the infinite-envelope guard
-    # (an increasing envelope behind a cut is finite -- it ends at the
-    # cut).  Without this, increasing envelopes could never be cut.
+    # tick: it moots the infinite-envelope guard (an increasing envelope
+    # behind a cut is finite -- it ends at the cut).  Without this,
+    # increasing envelopes could never be cut.  The natural end still
+    # applies first: a cut AFTER the envelope already died must not
+    # lengthen the table (and delay the music unmute) for nothing.
     post_cuts = [c for c in voice.cut_ticks if c > last_tick]
-    if post_cuts:
-        end = min(post_cuts)
-    else:
-        vol, pace, direction, t0 = voice.env_at(last_tick)
-        if direction == 1:
-            raise TranscribeError("increasing envelope has no natural end")
-        if vol == 0:
-            tail = 0
-        elif pace == 0:
+    vol, pace, direction, t0 = voice.env_at(last_tick)
+    if direction == 1 or (direction == 0 and pace == 0 and vol != 0):
+        if not post_cuts:
+            if direction == 1:
+                raise TranscribeError("increasing envelope has no natural end")
             raise TranscribeError("constant-volume tail never ends; trim rule needed")
-        else:
-            # volume already decayed for (last_tick - t0) ticks since the write
-            tail = max(0, vol * pace - (last_tick - t0))
-        end = last_tick + tail
+        natural_end = None  # unbounded: the cut ends it
+    elif vol == 0:
+        natural_end = last_tick
+    else:
+        # volume already decayed for (last_tick - t0) ticks since the write
+        natural_end = last_tick + max(0, vol * pace - (last_tick - t0))
+    end = min([e for e in [natural_end] + post_cuts if e is not None])
     # the hardware length timer cuts sound even mid-decay; the engine
     # must unmute there, not at the envelope's natural end
     if voice.len_enable:

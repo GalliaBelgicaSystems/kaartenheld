@@ -231,7 +231,10 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     }
 
     /* Full-set amount via shared shift-add below (mult in s_ss_m,
-     * base in s_ss_a, result in s_ss_best). */
+     * base in s_ss_a, result in s_ss_best).  Mults mirror
+     * g_combo_tier_mult (+25 when suited, like the resolver): table
+     * reads don't fit bank 3 (45 B release headroom), so a balance
+     * tweak must update both -- grep HAND_SHORT_STRAIGHT here. */
     s_ss_m = (*suited_io) ? 155 : 130;
     s_ss_a = *base_io;
     s_ss_best = 0;
@@ -271,7 +274,8 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
 
     /* Pair subset vs the full set (only when a pair exists): TWO_PAIR
      * for two paired values (150 unsuited / 175 suited), else PAIR
-     * (120 / 145).  Shared shift-add loop: no 8-bit * or /. */
+     * (120 / 145) -- mirrors g_combo_tier_mult, see above.  Shared
+     * shift-add loop: no 8-bit * or /. */
     if (s_ss_n != 0) {
         if (s_ss_n >= 2)
             s_ss_m = (s_ss_st == 0xFE || s_ss_st == 0xFF) ? 150 : 175;
@@ -510,7 +514,15 @@ void combo_resolve_banked(void)
                      * matches rank EXCEPT SHORT STRAIGHT (10), which slots
                      * between TWO_PAIR and THREE_KIND -- a raw max would let
                      * it outrank straights and better (e.g. a ringed 4-run
-                     * plus straight completion must stay STRAIGHT). */
+                     * plus straight completion must stay STRAIGHT).
+                     *
+                     * KNOWN LIMITATION (bank-3 budget, short-straight.md):
+                     * every ring trial heals so amounts are comparable, but
+                     * the loop picks by rank: a poorer SHORT can beat a
+                     * richer PAIR, and the first-found SHORT trial wins over
+                     * a richer one.  An amount-aware selection needs a
+                     * participating-base product per trial -- ~1.2 KB of
+                     * bank-3 code against 45 B of headroom. */
                     if (t2 == HAND_SHORT_STRAIGHT) {
                         if (best < HAND_THREE_KIND) { best = t2; best_v = v; }
                     } else if (t2 > best || (best == HAND_SHORT_STRAIGHT &&

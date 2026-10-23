@@ -18,8 +18,8 @@
  *
  * ABI: the fixed dispatch in item_screen.c sends the GEM tab here and
  * the QUEST tab to item_quest_nav_banked (same bank); the GEM page
- * renders through the bank-2 body like DECK/HERO.  Reads only this
- * bank's data, the staged Game*, and always-mapped WRAM; calls no
+ * renders here in bank 8 with its registry (never bank 2).  Reads only
+ * this bank's data, the staged Game*, and always-mapped WRAM; calls no
  * fixed-bank functions (variable writes go straight to GameState --
  * same v1 gap as the gamble table's gold moves, no VARIABLE_SET event;
  * the owned/equipped bits stay snapshot-assertable and the skill itself
@@ -35,7 +35,7 @@
 #define GEM_MSG_MAX 4   /* transient "MAX 3 GEMS" (see item_menu_message) */
 #define GEM_MSG_TTL 45
 
-extern const GemDefinition g_gems[];
+extern const GemDefinition g_gems[GEM_COUNT];
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
@@ -194,16 +194,18 @@ void item_quest_render_banked(void);
 /* ── Gem detail (SELECT on a gem row) ─────────────────────────────
  *   row 3: gem name
  *   row 5: what it unlocks (skill)
- *   rows 6-8: the short-straight rules it gates
+ *   rows 6-8: per-gem explainer from the registry (GemDefinition.detail,
+ *             so gem #2's text never hard-codes gem #1's rules)
  *   row 9: "SEL:BACK" (B closes via the fixed handler, same as quests) */
 static void gem_draw_detail(uint8_t bit)
 {
     uint8_t reg = gem_ptr_bit(bit);
+    uint8_t r;
     GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 12);
     GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 15);
-    GEM_DRAW_TEXT(0, 6, "3 IN A ROW SCORES", 17);
-    GEM_DRAW_TEXT(0, 7, "BEST 3 COUNT", 12);
-    GEM_DRAW_TEXT(0, 8, "RINGS FILL GAPS", 15);
+    for (r = 0; r < 3; r++) {
+        GEM_DRAW_TEXT(0, (uint8_t)(6 + r), g_gems[reg].detail[r], 20);
+    }
     GEM_DRAW_TEXT(0, 9, "SEL:BACK", 8);
 }
 
@@ -306,17 +308,18 @@ void item_gem_render_banked(void)
 
     gem_draw_header();
 
-    if (g->item_menu_mode == GEM_MODE_DETAIL) {
-        bit = gem_owned_bit(g, g->item_menu_index, &total);
-        if (total != 0) gem_draw_detail(bit);
-        return;
-    }
-
     owned = g->state.variables.values[VARIABLE_ID_GEM_OWNED - 1];
+    total = 0;
     for (v = 0; v < GEM_COUNT; v++) {
         if ((owned & (int16_t)(1 << v)) != 0) total++;
     }
-    if (total == 0) {
+
+    if (g->item_menu_mode == GEM_MODE_DETAIL) {
+        if (total != 0) {
+            bit = gem_owned_bit(g, g->item_menu_index, &total);
+            gem_draw_detail(bit);
+        }
+    } else if (total == 0) {
         GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
     } else {
         v = 0;
@@ -329,6 +332,8 @@ void item_gem_render_banked(void)
     }
     if (g->item_menu_message == GEM_MSG_MAX)
         GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
+    else if (total == 0)
+        GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
     else
         GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
 }

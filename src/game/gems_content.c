@@ -10,8 +10,9 @@
  * fixed for the GEM-tab row layout (name at col 2, ON/OFF at col 15,
  * skill on the line below). */
 
-const GemDefinition g_gems[] = {
-    { GEM_STRAIGHT, "STRAIGHT GEM", "SHORT STRAIGHT" },
+const GemDefinition g_gems[GEM_COUNT] = {
+    { GEM_STRAIGHT, "STRAIGHT GEM", "SHORT STRAIGHT",
+      { "3 IN A ROW SCORES", "BEST 3 COUNT", "RINGS FILL GAPS" } },
 };
 
 /* Registry length is GAME_GEM_COUNT == GEM_COUNT by construction (see

@@ -1,5 +1,5 @@
 {
-  "name": "gem_combo_two_pair_run",
+  "name": "gem_combo_two_pair",
   "test": true,
   "description": "Dynamic best-subset: two-pair + run (SW3 + SW3 + BO4 + BO4 + SW5, gem equipped) resolves as TWO_PAIR (14 x 150 = 21), not the ladder's SHORT (12 x 130 = 15). The preview shows the same.",
   "initial_state": {

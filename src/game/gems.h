@@ -18,6 +18,9 @@ typedef struct {
     uint8_t bit;        /* GEM_* bit in the OWNED/EQUIPPED masks */
     char name[13];      /* display label, e.g. "STRAIGHT GEM" */
     char skill[16];     /* what it unlocks, e.g. "SHORT STRAIGHT" */
+    char detail[3][20]; /* GEM-tab INFO page explainer rows 6-8 (each
+                         * fits 19 cols + NUL); per-gem so gem #2 never
+                         * inherits gem #1's rules */
 } GemDefinition;
 
 /* Gem registry length.  Single source of truth for the table size:
@@ -25,6 +28,6 @@ typedef struct {
  * tab iterates GEM_COUNT, so a short table would read past it. */
 #define GAME_GEM_COUNT GEM_COUNT
 
-extern const GemDefinition g_gems[];
+extern const GemDefinition g_gems[GEM_COUNT];
 
 #endif /* GAME_GEMS_H */
