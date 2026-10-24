@@ -2,12 +2,13 @@
 
 ## Problem
 
-The debug build's fixed `_CODE`/`_HOME` region ends at `0x7FFF` -- 1 B of
+The debug build's fixed `_CODE`/`_HOME` region ends at `0x7FFF` -- 20 B of
 headroom below `0x8000` (AGENTS.md §52.18). Release still has ~4.9 KB free,
 so this binds the debug (harness) build only. The next fixed-bank addition
 of any size breaks the debug link (`Possible overflow from Bank 1 into
 Bank 2`, Makefile fails loudly). Merging master already tipped it over
-once (dagger-counter diet fixed it); there is nothing left to trim.
+once (recovered with a diet plus prep-side staging); the remaining margin
+covers roughly two struct accesses, not a feature.
 
 Rule: no feature work that adds fixed-bank code in debug until this lands.
 
@@ -56,7 +57,7 @@ candidate 1 lands short.
 ## Acceptance
 
 - `make memmap`: debug fixed headroom **>= 256 B** (a typical feature's
-  worth; the exact number goes into the §52.18 note, replacing the 1 B).
+  worth; the exact number goes into the §52.18 note, replacing the 20 B).
   Moving `scenario_load_state` + `debug_run_action` alone should clear
   this easily (gap-measured at ~1.9 KB combined in the debug `.sym`) --
   move one body first, re-measure, then decide whether the second is
