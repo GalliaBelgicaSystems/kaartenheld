@@ -162,8 +162,8 @@ attack now vs save it to block next) is the core decision of the game.
 
 ## Defending
 
-After the telegraph (`ENEMY ATTACK!`, e.g. damage 3), **shields**
-(and rings) do anything. Swords and bows, played here are fully
+After the telegraph (`ENEMY ATTACK!`, e.g. damage 3), only **shields**
+(and rings) block. Swords and bows played here are fully
 inert — 0 block, 0 combo — though the game still lets you select them
 (and still eats them, so don't).
 
@@ -172,7 +172,8 @@ rings, but no shields/swords/bows), they **counterattack** — the
 attacker takes dagger damage (attack-phase poker scaling, poison
 included) while you still take the full incoming swing. Mixed with
 shields, swords or bows the daggers are simply lost. A dagger + ring
-deck can therefore always attack and heal, never blocking.
+deck can therefore always attack and heal, never blocking (a lone ring
+can't form a hand, so its block stays 0).
 
 ```
 net = incoming - (participating shields, scaled)

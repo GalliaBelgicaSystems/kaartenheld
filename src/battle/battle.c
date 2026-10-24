@@ -444,7 +444,9 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
  * Returns 1 when counter damage was dealt (the caller gates its victory
  * check on this so defend flows without a counter emit no new
  * telemetry).  Victory is NOT set here: the caller checks it after the
- * phase advance so a mutual kill stays a defeat (docs/how-to-combat.md).
+ * phase advance.  Precedence note: the prep skips dead heroes, so a
+ * lethal swing always ends in defeat with no counter; a living hero
+ * whose counter drops the last enemy wins.
  *
  * Fixed-bank budget (AGENTS.md 52.18): the prep body stages everything
  * the resolve needs (count, attacker, rider, deck width) because every

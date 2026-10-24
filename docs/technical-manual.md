@@ -466,7 +466,8 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
   an attack-phase poker evaluation over the daggers (poison rider
   included) while you still take the unblocked swing.  Mixed with any
   shield/sword/bow, daggers are lost (0 block, no counter).
-* Rings act as **wild shields** worth their power.
+* Rings **wildcard** the defend hand (they complete tiers like a joker)
+  but add **0 block** themselves.
 * The net is `incoming − (sum of shields + rings)`.
   * **Net > 0** → you take that damage (clamped to your HP).
   * **Net ≤ 0** → no damage.  Over-block *heals* you only while a ring is

@@ -38,27 +38,22 @@ void battle_counter_prep_banked(void)
     n = 0;
     for (i = 0; i < b->combo_count; i++) {
         uint8_t t = b->last_combo.cards[i].type;
-        if (t == BATTLE_CARD_TYPE_SHIELD || t == BATTLE_CARD_TYPE_SWORD ||
-            t == BATTLE_CARD_TYPE_BOW) {
+        /* Whitelist, not blacklist: only daggers and rings (HEAL) may
+         * stand next to daggers.  A future weapon type must consciously
+         * opt into counter play here instead of silently riding along
+         * as ring-like.  EMPTY slots can never be selected, but they
+         * abort too rather than passing as harmless. */
+        if (t != BATTLE_CARD_TYPE_DAGGER && t != BATTLE_CARD_TYPE_HEAL) {
             g_bk_byte_a = 0;
             return;
         }
         if (t == BATTLE_CARD_TYPE_DAGGER) {
-            /* Field-wise copy (no struct assignment: SDCC lowers
-             * Card-sized copies to __memcpy, unreachable while a
-             * switchable bank is mapped -- same rule as
-             * card_copy_banked in deck_shuffle_banked.c, enforced by
+            /* Shared field-wise copy (CARD_COPY_FIELDS in card.h): no
+             * struct assignment, so SDCC never lowers a RAM-resident
+             * __memcpy call here (AGENTS.md §52.11.1,
              * tools/check_banked_copies.sh). */
-            if (n != i) {
-                b->last_combo.cards[n].type = b->last_combo.cards[i].type;
-                b->last_combo.cards[n].value = b->last_combo.cards[i].value;
-                b->last_combo.cards[n].uses_remaining = b->last_combo.cards[i].uses_remaining;
-                b->last_combo.cards[n].cost = b->last_combo.cards[i].cost;
-                b->last_combo.cards[n].effect = b->last_combo.cards[i].effect;
-                b->last_combo.cards[n].status_id = b->last_combo.cards[i].status_id;
-                b->last_combo.cards[n].status_chance = b->last_combo.cards[i].status_chance;
-                b->last_combo.cards[n].ring = b->last_combo.cards[i].ring;
-            }
+            if (n != i) CARD_COPY_FIELDS(&b->last_combo.cards[n],
+                                         &b->last_combo.cards[i]);
             n++;
         }
     }

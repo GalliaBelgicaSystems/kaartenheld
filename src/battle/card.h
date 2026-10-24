@@ -51,4 +51,25 @@ typedef struct {
     uint8_t ring;
 } Card;
 
+/* Shared field-wise Card copy for banked bodies: SDCC lowers
+ * whole-struct assignment (and memcpy) to the RAM-resident __memcpy
+ * helper, which is unreachable while a switchable ROM bank is mapped
+ * (AGENTS.md §52.11.1; enforced by tools/check_banked_copies.sh).  This
+ * is deliberately a macro, not a static helper: an unused static would
+ * still be emitted into every TU that includes this header and breaks
+ * tiles_content.c's assembly output.  The size trap breaks the build if
+ * Card ever grows, so a new field can never silently go uncopied. */
+#define CARD_COPY_FIELDS(dst, src) \
+    do { \
+        typedef char card_copy_fields_ok[sizeof(Card) == 8 ? 1 : -1]; \
+        (dst)->type = (src)->type; \
+        (dst)->value = (src)->value; \
+        (dst)->uses_remaining = (src)->uses_remaining; \
+        (dst)->cost = (src)->cost; \
+        (dst)->effect = (src)->effect; \
+        (dst)->status_id = (src)->status_id; \
+        (dst)->status_chance = (src)->status_chance; \
+        (dst)->ring = (src)->ring; \
+    } while (0)
+
 #endif /* CARD_H */
