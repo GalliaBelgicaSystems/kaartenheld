@@ -1,0 +1,35 @@
+{
+ "name": "thanks_restart",
+ "test": true,
+ "description": "The battle-demo Thanks screen holds ~5 s (300 frames) then auto-restarts into a fresh overworld.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "RENDER_SCREEN"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 5005,
+  "screen": "THANKS"
+ }
+}

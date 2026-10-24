@@ -100,9 +100,10 @@ void intro_content_render(void);
 void tutorial_content_render(void);
 void credits_content_render(void);
 
-/* Bank-2 no-arg bodies dispatched by the simple_screens render wrappers
- * (thanks/ending/game-over).  game_over_content_render() reads
- * g_bk_byte_a (choice). */
+/* No-arg bodies dispatched by the simple_screens render wrappers
+ * (thanks/ending/game-over).  thanks_content_render() lives in bank 9
+ * (bank 4 could not fit its four lines); ending/game-over stay in
+ * bank 4.  game_over_content_render() reads g_bk_byte_a (choice). */
 void thanks_content_render(void);
 void ending_content_render(void);
 void game_over_content_render(void);
