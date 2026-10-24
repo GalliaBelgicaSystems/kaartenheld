@@ -169,8 +169,8 @@ typedef enum {
     TILE_FOREST_67 = 139,
     TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 36 tiles in sheet scan order (0..35),
-     * mapping 1:1 to the 36 castle VRAM slots (RPG_TILE_BASE_WORLD):
+    /* Castle Landscape tiles: 45 tiles in sheet scan order (0..44),
+     * mapping 1:1 to the 45 castle VRAM slots (RPG_TILE_BASE_WORLD):
      * TILE_CASTLE_<i> renders VRAM block slot i.  Suffixes stay scan
      * indices, NOT values.
      *
@@ -180,12 +180,14 @@ typedef enum {
      * evicted legacy desolate WALL_00..WALL_10 (unreferenced by every
      * level; the legacy engine ranges in ui.c now start at WALL_11).
      * 251..253 (top of the u8 range, still <= 0xFE per g_tiletype_fits_u8)
-     * stay with the chandelier/vase row as before.  Values 184..186
-     * (ex-red-square/MERCHANT/STAIRCASE) are free again.  Both empty
-     * cells share one tile id.  ui.c maps the 141..156 block through a
-     * 16-byte slot table (one range check instead of a branch ladder);
-     * the generated walk/glyph tables absorb the values with no hand
-     * edits. */
+     * stay with the chandelier/vase row as before.  The sheet's fifth
+     * row takes the last free values 184..186 (ex-red-square/MERCHANT/
+     * STAIRCASE) for the carpet corners + exit up; the row's remaining
+     * empty cells share the black-emptiness value 156 under new
+     * TILE_CASTLE_37..44 ids.  ui.c maps the 141..156 block through a
+     * 16-byte slot table plus a 3-byte table for 184..186 (one range
+     * check each instead of a branch ladder); the generated walk/glyph
+     * tables absorb the values with no hand edits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -220,7 +222,17 @@ typedef enum {
     TILE_CASTLE_31 = 153,
     TILE_CASTLE_32 = 154,
     TILE_CASTLE_33 = 155,
-    TILE_CASTLE_34 = 156,
+    TILE_CASTLE_34 = 184,
+    TILE_CASTLE_35 = 185,
+    TILE_CASTLE_36 = 186,
+    TILE_CASTLE_37 = 156,
+    TILE_CASTLE_38 = 156,
+    TILE_CASTLE_39 = 156,
+    TILE_CASTLE_40 = 156,
+    TILE_CASTLE_41 = 156,
+    TILE_CASTLE_42 = 156,
+    TILE_CASTLE_43 = 156,
+    TILE_CASTLE_44 = 156,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).

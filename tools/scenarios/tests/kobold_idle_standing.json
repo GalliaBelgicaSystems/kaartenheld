@@ -1,0 +1,31 @@
+{
+ "name": "kobold_idle_standing",
+ "test": true,
+ "description": "Standing kobold shows the idle pose (OAM 124), never walk frames: the TEST_FOREST chaser waits while the hero stands far away at (4,4). Companion to the patrol walk-frame coverage.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 124
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 12345
+ }
+}

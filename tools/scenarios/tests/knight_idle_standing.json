@@ -1,0 +1,31 @@
+{
+ "name": "knight_idle_standing",
+ "test": true,
+ "description": "Standing slime knight shows the idle pose (OAM 125), never walk frames: the TEST_SOUTH_FIELD knight (AI_NONE) stands while the hero waits far away at (8,10).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 125
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 8,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 4242
+ }
+}

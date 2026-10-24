@@ -38,8 +38,8 @@
 | ramp (slot) | tiles |
 |---|---|
 | castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table_left_half, castle_table_right_half, castle_table_top_empty, castle_table_with_plate_1, castle_table_with_plate_2, castle_top_left_throne, castle_top_right_throne |
-| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
-| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
+| castle3 (1) | castle_bottom_chandelier, castle_carpet_exterior_corner, castle_carpet_interior_corner, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
+| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_exit_up, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
 
 ### desolate_landscape (set `desolate_landscape`)
 
@@ -90,7 +90,7 @@
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
 | npc_wizard | npc_wizard | sprites7 (5) | ✓ |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
-| slime_knight | slime_knight_frame1 | sprites11 (3) | ≈ #3c5e26 |
+| slime_knight | slime_knight_frame1, slime_knight_frame2 | sprites11 (3) | ≈ #3c5e26 |
 | slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ✓ |
 | spider | spider_f0, spider_f1 | sprites (0) | ✓ |
 | treasure_chest | chest_closed, chest_open | sprites5 (1) | ✓ |
@@ -155,10 +155,11 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | battle | [2, 14] | fightslime | #3c5e26 |
 | enemy_ow | [0, 4] | sprites9 | #8b1b1b |
 | enemy_ow | [0, 8] | sprites11 | #3c5e26 |
-| enemy_ow | [0, 9] | sprites2 | #b09266 |
+| enemy_ow | [0, 9] | sprites11 | #3c5e26 |
+| enemy_ow | [0, 10] | sprites2 | #b09266 |
 | enemy_ow | [1, 4] | sprites9 | #8b1b1b |
 | enemy_ow | [1, 8] | sprites11 | #3c5e26 |
-| enemy_ow | [1, 9] | sprites2 | #b09266 |
-| enemy_ow | [2, 9] | sprites5 | #b09266 |
+| enemy_ow | [1, 10] | sprites2 | #b09266 |
+| enemy_ow | [2, 10] | sprites5 | #b09266 |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.

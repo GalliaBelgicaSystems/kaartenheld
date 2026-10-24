@@ -136,10 +136,12 @@ KNIGHT_COMBAT_MAP = [
 ]
 
 # (col, row, enemies tile id). Slime-knight overworld frames: row 3
-# (0-based row 2) of assets/sprites.png.
+# (0-based row 2) of assets/sprites.png, plus the idle stance (row 4,
+# 0-based row 3) added with the sprite refresh.
 KNIGHT_OW_MAP = [
     (6, 2, "slime_knight_frame1"),
     (7, 2, "slime_knight_frame2"),
+    (4, 3, "slime_knight_idle"),
 ]
 
 # Curated tile id -> (tileset json path, png dir).

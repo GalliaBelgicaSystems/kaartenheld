@@ -267,10 +267,10 @@ def verify_hostile_sprites(sess):
     forest = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest)
     sess.step(2)
-    # Player on MAP_FOREST renders the HERO_DESOLATE sprite (98|99), same as
-    # south_field; every other map uses PLAYER (102).
-    check("forest player renders as hero OAM tile (98|99)",
-          1, (98 <= shadow_sprite_tile(sess) <= 99))
+    # Player on MAP_FOREST renders the standing-hero idle sprite (96|97),
+    # same as south_field; moving heroes show walk frames 98|99.
+    check("forest player renders as hero idle OAM tile (96|97)",
+          1, (96 <= shadow_sprite_tile(sess) <= 97))
     attr_mirror = sess.get_symbol("g_tilemap_attr_mirror")
     check("forest treetop (3, 3) has field2 canopy palette (2)",
           2, mirror_at(sess, attr_mirror, 3, 3))
@@ -282,11 +282,11 @@ def verify_hostile_sprites(sess):
     sess.load_scenario(forest_amulet)
     sess.step(2)
     # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
-    # Closed-chest frame (shared-blob tile 121: 120 + the slime-knight
-    # overworld cell); the floor cell stays plain floor (VRAM tile
-    # 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 121)",
-          121, shadow_oam_slot_tile(sess, 5))
+    # Closed-chest frame (shared-blob tile 122: base 100 + offset 22, after
+    # the slime-knight walk row); the floor cell stays plain floor (VRAM
+    # tile 128 + 62 = 190), never chest paint.
+    check("forest amulet owns closed-chest OAM sprite (tile 122)",
+          122, shadow_oam_slot_tile(sess, 5))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
@@ -295,7 +295,7 @@ def verify_hostile_sprites(sess):
     # Loot it through the real interact path (amulet_open_sprite spawns
     # the player beside the amulet facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
-    # (122) and stay there across redraws.
+    # (123) and stay there across redraws.
     loot = load_scenario(sess, "amulet_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
@@ -303,8 +303,8 @@ def verify_hostile_sprites(sess):
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 122)",
-          122, shadow_oam_slot_tile(sess, 5))
+    check("looted amulet shows open-chest OAM sprite (tile 123)",
+          123, shadow_oam_slot_tile(sess, 5))
     check("looted amulet cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
@@ -462,9 +462,10 @@ def verify_battle_transition(sess):
     sess.step(1)
 
     # 1. Overworld steady: player at (13,8), camera (24,0) ->
-    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.
+    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.  Standing hero shows
+    #    the idle frames (96|97).
     check("overworld @ sprite position (shadow OAM)", (80, 88), shadow_oam(sess))
-    check("overworld sprite tile (shadow OAM)", 98, shadow_sprite_tile(sess))
+    check("overworld sprite tile (shadow OAM)", 1, (96 <= shadow_sprite_tile(sess) <= 97))
 
     # 2. Walk right into the slime at (14,8): Carl teaches first, so the
     #    bump opens his lesson (dialogue); closing it auto-starts the spar

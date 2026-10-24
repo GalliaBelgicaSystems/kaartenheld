@@ -89,9 +89,14 @@ void screen_change(Game *g, ScreenId screen)
 
     /* Screens that own VRAM block-1 art (battle enemy art shares slots
      * 128+ with world tiles) must not leak it into the next overworld
-     * redraw: force a tileset reload there. */
+     * redraw: force a tileset reload there.  Battles also time-share OAM
+     * ids with overworld art (AP pips over hero idle at 96-97, rider icons
+     * over the blob tail at 123-125): restream the overworld side and
+     * re-arm the battle stream (unconditional: idempotent, and dialogue
+     * closes are the only frequent entries). */
     if (screen == SCREEN_OVERWORLD) {
         ui_invalidate_tileset();
+        ui_restore_ow_oam();
     }
 
     telemetry_emit(EVENT_SCREEN_CHANGED, (uint8_t)old_screen, (uint8_t)screen, 0, 0);

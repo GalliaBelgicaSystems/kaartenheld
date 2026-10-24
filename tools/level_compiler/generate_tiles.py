@@ -12,8 +12,9 @@ What stays hand-written (frozen legacy, predates manifests): the generic
 tiles (FLOOR/WALL/EXIT), the old desolate set (DESOLATE_FLOOR_*,
 DESOLATE_FLOOR_PLAIN), stumps, and the t<8 semantic map. Those never
 change; only manifest-covered ranges are generated. (Values 184..186,
-ex-TILE_DESOLATE_FIRE_02/_MERCHANT/_STAIRCASE, were evicted for castle
-TILE_CASTLE_36/27/28; the legacy engine ranges now end at DESOLATE_FIRE_01.)
+ex-TILE_DESOLATE_FIRE_02/_MERCHANT/_STAIRCASE, were evicted for the
+castle fifth row: TILE_CASTLE_34/35/36; the legacy engine ranges now
+end at DESOLATE_FIRE_01.)
 The patrol replica dissolves into the same generated table (one source,
 two call sites) instead of a hand-kept copy.
 
@@ -359,19 +360,20 @@ def main(argv):
     # hand-ruled in ROM -- walkability in the edge/patrol legacy checks,
     # glyphs in the ui.c legacy branch, which catches 146..183 before the
     # generated table). Explicit '#'/solid entries keep the glyph Hi-only
-    # scan gap-safe now that castle 184..186 sit right after the gap.
+    # scan gap-safe. The castle fifth row (184..186) is manifest-owned
+    # (carpet corners + exit up, real walk/glyph rows from castle.json).
     # Behavior-preserving: no caller reaches the generated tables for
     # these values with other expectations (walkability callers check the
     # legacy ranges first; the '*' of FIRE_01 stays live in ui.c).
     value_to_const = {v: k for k, v in const_by_value.items()}
     covered = {v for _, v, _, _ in entries}
-    for value in range(146, 185):
+    for value in range(146, 187):
         if value in covered:
             continue  # manifest-owned now (castle 146..156 reuse the
-                      # evicted legacy ids, with real walk/glyph rows)
-        # Free values (184 ex-red-square, 185..186 ex-MERCHANT/STAIRCASE)
-        # have no TILE_ name: use the numeric literal, which is valid C
-        # wherever a constant name would go.
+                      # evicted legacy ids, 184..186 the fifth row,
+                      # with real walk/glyph rows)
+        # Free values have no TILE_ name: use the numeric literal, which
+        # is valid C wherever a constant name would go.
         entries.append((value_to_const.get(value, str(value)),
                         value, False, "#"))
     entries.sort(key=lambda e: e[1])

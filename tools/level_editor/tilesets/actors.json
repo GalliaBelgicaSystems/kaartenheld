@@ -5,7 +5,7 @@
   "tiles": [
     {
       "id": "actors_hero_idle",
-      "label": "hero idle",
+      "label": "hero idle 1",
       "gb_constant": "TILE_ACTORS_HERO_IDLE",
       "walkable": false,
       "color": "#020202",

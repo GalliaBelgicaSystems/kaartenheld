@@ -102,13 +102,14 @@ const uint8_t g_tileset_desolate[1024] = {
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
 
-const uint8_t g_tileset_castle[576] = {
-    /* 36 castle tiles (576 bytes) in sheet scan order, VRAM slot == scan
+const uint8_t g_tileset_castle[720] = {
+    /* 45 castle tiles (720 bytes) in sheet scan order, VRAM slot == scan
      * index (see world.h TILE_CASTLE_* and the gfx rule's --tile-coords):
      * slots 0..7 base walls, 8..16 row-1 walls/furniture, 17..19 throne
      * + rugs, 20..22 chandeliers + vase, 23..25 table half + plates,
      * 26 exit, 27..30 table top + vase + columns, 31..32 rotated rugs,
-     * 33 red carpet, 34..35 empty (shared tile) */
+     * 33 red carpet, 34 carpet interior corner, 35 carpet exterior
+     * corner, 36 exit up, 37..44 empty (shared tile) */
 #include "gfx/rpg_castle_tiles.inc"
 };
 
@@ -158,7 +159,7 @@ void ui_load_tileset_banked(void)
         case WORLD_TILESET_CASTLE:
             src = g_tileset_castle;
             pal_src = g_tile_pal_castle;
-            tile_count = 36;
+            tile_count = 45;
             break;
         case WORLD_TILESET_VILLAGE:
             src = g_tileset_village;

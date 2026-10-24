@@ -293,7 +293,7 @@
     {
       "id": "castle_exit",
       "palette": "castle4",
-      "label": "exit",
+      "label": "exit down",
       "gb_constant": "TILE_CASTLE_26",
       "walkable": true,
       "color": "#878787",
@@ -382,12 +382,45 @@
       "id": "castle_black_emptyness",
       "palette": "castle4",
       "label": "empty",
-      "gb_constant": "TILE_CASTLE_34",
+      "gb_constant": "TILE_CASTLE_37",
       "walkable": false,
-      "color": "#000000",
+      "color": "#d7d7d7",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_black_emptyness.png",
       "category": "terrain"
+    },
+    {
+      "id": "castle_carpet_interior_corner",
+      "label": "carpet interior corner",
+      "gb_constant": "TILE_CASTLE_34",
+      "walkable": true,
+      "color": "#90251b",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_carpet_interior_corner.png",
+      "category": "terrain",
+      "palette": "castle3"
+    },
+    {
+      "id": "castle_carpet_exterior_corner",
+      "label": "carpet exterior corner",
+      "gb_constant": "TILE_CASTLE_35",
+      "walkable": true,
+      "color": "#99351d",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_carpet_exterior_corner.png",
+      "category": "terrain",
+      "palette": "castle3"
+    },
+    {
+      "id": "castle_exit_up",
+      "label": "exit up",
+      "gb_constant": "TILE_CASTLE_36",
+      "walkable": true,
+      "color": "#8c8c8c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_exit_up.png",
+      "category": "terrain",
+      "palette": "castle4"
     }
   ],
   "vram_block": {
@@ -603,12 +636,66 @@
         "x": 7,
         "y": 3,
         "index": 34,
-        "tile": "castle_black_emptyness"
+        "tile": "castle_carpet_interior_corner"
       },
       {
         "x": 8,
         "y": 3,
         "index": 35,
+        "tile": "castle_carpet_exterior_corner"
+      },
+      {
+        "x": 0,
+        "y": 4,
+        "index": 36,
+        "tile": "castle_exit_up"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "index": 37,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "index": 38,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "index": 39,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "index": 40,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 5,
+        "y": 4,
+        "index": 41,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "index": 42,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 7,
+        "y": 4,
+        "index": 43,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "index": 44,
         "tile": "castle_black_emptyness"
       }
     ]

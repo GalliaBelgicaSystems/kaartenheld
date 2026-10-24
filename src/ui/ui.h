@@ -88,6 +88,12 @@ void dice_tiles_load_banked(void);
  * actor glyphs, PLAYER (102) or HERO (98). */
 #define HERO_DESOLATE_SPRITE_TILE_ID 98u
 #define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
+/* Standing-hero idle frames (hero_idle_1/2, streamed at boot beside the
+ * walk frames): OAM 96-97, time-shared with the battle AP pips (boot and
+ * overworld show idle; battle entry streams pips over them, overworld
+ * entry restores idle -- see ui_draw_actors_sprites).  Battle never needs
+ * idle art (hero hidden), overworld never needs pips. */
+#define HERO_IDLE_SPRITE_TILE_ID 96u
 /* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
  * owned by screens/enemy_types/treasure_chest.json).  Collision rules:
  * must not overlap the font-duplicate block 0..95 used for ASCII
@@ -108,6 +114,11 @@ void dice_tiles_load_banked(void);
  * and the castle boss 2x2 background block.  Lives in bank 4 to keep the
  * fixed bank under 0x8000. */
 void ui_actors_sprites_banked(void);
+
+/* Overworld-entry OAM restore (see ui.c): restreams time-shared overworld
+ * art (hero idle + blob tail) after battles.  Called from screen_change()
+ * on overworld entries. */
+void ui_restore_ow_oam(void);
 
 /* Bank-5 no-arg body behind ui_draw_actors_sprites(): swaps background
  * cells showing an animation frame tile to the current anim step's frame

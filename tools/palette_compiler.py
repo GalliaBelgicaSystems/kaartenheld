@@ -535,9 +535,9 @@ def main():
 
     # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*
     # by VRAM slot). Forest/village/desolate pack vram index == scan
-    # position; castle packs 8-wide against a 9-wide sheet, so its 16
-    # slots follow vram-index order, not scan order (encoding matches:
-    # see the castle gfx rule's --tile-coords).
+    # position; castle follows vram-index order (slot == scan index on
+    # the 9-wide sheet; encoding matches: see the castle gfx rule's
+    # --tile-coords).
     from PIL import Image as _Image
     set_of_ts = {"forest": "forest", "castle": "castle",
                  "desolate_landscape": "desolate_landscape", "village": "village"}
@@ -549,12 +549,12 @@ def main():
         vram_id = world_vram[ts]
         if ts == "castle":
             ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
-            # Sort by vram `index`: the 9x4 sheet maps 1:1 to 36 VRAM
+            # Sort by vram `index`: the 9x5 sheet maps 1:1 to 45 VRAM
             # slots in scan order (slot == index), matching the gfx
             # rule's --tile-coords and ui.c.
             ordered = sorted((v["index"], (v["x"], v["y"]), v["tile"])
                              for v in (ts_data.get("vram_block") or {}).get("tiles", [])
-                             if "tile" in v and v.get("index", 99) < 36)
+                             if "tile" in v and v.get("index", 99) < 45)
             cells = [c for _, c, _ in ordered]
             ids = [t for _, _, t in ordered]
         else:

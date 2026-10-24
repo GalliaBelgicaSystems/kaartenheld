@@ -1,0 +1,31 @@
+{
+ "name": "hero_idle_standing",
+ "test": true,
+ "description": "Standing hero shows idle frame 1 (OAM 96): boot TEST_FIELD, no input, step 1. The idle/walk select follows move_state; standing still must never show walk frames 98/99.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 1
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 0,
+   "expected": 96
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 5002
+ }
+}

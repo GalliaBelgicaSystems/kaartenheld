@@ -90,6 +90,9 @@ LAYOUT = [
     # with the sprites11 slime OBJ ramp).  Appended last so no existing
     # blob offset moves.
     ['slime_knight_frame1', 'slime_knight_frame2', None, None],
+    # Slime-knight standing pose (idle_cells): tail row like the frames
+    # above, so walk rows never shift when idle art lands.
+    ['slime_knight_idle', None, None, None],
     # AP-cost pips (battle top-left OAM HUD, owned by screens/ap_icons.json
     # with the sprites2 OBJ ramp).  Appended last so no existing blob
     # offset moves.

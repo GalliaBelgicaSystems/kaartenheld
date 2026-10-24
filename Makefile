@@ -186,8 +186,8 @@ gfx: manifest
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
-	# Four single-cell icons streamed once at boot to fixed OAM ids
-	# (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
+	# Four single-cell icons streamed on the first battle tick to fixed OAM
+	# ids (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
 	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
 	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
 	# untouched (these ride their own stream, not the enemy blob).
@@ -196,21 +196,32 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
 		-o $(GFX_OUT_DIR)/ap_tiles.h
+	# ── Battle OAM rider icons (fire/ice/poison, assets/enemy_sprites.png) ──
+	# Three single-cell icons streamed on the first battle tick to fixed OAM
+	# ids 123-125 (RIDER_TILE_BASE in battle_compile.py --rider-coords),
+	# time-sharing blob-tail ids with the last walk cell + idle rows
+	# (restored on overworld entry).  Same own-stream pattern as ap_tiles.
+	@RIDER_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --rider-coords) || { echo "FATAL: battle_compile --rider-coords failed" >&2; exit 1; }; \
+	[ -n "$$RIDER_COORDS" ] || { echo "FATAL: battle_compile --rider-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name rider_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$RIDER_COORDS" \
+		-o $(GFX_OUT_DIR)/rider_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png) ──
 	# Full world sheet (g_tileset_desolate)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
 		--shade-map generated/tiles/shades/desolate_landscape.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
-	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
+	# Player sprite tiles from assets/hero_sprites.png (walk frames 1 & 2,
+	# then idle frames 1 & 2 for the standing hero)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
 		--shade-map generated/tiles/shades/hero_ow.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-	# ── Castle tileset (assets/castle-tile.png, 9 cols × 4 rows) ─────────
-	# The full 36-tile sheet encodes in scan order, VRAM slot == scan
+	# ── Castle tileset (assets/castle-tile.png, 9 cols × 5 rows) ─────────
+	# The full 45-tile sheet encodes in scan order, VRAM slot == scan
 	# index (see world.h TILE_CASTLE_* and palette_compiler).  Sized by
 	# the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3 0,4 1,4 2,4 3,4 4,4 5,4 6,4 7,4 8,4" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
@@ -539,6 +550,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 # Ensure UI modules rebuild when generated sprite headers change
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
+$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path
