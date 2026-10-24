@@ -315,7 +315,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
+| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it wildcards the hand but adds 0 block (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
 | `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
@@ -384,7 +384,7 @@ The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
 | 7 | Hero row: `HERO` label (status color) + heart icon + `: n/m` in card-glyph brown, max ends col 19.  |
 | 8 | Deck counter: `DECK: n` + AP icon + `: energy./max.`, labels and numbers in card-glyph brown, last dot on col 19.  |
 | 9 | Transient gameplay messages (`NO ENERGY!`, `OUT OF USES!`, `ONE RING!`). |
-| 10 | Live combo row: `COMBO:` + current hand name while you select. |
+| 10 | Live combo row: `COMBO:` + current hand name while you select. In defend it forecasts `DMG <incoming>` in red plus `DEF <block>` in green -- or `CNT <counter>` in green for a daggers-only selection (suppressed when the swing is lethal). |
 | 11–14 | Your boxed hand cards (up to 5). |
 | 15 | Selection markers: digits 1–5 in selection order + the `^` cursor. |
 | 16 | Card description of the hovered card. |

@@ -176,6 +176,10 @@ included) while you still take the full incoming swing. Mixed with
 shields, swords or bows the daggers are simply lost. A dagger + ring
 deck can therefore always attack and heal, never blocking.
 
+While staging, the COMBO row forecasts the swing (`DMG`) beside your
+pending counter (`CNT`) — or `DEF` for shield hands. No counter is
+shown when the incoming hit would kill you.
+
 ```
 net = incoming - (participating shields, scaled)
 net > 0  -> you take that much

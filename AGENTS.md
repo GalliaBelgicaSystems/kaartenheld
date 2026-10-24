@@ -2591,6 +2591,10 @@ Rules:
   bank addition in a debug build will likely need a move-out first --
   every `b->field` access costs ~10 B under SDCC's 16-bit struct
   addressing, so stage through banked bodies and WRAM globals instead.
+  Companion pressure: bank 3 is thin in both builds (~40 B debug /
+  ~600 B release after the counter forecast), while bank 5 has room
+  (~2.3 KB debug / ~0.6 KB release after the card-tile loader move) --
+  prefer bank 5 for new banked bodies.
 
 ## 52.19 SDCC miscompile instances are LAYOUT-SENSITIVE (Aug 2026)
 

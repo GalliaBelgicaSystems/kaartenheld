@@ -834,6 +834,11 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     uint8_t i, w, h, t, tier, suited, q;
     uint16_t base, mult, prod;
     if (!nb || nb->combo_count == 0) return 0;
+    /* Lethal swing: a daggers-only hand blocks 0, so the hero goes down
+     * exactly when incoming >= hp -- and the prep skips dead heroes, so
+     * no counter fires.  Previewing CNT here would lie at the moment
+     * the player most needs the truth (defend_dagger_lethal). */
+    if (nb->enemy_incoming_dmg >= nb->player.hp) return 0;
     /* Cache the array bases: indexing through nb re-derives the full
      * 16-bit Battle offset on every access (~10 B a throw in this
      * bank). */
