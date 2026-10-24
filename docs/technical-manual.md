@@ -109,14 +109,15 @@ Battle and menus have their own controls, covered in §6 and §7.
 `TUTORIAL` on the title menu plays seven slides (`tutorial_content.c`).
 `LEFT`/`RIGHT` navigates, `B` exits.  The slides cover:
 
-1. **TUTORIAL BASICS** — use LEFT/RIGHT to navigate, B to exit.
-2. **CARD TYPES** — SW sword (damage), SH shield (block), BO bow (damage).
-3. **CARD TYPES 2** — HE heal (restore), DA dagger (dmg), F SW fire + BURN.
-4. **COMBOS** — played cards rank like poker hands, boosting effects.
-5. **ENERGY & COMBAT** — cards cost ENERGY; start with 1/turn.
-6. **DEFEND & STATUS** — only SH blocks dmg; SW/BO/DA block 0; POISON is a
-   damage-over-time.
-7. **SHIELD CARD** — offense: 0 dmg, but still counts for combos.
+1. **HOW TO FIGHT** — fights use cards; LEFT/RIGHT flips slides, B exits.
+2. **KNOW YOUR CARDS** — SW/BO/DA damage, SH blocks hits, HE rings heal.
+3. **STRIKE FIRST** — choose cards, press SELECT; each card costs energy.
+4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
+5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
+   daggers hit back.
+6. **BURN POISON FREEZE** — poison wounds and locks cards; ice skips
+   your turn.
+7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
 ---
 
@@ -314,7 +315,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
+| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it wildcards the hand but adds 0 block (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
 | `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
@@ -383,7 +384,7 @@ The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
 | 7 | Hero row: `HERO` label (status color) + heart icon + `: n/m` in card-glyph brown, max ends col 19.  |
 | 8 | Deck counter: `DECK: n` + AP icon + `: energy./max.`, labels and numbers in card-glyph brown, last dot on col 19.  |
 | 9 | Transient gameplay messages (`NO ENERGY!`, `OUT OF USES!`, `ONE RING!`). |
-| 10 | Live combo row: `COMBO:` + current hand name while you select. |
+| 10 | Live combo row: `COMBO:` + current hand name while you select. In defend it forecasts `DMG <incoming>` in red plus `DEF <block>` in green -- or `CNT <counter>` in green for a daggers-only selection (suppressed when the swing is lethal). |
 | 11–14 | Your boxed hand cards (up to 5). |
 | 15 | Selection markers: digits 1–5 in selection order + the `^` cursor. |
 | 16 | Card description of the hovered card. |
@@ -458,10 +459,19 @@ The first (leading) card decides the action:
 
 After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
 
-* **Only `SH` (shield) cards block.**  Swords/bows/daggers in the defend
-  hand contribute `0` block.
-* Rings act as **wild shields** worth their power.
-* The net is `incoming − (sum of shields + rings)`.
+* **Only `SH` (shield) cards block.**  Swords/bows in the defend
+  hand contribute `0` block.  **Daggers are the exception:** a
+  daggers-only selection (daggers plus optionally rings -- no
+  shields/swords/bows) **counterattacks** the telegraphed attacker with
+  an attack-phase poker evaluation over the daggers (poison rider
+  included) while you still take the unblocked swing.  Mixed with any
+  shield/sword/bow, daggers are lost (0 block, no counter).
+* Rings **wildcard** the defend hand (they complete tiers like a joker)
+  but add **0 block** themselves -- pinned by `defend_ring_joker_fodder`
+  (`SH3 + SH3 + RING` blocks `(3+3) x 180% = 10`: the ring shapes the
+  tier, never the sum).
+* The net is `incoming − block`, where `block` is the scaled
+  participating-shield sum (rings shape the tier, never the sum).
   * **Net > 0** → you take that damage (clamped to your HP).
   * **Net ≤ 0** → no damage.  Over-block *heals* you only while a ring is
     present, capped at max HP.

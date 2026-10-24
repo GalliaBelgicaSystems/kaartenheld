@@ -297,8 +297,9 @@ void ui_draw_battle_timer(const Battle *battle);
 void ui_draw_battle_timer_banked(void);
 uint8_t ui_calc_timer_bar(uint16_t t);
 
-/* Bank-3 no-arg body behind ui_init's battle-UI tile load (card frames +
- * bar segments + HUD icons from card_frame_tiles.h); dispatched via
+/* Bank-5 no-arg body behind ui_init's battle-UI tile load (card frames +
+ * bar segments + HUD icons from card_frame_tiles.h, living in
+ * ui_card_tiles_banked.c next to this loader); dispatched via
  * banked_call_run() with the LCD off. */
 void ui_card_tiles_load_banked(void);
 

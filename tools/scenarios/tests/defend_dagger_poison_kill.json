@@ -1,0 +1,172 @@
+{
+ "name": "defend_dagger_poison_kill",
+ "test": true,
+ "description": "Counter poison rider suppressed on a kill: the leading dagger carries a guaranteed poison rider, but the DA3-pair counter (8) finishes the 8-HP enemy0 -- poison must NOT land on the corpse (no STATUS_APPLIED, no CARDS_GREYED), only ENTITY_DEFEATED and the target step with no victory.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "DA",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 1,
+   "status": 1,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "DA",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 8
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 15
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_DEALT",
+   "index": 0,
+   "value": 8
+  },
+  {
+   "type": "event_arg",
+   "event": "ENTITY_DEFEATED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "TARGET_CHANGED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARDS_GREYED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

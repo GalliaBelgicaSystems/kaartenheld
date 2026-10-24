@@ -151,7 +151,7 @@ shows:
 |---|---|---|
 | **Sword** `SW` | Damage | Nothing |
 | **Bow** `BO` | Damage | Nothing |
-| **Dagger** `DA` | Damage, may poison | Nothing |
+| **Dagger** `DA` | Damage, may poison | Counterattacks alone (no shields/swords/bows); lost mixed |
 | **Shield** `SH` | 0 damage, but counts for combos | **Blocks** |
 | **Ring** `RG` | Converts the hand to healing | 0 block, but wildcard |
 

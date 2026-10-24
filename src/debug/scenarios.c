@@ -22,6 +22,8 @@
 
 extern Game g_game;
 
+void scenario_load_apply_banked(void);
+
 volatile uint8_t g_scen_load;  /* BSS zero (AGENTS.md 52.27) */
 volatile uint8_t g_scen_load_state;  /* BSS zero (AGENTS.md 52.27) */
 volatile uint8_t g_debug_action[6];
@@ -52,11 +54,9 @@ static void scenario_begin(uint16_t seed)
 static void scenario_load_state(void)
 {
     const uint8_t *b = g_scen_state_buf;
-    const uint8_t *p;
-    uint8_t *dst;
     SceneId scene;
     MapId map;
-    uint8_t x, y, facing, screen, dialogue_id, start_battle, i, n;
+    uint8_t x, y, facing, screen, dialogue_id, start_battle, i;
     uint16_t seed;
 
     if (b[0] != STATE_LOAD_DESC_VERSION) return;
@@ -73,76 +73,14 @@ static void scenario_load_state(void)
 
     game_new_game(&g_game.state);
 
-    p = b + STATE_LOAD_DESC_VARIABLES_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_VARIABLES_COUNT_OFF]; i++) {
-        uint8_t vid = *p++;
-        int16_t val = (int16_t)snap_read16(p);
-        p += 2;
-        if (vid >= 1 && vid <= MAX_STATE_VARIABLES) {
-            g_game.state.variables.values[vid - 1] = val;
-        }
-    }
-
-    p = b + STATE_LOAD_DESC_CURRENCY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_CURRENCY_COUNT_OFF]; i++) {
-        uint8_t cid = *p++;
-        int16_t amt = (int16_t)snap_read16(p);
-        p += 2;
-        if (cid >= 1 && cid <= MAX_CURRENCIES) {
-            g_game.state.currency.amount[cid - 1] = amt;
-        }
-    }
-
-    p = b + STATE_LOAD_DESC_PARTY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF] && i < MAX_PARTY_MEMBERS; i++) {
-        g_game.state.party.members[i].id = (CharacterId)*p++;
-        g_game.state.party.members[i].hp = *p++;
-        g_game.state.party.members[i].max_hp = *p++;
-        g_game.state.party.count = (uint8_t)(i + 1);
-    }
-
-    p = b + STATE_LOAD_DESC_INVENTORY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_INVENTORY_COUNT_OFF]; i++) {
-        deck_collection_add(&g_game.state.cards, (CardId)*p, *(p + 1));
-        p += 2;
-    }
-
-    /* Deck section: only applied when the host marks it present, so
-     * scenarios without "deck" keep the starter default.  Direct setup
-     * writes (no mechanic calls, no telemetry) per AGENTS.md 53.3.
-     * An explicit empty deck (count 0) is allowed: it is how scenarios
-     * reach battle_start's packed fallback-deck path now that the CARDS
-     * menu enforces DECK_MIN_CARDS. */
-    if (b[STATE_LOAD_DESC_DECK_PRESENT_OFF]) {
-        n = b[STATE_LOAD_DESC_DECK_COUNT_OFF];
-        if (n > MAX_DECK_CARDS) n = MAX_DECK_CARDS;
-        p = b + STATE_LOAD_DESC_DECK_ENTRY_OFF;
-        dst = g_game.state.cards.deck.cards;
-        i = n;
-        while (i) {
-            *dst++ = *p++;
-            i--;
-        }
-        g_game.state.cards.deck.count = n;
-    }
-
-    p = b + STATE_LOAD_DESC_WORLD_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_WORLD_COUNT_OFF]; i++) {
-        g_game.state.world.actors[i].actor_id = (ActorId)snap_read16(p);
-        p += 2;
-        g_game.state.world.actors[i].state = *p++;
-        g_game.state.world.count = (uint8_t)(i + 1);
-    }
-
-    p = b + STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PROGRESSION_COUNT_OFF]; i++) {
-        uint8_t t_type = *p++;
-        uint16_t t_id = snap_read16(p);
-        p += 2;
-        progression_ensure(&g_game.state, t_type, t_id, *p, snap_read16(p + 1));
-        p += 3;
-    }
-    /* equipment field removed; skipped */
+    /* Descriptor GameState sections (variables, currency, party,
+     * collection, deck, world, progression) apply in the bank-5 body
+     * so the fixed bank keeps headroom under 0x8000
+     * (docs/fixed-bank-move-out.md).  Pure WRAM writes, no fixed
+     * calls, no telemetry -- setup semantics per AGENTS.md 53.3. */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&scenario_load_apply_banked;
+    banked_call_run();
 
     g_game.state.scene.scene_id = scene;
     g_game.state.scene.player_x = x;

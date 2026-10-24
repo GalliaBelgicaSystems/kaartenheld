@@ -49,8 +49,10 @@ typedef struct {
     Card cards[5];
     uint8_t count;
     uint8_t eff_count;   /* cards that entered the hand (attack: every
-                          * card; defend: shields + rings -- inert
-                          * non-shields are 0 block, 0 combo) */
+                           * card; defend: shields + rings -- other
+                           * types are inert for block (0 block, 0 combo),
+                           * but a daggers-only selection counterattacks
+                           * through a separate attack-phase dispatch) */
     uint8_t tier;        /* HandTier */
     uint8_t suited;      /* all selected share one symbol (telemetry) */
     uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:
@@ -106,7 +108,8 @@ uint8_t combo_same_type(const volatile Card *cards, const uint8_t *idx,
  * paired cards; 5-card hands score all five.  With count_ring=0 rings
  * count as 0 (damage/block); the attack ring-heal passes count_ring=1
  * so the ring counts at its substituted value.  Shields never count in
- * attack; non-shields never count in defend.
+ * attack; non-shields never count in defend (daggers counter through a
+ * separate attack-phase dispatch instead -- see battle.c).
  *
  * Precondition: call combo_classify_loot on the SAME (cards, idx, n)
  * selection first -- this reads the histogram that call leaves behind
