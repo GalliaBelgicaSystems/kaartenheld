@@ -2586,14 +2586,14 @@ Rules:
 * 8-bit `*` anywhere (including banked bodies) pulls the SDCC mult
   routines (`__mulsuchar` et al.) into fixed `_CODE` (~69 B); use shifts,
   repeated addition, or a running counter for small tile-math instead.
-* The debug build's fixed bank is nearly full (20 B headroom after the
-  dagger counterattack, Oct 2026; release has ~4.9 KB): the next fixed-
+* The debug build's fixed bank is tight (627 B headroom after the
+  scenario-load move-out, Oct 2026; release has ~4.9 KB): the next fixed-
   bank addition in a debug build will likely need a move-out first --
   every `b->field` access costs ~10 B under SDCC's 16-bit struct
   addressing, so stage through banked bodies and WRAM globals instead.
   Companion pressure: bank 3 is thin in both builds (~40 B debug /
   ~600 B release after the counter forecast), while bank 5 has room
-  (~2.3 KB debug / ~0.6 KB release after the card-tile loader move) --
+  (~1.1 KB debug / ~0.6 KB release after the scenario-load move) --
   prefer bank 5 for new banked bodies.
 
 ## 52.19 SDCC miscompile instances are LAYOUT-SENSITIVE (Aug 2026)

@@ -56,7 +56,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 # telemetry arg with a gameplay side effect (loot-count read) is #ifdef'd at
 # its call site in world.c.
 # telemetry_snap.c is the banked extended-snapshot builder (debug-only).
-DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c
+DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
 MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c
