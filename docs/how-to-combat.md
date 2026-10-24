@@ -174,8 +174,7 @@ rings, but no shields/swords/bows), they **counterattack** — the
 attacker takes dagger damage (attack-phase poker scaling, poison
 included) while you still take the full incoming swing. Mixed with
 shields, swords or bows the daggers are simply lost. A dagger + ring
-deck can therefore always attack and heal, never blocking (a lone ring
-can't form a hand, so its block stays 0).
+deck can therefore always attack and heal, never blocking.
 
 ```
 net = incoming - (participating shields, scaled)
