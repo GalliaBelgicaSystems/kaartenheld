@@ -210,6 +210,13 @@ void battle_update(Battle *b);
 bool battle_is_card_selected(const Battle *b, uint8_t hand_idx);
 void battle_defend_resolve(Battle *b);
 void battle_defend_resolve_banked(void);
+/* Banked dagger-counter prep (src/battle/battle_counter_banked.c, ROM
+ * bank 5 in both builds): g_bk_ptr_a = Battle*.  Narrows a daggers-only
+ * defend selection to the compacted dagger subset and stages the dagger
+ * count in g_bk_byte_a (0 = no counter) plus attacker, rider and deck
+ * width in bytes b/c/d.  Dispatched from battle_defend_counter()
+ * (battle.c) between the block resolution and the discard. */
+void battle_counter_prep_banked(void);
 
 /* Banked no-arg deck-bridge body (src/battle/battle_init_content.c, ROM
  * bank 2), dispatched by battle_start via the WRAM trampoline. */

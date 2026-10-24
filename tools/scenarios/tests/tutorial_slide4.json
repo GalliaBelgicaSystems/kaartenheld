@@ -1,7 +1,7 @@
 {
  "name": "tutorial_slide4",
  "test": true,
- "description": "RIGHT navigation reaches the ENERGY & COMBAT slide (slide 4) and its text teaches the engine's real per-turn energy (BATTLE_ENERGY_PER_TURN = 2).",
+ "description": "RIGHT navigation reaches the DEFEND YOURSELF slide (slide 4) and its text teaches the defend phase: the foe shows its hit, shields block it, and lone daggers hit back.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -94,12 +94,12 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "ENERGY & COMBAT"
+   "contains": "DEFEND YOURSELF"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "1/turn"
+   "contains": "Shields block"
   },
   {
    "type": "event_occurred",

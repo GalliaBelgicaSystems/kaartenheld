@@ -9,7 +9,10 @@ typedef enum {
     BATTLE_CARD_TYPE_SHIELD = 1, /* SH: Defense / block */
     BATTLE_CARD_TYPE_BOW = 2,    /* BO: Ranged physical attack */
     BATTLE_CARD_TYPE_HEAL = 3,   /* HE: Restore HP (rings) */
-    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider */
+    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider;
+                                    * the only weapon playable on defense:
+                                    * a daggers-only selection counterattacks
+                                    * the telegraphed swing (battle.c) */
 } BattleCardType;
 
 /* Sentinel for an empty hand slot (played cards stay empty until the turn-
@@ -47,5 +50,26 @@ typedef struct {
      * MAX ONE per selection (battle-side gate). */
     uint8_t ring;
 } Card;
+
+/* Shared field-wise Card copy for banked bodies: SDCC lowers
+ * whole-struct assignment (and memcpy) to the RAM-resident __memcpy
+ * helper, which is unreachable while a switchable ROM bank is mapped
+ * (AGENTS.md §52.11.1; enforced by tools/check_banked_copies.sh).  This
+ * is deliberately a macro, not a static helper: an unused static would
+ * still be emitted into every TU that includes this header and breaks
+ * tiles_content.c's assembly output.  The size trap breaks the build if
+ * Card ever grows, so a new field can never silently go uncopied. */
+#define CARD_COPY_FIELDS(dst, src) \
+    do { \
+        typedef char card_copy_fields_ok[sizeof(Card) == 8 ? 1 : -1]; \
+        (dst)->type = (src)->type; \
+        (dst)->value = (src)->value; \
+        (dst)->uses_remaining = (src)->uses_remaining; \
+        (dst)->cost = (src)->cost; \
+        (dst)->effect = (src)->effect; \
+        (dst)->status_id = (src)->status_id; \
+        (dst)->status_chance = (src)->status_chance; \
+        (dst)->ring = (src)->ring; \
+    } while (0)
 
 #endif /* CARD_H */

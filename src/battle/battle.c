@@ -411,6 +411,106 @@ static void battle_resolve_hand_discard(Battle *b)
     b->combo_count = 0;
 }
 
+/* Shared on-hit rider for the leading card of last_combo (attack strikes
+ * and dagger counters, docs/combo-system.md §10/§13): rolls the
+ * eval-scaled chance staged in g_bk_byte_c (effect_resolve_into scales
+ * cards[0].status_chance by the full 16-bit multiplier, capped at 255)
+ * and applies status_id through status_apply, with poison also greying
+ * the victim's pool (Phase D).  slot = target combatant slot (1..n);
+ * grey_n = shared enemy-deck width.  Callers guarantee the victim
+ * stands.  One copy keeps the fixed bank small (AGENTS.md 52.18). */
+static void battle_leader_rider(uint8_t slot, uint8_t status_id,
+                                uint8_t grey_n)
+{
+    if (status_id == STATUS_NONE) return;
+    if ((uint8_t)rng_next() < g_bk_byte_c) {
+        if (status_apply(status_slots(slot), slot, status_id, 1, 0) &&
+            status_id == STATUS_POISON) {
+            status_grey_apply(slot, grey_n);
+        }
+    } else {
+        /* Roll failed: resisted (docs/combo-system.md §19). */
+        telemetry_emit(EVENT_STATUS_RESISTED, status_id, slot, 0, 0);
+    }
+}
+
+/* Dagger counterattack (defend phase): daggers are the only weapon that
+ * can be played on defense.  A daggers-only selection (at least one
+ * dagger; no shields, swords or bows; rings allowed and unchanged) hits
+ * the telegraphed attacker back with an attack-phase poker evaluation
+ * over the dagger subset, while the hero still takes the (unblocked)
+ * incoming swing.  Mixed selections lose the daggers: the block
+ * evaluation above already ignored them, and the prep body reports 0.
+ * Returns 1 when counter damage was dealt (the caller gates its victory
+ * check on this so defend flows without a counter emit no new
+ * telemetry).  Victory is NOT set here: the caller checks it after the
+ * phase advance.  Precedence note: the prep skips dead heroes, so a
+ * lethal swing always ends in defeat with no counter; a living hero
+ * whose counter drops the last enemy wins.
+ *
+ * Fixed-bank budget (AGENTS.md 52.18): the prep body stages everything
+ * the resolve needs (count, attacker, rider, deck width) because every
+ * b->field access costs ~10 fixed-bank bytes under SDCC's 16-bit struct
+ * addressing -- this wrapper touches the Battle struct only for the
+ * unavoidable damage call.  Detection plus compaction is the banked prep
+ * body (bank 5, battle_counter_banked.c); evaluation is a direct bank-3
+ * dispatch over the compacted scratch (combo_count stays whole so the
+ * coming discard still eats the full staged selection, rings included). */
+static uint8_t battle_defend_counter(Battle *b)
+{
+    uint8_t counter_dmg, atk, rid, deck_n;
+    Combatant *victim;
+    /* No null check: battle_execute_combo guarantees a live battle here
+     * (fixed-bank budget -- every branch counts, AGENTS.md 52.18). */
+    /* Prep dispatch (bank 5 in both builds -- see battle_counter_banked.c):
+     * dagger-only detection, subset compaction into the front of
+     * last_combo.cards (dead since the defend resolution above; the
+     * discard below reads hand/selected_indices), and full staging.
+     * g_bk_byte_a = dagger count (0 = no counter). */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&battle_counter_prep_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
+    if (g_bk_byte_a == 0) return 0;
+    /* The compacted subset keeps selection order, so cards[0] stays the
+     * leading dagger for the poison rider.  Copy the staging first: the
+     * eval dispatch below reuses byte_b/byte_d (byte_a and the two
+     * pointers still hold the prep staging, which the eval consumes). */
+    atk = g_bk_byte_b;
+    rid = g_bk_byte_c;
+    deck_n = g_bk_byte_d;
+    g_bk_call_bank = 3;
+    g_bk_call_target = (uint16_t)&combo_resolve_banked;
+    g_bk_byte_b = COMBO_PACK(COMBO_PHASE_ATTACK, CARD_EFFECT_DAMAGE_TARGET);
+    g_bk_byte_d = 0;
+    banked_call_run();
+    /* Counter telemetry is DAMAGE only (no COMBO/EFFECT event): the
+     * poker-scaled amount (a pair out-damages its flat face sum, suited
+     * bonus included) already proves the evaluation ran, and the rider
+     * below reports through the shared STATUS channels. */
+    counter_dmg = g_effect_last.amount;
+    /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
+     * >= 100% multiplier), so there is no empty-hand early-out.  The
+     * victim pointer is hoisted: SDCC recomputes the 16-bit indexed
+     * address on every access (~10 B a throw in this bank). */
+    victim = &b->enemies[atk];
+    combatant_take_damage(victim, counter_dmg);
+    telemetry_emit(EVENT_DAMAGE_DEALT, counter_dmg, 0, 0, 0);
+    /* On-hit poison rider from the leading dagger (shared helper; rid is
+     * the prep-staged status id, g_bk_byte_c the eval-scaled chance).
+     * Guarded like the attack path: a killing counter must not poison
+     * (or grey the deck for) a corpse. */
+    if (victim->hp != 0) {
+        battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
+    }
+#ifdef DEBUG_BUILD
+    else {
+        telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
+    }
+#endif
+    return 1;
+}
+
 /* Refill empty hand slots from the draw pile at a decision-phase start.
  * Returns false when the pile cannot cover every open slot AND the
  * discard pile can feed a reshuffle — the caller then runs the reshuffle
@@ -589,33 +689,12 @@ void battle_execute_combo(Battle *b)
                 telemetry_emit(EVENT_DAMAGE_DEALT, res.amount, 0, 0, 0);
                 /* On-hit status rider (Phase C): the leading card's data
                  * decides; the deterministic RNG roll decides landing
-                 * (docs/combo-system.md §13/§17). */
-                if (b->enemies[b->target_idx].hp != 0 &&
-                    b->last_combo.cards[0].status_id != STATUS_NONE) {
-                    /* Combo-scaled rider (docs/combo-system.md §10):
-                     * effect_resolve_into() (bank 3, called inside
-                     * battle_play_hand above) scaled cards[0].status_chance
-                     * by the full 16-bit multiplier (capped at 255) and
-                     * staged the threshold into g_bk_byte_c. */
-                    {
-                        uint8_t tslot = (uint8_t)(b->target_idx + 1);
-                        if ((uint8_t)rng_next() < g_bk_byte_c) {
-                            if (status_apply(status_slots(tslot), tslot,
-                                             b->last_combo.cards[0].status_id,
-                                             1, 0) &&
-                                /* Poison also greys the victim's pool (Phase D):
-                                 * the enemy's deck positions become unplayable
-                                 * for POISON_GREY_TURNS rounds. */
-                                b->last_combo.cards[0].status_id == STATUS_POISON) {
-                                status_grey_apply(tslot, b->enemy_deck.count);
-                            }
-                        } else {
-                            /* Roll failed: resisted (docs/combo-system.md §19). */
-                            telemetry_emit(EVENT_STATUS_RESISTED,
-                                           b->last_combo.cards[0].status_id,
-                                           tslot, 0, 0);
-                        }
-                    }
+                 * (docs/combo-system.md §13/§17).  Shared helper (see
+                 * above): the eval-scaled threshold rides g_bk_byte_c. */
+                if (b->enemies[b->target_idx].hp != 0) {
+                    battle_leader_rider((uint8_t)(b->target_idx + 1),
+                                        b->last_combo.cards[0].status_id,
+                                        b->enemy_deck.count);
                 }
             }
         }
@@ -672,13 +751,22 @@ void battle_execute_combo(Battle *b)
          * uses g_effect_last.amount -- so nothing may run between this call
          * and battle_defend_resolve(). */
         battle_defend_resolve(b);
-        battle_resolve_hand_discard(b);
-        b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-        b->delay_timer = 30;
-        b->dirty = BATTLE_DIRTY_ALL;
-        if (b->player.hp == 0) {
-            telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
-            battle_set_result(b, BATTLE_RESULT_DEFEAT);
+        /* Dagger counterattack (see battle_defend_counter): a daggers-only
+         * selection hits the attacker back on top of the resolved swing.
+         * Runs before the discard so the played daggers still pay their
+         * energy cost and leave play like any other staged cards. */
+        {
+            uint8_t counter_hit = battle_defend_counter(b);
+            battle_resolve_hand_discard(b);
+            b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
+            b->delay_timer = 30;
+            b->dirty = BATTLE_DIRTY_ALL;
+            if (b->player.hp == 0) {
+                telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
+                battle_set_result(b, BATTLE_RESULT_DEFEAT);
+            } else if (counter_hit && battle_all_enemies_dead(b)) {
+                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            }
         }
     }
 }

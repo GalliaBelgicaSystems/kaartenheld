@@ -66,8 +66,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_FIELD_CHEST_AP,
         "CHEST:",
-        3,
-        {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
+        4,
+        {"DAGGER! AP up!", "Daggers can poison", "and attack during", "defense phase!"},
         0,
         0
     },

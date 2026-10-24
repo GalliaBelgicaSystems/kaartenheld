@@ -19,17 +19,11 @@
 /* Field-wise card copy/swap helpers.  Banked bodies MUST NOT use struct
  * assignment: SDCC lowers Card-sized copies to __memcpy, which links into
  * the switchable home bank -- unreachable while bank 7 is mapped
- * (AGENTS.md 52.11.1). */
+ * (AGENTS.md 52.11.1).  Shares CARD_COPY_FIELDS (battle/card.h) so the
+ * field list lives in exactly one place. */
 static void card_copy_banked(Card *dst, const Card *src)
 {
-    dst->type = src->type;
-    dst->value = src->value;
-    dst->uses_remaining = src->uses_remaining;
-    dst->cost = src->cost;
-    dst->effect = src->effect;
-    dst->status_id = src->status_id;
-    dst->status_chance = src->status_chance;
-    dst->ring = src->ring;
+    CARD_COPY_FIELDS(dst, src);
 }
 
 static void card_swap_banked(Card *a, Card *b)
