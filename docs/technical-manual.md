@@ -467,8 +467,11 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
   included) while you still take the unblocked swing.  Mixed with any
   shield/sword/bow, daggers are lost (0 block, no counter).
 * Rings **wildcard** the defend hand (they complete tiers like a joker)
-  but add **0 block** themselves.
-* The net is `incoming − (sum of shields + rings)`.
+  but add **0 block** themselves -- pinned by `defend_ring_joker_fodder`
+  (`SH3 + SH3 + RING` blocks `(3+3) x 180% = 10`: the ring shapes the
+  tier, never the sum).
+* The net is `incoming − block`, where `block` is the scaled
+  participating-shield sum (rings shape the tier, never the sum).
   * **Net > 0** → you take that damage (clamped to your HP).
   * **Net ≤ 0** → no damage.  Over-block *heals* you only while a ring is
     present, capped at max HP.

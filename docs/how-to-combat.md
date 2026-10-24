@@ -163,9 +163,11 @@ attack now vs save it to block next) is the core decision of the game.
 ## Defending
 
 After the telegraph (`ENEMY ATTACK!`, e.g. damage 3), only **shields**
-(and rings) block. Swords and bows played here are fully
-inert — 0 block, 0 combo — though the game still lets you select them
-(and still eats them, so don't).
+block. Swords and bows played here are fully inert — 0 block, 0 combo
+— though the game still lets you select them (and still eats them, so
+don't). **Rings** add 0 block themselves but **wildcard** the hand into
+better tiers (a lone ring can't form a hand, so ring-only selections
+still block 0).
 
 **Daggers are the exception:** played alone (daggers plus optionally
 rings, but no shields/swords/bows), they **counterattack** — the

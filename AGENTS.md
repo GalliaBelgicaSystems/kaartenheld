@@ -2586,7 +2586,7 @@ Rules:
 * 8-bit `*` anywhere (including banked bodies) pulls the SDCC mult
   routines (`__mulsuchar` et al.) into fixed `_CODE` (~69 B); use shifts,
   repeated addition, or a running counter for small tile-math instead.
-* The debug build's fixed bank is nearly full (16 B headroom after the
+* The debug build's fixed bank is nearly full (1 B headroom after the
   dagger counterattack, Oct 2026; release has ~4.9 KB): the next fixed-
   bank addition in a debug build will likely need a move-out first --
   every `b->field` access costs ~10 B under SDCC's 16-bit struct

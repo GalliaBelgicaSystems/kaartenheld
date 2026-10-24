@@ -17,6 +17,10 @@
  *   g_bk_byte_c = leading dagger's on-hit status id (0 = none),
  *   g_bk_byte_d = shared enemy-deck count (poison grey-out width).
  * Otherwise stages 0 in byte_a and leaves everything else untouched.
+ * Contract: byte_a MUST still hold the count when the fixed caller runs
+ * the bank-3 eval dispatch next -- the eval consumes it as its input
+ * count, so no staging write may touch byte_a in between (the caller
+ * copies b/c/d to locals first for exactly this reason).
  *
  * Runs AFTER battle_defend_resolve_banked in the same defend flow, so
  * last_combo.cards is free scratch: the block resolution already
@@ -42,7 +46,10 @@ void battle_counter_prep_banked(void)
          * stand next to daggers.  A future weapon type must consciously
          * opt into counter play here instead of silently riding along
          * as ring-like.  EMPTY slots can never be selected, but they
-         * abort too rather than passing as harmless. */
+         * abort too rather than passing as harmless.  Ring ⟺ HEAL type
+         * holds both ways (battle_init_content: every HEAL card gets
+         * ring=1, and every loot/curated ring is typed HEAL), so the
+         * type check covers the flag. */
         if (t != BATTLE_CARD_TYPE_DAGGER && t != BATTLE_CARD_TYPE_HEAL) {
             g_bk_byte_a = 0;
             return;
@@ -51,9 +58,14 @@ void battle_counter_prep_banked(void)
             /* Shared field-wise copy (CARD_COPY_FIELDS in card.h): no
              * struct assignment, so SDCC never lowers a RAM-resident
              * __memcpy call here (AGENTS.md §52.11.1,
-             * tools/check_banked_copies.sh). */
-            if (n != i) CARD_COPY_FIELDS(&b->last_combo.cards[n],
-                                         &b->last_combo.cards[i]);
+             * tools/check_banked_copies.sh).  Pointers hoisted: the
+             * macro would otherwise recompute the indexed address on
+             * all eight field assignments. */
+            if (n != i) {
+                Card *d = &b->last_combo.cards[n];
+                const Card *s = &b->last_combo.cards[i];
+                CARD_COPY_FIELDS(d, s);
+            }
             n++;
         }
     }
