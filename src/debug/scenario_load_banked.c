@@ -17,8 +17,13 @@
  * setup semantics: the old inventory/progression paths called
  * deck_collection_add/progression_ensure, which are fixed-bank
  * functions a banked body must not call per §52.11.1 -- the direct
- * writes below are equivalent for valid fixture data and match the
- * deck section's existing direct-write precedent).
+ * writes below match the deck section's existing direct-write
+ * precedent.  One deliberate difference: collection writes bypass the
+ * max_copies gate (e.g. cards_menu_toggle stages 3 IRON_RING against a
+ * cap of 1, which the old path silently rejected).  That fixture's
+ * description and deck section both intend 3 rings, so the direct
+ * write matches author intent; every other inventory fixture is
+ * within cap).
  *
  * Self-contained: reads g_scen_state_buf, writes g_game.state, uses
  * only its own bank-local code.  No fixed-bank calls, no
@@ -106,7 +111,8 @@ void scenario_load_apply_banked(void)
     }
 
     /* Collection: direct writes (no max_copies gate -- setup precedent
-     * matches the deck section below; fixtures carry valid cards). */
+     * matches the deck section below; cards_menu_toggle intentionally
+     * stages 3 IRON_RING over the cap of 1). */
     p = b + STATE_LOAD_DESC_INVENTORY_ENTRY_OFF;
     count = b[STATE_LOAD_DESC_INVENTORY_COUNT_OFF];
     for (i = 0; i < count; i++) {
