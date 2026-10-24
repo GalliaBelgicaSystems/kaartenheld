@@ -458,8 +458,9 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
  * coming discard still eats the full staged selection, rings included). */
 static uint8_t battle_defend_counter(Battle *b)
 {
-    uint8_t counter_dmg, n, atk, rid, deck_n;
-    if (!b) return 0;
+    uint8_t counter_dmg, atk, rid, deck_n;
+    /* No null check: battle_execute_combo guarantees a live battle here
+     * (fixed-bank budget -- every branch counts, AGENTS.md 52.18). */
     /* Prep dispatch (bank 5 in both builds -- see battle_counter_banked.c):
      * dagger-only detection, subset compaction into the front of
      * last_combo.cards (dead since the defend resolution above; the
@@ -469,11 +470,11 @@ static uint8_t battle_defend_counter(Battle *b)
     g_bk_call_target = (uint16_t)&battle_counter_prep_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
-    n = g_bk_byte_a;
-    if (n == 0) return 0;
+    if (g_bk_byte_a == 0) return 0;
     /* The compacted subset keeps selection order, so cards[0] stays the
      * leading dagger for the poison rider.  Copy the staging first: the
-     * eval dispatch below reuses byte_b/byte_d. */
+     * eval dispatch below reuses byte_b/byte_d (byte_a still holds the
+     * prep-staged count, which the eval consumes as its input). */
     atk = g_bk_byte_b;
     rid = g_bk_byte_c;
     deck_n = g_bk_byte_d;
@@ -481,18 +482,14 @@ static uint8_t battle_defend_counter(Battle *b)
     g_bk_call_target = (uint16_t)&combo_resolve_banked;
     g_bk_ptr_a = (void *)b->last_combo.cards;
     g_bk_ptr_b = (void *)&b->last_combo;
-    g_bk_byte_a = n;
     g_bk_byte_b = COMBO_PACK(COMBO_PHASE_ATTACK, CARD_EFFECT_DAMAGE_TARGET);
     g_bk_byte_d = 0;
     banked_call_run();
-    /* Counter telemetry is EFFECT + DAMAGE only (no second COMBO event):
-     * the dispatched fx is always CARD_EFFECT_DAMAGE_TARGET and the
+    /* Counter telemetry is DAMAGE only (no COMBO/EFFECT event): the
      * poker-scaled amount (a pair out-damages its flat face sum, suited
-     * bonus included) already proves the evaluation ran. */
+     * bonus included) already proves the evaluation ran, and the rider
+     * below reports through the shared STATUS channels. */
     counter_dmg = g_effect_last.amount;
-    telemetry_emit(EVENT_EFFECT_RESOLVED, counter_dmg,
-                   (uint8_t)CARD_EFFECT_DAMAGE_TARGET,
-                   (uint8_t)COMBO_PHASE_ATTACK, atk);
     /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
      * >= 100% multiplier), so there is no empty-hand early-out. */
     combatant_take_damage(&b->enemies[atk], counter_dmg);

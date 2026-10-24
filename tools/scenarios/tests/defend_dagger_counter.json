@@ -135,12 +135,6 @@
    "event": "DAMAGE_RECEIVED",
    "index": 0,
    "value": 2
-  },
-  {
-   "type": "event_arg",
-   "event": "EFFECT_RESOLVED",
-   "index": 0,
-   "value": 8
   }
  ],
  "initial_state": {

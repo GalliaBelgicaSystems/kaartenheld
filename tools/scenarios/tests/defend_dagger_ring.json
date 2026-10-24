@@ -197,12 +197,6 @@
    "value": 2
   },
   {
-   "type": "event_arg",
-   "event": "EFFECT_RESOLVED",
-   "index": 0,
-   "value": 12
-  },
-  {
    "type": "event_count",
    "event": "CARD_PLAYED",
    "count": 5
