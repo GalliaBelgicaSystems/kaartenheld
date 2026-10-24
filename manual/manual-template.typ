@@ -53,7 +53,11 @@
 #set heading(numbering: "1.")
 
 // ── Headings: a numbered chapter rule, then small-caps sections ─────────
-#show heading.where(level: 1): it => block(sticky: true, width: 100%)[
+#show heading.where(level: 1): it => {
+  // Every chapter opens on a fresh booklet page. Weak, so the first
+  // chapter after the contents page does not leave a blank behind.
+  pagebreak(weak: true)
+  block(sticky: true, width: 100%)[
   #v(4mm, weak: true)
   #block(width: 100%)[
     #set text(size: 13pt, weight: "bold", fill: brand, tracking: 0.06em)
@@ -64,7 +68,8 @@
     #line(length: 100%, stroke: 0.9pt + brand)
   ]
   #v(1.6mm)
-]
+  ]
+}
 
 #show heading.where(level: 2): it => block(sticky: true, width: 100%)[
   #v(2.2mm)
