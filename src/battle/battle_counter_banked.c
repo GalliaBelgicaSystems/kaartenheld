@@ -70,6 +70,16 @@ void battle_counter_prep_banked(void)
         }
     }
     if (n == 0) return;
+    /* Stage the coming bank-3 eval dispatch's pointers here (banked
+     * bytes are cheap; the same computations cost ~10 B each in the
+     * fixed bank): ptr_a = compacted subset, ptr_b = result struct.
+     * Like byte_a, these must survive untouched until the fixed caller
+     * dispatches the eval -- it only reads byte_b/c/d and writes the
+     * bank/target pair in between.  byte_b/byte_d keep their prep
+     * meanings (attacker/rider staging) until the caller overwrites
+     * them with the eval pack/mode. */
+    g_bk_ptr_a = (void *)b->last_combo.cards;
+    g_bk_ptr_b = (void *)&b->last_combo;
     g_bk_byte_a = n;
     g_bk_byte_b = atk;
     g_bk_byte_c = b->last_combo.cards[0].status_id;

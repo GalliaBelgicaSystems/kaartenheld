@@ -459,6 +459,7 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
 static uint8_t battle_defend_counter(Battle *b)
 {
     uint8_t counter_dmg, atk, rid, deck_n;
+    Combatant *victim;
     /* No null check: battle_execute_combo guarantees a live battle here
      * (fixed-bank budget -- every branch counts, AGENTS.md 52.18). */
     /* Prep dispatch (bank 5 in both builds -- see battle_counter_banked.c):
@@ -473,15 +474,13 @@ static uint8_t battle_defend_counter(Battle *b)
     if (g_bk_byte_a == 0) return 0;
     /* The compacted subset keeps selection order, so cards[0] stays the
      * leading dagger for the poison rider.  Copy the staging first: the
-     * eval dispatch below reuses byte_b/byte_d (byte_a still holds the
-     * prep-staged count, which the eval consumes as its input). */
+     * eval dispatch below reuses byte_b/byte_d (byte_a and the two
+     * pointers still hold the prep staging, which the eval consumes). */
     atk = g_bk_byte_b;
     rid = g_bk_byte_c;
     deck_n = g_bk_byte_d;
     g_bk_call_bank = 3;
     g_bk_call_target = (uint16_t)&combo_resolve_banked;
-    g_bk_ptr_a = (void *)b->last_combo.cards;
-    g_bk_ptr_b = (void *)&b->last_combo;
     g_bk_byte_b = COMBO_PACK(COMBO_PHASE_ATTACK, CARD_EFFECT_DAMAGE_TARGET);
     g_bk_byte_d = 0;
     banked_call_run();
@@ -491,14 +490,21 @@ static uint8_t battle_defend_counter(Battle *b)
      * below reports through the shared STATUS channels. */
     counter_dmg = g_effect_last.amount;
     /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
-     * >= 100% multiplier), so there is no empty-hand early-out. */
-    combatant_take_damage(&b->enemies[atk], counter_dmg);
+     * >= 100% multiplier), so there is no empty-hand early-out.  The
+     * victim pointer is hoisted: SDCC recomputes the 16-bit indexed
+     * address on every access (~10 B a throw in this bank). */
+    victim = &b->enemies[atk];
+    combatant_take_damage(victim, counter_dmg);
     telemetry_emit(EVENT_DAMAGE_DEALT, counter_dmg, 0, 0, 0);
     /* On-hit poison rider from the leading dagger (shared helper; rid is
-     * the prep-staged status id, g_bk_byte_c the eval-scaled chance). */
-    battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
+     * the prep-staged status id, g_bk_byte_c the eval-scaled chance).
+     * Guarded like the attack path: a killing counter must not poison
+     * (or grey the deck for) a corpse. */
+    if (victim->hp != 0) {
+        battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
+    }
 #ifdef DEBUG_BUILD
-    if (b->enemies[atk].hp == 0) {
+    else {
         telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
     }
 #endif

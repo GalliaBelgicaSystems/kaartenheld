@@ -33,14 +33,15 @@ fixed-bank calls first (anything fixed-only must be staged out, the way
 
 Each is ~16 B of staging + `banked_call_run()` to bank 2. Merge into one
 wrapper taking an opcode byte (core vs extended snapshot), or have the
-two game.c call sites dispatch directly. Saves ~10-15 B -- small, but it
-is pure deletion with no behavior surface.
+two game.c call sites dispatch directly. Saves ~10-15 B -- only worth
+doing if candidate 1 lands short of the target.
 
 ### 3. `ui_draw_font_test` wrapper (src/ui/ui.c)
 
 Thin dispatch to the bank-3 body. Same merge treatment as (2) if a
 sibling wrapper exists on the same call path; otherwise leave it -- the
-body is already banked and the wrapper is ~15 B.
+body is already banked and the wrapper is ~15 B. Like (2): only if
+candidate 1 lands short.
 
 ### Explicitly out of scope
 
@@ -56,6 +57,12 @@ body is already banked and the wrapper is ~15 B.
 
 - `make memmap`: debug fixed headroom **>= 256 B** (a typical feature's
   worth; the exact number goes into the §52.18 note, replacing the 1 B).
+  Moving `scenario_load_state` + `debug_run_action` alone should clear
+  this easily (gap-measured at ~1.9 KB combined in the debug `.sym`) --
+  move one body first, re-measure, then decide whether the second is
+  needed. Note bank 5 is also the AGENTS-recommended home for new banked
+  bodies, so budget it against that guidance and update the §52.18
+  sentence when the move lands.
 - `make lint` (incl. `check_banked_copies.sh`), `make stack-budget`,
   `make test-sentinels` (layout-sensitive codegen, §52.19), full
   `make test-harness`, `make test`, `make verify-oam`, `make verify-music`,
