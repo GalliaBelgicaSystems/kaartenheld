@@ -41,6 +41,7 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
      * path reads it per cell without touching the static cache. */
     w->tileset_kind = def ? def->tileset : WORLD_TILESET_FOREST;
     w->encounter_actor_index = NO_ACTOR_INDEX;
+    w->encounter_cooldown = 0;
     w->map_changed = false;
     w->move_state = MOVE_STATE_IDLE;
     w->move_progress = 0;
@@ -181,6 +182,14 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
     if (hostile_slot != NO_ACTOR_INDEX &&
         w->actors[hostile_slot].ai_type != AI_TUTOR) {
+        if (w->encounter_cooldown != 0) {
+            /* Flee grace: bump into the hostile instead of fighting it.
+             * Same COLLISION telemetry shape as the commit path below,
+             * but no encounter is staged and none fires. */
+            telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,
+                           (uint8_t)w->actors[hostile_slot].id, 0);
+            return MOVE_RESULT_BLOCKED;
+        }
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
         w->encounter_actor_index = hostile_slot;
         w->move_target_x = target_x;
@@ -362,6 +371,9 @@ void world_on_battle_fled(Game *g)
      * WRAM reads/writes, and the fixed bank has room again. */
     idx = w->encounter_actor_index;
     w->encounter_actor_index = NO_ACTOR_INDEX;
+    /* Flee grace (WORLD_FLEE_GRACE_FRAMES): the hero exits next to a live
+     * hostile, so encounters stay suppressed for ~2s while they escape. */
+    w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
     if (idx == NO_ACTOR_INDEX) return;
 
     if (w->actors[idx].active) {
@@ -403,11 +415,16 @@ WorldMoveResult world_update_actors(World *w)
             telemetry_emit(EVENT_ACTOR_MOVED, g_patrol_evt[0],
                            g_patrol_evt[1], g_patrol_evt[2], g_patrol_evt[3]);
         } else if (g_patrol_outcome == 2) {
+            /* Patrol stepped onto the hero: a bump either way, a fight
+             * only off grace (the banked body returns before committing
+             * the step, so the enemy holds position in both cases). */
             telemetry_emit(EVENT_ACTOR_COLLISION, g_patrol_evt[0],
                            g_patrol_evt[1], g_patrol_evt[2], 0);
-            telemetry_emit(EVENT_ENCOUNTER_STARTED, g_patrol_evt[2],
-                           0, 0, 0);
-            return MOVE_RESULT_ENCOUNTER;
+            if (w->encounter_cooldown == 0) {
+                telemetry_emit(EVENT_ENCOUNTER_STARTED, g_patrol_evt[2],
+                               0, 0, 0);
+                return MOVE_RESULT_ENCOUNTER;
+            }
         }
     }
 

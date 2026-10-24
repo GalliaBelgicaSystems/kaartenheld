@@ -64,6 +64,12 @@ void overworld_screen_update(Game *g)
     WorldMoveResult move_res = MOVE_RESULT_NONE;
     ActorEngageResult engage = ENGAGE_NONE;
 
+    /* Flee grace ticks down once per overworld frame (pauses in battle,
+     * dialogue and menus, which run their own screens). */
+    if (g->world.encounter_cooldown != 0) {
+        g->world.encounter_cooldown--;
+    }
+
     /* (Chest-loot jingle ticks in game_update so menus don't freeze its
      * restore timer; see core/game.c.) */
 
