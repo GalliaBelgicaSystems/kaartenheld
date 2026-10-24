@@ -108,7 +108,7 @@ Each card has a **value** (its power) and a **symbol** (its type):
 |---|---|---|
 | `SW` Sword | damage (only if in the poker hand) | nothing (0) |
 | `BO` Bow | damage (only if in the poker hand) | nothing (0) |
-| `DA` Dagger | damage (may poison, only if in the hand) | nothing (0) |
+| `DA` Dagger | damage (may poison, only if in the hand) | counterattacks the swing ONLY when daggers-only (no shields/swords/bows); lost in mixed hands |
 | `SH` Shield | **0 damage** — but counts for combos | **blocks** its value (only if in the hand) |
 | `HE` Heal (rings) | converts the hand to healing (see below) | 0 block — but wildcards the hand + gates over-block heal |
 
@@ -162,10 +162,17 @@ attack now vs save it to block next) is the core decision of the game.
 
 ## Defending
 
-After the telegraph (`ENEMY ATTACK!`, e.g. damage 3), only **shields**
-(and rings) do anything. Swords, bows, daggers, played here are fully
+After the telegraph (`ENEMY ATTACK!`, e.g. damage 3), **shields**
+(and rings) do anything. Swords and bows, played here are fully
 inert — 0 block, 0 combo — though the game still lets you select them
 (and still eats them, so don't).
+
+**Daggers are the exception:** played alone (daggers plus optionally
+rings, but no shields/swords/bows), they **counterattack** — the
+attacker takes dagger damage (attack-phase poker scaling, poison
+included) while you still take the full incoming swing. Mixed with
+shields, swords or bows the daggers are simply lost. A dagger + ring
+deck can therefore always attack and heal, never blocking.
 
 ```
 net = incoming - (participating shields, scaled)

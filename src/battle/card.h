@@ -9,7 +9,10 @@ typedef enum {
     BATTLE_CARD_TYPE_SHIELD = 1, /* SH: Defense / block */
     BATTLE_CARD_TYPE_BOW = 2,    /* BO: Ranged physical attack */
     BATTLE_CARD_TYPE_HEAL = 3,   /* HE: Restore HP (rings) */
-    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider */
+    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider;
+                                    * the only weapon playable on defense:
+                                    * a daggers-only selection counterattacks
+                                    * the telegraphed swing (battle.c) */
 } BattleCardType;
 
 /* Sentinel for an empty hand slot (played cards stay empty until the turn-

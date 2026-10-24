@@ -818,9 +818,11 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
 /* Enemy-strike forecast: left "DMG <incoming>" in red, right "DEF <block>"
  * in green, so the player sees the incoming hit next to what the staged
  * shields block.  <block> is the defend-mode preview over the staged
- * shields (0 while none are staged).  Text path throughout, so buffer,
- * mirror and VRAM stay truthful for asserts; colors ride attribute
- * spans (attr mirror included). */
+ * shields (0 while none are staged -- daggers staged for a counterattack
+ * likewise preview 0 here; the counter resolves on confirm, see
+ * docs/how-to-combat.md).  Text path throughout, so buffer, mirror and
+ * VRAM stay truthful for asserts; colors ride attribute spans (attr
+ * mirror included). */
 static uint8_t battle_num_width(uint8_t val)
 {
     if (val >= 100) return 3;

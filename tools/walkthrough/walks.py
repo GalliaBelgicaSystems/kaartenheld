@@ -1205,16 +1205,16 @@ def walk_d(checks):
         expected="> TUTORIAL", actual="none")
     s.shoot("15-title-menu", need="> TUTORIAL")
     s.check("tutorial entered", s.press_until(
-        "a", lambda: s.text_has("TUTORIAL BASICS"), label="slide 0"),
-        expected="TUTORIAL BASICS", actual="none")
-    s.shoot("16-tutorial-slide0", need="TUTORIAL BASICS")
+        "a", lambda: s.text_has("HOW TO FIGHT"), label="slide 0"),
+        expected="HOW TO FIGHT", actual="none")
+    s.shoot("16-tutorial-slide0", need="HOW TO FIGHT")
     for label, marker in (
-            ("17-tutorial-slide1", "SW: SWORD"),
-            ("18-tutorial-slide2", "CARD TYPES 2"),
-            ("19-tutorial-slide3", "COMBOS"),
-            ("20-tutorial-slide4", "1/turn"),
-            ("21-tutorial-slide5", "DEFEND & STATUS"),
-            ("22-tutorial-slide6", "SHIELD CARD")):
+            ("17-tutorial-slide1", "SW BO DA"),
+            ("18-tutorial-slide2", "STRIKE FIRST"),
+            ("19-tutorial-slide3", "POKER PAYS"),
+            ("20-tutorial-slide4", "DEFEND YOURSELF"),
+            ("21-tutorial-slide5", "BURN POISON FREEZE"),
+            ("22-tutorial-slide6", "SPARE SHIELDS")):
         s.check(label, s.press_until(
             "right", lambda m=marker: s.text_has(m), label=label),
             expected=marker, actual="none")

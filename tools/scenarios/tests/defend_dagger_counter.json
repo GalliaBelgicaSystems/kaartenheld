@@ -1,0 +1,162 @@
+{
+ "name": "defend_dagger_counter",
+ "test": true,
+ "description": "Dagger counterattack: a daggers-only defend selection (DA3+DA3, no shields/swords/bows) hits the telegraphed kobold back for a suited PAIR (3+3)x145%=8 (flat sum would be 6) while the hero still takes the full incoming 2 (10->8, kobold 14->6 after the opening SW1; start_battle engages the last hostile, the 15-HP kobold).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "DA",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "DA",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 8
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 6
+  },
+  {
+   "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_DEALT",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_DEALT",
+   "index": 0,
+   "value": 8
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "EFFECT_RESOLVED",
+   "index": 0,
+   "value": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}
