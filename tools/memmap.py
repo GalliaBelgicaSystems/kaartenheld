@@ -290,6 +290,7 @@ def main():
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
         "_debug_action_leaf_banked": "debug-action leaf cases (bank 5)",
+        "_scenario_load_apply_banked": "scenario descriptor apply (bank 5)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

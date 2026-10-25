@@ -66,8 +66,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_FIELD_CHEST_AP,
         "CHEST:",
-        3,
-        {"FOUND DAGGER!!", "Plus one action", "point! AP up!"},
+        4,
+        {"DAGGER! AP up!", "Daggers can poison", "and attack during", "defense phase!"},
         0,
         0
     },
@@ -92,6 +92,14 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Halt! Keep peace.", "Watch for slimes."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_GUARD_KOBOLD_WARNING,
+        "GUARD:",
+        5,
+        {"Be very careful", "of Kobolds. They", "are very", "aggressive. Only", "Nis here is okay."},
         0,
         0
     },
@@ -268,6 +276,22 @@ const DialogueDefinition g_dialogues[] = {
         "CARL:",
         5,
         {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_GUARDS,
+        "GUARD:",
+        6,
+        {"Careful! North of", "here you'll find", "the castle of the", "Lord of Slimes and", "its desolate", "surroundings!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_SIGNPOST,
+        "",
+        8,
+        {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel."},
         0,
         0
     },

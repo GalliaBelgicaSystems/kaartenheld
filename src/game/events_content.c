@@ -170,6 +170,19 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, 0 }
         }
     },
+    /* ── Village-area gate guards ────────────────────────────────────
+     * Map-scoped override (first-match: placed before the generic
+     * GUARD_AFTER_MAYOR / GUARD_GREETING fallbacks below): the two
+     * guards flanking the north exit always give the castle warning,
+     * regardless of MET_MAYOR.  Town / ridge guards keep the generic
+     * lines. */
+    {
+        EVENT_ID_VILLAGE_GUARDS, EVENT_TRIGGER_INTERACT, ENTITY_ID_GUARD, MAP_VILLAGE_AREA,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_VILLAGE_GUARDS, 0, 0 }}
+    },
     {
         EVENT_ID_GUARD_AFTER_MAYOR, EVENT_TRIGGER_INTERACT, ENTITY_ID_GUARD, EVENT_MAP_ANY,
         1,

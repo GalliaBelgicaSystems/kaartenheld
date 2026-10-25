@@ -48,6 +48,11 @@ typedef enum {
  * at which point PLAYER_MOVED / exits / encounters are resolved. */
 #define MOVE_FRAMES 8
 
+/* Post-flee encounter grace, in frames (2 seconds at 60fps).  Fleeing
+ * leaves the hero next to a live hostile, so without this the next step
+ * (or patrol tick) would restart the same fight instantly. */
+#define WORLD_FLEE_GRACE_FRAMES 120
+
 typedef enum {
     MOVE_STATE_IDLE   = 0,
     MOVE_STATE_MOVING = 1
@@ -511,6 +516,15 @@ typedef struct {
      * destination).  Runtime only, never persistent. */
     uint8_t move_exit_x;
     uint8_t move_exit_y;
+
+    /* Post-flee encounter grace, in frames (WORLD_FLEE_GRACE_FRAMES at
+     * flee time, ticked down once per overworld frame, cleared on scene
+     * load).  While nonzero, both encounter sources -- stepping toward
+     * a hostile and a patrol stepping onto the hero -- resolve as plain
+     * bumps instead of fights, so no ENCOUNTER_STARTED fires.  Appended
+     * at the END of World (never mid-struct).  Runtime only, never
+     * persistent. */
+    uint8_t encounter_cooldown;
 } World;
 
 /* Neighbor edge indices (n,s,e,w), shared by the move decision and the

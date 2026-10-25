@@ -4,52 +4,52 @@
 #define TUTORIAL_TEXT_GENERATED_H
 
 static const char s_tut_0[4][20] = {
-    "TUTORIAL BASICS",
-    "Use LEFT/RIGHT to",
-    "navigate slides.",
-    "Press B to exit."
+    "HOW TO FIGHT:",
+    "Fights use cards.",
+    "LEFT RIGHT flips.",
+    "B goes back."
 };
 
 static const char s_tut_1[4][20] = {
-    "CARD TYPES:",
-    "SW: SWORD - damage",
-    "SH: SHIELD - block",
-    "BO: BOW - damage"
+    "KNOW YOUR CARDS:",
+    "SW BO DA damage.",
+    "SH blocks hits.",
+    "HE rings heal you."
 };
 
 static const char s_tut_2[4][20] = {
-    "CARD TYPES 2:",
-    "HE: HEAL - restore",
-    "DA: DAGGER - dmg",
-    "F SW: FIRE + BURN"
+    "STRIKE FIRST:",
+    "Choose cards, then",
+    "press SELECT. Each",
+    "card costs energy."
 };
 
 static const char s_tut_3[4][20] = {
-    "COMBOS:",
-    "Played cards rank",
-    "like poker hands,",
-    "boosting effects."
+    "POKER PAYS:",
+    "Pairs and better",
+    "multiply damage.",
+    "Kill foes faster."
 };
 
 static const char s_tut_4[4][20] = {
-    "ENERGY & COMBAT:",
-    "Cards cost ENERGY",
-    "Start with 1/turn.",
-    "Energy fades away."
+    "DEFEND YOURSELF:",
+    "Foe shows its hit.",
+    "Shields block it.",
+    "Lone DA hits back."
 };
 
 static const char s_tut_5[4][20] = {
-    "DEFEND & STATUS:",
-    "Only SH blocks dmg.",
-    "SW/BO/DA block 0.",
-    "POISON: 1/turn dot"
+    "BURN POISON FREEZE",
+    "Poison wounds and",
+    "locks cards. Ice",
+    "skips your turn."
 };
 
 static const char s_tut_6[4][20] = {
-    "SHIELD CARD:",
-    "Offense: 0 dmg,",
-    "but still counts",
-    "for your combos."
+    "SPARE SHIELDS:",
+    "They deal 0 damage",
+    "but build combos.",
+    "Play your spares."
 };
 
 static const char (* const s_tut_slides[7])[20] = {

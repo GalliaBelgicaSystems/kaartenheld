@@ -56,7 +56,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 # telemetry arg with a gameplay side effect (loot-count read) is #ifdef'd at
 # its call site in world.c.
 # telemetry_snap.c is the banked extended-snapshot builder (debug-only).
-DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c
+DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
 MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c
@@ -105,7 +105,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -982,6 +982,28 @@ parity: debug
 
 screenshots: $(TARGET)
 	@python3 tools/capture_walkthrough.py
+
+# Printed player's manual (manual/kaartenheld-manual.md): Markdown -> Typst
+# -> a 105 mm square instruction booklet PDF, the traditional Game Boy
+# format.  The intermediate .typ is written into build/ (one level below the
+# repo root, like manual/) so the Markdown's ../screenshots image paths
+# resolve there too; typst then compiles with the repo as its root so those
+# same paths stay inside it.  Host-side only, never part of the ROM gate.
+MANUAL_SRC = manual/kaartenheld-manual.md
+MANUAL_TEMPLATE = manual/manual-template.typ
+MANUAL_PDF = $(BUILD_DIR)/kaartenheld_manual.pdf
+MANUAL_TYP = $(BUILD_DIR)/kaartenheld_manual.typ
+MANUAL_IMAGES = $(wildcard screenshots/*.png screenshots/review/*.png) \
+	assets/title-red.png assets/title-brun.png
+
+manual: $(MANUAL_PDF)
+
+$(MANUAL_PDF): $(MANUAL_SRC) $(MANUAL_TEMPLATE) $(MANUAL_IMAGES) | $(BUILD_DIR)
+	@command -v pandoc >/dev/null || { echo "manual: pandoc not found (run inside nix develop)" >&2; exit 1; }
+	@command -v typst >/dev/null || { echo "manual: typst not found (run inside nix develop)" >&2; exit 1; }
+	pandoc $(MANUAL_SRC) --template=$(MANUAL_TEMPLATE) -t typst -o $(MANUAL_TYP)
+	typst compile --root . $(MANUAL_TYP) $(MANUAL_PDF)
+	@echo "manual: $(MANUAL_PDF)"
 
 # README GIFs (host-side, never CI-gated): boot splash+title, a kobold
 # battle, the Field -> Forest overworld walk, and the Lord of Slimes boss

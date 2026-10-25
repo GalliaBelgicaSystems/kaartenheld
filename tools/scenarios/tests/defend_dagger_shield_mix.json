@@ -1,0 +1,144 @@
+{
+ "name": "defend_dagger_shield_mix",
+ "test": true,
+ "description": "Mixed shields+daggers lose the daggers: defending the kobold's telegraphed 2 with SH3+DA2 blocks to net -1 (hero stays 10, no counter DAMAGE_DEALT from the defend -- exactly one DAMAGE_DEALT total, the opening SW3; kobold 15->12).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "DA",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 10
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 12
+  },
+  {
+   "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_DEALT",
+   "index": 0,
+   "value": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

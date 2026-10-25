@@ -168,14 +168,14 @@ static const EventDefinition *event_first_match(Game *g, EventTriggerType trigge
     return NULL;
 }
 
-ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor)
+ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor, MapId map)
 {
     bool dialogue_started = false;
     const EventDefinition *def;
 
     if (!g || !actor) return ENGAGE_NONE;
 
-    def = event_first_match(g, EVENT_TRIGGER_INTERACT, actor->id, EVENT_MAP_ANY);
+    def = event_first_match(g, EVENT_TRIGGER_INTERACT, actor->id, map);
     if (def) {
         telemetry_emit(EVENT_SCRIPT_TRIGGERED, (uint8_t)def->id, 0, 0, 0);
         event_execute_actions(g, def, &dialogue_started);

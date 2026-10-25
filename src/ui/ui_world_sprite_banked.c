@@ -95,12 +95,14 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
  * (no hostile compiles to SPRITE_KIND_CHEST), so it shows closed.
  * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
  * read) for its shared OAM base, frames, and palette; unknown rows fall
- * back to the ASCII glyph.  A standing actor (move_state == idle) with an
- * idle row shows the standing pose instead of the walk frames; the idle
- * row is a single frame, so the anim step does not advance it. */
+ * back to the ASCII glyph.  A standing actor (moving == 0) with an idle
+ * row shows the standing pose instead of the walk frames; the idle row is
+ * a single frame, so the anim step does not advance it.  Callers pass the
+ * raw move_state byte (0 idle / 1 moving, never compared: bank 4 release
+ * layout is full). */
 static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                                 uint8_t anim, uint8_t ow_type, uint8_t *prop,
-                                uint8_t standing)
+                                uint8_t moving)
 {
     switch (kind) {
         case SPRITE_KIND_CHEST:
@@ -118,16 +120,16 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                 const EnemyTypeDef *t = g_enemy_types[ow_type];
                 if (t->ow_tile != 0xFF) {
                     *prop = t->ow_palette;
-                    if (standing && t->ow_idle_tile != 0xFF) {
+                    if (!moving && t->ow_idle_tile != 0xFF) {
                         return t->ow_idle_tile;
                     }
                     if (t->ow_frames > 1) {
                         /* Blink row (bit 7): asymmetric reveal -- rest pose
-                         * for the first 54 of every 64 anim ticks, flash
-                         * frame for the last ~10.  Phase rides g_bk_byte_c
-                         * (staged by the fixed caller; read before the
-                         * chest path below repurposes it). */
-                        if ((t->ow_frames & 0x80) && g_bk_byte_c < 54) {
+                         * unless the fixed caller staged the reveal bit
+                         * (last ~10 of every 64 anim ticks) in g_bk_byte_c,
+                         * read here before the chest path below repurposes
+                         * it.  Flash frame is ow_tile + 1. */
+                        if ((t->ow_frames & 0x80) && !g_bk_byte_c) {
                             return t->ow_tile;
                         }
                         return (uint8_t)(t->ow_tile + anim);
@@ -184,8 +186,7 @@ void ui_actors_sprites_banked(void)
 
         if (a->active) {
             tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
-                                   anim, a->ow_type, &prop,
-                                   (uint8_t)(a->move_state != MOVE_STATE_MOVING));
+                                   anim, a->ow_type, &prop, a->move_state);
         }
         /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
@@ -278,7 +279,7 @@ void ui_actors_sprites_banked(void)
             continue;
         }
         tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                               anim, d->ow_type, &prop, 1);
+                               anim, d->ow_type, &prop, 0);
         if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
             /* State-driven frame: the shared-blob closed tile, or the
              * next tile (open frame) once the chest was looted.  The
