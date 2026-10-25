@@ -170,9 +170,14 @@ def load_combat_art():
         with open(path) as f:
             data = json.load(f)
         sid = data.get('id', path.stem)
-        for field in ['order', 'width', 'height', 'palette', 'frame0']:
+        for field in ['order', 'width', 'height', 'frame0']:
             if field not in data:
                 print("WARNING: %s: missing required field '%s'" % (path.name, field))
+        # BG palette is required only for BG-stamped sets; OAM sets must
+        # NOT carry it (ramp-check fails vestigial BG palettes on OAM sets:
+        # the encoder ignores them, display uses obj_palette).
+        if not data.get('oam') and 'palette' not in data:
+            print("WARNING: %s: missing required field 'palette' (BG-stamped set)" % path.name)
         w, h = data.get('width', 0), data.get('height', 0)
         if not (1 <= w <= 6):
             print("WARNING: %s: width %d must be 1-6" % (path.name, w))

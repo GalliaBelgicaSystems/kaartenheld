@@ -267,7 +267,9 @@ def main():
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
         pal = data.get("palette")
-        if pal not in ramps:
+        # BG palette is vestigial on OAM sets (encoder uses obj_palette;
+        # ramp-check fails it if present) -- require it only for BG stamps.
+        if not data.get("oam") and pal not in ramps:
             raise ValueError(f"combat_art/{path.name}: unknown palette ramp '{pal}'")
         obj = data.get("obj_palette")
         if obj is not None and obj not in ramps:
@@ -375,6 +377,9 @@ def main():
         if ramp is not None and ramp not in ramps:
             raise ValueError(f"enemy_types/{path.name}: unknown ow ramp '{ramp}'")
         for cell in ow.get("cells", []):
+            ow_declared[cell] = ramp
+        # Standing poses ride the same ramp as their walk cells.
+        for cell in ow.get("idle_cells", []) or []:
             ow_declared[cell] = ramp
     hero_data = json.loads((REPO_ROOT / "screens" / "hero.json").read_text())
     hero_pal = (hero_data.get("overworld") or {}).get("palette", 0)

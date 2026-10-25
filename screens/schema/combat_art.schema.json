@@ -3,14 +3,14 @@
   "title": "Combat art set",
   "description": "One named combat-art meta-tile set. Cells name curated tiles from tools/level_editor/public/tiles/combat/ (see tools/compose_battle_sprites.py LAYOUT); null is the all-white blank cell. frame1 omitted repeats frame0 (single-frame set).",
   "type": "object",
-  "required": ["id", "order", "width", "height", "palette", "frame0"],
+  "required": ["id", "order", "width", "height", "frame0"],
   "properties": {
     "id": { "type": "string" },
     "label": { "type": "string" },
     "order": { "type": "integer", "minimum": 0 },
     "width": { "type": "integer", "minimum": 1, "maximum": 6 },
     "height": { "type": "integer", "minimum": 1, "maximum": 4 },
-    "palette": { "type": "string", "description": "BG-stamp ramp name from assets/palette.txt (must hold a base slot). OAM sets encode with obj_palette instead." },
+    "palette": { "type": "string", "description": "BG-stamp ramp name from assets/palette.txt (must hold a base slot; required for BG-stamped sets). OAM sets must NOT carry it (the encoder ignores it; ramp-check fails it) -- they encode with obj_palette instead." },
     "oam": {
       "type": "boolean",
       "description": "Render this set as OAM sprites instead of the BG stamp (small enemies only; boss stays BG). Requires obj_palette."
