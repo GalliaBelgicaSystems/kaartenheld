@@ -66,7 +66,8 @@ typedef struct EnemyTypeDef {
                         // Bit 7 set = asymmetric reveal blink (see overworld.blink in enemy_type.schema.json):
                         // frame0 rest pose ~54/64 frames, frame1 flash ~10/64. Low 7 bits stay the frame count.
     uint8_t ow_palette;  // CGB OAM palette index
-    uint8_t ow_idle_tile;  // standing-pose base tile (blob offset + ENEMY_OW_BASE), 0xFF = keep walk frames while idle
+    uint8_t ow_idle_tile;  // standing-pose base tile (blob offset + ENEMY_OW_BASE), 0 = none
+                        // (shown only for never-moving AI_NONE actors; movers always take walk frames).
 } EnemyTypeDef;
 
 /* WRAM cache for the active battle screen's HUD layout.

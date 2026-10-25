@@ -689,7 +689,7 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets):
             if et_id in ow_idle_offsets:
                 ow_idle_tile = ENEMY_OW_BASE + ow_idle_offsets[et_id]
             else:
-                ow_idle_tile = 0xFF
+                ow_idle_tile = 0
             if ow.get('blink'):
                 # Asymmetric reveal blink: exactly 2 cells on a 1x1
                 # sprite (frame0 rest, frame1 flash); the blink bit rides
@@ -706,7 +706,7 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets):
             ow_h = 0
             ow_frames = 0
             ow_palette = 0
-            ow_idle_tile = 0xFF
+            ow_idle_tile = 0
         et = enemy_types[et_id]
         sprite = et.get('sprite') or {}
         art_id = sprite.get('art')

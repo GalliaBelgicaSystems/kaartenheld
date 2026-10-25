@@ -25,7 +25,7 @@
 00:7DBB 0000007D
 00:C940 000010B0
 00:94000 0000214D
-00:44000 00003A50
+00:44000 00003A4F
 00:64000 00003BF8
 00:54000 00003C17
 00:74000 00003C8B
@@ -319,8 +319,8 @@
 00:5554A _cgb_bg_palettes_desolate
 00:5550A _cgb_bg_palettes_forest
 00:555CA _cgb_bg_palettes_village
-00:474BA _chest_is
-00:474BA _chest_is_open_banked
+00:474B9 _chest_is
+00:474B9 _chest_is_open_banked
 00:19C8 _combatan
 00:19C8 _combatant_take_damage
 00:3440C _combo_cl
@@ -418,8 +418,8 @@
 00:94BCD _g_actor_tables
 00:D4E7 _g_alert_
 00:D4E7 _g_alert_ttl
-00:474F7 _g_all_ex
-00:474F7 _g_all_exits
+00:474F6 _g_all_ex
+00:474F6 _g_all_exits
 00:D633 _g_anim_c
 00:D623 _g_anim_cells
 00:D633 _g_anim_count
@@ -585,7 +585,7 @@
 00:D126 _g_scen_load_state
 00:D12E _g_scen_s
 00:D12E _g_scen_state_buf
-00:479CB _g_scenes
+00:479CA _g_scenes
 00:CF10 _g_sfx_la
 00:CF10 _g_sfx_last_id
 00:CF0E _g_sfx_pl
@@ -1030,8 +1030,8 @@
 00:4669C _tutorial_content_render
 00:5A6C _tutorial_screen_render
 00:5A81 _tutorial_screen_update
-00:46C07 _ui_actor
-00:46C07 _ui_actors_sprites_banked
+00:46C06 _ui_actor
+00:46C06 _ui_actors_sprites_banked
 00:6B22 _ui_calc_
 00:6B22 _ui_calc_timer_bar
 00:572CC _ui_card_
@@ -1201,8 +1201,8 @@
 00:5554A cgb_bg_palettes_desolate
 00:5550A cgb_bg_palettes_forest
 00:555CA cgb_bg_palettes_village
-00:474BA chest_is
-00:474BA chest_is_open_banked
+00:474B9 chest_is
+00:474B9 chest_is_open_banked
 00:19C8 combatan
 00:19C8 combatant_take_damage
 00:3440C combo_cl
@@ -1298,8 +1298,8 @@
 00:94BCD g_actor_tables
 00:D4E7 g_alert_
 00:D4E7 g_alert_ttl
-00:474F7 g_all_ex
-00:474F7 g_all_exits
+00:474F6 g_all_ex
+00:474F6 g_all_exits
 00:D633 g_anim_c
 00:D623 g_anim_cells
 00:D633 g_anim_count
@@ -1465,7 +1465,7 @@
 00:D126 g_scen_load_state
 00:D12E g_scen_s
 00:D12E g_scen_state_buf
-00:479CB g_scenes
+00:479CA g_scenes
 00:CF10 g_sfx_la
 00:CF10 g_sfx_last_id
 00:CF0E g_sfx_pl
@@ -1681,7 +1681,7 @@
 00:7BBB l__CODE
 00:3E27 l__CODE_2
 00:3D2A l__CODE_3
-00:3A50 l__CODE_4
+00:3A4F l__CODE_4
 00:3C17 l__CODE_5
 00:3BF8 l__CODE_6
 00:3C8B l__CODE_7
@@ -1963,8 +1963,8 @@
 00:4669C tutorial_content_render
 00:5A6C tutorial_screen_render
 00:5A81 tutorial_screen_update
-00:46C07 ui_actor
-00:46C07 ui_actors_sprites_banked
+00:46C06 ui_actor
+00:46C06 ui_actors_sprites_banked
 00:6B22 ui_calc_
 00:6B22 ui_calc_timer_bar
 00:572CC ui_card_

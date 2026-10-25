@@ -1,7 +1,7 @@
 {
  "name": "hero_idle_standing",
  "test": true,
- "description": "Standing hero shows idle frame 1 (OAM 96): boot TEST_FIELD, no input, step 1. The idle/walk select follows move_state; standing still must never show walk frames 98/99.",
+ "description": "Standing hero shows idle frame 1 (OAM 96) with correct idle art bytes: boot TEST_FIELD, no input, step 1. The oam_bytes pins guard the boot stream (a buffer-offset bug once streamed BSS garbage here: tile id right, art blank).",
  "actions": [
   {
    "type": "wait",
@@ -17,6 +17,16 @@
    "type": "oam_tile",
    "entry": 0,
    "expected": 96
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34304,
+   "tile": "hero_idle_1"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34320,
+   "tile": "hero_idle_2"
   }
  ],
  "initial_state": {

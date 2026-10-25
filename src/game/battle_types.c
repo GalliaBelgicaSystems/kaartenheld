@@ -30,7 +30,7 @@ static const EnemyTypeDef g_enemy_type_bat = {
     1,
     2,
     0,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_dog = {
@@ -54,7 +54,7 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     2,
     6,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_kobold = {
@@ -102,7 +102,7 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     1,
     130,
     1,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_npc_guard = {
@@ -126,7 +126,7 @@ static const EnemyTypeDef g_enemy_type_npc_guard = {
     1,
     1,
     7,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
@@ -150,7 +150,7 @@ static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
     1,
     1,
     7,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_npc_mayor = {
@@ -174,7 +174,7 @@ static const EnemyTypeDef g_enemy_type_npc_mayor = {
     1,
     1,
     7,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_npc_merchant = {
@@ -198,7 +198,7 @@ static const EnemyTypeDef g_enemy_type_npc_merchant = {
     1,
     1,
     6,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_npc_wizard = {
@@ -222,7 +222,7 @@ static const EnemyTypeDef g_enemy_type_npc_wizard = {
     1,
     1,
     5,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_slime = {
@@ -246,7 +246,7 @@ static const EnemyTypeDef g_enemy_type_slime = {
     1,
     2,
     3,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_slime_knight = {
@@ -294,7 +294,7 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     1,
     4,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_spider = {
@@ -318,7 +318,7 @@ static const EnemyTypeDef g_enemy_type_spider = {
     1,
     2,
     0,
-    255
+    0
 };
 
 static const EnemyTypeDef g_enemy_type_treasure_chest = {
@@ -342,7 +342,7 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     1,
     2,
     1,
-    255
+    0
 };
 
 const EnemyTypeDef* const g_enemy_types[14] = {

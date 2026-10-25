@@ -1,7 +1,7 @@
 {
- "name": "kobold_idle_standing",
+ "name": "kobold_chaser_no_idle",
  "test": true,
- "description": "Standing kobold shows the idle pose (OAM 124), never walk frames: the TEST_FOREST chaser waits while the hero stands far away at (4,4). Companion to the patrol walk-frame coverage.",
+ "description": "Moving-capable kobold never shows the idle pose: the TEST_FOREST chaser (AI_CHASE) waiting far from the hero shows walk frames, not idle 124. Only AI_NONE statics idle (knight_idle_standing).",
  "actions": [
   {
    "type": "wait",
@@ -16,7 +16,7 @@
   {
    "type": "oam_tile",
    "entry": 3,
-   "expected": 124
+   "expected": 103
   }
  ],
  "initial_state": {

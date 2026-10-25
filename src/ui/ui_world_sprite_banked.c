@@ -95,14 +95,17 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
  * (no hostile compiles to SPRITE_KIND_CHEST), so it shows closed.
  * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
  * read) for its shared OAM base, frames, and palette; unknown rows fall
- * back to the ASCII glyph.  A standing actor (moving == 0) with an idle
- * row shows the standing pose instead of the walk frames; the idle row is
- * a single frame, so the anim step does not advance it.  Callers pass the
- * raw move_state byte (0 idle / 1 moving, never compared: bank 4 release
- * layout is full). */
+ * back to the ASCII glyph.  A never-moving actor (still == 0, i.e. plain
+ * AI_NONE) with an idle row shows the standing pose instead of the walk
+ * frames; the idle row is a single frame, so the anim step does not
+ * advance it.  Callers pass the raw ai_type byte (AI_NONE is 0, never
+ * compared: bank 4 release layout is full); movers -- walking, chasing
+ * or merely pausing between steps -- always take walk frames.  Statics
+ * pass 0 (never move).  Idle base 0 means none (blob ids start at 100,
+ * so the fallback is always the walk row). */
 static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                                 uint8_t anim, uint8_t ow_type, uint8_t *prop,
-                                uint8_t moving)
+                                uint8_t still)
 {
     switch (kind) {
         case SPRITE_KIND_CHEST:
@@ -120,7 +123,7 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                 const EnemyTypeDef *t = g_enemy_types[ow_type];
                 if (t->ow_tile != 0xFF) {
                     *prop = t->ow_palette;
-                    if (!moving && t->ow_idle_tile != 0xFF) {
+                    if (!still && t->ow_idle_tile) {
                         return t->ow_idle_tile;
                     }
                     if (t->ow_frames > 1) {
@@ -186,7 +189,7 @@ void ui_actors_sprites_banked(void)
 
         if (a->active) {
             tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
-                                   anim, a->ow_type, &prop, a->move_state);
+                                   anim, a->ow_type, &prop, a->ai_type);
         }
         /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
