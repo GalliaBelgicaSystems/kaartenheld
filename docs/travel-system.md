@@ -23,22 +23,34 @@ Cards are made from progressively stronger materials:
 
 **Wood → Bronze → Iron → Steel → Mythril**
 
-Mythril cards are exceptionally powerful and have a unique property: they can manipulate time.
+Mythril cards are exceptionally powerful: the strongest material, and
+accordingly rare. Their deeper temporal connection is a sequel hook,
+not a Kaartenheld 1 mechanic.
 
-## Rewinding Time
-- The player can burn a Mythril card to rewind time.
-- Initial rule: one Mythril card per day rewound, up to a few days.
-- Burned cards are permanently lost.
-- Rewinding restores recent opportunities, but rewards acquired in the erased period are generally lost.
-- The Lord's overall progression is not completely reversed, preserving the countdown's urgency.
-- Rewinding is optional; the game remains completable without it.
+## Time Is Final
+
+- There is no rewinding. Spent days are gone.
+- Helping a village for three days costs three days — but that village
+  may help you later.
+- Missed opportunities become different storylines, not erased mistakes.
+- The Lord's progression never reverses.
+- This is what gives every choice weight without making the game cruel.
 
 ## Design Principles
 - Time is valuable, but not every activity should be a waste of time.
-- Rewinding should offer a second chance, not erase every consequence.
+- You can't undo yesterday: choices stand, and missed opportunities
+  become different stories rather than dead ends.
 - Missed opportunities should often lead to alternative stories rather than dead ends.
 - Choices should create different adventures, not simply good or bad outcomes.
 - The hero's journey is about learning that strength requires preparation, responsibility, and sacrifice.
+
+## Core Loop (locked)
+
+1. **Prepare** — cards, equipment, supplies, and what you know about the route.
+2. **Travel** — a fixed-duration route; each day advances the world calendar.
+3. **Make choices** — encounters, detours, fights, or press onward.
+4. **Arrive changed** — decisions affect people, locations, future
+   opportunities, and endings.
 
 ---
 
@@ -57,7 +69,7 @@ Travel Organizer NPC
    ↓
 Choose destination
    ↓
-Choose travel plan
+Confirm journey (fixed duration shown)
    ↓
 Journey simulation
    ↓
@@ -90,7 +102,9 @@ Town
        └── Northern Castle
 ```
 
-The NPC presents available destinations and the travel plans for each destination.
+The NPC presents available destinations. There is no transport menu:
+every route has one fixed duration, and the journey itself is the
+adventure.
 
 Example dialogue:
 
@@ -110,20 +124,16 @@ After selecting a destination:
 ```text
 TRAVEL ORGANIZER
 
-"How would you like to travel?"
+"Road to the Mountains."
 
-Express Caravan     150g
-Caravan              75g
-Wagon                30g
-On Foot               FREE
+5 days, mountain roads.
 
-[Select]
+[Travel]
 [Back]
 ```
 
-The important point is that **On Foot is a normal travel plan**, not a hard-coded fallback.
-
-Every route can define which plans are available.
+The duration and the known route notes come from the route JSON —
+the organizer never hard-codes them.
 
 ---
 
@@ -138,9 +148,7 @@ Travel NPC
     ↓
 select route
     ↓
-select travel plan
-    ↓
-journey_start(route, plan)
+journey_start(route)
     ↓
 Journey System
 ```
@@ -193,10 +201,15 @@ A route defines:
 
 * starting area
 * destination
-* available travel plans
+* fixed travel duration (`travel_days`)
 * resource consumption
 * event pools
 * environmental characteristics
+
+One route, one duration — there is no per-route transport menu. Travel
+is an adventure with sidetracks, not a transportation choice. The
+player's decisions along the way determine what the journey costs, not
+a plan picked up front.
 
 Example:
 
@@ -208,40 +221,7 @@ Example:
   "start": "TOWN",
   "destination": "MOUNTAIN_PASS",
 
-  "plans": [
-    {
-      "id": "express",
-      "name": "Express Caravan",
-      "cost": 150,
-      "min_days": 0,
-      "max_days": 0,
-      "events": false
-    },
-    {
-      "id": "caravan",
-      "name": "Caravan",
-      "cost": 75,
-      "min_days": 2,
-      "max_days": 3,
-      "events": true
-    },
-    {
-      "id": "wagon",
-      "name": "Wagon",
-      "cost": 30,
-      "min_days": 4,
-      "max_days": 7,
-      "events": true
-    },
-    {
-      "id": "foot",
-      "name": "On Foot",
-      "cost": 0,
-      "min_days": 8,
-      "max_days": 14,
-      "events": true
-    }
-  ],
+  "travel_days": 5,
 
   "resources": {
     "food_per_day": 2,
@@ -252,9 +232,8 @@ Example:
     "frequency": 35,
     "pool": [
       "bandit_attack",
-      "broken_wagon",
       "lost_traveler",
-      "find_food"
+      "mysterious_shrine"
     ]
   },
 
@@ -266,78 +245,60 @@ Example:
 
 The exact schema can evolve during implementation.
 
+Travel time vs detour time (replaces the old plan/clock split): the
+route's `travel_days` is the fixed baseline under normal conditions —
+the engine advances the journey and the global `DAY` clock (§35) by it.
+Anything *extra* comes from detours: event choices, delays, and
+recovery days, which extend the journey through the same shared
+time-advancement path (`journey delay` effects, defeat recovery §18,
+biome clears §35b). A 5-day route played as travel-2, help-2, travel-3
+arrives on day 8 with an ally — never failed, just not the journey as
+planned. Detour days count *as* journey days (progress + clock advance
+together), never silently stacked on top, so time cannot double-count.
+
 The important rule is:
 
 > **The journey engine should not contain knowledge that belongs in this JSON.**
 
 ---
 
-# 6. Travel Plans
+# 6. Travel Time vs Detour Time
 
-Travel plans are part of the route definition.
-
-They represent the fundamental tradeoff:
-
-```text
-More money
-    ↓
-Less time
-    ↓
-Less risk
-```
-
-while:
+Every route has one fixed baseline duration (`travel_days`). There is
+no caravan/wagon/foot menu and no fare — the tradeoff is not money for
+speed, it is focus against engagement:
 
 ```text
-Less money
+Stay on the road
     ↓
-More time
-    ↓
-More risk
+Arrive as planned
 ```
 
-The free plan is explicitly represented:
-
-```json
-{
-  "id": "foot",
-  "name": "On Foot",
-  "cost": 0,
-  "min_days": 8,
-  "max_days": 14
-}
-```
-
-The engine does not need a special:
-
-```c
-if (player_is_poor)
-```
-
-path.
-
-The free plan simply costs zero.
-
-This also allows different routes to offer different plans.
-
-For example:
+vs:
 
 ```text
-Mountain Pass:
-    Express Caravan
-    Caravan
-    Wagon
-    On Foot
-
-Island:
-    Ferry
-    Cargo Ship
-    On Foot: unavailable
-
-Remote Wilderness:
-    Wagon
-    On Foot
+Stop, help, investigate
+    ↓
+Arrive later, changed world
 ```
+
+Not every interesting event costs time. Content follows one rule:
+time is a resource the player manages, not a penalty on every encounter.
+An event states its cost up front, and the choice is explicit:
+
+* Continue immediately, schedule preserved.
+* Spend a day helping, gain a future ally.
+* Risk a shortcut that may save a day or cause trouble.
+* Investigate a site tied to the Convergence.
+
+Detour UX decision: the extra days pass *after* the detour plays out,
+and the cost is shown *before* committing. A story-heavy detour runs
+as a small self-contained adventure (dialogue, battle, reward) first;
+only on its resolution are the stated days charged through the shared
+time path. The player always knows the price before paying it.
+
+This is what fits Kaartenheld: you never fail a journey; you fail to
+have the journey you intended.
 
 ---
 
@@ -400,8 +361,8 @@ Represents food and water together. Consumed during travel.
 
 ### Parts
 
-Represents wagon repair/maintenance supplies. Primarily relevant to
-wagon-based travel.
+Represents journey repair/maintenance supplies. Consumed by rough
+terrain and breakdown events.
 
 Do not hard-code final consequences for depletion (see §10).
 
@@ -409,7 +370,7 @@ Do not hard-code final consequences for depletion (see §10).
 
 # 9. Resource Consumption
 
-Each journey day can consume resources according to the route/plan.
+Each journey day consumes resources according to the route.
 
 For example:
 
@@ -422,45 +383,46 @@ For example:
 }
 ```
 
-The actual schema could eventually allow travel plans to override these values.
-
-For example:
-
-```text
-On Foot:
-    food: 2
-    parts: 0
-
-Wagon:
-    food: 2
-    parts: 1
-
-Caravan:
-    food: 1
-    parts: 0
-```
-
 The journey runtime simply applies the configured consumption.
 
 ---
 
 # 10. Resource Depletion
 
-Do **not** decide yet what happens when resources reach zero.
+Depletion fires as an **edge**, not a level: `RESOURCE_DEPLETED(food)`
+is emitted once on the transition to zero, not every day spent at
+zero. The compiler requires **some** depletion response by Phase 1 —
+even if the first content is only HP damage — because victory-only
+battle resume (§18) and open-ended depletion both leave "what happens
+next?" undefined, and "never a game over" (§0) needs a data-defined
+answer from the start.
 
-Instead, depletion should generate a generic condition/event:
+Depletion resolves through the normal outcome machinery (§16):
 
 ```text
 Food reaches zero
        ↓
-RESOURCE_DEPLETED(food)
+RESOURCE_DEPLETED(food)   ← edge: once per transition to zero
        ↓
-Data-defined response
+Data-defined response (outcomes + effects, §16–17)
 ```
 
-This lets the design evolve.
+Minimal Phase 1 schema (compiler-rejected if absent):
 
-Possible future content could say:
+```json
+{
+  "on_depleted": {
+    "food": { "outcomes": [ { "weight": 100, "effects": [
+      { "type": "hp", "amount": -2 }
+    ] } ] },
+    "parts": { "outcomes": [ { "weight": 100, "effects": [
+      { "type": "journey", "id": "delay", "days": 1 }
+    ] } ] }
+  }
+}
+```
+
+Richer content can say:
 
 ```text
 Food depleted
@@ -502,9 +464,8 @@ typedef struct {
     uint8_t active;         /* 0 = none, 1 = travelling */
 
     uint8_t route_id;       /* game-range id (>= 0x80 convention) */
-    uint8_t plan_id;
 
-    uint8_t total_days;
+    uint8_t total_days;     /* fixed baseline (travel_days) + detours taken */
     uint8_t days_remaining;
 
     /* Abandon target: where the journey started. */
@@ -514,6 +475,11 @@ typedef struct {
     uint8_t origin_facing;
 
     uint8_t event_pending;  /* journey-event id awaiting choice, 0 = none */
+
+    /* Added before the SAVE_VERSION bump: Phase 3 depends on both. */
+    uint8_t return_to_journey; /* 1 = a road battle is in progress, resume
+                                * the journey on battle end */
+    uint8_t pending_delay;     /* extra days appended by delay effects */
 } JourneyState;
 ```
 
@@ -523,7 +489,7 @@ Rules:
   game-range convention — never bare `uint16_t`.
 * Food/parts live in `GameState.currency`, **not** in this struct (§8).
 * No large stack copies of `GameState` (AGENTS.md §52.14, SP = 0xFFFE
-  under the harness). The struct itself is ~9 bytes; WRAM/SRAM cost is
+  under the harness). The struct itself is ~11 bytes; WRAM/SRAM cost is
   tracked in `make memmap` + `docs/save-format.md`.
 
 The distinction remains:
@@ -540,18 +506,17 @@ JourneyState (+ currency)
 
 # 12. Journey Simulation
 
-The journey proceeds in discrete days.
+The journey proceeds in discrete days over the fixed baseline plus any
+detours taken.
 
 Basic flow:
 
 ```text
 Start Journey
       ↓
-Charge travel cost
+Set duration = travel_days
       ↓
-Determine duration
-      ↓
-DAY START
+DAY START (advance travel progress + global DAY clock)
       ↓
 Consume resources
       ↓
@@ -563,11 +528,11 @@ Event?
  ┌────┴─────┐
  No         Yes
  │           │
- │       Show Event
+ │       Show Event (+ stated time cost, if any)
  │           │
  │       Player Choice
  │           │
- │       Apply Effects
+ │       Play out detour (if any), then charge its days
  │           │
  └─────┬─────┘
        ↓
@@ -578,7 +543,11 @@ Days remaining?
  └── no  → ARRIVAL
 ```
 
-A journey with zero days, such as Express Caravan, simply skips the simulation.
+Detour days count *as* journey days: when an event's choice carries a
+time cost, the detour plays out first (dialogue, battle, reward) and
+its days are charged on resolution — travel progress and the global
+clock advance together, never double-counted. Not every event costs
+time (§6).
 
 ---
 
@@ -677,6 +646,10 @@ and:
 ```
 
 The engine should select according to the configured weights.
+Weights are `uint8_t` (0–255); the pool sum must fit `uint16_t`
+(compiler-rejected above 65535; in practice keep pools small enough to
+audit). The weighted pick runs in the banked journey body, where `%`
+is allowed — the fixed-bank wrapper never rolls (AGENTS.md §52.18).
 
 ---
 
@@ -817,9 +790,27 @@ Example:
 ```json
 {
   "type": "battle",
-  "id": "BANDIT_AMBUSH"
+  "id": "BANDIT_AMBUSH",
+  "on_victory": { "effects": [ { "type": "currency", "id": "gold", "amount": 20 } ] },
+  "on_defeat": { "effects": [
+    { "type": "journey", "id": "delay", "days": 1 },
+    { "type": "hp", "id": "floor", "amount": 1 }
+  ] }
 }
 ```
+
+Defeat is lost opportunity, not game over (the "time is the currency"
+principle). A road-battle effect routes the battle result into the
+same outcome machinery as §16: `on_victory` grants whatever the event
+promises (loot, flags, shortcuts); `on_defeat` grants nothing lootable
+and instead applies a data-defined recovery — normally a `journey
+delay` of +1 day (time is the scarce resource, so repeated defeat still
+hurts) plus an HP floor (`hp floor 1`) so the party cannot chain one
+defeat straight into the next at 0 HP. For boss fights, defeat
+additionally leaves the boss alive (no `ACTOR_STATE_DEFEATED`, no
+`clear_days` skip from §35b) — the retry itself is the cost. Both
+branches are required schema: the compiler rejects a `battle` effect
+with neither, and scenarios pin victory-loot vs defeat-no-loot-plus-delay.
 
 ```json
 {
@@ -835,7 +826,9 @@ The journey system should use existing game systems for effects where possible i
 
 # 18. Battle Integration
 
-Journey events should be able to launch existing card battles.
+Journey events should be able to launch existing card battles, with
+**both results data-defined** — victory-only resume leaves defeat
+semantics undefined, which "never a game over" (§0) cannot tolerate.
 
 Example:
 
@@ -850,7 +843,12 @@ Example:
       "effects": [
         {
           "type": "battle",
-          "id": "BANDIT_AMBUSH"
+          "id": "BANDIT_AMBUSH",
+          "on_victory": { "effects": [ { "type": "currency", "id": "gold", "amount": 20 } ] },
+          "on_defeat": { "effects": [
+            { "type": "journey", "id": "delay", "days": 1 },
+            { "type": "hp", "id": "floor", "amount": 1 }
+          ] }
         }
       ]
     }
@@ -865,13 +863,13 @@ Journey
    ↓
 Bandit Event
    ↓
-Fight
+Fight (sets JourneyState.return_to_journey = 1)
    ↓
 Existing Battle System
    ↓
-Battle Result
+Battle Result → on_victory | on_defeat
    ↓
-Resume Journey
+Resume Journey (return flag cleared)
 ```
 
 The existing battle system does not need to know that the battle originated from a journey.
@@ -928,7 +926,7 @@ Examples:
 Mountain
 → breakdowns
 → snow
-→ slower wagon travel
+→ slower travel over passes
 
 Desert
 → heat
@@ -968,17 +966,20 @@ Example:
 ```text
 ROAD TO THE MOUNTAINS
 
-Day 4 / 7
+Day 4 of 7 (clock 4 / 180)
 
 Food       18
 Parts       4
 
 ████████████░░░░░
 
-Weather: Clear
-
 [Continue]
 ```
+
+(The §21 mock's `Weather: Clear` row is cut from the slice — weather
+exists nowhere in the schema; see §32. The `Day` line shows simulated
+progress plus the global clock against the `CONVERGENCE_DAYS` content
+constant, never a hard-coded 180.)
 
 When an event happens, the screen becomes an event/choice screen:
 
@@ -1007,9 +1008,7 @@ Talk to Travel Organizer
      ↓
 Destination Selection
      ↓
-Travel Plan Selection
-     ↓
-Confirm Cost
+Confirm Journey
      ↓
 Journey Begins
 ```
@@ -1031,25 +1030,10 @@ Then:
 ```text
 TRAVEL ORGANIZER
 
-Mountain Pass
+Mountain Pass.
 
-Express Caravan     150g
-Caravan              75g
-Wagon                30g
-On Foot               FREE
-
-> Caravan
-```
-
-Then:
-
-```text
-TRAVEL ORGANIZER
-
-Caravan to Mountain Pass.
-
-Cost: 75g
-Estimated travel: 2–3 days
+Known about the route:
+5 days, mountain roads.
 
 [Travel]
 [Back]
@@ -1064,24 +1048,24 @@ The organizer should retrieve this information from the route definition rather 
 The runtime API should conceptually expose:
 
 ```c
-journey_start(route_id, plan_id);
+journey_start(route_id);
 ```
 
 It should:
 
 1. Validate the route.
-2. Validate the plan.
-3. Confirm the player is at the route's start.
-4. Confirm the player can pay.
-5. Deduct the cost (gold via `currency_add`, negative amount).
-6. Record `JourneyState.origin_*` from the current `GameState.scene`.
-7. Determine journey duration (game-RNG roll in `[min_days, max_days]`).
-8. Initialize journey state (`active = 1`).
-9. Switch to the journey screen.
+2. Confirm the player is at the route's start.
+3. Record `JourneyState.origin_*` from the current `GameState.scene`.
+4. Set the duration to the route's fixed `travel_days` (no roll —
+   determinism is structural, so the banked body never needs `%`,
+   AGENTS.md §52.18).
+5. Initialize journey state (`active = 1`, `return_to_journey = 0`,
+   `pending_delay = 0`).
+6. Switch to the journey screen.
 
 The Travel Organizer (`INTERACTION_TRAVEL`, §7) should call this
-function after the player confirms. Insufficient gold or wrong start
-scene is a transient menu message, never a silent no-op.
+function after the player confirms. A wrong start scene is a transient
+menu message, never a silent no-op.
 
 ---
 
@@ -1106,7 +1090,7 @@ The destination is already an existing world scene.
 
 The journey system simply provides the connection between areas.
 
-## 24b. Abandoning a Journey (fare lost)
+## 24b. Abandoning a Journey
 
 Decision: the player may abandon the voyage at any time from the
 journey screen:
@@ -1117,12 +1101,11 @@ journey_abandon();
 
 * Returns to `JourneyState.origin_*` via `scene_load` (exact
   pre-voyage position).
-* The plan fare is **not** refunded (penalty).
-* Consumed food/parts and HP/status effects **stay** (further penalty).
+* Consumed food/parts and HP/status effects **stay** (the penalty).
   No full-`GameState` checkpoint buffer is kept — this keeps the cost
-  to the ~9-byte `JourneyState` instead of an 800B second copy in WRAM.
+  to the ~11-byte `JourneyState` instead of an 800B second copy in WRAM.
 * Emits `JOURNEY_ABANDONED` telemetry and is scenario-tested
-  (abandon → origin scene/position, gold still deducted).
+  (abandon → origin scene/position restored, consumed effects kept).
 
 ---
 
@@ -1176,7 +1159,7 @@ The compiler should:
 Fat journey logic lives in a banked body behind a thin `g_bk_call_*`
 staging wrapper (the `combo_evaluate` / `scene_spawn` pattern,
 AGENTS.md §52.11.1), dispatched by `switch` (no function pointers,
-§52.1). No `%` / `/` / 8-bit `*` in the fixed-bank wrapper (§52.18).
+AGENTS.md §52.1). No `%` / `/` / 8-bit `*` in the fixed-bank wrapper (AGENTS.md §52.18).
 
 ---
 
@@ -1191,9 +1174,7 @@ Check:
 * unique route IDs
 * valid start scene (against `levels/registry.json`)
 * valid destination scene (against `levels/registry.json`)
-* valid travel plans
-* valid costs
-* valid day ranges
+* valid fixed `travel_days` (positive integer)
 * valid currency references (food / parts / gold)
 * valid event references
 
@@ -1238,35 +1219,30 @@ Every reference should resolve at compile time.
 # 28. Testing
 
 The journey system follows the harness contract (AGENTS.md §6–10,
-§53): semantic telemetry + snapshots + deterministic RNG + fixture
+AGENTS.md §53): semantic telemetry + snapshots + deterministic RNG + fixture
 scenarios. New scenarios use fixture levels
 (`tools/scenarios/fixtures/levels/test_*.json`, `TEST_*` scenes, bank
-4) — never real `levels/` scenes (§42.1). Duration rolls, event
-frequency, and weighted picks go through the game RNG (`SET_RNG`,
-inspectable). New telemetry is append-only (`telemetry.h` +
+4) — never real `levels/` scenes (AGENTS.md §42.1). Event
+frequency and weighted picks go through the game RNG (`SET_RNG`,
+inspectable) — the baseline duration is fixed, so no duration roll
+exists. New telemetry is append-only (`telemetry.h` +
 `EVENT_TYPE_MAP`); scenario setup writes direct-to-`GameState`
-(no gameplay telemetry, §53.3) with loader ordering per §52.12.
+(no gameplay telemetry, AGENTS.md §53.3) with loader ordering per AGENTS.md §52.12.
 
 Test at minimum:
 
 ```text
 Start journey
-→ correct route
-
-Select plan
-→ correct cost
-
-Free plan
-→ costs zero
-
-Instant plan
-→ zero travel days
-
-Normal plan
-→ duration within configured range
+→ correct route, fixed travel_days
 
 Daily update
 → resources consumed correctly
+
+Detour choice with a time cost
+→ journey extended, clock advanced together
+
+Free event (no time cost)
+→ schedule preserved
 
 Event selection
 → correct event pool used
@@ -1277,15 +1253,17 @@ Weighted events
 Event choice
 → correct effects applied
 
-Battle event
-→ battle starts
-→ journey resumes
+Battle event victory
+→ loot granted, journey resumes
+
+Battle event defeat
+→ no loot, +1 day delay, HP floor, journey resumes
 
 Journey completion
 → correct destination
 
 Abandon journey
-→ origin scene/position restored, fare still deducted
+→ origin scene/position restored
 
 Save/load mid-journey
 → roundtrip preserves journey + currency state
@@ -1297,7 +1275,7 @@ Invalid reference
 → compiler rejects it
 ```
 
-Randomness (duration, event frequency, weighted pools/outcomes) goes
+Randomness (event frequency, weighted pools/outcomes) goes
 through the game RNG with a deterministic/testable seed.
 
 ---
@@ -1316,14 +1294,7 @@ Travel Organizer
 Mountain Pass
 ```
 
-With four plans:
-
-```text
-Express Caravan
-Caravan
-Wagon
-On Foot
-```
+With a fixed duration (e.g. 5 days):
 
 Two resources:
 
@@ -1356,11 +1327,9 @@ This proves the entire architecture:
 ```text
 NPC
  ↓
-Route JSON
+Route JSON (fixed travel_days)
  ↓
-Travel plan
- ↓
-Journey
+Journey (+ detours)
  ↓
 Resources
  ↓
@@ -1423,7 +1392,7 @@ The final architecture should be:
                     │ Route JSON   │
                     └──────┬───────┘
                            │
-                     select plan
+                     fixed travel_days
                            │
                            ▼
                     ┌──────────────┐
@@ -1462,7 +1431,9 @@ The core rule is:
 
 > **The engine implements the journey mechanics. JSON defines what the journey means.**
 
-That means we deliberately do **not** commit yet to whether running out of food causes HP loss, poison, delays, arrival penalties, or something else. Those are content decisions that the data model should be capable of expressing later.
+That means depletion responses and battle-defeat consequences are content
+decisions that the data model expresses through §10/§16–§18 — the engine
+only routes `RESOURCE_DEPLETED` and `on_victory`/`on_defeat` into outcomes.
 
 ---
 
@@ -1477,39 +1448,40 @@ part of the plan, not an appendix.
   organizer table, `CURRENCY_ID_FOOD/PARTS`, `game_journey_register()`)
   lives in `src/game/`. Engine files never include game headers or
   branch on game ids.
-* **Screen contract** (§54.2/§54.6/§55.6, §36): new `SCREEN_JOURNEY`
+* **Screen contract** (AGENTS.md §54.2/§54.6/§55.6, AGENTS.md §36): new `SCREEN_JOURNEY`
   (next `ScreenId`, currently 13 in `src/screens/screen.h`); screens
   hold no persistent state (transient UI in `Game`, reset on exit);
   draw through `MenuFrame` with direct-literal titles; targeted
   redraws for Continue/day-step; declare the VRAM block-1 / CGB
   palette footprint and the `ui_invalidate_tileset()` return path;
-  timer-ISR music (§35) is never stalled by transitions.
-* **Journey screen weather**: the §21 mock shows `Weather: Clear`,
-  but weather exists nowhere in the schema. Cut it from the slice or
-  spec it as route `environment` data (§20) — no hardcoded weather
-  engine either way.
-* **Telemetry** (§55.4, `telemetry.h` append-only):
+  timer-ISR music (AGENTS.md §35) is never stalled by transitions.
+* **Journey screen weather**: cut from the slice (§21 mock no longer
+  shows it). If weather ever returns, it is route `environment` data
+  (§20) — no hardcoded weather engine either way.
+* **Telemetry** (AGENTS.md §55.4, `telemetry.h` append-only):
   `JOURNEY_STARTED`, `JOURNEY_DAY_ADVANCED`, `JOURNEY_EVENT_SHOWN`,
   `JOURNEY_CHOICE`, `JOURNEY_COMPLETED`, `JOURNEY_ABANDONED`,
-  `RESOURCE_CONSUMED`, `RESOURCE_DEPLETED`, `ARRIVAL`
+  `RESOURCE_CONSUMED`, `RESOURCE_DEPLETED`, `LORD_POWER_UP`,
+  `ARRIVAL`
   (plus reused `CURRENCY_*`, `DAMAGE/HEAL`, `BATTLE_*`,
   `SCRIPT_TRIGGERED`, `MUSIC_CHANGED`). Payloads follow the
   `data[4]` convention; host `EVENT_TYPE_MAP` stays in sync.
-* **Snapshot / descriptor** (§53.4–53.5): extend `g_state_snap_buf`
+* **Snapshot / descriptor** (AGENTS.md §53.4–53.5): extend `g_state_snap_buf`
   (journey fields) and `g_scen_state_buf` (journey setup) with version
   bumps; keep the append-only byte contract; expose semantic
   assertions only (`journey_day`, `resource`, `event_occurred`, … —
-  never byte offsets, §53.7).
-* **Zero-day express** (§5/§12): `express` (0 days) skips the day loop
-  but still validates route/plan, charges cost, records origin, and
-  emits start/arrival telemetry.
+  never byte offsets, AGENTS.md §53.7).
+* **Fixed baseline, no zero-day shortcut** (§5/§12): the route's
+  `travel_days` always run — duration is structural, never a roll, so
+  no choice of transport can buy immunity from the Convergence clock.
+  Speed comes only from declining detours.
 * **Validation gates**: `make clean && make debug && make release`
-  (headers have no deps, §52.2), `make test-harness` (incl. sentinels
+  (headers have no deps, AGENTS.md §52.2), `make test-harness` (incl. sentinels
   `patrol_slime_cross`, `patrol_enemy_bumps_player`,
-  `battle_multi_enemy_cycle_kill`, §52.19), `make test`,
+  `battle_multi_enemy_cycle_kill`, AGENTS.md §52.19), `make test`,
   `make memmap` (fails on `_HOME ≥ 0x8000`), `make lint`,
   `make verify-oam`; add a walkthrough milestone for the journey
-  screen (§56.3) when the slice lands.
+  screen (AGENTS.md §56.3) when the slice lands.
 
 ---
 
@@ -1525,17 +1497,19 @@ green on `make test-harness`, `make test`, `make memmap`, `make lint`,
 ASCII-only until the graphics seam (Phase 5): journey screens use
 `menu_draw_frame` + `ui_draw_text_line` into `g_ui_screen_buf` (the
 `shop_screen.c` pattern: frame + bank-2 content body, bank-2 caret
-repaint, no full redraws per §36). No new tile ids, palette writes,
+repaint, no full redraws per AGENTS.md §36). No new tile ids, palette writes,
 OAM entries, or VRAM block claims before Phase 5, so `verify-oam`
 stays unaffected and all tests assert `screen_row` text + semantic
 state (never tile data — the harness cannot see tile data anyway,
-§52.22).
+AGENTS.md §52.22).
 
 ## Phase 0 — IDs + currencies (no behavior)
 
 * `src/game/game_ids.h`: `CURRENCY_ID_FOOD = 2`,
   `CURRENCY_ID_PARTS = 3`; starter grants in `game_new_game`.
-* Why safe: `MAX_CURRENCIES` is already 4; currency snapshot /
+  `VARIABLE_ID_DAY` + `VARIABLE_ID_LORD_POWER` named variables;
+  `CONVERGENCE_DAYS` content constant (default 180).
+* Why safe: `MAX_CURRENCIES` is already 4; currency/variable snapshot /
   descriptor / telemetry sections are generic, so no wire change.
 
 ## Phase 1 — Data + compiler + registration (no UI)
@@ -1546,13 +1520,15 @@ state (never tile data — the harness cannot see tile data anyway,
   `dialogues` / `shops`), `src/game/journeys_content.c` in a banked
   ROM bank (bank chosen via `make memmap`; banks 2/4/5 are nearly
   full), `game_journey_register()` mirroring `event_init` /
-  `dialogue_register` (§55.2).
+  `dialogue_register` (AGENTS.md §55.2). Schema requires
+  fixed `travel_days`, `on_victory`/`on_defeat` on every `battle`
+  effect, and `on_depleted` responses (§10) — rejected if absent.
 * Engine skeleton: `src/world/journey.{h,c}` + banked body via the
   `g_bk_call_*` trampoline (`combo_evaluate` / `scene_spawn` pattern,
-  §52.11.1), `switch` dispatch only (no function pointers, §52.1), no
-  `%` / `/` / 8-bit `*` in the fixed-bank wrapper (§52.18). Pure
-  logic only: validate, fare via `currency_add`, duration roll in
-  `[min_days, max_days]` via the game RNG, consumption math. Callable
+  AGENTS.md §52.11.1), `switch` dispatch only (no function pointers, AGENTS.md §52.1), no
+  `%` / `/` / 8-bit `*` in the fixed-bank wrapper (AGENTS.md §52.18). Pure
+  logic only: validate, set the fixed baseline duration,
+  consumption math, clock charge. Callable
   from harness actions; no screen yet.
 
 ## Phase 2 — Organizer + start / abandon / arrive (ASCII menus)
@@ -1562,32 +1538,45 @@ state (never tile data — the harness cannot see tile data anyway,
   compact `StaticActorDefinition` copy (watch the `MAX_STATIC_ACTORS`
   WRAM comment); organizer table; `levels` actor `travel` property +
   `validate.py --travel-refs`.
-* `SCREEN_JOURNEY` (next id, currently 13): destination → plan →
-  confirm menus. `journey_start` records `origin_*`;
-  `journey_abandon` → `scene_load(origin)` with the fare kept and
+* `SCREEN_JOURNEY` (next id, currently 13): destination →
+  confirm menu. `journey_start` records `origin_*`;
+  `journey_abandon` → `scene_load(origin)` with
   consumed food/parts + HP/status effects kept (§24b);
   `journey_complete` → `scene_load(dest)` so `MAP_ENTER` fires.
-  Insufficient gold / wrong start scene are transient menu messages,
-  never silent no-ops.
+  Wrong start scene is a transient menu message,
+  never a silent no-op.
 
 ## Phase 3 — Day loop + road events + battle resume (still ASCII)
 
 * Day advance on `[Continue]` (one press + `WAIT` per edge-trigger,
-  §52.10): consume → depletion check → frequency roll → pool pick
-  (weighted) → choice screen (same MenuFrame pattern) →
-  `EventAction` effects (`ADD_CURRENCY` / hp / status / `battle` /
-  `journey`). Zero-day express skips the loop but keeps start/arrival
-  telemetry (§32).
+  AGENTS.md §52.10): consume → depletion edge check (§10) → frequency roll → pool pick
+  (weighted, banked body) → choice screen (same MenuFrame pattern) →
+  `EventAction` effects (`ADD_CURRENCY` / hp / status / `battle` with
+  `on_victory`/`on_defeat` / `journey`). Detour days extend the
+  journey and the clock together (§6); free events preserve the
+  schedule. Start/arrival telemetry always fires (§32).
 * Battle resume: road `battle` effects call the existing
-  `battle_start` (which never knows the origin); victory writeback per
-  §54.1, then resume the journey via a stored return flag.
+  `battle_start` (which never knows the origin); victory/defeat
+  writeback per AGENTS.md §54.1, then resume the journey via
+  `JourneyState.return_to_journey`. Defeat grants no loot, applies the
+  `on_defeat` delay + HP floor (§18); boss defeat leaves the boss alive
+  (no `clear_days` skip, §35b).
+* Biome clear: boss-defeat event applies `clear_days` (§35b) —
+  permanent, Lord ticks for the full skip.
 
 ## Phase 4 — Observability lock-in
 
 * Telemetry, snapshot/descriptor deltas, semantic dump, fixture level
-  (`test_journey*`, bank 4, `TEST_*` scene per §42.1), and the
-  walkthrough milestone (§56.3). See §34 for the per-phase audit
+  (`test_journey*`, bank 4, `TEST_*` scene per AGENTS.md §42.1), and the
+  walkthrough milestone (AGENTS.md §56.3). See §34 for the per-phase audit
   surface.
+
+## Phase 6 — Cut: no rewind in Kaartenheld 1
+
+Phase 6 was the rewind phase. It is deleted with the mechanic (§38):
+Phases 0–5 are the whole plan, ending at the graphics seam. The
+sequel restores a rewind phase on top of the shipped observability
+contract when it needs one.
 
 ## Phase 5 — Graphics seam (future, no logic change)
 
@@ -1599,7 +1588,7 @@ banked loader → WRAM cache → bank-3 renderer). Graphics work is then
 only: a `journeys/skin.json` (frame tiles, route icon, palette slots
 from free `UI_COLOR_*` / VRAM ids in `ui.h`), a banked tile loader
 (`ui_card_tiles_load_banked` pattern: LCD-off, `VBK_REG = 0` reset,
-signed-addressing §52.22), and per-row `ui_color_span` calls. Text
+signed-addressing AGENTS.md §52.22), and per-row `ui_color_span` calls. Text
 rows and assertions stay identical.
 
 Acceptance for "ASCII done, graphics easy": all Phase 1–4 scenarios
@@ -1622,15 +1611,15 @@ scenarios it needs — no "trust the screen" steps.
   existing `CURRENCY_ADDED` / `SPENT` events.
 * **P1**: compiler `--check` rejects (dup id, bad scene vs
   `registry.json`, bad `BattleId` / currency, dangling
-  organizer → route → event); logic scenarios assert cost math,
-  duration bounds, and consumption math via `event_arg` payloads —
+  organizer → route → event); logic scenarios assert fixed-duration,
+  consumption math via `event_arg` payloads —
   all seeded (`SET_RNG`), deterministic.
 * **P2**: `screen_row` text asserts (row 0 `TRAVEL`,
-  destination/plan rows, `FREE` / cost strings — titles are direct
-  literals per §54.6, so row text proves render);
+  destination rows + duration line — titles are direct
+  literals per AGENTS.md §54.6, so row text proves render);
   `event_occurred: JOURNEY_STARTED / ARRIVAL / JOURNEY_ABANDONED`;
-  abandon asserts origin scene + position restored AND gold still
-  deducted; `event_not_occurred` guards setup-telemetry leaks (§53.3).
+  abandon asserts origin scene + position restored with consumed
+  effects kept; `event_not_occurred` guards setup-telemetry leaks (AGENTS.md §53.3).
 * **P3**: `JOURNEY_DAY_ADVANCED` (day-counter args),
   `JOURNEY_EVENT_SHOWN` / `JOURNEY_CHOICE`,
   `RESOURCE_CONSUMED` / `DEPLETED`, `BATTLE_STARTED` → `BATTLE_ENDED`
@@ -1640,7 +1629,7 @@ scenarios it needs — no "trust the screen" steps.
   (`SCENE` / `PLAYER` / `FLAGS` / `VARIABLES` / `CURRENCY` / `PARTY` /
   `JOURNEY` / `WORLD`) + `EVENTS SINCE` incremental inspection;
   walkthrough milestone text-verified (`bg_text`), PNGs review-only
-  (§56.4).
+  (AGENTS.md §56.4).
 
 ## Audit commands (same every phase)
 
@@ -1651,11 +1640,11 @@ python3 tools/dev.py roundtrip <scenario>    # save-boundary probe (P3+)
 make test-harness JOBS=4                     # full suite + sentinels
 ```
 
-Rules baked in: scenarios stage `TEST_*` fixture scenes only (§42.1,
+Rules baked in: scenarios stage `TEST_*` fixture scenes only (AGENTS.md §42.1,
 never real `levels/`); new telemetry is append-only (`telemetry.h` +
 `EVENT_TYPE_MAP` in sync); snapshot/descriptor bumps carry version
 bytes; every new check gets a negative test (restore-the-bug → must
-FAIL, §52.16). A phase is done only when an LLM can state expected
+FAIL, AGENTS.md §52.16). A phase is done only when an LLM can state expected
 vs actual from `PASS` / `FAIL` output alone — no human "looks right
 on screen" step, including the future graphics phase (which asserts
 identical `screen_row` text plus a new `GRAPHICS:` skin block per
@@ -1671,23 +1660,60 @@ global day counter; arriving late changes the world, never game-overs.**
 Technical mapping (no new persistent store):
 
 * `VARIABLE_ID_DAY` (new named variable, `game_ids.h`): days elapsed
-  since waking in the distant biome, `0..180+` (`int16`, fits the
-  existing `VariableState.values[]`). `MAX_STATE_VARIABLES` is 16 with
-  8 used, so this consumes one free slot — no struct growth, no SRAM
-  growth, no save-version bump for the slot itself.
+  since waking in the distant biome, `0..CONVERGENCE_DAYS+` (`int16`,
+  fits the existing `VariableState.values[]`). `MAX_STATE_VARIABLES`
+  is 16 with 8 used, so this consumes one free slot — no struct
+  growth, no SRAM growth, no save-version bump for the slot itself.
+* `CONVERGENCE_DAYS` is a **compiled content constant** (default 180),
+  not a hard-coded `180` in C or screen text — "approximately 180"
+  means it may move during tuning. The journey screen shows
+  `Day N of M (clock N / M)` from the constant; content may reference
+  fractions of it for tier thresholds.
 * Increment points (closed list, all through `game_variable_add` so
-  `VARIABLE_SET` telemetry fires): journey day loop (`DAY START`,
-  §12), plus any future wait/rest action. Overworld wandering,
-  dialogue, and battles do **not** tick the clock — only explicit
-  day-advancing actions do. This is what makes "time is valuable, but
-  not every activity is a waste of time" mechanically true.
-* Display: journey screen `Day N / 180` row (§21) plus an overworld
+  `VARIABLE_SET` telemetry fires):
+  1. the journey day loop (`DAY START`, §12, advancing the fixed
+  baseline plus detours);
+  2. the biome-clear skip (§35b, charging `clear_days` at once);
+  3. defeat-recovery delays (`on_defeat` → `journey delay`, §18);
+  4. any future wait/rest/training action. Overworld wandering,
+  dialogue, and victorious battles do **not** tick the clock. Biome
+  exploration before the boss is therefore free by default — an
+  explicit choice ("preparation is free, commitment costs"), not an
+  oversight. If tuning wants preparation to cost something, charge
+  part of the biome's `clear_days` on biome **entry** and the rest on
+  the kill; the schema already supports splitting it because
+  `clear_days` is data, not a C constant.
+* Display: journey screen `Day N of M` row (§21) plus an overworld
   HUD readout once the clock exists. Both read the same variable;
-  neither stores a copy (screens hold no persistent state, §54.2).
+  neither stores a copy (screens hold no persistent state, AGENTS.md
+  §54.2).
 * Observability: `VARIABLE_SET` (day), `JOURNEY_DAY_ADVANCED`
   (day-counter args), semantic `VARIABLES: DAY=N` dump, `variable`
   scenario assertions. Deterministic under `SET_RNG` like everything
   else — the clock itself never rolls RNG, it only counts ticks.
+
+# 35b. Biome Clear = Fixed `clear_days` Skip (technical)
+
+Killing a biome's boss stands in for all the exploration the game does
+not simulate: a fixed day skip, data per biome, charged at once.
+
+* Schema: the boss-defeat event carries `clear_days` (e.g. 10):
+  `ACTOR_DEFEATED` → `SET_VARIABLE` progress + `ADD_VARIABLE DAY` +
+  Lord ticks for the full skip. Different biomes may deserve 8 or 15 —
+  it is a per-biome number, never a C constant. Budget check: ~10
+  days/biome plus fixed route durations means 180 days cover roughly
+  9–14 biomes plus the return — decide the biome count first, then
+  tune the per-biome values against it.
+* No ten `DAY START`s run: consumption, depletion checks, and random
+  events do **not** fire inside the skip (it is exploration abstracted
+  away, not travel). What **does** apply is the deterministic part —
+  the Lord ticks for all `clear_days` (looped `ADD_VARIABLE` in the
+  banked body, or a tick-as-function-of-elapsed-days; either way the
+  fixed-bank wrapper emits no `*`/`/`, AGENTS.md §52.18).
+* Permanence: a boss clear cannot be undone — there is no rewind
+  (§38), so the days are gone and the clear stands. The clear event
+  sets a persistent `CLEARED_<biome>` flag (an ordinary flag, not a
+  rewind-surviving special case) so the skip cannot re-trigger.
 
 # 36. Lord of Slime Progression (technical)
 
@@ -1700,8 +1726,8 @@ Technical mapping (derived + one stored variable, no new engine):
   the Lord's persistent strength. Advanced by the day tick (e.g. +1
   per N days via the same `DAY START` path) and **reduced** by
   disruption events (`ADD_VARIABLE` negative amount through the normal
-  journey choice/outcome effects, §15–17). Rewind (§38) deliberately
-  does **not** fully roll this back (see §38).
+  journey choice/outcome effects, §15–17). It never reverses: there is
+  no rewind (§38), so the countdown's urgency is structural.
 * Scaling consumers (all data-driven, no `if (day > X)` in C):
   - Battle: `battle_init` reads the tier (`LORD_POWER` threshold table
     in game content, banked like other tuning tables) and applies the
@@ -1740,56 +1766,31 @@ exist as the loot material axis (`MAT_WOOD..MAT_MYTHRIL`,
   (`loot_drop_banked.c`). Biome progression **is** material
   progression; no journey-specific drop code.
 * Ring charges: `LOOT_RING_USES(mat) = mat + 1` (mythril 5/battle).
-* Time manipulation is **not** a card stat — it is the rewind action
-  (§38), which consumes (burns) a Mythril card through the existing
-  `deck_collection_remove` path (permanent loss, collection + deck
-  counts update, `DECK_MIN_CARDS` floor respected). Any Mythril loot
-  card qualifies; no special "time card" type is needed.
+* No time manipulation in Kaartenheld 1. Mythril needs nothing more
+  than being the strongest band (power 8–9); its temporal connection
+  is story foreshadowing for the sequel, not a mechanic here.
 
-# 38. Rewinding Time by Burning Mythril (technical)
+# 38. Time Travel Is a Sequel Mechanic (deferred)
 
-§0 rule: burn one Mythril card per day rewound (up to a few days);
-burned cards are permanently lost; recent opportunities are restored
-but erased-period rewards are lost; the Lord's progression is **not**
-fully reversed; optional, never required for completion.
+Kaartenheld 1 has no rewinding: no checkpoint ring, no burn accounting,
+no restore, no paradox rules. The complexity — undoing story choices,
+restoring inventory, tracking world states, closing rewind exploits —
+would overshadow the journey/choices/consequences core, so it is cut
+deliberately, not postponed vaguely:
 
-Implementation shape (checkpoint-restore, bounded for the Game Boy):
-
-* **Dawn checkpoints, not a full history.** SRAM is 8 KB with three
-  1 KB player slots (`SAVE_SLOT_STRIDE 0x0400`, `docs/save-format.md`);
-  ~5 KB is free. Reserve a hidden checkpoint area of 3 × `GameState`
-  (≈3 KB) after the player slots: every `DAY START` copies the current
-  `GameState` into the ring (slot `day % 3`). WRAM cost: none beyond
-  the byte-at-a-time copy loop (no ~800 B stack staging, §52.14).
-  `SAVE_VERSION` bumps when this area is added (format change policy,
-  `src/rpg/save.h`).
-* **Rewind = restore + partial Lord rebate.** Restoring checkpoint
-  `day - N` brings back positions, HP, currency, flags, variables,
-  deck/collection *as of that dawn* — which is exactly why
-  erased-period rewards are lost (they postdate the checkpoint) and
-  why missed opportunities reopen (their trigger flags are un-set
-  again). Then re-apply `LORD_POWER` from a separately-kept running
-  total minus only a small rebate (e.g. restore-then-`+N-1` rather
-  than `+0`), so the countdown's urgency survives the rewind. The
-  Lord total lives outside the checkpoint (one extra SRAM word next
-  to the ring) precisely so the restore cannot zero it.
-* **Burn accounting:** `N` days ←→ `N` Mythril cards, removed via
-  `deck_collection_remove` (each removal emits its normal telemetry;
-  no silent deletes). Guards, all transient menu messages never
-  silent no-ops: no Mythril → no rewind offered; `N` capped by ring
-  depth (3) **and** by cards held; never below day 0; never
-  mid-battle / mid-event-choice (rewind is a dawn/journey-screen
-  action only); deck floor `DECK_MIN_CARDS` enforced per removal.
-* **Observability:** new append-only telemetry `MYTHRIL_REWIND`
-  (`data[4]` = days, card id, day-before, day-after) + reused
-  `VARIABLE_SET` / `CURRENCY_*` / `ACTOR_STATE_CHANGE` from the
-  restore path — but the restore copy itself must **not** emit per-field
-  gameplay telemetry (setup-vs-runtime rule, §53.3); only the rewind
-  event and the burn removals emit. Scenarios: rewind restores flag +
-  position, drops post-checkpoint gold, keeps Lord power within the
-  rebate bound, refuses with no Mythril (`event_not_occurred:
-  MYTHRIL_REWIND` negative test), roundtrip covers the checkpoint
-  area.
+* The Convergence countdown and its urgency stay (§35) — only the
+  escape hatch goes.
+* Mythril stays as the strongest material (§37); its temporal
+  connection is sequel foreshadowing.
+* Nothing in Phases 0–5 pays rewind's costs: no hidden SRAM ring, no
+  checkpoint headers/checksums, no `SAVE_VERSION` bump beyond the
+  already-planned `JourneyState`, no burn-ordering or Lord-rebate
+  rules, no rewind-surviving set.
+* The sequel picks this section back up: dawn checkpoints, burn
+  accounting, `lord = max(checkpoint, running − rebate)`, integrity
+  checksums, and the full audit contract drafted here previously all
+  transfer directly. This stub reserves the number so existing
+  cross-references (§35b, §37, §40) keep resolving.
 
 # 39. Choices, Relationships, Routes, Factions, Endings (technical)
 
@@ -1802,8 +1803,8 @@ flag/variable/event vocabulary:
 
 * Helping vs ignoring: a journey choice's effects are `SET_FLAG` /
   `ADD_VARIABLE` / `ADD_CURRENCY` / `SCENE_CHANGE` rows (§17). "Ally"
-  = a flag (e.g. `HELPED_CARAVAN`); "shortcut" = an organizer route
-  or plan with a `requires: flag` condition (§15) that the flag now
+  = an ally flag (e.g. `HELPED_TRAVELER`); "shortcut" = an organizer route
+  with a `requires: flag` condition (§15) that the flag now
   satisfies; "closed opportunity" = a first-match `INTERACT` /
   `MAP_ENTER` event whose condition the flag now fails, falling
   through to the alternative-story event listed after it.
@@ -1815,7 +1816,7 @@ flag/variable/event vocabulary:
 * Factions/endings: each faction is one generic variable (standing,
   e.g. 0–100) and each ending branch is a variable threshold checked
   by endgame `MAP_ENTER` events setting `VARIABLE_ID_ENDING_SHOWN`.
-  The QUEST menu pattern (§54.6) already proves generic-variable
+  The QUEST menu pattern (AGENTS.md §54.6) already proves generic-variable
   quests render without per-quest screen code; endings reuse it.
 * Design-principles enforcement stays in content review: every
   significant choice ships **both** branches as events (no dead-end
@@ -1824,34 +1825,31 @@ flag/variable/event vocabulary:
   (ally, gold, shortcut, lore flag) rather than help = reward /
   ignore = punishment.
 
-# 40. Save, Memory, and Harness Cost of §35–§39 (normative)
+# 40. Save, Memory, and Harness Cost of §35–§37 + §39 (normative)
 
 * **WRAM/SRAM:** two generic variable slots (`DAY`,
-  `LORD_POWER`) + one SRAM word for the Lord-rebate total + 3 ×
-  `GameState` hidden checkpoint ring (≈3 KB of the ~5 KB free SRAM).
-  No `GameState` struct growth except the already-planned
-  `JourneyState` (~9 B, §11). Tracked in `make memmap` +
-  `docs/save-format.md` + `docs/roadmap.md` §11; `SAVE_VERSION`
-  bumps once for the checkpoint area.
+  `LORD_POWER`) and nothing else. No hidden checkpoint ring, no
+  surviving set, no extra SRAM words. No `GameState` struct growth
+  except the already-planned `JourneyState` (~11 bytes with
+  `return_to_journey` + `pending_delay`, §11). Tracked in
+  `make memmap` + `docs/save-format.md` + `docs/roadmap.md` §11;
+  no `SAVE_VERSION` bump beyond the already-planned `JourneyState`.
 * **Banks:** clock/progression math lives in the banked journey body
-  (§26/§33 Phase 1); the checkpoint copy and rewind-restore bodies
-  follow the same `g_bk_call_*` trampoline pattern (§52.11.1),
-  `switch` dispatch only (§52.1), no `%`/`/`/8-bit-`*` in fixed
-  wrappers (§52.18). Content tables (tier thresholds, route
-  `requires`, checkpoint geometry) are compiled JSON in the journey
-  content bank — fixed `_CODE` stays untouched.
-* **Telemetry/snapshot (append-only):** `DAY_ADVANCED` (already
-  `JOURNEY_DAY_ADVANCED`), `LORD_POWER_UP`, `MYTHRIL_REWIND`,
-  `ROUTE_UNLOCKED` as needed; `VARIABLES: DAY / LORD_POWER` lines in
-  the semantic dump; `journey_day`, `variable`, `flag`,
-  `event_occurred / event_not_occurred` assertions only — never byte
-  offsets (§53.7). Descriptor/snapshot version bytes bump with the
-  format change (§53.4).
+  (§26/§33 Phase 1) via the `g_bk_call_*` trampoline pattern
+  (AGENTS.md §52.11.1), `switch` dispatch only (AGENTS.md §52.1), no
+  `%`/`/`/8-bit-`*` in fixed wrappers (AGENTS.md §52.18). Content
+  tables (tier thresholds, route `requires`) are compiled JSON in the
+  journey content bank — fixed `_CODE` stays untouched.
+* **Telemetry/snapshot (append-only):** `JOURNEY_DAY_ADVANCED`,
+  `LORD_POWER_UP`, `ROUTE_UNLOCKED` as needed; `VARIABLES: DAY /
+  LORD_POWER` lines in the semantic dump; `journey_day`, `variable`,
+  `flag`, `event_occurred / event_not_occurred` assertions only —
+  never byte offsets (AGENTS.md §53.7). Descriptor/snapshot version
+  bytes bump with the format change (AGENTS.md §53.4).
 * **Phasing:** §35–§37 ride the existing Phase 1–3 (variables exist
-  at P0, tiers/pools at P1–P3); §38 checkpoints + rewind land as a new
-  Phase 6 (after observability lock-in, before any graphics pass);
-  §39 faction/ending content is pure JSON once §35–§36 exist and
-  needs no phase of its own. Each phase still ends green on
-  `make test-harness` + sentinels, `make test`, `make memmap`,
-  `make lint`, `make verify-oam` (§32).
+  at P0, tiers/pools at P1–P3; §35b `clear_days` lands with the
+  boss-defeat event in P3); §39 faction/ending content is pure JSON
+  once §35–§36 exist and needs no phase of its own. Each phase still
+  ends green on `make test-harness` + sentinels, `make test`,
+  `make memmap`, `make lint`, `make verify-oam` (§32).
 
