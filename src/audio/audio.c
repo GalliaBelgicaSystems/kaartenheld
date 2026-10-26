@@ -34,6 +34,8 @@ uint8_t g_sound_enabled;
  * Debug-only: the release ROM never reads them. */
 #ifdef DEBUG_BUILD
 uint16_t g_sfx_played_count;  /* BSS zero (AGENTS.md 52.27) */
+uint16_t g_sfx_mute_ch2;  /* charged music-mute dosound ticks, CH2 */
+uint16_t g_sfx_mute_ch4;  /* charged music-mute dosound ticks, CH4 */
 /* BSS zero, then audio_init() sets SFX_NONE: a non-zero initializer is
  * never copied by the custom CRT0 (AGENTS.md 52.27), and the stale 0
  * would look like SFX_CURSOR -- the ISR stepped a phantom cursor blip at
@@ -68,7 +70,13 @@ void audio_play_sfx(uint8_t s)
      * priority one.  UI blips (CURSOR) can no longer cut a combat SFX
      * short -- which also stopped extending the music-channel mute --
      * and combat SFX always win over menu noise.  Equal priority
-     * restarts as before (repeated attacks stay responsive). */
+     * restarts as before (repeated attacks stay responsive; rapid menu
+     * blips keep their per-press feedback).  Deliberately no
+     * same-SFX suppression: the step clock (256 Hz ISR) does not run
+     * under the debug harness, so an in-flight SFX never completes
+     * there -- a same-id drop would diverge harness behavior from
+     * hardware (where a 0.14 s blip is long done) and silence
+     * fast menu navigation. */
     if (sfx_id <= SFX_HEAL && s_sfx_prio[s] < s_sfx_prio[sfx_id]) return;
     sfx_id = s;
     sfx_tick = 0;
@@ -77,6 +85,23 @@ void audio_play_sfx(uint8_t s)
     sfx_div = 0;
     sfx_muted = 0;
     voices = s_sfx_voices[s];
+#ifdef DEBUG_BUILD
+    /* Mute-budget telemetry (AGENTS.md 53.7): charge the full mute
+     * window (table dosound ticks + 1) per used voice, read from the
+     * bank-8 SFX index.  Charged here in user context because the
+     * 256 Hz timer ISR never runs under the debug harness (interrupts
+     * stay disabled there), so ISR-side counting would stay zero.
+     * Charging at trigger over-counts when a later SFX preempts
+     * (conservative upper bound); the drop policy above keeps that
+     * rare.  Zero release-ROM cost. */
+    {
+        uint8_t total = 0;
+        banked_copy(SFX_STEP_BANK,
+                    &total, (const void *)&s_sfx_index[s].total_ticks, 1);
+        if (voices & 0x01) g_sfx_mute_ch2 += (uint16_t)(total + 1);
+        if (voices & 0x02) g_sfx_mute_ch4 += (uint16_t)(total + 1);
+    }
+#endif
     /* Unmute-first handover: the previous SFX may have used a voice
      * this one does not (e.g. CH2 blip over a CH4 noise).  Without
      * this, sfx_muted's reset drops the old voice's bit and its music
@@ -121,6 +146,8 @@ void audio_init(void)
 #ifdef DEBUG_BUILD
     g_sfx_last_id = SFX_NONE;
     g_sfx_played_count = 0;
+    g_sfx_mute_ch2 = 0;
+    g_sfx_mute_ch4 = 0;
 #endif
 
     TAC_REG = 0x00;

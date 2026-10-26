@@ -36,7 +36,7 @@ VALID_ASSERTION_TYPES = {
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
     "oam_tile", "oam_attr", "oam_bytes",
-    "sfx_count", "sfx_last",
+    "sfx_count", "sfx_last", "sfx_mute_ch2_max", "sfx_mute_ch4_max",
     "stack_margin_min",
 }
 
@@ -382,6 +382,8 @@ def run_scenario(scenario):
         tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
         has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
         sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        has_sfx_mute_assert = any(a.get("type") in ("sfx_mute_ch2_max", "sfx_mute_ch4_max") for a in scenario.get("assertions", []))
+        sfx_mute_ch2, sfx_mute_ch4 = session.get_sfx_mute() if has_sfx_mute_assert else (None, None)
         if has_canary_assert:
             canary_depth, canary_margin = session.stack_canary_read(canary_base, canary_sp)
         else:
@@ -593,6 +595,21 @@ def run_scenario(scenario):
             actual = sfx_last
             passed = (actual == int(expected))
             actual = f"sfx_last={actual}"
+
+        elif a_type == "sfx_mute_ch2_max":
+            # Mute-budget gate: passes when the music-muted CH2 dosound
+            # ticks stay at or under `expected`.  Pins the SFX policy
+            # (preemption + no same-blip restart): any change that mutes
+            # more music fails loudly instead of silently gutting the mix.
+            actual = sfx_mute_ch2
+            passed = (actual is not None and actual <= int(expected))
+            actual = f"sfx_mute_ch2={actual}"
+
+        elif a_type == "sfx_mute_ch4_max":
+            # Same budget for the CH4 (noise/drums) voice.
+            actual = sfx_mute_ch4
+            passed = (actual is not None and actual <= int(expected))
+            actual = f"sfx_mute_ch4={actual}"
 
         elif a_type == "stack_margin_min":
             # Stack high-water canary: passes when the untouched-pattern

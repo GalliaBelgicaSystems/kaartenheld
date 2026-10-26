@@ -1,0 +1,84 @@
+{
+ "name": "sfx_mute_budget",
+ "test": true,
+ "description": "Mute-budget gate: one battle card select (SELECT, CH2, 8 dosound ticks) must mute CH2 for ~9 ticks and CH4 for 0. Pins the SFX policy: any change that mutes more music (longer tables, retrigger spam, stuck mutes) fails loudly.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 1
+  },
+  {
+   "type": "sfx_last",
+   "expected": 2
+  },
+  {
+   "type": "sfx_mute_ch2_max",
+   "expected": 12
+  },
+  {
+   "type": "sfx_mute_ch4_max",
+   "expected": 2
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 16,
+   "y": 15,
+   "facing": "RIGHT"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 7009
+ }
+}
