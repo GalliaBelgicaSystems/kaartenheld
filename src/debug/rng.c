@@ -1,22 +1,36 @@
 #include "rng.h"
-#include "rpg/loot.h"
+#include "banked.h"
 
-uint16_t g_rng_state = 1;
+/* BSS zero on purpose: the custom CRT0 empties WRAM but never copies
+ * _INITIALIZER (AGENTS.md 52.27), so an initializer here would still
+ * boot 0 -- the xorshift fixed point.  game_frame_tick_banked() primes
+ * the stream from DIV on the first tick and re-mixes it on the first
+ * input edge. */
+uint16_t g_rng_state;
+
+/* Thin fixed-bank wrappers: stage args/target into the g_bk_call_*
+ * globals, then run the WRAM trampoline (see banked.h / AGENTS.md
+ * 52.11.1).  The xorshift bodies live in ROM bank 2 (rng_banked.c) so
+ * the fixed-bank _CODE budget keeps room for rendering. */
 
 uint16_t rng_next(void)
 {
-    g_rng_state ^= g_rng_state << 7;
-    g_rng_state ^= g_rng_state >> 9;
-    g_rng_state ^= g_rng_state << 8;
-    return g_rng_state;
+    uint16_t lo;
+    uint16_t hi;
+
+    g_bk_call_bank = 2;
+    g_bk_call_target = (uint16_t)&rng_next_banked;
+    banked_call_run();
+    lo = g_bk_byte_a;
+    hi = g_bk_byte_b;
+    return (uint16_t)((hi << 8) | lo);
 }
 
 void rng_set_seed(uint16_t seed)
 {
-    g_rng_state = seed ? seed : 1;
-    /* Derive the isolated loot stream from the same seed so drops are
-     * deterministic per scenario while never consuming the shared
-     * stream (docs/loot.md §34.5). */
-    g_loot_rng_state = (uint16_t)(g_rng_state ^ 0x1B3C);
-    if (!g_loot_rng_state) g_loot_rng_state = 1;
+    g_bk_byte_a = (uint8_t)seed;
+    g_bk_byte_b = (uint8_t)(seed >> 8);
+    g_bk_call_bank = 2;
+    g_bk_call_target = (uint16_t)&rng_set_seed_banked;
+    banked_call_run();
 }

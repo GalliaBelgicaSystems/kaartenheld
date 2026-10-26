@@ -1,8 +1,7 @@
 {
  "name": "battle_attack",
  "test": true,
- "description": "Enter battle with Slime and attack once: the starter deck's first card SW3 deals 3 damage, dropping the slime from 5 to 2 HP",
- "scenario_id": "BATTLE_ATTACK",
+ "description": "Enter battle with Carl and attack once: the starter deck's first card SW1 deals 1 damage, dropping him from 10 to 9 HP",
  "actions": [
   {
    "type": "wait",
@@ -22,7 +21,71 @@
   },
   {
    "type": "wait",
-   "frames": 5
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   },
   {
    "type": "press",
@@ -52,12 +115,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 7
+   "expected": 9
   },
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "7/10"
+   "contains": "9/10"
   }
  ],
  "initial_state": {
@@ -67,6 +130,9 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 3000
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

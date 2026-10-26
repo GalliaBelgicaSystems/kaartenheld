@@ -1,8 +1,7 @@
 {
  "name": "actor_slime_combat",
  "test": true,
- "description": "Hostile World Actor (Slime) engagement starts combat with the Slime battle",
- "scenario_id": "FIRST_ENCOUNTER",
+ "description": "Hostile World Actor (Carl) engagement starts combat with the Carl practice battle",
  "actions": [
   {
    "type": "press",
@@ -11,6 +10,70 @@
   {
    "type": "wait",
    "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
  ],
  "assertions": [
@@ -42,6 +105,9 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 12345
+  "seed": 12345,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

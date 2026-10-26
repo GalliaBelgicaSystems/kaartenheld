@@ -1,4 +1,14 @@
+/* Bank split (memory budget): the release ROM's bank 5 is data-full
+ * (world tiles + atlas + scene rows), so the patrol body lives in bank 3
+ * there; the debug ROM's bank 3 is debug-code-full, so it lives in bank 5
+ * there (bank 5 has room in debug: no real scene rows).  Same pattern as
+ * scene_load.c's TEST_LEVELS split.  Keep in sync with the dispatch bank
+ * in world_update_actors() below. */
+#ifdef DEBUG_BUILD
 #pragma bank 5
+#else
+#pragma bank 3
+#endif
 
 #include "world.h"
 #include "actor.h"
@@ -36,7 +46,7 @@ void world_patrol_slot_banked(void)
     active_v = bp[ACTOR_OFFSET(active)];
     if (!active_v) return;
     ai_type_v = bp[ACTOR_OFFSET(ai_type)];
-    if (ai_type_v == AI_NONE) return;
+    if (ai_type_v == AI_NONE || ai_type_v == AI_TUTOR) return;
 
     /* Read ALL fields through byte pointer arithmetic (via ACTOR_OFFSET)
      * -- no struct pointer, no SDCC pointer caching across branch joins. */
@@ -60,7 +70,8 @@ void world_patrol_slot_banked(void)
             y_v = move_ty_v;
             move_state_v = MOVE_STATE_IDLE;
             move_progress_v = 0;
-            ai_timer_v = PATROL_STEP_INTERVAL;
+            ai_timer_v = (ai_type_v == AI_CHASE_FAST) ?
+                (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
             g_patrol_evt[0] = id_v;
             g_patrol_evt[1] = x_v;
             g_patrol_evt[2] = y_v;
@@ -82,10 +93,12 @@ void world_patrol_slot_banked(void)
         return;
     }
 
-    if (ai_type_v == AI_CHASE) {
+    if (ai_type_v == AI_CHASE || ai_type_v == AI_CHASE_FAST) {
         /* Chase: one greedy step toward the player each AI tick (whole
-         * scene is the zone).  Falls through to the shared walkability,
-         * encounter, and commit blocks below; ai_step is unused. */
+         * scene is the zone).  FAST chases twice as often: its timer
+         * resets to half the interval (see below).  Falls through to
+         * the shared walkability, encounter, and commit blocks below;
+         * ai_step is unused. */
         uint8_t px;
         uint8_t py;
         uint8_t dx;
@@ -95,7 +108,8 @@ void world_patrol_slot_banked(void)
         dx = (px >= x_v) ? (uint8_t)(px - x_v) : (uint8_t)(x_v - px);
         dy = (py >= y_v) ? (uint8_t)(py - y_v) : (uint8_t)(y_v - py);
         if (dx == 0 && dy == 0) {
-            bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+            bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+                (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
             return;
         }
         if (dx > dy) {
@@ -147,7 +161,8 @@ void world_patrol_slot_banked(void)
     if (target_x == x_v && target_y == y_v) {
         bp[ACTOR_OFFSET(facing)]   = facing_v;
         bp[ACTOR_OFFSET(ai_step)]  = (uint8_t)(ai_step_v + 1);
-        bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+        bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+            (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
         return;
     }
 
@@ -156,14 +171,15 @@ void world_patrol_slot_banked(void)
         blocked = 1;
     } else {
         tile = g_patrol_world->map[target_y][target_x];
-        /* Same generated traits table as world_is_walkable() (the bank-3
-         * body inlines the table instead of calling fixed-bank code, but
-         * both read generated/tiles/tile_traits.h: one source, no sync). */
+        /* Same generated traits table as the bank-2 edge predicate
+         * (edge_walkable in edge_banked.c inlines the table instead of
+         * calling fixed-bank code, but both read generated/tiles
+         * tile traits: one source, no sync). */
         if (tile == TILE_FLOOR || tile == TILE_EXIT) {
             blocked = 0;
         } else if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) {
             blocked = 0;
-        } else if (tile == TILE_DESOLATE_FLOOR_PLAIN || tile == TILE_DESOLATE_STAIRCASE) {
+        } else if (tile == TILE_DESOLATE_FLOOR_PLAIN) {
             blocked = 0;
         } else if (tile_landscape_walkable(tile)) {
             blocked = 0;
@@ -188,7 +204,9 @@ void world_patrol_slot_banked(void)
     }
 
     if (!blocked) {
-        for (i = 0; i < g_static_actor_count; i++) {
+        /* Clamped like actor_find_at (trashed count must not collide
+         * with garbage rows). */
+        for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
             if (g_static_actors[i].x == target_x &&
                 g_static_actors[i].y == target_y) {
                 blocked = 1; break;
@@ -202,7 +220,8 @@ void world_patrol_slot_banked(void)
         bp[ACTOR_OFFSET(ai_step)] =
             (ai_type_v == AI_PATROL_VERT) ? (uint8_t)(ai_step_v ^ 1) :
             (uint8_t)(ai_step_v + 1);
-        bp[ACTOR_OFFSET(ai_timer)] = PATROL_STEP_INTERVAL;
+        bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+            (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
         return;
     }
 

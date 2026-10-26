@@ -1,0 +1,56 @@
+{
+ "name": "amulet_chest_closed_at_accept",
+ "test": true,
+ "description": "Accepting the quest does not open the chest: at MERCHANT_QUEST=1 without the amulet the forest cell stays plain floor with the closed-chest OAM sprite (loot state is the AMULET_CHEST flag, not the quest variable)",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 16,
+   "row": 10,
+   "expected": 190
+  },
+  {
+   "type": "variable",
+   "variable": "MERCHANT_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "AMULET_CHEST",
+   "expected": false
+  },
+  {
+   "type": "actor_at",
+   "entity": "AMULET",
+   "x": 16,
+   "y": 10
+  },
+  {
+   "type": "oam_tile",
+   "entry": 5,
+   "expected": 121
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 15,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "variables": {
+   "MERCHANT_QUEST": 1
+  }
+ }
+}

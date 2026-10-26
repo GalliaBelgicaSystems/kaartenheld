@@ -1,7 +1,7 @@
 {
  "name": "card_shield_attack_fodder",
  "test": true,
- "description": "In attack phase playing a shield card alone acts as combo fodder (shields are excluded from attack sums: 0 damage, enemy HP stays 5), but consumes the shield card",
+ "description": "In attack phase playing a shield card alone acts as combo fodder (shields are excluded from attack sums: 0 damage, Carl's 10 HP stays 10), but consumes the shield card",
  "actions": [
   {
    "type": "wait",

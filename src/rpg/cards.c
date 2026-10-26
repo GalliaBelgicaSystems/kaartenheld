@@ -5,9 +5,11 @@
 
 /* The card catalog is game content, registered at boot via
  * card_register_defs() (see src/game/cards.c). */
-const CardDefinition *g_card_defs = NULL;
-uint8_t g_card_defs_count = 0;
-static uint8_t g_card_bank = 2;
+const CardDefinition *g_card_defs;  /* BSS zero = not registered yet */
+uint8_t g_card_defs_count;  /* BSS zero (AGENTS.md 52.27) */
+/* BSS: card_register_defs() (via game_content_init() at every boot) sets
+ * the home bank before any def is read. */
+static uint8_t g_card_bank;
 CardDefinition g_card_scratch;
 
 void card_register_defs(const CardDefinition *defs, uint8_t count,
@@ -24,9 +26,9 @@ const CardDefinition *card_get_def(CardId id)
     if (!g_card_defs) return NULL;
 
     /* Loot-range ids synthesize from the material/effect/weapon tables
-     * (docs/loot.md §34): bank-3 body fills the shared scratch. */
+     * (docs/loot.md §34): bank-8 body fills the shared scratch. */
     if (loot_is_loot_id(id)) {
-        g_bk_call_bank = 3;
+        g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&loot_synth_banked;
         g_bk_byte_a = id;
         banked_call_run();

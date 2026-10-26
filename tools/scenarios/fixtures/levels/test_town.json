@@ -100,7 +100,7 @@
         "y": 2,
         "width": 1,
         "height": 2,
-        "tile": "village.village_middle_house"
+        "tile": "village.village_middle_house_open_door"
       },
       {
         "x": 4,
@@ -142,7 +142,7 @@
         "y": 2,
         "width": 1,
         "height": 2,
-        "tile": "village.village_middle_house"
+        "tile": "village.village_middle_house_open_door"
       },
       {
         "x": 17,
@@ -184,7 +184,7 @@
         "y": 14,
         "width": 1,
         "height": 2,
-        "tile": "village.village_middle_house"
+        "tile": "village.village_middle_house_open_door"
       },
       {
         "x": 17,
@@ -226,7 +226,7 @@
         "y": 14,
         "width": 1,
         "height": 2,
-        "tile": "village.village_middle_house"
+        "tile": "village.village_middle_house_open_door"
       },
       {
         "x": 4,
@@ -296,21 +296,21 @@
         "y": 4,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 16,
         "y": 5,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 4,
         "y": 10,
         "width": 1,
         "height": 1,
-        "tile": "village.village_dog_frame_1"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 2,
@@ -366,35 +366,42 @@
         "y": 5,
         "width": 1,
         "height": 1,
-        "tile": "village.village_mayor"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 10,
         "y": 8,
         "width": 1,
         "height": 1,
-        "tile": "village.village_guard"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 9,
         "y": 3,
         "width": 1,
         "height": 1,
-        "tile": "village.village_merchant"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 11,
         "y": 3,
         "width": 1,
         "height": 1,
-        "tile": "village.village_merchant"
+        "tile": "village.village_plain_floor_1"
       },
       {
         "x": 6,
         "y": 10,
         "width": 1,
         "height": 1,
-        "tile": "village.village_save_wizard"
+        "tile": "village.village_plain_floor_1"
+      },
+      {
+        "x": 12,
+        "y": 10,
+        "width": 1,
+        "height": 1,
+        "tile": "village.village_plain_floor_1"
       }
     ]
   },
@@ -442,7 +449,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_mayor"
       }
     },
     {
@@ -466,31 +474,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
-      "id": "town_shopkeeper",
-      "type": "npc",
-      "position": {
-        "x": 9,
-        "y": 3
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SHOPKEEPER",
-        "display_name": "SHOPKEEPER",
-        "shop": 1,
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "S",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
       }
     },
     {
@@ -514,7 +499,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
       }
     },
     {
@@ -538,7 +524,57 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_wizard"
+      }
+    },
+    {
+      "id": "town_heal_mage",
+      "type": "npc",
+      "position": {
+        "x": 12,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_HEAL_MAGE",
+        "display_name": "HEAL MAGE",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "W",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_heal_mage"
+      }
+    },
+    {
+      "id": "test_town_dog",
+      "type": "npc",
+      "position": {
+        "x": 15,
+        "y": 14
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_DOG",
+        "display_name": "WILD DOG",
+        "dialogue": "DIALOGUE_ID_DOG_GREETING",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "W",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_dog"
       }
     }
   ],

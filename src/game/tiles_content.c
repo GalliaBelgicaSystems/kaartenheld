@@ -9,80 +9,49 @@
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
 
-/* 8 CGB BG palettes, 4 colors each in RGB555 format. */
-const palette_color_t cgb_bg_palettes[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field */    { RGB8(120,176,96),  RGB8(40,72,24),    RGB8(24,56,8),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(245,230,210), RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold */     { RGB8(255,252,224), RGB8(255,215,0),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim */      { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(40,40,40)   }
-};
+/* Overworld OBJ ramps (same generated source as the fixed-bank copy in
+ * ui.c, but static so this bank carries its own: a banked body can only
+ * read its own bank plus WRAM, never fixed-bank ROM above 0x4000). */
+#include "cgb_obj_palettes.inc"
 
-/* Forest / Field overworld palette set: Palette 5 (wood) Color 0 is
- * harmonized to grass green (RGB8(120,176,96)), eliminating rectangular
- * beige seams around tree trunks and stumps while preserving wood details. */
-const palette_color_t cgb_bg_palettes_forest[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 fire */     { RGB8(255,255,224), RGB8(255,140,40),  RGB8(220,50,20), RGB8(100,10,0)   },
-    /* 2 iron/ice */ { RGB8(235,242,250), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 field */    { RGB8(120,176,96),  RGB8(40,72,24),    RGB8(24,56,8),   RGB8(0,0,0)     },
-    /* 4 poison/mauve */{ RGB8(250,240,250), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(120,176,96),  RGB8(196,138,72),  RGB8(138,82,34), RGB8(61,32,10)  },
-    /* 6 gold */     { RGB8(255,252,224), RGB8(255,215,0),   RGB8(200,140,8), RGB8(90,58,0)   },
-    /* 7 dim */      { RGB8(200,200,200), RGB8(150,150,150), RGB8(90,90,90),   RGB8(40,40,40)   }
-};
+#ifdef DEBUG_BUILD
+/* Tilemap mirrors (defined in ui.c, pinned WRAM): kept in sync by the
+ * wipe so debugger reads stay sane between wipe and reveal. */
+extern uint8_t g_tilemap_mirror[32 * 32];
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
 
-/* Desolate landscape palette set: Anchor color 0 is slate rock (#938da1
- * -> RGB8(147,141,161)) across outdoor nature palettes. */
-const palette_color_t cgb_bg_palettes_desolate[8][4] = {
-    /* 0 gray */     { RGB8(255,255,255), RGB8(170,170,170), RGB8(85,85,85),  RGB8(0,0,0)      },
-    /* 1 campfire */ { RGB8(147,141,161), RGB8(237,194,20),  RGB8(215,80,20), RGB8(80,10,0)   },
-    /* 2 iron/ice */ { RGB8(147,141,161), RGB8(140,180,214), RGB8(70,105,138), RGB8(27,43,58) },
-    /* 3 flora */    { RGB8(147,141,161), RGB8(116,111,128), RGB8(63,58,74),  RGB8(38,35,46)  },
-    /* 4 poison/mauve */{ RGB8(147,141,161), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 deadwood */ { RGB8(147,141,161), RGB8(141,117,74),  RGB8(111,90,52), RGB8(38,35,46)  },
-    /* 6 gold */     { RGB8(147,141,161), RGB8(215,167,38),  RGB8(141,117,74),RGB8(50,30,10)  },
-    /* 7 slate rock*/{ RGB8(147,141,161), RGB8(131,123,150), RGB8(63,58,74),  RGB8(38,35,46)  }
-};
-
-/* Castle palette set: Anchor color 0 is light stone (#d7d7d7 ->
- * RGB8(215,215,215)) across indoor stone and furniture palettes. */
-const palette_color_t cgb_bg_palettes_castle[8][4] = {
-    /* 0 stone */    { RGB8(215,215,215), RGB8(179,176,176), RGB8(130,130,130),RGB8(46,46,46)  },
-    /* 1 curtain */  { RGB8(215,215,215), RGB8(139,27,27),   RGB8(98,18,18),  RGB8(30,0,0)    },
-    /* 2 iron */     { RGB8(215,215,215), RGB8(140,160,180), RGB8(70,90,110), RGB8(30,40,50)  },
-    /* 3 moss/green*/{ RGB8(215,215,215), RGB8(90,140,80),   RGB8(40,80,30),  RGB8(10,30,10)  },
-    /* 4 poison/mauve */{ RGB8(215,215,215), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood furn */{ RGB8(215,215,215), RGB8(158,142,113), RGB8(111,90,52), RGB8(40,25,10)  },
-    /* 6 gold */     { RGB8(215,215,215), RGB8(215,167,38),  RGB8(162,146,113),RGB8(60,40,10) },
-    /* 7 dim shadow*/{ RGB8(215,215,215), RGB8(130,130,130), RGB8(86,86,86),  RGB8(35,35,35)  }
-};
-
-/* Village palette set: Anchor color 0 is dirt (#b6a27e -> RGB8(182,162,126))
- * across outdoor nature palettes. */
-const palette_color_t cgb_bg_palettes_village[8][4] = {
-    /* 0 gray */     { RGB8(182,162,126), RGB8(200,200,200), RGB8(125,125,125),RGB8(30,30,30)  },
-    /* 1 fire */     { RGB8(182,162,126), RGB8(255,196,96),  RGB8(220,110,32), RGB8(90,40,10)  },
-    /* 2 iron */     { RGB8(182,162,126), RGB8(150,160,180), RGB8(85,105,130), RGB8(35,45,60)  },
-    /* 3 dirt floor */{ RGB8(182,162,126), RGB8(140,120,88),  RGB8(96,78,52),  RGB8(48,36,24)  },
-    /* 4 poison/mauve */{ RGB8(182,162,126), RGB8(190,140,200), RGB8(140,80,160), RGB8(60,30,80) },
-    /* 5 wood */     { RGB8(182,162,126), RGB8(150,105,60),  RGB8(95,62,32),   RGB8(38,24,10)  },
-    /* 6 cream */    { RGB8(182,162,126), RGB8(241,207,145), RGB8(200,160,90), RGB8(120,85,40) },
-    /* 7 dim */      { RGB8(182,162,126), RGB8(158,148,128), RGB8(100,88,66),  RGB8(42,36,26)  }
-};
+/* CGB palette tables + NPC display slots, generated from assets/palette.txt
+ * + tools/palette_slots.json by tools/palette_compiler.py (make manifest).
+ * Artist ramps win: these bytes are verbatim artist colors per slot. */
+#include "cgb_palettes.inc"
 
 /* Backward compatibility alias */
 #define cgb_bg_palettes_overworld cgb_bg_palettes_forest
 
+/* KEEP_SLOT4 travels in bit 7 of the staged kind byte (ui.h): every real
+ * tileset kind and mode must stay below 0x80 so no plain caller can ever
+ * trip it.  Zero ROM cost (same pattern as g_tiletype_fits_u8). */
+static const int g_cram_keep_kind_ok[((int)WORLD_TILESET_FOREST < 0x80 &&
+                                      (int)WORLD_TILESET_VILLAGE < 0x80 &&
+                                      (int)WORLD_TILESET_DESOLATE < 0x80 &&
+                                      (int)WORLD_TILESET_CASTLE < 0x80) ? 1 : 0];
+
 void ui_load_cram_banked(void)
 {
     uint8_t p, c;
+    uint8_t kind;
+    uint8_t keep;
     const uint8_t *pal_data;
+    /* Bit 7 of the staged kind is KEEP_SLOT4: skip CGB slot PAPER so a
+     * scene-transition wipe holding it black survives the load (slot 4
+     * is free in every world tileset).  Safe by construction: every
+     * tileset kind is < 0x80, so existing callers staging a plain kind
+     * can never trip it -- no shared-scratch staleness possible. */
+    kind = (uint8_t)(g_bk_byte_a & 0x7F);
+    keep = (uint8_t)(g_bk_byte_a & 0x80);
     if (!g_is_cgb) return;
-    switch (g_bk_byte_a) {
+    switch (kind) {
         case WORLD_TILESET_DESOLATE:
             pal_data = (const uint8_t *)cgb_bg_palettes_desolate;
             break;
@@ -103,27 +72,43 @@ void ui_load_cram_banked(void)
     }
     for (p = 0; p < 8; p++) {
         const uint8_t *ramp = pal_data + ((uint16_t)p << 3);
+        if (keep && p == UI_COLOR_PAPER) continue;
         BCPS_REG = (uint8_t)(0x80 | (p << 3));
         for (c = 0; c < 8; c++) {
-            BCPD_REG = ramp[c];
+            /* Per-store di + bounded Mode wait (BANKED_VRAM_WRITE):
+             * gate crossings repaint with the LCD ON (curtain wipe), so
+             * the timer ISR could otherwise eclipse the wait->store
+             * window into Mode 3 -- where the write drops while BCPS
+             * auto-increment still advances, splicing a stale byte
+             * into the ramp for the entire map stay.  LCD-off callers
+             * take the macro's direct-store fast path. */
+            BANKED_VRAM_WRITE(&BCPD_REG, ramp[c]);
         }
     }
 }
 
 /* World background tiles extracted from assets/ by tools/png2gb.py (make gfx) */
 
-const uint8_t g_tileset_forest[768] = {
-    /* 48 forest tiles (768 bytes): All wall, floor, stump, tree, and exit tiles */
+const uint8_t g_tileset_forest[1280] = {
+    /* 80 forest tiles (1280 bytes): walls, floors, stumps, trees, water
+     * bodies, exit tiles, and the row-4 hut/mailbox extension (slots
+     * 64..68; slots 69..79 are plain-floor duplicates) */
 #include "gfx/rpg_forest_world_tiles.inc"
 };
 
-const uint8_t g_tileset_desolate[768] = {
-    /* 48 desolate landscape tiles (768 bytes): All wall, floor, rock, tree, and prop tiles */
+const uint8_t g_tileset_desolate[1024] = {
+    /* 64 desolate landscape tiles (1024 bytes): walls, floors, rocks,
+     * trees, water bodies, and prop tiles */
 #include "gfx/rpg_desolate_world_tiles.inc"
 };
 
-const uint8_t g_tileset_castle[432] = {
-    /* 27 castle tiles (432 bytes) */
+const uint8_t g_tileset_castle[576] = {
+    /* 36 castle tiles (576 bytes) in sheet scan order, VRAM slot == scan
+     * index (see world.h TILE_CASTLE_* and the gfx rule's --tile-coords):
+     * slots 0..7 base walls, 8..16 row-1 walls/furniture, 17..19 throne
+     * + rugs, 20..22 chandeliers + vase, 23..25 table half + plates,
+     * 26 exit, 27..30 table top + vase + columns, 31..32 rotated rugs,
+     * 33 red carpet, 34..35 empty (shared tile) */
 #include "gfx/rpg_castle_tiles.inc"
 };
 
@@ -131,17 +116,6 @@ const uint8_t g_tileset_village[768] = {
     /* 48 village tiles (768 bytes): Walls, dirt floors, houses, wells,
      * roofs, NPC art, and the stairs exit tile */
 #include "gfx/rpg_village_world_tiles.inc"
-};
-
-/* NPC map art, sourced from the shared actors tileset (assets/
- * actor-sprites.png via tools/compose_npc_tiles.py).  The village
- * sheet's NPC cells were blanked when the art moved to the actors
- * tileset (assets/tilesets.md); ui_load_tileset_banked() overlays these
- * tiles into the village VRAM block slots the maps still reference.
- * Order mirrors compose_npc_tiles.py LAYOUT and the npc_slots[] table
- * below: guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
-const uint8_t g_actor_npc_tiles[96] = {
-#include "gfx/rpg_actor_npc_tiles.inc"
 };
 
 const uint8_t g_intrepid_font_tiles[1536] = {
@@ -166,6 +140,7 @@ void ui_load_tileset_banked(void)
     const uint8_t *pal_src;
     uint8_t tile_count;
     uint8_t i;
+    uint8_t val;
     uint16_t n;
     volatile uint8_t *dst;
 
@@ -173,17 +148,17 @@ void ui_load_tileset_banked(void)
         case WORLD_TILESET_FOREST:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 48;
+            tile_count = 80;
             break;
         case WORLD_TILESET_DESOLATE:
             src = g_tileset_desolate;
             pal_src = g_tile_pal_desolate;
-            tile_count = 48;
+            tile_count = 64;
             break;
         case WORLD_TILESET_CASTLE:
             src = g_tileset_castle;
             pal_src = g_tile_pal_castle;
-            tile_count = 16;
+            tile_count = 36;
             break;
         case WORLD_TILESET_VILLAGE:
             src = g_tileset_village;
@@ -193,7 +168,7 @@ void ui_load_tileset_banked(void)
         default:
             src = g_tileset_forest;
             pal_src = g_tile_pal_forest;
-            tile_count = 48;
+            tile_count = 80;
             break;
     }
 
@@ -201,41 +176,85 @@ void ui_load_tileset_banked(void)
     dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
     n = (uint16_t)tile_count << 4;
     while (n--) {
-        *dst++ = *src++;
+        /* Same LCD-on hazard as the CRAM loop above: one-shot tile
+         * bitmap load, so a Mode-3-eclipsed byte corrupts the tile for
+         * the entire map stay. */
+        val = *src++;
+        BANKED_VRAM_WRITE(dst, val);
+        dst++;
     }
-    for (i = 0; i < tile_count; i++) {
-        g_active_tile_palette[i] = pal_src[i];
-    }
-    for (; i < 48; i++) {
-        g_active_tile_palette[i] = 0;
-    }
-
-    if (tileset == WORLD_TILESET_VILLAGE) {
-        /* NPC map art moved to the shared actors tileset, so the village
-         * sheet's NPC cells are blank.  Overlay the actor-sourced tiles
-         * into the village block slots the maps reference.  Slot order
-         * must match g_actor_npc_tiles (compose_npc_tiles.py LAYOUT):
-         * guard, wizard, merchant, mayor, dog frame 1, dog frame 2. */
-        static const uint8_t npc_slots[6] = { 35, 36, 39, 41, 4, 5 };
-        /* CGB palette per NPC (UI_COLOR_* indices; the auto palette
-         * manifest cannot know these slots are NPC overlays): guard,
-         * wizard and dogs field green (3), merchant wood (5), mayor gold
-         * (6).  Order mirrors npc_slots (compose_npc_tiles.py LAYOUT). */
-        static const uint8_t npc_pals[6] = { 3, 3, 5, 6, 3, 3 };
-        uint8_t s;
-        uint8_t j;
-        const uint8_t *tile_src;
-        volatile uint8_t *tile_dst;
-
-        for (s = 0; s < 6; s++) {
-            tile_src = &g_actor_npc_tiles[(uint16_t)s << 4];
-            tile_dst = (volatile uint8_t *)(
-                0x8000u + ((uint16_t)(RPG_TILE_BASE_WORLD + npc_slots[s]) << 4));
-            for (j = 0; j < 16; j++) {
-                tile_dst[j] = tile_src[j];
-            }
-            g_active_tile_palette[npc_slots[s]] = npc_pals[s];
+    for (i = 0; i < 80; i++) {
+        /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
+         * byte): even slots assign the low nibble first, odd slots OR
+         * in the high nibble (ascending i guarantees the order). */
+        uint8_t v = (i < tile_count) ? pal_src[i] : 0;
+        if ((i & 1) == 0) {
+            g_active_tile_palette[i >> 1] = v;
+        } else {
+            g_active_tile_palette[i >> 1] |= (uint8_t)(v << 4);
         }
+    }
+
+    /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites
+     * with exact OBJ ramps (screens/enemy_types/npc_*.json): no overlay.
+     * The village sheet's old NPC cells are plain ground. */
+
+    /* Battles program the scratch OBJ slot for OAM enemy art; restore
+     * the NPC ramps (slots 5-7) on every tileset load so town sprites
+     * keep exact colors after a fight.  Lives here (not fixed bank) for
+     * ROM budget (AGENTS.md 55.5); PPU-safe like the CRAM loop above. */
+    if (g_is_cgb) {
+        OCPS_REG = (uint8_t)(0x80 | (5 << 3));
+        for (i = 0; i < 24; i++) {
+            BANKED_VRAM_WRITE(&OCPD_REG,
+                              ((const uint8_t *)cgb_obj_palettes)[40 + i]);
+        }
+    }
+}
+
+/* Full-ring black wipe for scene transitions (Bank 5).  Blackens CGB
+ * slot 4, then paints all 18 ring rows x 32 cols with blank tiles +
+ * slot 4 so the viewport is covered whatever SCX shows.  Slot 4 (PAPER)
+ * is free in every world tileset, so no map row can need it during the
+ * reveal.  All writes go through BANKED_VRAM_WRITE: gate crossings run
+ * this wipe with the LCD ON (curtain path skips ui_lcd_off), where an
+ * ISR-eclipsed wait would drop the write into Mode 3.  Sole caller is
+ * ui_draw_world_transition (always the full ring). */
+void ui_wipe_black_banked(void)
+{
+    uint8_t r;
+    uint8_t c;
+    uint16_t off;
+    volatile uint8_t *dst;
+    if (g_is_cgb) {
+        BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_PAPER << 3));
+        for (c = 0; c < 8; c++) {
+            BANKED_VRAM_WRITE(&BCPD_REG, 0);
+        }
+    }
+    for (r = 0; r < 18; r++) {
+        off = (uint16_t)r << 5;
+        VBK_REG = 0;
+        dst = (volatile uint8_t *)(0x9800u + off);
+        for (c = 0; c < 32; c++) {
+            BANKED_VRAM_WRITE(dst, 0);
+            dst++;
+        }
+        if (g_is_cgb) {
+            VBK_REG = 1;
+            dst = (volatile uint8_t *)(0x9800u + off);
+            for (c = 0; c < 32; c++) {
+                BANKED_VRAM_WRITE(dst, (uint8_t)(UI_COLOR_PAPER & 0x07));
+                dst++;
+            }
+            VBK_REG = 0;
+        }
+#ifdef DEBUG_BUILD
+        for (c = 0; c < 32; c++) {
+            g_tilemap_mirror[off + c] = 0;
+            g_tilemap_attr_mirror[off + c] = UI_COLOR_PAPER;
+        }
+#endif
     }
 }
 
@@ -251,7 +270,12 @@ void ui_title_logo_load_banked(void)
 
     VBK_REG = 0;
     while (n--) {
-        *dst++ = *src++;
+        /* Macro form even though title entry is LCD-off (direct-store
+         * fast path there): identical bytes, immune if ever reused
+         * with the LCD on. */
+        BANKED_VRAM_WRITE(dst, *src);
+        dst++;
+        src++;
     }
 }
 #endif

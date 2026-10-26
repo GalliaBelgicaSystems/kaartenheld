@@ -1,0 +1,109 @@
+{
+ "name": "combo_ap_cost_pips",
+ "test": true,
+ "description": "AP-cost OAM pips (top-left of each hand card): staging SW2/cost-1 and BO5/cost-2 shows the one-ap tile (96) on OAM entry 24 and the two-ap tile (97) on entry 25; a cost-0 third card shows no pip (entry 26 tile 0). No execute: pips render on the pending hand.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 3
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 2,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "SH",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 24,
+   "expected": 96
+  },
+  {
+   "type": "oam_tile",
+   "entry": 25,
+   "expected": 97
+  },
+  {
+   "type": "oam_tile",
+   "entry": 26,
+   "expected": 0
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
+}

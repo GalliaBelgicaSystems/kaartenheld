@@ -108,7 +108,7 @@ Introduce:
 typedef uint8_t CardId;
 
 #define CARD_NONE       0
-#define CARD_FIRST_GAME 0x80
+#define CARD_FIRST_GAME 0x40
 ```
 
 Follow the existing ID convention used by `ItemId`.
@@ -496,8 +496,10 @@ No counter needs to be maintained.
 > 3. `battle_resolve_hand_discard()` pays the summed combo cost (saturating
 >    at 0), decrements limited uses, emits `CARD_PLAYED` per card, discards
 >    them and refills those hand slots from the deck.
-> 4. `energy` is a per-turn pool (`BATTLE_ENERGY_PER_TURN`, currently 5),
->    refreshed to full at every decision-phase entry (attack AND defend).
+> 4. `energy` is a per-turn pool (the `ENERGY_POOL` variable, default
+>    2 = `BATTLE_ENERGY_PER_TURN`, staged at battle entry by the bank-4
+>    HUD body), refreshed to full at every decision-phase entry (attack
+>    AND defend).
 >
 > For a Potion:
 
@@ -533,13 +535,15 @@ AND
 uses_remaining == 0
 ```
 
-The card remains in the deck.
-
 It simply cannot currently be played.
 
 This distinction is important.
 
-The deck does not shrink during combat.
+When a played card reaches 0 uses it leaves combat entirely instead
+of entering the discard pile: a spent card would otherwise take up a
+hand slot it can never play from, cycling back through every future
+draw and reshuffle. Exiled cards never re-enter the draw pile, so
+later draws and reshuffles only see playable cards.
 
 ---
 
@@ -641,7 +645,7 @@ B BACK
 
 # 17. Phase 15 — Collection UI ✅ DONE
 
-> Note: implemented as the CARDS tab in `src/screens/item_screen.c`. Selecting a
+> Note: implemented as the DECK tab in `src/screens/item_screen.c`. Selecting a
 > card shows a single inline PWR/COST/U row (row 14) rather than a full detail
 > screen; `A` adds the selected card to the deck.
 
@@ -1261,19 +1265,28 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
 - **`max_copies` caps both collection and deck** (spec said the collection is
   uncapped). Enforced in `src/rpg/deck.c`; capping the collection too keeps
   the fixed-size entry array honest at 12 slots.
-- **Energy model**: per-turn pool of 5 (`BATTLE_ENERGY_PER_TURN`) refreshed at
-  every decision-phase entry rather than a per-combat budget. Affordability
-  is checked at selection time against `energy - combo_reserved_cost()` and
-  paid at resolve time. The pool size keeps all pre-energy scenarios valid
-  (a 5-card combo of cost-1 starters still fits).
-- **Deck-size ceiling unreachable**: the 20-card deck limit cannot be hit by
-  current content — total deckable copies across the catalog are 17
-  (IRON_SWORD ×4 + WOODEN_SHIELD ×3 + WOOD_RING ×3 + FIRE_SWORD ×3 +
-  POISON_DAGGER ×3 + BOW_9 ×1; AMULET is SPECIAL and not deckable). Recorded as a known
-  gap; no synthetic content was added just to test it.
+- **Energy model**: per-turn pool from the `ENERGY_POOL` variable
+  (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
+  refreshed to full at every decision-phase entry rather than a
+  per-combat budget. Story
+  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1,
+  chest +1, Monster Hunt +1, mimic +1 from the base-1 pool, reaching 5
+  in any order);
+  battles stage the
+  pool at entry and reuse it for the whole fight. Affordability is checked
+  at selection time against `energy - combo_reserved_cost()` and paid at
+  resolve time. The small default pool means combo scenarios select
+  cost-0 (or a single cost-1) cards so the hand still fits the pool.
+- **Deck-size ceiling**: the 20-card deck limit is reachable by stacking
+  repeated loot drops (loot cards have no copy limit).  The fixed catalog
+  alone provides 16 guaranteed copies (WOOD_SWORD ×4 + WOODEN_SHIELD ×4 +
+  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; AMULET is
+  SPECIAL and not deckable).  The catalog `CARD_IRON_SWORD` is excluded
+  from that count: it is a test/legacy entry that never appears in normal
+  play (in-play iron swords are derived loot ids, e.g. `0xA0`).
 - **Starter deck granted at new game**: a new game grants the collection
-  IRON_SWORD ×4 + WOODEN_SHIELD ×3 + FIRE_SWORD ×3 + POISON_DAGGER ×2 (and decks all
-  twelve, deal order SW SW SH SH SW first so the opening hand is SW3 SW3 SH2 SH2 SW4),
+  WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
+  ten, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW3),
   so the first battle already draws from the real deck system. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:

@@ -2,7 +2,6 @@
  "name": "state_midgame_setup",
  "test": true,
  "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section",
- "scenario_id": "FOREST_BOOT",
  "actions": [
   {
    "type": "press",
@@ -49,7 +48,7 @@
   },
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "POISON_DAGGER",
    "expected": 2
   },
   {
@@ -96,7 +95,7 @@
    }
   },
   "inventory": {
-   "WOOD_RING": 2
+   "POISON_DAGGER": 2
   },
   "world": {
    "SLIME_FOREST": "DEFEATED",

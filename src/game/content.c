@@ -11,18 +11,19 @@
 #include "core/game.h"
 #include "banked.h"
 #include "battle_data.h"
+#include "audio.h"
 
-#define HERO_START_HP    10
+#define HERO_START_HP    15
 #define HERO_START_GOLD  20
 
 /* ── Victory loot drop (docs/loot.md §17/§34.5) ─────────────────────
  * Thin fixed-bank wrapper: the whole decision (profile pick, roll,
- * encode) runs as ONE bank-3 body (loot_drop_banked.c); only this
+ * encode) runs as ONE bank-9 body (loot_drop_banked.c); only this
  * staging call stays fixed.  Returns the derived CardId (always drops
  * -- quality varies, not presence). */
 uint8_t game_loot_drop(uint8_t battle_type)
 {
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 9;
     g_bk_call_target = (uint16_t)&game_loot_drop_banked;
     g_bk_byte_a = battle_type;
     banked_call_run();
@@ -36,7 +37,6 @@ void game_content_init(void)
     game_dialogue_register();
     game_actors_register();
     game_cards_register();
-    game_quest_register();
 }
 
 void game_new_game(GameState *state)
@@ -44,7 +44,7 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
-    /* Player start is compiled from the field spawn (the single source of
+    /* Player start is compiled from the wake-grove spawn (the single source of
      * truth).  scene_spawn() runs the banked table read; the fallback for
      * bad map ids lives in that banked body, so this fixed-bank call site
      * stays branch-free (fixed-bank _CODE budget).  Harness builds start
@@ -53,8 +53,8 @@ void game_new_game(GameState *state)
     state->scene.scene_id = SCENE_TEST_FIELD;
     scene_spawn(MAP_TEST_FIELD);
 #else
-    state->scene.scene_id = SCENE_FIELD;
-    scene_spawn(MAP_FIELD);
+    state->scene.scene_id = SCENE_WAKE_GROVE;
+    scene_spawn(MAP_WAKE_GROVE);
 #endif
     state->scene.player_x = g_bk_byte_b;
     state->scene.player_y = g_bk_byte_c;
@@ -66,6 +66,13 @@ void game_new_game(GameState *state)
     state->party.members[0].max_hp = HERO_START_HP;
 
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
+    /* Base energy pool: every milestone (tutorial, chest, Monster Hunt,
+     * mimic) grants a uniform ADD 1 from here, reaching 5 in any
+     * completion order.
+     * Initializing (not relying on the stager's < 1 fallback) keeps the
+     * variable equal to the visible pool, so staged values, snapshots
+     * and the debugger never disagree about what a fight will stage. */
+    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated
@@ -91,17 +98,6 @@ void game_new_game(GameState *state)
     }
 }
 
-/* Thin fixed-bank wrapper: stages the battle type and dispatches to the
- * bank-4 body (battle_hud_load_banked) which does the actual id-scan and
- * WRAM copy.  This keeps the bulky id-scan + copy logic out of the fixed
- * bank (fixes _HOME overflow). */
-void game_battle_hud_load(uint8_t battle_type)
-{
-    g_bk_byte_a = battle_type;
-    g_bk_call_bank = 4;
-    g_bk_call_target = (uint16_t)&battle_hud_load_banked;
-    banked_call_run();
-}
 void game_on_level_up(GameState *state, ProgressionTarget target,
                       const ProgressionAddResult *result)
 {

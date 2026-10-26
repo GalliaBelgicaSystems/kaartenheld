@@ -18,8 +18,10 @@ Checks:
   5. no-lcd-off-during-movement: LCDC bit 7 (0x80) remains 1 on EVERY frame during
      held overworld movement (0 LCD-off frames).
 
-World-struct offsets are read from the live debug ROM (g_game symbol + fixed
-field offsets; the harness skips CRT0, so g_game and its World are in WRAM).
+World-struct offsets are read from the live debug ROM via the shared
+header mirror (tools/walkthrough/state_reader.py) plus a WRAM pattern
+scan for the player Entity; camera comes straight from SCX/SCY.
+Nothing is hardcoded (a hardcoded GameState size rotted here once).
 
 Run inside the Nix dev shell:
     make verify-scroll
@@ -95,38 +97,95 @@ def main():
         print("error: g_game not in symbol file (make debug first)", file=sys.stderr)
         return 1
 
-    # Wait for boot completion (g_boot_phase == 4)
+    # Wait for boot completion (g_boot_phase == 4, first game_render).
     for _ in range(300):
         pb.tick()
         if bp_addr and pb.memory[bp_addr] == 4:
             break
 
-    # Check initial LCD status after boot
-    lcdc_init = pb.memory[0xFF40]
-    check("lcd-on-after-boot", (lcdc_init & 0x80) != 0, f"LCDC=0x{lcdc_init:02X}")
+    # Reach the overworld: the debug ROM boots to splash, which
+    # auto-advances to title; START/A then walks title -> NEW GAME ->
+    # intro slides -> overworld (same state-verified pattern as
+    # verify_music.py; game frames and PyBoy ticks are not 1:1).
+    for _ in range(30):
+        if pb.memory[game_addr] == 0:
+            break
+        pb.button_press("start")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("start")
+        for _ in range(16):
+            pb.tick()
+        pb.button_press("a")
+        for _ in range(4):
+            pb.tick()
+        pb.button_release("a")
+        for _ in range(16):
+            pb.tick()
+    if pb.memory[game_addr] != 0:
+        print("error: never reached the overworld", file=sys.stderr)
+        return 1
 
-    # World struct field offsets relative to g_game (verified against the
-    # debug ROM): Game = screen(1) + prev_screen(1) + GameState(197)
-    # + World{ width,height,map_id,encounter_index,map_changed (5), player
-    # Entity (7), actors[4]*24 (96), map[24][40] (960), camera_px (2),
-    # scroll (2), move state (5) }.
-    POS_X = game_addr + 204
-    POS_Y = game_addr + 205
-    CAM_X = game_addr + 1267
-    CAM_Y = game_addr + 1268
-    SCROLL_X = game_addr + 1269
-    SCROLL_Y = game_addr + 1270
-    MOVE_STATE = game_addr + 1271
-    MOVE_TARGET_X = game_addr + 1272
-    MOVE_TARGET_Y = game_addr + 1273
-    MOVE_PROGRESS = game_addr + 1274
+    # World struct field offsets come from the shared header mirror in
+    # tools/walkthrough/state_reader.py (single source of truth -- a
+    # hardcoded GameState size rotted here once already).
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from walkthrough.state_reader import (
+        OFF_STATE, STATE_SIZE, ENTITY_SIZE, MAX_WORLD_ACTORS,
+        WORLD_WIDTH, WORLD_HEIGHT, _world_actor_runtime_size,
+        NAME_PTR_CANDIDATES,
+    )
+
+    # Locate the player Entity in WRAM by its boot pattern (robust to
+    # struct-layout drift -- the same technique as verify_music.py):
+    # TEST_FIELD spawn (17,7) facing LEFT, 15/15 HP, active, id 1.
+    WRAM_BASE = 0xC000
+    WRAM_SIZE = 0x2000
+    PLAYER_BOOT = bytes([17, 7, 15, 15, 1, 2, 1])
+    wram = bytes(pb.memory[i]
+                 for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+    idx = wram.find(PLAYER_BOOT)
+    if idx < 0:
+        print("error: player boot pattern not found in WRAM",
+              file=sys.stderr)
+        return 1
+    world = WRAM_BASE + idx - 5
+    POS_X = world + 5
+    POS_Y = world + 6
+    # Actor stride (const-char* size) probed via the World tail, exactly
+    # like StateReader.world_hostile_count: TEST_FIELD is forest (kind 2).
+    stride = None
+    for ptr in NAME_PTR_CANDIDATES:
+        size = (5 + ENTITY_SIZE
+                + MAX_WORLD_ACTORS * _world_actor_runtime_size(ptr)
+                + WORLD_WIDTH * WORLD_HEIGHT + 4 + 7 + 3)
+        if pb.memory[world + size - 5] == 2:
+            stride = MAX_WORLD_ACTORS * _world_actor_runtime_size(ptr)
+            break
+    if stride is None:
+        print("error: could not probe actor stride from World tail",
+              file=sys.stderr)
+        return 1
+    move_base = (world + 5 + ENTITY_SIZE + stride
+                 + WORLD_WIDTH * WORLD_HEIGHT + 4)
+    MOVE_STATE = move_base
+    MOVE_TARGET_X = move_base + 1
+    MOVE_TARGET_Y = move_base + 2
+    MOVE_PROGRESS = move_base + 3
+
+    # Check initial LCD status on the steady overworld (after the
+    # row-4 walk below, not right at the transition: the entry redraw
+    # leaves LCD off across its own frames and a single sample there
+    # races it).
+    lcdc_init = None
 
     # Shadow-OAM slot 0 = the player sprite (y, x).  Read before the frame's
     # ui_sprite_commit so it always reflects the latest game_render.
     OAM_Y = 0xC000
     OAM_X = 0xC001
 
-    # Boot position is the FIELD spawn from levels/field.json player.spawn
+    # Boot position is the TEST_FIELD spawn from
+    # tools/scenarios/fixtures/levels/test_field.json player.spawn
     # ((17,7)): row 7 holds the east gate (31,7), and a held RIGHT would
     # cross maps mid-check (gate redraws blank the LCD and break the scroll
     # invariants).  Step up to row 4 first -- it is clear of terrain blocks
@@ -145,6 +204,8 @@ def main():
         for _ in range(40):
             pb.tick()
     print(f"scroll row: player at ({pb.memory[POS_X]},{pb.memory[POS_Y]})")
+    lcdc_init = pb.memory[0xFF40]
+    check("lcd-on-after-boot", (lcdc_init & 0x80) != 0, f"LCDC=0x{lcdc_init:02X}")
 
     # Press and hold RIGHT
     pb.button_press("right")
@@ -220,8 +281,8 @@ def main():
                 py += prog
             elif tgt_y < player_y:
                 py -= prog
-        camx = pb.memory[CAM_X]
-        camy = pb.memory[CAM_Y]
+        camx = scx
+        camy = scy
         exp_y = py - camy + 16
         exp_x = px - camx + 8
         # Game loop order in main.c is: vsync() -> game_render() -> game_update().

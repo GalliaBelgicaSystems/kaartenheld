@@ -64,6 +64,15 @@ void overworld_screen_update(Game *g)
     WorldMoveResult move_res = MOVE_RESULT_NONE;
     ActorEngageResult engage = ENGAGE_NONE;
 
+    /* Flee grace ticks down once per overworld frame (pauses in battle,
+     * dialogue and menus, which run their own screens). */
+    if (g->world.encounter_cooldown != 0) {
+        g->world.encounter_cooldown--;
+    }
+
+    /* (Chest-loot jingle ticks in game_update so menus don't freeze its
+     * restore timer; see core/game.c.) */
+
     /* A committed move may resolve a map change or an encounter; resolve
      * those before reading fresh input. */
     move_res = world_update_move(&g->world, &g->state);
@@ -159,11 +168,21 @@ void overworld_screen_render(Game *g)
 
     px = (uint8_t)(world_player_px(w) - w->camera_px_x);
     py = (uint8_t)(world_player_py(w) - w->camera_px_y);
-    ui_update_camera(w);
 
     if (!rc->valid || rc->prev_screen != SCREEN_OVERWORLD ||
         w->map_id != rc->prev_map_id) {
-        ui_draw_world_full(w);
+        if (rc->prev_screen == SCREEN_DIALOGUE && w->map_id == rc->prev_map_id) {
+            /* Overlay exit: same map that was on screen under the box, so
+             * only the 4 box rows need their world tiles back (LCD stays
+             * on).  Battle-entered dialogues reloaded the tileset at entry,
+             * so their exits restore correctly too. */
+            ui_restore_dialogue_rows(w);
+        } else {
+            /* Any other overworld (re)draw -- gate crossing, battle/menu
+             * return, boot: the streaming LCD-on repaint (instant full
+             * redraw fallback inside, same end state). */
+            ui_draw_world_transition(w);
+        }
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
         rc->valid = true;
@@ -173,6 +192,11 @@ void overworld_screen_render(Game *g)
         rc->prev_dialogue_line = 255;
         rc->prev_dialogue_id = DIALOGUE_ID_NONE;
     }
+
+    /* Camera follows the player -- after the branch, so a gate-crossing
+     * wipe covers the old viewport before it snaps (the transition
+     * re-syncs mid-way while the screen is black). */
+    ui_update_camera(w);
 
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);

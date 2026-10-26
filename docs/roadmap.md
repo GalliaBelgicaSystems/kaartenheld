@@ -30,7 +30,7 @@ testable, save/load works, and the memory budget is understood.
 - **Camera / scroll — B1 + B2 DONE**: scenes are parameterized, the
   overworld has a pixel camera (`World.camera_px_x/y`, `world_update_scroll`
   follows the player smoothly and clamps to scene bounds; exposed in the
-  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 32x18; covered by
+  snapshot as `scroll_x/y` = camera_px/8).  FIELD is 24x18; covered by
   `large_map_scroll` + `field_east_scroll`.  B2 rendered the terrain as real
   GB tiles (`src/gfx/world_tiles.h`) into the 0x9800 tilemap.
 - **Camera / scroll — B3 + B4 DONE**: the overworld background scrolls
@@ -71,15 +71,21 @@ testable, save/load works, and the memory budget is understood.
     (clones of the struck actor; the final boss stands alone), regular
     enemy HP doubled (slimes 10-16, bats 8), boss tuned to 50 HP with a
     SET_ENEMY_HP scenario hook pinning it to 20 for deterministic tests.
-  - Energy pool raised to 6/phase (three cost-2 cards now form a combo);
-    rejected selections flash NO ENERGY! / OUT OF USES! on the battle HUD.
+  - Energy pool defaults to 1/phase (`BATTLE_ENERGY_PER_TURN`; was 6 —
+    combo scenarios select cost-0 or single cost-1 cards so the hand
+    still fits);
+    the live pool is the uncapped `ENERGY_POOL` variable
+    (staged at battle entry), raised by story events (+1 tutorial,
+    +1 chest, +1 Monster Hunt, +1 mimic from the base-1 pool, reaching 5);
+    rejected selections flash NO ENERGY! / OUT OF USES! on
+    the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
     resolution; executed results announce via the banner).  The Lost
     Amulet now renders in the CARDS tab as a non-deckable QUEST ITEM, and
-    the Merchant sells a heavy BOW 10 (30g).
+    the Merchant sells a heavy BOW 9 (30g).
   - Poker hand tiers implemented (strict sizes; PAIR..FIVE KIND, FLUSH,
     STRAIGHT, FULL HOUSE, STRAIGHT FLUSH with tier multipliers + suited
-    bonus), combo-scaled on-hit riders, and the DA1 POISON DAGGER starter
+    bonus), combo-scaled on-hit riders, and the DA2 POISON DAGGER field-cache
     card with flat 1-HP poison ticks.  Open: more statuses, finer-grained
     status telemetry.
 
@@ -122,6 +128,90 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
   now exits 2 (not-found) vs 1 (fail) and suggests close names.  Do not
   treat make's rc alone as evidence.
 
+### STATIC-WIPE POST-MORTEM (found 2026-10-11, Carl/chest work)
+
+Post-battle field statics (Carl's tutor, then the chest too) silently
+vanish in the DEBUG build: tiles walkable, no interactions, snapshot
+empty.  Established by mGBA write-watchpoint on
+`g_static_actor_count` (NOT by reading state): a stack push lands on it
+(SP=0xDF87, ~121 B deep) inside `status_grey_tick_banked` during battle
+turns.  Decisive attribution: the wipe reproduces on the clean ccbba76
+baseline (a post-victory chest walk finds no dagger there too), so it is
+PRE-EXISTING, not a Carl/chest regression -- no prior scenario ever
+checked post-battle statics, and the release ROM never shows it
+(walkthrough chest milestone green: no mirror writes, shallower frames).
+An early BSS-padding experiment briefly moved the victim (self-healing
+patrol temps onto the persistent count) and was reverted.  Hardening
+kept: every `g_static_actor_count` read is clamped to
+MAX_STATIC_ACTORS (the loader already caps writes there, so clamping is
+a no-op in valid states).  Lessons:
+* BSS layout shifts move stack-blast victims: any struct-size change
+  near the stack end must re-run post-battle static checks even when no
+  gameplay code changed.
+* The battle-turn chain remains over budget by model (worst 157 B); a
+  real frame diet is still open.  Until then, post-battle static
+  assertions stay out of the harness (persistence asserts the defeat
+  record + pool, never the tile).
+
+### WRAM-SHIFT POST-MORTEM (found 2026-10-13, birdsong work)
+
+Adding 23 B of WRAM globals (bird countdown/cursor/wave-save) broke
+107/227 harness scenarios with a ghost START press (battle_boot drops
+to the ITEM screen on frame 2 with pad=0x99/prev=0x99).  Established by
+bisection, not by reading state: the battle failure reproduces with the
+bird runtime fully disabled (`if (0 && ...)` + void-cast trigger), and
+decisively with ONLY 23 dummy WRAM bytes on the green music commit
+(worktree wramtest @ e156e3d + `uint8_t g_wram_probe[23]` → battle_boot
+FAIL; same tree without the dummy → PASS).  So the killer is the
+_layout shift itself_, not bird code: every symbol after the insertion
+point moves (input block DF6C→DF83) and the heap+stack gap shrinks
+192→169 B against a ~142 B modeled worst chain.  The first design also
+streamed from the 256 Hz timer ISR (extra ISR depth on top of the
+deepest battle nesting) and returned the chirp species in register A
+while the fixed wrapper read the shared g_bk_byte_b staging byte --
+stale zero forever, so no chirp event ever emitted (plus untrustworthy
+window-address breakpoint forensics on top).  Lessons kept in code:
+* birds were ZERO-WRAM by design (timing from g_game.frame low bits,
+  one EVENT_BIRD_CHIRP per 128-frame window, no ISR work, bank-7 bodies
+  so layout-pinned bank 5 stays byte-identical, WRAM map 5632 B
+  unchanged from green) -- the ambience has since been removed entirely,
+  but the zero-WRAM discipline it forced still holds for everything
+  that remains;
+* banked bodies return results through explicit g_bk_byte_b stores,
+  never bare C returns (the staging byte is the protocol);
+* power-of-two cadences (mask/shift, never % or /) keep SDCC div/mod
+  support routines out of fixed _CODE.
+* Open: the underlying overshoot (wild write or stack depth) predates
+  birds -- any future WRAM growth must re-run battle_boot first, and a
+  real stack-frame diet is still wanted (§52.24).
+
+### STACK CANARY (landed 2026-10-13, host-side measurement)
+
+The static stack-budget model (142 B worst chain) cannot see ISR
+nesting or layout-sensitive codegen, and the memmap "_DATA headroom"
+figure overstated the gap by ~66 B (it counted from _DATA end,
+ignoring the _INITIALIZED/BSS globals above it).  Measured with the
+host-side canary (`stack_canary_fill`/`stack_canary_read` in
+tools/emulator.py, asserted as `stack_margin_min` in scenarios --
+zero ROM bytes, opt-in per scenario like the SFX log):
+* true stack gap (s__HEAP..0xE000): 126 B, not 192;
+* idle title path: 94 B deep (margin 32);
+* battle paths (game_over_quit, battle_multi_enemy_cycle_kill):
+  125-126 B deep -- margin 0-1.  The suite is green with essentially
+  zero headroom.
+Guards landed with the canary:
+* `make memmap` reports the true gap AND hard-fails below 126 B
+  (WRAM freeze: any growth must first land the battle frame diet --
+  lowering the floor without it re-arms silent corruption);
+* `stack_margin_min: 0` on the two deepest battle paths locks the
+  measurement pipeline (fill/read/symbols) and turns guest crashes
+  into loud canary failures instead of mystery gameplay FAILs.
+Honest limits: at margin ~0 the canary measures but cannot by itself
+fail on smash-past-the-gap (reads clamp at the gap floor) -- the
+memmap freeze above is the actual tripwire, the canary is the
+tape measure.  If a future build needs WRAM and cannot diet first,
+the escape hatch is a sacrificial guard region, not a quieter assert.
+
 ### DONE
 
 - Card battle prototype (hand/deck/discard, draw, play, resolve; per-card
@@ -130,6 +220,14 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
 
 ### LATER
 
+- `ACTOR_FLAG_BLOCKING` (src/world/actor.h) is emitted by the compiler and
+  editor but never read by the ROM: `world_try_begin_move` blocks on any
+  `g_static_actors` entry (`actor_find_at`) regardless of the flag, so a
+  non-hostile compiled actor blocks even without `BLOCKING`.  The
+  walkthrough planner mirrors that actual behavior (every non-hostile
+  compiled actor is avoided) rather than the flag.  Decide later: honor
+  `BLOCKING` in the engine (a gameplay change) or drop it from the flag
+  vocabulary.
 - Dialogue boxes: raise `MAX_DIALOGUE_LINES` beyond 8 for richer NPC /
   signpost text — constraints and deferred checklist in
   `docs/dialogue-boxes.md`.
@@ -1383,4 +1481,139 @@ Memory note (two waves):
    rooms spawned no enemies).  `walk_sweep` now asserts each combat level
    spawns ≥1 hostile, so that regression cannot recur.
    Current release headroom: bank 2 ≈2.1 KB, bank 4 ≈1.1 KB, bank 5 ≈138 B.
+
+## 12. new-levels merge (tunnels branch, Sep 2026)
+
+`origin/new-levels` (one commit on a stale base: `castle_entry` redesign,
+new `village_area` 17 + `desolate_field` 18) was cherry-picked onto
+`tunnels` (linear history). Conflict in `castle_entry.json` resolved:
+tunnels `neighbors` + enemies kept, new terrain/name/spawn taken, invalid
+`castle.forest_plain_floor_1` (287 cells) fixed to `castle.castle_plain_floor`,
+south gate opened at x=9,10, desolate `actor_id` 60→64 collision minted.
+
+Bank-5 findings (release link is ground truth, `build/kaartenheld.map`
+`l__CODE_5`): base headroom was 144 B; the two new levels add ~1576 B
+(149+139 terrain blocks — dense single-cell detail vs 20–66 for existing
+levels). No lossless fit exists: all other bank-5 residents are immovable
+(asset/atlas/tiles/oam/scene-load, smallest mover exceeds every headroom)
+and a merge post-pass saves 0 blocks (greedy output already maximal).
+
+Landed:
+1. Compiler elides interior default-ground blocks (`optimize_terrain`
+   generalizes the dead `TILE_FLOOR` fossil to each level's own
+   `level_default_const`, with a perimeter guard — ROM pre-fills interior
+   default, perimeter pre-fills WALL, open rows appended after are
+   untouched). -131 blocks / -655 B permanently, marginally faster loads.
+2. `compile.py` emits NULL+0 actor tables for object-less scenes (SDCC
+   rejects `{}`) — `village_area` exposed it.
+3. `castle_entry` redesign, both new levels, both tunnels (below).
+
+Overflow terrain banks (both levels landed in-ROM): `village_area`
+terrain → bank 7, `desolate_field` terrain → bank 6
+(`OVERFLOW_TERRAIN_BANK`, balanced ~340 B headroom each); rows + exits
+stay in bank 5. `SceneDefinition.terrain_bank` (appended last) selects;
+`scene_load_tiles()` dispatches a per-bank stamp body that reads its
+own-bank arrays directly. Release banks: 4:289, 5:295, 6:97, 7:75.
+Two dead ends documented so the next person doesn't repeat them:
+* WRAM staging in the banked body: a 5 B window works, but switching
+  banks from switchable-ROM code self-unmaps the instruction stream
+  (the copy trampoline runs from WRAM for exactly this reason), and
+  struct assignment lowers to `call ___memcpy` (unmapped while
+  switched) — CPU runs away with the LCD off, which presents as PyBoy
+  `tick()` blocking forever (99.7% CPU, zero log output). Verify
+  switched bodies with `lcc -S` (zero `call`s). See docs/level-editor.md
+  Phase 22.
+* An 800 B WRAM staging static flipped hostile spawning under the
+  harness with zero execution difference (BSS-layout sensitivity,
+  §52.19 family); small statics did not. Keep new WRAM statics tiny
+  and let the sentinels judge.
+
+Tunnels added (user choice: point pairs, auto `tunnel_a_b` naming):
+`tunnel_town_village_area` (town (18,8) EAST `>` ↔ village (1,8) WEST
+`<`) and `tunnel_desolate_field_south_field` (south_field (5,14) SOUTH
+`>` ↔ desolate (10,14) NORTH `<`). Both pass the compile-time tunnel
+contract; gates sit on existing floor (zero terrain bytes; invisible-
+portal warnings accepted, precedented by fixtures).
+
+Remaining follow-ups: bank 6/7 margins (~100/75 B) fit ~1 small level's
+terrain before another overflow entry (or ROM growth past 8 banks) is
+needed; `decompile.py --roundtrip` fails on a pre-existing manifest gap
+(`actors_kobold_frame_1/2` demanded of desolate_landscape/forest by
+SPRITE_FRAMES but absent — untouched by this merge, non-gating tool).
+
+Castle tile-window extension (Oct 2026): the redone castle levels
+reference vram indices 16..22 (throne TR/BR, rugs, chandeliers, plain
+floor), which had no ROM encoding (build broke with undefined
+TILE_CASTLE_16..22; the Sep-2026 drop deliberately referenced only
+indices <16). Values 142..145 (gap) + 251..253 (top of u8, 254 kept
+clear, 0xFF sentinel) for TILE_CASTLE_16..19 / 20..22; VRAM slots
+16..22 hold vram 16..22, exit stairs move to the LAST slot 23
+(gfx --tile-coords + palette manifest + verifier slot map updated in
+lockstep). Renderer: two gateless art branches (values globally
+unique, like the exit row) + the glyph predicate collapsed from 7
+range clauses to one (all values 8..253 are landscape; legacy
+desolate returns earlier) to fund the fixed bank, which sits at 8 B
+headroom. TileType space is now effectively full (only 254 free):
+the next tileset growth needs a value-reclamation plan first.
+
+Castle art drop (same branch, Sep 2026): 9 new tiles (throne 2x2, floor
+debris, rugs, chandeliers) merged via `merge_tileset.py`, then hand-fixed
+— lessons for the next drop: (1) the merge never writes vram `(x,y)` and
+assigns defs by 9-wide sheet position, but castle slots pack 8-wide, so
+everything from slot 8 was shifted garbage (throne_TR at slot 8 pushed
+seven defs down one); always re-derive slots from the gfx `--tile-coords`
+list. (2) Evicted defs keep stale `gb_constant`s → duplicate constants
+(7 collisions here); delete or renumber them. (3) A CSV quoting artifact
+minted junk def `castle_plain_floor_3` (cell art == base floor). (4) New
+defs arrive untagged/wrong-tagged — tag from measured pixels (thrones
+browns→castle2, rugs/chandeliers red-gold→castle3, debris gray→castle4),
+never from the misaligned mismatch report. (5) The artist painted over
+`plain_floor` (296 refs) and `chest` (3 refs): migrated to debris/table
+(blocking preserved) after verifying no sprite-field refs. CI
+`ramp-check --strict` back to green with zero repaints and zero new
+allowlist entries. `make parity` fails identically with and without this
+work (pre-existing, non-gating, not CI-run).
+
+Screenshot note (Sep 2026): regenerating `screenshots/` on the merged tree
+updates 8 frames. `sweep-castle_entry` (+`sweep-castle`, +`sweep-castle_hall`)
+change full-frame (new interior — expected). Five others
+(`01-field-scrolled`, `11-battle-aftermath`, `sweep-forest_deep`,
+`sweep-forest_shrine`, `sweep-grassy_forest`, `sweep-throne_room`) differ
+by 29–54 px (same palettes — sprite-phase scale). Bisect: fossil
+`optimize_terrain` reproduces the committed bytes for those five, so the
+elision's bank-5 shrinkage deterministically shifts sprite phases in
+unrelated walks — all semantic gates stay green (harness 205/205,
+verify-oam, walkthrough 823/823), tilemaps are provably identical
+(pre-fill), and no engine C changed, but SOMETHING layout-coupled exists
+(uninitialized read or OOB-write victim shift — the §52.19 family).
+Prescription: mGBA watchpoint hunt next time this area is touched; do NOT
+treat byte-identical screenshots as proof of no behavioral coupling.
+
+Screenshot note 2 (Sep 2026): `11-battle-aftermath.png` (±74-81 px, a
+patrol-sprite/scroll 1-frame transient in the battle-exit window) flipped
+across three regens while every semantic gate stayed green (harness 210/210,
+verify-oam, walkthrough 919/919) and the other 41 frames stayed identical.
+Suspect: the walk's lossy-press/retry around the exit dead window landing
+the capture ±1 frame (AGENTS.md §56.2), not a ROM change — no ROM-side
+mechanism exists on that path. Prescription: do not read signal into pixel
+diffs confined to that frame; re-run the capture before hunting a rendering
+bug there.
+
+Game-over theme + title play-once + SLIME KNIGHT rename (Oct 2026):
+`game over.uge` wired as MUSIC_GAMEOVER (bank 7, loops) and played in
+`battle_set_result` DEFEAT so the DEFEATED! screen already carries it;
+map loads restore scene tracks, so no exit-path handling needed. Title
+`title short.uge` plays once via a bank-8 frame counter (358 frames =
+6.0 s song, stop with MUSIC_NONE so the harness observes it and a later
+visit replays): counting game frames, not ISR ticks, because the title
+screen never stalls the frame loop the way LCD-off transitions stall
+the jingle restore clock -- and it keeps the ISR (and its fixed-bank
+cost) untouched. Fixed-bank funding came from collapsing the glyph
+predicate to one range check (all values 8..253 are landscape; legacy
+desolate returns earlier) plus single-compare castle art branches;
+_HOME sits at 8 B headroom. Knight rename 11->12 chars widened
+Combatant.name/s_actor_names/g_battle_anim_target_name to 13 (banner
+"TARGET SLIME KNIGHT" is 19/20 cols; telegraph/defend banners clip the
+trailing "!" at 20, same as before with longer names); state_reader
+battle offsets +7/+1. Boss keeps "L.of Slimes".
 

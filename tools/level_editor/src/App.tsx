@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { EditorLevel, LevelExit, LevelRegion, createEmptyEditorLevel, levelDataToEditor } from './model/Level';
+import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, createEmptyEditorLevel, levelDataToEditor, normalizeNeighbors } from './model/Level';
 import { LevelObject } from './model/Objects';
 import { Toolbar, ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
@@ -72,6 +72,14 @@ export const App: React.FC = () => {
 
   // View Options
   const [zoom, setZoom] = useState<number>(1);
+  // Preview fidelity: raw artist PNGs vs the pipeline-exact ROM recolor.
+  // ROM is the default so ramp mistakes are visible before Compile ROM.
+  const [fidelity, setFidelity] = useState<'raw' | 'rom'>('rom');
+  // Palette generation: bumped on every palette save/assign so the level
+  // views (map canvas, tile picker) refetch manifests and drop cached
+  // recolors immediately, even without a view remount.
+  const [paletteVersion, setPaletteVersion] = useState<number>(0);
+  const bumpPaletteVersion = useCallback(() => setPaletteVersion((v) => v + 1), []);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [showCollision, setShowCollision] = useState<boolean>(false);
   const [showTerrain, setShowTerrain] = useState<boolean>(true);
@@ -112,6 +120,20 @@ export const App: React.FC = () => {
   const [shopView, setShopView] = useState<boolean>(false);
   // Palette view: preview/assign the engine CGB ramps to tiles + enemies.
   const [paletteView, setPaletteView] = useState<boolean>(false);
+  // Deep link: a ramp editor pre-opened in the Palettes view, requested
+  // by the ✎ jump in enemy/hero/combat views. Consumed once by
+  // PaletteManager, then cleared.
+  const [paletteEditRequest, setPaletteEditRequest] = useState<string | null>(null);
+  const openPaletteEditor = useCallback((ramp: string) => {
+    setShowCombatArt(false);
+    setEnemyView(null);
+    setHeroView(false);
+    setCardView(false);
+    setDialogueView(null);
+    setShopView(false);
+    setPaletteEditRequest(ramp);
+    setPaletteView(true);
+  }, []);
   // Battle view (screens/battle_hud.json + battle/<id>.json layout +
   // cards_skin.json) — the whole battle-time view, editable from here.
   const [cardView, setCardView] = useState<boolean>(false);
@@ -208,7 +230,17 @@ export const App: React.FC = () => {
     const res = await saveLevelToServer(level, previousId);
     if (res.success) {
       if (previousId) setCurrentLevelId(level.id);
-      setNotification({ message: `Successfully saved ${level.id} to ${res.path}!`, type: 'success' });
+      const tunnelBits: string[] = [];
+      if (res.tunnels_synced) tunnelBits.push(`${res.tunnels_synced} tunnel mouth(s) synced`);
+      if (res.tunnels_removed && res.tunnels_removed.length > 0) {
+        tunnelBits.push(`orphaned partner(s) removed: ${res.tunnels_removed.join(', ')}`);
+      }
+      if (res.tunnel_error) tunnelBits.push(`tunnel sync warning: ${res.tunnel_error}`);
+      setNotification({
+        message: `Successfully saved ${level.id} to ${res.path}!` +
+          (tunnelBits.length > 0 ? ` (${tunnelBits.join('; ')})` : ''),
+        type: res.tunnel_error ? 'info' : 'success',
+      });
       // Refresh the catalogue so newly created ids appear without a rebuild.
       try {
         const items = await fetchLevelList();
@@ -590,10 +622,35 @@ export const App: React.FC = () => {
           y: Math.min(orig.position.y + 1, level.height - 1)
         }
       };
+      // A deep copy clones properties.actor_id verbatim, which collides
+      // with the original (actor ids are globally unique; validate.py and
+      // the Validate modal both reject duplicates).  Mint a fresh id for
+      // the copy: one past the highest id used in this level or any other
+      // scene on disk.  Unset (0/missing) stays unset -- it cannot collide.
+      // entity_id is the shared enemy *type* and is correctly kept as-is.
+      const origAid = (orig.properties as any)?.actor_id;
+      let dupNote = '';
+      if (typeof origAid === 'number' && Number.isInteger(origAid) && origAid > 0) {
+        let peak = 0;
+        for (const o of level.objects) {
+          const a = (o.properties as any)?.actor_id;
+          if (typeof a === 'number' && Number.isInteger(a) && a > peak) peak = a;
+        }
+        for (const c of crossActorIds) {
+          if (c.id > peak) peak = c.id;
+        }
+        if (peak >= 65535) {
+          (copy.properties as any).actor_id = 0;
+          dupNote = ' (actor_id pool exhausted, reset to unset!)';
+        } else {
+          (copy.properties as any).actor_id = peak + 1;
+          dupNote = ` (actor_id ${peak + 1})`;
+        }
+      }
       const newObjs = [...level.objects, copy];
       pushState({ ...level, objects: newObjs });
       setSelectedEntityIndex(newObjs.length - 1);
-      setNotification({ message: `Duplicated object "${orig.id}"!`, type: 'success' });
+      setNotification({ message: `Duplicated object "${orig.id}"!${dupNote}`, type: 'success' });
     }
   };
 
@@ -678,6 +735,16 @@ export const App: React.FC = () => {
     const newExits = level.exits.filter((_, i) => i !== index);
     pushState({ ...level, exits: newExits });
     setSelectedEntityIndex(null);
+  };
+
+  // Server rewrote exits on disk (tunnel pairing via Return-exits panel):
+  // adopt them so the next save cannot overwrite the pairing.
+  const handleExitsSynced = (exits: LevelExit[]) => {
+    pushState({ ...level, exits });
+  };
+
+  const handleUpdateNeighbors = (neighbors: LevelNeighbors) => {
+    pushState({ ...level, neighbors: { ...normalizeNeighbors(level.neighbors), ...neighbors } });
   };
 
   // Region Operations
@@ -771,6 +838,40 @@ export const App: React.FC = () => {
       }
     });
     if (exitsOk) passed.push('Exits valid');
+
+    // Exit visibility: an exit keeps its cell art, so a trigger on plain
+    // ground is invisible in-game (mirror of collision.py is_portal_art).
+    // The validator warns the same; a solid gate is NOT blocked (the
+    // trigger fires before walkability).
+    const PORTAL_KEYWORDS = ['stair', 'door', 'gate', 'portal', 'exit', 'cave', 'warp', 'ladder'];
+    level.exits.forEach((ex, i) => {
+      if (ex.x < 0 || ex.x >= level.width || ex.y < 0 || ex.y >= level.height) return;
+      const tileId = level.grid[ex.y]?.[ex.x] ?? '';
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      const visible = !!tDef && (tDef.category === 'exit'
+        || PORTAL_KEYWORDS.some((k) => tileId.toLowerCase().includes(k)));
+      if (!visible) {
+        warnings.push(
+          `Exit #${i + 1} at (${ex.x},${ex.y}) sits on '${tileId || 'unpainted ground'}', ` +
+          `which does not read as a portal — the trigger is invisible in-game. ` +
+          `Paint the tileset's exit/stairs tile.`);
+      }
+    });
+
+    // Edge neighbors (mirror of validate.py: unknown targets fail loud).
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const knownIds = new Set(levelItems.filter((l) => l.category === 'levels').map((l) => l.id));
+      let neighborsOk = true;
+      for (const d of ['north', 'south', 'east', 'west'] as const) {
+        const t = (neighbors[d] || '').trim();
+        if (t && !knownIds.has(t)) {
+          errors.push(`Neighbor '${d}' target '${t}' is not a known level`);
+          neighborsOk = false;
+        }
+      }
+      if (neighborsOk) passed.push('Neighbors valid');
+    }
 
     // Objects
     let objectsOk = true;
@@ -879,15 +980,46 @@ export const App: React.FC = () => {
     });
     if (objectsOk) passed.push('Objects valid');
 
+    // Actor placement on walkable ground (mirror of validate.py): the
+    // engine resolves hostiles/static actors only after the walkability
+    // check, so an actor on solid art is inert/unreachable.  The editor
+    // grid models painted cells exactly; unpainted perimeter walls are
+    // the one case it cannot see (validator still catches those).
+    level.objects.forEach((obj) => {
+      const props = (obj.properties || {}) as Record<string, unknown>;
+      if (!props.entity_id) return;
+      // compile.py's default_actor_flags: explicit `flags` wins (an
+      // explicit [] stays empty), else default by object type.
+      const eff = (props.flags as string[] | undefined)
+        ?? (obj.type === 'enemy'
+          ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+          : ['BLOCKING', 'INTERACTABLE']);
+      const hostile = eff.includes('HOSTILE');
+      const blocking = eff.includes('BLOCKING');
+      if (!hostile && !blocking) return;
+      const p = obj.position || { x: -1, y: -1 };
+      const tileId = level.grid[p.y]?.[p.x];
+      const tDef = ts?.tiles.find((t) => t.id === tileId);
+      if (tDef && !tDef.walkable) {
+        warnings.push(
+          `Object '${obj.id}' (${hostile ? 'hostile' : 'blocking'}) at ` +
+          `(${p.x},${p.y}) is on non-walkable art: the engine cannot engage ` +
+          `or stand on it (move it to walkable ground).`);
+      }
+    });
+
     // Engine actor-slot caps (mirrors tools/level_compiler/validate.py):
     // actor_load_banked() spawns hostile rows into
     // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
     // g_static_actors (MAX_STATIC_ACTORS=10; src/world/actor.h); rows past
-    // the cap are silently dropped at runtime.  Enemies count as hostile
-    // even when flags are absent (compile.py defaults them HOSTILE).
-    const isHostile = (o: any) =>
-      o.type === 'enemy' ||
-      ((((o.properties || {}).flags as string[]) || []).includes('HOSTILE'));
+    // the cap are silently dropped at runtime.  Flags default by type
+    // (compile.py default_actor_flags) when `flags` is absent.
+    const effectiveFlags = (o: any): string[] =>
+      ((o.properties || {}).flags as string[] | undefined)
+      ?? (o.type === 'enemy'
+        ? ['HOSTILE', 'BLOCKING', 'INTERACTABLE']
+        : ['BLOCKING', 'INTERACTABLE']);
+    const isHostile = (o: any) => effectiveFlags(o).includes('HOSTILE');
     const hostileRows = level.objects
       .filter((o) => (o.properties || {}).entity_id && isHostile(o))
       .map((o) => o.id);
@@ -926,6 +1058,7 @@ export const App: React.FC = () => {
         connections: level.exits.map(
           (e) => `${e.direction?.toLowerCase() || 'exit'} -> ${e.target_scene} (spawn ${e.target_x},${e.target_y})`
         ),
+        neighbors: normalizeNeighbors(level.neighbors),
         regions: level.regions.map((r) => ({
           name: r.id,
           bounds: [r.bounds.x, r.bounds.y, r.bounds.width, r.bounds.height],
@@ -954,6 +1087,19 @@ export const App: React.FC = () => {
       });
     } else {
       lines.push('- None');
+    }
+    lines.push('\n## Edge neighbors');
+    {
+      const neighbors = normalizeNeighbors(level.neighbors);
+      const linked = (['north', 'south', 'east', 'west'] as const)
+        .filter((d) => (neighbors[d] || '').trim());
+      if (linked.length > 0) {
+        linked.forEach((d) => {
+          lines.push(`- ${d} edge → **${neighbors[d]}** (mirrored entry)`);
+        });
+      } else {
+        lines.push('- None');
+      }
     }
 
     lines.push('\n## Regions & Semantic Context');
@@ -1051,6 +1197,8 @@ export const App: React.FC = () => {
           onToggleGrid={() => setShowGrid(!showGrid)}
           showCollision={showCollision}
           onToggleCollision={() => setShowCollision(!showCollision)}
+          fidelity={fidelity}
+          onFidelityChange={setFidelity}
           onSave={handleSaveToServer}
           onDownload={() => downloadLevelJson(level)}
           onCompileRom={handleCompileRom}
@@ -1119,19 +1267,28 @@ export const App: React.FC = () => {
             <HeroManager
               key="hero"
               onOpenComposer={() => setShowCombatArt(true)}
+              onEditRamp={openPaletteEditor}
+              onChanged={bumpPaletteVersion}
             />
           ) : enemyView ? (
             <EnemyManager
               key={enemyView}
               initialId={enemyView}
               onOpenComposer={() => setShowCombatArt(true)}
+              onEditRamp={openPaletteEditor}
+              onChanged={bumpPaletteVersion}
             />
           ) : cardView ? (
             <BattleManager key="cards" />
           ) : shopView ? (
             <ShopManager key="shops" />
           ) : paletteView ? (
-            <PaletteManager key="palettes" />
+            <PaletteManager
+              key="palettes"
+              onPaletteSaved={bumpPaletteVersion}
+              editRequest={paletteEditRequest}
+              onEditRequestConsumed={() => setPaletteEditRequest(null)}
+            />
           ) : dialogueView !== null ? (
             <DialogueManager key="dialogues" initialId={dialogueView || undefined} />
           ) : (
@@ -1145,6 +1302,8 @@ export const App: React.FC = () => {
               // stored block form (pinned to the old tileset) is stale.
               onSelectTileset={(ts) => pushState({ ...level, tileset: ts, terrainDirty: true })}
               onSelectTile={setSelectedTileId}
+              fidelity={fidelity}
+              paletteVersion={paletteVersion}
             />
           </aside>
 
@@ -1156,6 +1315,8 @@ export const App: React.FC = () => {
               activeLayer={activeLayer}
               selectedTileId={selectedTileId}
               zoom={zoom}
+              fidelity={fidelity}
+              paletteVersion={paletteVersion}
               showGrid={showGrid}
               showCollision={showCollision}
               showTerrain={showTerrain}
@@ -1220,6 +1381,8 @@ export const App: React.FC = () => {
               onAddExit={handleAddExit}
               onUpdateExit={handleUpdateExit}
               onDeleteExit={handleDeleteExit}
+              onExitsSynced={handleExitsSynced}
+              onUpdateNeighbors={handleUpdateNeighbors}
               onAddObject={handleAddObject}
               onUpdateObject={handleUpdateObject}
               onDeleteObject={handleDeleteObject}
@@ -1354,7 +1517,10 @@ export const App: React.FC = () => {
         />
       )}
       {showCombatArt && (
-        <CombatArtStudio onClose={() => setShowCombatArt(false)} />
+        <CombatArtStudio
+          onClose={() => setShowCombatArt(false)}
+          onEditRamp={openPaletteEditor}
+        />
       )}
     </div>
   );

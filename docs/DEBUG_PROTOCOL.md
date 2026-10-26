@@ -484,6 +484,37 @@ dialogue + sets `MET_MAYOR`), `MAYOR_GREETING` (already met),
 `GUARD_AFTER_MAYOR` / `GUARD_GREETING` (Guard reacts differently once
 `MET_MAYOR`).
 
+### Dialogue YES/NO choice
+
+A dialogue row may carry `"choice": "yes_no"` (`screens/dialogue/*.json`,
+validated and compiled by `dialogue_compile.py` into
+`DialogueDefinition.choice`). On the dialogue's last page the choice UI is
+active: `UP`/`DOWN`/`LEFT`/`RIGHT` move the cursor between `YES` (default)
+and `NO`, `A`/`START` confirms (and then advances). The option row is the
+dialogue's last line and must read exactly `> YES   NO` (cursor cells at
+columns 0 and 7); only those cells repaint on a cursor move.
+
+Confirming emits:
+
+```text
+DIALOGUE_CHOICE
+  dialogue: HEAL_MAGE_ASK
+  choice: 0 (= YES) or 1 (= NO)
+```
+
+(`EVENT_DIALOGUE_CHOICE`; `data[0]` is the `DialogueId`, `data[1]` the
+choice index.) What an answer *means* is game content: the dialogue
+screen dispatches a game-owned banked body
+(`src/game/heal_mage_banked.c`, bank 8) that evaluates the pad edges,
+toggles/confirms, repaints the cursor, and reports an out code
+(`0` nothing, `1` toggled, `2` confirmed, `3` open the staged
+follow-up, `6` confirmed with a heal, `5` plain advance). The engine only acts on the
+code (and staged telemetry/jingle amounts as opaque data); it never
+branches on game ids. E.g. the Heal Mage heals + jingles + marks its
+one-shot used on `YES` and opens the ring-tip thanks, and opens the
+decline follow-up on `NO`.
+Scenarios drive the choice with `press` actions (`DOWN` to reach `NO`).
+
 ### Battle setup helpers
 
 `set_enemy_hp` (`DBG_ACT_SET_ENEMY_HP`) pins an enemy combatant's current HP
@@ -503,7 +534,7 @@ value, one-ring selection gate.  See `ring_one_ring_gate` /
 `ring_joker_heal`.
 
 `collection_add` (`DBG_ACT_ADD_ITEM`) grants cards to the collection by
-RAW id: `{"type": "collection_add", "card_id": 139, "quantity": 1}` --
+RAW id: `{"type": "collection_add", "card_id": 99, "quantity": 1}` --
 raw ids let scenarios reach derived loot-range CardIds that have no name
 in the host maps (docs/loot.md §34).
 
@@ -560,21 +591,41 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 
 * `QUEST_START` (interact MAYOR, quest NOT_STARTED) → MAYOR_INTRO dialogue,
   set MET_MAYOR, quest=ACTIVE.
-* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 3) → reward dialogue +
-  give SWORD + quest=COMPLETE (given exactly once).
+* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 5) → reward dialogue +
+  +1 AP (ENERGY_POOL) + quest=COMPLETE (given exactly once).
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
+
+The Lost Amulet side quest follows the same shape (`MERCHANT_QUEST` =
+0/1/2), with loot state split out: `STORY_FLAG_ID_AMULET_CHEST` records
+the chest opening (set atomically with the AMULET grant), so the chest
+sprite and chest jingle key off loot, never quest state:
+
+* `MERCHANT_INTRO` (interact MERCHANT, NOT_STARTED) → briefing dialogue,
+  quest=ACTIVE (tracked immediately).
+* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the amulet) →
+  briefing again (shop stays locked until delivery).
+* `AMULET_PICKUP` (interact AMULET, chest unopened) → FOUND dialogue +
+  item + quest=ACTIVE + chest flag.  Finding it before talking counts;
+  after delivery the flag stays set so it never refires.
+* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the amulet) →
+  thanks + 15g, amulet removed, quest=COMPLETE; the shop opens.
 
 Scenario actions: `equip_item` (mechanic) and the quick-screen UI (START →
 SELECT tab-focus → arrows → A) are both testable.
 
 ### Quick screen (tabbed)
 
-`SCREEN_ITEM` is the quick screen: tabs ITEM | EQUIP | QUEST | STATUS.
-START opens it in both the overworld and battle (player turn); SELECT in the
-overworld does nothing.  SELECT (or LEFT/RIGHT) cycles tabs directly with a
-`^` marking the active tab; B closes.  Hero HP/gold appear only on the
-STATUS tab; the QUEST tab lists ongoing quests and their progress.
+`SCREEN_ITEM` is the quick screen: tabs DECK | QUEST | HERO | GEM.
+START opens it in both the overworld and battle (player turn).
+LEFT/RIGHT switches tabs directly (RIGHT advances, LEFT goes back) with a
+`^` marking the active tab on row 1; B closes.  The HERO tab shows hero
+HP, battle AP pool, gold and total owned cards; the QUEST tab lists ongoing
+quests and their progress; SELECT on a quest row opens its detail page
+(giver, objective, progress).  The GEM tab lists owned gems (empty at
+start); A on a gem toggles its equipped bit manually (at most
+MAX_EQUIPPED_GEMS=3 equipped at once).  Owning alone does nothing --
+equipping unlocks the gem's skill (gem 0: short-straight combo tier).
 
 ### Menu screens (`MenuFrame`)
 
@@ -583,11 +634,14 @@ shared `MenuFrame` (`src/ui/menu.{h,c}`): a centered title plus a bounded
 content area.  Harness-relevant details:
 
 * Assert menu content with `screen_row` (row = absolute screen row).  The
-  quick screen layout is: row 0 centered title, row 2 tab labels, row 3 `^`
-  marker, content from row 5; the shop uses row 0 title, content from row 3.
+  quick screen layout is: row 0 tab labels (`DECK QUEST HERO GEM`), row 1 `^`
+  marker under the active tab, content from row 2 (DECK: FILTER/SORT row
+  at 2, one header row at 3 plus one card row each at 4-14; QUEST: tracked entries from row 3;
+  GEM: owned gems from row 3, `ON`/`OFF` equip state);
+  the shop uses row 0 title, content from row 3.
 * Titles and tab labels are direct literals (never a const pointer table),
-  so asserting row 0 / row 2 text proves the title/labels actually render.
-* Scenario actions for menus: `START` opens, `SELECT` cycles the tab,
+  so asserting row 0 text proves the labels actually render.
+* Scenario actions for menus: `START` opens, LEFT/RIGHT switches the tab,
   `B` closes; `use_item`/`equip_item` drive the underlying mechanics.
 
 ---
@@ -1086,6 +1140,8 @@ COLLISION
 ACTOR_COLLISION
 ACTOR_INTERACTION
 ACTOR_COMBAT_START
+ACTOR_STATE_CHANGE
+ACTOR_MOVED
 
 ENCOUNTER_STARTED
 BATTLE_STARTED
@@ -1116,7 +1172,7 @@ RNG_USED
 ## World Actors
 
 **World Actor** is the canonical term for any character-like entity that
-exists in an overworld scene (Mayor, Guard, Shopkeeper, Slime, Bat, Boss,
+exists in an overworld scene (Mayor, Guard, Merchant, Slime, Bat, Boss,
 Villager, Monster). Friendly NPCs and hostile enemies share one data-driven
 structure; hostility, interaction type, dialogue ID, and battle ID decide
 what happens when the player engages an actor.
@@ -1127,6 +1183,10 @@ Observe actors with:
 ACTOR_COLLISION      actor collided with the player (id, x, y)
 ACTOR_INTERACTION    actor engaged by the player (id, interaction)
 ACTOR_COMBAT_START   hostile actor engagement started combat (id)
+ACTOR_STATE_CHANGE   persistent actor lifecycle changed (actor id lo, id hi, new state)
+ACTOR_MOVED          patrol step committed (entity id, x, y, facing); split
+                     from ACTOR_STATE_CHANGE so one event id means one
+                     payload shape
 ```
 
 The SNAPSHOT `actors` section lists the active scene's actors with their
@@ -1421,7 +1481,7 @@ plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
 Fires whenever the battle's attacker/card target caret moves (UP/DOWN during
 the player select or defend phase, `battle_target_move`) and when the target
 auto-advances to the next living enemy after its current target is defeated
-(`battle_target_auto_advance`).  The target persists across turns — this
+(step-off-corpse inside the enemy-liveness check).  The target persists across turns — this
 event only fires when the *selection itself* changes, never on the reset of
 a new turn.  Single-enemy battles do not emit it (the caret is trapped on
 the only slot), and a wrap-back press that lands on the same living enemy
@@ -1440,8 +1500,9 @@ TARGET_CHANGED
 
 ```text
 LOOT_CARD_ADDED
-  data[0] = derived CardId (0x80..0xFF; decode via the §34.1 macros:
-            material = (id-0x80)>>5, effect = (id>>3)&3, weapon = id&7)
+  data[0] = derived CardId (0x60..0xFF; decode via the §34.1 macros:
+            material = (id-0x60)>>5, effect = (id>>3)&3, weapon = id&7;
+            material 0=wood 1=bronze 2=iron 3=steel 4=mythril)
   data[1] = collection count after the add
 
 CARD_SOLD (docs/loot.md §34.6)

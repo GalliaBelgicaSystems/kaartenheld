@@ -7,13 +7,17 @@
 #include "screen.h"
 #include "rpg/deck.h"
 
-/* Fixed-size capacity limits for the Game Boy.  No dynamic allocation. */
-#define MAX_PARTY_MEMBERS     4
+/* Fixed-size capacity limits for the Game Boy.  No dynamic allocation.
+ * Sized to what the game actually uses (single hero, gold-only currency,
+ * hero + weapon progression): every unused slot is WRAM + SRAM + checksum
+ * time on every save.  Grow a cap when a mechanic needs it, never in
+ * advance.  tools/walkthrough/state_reader.py mirrors these sizes. */
+#define MAX_PARTY_MEMBERS     1
 #define MAX_STATE_FLAGS       64
 #define MAX_STATE_VARIABLES   16
 #define MAX_PERSISTENT_ACTORS 16
-#define MAX_CURRENCIES        4
-#define MAX_PROGRESSION_TARGETS 8
+#define MAX_CURRENCIES        1
+#define MAX_PROGRESSION_TARGETS 2
 
 /* Generic, saveable identifiers.  The game layer decides what a given
  * ID means; the state layer only stores and retrieves it. */

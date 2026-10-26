@@ -87,11 +87,11 @@ and press **A** to talk.
 
 ### The Monster Hunt
 
-Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
+Talk to the **Mayor** in town. He asks you to defeat **5 monsters**.
 
-When you have beaten all three, go back to him and he will give you a
-wonderful prize: the **Iron Sword** card. Then he warns you that something
-dreadful waits at the castle.
+When you have beaten all five, go back to him and he will grant you
+wonderful power: **one extra AP** every round. Then he warns you that a
+darkness stirs at the castle.
 
 ![Your quests](manual_images/quests.png)
 
@@ -164,7 +164,7 @@ play up to **5** cards at once.
 
 ![Choosing cards](manual_images/detail-hand.png)
 
-Every card costs **Energy**. You get **6 Energy** each round, so spend it
+Every card costs **Energy**. You get **2 Energy** each round, so spend it
 carefully!
 
 ### Step 2 — Watch your attack
@@ -221,7 +221,9 @@ can!
 **Rings are clever helpers.** When you make a combo, a Ring can count as
 any *number* you need — super for making pairs or straights. But it is
 still a heal card, so it will **break** a "flush" (five cards of the same
-kind). And a Ring never hits the monster: it heals you instead.
+kind). And a Ring never hits the monster: any attack with a Ring in it
+heals you instead of dealing damage (the more the hand is worth, the
+more you heal).
 
 ---
 
@@ -229,13 +231,16 @@ kind). And a Ring never hits the monster: it heals you instead.
 
 - **Shields** only block. They do not hurt the monster, but they keep you
   safe — and they still count toward your combo.
-- **Rings** heal you, count as any number in a combo, or act as wild
-  shields on defence.
+- **Rings** heal you, count as any number in a combo, or act as
+  wildcards on defence (0 block themselves, but they complete your hand
+  and let over-block healing trigger).
 - **Poison** and **Burn** hurt a little every turn. Watch the little marks
   beside a fighter.
 - **Freeze** is nasty: a frozen fighter **misses a whole turn!**
 - When you are **poisoned**, a couple of your cards turn grey and cannot be
   used until the poison wears off.
+- Badly hurt between fights? Find the red-robed **Heal Mage** in town —
+  talking to him restores all your HP for free, with a happy little jingle.
 
 ---
 
@@ -243,17 +248,16 @@ kind). And a Ring never hits the monster: it heals you instead.
 
 Win battles to earn **gold**. You start with **20 gold**.
 
-Talk to the **Shopkeeper** in town to spend it:
+Talk to the **Lost Merchant** in town to spend it — once you return
+his stolen amulet from the Forest, his shop opens for business:
 
 ![The shop](manual_images/shop.png)
 
 ![The shop up close](manual_images/detail-shop.png)
 
-Press **A** to buy and **B** to leave. The Shopkeeper sells a **Healing
-Ring** — your best friend when you are hurt.
-
-Later, the **Lost Merchant** opens a bigger shop with an **Iron Sword** and
-a powerful **Mythril Bow**.
+Press **A** to buy and **B** to leave. The Merchant sells a powerful
+**Mythril Bow** and an **Iron Ring** — your best friend when you are
+hurt.
 
 ---
 
@@ -308,9 +312,9 @@ ending. The land is saved, thanks to you!
 - **Only Shields block.** Save your shields for defence.
 - **Rings are flexible!** Use one to finish a number combo, or save it to
   heal.
-- **Watch your Energy.** Six points a round goes fast.
+- **Watch your Energy.** Two points a round goes fast.
 - **Do not waste your timer.** Decide, then press **SELECT**.
-- **Beat the 3 monsters early** to win the Iron Sword.
+- **Beat the 5 monsters early** to win an extra AP.
 - **Sell cards you do not need** and buy a Healing Ring.
 - **Save often** at the Wizard — you never know what is around the corner!
 
@@ -320,14 +324,14 @@ ending. The land is saved, thanks to you!
 
 | | |
 |---|---|
-| Your health | **10 HP** |
+| Your health | **15 HP** |
 | Starting gold | **20** |
 | Cards in hand | **5** |
-| Energy each round | **6** |
+| Energy each round | **2** |
 | Time to decide | **20 seconds** |
 | Starter deck | **12 cards** |
 | Biggest deck | **20 cards** |
 | Collection limit | **12 different cards** |
-| Main quest | Defeat **3 monsters** for the Mayor |
+| Main quest | Defeat **5 monsters** for the Mayor |
 
 Now go, hero — the cards are in your hands!

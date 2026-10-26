@@ -2,7 +2,6 @@
  "name": "mayor_encounter",
  "test": true,
  "description": "Approach Mayor NPC in Town, trigger dialogue overlay, wait 120 frames without input, assert dialogue active & line 0 unchanged",
- "scenario_id": "MAYOR_ENCOUNTER",
  "actions": [
   {
    "type": "press",

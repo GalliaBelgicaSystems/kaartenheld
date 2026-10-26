@@ -1,0 +1,9 @@
+{
+  "$schema": "./schema/ap_icons.schema.json",
+  "id": "ap_icons",
+  "label": "Battle Top-Left OAM AP-Cost HUD",
+  "cells": {
+    "ap_1": "sprites2",
+    "ap_2": "sprites2"
+  }
+}

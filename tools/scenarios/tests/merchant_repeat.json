@@ -2,7 +2,6 @@
  "name": "merchant_repeat",
  "test": true,
  "description": "Once the amulet is delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",
- "scenario_id": "TOWN_BOOT",
  "actions": [
   {
    "type": "interact",

@@ -2,7 +2,6 @@
  "name": "battle_hud_animation_phase",
  "test": true,
  "description": "Asserts battle HUD text during PLAYER_ANIM: the centered banner row (0) shows the action, and the description row (16) stays blank without a card description",
- "scenario_id": "FIRST_ENCOUNTER",
  "actions": [
   {
    "type": "press",
@@ -18,7 +17,71 @@
   },
   {
    "type": "wait",
-   "frames": 5
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   },
   {
    "type": "press",
@@ -37,7 +100,7 @@
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "ATTACK SLIME"
+   "contains": "ATTACK CARL"
   },
   {
    "type": "screen_row_not_contains",
@@ -62,6 +125,9 @@
    "y": 8,
    "facing": "DOWN"
   },
-  "seed": 3000
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  }
  }
 }

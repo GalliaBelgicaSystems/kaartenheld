@@ -2,7 +2,6 @@
  "name": "gate_to_south_field",
  "test": true,
  "description": "Walk south on Field into the south exit gate to transition to South Field",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

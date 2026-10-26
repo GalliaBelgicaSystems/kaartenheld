@@ -9,13 +9,25 @@ typedef enum {
     BATTLE_CARD_TYPE_SHIELD = 1, /* SH: Defense / block */
     BATTLE_CARD_TYPE_BOW = 2,    /* BO: Ranged physical attack */
     BATTLE_CARD_TYPE_HEAL = 3,   /* HE: Restore HP (rings) */
-    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: 1 dmg, poison rider (POISON DAGGER) */
+    BATTLE_CARD_TYPE_DAGGER = 4  /* DA: low material band, poison rider;
+                                    * the only weapon playable on defense:
+                                    * a daggers-only selection counterattacks
+                                    * the telegraphed swing (battle.c) */
 } BattleCardType;
 
 /* Sentinel for an empty hand slot (played cards stay empty until the turn-
  * start draw refills them).  Must not collide with any BattleCardType; kept
  * as a #define because SDCC enums are signed 8-bit (0x80+ would wrap). */
 #define BATTLE_CARD_TYPE_EMPTY 0xFF
+
+/* Health-rider marker (docs/loot.md §34.1): every healing card shows a
+ * green '+' OAM icon (font glyph tile, boot-resident in the OAM block via
+ * the ui_init font duplicate; OBJ slot 3 = sprites11 greens, never
+ * reprogrammed after boot).  The shared blob is full (100-125) and
+ * 126-127 are reserved, so no blob tile exists for a fourth rider.
+ * Display-only: keyed off the heal role, never a status. */
+#define RIDER_TILE_HEALTH 11
+#define RIDER_OBJ_HEALTH  3
 
 typedef struct {
     uint8_t type;           /* BattleCardType */
@@ -39,12 +51,25 @@ typedef struct {
     uint8_t ring;
 } Card;
 
-/* Get one-line short description for card type */
-const char *card_get_description(uint8_t type);
-
-/* Packed description table geometry shared by card.c (fixed wrapper) and
- * card_content.c (bank-2 blob).  Stride = longest text + NUL, padded. */
-#define CARD_DESC_STRIDE 18
-#define CARD_DESC_TYPES  5
+/* Shared field-wise Card copy for banked bodies: SDCC lowers
+ * whole-struct assignment (and memcpy) to the RAM-resident __memcpy
+ * helper, which is unreachable while a switchable ROM bank is mapped
+ * (AGENTS.md §52.11.1; enforced by tools/check_banked_copies.sh).  This
+ * is deliberately a macro, not a static helper: an unused static would
+ * still be emitted into every TU that includes this header and breaks
+ * tiles_content.c's assembly output.  The size trap breaks the build if
+ * Card ever grows, so a new field can never silently go uncopied. */
+#define CARD_COPY_FIELDS(dst, src) \
+    do { \
+        typedef char card_copy_fields_ok[sizeof(Card) == 8 ? 1 : -1]; \
+        (dst)->type = (src)->type; \
+        (dst)->value = (src)->value; \
+        (dst)->uses_remaining = (src)->uses_remaining; \
+        (dst)->cost = (src)->cost; \
+        (dst)->effect = (src)->effect; \
+        (dst)->status_id = (src)->status_id; \
+        (dst)->status_chance = (src)->status_chance; \
+        (dst)->ring = (src)->ring; \
+    } while (0)
 
 #endif /* CARD_H */

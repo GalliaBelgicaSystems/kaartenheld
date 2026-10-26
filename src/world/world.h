@@ -17,11 +17,14 @@ typedef enum {
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
- * the scene and scrolls it with the scroll offset; the 40-col cap
- * exercises the tilemap ring-buffer wrap (the 32x32 BG tilemap is 32
- * wide). */
-#define WORLD_WIDTH  40
-#define WORLD_HEIGHT 24
+ * the scene and scrolls it with the scroll offset.  The caps match the
+ * renderer + hardware limits: ui_draw_world_map() draws a 32x18 window
+ * once at map load and the 32x32 BG tilemap ring is 32 wide, so a wider
+ * or taller scene would wrap/clobber VRAM instead of displaying.  The
+ * 32-wide stride also keeps every map[y][x] lookup a shift, not a
+ * multiply, on the multiply-less SM83. */
+#define WORLD_WIDTH  32
+#define WORLD_HEIGHT 18
 
 /* Overworld camera view window in tiles.  The camera (World.scroll_x/y)
  * keeps the player inside this window, scrolling as the player crosses its
@@ -31,12 +34,24 @@ typedef enum {
 
 /* Maximum concurrent hostile actors in a scene (compile-time constant). */
 #define MAX_WORLD_ACTORS 4
+
+/* Pursuit-alert display length (frames at 60 fps) after entering a map
+ * with live chasers.  Set by the bank-8 marks refresh on entry (it
+ * self-detects the map change; world_load_map only spawns the actors),
+ * drained per frame by the same refresh; the "!" OAM marks show while
+ * it runs. */
+#define ALERT_TTL_FRAMES 150
 #define NO_ACTOR_INDEX   0xFF
 
 /* Frames to walk a single tile (1 px/frame of an 8px tile).  Movement is
  * animated: a tile commit happens MOVE_FRAMES frames after the move starts,
  * at which point PLAYER_MOVED / exits / encounters are resolved. */
 #define MOVE_FRAMES 8
+
+/* Post-flee encounter grace, in frames (2 seconds at 60fps).  Fleeing
+ * leaves the hero next to a live hostile, so without this the next step
+ * (or patrol tick) would restart the same fight instantly. */
+#define WORLD_FLEE_GRACE_FRAMES 120
 
 typedef enum {
     MOVE_STATE_IDLE   = 0,
@@ -49,7 +64,8 @@ typedef enum {
     MOVE_OUTCOME_NONE      = 0,
     MOVE_OUTCOME_NORMAL    = 1,
     MOVE_OUTCOME_EXIT      = 2,
-    MOVE_OUTCOME_ENCOUNTER = 3
+    MOVE_OUTCOME_ENCOUNTER = 3,
+    MOVE_OUTCOME_EDGE      = 4
 } MoveOutcome;
 
 typedef enum {
@@ -78,8 +94,8 @@ typedef enum {
     TILE_STUMP_TR           = 5,
     TILE_STUMP_BL           = 6,
     TILE_STUMP_BR           = 7,
-    /* Forest Landscape tiles: 48 tiles in sheet scan order (0..47),
-     * mapping 1:1 to the 48-tile forest VRAM block (RPG_TILE_BASE_WORLD). */
+    /* Forest Landscape tiles: 64 tiles in sheet scan order (0..63),
+     * mapping 1:1 to the first 64 forest VRAM slots (RPG_TILE_BASE_WORLD). */
     TILE_FOREST_00 = 8,
     TILE_FOREST_01 = 9,
     TILE_FOREST_02 = 10,
@@ -128,171 +144,252 @@ typedef enum {
     TILE_FOREST_45 = 53,
     TILE_FOREST_46 = 54,
     TILE_FOREST_47 = 55,
+    TILE_FOREST_48 = 56,
+    TILE_FOREST_49 = 57,
+    TILE_FOREST_50 = 58,
+    TILE_FOREST_51 = 59,
+    TILE_FOREST_52 = 60,
+    TILE_FOREST_53 = 61,
+    TILE_FOREST_54 = 62,
+    TILE_FOREST_55 = 63,
+    TILE_FOREST_56 = 64,
+    TILE_FOREST_57 = 65,
+    TILE_FOREST_58 = 66,
+    TILE_FOREST_59 = 67,
+    TILE_FOREST_60 = 68,
+    TILE_FOREST_61 = 69,
+    TILE_FOREST_62 = 70,
+    TILE_FOREST_63 = 71,
+    /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
+     * 0xFF is the empty-cell sentinel and the enum must stay <= 0xFE
+     * (g_tiletype_fits_u8; 254 kept clear as buffer), so these live in
+     * the free 136..140 gap, NOT contiguously after 71 (72+ belongs to
+     * castle/village).  The renderer maps them with (value - 72), not
+     * (value - TILE_FOREST_00): see ui_draw_world_cell.
+     * value = 72 + VRAM slot.  (141..145 went to the castle exit +
+     * extension, 251..253 to the rest of the castle extension.) */
+    TILE_FOREST_64 = 136,
+    TILE_FOREST_65 = 137,
+    TILE_FOREST_66 = 138,
+    TILE_FOREST_67 = 139,
+    TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 27 tiles in sheet scan order (0..26),
-     * mapping 1:1 to the 27-tile castle VRAM block (RPG_TILE_BASE_WORLD). */
-    TILE_CASTLE_00 = 56,
-    TILE_CASTLE_01 = 57,
-    TILE_CASTLE_02 = 58,
-    TILE_CASTLE_03 = 59,
-    TILE_CASTLE_04 = 60,
-    TILE_CASTLE_05 = 61,
-    TILE_CASTLE_06 = 62,
-    TILE_CASTLE_07 = 63,
-    TILE_CASTLE_08 = 64,
-    TILE_CASTLE_09 = 65,
-    TILE_CASTLE_10 = 66,
-    TILE_CASTLE_11 = 67,
-    TILE_CASTLE_12 = 68,
-    TILE_CASTLE_13 = 69,
-    TILE_CASTLE_14 = 70,
-    TILE_CASTLE_15 = 71,
+    /* Castle Landscape tiles: 36 tiles in sheet scan order (0..35),
+     * mapping 1:1 to the 36 castle VRAM slots (RPG_TILE_BASE_WORLD):
+     * TILE_CASTLE_<i> renders VRAM block slot i.  Suffixes stay scan
+     * indices, NOT values.
+     *
+     * The base set 00..07 keeps 72..79; the exit keeps value 141 (gap
+     * between FOREST_68 and the legacy desolate block).  Everything else
+     * takes a contiguous freed block 142..156: the gap values plus
+     * evicted legacy desolate WALL_00..WALL_10 (unreferenced by every
+     * level; the legacy engine ranges in ui.c now start at WALL_11).
+     * 251..253 (top of the u8 range, still <= 0xFE per g_tiletype_fits_u8)
+     * stay with the chandelier/vase row as before.  Values 184..186
+     * (ex-red-square/MERCHANT/STAIRCASE) are free again.  Both empty
+     * cells share one tile id.  ui.c maps the 141..156 block through a
+     * 16-byte slot table (one range check instead of a branch ladder);
+     * the generated walk/glyph tables absorb the values with no hand
+     * edits. */
+    TILE_CASTLE_00 = 72,
+    TILE_CASTLE_01 = 73,
+    TILE_CASTLE_02 = 74,
+    TILE_CASTLE_03 = 75,
+    TILE_CASTLE_04 = 76,
+    TILE_CASTLE_05 = 77,
+    TILE_CASTLE_06 = 78,
+    TILE_CASTLE_07 = 79,
+    TILE_CASTLE_08 = 142,
+    TILE_CASTLE_09 = 80,
+    TILE_CASTLE_10 = 81,
+    TILE_CASTLE_11 = 82,
+    TILE_CASTLE_12 = 83,
+    TILE_CASTLE_13 = 84,
+    TILE_CASTLE_14 = 85,
+    TILE_CASTLE_15 = 86,
+    TILE_CASTLE_16 = 87,
+    TILE_CASTLE_17 = 143,
+    TILE_CASTLE_18 = 144,
+    TILE_CASTLE_19 = 145,
+    TILE_CASTLE_20 = 251,
+    TILE_CASTLE_21 = 252,
+    TILE_CASTLE_22 = 253,
+    TILE_CASTLE_23 = 146,
+    TILE_CASTLE_24 = 147,
+    TILE_CASTLE_25 = 148,
+    TILE_CASTLE_26 = 141,
+    TILE_CASTLE_27 = 149,
+    TILE_CASTLE_28 = 150,
+    TILE_CASTLE_29 = 151,
+    TILE_CASTLE_30 = 152,
+    TILE_CASTLE_31 = 153,
+    TILE_CASTLE_32 = 154,
+    TILE_CASTLE_33 = 155,
+    TILE_CASTLE_34 = 156,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
-     * TILE_VILLAGE_<i> renders VRAM block i. value = 83 + i. */
-    TILE_VILLAGE_00 = 83,
-    TILE_VILLAGE_01 = 84,
-    TILE_VILLAGE_02 = 85,
-    TILE_VILLAGE_03 = 86,
-    TILE_VILLAGE_04 = 87,
-    TILE_VILLAGE_05 = 88,
-    TILE_VILLAGE_06 = 89,
-    TILE_VILLAGE_07 = 90,
-    TILE_VILLAGE_08 = 91,
-    TILE_VILLAGE_09 = 92,
-    TILE_VILLAGE_10 = 93,
-    TILE_VILLAGE_11 = 94,
-    TILE_VILLAGE_12 = 95,
-    TILE_VILLAGE_13 = 96,
-    TILE_VILLAGE_14 = 97,
-    TILE_VILLAGE_15 = 98,
-    TILE_VILLAGE_16 = 99,
-    TILE_VILLAGE_17 = 100,
-    TILE_VILLAGE_18 = 101,
-    TILE_VILLAGE_19 = 102,
-    TILE_VILLAGE_20 = 103,
-    TILE_VILLAGE_21 = 104,
-    TILE_VILLAGE_22 = 105,
-    TILE_VILLAGE_23 = 106,
-    TILE_VILLAGE_24 = 107,
-    TILE_VILLAGE_25 = 108,
-    TILE_VILLAGE_26 = 109,
-    TILE_VILLAGE_27 = 110,
-    TILE_VILLAGE_28 = 111,
-    TILE_VILLAGE_29 = 112,
-    TILE_VILLAGE_30 = 113,
-    TILE_VILLAGE_31 = 114,
-    TILE_VILLAGE_32 = 115,
-    TILE_VILLAGE_33 = 116,
-    TILE_VILLAGE_34 = 117,
-    TILE_VILLAGE_35 = 118,
-    TILE_VILLAGE_36 = 119,
-    TILE_VILLAGE_37 = 120,
-    TILE_VILLAGE_38 = 121,
-    TILE_VILLAGE_39 = 122,
-    TILE_VILLAGE_40 = 123,
-    TILE_VILLAGE_41 = 124,
-    TILE_VILLAGE_42 = 125,
-    TILE_VILLAGE_43 = 126,
-    TILE_VILLAGE_44 = 127,
-    TILE_VILLAGE_45 = 128,
-    TILE_VILLAGE_46 = 129,
-    TILE_VILLAGE_47 = 130,
+     * TILE_VILLAGE_<i> renders VRAM block i. value = 88 + i. */
+    TILE_VILLAGE_00 = 88,
+    TILE_VILLAGE_01 = 89,
+    TILE_VILLAGE_02 = 90,
+    TILE_VILLAGE_03 = 91,
+    TILE_VILLAGE_04 = 92,
+    TILE_VILLAGE_05 = 93,
+    TILE_VILLAGE_06 = 94,
+    TILE_VILLAGE_07 = 95,
+    TILE_VILLAGE_08 = 96,
+    TILE_VILLAGE_09 = 97,
+    TILE_VILLAGE_10 = 98,
+    TILE_VILLAGE_11 = 99,
+    TILE_VILLAGE_12 = 100,
+    TILE_VILLAGE_13 = 101,
+    TILE_VILLAGE_14 = 102,
+    TILE_VILLAGE_15 = 103,
+    TILE_VILLAGE_16 = 104,
+    TILE_VILLAGE_17 = 105,
+    TILE_VILLAGE_18 = 106,
+    TILE_VILLAGE_19 = 107,
+    TILE_VILLAGE_20 = 108,
+    TILE_VILLAGE_21 = 109,
+    TILE_VILLAGE_22 = 110,
+    TILE_VILLAGE_23 = 111,
+    TILE_VILLAGE_24 = 112,
+    TILE_VILLAGE_25 = 113,
+    TILE_VILLAGE_26 = 114,
+    TILE_VILLAGE_27 = 115,
+    TILE_VILLAGE_28 = 116,
+    TILE_VILLAGE_29 = 117,
+    TILE_VILLAGE_30 = 118,
+    TILE_VILLAGE_31 = 119,
+    TILE_VILLAGE_32 = 120,
+    TILE_VILLAGE_33 = 121,
+    TILE_VILLAGE_34 = 122,
+    TILE_VILLAGE_35 = 123,
+    TILE_VILLAGE_36 = 124,
+    TILE_VILLAGE_37 = 125,
+    TILE_VILLAGE_38 = 126,
+    TILE_VILLAGE_39 = 127,
+    TILE_VILLAGE_40 = 128,
+    TILE_VILLAGE_41 = 129,
+    TILE_VILLAGE_42 = 130,
+    TILE_VILLAGE_43 = 131,
+    TILE_VILLAGE_44 = 132,
+    TILE_VILLAGE_45 = 133,
+    TILE_VILLAGE_46 = 134,
+    TILE_VILLAGE_47 = 135,
     /* Desolate landscape */
-    TILE_DESOLATE_WALL_00    = 141,
-    TILE_DESOLATE_WALL_01    = 142,
-    TILE_DESOLATE_WALL_02    = 143,
-    TILE_DESOLATE_WALL_03    = 144,
-    TILE_DESOLATE_WALL_04    = 145,
-    TILE_DESOLATE_WALL_05    = 146,
-    TILE_DESOLATE_WALL_06    = 147,
-    TILE_DESOLATE_WALL_07    = 148,
-    TILE_DESOLATE_WALL_08    = 149,
-    TILE_DESOLATE_WALL_09    = 150,
-    TILE_DESOLATE_WALL_10    = 151,
-    TILE_DESOLATE_WALL_11    = 152,
-    TILE_DESOLATE_TREE_TL    = 153,
-    TILE_DESOLATE_TREE_TR    = 154,
-    TILE_DESOLATE_ROCK_TL    = 155,
-    TILE_DESOLATE_ROCK_TR    = 156,
-    TILE_DESOLATE_WALL_12    = 157,
-    TILE_DESOLATE_WALL_13    = 158,
-    TILE_DESOLATE_WALL_14    = 159,
-    TILE_DESOLATE_WALL_15    = 160,
-    TILE_DESOLATE_WALL_16    = 161,
-    TILE_DESOLATE_WALL_17    = 162,
-    TILE_DESOLATE_FLOOR_00   = 163,
-    TILE_DESOLATE_FLOOR_01   = 164,
-    TILE_DESOLATE_FLOOR_02   = 165,
-    TILE_DESOLATE_FLOOR_03   = 166,
-    TILE_DESOLATE_WALL_18    = 167,
-    TILE_DESOLATE_WALL_19    = 168,
-    TILE_DESOLATE_TREE_BL    = 169,
-    TILE_DESOLATE_TREE_BR    = 170,
-    TILE_DESOLATE_ROCK_BL    = 171,
-    TILE_DESOLATE_ROCK_BR    = 172,
-    TILE_DESOLATE_FLOOR_PLAIN = 173,
-    TILE_DESOLATE_HERO_01    = 174,
-    TILE_DESOLATE_HERO_02    = 175,
-    TILE_DESOLATE_KOBOLD_01  = 176,
-    TILE_DESOLATE_KOBOLD_02  = 177,
-    TILE_DESOLATE_FIRE_01    = 178,
-    TILE_DESOLATE_FIRE_02    = 179,
-    TILE_DESOLATE_MERCHANT   = 180,
-    TILE_DESOLATE_STAIRCASE  = 181,
-    /* Desolate Landscape (level-editor) tiles: 48 tiles in sheet scan order,
-     * mapping 1:1 to the 48-tile desolate VRAM block (RPG_TILE_BASE_DESOLATE).
-     * TILE_DESOLATE_LANDSCAPE_<i> renders VRAM block i. value = 182 + i. */
-    TILE_DESOLATE_LANDSCAPE_00 = 182,
-    TILE_DESOLATE_LANDSCAPE_01 = 183,
-    TILE_DESOLATE_LANDSCAPE_02 = 184,
-    TILE_DESOLATE_LANDSCAPE_03 = 185,
-    TILE_DESOLATE_LANDSCAPE_04 = 186,
-    TILE_DESOLATE_LANDSCAPE_05 = 187,
-    TILE_DESOLATE_LANDSCAPE_06 = 188,
-    TILE_DESOLATE_LANDSCAPE_07 = 189,
-    TILE_DESOLATE_LANDSCAPE_08 = 190,
-    TILE_DESOLATE_LANDSCAPE_09 = 191,
-    TILE_DESOLATE_LANDSCAPE_10 = 192,
-    TILE_DESOLATE_LANDSCAPE_11 = 193,
-    TILE_DESOLATE_LANDSCAPE_12 = 194,
-    TILE_DESOLATE_LANDSCAPE_13 = 195,
-    TILE_DESOLATE_LANDSCAPE_14 = 196,
-    TILE_DESOLATE_LANDSCAPE_15 = 197,
-    TILE_DESOLATE_LANDSCAPE_16 = 198,
-    TILE_DESOLATE_LANDSCAPE_17 = 199,
-    TILE_DESOLATE_LANDSCAPE_18 = 200,
-    TILE_DESOLATE_LANDSCAPE_19 = 201,
-    TILE_DESOLATE_LANDSCAPE_20 = 202,
-    TILE_DESOLATE_LANDSCAPE_21 = 203,
-    TILE_DESOLATE_LANDSCAPE_22 = 204,
-    TILE_DESOLATE_LANDSCAPE_23 = 205,
-    TILE_DESOLATE_LANDSCAPE_24 = 206,
-    TILE_DESOLATE_LANDSCAPE_25 = 207,
-    TILE_DESOLATE_LANDSCAPE_26 = 208,
-    TILE_DESOLATE_LANDSCAPE_27 = 209,
-    TILE_DESOLATE_LANDSCAPE_28 = 210,
-    TILE_DESOLATE_LANDSCAPE_29 = 211,
-    TILE_DESOLATE_LANDSCAPE_30 = 212,
-    TILE_DESOLATE_LANDSCAPE_31 = 213,
-    TILE_DESOLATE_LANDSCAPE_32 = 214,
-    TILE_DESOLATE_LANDSCAPE_33 = 215,
-    TILE_DESOLATE_LANDSCAPE_34 = 216,
-    TILE_DESOLATE_LANDSCAPE_35 = 217,
-    TILE_DESOLATE_LANDSCAPE_36 = 218,
-    TILE_DESOLATE_LANDSCAPE_37 = 219,
-    TILE_DESOLATE_LANDSCAPE_38 = 220,
-    TILE_DESOLATE_LANDSCAPE_39 = 221,
-    TILE_DESOLATE_LANDSCAPE_40 = 222,
-    TILE_DESOLATE_LANDSCAPE_41 = 223,
-    TILE_DESOLATE_LANDSCAPE_42 = 224,
-    TILE_DESOLATE_LANDSCAPE_43 = 225,
-    TILE_DESOLATE_LANDSCAPE_44 = 226,
-    TILE_DESOLATE_LANDSCAPE_45 = 227,
-    TILE_DESOLATE_LANDSCAPE_46 = 228,
-    TILE_DESOLATE_LANDSCAPE_47 = 229
+    /* Values 146..156 (ex-TILE_DESOLATE_WALL_00..WALL_10) are evicted:
+     * reused as the TILE_CASTLE_23..34 extension block above.
+     * Unreferenced by every level; the legacy engine ranges in ui.c
+     * now start at TILE_DESOLATE_WALL_11. */
+    TILE_DESOLATE_WALL_11    = 157,
+    TILE_DESOLATE_TREE_TL    = 158,
+    TILE_DESOLATE_TREE_TR    = 159,
+    TILE_DESOLATE_ROCK_TL    = 160,
+    TILE_DESOLATE_ROCK_TR    = 161,
+    TILE_DESOLATE_WALL_12    = 162,
+    TILE_DESOLATE_WALL_13    = 163,
+    TILE_DESOLATE_WALL_14    = 164,
+    TILE_DESOLATE_WALL_15    = 165,
+    TILE_DESOLATE_WALL_16    = 166,
+    TILE_DESOLATE_WALL_17    = 167,
+    TILE_DESOLATE_FLOOR_00   = 168,
+    TILE_DESOLATE_FLOOR_01   = 169,
+    TILE_DESOLATE_FLOOR_02   = 170,
+    TILE_DESOLATE_FLOOR_03   = 171,
+    TILE_DESOLATE_WALL_18    = 172,
+    TILE_DESOLATE_WALL_19    = 173,
+    TILE_DESOLATE_TREE_BL    = 174,
+    TILE_DESOLATE_TREE_BR    = 175,
+    TILE_DESOLATE_ROCK_BL    = 176,
+    TILE_DESOLATE_ROCK_BR    = 177,
+    TILE_DESOLATE_FLOOR_PLAIN = 178,
+    TILE_DESOLATE_HERO_01    = 179,
+    TILE_DESOLATE_HERO_02    = 180,
+    TILE_DESOLATE_KOBOLD_01  = 181,
+    TILE_DESOLATE_KOBOLD_02  = 182,
+    TILE_DESOLATE_FIRE_01    = 183,
+    /* Value 184 (ex-TILE_DESOLATE_FIRE_02) is evicted: reused as
+     * TILE_CASTLE_36 above.  The legacy engine ranges now end at
+     * TILE_DESOLATE_FIRE_01. */
+    /* Values 185..186 (ex-TILE_DESOLATE_MERCHANT/_STAIRCASE) are evicted:
+     * reused as TILE_CASTLE_27/28 above.  The legacy engine ranges now
+     * end at TILE_DESOLATE_FIRE_02. */
+    /* Desolate Landscape (level-editor) tiles: 64 tiles in sheet scan order,
+     * mapping 1:1 to the 64-tile desolate VRAM block (RPG_TILE_BASE_DESOLATE).
+     * TILE_DESOLATE_LANDSCAPE_<i> renders VRAM block i. value = 187 + i. */
+    TILE_DESOLATE_LANDSCAPE_00 = 187,
+    TILE_DESOLATE_LANDSCAPE_01 = 188,
+    TILE_DESOLATE_LANDSCAPE_02 = 189,
+    TILE_DESOLATE_LANDSCAPE_03 = 190,
+    TILE_DESOLATE_LANDSCAPE_04 = 191,
+    TILE_DESOLATE_LANDSCAPE_05 = 192,
+    TILE_DESOLATE_LANDSCAPE_06 = 193,
+    TILE_DESOLATE_LANDSCAPE_07 = 194,
+    TILE_DESOLATE_LANDSCAPE_08 = 195,
+    TILE_DESOLATE_LANDSCAPE_09 = 196,
+    TILE_DESOLATE_LANDSCAPE_10 = 197,
+    TILE_DESOLATE_LANDSCAPE_11 = 198,
+    TILE_DESOLATE_LANDSCAPE_12 = 199,
+    TILE_DESOLATE_LANDSCAPE_13 = 200,
+    TILE_DESOLATE_LANDSCAPE_14 = 201,
+    TILE_DESOLATE_LANDSCAPE_15 = 202,
+    TILE_DESOLATE_LANDSCAPE_16 = 203,
+    TILE_DESOLATE_LANDSCAPE_17 = 204,
+    TILE_DESOLATE_LANDSCAPE_18 = 205,
+    TILE_DESOLATE_LANDSCAPE_19 = 206,
+    TILE_DESOLATE_LANDSCAPE_20 = 207,
+    TILE_DESOLATE_LANDSCAPE_21 = 208,
+    TILE_DESOLATE_LANDSCAPE_22 = 209,
+    TILE_DESOLATE_LANDSCAPE_23 = 210,
+    TILE_DESOLATE_LANDSCAPE_24 = 211,
+    TILE_DESOLATE_LANDSCAPE_25 = 212,
+    TILE_DESOLATE_LANDSCAPE_26 = 213,
+    TILE_DESOLATE_LANDSCAPE_27 = 214,
+    TILE_DESOLATE_LANDSCAPE_28 = 215,
+    TILE_DESOLATE_LANDSCAPE_29 = 216,
+    TILE_DESOLATE_LANDSCAPE_30 = 217,
+    TILE_DESOLATE_LANDSCAPE_31 = 218,
+    TILE_DESOLATE_LANDSCAPE_32 = 219,
+    TILE_DESOLATE_LANDSCAPE_33 = 220,
+    TILE_DESOLATE_LANDSCAPE_34 = 221,
+    TILE_DESOLATE_LANDSCAPE_35 = 222,
+    TILE_DESOLATE_LANDSCAPE_36 = 223,
+    TILE_DESOLATE_LANDSCAPE_37 = 224,
+    TILE_DESOLATE_LANDSCAPE_38 = 225,
+    TILE_DESOLATE_LANDSCAPE_39 = 226,
+    TILE_DESOLATE_LANDSCAPE_40 = 227,
+    TILE_DESOLATE_LANDSCAPE_41 = 228,
+    TILE_DESOLATE_LANDSCAPE_42 = 229,
+    TILE_DESOLATE_LANDSCAPE_43 = 230,
+    TILE_DESOLATE_LANDSCAPE_44 = 231,
+    TILE_DESOLATE_LANDSCAPE_45 = 232,
+    TILE_DESOLATE_LANDSCAPE_46 = 233,
+    TILE_DESOLATE_LANDSCAPE_47 = 234,
+    TILE_DESOLATE_LANDSCAPE_48 = 235,
+    TILE_DESOLATE_LANDSCAPE_49 = 236,
+    TILE_DESOLATE_LANDSCAPE_50 = 237,
+    TILE_DESOLATE_LANDSCAPE_51 = 238,
+    TILE_DESOLATE_LANDSCAPE_52 = 239,
+    TILE_DESOLATE_LANDSCAPE_53 = 240,
+    TILE_DESOLATE_LANDSCAPE_54 = 241,
+    TILE_DESOLATE_LANDSCAPE_55 = 242,
+    TILE_DESOLATE_LANDSCAPE_56 = 243,
+    TILE_DESOLATE_LANDSCAPE_57 = 244,
+    TILE_DESOLATE_LANDSCAPE_58 = 245,
+    TILE_DESOLATE_LANDSCAPE_59 = 246,
+    TILE_DESOLATE_LANDSCAPE_60 = 247,
+    TILE_DESOLATE_LANDSCAPE_61 = 248,
+    TILE_DESOLATE_LANDSCAPE_62 = 249,
+    TILE_DESOLATE_LANDSCAPE_63 = 250,
 } TileType;
+
+/* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
+ * (empty/unset cell), so the enum must never reach it -- only 254 is
+ * still clear past the castle extension (251..253), and it stays clear
+ * as buffer.  Enforced by g_tiletype_fits_u8 in world.c (kept out of
+ * this header so the 2 bytes are emitted once). */
 
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32
@@ -391,13 +488,46 @@ typedef struct {
      * map-0 line could poison once and misrender a whole map as generic
      * fallback art.  Runtime only, never persistent. */
     WorldTilesetKind tileset_kind;
+
+    /* Edge-crossing target (MapId) for MOVE_OUTCOME_EDGE moves, staged by
+     * world_try_begin_move and consumed by world_update_move.  Runtime
+     * only, never persistent. */
+    uint8_t move_param;
+    /* Edge-crossing direction (NbrEdge) for MOVE_OUTCOME_EDGE moves: the
+     * commit path must mirror the decide path exactly (corners belong to
+     * two edges), so the direction is staged, never recomputed. */
+    uint8_t move_dir;
+    /* Point-exit destination, staged by world_try_begin_move on the
+     * MOVE_OUTCOME_EXIT path and consumed at commit.  Kept separate from
+     * move_target_x/y (which stays the STEPPED gate tile so the walk
+     * animation is a normal one-tile step, not a slide toward the far
+     * destination).  Runtime only, never persistent. */
+    uint8_t move_exit_x;
+    uint8_t move_exit_y;
+
+    /* Post-flee encounter grace, in frames (WORLD_FLEE_GRACE_FRAMES at
+     * flee time, ticked down once per overworld frame, cleared on scene
+     * load).  While nonzero, both encounter sources -- stepping toward
+     * a hostile and a patrol stepping onto the hero -- resolve as plain
+     * bumps instead of fights, so no ENCOUNTER_STARTED fires.  Appended
+     * at the END of World (never mid-struct).  Runtime only, never
+     * persistent. */
+    uint8_t encounter_cooldown;
 } World;
+
+/* Neighbor edge indices (n,s,e,w), shared by the move decision and the
+ * banked edge-spawn body. */
+typedef enum {
+    NBR_N = 0,
+    NBR_S = 1,
+    NBR_E = 2,
+    NBR_W = 3
+} NbrEdge;
 
 void world_init(World *w, const GameState *state);
 void world_load_map(World *w, MapId map_id, const GameState *state);
 void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
                       const GameState *state);
-bool world_is_walkable(const World *w, uint8_t x, uint8_t y);
 
 /* Overworld camera: keep the player centred in the WORLD_VIEW_W x
  * WORLD_VIEW_H view, clamped at the scene bounds (scenes smaller than the
@@ -424,15 +554,8 @@ WorldMoveResult world_update_actors(World *w);
 
 /* Renderer pixel position (tile*8 plus the sub-tile walk progress) of the
  * player sprite.  Valid whenever the player is not animating a move. */
-/* Bank-3 pixel-interpolation body (src/world/px_banked.c); dispatched by
- * the four world_*_px/py wrappers. */
-void world_px_banked(void);
-
 uint8_t world_player_px(const World *w);
 uint8_t world_player_py(const World *w);
-
-uint8_t world_actor_px(const WorldActorRuntime *a);
-uint8_t world_actor_py(const WorldActorRuntime *a);
 
 void world_on_battle_end(Game *g, bool victory);
 void world_patrol_slot_banked(void);
@@ -441,7 +564,5 @@ void world_patrol_slot_banked(void);
  * the hero ran (written back into the runtime actor); no reward, defeat or
  * quest progress is applied. */
 void world_on_battle_fled(Game *g);
-/* Bank-2 body (src/world/fled_banked.c) dispatched by the wrapper. */
-void world_on_battle_fled_banked(void);
 
 #endif /* WORLD_H */

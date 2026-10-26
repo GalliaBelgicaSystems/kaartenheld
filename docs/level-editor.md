@@ -1086,3 +1086,186 @@ The editor writes it; the compiler and every host tool derive from it.
   engine-wired guard.
 * `make registry-check` locks the contract (versioning, never-reuse,
   registry/file agreement) against a temp root.
+
+# Phase 20 — Invisible exits + whole-edge neighbors (the "ocean")
+
+Placing an exit no longer stamps a staircase/ladder tile. Exits are
+**invisible triggers**: the gate cell keeps whatever terrain art is
+painted under it (doors, elevators, stairs the author paints by hand),
+and stepping onto it teleports via the exit table. The trigger fires
+before terrain walkability, so a solid-looking gate is not blocked — but
+it must actually *look* like a portal, or the player cannot see it.
+`open_ground_blocks` opens unpainted gate cells to default ground, so an
+unpainted exit works but is invisible. `validate.py` (and the editor's
+Validate view) warns when an exit sits on art that does not read as a
+portal (no `category: exit`, no stair/door/gate/portal/exit/cave/warp/
+ladder in the tile id); the shipped gates paint the tileset's stairs/exit
+tile. Point exits are also checked cross-file: the destination
+`target_x/target_y` must be walkable or the build fails (stuck spawn),
+while visibility is a non-fatal warning.
+
+Whole map borders can link to other maps through `neighbors`:
+
+```json
+"neighbors": { "north": "forest", "south": "south_field",
+               "east": "town", "west": "" }
+```
+
+Stepping onto a non-wall cell of a linked border crosses to the neighbor
+scene with a mirrored entry spawn (one cell inside the opposite edge,
+clamped for size mismatches). Walls stay walls: a wall on a linked edge
+blocks, everything else crosses. A point exit on the same cell wins over
+the edge rule. Links should be reciprocal (walk back); one-sided links
+warn unless a point exit covers the return.
+
+### Crossing safety (paired openings, hard compile error)
+
+Because the landing cell is *inside* the neighbour, a border opening only
+works when the matching entry cell in the neighbour is walkable. A link
+therefore needs a corridor on both sides:
+
+* the source's linked border cells (the cells you step onto), and
+* the target's entry line one cell inside the opposite edge (where you
+  land), across the non-corner span.
+
+`open_ground_blocks` opens *unpainted* border cells; the shipped levels
+also carve the target entry lines explicitly so the whole edge is
+traversable (block levels subtract the entry row/column from their wall
+blocks; grid levels get the default floor). This is what stops a mapper
+from digging a wall just inside an opening and trapping the player.
+
+`tools/level_compiler/collision.py` holds the one implementation
+(`mirrored_entry` + `edge_link_report`). It is enforced as a **hard
+compile error** — `compile.py` refuses to build a trapping pairing — and
+surfaced by `validate.py` and the editor's inline Edge-links panel
+(`/api/neighbor-check`). It rejects:
+
+* a walkable crossing whose mirrored landing cell is a wall (player stuck
+  inside a wall);
+* a declared reciprocal return whose edge has no walkable cell (player
+  trapped in the neighbour — e.g. walking into a fully walled map);
+* a reciprocal return that itself lands in a wall.
+
+## Contract
+
+* `levels/schema/level.schema.json` gains optional `neighbors`
+  (north/south/east/west scene names, empty = no link).
+* The compiler emits four neighbor bytes per `SceneDefinition` row
+  (`MAP_NONE` = no link) plus open-ground rows for unpainted gates and
+  linked edges, so the ROM fill loop stays branch-free. Unknown targets
+  fail loudly, like exit targets.
+* The ROM resolves a step as point-exit trigger first, then linked-edge
+  crossing, then a normal walk (fixed-bank budget: the edge predicate
+  and mirrored spawn run banked; see AGENTS.md 55.5).
+* The editor paints linked borders with green `⇄ <scene>` strips, edits
+  the four links in the Exits tab, rewires them on rename, and clears
+  them on delete (same as exits). `validate.py` checks targets,
+  reciprocity, gate art, and crossing safety; the Exits tab's Edge-links
+  panel reports the same per-link status inline (via
+  `/api/neighbor-check`, using the editor's unsaved level data).
+* The walkthrough planner (`tools/walkthrough/route.py`) routes over
+  exits and edges identically, and only across crossings whose landing
+  cell is walkable; the content sweep visits every level through them.
+* `collision.py` is the shared collision/neighbor helper module for the
+  compiler, validator, and planner (single source of truth; avoids the
+  compile↔validate import cycle).
+* Harness fixtures (`tools/scenarios/fixtures/`) carry no neighbor links
+  (frozen fixtures stay decoupled from the corridor geometry); edge
+  coverage lives in the walkthrough, trigger coverage in the harness
+  scenarios.
+
+Supersedes Phase 16's exit-art bullet: gates no longer render
+per-tileset stairs art and the ROM never stamps `TILE_EXIT`; the
+`exit: true` manifest markings remain as decor-tile metadata only.
+
+# Phase 21 — Two-way tunnels (linked exit pairs)
+
+Point exits are one-way rows: going back needs a second exit in the
+target scene. A **tunnel** is that return pair made first-class: two
+exits sharing one `tunnel` id, one in each of two levels, with mutual
+targets and each landing on the other's gate (spawn-tracks-gate). The
+ROM format is unchanged — two plain `SceneExit` rows — so there is no
+engine, bank, or memmap impact; the id lives only in JSON + tooling.
+
+```json
+"exits": [
+  { "x": 12, "y": 11, "target_scene": "south_field",
+    "target_x": 12, "target_y": 11, "direction": "SOUTH",
+    "tile_char": "<", "tunnel": "tunnel_mountain_pass_south_field" }
+]
+```
+
+No `tunnel` field = one-way exit, exactly as before. Tunnels are
+opt-in per exit, never forced.
+
+## Contract
+
+* `levels/schema/level.schema.json` gains optional exit `tunnel`
+  (lowercase letter-first id, same shape as scene ids, enforced by a
+  `"pattern"` so JSON-schema-aware tools catch bad ids early; the
+  Python/TS checks remain the hard gate).
+* `tools/level_compiler/collision.py` owns the pairing check
+  (`tunnel_report`/`tunnel_issues`, mirroring `edge_link_report`): each
+  id must have exactly two mouths in different levels, mutual targets,
+  and spawn-tracks-gate landings. Violations are a **hard compile
+  error** (`compile.py` aborts) and a `validate.py` error — a dangling
+  mouth strands the player with no way back, so it can never ship.
+  The editor's `tunnelStatus()` mirrors these invariants; the shared
+  corpus (`tools/level_compiler/tests/tunnel_parity_cases.json` +
+  `test_tunnel_parity.py` and `tools/level_editor/tests/tunnel_parity.mjs`)
+  guards both sides from drifting.
+* `decompile.py` preserves `tunnel` ids across the JSON ⇄ C roundtrip
+  (the C rows cannot hold them); a retargeted mouth loses its id and
+  fails loudly at the next compile instead of silently unlinking.
+* The editor keeps pairs in sync with **full auto-sync**:
+  - the Exits tab's “Return exits & tunnels” panel shows 🔗 paired /
+    ⚠ broken per exit, with one-click Create / Create tunnel /
+    Make tunnel / Unlink;
+  - every save syncs partner mouths (target back at the saver, landing
+    on the saver's gate) and removes orphaned rows of deleted mouths
+    (reported in the save notification, never silent), reading the
+    levels directory once per save;
+  - “Make tunnel” adopts an existing return coordinate-aware: with
+    several untunneled returns to the source level only the one already
+    landing on the new mouth's gate is adopted, otherwise a fresh
+    partner is created (a mouth carrying a different tunnel id is never
+    absorbed);
+  - unlinking keeps both rows as independent one-way exits; deleting a
+    mouth removes its partner on save (with confirm);
+  - tunnel mouths render teal ⇄ on the canvas vs orange one-ways.
+* Rename/delete rewire preserves tunnel ids (rename) and clears
+  partners of deleted levels (delete), same as exits.
+* Whole-edge `neighbors` links are out of scope — tunnels cover point
+  exits only.
+
+# Phase 22 — Overflow terrain banks (world bank is full)
+
+Release bank 5 (scene table + tile/atlas/OAM content) sits at ~144 B
+headroom, so detailed new levels no longer fit it. Scenes whose terrain
+exceeds the budget keep their `s_<id>_terrain` arrays in a roomier bank
+(`OVERFLOW_TERRAIN_BANK` in `tools/level_compiler/compile.py`: desolate
+→ 6, village → 7) and record it in `SceneDefinition.terrain_bank`
+(appended last, offsets never shift). `scene_load_tiles()` (fixed bank)
+dispatches a per-bank stamp body (`terrain_stamp_b<N>_banked`, emitted
+into the same file as its arrays) that reads its own-bank tables
+directly. Rules that bit and must not be re-broken:
+* **Never switch banks inside a banked body.** Code executing from
+  switchable ROM unmaps its own instruction stream the moment it
+  selects another bank (the WRAM copy trampoline exists for exactly
+  this reason). The home body skips foreign terrain; only fixed-bank
+  code dispatches.
+* **No calls while switched — including compiler-generated ones.**
+  `s_terrain_window = tbl[i]` lowers to `call ___memcpy`, unmapped
+  while switched: CPU runs away with the LCD off (PyBoy's frame wait
+  then never returns — 99.7% CPU, zero log output). Scalar moves only.
+  Verify with `lcc -S` (zero `call`s in switched bodies).
+* **Keep new WRAM statics tiny.** An 800 B staging buffer flipped
+  hostile spawning under the harness with zero execution difference
+  (BSS-layout sensitivity, §52.19 family); the 5 B window did not.
+* Stamp bodies omit bounds clamps deliberately: `validate.py` fails
+  loudly on out-of-bounds terrain, so committed content always fits
+  (the home body keeps its own clamps).
+* If `OVERFLOW_TERRAIN_BANK` gains a bank: add the terrain file to
+  `Makefile` `CONTENT_SRCS`, extend the `terrain_stamp_b<N>` dispatch
+  in `scene.c`, and cover `decompile.py` (it already parses split
+  files); `make memmap` guards all bank budgets.

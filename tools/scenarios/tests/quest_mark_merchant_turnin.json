@@ -1,0 +1,38 @@
+{
+ "name": "quest_mark_merchant_turnin",
+ "test": true,
+ "description": "Quest marker ? returns over the merchant while holding the amulet with the quest ACTIVE (delivery ready): entry 30 shows QUESTION_TILE (127).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2,
+   "MERCHANT_QUEST": 1
+  },
+  "inventory": {
+   "AMULET": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 127
+  }
+ ]
+}

@@ -42,8 +42,8 @@ typedef struct Game {
     uint32_t frame;
     uint8_t game_over_choice;  /* 0 = YES, 1 = NO on the continue prompt */
     uint8_t item_menu_index;   /* cursor into the active tab's list (0 =
-                                  FILTER/SORT row on the CARDS tab) */
-    uint8_t item_menu_tab;     /* 0 = CARDS, 1 = QUEST */
+                                   FILTER/SORT row on the DECK tab) */
+    uint8_t item_menu_tab;     /* 0 = DECK, 1 = QUEST, 2 = HERO, 3 = GEM */
     uint8_t item_menu_scroll;  /* first visible card position of the list */
     uint8_t item_menu_filter;  /* 0xFF = ALL, else a CardType value */
     uint8_t item_menu_sort;    /* 0 = none, 1 = type, 2 = power, 3 = cost,
@@ -74,6 +74,5 @@ void game_restart(Game *g);
 void game_update(Game *g);
 void game_render(Game *g);
 void game_render_reset(Game *g);
-void game_render_reset_banked(void);
 
 #endif /* GAME_H */

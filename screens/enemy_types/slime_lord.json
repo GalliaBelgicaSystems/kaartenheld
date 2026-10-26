@@ -8,11 +8,11 @@
     "width": 2,
     "height": 2,
     "cells": ["boss_ow_tl", "boss_ow_tr", "boss_ow_bl", "boss_ow_br"],
-    "palette": 1
+    "palette": "sprites2"
   },
   "name": "L.of Slimes",
-  "hp": 50,
-  "max_hp": 50,
+  "hp": 99,
+  "max_hp": 99,
   "battle_id": "BATTLE_SLIME_LORD",
   "ai_types": ["AI_NONE"],
   "gold_reward": 50,

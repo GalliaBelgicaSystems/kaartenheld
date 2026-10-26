@@ -1,0 +1,68 @@
+{
+ "name": "ring_floor_palette",
+ "test": true,
+ "description": "A finite-use ring's floor remaining-uses counter rides the weapon (wood) palette like the bow's: HE1 ring with 1 use shows HEX on the semantic row and palette 5 on both the X row and the floor row (bare box span would leave the counter paper-white)",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7003,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 1
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 0
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "HEX"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 13,
+   "col": 1,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 14,
+   "col": 1,
+   "expected": 5
+  }
+ ]
+}

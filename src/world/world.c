@@ -1,5 +1,4 @@
 #include "world.h"
-#include "tile_walk.h"
 #include "game.h"
 #include "telemetry.h"
 #include "actor.h"
@@ -14,6 +13,16 @@
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
+
+/* TileType headroom (see the note on the enum in world.h): ids live in
+ * uint8_t map arrays with 0xFF as the empty-cell sentinel.  A size-0
+ * array is a hard compile error (same pattern as g_input_bit_layout_ok
+ * in input.c). */
+static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0];
+
+/* Bank-3 movement bodies (src/world/edge_banked.c). */
+void world_gate_check_banked(void);
+void world_edge_spawn_banked(void);
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -32,10 +41,13 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
      * path reads it per cell without touching the static cache. */
     w->tileset_kind = def ? def->tileset : WORLD_TILESET_FOREST;
     w->encounter_actor_index = NO_ACTOR_INDEX;
+    w->encounter_cooldown = 0;
     w->map_changed = false;
     w->move_state = MOVE_STATE_IDLE;
     w->move_progress = 0;
     w->move_outcome = MOVE_OUTCOME_NONE;
+    w->move_param = MAP_NONE;
+    w->move_dir = NBR_N;
     /* The scene owns its music (SceneDefinition.music): switch to it on
      * every map load so gate crossings boot the right area track. */
     audio_play_music(def ? def->music : MUSIC_OVERWORLD);
@@ -76,7 +88,7 @@ void world_init(World *w, const GameState *state)
 {
     if (!w) return;
     /* Runtime player position seeds from the canonical state (which
-     * game_new_game fills from levels/field.json player.spawn, the single
+     * game_new_game fills from levels/wake_grove.json player.spawn, the single
      * source of truth).  Never hardcode coordinates here: scene_sync_from_world
      * copies the runtime position back into GameState every frame, so a
      * hardcoded value would silently overwrite the authored spawn. */
@@ -104,27 +116,14 @@ void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
     telemetry_emit(EVENT_MAP_CHANGED, (uint8_t)old_map, (uint8_t)map_id, spawn_x, spawn_y);
 }
 
-bool world_is_walkable(const World *w, uint8_t x, uint8_t y)
-{
-    uint8_t tile;
-    if (!w || x >= w->width || y >= w->height) return false;
-    tile = w->map[y][x];
-    if (tile == TILE_FLOOR || tile == TILE_EXIT) return true;
-    if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) return true;
-    if (tile == TILE_DESOLATE_FLOOR_PLAIN || tile == TILE_DESOLATE_STAIRCASE) return true;
-    /* Desolate-landscape floors come from the generated traits table
-     * (tools/level_compiler/generate_tiles.py from the editor manifest),
-     * so manifest edits can never silently diverge from ROM collision. */
-    if (tile_landscape_walkable(tile)) return true;
-    return false;
-}
-
 WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
                                      const GameState *state)
 {
     uint8_t target_x, target_y;
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
+    const SceneDefinition *def;
+    const SceneExit *ex;
 
     if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
     (void)state;
@@ -137,27 +136,77 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     target_x = (uint8_t)(w->player.position.x + dx);
     target_y = (uint8_t)(w->player.position.y + dy);
 
-    if (!world_is_walkable(w, target_x, target_y)) {
-        return MOVE_RESULT_BLOCKED;
+    def = scene_definition_for_map(w->map_id);
+
+    /* Invisible point-exit triggers fire regardless of the art painted
+     * under them, so the fixed-side table lookup comes first.  The STEPPED
+     * gate tile stays the move target (a normal one-tile walk); the far
+     * destination is staged separately. */
+    ex = scene_exit_at(def, target_x, target_y);
+    if (ex) {
+        w->move_outcome = MOVE_OUTCOME_EXIT;
+        w->move_param = (uint8_t)ex->target_scene;
+        w->move_target_x = target_x;
+        w->move_target_y = target_y;
+        w->move_exit_x = ex->spawn_x;
+        w->move_exit_y = ex->spawn_y;
+    } else {
+        /* Walkability + whole-edge decide run banked (bank 2 body writes
+         * outcome/param/dir/target straight through the staged World
+         * pointer).  A missing def stages NULL, which the body treats as
+         * no links after resetting the outcome to NONE.  Unwalkable
+         * ground blocks HERE, before actors resolve, so a hostile or
+         * static actor on solid art stays inert -- the legacy
+         * walkability-first gate (AGENTS item: actor checks must not
+         * precede walkability). */
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&world_gate_check_banked;
+        g_bk_ptr_a = (void *)w;
+        g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
+        g_bk_byte_a = target_x;
+        g_bk_byte_b = target_y;
+        banked_call_run();
+        if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            return MOVE_RESULT_BLOCKED;
+        }
     }
 
+    /* Hostile/static actors resolve only on walkable (or trigger) cells
+     * and win over the exit trigger staged above.  Lesson tile (Carl):
+     * the tutor hostile never encounters directly; the co-located
+     * dialogue static teaches first (bump/facing paths in
+     * interaction.c) and closing its dialogue auto-starts the
+     * stashed spar (dialogue_screen.c).  Co-location with a dialogue
+     * static is enforced by validate.py (a lone tutor would be stepped
+     * onto). */
     hostile_slot = actor_find_hostile_slot(w, target_x, target_y);
-    if (hostile_slot != NO_ACTOR_INDEX) {
+    if (hostile_slot != NO_ACTOR_INDEX &&
+        w->actors[hostile_slot].ai_type != AI_TUTOR) {
+        if (w->encounter_cooldown != 0) {
+            /* Flee grace: bump into the hostile instead of fighting it.
+             * Same COLLISION telemetry shape as the commit path below,
+             * but no encounter is staged and none fires. */
+            telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,
+                           (uint8_t)w->actors[hostile_slot].id, 0);
+            return MOVE_RESULT_BLOCKED;
+        }
         w->move_outcome = MOVE_OUTCOME_ENCOUNTER;
         w->encounter_actor_index = hostile_slot;
+        w->move_target_x = target_x;
+        w->move_target_y = target_y;
     } else {
+        /* No stash here: the BLOCKED bump below lands in
+         * interaction_try_bump, which syncs encounter_actor_index from
+         * the same tile when its dialogue opens (and the A-key facing
+         * path does the same).  One writer, no stale slots. */
         actor = actor_find_at(w, target_x, target_y);
         if (actor) {
             telemetry_emit(EVENT_ACTOR_COLLISION, target_x, target_y,
                            (uint8_t)actor->id, 0);
             return MOVE_RESULT_BLOCKED;
         }
-        w->move_outcome = (w->map[target_y][target_x] == TILE_EXIT) ? MOVE_OUTCOME_EXIT
-                                                                    : MOVE_OUTCOME_NORMAL;
     }
 
-    w->move_target_x = target_x;
-    w->move_target_y = target_y;
     w->move_progress = 0;
     w->move_state = MOVE_STATE_MOVING;
     return MOVE_RESULT_MOVED;
@@ -178,18 +227,41 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
         w->move_progress = 0;
         w->move_state = MOVE_STATE_IDLE;
 
-        if (w->move_outcome == MOVE_OUTCOME_EXIT) {
-            /* Generic scene exit: the scene definition owns destination +
-             * spawn.  Like the legacy instant move, the player never commits
-             * PLAYER_MOVED onto the gate; the map changes instead. */
-            const SceneDefinition *def = scene_definition_for_map(w->map_id);
-            const SceneExit *ex = scene_exit_at(def, target_x, target_y);
-            if (ex) {
-                world_change_map(w, scene_id_to_map(ex->target_scene),
-                                 ex->spawn_x, ex->spawn_y, state);
-                return MOVE_RESULT_MAP_CHANGED;
+        if (w->move_outcome == MOVE_OUTCOME_EXIT || w->move_outcome == MOVE_OUTCOME_EDGE) {
+            /* Scene change: point-exit spawns were staged by the decide
+             * path; whole-edge entry spawns run banked (bank 2 body,
+             * fixed-bank budget) from the staged cross-coordinate, edge
+             * dimension and direction. The player never commits
+             * PLAYER_MOVED onto the gate; the map changes. */
+            SceneId target_scene = (SceneId)w->move_param;
+            uint8_t sx = w->move_target_x;
+            uint8_t sy = w->move_target_y;
+            if (w->move_outcome == MOVE_OUTCOME_EDGE) {
+                /* Mirrored entry spawn runs banked (bank 2 body,
+                 * fixed-bank budget): cross-coordinate from the staged
+                 * target, both neighbor dims from a table fetch (the
+                 * predicate body cannot read tables). */
+                const SceneDefinition *nd = scene_definition_for_map((MapId)w->move_param);
+                if (!nd) {
+                    return MOVE_RESULT_BLOCKED;
+                }
+                g_bk_call_bank = 2;
+                g_bk_call_target = (uint16_t)&world_edge_spawn_banked;
+                g_bk_byte_a = (w->move_dir < 2) ? w->move_target_x : w->move_target_y;
+                g_bk_byte_b = nd->width;
+                g_bk_byte_c = nd->height;
+                g_bk_byte_d = w->move_dir;
+                banked_call_run();
+                sx = g_bk_byte_a;
+                sy = g_bk_byte_b;
+            } else {
+                /* Point exit: the explicit destination staged at decide
+                 * time (move_target is the stepped gate tile). */
+                sx = w->move_exit_x;
+                sy = w->move_exit_y;
             }
-            return MOVE_RESULT_BLOCKED;
+            world_change_map(w, scene_id_to_map(target_scene), sx, sy, state);
+            return MOVE_RESULT_MAP_CHANGED;
         } else if (w->move_outcome == MOVE_OUTCOME_ENCOUNTER) {
             /* The player does not occupy the enemy tile; battle starts from
              * the pre-move position (matches the legacy instant behavior).
@@ -213,38 +285,33 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
     return MOVE_RESULT_MOVED;
 }
 
-/* Pixel helpers run banked (src/world/px_banked.c) -- pure arithmetic,
- * staged pointers, results through the shared byte below. */
-uint8_t g_px_result;
-
-static uint8_t px_dispatch(uint8_t variant, const void *p)
+/* Sub-tile pixel interpolation: tile*8 plus the in-flight walk progress.
+ * Inline (not banked): this runs 2-4x per overworld frame and the fixed
+ * bank has room again. */
+static uint8_t px_calc_interp(uint8_t base, uint8_t target, uint8_t progress)
 {
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&world_px_banked;
-    g_bk_byte_a = variant;
-    g_bk_ptr_a = (void *)p;
-    banked_call_run();
-    return g_px_result;
+    uint8_t px = (uint8_t)(base << 3);
+    if (target > base) return (uint8_t)(px + progress);
+    if (target < base) return (uint8_t)(px - progress);
+    return px;
 }
 
 uint8_t world_player_px(const World *w)
 {
-    return w ? px_dispatch(0, w) : 0;
+    if (!w) return 0;
+    return (w->move_state == MOVE_STATE_MOVING) ?
+        px_calc_interp(w->player.position.x, w->move_target_x,
+                       w->move_progress) :
+        (uint8_t)(w->player.position.x << 3);
 }
 
 uint8_t world_player_py(const World *w)
 {
-    return w ? px_dispatch(1, w) : 0;
-}
-
-uint8_t world_actor_px(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(2, a) : 0;
-}
-
-uint8_t world_actor_py(const WorldActorRuntime *a)
-{
-    return a ? px_dispatch(3, a) : 0;
+    if (!w) return 0;
+    return (w->move_state == MOVE_STATE_MOVING) ?
+        px_calc_interp(w->player.position.y, w->move_target_y,
+                       w->move_progress) :
+        (uint8_t)(w->player.position.y << 3);
 }
 
 void world_on_battle_end(Game *g, bool victory)
@@ -280,9 +347,11 @@ void world_on_battle_end(Game *g, bool victory)
          * CARD_NONE = collection previously full (no room to grant). */
         if (g_loot_id != CARD_NONE) {
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
+#ifdef DEBUG_BUILD
                 telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
                                deck_collection_count(&g->state.cards,
                                                      g_loot_id), 0, 0);
+#endif
             } else {
                 g_loot_id = CARD_NONE;
             }
@@ -292,16 +361,27 @@ void world_on_battle_end(Game *g, bool victory)
 
 void world_on_battle_fled(Game *g)
 {
-    /* Body runs banked (src/world/fled_banked.c) through the WRAM
-     * trampoline -- pure WRAM reads/writes, no staging args needed. */
+    World *w;
+    uint8_t idx;
     if (!g) return;
-    g_bk_call_bank = 3;
-    g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
-    g_bk_ptr_a = (void *)g;
-    banked_call_run();
+    w = &g->world;
+
+    /* The enemy stays on the map at the HP it had when the hero ran:
+     * no reward, defeat, or quest progress.  Inline (not banked): pure
+     * WRAM reads/writes, and the fixed bank has room again. */
+    idx = w->encounter_actor_index;
+    w->encounter_actor_index = NO_ACTOR_INDEX;
+    /* Flee grace (WORLD_FLEE_GRACE_FRAMES): the hero exits next to a live
+     * hostile, so encounters stay suppressed for ~2s while they escape. */
+    w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
+    if (idx == NO_ACTOR_INDEX) return;
+
+    if (w->actors[idx].active) {
+        w->actors[idx].hp = g->battle.enemies[0].hp;
+    }
 }
 
-uint8_t g_patrol_outcome = 0;
+uint8_t g_patrol_outcome;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_patrol_evt[4];
 World *g_patrol_world;
 uint8_t g_patrol_slot;
@@ -313,23 +393,38 @@ WorldMoveResult world_update_actors(World *w)
     if (!w) return MOVE_RESULT_NONE;
 
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
+        /* Inactive slots have no patrol state (the banked body returns
+         * immediately for them): skip the trampoline round-trip.  Peaceful
+         * maps (town, cleared scenes) run zero patrol dispatches/frame. */
+        if (!w->actors[slot].active) continue;
         g_patrol_outcome = 0;
         g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;
         g_patrol_slot = slot;
+#ifdef DEBUG_BUILD
         g_bk_call_bank = 5;
+#else
+        g_bk_call_bank = 3;
+#endif
         g_bk_call_target = (uint16_t)&world_patrol_slot_banked;
         banked_call_run();
 
         if (g_patrol_outcome == 1) {
-            telemetry_emit(EVENT_ACTOR_STATE_CHANGE, g_patrol_evt[0],
+            /* Step commit: movement schema (entity, x, y, facing) — NOT
+             * the lifecycle schema of EVENT_ACTOR_STATE_CHANGE. */
+            telemetry_emit(EVENT_ACTOR_MOVED, g_patrol_evt[0],
                            g_patrol_evt[1], g_patrol_evt[2], g_patrol_evt[3]);
         } else if (g_patrol_outcome == 2) {
+            /* Patrol stepped onto the hero: a bump either way, a fight
+             * only off grace (the banked body returns before committing
+             * the step, so the enemy holds position in both cases). */
             telemetry_emit(EVENT_ACTOR_COLLISION, g_patrol_evt[0],
                            g_patrol_evt[1], g_patrol_evt[2], 0);
-            telemetry_emit(EVENT_ENCOUNTER_STARTED, g_patrol_evt[2],
-                           0, 0, 0);
-            return MOVE_RESULT_ENCOUNTER;
+            if (w->encounter_cooldown == 0) {
+                telemetry_emit(EVENT_ENCOUNTER_STARTED, g_patrol_evt[2],
+                               0, 0, 0);
+                return MOVE_RESULT_ENCOUNTER;
+            }
         }
     }
 

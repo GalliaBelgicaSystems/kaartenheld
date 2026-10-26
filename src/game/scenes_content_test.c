@@ -13,7 +13,8 @@ const SceneExit g_all_exits[] = {
     { 12,  0, 10, 10, SCENE_TEST_CASTLE,   '>' },
     { 12, 11, 12,  1, SCENE_TEST_MOUNTAIN_PASS, '<' },
     { 12,  0, 12, 16, SCENE_TEST_FIELD,    '<' },
-    { 12, 11, 12, 10, SCENE_TEST_MOUNTAIN_PASS, '>' }
+    { 12, 11, 12, 10, SCENE_TEST_MOUNTAIN_PASS, '>' },
+    {  1,  7, 17,  7, SCENE_TEST_FIELD,    '<' }
 };
 
 static const SceneTerrainBlock s_test_field_terrain[] = {
@@ -21,7 +22,7 @@ static const SceneTerrainBlock s_test_field_terrain[] = {
     { 1, 0, 3, 1, TILE_FOREST_03 },
     { 4, 0, 2, 1, TILE_FOREST_01 },
     { 6, 0, 6, 1, TILE_FOREST_02 },
-    { 12, 0, 1, 18, TILE_FOREST_32 },
+    { 12, 0, 1, 18, TILE_FOREST_62 },
     { 13, 0, 2, 1, TILE_FOREST_01 },
     { 15, 0, 5, 1, TILE_FOREST_02 },
     { 20, 0, 2, 1, TILE_FOREST_01 },
@@ -29,8 +30,6 @@ static const SceneTerrainBlock s_test_field_terrain[] = {
     { 26, 0, 5, 1, TILE_FOREST_01 },
     { 31, 0, 1, 1, TILE_FOREST_05 },
     { 0, 1, 1, 2, TILE_FOREST_09 },
-    { 1, 1, 11, 16, TILE_FOREST_32 },
-    { 13, 1, 18, 16, TILE_FOREST_32 },
     { 31, 1, 1, 1, TILE_FOREST_08 },
     { 31, 2, 1, 3, TILE_FOREST_07 },
     { 0, 3, 1, 2, TILE_FOREST_11 },
@@ -38,7 +37,7 @@ static const SceneTerrainBlock s_test_field_terrain[] = {
     { 31, 5, 1, 2, TILE_FOREST_08 },
     { 0, 6, 1, 1, TILE_FOREST_11 },
     { 0, 7, 1, 2, TILE_FOREST_09 },
-    { 31, 7, 1, 1, TILE_FOREST_32 },
+    { 31, 7, 1, 1, TILE_FOREST_62 },
     { 31, 8, 1, 1, TILE_FOREST_08 },
     { 0, 9, 1, 1, TILE_FOREST_10 },
     { 31, 9, 1, 1, TILE_FOREST_06 },
@@ -107,9 +106,6 @@ static const SceneTerrainBlock s_test_town_terrain[] = {
     { 3, 11, 1, 1, TILE_VILLAGE_08 },
     { 2, 12, 1, 1, TILE_VILLAGE_23 },
     { 3, 12, 1, 1, TILE_VILLAGE_24 },
-    { 3, 4, 1, 1, TILE_VILLAGE_04 },
-    { 16, 5, 1, 1, TILE_VILLAGE_04 },
-    { 4, 10, 1, 1, TILE_VILLAGE_04 },
     { 2, 5, 1, 1, TILE_VILLAGE_22 },
     { 15, 4, 1, 1, TILE_VILLAGE_22 },
     { 2, 9, 1, 1, TILE_VILLAGE_22 },
@@ -117,11 +113,7 @@ static const SceneTerrainBlock s_test_town_terrain[] = {
     { 4, 5, 1, 1, TILE_VILLAGE_37 },
     { 17, 5, 1, 1, TILE_VILLAGE_37 },
     { 4, 9, 1, 1, TILE_VILLAGE_37 },
-    { 10, 5, 1, 1, TILE_VILLAGE_41 },
-    { 10, 8, 1, 1, TILE_VILLAGE_35 },
-    { 9, 3, 1, 1, TILE_VILLAGE_39 },
-    { 11, 3, 1, 1, TILE_VILLAGE_39 },
-    { 6, 10, 1, 1, TILE_VILLAGE_36 },
+    { 1, 7, 1, 1, TILE_VILLAGE_06 },
     { 0, 0, 0, 0, 0 }
 };
 
@@ -166,6 +158,7 @@ static const SceneTerrainBlock s_test_forest_terrain[] = {
     { 6, 14, 1, 1, TILE_FOREST_15 },
     { 5, 15, 1, 1, TILE_FOREST_30 },
     { 6, 15, 1, 1, TILE_FOREST_31 },
+    { 12, 11, 1, 1, TILE_FOREST_62 },
     { 0, 0, 0, 0, 0 }
 };
 
@@ -200,6 +193,8 @@ static const SceneTerrainBlock s_test_mountain_pass_terrain[] = {
     { 14, 13, 1, 1, TILE_DESOLATE_LANDSCAPE_15 },
     { 13, 14, 1, 1, TILE_DESOLATE_LANDSCAPE_30 },
     { 14, 14, 1, 1, TILE_DESOLATE_LANDSCAPE_31 },
+    { 12, 0, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 12, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
     { 0, 0, 0, 0, 0 }
 };
 
@@ -210,23 +205,100 @@ static const SceneTerrainBlock s_test_castle_terrain[] = {
     { 16, 3, 1, 6, TILE_CASTLE_04 },
     { 4, 3, 2, 1, TILE_CASTLE_01 },
     { 14, 3, 2, 1, TILE_CASTLE_01 },
-    { 4, 8, 2, 1, TILE_CASTLE_09 },
-    { 14, 8, 2, 1, TILE_CASTLE_09 },
-    { 9, 6, 1, 1, TILE_CASTLE_12 },
-    { 9, 9, 1, 1, TILE_CASTLE_14 },
+    { 4, 8, 2, 1, TILE_CASTLE_10 },
+    { 14, 8, 2, 1, TILE_CASTLE_10 },
+    { 9, 6, 1, 1, TILE_CASTLE_27 },
+    { 9, 9, 1, 1, TILE_CASTLE_27 },
+    { 12, 11, 1, 1, TILE_CASTLE_15 },
     { 0, 0, 0, 0, 0 }
 };
 
 static const SceneTerrainBlock s_test_south_field_terrain[] = {
-    { 5, 5, 1, 1, TILE_DESOLATE_LANDSCAPE_32 },
+    { 17, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_37 },
+    { 12, 0, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 12, 11, 1, 1, TILE_DESOLATE_LANDSCAPE_39 },
+    { 0, 0, 0, 0, 0 }
+};
+
+static const SceneTerrainBlock s_test_gamble_terrain[] = {
+    { 0, 0, 1, 1, TILE_VILLAGE_00 },
+    { 1, 0, 18, 1, TILE_VILLAGE_01 },
+    { 19, 0, 1, 1, TILE_VILLAGE_02 },
+    { 19, 1, 1, 16, TILE_VILLAGE_03 },
+    { 0, 1, 1, 16, TILE_VILLAGE_19 },
+    { 0, 17, 1, 1, TILE_VILLAGE_16 },
+    { 1, 17, 18, 1, TILE_VILLAGE_17 },
+    { 19, 17, 1, 1, TILE_VILLAGE_18 },
+    { 2, 1, 1, 1, TILE_VILLAGE_10 },
+    { 3, 1, 1, 1, TILE_VILLAGE_11 },
+    { 4, 1, 1, 1, TILE_VILLAGE_12 },
+    { 2, 2, 1, 2, TILE_VILLAGE_42 },
+    { 3, 2, 1, 2, TILE_VILLAGE_43 },
+    { 4, 2, 1, 2, TILE_VILLAGE_44 },
+    { 15, 1, 1, 1, TILE_VILLAGE_13 },
+    { 16, 1, 1, 1, TILE_VILLAGE_14 },
+    { 17, 1, 1, 1, TILE_VILLAGE_15 },
+    { 15, 2, 1, 2, TILE_VILLAGE_42 },
+    { 16, 2, 1, 2, TILE_VILLAGE_43 },
+    { 17, 2, 1, 2, TILE_VILLAGE_44 },
+    { 15, 13, 1, 1, TILE_VILLAGE_10 },
+    { 16, 13, 1, 1, TILE_VILLAGE_11 },
+    { 17, 13, 1, 1, TILE_VILLAGE_12 },
+    { 15, 14, 1, 2, TILE_VILLAGE_42 },
+    { 16, 14, 1, 2, TILE_VILLAGE_43 },
+    { 17, 14, 1, 2, TILE_VILLAGE_44 },
+    { 2, 13, 1, 1, TILE_VILLAGE_13 },
+    { 3, 13, 1, 1, TILE_VILLAGE_14 },
+    { 4, 13, 1, 1, TILE_VILLAGE_15 },
+    { 2, 14, 1, 2, TILE_VILLAGE_42 },
+    { 3, 14, 1, 2, TILE_VILLAGE_43 },
+    { 4, 14, 1, 2, TILE_VILLAGE_44 },
+    { 15, 10, 1, 1, TILE_VILLAGE_07 },
+    { 16, 10, 1, 1, TILE_VILLAGE_08 },
+    { 15, 11, 1, 1, TILE_VILLAGE_23 },
+    { 16, 11, 1, 1, TILE_VILLAGE_24 },
+    { 2, 11, 1, 1, TILE_VILLAGE_07 },
+    { 3, 11, 1, 1, TILE_VILLAGE_08 },
+    { 2, 12, 1, 1, TILE_VILLAGE_23 },
+    { 3, 12, 1, 1, TILE_VILLAGE_24 },
+    { 2, 5, 1, 1, TILE_VILLAGE_22 },
+    { 15, 4, 1, 1, TILE_VILLAGE_22 },
+    { 2, 9, 1, 1, TILE_VILLAGE_22 },
+    { 17, 10, 1, 1, TILE_VILLAGE_22 },
+    { 4, 5, 1, 1, TILE_VILLAGE_37 },
+    { 17, 5, 1, 1, TILE_VILLAGE_37 },
+    { 4, 9, 1, 1, TILE_VILLAGE_37 },
+    { 1, 7, 1, 1, TILE_VILLAGE_06 },
     { 0, 0, 0, 0, 0 }
 };
 
 const SceneDefinition g_scenes[] = {
-    { MAP_TEST_FIELD,      MUSIC_FOREST,      32, 18, &g_all_exits[0],     3, WORLD_TILESET_FOREST,    s_test_field_terrain, 17, 7, DIRECTION_LEFT,  TILE_FOREST_32 },
-    { MAP_TEST_TOWN,       MUSIC_TOWN,        20, 18, &g_all_exits[3],     1, WORLD_TILESET_VILLAGE,   s_test_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06 },
-    { MAP_TEST_FOREST,     MUSIC_FOREST,      20, 18, &g_all_exits[4],     1, WORLD_TILESET_FOREST,    s_test_forest_terrain, 12, 10, DIRECTION_UP,    TILE_FOREST_32 },
-    { MAP_TEST_MOUNTAIN_PASS, MUSIC_DESOLATE,    20, 18, &g_all_exits[5],     2, WORLD_TILESET_DESOLATE,  s_test_mountain_pass_terrain, 12, 10, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_32 },
-    { MAP_TEST_CASTLE,     MUSIC_DUNGEON,     20, 18, &g_all_exits[7],     1, WORLD_TILESET_CASTLE,    s_test_castle_terrain, 10, 10, DIRECTION_UP,    TILE_CASTLE_15 },
-    { MAP_TEST_SOUTH_FIELD, MUSIC_DESOLATE,    20, 18, &g_all_exits[8],     2, WORLD_TILESET_DESOLATE,  s_test_south_field_terrain, 12, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_32 }
+    { MAP_TEST_FIELD,      MUSIC_FOREST,      32, 18, &g_all_exits[0],     3, WORLD_TILESET_FOREST,    s_test_field_terrain, 17, 7, DIRECTION_LEFT,  TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_TOWN,       MUSIC_TOWN,        20, 18, &g_all_exits[3],     1, WORLD_TILESET_VILLAGE,   s_test_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_FOREST,     MUSIC_FOREST,      20, 18, &g_all_exits[4],     1, WORLD_TILESET_FOREST,    s_test_forest_terrain, 12, 10, DIRECTION_UP,    TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_MOUNTAIN_PASS, MUSIC_DESOLATE,    20, 18, &g_all_exits[5],     2, WORLD_TILESET_DESOLATE,  s_test_mountain_pass_terrain, 12, 10, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_CASTLE,     MUSIC_DUNGEON,     20, 18, &g_all_exits[7],     1, WORLD_TILESET_CASTLE,    s_test_castle_terrain, 10, 10, DIRECTION_UP,    TILE_CASTLE_15, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_SOUTH_FIELD, MUSIC_DESOLATE,    20, 18, &g_all_exits[8],     2, WORLD_TILESET_DESOLATE,  s_test_south_field_terrain, 12, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 },
+    { MAP_TEST_GAMBLE,     MUSIC_TOWN,        20, 18, &g_all_exits[10],    1, WORLD_TILESET_VILLAGE,   s_test_gamble_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 4 }
 };
+
+
+#include "game.h"
+#include "banked.h"
+/* Banked chest-open resolver: reports whether the chest at the
+ * staged (x, y) was already looted (g_bk_byte_b = x,
+ * g_bk_byte_c = y; the map comes from g_game.world, WRAM and
+ * always mapped).  Chests are OAM sprites:
+ * the sprite body shows the open frame once the loot flag or
+ * variable is set, so the opened chest stays open across scene
+ * loads with no floor-paint stamp.  Self-contained: g_game is
+ * WRAM (always mapped), everything else is literals -- no
+ * staging, no table, no fixed-bank calls while mapped.  Called
+ * directly by the banked sprite body (same bank: plain call,
+ * no trampoline). */
+uint8_t chest_is_open_banked(void)
+{
+    if (g_game.world.map_id == MAP_TEST_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
+    if (g_game.world.map_id == MAP_TEST_FOREST && g_bk_byte_b == 16 && g_bk_byte_c == 10 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    return 0;
+}

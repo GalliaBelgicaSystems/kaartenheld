@@ -4,7 +4,7 @@
   "label": "Bat",
   "category": "minion",
   "sprite": { "art": "bat", "frames": 2 },
-  "overworld": { "cells": ["bat_f0", "bat_f1"], "palette": 0 },
+  "overworld": { "cells": ["bat_f0", "bat_f1"], "palette": "sprites" },
   "name": "BAT",
   "hp": 8,
   "max_hp": 8,

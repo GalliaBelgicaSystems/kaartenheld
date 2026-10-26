@@ -2,7 +2,6 @@
  "name": "overworld_select_back",
  "test": true,
  "description": "Press SELECT on the overworld to open the load menu, then press B. The save/load screen must return to the OVERWORLD (not anywhere else). Regression guard for the save/load B/START handler honoring the caller screen.",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

@@ -2,7 +2,6 @@
  "name": "mayor_dialogue_stability",
  "test": true,
  "description": "Interact with Mayor NPC and wait 300 frames (5 seconds) with zero input, asserting dialogue remains active, line 0 unchanged, and RENDER_DIALOGUE emitted cleanly",
- "scenario_id": "MAYOR_ENCOUNTER",
  "actions": [
   {
    "type": "press",

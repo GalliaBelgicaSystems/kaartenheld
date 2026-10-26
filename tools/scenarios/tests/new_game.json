@@ -2,7 +2,6 @@
  "name": "new_game",
  "test": true,
  "description": "Verify initial game state after boot",
- "scenario_id": "NEW_GAME",
  "actions": [],
  "assertions": [
   {
@@ -11,7 +10,7 @@
   },
   {
    "type": "player_hp",
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "player_position",
@@ -40,7 +39,7 @@
   {
    "type": "party_hp",
    "member": 0,
-   "expected": 10
+   "expected": 15
   },
   {
    "type": "party_level",

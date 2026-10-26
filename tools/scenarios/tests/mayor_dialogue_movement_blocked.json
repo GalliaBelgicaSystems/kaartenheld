@@ -2,7 +2,6 @@
  "name": "mayor_dialogue_movement_blocked",
  "test": true,
  "description": "Verify movement directional inputs are locked while dialogue overlay is active",
- "scenario_id": "MAYOR_DIALOGUE_MOVEMENT_BLOCKED",
  "actions": [
   {
    "type": "press",

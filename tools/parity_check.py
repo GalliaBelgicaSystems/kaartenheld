@@ -10,7 +10,10 @@ Two halves (see docs/level-editor.md Phase 17):
    registry the editor renders from), load the map in the debug ROM, and
    compare every terrain cell against the WRAM tilemap mirror.  Actor-
    occupied cells are SKIPPED (actor overlay rules live with actor
-   scenarios, not here).  Any terrain mismatch fails loudly.
+   scenarios, not here).  Any terrain mismatch fails loudly.  The boot
+   half runs the frozen TEST fixtures (the only scenes the debug ROM
+   links -- tools/scenarios/fixtures/levels/); the static half below
+   covers the real levels.
 2. Animation frame-set parity (static cross-check, no boot): every
    animation_frames id in every level must resolve in its tileset manifest
    AND vram_block (a typo silently degrades to a fallback today), and the
@@ -53,7 +56,7 @@ def first_plain_tile(tileset_id, tileset):
 
 
 def level_default_index(level, tilesets):
-    """Resolve the level's default_walkable to a VRAM block index."""
+    """Resolve the level's default_walkable to a ROM VRAM slot."""
     tileset_id = level["map"]["tileset"]
     tileset = tilesets[tileset_id]
     dw = level.get("default_walkable") or ""
@@ -62,10 +65,14 @@ def level_default_index(level, tilesets):
     short = dw.split(".")[-1]
     for e in tileset.get("vram_block", {}).get("tiles", []):
         if e.get("tile") == short:
-            return VRAM_BASE + e.get("index")
+            slot = vram_slot(tileset_id, e.get("index"))
+            if slot is None:
+                break
+            return VRAM_BASE + slot
     raise ValueError("%s: default ground '%s' has no vram index" % (level["id"], dw))
 WALL_FALLBACK_INDEX = {
     "forest": 1,
+    "village": 1,
     "desolate_landscape": 1,
     "castle": 10,
 }
@@ -78,7 +85,6 @@ SPRITE_RULE_CELLS = {
     "forest_kobold_sprite_tile": {(3, 2), (4, 2)},
     "forest_bat_sprite_tile": {(9, 2), (10, 2)},
     "forest_hero_sprite_tile": {(1, 2), (2, 2)},
-    "forest_chest_sprite_tile": {(11, 2)},
     "hero_desolate_sprite_tile": {(1, 2), (2, 2)},
     "kobold_sprite_tile": {(3, 2), (4, 2)},
     "desolate_bat_sprite_tile": {(9, 2), (10, 2)},
@@ -111,11 +117,22 @@ def load_tilesets():
     return tilesets
 
 
-def manifest_index(tileset, tile_id):
-    """Manifest tile id -> VRAM block index via vram_block cross-refs."""
+def vram_slot(tileset_id, vram_index):
+    """vram_block index -> ROM VRAM load slot.
+
+    Must match the Makefile gfx rule --tile-coords and
+    verify_palette_manifest.py: every tileset (castle included, 9x4 = 36
+    slots in scan order) packs slot i = vram index i.  Returns None for
+    indices the ROM never loads."""
+    return vram_index
+
+
+def manifest_index(tileset_id, tileset, tile_id):
+    """Manifest tile id -> ROM VRAM load slot (== vram_block index: every
+    tileset packs slot i = index i, castle included)."""
     for e in tileset.get("vram_block", {}).get("tiles", []):
         if e.get("tile") == tile_id:
-            return e.get("index")
+            return vram_slot(tileset_id, e.get("index"))
     return None
 
 
@@ -138,7 +155,13 @@ def expand_terrain(level):
 
 
 def expected_grid(level, tilesets):
-    """Full-map expected VRAM tile indices.  Returns (grid, skipped)."""
+    """Full-map expected VRAM tile indices.  Returns (grid, skipped).
+
+    Mirrors the ROM loader: unpainted interior is default ground;
+    unpainted perimeter is wall, except unpainted point-exit gates and
+    whole linked edges (neighbors), which compile to open-ground rows.
+    Gates never stamp their own art: exit cells render their painted
+    art (or default ground), so they are checked, not skipped."""
     tileset_id = level["map"]["tileset"]
     tileset = tilesets[tileset_id]
     by_id = {t["id"]: t for t in tileset.get("tiles", [])}
@@ -150,6 +173,10 @@ def expected_grid(level, tilesets):
     except ValueError as e:
         fail(str(e))
         return {}, set()
+    neighbors = level.get("neighbors", {}) or {}
+    linked = {d for d in ("north", "south", "east", "west")
+              if (neighbors.get(d) or "").strip()}
+    gates = {(e.get("x", -1), e.get("y", -1)) for e in level.get("exits", [])}
     grid = {}
     for y in range(h):
         for x in range(w):
@@ -157,9 +184,18 @@ def expected_grid(level, tilesets):
             if cell is not None:
                 short = cell.split(".")[-1]
             elif x == 0 or y == 0 or x == w - 1 or y == h - 1:
-                # Engine perimeter rule (borders default to walls); painted
-                # blocks and exits take precedence (handled below/above).
-                grid[(x, y)] = VRAM_BASE + WALL_FALLBACK_INDEX[tileset_id]
+                # Engine perimeter rule (borders default to walls), with
+                # the two ROM exceptions, both compiled to default-ground
+                # rows: unpainted gates and linked edges.
+                if (x, y) in gates:
+                    grid[(x, y)] = default_idx
+                    continue
+                on_linked = ((y == 0 and "north" in linked)
+                             or (y == h - 1 and "south" in linked)
+                             or (x == 0 and "west" in linked)
+                             or (x == w - 1 and "east" in linked))
+                grid[(x, y)] = (default_idx if on_linked
+                                else VRAM_BASE + WALL_FALLBACK_INDEX[tileset_id])
                 continue
             else:
                 grid[(x, y)] = default_idx
@@ -168,7 +204,7 @@ def expected_grid(level, tilesets):
             if info is None:
                 fail("%s: unknown tile '%s' at (%d,%d)" % (level["id"], cell, x, y))
                 continue
-            idx = manifest_index(tileset, short)
+            idx = manifest_index(tileset_id, tileset, short)
             if idx is None:
                 fail("%s: tile '%s' has no vram_block index" % (level["id"], short))
                 continue
@@ -178,9 +214,6 @@ def expected_grid(level, tilesets):
     for obj in level.get("objects", []):
         p = obj.get("position", {})
         skipped.add((p.get("x", -1), p.get("y", -1)))
-    # Exits render exit art, not terrain.
-    for e in level.get("exits", []):
-        skipped.add((e.get("x", -1), e.get("y", -1)))
     return grid, skipped
 
 
@@ -267,6 +300,9 @@ def check_map(sess, level, tilesets):
         print("FAIL %s: %d/%d terrain cells mismatch" % (sid, bad, len(grid) - len(skipped)))
 
 
+FIXTURES_DIR = REPO_ROOT / "tools" / "scenarios" / "fixtures" / "levels"
+
+
 def main(argv):
     only = set(argv[1:])
     tilesets = load_tilesets()
@@ -286,10 +322,26 @@ def main(argv):
     if failures:
         return 1
 
+    # Boot-backed terrain parity runs in the debug ROM, which links ONLY
+    # the frozen test fixtures (TEST_* scenes): real scene ids resolve on
+    # the host but load empty scenes on hardware. Check the fixtures
+    # instead -- same tilesets, same tile pipeline, actually loadable
+    # (a real id also matches its fixture via the test_ prefix).
+    fixtures_by_id = {}
+    for p in sorted(FIXTURES_DIR.glob("*.json")):
+        data = json.loads(p.read_text())
+        fixtures_by_id[data["id"]] = data
+    if only:
+        fixtures_by_id = {k: v for k, v in fixtures_by_id.items()
+                          if k in only or k.replace("test_", "", 1) in only}
+        if not fixtures_by_id:
+            print("no such levels: %s" % sorted(only))
+            return 2
+
     sess = EmulatorSession()
     try:
         sess.connect()
-        for sid, level in levels_by_id.items():
+        for sid, level in fixtures_by_id.items():
             check_map(sess, level, tilesets)
     finally:
         sess.disconnect()

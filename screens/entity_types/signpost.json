@@ -5,5 +5,5 @@
   "kind": "npc",
   "name": "SIGNPOST",
   "visual": "?",
-  "sprite_kind": "ascii"
+  "sprite_kind": "tile"
 }

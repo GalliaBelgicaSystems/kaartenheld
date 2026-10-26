@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EditorLevel, LevelExit, LevelRegion, PlayerSpawn } from './model/Level';
+import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, NEIGHBOR_DIRS, PlayerSpawn, normalizeNeighbors } from './model/Level';
 import { LevelObject, OBJECT_TEMPLATES } from './model/Objects';
 import { EditLayer, LayerPanel } from './LayerPanel';
 import { BUILTIN_TILESETS, TileDefinition } from './model/Tileset';
@@ -9,8 +9,10 @@ import { fetchDialogueList } from './io/dialogue';
 import { fetchShopList } from './io/shops';
 import { fetchEntityTypeList, saveEntityType } from './io/entityTypes';
 import { ExitConnector } from './ExitConnector';
+import { EdgeConnector } from './EdgeConnector';
 import { TutorialEditor } from './TutorialEditor';
 import { fetchUsedActorIds } from './io/saveLevel';
+import { unlinkTunnel } from './io/tunnels';
 import { FilterCombo } from './FilterCombo';
 
 
@@ -33,6 +35,9 @@ interface InspectorProps {
   onAddExit: (exit: LevelExit) => void;
   onUpdateExit: (index: number, exit: LevelExit) => void;
   onDeleteExit: (index: number) => void;
+  /** Server rewrote exits on disk (tunnel pairing); replace editor state. */
+  onExitsSynced?: (exits: LevelExit[]) => void;
+  onUpdateNeighbors: (neighbors: LevelNeighbors) => void;
   onAddObject: (obj: LevelObject) => void;
   onUpdateObject: (index: number, obj: LevelObject) => void;
   onDeleteObject: (index: number) => void;
@@ -55,7 +60,7 @@ interface InspectorProps {
 
 // BGM preview files rendered by tools/render_music_preview.py
 // (make music-preview) into tools/level_editor/public/audio/.
-// Chiptune-only tracks (OVERWORLD/TITLE/VICTORY) have no preview.
+// One-shot jingles (VICTORY/CHEST) and the title theme have no preview.
 const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_BATTLE: '/audio/battle.wav',
   MUSIC_DESOLATE: '/audio/desolate_landscape.wav',
@@ -63,6 +68,7 @@ const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_BOSS: '/audio/boss_fight.wav',
   MUSIC_TOWN: '/audio/village.wav',
   MUSIC_DUNGEON: '/audio/castle.wav',
+  MUSIC_OVERWORLD: '/audio/opening.wav',
 };
 
 const MusicPreviewToggle: React.FC<{ music: string; levelId: string }> = ({
@@ -147,6 +153,8 @@ export const Inspector: React.FC<InspectorProps> = ({
   onAddExit,
   onUpdateExit,
   onDeleteExit,
+  onExitsSynced,
+  onUpdateNeighbors,
   onAddObject,
   onUpdateObject,
   onDeleteObject,
@@ -1510,10 +1518,51 @@ export const Inspector: React.FC<InspectorProps> = ({
                   </div>
                 </div>
 
+                {selectedExit.tunnel ? (
+                  <div
+                    className="form-group"
+                    style={{ background: '#e8f8f5', border: '1px solid #16a085', borderRadius: 4, padding: 8 }}
+                  >
+                    <label>🔗 Tunnel: {selectedExit.tunnel}</label>
+                    <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
+                      Saving syncs the partner mouth (target + landing onto this gate).
+                      Deleting this exit removes its partner on save.
+                    </div>
+                    <button
+                      className="btn btn-sm"
+                      onClick={async () => {
+                        if (!selectedExit.tunnel) return;
+                        if (!confirm(
+                          `Unlink tunnel '${selectedExit.tunnel}'?\n\nBoth mouths stay as independent one-way exits.`
+                        )) return;
+                        try {
+                          await unlinkTunnel(selectedExit.tunnel);
+                        } catch (e: any) {
+                          alert(`Unlink failed: ${e.message}`);
+                          return;
+                        }
+                        const { tunnel: _dropped, ...rest } = selectedExit;
+                        onUpdateExit(selectedEntityIndex, rest as LevelExit);
+                      }}
+                    >
+                      Unlink tunnel (keep both one-way)
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>
+                    One-way exit — use “Return exits &amp; tunnels” below to pair it.
+                  </div>
+                )}
+
                 <div className="btn-group-row">
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => onDeleteExit(selectedEntityIndex)}
+                    onClick={() => {
+                      if (selectedExit.tunnel && !confirm(
+                        `Delete this tunnel mouth?\n\nIts partner ('${selectedExit.tunnel}') is removed on save. This cannot be undone.`
+                      )) return;
+                      onDeleteExit(selectedEntityIndex);
+                    }}
                   >
                     🗑️ Delete Exit
                   </button>
@@ -1534,14 +1583,64 @@ export const Inspector: React.FC<InspectorProps> = ({
                     onClick={() => onSelectEntityIndex(idx)}
                   >
                     <span className="item-title">
-                      🚪 ({ex.x},{ex.y}) → <strong>{ex.target_scene}</strong>
+                      {ex.tunnel ? '🔗' : '🚪'} ({ex.x},{ex.y}) → <strong>{ex.target_scene}</strong>
+                      {ex.tunnel ? <span style={{ color: '#16a085' }}> [{ex.tunnel}]</span> : null}
                     </span>
                     <span className="item-sub">spawn ({ex.target_x},{ex.target_y})</span>
                   </div>
                 ))}
               </div>
             )}
-            <ExitConnector levelId={level.id} exits={level.exits} />
+            <ExitConnector levelId={level.id} exits={level.exits} onExitsSynced={onExitsSynced} />
+            <div className="section-header-row" style={{ marginTop: 12 }}>
+              <h4>Edge neighbors</h4>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>
+              Whole-edge links: stepping onto a non-wall cell of a linked
+              border crosses to that scene (mirrored entry). A point exit
+              on the same cell wins. Paint open ground on the border (or
+              leave it unpainted); walls stay walls.
+            </div>
+            {(() => {
+              const neighbors = normalizeNeighbors(level.neighbors);
+              const opposite: Record<string, string> = {
+                north: 'south', south: 'north', east: 'west', west: 'east',
+              };
+              return (
+                <div>
+                  {NEIGHBOR_DIRS.map((direction) => (
+                    <div className="form-group" key={direction}>
+                      <label style={{ textTransform: 'capitalize' }}>{direction}</label>
+                      <FilterCombo
+                        items={[
+                          { value: '', label: '(no link)' },
+                          ...sceneOptions
+                            .filter((s) => s.id !== level.id)
+                            .map((s) => ({
+                              value: s.id,
+                              label: `${s.name} (${s.id}.json)`,
+                            })),
+                        ]}
+                        value={neighbors[direction] || ''}
+                        onPick={(v) =>
+                          onUpdateNeighbors({ ...neighbors, [direction]: v })
+                        }
+                        staleLabel={(v) => `${v} (unknown — pick a scene below)`}
+                        placeholder="Filter scenes..."
+                      />
+                      {neighbors[direction] ? (
+                        <div className="item-sub">
+                          {sceneOptions.some((s) => s.id === neighbors[direction])
+                            ? `→ ${neighbors[direction]} (set its ${opposite[direction]} back for a return)`
+                            : `⚠️ '${neighbors[direction]}' is not a known scene`}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+            <EdgeConnector level={level} />
           </div>
         )}
 
@@ -1744,6 +1843,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                       <option value="AI_PATROL_CROSS">AI_PATROL_CROSS</option>
                       <option value="AI_PATROL_CIRCLE">AI_PATROL_CIRCLE</option>
                       <option value="AI_CHASE">AI_CHASE</option>
+                      <option value="AI_CHASE_FAST">AI_CHASE_FAST (2x chase speed)</option>
                       <option value="AI_PATROL_VERT">AI_PATROL_VERT (up/down 3 tiles)</option>
                       </select>
                     </div>

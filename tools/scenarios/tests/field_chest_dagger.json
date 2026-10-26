@@ -1,0 +1,114 @@
+{
+ "name": "field_chest_dagger",
+ "test": true,
+ "description": "Bumping the field cache (chest east of Carl) opens its reward speech (POISON DAGGER plus one action point), grants the first POISON_DAGGER and adds +1 to the base-1 energy pool (2) with FIELD_CHEST; bumping again grants nothing (one-shot)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 1
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 2
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "actor_at",
+   "entity": "CHEST",
+   "x": 21,
+   "y": 8
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 21,
+   "row": 8,
+   "expected": 190
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 122
+  },
+  {
+   "type": "music_track",
+   "expected": "CHEST"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

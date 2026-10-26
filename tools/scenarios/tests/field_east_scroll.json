@@ -2,7 +2,6 @@
  "name": "field_east_scroll",
  "test": true,
  "description": "Walk east across the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while scroll_x advances and clamps at the east edge, proving horizontal camera scroll on a wide map",
- "scenario_id": "FIELD_EAST_SCROLL",
  "actions": [
   {
    "type": "hold",

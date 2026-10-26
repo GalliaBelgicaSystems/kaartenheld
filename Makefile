@@ -1,5 +1,11 @@
 # Makefile for Game Boy ROM development with GBDK-4 and RGBDS
 
+# Delete a target when its recipe fails: the link rules fail loudly on
+# rgblink bank-overflow warnings (AGENTS.md 52.18) AFTER the linker has
+# already written the ROM, so without this the corrupt .gb survives and
+# the next make reports "up to date" and exits 0 on top of it.
+.DELETE_ON_ERROR:
+
 CC = lcc
 RGBFIX = rgbfix
 
@@ -32,7 +38,8 @@ SRCS = $(BANK5_EARLY_SRCS) $(filter-out $(BANK5_EARLY_SRCS),$(ALL_SRCS))
 # real content (levels/) evolves freely.  The release build must never
 # see these symbols (same g_scenes/g_actor_tables names).
 TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors_content_test.c
-CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c
+CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
+	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 4 in
@@ -43,18 +50,24 @@ RELEASE_ONLY_SRCS = $(SRC_DIR)/screens/title_logo_content.c
 DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_CONTENT_SRCS)
 
 # Debug-harness-only sources excluded from the release ROM.
-# telemetry.c IS needed by gameplay (game.c/world.c emit events);
+# telemetry.c (ring buffer + snapshot dispatch) is debug-only now: release
+# builds compile telemetry calls out via no-op macros in telemetry.h, so the
+# 670 B WRAM ring and all per-event CPU leave the release ROM.  The one
+# telemetry arg with a gameplay side effect (loot-count read) is #ifdef'd at
+# its call site in world.c.
 # telemetry_snap.c is the banked extended-snapshot builder (debug-only).
-DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/assertions.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c
+DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
 SFX_UGE = assets/sfx/sfx\ accept.uge assets/sfx/sfx\ back.uge \
           assets/sfx/sfx\ block.uge assets/sfx/sfx\ cursor.uge \
-          assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge
+          assets/sfx/sfx\ heal.uge assets/sfx/sfx\ hurt.uge \
+          assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge \
+          assets/sfx/alert.uge
 # screens/sfx.json may map any SFX id to any .uge (assets/sfx or
 # assets/music), so the tables depend on the registry plus both pools.
 SFX_REGISTRY = screens/sfx.json
@@ -77,14 +90,22 @@ HUGEDRIVER_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver.o
 # bytes through the mapped ROM window, so driver + song must share a bank.
 HUGEDRIVER_B7_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b7.o
 HUGEDRIVER_B7_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b7.o
+# Third hUGE driver copy in bank 9 (renamed exports) for the casino song:
+# bank 7 has only ~640 B free in the release layout (the debug build has
+# ~1.5 KB) and the casino track's data is ~3.3 KB, so the song moves to
+# the pristine bank 9 (MBC5 low byte reaches 8-15 with the high byte 0)
+# together with its own driver copy (~1.9 KB; driver + song must share a
+# bank -- the driver reads song bytes through the mapped window).
+HUGEDRIVER_B9_OBJ = $(BUILD_DIR)/lib/hUGEDriver_b9.o
+HUGEDRIVER_B9_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b9.o
 
-OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ)
-OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
+OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG) $(HUGEDRIVER_B9_OBJ_DEBUG)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario state roundtrip screenshot screenshots gifs verify-walkthrough parity lint memmap verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx atlas atlas-check manifest tiles tiles-check levels-test levels-test-check doctor music music-preview sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean
 
 all: $(TARGET)
 
@@ -96,12 +117,25 @@ debug: $(TARGET_DEBUG)
 # build: sdcc's --use-stdout pipeline corrupts the .asm stream when warnings
 # are enabled (they leak into stdout).  Compiling with -S surfaces the same
 # warnings without invoking the assembler.
-lint: gfx tiles $(SRCS)
+# sfx is a prerequisite: the banked sfx_step.c includes the transcribed
+# generated/sfx/sfx_tables.h, which does not exist on a fresh clone
+# (generated/ is untracked) -- without it the ABI guard below fails.
+lint: gfx tiles sfx $(SRCS)
 	@ok=1; \
 	for f in $(SRCS); do \
 		out=$$($(CC) -S -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
 		if echo "$$out" | grep -q "warning"; then \
 			echo "=== $$f ==="; echo "$$out" | grep "warning"; ok=0; \
+		fi; \
+	done; \
+	CC="$(CC)" INCLUDES="$(INCLUDES)" sh tools/check_banked_copies.sh || ok=0; \
+	for f in $(SRCS); do \
+		if grep -q "#pragma bank" "$$f"; then \
+			hits=$$(sed -e 's|//.*$$||' -e 's|/\*.*\*/||g' "$$f" | grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|\<CRITICAL\>|enable_interrupts|disable_interrupts|set_interrupts' | grep -vE '^[0-9]+:[[:space:]]*\*'); \
+			if [ -n "$$hits" ]; then \
+				echo "$$hits" | sed "s|^|$$f:|"; \
+				echo "BANKED-DI-EI: $$f has $$(echo "$$hits" | wc -l) forbidden interrupt op(s) in a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			fi; \
 		fi; \
 	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
@@ -111,105 +145,103 @@ lint: gfx tiles $(SRCS)
 # which the Nix dev shell provides.
 GFX_OUT_DIR = $(SRC_DIR)/gfx
 
-gfx:
+gfx: manifest
 	@mkdir -p $(GFX_OUT_DIR)
-	# Shared composed sheets (battle art, overworld enemies, hero): the
-	# gfx rules below read these; compose them deterministically from the
-	# curated public/tiles/ PNGs so a clean checkout always has them.
-	@python3 tools/compose_battle_sprites.py
-	@python3 tools/compose_enemy_sprites.py
-	@python3 tools/compose_hero_sprites.py
-	@python3 tools/compose_card_frames.py
 	# ── Intrepid font ─────────────────────────────────────────────────────
 	@python3 tools/png2gb.py assets/intrepid.png --name intrepid_font_tiles \
 		--raw -o $(GFX_OUT_DIR)/intrepid_font_tiles.inc
-	# ── Forest tileset (assets/forest-tile.png, 16 cols × 3 rows) ────────
-	# Full 48-tile world sheet (g_tileset_forest)
+	# ── Forest tileset (assets/forest-tile.png, 16 cols × 5 rows) ────────
+	# Shade maps come from generated/tiles/shades/*.json (palette_compiler:
+	# exact artist ramps per tile, no luminance guessing). Every rule below
+	# takes --shade-map; off-ramp pixels use the nearest shade of the
+	# tile's ramp and are listed in generated/tiles/ramp_mismatches.json.
+	# Full 80-tile world sheet (g_tileset_forest)
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
-		--palette auto --anchor-color "#7bb660" \
+		--shade-map generated/tiles/shades/forest.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
-	# Floor tile: col 0, row 2
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_floor \
-		--palette auto --anchor-color "#7bb660" --tile-coords "0,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_floor.inc
-	# Treetop tile: col 12, row 0
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_tree \
-		--palette auto --anchor-color "#7bb660" --tile-coords "12,0" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_tree.inc
-	# Exit tile: col 8, row 2
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_exit \
-		--palette auto --anchor-color "#7bb660" --tile-coords "8,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_exit.inc
-	# Stump tiles TL,TR,BL,BR + mini (BR repeated): cols 14-15, rows 0-1
-	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_stumps \
-		--palette auto --anchor-color "#7bb660" --tile-coords "14,0 15,0 14,1 15,1 15,1" \
-		--raw -o $(GFX_OUT_DIR)/rpg_forest_stumps.inc
-	# Chest sprite tile from forest-tile.png (tile 11,2 "treasure chest
-	# forest").  Anchor the forest-floor green to shade 0 = OAM transparent;
-	# without it the gold highlight (brightest color) grabs shade 0 and the
-	# green background lands on shade 1, rendering as an opaque tan box.
-	@python3 tools/png2gb.py assets/forest-tile.png --name forest_chest_sprite_tile \
-		--palette auto --anchor-color "#7bb660" --tile-coords "11,2" \
-		-o $(GFX_OUT_DIR)/forest_chest_sprite_tile.h
-	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × 8 rows) ────
+	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
 	# then frame1 per set); the compiler also emits per-set blob offsets
 	# into battle_types.c, so the loader needs no fixed set size.
 	# Sheet layout: see tools/compose_battle_sprites.py.
-	@python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords)" \
+	# The coords subshell must not fail silently: an erroring compiler
+	# prints to stderr but captures empty stdout, and png2gb would then
+	# generate a sheet-order blob (every OAM sprite wrong art, all
+	# tile-id assertions still green).  Fail loudly instead.
+	@BATTLE_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --gfx-coords) || { echo "FATAL: battle_compile --gfx-coords failed" >&2; exit 1; }; \
+	[ -n "$$BATTLE_COORDS" ] || { echo "FATAL: battle_compile --gfx-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/battle_sprites.png --name battle_enemy_art \
+		--shade-map generated/tiles/shades/battle.json --tile-coords "$$BATTLE_COORDS" \
 		-o $(GFX_OUT_DIR)/battle_enemy_art.h
 	# ── Shared overworld enemy sprites (assets/enemy_sprites.png) ──
 	# One transparent-background sprite per enemy type, shared by every
-	# world.  Cell order comes from screens/enemy_types overworld.cells
+	# world. Cell order comes from screens/enemy_types overworld.cells
 	# (sorted enemy-id order); tiles load to OAM at ENEMY_OW_BASE (100).
 	# Sheet layout: see tools/compose_enemy_sprites.py.
-	@python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
-		--palette auto --tile-coords "$$(python3 tools/screen_compiler/battle_compile.py --ow-coords)" \
+	# Same fail-loud rule as above (an over-budget blob once shipped a
+	# sheet-order enemy_ow_tiles.h that scrambled every OAM sprite).
+	@OW_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ow-coords) || { echo "FATAL: battle_compile --ow-coords failed" >&2; exit 1; }; \
+	[ -n "$$OW_COORDS" ] || { echo "FATAL: battle_compile --ow-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
-	# ── Desolate landscape (assets/desolate_landscape.png, 16 cols × 3 rows) ──
-	# Full 48-tile world sheet (g_tileset_desolate)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_world_tiles \
-		--palette auto --anchor-color "#938da1" \
+	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
+	# Four single-cell icons streamed once at boot to fixed OAM ids
+	# (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
+	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
+	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
+	# untouched (these ride their own stream, not the enemy blob).
+	@AP_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ap-coords) || { echo "FATAL: battle_compile --ap-coords failed" >&2; exit 1; }; \
+	[ -n "$$AP_COORDS" ] || { echo "FATAL: battle_compile --ap-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
+		-o $(GFX_OUT_DIR)/ap_tiles.h
+	# ── Desolate landscape (assets/desolate-tile.png) ──
+	# Full world sheet (g_tileset_desolate)
+	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
+		--shade-map generated/tiles/shades/desolate_landscape.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
-	# 41-tile subset for scene terrain lookup (rows 0–2, cols 0–8 on row 2)
-	@python3 tools/png2gb.py assets/desolate_landscape.png --name rpg_desolate_tiles \
-		--palette auto --anchor-color "#938da1" --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2" \
-		--raw -o $(GFX_OUT_DIR)/rpg_desolate_tiles.inc
 	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
-		--palette auto \
+		--shade-map generated/tiles/shades/hero_ow.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-	# ── Castle tileset (assets/castle-tile.png) ─────────
-	# Full world sheet (g_tileset_castle).  Sized by the source PNG.
+	# ── Castle tileset (assets/castle-tile.png, 9 cols × 4 rows) ─────────
+	# The full 36-tile sheet encodes in scan order, VRAM slot == scan
+	# index (see world.h TILE_CASTLE_* and palette_compiler).  Sized by
+	# the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--palette auto --anchor-color "#d7d7d7" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
-	# Full 48-tile world sheet (g_tileset_village).  Arranged in SheetIndex
+	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
-		--palette auto --anchor-color "#b6a27e" \
+		--shade-map generated/tiles/shades/village.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
-	# NPC map art (compose from the curated actors tileset; see
-	# tools/compose_npc_tiles.py).  The village sheet's NPC cells are blank
-	# since the art moved to the shared actors tileset; tiles_content.c
-	# overlays these into the village VRAM block after the sheet copy.
-	@python3 tools/compose_npc_tiles.py
-	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 8 rows) ──
+	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 10 rows) ──
 	# 9 border/background tiles for the boxed battle-hand cards (TL TM TR /
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
-		--palette auto -o $(GFX_OUT_DIR)/card_frame_tiles.h
-	@python3 tools/png2gb.py assets/npc_tiles.png --name rpg_actor_npc_tiles \
-		--palette auto --anchor-color "#f1eb03" --raw \
-		-o $(GFX_OUT_DIR)/rpg_actor_npc_tiles.inc
+		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
+	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
+	# The sheet is composed by the manifest prerequisite (compose_dice.py);
+	# palette_compiler.py writes the shade map.  Only the encode belongs here.
+	# Encoded with the wood ramp (brown on tan); streamed on demand by
+	# the bank-8 dice body to UI_TILE_DICE_BASE (246-255).  Reusable
+	# battle chrome, not gamble-only.
+	@python3 tools/png2gb.py assets/dice.png --name dice_tiles \
+		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
+	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
+	# Regenerated every build from the live battle sources (never
+	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
+	# BG CRAM slots for the bank-8 gamble entry body.
+	@python3 tools/gamble_art_compile.py
 	# ── Title logo (assets/title-red.png, 16 cols × 3 rows) ──────────────
 	# Full 48-tile logo sheet, loaded into the world BG block (ids 128-175)
 	# with CGB palette 1 on the title screen.  The level-editor Title Studio
 	# previews the exact same image, so a copy is published under
 	# public/tiles/title/ (mirrors the ROM 1:1; the CI drift diff covers it).
 	@python3 tools/png2gb.py assets/title-red.png --name title_logo_tiles \
-		--palette auto --anchor-color "#ffffff" --raw \
+		--shade-map generated/tiles/shades/title.json --raw \
 		-o $(GFX_OUT_DIR)/title_logo_tiles.inc
 	@mkdir -p tools/level_editor/public/tiles/title
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
@@ -222,14 +254,6 @@ gfx:
 
 
 
-# Regenerate the asset atlas (docs/assets_atlas.md + src/gfx/asset_atlas.h
-# + the banked .inc data).  Deterministic: rerunning produces byte-identical
-# output.  See docs/assets_atlas.md and tools/asset_atlas.py.
-atlas:
-	@python3 tools/asset_atlas.py
-
-# Drift check: Makefile gfx --tile-coords must match the atlas registry, and
-# the generated artifacts must be in sync with the current source assets.
 # Level compiler targets (docs/level-editor.md)
 LEVEL ?= forest
 level:
@@ -249,7 +273,7 @@ levels-check:
 	@python3 tools/level_compiler/validate.py levels/*.json
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c --check
 
-src/game/scenes_content.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
+src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c
 # ^ Also (re)generates src/world/scene_ids_generated.h (MAP_*/SCENE_* values
 # from levels/registry.json) as a side effect; the wildcard above includes
@@ -257,24 +281,29 @@ src/game/scenes_content.c src/world/scene_ids_generated.h &: $(wildcard levels/*
 
 # Frozen harness-test fixtures (tools/scenarios/fixtures/levels/): the
 # debug (harness) ROM links ONLY these, so real content edits can never
-# break the scenario suite.  Compiled with --bank 4 (GAME_TEST_CONTENT_BANK)
-# so the release budgets (banks 2/5) are untouched.  Committed C must equal
-# fresh compile (no hand edits, same convention as the real content).
+# break the scenario suite.  Scenes compile with --bank 4
+# (GAME_TEST_CONTENT_BANK) and actors with --actors-bank 9
+# (GAME_TEST_ACTOR_BANK): debug bank 4 is full, while the loader body
+# must share its tables' bank, so the actor tables (but not the chest
+# resolver, which stays in the bank-4 scenes file via --chest-in-scenes
+# for the sprite body's same-bank call) live in pristine bank 9.
+# Committed C must equal fresh compile (no hand edits, same convention
+# as the real content).
 LEVELS_TEST_DIR = tools/scenarios/fixtures/levels
 
 levels-test:
 	@python3 tools/level_compiler/validate.py $(LEVELS_TEST_DIR)/*.json
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c
 	@echo "All test fixture levels compiled to src/game/scenes_content_test.c"
 
 levels-test-check:
 	@python3 tools/level_compiler/validate.py $(LEVELS_TEST_DIR)/*.json
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c --check
 
 src/game/scenes_content_test.c src/game/actors_content_test.c &: $(wildcard $(LEVELS_TEST_DIR)/*.json)
-	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 \
+	@python3 tools/level_compiler/compile.py $(LEVELS_TEST_DIR)/*.json --bank 4 --actors-bank 9 --chest-in-scenes \
 		-o src/game/scenes_content_test.c --actors-output src/game/actors_content_test.c
 
 # Screen content compiler (docs/level-editor.md Phase 17): screens/*.json is
@@ -284,7 +313,7 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,card_skin}.c + src/screens/tutorial_*_generated.h"
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
@@ -313,6 +342,12 @@ shops:
 shops-check:
 	@python3 tools/screen_compiler/shops_compile.py --all --check
 	@python3 tools/level_compiler/validate.py --shop-refs
+
+# Spawn actions: EVENT_ACTION_SPAWN_* rows in src/game/events_content.c
+# carry compiled bytes (e.g. the slime ow_type); validate.py resolves
+# the live values and fails loudly on drift (never hand-synced).
+spawns-check:
+	@python3 tools/level_compiler/validate.py --spawn-refs
 
 # Entity types: screens/enemy_types/*.json + screens/entity_types/*.json are
 # the single source of truth for the ENTITY_ID_* game range.  Adding a type
@@ -345,7 +380,7 @@ src/game/entity_ids_generated.h: $(wildcard screens/enemy_types/*.json) $(wildca
 src/game/title_data.c: screens/title.json
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-src/game/battle_screens.c src/game/battle_types.c src/game/card_skin.c: $(wildcard screens/battle/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
+src/game/battle_screens.c src/game/battle_types.c src/game/enemy_ow_count.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 
 # Extract tile images from source PNGs for the web editor (import_tileset.py)
@@ -357,7 +392,7 @@ extract-tiles:
 		--output-dir tools/level_editor/public/tiles/forest \
 		--output-json tools/level_editor/tilesets/forest.json
 	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/desolate_landscape.png --csv assets/desolate_landscape-description.csv \
+		--sheet assets/desolate-tile.png --csv assets/desolate-description.csv \
 		--tileset-id desolate_landscape --label "Desolate Landscape" \
 		--gb-tileset-kind WORLD_TILESET_DESOLATE \
 		--output-dir tools/level_editor/public/tiles/desolate_landscape \
@@ -374,12 +409,21 @@ extract-tiles:
 		--gb-tileset-kind WORLD_TILESET_VILLAGE \
 		--output-dir tools/level_editor/public/tiles/village \
 		--output-json tools/level_editor/tilesets/village.json
-	@python3 tools/level_editor/import_tileset.py \
-		--sheet assets/actor-sprites.png --csv assets/actor-tileset-description.csv \
-		--tileset-id actors --label "Actors (Shared)" \
-		--gb-tileset-kind WORLD_TILESET_ACTORS \
-		--output-dir tools/level_editor/public/tiles/actors \
-		--output-json tools/level_editor/tilesets/actors.json
+# NOTE: no actors stanza: assets/actor-sprites.png was removed (commit
+# "removed unneeded actors"); the actors tileset is curated-source now and
+# its boss cells reload from assets/sprites.png via reload-boss-tiles below.
+
+# Deterministic Boss-tile reload: source sheets + CSVs -> curated editor
+# PNGs + color swatches (tools/level_editor/reload_boss_tiles.py). Reruns
+# are byte-identical; --check fails loudly on drift (no hand edits to the
+# reloaded PNGs). Covers all 12 combat Boss cells (9 live + 3 glow-eyes
+# editor-only) and all 8 OW Boss cells (actors tileset) + 4 enemies aliases
+# (boss_ow_*, the slime-lord OW sprite).
+reload-boss-tiles:
+	@python3 tools/level_editor/reload_boss_tiles.py
+
+reload-boss-tiles-check:
+	@python3 tools/level_editor/reload_boss_tiles.py --check
 
 # NOTE: extract-tiles is intentionally NOT a dependency here.
 # The tileset JSON files (tools/level_editor/tilesets/*.json) are the sole
@@ -391,18 +435,41 @@ editor:
 	@echo "Starting Game Boy RPG Level Editor..."
 	@cd tools/level_editor && npm install --no-audit --no-fund && npm run dev
 
-atlas-check:
-	@python3 tools/asset_atlas.py --check
-
 # Tileset manifest check: vram_block composition, exit marking, sheet bounds.
 tiles-check:
 	@python3 tools/level_editor/validate_tilesets.py tools/level_editor/tilesets/*.json
 
-# Palette manifest generation: PNG + tileset JSON -> generated/tiles/<tileset>.json
-# Single source of truth for CGB palettes (web editor + ROM compiler parity).
-# See docs/cgb_color_tiles.md §7 and tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_compiler.py | $(GENERATED_TILES_DIR)
+# Palette manifest generation: curated PNGs -> composed sheets ->
+# generated/tiles/*.json + shades + C palette includes + mismatch report.
+# Ramps always win (every tile gets an existing artist ramp); wrongness is
+# reported in generated/tiles/ramp_mismatches.json, never a build failure.
+# See tools/palette_compiler.py.
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json | $(GENERATED_TILES_DIR)
+	@python3 tools/compose_battle_sprites.py
+	@python3 tools/compose_enemy_sprites.py
+	@python3 tools/compose_hero_sprites.py
+	@python3 tools/compose_card_frames.py
+	@python3 tools/compose_dice.py
 	@python3 tools/palette_compiler.py
+	@python3 tools/verify_palette_manifest.py
+
+# Mismatch report: tiles whose pixels don't exactly fit their ramp.
+# Always exits green (ramps win); the JSON is the artist todo list. Also
+# prints the advisory ramp-tag validity findings (unknown / wrong-set tags;
+# see tools/verify_ramp_tags.py) -- advisory only, never fails.
+palette-check: manifest
+	@python3 -c "import json; m=json.load(open('generated/tiles/ramp_mismatches.json')); print('palette-check: %d reported tiles (see generated/tiles/ramp_mismatches.json)' % len(m)); [print('  %-14s %-7s declared=%-12s used=%-12s off=%s' % (r['sheet'], str(r['tile']), r['declared'], r['used_ramp'], ','.join(r['off_colors']))) for r in m]"
+	@python3 tools/verify_ramp_tags.py
+
+# Ramp-tag strict gate: every VRAM-block world tile carries an explicit
+# palette tag, the committed palette_ramps.json export (+ public copy) is
+# fresh, and every current mismatch is allowlisted (no new silent
+# fallbacks). Fails loudly; wired into CI. Deliberately NOT a manifest
+# prerequisite: it must check the committed tree as-is (regenerating first
+# would make the freshness check vacuous). Requires a prior `make manifest`
+# for generated/tiles/ramp_mismatches.json.
+ramp-check:
+	@python3 tools/verify_ramp_tags.py --strict
 
 # Tile-trait generation: manifests -> generated/tiles/tile_traits.h
 # (walk/glyph ranges + exit indices consumed by world.c, patrol_banked.c,
@@ -411,18 +478,21 @@ GENERATED_TILES_DIR = generated/tiles
 GENERATED_TILE_WALK = $(GENERATED_TILES_DIR)/tile_walk.h
 GENERATED_TILE_GLYPH = $(GENERATED_TILES_DIR)/tile_glyph.h
 GENERATED_TILE_PALETTE = $(GENERATED_TILES_DIR)/tile_palette.h
-tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE)
+GENERATED_TILE_ANIM = $(GENERATED_TILES_DIR)/anim_pairs.h
+tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM)
 
-$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
+$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
 	python3 tools/level_compiler/generate_tiles.py --out "$(GENERATED_TILES_DIR)"
 
 $(GENERATED_TILES_DIR):
 	mkdir -p $(GENERATED_TILES_DIR)
 
 # Consumers rebuild when the generated headers change (they are untracked).
-$(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o: $(GENERATED_TILE_WALK)
+$(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world/edge_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o $(BUILD_DIR)/debug/world/edge_banked.o: $(GENERATED_TILE_WALK)
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
+$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GENERATED_TILE_ANIM)
+$(BUILD_DIR)/ui/anim_swap_banked.o $(BUILD_DIR)/debug/ui/anim_swap_banked.o: $(GENERATED_TILE_ANIM)
 
 # Header-dependency safety net (AGENTS.md 52.2): the compile rules track
 # only .c -> .o mtimes, so an object compiled against an older struct
@@ -556,6 +626,15 @@ $(BUILD_DIR)/debug/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD $(INCLUDES) -o $@ $<
 
+# audio.c + sfx_step.c include generated/sfx/sfx_tables.h (side product of
+# one transcriber run). Order the tables first: on a fresh clone
+# generated/ is absent and parallel make otherwise compiles these objects
+# before the header exists (fatal error: sfx_tables.h: No such file or
+# directory). Normal prerequisites (not order-only) so regenerated tables
+# also rebuild their consumers.
+$(BUILD_DIR)/audio/audio.o $(BUILD_DIR)/audio/sfx_step.o \
+$(BUILD_DIR)/debug/audio/audio.o $(BUILD_DIR)/debug/audio/sfx_step.o: $(SFX_TABLES)
+
 $(GENERATED_MUSIC_DIR)/battle.c: assets/music/Battle\ BGM.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 6 song_battle "$@"
 
@@ -580,6 +659,13 @@ $(GENERATED_MUSIC_DIR)/castle.c: assets/music/castle.uge tools/compile_music.py 
 $(GENERATED_MUSIC_DIR)/mimic.c: assets/music/Mimic.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_mimic "$@"
 
+# Mimic battle intro (short sting, ~0.9 s).  Played once on mimic combat entry,
+# then audio_update() swaps in the looping song_mimic above (the ROM driver
+# loops whole songs, so intro and loop must be separate songs).  Bank 7
+# like the loop; both use the _b7 driver copy.
+$(GENERATED_MUSIC_DIR)/mimic_intro.c: assets/music/Mimic_intro.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_mimic_intro "$@"
+
 # Title theme.  Replaces the old hardcoded chiptune title table now that
 # the legacy music engine is gone (docs/uge.md Phase 6).
 $(GENERATED_MUSIC_DIR)/title.c: assets/music/title\ short.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
@@ -590,15 +676,66 @@ $(GENERATED_MUSIC_DIR)/title.c: assets/music/title\ short.uge tools/compile_musi
 $(GENERATED_MUSIC_DIR)/victory.c: assets/music/victory.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_victory "$@"
 
+# Opening theme (assets/music/opening.uge).  Wired to MUSIC_OVERWORLD:
+# the four scenes on that track had no authored music yet.  Bank 7
+# (the SFX moved to bank 8 to make room): plays through the bank-7
+# driver copy.
+$(GENERATED_MUSIC_DIR)/opening.c: assets/music/opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_opening "$@"
+
+# Chest-opening jingle (assets/music/chest opening.uge, one-shot).
+# Played once per chest loot (MUSIC_CHEST); the overworld restores the
+# scene track when it ends.  Bank 7 like the opening theme.
+$(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+
+# Game-over theme (assets/music/game over.uge, loops).  Played the moment
+# the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
+# result screen already carries it; it keeps playing over the game-over
+# choice menu until a map load restores the scene track (world_init
+# plays it on every map load).  Bank 7 like the other late songs.
+$(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
+
+# End-credits theme (assets/music/demo complete.uge, loops).  Played when
+# the final-boss victory exits to the ending screen (THE END).  Bank 7
+# like the other late songs.
+$(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
+
+# Chuck-a-luck table theme (assets/music/casino.uge, loops) for Nis's
+# table.  Bank 7 has ~640 B free (release) and this track is ~3.3 KB, so it lives
+# in the pristine bank 9 next to its own driver copy
+# (hUGEDriver_b9.o): the driver reads song bytes through the mapped ROM
+# window, so driver + song must share a bank.
+$(GENERATED_MUSIC_DIR)/casino.c: assets/music/casino.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 9 song_casino "$@"
+$(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+
+# Game-over theme (assets/music/game over.uge, loops).  Played the moment
+# the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
+# result screen already carries it; it keeps playing over the game-over
+# choice menu until a map load restores the scene track (world_init
+# plays it on every map load).  Bank 7 like the other late songs.
+
 # WAV previews for the level editor's BGM toggle (Inspector Map Info).
 # Rendered from the generated song C by tools/render_music_preview.py
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"
+
+# Fast pre-link feedback for tracker songs: ROM bytes per song + playback
+# length (tracker ticks, seconds, timer-ISR ticks) without a full build.
+# Usage: make music-size [SONG=mimic_intro]
+# A new song's bank fit and chaining-relevant duration are answered here,
+# before the first compile+link iteration.
+music-size: music
+	CC="$(CC)" INCLUDES="$(INCLUDES)" python3 tools/music_size.py $(SONG)
 
 $(MUSIC_PREVIEW_DIR)/%.wav: $(GENERATED_MUSIC_DIR)/%.c tools/render_music_preview.py | $(MUSIC_PREVIEW_DIR)
 	python3 tools/render_music_preview.py $*
@@ -683,6 +820,46 @@ $(HUGEDRIVER_B7_OBJ_DEBUG): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py 
 		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B7 \
 		-o $@ $(BUILD_DIR)/debug/lib/hUGEDriver_b7.obj
 
+# Third hUGE driver copy in bank 9 (renamed exports, same list as b7) for
+# the casino song: driver + song must share a bank (see the casino.c rule).
+$(HUGEDRIVER_B9_OBJ): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(RGBASM_HUGE) -I lib/hUGEDriver/ -DGBDK -o $(BUILD_DIR)/lib/hUGEDriver_b9.obj $<
+	$(RGB2SDAS) -b 9 \
+		-r hUGE_init=hUGE_init_b9 \
+		-r _hUGE_init=_hUGE_init_b9 \
+		-r hUGE_dosound=hUGE_dosound_b9 \
+		-r _hUGE_dosound=_hUGE_dosound_b9 \
+		-r hUGE_mute_channel=hUGE_mute_channel_b9 \
+		-r _hUGE_mute_channel=_hUGE_mute_channel_b9 \
+		-r hUGE_set_position=hUGE_set_position_b9 \
+		-r _hUGE_set_position=_hUGE_set_position_b9 \
+		-r hUGE_current_wave=hUGE_current_wave_b9 \
+		-r _hUGE_current_wave=_hUGE_current_wave_b9 \
+		-r hUGE_mute_mask=hUGE_mute_mask_b9 \
+		-r _hUGE_mute_mask=_hUGE_mute_mask_b9 \
+		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B9 \
+		-o $@ $(BUILD_DIR)/lib/hUGEDriver_b9.obj
+
+$(HUGEDRIVER_B9_OBJ_DEBUG): lib/hUGEDriver/src/hUGEDriver.asm tools/rgb2sdas.py | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(RGBASM_HUGE) -I lib/hUGEDriver/ -DGBDK -o $(BUILD_DIR)/debug/lib/hUGEDriver_b9.obj $<
+	$(RGB2SDAS) -b 9 \
+		-r hUGE_init=hUGE_init_b9 \
+		-r _hUGE_init=_hUGE_init_b9 \
+		-r hUGE_dosound=hUGE_dosound_b9 \
+		-r _hUGE_dosound=_hUGE_dosound_b9 \
+		-r hUGE_mute_channel=hUGE_mute_channel_b9 \
+		-r _hUGE_mute_channel=_hUGE_mute_channel_b9 \
+		-r hUGE_set_position=hUGE_set_position_b9 \
+		-r _hUGE_set_position=_hUGE_set_position_b9 \
+		-r hUGE_current_wave=hUGE_current_wave_b9 \
+		-r _hUGE_current_wave=_hUGE_current_wave_b9 \
+		-r hUGE_mute_mask=hUGE_mute_mask_b9 \
+		-r _hUGE_mute_mask=_hUGE_mute_mask_b9 \
+		-r hUGE_NO_WAVE=hUGE_NO_WAVE_B9 \
+		-o $@ $(BUILD_DIR)/debug/lib/hUGEDriver_b9.obj
+
 # Grouped targets (&:): the lite libs come from ONE make_lite_libs.py run.
 # A plain multi-target rule runs its recipe once PER TARGET, which under
 # `make debug release -j` (the editor's Compile ROM button) races the two
@@ -698,14 +875,24 @@ $(GB_LITE) $(SM83_LITE) &: $(OBJS) $(OBJS_DEBUG) | $(BUILD_DIR)
 LDFLAGS = -Wl-b_DATA=0xC940
 
 $(TARGET): gfx tiles levels screens dialogues shops entities music $(OBJS) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
-	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS) $(GB_LITE) $(SM83_LITE)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo16 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-release.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-release.log; test $$rc -eq 0
+# Fixed-bank overflow is silent: rgblink warns ("Possible overflow ...
+# bank 1 -> 2" / "spans into the next") but still overwrites the start of
+# the next bank (AGENTS.md 52.18).  Fail loudly instead (see also
+# tools/check_banked_copies.sh, wired into `make lint`).
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-release.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-release.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld.noi $(BUILD_DIR)/kaartenheld.sym
-	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" $@
+# NOTE: lcc already runs rgbfix once internally at link time, so this
+# explicit second fix only (idempotently) stamps MBC/RAM/title fields.
+# -W no-overwrite silences the resulting "overwrote a non-zero byte"
+# noise (verified byte-identical via sha256 before/after).
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
 $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities music $(OBJS_DEBUG) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
-	$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo8 $(LDFLAGS) -Wl-m -Wl-j -Wl-y -o $@ build/crt0.o $(OBJS_DEBUG) $(GB_LITE) $(SM83_LITE)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo16 $(LDFLAGS) -Wl-m -Wl-j -Wl-y -o $@ build/crt0.o $(OBJS_DEBUG) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-debug.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-debug.log; test $$rc -eq 0
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-debug.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-debug.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
-	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" $@
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
 build/crt0.o: src/crt0.s | $(BUILD_DIR)
 	sdasgb -o $@ $<
@@ -729,7 +916,7 @@ run-debug: $(TARGET_DEBUG)
 test: $(TARGET)
 	@echo "Validating Game Boy ROM header..."
 	@if command -v $(RGBFIX) >/dev/null 2>&1; then \
-		$(RGBFIX) -v -C -t "KAARTENHELD" $(TARGET); \
+		$(RGBFIX) -v -C -t "KAARTENHELD" -W no-overwrite $(TARGET); \
 	else \
 		test -s $(TARGET); \
 	fi
@@ -737,6 +924,24 @@ test: $(TARGET)
 
 test-harness: debug
 	python3 tools/dev.py test --jobs $(JOBS)
+
+# Fast iteration gate: the three layout-sensitive sentinel scenarios
+# (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or
+# banked-body change BEFORE trusting the build; run the full suite at the end.
+test-sentinels: debug
+	python3 tools/dev.py scenario patrol_slime_cross
+	python3 tools/dev.py scenario patrol_enemy_bumps_player
+	python3 tools/dev.py scenario battle_multi_enemy_cycle_kill
+
+# Full validation gate (AGENTS.md Step 6), in order, in one invocation so
+# agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
+validate: memmap lint
+	$(MAKE) test-harness JOBS=$(JOBS)
+	$(MAKE) test
+	$(MAKE) verify-oam
+	$(MAKE) stack-budget
+	$(MAKE) verify-music
+	$(MAKE) verify-walkthrough
 
 test-scenario: debug
 	@python3 tools/dev.py scenario $(SCENARIO)
@@ -766,8 +971,31 @@ parity: debug
 screenshots: $(TARGET)
 	@python3 tools/capture_walkthrough.py
 
+# Printed player's manual (manual/kaartenheld-manual.md): Markdown -> Typst
+# -> a 105 mm square instruction booklet PDF, the traditional Game Boy
+# format.  The intermediate .typ is written into build/ (one level below the
+# repo root, like manual/) so the Markdown's ../screenshots image paths
+# resolve there too; typst then compiles with the repo as its root so those
+# same paths stay inside it.  Host-side only, never part of the ROM gate.
+MANUAL_SRC = manual/kaartenheld-manual.md
+MANUAL_TEMPLATE = manual/manual-template.typ
+MANUAL_PDF = $(BUILD_DIR)/kaartenheld_manual.pdf
+MANUAL_TYP = $(BUILD_DIR)/kaartenheld_manual.typ
+MANUAL_IMAGES = $(wildcard screenshots/*.png screenshots/review/*.png) \
+	assets/title-red.png assets/title-brun.png
+
+manual: $(MANUAL_PDF)
+
+$(MANUAL_PDF): $(MANUAL_SRC) $(MANUAL_TEMPLATE) $(MANUAL_IMAGES) | $(BUILD_DIR)
+	@command -v pandoc >/dev/null || { echo "manual: pandoc not found (run inside nix develop)" >&2; exit 1; }
+	@command -v typst >/dev/null || { echo "manual: typst not found (run inside nix develop)" >&2; exit 1; }
+	pandoc $(MANUAL_SRC) --template=$(MANUAL_TEMPLATE) -t typst -o $(MANUAL_TYP)
+	typst compile --root . $(MANUAL_TYP) $(MANUAL_PDF)
+	@echo "manual: $(MANUAL_PDF)"
+
 # README GIFs (host-side, never CI-gated): boot splash+title, a kobold
-# battle, and the Field -> Forest overworld walk.  Committed under
+# battle, the Field -> Forest overworld walk, and the Lord of Slimes boss
+# battle (glowing-eyes blink).  Committed under
 # screenshots/ (the walkthrough --clean prune only removes *.png, so these
 # survive).
 gifs: $(TARGET)
@@ -786,6 +1014,12 @@ verify-walkthrough: release
 # and scene (map) changes via the mGBA debugger (see tools/verify_oam.py).
 verify-oam: debug
 	@python3 tools/verify_oam.py
+
+# Verify the banked-call stack worst case stays within budget: static
+# analysis over the debug .lst call graph (see tools/stack_budget.py).
+# Ratchet: fails when worst-case depth exceeds the pinned baseline.
+stack-budget: debug
+	@python3 tools/stack_budget.py
 
 # Verify real-boot VRAM writes land (vsync-before-render + LCD-off boot
 # redraw): boots the debug ROM WITHOUT harness mode and compares the real
@@ -844,8 +1078,9 @@ vram-dialogue: release
 
 # Print a reproducible memory budget (code/WRAM usage, _HOME headroom vs the
 # 0x8000 ceiling).  Exits non-zero if a documented invariant is violated.
-memmap: debug
+memmap: debug release
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld_debug.map
+	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
 
 clean:
 	rm -rf $(BUILD_DIR) $(GENERATED_MUSIC_DIR)

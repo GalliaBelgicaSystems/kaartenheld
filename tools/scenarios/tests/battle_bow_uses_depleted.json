@@ -2,7 +2,6 @@
  "name": "battle_bow_uses_depleted",
  "test": true,
  "description": "A bow with its uses spent renders the 0-arrows glyph on the floor row (tile 98) while the middle row keeps the nine power icon; the semantic row reads BO0.",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

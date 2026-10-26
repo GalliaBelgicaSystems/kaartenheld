@@ -48,7 +48,9 @@ static uint8_t snap_write_actors(const World *world, uint8_t *out,
         }
     }
 
-    for (i = 0; i < g_static_actor_count && n < max_actors; i++) {
+    /* Clamped like actor_find_at (trashed count must not dump garbage
+     * rows into the snapshot). */
+    for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS && n < max_actors; i++) {
         *p++ = (uint8_t)g_static_actors[i].id;
         *p++ = g_static_actors[i].x;
         *p++ = g_static_actors[i].y;

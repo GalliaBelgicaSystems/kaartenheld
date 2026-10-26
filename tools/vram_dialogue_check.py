@@ -2,11 +2,11 @@
 """Dialogue-box placement ground-truth check (PyBoy).
 
 On this ASCII-only branch the dialogue box is drawn into the BACKGROUND
-tilemap (0x9800) at screen rows 12-17 via the console font -- the
+tilemap (0x9800) at screen rows 14-17 via the console font -- the
 window-layer dialogue box (f77ec9b) is a gfx-branch change.  The dialogue
 overlays the frozen, camera-scrolled overworld (SCX/SCY are kept during
-SCREEN_DIALOGUE), so the box is written at ring rows (12 + scroll_y)..(17 +
-scroll_y) and the PPU shows it at screen rows 12-17.  The box must be
+SCREEN_DIALOGUE), so the box is written at ring rows (14 + scroll_y)..(17 +
+scroll_y) and the PPU shows it at screen rows 14-17.  The box must be
 present, clean (no map tiles inside it), and the HUD window must be
 disabled while the dialogue is up.
 
@@ -15,11 +15,13 @@ scrolled, SCY > 0), triggers the dialogue by bumping the guard, and decodes
 the actual BACKGROUND tilemap:
 
   1. dialogue-bg-box: the box is present in the background at screen rows
-     12-17 at the expected shape (+ border, speaker, line, [A] CONTINUE).
+     14-17 at the expected shape (top bar with speaker, three text
+     rows, no bottom border; no "[A] CONTINUE").
   2. dialogue-clean: the box contains only dialogue text -- no map tiles
      mixed in.
   3. dialogue-window-hidden: the HUD window is disabled during dialogue.
-  4. dialogue-second-line: pressing A advances to the later dialogue line.
+  4. dialogue-second-line: both lines are visible at once (two-line
+     pages); one A press closes the 2-line greeting.
 
 The walk is POSITION-based, not press-count based.  PyBoy's fixed button
 delays are lossy (an 8-tick hold drops ~30% of presses), and hold-to-move
@@ -291,8 +293,8 @@ def main():
     bg = pb.tilemap_background
 
     # On this ASCII-only branch the dialogue box is drawn into the
-    # BACKGROUND tilemap (console putchar) at screen rows 12-17, offset into
-    # the 32x32 ring by the frozen camera: ring rows (12+scroll_y)..(17+scroll_y),
+    # BACKGROUND tilemap (console putchar) at screen rows 14-17, offset into
+    # the 32x32 ring by the frozen camera: ring rows (14+scroll_y)..(17+scroll_y),
     # ring cols (scroll_x..scroll_x+19).  The window-layer dialogue box
     # (f77ec9b) is a gfx-branch change.  The box must still be present,
     # clean (no map tiles inside it), and the window must stay disabled
@@ -304,37 +306,45 @@ def main():
     scroll_x = pb.memory[0xFF43] >> 3
     print(f"dialogue camera: scroll=({scroll_x},{scroll_y})")
 
-    box = [background_row(pb, 12 + wy, scroll_y) for wy in range(6)]
+    box = [background_row(pb, 14 + wy, scroll_y) for wy in range(4)]
     lcdc = pb.memory[0xFF40]
     win_enabled = bool(lcdc & 0x20)
 
     # ── 1. Dialogue box present in the BACKGROUND at the expected shape ──
-    top_ok = box[0].startswith("+") and box[0].endswith("+")
-    bottom_ok = box[5].startswith("+") and box[5].endswith("+")
-    continue_ok = "[A] CONTINUE" in box[4]
-    check("dialogue-bg-box", top_ok and bottom_ok and continue_ok,
-          "expected the box (+ borders, [A] CONTINUE) in background rows "
-          f"12-17 at the scrolled ring offset (scroll_y={scroll_y}), got: "
+    # Top bar with the speaker name, three full-width text rows, no
+    # bottom border.  The guard greeting shows both lines at once plus a
+    # blank third row (two-line pages, no "[A] CONTINUE"): first line on
+    # row 15, second on row 16, blank on row 17.  The last page shows no
+    # continue chevron (tile 109, decoded as "#" below).
+    top_ok = box[0].startswith("+") and box[0].endswith("+") and "GUARD:" in box[0]
+    first_ok = "Halt! Keep peace." in box[1]
+    second_ok = "Watch for slimes." in box[2]
+    third_blank = box[3].strip() == ""
+    check("dialogue-bg-box", top_ok and first_ok and second_ok and third_blank,
+          "expected the box (GUARD: top, two lines, blank third row) in background rows "
+          f"14-17 at the scrolled ring offset (scroll_y={scroll_y}), got: "
           + " / ".join(box))
 
-    # ── 2. Box is clean: only font tiles (0..95 or 128..223) inside it ────────
-    dirty = any((t >= 96 and not (128 <= t <= 223)) for wy in range(6)
-                for t in (raw_id(pb, x, (12 + scroll_y + wy) & 31)
+    # ── 2. Box is clean: only font tiles (0..95 or 128..223) or the dialogue
+    # continue chevron (tile 109, down-pointing rotated ">") inside it ────
+    dirty = any((t >= 96 and not (128 <= t <= 223) and t != 109) for wy in range(4)
+                for t in (raw_id(pb, x, (14 + scroll_y + wy) & 31)
                           for x in range(20)))
     check("dialogue-clean", not dirty,
-          f"map tiles leaked into the dialogue box (rows: {box[1:5]})")
+          f"map tiles leaked into the dialogue box (rows: {box[1:3]})")
 
     # ── 3. Window disabled during dialogue (HUD is overworld-only) ──────
     check("dialogue-window-hidden", not win_enabled,
           f"expected the HUD window disabled during dialogue, got LCDC=0x{lcdc:02X}")
 
-    # Advance once and verify the later line too.
+    # Both lines are visible at once (two-line pages): no advance needed.
+    # Press A once to close the 2-line greeting and verify the box is gone.
     press("a", settle=30)
     for _ in range(10):
         pb.tick()
-    second_line = background_row(pb, 14, scroll_y)
-    check("dialogue-second-line", "Watch for slimes." in second_line,
-          "expected the second dialogue line, got: " + second_line)
+    closed_top = background_row(pb, 14, scroll_y)
+    check("dialogue-second-line", not (closed_top.startswith("+") and "GUARD:" in closed_top),
+          "expected the dialogue box to close after one A press, still: " + closed_top)
 
     print()
     if failures:

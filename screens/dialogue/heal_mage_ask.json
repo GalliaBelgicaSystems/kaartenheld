@@ -1,0 +1,10 @@
+{
+  "id": "heal_mage_ask",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "Do you want me to",
+    "heal your wounds?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

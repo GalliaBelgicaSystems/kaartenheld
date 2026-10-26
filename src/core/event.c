@@ -6,6 +6,11 @@
 #include "rpg/currency.h"
 #include "banked.h"
 
+/* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
+ * ROM bank 2).  Declared here so the fixed-bank executor can take its
+ * address for the trampoline. */
+void game_slime_trio_spawn_banked(void);
+
 /* ── Event engine ──────────────────────────────────────────────────
  * The engine matches events against a table registered by the game layer
  * (event_init, called from src/game/events.c).  First match wins; for
@@ -16,9 +21,11 @@
  * it is read, so callers never touch banked data and the bank register is
  * always restored to 0.  event_get_row() returns the scratch copy; a
  * returned pointer is only valid until the next row access. */
-static const EventDefinition *g_events = NULL;
+static const EventDefinition *g_events;  /* BSS (52.27) */
 static uint8_t g_event_count = 0;
-static uint8_t g_event_bank = 2;
+/* BSS: event_init() (via game_content_init() at every boot) sets the home
+ * bank before any row is read. */
+static uint8_t g_event_bank;
 static EventDefinition g_event_scratch;
 
 /* banked_copy() takes a uint8_t byte count; a larger row cannot be staged. */
@@ -72,6 +79,7 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         uint8_t t = a->type;
         uint16_t a0 = a->arg0;
         int16_t a1 = a->arg1;
+        bool ok;
         if (t == EVENT_ACTION_DIALOGUE) {
             dialogue_start_def(&g->dialogue, (DialogueId)a0);
             if (dialogue_started) *dialogue_started = true;
@@ -84,17 +92,50 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
         } else if (t == EVENT_ACTION_ADD_VARIABLE) {
             game_variable_add(&g->state, (VariableId)a0, a1);
         } else if (t == EVENT_ACTION_SCENE_CHANGE) {
+            /* Must not run in the same event as EVENT_ACTION_DIALOGUE:
+             * the new map is not rendered until the next overworld
+             * frame, so a same-frame dialogue would take the LCD-on
+             * overlay over stale VRAM.  Keep scene-changing and
+             * dialogue-starting events separate (no shipped event
+             * combines them; interaction_on_dialogue_end also never
+             * changes scenes for the same reason). */
             scene_load(g, (SceneId)a0, (uint8_t)a1, (uint8_t)a->arg2);
         } else if (t == EVENT_ACTION_ADD_ITEM) {
-            if (deck_collection_add(&g->state.cards, (CardId)a0, (uint8_t)a1)) {
+            ok = deck_collection_add(&g->state.cards, (CardId)a0, (uint8_t)a1);
+#ifdef DEBUG_BUILD
+            if (ok) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_COLLECTION, (uint8_t)a0, (uint8_t)a1, 0, 0);
             }
+#else
+            (void)ok;
+#endif
+            /* A failed grant aborts the event: later actions (quest
+             * flags, loot state) must not apply for an item the player
+             * never received (e.g. opening a chest with a full
+             * collection would otherwise consume the one-shot). */
+            if (!ok) break;
         } else if (t == EVENT_ACTION_ADD_CURRENCY) {
             currency_add(&g->state, (CurrencyId)a0, a1);
         } else if (t == EVENT_ACTION_REMOVE_ITEM) {
-            if (deck_collection_remove(&g->state.cards, (CardId)a0, (uint8_t)a1)) {
+            ok = deck_collection_remove(&g->state.cards, (CardId)a0, (uint8_t)a1);
+#ifdef DEBUG_BUILD
+            if (ok) {
                 telemetry_emit(EVENT_CARD_REMOVED_FROM_COLLECTION, (uint8_t)a0, (uint8_t)a1, 0, 0);
             }
+#else
+            (void)ok;
+#endif
+        } else if (t == EVENT_ACTION_SPAWN_SLIME_TRIO) {
+            /* Slime-knight armor split (game content, bank 2): the
+             * felled knight's runtime slot becomes a slime-trio
+             * encounter in place.  Thin dispatch only -- the body
+             * resolves its own ow byte from the event row (same bank),
+             * so nothing is staged and the fixed bank pays just the
+             * branch + call.  Keeps engine files free of game ids
+             * (AGENTS.md §55.1). */
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
+            banked_call_run();
         }
     }
 }
@@ -127,14 +168,14 @@ static const EventDefinition *event_first_match(Game *g, EventTriggerType trigge
     return NULL;
 }
 
-ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor)
+ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor, MapId map)
 {
     bool dialogue_started = false;
     const EventDefinition *def;
 
     if (!g || !actor) return ENGAGE_NONE;
 
-    def = event_first_match(g, EVENT_TRIGGER_INTERACT, actor->id, EVENT_MAP_ANY);
+    def = event_first_match(g, EVENT_TRIGGER_INTERACT, actor->id, map);
     if (def) {
         telemetry_emit(EVENT_SCRIPT_TRIGGERED, (uint8_t)def->id, 0, 0, 0);
         event_execute_actions(g, def, &dialogue_started);
@@ -149,6 +190,13 @@ void event_resolve_map_enter(Game *g, MapId to_map)
     const EventDefinition *def;
 
     if (!g) return;
+
+    /* Gate crossing ends any merchant engagement (same rule as
+     * scene_load, which gate walks bypass): selling stays doorstep-bound
+     * to the buying shop.  This runs only on MAP_CHANGED (sole caller is
+     * the overworld gate branch), before MAP_ENTER events, none of which
+     * read shop state. */
+    g->shop_id = 0;
 
     def = event_first_match(g, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, to_map);
     if (def) {

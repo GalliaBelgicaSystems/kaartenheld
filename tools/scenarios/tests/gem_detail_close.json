@@ -1,0 +1,88 @@
+{
+ "name": "gem_detail_close",
+ "test": true,
+ "description": "B on the GEM detail page returns to the list with no stale detail rows: row 3 shows STRAIGHT GEM again while rows 6 and 9 no longer carry the INFO text.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "STRAIGHT GEM"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 6,
+   "contains": "3 IN A ROW"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 9,
+   "contains": "SEL:BACK"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8411,
+  "variables": {
+   "GEM_OWNED": 1
+  }
+ }
+}

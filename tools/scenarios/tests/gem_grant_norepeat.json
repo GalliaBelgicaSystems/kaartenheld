@@ -1,0 +1,103 @@
+{
+  "name": "gem_grant_norepeat",
+  "test": true,
+  "description": "The gem prize is one-shot: a second +20-net sitting with the gem already owned opens the ordinary farewell, leaves the owned bit at 1, and pays the gold normally.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "DIALOGUE"
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "KOBOLD_FAREWELL"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 1
+    },
+    {
+      "type": "currency",
+      "expected": 50,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 579,
+    "variables": {
+      "GEM_OWNED": 1
+    }
+  }
+}

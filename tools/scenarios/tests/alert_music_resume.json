@@ -1,0 +1,34 @@
+{
+ "name": "alert_music_resume",
+ "test": true,
+ "description": "Held track resumes after the alert sting: 130 frames after entering TEST_FOREST (kobold pursuers, sting at ~30 f) the forest track plays again.",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 130
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "music_track",
+   "expected": "FOREST"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 1
+  }
+ ]
+}

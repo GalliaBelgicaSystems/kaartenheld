@@ -6,9 +6,12 @@
 #include "world.h"
 #include "audio.h"
 
-/* A generic exit from a scene.  The tile at (gate_x, gate_y) is TILE_EXIT;
- * stepping onto it moves the player to target_scene at (spawn_x, spawn_y).
- * tile_char is the rendered glyph ('>' forward, '<' back, etc.). */
+/* A generic exit from a scene.  The exit is an invisible trigger: it keeps
+ * whatever terrain art is painted at (gate_x, gate_y) and never stamps its
+ * own tile.  Stepping onto it moves the player to target_scene at
+ * (spawn_x, spawn_y).  tile_char is the rendered glyph ('>' forward, '<'
+ * back, etc.) for the semantic buffer.  A trigger on a linked border cell
+ * wins over the neighbors edge rule. */
 typedef struct {
     uint8_t gate_x;
     uint8_t gate_y;
@@ -34,7 +37,7 @@ typedef struct {
  * width/height set the scene's tile bounds (<= WORLD_WIDTH/HEIGHT); the
  * overworld camera clamps its view window to them.  spawn_x/spawn_y/spawn_facing
  * is the player start compiled from the level JSON's player.spawn (the single
- * source of truth; game_new_game reads the FIELD row). */
+ * source of truth; game_new_game reads the WAKE_GROVE row). */
 typedef struct {
     MapId map_id;
     MusicTrack music;
@@ -48,6 +51,21 @@ typedef struct {
     uint8_t spawn_y;
     uint8_t spawn_facing; /* Direction */
     uint8_t default_tile; /* TileType for unpainted cells (default_walkable) */
+    /* Whole-edge map links (the "ocean"): stepping onto a non-wall cell of
+     * a linked border crosses to the neighbor scene with a mirrored entry
+     * spawn.  MAP_NONE (0xFF) = no link on that edge.  Appended at the END
+     * of the struct so existing field offsets never shift. */
+    uint8_t neighbor_n; /* MapId or MAP_NONE */
+    uint8_t neighbor_s; /* MapId or MAP_NONE */
+    uint8_t neighbor_e; /* MapId or MAP_NONE */
+    uint8_t neighbor_w; /* MapId or MAP_NONE */
+    /* ROM bank holding this scene's terrain_blocks array.  Normally the
+     * home content bank (5 release, 4 TEST fixtures); overflow scenes keep
+     * their terrain in a roomier bank, stamped by a per-bank body
+     * dispatched from scene_load_tiles() (see scene_load.c).  Appended at
+     * the END so existing field offsets never shift (rebuild everything
+     * after touching this header: AGENTS.md 52.2). */
+    uint8_t terrain_bank;
 } SceneDefinition;
 
 /* Look up a scene definition by its map id.
@@ -56,9 +74,6 @@ typedef struct {
  * pointer is valid only until the next call to scene_definition_for_map().
  * Do not retain this pointer across nested or subsequent scene lookups. */
 const SceneDefinition *scene_definition_for_map(MapId map_id);
-
-/* Get the tileset kind for a given map id. */
-WorldTilesetKind scene_get_tileset(MapId map_id);
 
 /* Find the exit whose gate tile sits at (x, y), or NULL. */
 const SceneExit *scene_exit_at(const SceneDefinition *def, uint8_t x, uint8_t y);

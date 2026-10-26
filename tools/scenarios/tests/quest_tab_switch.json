@@ -1,8 +1,7 @@
 {
  "name": "quest_tab_switch",
  "test": true,
- "description": "Quick-screen tab switching is symmetric: LEFT/RIGHT moves CARDS -> QUESTS and back again (QUEST list previously swallowed LEFT/RIGHT so the return trip was impossible)",
- "scenario_id": "NEW_GAME",
+ "description": "Quick-screen tab switching is symmetric: LEFT/RIGHT moves DECK -> QUEST and back again (QUEST list previously swallowed LEFT/RIGHT so the return trip was impossible)",
  "actions": [
   {
    "type": "press",
@@ -37,12 +36,12 @@
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "CARDS"
+   "contains": "DECK QUEST HERO GEM"
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "I SW"
+   "row": 4,
+   "contains": "WOOD SWORD"
   }
  ],
  "initial_state": {

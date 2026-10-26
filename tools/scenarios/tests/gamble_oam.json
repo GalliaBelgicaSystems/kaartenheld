@@ -1,0 +1,84 @@
+{
+  "name": "gamble_oam",
+  "test": true,
+  "description": "Nis renders as OAM sprites on entries 1-6 (tiles 128-133, the battle-art block base).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "oam_tile",
+      "entry": 1,
+      "expected": 128
+    },
+    {
+      "type": "oam_tile",
+      "entry": 2,
+      "expected": 129
+    },
+    {
+      "type": "oam_tile",
+      "entry": 3,
+      "expected": 130
+    },
+    {
+      "type": "oam_tile",
+      "entry": 4,
+      "expected": 131
+    },
+    {
+      "type": "oam_tile",
+      "entry": 5,
+      "expected": 132
+    },
+    {
+      "type": "oam_tile",
+      "entry": 6,
+      "expected": 133
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 5
+  }
+}

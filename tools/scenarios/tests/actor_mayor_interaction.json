@@ -2,7 +2,6 @@
  "name": "actor_mayor_interaction",
  "test": true,
  "description": "Friendly World Actor (Mayor) starts dialogue when engaged",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "press",

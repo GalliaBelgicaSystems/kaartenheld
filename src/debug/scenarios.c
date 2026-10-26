@@ -18,44 +18,26 @@
 #include "game_ids.h"
 #include "ui.h"
 #include "battle.h"
+#include "banked.h"
 
 extern Game g_game;
 
-volatile uint8_t g_scen_load = 0;
-volatile uint8_t g_scen_load_state = 0;
-volatile uint8_t g_debug_action[6];
-volatile uint8_t g_debug_action_pending = 0;
-uint8_t g_scen_state_buf[STATE_LOAD_DESC_SIZE];
+void scenario_load_apply_banked(void);
 
-enum {
-    DBG_ACT_ADD_ITEM = 1,
-    DBG_ACT_REMOVE_ITEM = 2,
-    DBG_ACT_ADD_CURRENCY = 3,
-    DBG_ACT_ADD_PROGRESS = 4,
-    DBG_ACT_BUY_ITEM = 5,
-    DBG_ACT_USE_ITEM = 6,
-    DBG_ACT_EQUIP_ITEM = 7,
-    DBG_ACT_SAVE = 8,
-    DBG_ACT_LOAD = 9,
-    DBG_ACT_SET_HAND_CARD = 10,
-    DBG_ACT_SET_FILTER = 11,
-    DBG_ACT_SET_SORT = 12,
-    DBG_ACT_DECK_ADD = 13,
-    DBG_ACT_SET_HAND_CARD_META = 14,
-    DBG_ACT_START_BATTLE = 15,
-    DBG_ACT_DECK_REMOVE = 16,
-    DBG_ACT_SET_HAND_CARD_STATUS = 17,
-    DBG_ACT_SET_ENEMY_HP = 18,
-    DBG_ACT_APPLY_STATUS = 19,
-    DBG_ACT_SET_HAND_RING = 20
-};
+volatile uint8_t g_scen_load;  /* BSS zero (AGENTS.md 52.27) */
+volatile uint8_t g_scen_load_state;  /* BSS zero (AGENTS.md 52.27) */
+volatile uint8_t g_debug_action[6];
+volatile uint8_t g_debug_action_pending;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_scen_state_buf[STATE_LOAD_DESC_SIZE];
 
 static void scenario_begin(uint16_t seed)
 {
     g_game.frame = 0;
     g_game.game_over_choice = 0;
     rng_set_seed(seed);
+#ifdef DEBUG_BUILD
     input_reset();
+#endif
     telemetry_init();
     telemetry_set_frame_ptr(&g_game.frame);
     /* Baseline music is the loaded scene's track (runs after
@@ -72,11 +54,9 @@ static void scenario_begin(uint16_t seed)
 static void scenario_load_state(void)
 {
     const uint8_t *b = g_scen_state_buf;
-    const uint8_t *p;
-    uint8_t *dst;
     SceneId scene;
     MapId map;
-    uint8_t x, y, facing, screen, dialogue_id, start_battle, i, n;
+    uint8_t x, y, facing, screen, dialogue_id, start_battle, i;
     uint16_t seed;
 
     if (b[0] != STATE_LOAD_DESC_VERSION) return;
@@ -93,76 +73,14 @@ static void scenario_load_state(void)
 
     game_new_game(&g_game.state);
 
-    p = b + STATE_LOAD_DESC_VARIABLES_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_VARIABLES_COUNT_OFF]; i++) {
-        uint8_t vid = *p++;
-        int16_t val = (int16_t)snap_read16(p);
-        p += 2;
-        if (vid >= 1 && vid <= MAX_STATE_VARIABLES) {
-            g_game.state.variables.values[vid - 1] = val;
-        }
-    }
-
-    p = b + STATE_LOAD_DESC_CURRENCY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_CURRENCY_COUNT_OFF]; i++) {
-        uint8_t cid = *p++;
-        int16_t amt = (int16_t)snap_read16(p);
-        p += 2;
-        if (cid >= 1 && cid <= MAX_CURRENCIES) {
-            g_game.state.currency.amount[cid - 1] = amt;
-        }
-    }
-
-    p = b + STATE_LOAD_DESC_PARTY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PARTY_COUNT_OFF]; i++) {
-        g_game.state.party.members[i].id = (CharacterId)*p++;
-        g_game.state.party.members[i].hp = *p++;
-        g_game.state.party.members[i].max_hp = *p++;
-        g_game.state.party.count = (uint8_t)(i + 1);
-    }
-
-    p = b + STATE_LOAD_DESC_INVENTORY_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_INVENTORY_COUNT_OFF]; i++) {
-        deck_collection_add(&g_game.state.cards, (CardId)*p, *(p + 1));
-        p += 2;
-    }
-
-    /* Deck section: only applied when the host marks it present, so
-     * scenarios without "deck" keep the starter default.  Direct setup
-     * writes (no mechanic calls, no telemetry) per AGENTS.md 53.3.
-     * An explicit empty deck (count 0) is allowed: it is how scenarios
-     * reach battle_start's packed fallback-deck path now that the CARDS
-     * menu enforces DECK_MIN_CARDS. */
-    if (b[STATE_LOAD_DESC_DECK_PRESENT_OFF]) {
-        n = b[STATE_LOAD_DESC_DECK_COUNT_OFF];
-        if (n > MAX_DECK_CARDS) n = MAX_DECK_CARDS;
-        p = b + STATE_LOAD_DESC_DECK_ENTRY_OFF;
-        dst = g_game.state.cards.deck.cards;
-        i = n;
-        while (i) {
-            *dst++ = *p++;
-            i--;
-        }
-        g_game.state.cards.deck.count = n;
-    }
-
-    p = b + STATE_LOAD_DESC_WORLD_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_WORLD_COUNT_OFF]; i++) {
-        g_game.state.world.actors[i].actor_id = (ActorId)snap_read16(p);
-        p += 2;
-        g_game.state.world.actors[i].state = *p++;
-        g_game.state.world.count = (uint8_t)(i + 1);
-    }
-
-    p = b + STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF;
-    for (i = 0; i < b[STATE_LOAD_DESC_PROGRESSION_COUNT_OFF]; i++) {
-        uint8_t t_type = *p++;
-        uint16_t t_id = snap_read16(p);
-        p += 2;
-        progression_ensure(&g_game.state, t_type, t_id, *p, snap_read16(p + 1));
-        p += 3;
-    }
-    /* equipment field removed; skipped */
+    /* Descriptor GameState sections (variables, currency, party,
+     * collection, deck, world, progression) apply in the bank-5 body
+     * so the fixed bank keeps headroom under 0x8000
+     * (docs/fixed-bank-move-out.md).  Pure WRAM writes, no fixed
+     * calls, no telemetry -- setup semantics per AGENTS.md 53.3. */
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&scenario_load_apply_banked;
+    banked_call_run();
 
     g_game.state.scene.scene_id = scene;
     g_game.state.scene.player_x = x;
@@ -182,7 +100,7 @@ static void scenario_load_state(void)
         g_game.state.flags.bytes[i] = b[STATE_LOAD_DESC_FLAGS_OFF + i];
     }
     g_game.game_over_choice = b[STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF];
-    g_game.shop_id = 1;
+    g_game.shop_id = 0;
     g_game.prev_screen = SCREEN_OVERWORLD;
     g_game.screen = SCREEN_OVERWORLD;
 
@@ -191,6 +109,13 @@ static void scenario_load_state(void)
     }
     if (dialogue_id != DIALOGUE_ID_NONE) {
         dialogue_start_def(&g_game.dialogue, (DialogueId)dialogue_id);
+        /* Tell the truth about what was rendered: this scenario boots
+         * straight into dialogue without ever rendering the overworld,
+         * so prev must read DIALOGUE (not OVERWORLD) or the entry takes
+         * the LCD-on overlay over uninitialized VRAM.  Normal NPC
+         * entries set prev via screen_change from the live current
+         * screen and are unaffected. */
+        g_game.prev_screen = SCREEN_DIALOGUE;
         g_game.screen = SCREEN_DIALOGUE;
     }
     if (start_battle) {
@@ -226,14 +151,21 @@ static void scenario_load_state(void)
         g_game.prev_screen = SCREEN_SPLASH;
         audio_play_music(MUSIC_TITLE);
     }
+    /* NOTE: no SCREEN_GAMBLE boot branch (fixed budget, 52.18):
+     * gamble scenarios reach the table through the real path (walk into
+     * the fixture kobold, press A through the invite, answer YES), so no
+     * loader support is needed.  The banked frame body auto-initializes
+     * on entry.  The farewell dialogue is exercised by pressing B. */
 
     game_render_reset(&g_game);
 
-    if (dialogue_id != DIALOGUE_ID_NONE) {
-        g_game.render_cache.prev_screen = SCREEN_DIALOGUE;
-    }
     debug_snapshot();
 }
+
+/* Pure state-write leaf cases live in the bank-5 body
+ * (dbg_action_banked.c) so the fixed bank stays under 0x8000
+ * (AGENTS.md §52.11.1/§52.18). */
+void debug_action_leaf_banked(void);
 
 static void debug_run_action(void)
 {
@@ -244,6 +176,14 @@ static void debug_run_action(void)
     uint8_t i;
     ProgressionTarget target;
     ProgressionAddResult pres;
+
+    g_bk_call_bank = 5;
+    g_bk_call_target = (uint16_t)&debug_action_leaf_banked;
+    banked_call_run();
+    if (g_bk_byte_a) {
+        debug_snapshot();
+        return;
+    }
 
     switch (action) {
         case DBG_ACT_ADD_ITEM:
@@ -288,48 +228,6 @@ static void debug_run_action(void)
                 g_game.world.player.facing = (Direction)g_game.state.scene.player_facing;
             }
             break;
-        case DBG_ACT_SET_HAND_CARD:
-            if (a0 < BATTLE_HAND_SIZE) {
-                uint8_t t = (uint8_t)((uint16_t)a1 & 0xFF);
-                uint8_t fx = CARD_EFFECT_DAMAGE_TARGET;
-                /* Injected cards bypass CardDefinition lookup; give them
-                 * the default effect for their type so effect resolution
-                 * sees a complete card.  Debug-only mapping (this file is
-                 * excluded from the release ROM). */
-                if (t == BATTLE_CARD_TYPE_SHIELD) {
-                    fx = CARD_EFFECT_BLOCK_DAMAGE;
-                } else if (t == BATTLE_CARD_TYPE_HEAL) {
-                    fx = CARD_EFFECT_HEAL_HP;
-                }
-                g_game.battle.hand[a0].type = (BattleCardType)t;
-                g_game.battle.hand[a0].value = a2;
-                g_game.battle.hand[a0].effect = fx;
-                /* Injected cards carry no status rider; reset both fields
-                 * so a previously injected rider cannot leak into a slot
-                 * that was played earlier in the same battle. */
-                g_game.battle.hand[a0].status_id = STATUS_NONE;
-                g_game.battle.hand[a0].status_chance = 0;
-                g_game.battle.hand[a0].ring = 0;
-            }
-            break;
-
-        case DBG_ACT_SET_HAND_CARD_STATUS:
-            /* Pin the injected hand card's on-hit status rider (Phase C
-             * scenarios).  a1 = StatusId, a2 = roll chance (1/255). */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].status_id = a1;
-                g_game.battle.hand[a0].status_chance = a2;
-            }
-            break;
-        case DBG_ACT_SET_ENEMY_HP:
-            /* Pin an enemy combatant's current HP (battle must be active).
-             * Direct state write, no telemetry: scenario setup semantics
-             * (AGENTS.md §53.3). */
-            if (g_game.battle.enemy_count > a0) {
-                g_game.battle.enemies[a0].hp = a1;
-            }
-            break;
-
         case DBG_ACT_APPLY_STATUS:
             /* Apply a status through the real mechanic (status_apply,
              * STATUS_APPLIED telemetry included): a0 = combatant slot
@@ -345,41 +243,38 @@ static void debug_run_action(void)
                                              : g_game.battle.enemy_deck.count;
                     status_grey_apply(a0, pool);
                 }
-            }
-            break;
-
-        case DBG_ACT_SET_HAND_RING:
-            /* Mark an injected hand card as a loot RING (docs/loot.md
-             * §34.3) so joker/gate scenarios don't depend on the dealt
-             * deck contents. */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].ring = 1;
+                /* Repaint the tinted row: on hardware every apply is
+                 * followed by a phase change (DIRTY_ALL), but debug-action
+                 * applies land mid-phase with no widely-dirty redraw. */
+                if (ok) {
+                    g_game.battle.dirty |= (a0 == 0) ? BATTLE_DIRTY_HERO
+                                                     : BATTLE_DIRTY_ENEMIES;
+                }
             }
             break;
 
         case DBG_ACT_DECK_ADD:
             /* Real mechanic call: all deck_add_card validations apply
              * (ownership, SPECIAL exclusion, max_copies, size). */
+#ifdef DEBUG_BUILD
             if (deck_add_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
             }
+#else
+            (void)deck_add_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_DECK_REMOVE:
             /* Real mechanic call: membership + DECK_MIN_CARDS floor apply.
              * Both emit on success only (mirroring the UI caller), so
              * scenarios assert acceptance/rejection via event counts. */
+#ifdef DEBUG_BUILD
             if (deck_remove_card(&g_game.state.cards, (CardId)a0)) {
                 telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, a0, 0, 0, 0);
             }
-            break;
-        case DBG_ACT_SET_HAND_CARD_META:
-            /* Companion to SET_HAND_CARD: pins the injected hand card's
-             * energy cost and remaining uses so combo/energy scenarios are
-             * independent of the dealt deck contents. */
-            if (a0 < BATTLE_HAND_SIZE) {
-                g_game.battle.hand[a0].cost = a1;
-                g_game.battle.hand[a0].uses_remaining = a2;
-            }
+#else
+            (void)deck_remove_card(&g_game.state.cards, (CardId)a0);
+#endif
             break;
         case DBG_ACT_START_BATTLE:
             /* Re-arm an encounter against the first living active actor
@@ -394,14 +289,10 @@ static void debug_run_action(void)
             }
             start_battle_from_world(&g_game);
             break;
-        case DBG_ACT_SET_FILTER:
-            g_game.item_menu_filter = a0;
-            g_game.render_cache.valid = false;
-            break;
-        case DBG_ACT_SET_SORT:
-            g_game.item_menu_sort = a0;
-            g_game.render_cache.valid = false;
-            break;
+        /* SET_HAND_CARD / SET_HAND_CARD_META / SET_HAND_CARD_STATUS /
+         * SET_HAND_RING / SET_ENEMY_HP / SET_FILTER / SET_SORT are pure
+         * state writes handled by the bank-5 leaf body above; no case
+         * here (the body's out code short-circuits before the switch). */
         default:
             break;
     }

@@ -1,7 +1,7 @@
 {
  "name": "card_battle_victory",
  "test": true,
- "description": "Playing through the slime trio with the real starter deck (attack and defend phases, exercising draw and reshuffle) ends in BATTLE_WON and returns to the overworld",
+ "description": "Playing through Carl's solo practice spar with the real starter deck (attack and defend phases, exercising draw and reshuffle) ends in BATTLE_WON and returns to the overworld",
  "actions": [
   {
    "type": "wait",
@@ -14,6 +14,70 @@
   {
    "type": "wait",
    "frames": 13
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   },
   {
    "type": "wait",
@@ -477,6 +541,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "party": {
    "HERO": {
     "hp": 60,

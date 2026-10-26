@@ -1,4 +1,12 @@
+/* Test fixtures keep their actor tables in bank 9 (GAME_TEST_ACTOR_BANK):
+ * debug bank 4 is full (battle art + actor tables + sprite bodies share
+ * it), while the loader body must share its tables' bank (direct reads,
+ * AGENTS.md §52.11.1).  Mirrors scene_load.c's TEST_LEVELS bank split. */
+#ifdef TEST_LEVELS
+#pragma bank 9
+#else
 #pragma bank 4
+#endif
 
 #include "actor.h"
 #include "world.h"
@@ -8,7 +16,7 @@
 /* Fixed-WRAM per-slot display-name staging (defined in actor.c, always
  * mapped).  actor_spawn copies the bank-2 def literal here; fixed-bank
  * encounter code then dereferences it with any ROM bank mapped. */
-extern char s_actor_names[MAX_WORLD_ACTORS][12];
+extern char s_actor_names[MAX_WORLD_ACTORS][13];
 
 /* ── Scene actor loader, bank-2 body ────────────────────────────────
  * Dispatched by actor_load_scene() (src/world/actor.c) through the WRAM
@@ -122,9 +130,9 @@ void actor_load_scene_banked(void)
                         def->display_name : "Enemy";
                     actor_spawn(&world->actors[slot], def);
                     /* Stage the def name literal (bank 2 mapped here) into
-                     * fixed WRAM, capped like Combatant.name (11+NUL, same
+                     * fixed WRAM, capped like Combatant.name (12+NUL, same
                      * idiom as battle_start in battle.c). */
-                    for (j = 0; j < 11 && src[j]; j++) {
+                    for (j = 0; j < 12 && src[j]; j++) {
                         dst[j] = src[j];
                     }
                     dst[j] = 0;
@@ -137,19 +145,15 @@ void actor_load_scene_banked(void)
                  * lowers to __memcpy, which lives in the fixed bank and
                  * is unreachable while bank 2 is mapped (see
                  * status_content.c for the identical pattern). */
-                g_static_actors[g_static_actor_count].actor_id = def->actor_id;
                 g_static_actors[g_static_actor_count].id = def->id;
                 g_static_actors[g_static_actor_count].x = def->x;
                 g_static_actors[g_static_actor_count].y = def->y;
                 g_static_actors[g_static_actor_count].facing = def->facing;
-                g_static_actors[g_static_actor_count].flags = def->flags;
                 g_static_actors[g_static_actor_count].visual = def->visual;
                 g_static_actors[g_static_actor_count].sprite_kind =
                     def->sprite_kind;
                 g_static_actors[g_static_actor_count].ow_type =
                     def->ow_type;
-                g_static_actors[g_static_actor_count].display_name =
-                    def->display_name;
                 g_static_actors[g_static_actor_count].interaction =
                     def->interaction;
                 g_static_actors[g_static_actor_count].shop_id = def->shop_id;

@@ -1,0 +1,3 @@
+# Committed build artifacts (ROMs, symbol files): kept in-tree for
+# convenience, but generated -- collapse them in review diffs.
+build/** linguist-generated=true

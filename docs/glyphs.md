@@ -32,7 +32,6 @@ never share a glyph, so a screen cell names exactly one thing.
 | `L` | lord of slimes (boss) |
 | `M` | mayor |
 | `G` | guard |
-| `S` | shopkeeper |
 | `C` | merchant |
 | `W` | wizard |
 | `?` | signpost |

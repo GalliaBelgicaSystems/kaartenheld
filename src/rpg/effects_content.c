@@ -4,7 +4,7 @@
 #include "banked.h"
 
 /* ── Banked effect resolution (docs/combo-system.md Phase B/C) ───────
- * Runs inside the combo_resolve() dispatch (ROM bank 3): the combo body
+ * Runs inside the banked combo dispatch (ROM bank 3): the combo body
  * calls effect_resolve_into() bank-locally after evaluating hand shape.
  * Self-contained: pure function of its arguments; writes the shared
  * g_effect_last slot (WRAM) and/or the caller's out pointer; never calls
@@ -53,12 +53,35 @@ static uint8_t effect_scale_power(const ComboResult *combo)
                                         combo->multiplier));
 }
 
+/* Scale the leading card's on-hit status chance by the hand's full
+ * 16-bit multiplier, capped at 255 (~100%).  Staged into g_bk_byte_c
+ * so the fixed-bank caller (battle_execute_combo) spends a single byte
+ * compare instead of a 106-byte mul/div loop in the tight fixed bank --
+ * and avoids the old (uint8_t)multiplier cast that wrapped multipliers
+ * >= 260 (FULL HOUSE and up) mod 256.  Capping the running sum at
+ * 25500 before dividing by 100 also prevents uint16 overflow at high
+ * multipliers (e.g. 255 * 425). */
+static uint8_t effect_scale_status_chance(const ComboResult *combo)
+{
+    uint16_t r = 0;
+    uint8_t c;
+    if (!combo || combo->count == 0) return 0;
+    c = combo->cards[0].status_chance;
+    while (c != 0) {
+        r = (uint16_t)(r + combo->multiplier);
+        if (r >= 25500u) return 255;
+        c--;
+    }
+    return effect_div100(r);
+}
+
 void effect_resolve_into(uint8_t effect_type, const ComboResult *combo,
                          EffectResult *out)
 {
     EffectResult *dst = out ? out : &g_effect_last;
 
     dst->type = effect_type;
+    g_bk_byte_c = effect_scale_status_chance(combo);
 
     switch (effect_type) {
         case CARD_EFFECT_DAMAGE_TARGET:

@@ -1,7 +1,7 @@
 {
  "name": "battle_multi_enemy_targeting",
  "test": true,
- "description": "Bumping the Mountain Pass slime starts a 3-slime battle (trio clones share the struck actor's 8 HP) and D-pad DOWN cycles the target cursor",
+ "description": "Bumping the Mountain Pass slime starts a 3-slime battle (trio clones share the struck actor's 10 HP) and D-pad DOWN cycles the target cursor",
  "actions": [
   {
    "type": "press",
@@ -42,7 +42,7 @@
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "16/16  16/16  16/16"
+   "contains": "10/10  10/10  10/10"
   },
   {
    "type": "screen_row",
@@ -52,12 +52,17 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "HERO        HP:10/10"
+   "contains": "HERO"
   },
   {
    "type": "screen_row",
+   "row": 7,
+   "contains": "15/15"
+  },
+  {
+   "type": "screen_row_not_contains",
    "row": 10,
-   "contains": "COMBO:"
+   "contains": "DMG"
   }
  ],
  "initial_state": {

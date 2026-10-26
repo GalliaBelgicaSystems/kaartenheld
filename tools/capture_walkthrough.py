@@ -14,6 +14,7 @@ detail per check, AGENTS.md §46 style).
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 
@@ -30,11 +31,13 @@ from walkthrough.walks import WALK_SECONDS            # noqa: E402
 # are computed from the planner's scenes at runtime; every other label
 # must match a Session.shoot() call in tools/walkthrough/walks.py.
 CLASSIC_MILESTONES = [
-    "00-boot-field", "01-field-scrolled", "02-town-arrived",
-    "03-guard-dialogue", "04-dialogue-next", "05-shop",
+    "00-boot-grove", "00-stairs-refusal", "01-field-scrolled", "02-town-arrived",
+    "02-mayor-mark", "03-guard-dialogue", "04-dialogue-next", "05-shop",
     "06-cards-menu", "07-filter-picker", "08-quests-tab",
-    "09-battle", "10-battle-attack", "11-battle-aftermath",
-    "11-battle-victory", "12-wizard-save", "13-wizard-saved",
+    "08-carl-field", "08-carl-mark", "08-carl-tutor",
+    "09-battle", "10-battle-attack", "10-battle-defend",
+    "11-battle-aftermath",
+    "11-battle-victory", "11-victory-speech", "11-chest", "12-wizard-save", "13-wizard-saved",
     "14-forest-arrived", "15-title-menu", "16-tutorial-slide0",
     "17-tutorial-slide1", "18-tutorial-slide2", "19-tutorial-slide3",
     "20-tutorial-slide4", "21-tutorial-slide5", "22-tutorial-slide6",
@@ -81,10 +84,65 @@ def prune():
               % (len(removed), ", ".join(removed)))
 
 
+def preflight():
+    """ROM/sym/levels coherence gate (triage for uniform world-mirror -1s).
+
+    A uniform world_hostile_count -1 with passing boot anchors is NOT a
+    ROM/.sym mismatch — the expected tileset kind comes from the
+    working-tree levels/, so levels/ edited after the ROM was built (or
+    World-tail struct drift) are the suspects (docs/verify-walkthrough.md
+    §4.2).  Report whether the inputs under test match HEAD so a failure
+    can be attributed before reading results.  Dirty state is
+    INFORMATIONAL only: `make verify-walkthrough` rebuilds from working
+    sources by design."""
+    sym = os.path.splitext(ROM)[0] + ".sym"
+    if not os.path.isfile(sym):
+        print("error: release .sym not found — build it first (make "
+              "release)", file=sys.stderr)
+        return 1
+    # Stale-.sym tripwire: .sym and .noi are both pure link-time products
+    # (rgbfix stamps the .gb AFTER make_sym.py, and `make test` stamps it
+    # again, so the .gb is routinely newer than both — comparing against
+    # the .gb would false-positive on every healthy tree).  A .sym older
+    # than the .noi predates the latest link: swapped-in or interrupted.
+    # The .noi is untracked, so a fresh clone has none and the tripwire
+    # is inactive there — say so instead of silently skipping.
+    noi = os.path.splitext(ROM)[0] + ".noi"
+    if not os.path.isfile(noi):
+        print("note: no %s (fresh clone?) — stale-.sym tripwire "
+              "inactive" % noi)
+    elif os.path.getmtime(sym) < os.path.getmtime(noi):
+        print("error: %s is OLDER than %s — stale .sym from another "
+              "tree state or an interrupted build; `make clean && make "
+              "release` and re-run (see docs/verify-walkthrough.md "
+              "§4.2)" % (sym, noi), file=sys.stderr)
+        return 1
+    try:
+        # git diff --quiet: 0 = clean, 1 = differences, >1 = error
+        # (not a repo, no git).  Only 1 means dirty; anything else is
+        # "unknown", never a false dirty report.
+        rc = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", ROM, sym,
+             os.path.join(REPO, "levels")],
+            cwd=REPO).returncode
+        dirty = True if rc == 1 else False if rc == 0 else None
+    except OSError:
+        dirty = None
+    if dirty is True:
+        print("note: build/kaartenheld.gb + .sym and/or levels/ differ "
+              "from HEAD — testing the working tree, not the committed "
+              "inputs")
+    elif dirty is False:
+        print("note: build/kaartenheld.gb + .sym and levels/ match HEAD")
+    return 0
+
+
 def run(clean=False):
     if not os.path.isfile(ROM):
         print("error: release ROM not found — build it first (make "
               "release)", file=sys.stderr)
+        return 1
+    if preflight():
         return 1
 
     os.makedirs(OUT, exist_ok=True)

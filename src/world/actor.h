@@ -37,7 +37,9 @@ typedef enum {
     BATTLE_SLIME_TRIO = 3,
     BATTLE_MIMIC = 4,
     BATTLE_KOBOLD = 5,
-    BATTLE_SPIDER = 6
+    BATTLE_SPIDER = 6,
+    BATTLE_CARL = 7,
+    BATTLE_SLIME_KNIGHT = 8
 } BattleId;
 
 /* Overworld autonomous patrol/AI behavior type. */
@@ -48,11 +50,29 @@ typedef enum {
     AI_CHASE         = 3,   /* Step toward the player every AI tick (Kobolds) */
     AI_PATROL_VERT   = 4    /* Bounce vertically up/down 3 tiles from spawn
                              * (castle Spiders); direction held in ai_step
-                             * bit 0, flips at the bound or a blocked path */
+                             * bit 0, flips at the bound or a blocked path */,
+    AI_TUTOR         = 5    /* Stationary sparring tutor (Carl): movement
+                             * treats the tile as a lesson bump (BLOCKED +
+                             * dialogue via the co-located static) instead
+                             * of an encounter, and stashes the spar for
+                             * auto-start on close.  Patrol ignores it
+                             * (see patrol_banked.c).  Co-location with a
+                             * dialogue static is enforced by validate.py. */,
+    AI_CHASE_FAST     = 6    /* Twice-as-fast chaser (Slime Knight): same
+                             * greedy step as AI_CHASE but ticks at half
+                             * the interval (see patrol_banked.c). */
 } ActorAiType;
 
 /* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */
 #define AI_PATROL_VERT_TILES 3
+
+/* Overworld HUD marker kinds (OAM icons drawn above actors by the
+ * bank-4 sprite pass, fixed entries 30+): 0 = none, 1 = quest "?"
+ * (talk to advance/turn in), 2 = pursuer "!" (alert active).
+ * Decided per frame by game_frame_tick_banked's marks refresh (bank 8). */
+#define ACTOR_MARK_NONE  0
+#define ACTOR_MARK_QUEST 1
+#define ACTOR_MARK_ALERT 2
 
 /* Static, scene-owned actor configuration.  No mutable gameplay state.
  * actor_id is the stable persistent instance id (ActorId) used to track
@@ -103,6 +123,12 @@ extern uint8_t g_actor_registry_count;
 /* Bank-2 body dispatched by actor_load_scene(). */
 void actor_load_scene_banked(void);
 
+/* Banked chest-open resolver (emitted with the actor tables by
+ * compile.py, same bank: plain call, no trampoline).  Staged inputs:
+ * g_bk_byte_a = map id, g_bk_byte_b = x, g_bk_byte_c = y.  Reads g_game
+ * directly (WRAM, always mapped). */
+uint8_t chest_is_open_banked(void);
+
 /* Result of engaging an actor. */
 typedef enum {
     ENGAGE_NONE = 0,
@@ -124,17 +150,16 @@ typedef enum {
  * than the old seven full WorldActorDefinition rows (150 vs 175 B) —
  * statics never battle, never patrol, never drop loot, and only the
  * final boss uses conditional spawns, so the hostile-only payload is
- * dropped from the static copy.  Field names mirror
- * WorldActorDefinition so consumers read the same accessors. */
+ * dropped from the static copy.  ActorId/display_name/flags are dropped
+ * too: the loader only stores non-hostiles here (no defeat tracking, no
+ * battle labels, never hostile), so those fields were write-only.  Field
+ * names mirror WorldActorDefinition so consumers read the same accessors. */
 typedef struct StaticActorDefinition {
-    ActorId actor_id;
     EntityId id;
     uint8_t x;
     uint8_t y;
     uint8_t facing;
-    uint8_t flags;
     uint8_t visual;              /* ASCII prototype character */
-    const char *display_name;    /* semantic name (battle label, ...) */
     InteractionId interaction;
     uint8_t shop_id;             /* which shop this actor runs (0 = none) */
     DialogueId dialogue_id;

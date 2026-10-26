@@ -10,11 +10,13 @@ import json
 import glob
 import multiprocessing
 import os
+import re
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
-                      SCENARIO_IDS, ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
+                      DIALOGUE_NAME_TO_ID,
+                      ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
                       VARIABLE_ID_MAP, ITEM_ID_MAP, ACTOR_ID_MAP,
                       ACTOR_STATE_NAME_MAP, CHARACTER_ID_MAP, SCENE_MAP,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
@@ -28,12 +30,14 @@ VALID_ASSERTION_TYPES = {
     "battle_energy", "battle_draw_remaining", "battle_discard_count",
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
-    "screen_row", "screen_row_not_contains", "actor_at",
+    "screen_row", "screen_row_not_contains", "vram_row", "actor_at",
     "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
-    "sfx_count", "sfx_last"
+    "oam_tile", "oam_attr", "oam_bytes",
+    "sfx_count", "sfx_last",
+    "stack_margin_min",
 }
 
 VALID_ENTITY_IDS = set(ENTITY_ID_MAP.values())
@@ -45,6 +49,41 @@ VALID_VARIABLE_NAMES = set(VARIABLE_ID_MAP)
 VALID_ITEM_NAMES = set(ITEM_ID_MAP) - {"NONE"}
 VALID_ACTOR_NAMES = set(ACTOR_ID_MAP)
 VALID_ACTOR_STATES = set(ACTOR_STATE_NAME_MAP)
+
+
+_AP_TILES_CACHE = None
+
+
+def _load_ap_tiles():
+    """Parse generated src/gfx/ap_tiles.h into {name: [16 bytes]}.
+
+    Tile order in the file is the png2gb --ap-coords order, which matches
+    AP_TILE_IDS: ap_1, ap_2, exclaim, question.  Comparing live OAM tile
+    data against this file (rather than hand-written hex) keeps one
+    source of truth: art changes update both sides together, while a
+    runtime VRAM clobber still fails loudly.  Anchored to the repo root
+    (not the cwd): a missing file is a loud error, never a silent {} that
+    misreads as 'unknown ap_tiles entry'.
+    """
+    global _AP_TILES_CACHE
+    if _AP_TILES_CACHE is not None:
+        return _AP_TILES_CACHE
+    names = ["ap_1", "ap_2", "exclaim", "question"]
+    tiles = {}
+    ap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "..", "src", "gfx", "ap_tiles.h")
+    try:
+        with open(ap_path) as f:
+            text = f.read()
+    except OSError as e:
+        raise FileNotFoundError(f"ap_tiles.h not found at {ap_path}: {e}")
+    blocks = re.findall(r"/\* tile \d+ \*/(.*?)(?=/\* tile \d+ \*/|\Z)", text, re.S)
+    for name, block in zip(names, blocks):
+        vals = [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{2})", block)]
+        if len(vals) == 16:
+            tiles[name] = vals
+    _AP_TILES_CACHE = tiles
+    return tiles
 VALID_CURRENCY_NAMES = set(CURRENCY_ID_MAP)
 VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 
@@ -59,13 +98,9 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 # scenarios that never ran NEW_GAME would under-report inventory by these
 # starter amounts.  If that use ever broadens, gate the delta on the
 # snapshot's actual origin instead.
-NEW_GAME_COLLECTION = {"IRON_SWORD": 4, "WOODEN_SHIELD": 3, "FIRE_SWORD": 3, "POISON_DAGGER": 2}
+NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "FIRE_SWORD": 2}
 
 def validate_scenario(data, filepath):
-    scen_id = data.get("scenario_id")
-    if scen_id and scen_id not in SCENARIO_IDS:
-        raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown scenario_id '{scen_id}'. Valid IDs: {list(SCENARIO_IDS.keys())}")
-
     for act in data.get("actions", []):
         if act.get("type") == "interact":
             actor = act.get("actor")
@@ -100,6 +135,12 @@ def validate_scenario(data, filepath):
         actor = a.get("actor")
         if actor and actor not in VALID_ACTOR_NAMES:
             raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor '{actor}'. Valid actors: {sorted(list(VALID_ACTOR_NAMES))}")
+
+        # event_arg accepts a dialogue NAME as its value (resolved to the
+        # numeric id at eval time); unknown names fail here, not silently.
+        eval_arg = a.get("value") if a.get("type") == "event_arg" else None
+        if isinstance(eval_arg, str) and eval_arg not in VALID_DIALOGUE_IDS:
+            raise ValueError(f"SCENARIO ERROR in {filepath}: event_arg value '{eval_arg}' is not a known dialogue")
 
         astate = a.get("expected_state")
         if astate and astate not in VALID_ACTOR_STATES:
@@ -172,7 +213,6 @@ def run_scenario(scenario):
     """
     name = scenario.get("name", "unknown")
     description = scenario.get("description", "")
-    scenario_id = scenario.get("scenario_id", "NEW_GAME")
     actions = scenario.get("actions", [])
     assertions = scenario.get("assertions", [])
 
@@ -182,6 +222,12 @@ def run_scenario(scenario):
 
         # Load requested scenario from its declarative initial_state
         session.load_scenario(scenario)
+
+        # Stack canary (opt-in, like the SFX log): fill the dead stack
+        # region after load so boot/load frames don't pollute the
+        # measurement; only the scenario's own actions count.
+        has_canary_assert = any(a.get("type") == "stack_margin_min" for a in scenario.get("assertions", []))
+        canary_base, canary_sp = session.stack_canary_fill() if has_canary_assert else (None, None)
 
         # Execute action sequence
         for act in actions:
@@ -222,6 +268,14 @@ def run_scenario(scenario):
             elif act_type == "load":
                 slot = act.get("slot", 1) - 1 if "slot" in act else 0
                 session.debug_action(session.DBG_ACT_LOAD, slot, 0, 0)
+            elif act_type == "sram_write":
+                # Raw single-byte SRAM poke (harness-only: no ROM debug
+                # command involved).  Used to craft blobs the ROM would
+                # never write itself -- e.g. backdating the save version
+                # byte to prove old versions are rejected.  Address is
+                # an absolute GB address (save slot N base = 0xA000 +
+                # N*0x400; version byte at base+2).
+                session.write_mem(act.get("addr", 0), act.get("value", 0))
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by
@@ -301,7 +355,18 @@ def run_scenario(scenario):
                                      int(act.get("card_id", 0)) & 0xFF,
                                      0, int(act.get("quantity", 1)) & 0xFF)
 
-        # Read final snapshot, canonical state buffer and telemetry
+        # Read final snapshot, canonical state buffer and telemetry.
+        # VRAM pinning (vram_row / oam_bytes) needs a PPU-accessible halt;
+        # sync ONCE here, before the snapshot, so the state and the VRAM
+        # reads below share the same halt.  Syncing later (e.g. inside
+        # get_screen_dump) would step game time after the snapshot was
+        # taken and skew the two.  The guard is a no-op when the halt
+        # already landed in HBlank/VBlank.
+        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        oam_needs_vblank = any(a.get("type") == "oam_bytes"
+                               for a in scenario.get("assertions", []))
+        if has_vram_assert or oam_needs_vblank:
+            session.ensure_vram_readable()
         snap = session.snapshot()
         state_snap = session.state_snapshot()
         telemetry = session.get_telemetry()
@@ -317,6 +382,29 @@ def run_scenario(scenario):
         tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
         has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
         sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        if has_canary_assert:
+            canary_depth, canary_margin = session.stack_canary_read(canary_base, canary_sp)
+        else:
+            canary_depth, canary_margin = None, None
+        # OAM HUD assertions (battle top-right rider sprites) must pre-read
+        # before disconnect: evaluation runs after the session closes.
+        has_oam_assert = any(a.get("type") in ("oam_tile", "oam_attr", "oam_bytes") for a in scenario.get("assertions", []))
+        oam_entries = {}
+        # Expected AP/mark tile bytes come from the generated ap_tiles.h
+        # (same file the ROM links): tile order is the --ap-coords order.
+        ap_tiles = {}
+        if has_oam_assert:
+            ap_tiles = _load_ap_tiles()
+            for a in scenario.get("assertions", []):
+                if a.get("type") in ("oam_tile", "oam_attr"):
+                    entry = a.get("entry", 0)
+                    if entry not in oam_entries:
+                        oam_entries[entry] = session.get_oam_entry(entry)
+                elif a.get("type") == "oam_bytes":
+                    key = (a.get("addr", 0), a.get("tile", ""))
+                    if key not in oam_entries:
+                        oam_entries[key] = session.read_vram_block(
+                            a.get("addr", 0), 16)
 
         # Check if any assertion needs logical screen buffer
         has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
@@ -324,6 +412,14 @@ def run_scenario(scenario):
         if has_screen_assert:
             screen_buf = session.get_screen_buf()
             screen_lines = screen_buf.split('\n')
+        # vram_row reads REAL VRAM (0x9800) instead of the semantic
+        # buffer: the gate for RAM-truth-vs-VRAM-lie rendering bugs
+        # (AGENTS.md 52.25 family), where the buffer is correct but the
+        # pixels are not. Same font mapping as the walkthrough bg_text.
+        # Readability was ensured once before the snapshot above.
+        vram_lines = []
+        if has_vram_assert:
+            vram_lines = session.get_screen_dump().split('\n')
     finally:
         session.disconnect()
 
@@ -446,6 +542,48 @@ def run_scenario(scenario):
             passed = (actual == int(expected))
             actual = f"tilemap_attr[{world_col},{world_row}]={actual}"
 
+        elif a_type == "oam_tile":
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[2] if oam is not None and oam[2] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].tile={actual}"
+
+        elif a_type == "oam_attr":
+            # OAM entry attribute byte (CGB palette in bits 0-2): pins
+            # which palette a sprite actually renders with, e.g. that a
+            # health-rider icon rides OBJ slot 3 (sprites11 greens) and
+            # not some reprogrammed slot.
+            entry = a.get("entry", 0)
+            oam = oam_entries.get(entry)
+            actual = oam[3] if oam is not None and oam[3] is not None else None
+            passed = (actual == int(expected))
+            actual = f"oam[{entry}].attr={actual}"
+
+        elif a_type == "oam_bytes":
+            # Live OAM tile DATA (not just the tile id): gates VRAM-truth
+            # vs tile-id-truth rendering bugs (AGENTS.md 52.22 family --
+            # same class as vram_row).  Reads happen in VBlank; expected
+            # bytes come from the generated ap_tiles.h so art changes
+            # update both sides while a runtime clobber still fails.
+            addr = a.get("addr", 0)
+            tile_name = a.get("tile", "")
+            live = oam_entries.get((addr, tile_name))
+            want = ap_tiles.get(tile_name)
+            if live is None or any(b is None for b in live):
+                actual = "oam-bytes unreadable"
+                passed = False
+            elif want is None:
+                actual = f"unknown ap_tiles entry {tile_name!r}"
+                passed = False
+            else:
+                actual = " ".join("%02X" % b for b in live)
+                passed = (list(live) == list(want))
+                if not passed:
+                    actual = (f"oam-bytes@{addr:#06x} mismatch: "
+                              f"got {actual} want "
+                              + " ".join("%02X" % b for b in want))
+
         elif a_type == "sfx_count":
             actual = sfx_count
             passed = (actual == int(expected))
@@ -455,6 +593,15 @@ def run_scenario(scenario):
             actual = sfx_last
             passed = (actual == int(expected))
             actual = f"sfx_last={actual}"
+
+        elif a_type == "stack_margin_min":
+            # Stack high-water canary: passes when the untouched-pattern
+            # margin below the deepest stack reach is at least `expected`
+            # bytes.  Catches both deeper frames and WRAM shifts that
+            # shrink the gap (the ghost-input class); see AGENTS.md §52.24.
+            actual = canary_margin
+            passed = (actual is not None and actual >= int(expected))
+            actual = f"stack_margin={actual}"
 
         elif a_type == "music_track":
             actual = snap.get("music_track", "UNKNOWN")
@@ -532,6 +679,17 @@ def run_scenario(scenario):
             passed = contains_str in actual_row
             actual = f"row {row_idx}: '{actual_row.strip()}'"
 
+        elif a_type == "vram_row":
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"vram_row assertion row {row_idx} requires 'contains'")
+            expected = f"VRAM row {row_idx} contains '{contains_str}'"
+            actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
+            passed = contains_str in actual_row
+            actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
+
         elif a_type == "screen_row_not_contains":
             row_idx = a.get("row", 0)
             contains_str = a.get("contains", expected)
@@ -582,10 +740,20 @@ def run_scenario(scenario):
 
         elif a_type == "event_arg":
             # Payload assertion: passes when at least one emitted event of
-            # the given type carries data[index] == value.
+            # the given type carries data[index] == value.  A string value
+            # is a dialogue name resolved to its numeric id (renumber-safe:
+            # dialogue ids shift whenever screens/dialogue/*.json changes,
+            # so hardcoding numbers rots -- carl_remedial_lesson broke this
+            # way); unknown names fail loudly here, never silently.
             exp_event = a.get("event", expected)
             idx = int(a.get("index", 0))
-            exp_val = int(a.get("value", 0))
+            exp_val_raw = a.get("value", 0)
+            if isinstance(exp_val_raw, str):
+                if exp_val_raw not in DIALOGUE_NAME_TO_ID:
+                    raise ValueError(f"SCENARIO ERROR in '{scenario.get('name', 'unknown')}': event_arg value '{exp_val_raw}' is not a known dialogue")
+                exp_val = DIALOGUE_NAME_TO_ID[exp_val_raw]
+            else:
+                exp_val = int(exp_val_raw)
             expected = f"{exp_event} data[{idx}] == {exp_val}"
             matches = [ev for ev in telemetry if ev.get("type") == exp_event]
             hits = [ev.get("data") for ev in matches
@@ -811,8 +979,8 @@ def build_initial_state_from_snapshot(snap, state_snap):
         if not iname:
             continue
         # Emit only the delta over the new-game starter grants
-        # (game_new_game in src/game/content.c adds IRON_SWORD x2,
-        # WOODEN_SHIELD x2, FIRE_SWORD x1 to the collection): the loader
+        # (game_new_game in src/game/content.c adds WOOD_SWORD x4,
+        # WOODEN_SHIELD x4, FIRE_SWORD x2 to the collection): the loader
         # applies inventory additively, so re-emitting the full observed
         # collection would double-add the starters on reload.
         qty = it.get("quantity", 0) - NEW_GAME_COLLECTION.get(iname, 0)

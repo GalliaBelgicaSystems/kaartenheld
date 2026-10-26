@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 #include "game.h"
 #include "audio.h"
+#include "banked.h"
 #include "input.h"
 #include "ui.h"
 #include "content.h"
@@ -15,7 +16,7 @@ Game g_game;
  *
  * Core subsystem initialisation (input, UI, fonts) always runs.
  */
-volatile uint8_t g_harness_mode = 0;
+volatile uint8_t g_harness_mode;  /* BSS zero (AGENTS.md 52.27) */
 
 /*
  * Boot-phase breadcrumb for the test harness.  Incremented at each
@@ -26,7 +27,7 @@ volatile uint8_t g_harness_mode = 0;
  *  3 = game_init() complete
  *  4 = first game_render() complete
  */
-volatile uint8_t g_boot_phase = 0;
+volatile uint8_t g_boot_phase;  /* BSS zero (AGENTS.md 52.27) */
 
 extern void timer_isr_init(void);
 extern void oam_dma_init(void);
@@ -41,6 +42,10 @@ int main(void)
     __endasm;
     *(volatile uint8_t *)0x2000 = 1;
     *(volatile uint8_t *)0x3000 = 0;
+    /* Live-bank mirror for the timer ISR (banked.h): the home bank is
+     * mapped here, before enable_interrupts() below.  Assigned (not
+     * initialized) so the harness path, which skips CRT0, agrees. */
+    g_rom_bank_live = 1;
     timer_isr_init();
     oam_dma_init();
     banked_copy_init();
@@ -84,11 +89,13 @@ int main(void)
             vsync();
         }
         game_render(&g_game);
-        /* DMA shadow OAM to real OAM.  Runs right after game_render, so for
-         * steady frames it is still inside the VBlank opened by the vsync
-         * above.  Transitions force the hide earlier (ui_sprite_begin_transition
-         * in game_render) so the sprite is gone before the new screen's
-         * redraw wipes the display. */
+        /* DMA shadow OAM to real OAM right after the render: SCX_REG and
+         * hardware OAM always belong to the same frame (no 1-px scroll
+         * lag).  Steady frames fit in VBlank (the only VBlank-buster,
+         * ui_refill_semantic's 43k-T-state scan, runs harness-only now);
+         * full redraws run LCD-off, where DMA timing is irrelevant, and
+         * transition hides land immediately via
+         * ui_sprite_begin_transition(). */
         ui_sprite_commit();
     }
 }

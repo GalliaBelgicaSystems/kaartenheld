@@ -21,8 +21,8 @@
         "village.village_top_wall",
         "village.village_top_wall",
         "village.village_top_wall",
-        "village.village_top_wall",
-        "village.village_top_wall",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_top_wall",
         "village.village_top_wall",
         "village.village_top_wall",
@@ -59,7 +59,7 @@
         "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -72,7 +72,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_right_wall"
@@ -81,20 +81,20 @@
         "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_merchant",
         "village.village_plain_floor_1",
-        "village.village_merchant",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_right_wall"
@@ -126,13 +126,57 @@
         "village.village_plain_floor_1",
         "village.village_barrel",
         "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_mayor",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_right_wall"
+      ],
+      [
+        "village.village_left_wall",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_right_wall"
+      ],
+      [
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -163,51 +207,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_right_wall"
-      ],
-      [
-        "village.village_left_wall",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_right_wall"
-      ],
-      [
-        "village.village_left_wall",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_guard",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_plain_floor_1",
-        "village.village_right_wall"
+        "village.village_plain_floor_1"
       ],
       [
         "village.village_left_wall",
@@ -238,7 +238,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
-        "village.village_save_wizard",
+        "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -280,7 +280,7 @@
         "village.village_plain_floor_1",
         "village.village_bottom_left_well",
         "village.village_bottom_right_well",
-        "village.village_plain_floor_1",
+        "village.village_fire_frame_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -323,7 +323,7 @@
         "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -336,7 +336,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_right_wall"
@@ -345,7 +345,7 @@
         "village.village_left_wall",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
@@ -358,7 +358,7 @@
         "village.village_plain_floor_1",
         "village.village_plain_floor_1",
         "village.village_left_house",
-        "village.village_middle_house",
+        "village.village_middle_house_open_door",
         "village.village_right_house",
         "village.village_plain_floor_1",
         "village.village_right_wall"
@@ -420,17 +420,13 @@
       ]
     }
   },
-  "exits": [
-    {
-      "x": 1,
-      "y": 7,
-      "target_scene": "field",
-      "target_x": 17,
-      "target_y": 7,
-      "direction": "WEST",
-      "tile_char": "<"
-    }
-  ],
+  "exits": [],
+  "neighbors": {
+    "north": "forest",
+    "south": "",
+    "east": "village_area",
+    "west": "field"
+  },
   "objects": [
     {
       "id": "town_mayor",
@@ -453,7 +449,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_mayor"
       }
     },
     {
@@ -464,9 +461,9 @@
         "y": 8
       },
       "properties": {
-        "entity_id": "ENTITY_ID_GUARD",
+        "entity_id": "ENTITY_ID_TOWN_GUARD",
         "display_name": "GUARD",
-        "dialogue": "DIALOGUE_ID_GUARD_GREETING",
+        "dialogue": "DIALOGUE_ID_GUARD_KOBOLD_WARNING",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [
@@ -477,55 +474,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
-      "id": "town_shopkeeper",
-      "type": "npc",
-      "position": {
-        "x": 9,
-        "y": 3
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SHOPKEEPER",
-        "display_name": "SHOPKEEPER",
-        "shop": 1,
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "S",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
-      "id": "town_merchant",
-      "type": "npc",
-      "position": {
-        "x": 11,
-        "y": 3
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_MERCHANT",
-        "display_name": "MERCHANT",
-        "shop": 2,
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "C",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_guard"
       }
     },
     {
@@ -549,71 +499,33 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "enemy_type": "npc_wizard"
       }
     },
     {
-      "id": "village_fire",
+      "id": "town_heal_mage",
       "type": "npc",
       "position": {
-        "x": 4,
-        "y": 5
+        "x": 12,
+        "y": 10
       },
       "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
-    },
-    {
-      "id": "village_fire_copy",
-      "type": "npc",
-      "position": {
-        "x": 4,
-        "y": 12
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
-    },
-    {
-      "id": "village_fire_copy_copy",
-      "type": "npc",
-      "position": {
-        "x": 14,
-        "y": 5
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "interior.villager",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_FIRE"
-      },
-      "animation_frames": [
-        "village.village_fire_frame_1",
-        "village.village_fire_frame_2"
-      ],
-      "overworld_sprite": "village.village_fire_frame_1"
+        "entity_id": "ENTITY_ID_HEAL_MAGE",
+        "display_name": "HEAL MAGE",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "W",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_heal_mage"
+      }
     },
     {
       "id": "village_dog",
@@ -625,7 +537,7 @@
       "properties": {
         "display_name": "",
         "dialogue": "",
-        "overworld_sprite": "interior.villager",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG"
@@ -646,7 +558,7 @@
       "properties": {
         "display_name": "",
         "dialogue": "",
-        "overworld_sprite": "interior.villager",
+        "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
         "entity_id": "ENTITY_ID_DOG"

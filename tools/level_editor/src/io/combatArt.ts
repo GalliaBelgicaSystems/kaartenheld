@@ -13,7 +13,18 @@ export interface CombatArtSet {
   order: number;
   width: number;
   height: number;
-  palette: number;
+  /** BG-stamp ramp name (must hold a base slot). OAM sets encode with
+   *  obj_palette instead; this field stays present but unused by them. */
+  palette: string;
+  /** OAM path flag. OAM sets REQUIRE obj_palette. */
+  oam?: boolean;
+  /** OBJ ramp name for OAM sets (slotless by design: programmed into the
+   *  battle scratch slot at entry). */
+  obj_palette?: string;
+  /** Optional second OBJ ramp for one off-ramp cell (spider eye). */
+  obj_alt_palette?: string;
+  /** Frame-relative cell indices using obj_alt_palette. */
+  obj_alt_cells?: number[];
   frame0: Array<string | null>;
   frame1?: Array<string | null>;
 }
@@ -70,7 +81,7 @@ export const COMBAT_BRUSH_NAMES: string[] = [
   'combat_bottom_left_card_corner', 'combat_bottom_middle_card', 'combat_bottom_right_card_corner',
   'combat_center_card',
   'combat_one_icon', 'combat_two_icon', 'combat_three_icon', 'combat_four_icon',
-  'combat_poison_status', 'combat_fire_status', 'combat_ice_status',
+  'combat_top_right_poison_card', 'combat_top_right_fire_card', 'combat_top_right_ice_card',
   'combat_arrow_pointing_up', 'combat_hp_icon', 'combat_ap_icon',
   'combat_deck_icon', 'combat_hero_icon',
   'combat_top_left_kobold', 'combat_top_middle_kobold', 'combat_top_right_kobold',

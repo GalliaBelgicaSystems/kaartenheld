@@ -1,0 +1,14 @@
+{
+  "$schema": "../schema/enemy_type.schema.json",
+  "id": "npc_wizard",
+  "label": "Wizard OW",
+  "category": "minion",
+  "sprite": null,
+  "overworld": { "cells": ["npc_wizard"], "palette": "sprites7" },
+  "name": "WIZARD",
+  "hp": 1,
+  "max_hp": 1,
+  "battle_id": "BATTLE_NONE",
+  "gold_reward": 0,
+  "reward_currency": "CURRENCY_ID_GOLD"
+}

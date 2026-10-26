@@ -65,8 +65,8 @@ class Session:
             self.pb.tick()
         self.reader = StateReader(self.pb, rom)
         import json
-        field = json.load(open(os.path.join(LEVELS_DIR, "field.json")))
-        self.spawn = field["player"]["spawn"]
+        grove = json.load(open(os.path.join(LEVELS_DIR, "wake_grove.json")))
+        self.spawn = grove["player"]["spawn"]
         self.reader.assert_boot_anchors(self.spawn, label)
         self.t_start = time.time()
         if boot:
@@ -99,12 +99,12 @@ class Session:
         # of the Game struct): the splash renders a bitmap logo whose BG
         # tiles read as non-text, so the text markers alone cannot detect it.
         screen = self.pb.memory[self.reader.g_game]
-        if screen in (9, 10, 11, 12):  # TITLE, INTRO, TUTORIAL, SPLASH
+        if screen in (9, 10, 11, 12, 13):  # TITLE, INTRO, TUTORIAL, SPLASH, CREDITS
             return True
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
     def quick_open(self):
-        return self.text_has("CARDS QUEST")
+        return self.text_has("DECK QUEST")
 
     def on_overworld(self):
         return (not self.quick_open()) and not self.on_title_or_intro()
@@ -241,10 +241,14 @@ class Session:
     def walk_btn(self, btn, goal, budget=600):
         """Discrete one-tile presses until goal() holds; a press that
         produced no movement is retried, so the route converges
-        regardless of host timing (same mechanics as the old walk())."""
+        regardless of host timing (same mechanics as the old walk()).
+        Bails immediately on DECK: (ambush started) instead of burning
+        all 600 presses (~16,800 frames) into the battle screen."""
         for _ in range(budget):
             if goal():
                 return True
+            if self.text_has("DECK:"):
+                return False
             x0, y0 = self.pos()
             self.pb.button_press(btn)
             self.tick(4)
@@ -252,6 +256,8 @@ class Session:
             for _ in range(24):
                 self.tick()
                 if self.pos() != (x0, y0):
+                    break
+                if self.text_has("DECK:"):
                     break
         return bool(goal())
 
@@ -265,11 +271,16 @@ class Session:
     def cross_exit(self, btn, expect_scene, tries=4):
         """Step onto an exit tile and ride out the transition wipe.  A
         dropped press leaves us unmoved — only the wipe tells them
-        apart, so a wipe-free arrival is retried, never trusted."""
+        apart, so a wipe-free arrival is retried, never trusted.
+        A 4-tick press that lands fully inside an LCD-off blackout
+        (arrival redraws, transition wipes) never samples, so a wipe
+        seen WITHOUT the scene changing must also retry: only return
+        early on an actual scene match, never on a wipe alone."""
         for _ in range(tries):
             self.press(btn, settle=12)
             if self.wiped() and self.settle_scene():
-                return self.reader.scene_state()["scene_id"] == expect_scene
+                if self.reader.scene_state()["scene_id"] == expect_scene:
+                    return True
         return self.reader.scene_state()["scene_id"] == expect_scene
 
     # ── OAM ──────────────────────────────────────────────────────────

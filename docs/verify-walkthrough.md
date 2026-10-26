@@ -1,7 +1,8 @@
 # verify-walkthrough — Real-Content Semantic Verifier
 
 Status: **implemented** — `make verify-walkthrough`, required on push (CI).
-759 checks green (incl. the content sweep over 14 levels); PNG output
+1584 checks green (incl. the content sweep over 18 levels: 14 reworked
+overworld levels plus the 4 retained eastern forest levels); PNG output
 byte-stable across runs; negative tests (offset drift, route failure)
 verified to fail loudly.
 
@@ -23,12 +24,12 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 |---|---|
 | Release ROM `.sym` exposes readable WRAM symbols | `_g_game`@0xC94C, `g_battle`@0xD0D5, `g_audio_current_track`@0xDA19, `g_rng_state`@0xDA37 (0x44D85-range entries are ROM initializers — ignored) |
 | Struct layouts | `Game`: screen(0), prev_screen(1), **state@2**; `GameState`: scene(4B: id,x,y,facing), party(13B), cards(CardState), flags(8B), variables(32B), currency(8B), world(49B), progression(49B); `Battle`: player Combatant(14B: hp,max_hp,name[12]), enemies[3]@+14, phase/turn/result, battle_over |
-| Boot anchors | scene pattern `[0,17,7,3]` (SCENE_FIELD + spawn + DIRECTION_RIGHT) + party `[1,10,10]` + gold=20 + hp=10/10; anchor failure = loud error naming offset-mirror drift |
-| Enums | SceneId 0..N real (registry-assigned) / TEST fixed at 240+; MusicTrack NONE0 OVERWORLD1 BATTLE2 VICTORY3 TITLE4 TOWN5 DUNGEON6 BOSS7 MIMIC8 DESOLATE9 FOREST10; flags bit-packed (N → byte (N-1)/8 bit (N-1)%8): ARRIVED_TOWN=1, MET_MAYOR=2; CURRENCY_ID_GOLD=1 → amount[0]; HERO_START gold=20 hp=10 |
+| Boot anchors | scene pattern `[19,10,8,0]` (SCENE_WAKE_GROVE + spawn + DIRECTION_UP) + party `[1,15,15]` + gold=20 + hp=15/15; anchor failure = loud error naming offset-mirror drift |
+| Enums | SceneId 0..N real (registry-assigned) / TEST fixed at 240+; MusicTrack NONE0 OVERWORLD1 BATTLE2 VICTORY3 TITLE4 TOWN5 DUNGEON6 BOSS7 MIMIC8 DESOLATE9 FOREST10; flags bit-packed (N → byte (N-1)/8 bit (N-1)%8): ARRIVED_TOWN=1, MET_MAYOR=2; CURRENCY_ID_GOLD=1 → amount[0]; HERO_START gold=20 hp=15 |
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
-| Shop | shopkeeper (shop_id=1) sells CARD_WOOD_RING; A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
-| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits slime `gold_reward` from `levels/field.json` |
+| Shop | merchant (shop_id=2, opened by delivering the amulet) sells one CARD_IRON_RING + one CARD_BOW_9 (one-copy rows, then out of stock); A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
+| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits Carl's `gold_reward` from `levels/field.json`; his defeat sets `ENERGY_POOL` 2 |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
@@ -55,8 +56,8 @@ tools/walkthrough/
   `deck_count`, `collection_count(card_id)`,
   `battle.{player_hp, enemy_hp[i], result, phase}`, `music_track`,
   `shop_message`, `save_slot_message`.
-* **Boot anchors**: at session start assert scene==SCENE_FIELD,
-  position==spawn (from `levels/field.json`), gold==20, hp==10/10,
+* **Boot anchors**: at session start assert scene==SCENE_WAKE_GROVE,
+  position==spawn (from `levels/wake_grove.json`), gold==20, hp==15/15,
   ARRIVED_TOWN unset.  Post-action anchors re-verify (ARRIVED_TOWN set
   after town entry; gold==20−cost after purchase).  Anchor failure →
   hard error: "struct offset mirror drift — update the mirror from
@@ -83,7 +84,7 @@ tools/walkthrough/
 
 ### Phase 4 — Expanded milestones (expected values read from `levels/*.json`)
 
-1. **Shop purchase** (Walk A): buy WOOD_RING → assert
+1. **Shop purchase** (Walk A): buy IRON_RING → assert
    gold==20−cost, `shop_message==BOUGHT`, collection gained the card.
 2. **Mayor flag**: interact mayor → assert STORY_FLAG MET_MAYOR set.
 3. **Battle victory** (Walk B): loop select+execute (bounded;
@@ -148,15 +149,42 @@ tools/walkthrough/
 ## 4.1 Battle mechanics learned (verified by the probes)
 
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
-  (`src/screens/overworld_screen.c`) — the field slime fight is 3x10 HP.
+  (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
+  1x10 HP practice spar (0-damage deck); his defeat raises ENERGY_POOL
+  0 -> 2 and shows his good-luck speech deferred at the battle exit.
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection
   must be verified against `combo_count` and retried (§52.10).
 * The starter hand is mostly swords/shields; combos of 3 swords deal
-  ~10 damage — trio dies in a handful of hand-aware rounds.
+  ~5 damage — Carl's 10 HP spar takes about five single-card rounds
+  at the flat-1 starting pool.
 * `+429` in the Battle struct (mapped as `energy`) does not behave like
   a plain energy budget under scripted play; selection therefore keys
   off `combo_count`, not energy.
+
+## 4.2 Triage: uniform world-mirror -1s
+
+* `world_hostile_count` returns -1 when NEITHER const-char* stride
+  candidate makes the World tail byte match the expected tileset kind.
+  Boot anchors passing first proves `g_game`/`.sym` and the
+  GameState/World-head layout are fine, so a uniform -1 is NOT a
+  ROM/`.sym` mismatch. The suspects are: `levels/` edited after the
+  ROM was built (the expected kind is computed from the working-tree
+  level JSON, with a silent default for unknown tileset names), or
+  World-tail struct drift (reader mirror vs `src/world/world.h`).
+* The failure message shows the observed tail bytes next to the
+  expected kind, which distinguishes these causes on the spot.
+* The script fails fast when `build/kaartenheld.sym` is older than
+  `build/kaartenheld.noi` (both pure link-time products — the .gb is
+  routinely newer than both because rgbfix stamps it after make_sym.py
+  and again under `make test`, so the .gb mtime cannot be used), and
+  prints whether the ROM pair plus `levels/` match HEAD before running
+  (dirty state = testing the working tree, which is expected under
+  `make verify-walkthrough`; it only attributes).
+* Recipe: `git diff --quiet HEAD -- build/kaartenheld.gb
+  build/kaartenheld.sym levels/` (clean?), then `python3
+  tools/capture_walkthrough.py` directly against the committed ROM —
+  no `make` in between, so no rebuild can race the read.
 
 ## 5. Decisions (user-confirmed)
 

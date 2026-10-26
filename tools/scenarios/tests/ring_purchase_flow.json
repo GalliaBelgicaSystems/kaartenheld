@@ -1,12 +1,11 @@
 {
  "name": "ring_purchase_flow",
  "test": true,
- "description": "The Shopkeeper sells WOOD_RING as the I RG card (20 gold): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), it appears in CARDS as an undecked row, and A decks it",
- "scenario_id": "TOWN_BOOT",
+ "description": "The Merchant's one-copy shop sells IRON_RING as the IRON RING card (20 gold, first row): purchase adds it to the collection (CURRENCY_SPENT + CARD_PURCHASED), quitting opens the equip-tip dialogue (DIALOGUE_STARTED), closing it returns to the overworld where START opens CARDS, and A decks the ring row",
  "actions": [
   {
    "type": "interact",
-   "actor": "SHOPKEEPER"
+   "actor": "MERCHANT"
   },
   {
    "type": "wait",
@@ -30,19 +29,19 @@
   },
   {
    "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
    "button": "START"
   },
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",
@@ -88,7 +87,7 @@
  "assertions": [
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "IRON_RING",
    "expected": 1
   },
   {
@@ -106,25 +105,29 @@
   },
   {
    "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_occurred",
    "event": "CARD_ADDED_TO_DECK"
   },
   {
    "type": "screen_row",
-   "row": 14,
-   "contains": "I RG"
+   "row": 7,
+   "contains": "IRON RING"
   },
   {
    "type": "screen_row",
-   "row": 14,
+   "row": 7,
    "contains": "1"
   }
  ],
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
-   "x": 9,
-   "y": 4,
-   "facing": "UP"
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
   },
   "seed": 8504,
   "flags": {
@@ -132,6 +135,9 @@
   },
   "currency": {
    "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
   }
  }
 }

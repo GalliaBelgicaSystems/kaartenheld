@@ -1,0 +1,81 @@
+{
+  "name": "gem_unequip",
+  "test": true,
+  "description": "Manual unequip: A on an equipped gem clears only the equipped bit (ownership kept) and the row flips back to OFF.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "OFF"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_EQUIPPED",
+      "expected": 0
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8410,
+    "variables": {
+      "GEM_OWNED": 1,
+      "GEM_EQUIPPED": 1
+    }
+  }
+}

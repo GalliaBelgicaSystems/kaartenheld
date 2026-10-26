@@ -21,12 +21,7 @@ extern uint8_t ui_font_tile_base;
 
 static void simple_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = tile;
-    } else {
-        *dst = tile;
-    }
+    BANKED_VRAM_WRITE(dst, tile);
 }
 
 static void simple_put_char(uint8_t x, uint8_t y, char ch)
@@ -70,11 +65,6 @@ static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max
         dst++;
         buf++;
     }
-}
-
-void thanks_content_render(void)
-{
-    simple_draw_text(1, 8, "THANKS FOR PLAYING!", 19);
 }
 
 void ending_content_render(void)

@@ -42,8 +42,16 @@ void battle_screen_update(Game *g)
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             if (vg->battle.result == BATTLE_RESULT_VICTORY ||
                 vg->battle.result == BATTLE_RESULT_FLED) {
-                vg->world.player.hp = vg->battle.player.hp;
-                vg->state.party.members[0].hp = vg->battle.player.hp;
+                uint8_t exit_hp = vg->battle.player.hp;
+                /* Mutual-KO survival: a victory earned with 0 HP (shared
+                 * status-tick boundary killed both sides, victory shadows
+                 * the death) exits breathing at 1 HP instead of stranding
+                 * a corpse in the overworld. */
+                if (vg->battle.result == BATTLE_RESULT_VICTORY && exit_hp == 0) {
+                    exit_hp = 1;
+                }
+                vg->world.player.hp = exit_hp;
+                vg->state.party.members[0].hp = exit_hp;
                 /* Return to the current scene's area track (TOWN/DUNGEON
                  * get their own theme again instead of the field's). */
                 {
@@ -52,7 +60,17 @@ void battle_screen_update(Game *g)
                 }
                 if (vg->battle.result == BATTLE_RESULT_VICTORY) {
                     world_on_battle_end(g, true);
-                    screen_change(g, game_screen_after_victory(g));
+                    /* Deferred victory dialogue (e.g. Carl's reward
+                     * speech, started by the ACTOR_DEFEATED event inside
+                     * world_on_battle_end): show it before leaving. */
+                    screen_change(g, vg->dialogue.active ? SCREEN_DIALOGUE :
+                        game_screen_after_victory(g));
+                    /* Final-boss victory exits to the ending screen (THE
+                     * END credits): switch from the area track to the
+                     * end-credits theme (demo complete.uge, loops). */
+                    if (g->screen == SCREEN_ENDING) {
+                        audio_play_music(MUSIC_ENDING);
+                    }
                 } else {
                     world_on_battle_fled(g);
                     screen_change(g, SCREEN_OVERWORLD);
@@ -71,18 +89,12 @@ void battle_screen_update(Game *g)
         if (input_pressed(INPUT_START)) {
             item_screen_reset(g);
             screen_change(g, SCREEN_ITEM);
-        } else if (input_pressed(INPUT_LEFT)) {
+        } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, -1);
-        } else if (input_pressed(INPUT_RIGHT)) {
+            battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
+        } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
             audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, 1);
-        } else if (input_pressed(INPUT_UP)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, -1);
-        } else if (input_pressed(INPUT_DOWN)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, 1);
+            battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
         } else if (input_pressed(INPUT_A)) {
             battle_card_select((Battle *)&vg->battle);
         } else if (input_pressed(INPUT_B)) {
@@ -114,10 +126,16 @@ void battle_screen_render(Game *g)
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_BATTLE, 0, 0, 0);
         vg->render_cache.valid = true;
         vg->render_cache.prev_screen = SCREEN_BATTLE;
-    } else if (vg->battle.dirty) {
-        ui_update_battle((Battle *)&vg->battle);
-    } else if (vg->render_cache.prev_battle_timer_bar != timer_bar) {
-        ui_draw_battle_timer((Battle *)&vg->battle);
+    } else {
+        if (vg->battle.dirty) {
+            ui_update_battle((Battle *)&vg->battle);
+        }
+        /* Independent if (not else-if): a dirty frame coinciding with a
+         * bar-tick change must still redraw the bar, or the bar freezes
+         * for a full second while prev_battle_timer_bar moves on. */
+        if (vg->render_cache.prev_battle_timer_bar != timer_bar) {
+            ui_draw_battle_timer((Battle *)&vg->battle);
+        }
     }
     vg->battle.dirty = 0;
     vg->render_cache.prev_battle_timer_bar = timer_bar;

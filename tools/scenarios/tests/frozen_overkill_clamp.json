@@ -1,9 +1,9 @@
 {
  "name": "frozen_overkill_clamp",
  "test": true,
- "description": "Frozen overkill defense: when the incoming net exceeds the hero's remaining HP and the hero is frozen (cannot defend), the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10 HP and frozen; slime deals 2 damage -> overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
+ "description": "Frozen overkill defense: when the incoming net exceeds the hero's remaining HP and the hero is frozen (cannot defend), the hero is reduced to 0 and DAMAGE_RECEIVED reports the HP ACTUALLY lost (clamped) rather than the nominal net. Hero starts 1/10 HP and frozen; the forest slime deals 2 damage -> overkills: DAMAGE_RECEIVED reports 1 (remaining HP), ENTITY_DEFEATED, hero at 0 HP.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,

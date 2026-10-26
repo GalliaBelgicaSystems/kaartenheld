@@ -8,7 +8,7 @@ headroom (bank 2 at 15.0/16 KB, bank 3 opened), verify-oam OK.
 
 The poker combat system is fully operational: material × effect × weapon
 identity tables, derived CardId synthesis, live COMBO row preview,
-energy 6/phase with rejection feedback, and enemy trios with doubled HP.
+energy 2/phase with rejection feedback, and enemy trios with doubled HP.
 
 ## Priority 1 — ~~Fix the victory drop hook hang~~ RESOLVED
 
@@ -111,7 +111,7 @@ chance), legality per §34.2; synthesized names carry the effect infix
 - Poker hand tiers (PAIR..FIVE KIND) with strict sizing + suited bonus
 - Derived-id card_get_def synthesis (loot-range CardIds)
 - DA1 Poison Dagger starter card + BOW 10 Merchant stock
-- Energy pool 6/phase + NO ENERGY!/OUT OF USES! rejection feedback
+- Energy pool 2/phase (`BATTLE_ENERGY_PER_TURN`; was 6) + NO ENERGY!/OUT OF USES! rejection feedback
 - Live COMBO row preview (real-time pending-hand classification)
 - Enemy trios + doubled enemy HP + solo final boss
 - Save system fixes (slot stride 0x400, runtime capacity guard)

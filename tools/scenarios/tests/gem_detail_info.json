@@ -1,0 +1,90 @@
+{
+ "name": "gem_detail_info",
+ "test": true,
+ "description": "GEM detail page: with the STRAIGHT gem owned, SELECT on the GEM tab opens the INFO page (name, skill, short-straight rules, SEL:BACK); B closes it back to the list.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "STRAIGHT GEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "SHORT STRAIGHT"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "3 IN A ROW SCORES"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "RINGS FILL GAPS"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "SEL:BACK"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8411,
+  "variables": {
+   "GEM_OWNED": 1
+  }
+ }
+}

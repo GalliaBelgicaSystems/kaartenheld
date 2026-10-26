@@ -53,10 +53,22 @@ from Phase C/D: HEAL ALL; per-effect scaling refinements.
 
 # 0.1 Hand table (implemented)
 
+**Poker-hands-only scoring.** Only the cards forming the poker hand
+count toward the effect magnitude -- every extra card deals/blocks 0.
+HIGH CARD scores the single highest eligible card; pairs/kinds score
+only the paired cards; five-card hands (straights, flushes, full houses
+and up) score all five. Rings never add attack damage or block (0), but
+count as wildcards for the tier: an attack ring converts the whole hand
+to healing (scaled participating value, ring at its substituted value --
+`SW1` + ring is a PAIR healing (1 + 1) x 120% = 2).
+
 Strict poker sizing: pairs and kinds need >= 2 effective cards;
 STRAIGHT, FLUSH, STRAIGHT_FLUSH and FIVE KIND require all five
 effective cards (attack phase: every selected card; defend: SHIELDs
-only).  Values classify order-independently.  Suited bonus: +25
+only -- other selected cards are inert for classification AND block);
+the SHORT STRAIGHT needs a 3+ run at any staged count >= 3
+(gem-gated, docs/short-straight.md).
+Values classify order-independently.  Suited bonus: +25
 percent when every effective card shares one symbol and a tier was
 made.  Effective multiplier scales base_power into the effect amount,
 and scales on-hit status rider chances (capped ~100%):
@@ -68,6 +80,23 @@ and scales on-hit status rider chances (capped ~100%):
 | TWO PAIR        | 150  | FOUR KIND      | 280  |
 | THREE KIND      | 180  | STRAIGHT FLUSH | 350  |
 | STRAIGHT        | 210  | FIVE KIND      | 400  |
+| SHORT STRAIGHT  | 130  |                |      |
+
+The SHORT STRAIGHT (tier 10, docs/short-straight.md) needs a run of 3+
+distinct sequential values at any staged count ≥ 3 and only classifies
+while the STRAIGHT gem is equipped (GEM tab); it slots below THREE KIND,
+above TWO PAIR.  Only the highest three run values count, one
+best-eligible card each.
+
+**Best-subset resolution.** Classification picks the ladder tier, but
+resolution plays the highest-scoring subset of the staged cards: a
+pair subset or a lone high card can beat the ladder's SHORT STRAIGHT
+(`gem_combo_two_pair`, `gem_combo_singleton`), and a SHORT run can
+beat the ladder's PAIR (`gem_combo_pair_run`).  Ringed hands convert
+to healing, where best-subset evaluation and trial-amount tracking
+maximize the resulting play.  The live COMBO-row preview shows the
+winning play (`gem_combo_preview`, reads `SHORT STR`), so preview and
+result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
 damage, base poison chance 50% scaled by the hand multiplier.  Poison
@@ -90,7 +119,7 @@ payloads):
   `CardDefinition.effect`): the definition owns the effect; combat consumes
   it.
 * Combo evaluation and effect scaling share ONE banked dispatch
-  (`combo_resolve` → bank-2 body calling `effect_resolve_into`
+  (the banked combo dispatch → bank-3 body calling `effect_resolve_into`
   bank-locally), because the fixed bank is completely full (`make memmap`).
   The modules stay separate: the evaluator produces only quality
   (`ComboResult`: shape flags, multiplier, base_power, eff_count); the

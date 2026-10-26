@@ -2,7 +2,6 @@
  "name": "party_initial",
  "test": true,
  "description": "Declarative initial_state injects party member stats into the canonical GameState",
- "scenario_id": "NEW_GAME",
  "actions": [],
  "assertions": [
   {

@@ -1,0 +1,96 @@
+{
+ "name": "amulet_unsellable",
+ "test": true,
+ "description": "The Lost Amulet cannot be sold: it is a SPECIAL quest card, not loot, so A on its detail page at the buying merchant is a silent no-op (still owned, no gold, no CARD_SOLD). Pins the MERCHANT_REMINDER no-strand invariant.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  },
+  "inventory": {
+   "AMULET": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "inventory",
+   "item": "AMULET",
+   "expected": 1
+  },
+  {
+   "type": "currency",
+   "expected": 0,
+   "currency": "GOLD"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_SOLD"
+  }
+ ]
+}

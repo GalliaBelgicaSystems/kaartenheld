@@ -1,0 +1,70 @@
+{
+ "name": "carl_chest_gate",
+ "test": true,
+ "description": "Carl withholds the spar until the field cache is opened: bumping him with FIELD_CHEST clear opens 'Open chest, then come back!' with no battle staged (pool stays base 1); closing returns to the overworld",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "CARL_CHEST_FIRST"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_ENDED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": false
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 1
+  },
+  {
+   "type": "dialogue_active",
+   "expected": false
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 4242
+ }
+}

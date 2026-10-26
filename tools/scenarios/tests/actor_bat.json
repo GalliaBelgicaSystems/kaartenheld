@@ -2,7 +2,6 @@
  "name": "actor_bat",
  "test": true,
  "description": "Extensibility: a second hostile actor (Bat) starts combat with no generic engine changes",
- "scenario_id": "ACTOR_BAT",
  "actions": [
   {
    "type": "press",

@@ -1,0 +1,87 @@
+{
+ "name": "ring_uses_iron_detail",
+ "test": true,
+ "description": "The merchant's iron ring carries 3 uses per battle (material-band uses, docs/loot.md 34.1): its CARDS detail page shows USES 3 plus HEALTH RIDER and the green '+' OAM icon (tile 11, slot 3). The loot twin (derived id 164) is pinned by loot_ring_uses_iron.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "inventory": {
+   "IRON_RING": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "3"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "IRON RING"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "HEALTH RIDER"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
+  }
+ ]
+}

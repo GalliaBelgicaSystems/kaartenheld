@@ -2,7 +2,6 @@
  "name": "actor_guard_interaction",
  "test": true,
  "description": "Friendly World Actor (Guard) starts dialogue when engaged",
- "scenario_id": "GUARD_DIALOGUE",
  "actions": [
   {
    "type": "press",

@@ -8,7 +8,6 @@
 #include "rpg/currency.h"
 #include "quest.h"
 #include "ui.h"
-#include "menu.h"
 #include "card.h"
 #include "shops.h"
 #include "banked.h"
@@ -18,11 +17,21 @@
  * (AGENTS.md 52.18). */
 void item_menu_cursor_banked(void);
 
-#define TAB_CARDS 0
-#define TAB_QUEST 1
-#define NUM_TABS  2
+/* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
+ * through here; non-GEM tabs forward to the quest bodies in the same
+ * bank (direct call, no trampoline), so the fixed dispatch below needs
+ * no extra branches for the fourth tab (fixed _HOME headroom: AGENTS.md
+ * 52.18). */
+void item_gem_nav_banked(void);
+void item_gem_render_banked(void);
 
-/* Cursor index 0 on the CARDS tab is the FILTER/SORT row; card entries
+#define TAB_DECK  0
+#define TAB_QUEST 1
+#define TAB_HERO  2
+#define TAB_GEM   3
+#define NUM_TABS  4
+
+/* Cursor index 0 on the DECK tab is the FILTER/SORT row; card entries
  * start at 1. */
 #define ROW_TOP     0
 #define FIRST_CARD  1
@@ -193,36 +202,20 @@ static void cycle_sort(Game *g)
         SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
 }
 
-/* Shared label tables (fixed bank, same file — safe per AGENTS.md §54.6). */
-static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
-    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
-};
-
-static const char *card_type_name(uint8_t t)
-{
-    return (t < CARD_TYPE_COUNT) ? s_card_type_names[t] : "SPL";
-}
-
-static const char *filter_name(uint8_t f)
-{
-    return (f <= CARD_TYPE_UTILITY) ? s_card_type_names[f] : "ALL";
-}
-
-static const char *sort_name(uint8_t s)
-{
-    switch (s) {
-        case SORT_TYPE:       return "TYPE";
-        case SORT_POWER:      return "PWR+";
-        case SORT_COST:       return "CST+";
-        case SORT_POWER_DESC: return "PWR-";
-        case SORT_COST_DESC:  return "CST-";
-        default:              return "OFF";
-    }
-}
-
+/* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <-> GEM).
+ * Directional: with four tabs a forward-only cycle would strand
+ * LEFT presses on the wrong tab. The direction is read here so the
+ * two call sites keep their original single-call shape (fixed-bank
+ * _HOME headroom, AGENTS.md 52.18). */
 static void switch_tab(Game *g)
 {
-    g->item_menu_tab = (g->item_menu_tab == TAB_CARDS) ? TAB_QUEST : TAB_CARDS;
+    if (input_pressed(INPUT_RIGHT)) {
+        if (g->item_menu_tab == TAB_GEM) g->item_menu_tab = TAB_DECK;
+        else g->item_menu_tab++;
+    } else {
+        if (g->item_menu_tab == TAB_DECK) g->item_menu_tab = TAB_GEM;
+        else g->item_menu_tab--;
+    }
     g->item_menu_index = ROW_TOP;
     g->item_menu_scroll = 0;
     g->render_cache.valid = false;
@@ -250,7 +243,7 @@ static void item_menu_step(Game *g, uint8_t new_index)
 void item_screen_reset(Game *g)
 {
     g->item_menu_index = ROW_TOP;
-    g->item_menu_tab = TAB_CARDS;
+    g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
     g->item_menu_filter = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
@@ -300,7 +293,7 @@ void item_screen_update(Game *g)
                 g->item_menu_mode = MODE_LIST;
                 break;
             default:
-                if (g->item_menu_tab == TAB_CARDS &&
+                if (g->item_menu_tab == TAB_DECK &&
                     g->item_menu_index > ROW_TOP) {
                     /* Two-step close: first B jumps to the top row. */
                     g->item_menu_index = ROW_TOP;
@@ -315,31 +308,27 @@ void item_screen_update(Game *g)
         return;
     }
 
-    if (g->item_menu_tab == TAB_QUEST) {
+    /* QUEST, HERO and GEM tabs share the pre-DECK branch (LR switches
+     * tabs from LIST mode; HERO is read-only otherwise).  Cursor/
+     * detail input for QUEST lives in bank 8 with the quest registry
+     * and GEM input routes through the bank-8 gem body (which forwards
+     * QUEST back to the quest nav in-bank, so this dispatch needs no
+     * tab branch of its own -- fixed-bank headroom: AGENTS.md 52.18). */
+    if (g->item_menu_tab != TAB_DECK) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
-        if (input_pressed(INPUT_SELECT)) {
-            g->item_menu_mode = MODE_QUEST_DETAIL;
-            g->render_cache.valid = false;
-            return;
-        }
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             switch_tab(g);
             return;
         }
-        build_view(g);
-        total = quest_count();
-        if (total == 0) return;
-        if (input_pressed(INPUT_UP)) {
-            item_menu_step(g, (g->item_menu_index > 0) ?
-                (uint8_t)(g->item_menu_index - 1) : (uint8_t)(total - 1));
-        } else if (input_pressed(INPUT_DOWN)) {
-            item_menu_step(g, (g->item_menu_index < (uint8_t)(total - 1)) ?
-                (uint8_t)(g->item_menu_index + 1) : 0);
-        }
+        if (g->item_menu_tab == TAB_HERO) return;
+        g_bk_call_bank = 8;
+        g_bk_call_target = (uint16_t)&item_gem_nav_banked;
+        g_bk_ptr_a = (void *)g;
+        banked_call_run();
         return;
     }
 
-    /* ── CARDS tab ─────────────────────────────────────────────── */
+    /* ── DECK tab ─────────────────────────────────────────────── */
     switch (g->item_menu_mode) {
         case MODE_CARD_DETAIL:
             if (input_pressed(INPUT_SELECT)) {
@@ -375,9 +364,14 @@ void item_screen_update(Game *g)
         return;
     }
 
-    /* One fresh view per frame for every LIST-mode path below. */
-    build_view(g);
-
+    /* NOTE: no per-frame build_view here.  The view is rebuilt on every
+     * full redraw (see item_screen_render) plus explicitly after picker
+     * filter/sort changes.  That covers every consumer: at most one menu
+     * action runs per frame, every collection mutation invalidates the
+     * cache (same-frame rebuild before the next frame's consumption), and
+     * the SELECT/A/detail guards reject out-of-range indices.  A per-frame
+     * rebuild would cost fixed-bank bytes we do not have (see the render
+     * note; _HOME must stay below 0x8000). */
     if (input_pressed(INPUT_SELECT)) {
         if (g->item_menu_index >= FIRST_CARD &&
             (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
@@ -450,15 +444,41 @@ void item_screen_render(Game *g)
     if (!g) return;
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_ITEM) {
-        if (g->item_menu_tab == TAB_QUEST)
-            menu_draw_frame("QUESTS");
-        else
-            menu_draw_frame("CARDS");
-        ui_draw_text_line(0, 2, "CARDS QUEST", 11);
-        ui_draw_text_line((uint8_t)(g->item_menu_tab * 6), 3, "^", 1);
+        /* The tab header (row 0 tabs + row 1 caret) is drawn by the
+         * banked bodies below (fixed-bank _HOME is nearly full,
+         * AGENTS.md 52.18): ui_clear_screen + CRAM here, then the
+         * dispatched body paints header + content. */
 
-        g_bk_call_bank = 2;
-        g_bk_call_target = (uint16_t)&item_screen_render_banked;
+        ui_clear_screen();
+        /* UI-mode CRAM (base set): card icons are encoded with the battle
+         * display ramps (card_display_slots.json); the world tileset's
+         * CRAM would show wrong colors.  Overworld/battle full redraws
+         * restore their own CRAM on exit.  No-op when opened from battle
+         * (already base). */
+        ui_set_cram_palette(0);
+
+        /* The banked body consumes the view read-only (single shared
+         * view; see build_view).  The update no longer rebuilds it every
+         * frame (fixed-bank budget — see its note), so every full redraw
+         * rebuilds it here instead: the open frame can otherwise run
+         * before any update (same-frame screen_change), painting blank
+         * rows from the BSS-zero view that the valid cache then freezes.
+         * Detail-page sells also mutate and redraw in the same frame. */
+        build_view(g);
+
+        /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
+         * both render in bank 8 with their registries (AGENTS.md
+         * 52.11.1: code shares its tables' bank; bank 8 is the overflow
+         * bank per AGENTS.md 55.5).  GEM routes through
+         * item_gem_render_banked, which forwards QUEST to the quest
+         * renderer in-bank, so this dispatch needs no extra branch. */
+        if (g->item_menu_tab == TAB_QUEST || g->item_menu_tab == TAB_GEM) {
+            g_bk_call_bank = 8;
+            g_bk_call_target = (uint16_t)&item_gem_render_banked;
+        } else {
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&item_screen_render_banked;
+        }
         g_bk_ptr_a = (void *)g;
         banked_call_run();
 

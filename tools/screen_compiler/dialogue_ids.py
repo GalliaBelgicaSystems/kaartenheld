@@ -55,7 +55,9 @@ def dialogue_id_map():
 
 def load_story_flags():
     """{STORY_FLAG_ID_* name: value} parsed from src/game/game_ids.h
-    (hand-managed game content; the compiler only resolves references)."""
+    (hand-managed game content; the compiler only resolves references).
+    Flags live in a typedef enum (not #defines); the _COUNT sentinel is
+    excluded since it is a bound, not a settable flag."""
     ids = set()
     path = REPO_ROOT / "src" / "game" / "game_ids.h"
     try:
@@ -63,6 +65,7 @@ def load_story_flags():
     except FileNotFoundError:
         print("WARNING: game_ids.h not found; skipping story-flag validation")
         return ids
-    for m in re.finditer(r"#define\s+(STORY_FLAG_ID_[A-Z0-9_]+)\b", text):
-        ids.add(m.group(1))
+    for m in re.finditer(r"\b(STORY_FLAG_ID_[A-Z0-9_]+)\b", text):
+        if not m.group(1).endswith("_COUNT"):
+            ids.add(m.group(1))
     return ids

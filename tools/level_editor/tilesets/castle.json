@@ -2,9 +2,11 @@
   "id": "castle",
   "label": "Castle & Bastion",
   "gb_tileset_kind": "WORLD_TILESET_CASTLE",
+  "indexed": true,
   "tiles": [
     {
       "id": "castle_top_left_corner_wall",
+      "palette": "castle4",
       "label": "top left corner wall",
       "gb_constant": "TILE_CASTLE_00",
       "walkable": false,
@@ -15,6 +17,7 @@
     },
     {
       "id": "castle_top_wall",
+      "palette": "castle4",
       "label": "top wall",
       "gb_constant": "TILE_CASTLE_01",
       "walkable": false,
@@ -25,6 +28,7 @@
     },
     {
       "id": "castle_top_right_corner_wall",
+      "palette": "castle4",
       "label": "top right corner wall",
       "gb_constant": "TILE_CASTLE_02",
       "walkable": false,
@@ -35,6 +39,7 @@
     },
     {
       "id": "castle_left_wall",
+      "palette": "castle4",
       "label": "left wall",
       "gb_constant": "TILE_CASTLE_03",
       "walkable": false,
@@ -45,6 +50,7 @@
     },
     {
       "id": "castle_right_wall",
+      "palette": "castle4",
       "label": "right wall",
       "gb_constant": "TILE_CASTLE_04",
       "walkable": false,
@@ -55,6 +61,7 @@
     },
     {
       "id": "castle_window",
+      "palette": "castle4",
       "label": "window",
       "gb_constant": "TILE_CASTLE_05",
       "walkable": false,
@@ -65,6 +72,7 @@
     },
     {
       "id": "castle_curtain",
+      "palette": "castle3",
       "label": "curtain",
       "gb_constant": "TILE_CASTLE_06",
       "walkable": false,
@@ -74,29 +82,43 @@
       "category": "terrain"
     },
     {
-      "id": "castle_stairs",
-      "label": "stairs",
+      "id": "castle_top_left_throne",
+      "palette": "castle2",
+      "label": "top left throne",
       "gb_constant": "TILE_CASTLE_07",
-      "walkable": true,
-      "color": "#858585",
-      "ascii": ".",
-      "image_url": "/tiles/castle/castle_stairs.png",
+      "walkable": false,
+      "color": "#afa593",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_top_left_throne.png",
       "category": "terrain"
     },
     {
-      "id": "castle_bottom_left_corren_wall",
-      "label": "bottom left corren wall",
+      "id": "castle_top_right_throne",
+      "palette": "castle2",
+      "label": "top right throne",
       "gb_constant": "TILE_CASTLE_08",
+      "walkable": false,
+      "color": "#afa593",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_top_right_throne.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_bottom_left_corner_wall",
+      "palette": "castle4",
+      "label": "bottom left corner wall",
+      "gb_constant": "TILE_CASTLE_09",
       "walkable": false,
       "color": "#5a5a5a",
       "ascii": "#",
-      "image_url": "/tiles/castle/castle_bottom_left_corren_wall.png",
+      "image_url": "/tiles/castle/castle_bottom_left_corner_wall.png",
       "category": "wall"
     },
     {
       "id": "castle_bottom_wall",
+      "palette": "castle4",
       "label": "bottom wall",
-      "gb_constant": "TILE_CASTLE_09",
+      "gb_constant": "TILE_CASTLE_10",
       "walkable": false,
       "color": "#666666",
       "ascii": "#",
@@ -105,8 +127,9 @@
     },
     {
       "id": "castle_bottom_right_corner_wall",
+      "palette": "castle4",
       "label": "bottom right corner wall",
-      "gb_constant": "TILE_CASTLE_10",
+      "gb_constant": "TILE_CASTLE_11",
       "walkable": false,
       "color": "#5a5a5a",
       "ascii": "#",
@@ -115,8 +138,9 @@
     },
     {
       "id": "castle_chair_facing_left",
+      "palette": "castle2",
       "label": "chair facing left",
-      "gb_constant": "TILE_CASTLE_11",
+      "gb_constant": "TILE_CASTLE_12",
       "walkable": false,
       "color": "#bcb6ab",
       "ascii": "#",
@@ -124,43 +148,245 @@
       "category": "terrain"
     },
     {
-      "id": "castle_table",
-      "label": "table",
-      "gb_constant": "TILE_CASTLE_12",
+      "id": "castle_table_left_half",
+      "palette": "castle2",
+      "label": "table left half",
+      "gb_constant": "TILE_CASTLE_13",
       "walkable": false,
-      "color": "#9e8e71",
+      "color": "#988665",
       "ascii": "#",
-      "image_url": "/tiles/castle/castle_table.png",
+      "image_url": "/tiles/castle/castle_table_left_half.png",
       "category": "terrain"
     },
     {
-      "id": "castle_chair_facing_riht",
-      "label": "chair facing riht",
-      "gb_constant": "TILE_CASTLE_13",
+      "id": "castle_chair_facing_right",
+      "palette": "castle2",
+      "label": "chair facing right",
+      "gb_constant": "TILE_CASTLE_14",
       "walkable": false,
       "color": "#bcb6ab",
       "ascii": "#",
-      "image_url": "/tiles/castle/castle_chair_facing_riht.png",
+      "image_url": "/tiles/castle/castle_chair_facing_right.png",
       "category": "terrain"
     },
     {
-      "id": "castle_chest",
-      "label": "chest",
-      "gb_constant": "TILE_CASTLE_14",
-      "walkable": false,
-      "color": "#a29271",
-      "ascii": "#",
-      "image_url": "/tiles/castle/castle_chest.png",
-      "category": "terrain"
-    },
-    {
-      "id": "castle_plain_floor",
-      "label": "plain floor",
+      "id": "castle_floor_with_debris",
+      "palette": "castle4",
+      "label": "floor with debris",
       "gb_constant": "TILE_CASTLE_15",
       "walkable": true,
-      "color": "#d7d7d7",
+      "color": "#d0d0d0",
       "ascii": ".",
-      "image_url": "/tiles/castle/castle_plain_floor.png",
+      "image_url": "/tiles/castle/castle_floor_with_debris.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_bottom_left_throne",
+      "palette": "castle2",
+      "label": "bottom left throne",
+      "gb_constant": "TILE_CASTLE_16",
+      "walkable": false,
+      "color": "#9c8e75",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_bottom_left_throne.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_bottom_right_throne",
+      "palette": "castle2",
+      "label": "bottom right throne",
+      "gb_constant": "TILE_CASTLE_17",
+      "walkable": false,
+      "color": "#9c8e75",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_bottom_right_throne.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_left_rug",
+      "palette": "castle3",
+      "label": "left rug",
+      "gb_constant": "TILE_CASTLE_18",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_left_rug.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_right_rug",
+      "palette": "castle3",
+      "label": "right rug",
+      "gb_constant": "TILE_CASTLE_19",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_right_rug.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_top_chandelier",
+      "palette": "castle3",
+      "label": "top chandelier",
+      "gb_constant": "TILE_CASTLE_20",
+      "walkable": false,
+      "color": "#d7cdb3",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_top_chandelier.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_bottom_chandelier",
+      "palette": "castle3",
+      "label": "bottom chandelier",
+      "gb_constant": "TILE_CASTLE_21",
+      "walkable": false,
+      "color": "#d7ceb5",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_bottom_chandelier.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_vase",
+      "palette": "castle4",
+      "label": "vase",
+      "gb_constant": "TILE_CASTLE_22",
+      "walkable": false,
+      "color": "#a2a2a2",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_vase.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_table_right_half",
+      "palette": "castle2",
+      "label": "table right half",
+      "gb_constant": "TILE_CASTLE_23",
+      "walkable": false,
+      "color": "#988665",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_table_right_half.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_table_with_plate_1",
+      "palette": "castle2",
+      "label": "table with plate 1",
+      "gb_constant": "TILE_CASTLE_24",
+      "walkable": false,
+      "color": "#927d58",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_table_with_plate_1.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_table_with_plate_2",
+      "palette": "castle2",
+      "label": "table with plate 2",
+      "gb_constant": "TILE_CASTLE_25",
+      "walkable": false,
+      "color": "#927d58",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_table_with_plate_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_exit",
+      "palette": "castle4",
+      "label": "exit",
+      "gb_constant": "TILE_CASTLE_26",
+      "walkable": true,
+      "color": "#878787",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_exit.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_table_top_empty",
+      "palette": "castle2",
+      "label": "table top empty",
+      "gb_constant": "TILE_CASTLE_27",
+      "walkable": false,
+      "color": "#8d754a",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_table_top_empty.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_vase_2",
+      "palette": "castle4",
+      "label": "vase 2",
+      "gb_constant": "TILE_CASTLE_28",
+      "walkable": false,
+      "color": "#b0b0b0",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_vase_2.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_roman_column_base",
+      "palette": "castle4",
+      "label": "roman column base",
+      "gb_constant": "TILE_CASTLE_29",
+      "walkable": false,
+      "color": "#aaaaaa",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_roman_column_base.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_roman_column_top",
+      "palette": "castle4",
+      "label": "roman column top",
+      "gb_constant": "TILE_CASTLE_30",
+      "walkable": false,
+      "color": "#a2a2a2",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_roman_column_top.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_right_rug_rotated",
+      "palette": "castle3",
+      "label": "right rug rotated",
+      "gb_constant": "TILE_CASTLE_31",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_right_rug_rotated.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_left_rug_rotated",
+      "palette": "castle3",
+      "label": "left rug rotated",
+      "gb_constant": "TILE_CASTLE_32",
+      "walkable": true,
+      "color": "#942c1c",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_left_rug_rotated.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_red_carpet",
+      "palette": "castle3",
+      "label": "red carpet",
+      "gb_constant": "TILE_CASTLE_33",
+      "walkable": true,
+      "color": "#8b1b1b",
+      "ascii": ".",
+      "image_url": "/tiles/castle/castle_red_carpet.png",
+      "category": "terrain"
+    },
+    {
+      "id": "castle_black_emptyness",
+      "palette": "castle4",
+      "label": "empty",
+      "gb_constant": "TILE_CASTLE_34",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/castle/castle_black_emptyness.png",
       "category": "terrain"
     }
   ],
@@ -214,56 +440,176 @@
         "x": 7,
         "y": 0,
         "index": 7,
-        "tile": "castle_stairs",
-        "exit": true
+        "tile": "castle_top_left_throne"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "index": 8,
+        "tile": "castle_top_right_throne"
       },
       {
         "x": 0,
         "y": 1,
-        "index": 8,
-        "tile": "castle_bottom_left_corren_wall"
+        "index": 9,
+        "tile": "castle_bottom_left_corner_wall"
       },
       {
         "x": 1,
         "y": 1,
-        "index": 9,
+        "index": 10,
         "tile": "castle_bottom_wall"
       },
       {
         "x": 2,
         "y": 1,
-        "index": 10,
+        "index": 11,
         "tile": "castle_bottom_right_corner_wall"
       },
       {
         "x": 3,
         "y": 1,
-        "index": 11,
+        "index": 12,
         "tile": "castle_chair_facing_left"
       },
       {
         "x": 4,
         "y": 1,
-        "index": 12,
-        "tile": "castle_table"
+        "index": 13,
+        "tile": "castle_table_left_half"
       },
       {
         "x": 5,
         "y": 1,
-        "index": 13,
-        "tile": "castle_chair_facing_riht"
+        "index": 14,
+        "tile": "castle_chair_facing_right"
       },
       {
         "x": 6,
         "y": 1,
-        "index": 14,
-        "tile": "castle_chest"
+        "index": 15,
+        "tile": "castle_floor_with_debris"
       },
       {
         "x": 7,
         "y": 1,
-        "index": 15,
-        "tile": "castle_plain_floor"
+        "index": 16,
+        "tile": "castle_bottom_left_throne"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "index": 17,
+        "tile": "castle_bottom_right_throne"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "index": 18,
+        "tile": "castle_left_rug"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "index": 19,
+        "tile": "castle_right_rug"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "index": 20,
+        "tile": "castle_top_chandelier"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "index": 21,
+        "tile": "castle_bottom_chandelier"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "index": 22,
+        "tile": "castle_vase"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "index": 23,
+        "tile": "castle_table_right_half"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "index": 24,
+        "tile": "castle_table_with_plate_1"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "index": 25,
+        "tile": "castle_table_with_plate_2"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "index": 26,
+        "tile": "castle_exit",
+        "exit": true
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "index": 27,
+        "tile": "castle_table_top_empty"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "index": 28,
+        "tile": "castle_vase_2"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "index": 29,
+        "tile": "castle_roman_column_base"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "index": 30,
+        "tile": "castle_roman_column_top"
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "index": 31,
+        "tile": "castle_right_rug_rotated"
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "index": 32,
+        "tile": "castle_left_rug_rotated"
+      },
+      {
+        "x": 6,
+        "y": 3,
+        "index": 33,
+        "tile": "castle_red_carpet"
+      },
+      {
+        "x": 7,
+        "y": 3,
+        "index": 34,
+        "tile": "castle_black_emptyness"
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "index": 35,
+        "tile": "castle_black_emptyness"
       }
     ]
   }

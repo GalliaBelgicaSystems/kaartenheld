@@ -1,7 +1,7 @@
 {
  "name": "card_battle_selection_cycle",
  "test": true,
- "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact",
+ "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact (heal cards show the X joker glyph: HE7 reads HEX)",
  "actions": [
   {
    "type": "wait",
@@ -40,6 +40,14 @@
   {
    "type": "press",
    "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
   },
   {
    "type": "wait",
@@ -106,7 +114,7 @@
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 11,
+   "col": 13,
    "expected": 113
   },
   {
@@ -118,18 +126,18 @@
   {
    "type": "tilemap_cell",
    "row": 8,
-   "col": 11,
+   "col": 13,
    "expected": 114
   },
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "COMBO:"
+   "contains": "HCARD DMG3"
   },
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "SW3 SH2 BO4 SW4 HE7"
+   "contains": "SW3 SH2 BO4 SW4 HEX"
   },
   {
    "type": "screen_row",
@@ -155,6 +163,9 @@
    "facing": "DOWN"
   },
   "seed": 3000,
-  "start_battle": true
+  "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
  }
 }

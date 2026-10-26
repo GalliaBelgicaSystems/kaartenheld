@@ -1,0 +1,73 @@
+{
+  "name": "gamble_invite",
+  "test": true,
+  "description": "Bumping Nis the kobold opens his rules dialogue (not the table): speaker tag, rules page, choice page with the +20 prize teaser and YES default.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "DIALOGUE"
+    },
+    {
+      "type": "dialogue_active",
+      "expected": true
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "KOBOLD_INVITE"
+    },
+    {
+      "type": "screen_row",
+      "row": 14,
+      "contains": "Nis:"
+    },
+    {
+      "type": "screen_row",
+      "row": 15,
+      "contains": "+20 NET WINS A GEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "> YES"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_STARTED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 11
+  }
+}

@@ -1,0 +1,36 @@
+{
+ "name": "quest_mark_mayor_turnin",
+ "test": true,
+ "description": "Quest marker ? returns over the mayor when the hunt is ACTIVE with 5+ monsters slain (turn-in ready): entry 30 shows QUESTION_TILE (127).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 5,
+   "facing": "DOWN"
+  },
+  "seed": 8504,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MONSTERS_DEFEATED": 5,
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 127
+  }
+ ]
+}

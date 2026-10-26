@@ -1,0 +1,56 @@
+{
+ "name": "battle_ring_depleted",
+ "test": true,
+ "description": "Ring single-use gate (docs/loot.md 34.1): staging a wood ring whose uses are exhausted (uses_remaining = 0) is rejected with a transient 'OUT OF USES!' flash on row 9 -- the ring counterpart of battle_depleted_message. Pairs with battle_health_ring, which proves the 1 -> 0 consumption.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 0
+  },
+  {
+   "type": "set_hand_card_ring",
+   "index": 0
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "OUT OF USES!"
+  }
+ ]
+}

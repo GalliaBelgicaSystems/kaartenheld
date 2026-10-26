@@ -1,0 +1,70 @@
+{
+ "name": "quest_detail_complete",
+ "test": true,
+ "description": "SELECT on a completed quest row shows DONE plus what the reward was: MONSTER HUNT complete renders DONE and GOT +1 AP",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "MONSTER HUNT"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "DONE"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "GOT"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "+1 AP"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 2,
+   "MONSTERS_DEFEATED": 5
+  }
+ }
+}

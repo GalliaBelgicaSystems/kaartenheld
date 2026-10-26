@@ -1,0 +1,35 @@
+{
+ "name": "alert_mark_hidden_before_sting",
+ "test": true,
+ "description": "The pursuer ! bubble debuts WITH the alert sting, never at entry: 10 frames after entering TEST_FOREST (kobold pursuers, sting at ~30 f) the track is already held (NONE) but entry 30 is still hidden (tile 0).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 0
+  }
+ ]
+}

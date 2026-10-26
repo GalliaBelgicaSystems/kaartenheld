@@ -26,6 +26,12 @@ Every combat victory rewards you with a **new random card**: add it to your deck
   <em>Overworld — from the Field through the gate into the Forest, out to the chest.</em>
 </p>
 
+<p align="center">
+  <img src="screenshots/boss.gif" alt="Kaartenheld boss battle: the Lord of Slimes, its glowing eyes blinking red and orange" width="480">
+  <br>
+  <em>Boss battle — the <strong>Lord of Slimes</strong>, its glowing eyes blinking.</em>
+</p>
+
 ## How It Is Made
 
 Kaartenheld is built with a deliberately split creative process:
@@ -198,7 +204,7 @@ All build tools, compilers, emulators, and test runners are automatically provid
 | `make memmap` | Check ROM and WRAM memory budget | Invariant check (`_HOME < 0x8000`) |
 | `make lint` | Compile-to-assembly `-Wall` pass over all sources | Warning report |
 | `make screenshots` | Headless PyBoy walkthrough capture | `screenshots/*.png` |
-| `make gifs` | Regenerate the README GIFs (boot, kobold battle, overworld) | `screenshots/boot.gif`, `screenshots/battle.gif`, `screenshots/overworld.gif` |
+| `make gifs` | Regenerate the README GIFs (boot, kobold battle, overworld, boss) | `screenshots/boot.gif`, `screenshots/battle.gif`, `screenshots/overworld.gif`, `screenshots/boss.gif` |
 | `make run` | Launch release ROM in emulator | Game window |
 | `make run-debug` | Launch debug ROM in emulator | Debug game window |
 | `make screenshot` | Capture headless emulator screenshot | `build/screenshot.png` |

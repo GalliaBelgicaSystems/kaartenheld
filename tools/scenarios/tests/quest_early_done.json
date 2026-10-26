@@ -1,0 +1,67 @@
+{
+ "name": "quest_early_done",
+ "test": true,
+ "description": "Kills done before accepting: with the quest NOT_STARTED and 5 monsters already slain, the first talk takes the early-turn-in path (MAYOR_EARLY, not MAYOR_INTRO): MET_MAYOR set, +1 AP, quest jumps straight to COMPLETE",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MAYOR"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "dialogue_id",
+   "expected": "MAYOR_EARLY"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "You've already"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "slain 5 monsters!"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "Hunters like you"
+  },
+  {
+   "type": "variable",
+   "variable": "QUEST_MONSTER_HUNT",
+   "expected": 2
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 4
+  },
+  {
+   "type": "flag",
+   "flag": "MET_MAYOR",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8406,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "MONSTERS_DEFEATED": 5,
+   "ENERGY_POOL": 3
+  }
+ }
+}

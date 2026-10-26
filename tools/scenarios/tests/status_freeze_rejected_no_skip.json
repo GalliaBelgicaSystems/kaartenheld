@@ -2,7 +2,6 @@
  "name": "status_freeze_rejected_no_skip",
  "test": true,
  "description": "Rejected FREEZE must not freeze (review fix): a combatant with both status slots full (BURN + POISON) rejects a FREEZE application -- no third STATUS_APPLIED, and the enemy's attack is NOT skipped (no TURN_SKIPPED)",
- "scenario_id": "BATTLE_BOOT",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

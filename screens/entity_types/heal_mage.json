@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "heal_mage",
+  "label": "Heal Mage",
+  "kind": "npc",
+  "name": "HEAL MAGE",
+  "visual": "W",
+  "sprite_kind": "tile"
+}

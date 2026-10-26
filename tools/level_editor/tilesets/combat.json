@@ -154,33 +154,33 @@
       "category": "terrain"
     },
     {
-      "id": "combat_poison_status",
-      "label": "poison status",
-      "gb_constant": "TILE_COMBAT_POISON_STATUS",
-      "walkable": false,
-      "color": "#b68e94",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_poison_status.png",
-      "category": "terrain"
-    },
-    {
-      "id": "combat_fire_status",
-      "label": "fire status",
-      "gb_constant": "TILE_COMBAT_FIRE_STATUS",
-      "walkable": false,
-      "color": "#ca8959",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_fire_status.png",
-      "category": "object"
-    },
-    {
-      "id": "combat_arrow_pointing_up",
-      "label": "arrow pointing up",
-      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP",
+      "id": "combat_arrow_pointing_up_dark",
+      "label": "arrow pointing up dark",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_DARK",
       "walkable": false,
       "color": "#c9beae",
       "ascii": "#",
-      "image_url": "/tiles/combat/combat_arrow_pointing_up.png",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_dark.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_ap_dot",
+      "label": "ap dot",
+      "gb_constant": "TILE_COMBAT_AP_DOT",
+      "walkable": false,
+      "color": "#f6f4f2",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_ap_dot.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_arrow_pointing_up_light",
+      "label": "arrow pointing up light",
+      "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_LIGHT",
+      "walkable": false,
+      "color": "#e0d4c3",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_arrow_pointing_up_light.png",
       "category": "terrain"
     },
     {
@@ -198,7 +198,7 @@
       "label": "ap icon",
       "gb_constant": "TILE_COMBAT_AP_ICON",
       "walkable": false,
-      "color": "#c3b6a3",
+      "color": "#ded8ce",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_ap_icon.png",
       "category": "terrain"
@@ -294,36 +294,6 @@
       "category": "enemy"
     },
     {
-      "id": "combat_top_middle_slime_2",
-      "label": "top middle slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SLIME_2",
-      "walkable": false,
-      "color": "#9dcf7c",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_middle_slime_2.png",
-      "category": "enemy"
-    },
-    {
-      "id": "combat_top_left_slime_2",
-      "label": "top left slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_LEFT_SLIME_2",
-      "walkable": false,
-      "color": "#b7d8a2",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_left_slime_2.png",
-      "category": "enemy"
-    },
-    {
-      "id": "combat_top_right_slime_2",
-      "label": "top right slime 2",
-      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SLIME_2",
-      "walkable": false,
-      "color": "#b8d8a4",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_top_right_slime_2.png",
-      "category": "enemy"
-    },
-    {
       "id": "combat_top_left_bat",
       "label": "top left bat",
       "gb_constant": "TILE_COMBAT_TOP_LEFT_BAT",
@@ -398,7 +368,7 @@
       "label": "bottom middle boss",
       "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_BOSS",
       "walkable": false,
-      "color": "#191816",
+      "color": "#171615",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_middle_boss.png",
       "category": "enemy"
@@ -428,7 +398,7 @@
       "label": "middle center boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS",
       "walkable": false,
-      "color": "#190e0c",
+      "color": "#100707",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss.png",
       "category": "enemy"
@@ -438,7 +408,7 @@
       "label": "middle right boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS",
       "walkable": false,
-      "color": "#99948a",
+      "color": "#9b958a",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_right_boss.png",
       "category": "enemy"
@@ -472,16 +442,6 @@
       "ascii": "#",
       "image_url": "/tiles/combat/combat_top_right_boss.png",
       "category": "enemy"
-    },
-    {
-      "id": "combat_ice_status",
-      "label": "ice status",
-      "gb_constant": "TILE_COMBAT_ICE_STATUS",
-      "walkable": false,
-      "color": "#b8c5af",
-      "ascii": "#",
-      "image_url": "/tiles/combat/combat_ice_status.png",
-      "category": "terrain"
     },
     {
       "id": "combat_top_left_kobold",
@@ -678,7 +638,7 @@
       "label": "left middle boss 2",
       "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS_2",
       "walkable": false,
-      "color": "#38302c",
+      "color": "#716b68",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_left_middle_boss_2.png",
       "category": "enemy"
@@ -688,7 +648,7 @@
       "label": "middle center boss 2",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS_2",
       "walkable": false,
-      "color": "#453628",
+      "color": "#180e09",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss_2.png",
       "category": "enemy"
@@ -698,7 +658,7 @@
       "label": "middle right boss 2",
       "gb_constant": "TILE_COMBAT_MIDDLE_RIGHT_BOSS_2",
       "walkable": false,
-      "color": "#aeaeac",
+      "color": "#9b958a",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_right_boss_2.png",
       "category": "enemy"
@@ -731,6 +691,26 @@
       "color": "#cca977",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_0_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_4_arrows_left",
+      "label": "4_arrows_left",
+      "gb_constant": "TILE_COMBAT_4_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c09e6d",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_4_arrows_left.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_5_arrows_left",
+      "label": "5_arrows_left",
+      "gb_constant": "TILE_COMBAT_5_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#dfbd8d",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_5_arrows_left.png",
       "category": "terrain"
     },
     {
@@ -784,6 +764,16 @@
       "category": "terrain"
     },
     {
+      "id": "combat_x_icon",
+      "label": "X icon",
+      "gb_constant": "TILE_COMBAT_X_ICON",
+      "walkable": false,
+      "color": "#b39467",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_x_icon.png",
+      "category": "terrain"
+    },
+    {
       "id": "combat_black_emptyness_2",
       "label": "empty",
       "gb_constant": "TILE_COMBAT_BLACK_EMPTYNESS",
@@ -802,6 +792,106 @@
       "ascii": "#",
       "image_url": "/tiles/combat/combat_black_emptyness_3.png",
       "category": "object"
+    },
+    {
+      "id": "combat_top_left_slime_knight",
+      "label": "top left slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_LEFT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#a2b396",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_left_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_middle_slime_knight",
+      "label": "top middle slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_MIDDLE_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#637e51",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_middle_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_top_right_slime_knight",
+      "label": "top right slime knight",
+      "gb_constant": "TILE_COMBAT_TOP_RIGHT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#e1e6dd",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_top_right_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_left_slime_knight",
+      "label": "bottom left slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#9caf90",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_left_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_middle_slime_knight",
+      "label": "bottom middle slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#50693f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_middle_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_bottom_right_slime_knight",
+      "label": "bottom right slime knight",
+      "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_SLIME_KNIGHT",
+      "walkable": false,
+      "color": "#ced6c8",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_bottom_right_slime_knight.png",
+      "category": "enemy"
+    },
+    {
+      "id": "combat_five_icon",
+      "label": "five icon",
+      "gb_constant": "TILE_COMBAT_FIVE_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_five_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_six_icon",
+      "label": "six icon",
+      "gb_constant": "TILE_COMBAT_SIX_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_six_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_seven_icon",
+      "label": "seven icon",
+      "gb_constant": "TILE_COMBAT_SEVEN_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_seven_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_eight_icon",
+      "label": "eight icon",
+      "gb_constant": "TILE_COMBAT_EIGHT_ICON",
+      "walkable": false,
+      "color": "#bc9c6e",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_eight_icon.png",
+      "category": "terrain"
     }
   ]
 }

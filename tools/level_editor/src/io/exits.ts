@@ -15,6 +15,12 @@ export interface ExitStatus {
   return_exit: LevelExit | null;
   proposal: LevelExit | null;
   error: string | null;
+  /** Tunnel pairing state for this exit (null tunnel = one-way exit). */
+  tunnel: string | null;
+  tunnel_ok: boolean | null;
+  tunnel_error: string | null;
+  /** Suggested id when creating a tunnel for this exit. */
+  suggested_tunnel: string | null;
 }
 
 export async function fetchExitStatus(fromId: string, exits: LevelExit[]): Promise<ExitStatus[]> {
@@ -32,16 +38,36 @@ export async function fetchExitStatus(fromId: string, exits: LevelExit[]): Promi
 export interface ConnectResult {
   created: boolean;
   to_exit: LevelExit;
+  /** Updated from-level exits (server upsert, incl. tunnel id).  Apply to
+   *  editor state so the next save cannot overwrite the pairing. */
+  from_exits: LevelExit[];
+  from_exit: LevelExit;
+  tunnel: string | null;
 }
 
-export async function connectLevels(fromId: string, exit: LevelExit): Promise<ConnectResult> {
+export async function connectLevels(
+  fromId: string,
+  exit: LevelExit,
+  opts?: { asTunnel?: boolean; tunnel?: string },
+): Promise<ConnectResult> {
   const res = await fetch('/api/connect-levels', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from_id: fromId, exit }),
+    body: JSON.stringify({
+      from_id: fromId,
+      exit,
+      as_tunnel: !!opts?.asTunnel,
+      tunnel: opts?.tunnel ?? null,
+    }),
   });
   if (!res.ok) throw new Error(`connect returned ${res.status}`);
   const body = await res.json();
   if (!body.success) throw new Error(body.error || 'connect failed');
-  return { created: !!body.created, to_exit: body.to_exit };
+  return {
+    created: !!body.created,
+    to_exit: body.to_exit,
+    from_exits: body.from_exits || [],
+    from_exit: body.from_exit,
+    tunnel: body.tunnel ?? null,
+  };
 }

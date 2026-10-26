@@ -8,296 +8,405 @@
     "music": "MUSIC_FOREST",
     "map_id": "MAP_FOREST"
   },
-  "default_walkable": "forest.forest_plain_floor_1",
+  "default_walkable": "forest.forest_plain_floor_2",
   "layers": {
     "terrain": [
-      {
-        "x": 1,
-        "y": 1,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_corner_wall"
-      },
-      {
-        "x": 2,
-        "y": 1,
-        "width": 16,
-        "height": 1,
-        "tile": "forest.forest_top_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 1,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_corner_wall"
-      },
-      {
-        "x": 1,
-        "y": 2,
-        "width": 1,
-        "height": 14,
-        "tile": "forest.forest_left_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 2,
-        "width": 1,
-        "height": 7,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 10,
-        "width": 1,
-        "height": 6,
-        "tile": "forest.forest_right_wall_1"
-      },
-      {
-        "x": 1,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_corner_wall"
-      },
-      {
-        "x": 2,
-        "y": 16,
-        "width": 16,
-        "height": 1,
-        "tile": "forest.forest_bottom_wall_1"
-      },
-      {
-        "x": 18,
-        "y": 16,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_corner_wall"
-      },
-      {
-        "x": 3,
-        "y": 3,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 4,
-        "y": 3,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 3,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 4,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 15,
-        "y": 3,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 16,
-        "y": 3,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 15,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 16,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 6,
-        "y": 7,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 7,
-        "y": 7,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 6,
-        "y": 8,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 7,
-        "y": 8,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 15,
-        "y": 8,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 16,
-        "y": 8,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 15,
-        "y": 9,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 16,
-        "y": 9,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 3,
-        "y": 12,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 4,
-        "y": 12,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 3,
-        "y": 13,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 4,
-        "y": 13,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 15,
-        "y": 13,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_treetop"
-      },
-      {
-        "x": 16,
-        "y": 13,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_top"
-      },
-      {
-        "x": 15,
-        "y": 14,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_treetrunk"
-      },
-      {
-        "x": 16,
-        "y": 14,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_trunk"
-      },
-      {
-        "x": 10,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_tree_stump"
-      },
-      {
-        "x": 11,
-        "y": 4,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_stump"
-      },
-      {
-        "x": 10,
-        "y": 5,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_tree_stump"
-      },
-      {
-        "x": 11,
-        "y": 5,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_stump"
-      },
-      {
-        "x": 5,
-        "y": 14,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_left_tree_stump"
-      },
-      {
-        "x": 6,
-        "y": 14,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_top_right_tree_stump"
-      },
-      {
-        "x": 5,
-        "y": 15,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_left_tree_stump"
-      },
-      {
-        "x": 6,
-        "y": 15,
-        "width": 1,
-        "height": 1,
-        "tile": "forest.forest_bottom_right_tree_stump"
-      }
+      [
+        "forest.forest_top_left_corner_wall",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_wall_1",
+        "forest.forest_top_right_corner_wall"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_tree_stump",
+        "forest.forest_top_right_tree_stump",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_stairs",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_tree_stump",
+        "forest.forest_bottom_right_tree_stump",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_treetop",
+        "forest.forest_top_right_tree_top",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_top_left_tree_stump",
+        "forest.forest_top_right_tree_stump",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_treetrunk",
+        "forest.forest_bottom_right_tree_trunk",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_left_tree_stump",
+        "forest.forest_bottom_right_tree_stump",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_left_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_right_wall_1"
+      ],
+      [
+        "forest.forest_bottom_left_corner_wall",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_left_corner_wall",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_plain_floor_2",
+        "forest.forest_plain_floor_2",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_wall_1",
+        "forest.forest_bottom_right_corner_wall",
+        "forest.forest_bottom_right_corner_wall"
+      ]
     ]
   },
   "player": {
@@ -313,24 +422,22 @@
   },
   "exits": [
     {
-      "x": 12,
-      "y": 11,
+      "x": 5,
+      "y": 5,
       "target_scene": "field",
-      "target_x": 12,
+      "target_x": 15,
       "target_y": 1,
       "direction": "SOUTH",
-      "tile_char": "<"
-    },
-    {
-      "x": 19,
-      "y": 9,
-      "target_scene": "forest_glade",
-      "target_x": 2,
-      "target_y": 9,
-      "direction": "EAST",
-      "tile_char": ">"
+      "tile_char": ">",
+      "tunnel": "tunnel_field_forest"
     }
   ],
+  "neighbors": {
+    "north": "grassy_forest",
+    "south": "town",
+    "east": "",
+    "west": ""
+  },
   "objects": [
     {
       "id": "forest_slime",
@@ -355,8 +462,8 @@
           "INTERACTABLE"
         ],
         "visual": "E",
-        "hp": 12,
-        "max_hp": 12,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME",
@@ -366,10 +473,10 @@
     {
       "id": "forest_bat",
       "type": "enemy",
-      "overworld_sprite": "forest.forest_enemy_bats_frame_1",
+      "overworld_sprite": "actors.actors_bats_frame_1",
       "animation_frames": [
-        "forest.forest_enemy_bats_frame_1",
-        "forest.forest_enemy_bats_frame_2"
+        "actors.actors_bats_frame_1",
+        "actors.actors_bats_frame_2"
       ],
       "position": {
         "x": 7,
@@ -413,8 +520,8 @@
           "INTERACTABLE"
         ],
         "visual": "K",
-        "hp": 12,
-        "max_hp": 12,
+        "hp": 15,
+        "max_hp": 15,
         "gold_reward": 8,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_KOBOLD",
@@ -422,39 +529,11 @@
       }
     },
     {
-      "id": "amulet_pickup",
-      "type": "item",
-      "overworld_sprite": "forest.forest_treasure_chest_forest",
-      "animation_frames": [
-        "forest.forest_treasure_chest_forest"
-      ],
-      "position": {
-        "x": 16,
-        "y": 10
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_AMULET",
-        "display_name": "AMULET",
-        "dialogue": "DIALOGUE_ID_AMULET_NOTHING",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "A",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
       "id": "forest_slime2",
       "type": "enemy",
       "position": {
-        "x": 15,
-        "y": 13
+        "x": 14,
+        "y": 12
       },
       "properties": {
         "entity_id": "ENTITY_ID_SLIME",
@@ -467,8 +546,8 @@
           "INTERACTABLE"
         ],
         "visual": "E",
-        "hp": 20,
-        "max_hp": 20,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 10,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SLIME",

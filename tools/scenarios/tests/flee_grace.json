@@ -1,0 +1,89 @@
+{
+ "name": "flee_grace",
+ "test": true,
+ "description": "Post-flee encounter grace (~2s): hero spawns adjacent to the chasing kobold at (4,9)/(4,10) and flees the instant battle. Stepping into the kobold during grace only bumps (no fight); SELECT then opens the SAVE screen in the overworld but would execute an attack inside a battle; B backs out of either. End state proves it: still OVERWORLD with the kobold untouched at 15 HP. Without the grace the first step would start battle 2, SELECT would hit for 1+, and the game would still be in battle.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 10
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 15
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 4,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

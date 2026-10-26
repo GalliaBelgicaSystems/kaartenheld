@@ -1,8 +1,7 @@
 {
  "name": "actor_defeat_initial",
  "test": true,
- "description": "A DEFEATED persistent actor in initial_state is not spawned into the scene",
- "scenario_id": "FIRST_ENCOUNTER",
+ "description": "Carl never despawns: with SLIME_FIELD already DEFEATED his tutor side still stands on (14,8), so bumping it opens the repeat lesson (intro card guide, no AP line) instead of walking through or fighting",
  "actions": [
   {
    "type": "press",
@@ -19,8 +18,16 @@
    "expected": "OVERWORLD"
   },
   {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "TUTORIAL_CARL_INTRO"
+  },
+  {
    "type": "player_position",
-   "expected_x": 14,
+   "expected_x": 13,
    "expected_y": 8
   },
   {
@@ -31,6 +38,10 @@
   {
    "type": "event_not_occurred",
    "event": "ENCOUNTER_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
   }
  ],
  "initial_state": {
@@ -41,6 +52,9 @@
    "facing": "DOWN"
   },
   "seed": 7005,
+  "flags": {
+   "FIELD_CHEST": true
+  },
   "world": {
    "SLIME_FIELD": "DEFEATED"
   }

@@ -1,0 +1,90 @@
+{
+  "name": "gem_equip",
+  "test": true,
+  "description": "Manual equip: with the STRAIGHT gem owned, A on the GEM tab sets the equipped bit and the row flips to ON (no auto-equip anywhere on the grant path).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "DECK QUEST HERO GEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "STRAIGHT GEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "ON"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_EQUIPPED",
+      "expected": 1
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8410,
+    "variables": {
+      "GEM_OWNED": 1
+    }
+  }
+}

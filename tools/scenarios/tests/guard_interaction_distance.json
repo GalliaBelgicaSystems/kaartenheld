@@ -2,7 +2,6 @@
  "name": "guard_interaction_distance",
  "test": true,
  "description": "Guard dialogue must only trigger when the player walks INTO the guard's tile, not one square before reaching him",
- "scenario_id": "GUARD_INTERACTION_DISTANCE",
  "actions": [
   {
    "type": "wait",

@@ -1,0 +1,62 @@
+{
+ "name": "loot_health_ring_list",
+ "test": true,
+ "description": "Health-rider list icon (docs/loot.md 34.1): a bronze plain ring (id 132) shows the green '+' OAM icon (tile 11) over the CARDS list elem cell. The detail page is pinned separately by loot_health_ring; this pins the list call site (including scroll-row repaint).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "HEAL"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 4,
+   "contains": "BRONZE RING"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
+  }
+ ]
+}

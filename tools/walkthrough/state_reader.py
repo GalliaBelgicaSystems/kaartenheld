@@ -27,13 +27,16 @@ OFF_STATE = 2
 
 # GameState (src/rpg/state.h) — fields in declaration order.
 OFF_SCENE = 0            # SceneState: SceneId, x, y, facing (4 B)
-OFF_PARTY = 4            # PartyState: members[4]x(id,hp,max)=12 + count = 13
-OFF_CARDS = 17           # CardState: collection + deck
+OFF_PARTY = 4            # PartyState: members[1]x(id,hp,max)=3 + count = 4
+OFF_CARDS = 8            # CardState: collection + deck
 OFF_CARDS_COLLECTION = OFF_CARDS         # entries[12]x(id,count)=24 + count
 OFF_CARDS_DECK = OFF_CARDS + 25          # cards[20] + count = 21
 OFF_FLAGS = OFF_CARDS + 46               # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
-OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 4 = 8
+OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
+OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
+OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
+STATE_SIZE = OFF_PROGRESSION + 13        # == sizeof(GameState); locates World/Battle
 
 # CardDefinition (src/rpg/cards.h): id type power cost uses max_copies
 # effect battle_type price status_id status_chance name[12] = 23 B.
@@ -54,16 +57,17 @@ CHARACTER_STATE_MAX_HP = 2
 
 # ── World (src/world/world.h) — needed to reach g_game.battle ────────
 # Packed layout: width, height, map_id, encounter_actor_index,
-# map_changed(bool), player Entity, actors[4], map[24][40], camera_px_x,
+# map_changed(bool), player Entity, actors[4], map[18][32], camera_px_x,
 # camera_px_y, scroll_x, scroll_y, move_state, move_target_x,
-# move_target_y, move_progress, move_outcome, tileset_kind.
+# move_target_y, move_progress, move_outcome, tileset_kind, move_param,
+# move_dir, move_exit_x, move_exit_y, encounter_cooldown.
 # Entity (src/world/entity.h): position(2), hp, max_hp, active(bool),
 # facing, id = 7 bytes (validated at boot: it is exactly the pattern
 # the old PLAYER_BOOT locate found).
 ENTITY_SIZE = 7
 MAX_WORLD_ACTORS = 4        # src/world/world.h
-WORLD_WIDTH = 40
-WORLD_HEIGHT = 24
+WORLD_WIDTH = 32            # src/world/world.h (32x18 renderer limit)
+WORLD_HEIGHT = 18
 
 def _world_actor_runtime_size(name_ptr_size):
     # WorldActorRuntime (src/world/world.h): actor_id(u16), id, active,
@@ -76,7 +80,7 @@ def _world_actor_runtime_size(name_ptr_size):
 def world_size(name_ptr_size):
     return (5 + ENTITY_SIZE
             + MAX_WORLD_ACTORS * _world_actor_runtime_size(name_ptr_size)
-            + WORLD_WIDTH * WORLD_HEIGHT + 4 + 5 + 1)
+            + WORLD_WIDTH * WORLD_HEIGHT + 4 + 7 + 4)
 
 # const char* size on this toolchain is not pinned down from headers
 # (2-byte near vs 3-byte generic pointer); both candidates are probed
@@ -85,18 +89,18 @@ def world_size(name_ptr_size):
 NAME_PTR_CANDIDATES = (2, 3)
 
 # Battle player Combatant (src/battle/combatant.h): hp, max_hp,
-# name[12].  The hero's battle display name starts with 'H'.
+# name[13].  The hero's battle display name starts with 'H'.
 BATTLE_PLAYER_HP = 0
 BATTLE_PLAYER_MAX_HP = 1
-BATTLE_ENEMIES = 14        # enemies[0] offset (player Combatant = 14 B)
-BATTLE_ENEMY_STRIDE = 14   # Combatant size
+BATTLE_ENEMIES = 15        # enemies[0] offset (player Combatant = 15 B)
+BATTLE_ENEMY_STRIDE = 15   # Combatant size
 
 # Battle hand region (src/battle/battle.h, after player + enemies[3] +
 # enemy_count + target_idx + dirty): Deck deck; Card hand[5];
 # selected_indices[5]; combo_count; cursor_pos; energy.
 # Deck (src/battle/deck.h): cards[20]x8 + count + draw_idx +
 # discard[20]x8 + discard_count = 323.
-BATTLE_HAND = 14 + 3 * 14 + 3 + 323   # 382
+BATTLE_HAND = 15 + 3 * 15 + 3 + 323   # 391
 CARD_SIZE = 8                # src/battle/card.h
 CARD_TYPE = 0                # BattleCardType
 CARD_VALUE = 1
@@ -123,15 +127,24 @@ def flag_bit(flag_id):
 
 
 # ── Engine/game constants (mirrored from headers, cited) ────────────
-# SceneId (src/screens/screen.h)
+# SceneId (src/world/scene_ids_generated.h, from levels/registry.json)
 SCENE_FIELD = 0
 SCENE_TOWN = 1
 SCENE_FOREST = 2
 SCENE_MOUNTAIN_PASS = 3
 SCENE_CASTLE = 4
 SCENE_SOUTH_FIELD = 5
+SCENE_SOUTH_RIDGE = 12
+SCENE_CASTLE_ENTRY = 13
+SCENE_CASTLE_HALL = 14
+SCENE_THRONE_ROOM = 15
+SCENE_GRASSY_FOREST = 16
+SCENE_VILLAGE_AREA = 17
+SCENE_DESOLATE_FIELD = 18
+SCENE_WAKE_GROVE = 19
 
 # MusicTrack (src/audio/audio.h)
+MUSIC_NONE = 0
 MUSIC_OVERWORLD = 1
 MUSIC_BATTLE = 2
 MUSIC_VICTORY = 3
@@ -142,6 +155,13 @@ MUSIC_BOSS = 7
 MUSIC_MIMIC = 8
 MUSIC_DESOLATE = 9
 MUSIC_FOREST = 10
+MUSIC_CHEST = 11
+MUSIC_GAMEOVER = 12
+MUSIC_ENDING = 13
+
+# SFX ids (src/audio/audio.h) + engine idle value (audio.c SFX_NONE)
+SFX_ALERT = 7
+SFX_NONE = 0xFF
 
 # Story flags (src/game/game_ids.h)
 STORY_FLAG_ID_ARRIVED_TOWN = 1
@@ -149,6 +169,8 @@ STORY_FLAG_ID_MET_MAYOR = 2
 
 # Variables (src/game/game_ids.h)
 VARIABLE_ID_QUEST_MONSTER_HUNT = 3
+VARIABLE_ID_MERCHANT_QUEST = 5
+VARIABLE_ID_ENERGY_POOL = 6
 
 # Currency (src/game/game_ids.h) — dense slots indexed by id-1.
 CURRENCY_ID_GOLD = 1
@@ -156,15 +178,20 @@ CURRENCY_ID_GOLD = 1
 # Cards (src/rpg/cards.h + src/game/game_ids.h)
 CARD_FIRST_GAME = 0x40
 CARD_IRON_SWORD = CARD_FIRST_GAME + 0
+CARD_WOOD_SWORD = CARD_FIRST_GAME + 7
 CARD_WOODEN_SHIELD = CARD_FIRST_GAME + 1
-CARD_WOOD_RING = CARD_FIRST_GAME + 2
+CARD_IRON_RING = CARD_FIRST_GAME + 2
+CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
+CARD_AMULET = CARD_FIRST_GAME + 5
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
-HERO_START_HP = 10
-# Observed boot facing byte in state.scene / world.player (the compiled
-# spawn-facing mapping; asserted, not derived).
-BOOT_FACING = 2
+HERO_START_HP = 15
+# Spawn-facing bytes (Direction enum, src/world/entity.h: UP=0, DOWN=1,
+# LEFT=2, RIGHT=3).  Keyed by the level JSON player.spawn facing string;
+# the boot anchor derives the expectation from the JSON, never a constant.
+SPAWN_FACING_BYTES = {"UP": 0, "DOWN": 1, "LEFT": 2, "RIGHT": 3,
+                      "NORTH": 0, "SOUTH": 1, "WEST": 2, "EAST": 3}
 ENTITY_ID_PLAYER = 1        # engine sentinel (src/world/entity.h)
 
 
@@ -231,8 +258,9 @@ class StateReader:
         self.sym = SymTable(os.path.splitext(rom_path)[0] + ".sym")
         self.g_game = self.sym.wram("g_game")
         self.g_audio = self.sym.wram("g_audio_current_track")
+        self.sfx_id = self.sym.wram("sfx_id")
         self.state = self.g_game + OFF_STATE
-        self.world = self.state + 209      # sizeof(GameState), see above
+        self.world = self.state + STATE_SIZE   # sizeof(GameState), see above
         self._battle_base = None           # resolved at first battle read
         self._world_ptr_size = None        # const-char* size once probed
         self._rom = open(rom_path, "rb")
@@ -302,20 +330,31 @@ class StateReader:
         validates against the live battle (hero hp/max + 'H' name)."""
         if self._battle_base is not None:
             return self._battle_base
-        state_size = 209
+        state_size = STATE_SIZE
         for ptr in NAME_PTR_CANDIDATES:
             cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
             head = self.rd(cand, 2)
             name = self.rd(cand + 2, 1)
-            if (head == bytes([HERO_START_HP, HERO_START_HP])
-                    and name == b"H"):
+            # Accept base (15) or god-mode (99) max, any hp<=max (transit
+            # fights take damage; probe must survive damaged heroes).
+            if (name == b"H" and head[1] in (HERO_START_HP, 99)
+                    and head[0] <= head[1]):
                 self._battle_base = cand
                 self._world_ptr_size = ptr
                 return cand
+        # Include observed bytes so god-mode (99/99) vs base (15/15)
+        # mismatches are diagnosable without a second run.
+        seen = []
+        for ptr in NAME_PTR_CANDIDATES:
+            cand = self.g_game + OFF_STATE + state_size + world_size(ptr)
+            seen.append("ptr%d@%x head=%s name=%r" % (
+                ptr, cand, self.rd(cand, 2).hex(),
+                self.rd(cand + 2, 1)))
         raise BattleProbeError(
-            "could not locate g_game.battle with either const-char* "
-            "candidate; World mirror or Battle layout changed — update "
-            "tools/walkthrough/state_reader.py from src/world/world.h")
+            "could not locate g_game.battle (%s); World mirror or "
+            "Battle layout changed — update "
+            "tools/walkthrough/state_reader.py from src/world/world.h"
+            % "; ".join(seen))
 
     def world_hostile_count(self, tileset_kind):
         """Number of active hostile slots in the current scene
@@ -324,14 +363,15 @@ class StateReader:
         to be a hardcoded 6, silently dropping maps 8+).
 
         The const-char* size (which sets the actor stride) is not a
-        separate symbol, so it is resolved from the World tail byte
-        (tileset_kind) against the caller's expected kind -- the battle
-        probe cannot be used because g_game.battle is only initialized once
-        a battle starts."""
+        separate symbol, so it is resolved from the World tail bytes
+        (tileset_kind, then move_param, move_dir, move_exit_x,
+        move_exit_y, encounter_cooldown) against the caller's expected
+        kind -- the battle probe cannot be used because g_game.battle is
+        only initialized once a battle starts."""
         ptr = self._world_ptr_size
         if ptr is None:
             for cand in NAME_PTR_CANDIDATES:
-                if self.rd(self.world + world_size(cand) - 1, 1)[0] == tileset_kind:
+                if self.rd(self.world + world_size(cand) - 6, 1)[0] == tileset_kind:
                     ptr = cand
                     break
             if ptr is None:
@@ -344,6 +384,18 @@ class StateReader:
             if self.rd(base + s * stride + 3, 1)[0]:
                 n += 1
         return n
+
+    def world_tail_candidates(self):
+        """Observed World-tail byte per const-char* stride candidate.
+
+        Returns {ptr_size: byte} read at world + world_size(ptr) - 6 for
+        each candidate, without resolving or caching anything — so a
+        mismatch report can show observed-vs-expected on the spot instead
+        of a bare -1 (see _check_hostiles in walks.py)."""
+        out = {}
+        for cand in NAME_PTR_CANDIDATES:
+            out[cand] = self.rd(self.world + world_size(cand) - 6, 1)[0]
+        return out
 
     def battle_player_hp(self):
         return self.rd(self._resolve_battle_base()
@@ -382,6 +434,13 @@ class StateReader:
     def music_track(self):
         return self.rd(self.g_audio, 1)[0]
 
+    def sfx_voice(self):
+        """Live SFX engine id (sfx_id in audio.c, NOT the debug-only
+        sfx_last): 0xFF when idle, the SfxId while a sting steps.
+        Real-play execution proof that a triggered SFX actually runs
+        to completion (the harness only observes the trigger call)."""
+        return self.rd(self.sfx_id, 1)[0]
+
     # ── ROM-image content reads (const tables in banked ROM) ─────────
     def card_price(self, card_id):
         idx = card_id - CARD_FIRST_GAME
@@ -402,9 +461,9 @@ class StateReader:
         this file (every constant cites its header)."""
         problems = []
         s = self.scene_state()
-        if s["scene_id"] != SCENE_FIELD:
-            problems.append("scene_id=%d != SCENE_FIELD(%d)"
-                            % (s["scene_id"], SCENE_FIELD))
+        if s["scene_id"] != SCENE_WAKE_GROVE:
+            problems.append("scene_id=%d != SCENE_WAKE_GROVE(%d)"
+                            % (s["scene_id"], SCENE_WAKE_GROVE))
         if (s["player_x"], s["player_y"]) != (spawn["x"], spawn["y"]):
             problems.append("pos=(%d,%d) != spawn (%d,%d)"
                             % (s["player_x"], s["player_y"],
@@ -420,8 +479,10 @@ class StateReader:
         # World mirror: the player Entity must sit exactly at
         # world+5 with the boot spawn pattern.
         pe = self.rd(self.world + 5, ENTITY_SIZE)
+        facing = SPAWN_FACING_BYTES.get(str(spawn.get("facing", "DOWN")),
+                                        1)
         want = bytes([spawn["x"], spawn["y"], HERO_START_HP, HERO_START_HP,
-                      1, BOOT_FACING, ENTITY_ID_PLAYER])
+                      1, facing, ENTITY_ID_PLAYER])
         if pe != want:
             problems.append("world.player=%s != %s"
                             % (pe.hex(), want.hex()))

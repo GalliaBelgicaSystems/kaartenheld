@@ -38,7 +38,7 @@ extern const char g_title_prompt_text[21];
 extern uint8_t g_title_prompt_x, g_title_prompt_y;
 extern const char g_title_credits_text[21];
 extern uint8_t const g_title_credits_x, g_title_credits_y, g_title_credits_enabled;
-extern const char g_title_menu_options[4][21];
+extern const char g_title_menu_options[5][21];
 extern uint8_t g_title_menu_x, g_title_menu_caret_x, g_title_menu_first_row, g_title_menu_row_step, g_title_menu_count;
 
 /* CGB calibration index (ui.c): palette programming is skipped on DMG. */
@@ -46,12 +46,7 @@ extern uint8_t g_is_cgb;
 
 static void title_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
-    if (LCDC_REG & 0x80) {
-        while (STAT_REG & 0x02);
-        *dst = tile;
-    } else {
-        *dst = tile;
-    }
+    BANKED_VRAM_WRITE(dst, tile);
 }
 
 static void title_put_char(uint8_t x, uint8_t y, char ch)
@@ -106,8 +101,10 @@ static void title_draw_logo(void)
 }
 
 /* CGB BG palette ramp for the bitmap logo (title-red.png): white, light
- * pink, red, dark red.  Slot g_title_logo_image_palette (1) is rewritten
- * here each title redraw; other screens reload CRAM on entry. */
+ * pink, red, dark red -- must match the `title` ramp in
+ * assets/palette.txt (the sheet encodes against it).  Slot
+ * g_title_logo_image_palette (1) is rewritten here each title redraw;
+ * other screens reload CRAM on entry. */
 static void title_program_logo_palette(void)
 {
     static const palette_color_t ramp[4] = {
@@ -182,14 +179,15 @@ static void title_draw_graphic(void)
 
 static void title_draw_menu(uint8_t index)
 {
-    title_draw_text(3, 10, index == 0 ? "> NEW GAME" : "  NEW GAME", 11);
-    title_draw_text(3, 12, index == 1 ? "> CONTINUE" : "  CONTINUE", 11);
+    title_draw_text(3, 9, index == 0 ? "> NEW GAME" : "  NEW GAME", 11);
+    title_draw_text(3, 11, index == 1 ? "> CONTINUE" : "  CONTINUE", 11);
     if (g_sound_enabled) {
-        title_draw_text(3, 14, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
+        title_draw_text(3, 13, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
     } else {
-        title_draw_text(3, 14, index == 2 ? "> SOUND: OFF" : "  SOUND: OFF", 13);
+        title_draw_text(3, 13, index == 2 ? "> SOUND: OFF" : "  SOUND: OFF", 13);
     }
-    title_draw_text(3, 16, index == 3 ? "> TUTORIAL" : "  TUTORIAL", 10);
+    title_draw_text(3, 15, index == 3 ? "> TUTORIAL" : "  TUTORIAL", 10);
+    title_draw_text(3, 17, index == 4 ? "> CREDITS" : "  CREDITS", 10);
 }
 
 void title_content_render(void)
@@ -228,7 +226,7 @@ void title_content_render(void)
  * current index, writes it back through the staged Game* (WRAM always
  * mapped), and repaints only the two '>' cells -- mirroring
  * g_ui_screen_buf so the render cache stays valid and no full redraw
- * flickers on navigation.  Rows are 10, 12, 14, 16 for indices 0..3. */
+ * flickers on navigation.  Rows are 9, 11, 13, 15, 17 for indices 0..4. */
 void title_menu_step_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -236,7 +234,7 @@ void title_menu_step_banked(void)
     uint8_t new_index;
     uint8_t old_row;
     uint8_t new_row;
-    uint8_t max_idx = 3;
+    uint8_t max_idx = 4;
 
     if (!g) return;
     index = g->title_menu_index;
@@ -247,8 +245,8 @@ void title_menu_step_banked(void)
         if (index == 0) new_index = max_idx;
         else new_index = (uint8_t)(index - 1);
     }
-    old_row = (uint8_t)(10 + (index << 1));
-    new_row = (uint8_t)(10 + (new_index << 1));
+    old_row = (uint8_t)(9 + (index << 1));
+    new_row = (uint8_t)(9 + (new_index << 1));
     if (old_row != new_row) {
         title_put_char(3, old_row, ' ');
         title_put_char(3, new_row, '>');
@@ -256,25 +254,33 @@ void title_menu_step_banked(void)
     g->title_menu_index = new_index;
 }
 
-/* ── Intro: three scripted ASCII slides ───────────────────────────── */
+/* ── Intro: four scripted ASCII slides ─────────────────────────────
+ * Shown from columns 3 to 18 inclusive (16 wide; longest line is 14).
+ * A/START advances; the final slide drops into a fresh playthrough. */
 
 static const char s_intro_0[4][20] = {
-    "A troubled land",
-    "calls out for a",
-    "hero of a new",
-    "kind.",
+    "Mankind has",
+    "fallen from",
+    "grace and now",
+    "fades away...",
 };
 static const char s_intro_1[4][20] = {
-    "Your strength is",
-    "not in steel,",
-    "but in the cards",
-    "you carry.",
+    "The Lord of",
+    "Slimes rules",
+    "lands once",
+    "peaceful...",
 };
 static const char s_intro_2[4][20] = {
-    "Only the Lord of",
-    "Slimes stands",
-    "between all that",
-    "lives and the end.",
+    "But from the",
+    "ashes, a hero",
+    "rises, armed",
+    "with ancient",
+};
+static const char s_intro_3[4][20] = {
+    "magic cards...",
+    "The last hope",
+    "of a dying",
+    "world.",
 };
 
 void intro_content_render(void)
@@ -286,10 +292,11 @@ void intro_content_render(void)
 
     if (slide == 0) lines = s_intro_0;
     else if (slide == 1) lines = s_intro_1;
-    else lines = s_intro_2;
+    else if (slide == 2) lines = s_intro_2;
+    else lines = s_intro_3;
 
     for (i = 0; i < count; i++) {
-        title_draw_text(3, (uint8_t)(6 + i), lines[i], 18);
+        title_draw_text(3, (uint8_t)(6 + i), lines[i], 16);
     }
     title_draw_text(5, 16, "[A] NEXT", 10);
 }

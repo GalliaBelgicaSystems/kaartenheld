@@ -1,0 +1,116 @@
+{
+  "name": "gem_grant_net20",
+  "test": true,
+  "description": "Chuck-a-luck prize: leaving +20 net up in one sitting (20 -> 50 on a 3:1 BET=10 win, seed 579 dice 1/1/1) wins the STRAIGHT gem once -- Nis's prize dialogue opens with the owned bit set.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "DIALOGUE"
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "KOBOLD_PRIZE"
+    },
+    {
+      "type": "screen_row",
+      "row": 14,
+      "contains": "Nis:"
+    },
+    {
+      "type": "screen_row",
+      "row": 15,
+      "contains": "YOU WON A GEM!"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 1
+    },
+    {
+      "type": "currency",
+      "expected": 50,
+      "currency": "GOLD"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "KOBOLD_PRIZE"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 579
+  }
+}

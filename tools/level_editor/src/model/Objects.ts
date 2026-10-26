@@ -19,6 +19,7 @@ export const BATTLE_IDS = [
   'BATTLE_MIMIC',
   'BATTLE_KOBOLD',
   'BATTLE_SPIDER',
+  'BATTLE_SLIME_KNIGHT',
 ] as const;
 
 // Valid AI kinds (src/world/actor.h AIKind).
@@ -27,7 +28,9 @@ export const AI_IDS = [
   'AI_PATROL_CROSS',
   'AI_PATROL_CIRCLE',
   'AI_CHASE',
+  'AI_CHASE_FAST',
   'AI_PATROL_VERT',
+  'AI_TUTOR',
 ] as const;
 
 export interface LevelObject {

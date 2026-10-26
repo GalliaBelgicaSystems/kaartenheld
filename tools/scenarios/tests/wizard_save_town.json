@@ -2,7 +2,6 @@
  "name": "wizard_save_town",
  "test": true,
  "description": "Talking to the Wizard in Town opens the save menu and pressing A saves the game",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

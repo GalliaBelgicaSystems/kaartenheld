@@ -1,0 +1,195 @@
+{
+ "name": "dialogue_then_scene_change",
+ "test": true,
+ "description": "Talk to the mayor and close (leaves g->prev_screen stale DIALOGUE), walk to the field gate, then debug-load the town save: scene_load to a different map must fully repaint (tileset + all rows), not take the 4-row dialogue-exit restore. Regression for the stale-prev misclassification.",
+ "actions": [
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "load",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_TOWN"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 9,
+   "expected_y": 5
+  },
+  {
+   "type": "dialogue_active",
+   "expected": false
+  },
+  {
+   "type": "story_flag",
+   "flag": "MET_MAYOR",
+   "expected": false
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCENE_CHANGED"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 9,
+   "row": 6,
+   "expected": 134
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 5,
+   "row": 5,
+   "expected": 134
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 9,
+   "row": 6,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_attr",
+   "col": 5,
+   "row": 5,
+   "expected": 5
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 7777,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
+}

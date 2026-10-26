@@ -1,0 +1,88 @@
+{
+  "name": "gamble_farewell_close",
+  "test": true,
+  "description": "After Nis's goodbye, A closes the box and returns to the overworld beside him with the scene track (TOWN) playing again.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "dialogue_active",
+      "expected": false
+    },
+    {
+      "type": "player_position",
+      "expected_x": 4,
+      "expected_y": 7
+    },
+    {
+      "type": "music_track",
+      "expected": "TOWN"
+    },
+    {
+      "type": "currency",
+      "expected": 20,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 99
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "name": "gamble_invite_accept",
+  "test": true,
+  "description": "Answering YES on Nis's invite (default cursor, A) opens the table on CHOOSE BET / CHOOSE NUMBER / GOLD OWNED with hidden dice. YES choice recorded.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "CHUCK-A-LUCK"
+    },
+    {
+      "type": "screen_row",
+      "row": 2,
+      "contains": "Nis"
+    },
+    {
+      "type": "screen_row",
+      "row": 7,
+      "contains": ">CHOOSE BET:1"
+    },
+    {
+      "type": "screen_row",
+      "row": 8,
+      "contains": "CHOOSE NUMBER:1"
+    },
+    {
+      "type": "screen_row",
+      "row": 9,
+      "contains": "GOLD OWNED:20"
+    },
+    {
+      "type": "screen_row",
+      "row": 12,
+      "contains": "?"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "A:ROLL B:LEAVE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 0,
+      "value": "KOBOLD_INVITE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 1,
+      "value": 0
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345
+  }
+}

@@ -49,6 +49,14 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {
@@ -81,7 +89,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 18
+   "expected": 20
   }
  ],
  "initial_state": {

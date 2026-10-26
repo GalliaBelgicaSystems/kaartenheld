@@ -1,0 +1,82 @@
+{
+ "name": "quest_list_empty",
+ "test": true,
+ "description": "The QUEST tab starts empty: with no quest accepted, neither MONSTER HUNT nor LOST AMULET is listed and a placeholder shows instead. SELECT/UP/DOWN are no-ops on the empty log (leaving it needs LEFT/RIGHT, covered by quest_tab_switch)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "QUEST"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "no quests yet"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 3,
+   "contains": "MONSTER HUNT"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 3,
+   "contains": "LOST AMULET"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ }
+}

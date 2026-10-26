@@ -1,0 +1,48 @@
+{
+ "name": "field_chest_closed_sprite",
+ "test": true,
+ "description": "Before looting, the field cache cell shows plain floor (VRAM 190) with the closed-chest OAM sprite on top: chests are SPRITE_KIND_CHEST sprites, no floor paint",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 21,
+   "row": 8,
+   "expected": 190
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": false
+  },
+  {
+   "type": "actor_at",
+   "entity": "CHEST",
+   "x": 21,
+   "y": 8
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 121
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

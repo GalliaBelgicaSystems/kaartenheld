@@ -2,7 +2,6 @@
  "name": "progression_hero",
  "test": true,
  "description": "Generic progression: the HERO target gains progress, crosses a threshold, and levels up",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "add_progress",

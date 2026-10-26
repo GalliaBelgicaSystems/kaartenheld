@@ -5,7 +5,7 @@ validate.py - Level validator for Game Boy RPG Level Editor
 Validates level JSON files against schemas and semantic game rules:
 - Schema validation
 - Tileset and semantic tile validity
-- Map bounds and dimensions (<= 40x24)
+- Map bounds and dimensions (<= 32x18, the renderer + tilemap-ring limit)
 - Player spawn validity and collision
 - Exit placement and target scene validity
 - Object IDs uniqueness and placement
@@ -18,6 +18,7 @@ Usage:
 
 import sys
 import os
+import re
 import json
 import glob
 from pathlib import Path
@@ -25,9 +26,14 @@ from pathlib import Path
 from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
+from collision import (
+    derive_collision, edge_link_report, effective_actor_flags,
+    neighbor_pairing_issues, edge_geometry_issues, point_exit_issues,
+    tunnel_id_valid, tunnel_issues, cell_tile_info, level_default_tile,
+)
 
-MAX_WORLD_WIDTH = 40
-MAX_WORLD_HEIGHT = 24
+MAX_WORLD_WIDTH = 32
+MAX_WORLD_HEIGHT = 18
 
 
 def known_scene_names(registry=None):
@@ -264,6 +270,62 @@ def load_tilesets(tilesets_dir=None):
 
 
 _KNOWN_ENTITY_IDS = None
+_ENTITY_SPRITE_KINDS = None
+
+
+def entity_sprite_kind(entity_id):
+    """sprite_kind for an ENTITY_ID_* from screens/entity_types/*.json.
+
+    Mirrors the data-driven fallback in compile.py resolve_sprite_kind:
+    friendly NPCs authored in the editor (amulet, chest, ...) resolve
+    their overworld sprite here without a hardcoded id list."""
+    global _ENTITY_SPRITE_KINDS
+    if _ENTITY_SPRITE_KINDS is None:
+        _ENTITY_SPRITE_KINDS = {}
+        tools_dir = Path(__file__).resolve().parent.parent
+        for path in (tools_dir / ".." / "screens" / "entity_types").glob("*.json"):
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, ValueError):
+                continue
+            tid = data.get("id") or path.stem
+            _ENTITY_SPRITE_KINDS["ENTITY_ID_" + str(tid).upper()] = data.get("sprite_kind")
+    return _ENTITY_SPRITE_KINDS.get(entity_id)
+
+
+def is_chest_sprite(obj):
+    """True when compile.py would resolve this object to SPRITE_KIND_CHEST:
+    a "chest" token in its sprite names, or its entity type's sprite_kind.
+    (Boss tokens win over chest in compile.py; mirrored here.)"""
+    props = obj.get("properties") or {}
+    names = " ".join(str(f) for f in (obj.get("animation_frames") or []))
+    names += " " + str(obj.get("overworld_sprite") or "")
+    if "boss" in names:
+        return False
+    if "chest" in names:
+        return True
+    if props.get("entity_id") == "ENTITY_ID_SLIME_LORD":
+        return False
+    return entity_sprite_kind(props.get("entity_id", "")) == "chest"
+
+
+_TILE_CONSTANTS = None
+
+
+def _tile_const_values():
+    """{TILE_* const name: value} parsed from src/world/world.h."""
+    global _TILE_CONSTANTS
+    if _TILE_CONSTANTS is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        try:
+            text = (repo_root / "src" / "world" / "world.h").read_text()
+        except OSError:
+            text = ""
+        _TILE_CONSTANTS = {
+            m.group(1): int(m.group(2))
+            for m in re.finditer(r"\b(TILE_[A-Z0-9_]+)\s*=\s*(\d+)", text)
+        }
+    return _TILE_CONSTANTS
 
 
 def known_entity_ids():
@@ -445,6 +507,21 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         passed.append("Collision valid")
         passed.append("Player spawn valid")
 
+    # 3b. Default-ground walkability (§52.23): the ROM pre-fills every
+    # interior cell with the level default, so a solid default bricks
+    # movement, patrols and encounters map-wide while other tilesets
+    # keep working.  Missing info stays silent (other checks own those
+    # cases); only an explicitly solid default fails.
+    default_tid = level_default_tile(level_data, tilesets)
+    if default_tid and "." in default_tid:
+        set_id, _, tile_id = default_tid.partition(".")
+        ts = tilesets.get(set_id, {})
+        tinfo = {t.get("id"): t for t in ts.get("tiles", [])}.get(tile_id)
+        if tinfo is not None and not tinfo.get("walkable", True):
+            errors.append(
+                f"Default ground '{default_tid}' is not walkable: "
+                f"unpainted interior cells would all be solid")
+
     # 4. Exits Check
     exits_ok = True
     exits = level_data.get("exits", [])
@@ -462,8 +539,41 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         if target not in known_scene_names() and (all_level_ids is None or target not in all_level_ids):
             warnings.append(f"Exit {e_idx} target '{target}' is not in known scenes list")
 
+        tunnel = exit_obj.get("tunnel", "")
+        if tunnel and not tunnel_id_valid(tunnel):
+            errors.append(
+                f"Exit {e_idx} tunnel id '{tunnel}' is invalid (want "
+                f"lowercase letters, digits and underscores, starting with "
+                f"a letter, e.g. 'tunnel_town_field')")
+            exits_ok = False
+
     if exits_ok:
         passed.append("Exits valid")
+
+    # 4b. Edge neighbors (whole-edge links). Unknown targets are errors
+    # (the compiler would abort on them); one-sided links only warn
+    # (walk in works, walk back is a wall until the return is set).
+    neighbors_ok = True
+    neighbors = level_data.get("neighbors", {}) or {}
+    if neighbors and not isinstance(neighbors, dict):
+        errors.append("'neighbors' must be an object with north/south/east/west scene names")
+        neighbors_ok = False
+    else:
+        for direction in ("north", "south", "east", "west"):
+            target = (neighbors.get(direction) or "").strip() if isinstance(neighbors, dict) else ""
+            if not target:
+                continue
+            if target not in known_scene_names() and (all_level_ids is None or target not in all_level_ids):
+                errors.append(
+                    f"Neighbor '{direction}' target '{target}' is not a known scene "
+                    f"(point it at a registered scene)")
+                neighbors_ok = False
+    if neighbors_ok:
+        passed.append("Neighbors valid")
+
+    # Point-exit visibility + landing walkability are cross-file (the
+    # landing cell lives in the target scene); see collision.py
+    # point_exit_issues(), reported by main() and enforced by compile.py.
 
     # 5. Objects Check (full-fidelity actor slots: JSON must be able to
     # roundtrip the C WorldActorDefinition rows -- see decompile.py)
@@ -544,6 +654,58 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             if key in props and (not isinstance(props[key], int) or props[key] < 0):
                 errors.append(f"Object '{oid}' has invalid {key} '{props[key]}'")
                 objects_ok = False
+        # Chest-sprite open state: open_flag/open_variable name the story
+        # state that opens the chest (compile.py resolves them into the
+        # banked chest_is_open_banked resolver).  Chests are OAM sprites
+        # now, not floor paint: the retired open_tile prop is rejected
+        # here so a stale level fails loudly instead of stamping water.
+        # Names resolve at compile time (compile.py fails loudly on
+        # unknown ones); here we only check the shape, so a typo
+        # surfaces with the object id attached.
+        if "open_tile" in props:
+            errors.append(f"Object '{oid}' uses retired open_tile: chests "
+                          f"are OAM sprites, open state comes from "
+                          f"open_flag/open_variable only")
+            objects_ok = False
+        for key, prefix in (("open_flag", "STORY_FLAG_ID_"),
+                            ("open_variable", "VARIABLE_ID_")):
+            if key in props and (not isinstance(props[key], str) or
+                                 not props[key].startswith(prefix)):
+                errors.append(f"Object '{oid}' {key} must name a {prefix}* id")
+                objects_ok = False
+        # A non-hostile chest sprite with neither open prop silently
+        # never opens (compile.py emits no resolver clause and the sprite
+        # stays closed forever).  Require one, like open_tile used to
+        # require a floor cell.  Hostile chest sprites (mimics: battle
+        # prop) are exempt -- they open via defeat, never via flags.
+        if (is_chest_sprite(obj) and "battle" not in props and
+                not props.get("open_flag") and
+                not props.get("open_variable")):
+            errors.append(f"Object '{oid}' is a chest sprite with no "
+                          f"open_flag/open_variable: it would never open")
+            objects_ok = False
+
+    # Lesson tiles (Carl): an AI_TUTOR hostile teaches through a
+    # co-located dialogue static on the same tile (one visual sprite:
+    # both render the same slime art).  The movement lesson branch
+    # assumes this pairing -- a lone tutor would be stepped onto, and a
+    # tutor without a lesson-giver never spars.  Fail loudly instead.
+    for obj in objects:
+        props = obj.get("properties", {}) or {}
+        if obj.get("type") == "enemy" and props.get("ai") == "AI_TUTOR":
+            pos = obj.get("position", {}) or {}
+            mates = [o for o in objects
+                     if o is not obj
+                     and (o.get("position", {}) or {}).get("x") == pos.get("x")
+                     and (o.get("position", {}) or {}).get("y") == pos.get("y")]
+            lesson = [o for o in mates
+                      if (o.get("properties", {}) or {}).get("dialogue")]
+            if len(lesson) != 1:
+                errors.append(
+                    f"AI_TUTOR '{obj.get('id')}' needs exactly one co-located "
+                    f"dialogue static on its tile (lesson before the spar), "
+                    f"found {len(lesson)}")
+                objects_ok = False
 
     # Engine actor-slot caps: actor_load_banked() spawns hostile rows into
     # World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
@@ -561,10 +723,12 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     static_cap = _engine_cap("MAX_STATIC_ACTORS")
     hostile_rows = [o.get("id") for o in objects
                     if (o.get("properties") or {}).get("entity_id")
-                    and "HOSTILE" in ((o.get("properties") or {}).get("flags") or [])]
+                    and "HOSTILE" in effective_actor_flags(
+                        o.get("type"), o.get("properties") or {})]
     static_rows = [o.get("id") for o in objects
                    if (o.get("properties") or {}).get("entity_id")
-                   and "HOSTILE" not in ((o.get("properties") or {}).get("flags") or [])]
+                   and "HOSTILE" not in effective_actor_flags(
+                       o.get("type"), o.get("properties") or {})]
     if hostile_cap and len(hostile_rows) > hostile_cap:
         errors.append(
             f"Level has {len(hostile_rows)} hostile actors but the engine spawns at most "
@@ -577,6 +741,32 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
             f"silently dropped: {static_rows[static_cap:]}")
         objects_ok = False
 
+    # Actor placement on walkable ground: the engine's move gate resolves
+    # hostile/static actors only after the walkability check, so an actor
+    # on solid art is inert (hostile) or unreachable (blocking).  Warn so
+    # the mapper moves it instead of silently shipping an inert enemy.
+    # Frozen TEST fixtures deliberately place a wall actor to lock the
+    # behavior, so skip the warning for them.
+    _is_test_level = str(level_data.get("id", "")).startswith("test_")
+    if tileset and not _is_test_level:
+        actor_grid = derive_collision(level_data, tileset)
+        for obj in objects:
+            props = obj.get("properties") or {}
+            if not props.get("entity_id"):
+                continue  # decoration object: no engine actor row
+            flags = effective_actor_flags(obj.get("type"), props)
+            kind = "hostile" if "HOSTILE" in flags else (
+                "blocking" if "BLOCKING" in flags else None)
+            if not kind:
+                continue
+            px = (obj.get("position") or {}).get("x", -1)
+            py = (obj.get("position") or {}).get("y", -1)
+            if (0 <= px < width and 0 <= py < height and not actor_grid[py][px]):
+                warnings.append(
+                    f"Object '{obj.get('id')}' ({kind}) at ({px},{py}) is on "
+                    f"non-walkable art: the engine cannot engage or stand on it "
+                    f"(move it to walkable ground).")
+
     if objects_ok:
         passed.append("Objects valid")
 
@@ -584,7 +774,107 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     return is_valid, errors, warnings, passed
 
 
+def neighbor_check_cli():
+    """`validate.py --neighbor-check [override.json]`: JSON edge-pairing
+    report for the editor. Reads all real levels from disk; an optional
+    JSON document ({from_id, data}) from the override file (or stdin)
+    replaces one level (unsaved editor state). Prints {success, links}
+    for the overridden level, else {success, errors, warnings}."""
+    tilesets = load_tilesets()
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    levels_dir = repo_root / "levels"
+    levels_by_id = {}
+    for p in sorted(levels_dir.glob("*.json")):
+        if not is_level_file(p):
+            continue
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(data, dict) and data.get("id"):
+            levels_by_id[data["id"]] = data
+    override = None
+    if len(sys.argv) >= 3 and sys.argv[2]:
+        try:
+            override = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            override = None
+    if override is None:
+        try:
+            if not sys.stdin.isatty():
+                raw = sys.stdin.read().strip()
+                if raw:
+                    override = json.loads(raw)
+        except (OSError, ValueError):
+            override = None
+    from_id = None
+    if isinstance(override, dict):
+        fid = override.get("from_id")
+        data = override.get("data")
+        if isinstance(fid, str) and isinstance(data, dict):
+            from_id = fid
+            levels_by_id[fid] = data
+    try:
+        if from_id and from_id in levels_by_id:
+            links = edge_link_report(from_id, levels_by_id[from_id],
+                                     levels_by_id, tilesets)
+            print(json.dumps({"success": True, "links": links}))
+        else:
+            errors, warnings = neighbor_pairing_issues(levels_by_id, tilesets)
+            geo_errors, geo_warnings = edge_geometry_issues(levels_by_id,
+                                                            tilesets)
+            print(json.dumps({"success": True,
+                              "errors": errors + geo_errors,
+                              "warnings": warnings + geo_warnings}))
+    except SystemExit as exc:
+        print(json.dumps({"success": False, "error": str(exc)}))
+
+
+def validate_spawn_refs():
+    """EVENT_ACTION_SPAWN_SLIME_TRIO rows must carry the current slime
+    ow_type byte (arg0).  The byte is positional (sorted enemy-type
+    order), so adding an enemy type can renumber it; a stale byte
+    renders the wrong overworld sprite with no compile error.  The
+    single source is compile.resolve_enemy_ow (same function the level
+    compiler uses for actor rows) — this fails loudly on drift instead
+    of hand-syncing.  Errors only."""
+    import re
+    errors = []
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    tools_dir = Path(__file__).resolve().parent.parent
+    if str(tools_dir / "screen_compiler") not in sys.path:
+        sys.path.insert(0, str(tools_dir / "screen_compiler"))
+    try:
+        from compile import load_enemy_types, resolve_enemy_ow
+        want = resolve_enemy_ow(
+            {"properties": {"enemy_type": "slime"}}, load_enemy_types())
+    except (SystemExit, ValueError, ImportError) as exc:
+        return [f"Cannot resolve slime ow_type: {exc}"]
+    if want is None:
+        return ["slime enemy type has no overworld art: spawn would be spriteless"]
+    events_c = repo_root / "src" / "game" / "events_content.c"
+    try:
+        text = events_c.read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"Cannot read {events_c}: {exc}"]
+    found = False
+    for m in re.finditer(
+            r"EVENT_ACTION_SPAWN_SLIME_TRIO\s*,\s*(\d+)\s*,\s*0\s*,\s*0", text):
+        found = True
+        if int(m.group(1)) != want:
+            errors.append(
+                f"events_content.c SPAWN_SLIME_TRIO ow byte is {m.group(1)} "
+                f"but slime resolves to {want} — update the row (never the "
+                f"resolver)")
+    if not found:
+        errors.append("No EVENT_ACTION_SPAWN_SLIME_TRIO row in events_content.c")
+    return errors
+
+
 def main():
+    if len(sys.argv) >= 2 and sys.argv[1] == "--neighbor-check":
+        neighbor_check_cli()
+        return
     if len(sys.argv) >= 2 and sys.argv[1] == "--dialogue-refs":
         errors, warnings = validate_dialogue_refs()
         for w in warnings:
@@ -603,10 +893,19 @@ def main():
             sys.exit(1)
         print("shop refs OK")
         return
+    if len(sys.argv) >= 2 and sys.argv[1] == "--spawn-refs":
+        errors = validate_spawn_refs()
+        for e in errors:
+            print(f"ERROR: {e}")
+        if errors:
+            sys.exit(1)
+        print("spawn refs OK")
+        return
     if len(sys.argv) < 2:
         print("Usage: validate.py <level1.json> [level2.json ...]")
         print("       validate.py --dialogue-refs")
         print("       validate.py --shop-refs")
+        print("       validate.py --spawn-refs")
         sys.exit(1)
 
     tilesets = load_tilesets()
@@ -665,6 +964,68 @@ def main():
                     overall_success = False
                 else:
                     seen_actor_ids[aid] = obj.get("id")
+
+    # Cross-file check: neighbor links must be reciprocal (walk back).
+    # One-sided links used to warn; they now fail loudly -- a missing
+    # return silently strands the walk-back route (castle_entry's
+    # inverted east/west pair teleported players across the map), so a
+    # deliberate one-way link must go through a point exit instead.
+    _OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
+    _by_id = {}
+    for _, data in loaded_levels:
+        if isinstance(data, dict) and data.get("id"):
+            _by_id[data["id"]] = data
+    for p, data in loaded_levels:
+        if not isinstance(data, dict):
+            continue
+        for direction in ("north", "south", "east", "west"):
+            target = ((data.get("neighbors", {}) or {}).get(direction) or "").strip()
+            if not target or target not in _by_id:
+                continue
+            back = ((_by_id[target].get("neighbors", {}) or {}).get(_OPPOSITE[direction]) or "").strip()
+            if back != data.get("id"):
+                # A point-exit trigger back counts as a return path (e.g. a
+                # door into a map whose whole edge belongs elsewhere).
+                returns = [e for e in (_by_id[target].get("exits", []) or [])
+                           if e.get("target_scene") == data.get("id")]
+                if returns:
+                    continue
+                print(f"ERROR: {os.path.basename(p)} edge '{direction}' -> '{target}' "
+                      f"has no return link ({target} {_OPPOSITE[direction]} is '{back or 'unset'}')")
+                overall_success = False
+
+    # Cross-file gate: whole-edge links must pair up geometrically so the
+    # player can never land inside a wall or get trapped (collision.py is
+    # the one implementation; compile.py aborts on the same errors).
+    if any(not sid.startswith("test_") for sid in all_level_ids):
+        _pair_errors, _pair_warnings = neighbor_pairing_issues(_by_id, tilesets)
+        for warn in _pair_warnings:
+            print(f"WARNING: {warn}")
+        for err in _pair_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        _geo_errors, _geo_warnings = edge_geometry_issues(_by_id, tilesets)
+        for warn in _geo_warnings:
+            print(f"WARNING: {warn}")
+        for err in _geo_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        # Tunnels: linked exit pairs must have exactly two mutual mouths
+        # with spawn-tracks-gate landings (same gate as compile.py).
+        _tun_errors, _tun_warnings = tunnel_issues(_by_id)
+        for warn in _tun_warnings:
+            print(f"WARNING: {warn}")
+        for err in _tun_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
+        # Point exits: landing cell must be walkable (stuck spawn) and the
+        # gate art must read as a portal (invisible triggers).
+        _px_errors, _px_warnings = point_exit_issues(_by_id, tilesets)
+        for warn in _px_warnings:
+            print(f"WARNING: {warn}")
+        for err in _px_errors:
+            print(f"ERROR: {err}")
+            overall_success = False
 
     for p, data in loaded_levels:
         basename = os.path.basename(p)

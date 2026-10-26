@@ -1,8 +1,7 @@
 {
  "name": "card_sort_power",
  "test": true,
- "description": "Power-desc sort shows strongest cards first in the CARDS tab: F SW, I SW, W SH for the granted starter collection",
- "scenario_id": "NEW_GAME",
+ "description": "Power-desc sort orders the granted starter collection by material band: BRONZE SWORD (3), WOOD SWORD (1), WOOD SHIELD (1); equal-power cards keep collection order",
  "actions": [
   {
    "type": "press",
@@ -28,18 +27,18 @@
   },
   {
    "type": "screen_row",
+   "row": 4,
+   "contains": "BRONZE SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "WOOD SWORD"
+  },
+  {
+   "type": "screen_row",
    "row": 6,
-   "contains": "F SW"
-  },
-  {
-   "type": "screen_row",
-   "row": 8,
-   "contains": "I SW"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "W SH"
+   "contains": "WOOD SHIELD"
   }
  ],
  "initial_state": {

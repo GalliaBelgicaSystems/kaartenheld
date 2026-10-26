@@ -8,7 +8,7 @@
     "music": "MUSIC_DUNGEON",
     "map_id": "MAP_CASTLE"
   },
-  "default_walkable": "castle.castle_plain_floor",
+  "default_walkable": "castle.castle_floor_with_debris",
   "layers": {
     "terrain": [
       {
@@ -72,14 +72,14 @@
         "y": 6,
         "width": 1,
         "height": 1,
-        "tile": "castle.castle_table"
+        "tile": "castle.castle_table_top_empty"
       },
       {
         "x": 9,
         "y": 9,
         "width": 1,
         "height": 1,
-        "tile": "castle.castle_chest"
+        "tile": "castle.castle_table_top_empty"
       }
     ]
   },
@@ -161,8 +161,8 @@
           "INTERACTABLE"
         ],
         "visual": "T",
-        "hp": 30,
-        "max_hp": 30,
+        "hp": 50,
+        "max_hp": 50,
         "gold_reward": 0,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_MIMIC",
@@ -189,8 +189,8 @@
           "INTERACTABLE"
         ],
         "visual": "S",
-        "hp": 16,
-        "max_hp": 16,
+        "hp": 10,
+        "max_hp": 10,
         "gold_reward": 15,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_SPIDER",
@@ -222,15 +222,13 @@
           "INTERACTABLE"
         ],
         "visual": "L",
-        "hp": 50,
-        "max_hp": 50,
+        "hp": 99,
+        "max_hp": 99,
         "gold_reward": 50,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_NONE",
         "ai": "AI_NONE",
-        "solo": true,
-        "quest_var": "VARIABLE_ID_QUEST_MONSTER_HUNT",
-        "quest_val": 2
+        "solo": true
       }
     }
   ],

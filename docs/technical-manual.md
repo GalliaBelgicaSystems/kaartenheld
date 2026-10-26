@@ -50,9 +50,8 @@ and the game reaches its ending.
 ### 1.2 The villain
 
 The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
-**Throne Room** is where the **Lord of Slimes** (50 HP) waits.  He appears
-**only after** the Monster Hunt quest is complete (his spawn is gated on the
-quest variable, see §4.2), so "every slime you kill leads to a bigger slime".
+**Throne Room** is where the **Lord of Slimes** (99 HP) waits.  He is
+always present and reachable, so the final fight is open from the start.
 
 ---
 
@@ -100,8 +99,8 @@ Overworld:
 | `START` | Open the quick screen (cards & quests, §7). |
 | `SELECT` | Open the **LOAD GAME** screen. |
 
-Dialogue: `A`/`START` advances to the next line; the dialogue closes after
-the last line.
+Dialogue: `A`/`START` advances to the next page (three lines); the dialogue closes after
+the last page.
 
 Battle and menus have their own controls, covered in §6 and §7.
 
@@ -110,14 +109,15 @@ Battle and menus have their own controls, covered in §6 and §7.
 `TUTORIAL` on the title menu plays seven slides (`tutorial_content.c`).
 `LEFT`/`RIGHT` navigates, `B` exits.  The slides cover:
 
-1. **TUTORIAL BASICS** — use LEFT/RIGHT to navigate, B to exit.
-2. **CARD TYPES** — SW sword (damage), SH shield (block), BO bow (damage).
-3. **CARD TYPES 2** — HE heal (restore), DA dagger (dmg), F SW fire + BURN.
-4. **COMBOS** — played cards rank like poker hands, boosting effects.
-5. **ENERGY & COMBAT** — cards cost ENERGY; start with 6/turn.
-6. **DEFEND & STATUS** — only SH blocks dmg; SW/BO/DA block 0; POISON is a
-   damage-over-time.
-7. **SHIELD CARD** — offense: 0 dmg, but still counts for combos.
+1. **HOW TO FIGHT** — fights use cards; LEFT/RIGHT flips slides, B exits.
+2. **KNOW YOUR CARDS** — SW/BO/DA damage, SH blocks hits, HE rings heal.
+3. **STRIKE FIRST** — choose cards, press SELECT; each card costs energy.
+4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
+5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
+   daggers hit back.
+6. **BURN POISON FREEZE** — poison wounds and locks cards; ice skips
+   your turn.
+7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
 ---
 
@@ -176,35 +176,34 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 |---|---|---|
 | Mayor | (10,5) | Gives the Monster Hunt quest (§4.2). |
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
-| Shopkeeper | (9,3) | Runs the shop (sells the Ring, §9). |
-| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then a bigger shop (§4.3, §9). |
+| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
+| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.
 
-**FOREST** — trees, stumps, a slime (12 HP), a bat (8 HP), a kobold
-(12 HP) and a tougher slime (20 HP), plus the Lost Amulet chest at
+**FOREST** — trees, stumps, slimes, a bat (8 HP) and a kobold, plus the Lost Amulet chest at
 (16,10).  An east gate opens onto the forest branch.
 
-**FOREST BRANCH** — MOSSY GLADE (slime, bat, kobold, tough slime; a
-hermit's advice), DEEP WOODS (kobold, spider, tough slime, bat; a
-signpost), SUNKEN GROVE (a solo Mimic, spider, bat and tough slime), and
-the OVERGROWN SHRINE (elite slime, spider, kobold, bat; a shrine
+**FOREST BRANCH** — MOSSY GLADE (slime, bat, kobold; a
+hermit's advice), DEEP WOODS (kobold, spider, slime, bat; a
+signpost), SUNKEN GROVE (a solo Mimic, spider, bat and slime), and
+the OVERGROWN SHRINE (slime, spider, kobold, bat; a shrine
 signpost).
 
 **SOUTH FIELD / HOWLING RIDGE** — desolate ground.  The south field
 holds a slime, a bat and a kobold; the ridge east of it is thick with a
-kobold, a bat, a tougher slime and a spider, plus a scout's advice.
+kobold, a bat, a slime and a spider, plus a scout's advice.
 
-**MOUNTAIN PASS** — a narrow walled corridor with a slime (16 HP), a bat
-(8 HP) and a tougher slime (20 HP).
+**MOUNTAIN PASS** — a narrow walled corridor with slimes and a bat
+(8 HP).
 
-**CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, tough slime), the
-GREAT HALL (kobold, spider, bat, tough slime; a knight's advice), CASTLE
+**CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, slime), the
+GREAT HALL (kobold, spider, bat, slime; a knight's advice), CASTLE
 (a bat, a spider, a kobold and the solo Mimic), and the THRONE ROOM,
-where the Lord of Slimes waits (with a bat and a spider) once the Monster
-Hunt quest is complete.
+where the Lord of Slimes (99 HP, always present) waits with a bat and
+a spider.
 
 ### 3.4 Encounters
 
@@ -234,7 +233,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 
 | Quest | Status var | Objective | Reward note |
 |---|---|---|---|
-| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "SWORD" |
+| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 5 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
 
 ### 4.2 Monster Hunt — the main quest
@@ -242,43 +241,46 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 1. **Start.** Talk to the **Mayor** for the first time:
 
    > I am the Mayor.
-   > Slimes menace the forest.
-   > Please help us!
+   > Defeat 5 monsters!
+   > Gain extra AP!
 
-2. **Objective.** Defeat **3 monsters in total** — any hostile counts
+2. **Objective.** Defeat **5 monsters in total** — any hostile counts
    (field/forest slimes, bats, even the boss).  Kills made *before* the
    quest starts still count toward the total.  While the quest is active
-   the Mayor says "Still monsters about. Defeat them all!"
-3. **Complete.** Talk to the Mayor again once 3 are defeated.  He gives
-   you the **Iron Sword** card and warns that something dreadful waits at
+   the Mayor says "Defeat 5 monsters! Return for power!"
+3. **Complete.** Talk to the Mayor again once 5 are defeated.  He grants
+   **one extra AP** (ENERGY_POOL +1) and warns that a darkness stirs at
    the Castle:
 
-   > You did it! Take this Sword!
-   > I have felt a disturbance in the ether: I believe that something
-   > dreadful waits for you at the Castle.
+   > You did it! Take this power: one more AP!
+   > I feel a darkness at the Castle. Steel yourself!
 
 4. **Finished.** Talking to the Mayor after completion is a short "go
-   forth, hero!" line ("The Sword suits you. Go forth, hero!").
+   forth, hero!" line ("Use your power. Go forth, hero!").
 
-Completing this quest is what unlocks the spawn of the **Lord of Slimes**
-in the Castle.
+The **Lord of Slimes** (99 HP) in the Castle is always present and
+reachable — it is not gated behind this quest.
 
 ### 4.3 Lost Amulet — the side quest
 
-1. **Start.** Talk to the **Lost Merchant** in Town (the first visit):
+1. **Start.** Talk to the **Lost Merchant** in Town (the first visit).
+   Accepting sets the quest **ACTIVE**, so it is tracked on the QUEST
+   tab straight away:
 
    > A thief stole my
    > family heirloom!
    > Find it in the Forest!
 
-2. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
+2. **Reminder.** Talking to him again before you found it re-briefs
+   (same lines); his shop stays locked until the delivery.
+3. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
    Interact with it ("You found the Lost Amulet!").  It is added to your
-   card collection (as a non-deckable `SPECIAL` card).  Returning to the
-   spot afterwards says "Nothing here now."
-3. **Complete.** Return to the Merchant once you have the amulet.  He
+   card collection (as a non-deckable `SPECIAL` card).  Finding it
+   before talking to him works too: the pickup counts either way.
+   Returning to the spot afterwards says "Nothing here now."
+4. **Complete.** Return to the Merchant once you have the amulet.  He
    thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his real shop (which sells the Iron Sword and
-   the Mythril Bow):
+   **15 gold**, and opens his shop (Iron Ring and Mythril Bow, §9.3):
 
    > You found it! Thank you, hero!
    > My shop is open now.
@@ -294,10 +296,10 @@ Every tool in battle is a **card**.  Cards have several attributes
 
 | Field | Meaning |
 |---|---|
-| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The descriptive name shown in menus. |
-| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW3`,
-`SH2`, `RG5`; the **battle hand** uses its own code set — `SW3`, `SH2`,
-`BO2`, **`HE5`** for a heal ring, `DA1`. |
+| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The short code shown in the shop; the CARDS menu instead shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
+| **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW5`,
+`SH1`, `RG4`; the **battle hand** uses its own code set — `SW5`, `SH1`,
+`BO9`, **`HE4`** for a heal ring, `DA2`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
 | **Cost** | Energy price to play in battle (most cards cost 1). |
@@ -313,8 +315,8 @@ Every tool in battle is a **card**.  Cards have several attributes
 | `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
 | `BO` | Bow | Attack | Ranged damage. |
-| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it blocks like a shield (§6.5).  Shop label `RG5`, battle hand label `HE5`. |
-| `DA` | Dagger | Attack | 1 damage plus a poison rider. |
+| `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it wildcards the hand but adds 0 block (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
+| `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
 Broad categories: `ATK` attack, `DEF` defense, `HEL` heal, `STS` status,
 `UTL` utility, `SPL` special (quest items that cannot be decked).
@@ -325,13 +327,20 @@ All catalogue cards (`src/game/cards_content.c`):
 
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
-| Iron Sword | `I SW` | `SW3` | ATK | 3 | 1 | – | 4 | — | 10g |
-| Wooden Shield | `W SH` | `SH2` | DEF | 2 | 1 | – | 3 | — | — |
-| Ring (shop) | `I RG` | `RG5` | HEL | 5 | 1 | 3/battle | 3 | — | 20g |
-| Fire Sword | `F SW` | `SW4` | ATK | 4 | 1 | – | 3 | BURN 128 | — |
-| Poison Dagger | `P DA` | `DA1` | ATK | 1 | 1 | – | 3 | POISON 128 | — |
+| Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
+| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (test) |
+| Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
+| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 3/battle | 1 | — | 20g |
+| Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
+| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
+
+The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
+entry: it has no shop row, is not in the starter deck, and never drops.
+Scenarios use it as a convenient power-5 sword.  In normal play iron
+swords come from loot as derived ids (e.g. `0xA0` for a plain iron
+sword), which start dropping at AP 4 (loot.md §34.5).
 
 Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
 multiplier (§8.4).
@@ -353,9 +362,9 @@ Deck rules (`src/rpg/deck.h`):
 
 ### 5.5 Starter deck
 
-A new game grants this 12-card deck (`content.c`): **4× Iron Sword
-(`SW3`), 3× Wooden Shield (`SH2`), 3× Fire Sword (`SW4`), 2× Poison
-Dagger (`DA1`)**.  The opening hand is always `SW SW SH SH SW` (the first
+A new game grants this 10-card deck (`content.c`, from `screens/hero.json`):
+**4× Wood Sword (`SW1`), 4× Wooden Shield (`SH1`), 2× Fire Sword
+(`SW3`)**.  The opening hand is always `SW SW SH SH SW` (the first
 five copies are the two swords, two shields and a fire sword; the extras
 only deepen the draw pile).
 
@@ -372,10 +381,10 @@ The battle screen (HUD layout fixed in `AGENTS.md §52.11.2`):
 | 0 | Turn banner, centered (`PLAYER TURN`, `ENEMY ATTACK!`, `DEFENSE TURN`, `VICTORY!`, `DEFEATED!`, `FLED!`, ...). |
 | 2 | Enemy HP line. |
 | 3–4 | Enemy art + target caret. Up to 3 enemies. |
-| 7 | Hero row: `HERO` label + `HP: n/m`. |
-| 8 | Deck counter: `DECK: n` (cards left in the draw pile) + AP. |
+| 7 | Hero row: `HERO` label (status color) + heart icon + `: n/m` in card-glyph brown, max ends col 19.  |
+| 8 | Deck counter: `DECK: n` + AP icon + `: energy./max.`, labels and numbers in card-glyph brown, last dot on col 19.  |
 | 9 | Transient gameplay messages (`NO ENERGY!`, `OUT OF USES!`, `ONE RING!`). |
-| 10 | Live combo row: `COMBO:` + current hand name while you select. |
+| 10 | Live combo row: `COMBO:` + current hand name while you select. In defend it forecasts `DMG <incoming>` in red plus `DEF <block>` in green -- or `CNT <counter>` in green for a daggers-only selection (suppressed when the swing is lethal). |
 | 11–14 | Your boxed hand cards (up to 5). |
 | 15 | Selection markers: digits 1–5 in selection order + the `^` cursor. |
 | 16 | Card description of the hovered card. |
@@ -387,13 +396,18 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 ### 6.2 Hand, energy, timer
 
 * **Hand**: 5 cards drawn from your deck at battle start.
-* **Energy**: **6 per full round**.  Most cards cost 1; the Mythril Bow
+* **Energy**: the **pool** per decision phase (attack and defend each get a
+  fresh refill to full).  It starts at **1**; the tutorial, the field
+  cache, the Monster Hunt quest and the mimic each grant **+1** (up to 5).  Most
+  cards cost 1; the Mythril Bow
   costs 2.  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
   (1200 frames).  It runs in the attack *and* defend decision phases.
   When it expires, your current selection is auto-executed — a timer-out
-  with no selection commits an empty combo (`battle.c`).
+  with no selection auto-picks the hovered card (or the first playable
+  one) and executes that; only a hand with nothing playable commits an
+  empty combo (`battle.c`).
 
 ### 6.3 Battle phases
 
@@ -445,10 +459,19 @@ The first (leading) card decides the action:
 
 After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
 
-* **Only `SH` (shield) cards block.**  Swords/bows/daggers in the defend
-  hand contribute `0` block.
-* Rings act as **wild shields** worth their power.
-* The net is `incoming − (sum of shields + rings)`.
+* **Only `SH` (shield) cards block.**  Swords/bows in the defend
+  hand contribute `0` block.  **Daggers are the exception:** a
+  daggers-only selection (daggers plus optionally rings -- no
+  shields/swords/bows) **counterattacks** the telegraphed attacker with
+  an attack-phase poker evaluation over the daggers (poison rider
+  included) while you still take the unblocked swing.  Mixed with any
+  shield/sword/bow, daggers are lost (0 block, no counter).
+* Rings **wildcard** the defend hand (they complete tiers like a joker)
+  but add **0 block** themselves -- pinned by `defend_ring_joker_fodder`
+  (`SH3 + SH3 + RING` blocks `(3+3) x 180% = 10`: the ring shapes the
+  tier, never the sum).
+* The net is `incoming − block`, where `block` is the scaled
+  participating-shield sum (rings shape the tier, never the sum).
   * **Net > 0** → you take that damage (clamped to your HP).
   * **Net ≤ 0** → no damage.  Over-block *heals* you only while a ring is
     present, capped at max HP.
@@ -462,22 +485,26 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
   * **Bat** — bow and sword values up to 4; one bow swing carries a
     poison rider (60/255).
   * **Kobold** — `SW2/SW2/SW3` plus a heal worth 2.
-  * **Mimic** — `SW2`–`SW4` plus a heal worth 3.
+  * **Mimic** — `SW3`–`SW5` plus a heal worth 3.  Two shields block
+  every swing but the top one.
   * **Spider** — bow/sword up to 3 plus a healer; one webbing bow swing
     carries a poison rider (70/255).
   * **Team slimes** (the trio encounter) hit for 2–3 each round.
 * When the enemy deck is exhausted it **reshuffles** and keeps going.
 * Freeze / grey-out can make the enemy skip (see §8.5/§8.7).
-* The boss (no deck) simply telegraphs a flat 3-damage swing.
+* The boss (no deck) simply telegraphs a flat 4-damage swing: two
+  shields block it exactly.
 
 ### 6.7 Deck exhaustion — the reshuffle turn
 
-When both the draw pile **and** the hand are empty at the start of your
-round, the game consumes your action that cycle to **reshuffle** the
-discard pile back into the draw pile and re-deal; the enemy still attacks
-that round (`deck.md Phase 10`).  The draw pile otherwise never auto-
-refills from the discard (a draw from a dry pile would hand you a phantom
-`SW2` safety card, but the reshuffle turn is designed to prevent it).
+When the draw pile cannot cover every open hand slot at the start of
+your round — fully dry, or short with cards already discarded — the game
+consumes your action that cycle to **reshuffle** the discard pile back
+into the draw pile and re-deal; the enemy still attacks that round
+(`deck.md Phase 10`).  A short pile never deals a partial refill: the
+reshuffle happens first instead of minting phantom `SW2` safety cards for
+the shortfall.  The draw pile otherwise never auto-refills from the
+discard.
 
 ### 6.8 Victory, defeat, flee
 
@@ -503,27 +530,32 @@ collection is full (12 distinct types), no card is granted.
 
 ### 7.1 Opening menus
 
-* Overworld `START` → **CARDS** quick screen.
+* Overworld `START` → **DECK** quick screen.
 * Overworld `SELECT` → **LOAD GAME**.
 * Facing an actor and pressing `A` → dialogue, shop, save, or battle,
   depending on the actor.
 
-### 7.2 The quick screen (CARDS / QUESTS)
+### 7.2 The quick screen (DECK / QUEST / HERO / GEM)
 
-Two tabs, switched with `LEFT`/`RIGHT`.  A `^` marks the active tab.
+Four tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
+Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**CARDS tab** — the collection/deck manager:
+**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP MATERIAL TYPE` column header, cards follow one per row:
 
-* The top row (`* FILTER/SORT *`) opens a picker with `A`.
-* Each card row shows its identity name (e.g. `I SW`) and, at the far
-  right, the **decked-copy count** (0..n).
+* The `* FILTER/SORT *` row opens a picker with `A`.
+* Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`
+  name (`IRON SWORD`, `WOOD SHIELD`, `MYTHRIL BOW`), element-colored (red for
+  fire, blue for ice, purple for poison), and at the far right the
+  **decked-copy count** (0..n).
 * `A` on a card adds **one copy** to your battle deck; pressing `A` again
   once the card is fully decked **clears all its copies** from the deck
   (all-or-nothing — it refuses if that would drop you below the 5-card
   minimum).  Rejections show a transient message: `DECK FULL`, `DECK MIN
   5`, or `QUEST ITEM` (for special quest items).
-* `SELECT` on a card opens the **detail page**: name, type, power, cost,
-  uses/battle, max copies, owned, decked, price.
+* `SELECT` on a card opens the **detail page**: full name, on-hit rider
+  (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
+  / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),
+  `OWN`/`DECK` counts, and the `SELL` value (numbers right-aligned).
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
 * `A` on a loot card's **detail page** sells one copy while you have a
@@ -535,14 +567,32 @@ rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
 * Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
 * Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
 
-**QUEST tab** — the quest list.  Each entry shows the quest name and a
-status line:
+**QUEST tab** — the tracked-quest list (entries from row 3). Only accepted
+quests appear: entries with status `not started` stay hidden, so the tab
+starts empty (`no quests yet`) and fills as quests are accepted.  Each tracked
+entry shows the quest name and a status line:
 
-* `not started`
 * `status var: X/T` while active (e.g. `monsters: 2/3`)
 * `complete - SWORD` when done.
 
-`SELECT` on a quest opens a placeholder detail page.
+`SELECT` on a quest opens its **detail page**: the quest name, who gave it
+(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 5 MONSTERS`), and where
+you stand (e.g. `3/5 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
+counter-less quests).
+
+**HERO tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
+(battle energy pool), `GOLD <n>`, `CARDS <n>` (total owned copies).
+
+**GEM tab** — owned gems, one row per gem with `ON`/`OFF` equip state and
+the skill line below (`STRAIGHT GEM` → `SHORT STRAIGHT`).  Starts empty
+(`NO GEMS YET` / `WIN +20 AT NIS`).  `A` toggles equip manually (at most
+3 equipped at once); owning alone does nothing.  Gem 0 is won at Nis's
+chuck-a-luck table by leaving +20 net up in one sitting
+(docs/chuck-a-luck.md); while
+equipped, 3-card runs score as SHORT STRAIGHT (§8.2).  Resolution is
+best-subset: the game automatically plays the highest-scoring subset of
+the staged cards (a pair subset or lone high card can beat the run --
+see §8.2), and the preview shows that winning play.
 
 ---
 
@@ -571,13 +621,22 @@ Selected cards are ranked **exactly like poker hands**
 | 7 | FOUR KIND | 4 same value | 280% |
 | 8 | STRAIGHT FLUSH | 5 sequential, same symbol | 350% |
 | 9 | FIVE KIND | all 5 same value | 400% |
+| 10 | SHORT STRAIGHT | longest run of distinct sequential values ≥ 3 at any staged count ≥ 3 (**STRAIGHT gem equipped**; slots below THREE KIND, above TWO PAIR; only the highest three of the run count) | 130% |
+
+* The SHORT STRAIGHT works at any staged count ≥ 3 and never appears
+  without its gem.  Resolution is best-subset: the game plays the
+  highest-scoring subset (the run, a pair subset, or a lone high card)
+  and the preview shows it.  A 4-run scores its top three (1,2,3,4 →
+  2+3+4); a paired duplicate shares its value but is not part of any
+  run (3,3,4,5 → 3+4+5).
 
 * Straights/flushes/straight-flushes/five-kind require **all five** cards;
   pairs and kinds work with 2+.
 * **Rings are JOKER cards** (`combo_content.c` §34.3): in the hand
   evaluation, each ring's value may be any value **1..10** — the evaluator
-  tries every legal value and keeps the *best* tier.  A `SW3, SH2, RG5`
-  selection lets the ring become a 3 (a pair) so the tier improves.
+  tries every legal value and keeps the *best* tier.  A `SW5, SH1, RG4`
+  selection lets the ring become a 1 (a pair with the shield) so the
+  tier improves.
   Crucially the joker substitutes **values only** — a ring's symbol is
   still `HE/RG`, so it still participates in (and can break) a suited
   bonus.  A lone ring is the best hand-add (wild value), but two rings
@@ -585,13 +644,20 @@ Selected cards are ranked **exactly like poker hands**
 * The whole selected hand contributes to the classification, but only the
   **effective** cards contribute to the base magnitude (see §8.3).
 
-### 8.3 Base power
+### 8.3 Base power (poker-hands-only)
 
-* **Attack phase**: base power = sum of all non-shield, non-ring values.
-  (Shields and rings deal 0 in attack but still count toward the hand
-  shape.)
-* **Defend phase**: base power = sum of **shield values and rings**
-  (rings are wild shields worth their power).
+Only the cards forming the poker hand count -- extras deal/block 0:
+
+* **Attack phase**: base power = sum of the *participating*
+  damage-card values (swords/bows/daggers count; shields add 0; rings
+  add 0; a HEAL-type card counts its value in a healing hand). HIGH
+  CARD scores the single highest eligible card. A ring in the selection
+  converts the whole hand to healing instead: base = participating
+  damage values + the ring at its substituted (joker) value, resolved
+  as healing (no damage); a lone ring heals its face value.
+* **Defend phase**: base power = sum of the *participating* **shield
+  values** (rings and non-shields add 0 but rings still count as
+  wildcards for the tier and gate the over-block heal).
 
 ### 8.4 Effect scaling
 
@@ -605,8 +671,8 @@ where multiplier is the tier percent, plus a **+25% suited bonus** when all
 cards that enter the hand evaluation share one symbol — in **attack** that
 means every selected card (a shield or ring you slot in can break a suited
 bonus); in **defend** it means every shield/ring you play.  Examples: a
-`SW3 + SW3` pair = 6 × 120% = 7 (truncated); a `SW3,SW3,SH2,SH2,SH2` full
-house (power 6) = 6 × 260% = 15.
+`SW2 + SW2` pair = 4 × 120% = 4 (truncated); a `SW2,SW2,SH1,SH1,SH1` full
+house (power 4) = 4 × 260% = 10.
 
 The **suited bonus** is the reason mixing too many card types dilutes your
 damage — a homogeneous hand punches well above its weight.
@@ -671,29 +737,27 @@ selling loot.  Uses: shop purchases.
 ### 9.2 Battle rewards
 
 Defeating a monster grants gold **once per battle** (a trio pays the
-plain reward once, not per clone).  HP varies by placement; gold depends
+plain reward once, not per clone).  HP is flat per type; gold depends
 on the enemy type:
 
 | Enemy | HP | Gold |
 |---|---|---|
-| Slime | 10–16 | 5 |
-| Elite slime | 20 | 10 |
+| Slime | 10 | 5 |
 | Bat | 8–12 | 8 |
-| Kobold | 12–18 | 8 |
-| Spider | 16–18 | 15 |
-| Mimic (solo) | 30 | 0 |
-| Lord of Slimes (solo boss) | 50 | 50 |
+| Kobold | 15 | 8 |
+| Spider | 10 | 15 |
+| Mimic (solo) | 50 | 0 |
+| Lord of Slimes (solo boss) | 99 | 50 |
 
 ### 9.3 Shops
 
-Two shops exist (`src/game/shops_content.c`):
+One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
-* **Shopkeeper** (Town, (9,3)) — shop 1 — sells the **Ring** (`I RG`,
-  `RG5`) for **20g** (a heal card; the game's only reliable healing,
-  outside loot rings).
-* **Lost Merchant** (Town, (11,3)) — shop 2 — sells the **Iron Sword**
-  for **10g** and the **Mythril Bow** for **30g**.  Reachable only after
-  the Lost Amulet quest (§4.3).
+* **Lost Merchant** (Town, (11,3)) — sells the **Iron Ring** (`I RG`,
+  `RG4`) for **20g** (a heal card; the game's only reliable healing
+  outside loot rings) and the **Mythril Bow** (`M BO`, `BO9`) for
+  **30g**, one copy of each.  Reachable only after the Lost Amulet
+  quest (§4.3): before the delivery he re-briefs instead of selling.
 
 Shopping: `A` buys the hovered item if you have enough gold and room in
 your card collection (max distinct types = 12).  Feedback lines: `Bought!`,
@@ -704,26 +768,31 @@ your **collection**; deck them from the CARDS menu to use them.
 
 Victory loot cards are **procedurally generated** with a derived identity
 name `[material] [effect] weapon` (`loot_banked.c`, `loot.md §34`) — e.g.
-`W SW` (wood sword), `M P DA` (mythril poison dagger), `W F SW` (wood fire
+`W SW` (wood sword), `M P DA` (mythril poison dagger), `S SW` (steel
 sword).
 
-* Materials raise power: **W**ood +0, **B**ronze +1, **I**ron +2,
-  **M**ythril +3 (weighted wood-heavy).
+* Material bands: **W**ood 1, **B**ronze 2–3, **I**ron 4–5, **S**teel
+  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/dagger/ring
+  the low end.  The same bands power attack, shield block and ring heal.
+* **Wood never carries a rider**; the generator forces plain at wood and
+  synthesis strips wood+rider ids.  Rider cards are bronze and above.
 * Effects are legal per weapon: daggers may carry **P**oison, swords may
   carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
   plain.  Illegal pairs carry no rider.
-* Weapon bases: sword 3, shield 2, bow 2, ring 2 (heals), dagger 1.
+* Loot material is **AP-gated** (docs/loot.md §34.5): AP 1 is wood-only,
+  AP 2–3 bronze, AP 4 iron, AP 5+ steel/mythril.  Steel and mythril stay
+  low-probability even at AP 5.
 
 Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
 
 **Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
 the shop actor; only the Lost Merchant buys), you can sell **loot** cards
-from the CARDS tab: open a loot card's detail page (`SELECT`) and press
+from the DECK tab: open a loot card's detail page (`SELECT`) and press
 `A` to sell one copy (no `SELL` label is shown — the sale is silent; the
 `CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
-the card's price field, synthesized as `base power + material tier×2 (+2
-for a poison dagger)`.  You cannot sell a copy that would strand a decked
+the card's price field, synthesized as `power + material tier×2 (+2 for
+a poison dagger)`.  You cannot sell a copy that would strand a decked
 card without ownership backing (rejected with the `DECK FULL` message).
 
 ---
@@ -771,8 +840,10 @@ skipping the title screen and the intro slides.
 ## 11. Audio
 
 Music tracks (`src/audio/audio.h`): overworld, battle, victory (one-shot
-fanfare), title, town, dungeon (castle), boss.  The boss theme plays only
-for the Lord of Slimes.  UI SFX: a short cursor blip and a confirm tone.
+fanfare), title, town, dungeon (castle), boss, mimic.  The boss theme plays only
+for the Lord of Slimes.  Mimic combat plays the short `Mimic_intro.uge`
+sting first (~0.9 s), then the looping `Mimic.uge` battle theme (timed swap in
+`audio_update()`; the tracker driver loops whole songs).  UI SFX: a short cursor blip and a confirm tone.
 `SOUND: ON/OFF` on the title menu toggles the soundtrack.
 
 Music runs on the hardware **timer interrupt** at a fixed 256 Hz, so
@@ -815,9 +886,9 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 ## 13. Reference: quick numbers
 
-* Hero: HP 10, gold 20, deck 12, opening hand `SW SW SH SH SW`.
+* Hero: HP 15, gold 20, deck 10, opening hand `SW SW SH SH SW`.
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 6/round, timer 20s per decision.
+* Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

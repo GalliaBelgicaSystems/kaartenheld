@@ -1,8 +1,7 @@
 {
  "name": "merchant_shop_open",
  "test": true,
- "description": "After returning the amulet the Merchant's shop opens (rewarded gold 15). The starter deck already owns all four IRON_SWORD copies (max_copies 4), so buying a fifth is rejected atomically: gold keeps the reward, no CARD_PURCHASED fires",
- "scenario_id": "TOWN_BOOT",
+ "description": "Finding the amulet unlocks the shop via delivery: first talk holding it fires THANKS (+15 gold, amulet removed, quest COMPLETE); closing and talking again opens the shop with the one-copy ring+bow stock",
  "actions": [
   {
    "type": "interact",
@@ -10,7 +9,7 @@
   },
   {
    "type": "wait",
-   "frames": 5
+   "frames": 10
   },
   {
    "type": "press",
@@ -18,35 +17,11 @@
   },
   {
    "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 5
+   "frames": 10
   },
   {
    "type": "interact",
    "actor": "MERCHANT"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "A"
   },
   {
    "type": "wait",
@@ -61,12 +36,28 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "SW3"
+   "contains": "RG4"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "10"
+   "contains": "20"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "BO9"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "30"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "MERCHANT_THANKS"
   },
   {
    "type": "variable",
@@ -80,17 +71,8 @@
   },
   {
    "type": "inventory",
-   "item": "IRON_SWORD",
-   "expected": 4
-  },
-  {
-   "type": "inventory",
    "item": "AMULET",
    "expected": 0
-  },
-  {
-   "type": "event_not_occurred",
-   "event": "CARD_PURCHASED"
   }
  ],
  "initial_state": {

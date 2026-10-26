@@ -49,7 +49,11 @@ typedef struct {
     bool at_least;      /* VARIABLE / ITEM_COUNT: >= when true, == when false */
 } EventCond;
 
-#define MAX_EVENT_CONDS 3
+#define MAX_EVENT_CONDS 2   /* capped at 2 (was 3) to fund dialogue rows
+                             * in bank 2: no shipped event uses more than 2
+                             * (quest state = one variable, merchant = item
+                             * + variable).  A future 3-cond event must
+                             * split into two ordered first-match events. */
 
 typedef enum {
     EVENT_ACTION_NONE = 0,
@@ -61,7 +65,18 @@ typedef enum {
     EVENT_ACTION_SCENE_CHANGE = 6,
     EVENT_ACTION_ADD_ITEM = 7,
     EVENT_ACTION_ADD_CURRENCY = 8,
-    EVENT_ACTION_REMOVE_ITEM = 9
+    EVENT_ACTION_REMOVE_ITEM = 9,
+    /* Spawn the slime trio where the slime knight fell (slime-knight
+     * armor split): reuses the knight's runtime slot in place, so no
+     * scene rows and no actor cap are consumed.  arg0 = slime ow_type
+     * byte (compiled into the event row; drift-checked by
+     * validate.py --spawn-refs).  First spawn action; generalize when
+     * a second need appears (roadmap YAGNI). */
+    EVENT_ACTION_SPAWN_SLIME_TRIO = 10
+    /* Heal-full and play-music actions were retired with the Heal Mage
+     * YES/NO rework (the choice resolve heals + jingles through the
+     * bank-5 body and the fixed dialogue-screen wrapper instead); their
+     * ids stay unassigned. */
 } EventActionType;
 
 typedef struct {
@@ -97,7 +112,7 @@ void event_init(const EventDefinition *table, uint8_t count, uint8_t bank);
 /* Resolve the first matching INTERACT event for the given actor and run its
  * actions.  Returns the engage result the screen should act on:
  * ENGAGE_DIALOGUE if a dialogue was started, else ENGAGE_NONE. */
-ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor);
+ActorEngageResult event_engage_actor(Game *g, const StaticActorDefinition *actor, MapId map);
 
 /* Resolve the first matching MAP_ENTER event for the map and run it. */
 void event_resolve_map_enter(Game *g, MapId to_map);

@@ -2,58 +2,58 @@
   "slides": [
     {
       "lines": [
-        "TUTORIAL BASICS",
-        "Use LEFT/RIGHT to",
-        "navigate slides.",
-        "Press B to exit."
+        "HOW TO FIGHT:",
+        "Fights use cards.",
+        "LEFT RIGHT flips.",
+        "B goes back."
       ]
     },
     {
       "lines": [
-        "CARD TYPES:",
-        "SW: SWORD - damage",
-        "SH: SHIELD - block",
-        "BO: BOW - damage"
+        "KNOW YOUR CARDS:",
+        "SW BO DA damage.",
+        "SH blocks hits.",
+        "HE rings heal you."
       ]
     },
     {
       "lines": [
-        "CARD TYPES 2:",
-        "HE: HEAL - restore",
-        "DA: DAGGER - dmg",
-        "F SW: FIRE + BURN"
+        "STRIKE FIRST:",
+        "Choose cards, then",
+        "press SELECT. Each",
+        "card costs energy."
       ]
     },
     {
       "lines": [
-        "COMBOS:",
-        "Played cards rank",
-        "like poker hands,",
-        "boosting effects."
+        "POKER PAYS:",
+        "Pairs and better",
+        "multiply damage.",
+        "Kill foes faster."
       ]
     },
     {
       "lines": [
-        "ENERGY & COMBAT:",
-        "Cards cost ENERGY",
-        "Start with 6/turn.",
-        "Energy fades away."
+        "DEFEND YOURSELF:",
+        "Foe shows its hit.",
+        "Shields block it.",
+        "Lone DA hits back."
       ]
     },
     {
       "lines": [
-        "DEFEND & STATUS:",
-        "Only SH blocks dmg.",
-        "SW/BO/DA block 0.",
-        "POISON: 1/turn dot"
+        "BURN POISON FREEZE",
+        "Poison wounds and",
+        "locks cards. Ice",
+        "skips your turn."
       ]
     },
     {
       "lines": [
-        "SHIELD CARD:",
-        "Offense: 0 dmg,",
-        "but still counts",
-        "for your combos."
+        "SPARE SHIELDS:",
+        "They deal 0 damage",
+        "but build combos.",
+        "Play your spares."
       ]
     }
   ]

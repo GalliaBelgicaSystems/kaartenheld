@@ -28,7 +28,13 @@ typedef enum {
     CARD_EFFECT_NONE          = 0,
     CARD_EFFECT_DAMAGE_TARGET = 1,
     CARD_EFFECT_BLOCK_DAMAGE   = 2,
-    CARD_EFFECT_HEAL_HP        = 3
+    CARD_EFFECT_HEAL_HP        = 3,
+    /* Sentinel: one past the last valid effect, never a real effect.
+     * Implicit (no explicit value) so it always stays one past the last
+     * enumerator -- adding an effect cannot silently collide with it.
+     * Range guards (e.g. the combo staging pack) must test against this,
+     * not against the current last enumerator. */
+    CARD_EFFECT_COUNT
 } CardEffectType;
 
 /* Static card definition.  Registered at boot via card_register_defs().
@@ -78,7 +84,11 @@ const CardDefinition *card_get_def(CardId id);
 
 /* Shared definition scratch (WRAM): card_get_def's return target.  The
  * bank-3 synth body (loot_synth_banked) writes it directly, so it must
- * be visible project-wide rather than file-static. */
+ * be visible project-wide rather than file-static.  The bank-2 item
+ * render synthesizes loot defs into the SAME scratch (ic_loot_synth in
+ * item_content_banked.c, which cannot reach bank 3) -- so never hold
+ * two looked-up defs across another def lookup; copy out what you need
+ * first. */
 extern CardDefinition g_card_scratch;
 
 #endif /* RPG_CARDS_H */

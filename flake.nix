@@ -245,6 +245,10 @@
             pkgs.python3Packages.pillow
             pyboy
             pkgs.nodejs
+            # Manual typesetting (make manual): pandoc reads the Markdown,
+            # typst renders the 105 mm square instruction booklet PDF.
+            pkgs.pandoc
+            pkgs.typst
           ];
 
           shellHook = ''

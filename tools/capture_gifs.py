@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """README GIF captures (host-side, never CI-gated).
 
-Produces three headless PyBoy recordings of the RELEASE ROM, assembled to GIF
+Produces four headless PyBoy recordings of the RELEASE ROM, assembled to GIF
 with Pillow:
 
   screenshots/boot.gif       Gallia Belgica splash -> Kaartenheld title
   screenshots/battle.gif     kobold trio: TWO PAIR combo selection + attack
   screenshots/overworld.gif  Field -> forest gate -> wander to the chest
+  screenshots/boss.gif       Lord of Slimes: glowing eyes blink in battle
 
 Regenerate with `make gifs`.  The frames are a visual aid only; the semantic
 gate is `make verify-walkthrough` (docs/verify-walkthrough.md).
@@ -31,6 +32,10 @@ OUT = os.path.join(REPO, "screenshots")
 BOOT_GIF = os.path.join(OUT, "boot.gif")
 BATTLE_GIF = os.path.join(OUT, "battle.gif")
 OVERWORLD_GIF = os.path.join(OUT, "overworld.gif")
+BOSS_GIF = os.path.join(OUT, "boss.gif")
+
+# The Lord of Slimes always spawns in the throne room (ungated since the
+# mayor-quest rework: 5 kills grant +1 AP, no spawn gating anywhere).
 
 # Release-ROM screen ids (src/screens/screen.h).
 SCREEN_TITLE = 9
@@ -102,12 +107,23 @@ def capture_battle():
     planner = Planner()
     s = Session(checks, "gif-battle")
     try:
+        # Transit god-mode (walkthrough convention): 99 HP so a patrol
+        # ambush on the way to the forest can't derail the scripted
+        # fight.  The kobold lives in the forest now (the field is
+        # Carl's solo spar); walk the walk-c gate first, then engage.
+        W.god_mode(s)
         field = W._level("field")
-        kobold = next(o for o in field["objects"]
+        spawn = W._boot_to_field(s, planner)
+        forest = W._level("forest")
+        fspawn = (forest["player"]["spawn"]["x"],
+                  forest["player"]["spawn"]["y"])
+        W.follow(s, planner, "field", spawn, "forest", fspawn)
+        s.settle_scene(expected_scene=W.SCENE_FOREST)
+        kobold = next(o for o in forest["objects"]
                       if (o.get("properties") or {}).get("entity_id")
                       == "ENTITY_ID_KOBOLD")
         kxy = (kobold["position"]["x"], kobold["position"]["y"])
-        if not W.engage_hostile(s, planner, "field", kxy):
+        if not W.engage_hostile(s, planner, "forest", kxy):
             raise SystemExit("kobold battle did not engage")
         # Settle into the player select phase (TARGET banner).
         s.wait_for(lambda: s.text_has("TARGET ")
@@ -141,17 +157,18 @@ def capture_battle():
 
 
 def capture_overworld():
-    """Field spawn -> forest gate -> wander to the amulet chest."""
+    """Field spawn -> forest gate -> wander east through the trees."""
     checks = []
     planner = Planner()
     s = Session(checks, "gif-overworld")
     try:
-        field = W._level("field")
-        sp = field["player"]["spawn"]
-        spawn = (sp["x"], sp["y"])
-        e = next(e for e in field["exits"]
-                 if e["target_scene"] == "forest")
-        goal = (e["target_x"], e["target_y"])
+        # Transit god-mode (walkthrough convention): 99 HP so a patrol
+        # ambush can't derail the scripted walk.
+        W.god_mode(s)
+        field_pos = W._boot_to_field(s, planner)
+        forest = W._level("forest")
+        goal = (forest["player"]["spawn"]["x"],
+                forest["player"]["spawn"]["y"])
 
         frames = []
 
@@ -163,16 +180,15 @@ def capture_overworld():
         s.tick = cap_tick
 
         # Walk the Field to the north gate; the crossing wipes to the Forest.
-        W.follow(s, planner, "field", spawn, "forest", goal)
+        W.follow(s, planner, "field", field_pos, "forest", goal)
         s.settle_scene(expected_scene=W.SCENE_FOREST)
         s.tick(20)
 
-        # Wander east to the Lost Amulet chest and stop facing it.
-        chest = next(o for o in W._level("forest")["objects"]
-                     if (o.get("properties") or {}).get("entity_id")
-                     == "ENTITY_ID_AMULET")
-        cxy = (chest["position"]["x"], chest["position"]["y"])
-        path = planner.path("forest", goal, (cxy[0] - 1, cxy[1]))
+        # Wander east a few tiles and stop facing the trees (short and
+        # far from the kobold's chase range so no battle interrupts the
+        # recording; the amulet chest this used to visit moved to the
+        # mountain pass).
+        path = planner.path("forest", goal, (16, 10), avoid_exits=True)
         if path:
             W._walk_path(s, path)
         s.tick(40)
@@ -181,9 +197,67 @@ def capture_overworld():
     return frames
 
 
+def capture_boss():
+    """Lord of Slimes: walk to the castle, stage the completed Monster
+    Hunt (memory write, bow-shot precedent -- the quest chain itself is
+    covered by scenarios), enter the throne room so the boss spawns, and
+    record ~3 s of idle battle: the eye-glow overlay blinks red/orange
+    every 16 battle-clock ticks."""
+    checks = []
+    planner = Planner()
+    s = Session(checks, "gif-boss")
+    try:
+        # Transit god-mode + boot out of the grove first (walkthrough
+        # convention): follow() trusts its start position, and a fresh
+        # boot lands in the grove, not the field.
+        W.god_mode(s)
+        field_entry = W._boot_to_field(s, planner)
+        field = W._level("field")
+        spawn = (field["player"]["spawn"]["x"],
+                 field["player"]["spawn"]["y"])
+        # Castle via the walk-E route, stopping at the interior arrival
+        # tile (NOT the throne portal edge: stepping onto it would cross
+        # into the throne room early).
+        castle_arrival = planner.arrival_pos("castle") or spawn
+        W.follow(s, planner, "field", field_entry, "castle", castle_arrival)
+        # Cross into the throne room and stop south of the boss at (10,7).
+        W.follow(s, planner, "castle", s.pos(), "throne_room", (10, 8))
+        throne_id = planner.scenes["throne_room"].scene_id
+        s.settle_scene(expected_scene=throne_id)
+        if not s.text_has("DECK:"):
+            s.check("boss engaged",
+                    s.press_until("up", lambda: s.text_has("DECK:"),
+                                  tries=10, settle=24, label="bump boss"),
+                    expected="DECK:", actual="none")
+        s.wait_for(lambda: s.text_has("TARGET ")
+                   or s.text_has("PLAYER TURN"), ticks=300)
+        s.tick(40)
+
+        frames = []
+
+        def cap_tick(n=1):
+            for _ in range(n):
+                s.pb.tick()
+                frames.append(s.pb.screen.image.copy())
+
+        s.tick = cap_tick
+        # Idle battle: no input, so neither side acts; the timer drains
+        # and the eyes blink (~11 flips in 180 ticks).
+        s.tick(180)
+    finally:
+        s.close()
+    bad = [c for c in checks if not c[2]]
+    for label, name, _ok, expected, actual in bad:
+        print("  [%s] %s\n      expected: %s\n      actual:   %s"
+              % (label, name, expected, actual))
+    if bad:
+        raise SystemExit("boss capture checks failed")
+    return frames
+
+
 def main():
     ap = argparse.ArgumentParser(description="README GIF captures")
-    ap.add_argument("--only", choices=["boot", "battle", "overworld"],
+    ap.add_argument("--only", choices=["boot", "battle", "overworld", "boss"],
                     default=None)
     args = ap.parse_args()
 
@@ -195,6 +269,9 @@ def main():
         # Smooth 30 fps for the camera scroll: record every frame, keep
         # every 2nd, 33 ms each.
         save_gif(capture_overworld(), OVERWORLD_GIF, duration=33, keep=2)
+    if args.only in (None, "boss"):
+        # ~3 s idle boss battle at 20 fps (every 3rd tick, 50 ms each).
+        save_gif(capture_boss(), BOSS_GIF, duration=50, keep=3)
     return 0
 
 

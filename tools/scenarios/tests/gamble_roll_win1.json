@@ -1,0 +1,106 @@
+{
+  "name": "gamble_roll_win1",
+  "test": true,
+  "description": "Seeded 1:1 win: choose NUM=2, BET=1, dice come up 2/6/3 (seed 12345), one match pays profit 1 (20 -> 21).",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "GAMBLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 5,
+      "contains": "YOU WIN +1"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "1 MATCH WIN +1"
+    },
+    {
+      "type": "screen_row",
+      "row": 12,
+      "contains": "2     6     3"
+    },
+    {
+      "type": "currency",
+      "expected": 21,
+      "currency": "GOLD"
+    },
+    {
+      "type": "music_track",
+      "expected": "CASINO"
+    },
+    {
+      "type": "sfx_last",
+      "expected": 8
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345
+  }
+}

@@ -1,8 +1,7 @@
 {
  "name": "battle_slime_sprite",
  "test": true,
- "description": "Slime trio battle renders 3x2 enemy art tiles (slime art set from screens/enemy_types.json) under each HP line, centered on the 6-column name slot (art at slot_x+1)",
- "scenario_id": "BATTLE_BOOT",
+ "description": "Slime trio battle (mountain pass wall slime, the fixture's last hostile): enemies render as OAM sprites (BG art footprint stays blank); HP lines, banner and events pin the rest.",
  "actions": [],
  "assertions": [
   {
@@ -16,7 +15,7 @@
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "10/10"
+   "contains": "8/ 8"
   },
   {
    "type": "screen_row",
@@ -32,31 +31,31 @@
    "type": "tilemap_cell",
    "row": 3,
    "col": 1,
-   "expected": 128
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 2,
-   "expected": 129
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 4,
    "col": 1,
-   "expected": 131
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 8,
-   "expected": 140
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 3,
    "col": 15,
-   "expected": 152
+   "expected": 0
   },
   {
    "type": "event_occurred",
@@ -64,11 +63,11 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
    "x": 13,
-   "y": 8,
-   "facing": "DOWN"
+   "y": 7,
+   "facing": "RIGHT"
   },
   "seed": 5002,
   "start_battle": true

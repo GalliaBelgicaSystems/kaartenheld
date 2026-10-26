@@ -1,8 +1,7 @@
 {
  "name": "amulet_pickup",
  "test": true,
- "description": "Interacting with the forest amulet chest grants the AMULET item and starts the merchant quest (visual is a chest sprite, engagement unchanged)",
- "scenario_id": "FOREST_BOOT",
+  "description": "Interacting with the forest amulet (floor debris visual) grants the AMULET item and starts the merchant quest",
  "actions": [
   {
    "type": "interact",

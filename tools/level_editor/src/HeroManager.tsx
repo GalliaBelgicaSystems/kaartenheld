@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchEnemyTypeList } from './io/combatArt';
 import { BUILTIN_TILESETS } from './model/Tileset';
+import { RampSelect } from './RampSelect';
 
 /** Hero manager (art + stats + starter deck): one record for the hero.
  *  The level view owns placement; this view owns looks.  Selections apply
@@ -11,7 +12,9 @@ interface HeroDraft {
   start_hp: number;
   start_gold: number;
   starter_deck: string[];
-  overworld: { cells: string[]; palette: number } | null;
+  /** OBJ ramp name (files normalize here on edit); a legacy bare OBJ
+   *  slot int still loads and displays via the slotmap. */
+  overworld: { cells: string[]; palette: string | number } | null;
 }
 
 const owTiles = (BUILTIN_TILESETS.hero?.tiles || []).filter((t) => t.category === 'hero');
@@ -20,13 +23,24 @@ const tileUrl = (id: string) => {
   return t ? t.image_url : `/tiles/hero/${id}.png`;
 };
 
-export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenComposer }) => {
+export const HeroManager: React.FC<{
+  onOpenComposer: () => void;
+  /** Jump into the Palettes view with a ramp editor pre-opened. */
+  onEditRamp?: (rampName: string) => void;
+  /** A save changed the overworld palette: level views should refresh. */
+  onChanged?: () => void;
+}> = ({ onOpenComposer, onEditRamp, onChanged }) => {
   const [hero, setHero] = useState<HeroDraft | null>(null);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState('');
+  // Palette at last load/save: bump level views only when it changed.
+  const [savedPalette, setSavedPalette] = useState<string | number | null>(null);
 
   useEffect(() => {
-    fetch('/api/hero').then(r => r.json()).then(setHero).catch(() => setStatus('load failed'));
+    fetch('/api/hero').then(r => r.json()).then((h) => {
+      setHero(h);
+      setSavedPalette(h?.overworld?.palette ?? null);
+    }).catch(() => setStatus('load failed'));
   }, []);
 
   const save = async () => {
@@ -39,6 +53,9 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
       });
       setDirty(false);
       setStatus('saved screens/hero.json — run make screens + make gfx to recompile');
+      const pal = hero.overworld?.palette ?? null;
+      if (onChanged && pal !== savedPalette) onChanged();
+      setSavedPalette(pal);
     } catch (e: any) {
       setStatus(`save failed: ${e.message}`);
     }
@@ -98,14 +115,16 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
             (max 2)
           </div>
           <div style={{ marginTop: 6, fontSize: 13 }}>
-            <label>Palette:{' '}
-              <input type="number" min={0} max={7} style={{ width: 50 }}
-                value={hero?.overworld?.palette || 0}
-                onChange={(e) => {
-                  const palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0));
-                  setHero((prev) => ({ ...prev!, overworld: { ...prev!.overworld!, palette } }));
+            <label>Palette (OBJ ramp):{' '}
+              <RampSelect
+                value={hero?.overworld?.palette ?? 0}
+                filter="obj"
+                onPick={(ramp) => {
+                  setHero((prev) => ({ ...prev!, overworld: { ...prev!.overworld!, palette: ramp } }));
                   setDirty(true);
-                }} />
+                }}
+                onEditRamp={onEditRamp}
+              />
             </label>
           </div>
         </div>
@@ -120,7 +139,7 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
           </div>
           <div style={{ marginBottom: 6 }}>
             <label>Start HP: <input type="number" min={1} max={255} style={{ width: 60 }}
-              value={hero?.start_hp || 10}
+              value={hero?.start_hp || 15}
               onChange={(e) => { setHero((prev) => ({ ...prev!, start_hp: Math.max(1, Math.min(255, parseInt(e.target.value) || 1)) })); setDirty(true); }} /></label>
             {'  '}
             <label>Start Gold: <input type="number" min={0} max={65535} style={{ width: 80 }}
@@ -140,10 +159,10 @@ export const HeroManager: React.FC<{ onOpenComposer: () => void }> = ({ onOpenCo
               setHero((prev) => ({ ...prev!, starter_deck: cards }));
               setDirty(true);
             }}
-            placeholder="CARD_IRON_SWORD,&#10;CARD_IRON_SWORD,&#10;CARD_WOODEN_SHIELD..."
+            placeholder="CARD_WOOD_SWORD,&#10;CARD_WOOD_SWORD,&#10;CARD_WOODEN_SHIELD..."
           />
           <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>
-            Valid card IDs: CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
+            Valid card IDs: CARD_WOOD_SWORD, CARD_IRON_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD, CARD_POISON_DAGGER, etc.
           </div>
         </div>
 

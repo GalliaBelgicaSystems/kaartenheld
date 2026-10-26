@@ -2,7 +2,6 @@
  "name": "mayor_intro_event",
  "test": true,
  "description": "MAYOR_INTRO event: first interaction with the Mayor starts the intro dialogue and sets MET_MAYOR immediately",
- "scenario_id": "MAYOR_DIALOGUE",
  "actions": [
   {
    "type": "interact",

@@ -1,8 +1,7 @@
 {
  "name": "quest_list_merchant",
  "test": true,
- "description": "The QUEST tab lists the LOST AMULET quest automatically (ACTIVE when the amulet was found), alongside MONSTER HUNT",
- "scenario_id": "NEW_GAME",
+ "description": "The QUEST tab tracks only accepted quests: LOST AMULET (ACTIVE) is listed while MONSTER HUNT (NOT_STARTED) stays hidden",
  "actions": [
   {
    "type": "press",
@@ -28,23 +27,23 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "MONSTER HUNT"
-  },
-  {
-   "type": "screen_row",
-   "row": 6,
-   "contains": "not started"
-  },
-  {
-   "type": "screen_row",
-   "row": 7,
+   "row": 3,
    "contains": "LOST AMULET"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 4,
    "contains": "active"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 3,
+   "contains": "MONSTER HUNT"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 5,
+   "contains": "MONSTER HUNT"
   }
  ],
  "initial_state": {

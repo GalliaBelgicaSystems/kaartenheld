@@ -144,6 +144,21 @@ this on every push.  Must be included in the standard validate sequence alongsid
 
 ---
 
+## Stack Budget Check
+
+```bash
+make stack-budget
+```
+
+Asserts the statically computed worst-case banked-call stack depth stays
+within the pinned baseline (`tools/stack_budget.py`, a ratchet over the
+debug `.lst` call graph).  Catches stack overflows into WRAM globals that
+no harness scenario can observe (see §52.24).  **Required** — CI runs
+this on every push.  Must be included in the standard validate sequence
+alongside `make test-harness` and `make test`.
+
+---
+
 ## Run in Emulator
 
 ```bash
@@ -1336,10 +1351,16 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
 * **ROM Bank 6 Isolation**:
   * The driver assembly (`lib/hUGEDriver/src/hUGEDriver.asm` via `tools/rgb2sdas.py -b 6`) and all converted track data (`#pragma bank 6`, six songs) live in **ROM Bank 6**.  The driver reads song bytes through the mapped ROM window, so songs cannot live anywhere else.
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
-  * Bank 6 is full (16224/16384 B): the transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 7`) live in **ROM Bank 7** alongside the icon table.  The timer ISR selects bank 7 around `sfx_step_tick()` and bank 6 around `hUGE_dosound()`; muting targets bank 6 (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
+  * Bank 6 is full (16224/16384 B): the opening theme, chest jingle, mimic loop + intro and victory (`generated/music/*.c`, `#pragma bank 7`) live in **ROM Bank 7** next to a **second copy of the hUGE driver**.  The transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 8`) live in **ROM Bank 8** alongside the icon table and the shared overworld sprite blob.  The timer ISR selects bank 8 around `sfx_step_tick()` and bank 6/7 around `hUGE_dosound()`; muting targets the song's bank (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
+  * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * **ROM Bank 9 (casino theme)**: the chuck-a-luck table track (`assets/music/casino.uge` -> `generated/music/casino.c`, symbol `song_casino`, `MUSIC_CASINO`) needs ~3.3 KB and bank 7 has only ~640 B free in the release layout
+  (~1.5 KB in debug), so it lives in **bank 9** next to its own **third copy of the hUGE driver** (`hUGEDriver_b9.o`, all exports renamed `_b9`).  `huge_music.c` therefore carries a three-legged bank dispatch (init / dosound / mute: bank 9 then bank 7 then the bank-6 default); the two mute entry points share one `huge_mute_dispatch()` ladder because each extra leg costs fixed-bank ROM.  Bank 9 is otherwise the debug build's test-actor bank (`GAME_TEST_ACTOR_BANK`), and it still has >8 KB free -- check `make memmap` before adding a second song there, and remember a new song bank always needs its own driver copy.
+  * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
+  * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
-  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.
-  * `huge_music_play_banked(song, bank)` records the song's bank in `s_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  `huge_music_play()` is the bank-6 shorthand.  New songs go to bank 7 through this path -- never bank 6.
+  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.  The eleventh song (`demo complete.uge` -> `generated/music/demo_complete.c`, symbol `song_demo_complete`, `MUSIC_ENDING`) shares bank 7 too (loops over the THE END credits after a final-boss victory); fitting it moved the world-anim bodies (`anim_swap_banked.c`: pure, trampoline-dispatched, no same-bank data) to bank 8, which has room.
+  * Ambient birdsong was removed entirely (no `bird*.pcm`, no `bird_ambient_banked`, no `EVENT_BIRD_CHIRP`): Wake Grove and Carl's field are silent like every other map.  The removal changes no WRAM (birdsong was zero-WRAM by design), so the measured branch-vs-master growth stays `_DATA` +41 B (stack gap 158->133 B against the 126 B floor): the chest jingle's 2 BSS bytes, the forest row-4 extension (`g_active_tile_palette` 32->40 B) and the 8-entry animation index list (`g_anim_cells`/`g_anim_count`, 17 B).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`).  `battle_boot` + `stack-budget` stay green; any further WRAM growth must re-run them first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
+  * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
 * **Tick Division (64 Hz from 256 Hz Timer)**:
   * The hardware timer ISR (`src/crt0.s`) calls `audio_update()` at **256 Hz**.
@@ -1354,7 +1375,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   emits `di`/`ei` -- an `ei()` executed while already inside the 256 Hz
   timer ISR re-enables nested timer interrupts, stacking ISR frames until
   the WRAM below the stack is smashed.  Observed symptom (Sep 2026):
-  ghost joypad input -- `pad_state`/`prev_pad_state` accumulate pressed
+  ghost joypad input -- `g_inp_pad`/`g_inp_prev` accumulate pressed
   bits and releases never register, freezing the intro screen in every
   real-timing emulator (mGBA, Gambatte) while PyBoy's frame pacing masked
   it.  `audio_update()`'s ISR-side unmute therefore calls
@@ -1406,8 +1427,8 @@ input_init()
 initialize both:
 
 ```text
-pad_state
-prev_pad_state
+g_inp_pad
+g_inp_prev
 ```
 
 to the current hardware:
@@ -1419,7 +1440,7 @@ joypad()
 Leaving:
 
 ```text
-prev_pad_state = 0
+g_inp_prev = 0
 ```
 
 can cause `input_pressed()` to incorrectly report a button press during boot.
@@ -1611,7 +1632,40 @@ The test should fail before the fix and pass after it whenever practical.
 
 ## Step 6 — Validate
 
-Run:
+While working (fast feedback loop): build and run ONLY the scenarios
+touched by the change, never the full gate.  Full `validate` is slow;
+run it once at the end of the session, before merging — never
+mid-session:
+
+```bash
+# during work: touched scenarios only, e.g.
+make test-scenario SCENARIO=forest_boot
+```
+
+```bash
+# end of session, before merge: the whole gate in one invocation
+# (single `nix develop` entry; `-j` is safe, the Makefile is parallel-clean)
+make -j$(nproc) validate
+```
+
+`validate` runs, in order: `memmap`, `lint`, `test-harness`,
+`test`, `verify-oam`, `verify-music`, `verify-walkthrough`.  The
+individual targets below document what each step covers; run them
+separately only when iterating on one area.  During iteration, run the
+three layout-sensitive sentinels (§52.19) instead of the full suite:
+
+```bash
+make test-sentinels
+```
+
+and reserve the full `make test-harness` for the end.  For tracker-song
+work, answer bank-fit and duration questions without a full build:
+
+```bash
+make music-size [SONG=mimic_intro]
+```
+
+Run (via `validate` or individually):
 
 ```bash
 make test-harness
@@ -1667,15 +1721,14 @@ make run
 is only necessary when the ROM's C (or headers, or generated `.inc` tile data)
 changed in a way that could affect gameplay.  Changes confined to the host-side
 level editor — `tools/level_editor/**` (TypeScript, JSON tileset definitions,
-extracted `public/tiles/**` PNGs), `tools/asset_atlas.py`, JSON compilation, or
+extracted `public/tiles/**` PNGs), JSON compilation, or
 `tools/level_editor/extract_tiles.py` — do **not** exercise the ROM:
 `make test-harness` adds no signal and can take many minutes, so skip it.
 
 For host-side-only work the proportional validation is:
 
 * the TypeScript/JSON changes build (`npm run build` in `tools/level_editor/`);
-* any source asset / coordinate mapping is consistent (`make atlas`, and where
-  relevant `python3 tools/asset_atlas.py --check`);
+* any source asset / coordinate mapping is consistent (`make manifest`);
 * if new tileset definitions were added, verify they load in the editor.
 
 If a change *also* regenerates ROM-included tile data (a `make gfx` output such
@@ -1716,8 +1769,9 @@ map.  Two tiers enforce that:
 * **Tier 1 — test fixtures** (`tools/scenarios/fixtures/levels/test_*.json`):
   frozen copies of the levels as the scenarios know them (headline
   hostile last, no user-placed extras).  The **debug (harness) ROM links
-  ONLY these** (`scenes_content_test.c` / `actors_content_test.c`, bank 4,
-  `--bank 4`), selected at compile time by `-DTEST_LEVELS` + the
+  ONLY these** (`scenes_content_test.c` bank 4 / `actors_content_test.c`
+  bank 9, `--bank 4 --actors-bank 9 --chest-in-scenes`), selected at
+  compile time by `-DTEST_LEVELS` + the
   `TEST_*` scene ids (fixed block at 240+, never moves).  Scenarios stage
   `scene: TEST_FIELD` etc.
 * **Tier 2 — working content** (`levels/`): everything the editor, the
@@ -2252,8 +2306,9 @@ mirror the `banked_copy` pattern:
   `banked_copy_init()` so it is resident under the harness too): it selects
   the bank, computes the runtime target `0x4000 | (addr & 0x3FFF)`, pushes
   the WRAM return address, and `jp`s to the target; the target's `ret` pops
-  back to WRAM, which restores home bank 1, `__current_bank`, and (unless
-  harness mode) `ei`.
+  back to WRAM, which restores home bank 1, records it in
+  `g_rom_bank_live`, and unconditionally `ei`s (safe under the harness:
+  `IE` is clear there since CRT0 is skipped, so it is a no-op).
 
 First user: `src/battle/combo.c` (`combo_evaluate` wrapper) →
 `src/battle/combo_content.c` (`combo_evaluate_banked`, bank 2).  This
@@ -2283,10 +2338,15 @@ name row; HP moved here when the name row was removed), `3-4` enemies
 (art/caret), `7` hero, `8` deck counter (`DECK:` +
 draw-pile count at columns 13-19, `battle_draw_deck_line`, drawn with the
 hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
-(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` `COMBO:`
-+ hand type (`PAIR`/`FLUSH`/`STRAIGHT` from `ui_combo_hand_name`, ui.c;
-drawn with a full 20-col row clear -- the combo draw owns the row the
-old blank band above the hand occupied), `11-14`
+(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` pending
+combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
+classifier plus the resolve-mirror damage, no `COMBO:` label; with no poker
+tier the row still shows the inflicted face value as bare `DMG<n>`, blank
+only when nothing effective is staged; during a telegraphed enemy strike
+the row splits into a forecast -- `DMG <n>` red on the left (incoming)
+plus `DEF <m>` green right-aligned (current staged block, 0 while none
+staged), no `ENEMY` prefix; drawn with a full 20-col row clear -- the combo
+draw owns the row the old blank band above the hand occupied), `11-14`
 boxed hand cards (`cards_row`=14 is the BOTTOM
 row; each card is a 3-wide x `box_h`-tall frame from the compiled
 `card_frame_tiles` at VRAM `UI_TILE_CARD_FRAME_BASE` 118, weapon icon on
@@ -2337,6 +2397,63 @@ row positions are layout-driven: label at (hero_label_row,
 hero_label_col), HP block at hero_hp_col (icon 2 cols left of "HP:"),
 DECK at deck_col (icon 1 left), AP at ap_col (icon 2 left).  VRAM BG
 tiles 117-127 are FULLY allocated (bar segments + card frames).
+
+### 52.11.3 No di/ei (or __critical) inside banked bodies (Oct 2026, reworked: music-clock stall fix)
+
+Holding `di` across a whole banked body stalls the 256 Hz music clock:
+the trampoline used to `di` at entry and `ei` only after the body
+returned, so every long body (scene loads, full redraws) masked timer
+interrupts for whole frames -- IF showed the timer bit pending while
+TIMA kept counting, `g_audio_ticks` froze for 3-11 frame clusters, and
+`make verify-music` failed its no-stalled-frames + fixed-clock-rate
+checks (~3.78 ticks/frame instead of ~4.28).
+
+The trampoline now runs bodies with interrupts ENABLED (`ei` after the
+bank select, `di` before the restore) and the 256 Hz timer ISR
+saves/restores the *live* bank via `g_rom_bank_live` (`src/core/
+banked.h`, assigned `1` by `main()` before `enable_interrupts()`)
+instead of blindly restoring home bank 1 -- so the ISR can fire
+mid-body and the body resumes on its own bank.  Only the two MBC5
+switch sequences themselves run under `di`.
+
+Consequences:
+
+* A `di` (or SDCC `__critical`, which emits `di`/`ei`) held inside a
+  banked body reintroduces music-clock stalls; an `ei` alone is
+  harmless (interrupts are already enabled) but pointless.  The lint
+  gate still rejects every bare interrupt op in `#pragma bank` files.
+* Every banked VRAM/CRAM access that can execute with the LCD on must
+  use `BANKED_VRAM_WRITE` / `BANKED_VRAM_READ` (`banked.h`: bounded Mode
+  wait + per-access `di`, microsecond window, LCD-off fast path).  The
+  ISR can otherwise eclipse the wait->access window and drop a write
+  into Mode 3 (or return 0xFF for a read).  This covers overlays AND
+  gate-crossing loads (`tiles_content` tilesets/CRAM/wipes, anim-cell
+  rebuilds): overworld->overworld transitions repaint with the LCD on
+  (curtain path skips `ui_lcd_off`), and those loads are one-shot --
+  a dropped byte corrupts the tile/ramp for the entire map stay, and a
+  misread cell never animates.  Bare/non-atomic forms remain only on
+  provably LCD-off paths (splash/logo boot art, battle-entry palettes,
+  title logo palette), where STAT is idle and the ISR cannot eclipse.
+* Historical instances (pre-rework, when the trampoline held `di` and
+  the ISR restored home bank 1): the dialogue-box paper-attr loop
+  gained per-byte `di`/`wait`/`ei` and flaked ~1-in-6 dialogue entries
+  (the admitted ISR misrouted the body onto bank 1); per-cell `di`/`ei`
+  in the anim walk and the battle helper froze PyBoy outright, which is
+  why those paths stayed `di`-free and battle accepted the ISR-eclipse
+  race until this rework.  Same masking note as ever: the SameBoy/mGBA
+  harness stays green regardless (IE is clear there, so `ei` is a no-op
+  -- 52.15 family).
+
+Rules:
+
+* Banked LCD-on VRAM/CRAM data writes use `BANKED_VRAM_WRITE`, never
+  hand-rolled `di`/`wait`/`ei` (lint forbids the latter anyway).
+  Fixed-bank `di`/`ei` (`ui_vram_sync_write`) stays safe: home bank is
+  always mapped.
+* `make lint` fails loudly on any bare `di`/`ei` asm instruction inside a
+  file containing `#pragma bank` (no grandfathered violations).
+* Banked render paths must be validated under real timing
+  (`make verify-walkthrough`); the harness cannot catch this class.
 
 ## 52.12 Scenario state ordering
 
@@ -2434,6 +2551,12 @@ loop order instead: `game_render()` runs before `vsync()`, so from a
 run checks that arm their own breakpoints in separate sessions (one per
 section) to avoid cross-pauses.
 
+`frame` advances the VBlank phase but does NOT reliably advance gameplay:
+from a step-paused state 40 `frame`s produced zero guest movement (held
+input never consumed) while `step()` crossed the gate in ~8 (§52.26).
+Drive input with `step()`/`hold()` (frame-accurate via the `game_render`
+breakpoint); reserve raw `frame` for VBlank-phase reads (`wait_vblank`).
+
 ## 52.18 Fixed-bank overflow presents as a mysterious "guest spin"
 
 The `_CODE`/`_HOME` fixed area sits hard against `0x8000` (§55.5).  When an
@@ -2450,8 +2573,10 @@ boundary; whether it hung flipped with unrelated code-size changes.
 Rules:
 
 * After ANY new fixed-bank code, run `make memmap` (it fails on violation)
-  AND grep the link step for `Possible overflow` — the build itself does not
-  fail on the warning.
+  AND check the link step for `Possible overflow` — the Makefile link
+  rules fail loudly on the warning (they delete the corrupt target via
+  `.DELETE_ON_ERROR`, so the next make re-links instead of reporting
+  "up to date").
 * Keep fat logic out of the fixed bank by structure, not by trimming: pure
   arithmetic (rolls, encodes) belongs in a bank-2 body behind one thin
   staging wrapper (see `src/game/loot_drop_banked.c` + `game_loot_drop()`),
@@ -2461,6 +2586,15 @@ Rules:
 * 8-bit `*` anywhere (including banked bodies) pulls the SDCC mult
   routines (`__mulsuchar` et al.) into fixed `_CODE` (~69 B); use shifts,
   repeated addition, or a running counter for small tile-math instead.
+* The debug build's fixed bank is tight (627 B headroom after the
+  scenario-load move-out, Oct 2026; release has ~4.9 KB): the next fixed-
+  bank addition in a debug build will likely need a move-out first --
+  every `b->field` access costs ~10 B under SDCC's 16-bit struct
+  addressing, so stage through banked bodies and WRAM globals instead.
+  Companion pressure: bank 3 is thin in both builds (~40 B debug /
+  ~600 B release after the counter forecast), while bank 5 has room
+  (~1.1 KB debug / ~0.6 KB release after the scenario-load move) --
+  prefer bank 5 for new banked bodies.
 
 ## 52.19 SDCC miscompile instances are LAYOUT-SENSITIVE (Aug 2026)
 
@@ -2491,8 +2625,9 @@ Rules:
   build there, run the three sentinel scenarios.
 * After ANY change to optimization flags, volatile qualifiers on shared
   globals/params, or banked-body placement, run the sentinels BEFORE
-  trusting the build: `patrol_slime_cross`, `patrol_enemy_bumps_player`,
-  `battle_multi_enemy_cycle_kill`, plus the full harness.
+  trusting the build (`make test-sentinels`: `patrol_slime_cross`,
+  `patrol_enemy_bumps_player`, `battle_multi_enemy_cycle_kill`), plus the
+  full harness.
 * mGBA watchpoints (`watch <addr>`; delete connect()'s breakpoints 1/2
   first, then arm) catch wild writers red-handed — state probes cannot
   distinguish "bad data" from "good data rendered wrong".
@@ -2559,6 +2694,172 @@ its internal VBK state selects at read time, while the renderer fetches
 per the LCDC.4 mode -- a memory dump and the rendered frame can
 legitimately disagree without either being wrong.  Never treat a PyBoy
 VRAM read as proof of BG visibility.
+
+## 52.23 Repurposing a tileset cell silently remaps every level that names it
+
+Sheet cells are addressed POSITIONALLY (`TILE_<SET>_<nn>` == sheet index)
+while levels reference tiles by NAME.  If new art takes over a cell whose
+old def is the level default ground (e.g. forest cell 39,
+`forest_plain_floor_1`), the merge tool keeps the positional constant and
+every floor rect in every level keeps compiling to the same index -- now
+rendering the NEW art.  Worse, if the new def is solid, the GENERATED
+`tile_walk.h` (rebuilt from the manifest on every build, gitignored so
+`git status` stays clean) flips that index to non-walkable and the whole
+map goes solid: movement, patrols and encounters die, while town maps
+(different tileset) keep working, which misdirects the diagnosis at
+`edge_walkable` / input / BSS layout for hours.
+
+Rules:
+
+* Never repurpose a cell whose def is referenced by levels (check
+  `grep -rl <tile_id> levels/ tools/scenarios/fixtures/levels/` and the
+  `default_walkable` fields) without migrating those references to a live
+  duplicate first.  The migration is mechanical (`sed` across both trees;
+  keep the TEST fixtures in lockstep -- §42.1 notwithstanding, a renamed
+  ground tile is a deliberate fixture change).
+* After any tileset merge, regenerate and eyeball
+  `generated/tiles/tile_walk.h`: a default-ground index must stay
+  walkable; a new solid prop must own an index outside every kWalk range.
+* `scenes_content*.c` staying byte-identical across such a change is
+  EXPECTED (same positional constants) and proves nothing about runtime
+  behavior -- the walk table is the other half of the contract.
+
+## 52.24 Banked-call stack budget: deep frames smash globals (Sep 2026)
+
+Under the debug ROM the heap+stack gap (`0xE000 - s__BSS`, ~130-140 B)
+is the entire stack budget: SP starts at `0xE000` (set by `main`, also
+under the harness) and every nested banked call eats into it.  The
+battle combo chain (update -> trampoline -> the banked combo dispatch
+(48 B frame) -> classify (23 B) -> effect) once needed ~160 B: SP descended to
+`DF60` and pushes landed in input state (`injected_pad_state` =
+A+SELECT), so the next menu confirm ghost-fired -- `game_over_quit`
+went SAVE_LOAD instead of THANKS.  A 1 B WRAM layout shift chose the
+victim (base builds silently smashed probe bytes), so the suite was
+green until any `_INITIALIZER`/BSS change flipped it.  Caught with an
+mGBA write watchpoint (`watch ADDR` -- note the `w`-suffixed form
+never fires in this mGBA build; plain `watch` traps reads and writes,
+and the hit text distinguishes them: writes show `new value`).
+
+Rules:
+
+* Keep banked-body stack frames small by structure: reread inputs
+  through staging pointers/index maps instead of staging arrays, share
+  one classifier/tier ladder instead of duplicating it, keep scratch in
+  WRAM statics only when it does not just move the ceiling down with
+  the floor (stack->BSS moves are zero-sum for overflow margin).
+* `game_over_quit` is the canary for this family (long auto-battle +
+  menu confirm): it fails on any recurrence.  `make stack-budget` is the
+  machine guard (static worst-case ratchet over the debug call graph).
+  After ANY change to fixed-bank code size, WRAM globals, banked-body
+  placement, or battle stack frames, run the gate plus the sentinels
+  (§52.19) before trusting the build -- a green full harness is
+  required, not optional.
+* mGBA `break` at banked targets proved unreliable in this setup
+  (hits conflate banks); use `watch` + PC/reported-address
+  attribution for wild-write hunts, and distrust single-byte
+  tripwires (a 48 B `add sp` jump lands past them).
+
+## 52.25 Redraw skips go stale across domains (Oct 2026)
+
+`ui_draw_dialogue_line` skips VRAM writes whose `g_ui_screen_buf` char
+already matches (an LCD-on incremental-update optimization;
+`ui_put_char_ring` writes unconditionally).  The buffer is only a valid
+short-circuit when it holds
+the SAME domain the new text is compared against.  The dialogue box
+stamps over a live world redraw, so the buffer holds WORLD glyphs at
+stamp time: a tree trunk (glyph `t`, VRAM tile 157) under a text `t`
+skipped its write, leaving trunk art on screen while the buffer (and
+every harness assert reading it) claimed text.  Only pixels showed it
+(Carl's "fight", one cell; PyBoy `bg_text` decodes the art tile as
+`?`).
+
+Rules:
+
+* Any first stamp over a live world (or any cross-domain redraw) must
+  invalidate the covered buffer rows first (`ui_draw_dialogue` zeroes
+  rows 14-17; NUL never equals text, so the whole stamp writes, and
+  later same-domain page turns keep their sound skips).  Menus are
+  safe by structure (`menu_draw_frame` clears first); audit any new
+  world-overlay path for the same hazard.
+* Harness text asserts are blind to this class (RAM truth vs VRAM lie,
+  same family as §52.15): gate overlay text with a real-VRAM read --
+  the walkthrough's exact-row `bg_text` assert at a proven-colliding
+  position (`08-carl-tutor` row 16) is the canary, negative-tested
+  (pre-fix it decodes `?`).
+* Same for battle HUD rows: the combo row (row 10) clear loop wiped VRAM
+  without invalidating the buffer, so staging a shield blanked VRAM while
+  the buffer stayed truthful (Oct 2026: user saw only the DEF digit, all
+  buffer asserts green).  The row now invalidates its buffer cells in the
+  clear loop, and `vram_row` (real-VRAM `0x9800` read, tile+32 decode)
+  gates it in `defend_warn_block` -- negative-tested (pre-fix VRAM reads
+  just `3`).
+
+## 52.26 mGBA window-address breakpoints stick and conflate (Oct 2026)
+
+mGBA matches breakpoints against the raw CPU PC with no bank awareness,
+and it cannot resume past a halt in the switchable window
+(`0x4000-0x7FFF`):
+
+* A `break` at a banked target's window address also fires when
+  fixed-bank `_HOME` code (or any other bank) executes at the same CPU
+  address. Instance: the OAM gate-after-dialogue check broke at the
+  bank-5 wipe body (`0x642E`) and halted 9 bytes into fixed-bank
+  `ui_invalidate_tileset` with live OAM -- a fixed-bank size change had
+  parked it exactly on the wipe address, failing the check with
+  plausible-but-wrong state. Proven by reading the halted bytes and
+  matching them against the ROM file (fixed bytes, not bank-5 bytes).
+* Worse, `c`/`frame` issued from such a halt re-trap instantly (DIV
+  advances ~10 ticks per command, the player never moves): the poll loop
+  can never reach the real target, so byte-verifying the halt is not
+  enough -- the loop must never halt there at all.
+
+Rules:
+
+* Never assert on state read at a window-address halt. Prove execution
+  with a WRAM execution counter instead (pattern: DEBUG-only
+  `g_debug_hide_count`, incremented by `ui_sprite_begin_transition()`,
+  reset via debugger write, delta asserted after frame-stepping) --
+  deterministic, layout-proof, race-proof.
+* Drive debugger sessions with `step()` (next + continue via the ROM0
+  `game_render` breakpoint), never raw `frame`: from a step-paused
+  state 40 `frame`s produced zero guest movement while `step()` crossed
+  the gate in ~8. Raw `frame` is only trustworthy where the suite
+  already proves it (VBlank-phase reads via `wait_vblank`).
+* A new execution check needs BOTH negative tests before it gates:
+  restore the bug it guards (counter stays 0 / grows -> FAIL) AND reach
+  the wrong screen (the steady-battle check once measured Carl's
+  dialogue instead of battle -- hide correctly skipped by the overlay
+  path -- so assert the screen first or the passage is vacuous).
+
+## 52.27 Custom CRT0 performs NO _INITIALIZER copy (Oct 2026)
+
+`src/crt0.s` `init` clears WRAM (`0xC000-0xDFFF`) and jumps to `_main`
+without ever copying the linker's `_INITIALIZER` table to `_DATA`.
+Every explicitly-initialized WRAM global therefore boots as ZERO:
+
+* `g_rng_state = 1` booted 0 -- the xorshift fixed point, so every
+  release-ROM "random" roll was constant (chuck-a-luck dice stuck at
+  [1,1,1], loot quality never varied, on-hit statuses always landed).
+* `g_loot_rng_state = 0x1234` booted 0 -- same degenerate stream.
+* `= 0` initializers are unaffected (zero is zero).
+
+The harness never caught it: it skips CRT0 and every scenario seeds
+explicitly (`scenario_begin` -> `rng_set_seed`), and battles/loot still
+complete deterministically. The old `loot.c` comment claiming "CRT0
+initializes" was the same wrong assumption -- corrected when found.
+
+Rules:
+
+* NEVER rely on a non-zero WRAM initializer. Either zero-init (BSS) +
+  explicit runtime init, or lazy-prime at first consumption (the
+  pattern: `game_frame_tick_banked` primes both RNG streams from DIV
+  when zero -- runs every frame in both builds, zero fixed-bank cost,
+  harness-immune because scenarios pre-seed nonzero).
+* The verbose symptom for this class: release-only constant "random"
+  behavior that the harness cannot reproduce (its explicit seeds mask
+  the zero boot state). Diagnose with a WRAM state dump across rolls
+  (PyBoy `memory[]` reads at the `.sym` addresses), not with more
+  scenarios.
 
 ---
 
@@ -2732,14 +3033,18 @@ lives in `GameState`.  Transient UI state (`game_over_choice`,
 reset on exit.  A screen must never become the home of gameplay state
 (quest progress, HP, etc.).
 
-The quick screen (`SCREEN_ITEM`) is a tabbed menu: CARDS (collection/deck
-management: paired rows whose membership glyph is the decked-copy count,
-A adds one copy and clears every copy once the card is fully decked, all
-through the real `deck_add_card`/`deck_remove_card`; SELECT opens a detailpage whose FILTER/SORT entry opens an inline picker) and QUEST (ongoing
-quests; SELECT shows a placeholder detail line).  START is the universal
+The quick screen (`SCREEN_ITEM`) is a tabbed menu: DECK (collection/deck
+management: one row per card (weapon icon, AP-cost digit, element-colored
+full name, decked-copy count), A adds one copy and clears every copy once
+the card is fully decked, all through the real `deck_add_card`/`deck_remove_card`;
+SELECT opens a detail page (rider, role, AP cost, power, uses, own/deck,
+sell); the FILTER/SORT row opens an inline picker), QUEST (ongoing quests;
+SELECT opens a detail page with giver, objective and progress), HERO
+(read-only hero/wallet summary) and GEM (owned gems; A toggles equip,
+at most 3 equipped at once -- owning alone unlocks nothing).  START is the universal
 open key (overworld and battle player-turn).  Inside, LEFT/RIGHT switches
 tabs, UP/DOWN moves the list, A confirms/toggles, B backs out (two-step on
-the CARDS list: first B jumps to the first card row, B again on the top row
+the DECK list: first B jumps to the first card row, B again on the top row
 closes), SELECT opens the detail submenu.  Rejections (`DECK FULL`) show a
 transient message cleared by a frame TTL, never a silent no-op.  On a loot
 card's detail page, A sells one copy while the player has engaged a buying
@@ -2888,7 +3193,8 @@ a location", per-quest hints, repeatable quests) are logged in
 Every quest/event/item/actor state transition must remain visible to the
 harness: `SCRIPT_TRIGGERED` (events), `VARIABLE_SET` (quest/variable state),
 `ITEM_ADDED`/`ITEM_REMOVED`, `CURRENCY_ADDED`/`CURRENCY_SPENT`,
-`ACTOR_STATE_CHANGE`, plus the semantic snapshot.  A content change that makes
+`ACTOR_STATE_CHANGE` (persistent lifecycle), `ACTOR_MOVED` (patrol steps),
+plus the semantic snapshot.  A content change that makes
 a gameplay outcome invisible to `make test-harness` is incomplete.
 
 ## 55.5 Memory budget
@@ -2898,6 +3204,16 @@ The non-bankable `_HOME` area must stay below `0x8000` (CPU addresses
 `0x8000+` alias VRAM).  Keep `_CODE` (fixed bank) as small as practical and
 track the budget in the roadmap; every substantial feature should be checked
 against `make memmap`.
+
+The ROM is 256 KB / 16 banks (Makefile `-Wl-yo16`, MBC5 0x1B).  Banks 8-15
+are free for new banked content: the MBC5 low bank byte at `0x2000` addresses
+them with the high byte at `0x3000` still 0, so the existing trampolines
+(`crt0.s`, `src/core/banked.c`) reach them with no assembly change.  Banks
+16+ would need the high-bit register and are out of scope.  Placement rules
+for new banks: code that reads banked tables directly must share the tables'
+bank (§52.11.1); prefer data-driven placement (compiler-emitted sections)
+over hand-split files; the fixed bank can never grow, so it is not a spill
+target for anything.
 
 ## 55.6 VRAM / palette ownership across screens
 
@@ -2909,6 +3225,40 @@ Likewise `ui_lcd_off()` wipes every CGB tile attribute to palette 0, so any
 screen drawn over the live world (dialogue) must redraw the world (tilemap
 + attribute spans), not just stamp its own box.  `make verify-oam`
 executes both regressions (battle VRAM restore, dialogue palette restore).
+
+## 55.7 Chests are OAM sprites, floor stays floor
+
+Chests (and similar openable pickups like the forest amulet) render as
+OAM sprites, never background tiles: the level paints plain ground on
+the cell and the actor is a `SPRITE_KIND_CHEST` interactable on it
+(solid via the actor's `BLOCKING` flag, not via tile walkability).
+Closed/open art lives in the shared overworld blob as consecutive
+frames owned by `screens/enemy_types/treasure_chest.json`
+(`chest_closed` then `chest_open`, sprites5 ramp); the banked sprite
+body picks the frame from loot state at render time.
+
+Loot/state variants are data, not engine branches: each openable
+object carries `open_flag` / `open_variable` props (the retired
+`open_tile` floor-paint prop is rejected by validate.py), compiled into
+the banked `chest_is_open_banked()` resolver (a new chest = new JSON
+props, never an engine change).  The opened chest stays open because
+the flag/variable persists -- no floor stamp on open, no re-stamp on
+revisit, no render branch and no engine struct growth.  Chests get
+`oam_tile` scenario asserts (closed pre-loot, open post-loot) plus a
+`verify-oam` sprite check; the floor cell gets a plain-floor
+`tilemap_cell` assert proving the paint was never touched.
+
+Water bodies are ordinary solid terrain, not sprites: the forest and
+desolate sheets carry full water tile sets (borders, interiors, two
+animation frames) in 64-slot VRAM blocks.  Sheet cells are addressed
+positionally (see §52.23): repurposing a cell that levels reference --
+as water did to forest/desolate indices 41-47, flipping default ground
+to solid -- requires migrating every reference (terrain blocks,
+fixtures, scene defaults, `default_walkable`) and eyeballing the
+regenerated `tile_walk.h`, because the compiled content stays
+byte-identical while the walk table flips.  `validate.py` fails loudly
+if a scene's default ground tile is not walkable, so this class can no
+longer land silently.
 
 ---
 
@@ -2965,7 +3315,7 @@ the commit/PR without booting anything.
     visible tilemap through SCX/SCY; the font lives at tile base 0, so
     cells read directly as ASCII): guard dialogue by the `GUARD:` speaker
     tag, shop/save menu by their row-0 titles, the quick screen by the
-    `CARDS QUEST` tab labels, the filter/sort picker by its
+    `DECK QUEST` tab labels, the filter/sort picker by its
     `LR CYCLE  A:OK B:NO` footer.  Pixel heuristics are NOT usable here:
     an earlier LCDC-bit-5 check was vacuous (nothing in the ROM ever sets
     bit 5), and a dark-pixel caret scan false-positived on terrain glyphs,
@@ -2974,7 +3324,7 @@ the commit/PR without booting anything.
     substrings — always use `any("X" in r ...)` / `all("X" not in r ...)`;
     a bare `in` made a close condition fire instantly and poisoned the run.
   * the quick screen's active tab is verified by the `^` caret column read
-    from BG text row 3 (column 0 = CARDS, 6 = QUEST) and `RIGHT` is repeated
+    from BG text row 3 (column 0 = DECK, 5 = QUEST) and `RIGHT` is repeated
     until the target caret appears.
 * Frames are saved with PyBoy's `screen.image` (headless framebuffer render);
   each save prints the first non-blank `bg_text` row so a mislabeled frame
@@ -2982,31 +3332,39 @@ the commit/PR without booting anything.
 * Five fresh sessions are used: Walk A (overworld → Town → dialogue → shop →
   quick screen), Walk B (slime battle on the Field), Walk C (Forest gate),
   Walk D (title-menu + tutorial slides), and Walk E (castle mimic battle:
-  FIELD → south → SOUTH_FIELD → south → MOUNTAIN_PASS → north → CASTLE
-  ENTRY → north → GREAT HALL → north → CASTLE, then into the mimic; the
+  FIELD → tunnel → FOREST → tunnel → GRASSY FOREST → north → DESOLATE
+  FIELD → tunnel → SOUTH RIDGE → tunnel → SOUTH FIELD → north → CASTLE
+  ENTRY → north → GREAT HALL → tunnel → CASTLE, then into the mimic; the
   planner routes through the expanded castle chain and all corridor
   columns avoid patrol boxes), so persistent state never bleeds
   between milestones.  Walk D stops at the boot title screen (START → menu,
   DOWN to the TUTORIAL entry, A, then RIGHT through the seven slides); it never
   enters the game.
 * Determinism is verified: the walk's position/caret/text checks make the
-  24 frames byte-identical across repeated runs.
+  29 frames byte-identical across repeated runs.
 
 ## 56.3 Milestones
 
 ```text
-00-boot-field        overworld at spawn with the HUD
+00-boot-grove        WAKE GROVE at spawn with the HUD (hero wakes)
+00-stairs-refusal    staircase refusal dialogue ("back down there")
 01-field-scrolled    FIELD with the camera scrolled (SCX > 0)
 02-town-arrived      TOWN just inside the east gate (camera at origin)
+02-mayor-mark        mayor with the quest "?" overhead (pre-dialogue)
 03-guard-dialogue    dialogue box over the scrolled town (camera offset)
 04-dialogue-next     second dialogue line
 05-shop              shopkeeper shop screen
-06-cards-menu        START quick screen (CARDS tab)
+06-cards-menu        START quick screen (DECK tab)
 07-filter-picker     filter/sort picker over the card list
 08-quests-tab        QUEST tab
-09-battle            slime encounter (battle screen)
+08-carl-field        overworld beside Carl (single field slime)
+08-carl-mark         Carl with the quest "?" overhead (pre-lesson)
+08-carl-tutor        Carl's lesson dialogue (name + warning)
+09-battle            Carl spar opens (select hints on rows 5/9)
 10-battle-attack     after a player attack (damage dealt)
-11-battle-victory    VICTORY result over the slime trio (loot gold asserted)
+10-battle-defend     Carl's telegraph + defend hints
+11-battle-victory    VICTORY result over the solo spar (loot gold asserted)
+11-victory-speech    Carl's good-luck speech (AP 2 -> 3)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)
 12-wizard-save       save menu at the wizard
 13-wizard-saved      after saving to Slot 1
@@ -3017,7 +3375,7 @@ the commit/PR without booting anything.
 17-tutorial-slide1   CARD TYPES
 18-tutorial-slide2   CARD TYPES 2
 19-tutorial-slide3   COMBOS
-20-tutorial-slide4   ENERGY & COMBAT (6/turn)
+20-tutorial-slide4   ENERGY & COMBAT (2/turn)
 21-tutorial-slide5   DEFEND & STATUS
 22-tutorial-slide6   SHIELD CARD
 ```

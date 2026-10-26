@@ -1,0 +1,84 @@
+{
+  "name": "gem_no_grant",
+  "test": true,
+  "description": "Below the prize bar: leaving a sitting down gold (20 -> 19 loss, seed 12345 dice 2/6/3) opens the ordinary farewell with no gem owned.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "DIALOGUE"
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "KOBOLD_FAREWELL"
+    },
+    {
+      "type": "variable",
+      "variable": "GEM_OWNED",
+      "expected": 0
+    },
+    {
+      "type": "currency",
+      "expected": 19,
+      "currency": "GOLD"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_GAMBLE",
+    "player": {
+      "x": 4,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "seed": 12345
+  }
+}

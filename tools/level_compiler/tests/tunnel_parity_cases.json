@@ -1,0 +1,76 @@
+{
+  "_comment": "Shared parity corpus for Python tunnel_report() (tools/level_compiler/collision.py) and TS tunnelStatus() (tools/level_editor/vite.config.ts). Both must agree on `ok` per case; each side matches its own error fragment. Run: python3 tools/level_compiler/tests/test_tunnel_parity.py && node tools/level_editor/tests/tunnel_parity.mjs",
+  "cases": [
+    {
+      "name": "healthy",
+      "tunnel": "tunnel_a_b",
+      "ok": true,
+      "py_fragment": null,
+      "ts_fragment": null,
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_a_b"}]},
+        "b": {"exits": [{"x": 5, "y": 6, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_a_b"}]}
+      }
+    },
+    {
+      "name": "one_end",
+      "tunnel": "tunnel_lonely",
+      "ok": false,
+      "py_fragment": "only one end",
+      "ts_fragment": "only one end",
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_lonely"}]},
+        "b": {"exits": []}
+      }
+    },
+    {
+      "name": "three_ends",
+      "tunnel": "tunnel_trio",
+      "ok": false,
+      "py_fragment": "exactly two mouths",
+      "ts_fragment": "exactly two mouths",
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_trio"}]},
+        "b": {"exits": [{"x": 5, "y": 6, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_trio"}]},
+        "c": {"exits": [{"x": 3, "y": 3, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_trio"}]}
+      }
+    },
+    {
+      "name": "same_level",
+      "tunnel": "tunnel_inner",
+      "ok": false,
+      "py_fragment": "different levels",
+      "ts_fragment": "different levels",
+      "levels": {
+        "a": {"exits": [
+          {"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_inner"},
+          {"x": 3, "y": 4, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_inner"}
+        ]},
+        "b": {"exits": []}
+      }
+    },
+    {
+      "name": "non_mutual",
+      "tunnel": "tunnel_crossed",
+      "ok": false,
+      "py_fragment": "not mutual",
+      "ts_fragment": "not mutual",
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_crossed"}]},
+        "b": {"exits": [{"x": 5, "y": 6, "target_scene": "c", "target_x": 7, "target_y": 8, "tunnel": "tunnel_crossed"}]},
+        "c": {"exits": []}
+      }
+    },
+    {
+      "name": "drifted_landing",
+      "tunnel": "tunnel_drift",
+      "ok": false,
+      "py_fragment": "spawn-tracks-gate",
+      "ts_fragment": "drifted",
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 9, "target_y": 9, "tunnel": "tunnel_drift"}]},
+        "b": {"exits": [{"x": 5, "y": 6, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_drift"}]}
+      }
+    }
+  ]
+}

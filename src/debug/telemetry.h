@@ -152,12 +152,15 @@ typedef enum {
     EVENT_VARIABLE_SET,
     EVENT_CARD_ADDED_TO_DECK,
     EVENT_CARD_REMOVED_FROM_DECK,
+    /* Persistent lifecycle (state.c game_world_set_actor_state):
+     * d0 = ActorId lo, d1 = ActorId hi, d2 = ActorStateId, d3 = 0.
+     * Patrol movement uses EVENT_ACTOR_MOVED (different schema). */
     EVENT_ACTOR_STATE_CHANGE,
     EVENT_SCRIPT_TRIGGERED,
     /* d0 = HP restored; d1 = cause: 0 = heal card, 1 = ring resolving
      * with an offense hand (docs/loot.md §34.3), 2 = defense net
      * over-block WITH a ring (healing shield) in the defense combo
-     * (docs/loot.md §34.4). */
+     * (docs/loot.md §34.4), 3 = NPC full restore (Heal Mage event). */
     EVENT_HEALED,
     EVENT_ITEM_USED,
     EVENT_ITEM_USE_FAILED,
@@ -178,7 +181,7 @@ typedef enum {
     EVENT_DECK_RESHUFFLED,
     /* Append-only: these byte values are a wire contract with
      * tools/emulator.py EVENT_TYPE_MAP (AGENTS.md §53.4). */
-    EVENT_COMBO_RESOLVED,   /* d0=multiplier d1=eff_count d2=flags(straight|suited<<1) d3=phase */
+    EVENT_COMBO_RESOLVED,   /* d0=tier d1=eff_count d2=suited d3=phase */
     EVENT_EFFECT_RESOLVED,  /* d0=amount d1=effect type d2=phase d3=target slot */
     /* Phase C statuses (docs/combo-system.md §12-§19). */
     EVENT_STATUS_APPLIED,   /* d0=status id d1=stacks d2=duration */
@@ -202,7 +205,15 @@ typedef enum {
     EVENT_CARDS_GREYED,
     /* Cleared after POISON_GREY_TURNS: d0 = actor slot, d1/d2 = the
      * previously-greyed pool positions. */
-    EVENT_CARDS_UNGREYED
+    EVENT_CARDS_UNGREYED,
+    /* Patrol step commit (world.c): d0 = EntityId, d1 = x, d2 = y,
+     * d3 = facing.  Split out of EVENT_ACTOR_STATE_CHANGE, which carries
+     * a different schema (actor_id_lo/hi + lifecycle state) — one event
+     * id must mean one payload shape. */
+    EVENT_ACTOR_MOVED,
+    /* Dialogue YES/NO answer (dialogue_screen.c): d0 = DialogueId,
+     * d1 = choice index (0 = YES, 1 = NO), d2/d3 = 0. */
+    EVENT_DIALOGUE_CHOICE,
 } GameEventType;
 
 typedef struct {
@@ -219,10 +230,24 @@ extern GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
 extern uint8_t g_telemetry_count;
 extern uint8_t g_telemetry_head;
 
+#ifdef DEBUG_BUILD
+
 void telemetry_init(void);
 void telemetry_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3);
 void telemetry_set_frame_ptr(const uint32_t *frame_ptr);
 void debug_snapshot(void);
+
+#else /* release ROM: telemetry is debug-only (no ring buffer, no per-event
+ * CPU).  Calls compile out entirely; the one call site with a
+ * side-effecting argument (world_on_battle_end's LOOT_CARD_ADDED count)
+ * is #ifdef'd at the site, so no gameplay behavior changes. */
+
+#define telemetry_init() ((void)0)
+#define telemetry_emit(type, d0, d1, d2, d3) ((void)0)
+#define telemetry_set_frame_ptr(frame_ptr) ((void)0)
+#define debug_snapshot() ((void)0)
+
+#endif /* DEBUG_BUILD */
 /* Bank-2 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
 void debug_snapshot_banked(void);
 void debug_state_snapshot(void);

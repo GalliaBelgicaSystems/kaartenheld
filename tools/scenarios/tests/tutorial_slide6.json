@@ -1,8 +1,7 @@
 {
  "name": "tutorial_slide6",
  "test": true,
- "description": "RIGHT navigation reaches the SHIELD CARD slide (slide 6, the 7th) and its text teaches the real shield mechanics: a shield in offense deals 0 damage but still counts toward the poker hand. Regression: slide 5 also drops FREEZE so slide 6 stays reachable at the 7-slide RIGHT boundary.",
- "scenario_id": "TITLE_BOOT",
+ "description": "RIGHT navigation reaches the SPARE SHIELDS slide (slide 6, the 7th) and its text teaches the real shield mechanics: a shield in offense deals 0 damage but still counts toward the poker hand. Regression: the 7-slide RIGHT boundary still lands here.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -111,16 +110,16 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "SHIELD CARD"
+   "contains": "SPARE SHIELDS"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "0 dmg"
+   "contains": "0 damage"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 7,
    "contains": "combos"
   },
   {

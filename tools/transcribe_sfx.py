@@ -23,7 +23,7 @@ channels, infinite envelopes) is a loud error, never a guess.
 Driver references (lib/hUGEDriver/src/hUGEDriver.asm): note path ~1440,
 do_table ~570, do_effect ~648, arp ~1065, CH4 load ~1644, tick_time ~1805.
 
-Output: generated/sfx/sfx_tables.c (#pragma bank 7): per SFX one tone
+Output: generated/sfx/sfx_tables.c (#pragma bank 8): per SFX one tone
 array and one noise array of (tick, register image) steps at 64 Hz
 dosound-tick resolution, plus lengths. Durations are the scored ones
 (envelope decay to silence, verbatim).
@@ -52,13 +52,14 @@ sys.path.insert(0, str(SCRIPT_DIR))
 LAST_NOTE = 90
 NO_NOTE = 90
 TICKS_MAX_DOSOUND = 512  # uint8 table cursor is dosound ticks; sanity cap
-# Tables live in bank 7 with the stepper (bank 6 holds driver + songs and
-# is full); only the 7 voice-presence bytes live in the fixed bank.
+# Tables live in bank 8 with the stepper (banks 6/7 hold drivers + songs
+# and are full); only the 7 voice-presence bytes live in the fixed bank.
 # Includes the SfxEntry row per SFX (~7B).
 SFX_BANK_BUDGET = 3072
 
 # SFX id order must match the SFX_* enum in src/audio/audio.h
-SFX_IDS = ["CURSOR", "CONFIRM", "SELECT", "BACK", "ATTACK", "HIT", "BLOCK"]
+SFX_IDS = ["CURSOR", "CONFIRM", "SELECT", "BACK", "ATTACK", "HIT", "BLOCK",
+           "ALERT", "WIN", "HURT", "HEAL"]
 # Which .uge voices each SFX id is DATA, not code: screens/sfx.json maps
 # each fixed SFX id to a .uge path (assets/sfx/* or assets/music/*).  The
 # editor's Sound view edits that registry; this tool reads it so the two
@@ -224,6 +225,9 @@ class Voice:
         self.step_width = 0
         self.go = 0x80
         self.events = []
+        # note-cut ticks (driver fx E): trim_voice clamps the table end
+        # at the first cut after the last audible tick
+        self.cut_ticks = []
         # length-timer state (NRx1 writes reload it; runs at 256 Hz)
         self.len_n = 0
         self.len_enable = False
@@ -379,6 +383,18 @@ class Emu:
         voice.emit(tick, {"FREQ_LO": voice.period & 0xFF,
                           "FREQ_HI": ((voice.period >> 8) & 0x07)})
 
+    def apply_cut(self, tick):
+        """Note-cut event (driver note_cut, verbatim): zero the envelope
+        and retrigger with a zeroed envelope, which silences the voice.
+        Mirrors the driver register writes (NR22 <- 0, NR24 trigger);
+        the retrigger's length reload is inaudible on a silenced voice
+        and the length model (like the attack path) does not track it."""
+        v = self.tone
+        hi = v.regs.get("FREQ_HI", 0) & 0x07
+        v.emit(tick, {"NR22": 0, "FREQ_HI": hi | 0x80, "_trig": True},
+               force=True)
+        v.cut_ticks.append(tick)
+
     def sweep_step(self, tick):
         v = self.tone
         pace = (v.sweep >> 4) & 0x07
@@ -444,8 +460,11 @@ class Emu:
         # (arp), then play/trigger. Play runs last, so its length-enable
         # bit wins over an arp-cleared one.
         arp = fx == 0 and param != 0
-        if fx != 0:
+        if fx != 0 and fx != 0xE:
             raise TranscribeError(f"pattern effect {fx} unsupported")
+        # Note-cut (E) is a no-op on the row tick itself: the driver
+        # skips process_effects on tick zero, so an E row only acts on
+        # inner ticks (see pattern_tick).
         if note < LAST_NOTE:
             if instr == 0:
                 raise TranscribeError("note attack with no instrument")
@@ -484,6 +503,16 @@ class Emu:
         if fx == 0:
             if param != 0:
                 self.apply_arp(tick, param, is_noise=(ch != 0))
+        elif fx == 0xE:
+            # Note cut (driver fx_note_cut + note_cut, verbatim): fires
+            # when the row-relative tick equals the param.  Inner ticks
+            # only, so param 0 can never match (same as the driver, whose
+            # process_effects is skipped on tick zero).  Only the tone
+            # voice is observed; a cut on noise stays a loud error.
+            if ch != 0:
+                raise TranscribeError(f"pattern effect {fx} on noise unsupported")
+            if tick % self.tempo == param:
+                self.apply_cut(tick)
         else:
             raise TranscribeError(f"pattern effect {fx} on inner tick unsupported")
         self.table_step(tick, voice, tables, ch == 3)
@@ -526,17 +555,26 @@ def trim_voice(voice):
     if not audible:
         return [], 0
     last_tick, _ = audible[-1]
+    # A note-cut after the last audible tick silences the voice at its
+    # tick: it moots the infinite-envelope guard (an increasing envelope
+    # behind a cut is finite -- it ends at the cut).  Without this,
+    # increasing envelopes could never be cut.  The natural end still
+    # applies first: a cut AFTER the envelope already died must not
+    # lengthen the table (and delay the music unmute) for nothing.
+    post_cuts = [c for c in voice.cut_ticks if c > last_tick]
     vol, pace, direction, t0 = voice.env_at(last_tick)
-    if direction == 1:
-        raise TranscribeError("increasing envelope has no natural end")
-    if vol == 0:
-        tail = 0
-    elif pace == 0:
-        raise TranscribeError("constant-volume tail never ends; trim rule needed")
+    if direction == 1 or (direction == 0 and pace == 0 and vol != 0):
+        if not post_cuts:
+            if direction == 1:
+                raise TranscribeError("increasing envelope has no natural end")
+            raise TranscribeError("constant-volume tail never ends; trim rule needed")
+        natural_end = None  # unbounded: the cut ends it
+    elif vol == 0:
+        natural_end = last_tick
     else:
         # volume already decayed for (last_tick - t0) ticks since the write
-        tail = max(0, vol * pace - (last_tick - t0))
-    end = last_tick + tail
+        natural_end = last_tick + max(0, vol * pace - (last_tick - t0))
+    end = min([e for e in [natural_end] + post_cuts if e is not None])
     # the hardware length timer cuts sound even mid-decay; the engine
     # must unmute there, not at the envelope's natural end
     if voice.len_enable:
@@ -616,12 +654,12 @@ def emit_c(tables):
     out.append(" * the freq trajectory: no CH2 sweep register exists); score CH4")
     out.append(" * renders verbatim. SFX_SELECT shares the accept tables.")
     out.append(" */")
-    out.append("#pragma bank 7")
+    out.append("#pragma bank 8")
     out.append("")
     out.append("#include <stdint.h>")
     out.append("")
     out.append("/* Per-voice typed step arrays plus the SfxEntry table, all")
-    out.append(" * bank 7: the banked stepper (src/audio/sfx_step.c) reads them")
+    out.append(" * bank 8: the banked stepper (src/audio/sfx_step.c) reads them")
     out.append(" * in-bank, so fixed code never pays generic-pointer or")
     out.append(" * struct-multiply costs (AGENTS.md 52.18). Mask bits select")
     out.append(" * which regs the stepper writes (bit order = field order);")
@@ -664,7 +702,7 @@ def emit_c(tables):
 def emit_index(tables):
     """Fixed-bank voice-presence bytes only (7 bytes): the trigger mutes
     exactly the voices each SFX uses, with plain byte reads. Everything
-    else lives in bank 7 with the stepper."""
+    else lives in bank 8 with the stepper."""
     out = []
     out.append("/* Generated by tools/transcribe_sfx.py -- DO NOT EDIT DIRECTLY */")
     out.append("#include <stdint.h>")

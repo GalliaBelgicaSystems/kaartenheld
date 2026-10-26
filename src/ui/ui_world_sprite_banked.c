@@ -7,7 +7,49 @@
 #include "banked.h"
 #include "battle_data.h"
 #include "gfx/rpg_tile_lookup.h"
-#include "gfx/enemy_ow_tiles.h"
+#include "ap_tiles_generated.h"
+
+/* HUD marker state owned by the bank-8 tick (marks_banked.c, WRAM BSS):
+ * per-actor marks recomputed every frame. */
+extern uint8_t g_actor_marks[];
+extern uint8_t g_static_marks[];
+
+/* Fixed OAM entries for HUD markers (see ACTOR_MARK_* in actor.h):
+ * quest "?" / pursuer "!" above actors.  Fixed slots (never the running
+ * actor cursor) so markers never shift actor entries (verify-oam asserts
+ * absolute slots).  Slots 30-37 cover up to 8 markers; additional marked
+ * actors are skipped.  ui_sprite_begin_transition() hides the whole table
+ * on screen changes so markers never leak into battle. */
+#define MARK_OAM_BASE 30u
+#define MARK_OAM_LAST 37u
+
+/* Draw one HUD marker above (px, py) (actor top-left pixel, camera
+ * already subtracted) and advance the fixed slot.  Skips (without
+ * consuming a slot) when kind is NONE, slots are exhausted, or the
+ * marker would sit off-screen.  Stale slots are cleared by the
+ * hide-remainder loop at the end of the pass, so a disappearing marker
+ * never leaves a ghost sprite. */
+static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
+{
+    volatile uint8_t *e;
+    if (kind == ACTOR_MARK_NONE || *slot > MARK_OAM_LAST) return;
+    e = (volatile uint8_t *)(0xC000u + ((uint16_t)*slot << 2));
+    (*slot)++;
+    if (px >= 160 || py < 8 || py >= 144) {
+        e[0] = 0;
+        e[2] = 0;
+        return;
+    }
+    e[0] = (uint8_t)(py + 8); /* one cell above the head + OAM offset */
+    e[1] = (uint8_t)(px + 8);
+    if (kind == ACTOR_MARK_QUEST) {
+        e[2] = QUESTION_TILE;
+        e[3] = QUESTION_OBJ;
+    } else {
+        e[2] = EXCLAIM_TILE;
+        e[3] = EXCLAIM_OBJ;
+    }
+}
 
 /* ── Overworld actor sprites + castle boss background (bank-3 body) ──
  * The data-driven SPRITE_KIND_* OAM choice, the per-actor shadow-OAM write
@@ -21,17 +63,6 @@
 #ifdef DEBUG_BUILD
 extern uint8_t g_tilemap_mirror[32 * 32];
 #endif
-
-/* Bat OAM sprite tile data (2 frames), shared by the desolate and castle
- * tileset variants (identical pixel art).  Lives in bank 3 so the fixed
- * bank's _CODE does not carry 64 bytes of sprite data; ui_init() copies it
- * into WRAM via banked_copy and set_sprite_data()s both tile IDs. */
-const uint8_t s_bat_tiles[32] = {
-    0x00, 0x00, 0xA0, 0xA0, 0x4A, 0x4A, 0x04, 0x04,
-    0x00, 0x00, 0x28, 0x28, 0x10, 0x10, 0x00, 0x00,
-    0x00, 0x00, 0x0A, 0x0A, 0xA4, 0xA4, 0x40, 0x40,
-    0x00, 0x00, 0x00, 0x00, 0x28, 0x28, 0x10, 0x10
-};
 
 /* Shadow OAM WRAM base (GBDK's global `shadow_OAM` at 0xC000).  Each entry
  * is 4 bytes: y, x, tile, attr.  Written directly (WRAM is always mapped)
@@ -58,25 +89,27 @@ static uint8_t spr_axis_px(const WorldActorRuntime *a, uint8_t axis)
 }
 
 /* SPRITE_KIND_* -> OAM tile/prop.  Single source for both loops below.
- * Bats use the grey ramp (black bodies); kobolds and chests use the brown
- * wood palette (OBJ palette 2); the chest art is 1 frame in both anim
- * slots, so + anim stays uniform.  SPRITE_KIND_ENEMY reads the actor's
- * enemy-type row (same bank: direct read) for its shared OAM base,
- * frames, and palette; unknown rows fall back to the ASCII glyph. */
-static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual, uint8_t castle,
+ * Chests read the shared-blobs treasure-chest row (same bank: direct
+ * read): closed frame, or the open frame once chest_is_open_banked says
+ * the staged chest was looted.  The hostile loop never stages a chest
+ * (no hostile compiles to SPRITE_KIND_CHEST), so it shows closed.
+ * SPRITE_KIND_ENEMY reads the actor's enemy-type row (same bank: direct
+ * read) for its shared OAM base, frames, and palette; unknown rows fall
+ * back to the ASCII glyph. */
+static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
                                 uint8_t anim, uint8_t ow_type, uint8_t *prop)
 {
     switch (kind) {
-        case SPRITE_KIND_KOBOLD:
-            *prop = 2;
-            return (uint8_t)(KOBOLD_SPRITE_TILE_ID + anim);
-        case SPRITE_KIND_BAT:
-            *prop = 0;
-            return (uint8_t)((castle ? BAT_CASTLE_SPRITE_TILE_ID
-                                     : BAT_DESOLATE_SPRITE_TILE_ID) + anim);
         case SPRITE_KIND_CHEST:
-            *prop = 2;
-            return (uint8_t)(CHEST_SPRITE_TILE_ID + anim);
+            if (ow_type < g_enemy_type_count) {
+                const EnemyTypeDef *t = g_enemy_types[ow_type];
+                if (t->ow_tile != 0xFF) {
+                    *prop = t->ow_palette;
+                    return t->ow_tile;
+                }
+            }
+            *prop = 0;
+            return 0;
         case SPRITE_KIND_ENEMY:
             if (ow_type < g_enemy_type_count) {
                 const EnemyTypeDef *t = g_enemy_types[ow_type];
@@ -99,6 +132,7 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual, uint8_t castle,
             return (uint8_t)(ui_font_tile_base + (uint8_t)(visual - ' '));
     }
 }
+
 
 /* Compute the OAM tile/prop/position for every active non-boss actor (from
  * its SPRITE_KIND_* and sub-tile position) and write it straight into shadow
@@ -123,6 +157,7 @@ void ui_actors_sprites_banked(void)
     uint8_t slot;
     uint8_t i;
     uint8_t oam_slot = OAM_SLOT_ACTOR0;  /* running OAM entry cursor */
+    uint8_t mark_slot = MARK_OAM_BASE;   /* fixed HUD-marker entries */
 
     if (!w) return;
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
@@ -135,14 +170,21 @@ void ui_actors_sprites_banked(void)
 
         if (a->active) {
             tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
-                                   castle, anim, a->ow_type, &prop);
+                                   anim, a->ow_type, &prop);
         }
         /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
-         * frame-major: the frame offset is anim*cell_count. */
+         * frame-major: the frame offset is anim*cell_count.  Gated on
+         * active like sprite_tile_for above: the loader clears only the
+         * active flag, so an inactive slot keeps its previous map's kind
+         * and ow_type -- without this gate a stale multi-tile ENEMY kind
+         * resurrects its old sprite (visible boss ghost after restart)
+         * and the single-hide below only covers the first of its w*h
+         * entries. */
         gw = 1;
         gh = 1;
-        if ((int)a->sprite_kind == SPRITE_KIND_ENEMY &&
+        if (a->active &&
+            (int)a->sprite_kind == SPRITE_KIND_ENEMY &&
             a->ow_type < g_enemy_type_count) {
             const EnemyTypeDef *t = g_enemy_types[a->ow_type];
             if (t->ow_tile != 0xFF && (t->ow_w > 1 || t->ow_h > 1)) {
@@ -184,6 +226,8 @@ void ui_actors_sprites_banked(void)
                 }
                 /* w*h entries (no mult: w,h <= 2) */
                 oam_slot = (uint8_t)(oam_slot + (gh == 2 ? (gw == 2 ? 4 : 2) : gw));
+                /* HUD marker ("?" quest / "!" pursuer) above this actor. */
+                mark_draw(px, py, g_actor_marks[slot], &mark_slot);
                 continue;
             }
         }
@@ -201,7 +245,13 @@ void ui_actors_sprites_banked(void)
         uint8_t tile;
         uint8_t prop = 0;
         uint8_t px, py;
-        if (i >= g_static_actor_count) {
+        /* Clamped (see actor_find_at): a trashed count must neither
+         * render garbage rows as phantom sprites nor hide valid ones.
+         * Valid counts never exceed the cap (loader enforces it), so an
+         * over-cap count means corruption: hide everything rather than
+         * draw stale rows. */
+        if (g_static_actor_count > MAX_STATIC_ACTORS ||
+            i >= g_static_actor_count) {
             e[0] = 0;  /* no static here: hide any stale sprite */
             continue;
         }
@@ -213,7 +263,19 @@ void ui_actors_sprites_banked(void)
             continue;
         }
         tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                               castle, anim, d->ow_type, &prop);
+                               anim, d->ow_type, &prop);
+        if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
+            /* State-driven frame: the shared-blob closed tile, or the
+             * next tile (open frame) once the chest was looted.  The
+             * resolver reads the map from g_game (WRAM, always mapped);
+             * only the chest position stages through the banked-call
+             * globals (same bank: plain call). */
+            g_bk_byte_b = d->x;
+            g_bk_byte_c = d->y;
+            if (chest_is_open_banked()) {
+                tile = (uint8_t)(tile + 1);
+            }
+        }
         if (!tile) {
             e[0] = 0;
             continue;
@@ -225,9 +287,19 @@ void ui_actors_sprites_banked(void)
             e[1] = (uint8_t)(px + 8);
             e[2] = tile;
             e[3] = prop;
+            /* HUD marker ("?" quest / "!" pursuer) above this actor. */
+            mark_draw(px, py, g_static_marks[i], &mark_slot);
             continue;
         }
         e[0] = 0;  /* hidden */
+    }
+    /* Hide unused marker slots so a disappearing "?" / "!" never leaves
+     * a stale sprite from an earlier frame (mark_draw only consumes
+     * slots for live markers). */
+    while (mark_slot <= MARK_OAM_LAST) {
+        ((volatile uint8_t *)(0xC000u + ((uint16_t)mark_slot << 2)))[0] = 0;
+        ((volatile uint8_t *)(0xC000u + ((uint16_t)mark_slot << 2)))[2] = 0;
+        mark_slot++;
     }
     /* Castle boss is drawn directly into the background tilemap as a 2x2
      * block (castle tile indexes 7,8,16,17), not an OAM sprite. */

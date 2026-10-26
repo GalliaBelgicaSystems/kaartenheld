@@ -10,8 +10,8 @@
 
 const HudSkinDef g_hud_skin = {
     113, 1, /* hp icon + color */
-    114, 6, /* ap icon + color */
-    116, 2, /* deck icon + color */
+    114, 3, /* ap icon + color */
+    116, 3, /* deck icon + color */
     117, 127, /* bar segment tiles: filled, empty */
-    5, 17, 20 /* bar color, row, width */
+    0, 17, 20 /* bar color, row, width */
 };

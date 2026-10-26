@@ -2,7 +2,6 @@
  "name": "large_map_scroll",
  "test": true,
  "description": "Walk south on the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while the player moves to (2,16), proving the large-map data model works with a full-height viewport",
- "scenario_id": "LARGE_MAP_SCROLL",
  "actions": [
   {
    "type": "hold",

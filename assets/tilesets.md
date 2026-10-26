@@ -20,24 +20,40 @@ tools/level_editor/tilesets/<id>.json        (tile defs; SOURCE OF TRUTH
                                               overwrite hand fields)
     |  tools/compose_*.py  (packs curated PNGs into a ROM source sheet)
     v
-assets/<composed>.png
-    |  make gfx  (png2gb --tile-coords from a compiler --*-coords query)
+assets/<composed>.png --\
+    |                  +--> make manifest (palette_compiler: per-tile ramp
+    |                        shade maps in generated/tiles/shades/ + report)
+    |  make gfx  (png2gb --shade-map: shades resolve by exact ramp value,
+    |             never by luminance sort; no legacy mode remains)
     v
 src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
 ```
 
 ## Combat tileset (battle art)
 
-- Source: `assets/combat-tile.png` (128x32, 16 cols x 4 rows = 64 tiles)
+- Source: `assets/combat-tile.png` (128x40, 16 cols x 5 rows = 80 tiles)
   + `assets/combat-tileset-description.csv` (canonical tile names; rows
   cover icons/cards, slime, bat/boss, kobold/spider).
-- Curated: `tools/level_editor/public/tiles/combat/*.png` — hand-curated,
-  NOT produced by `make extract-tiles`. Enemy art is 32x32 (4x pixel art);
-  HUD/cards/icons are 8x8. Boss = 9 tiles (horns/head/torso rows).
+- Curated: `tools/level_editor/public/tiles/combat/*.png` (8x8) — DERIVED,
+  not hand-maintained: Boss cells reload via `make reload-boss-tiles`
+  (`tools/level_editor/reload_boss_tiles.py`), never by hand-editing the
+  PNGs. Boss = 9 live tiles (horns/head/torso rows) + 3 glow-eyes variants
+  (editor-only: 5 colors, over the 2bpp budget, excluded from the ROM
+  LAYOUT).
 - Editor defs: `tools/level_editor/tilesets/combat.json`.
 - Compose: `tools/compose_battle_sprites.py` LAYOUT (3 cols x N rows) ->
   `assets/battle_sprites.png`. Only names in the LAYOUT resolve to sheet
-  cells for the ROM.
+  cells for the ROM. The boss glow-eyes `_2` cells stay editor-only: the
+  glow is an OAM overlay over the BG stamp (the `glow` block in
+  `screens/combat_art/boss.json`: eye-cell mask + unlit/lit OBJ ramps),
+  reusing the stamp's tile ids and flipping sprite palettes on the battle
+  clock -- no sheet row, no extra VRAM. The overlay reuses stamp bytes,
+  so both glow ramps must match the set ramp everywhere except index 1
+  (`battle_compile.py` structural check); the eye cells are declared with
+  the unlit ramp in `palette_compiler.py` so the artist's exact pixels
+  stay silent in the palette report, and each `<base>_2` reference PNG
+  must equal its cell with red recoloured to orange only (shape check).
+  The palette report stays silent.
 - ROM: `src/gfx/battle_enemy_art.h` (only tiles referenced by a combat-art
   set are extracted, via `battle_compile.py --gfx-coords`; blob offsets in
   `battle_types.c`). Battle BG art, variable WxH per set (boss is 3x3).
@@ -46,27 +62,27 @@ src/gfx/*.h / *.inc  (linked into fixed or banked ROM code)
   flagged "not compiled to ROM"). The Inspector's per-object sprite
   pickers also list combat tiles (scoped `combat.*`).
 
-## Actors tileset (shared NPC/enemy art)
+## Actors tileset (shared NPC art)
 
-- Source: `assets/actor-sprites.png` + `assets/actor-tileset-description.csv`
-  (12x2 grid; yellow `(241,235,3)` chroma-keys to transparent on import).
-- Curated: `tools/level_editor/public/tiles/actors/*.png` (24 tiles) +
-  `tools/level_editor/tilesets/actors.json`, via `make extract-tiles`.
-- Crucially, `actor-sprites.png` is **never read by `make gfx`**. The
-  curated actors PNGs are editor previews and per-object sprite choices
-  (Inspector lists every tileset). To use actors art in a *compiled*
-  pipeline, copy the PNGs into the target sheet's curated directory:
-  - boss corners -> `public/tiles/enemies/boss_ow_*` (2x2 shared boss
-    overworld sprite),
-  - kobold/spider frames -> `public/tiles/enemies/kobold_*`,
-    `spider_*` (pickable enemy overworld art).
+- Curated: `tools/level_editor/public/tiles/actors/*.png` (8x8, real
+  transparency → chroma-key yellow on compose) +
+  `tools/level_editor/tilesets/actors.json`. No `make extract-tiles` entry
+  (`assets/actor-sprites.png` was removed; `assets/sprites.png` is the
+  canonical OW sheet). Boss cells (`actors_boss_*`, incl. the `_2` set)
+  reload via `make reload-boss-tiles`, never by hand.
+- NPC map art: `compose_npc_tiles.py` -> `assets/npc_tiles.png` (village
+  overlay slots; per-cell display-slot ramps, see palette_compiler).
 
 ## Enemies sheet (shared overworld enemy sprites) — the overworld picker
 
-Like combat art, these curated PNGs are hand-maintained (no
-`make extract-tiles` entry): `tools/level_editor/public/tiles/enemies/*.png`
+Like combat art, these curated PNGs have no `make extract-tiles` entry —
+but they are DERIVED, not hand-maintained:
+`tools/level_editor/public/tiles/enemies/*.png`
 (8x8, transparent background that maps to OAM shade 0) +
-`tools/level_editor/tilesets/enemies.json`.
+`tools/level_editor/tilesets/enemies.json`. Source: `assets/sprites.png` +
+`sprites-tileset-description.csv`; Boss cells (`boss_ow_*`, the slime-lord
+OW sprite) reload via `make reload-boss-tiles` (explicit alias map in the
+script: sheet slug `boss_top_left_corner` → `boss_ow_tl`, etc.).
 
 - Curated: `tools/level_editor/public/tiles/enemies/*.png` (8x8,
   transparent background that maps to OAM shade 0) +
@@ -89,16 +105,12 @@ Like combat art, these curated PNGs are hand-maintained (no
   enemy `overworld` JSON is `{ width, height, cells }` with `cells` a flat
   frame-major list of `width*height*frames` tile names.
 
-## Hero art (three separate paths — do not confuse)
+## Hero art (two paths — do not confuse)
 
 - Player sprite in-game: `hero_desolate_sprite_tile` (from
-  `assets/desolate_landscape.png` tile-coords `1,2 2,2`), loaded at OAM
-  tile 98 (`HERO_DESOLATE_SPRITE_TILE_ID`). This is what the player sees.
-- `public/tiles/hero/` + `tilesets/hero.json` + `compose_hero_sprites.py`
-  -> `assets/hero_sprites.png`: currently **no ROM consumer** (dead
-  artifact kept for editor previews). Do not add hero art here expecting
-  it in-game. Likewise `g_hero_ow_*` in `battle_types.c` is emitted but
-  unread by the ROM.
+  `assets/hero_sprites.png`, composed from `public/tiles/hero/`), loaded
+  at OAM and encoded with the hero's OBJ ramp (`screens/hero.json`
+  overworld.palette). This is what the player sees.
 - `screens/hero.json`: hero name/stats/starter-deck/overworld. The starter
   deck compiles to `src/game/hero_content.c` (`g_hero_starter_deck_ids`,
   bank 2); both `game_new_game` and the battle fallback read it.
@@ -106,14 +118,13 @@ Like combat art, these curated PNGs are hand-maintained (no
 ## World sheets (background terrain)
 
 - Sources: `assets/forest-tile.png`, `assets/castle-tile.png`,
-  `assets/village-tile.png`, `assets/desolate_landscape.png` (+ CSVs).
+  `assets/village-tile.png`, `assets/desolate-tile.png` (+ CSVs).
 - Curated via `make extract-tiles` -> `public/tiles/<id>/` +
-  `tilesets/<id>.json` (palettes via `palette_compiler.py`,
-  `generated/tiles/`; atlas registry via `tools/asset_atlas.py`).
-- ROM: `make gfx` `png2gb` direct-sheet rules (`rpg_*_world_tiles.inc`)
-  plus single-tile extracts (floor/tree/exit/stairs/chest).
-- `assets/desolate_landscape.png` triple duty: world sheet + reference
-  palette for enemy-sheet quantization + `hero_desolate_sprite_tile`.
+  `tilesets/<id>.json` (per-tile `"palette"` ramp tags; palettes via
+  `palette_compiler.py`, `generated/tiles/`).
+- ROM: `make gfx` `png2gb --shade-map` rules (`rpg_*_world_tiles.inc`)
+  plus single-tile extracts (floor/tree/exit/stumps). Castle encodes in
+  vram-index order (9-wide sheet vs 8-wide slots; see palette_compiler).
 
 ## Fonts, icons, audio, mockups
 
@@ -130,8 +141,8 @@ Like combat art, these curated PNGs are hand-maintained (no
   Rendered from the bank-2 `ui_splash_logo_render_banked` body with one CGB
   palette `[white, red, blue, black]` (the gray anti-aliasing folds into
   black).  LLM-only content: the editor has no splash screen.
-- `assets/equipment_8x8.png` + `assets/symbols_8x8.png` -> icon atlas
-  (`tools/asset_atlas.py`, 9px stride).
+- UI icons come from the combat sheet (`compose_card_frames.py` ->
+  `card_frame_tiles.h`); gold prices use the font glyph `G`.
 - `assets/music/*.uge` -> hUGETracker soundtrack, ROM bank 6.
   `assets/sfx/*.uge` -> transcribed SFX tables, ROM bank 7.
 - Reference/mockups only (never build inputs): `battle_screen_mockup.jpg`,

@@ -2,11 +2,10 @@
  "name": "shop_buy_insufficient_gold",
  "test": true,
  "description": "Buying without enough gold fails: nothing is purchased and the shop stays open",
- "scenario_id": "ACTOR_SHOPKEEPER",
  "actions": [
   {
    "type": "interact",
-   "actor": "SHOPKEEPER"
+   "actor": "MERCHANT"
   },
   {
    "type": "press",
@@ -29,7 +28,7 @@
   },
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "IRON_RING",
    "expected": 0
   },
   {
@@ -40,9 +39,9 @@
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
-   "x": 9,
-   "y": 4,
-   "facing": "UP"
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
   },
   "seed": 8102,
   "flags": {
@@ -50,6 +49,9 @@
   },
   "currency": {
    "GOLD": 5
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
   }
  }
 }

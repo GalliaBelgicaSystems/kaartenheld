@@ -1,0 +1,24 @@
+{
+  "name": "burn_tint_visible",
+  "test": true,
+  "description": "Burn visibility: the middle Mountain Pass slime carries BURN while alive, so its HP row (x=7..12, row 2) must carry the FIRE palette (1); the un-afflicted left slime HP row stays NONE (0). Locks the status-tint half of the burn-corpse report.",
+  "initial_state": {
+    "scene": "TEST_MOUNTAIN_PASS",
+    "player": { "x": 13, "y": 7, "facing": "RIGHT" },
+    "party": { "HERO": { "hp": 60, "max_hp": 60 } },
+    "seed": 5002
+  },
+  "actions": [
+    { "type": "press", "button": "RIGHT" },
+    { "type": "wait", "frames": 10 },
+    { "type": "apply_status", "slot": 2, "status": 2, "duration": 3 },
+    { "type": "wait", "frames": 30 }
+  ],
+  "assertions": [
+    { "type": "screen", "expected": "BATTLE" },
+    { "type": "event_occurred", "event": "STATUS_APPLIED" },
+    { "type": "tilemap_attr", "row": 2, "col": 7, "expected": 1 },
+    { "type": "tilemap_attr", "row": 2, "col": 8, "expected": 1 },
+    { "type": "tilemap_attr", "row": 2, "col": 0, "expected": 0 }
+  ]
+}

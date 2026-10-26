@@ -26,7 +26,8 @@ def _scene_id_maps():
     except (OSError, ValueError):
         scenes, base = {}, 240
     test_names = ["test_field", "test_town", "test_forest",
-                  "test_mountain_pass", "test_castle", "test_south_field"]
+                  "test_mountain_pass", "test_castle", "test_south_field",
+                  "test_gamble"]
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
@@ -40,15 +41,16 @@ TELEMETRY_EVENT_SIZE = 13
 GAME_STATE_MAP = {0: "OVERWORLD", 1: "BATTLE", 2: "GAME_OVER", 3: "THANKS"}
 SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "THANKS",
               5: "SHOP", 6: "ITEM", 7: "ENDING", 8: "SAVE_LOAD", 9: "TITLE", 10: "INTRO",
-              11: "TUTORIAL", 12: "SPLASH"}
+              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS", 14: "GAMBLE"}
 SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
-                   9: "DESOLATE", 10: "FOREST"}
+                   9: "DESOLATE", 10: "FOREST", 11: "CHEST", 12: "GAMEOVER",
+                   13: "ENDING", 14: "CASINO"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -115,7 +117,8 @@ EVENT_TYPE_MAP = {
     57: "TURN_SKIPPED", 58: "STATUS_RESISTED",
     59: "NEW_GAME_STARTED", 60: "GAME_CONTINUED", 61: "SOUND_TOGGLED",
     62: "TARGET_CHANGED",
-    63: "CARDS_GREYED", 64: "CARDS_UNGREYED"
+    63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
+    65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -128,7 +131,18 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 8: "BOSS_DEFEATED",
                 GAME_ID_BASE + 9: "MERCHANT_INTRO",
                 GAME_ID_BASE + 10: "MERCHANT_DELIVER",
-                GAME_ID_BASE + 11: "AMULET_PICKUP"}
+                GAME_ID_BASE + 11: "AMULET_PICKUP",
+                GAME_ID_BASE + 12: "TUTORIAL_COMPLETE",
+                GAME_ID_BASE + 13: "FIELD_CHEST",
+                GAME_ID_BASE + 14: "MERCHANT_REMINDER",
+                GAME_ID_BASE + 15: "KNIGHT_SPLIT",
+                GAME_ID_BASE + 16: "HEAL_MAGE",
+                GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
+                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 19: "MIMIC_REWARD",
+                GAME_ID_BASE + 20: "QUEST_NUDGE",
+                GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
+                GAME_ID_BASE + 22: "QUEST_EARLY_DONE"}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -139,13 +153,20 @@ ACTOR_INFO_MAP = {
     "SLIME":       {"visual": "E", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME"},
     "MAYOR":       {"visual": "M", "hostile": False, "interaction": "DIALOGUE", "dialogue": "MAYOR_GREETING", "battle": "NONE"},
     "GUARD":       {"visual": "G", "hostile": False, "interaction": "DIALOGUE", "dialogue": "GUARD_GREETING", "battle": "NONE"},
-    "SHOPKEEPER":  {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SHOPKEEPER_GREETING", "battle": "NONE"},
     "BAT":         {"visual": "V", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "BAT"},
     "SLIME_LORD":  {"visual": "L", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "NONE"},
     "MERCHANT":    {"visual": "C", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},
     "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
+    "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE_ASK", "battle": "NONE"},
+    "CARL":        {"visual": "C", "hostile": True, "interaction": "COMBAT", "dialogue": "TUTORIAL_CARL_INTRO", "battle": "CARL"},
+    "CHEST":       {"visual": "T", "hostile": False, "interaction": "NONE", "dialogue": "NONE", "battle": "NONE"},
+    "DOG":         {"visual": "?", "hostile": False, "interaction": "NONE", "dialogue": "DOG_GREETING", "battle": "NONE"},
+    "KOBOLD":      {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "KOBOLD"},
+    "MIMIC":       {"visual": "T", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "MIMIC"},
+    "SPIDER":      {"visual": "S", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SPIDER"},
+    "SLIME_KNIGHT": {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME_KNIGHT"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's
@@ -155,21 +176,6 @@ BUTTON_NAMES = ["RIGHT", "LEFT", "UP", "DOWN", "A", "B", "SELECT", "START"]
 BUTTON_MASKS = {
     "RIGHT": 0x01, "LEFT": 0x02, "UP": 0x04, "DOWN": 0x08,
     "A": 0x10, "B": 0x20, "SELECT": 0x40, "START": 0x80
-}
-
-SCENARIO_IDS = {
-    "NEW_GAME": 1, "FIRST_ENCOUNTER": 2, "TOWN_ARRIVAL": 3,
-    "TOWN_DEPARTURE": 4, "TOWN_REENTRY": 5, "MAYOR_ENCOUNTER": 6,
-    "MAYOR_DIALOGUE": 7, "MAYOR_DIALOGUE_MOVEMENT_BLOCKED": 8,
-    "GUARD_DIALOGUE": 9, "FONT_TEST": 10, "DIALOGUE_RENDER_TEST": 11,
-    "BATTLE_ATTACK": 12, "GUARD_INTERACTION_DISTANCE": 13, "GAME_OVER": 14,
-    "OVERWORLD_BOOT": 15, "DIALOGUE_BOOT": 16, "BATTLE_BOOT": 17,
-    "GAME_OVER_BOOT": 18, "THANKS_BOOT": 19, "FOREST_BOOT": 20,
-    "MOUNTAIN_PASS_BOOT": 21, "CASTLE_BOOT": 22, "TOWN_BOOT": 23,
-    "ACTOR_COLLISION_BLOCKING": 24, "ACTOR_SHOPKEEPER": 25, "ACTOR_BAT": 26,
-    "LARGE_MAP_SCROLL": 27, "FIELD_EAST_SCROLL": 28, "CAMERA_BOUNDARY_CLAMP": 29,
-    "SCROLL_RENDER_ALIGNMENT": 30, "START_SWALLOWS_MAP_COMMIT": 31,
-    "TITLE_BOOT": 32
 }
 
 # ── Declarative initial-state descriptor ─────────────────────────────
@@ -221,19 +227,26 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
-                   "MERCHANT_QUEST": 5}
+                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
+                   "GEM_OWNED": 7, "GEM_EQUIPPED": 8}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "WOOD_RING": 0x42, "FIRE_SWORD": 0x43,
+               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_9": 0x46}
+               "BOW_9": 0x46, "WOOD_SWORD": 0x47}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
-                "SPIDER_FIELD": 12,
+                "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
+# NOTE: SLIME_FIELD and CARL_FIELD intentionally share id 1. The test
+# fixtures use one persistent id per spawned hostile, and TEST_FIELD's
+# only hostile is Carl's tutor spar (the field slime lives in the south
+# map).  Forward lookup (name -> id) is unambiguous; the reverse map
+# below keeps the LAST name (CARL_FIELD).  Do not "fix" by renumbering:
+# scenario initial_state world blocks use both spellings.
 ACTOR_STATE_NAME_MAP = {"ALIVE": 0, "DEFEATED": 1}
 # Status IDs (mirrors src/rpg/status.h StatusId enum)
 STATUS_ID_MAP = {"NONE": 0, "POISON": 1, "BURN": 2, "FREEZE": 3}
@@ -488,6 +501,17 @@ class EmulatorSession:
     def _memwrite(self, addr, val):
         """Write single byte to GB memory address."""
         self._cmd(f'w/1 0x{addr:04X} 0x{val:02X}')
+
+    def write_mem(self, addr, val):
+        """Raw single-byte write (harness-only pokes, e.g. SRAM blobs).
+
+        SRAM (0xA000-0xBFFF) sits behind the MBC5 RAM gate: the ROM
+        closes it after every save/load, so open it first with 0x0A to
+        rRAMG (0x0000), otherwise the poke is silently ignored."""
+        addr &= 0xFFFF
+        if 0xA000 <= addr < 0xC000:
+            self._memwrite(0x0000, 0x0A)
+        self._memwrite(addr, val & 0xFF)
 
     def _set_pc(self, addr):
         """Set the CPU program counter."""
@@ -1075,6 +1099,53 @@ class EmulatorSession:
         addr = self.get_symbol("g_tilemap_attr_mirror")
         return [self._memread(addr + i) for i in range(32 * 32)]
 
+    def get_oam_entry(self, entry):
+        """Read one shadow-OAM entry (WRAM 0xC000, 4 bytes: y, x, tile, prop).
+        Used for OAM HUD assertions (battle top-right rider sprites); the
+        SameBoy harness cannot observe VBlank-timed rendering, but OAM entry
+        bytes are deterministic WRAM state (AGENTS.md 52.15: riders are set
+        by the bank-5 OAM pass, not by a VBlank-timed reveal)."""
+        base = 0xC000 + (entry & 0xFF) * 4
+        return tuple(self._memread(base + i) for i in range(4))
+
+    def ensure_vram_readable(self, max_frames=8):
+        """Halt-phase VRAM guard: VRAM is unreadable mid-scanout (mGBA
+        serves 0xFF while the PPU is in mode 2/3, and halting at a
+        breakpoint freezes the PPU wherever it was).  Check STAT first:
+        if already in HBlank/VBlank there is nothing to wait for and no
+        game time advances.  Otherwise step whole frames until an
+        accessible window, capped so a stuck phase can't spin the run.
+        Returns True when VRAM should be readable (best effort after
+        the cap -- callers compare against expected content anyway)."""
+        try:
+            stat = self._memread(0xFF41)
+        except Exception:
+            stat = None
+        if stat is not None and (stat & 0x03) <= 1:
+            return True
+        for _ in range(max_frames):
+            self._cmd("frame")
+            try:
+                stat = self._memread(0xFF41)
+            except Exception:
+                continue
+            if stat is not None and (stat & 0x03) <= 1:
+                return True
+        return False
+
+    def read_vram_block(self, addr, length):
+        """Read length raw VRAM bytes with NO sync of its own: call
+        ensure_vram_readable() first (one sync covers all blocks a
+        scenario needs, and it skips stepping entirely when the halt
+        already landed in an accessible window).  Returns a list of
+        ints (None for failed reads).  Forces the tile bank first (same
+        VBK=1 halt-phase hazard as get_screen_dump)."""
+        try:
+            self._memwrite(0xFF4F, 0)
+        except Exception:
+            pass
+        return [self._memread(addr + i) for i in range(length)]
+
     def get_sfx_state(self):
         """Read the SFX trigger log: (total count, last SFX id).
         Per-trigger SFX telemetry would flood the 32-entry gameplay ring
@@ -1086,6 +1157,77 @@ class EmulatorSession:
         hi = self._memread(count_addr + 1)
         count = (lo or 0) | ((hi or 0) << 8)
         return count, self._memread(last_addr)
+
+    # Stack high-water canary (AGENTS.md §52.24): the static stack-budget
+    # model cannot see ISR nesting or layout-sensitive codegen, so this
+    # measures the real thing.  The heap+stack gap (linker _DATA end ..
+    # 0xE000) is filled with a pattern after scenario load; after the
+    # scenario's actions the lowest overwritten byte marks the deepest
+    # stack reach.  Host-side only (zero ROM bytes): fill/read ride the
+    # debugger like every other harness read.  Only scenarios asserting
+    # stack_margin_min pay the memread cost (same opt-in pattern as the
+    # SFX log).
+    STACK_TOP = 0xE000
+    STACK_CANARY_BYTE = 0xAA
+
+    def _read_sp(self):
+        """Return the current SP as an int, or None.  Fails loudly via
+        None (callers raise) so a drifted register-dump format can never
+        pass as a clean bill of stack health."""
+        m = re.search(r'SP:\s*([0-9A-Fa-f]+)', self._read_registers())
+        return int(m.group(1), 16) if m else None
+
+    def _gap_start(self):
+        """First address past ALL WRAM globals (the heap+stack gap starts
+        here).  Uses the linker's s__HEAP marker -- not s__DATA+l__DATA,
+        which stops at _DATA end and would scribble the _INITIALIZED /
+        BSS globals living above it (input mask, telemetry, scenario
+        state: the ghost-input class).  Recomputed per session from the
+        ROM's own .sym so a WRAM layout shift moves the canary with the
+        gap instead of scribbling globals.  Caveat: file-scope statics
+        without initializers would land here too (BSS grows upward from
+        s__BSS); none exist in this build (l__BSS is 0 -- SDCC emits
+        even =0 statics with _INITIALIZER records), and if one ever
+        appears the canary scenarios fail loudly, which is the correct
+        response to stack-allocated overlap."""
+        return self.get_symbol("s__HEAP")
+
+    def stack_canary_fill(self):
+        """Fill the dead stack region with the canary pattern.  Returns
+        the (gap_start, sp) pair the readback needs.  Must run while the
+        guest is halted at a breakpoint (it is: the harness steps frames
+        that way).  Raises instead of scribbling live frames: an SP
+        already inside globals means the stack has smashed globals and
+        the scenario is broken beyond measuring."""
+        gap_start = self._gap_start()
+        sp = self._read_sp()
+        if sp is None:
+            raise RuntimeError("stack canary: cannot read SP from debugger")
+        if sp < gap_start or sp > self.STACK_TOP:
+            raise RuntimeError(
+                "stack canary: SP=%04X outside gap [%04X, %04X): "
+                "stack already smashed, refusing to fill" % (sp, gap_start, self.STACK_TOP))
+        for addr in range(gap_start, sp):
+            self._memwrite(addr, self.STACK_CANARY_BYTE)
+        return gap_start, sp
+
+    def stack_canary_read(self, gap_start, sp_fill):
+        """Return (depth, margin) in bytes.  depth = deepest stack reach
+        measured from STACK_TOP (0xE000); margin = untouched pattern
+        bytes remaining below it (gap room the run did NOT need).  A
+        WRAM shift that shrinks the gap trips margin even when depth is
+        unchanged -- that is the +23 B ghost-input class.  Raises on
+        unreadable bytes (guest crash reads as failure, never as health)."""
+        lowest = sp_fill
+        for addr in range(gap_start, sp_fill):
+            val = self._memread(addr)
+            if val is None:
+                raise RuntimeError(
+                    "stack canary: unreadable byte at %04X" % addr)
+            if val != self.STACK_CANARY_BYTE:
+                lowest = addr
+                break
+        return self.STACK_TOP - lowest, lowest - gap_start
 
     def get_screen_buf(self):
         """Read 18×20 characters from g_ui_screen_buf."""
@@ -1104,19 +1246,39 @@ class EmulatorSession:
 
     def get_screen_dump(self):
         """Read 20x18 VRAM background tilemap from 0x9800.
-        
-        Assumes GBDK font_ibm loaded at tile base 0 (identity tile-to-ASCII
-        mapping).  For custom fonts the tile-base offset from the font handle
-        would need to be subtracted first.
-        """
+
+        Text tiles decode as tile_id + 32 (ui_font_tile_base is 0, so
+        the PPU fetches ch - ' '; see battle_draw_text_line).  Non-text
+        tiles (art, icons) decode to whatever bytes they are; pass '.'.
+        The halt point of a frame-stepped session is scanout-phase
+        dependent: an ungated read mid-scanout returns 0xFF and looks
+        exactly like unwritten VRAM (the 52.25 blind spot -- buffer
+        truthful, VRAM read blank).  The CALLER must ensure readability
+        first (test_runner hoists one ensure_vram_readable() before the
+        snapshot, so state and VRAM share the same halt instead of the
+        dump stepping game time after the snapshot was taken).  No sync
+        of its own here on purpose: a dump must never advance frames.
+        VBK is forced to the tile bank first: the deterministic halt can
+        land mid palette-span (VBK=1) inside an HBlank window the
+        readability guard accepts, and an mGBA read then serves the
+        attribute bank instead of tiles.  Forcing tile-bank select makes
+        the dump immune to halt-phase alignment (any ROM cycle shift can
+        move the halt into or out of a span window).  Safe: nothing
+        advances game time after the dump before disconnect, so no span
+        can resume on the wrong bank."""
+        try:
+            self._memwrite(0xFF4F, 0)
+        except Exception:
+            pass
+
         rows = []
         for y in range(18):
             # VRAM tilemap stride is 32 tiles (20 visible + 12 off-screen)
             row_bytes = []
             for x in range(20):
                 b = self._memread(0x9800 + y * 32 + x)
-                if b is not None:
-                    row_bytes.append(chr(b) if 32 <= b <= 126 else '.')
+                if b is not None and 0 <= b <= 95:
+                    row_bytes.append(chr(b + 32))
                 else:
                     row_bytes.append('.')
             rows.append(''.join(row_bytes))
@@ -1164,7 +1326,7 @@ class EmulatorSession:
             }
             if ev_type_str in ("STORY_FLAG_SET", "STORY_FLAG_CLEARED"):
                 ev_obj["flag_name"] = STORY_FLAG_ID_MAP.get(data[0], f"FLAG_{data[0]}")
-            elif ev_type_str in ("DIALOGUE_STARTED", "DIALOGUE_NEXT", "DIALOGUE_ENDED"):
+            elif ev_type_str in ("DIALOGUE_STARTED", "DIALOGUE_NEXT", "DIALOGUE_ENDED", "DIALOGUE_CHOICE"):
                 ev_obj["dialogue_id_name"] = DIALOGUE_ID_MAP.get(data[0], f"UNKNOWN_{data[0]}")
             elif ev_type_str == "INTERACTION_ATTEMPT":
                 ev_obj["target_entity"] = ENTITY_ID_MAP.get(data[3], f"UNKNOWN_{data[3]}")

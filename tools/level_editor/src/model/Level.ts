@@ -9,6 +9,32 @@ export interface LevelExit {
   target_y: number;
   direction?: 'NORTH' | 'SOUTH' | 'EAST' | 'WEST' | string;
   tile_char?: string;
+  /** Two-way tunnel id linking this exit to exactly one return exit in
+   *  the target scene (same id on both mouths, mutual targets, each
+   *  landing on the other's gate). Absent = one-way exit. */
+  tunnel?: string;
+}
+
+/** Whole-edge map links (the "ocean"): stepping onto a non-wall cell of
+ *  a linked border crosses to the neighbor scene with a mirrored entry
+ *  spawn. Empty string = no link. A point exit on the same cell wins. */
+export interface LevelNeighbors {
+  north?: string;
+  south?: string;
+  east?: string;
+  west?: string;
+}
+
+export const NEIGHBOR_DIRS = ['north', 'south', 'east', 'west'] as const;
+
+export function normalizeNeighbors(raw: any): LevelNeighbors {
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const out: LevelNeighbors = {};
+  for (const d of NEIGHBOR_DIRS) {
+    const v = src[d];
+    out[d] = typeof v === 'string' ? v : '';
+  }
+  return out;
 }
 
 export interface LevelRegion {
@@ -90,6 +116,8 @@ export interface EditorLevel {
   terrainDirty: boolean;
   spawn: PlayerSpawn;
   exits: LevelExit[];
+  /** Whole-edge links; absent on screens (levels only). */
+  neighbors?: LevelNeighbors;
   objects: LevelObject[];
   regions: LevelRegion[];
   isScreen?: boolean;
@@ -409,6 +437,22 @@ export function levelDataToEditor(data: any): EditorLevel {
     }
     grid.push(row);
   }
+  // Unpainted perimeter renders as solid TILE_WALL in ROM (not default
+  // ground), so pre-fill the canvas border with a wall tile: otherwise an
+  // edited block-format level serializes border floor and silently opens
+  // every edge (this erased the castle/throne_room perimeters). Explicit
+  // paint from data.terrain below still wins, so gates stay open.
+  const wallTile = tileset.tiles.find((t) => t.category === 'wall' && !t.id.includes('corner'))?.id
+    || tileset.tiles.find((t) => t.category === 'wall')?.id
+    || tileset.tiles.find((t) => !t.walkable)?.id || defaultFloor;
+  for (let x = 0; x < w; x++) {
+    grid[0][x] = wallTile;
+    grid[h - 1][x] = wallTile;
+  }
+  for (let y = 0; y < h; y++) {
+    grid[y][0] = wallTile;
+    grid[y][w - 1] = wallTile;
+  }
 
   const rawTerrain = data.layers?.terrain;
   let terrainSource: 'blocks' | 'grid' = 'grid';
@@ -462,6 +506,7 @@ export function levelDataToEditor(data: any): EditorLevel {
     defaultWalkable: typeof data.default_walkable === 'string' ? data.default_walkable : undefined,
     spawn: data.player?.spawn || { x: Math.floor(w / 2), y: Math.floor(h / 2), facing: 'DOWN' },
     exits: data.exits || [],
+    neighbors: normalizeNeighbors(data.neighbors),
     objects: data.objects || [],
     regions: data.regions || []
   };
@@ -522,6 +567,12 @@ export function editorToLevelData(lvl: EditorLevel): any {
       spawn: lvl.spawn
     },
     exits: lvl.exits,
+    neighbors: {
+      north: lvl.neighbors?.north || '',
+      south: lvl.neighbors?.south || '',
+      east: lvl.neighbors?.east || '',
+      west: lvl.neighbors?.west || '',
+    },
     objects: lvl.objects,
     regions: lvl.regions
   };

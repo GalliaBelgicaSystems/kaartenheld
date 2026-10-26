@@ -9,11 +9,6 @@
 #include "battle_data.h"
 #include "game_ids.h"
 
-/* Hero overworld sprite data (shared, type-owned) */
-const uint8_t g_hero_ow_tile = 100;
-const uint8_t g_hero_ow_frames = 2;
-const uint8_t g_hero_ow_palette = 2;
-
 static const EnemyTypeDef g_enemy_type_bat = {
     "bat",
     "Bat",
@@ -26,7 +21,7 @@ static const EnemyTypeDef g_enemy_type_bat = {
     CURRENCY_ID_GOLD,
     1,
     2,
-    7,
+    0,
     3,
     2,
     12,
@@ -57,14 +52,60 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     1,
     2,
-    2
+    6
 };
 
-static const EnemyTypeDef g_enemy_type_fire = {
-    "fire",
-    "Fire",
+static const EnemyTypeDef g_enemy_type_kobold = {
+    "kobold",
+    "Kobold",
     0,
-    "FIRE",
+    "KOBOLD",
+    15,
+    15,
+    "BATTLE_KOBOLD",
+    8,
+    CURRENCY_ID_GOLD,
+    4,
+    1,
+    0,
+    3,
+    2,
+    54,
+    102,
+    1,
+    1,
+    2,
+    0
+};
+
+static const EnemyTypeDef g_enemy_type_mimic = {
+    "mimic",
+    "Mimic",
+    1,
+    "MIMIC",
+    50,
+    50,
+    "BATTLE_MIMIC",
+    0,
+    CURRENCY_ID_GOLD,
+    3,
+    1,
+    0,
+    3,
+    2,
+    42,
+    104,
+    1,
+    1,
+    2,
+    1
+};
+
+static const EnemyTypeDef g_enemy_type_npc_guard = {
+    "npc_guard",
+    "Guard OW",
+    0,
+    "GUARD",
     1,
     1,
     "BATTLE_NONE",
@@ -79,54 +120,100 @@ static const EnemyTypeDef g_enemy_type_fire = {
     116,
     1,
     1,
-    2,
-    1
+    1,
+    7
 };
 
-static const EnemyTypeDef g_enemy_type_kobold = {
-    "kobold",
-    "Kobold",
+static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
+    "npc_heal_mage",
+    "Heal Mage OW",
     0,
-    "KOBOLD",
-    12,
-    12,
-    "BATTLE_KOBOLD",
-    8,
+    "HEAL MAGE",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
     CURRENCY_ID_GOLD,
-    4,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    119,
     1,
     1,
-    3,
-    2,
-    54,
-    102,
     1,
-    1,
-    2,
-    2
+    7
 };
 
-static const EnemyTypeDef g_enemy_type_mimic = {
-    "mimic",
-    "Mimic",
+static const EnemyTypeDef g_enemy_type_npc_mayor = {
+    "npc_mayor",
+    "Mayor OW",
+    0,
+    "MAYOR",
     1,
-    "MIMIC",
-    30,
-    30,
-    "BATTLE_MIMIC",
+    1,
+    "BATTLE_NONE",
     0,
     CURRENCY_ID_GOLD,
-    3,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    117,
     1,
-    5,
-    3,
-    2,
-    42,
-    104,
     1,
     1,
-    2,
-    2
+    7
+};
+
+static const EnemyTypeDef g_enemy_type_npc_merchant = {
+    "npc_merchant",
+    "Merchant OW",
+    0,
+    "MERCHANT",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    118,
+    1,
+    1,
+    1,
+    6
+};
+
+static const EnemyTypeDef g_enemy_type_npc_wizard = {
+    "npc_wizard",
+    "Wizard OW",
+    0,
+    "WIZARD",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    119,
+    1,
+    1,
+    1,
+    5
 };
 
 static const EnemyTypeDef g_enemy_type_slime = {
@@ -140,8 +227,8 @@ static const EnemyTypeDef g_enemy_type_slime = {
     5,
     CURRENCY_ID_GOLD,
     0,
-    2,
-    3,
+    1,
+    0,
     3,
     2,
     0,
@@ -152,13 +239,36 @@ static const EnemyTypeDef g_enemy_type_slime = {
     3
 };
 
+static const EnemyTypeDef g_enemy_type_slime_knight = {
+    "slime_knight",
+    "Slime Knight",
+    0,
+    "SLIME KNIGHT",
+    15,
+    15,
+    "BATTLE_SLIME_KNIGHT",
+    12,
+    CURRENCY_ID_GOLD,
+    6,
+    1,
+    0,
+    3,
+    2,
+    78,
+    120,
+    1,
+    1,
+    1,
+    3
+};
+
 static const EnemyTypeDef g_enemy_type_slime_lord = {
     "slime_lord",
     "Lord of Slimes",
     2,
     "L.of Slimes",
-    50,
-    50,
+    99,
+    99,
     "BATTLE_SLIME_LORD",
     50,
     CURRENCY_ID_GOLD,
@@ -172,7 +282,7 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     2,
     1,
-    1
+    4
 };
 
 static const EnemyTypeDef g_enemy_type_spider = {
@@ -180,8 +290,8 @@ static const EnemyTypeDef g_enemy_type_spider = {
     "Spider",
     1,
     "SPIDER",
-    16,
-    16,
+    10,
+    10,
     "BATTLE_SPIDER",
     15,
     CURRENCY_ID_GOLD,
@@ -198,16 +308,43 @@ static const EnemyTypeDef g_enemy_type_spider = {
     0
 };
 
-const EnemyTypeDef* const g_enemy_types[8] = {
+static const EnemyTypeDef g_enemy_type_treasure_chest = {
+    "treasure_chest",
+    "Chest",
+    0,
+    "CHEST",
+    1,
+    1,
+    "BATTLE_NONE",
+    0,
+    CURRENCY_ID_GOLD,
+    255,
+    0,
+    0,
+    0,
+    0,
+    0,
+    121,
+    1,
+    1,
+    2,
+    1
+};
+
+const EnemyTypeDef* const g_enemy_types[14] = {
     &g_enemy_type_bat,
     &g_enemy_type_dog,
-    &g_enemy_type_fire,
     &g_enemy_type_kobold,
     &g_enemy_type_mimic,
+    &g_enemy_type_npc_guard,
+    &g_enemy_type_npc_heal_mage,
+    &g_enemy_type_npc_mayor,
+    &g_enemy_type_npc_merchant,
+    &g_enemy_type_npc_wizard,
     &g_enemy_type_slime,
+    &g_enemy_type_slime_knight,
     &g_enemy_type_slime_lord,
     &g_enemy_type_spider,
+    &g_enemy_type_treasure_chest,
 };
-const uint8_t g_enemy_type_count = 8;
-
-const uint8_t g_enemy_ow_tile_count = 18;
+const uint8_t g_enemy_type_count = 14;

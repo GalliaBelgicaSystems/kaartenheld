@@ -16,9 +16,11 @@ void scene_update_from_map(Game *g)
     new_scene = map_to_scene_id(g->world.map_id);
     old_scene = g->state.scene.scene_id;
     g->state.scene.scene_id = new_scene;
+#ifdef DEBUG_BUILD
     if (old_scene != new_scene) {
         telemetry_emit(EVENT_SCENE_CHANGED, (uint8_t)old_scene, (uint8_t)new_scene, 0, 0);
     }
+#endif
 }
 
 void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
@@ -31,13 +33,26 @@ void scene_load(Game *g, SceneId scene, uint8_t spawn_x, uint8_t spawn_y)
     g->state.scene.player_x = spawn_x;
     g->state.scene.player_y = spawn_y;
     world_change_map(&g->world, scene_id_to_map(scene), spawn_x, spawn_y, &g->state);
-    /* A scene change ends any merchant engagement: the CARDS tab's
+    /* A scene change ends any merchant engagement: the DECK tab's
      * SELL action is only available at a buying shop's doorstep. */
     g->shop_id = 0;
+#ifdef DEBUG_BUILD
     if (old_scene != scene) {
         telemetry_emit(EVENT_SCENE_CHANGED, (uint8_t)old_scene, (uint8_t)scene, spawn_x, spawn_y);
     }
-    game_render_reset(g);
+#endif
+    /* A scene change is not a screen change: force the next frame to
+     * redraw fully WITHOUT reseeding render state.  game_render_reset()
+     * would copy the stale g->prev_screen (DIALOGUE long after a
+     * conversation closed) into rc->prev_screen and seed rc->prev_map_id
+     * with the already-new map -- the next frame then misclassifies as
+     * a dialogue exit and restores 4 rows instead of repainting.  The
+     * untouched prev_screen/prev_map_id keep whatever the last rendered
+     * frame left, and their mismatch with the new map routes overworld
+     * to the full transition repaint.  Force the tileset reload too:
+     * battle art or another set may own VRAM block 1. */
+    g->render_cache.valid = false;
+    ui_invalidate_tileset();
 }
 
 /* Sync the canonical GameState.scene from the runtime World copy.  Called
@@ -100,6 +115,10 @@ void screen_update(Game *g)
     case SCREEN_SPLASH: splash_screen_update(g); break;
     case SCREEN_INTRO: intro_screen_update(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_update(g); break;
+    case SCREEN_CREDITS: tutorial_screen_update(g); break; /* shared: see credits_screen.c */
+    /* SCREEN_GAMBLE has no update OR render case: the bank-8 per-frame
+     * tick body runs the whole table (entry paint + input + audio), so
+     * the fixed bank spends nothing here (AGENTS.md 52.18). */
     default: break;
     }
 }
@@ -121,6 +140,7 @@ void screen_render(Game *g)
     case SCREEN_SPLASH: splash_screen_render(g); break;
     case SCREEN_INTRO: intro_screen_render(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_render(g); break;
+    case SCREEN_CREDITS: credits_screen_render(g); break;
     default: break;
     }
 }

@@ -5,6 +5,8 @@ import {
   fetchCombatArtList, fetchCombatArtSet, saveCombatArtSet,
   fetchEnemyTypeList, fetchEnemyType, saveEnemyType,
 } from './io/combatArt';
+import { RampSelect, firstSlottedRamp } from './RampSelect';
+import { RampGuide, fetchRampGuide } from './io/romRecolor';
 
 /** Battle-art studio: combat-art meta-tile composer + per-enemy combat
  *  sprite assignment.  Edits screens/combat_art/*.json (compiled by
@@ -14,11 +16,14 @@ import {
 
 const cellPx = 30;
 
-function blankSet(id: string, order: number): CombatArtSet {
+function blankSet(id: string, order: number, defaultPalette: string): CombatArtSet {
   const cells: Array<string | null> = new Array(3 * 2).fill(null);
+  // palette: 0 was never valid (the pipeline requires a ramp name and
+  // raises on anything else); the caller passes the first base-slotted
+  // ramp from the guide so a ramp rename can't silently break creation.
   return {
     $schema: '../schema/combat_art.schema.json',
-    id, label: id, order, width: 3, height: 2, palette: 0,
+    id, label: id, order, width: 3, height: 2, palette: defaultPalette,
     frame0: cells.slice(),
   };
 }
@@ -33,7 +38,11 @@ function resizeCells(cells: Array<string | null>, oldW: number, oldH: number, w:
   return out;
 }
 
-export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const CombatArtStudio: React.FC<{
+  onClose: () => void;
+  /** Jump into the Palettes view with a ramp editor pre-opened. */
+  onEditRamp?: (rampName: string) => void;
+}> = ({ onClose, onEditRamp }) => {
   const [tab, setTab] = useState<'sets' | 'enemies'>('sets');
   const [sets, setSets] = useState<CombatArtListItem[]>([]);
   const [activeId, setActiveId] = useState<string>('');
@@ -45,6 +54,21 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
   const [images, setImages] = useState<Map<string, HTMLImageElement>>(new Map());
   const [enemies, setEnemies] = useState<EnemyTypeListItem[]>([]);
   const [enemyRows, setEnemyRows] = useState<Record<string, { art: string; frames: number; dirty: boolean }>>({});
+  // Ramp catalog for path-aware validation (mirrors palette_compiler):
+  // BG stamps need a base-slotted ramp, OAM sets need obj_palette.
+  const [guide, setGuide] = useState<RampGuide | null>(null);
+  useEffect(() => {
+    fetchRampGuide().then(setGuide).catch(() => setGuide(null));
+  }, []);
+  // Alt-cell indices as typed text (parsed + validated on change).
+  // Synced from the set so switching sets reloads it; invalid mid-typing
+  // text is preserved (the set only updates on valid parses).
+  const [altCellsText, setAltCellsText] = useState<string>('');
+  const altCellsKey = ((set && set.obj_alt_cells) || []).join(',');
+  useEffect(() => {
+    setAltCellsText(altCellsKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, altCellsKey]);
 
   useEffect(() => {
     fetchCombatArtList().then((items) => {
@@ -128,7 +152,9 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
     if (!id || !/^[A-Za-z0-9_]+$/.test(id)) return;
     if (sets.some((s) => s.id === id)) { setStatus(`id '${id}' already exists`); return; }
     const order = sets.reduce((m, s) => Math.max(m, s.order), -1) + 1;
-    const fresh = blankSet(id, order);
+    // Guide-derived default (falls back to 'fightboss' offline, exactly
+    // the previous behavior).
+    const fresh = blankSet(id, order, firstSlottedRamp(guide, 'base') || 'fightboss');
     saveCombatArtSet(fresh).then(() => {
       fetchCombatArtList().then((items) => { setSets(items); setActiveId(id); });
       setStatus(`created '${id}' at order ${order} (appended: blob offsets stay stable)`);
@@ -150,6 +176,11 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
   };
 
   const cells = useMemo(() => (set ? frameCells(set, frame) : []), [set, frame]);
+  // Ramp/slot lookups from the static export (mirrors palette_compiler).
+  const rampKnown = (name: unknown): name is string =>
+    typeof name === 'string' && !!guide?.ramps[name];
+  const rampSlotted = (name: string, setName: 'base' | 'obj'): boolean =>
+    !!guide?.ramps[name]?.slots?.some((s) => s.startsWith(`${setName}:`));
   const problems = useMemo(() => {
     const out: string[] = [];
     if (set) {
@@ -159,9 +190,35 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
       if (unknown.length > 0) out.push(`unknown tiles: ${[...new Set(unknown)].join(', ')}`);
       const noSheet = cells.filter((c) => c !== null && !SHEET_TILE_NAMES.includes(c as string));
       if (noSheet.length > 0) out.push(`not compiled to ROM (add LAYOUT entry + compose + make gfx): ${[...new Set(noSheet)].join(', ')}`);
+      // Ramp wiring (pipeline rules; a bad value breaks `make manifest`).
+      if (guide) {
+        if (set.oam) {
+          if (!rampKnown(set.obj_palette)) {
+            out.push(`OAM set needs obj_palette (an OBJ ramp name) — encoding has no ramp without it`);
+          }
+          if (set.obj_alt_palette !== undefined && !rampKnown(set.obj_alt_palette)) {
+            out.push(`obj_alt_palette '${set.obj_alt_palette}' is not a known ramp`);
+          }
+        } else if (!rampKnown(set.palette)) {
+          out.push(`BG palette '${set.palette}' is not a known ramp name (numbers break the manifest)`);
+        } else if (!rampSlotted(set.palette, 'base')) {
+          out.push(`BG palette '${set.palette}' holds no base slot — the stamp would display wrong`);
+        }
+        const altCount = set.width * set.height;
+        for (const idx of set.obj_alt_cells || []) {
+          if (!Number.isInteger(idx) || idx < 0 || idx >= altCount) {
+            out.push(`obj_alt_cells entry ${idx} out of frame (0-${altCount - 1})`);
+            break;
+          }
+        }
+        if (set.obj_alt_palette !== undefined && altCount > 8) {
+          out.push(`obj_alt_cells needs width*height<=8 (pipeline rule)`);
+        }
+      }
     }
     return out;
-  }, [set, cells]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [set, cells, guide]);
 
   const renderGrid = (f: 0 | 1, interactive: boolean) => {
     if (!set) return null;
@@ -264,9 +321,70 @@ export const CombatArtStudio: React.FC<{ onClose: () => void }> = ({ onClose }) 
                   <div style={{ marginTop: 8 }}>
                     <label>Label: <input value={set.label} onChange={(e) => mutate((s) => { s.label = e.target.value; return s; })} /></label>
                   </div>
-                  <div style={{ marginTop: 4 }}>
-                    <label>Palette: <input type="number" min={0} max={7} value={set.palette}
-                      onChange={(e) => mutate((s) => { s.palette = Math.max(0, Math.min(7, parseInt(e.target.value) || 0)); return s; })} style={{ width: 50 }} /></label>
+                  <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {set.oam ? (
+                      <>
+                        <div style={{ fontSize: 12, color: '#555' }}>
+                          OAM set — encodes with the OBJ ramp (battle scratch slot).
+                        </div>
+                        <label>OBJ palette:{' '}
+                          <RampSelect
+                            value={set.obj_palette ?? ''}
+                            filter="all"
+                            onPick={(r) => mutate((s) => { s.obj_palette = r; return s; })}
+                            onEditRamp={onEditRamp}
+                          />
+                        </label>
+                        <label>Alt palette (optional, one off-ramp cell):{' '}
+                          <RampSelect
+                            value={set.obj_alt_palette ?? ''}
+                            filter="all"
+                            optional
+                            onPick={(r) => mutate((s) => { s.obj_alt_palette = r; return s; })}
+                            onClear={() => {
+                              setAltCellsText('');
+                              mutate((s) => { delete s.obj_alt_palette; delete s.obj_alt_cells; return s; });
+                            }}
+                            onEditRamp={onEditRamp}
+                          />
+                        </label>
+                        <label>Alt cells (frame-relative indices, comma-separated):{' '}
+                          <input
+                            value={altCellsText}
+                            spellCheck={false}
+                            placeholder="e.g. 2"
+                            style={{ width: 90 }}
+                            onChange={(e) => {
+                              const text = e.target.value;
+                              setAltCellsText(text);
+                              const parts = text.split(',').map((p) => p.trim()).filter((p) => p !== '');
+                              if (parts.length === 0) {
+                                mutate((s) => { delete s.obj_alt_cells; return s; });
+                                return;
+                              }
+                              const nums = parts.map((p) => Number(p));
+                              if (nums.every((n) => Number.isInteger(n) && n >= 0)) {
+                                mutate((s) => { s.obj_alt_cells = nums; return s; });
+                              }
+                            }}
+                          />
+                        </label>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 12, color: '#555' }}>
+                          BG stamp — encodes and displays with the BG ramp (base set).
+                        </div>
+                        <label>Palette:{' '}
+                          <RampSelect
+                            value={set.palette}
+                            filter="base"
+                            onPick={(r) => mutate((s) => { s.palette = r; return s; })}
+                            onEditRamp={onEditRamp}
+                          />
+                        </label>
+                      </>
+                    )}
                   </div>
                   <div style={{ marginTop: 4, fontSize: 13 }}>Order: {set.order} (stable, do not renumber)</div>
                   {problems.map((p) => <div key={p} style={{ color: '#a00', fontSize: 13 }}>{p}</div>)}

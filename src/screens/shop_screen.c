@@ -19,8 +19,21 @@
  * Cursor state lives in g->item_menu_index. */
 static const ShopDefinition *shop_active(const Game *g)
 {
-    return game_shop_for_id(g ? g->shop_id : 1);
+    return game_shop_for_id(g ? g->shop_id : 2);
 }
+
+/* One-copy stock (docs/loot.md §34.6): a line is visible only while the
+ * player owns no copy of its card.  Buying the ring/bow hides its row
+ * for good (curated shop cards are not loot-sellable, so no sell-back
+ * re-opens it).  The cursor
+ * addresses VISIBLE positions (dense from row 5).  The visible map is
+ * rebuilt by the bank-2 render on every full redraw (entry, purchase)
+ * into WRAM (g_shop_vis_map, owned by screen_content.c); this update
+ * only reads it, so the fixed bank pays no scan (AGENTS.md §52.11.1).
+ * A purchase hides its own row: the redraw rebuilds + clamps before
+ * painting, so no stale row is ever addressable. */
+extern uint8_t g_shop_vis_map[];
+extern uint8_t g_shop_vis_count;
 
 /* Full shop content draw lives in the bank-2 body (screen_content.c) so the
  * fixed _CODE/_HOME area stays under 0x8000 (AGENTS.md 52.11.1). */
@@ -44,19 +57,19 @@ static void shop_menu_step(Game *g, uint8_t new_index)
 void shop_screen_update(Game *g)
 {
     const ShopDefinition *def;
-    uint8_t count;
+    uint8_t vis_count;
 
     if (!g) return;
     def = shop_active(g);
-    count = def ? def->count : 0;
+    vis_count = g_shop_vis_count;
 
-    if (count > 0) {
+    if (vis_count > 0) {
         if (input_pressed(INPUT_UP) && g->item_menu_index > 0) {
             shop_menu_step(g, (uint8_t)(g->item_menu_index - 1));
-        } else if (input_pressed(INPUT_DOWN) && (uint8_t)(g->item_menu_index + 1) < count) {
+        } else if (input_pressed(INPUT_DOWN) && (uint8_t)(g->item_menu_index + 1) < vis_count) {
             shop_menu_step(g, (uint8_t)(g->item_menu_index + 1));
-        } else if (input_pressed(INPUT_A) && g->item_menu_index < count) {
-            CardId card_id = def->items[g->item_menu_index];
+        } else if (input_pressed(INPUT_A) && def && g->item_menu_index < vis_count) {
+            CardId card_id = def->items[g_shop_vis_map[g->item_menu_index]];
             const CardDefinition *card = card_get_def(card_id);
             uint8_t price = card ? card->price : 0;
             if (currency_get(&g->state, CURRENCY_ID_GOLD) < price) {
@@ -76,10 +89,35 @@ void shop_screen_update(Game *g)
         }
     }
     if (input_pressed(INPUT_B) || input_pressed(INPUT_START)) {
+        /* Leaving after a purchase stages the merchant's equip tip for
+         * the post-tick dialogue slot (docs/loot.md 34.6): the tip opens
+         * as a normal dialogue box instead of the old in-shop hint
+         * lines, and fires once per buying visit.  Staged, not opened
+         * here: the fixed bank sits hard against 0x8000, and a
+         * dialogue_start_def + screen_change pair here overflows it
+         * into bank 2 (AGENTS.md 52.18).  Target DIALOGUE directly (not
+         * OVERWORLD): the tilemap still holds the shop screen when the
+         * post-tick opens the dialogue the same frame, and the dialogue
+         * renderer only does its full LCD-off world redraw when
+         * prev_screen != OVERWORLD -- routing through OVERWORLD first
+         * leaves the stale SHOP title in VRAM row 0 under the box and
+         * on the overworld after (walk-a shop-closed regression).
+         * screen_change is idempotent, so the post-tick's own
+         * screen_change(DIALOGUE) is a no-op.  Dialogue close returns
+         * to the overworld through the standard exit path (no stashed
+         * encounter here, unlike Carl's lesson). */
+        if (g->shop_message == SHOP_MSG_BOUGHT)
+            g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
         g->shop_message = SHOP_MSG_NONE;
         g->item_menu_index = 0;
         audio_play_sfx(SFX_BACK);
-        screen_change(g, SCREEN_OVERWORLD);
+        /* Single call site: the ternary keeps the fixed bank small
+         * (two call sites cost ~8 B the 0x8000-ceilinged bank cannot
+         * spare -- debug headroom is 10 B with this shape).  Reading
+         * back g_bk_dlg_id is safe: no other shop-frame producer
+         * stages the post-tick dialogue slot, so nonzero here means
+         * this exit staged the tip. */
+        screen_change(g, (g_bk_dlg_id != 0) ? SCREEN_DIALOGUE : SCREEN_OVERWORLD);
     }
 }
 
@@ -92,6 +130,12 @@ void shop_screen_render(Game *g)
 
     if (!rc->valid || rc->prev_screen != SCREEN_SHOP) {
         menu_draw_frame("SHOP");
+        /* UI-mode CRAM (base set): the card icons stamped below are
+         * encoded with the battle display ramps (card_display_slots.json).
+         * Without this they would inherit the world tileset's CRAM and
+         * show village/forest colors.  The overworld/battle full redraws
+         * restore their own CRAM on exit, so no restore is needed here. */
+        ui_set_cram_palette(0);
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&shop_content_render;
         g_bk_ptr_a = (void *)g;

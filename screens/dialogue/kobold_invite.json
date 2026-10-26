@@ -1,0 +1,15 @@
+{
+  "id": "kobold_invite",
+  "speaker": "Nis:",
+  "lines": [
+    "I'M NIS! PICK 1-6.",
+    "I ROLL 3 DICE.",
+    "MATCH TO WIN 1:1,",
+    "2:1 OR 3:1.",
+    "BET 1, 5 OR 10.",
+    "UPDN ROW LR CHANGE",
+    "+20 NET WINS A GEM",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

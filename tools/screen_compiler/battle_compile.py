@@ -36,6 +36,90 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 DEFAULT_OUT_DIR = str(REPO_ROOT / "src" / "game")
 
+# Ramp-name -> hardware slot resolution (generated/tiles/base.json +
+# obj.json from palette_compiler). Content JSONs name artist ramps
+# ("fightslime", "sprites"); the ROM needs slot ints. Unknown names fail
+# loudly; plain ints pass through range-checked (legacy).
+_ramp_slots = None  # ({ramp: base_slot}, {ramp: obj_slot})
+
+
+def _load_ramp_slots():
+    global _ramp_slots
+    if _ramp_slots is None:
+        try:
+            base = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())["slots"]
+            obj = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())["slots"]
+        except (OSError, ValueError, KeyError) as e:
+            raise SystemExit(f"ERROR: ramp manifests missing (run make manifest first): {e}")
+        _ramp_slots = (
+            {v["ramp"]: int(k) for k, v in base.items()},
+            {v["ramp"]: int(k) for k, v in obj.items()},
+        )
+    return _ramp_slots
+
+
+def resolve_base_palette(pal, where):
+    """Artist ramp name (or int) -> base/BG hardware slot."""
+    if isinstance(pal, str):
+        base, _ = _load_ramp_slots()
+        if pal not in base:
+            raise SystemExit(f"ERROR: {where}: unknown base ramp '{pal}'")
+        return base[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def resolve_obj_palette(pal, where):
+    """Artist ramp name (or int) -> OBJ hardware slot."""
+    if isinstance(pal, str):
+        _, obj = _load_ramp_slots()
+        if pal not in obj:
+            raise SystemExit(f"ERROR: {where}: unknown OBJ ramp '{pal}'")
+        return obj[pal]
+    if not (0 <= pal <= 7):
+        print(f"WARNING: {where}: palette {pal} out of 0-7")
+        return 0
+    return pal
+
+
+def check_glow_ramp_structure(where, stamp_ramp, unlit_ramp, lit_ramp):
+    """Fail loudly unless both glow ramps match the set's stamp ramp at
+    indices 0/2/3 and differ only at index 1. The overlay reuses the
+    stamp's tile bytes through an OBJ palette, so index 1 is the ONLY
+    shade that remaps (the blink pixel); any other difference would
+    recolor the whole face under the overlay."""
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    for _name in (stamp_ramp, unlit_ramp, lit_ramp):
+        if _name not in _ramps:
+            raise SystemExit(f"ERROR: {where}: unknown glow ramp '{_name}'")
+    _s, _u, _l = _ramps[stamp_ramp], _ramps[unlit_ramp], _ramps[lit_ramp]
+    for _i in (0, 2, 3):
+        if _u[_i] != _s[_i] or _l[_i] != _s[_i]:
+            raise SystemExit(
+                f"ERROR: {where}: glow ramps must match '{stamp_ramp}' "
+                f"at index {_i} (unlit={_u[_i]} lit={_l[_i]} stamp={_s[_i]}); "
+                f"only index 1 may differ")
+    if _u[1] == _s[1] or _l[1] == _s[1]:
+        raise SystemExit(f"ERROR: {where}: glow ramps must differ from "
+                         f"'{stamp_ramp}' at index 1 (nothing would blink)")
+    if _u[1] == _l[1]:
+        raise SystemExit(f"ERROR: {where}: glow unlit/lit must differ at "
+                         f"index 1 (nothing would blink)")
+
+
+def check_obj_palette_name(name, where):
+    """obj_palette names ride along for future battle-OAM work; they must
+    still name a real artist ramp (palette.txt), never a typo."""
+    if name is None:
+        return
+    from palette_parse import parse_palette
+    _, ramps = parse_palette()
+    if name not in ramps:
+        raise SystemExit(f"ERROR: {where}: unknown obj_palette ramp '{name}'")
+
 # Combat-art sets (screens/combat_art/*.json) replace the old hardcoded
 # ART_SETS table: each set names curated sheet tiles per frame plus its
 # dimensions and CGB palette.  Tile names resolve through
@@ -50,21 +134,29 @@ from compose_hero_sprites import TILE_COORDS as HERO_TILE_COORDS
 # Shared overworld enemy OAM base (must match ENEMY_OW_BASE in src/ui/ui.h).
 # Blob: concatenated per-enemy frames in pinned order (see OW_ORDER_PINNED
 # below); OAM ids 128+ alias BG tiles, so the blob must stay below 128
-# (clear error below).
+# (clear error below).  OAM 126-127 are additionally reserved for the
+# battle HUD pips (AP cost, !/? marks, streamed separately), so the blob
+# is capped at 26 tiles (separate loud error below).
 ENEMY_OW_BASE = 100
 ENEMY_OW_LIMIT = 128
 
-# Packing order for the shared overworld blob.  The six pre-dog/fire ids
-# are pinned in their committed positions (verify_oam.py asserts bat
-# 100-101, mimic 104-105, slime 106-107, boss 108-111): alphabetical
-# packing cannot provide append-only stability, so any id NOT in this
-# list is appended after it in sorted order and can never shift the
-# pinned prefix.  Never reorder this list; append-only.
-OW_ORDER_PINNED = ['bat', 'kobold', 'mimic', 'slime', 'slime_lord', 'spider']
+# Packing order for the shared overworld blob.
+# The pinned prefix covers the full shipped roster in its committed
+# positions (verify_oam.py asserts bat 100-101, mimic 104-105, slime
+# 106-107, boss 108-111; verify_vram.py asserts the NPC run 116-120):
+# alphabetical packing cannot provide append-only stability, so any id
+# NOT in this list appends after it in sorted order (shifting only the
+# rider tail, never an enemy).  The heal mage is pinned directly after
+# the wizard whose art it shares (dedup maps it onto the wizard slot),
+# so reskins never renumber anything.  Never reorder this list;
+# append-only.
+OW_ORDER_PINNED = ['bat', 'kobold', 'mimic', 'slime', 'slime_lord', 'spider',
+                   'dog', 'npc_guard', 'npc_mayor', 'npc_merchant',
+                   'npc_wizard', 'npc_heal_mage', 'slime_knight',
+                   'treasure_chest']
 
-# Hero overworld is always first in the OW blob at ENEMY_OW_BASE (100).
-# Hero has 1-2 frames; enemies follow after.
-HERO_OW_MAX_FRAMES = 2
+# Enemies precede riders in the shared OW blob (see ow_blob_layout);
+# riders append at the tail.  Never reorder the pinned list; append-only.
 
 
 def load_combat_art():
@@ -98,6 +190,59 @@ def load_combat_art():
                     print("WARNING: %s: unknown combat tile '%s'" % (path.name, name))
         if sid in sets:
             print("WARNING: %s: duplicate combat art id '%s'" % (path.name, sid))
+        if data.get('oam') and not data.get('obj_palette'):
+            print("WARNING: %s: oam set without obj_palette ramp" % path.name)
+        if data.get('obj_palette'):
+            check_obj_palette_name(data.get('obj_palette'), "%s obj_palette" % path.name)
+        # Second OBJ scratch slot (spider eye): one off-ramp cell rides an
+        # existing artist ramp in BATTLE_OBJ_SCRATCH2 instead of a repaint.
+        alt = data.get('obj_alt_palette')
+        alt_cells = data.get('obj_alt_cells')
+        if alt is not None or alt_cells is not None:
+            if not data.get('oam'):
+                print("WARNING: %s: obj_alt_palette needs oam" % path.name)
+            if alt is None or not isinstance(alt_cells, list):
+                print("WARNING: %s: obj_alt_palette and obj_alt_cells must come as a pair" % path.name)
+            else:
+                check_obj_palette_name(alt, "%s obj_alt_palette" % path.name)
+                if w * h > 8:
+                    print("WARNING: %s: obj_alt_cells needs width*height<=8 (uint8 mask), have %d"
+                          % (path.name, w * h))
+                for _c in alt_cells:
+                    if not isinstance(_c, int) or not (0 <= _c < w * h):
+                        print("WARNING: %s: obj_alt_cells entry %r out of 0..%d"
+                              % (path.name, _c, w * h - 1))
+        # Eye-glow overlay (BG-stamped sets only): frame0-relative cells
+        # redrawn as OAM sprites over the stamp, flipping between two OBJ
+        # palettes on the battle clock. Every cell index must fit one OAM
+        # stride per enemy slot (< 6): higher cells would clobber the next
+        # slot's entries. Both ramps must match the set palette at indices
+        # 0/2/3 and differ only at index 1 (the blink pixel): the overlay
+        # reuses the stamp's tile bytes, so only index 1 remaps -- anything
+        # else would recolor the face.
+        glow = data.get('glow')
+        if glow is not None:
+            if data.get('oam'):
+                print("WARNING: %s: glow is for BG-stamped sets, not oam" % path.name)
+            gcells = glow.get('cells')
+            gunlit, glit = glow.get('unlit'), glow.get('lit')
+            if not isinstance(gcells, list) or not gcells:
+                print("WARNING: %s: glow.cells must be a non-empty list" % path.name)
+            else:
+                for _c in gcells:
+                    if not isinstance(_c, int) or not (0 <= _c < w * h):
+                        print("WARNING: %s: glow cell %r out of 0..%d"
+                              % (path.name, _c, w * h - 1))
+                    elif _c >= 6:
+                        print("WARNING: %s: glow cell %r needs index < 6 (one OAM stride per slot)"
+                              % (path.name, _c))
+            if gunlit is None or glit is None:
+                print("WARNING: %s: glow needs unlit and lit ramps" % path.name)
+            else:
+                check_obj_palette_name(gunlit, "%s glow.unlit" % path.name)
+                check_obj_palette_name(glit, "%s glow.lit" % path.name)
+                check_glow_ramp_structure(path.name, data.get('palette'),
+                                          gunlit, glit)
         sets[sid] = data
     order = sorted(sets.keys(), key=lambda k: sets[k].get('order', 0))
     seen_orders = [sets[k].get('order', 0) for k in order]
@@ -233,7 +378,7 @@ def validate_enemy_type(path: Path, art_ids) -> dict:
 
     # Validate AI types
     valid_ai = ['AI_NONE', 'AI_PATROL_CROSS', 'AI_PATROL_CIRCLE', 'AI_CHASE',
-                'AI_PATROL_VERT']
+                'AI_CHASE_FAST', 'AI_PATROL_VERT', 'AI_TUTOR']
     for ai in data.get('ai_types', []):
         if ai not in valid_ai:
             print("WARNING: %s: invalid AI type '%s'" % (path.name, ai))
@@ -375,44 +520,56 @@ def build_battle_screens_output(battle_screens, enemy_types):
     return "\n".join(lines)
 
 
-def ow_blob_layout(enemy_types, hero_json=None):
+def _find_cell_run(cells, names):
+    """Offset of an existing contiguous run of `names` in `cells`, or None.
+
+    Lets reskins share art bytes instead of spending a blob slot each:
+    npc_heal_mage reuses the npc_wizard tile with its own OBJ ramp, so
+    the sorted tail stays put and the 28-tile hard budget survives one
+    more reskin.  Only exact full-list runs match (same bytes, same
+    order); partial overlaps append normally.  Order-independent: the
+    later type reuses the earlier type's slot whichever sorts first."""
+    n = len(names)
+    if n == 0:
+        return None
+    for i in range(len(cells) - n + 1):
+        if cells[i:i + n] == names:
+            return i
+    return None
+
+
+def ow_blob_layout(enemy_types, rider_types=None):
     """Shared overworld blob layout: returns (offsets, cells) where offsets
     maps id -> blob tile offset and cells is the ordered tile-name
-    list (hero first, then the pinned prefix OW_ORDER_PINNED, then any
-    remaining ids in sorted order: append-only, pinned tiles never move).
+    list (pinned prefix OW_ORDER_PINNED, then any remaining ids in sorted
+    order: append-only, pinned tiles never move; identical cell runs are
+    shared, never duplicated).
     Overworld sprites may be multi-tile grids (width*height cells per frame,
     frame-major): each type contributes width*height*frames cells, and the
     per-type base is the cumulative tile offset.
     Returns (None, None) on budget overflow (error already printed)."""
-    # Hero always comes first
     offsets = {}
     cells = []
     at = 0
-    
-    if hero_json is not None:
-        hero_ow = hero_json.get('overworld') or None
-        if hero_ow is not None:
-            names = hero_ow.get('cells', [])
-            w = hero_ow.get('width', 1) or 1
-            h = hero_ow.get('height', 1) or 1
-            if len(names) % (w * h) != 0:
-                print("WARNING: hero: overworld.cells has %d entries, not a multiple of width*height=%d" % (len(names), w * h))
-            for name in names:
-                if name not in HERO_TILE_COORDS:
-                    print("WARNING: hero: unknown overworld tile '%s'" % name)
-            pal = hero_json['overworld'].get('palette', 0)
-            if not (0 <= pal <= 7):
-                print("WARNING: hero: overworld.palette %s out of 0-7" % pal)
-            offsets['hero'] = at
-            cells.extend(names)
-            at += len(names)
-    
+
     # Enemies in pinned-prefix order, then any unlisted ids sorted:
     # new content appends at the tail and can never shift pinned tiles.
-    et_ids = ([i for i in OW_ORDER_PINNED if i in enemy_types] +
-              sorted(i for i in enemy_types.keys() if i not in OW_ORDER_PINNED))
+    # Rider HUD icons (screens/rider_icons.json: per-card OAM, not
+    # enemies, never spawned) append AFTER every enemy under their cell
+    # names (not sorted among them: "rider_*" would otherwise wedge before
+    # "slime_*" and renumber the blob) so their offsets stay computed,
+    # never hand-written, and enemy offsets never move.
+    merged = dict(enemy_types)
+    _rider_ids = []
+    if rider_types:
+        for _rid, _rramp in sorted(rider_types.items()):
+            merged[_rid] = {"overworld": {"cells": [_rid], "palette": _rramp}}
+            _rider_ids.append(_rid)
+    et_ids = ([i for i in OW_ORDER_PINNED if i in merged] +
+              sorted(i for i in merged.keys() if i not in OW_ORDER_PINNED
+                     and i not in _rider_ids) + _rider_ids)
     for et_id in et_ids:
-        ow = (enemy_types[et_id].get('overworld') or None)
+        ow = (merged[et_id].get('overworld') or None)
         if ow is None:
             continue
         names = ow.get('cells', [])
@@ -424,8 +581,12 @@ def ow_blob_layout(enemy_types, hero_json=None):
             if name not in ENEMY_TILE_COORDS:
                 print("WARNING: %s: unknown overworld tile '%s'" % (et_id, name))
         pal = ow.get('palette', 0)
-        if not (0 <= pal <= 7):
+        if isinstance(pal, int) and not (0 <= pal <= 7):
             print("WARNING: %s: overworld.palette %s out of 0-7" % (et_id, pal))
+        reuse = _find_cell_run(cells, names)
+        if reuse is not None:
+            offsets[et_id] = reuse
+            continue
         offsets[et_id] = at
         cells.extend(names)
         at += len(names)
@@ -433,10 +594,20 @@ def ow_blob_layout(enemy_types, hero_json=None):
         print("ERROR: overworld blob needs %d OAM tiles, budget is %d (base %d, limit %d)"
               % (at, ENEMY_OW_LIMIT - ENEMY_OW_BASE, ENEMY_OW_BASE, ENEMY_OW_LIMIT), file=sys.stderr)
         return None, None
+    # OAM 126-127 are reserved for battle HUD pips (AP cost + !/? marks,
+    # streamed separately -- see build_ap_output): the blob must stop at 26
+    # so a future enemy addition fails loudly here instead of silently
+    # clobbering them.  (128+ is BG world/enemy art and equally hard.)
+    if at > 26:
+        print("ERROR: overworld blob needs %d tiles but OAM 126-127 are reserved"
+              " for battle HUD pips (AP cost, !/? marks); move or drop a blob"
+              " cell first" % at, file=sys.stderr)
+        return None, None
     return offsets, cells
 
 
-def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json=None):
+def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
+                           rider_types=None):
     """Generate C code for enemy type definitions + hero data."""
     lines = []
 
@@ -452,33 +623,18 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     lines.append('#include "game_ids.h"')
     lines.append("")
 
-    # Hero data (first in OW blob)
-    lines.append("/* Hero overworld sprite data (shared, type-owned) */")
-    if hero_json is not None:
-        hero_ow = hero_json.get('overworld') or None
-        if hero_ow is not None:
-            names = hero_ow.get('cells', [])
-            pal = hero_json['overworld'].get('palette', 0)
-            lines.append("const uint8_t g_hero_ow_tile = %d;" % ENEMY_OW_BASE)
-            lines.append("const uint8_t g_hero_ow_frames = %d;" % len(hero_ow.get('cells', [])))
-            lines.append("const uint8_t g_hero_ow_palette = %d;" % hero_json['overworld'].get('palette', 0))
-        else:
-            lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
-            lines.append("const uint8_t g_hero_ow_frames = 0;")
-            lines.append("const uint8_t g_hero_ow_palette = 0;")
-    else:
-        lines.append("const uint8_t g_hero_ow_tile = 0xFF;")
-        lines.append("const uint8_t g_hero_ow_frames = 0;")
-        lines.append("const uint8_t g_hero_ow_palette = 0;")
-    lines.append("")
-
     # Enemy type definitions
+    # (No hero globals: the hero loads its own 2 tiles via
+    # HERO_DESOLATE_SPRITE_TILE_ID and never reads this blob, so the
+    # g_hero_ow_* row was dead -- and its vestigial hero-first layout
+    # path once over-counted the blob budget by 2 and shipped a
+    # sheet-order blob.  The blob is enemies + tail riders only.)
     cat_map = {'minion': 0, 'elite': 1, 'boss': 2}
 
     et_ids = sorted(enemy_types.keys())
-    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, None)  # hero handled separately
+    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
     if ow_offsets is None:
-        return None
+        return None, None
     for et_id in et_ids:
         ow = (enemy_types[et_id].get('overworld') or None)
         if ow is not None and et_id in ow_offsets:
@@ -487,7 +643,8 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
             ow_h = ow.get('height', 1) or 1
             cells = ow.get('cells', [])
             ow_frames = (len(cells) // (ow_w * ow_h)) if (ow_w * ow_h) else 0
-            ow_palette = ow.get('palette', 0)
+            ow_palette = resolve_obj_palette(ow.get('palette', 0),
+                                             "%s overworld.palette" % et_id)
         else:
             ow_tile = 0xFF
             ow_w = 0
@@ -504,7 +661,15 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
         art_offset = 0
         if art_id in art_sets:
             art_index = art_order.index(art_id)
-            art_palette = art_sets[art_id]['palette']
+            # OAM sets (every battle enemy except the boss) draw through
+            # the OBJ ramp and blank their BG footprint, so the declared
+            # BG `palette` is vestigial and need not hold a hardware slot.
+            # Only BG-stamped sets (the boss) resolve art_palette.
+            if art_sets[art_id].get('oam'):
+                art_palette = 0
+            else:
+                art_palette = resolve_base_palette(art_sets[art_id]['palette'],
+                                                   "%s combat art palette" % art_id)
             art_w = art_sets[art_id]['width']
             art_h = art_sets[art_id]['height']
             art_offset = art_offsets[art_id]
@@ -544,21 +709,361 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero
     lines.append("")
     # Shared overworld blob size (tiles) for the ui_init OAM stream.
     # Enemies only: the hero overworld sprite is loaded separately via
-    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob, so the blob
-    # and g_enemy_ow_tile_count must not include hero cells (they would
-    # shift every enemy ow_tile offset in battle_types.c by 2).
+    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob.  Rider HUD
+    # icons ride the same stream at the blob tail, so the count DOES
+    # include them.  Reuses the single layout computed above (one call:
+    # riders append after every enemy, so enemy offsets are identical
+    # either way and a rider-driven overflow is still caught).
     _ow_enemy = len(_ow_cells) if _ow_cells is not None else 0
-    lines.append("const uint8_t g_enemy_ow_tile_count = %d;" % _ow_enemy)
+    # NOTE: g_enemy_ow_tile_count is intentionally NOT emitted here.
+    # battle_types.c lives in bank 4 while the blob (enemy_ow_tiles.h)
+    # lives in bank 8; ui_sprite_init() reads the count through
+    # banked_copy(8, ...) and a banked reader must share its table's
+    # bank.  The count is emitted into enemy_ow_count.c (bank 8) instead;
+    # see build_ow_count_output().  (When the count lived here, the boot
+    # read returned 0xFF and ui_init's t+=8 chunk loop wrapped past 255
+    # forever -- release ROM never booted.)
+
+    return "\n".join(lines), _ow_enemy
+
+
+def build_ow_count_output(ow_count):
+    """Generate enemy_ow_count.c: the shared overworld blob size (tiles)
+    for the ui_init OAM stream.  Lives in bank 8 WITH the blob
+    (enemy_ow_tiles.h via enemy_ow_content.c) because ui_sprite_init()
+    reads it through banked_copy(8, ...) -- a banked reader must share
+    its table's bank (AGENTS.md 55.5)."""
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/enemy_types/ and re-run.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#pragma bank 8")
+    lines.append("")
+    lines.append('#include <stdint.h>')
+    lines.append('#include "battle_data.h"')
+    lines.append("")
+    lines.append("/* Shared overworld blob size (tiles) for the ui_init OAM")
+    lines.append(" * stream.  Enemies only: the hero overworld sprite is loaded")
+    lines.append(" * separately via HERO_DESOLATE_SPRITE_TILE_ID and never from")
+    lines.append(" * this blob, so the blob and this count must not include hero")
+    lines.append(" * cells (they would shift every enemy ow_tile offset by 2).")
+    lines.append(" * Rider HUD icons ride the same stream at the blob tail, so")
+    lines.append(" * the count DOES include them. */")
+    lines.append("const uint8_t g_enemy_ow_tile_count = %d;" % ow_count)
+    lines.append("")
+    return "\n".join(lines)
+
+
+def load_rider_types():
+    """Load + validate screens/rider_icons.json (battle per-card OAM icons).
+
+    Returns {cell: ramp} or None on error.  Cells must exist on the enemy
+    sheet (compose_enemy_sprites.TILE_COORDS); ramps must be real artist
+    ramps (palette.txt).  Slotted-ness resolves later via
+    resolve_obj_palette (unknown slot = loud compile error)."""
+    return _load_icon_table("rider_icons.json",
+                            ["rider_fire", "rider_ice", "rider_poison"])
+
+
+def _load_icon_table(filename, required):
+    """Load + validate a battle OAM icon table (screens/*.json).
+
+    Returns {cell: ramp} or None on error.  Cells must exist on the enemy
+    sheet (compose_enemy_sprites.TILE_COORDS); ramps must be real artist
+    ramps (palette.txt).  Keys must match `required` exactly so renames
+    and typos fail loudly instead of silently dropping an icon."""
+    from palette_parse import parse_palette as _parse_palette
+    path = REPO_ROOT / "screens" / filename
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        sys.stderr.write("ERROR: missing %s\n" % path)
+        return None
+    cells = data.get("cells") or {}
+    if sorted(cells.keys()) != sorted(required):
+        sys.stderr.write("ERROR: %s cells must hold exactly %s\n"
+                         % (filename, "/".join(required)))
+        return None
+    _, _ramps = _parse_palette()
+    for _cell, _ramp in cells.items():
+        if _cell not in ENEMY_TILE_COORDS:
+            sys.stderr.write("ERROR: %s cell '%s' not on the enemy sheet\n" % (filename, _cell))
+            return None
+        if _ramp not in _ramps:
+            sys.stderr.write("ERROR: %s.%s unknown ramp '%s'\n" % (filename, _cell, _ramp))
+            return None
+    return cells
+
+
+def load_ap_types():
+    """Load + validate screens/ap_icons.json (battle AP-cost OAM pips).
+
+    Returns {cell: ramp} or None on error.  One icon per energy cost 1-2
+    (cost 0 shows none); the three-ap art stays staged in the sheet until
+    a 3-cost card exists (no free OAM tile below the BG-art aliasing)."""
+    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2"])
+
+
+def load_mark_types():
+    """Load + validate screens/mark_icons.json (battle OAM !/? glyphs).
+
+    Returns {cell: ramp} or None on error.  Wired through the same
+    pipeline as the riders/AP pips; placement follows separately."""
+    return _load_icon_table("mark_icons.json", ["exclaim", "question"])
+
+
+def build_rider_output(enemy_types, rider_types):
+    """Generate src/game/rider_tiles_generated.h: battle per-card OAM icons.
+
+    Selected-card element riders (STATUS_POISON/BURN/FREEZE) render as OAM
+    sprites, not BG tiles.  Their VRAM ids are blob offsets computed by
+    ow_blob_layout (append-only, never hand-written); their OBJ slots come
+    from the rider_icons.json ramp (slotted OBJ ramps only, resolved here
+    so a typo fails the compile, not the battle).  Compile-time constants:
+    zero ROM/RAM cost, no cross-bank reads, no staging.
+    """
+    if not rider_types:
+        sys.stderr.write("ERROR: missing rider HUD declaration\n")
+        return None
+    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
+    if ow_offsets is None:
+        return None
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py --all.")
+    lines.append(" * Do not edit directly -- edit screens/rider_icons.json and re-run.")
+    lines.append(" * Battle per-card OAM rider icons: VRAM tile ids + OBJ palette slots")
+    lines.append(" * for the selected-card element riders.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#ifndef RIDER_TILES_GENERATED_H")
+    lines.append("#define RIDER_TILES_GENERATED_H")
+    lines.append("")
+    for _rid, _elem in (("rider_fire", "BURN"), ("rider_ice", "FREEZE"),
+                        ("rider_poison", "POISON")):
+        _ramp = rider_types.get(_rid)
+        if _ramp is None or _rid not in ow_offsets:
+            sys.stderr.write("ERROR: rider_icons.json missing '%s'\n" % _rid)
+            return None
+        _slot = resolve_obj_palette(_ramp, "rider_icons.%s" % _rid)
+        lines.append("#define RIDER_TILE_%s %d" % (_elem, ENEMY_OW_BASE + ow_offsets[_rid]))
+        lines.append("#define RIDER_OBJ_%s %d" % (_elem, _slot))
+    lines.append("")
+    lines.append("#endif /* RIDER_TILES_GENERATED_H */")
+    lines.append("")
+    return "\n".join(lines)
+
+
+# Fixed OAM tile ids for the battle HUD pips.  Below the BG-art aliasing
+# (OAM 128+ shares physical tiles with BG 128+), clear of the font dup
+# (OAM 0-95) and the hero tiles (98-99); the enemy blob streams to 100+.
+# AP_1/2 sit at 96-97, the marks at 126-127 (blob-adjacent spare); the
+# blob is capped at 26 tiles so growth fails loudly instead of
+# clobbering them (see ow_blob_layout).
+AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "exclaim": 126, "question": 127}
+
+
+def build_ap_output(ap_types, mark_types):
+    """Generate src/game/ap_tiles_generated.h: battle HUD OAM pips.
+
+    Per-card AP-cost pips (top-left of each hand card, selected by energy
+    cost; cost 0 shows none) plus the !/? mark glyphs (wired, placement
+    follows separately).  Tiles are fixed OAM ids (AP_TILE_IDS above --
+    NOT blob offsets); OBJ slots come from the ap/mark_icons.json ramps
+    (slotted OBJ ramps only, resolved here so a typo fails the compile,
+    not the battle).  Compile-time constants: zero ROM/RAM cost, no
+    cross-bank reads, no staging.
+    """
+    if not ap_types or not mark_types:
+        sys.stderr.write("ERROR: missing AP/mark HUD declaration\n")
+        return None
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py --all.")
+    lines.append(" * Do not edit directly -- edit screens/ap_icons.json /")
+    lines.append(" * screens/mark_icons.json and re-run.")
+    lines.append(" * Battle HUD OAM pips: fixed VRAM tile ids (AP_TILE_IDS) +")
+    lines.append(" * OBJ palette slots for AP-cost pips and !/? marks.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#ifndef AP_TILES_GENERATED_H")
+    lines.append("#define AP_TILES_GENERATED_H")
+    lines.append("")
+    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2")):
+        _ramp = ap_types.get(_cell)
+        if _ramp is None:
+            sys.stderr.write("ERROR: ap_icons.json missing '%s'\n" % _cell)
+            return None
+        _slot = resolve_obj_palette(_ramp, "ap_icons.%s" % _cell)
+        lines.append("#define AP_TILE_%s %d" % (_vid, AP_TILE_IDS[_cell]))
+        lines.append("#define AP_OBJ_%s %d" % (_vid, _slot))
+    for _cell, _vid in (("exclaim", "EXCLAIM"), ("question", "QUESTION")):
+        _ramp = mark_types.get(_cell)
+        if _ramp is None:
+            sys.stderr.write("ERROR: mark_icons.json missing '%s'\n" % _cell)
+            return None
+        _slot = resolve_obj_palette(_ramp, "mark_icons.%s" % _cell)
+        lines.append("#define %s_TILE %d" % (_vid, AP_TILE_IDS[_cell]))
+        lines.append("#define %s_OBJ %d" % (_vid, _slot))
+    lines.append("")
+    lines.append("#endif /* AP_TILES_GENERATED_H */")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_battle_obj_output(art_sets, art_order):
+    """Generate C code for OAM battle-art OBJ ramps (Florent's model).
+
+    Fixed bank (no #pragma: 39 bytes the bank-4 loader reads directly --
+    fixed ROM is always mapped, so no staging or trampoline is needed and
+    bank 4, which overflows otherwise, stays untouched). Raw RGB555 byte
+    pairs (CGB order, low first), matching RGB8() semantics.
+    """
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    _obj_order = []
+    for _sid in art_order:
+        _oramp = (art_sets[_sid] or {}).get("obj_palette")
+        if _oramp and _oramp not in _obj_order:
+            if _oramp not in _ramps:
+                raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj ramp '{_oramp}'")
+            _obj_order.append(_oramp)
+        _alt = (art_sets[_sid] or {}).get("obj_alt_palette")
+        if _alt and _alt not in _obj_order:
+            if _alt not in _ramps:
+                raise SystemExit(f"ERROR: combat_art/{_sid}: unknown obj_alt ramp '{_alt}'")
+            _obj_order.append(_alt)
+    # NOTE: eye-glow ramps do NOT join this table (see build_battle_glow_output).
+
+    def _rgb555(rgb):
+        v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
+        return v & 0xFF, (v >> 8) & 0xFF
+
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/combat_art/ and re-run.")
+    lines.append(" * Fixed bank (no pragma): read by the bank-4 art loader.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    lines.append("/* OBJ ramps for OAM battle art. Indexed by g_battle_art_obj. */")
+    lines.append("const uint8_t g_battle_obj_ramps[] = {")
+    for _oramp in _obj_order:
+        _pairs = ", ".join("0x%02X, 0x%02X" % _rgb555(c) for c in _ramps[_oramp])
+        lines.append(f"    /* {_oramp} */ {_pairs},")
+    lines.append("};")
+    lines.append("/* Per art set (art_order): OBJ ramp index, or 0xFF = BG stamp. */")
+    lines.append("const uint8_t g_battle_art_obj[] = {%s};" %
+                 ", ".join("0x%02X" % (_obj_order.index((art_sets[_sid] or {}).get("obj_palette"))
+                                       if (art_sets[_sid] or {}).get("obj_palette") else 0xFF)
+                           for _sid in art_order))
+    lines.append("/* Per art set (art_order): second OBJ ramp index for off-ramp")
+    lines.append(" * cells (spider eye), or 0xFF = none.  Programmed into")
+    lines.append(" * BATTLE_OBJ_SCRATCH2 at battle entry (bank-5 alt loader). */")
+    lines.append("const uint8_t g_battle_art_obj_alt[] = {%s};" %
+                 ", ".join("0x%02X" % (_obj_order.index((art_sets[_sid] or {}).get("obj_alt_palette"))
+                                       if (art_sets[_sid] or {}).get("obj_alt_palette") else 0xFF)
+                           for _sid in art_order))
+    lines.append("/* Per art set (art_order): frame-relative cell bitmask drawn")
+    lines.append(" * with the alt ramp (uint8: width*height must be <= 8). */")
+    _masks = []
+    for _sid in art_order:
+        _cells = (art_sets[_sid] or {}).get("obj_alt_cells") or []
+        _m = 0
+        for _c in _cells:
+            if isinstance(_c, int) and 0 <= _c < 8:
+                _m |= (1 << _c)
+        _masks.append("0x%02X" % _m)
+    lines.append("const uint8_t g_battle_art_alt_mask[] = {%s};" % ", ".join(_masks))
+    lines.append("")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def build_battle_glow_output(art_sets, art_order):
+    """Generate C code for eye-glow overlay descriptors (BG-stamped sets).
+
+    Bank 5 (lives with its only reader, battle_oam_banked.c -- same bank,
+    no staging or trampoline; the fixed bank, ~16 B under 0x8000, and
+    bank 4, which overflows otherwise, stay untouched). Per art set
+    (art_order): the overlay eye-cell bitmask (0x00 = none), plus the
+    unlit/lit ramp indices into the file-local g_battle_glow_ramps table
+    below (0xFF = none). The ramp bytes ride along (deduped, append-only)
+    instead of indexing the fixed-bank g_battle_obj_ramps: banked code
+    cannot read across banks (AGENTS.md banked.h), and growing the fixed
+    table would erase the last headroom. Both tables come from one script
+    run off the same palette.txt, pinned by --check.
+    """
+    from palette_parse import parse_palette as _parse_palette
+    _, _ramps = _parse_palette()
+    _glow_order = []
+    for _sid in art_order:
+        _glow = (art_sets[_sid] or {}).get("glow") or {}
+        for _key in ("unlit", "lit"):
+            _gramp = _glow.get(_key)
+            if _gramp and _gramp not in _glow_order:
+                _glow_order.append(_gramp)
+
+    def _rgb555(rgb):
+        v = ((rgb[0] >> 3) | ((rgb[1] >> 3) << 5) | ((rgb[2] >> 3) << 10)) & 0x7FFF
+        return v & 0xFF, (v >> 8) & 0xFF
+
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/combat_art/ and re-run.")
+    lines.append(" * Bank 5: read by the bank-5 battle OAM pass.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#pragma bank 5")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    lines.append("/* Eye-glow ramp bytes (CGB order, low first). Indexed by")
+    lines.append(" * g_battle_art_glow_unlit/lit below. */")
+    lines.append("const uint8_t g_battle_glow_ramps[] = {")
+    for _gramp in _glow_order:
+        _pairs = ", ".join("0x%02X, 0x%02X" % _rgb555(c) for c in _ramps[_gramp])
+        lines.append(f"    /* {_gramp} */ {_pairs},")
+    lines.append("};")
+    lines.append("/* Per art set (art_order): overlay eye-cell bitmask")
+    lines.append(" * (frame0-relative row-major indices, all < 6: one OAM")
+    lines.append(" * stride per enemy slot). */")
+    _masks = []
+    for _sid in art_order:
+        _glow = (art_sets[_sid] or {}).get("glow") or {}
+        _m = 0
+        for _c in _glow.get("cells") or []:
+            if isinstance(_c, int) and 0 <= _c < 6:
+                _m |= (1 << _c)
+        _masks.append("0x%02X" % _m)
+    lines.append("const uint8_t g_battle_art_glow_mask[] = {%s};" % ", ".join(_masks))
+    lines.append("/* Per art set (art_order): unlit/lit ramp indices into")
+    lines.append(" * g_battle_glow_ramps above (0xFF = no overlay). Programmed")
+    lines.append(" * into the battle scratch OBJ slots at battle entry. */")
+    for _key in ("unlit", "lit"):
+        lines.append("const uint8_t g_battle_art_glow_%s[] = {%s};" %
+                     (_key, ", ".join("0x%02X" % (_glow_order.index(((art_sets[_sid] or {}).get("glow") or {}).get(_key))
+                                                                 if ((art_sets[_sid] or {}).get("glow") or {}).get(_key) else 0xFF)
+                                                 for _sid in art_order)))
+    lines.append("")
     lines.append("")
 
     return "\n".join(lines)
 
 
 # Battle hand-card skin (screens/cards_skin.json): per BattleCardType
-# weapon icon tile + CGB palette, per element status icon tile + palette,
-# and the card box geometry.  Icon names resolve to the fixed VRAM icon
-# tiles ui_init loads (ui.h UI_TILE_CARD_*: 104-112); colors to UI_COLOR_*
-# palette indices.  The generated const g_card_skin (bank 4, card_skin.c)
+# weapon icon tile + CGB palette, and the card box geometry.  Icon names
+# resolve to the fixed VRAM icon tiles ui_init loads (ui.h UI_TILE_CARD_*: 104-109); colors to UI_COLOR_*
+# palette indices.  Element riders are OAM sprites now (screens/enemy_types
+# rider_*, programmed at battle entry), not BG tiles: the skin carries no
+# element section.  The generated const g_card_skin (bank 4, card_skin.c)
 # is staged into the WRAM mirror g_card_skin_wram by
 # battle_hud_load_banked() at battle entry.
 ICON_TILES = {
@@ -568,32 +1073,31 @@ ICON_TILES = {
     # <slug>.png (checked on every invocation) EXCEPT 'amulet', which is an
     # atlas-only icon with no combat-tileset entry.
     # NOTE: VRAM tile DATA for the weapon icons (sword/shield/bow/dagger/
-    # ring) and the element status tiles comes from the combat tileset via
+    # ring) comes from the combat tileset via
     # the card-frames sheet (the banked loader overwrites the atlas data
-    # the atlas loop loads at 104-108 and 110/111/112).
+    # the atlas loop loads at 104-108).
     'combat_sword_icon': 104, 'combat_shield_icon': 105,
     'combat_bow_icon': 106, 'combat_dagger_icon': 107,
     'combat_ring_icon': 108, 'amulet': 109,
-    'combat_fire_status': 110, 'combat_ice_status': 111,
-    'combat_poison_status': 112,
     'combat_hp_icon': 113, 'combat_ap_icon': 114,
     'combat_deck_icon': 116,
+    'combat_ap_dot': 111,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
-    # Limited-use arrow counters (bow floor row): remaining-uses glyphs
-    # 0/1/2/3, plus the power-row nine icon.  VRAM ids must match the tail
-    # of s_card_tile_vram_ids (src/ui/ui_battle_content.c) — free BG fetch
-    # slots 98-102, nothing else ever writes them.
+    # Limited-use arrow counters (bow floor row + HEAL rings sharing it):
+    # remaining-uses glyphs 0..5, plus the power-row nine icon.  VRAM ids
+    # must match the tail of s_card_tile_vram_ids
+    # (src/ui/ui_battle_content.c) — free BG fetch slots 97/98-103,
+    # nothing else ever writes them.  5_arrows reuses the trailing blank
+    # slot 103 (same overwrite trick as 4_arrows on 97).
     'combat_0_arrows_left': 98, 'combat_1_arrow_left': 99,
     'combat_2_arrows_left': 100, 'combat_3_arrows_left': 101,
-    'combat_nine_icon': 102,
+    'combat_nine_icon': 102, 'combat_4_arrows_left': 97,
+    'combat_5_arrows_left': 103,
 }
 SKIN_COLORS = {'none': 0, 'fire': 1, 'iron': 2, 'field': 3, 'poison': 4,
                'wood': 5, 'gold': 6, 'dim': 7}
 # BattleCardType order (src/battle/card.h): SWORD SHIELD BOW HEAL DAGGER.
 SKIN_TYPE_KEYS = ['sword', 'shield', 'bow', 'heal', 'dagger']
-# StatusId order (src/rpg/status.h): NONE POISON BURN FREEZE; none has no
-# JSON entry (the icon cell stays blank).
-SKIN_ELEM_KEYS = [None, 'poison', 'fire', 'ice']
 
 DEFAULT_SKIN = {
     'box': {'w': 3, 'h': 4},
@@ -602,12 +1106,7 @@ DEFAULT_SKIN = {
         'shield': {'icon': 'combat_shield_icon', 'color': 'wood'},
         'bow':    {'icon': 'combat_bow_icon',    'color': 'gold'},
         'heal':   {'icon': 'combat_ring_icon',   'color': 'field'},
-        'dagger': {'icon': 'combat_dagger_icon', 'color': 'poison'},
-    },
-    'elements': {
-        'fire':   {'icon': 'combat_fire_status',   'color': 'fire'},
-        'ice':    {'icon': 'combat_ice_status',    'color': 'iron'},
-        'poison': {'icon': 'combat_poison_status', 'color': 'poison'},
+    'dagger':   {'icon': 'combat_dagger_icon',   'color': 'poison'},
     },
 }
 
@@ -679,22 +1178,6 @@ def load_card_skin():
             sys.stderr.write("ERROR: cards_skin.types.%s color '%s' not in %s\n"
                              % (key, entry.get('color'), sorted(SKIN_COLORS)))
             return None
-    elements = skin.get('elements') or {}
-    for key in SKIN_ELEM_KEYS:
-        if key is None:
-            continue
-        entry = elements.get(key)
-        if not entry:
-            sys.stderr.write("ERROR: cards_skin.elements missing '%s'\n" % key)
-            return None
-        if entry.get('icon') not in ICON_TILES:
-            sys.stderr.write("ERROR: cards_skin.elements.%s icon '%s' not in %s\n"
-                             % (key, entry.get('icon'), sorted(ICON_TILES)))
-            return None
-        if entry.get('color') not in SKIN_COLORS:
-            sys.stderr.write("ERROR: cards_skin.elements.%s color '%s' not in %s\n"
-                             % (key, entry.get('color'), sorted(SKIN_COLORS)))
-            return None
     return skin
 
 
@@ -721,17 +1204,11 @@ def build_card_skin_output(skin):
     lines.append("    { %s }," % ", ".join(str(ICON_TILES[skin['types'][k]['icon']]) for k in SKIN_TYPE_KEYS))
     lines.append("    /* weapon_color: %s */" % " ".join(SKIN_TYPE_KEYS))
     lines.append("    { %s }," % ", ".join(str(SKIN_COLORS[skin['types'][k]['color']]) for k in SKIN_TYPE_KEYS))
-    lines.append("    /* elem_tile: none poison fire ice (none = blank font tile;")
-    lines.append("     * JSON 'fire' = STATUS_BURN, 'ice' = STATUS_FREEZE) */")
-    lines.append("    { 0, %s }," % ", ".join(str(ICON_TILES[skin['elements'][k]['icon']]) for k in SKIN_ELEM_KEYS if k))
-    lines.append("    /* elem_color: none %s */" % " ".join(
-        k for k in SKIN_ELEM_KEYS if k))
-    lines.append("    { 0, %s }," % ", ".join(str(SKIN_COLORS[skin['elements'][k]['color']]) for k in SKIN_ELEM_KEYS if k))
     # Limited-use arrow counters: at most one card type carries them
-    # (the bow); uses_tile is indexed by remaining uses 0..4 (clamped),
-    # uses_power_tile is the power-row glyph for that type.
+    # (the bow, shared by HEAL rings); uses_tile is indexed by remaining
+    # uses 0..5, uses_power_tile is the power-row glyph for that type.
     uses_type, uses_tiles, uses_power = skin_uses_icons(skin)
-    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..4, uses_power_tile */")
+    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..5, uses_power_tile */")
     lines.append("    %d," % uses_type)
     lines.append("    { %s }," % ", ".join(uses_tiles))
     lines.append("    %d" % uses_power)
@@ -743,19 +1220,19 @@ def build_card_skin_output(skin):
 def skin_uses_icons(skin):
     """Resolve the limited-use arrow counters: the (single) card type
     with a uses_icons list -> (BATTLE_CARD_TYPE index, tile list indexed
-    by remaining uses 0..4, power icon tile).  Exactly five icons,
-    ordered uses 4..0 (slot 4 doubles as the clamp target for uses > 4);
-    uses_power_icon is the power-row glyph for that type."""
+    by remaining uses 0..5, power icon tile).  Exactly six icons,
+    ordered uses 5..0; uses_power_icon is the power-row glyph for that
+    type."""
     if skin is None:
-        return 0xFF, ["0"] * 5, 0
+        return 0xFF, ["0"] * 6, 0
     for idx, key in enumerate(SKIN_TYPE_KEYS):
         entry = skin['types'][key]
         icons = entry.get('uses_icons')
         if not icons:
             continue
-        if len(icons) != 5:
-            raise ValueError("cards_skin.%s.uses_icons must list exactly 5 "
-                             "icons (uses 4,3,2,1,0)" % key)
+        if len(icons) != 6:
+            raise ValueError("cards_skin.%s.uses_icons must list exactly 6 "
+                             "icons (uses 5,4,3,2,1,0)" % key)
         for name in icons:
             if name not in ICON_TILES:
                 raise ValueError("cards_skin.%s.uses_icons: unknown icon "
@@ -766,10 +1243,10 @@ def skin_uses_icons(skin):
             raise ValueError("cards_skin.%s.uses_power_icon: unknown icon "
                              "'%s' (not in the combat tileset slugs)"
                              % (key, power_name))
-        # JSON order is uses 4..0; the ROM indexes by remaining uses.
+        # JSON order is uses 5..0; the ROM indexes by remaining uses.
         tiles = [ICON_TILES[name] for name in reversed(icons)]
         return idx, [str(t) for t in tiles], ICON_TILES[power_name]
-    return 0xFF, ["0"] * 5, 0
+    return 0xFF, ["0"] * 6, 0
 
 
 def load_battle_hud():
@@ -934,6 +1411,8 @@ def main(args=None):
                         help="Print the png2gb --tile-coords string for battle_enemy_art.h (set order, frame0 then frame1 per set) and exit")
     parser.add_argument("--ow-coords", action="store_true",
                         help="Print the png2gb --tile-coords string for enemy_ow_tiles.h (sorted enemy-id order) and exit")
+    parser.add_argument("--ap-coords", action="store_true",
+                        help="Print the png2gb --tile-coords string for ap_tiles.h (AP cost pips + !/? marks, fixed order) and exit")
 
     args = parser.parse_args(args)
 
@@ -955,7 +1434,9 @@ def main(args=None):
     if hud is None:
         return 1
 
-    # Load hero.json for OW blob
+    # Load hero.json for the starter-deck table (hero_content.c) and the
+    # hero.json content checks below -- never for the OW blob (the hero
+    # loads its own tiles and shares no blob slots with enemies).
     hero_json = None
     hero_path = REPO_ROOT / "screens" / "hero.json"
     if hero_json is None and hero_path.exists():
@@ -968,6 +1449,9 @@ def main(args=None):
             for frame in ['frame0', 'frame1']:
                 for (x, y) in set_frame_cells(art_sets[sid], frame):
                     coords.append("%d,%d" % (x, y))
+        if not coords:
+            print("ERROR: --gfx-coords produced no tiles", file=sys.stderr)
+            return 1
         print(" ".join(coords))
         return 0
 
@@ -1018,7 +1502,7 @@ def main(args=None):
                     if name not in HERO_TILE_COORDS:
                         print("WARNING: hero.json: unknown overworld tile '%s'" % name)
                 pal = ow.get('palette', 0)
-                if not (0 <= pal <= 7):
+                if isinstance(pal, int) and not (0 <= pal <= 7):
                     print("WARNING: hero.json: overworld.palette %s out of 0-7" % pal)
         else:
             print("WARNING: screens/hero.json not found")
@@ -1050,32 +1534,60 @@ def main(args=None):
         return 0
 
     if args.ow_coords:
-        # Enemies only: the hero overworld sprite is loaded separately via
-        # HERO_DESOLATE_SPRITE_TILE_ID (not from this blob), so prepending
-        # hero cells here would shift every enemy OAM offset by the hero's
-        # tile count and break the ow_tile values in battle_types.c (which
-        # are computed hero-excluded by ow_blob_layout).  The blob order
-        # must match battle_types.c exactly: sorted enemy-id order.
-        _offsets, names = ow_blob_layout(enemy_types, hero_json)
+        # Enemies + tail riders only: the hero overworld sprite is loaded
+        # separately via HERO_DESOLATE_SPRITE_TILE_ID and never from this
+        # blob (its vestigial hero-first layout path once over-counted the
+        # budget by 2 and, swallowed by the Makefile $(...) substitution,
+        # shipped a sheet-order blob that scrambled every OAM sprite while
+        # all tile-id assertions stayed green).  The blob order must match
+        # battle_types.c exactly: sorted enemy-id order, riders appended
+        # at the tail (same tail rule as ow_blob_layout).
+        _rider_types = load_rider_types()
+        if _rider_types is None:
+            return 1
+        _offsets, names = ow_blob_layout(enemy_types, _rider_types)
         if names is None:
             return 1
         coords = []
-        hero_cells = []
-        if hero_json is not None:
-            hero_ow = hero_json.get('overworld') or None
-            if hero_ow is not None:
-                hero_cells = hero_json['overworld'].get('cells', [])
         for n in names:
-            if n not in hero_cells:
-                coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --ow-coords produced no tiles", file=sys.stderr)
+            return 1
+        print(" ".join(coords))
+        return 0
+
+    if args.ap_coords:
+        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1,
+        # ap_2, then the marks -- matches AP_TILE_IDS; ap_3 stays staged
+        # until a 3-cost card exists and is deliberately excluded here).
+        _ap_types = load_ap_types()
+        _mark_types = load_mark_types()
+        if _ap_types is None or _mark_types is None:
+            return 1
+        coords = []
+        for n in ["ap_1", "ap_2", "exclaim", "question"]:
+            if n not in ENEMY_TILE_COORDS:
+                print("ERROR: --ap-coords: '%s' not on the enemy sheet" % n, file=sys.stderr)
+                return 1
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --ap-coords produced no tiles", file=sys.stderr)
+            return 1
         print(" ".join(coords))
         return 0
 
 # Generate outputs
     battle_screens_output = build_battle_screens_output(battle_screens, {})
-    enemy_types_output = build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets, hero_json)
+    rider_types = load_rider_types()
+    if rider_types is None:
+        return 1
+    enemy_types_output, ow_count = build_enemy_types_output(
+        enemy_types, art_sets, art_order, art_offsets,
+        rider_types)
     if enemy_types_output is None:
         return 1
+    ow_count_output = build_ow_count_output(ow_count)
     hero_output = build_hero_output(hero_json)
     card_skin_output = build_card_skin_output(skin)
     if card_skin_output is None:
@@ -1083,24 +1595,53 @@ def main(args=None):
     hud_skin_output = build_battle_hud_output(hud)
     if hud_skin_output is None:
         return 1
+    battle_obj_output = build_battle_obj_output(art_sets, art_order)
+    battle_glow_output = build_battle_glow_output(art_sets, art_order)
+    rider_output = build_rider_output(enemy_types, rider_types)
+    if rider_output is None:
+        return 1
+    ap_types = load_ap_types()
+    if ap_types is None:
+        return 1
+    mark_types = load_mark_types()
+    if mark_types is None:
+        return 1
+    ap_output = build_ap_output(ap_types, mark_types)
+    if ap_output is None:
+        return 1
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
+    # Write battle_obj_tables.c (fixed bank OBJ ramps for OAM battle art)
+    battle_obj_path = output_dir / "battle_obj_tables.c"
+    # Write battle_glow_content.c (bank-5 eye-glow overlay descriptors)
+    battle_glow_path = output_dir / "battle_glow_content.c"
     # Write battle_types.c
     battle_types_path = output_dir / "battle_types.c"
+    # Write enemy_ow_count.c (bank-8 blob size for the ui_init OAM stream)
+    ow_count_path = output_dir / "enemy_ow_count.c"
     # Write hero_content.c (data-driven starter deck)
     hero_content_path = output_dir / "hero_content.c"
     # Write card_skin.c (battle hand-card skin)
     card_skin_path = output_dir / "card_skin.c"
     # Write hud_skin.c (battle HUD skin)
     hud_skin_path = output_dir / "hud_skin.c"
+    # Write rider_tiles_generated.h (battle per-card OAM rider icons)
+    rider_path = output_dir / "rider_tiles_generated.h"
+    # Write ap_tiles_generated.h (battle HUD OAM pips: AP cost + !/?)
+    ap_path = output_dir / "ap_tiles_generated.h"
 
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
+                            (battle_obj_path, battle_obj_output),
+                            (battle_glow_path, battle_glow_output),
                             (battle_types_path, enemy_types_output),
+                            (ow_count_path, ow_count_output),
                             (hero_content_path, hero_output),
                             (card_skin_path, card_skin_output),
-                            (hud_skin_path, hud_skin_output)):
+                            (hud_skin_path, hud_skin_output),
+                            (rider_path, rider_output),
+                            (ap_path, ap_output)):
             try:
                 committed = path.read_text(encoding="utf-8")
             except FileNotFoundError:
@@ -1108,18 +1649,49 @@ def main(args=None):
             if committed is None or committed != fresh:
                 print("DRIFT: fresh compile differs from %s" % path, file=sys.stderr)
                 return 1
-        print("battle compile --check OK: %s, %s, %s, %s and %s match fresh output"
-              % (battle_screens_path, battle_types_path, hero_content_path,
-                 card_skin_path, hud_skin_path))
+        # Cross-artifact guard: src/gfx/enemy_ow_tiles.h is emitted by
+        # png2gb (gfx rule), not here, so drift above cannot catch a blob
+        # generated with the wrong tile order/count (a swallowed
+        # --ow-coords error once shipped a sheet-order blob that
+        # scrambled every OAM sprite while every byte-check passed).
+        # The header must hold exactly ow_count tiles (16 bytes each).
+        _blob_path = REPO_ROOT / "src" / "gfx" / "enemy_ow_tiles.h"
+        try:
+            _blob_text = _blob_path.read_text(encoding="utf-8")
+            _m = re.search(r"enemy_ow_tiles\[(\d+)\]", _blob_text)
+            _blob_bytes = int(_m.group(1)) if _m else -1
+        except (OSError, ValueError):
+            _blob_bytes = -1
+        if _blob_bytes != ow_count * 16:
+            print("DRIFT: %s holds %d bytes, expected %d (ow_count %d tiles); "
+                  "re-run make gfx" % (_blob_path, _blob_bytes,
+                                        ow_count * 16, ow_count),
+                  file=sys.stderr)
+            return 1
+        print("battle compile --check OK: %s, %s, %s, %s, %s, %s, %s and %s match fresh output"
+              % (battle_obj_path, battle_glow_path, battle_screens_path, battle_types_path,
+                 ow_count_path, hero_content_path, card_skin_path, hud_skin_path))
         return 0
 
     with open(battle_screens_path, "w") as f:
         f.write(battle_screens_output)
     print("Wrote %s" % battle_screens_path)
 
+    with open(battle_obj_path, "w") as f:
+        f.write(battle_obj_output)
+    print("Wrote %s" % battle_obj_path)
+
+    with open(battle_glow_path, "w") as f:
+        f.write(battle_glow_output)
+    print("Wrote %s" % battle_glow_path)
+
     with open(battle_types_path, "w") as f:
         f.write(enemy_types_output)
     print("Wrote %s" % battle_types_path)
+
+    with open(ow_count_path, "w") as f:
+        f.write(ow_count_output)
+    print("Wrote %s" % ow_count_path)
 
     with open(hero_content_path, "w") as f:
         f.write(hero_output)
@@ -1132,6 +1704,13 @@ def main(args=None):
     with open(hud_skin_path, "w") as f:
         f.write(hud_skin_output)
     print("Wrote %s" % hud_skin_path)
+
+    with open(rider_path, "w") as f:
+        f.write(rider_output)
+    print("Wrote %s" % rider_path)
+    with open(ap_path, "w") as f:
+        f.write(ap_output)
+    print("Wrote %s" % ap_path)
 
     return 0
 

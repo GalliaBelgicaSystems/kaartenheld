@@ -2,7 +2,6 @@
  "name": "status_freeze_skip",
  "test": true,
  "description": "On-hit status rider Phase D: a SW1 hand card carrying FREEZE (chance 255=guaranteed) applies FREEZE to the slime; the frozen slime skips its next attack entirely (TURN_SKIPPED, no ENEMY_CARD_PLAYED, no incoming damage)",
- "scenario_id": "BATTLE_BOOT",
  "actions": [
   {
    "type": "wait",

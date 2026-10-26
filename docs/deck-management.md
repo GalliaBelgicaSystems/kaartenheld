@@ -1,7 +1,7 @@
-# Deck Management — CARDS Menu & Starter Deck
+# Deck Management — DECK Menu & Starter Deck
 
 Authoritative spec for the deck-management feature: the starter deck grant,
-the unified CARDS menu, and the input contract around it. Semantics of the
+the unified DECK menu, and the input contract around it. Semantics of the
 underlying collection/deck engine live in `docs/deck.md`; this document owns
 the *player-facing* management layer.
 
@@ -9,7 +9,7 @@ the *player-facing* management layer.
 
 ## 1. Starter deck
 
-A new game grants a real, owned 12-card deck (collection **and** deck state in
+A new game grants a real, owned 10-card deck (collection **and** deck state in
 `GameState.cards`, written by `game_new_game()` via the silent mutators
 `deck_collection_add` / `deck_add_card` — no boot telemetry).  The contents
 and order are data, not code: `screens/hero.json` `starter_deck` (ordered
@@ -18,15 +18,19 @@ draw-pile CardIds), compiled by `battle_compile.py` into
 in the level editor's Hero view.  The default set is:
 
 ```text
-IRON_SWORD    ×4   → SW3   (max_copies 4)
-WOODEN_SHIELD ×3   → SH2   (max_copies 3)
-FIRE_SWORD    ×3   → SW4   (unlimited uses; BURN rider)
-POISON_DAGGER ×2   → DA1   (max_copies 3)
+WOOD_SWORD    ×4   → SW1   (max_copies 4)
+WOODEN_SHIELD ×4   → SH1   (max_copies 4)
+FIRE_SWORD    ×2   → SW3   (unlimited uses; BURN rider, bronze tier)
 ```
 
+No daggers: the first POISON_DAGGER (DA2, max_copies 3) comes from the
+field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
+one-shot via `STORY_FLAG_ID_FIELD_CHEST`, announced by its own reward
+speech that also grants +1 AP).
+
 The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
-the opening battle hand is `SW3 SW3 SH2 SH2 SW4` and the draw pile starts at
-7. The original five-card grant was enlarged so a fresh file can actually
+the opening battle hand is `SW1 SW1 SH1 SH1 SW3` and the draw pile starts at
+5. The original five-card grant was enlarged so a fresh file can actually
 cycle its deck (draw → discard → reshuffle) without shopping first.
 
 Consequences:
@@ -37,60 +41,69 @@ Consequences:
   `g_hero_starter_deck` table through the card catalog, so it always
   mirrors the granted set byte-for-byte (including the first-five deal
   order).
-- Healing is **not** free at the start. The only heal source is the shop's
-  IRON RING card — **RG5** (power 5, `uses_per_battle` 3, price 20g).
-  Buy it, then add it to the deck from the CARDS menu.
+- Healing is **not** free at the start. The only guaranteed heal source is
+  the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 3,
+  price 20g).  Buy it, then add it to the deck from the DECK menu.
 - Shop rows render the ITEM code derived from the card definition
-  (`ui_card_code_str`: weapon-type code + power digit, e.g. `RG5`, `SW3` --
+  (`sc_card_code_str` in the bank-2 shop body: weapon-type code + power digit, e.g. `RG4`, `SW5` --
   a HEAL card is a ring, so the shop shows `RG` rather than its battle
   code `HE`) plus its `price` — no display strings are duplicated in the
   shop layer.
 - The old 20-card starter table is gone; the deck grows toward the 20-card
   cap through play.
 
-## 2. The CARDS menu
+## 2. The DECK menu
 
-START opens the quick screen. It has two tabs: **CARDS** and **QUEST**
-(LEFT/RIGHT switches). The former separate DECK tab is merged into CARDS:
-every owned, deckable card is one list entry showing its deck membership.
+START opens the quick screen. It has four tabs: **DECK**, **QUEST**,
+**HERO** and **GEM** (LEFT/RIGHT switches: RIGHT advances, LEFT goes
+back). The DECK tab lists every owned, deckable card as one entry showing
+its deck membership.
 
 ### Layout
 
-Each card occupies a **pair of rows**:
+Row 0 holds the tab labels (`DECK QUEST HERO GEM`); row 1 the `^` caret
+under the active tab. The DECK list starts at row 2 with a column
+header (`AP MATERIAL TYPE`) at row 3:
 
 ```text
-  * FILTER/SORT *            ← top row (see §4)
-> I SW                    4      ← name row: cursor + lore name + membership
-  Sword: physical               ← description row (combat description)
-  W SH                    3
-  Shield: block dmg
-  ...
+DECK QUEST HERO GEM        <- row 0 (tabs)
+^                          <- row 1 (caret under DECK)
+  * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
+   AP MATERIAL TYPE     <- row 3 (column header)
+>   1 WOOD SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
+    1 WOOD SHIELD        4     element-colored full name, decked count
+    1 BRONZE SWORD       2
 ```
 
-- **Lore name**: `def->name`, the player-facing card name (e.g. `I SW`,
-  `W SH`, `F SW`, `I RG`), shown in the CARDS tab and the detail page. The
-  combat hand keeps the short `<battle_type><power>` code (`SW3`, `HE5`, ...)
-  since that is where the abbreviation fits the HUD.
-- **Description**: `card_get_description(battle_type)` — the same string the
-  battle HUD shows.
+- **Full name**: `<MATERIAL> <WEAPON>` (e.g. `IRON SWORD`, `WOOD SHIELD`,
+  `MYTHRIL BOW`), element-colored: red for fire-rider cards, blue for ice,
+  purple for poison; plain cards stay default ink. The combat hand keeps the
+  short `<battle_type><power>` code (`SW1`, `HE1`, ...) since that is where
+  the abbreviation fits the HUD.
+- **Icons**: weapon tile at col 2 (wood palette), element rider OAM over the
+  col-1 elem cell plus its element color span; **AP cost** digit at cols 3-4.
 - **Membership column** (rightmost): the decked-copy count as a digit
   (`0` = none, `1`..`n` = copies in the deck), so partial stacks (starter
-  4x I SW / 3x W SH / 3x F SW, ring up to 3) are visible at a glance.
+  4x WOOD SWORD / 4x WOOD SHIELD / 2x BRONZE SWORD, one shop ring) are visible
+  at a glance.
 - SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
-- ~6 pairs visible; scrolling moves by pair.
+- up to 11 cards visible (rows 4-14) under the row-3 column header;
+  scrolling shifts the window (the FILTER/SORT row scrolls
+  off once the caret leaves the first window).
 
 ### Actions
 
 | Input | Context | Effect |
 |---|---|---|
 | START | overworld / menu | open / close the menu |
-| LEFT / RIGHT | menu | switch tab |
-| UP / DOWN | card rows | move cursor by entry (UP from first card reaches the top row) |
+| LEFT / RIGHT | menu | switch tab (RIGHT advances, LEFT goes back) |
+| UP / DOWN | card rows | move cursor by entry (UP from first card reaches the FILTER/SORT row) |
+| UP / DOWN | quest rows | move cursor by entry (wraps around) |
 | A | card row | add one copy; clear all copies when fully decked (§3) |
-| SELECT | CARDS row | detail submenu (§5) |
-| SELECT | QUEST row | placeholder quest detail text |
-| B | main list, not on top row | jump to first card row (**step 1**) |
-| B | on top FILTER/SORT row | close the menu (**step 2**) |
+| SELECT | DECK row | detail submenu (§5) |
+| SELECT | QUEST row | quest detail: giver, objective, progress (§5) |
+| B | main list, not on top row | jump to the top row (**step 1**) |
+| B | on top row | close the menu (**step 2**) |
 | B | any submenu | back out one level |
 
 The two-step B is deliberate: B never closes the menu directly from the card
@@ -110,11 +123,10 @@ A routes through the real mechanics — no UI-side shortcuts:
   - `DECK MIN 5` — the clear is rejected all-or-nothing when the cards
     left after removing every copy of this card would drop the deck below
     **5** (`DECK_MIN_CARDS`, one full opening hand). Nothing is removed in
-    that case. On the 12-card starter a single-card clear can no longer
-    breach the floor (the largest stack is 4 swords, leaving 8), so the
+    that case. On the 10-card starter a single-card clear can no longer
+    breach the floor (the largest stack is 4 swords, leaving 6), so the
     boundary is reached by clearing stacks in sequence — e.g. after the
-    swords and shields are cleared, the fire-sword clear at deck 5 is
-    rejected.
+    swords are cleared, the shield clear at deck 6 is rejected.
     `deck_remove_card()` enforces the same floor as an engine backstop for
     any other caller.
 
@@ -134,19 +146,51 @@ values; A validates and applies them to the list; B backs out unchanged.
 
 SELECT on a highlighted entry opens a full-property view; B returns.
 
-CARDS:
+DECK (example: BRONZE SWORD with a fire rider):
 
 ```text
-NAME   WD RING
-TYPE   HEAL
-PWR    5        COST   1
-USES   3/battle (- = unlimited)
-MAX CP 3        PRICE  20
-OWNED  x1       IN DECK x0
+  BRONZE SWORD          <- element-colored full name + weapon icon
+FIRE RIDER              <- on-hit element rider (or NO RIDER)
+TYPE ATTACK             <- ATTACK / DEFEND / HEAL combat role
+AP COST             1   <- numbers right-aligned to col 18
+POWER               3
+USES              INF   <- per-battle uses (INF = unlimited)
+OWN     1 DECK        0
+SELL               5G   <- merchant sell value (-- when not buyable)
+SEL:BACK                <- A:SELL SEL:BACK at a buying merchant
 ```
 
-QUEST: a one-line placeholder (`no details yet`); per-quest detail is future
-work.
+QUEST (example: MONSTER HUNT):
+
+```text
+MONSTER HUNT
+MAYOR IN TOWN           <- who gave the quest
+KILL 5 MONSTERS         <- the condition
+3/5 monsters            <- where you stand (DONE when complete,
+                         ACTIVE for counter-less quests)
+GOT +1 AP               <- what the reward was (completed quests only;
+                         e.g. GOT SHOP OPENED for LOST AMULET)
+SEL:BACK
+```
+
+HERO is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
+`GOLD <n>`, `CARDS <n>` (total owned copies).
+
+## 5b. GEM tab (gems)
+
+The fourth tab lists owned gems, one row per gem (`STRAIGHT GEM` + `ON` /
+`OFF` equip state, skill line below).  Empty pocket: `NO GEMS YET` /
+`WIN +20 AT NIS`.  Gems start at zero owned; gem 0 is won at the
+chuck-a-luck table by leaving +20 net up in one sitting
+(docs/chuck-a-luck.md).  Owning alone does nothing -- A toggles the
+equipped bit manually (never auto-equipped), at most MAX_EQUIPPED_GEMS=3
+equipped at once (`MAX 3 GEMS` refusal otherwise).  Equipped state lives
+in `VARIABLE_ID_GEM_EQUIPPED` (owned in `VARIABLE_ID_GEM_OWNED`), so the
+snapshot, descriptor, saves and the roundtrip cover gems with no
+transport churn; the grant itself is observable through the prize
+dialogue (`DIALOGUE_STARTED KOBOLD_PRIZE`) and the skill through
+`COMBO_RESOLVED` (tier 10).  Scenarios: `gem_empty`, `gem_equip`,
+`gem_unequip`, `gem_grant_net20`, `gem_grant_norepeat`, `gem_no_grant`.
 
 ## 6. Reshuffle semantics (combat)
 
@@ -162,7 +206,7 @@ restated here because it constrains the menu's promises:
   enemy still attacks).
 - `uses_remaining` travels inside the `Card` copy through discard/draw/
   reshuffle, so **limited cards stay depleted across reshuffles** while
-  unlimited cards cycle freely. A depleted HE5 returns to the hand but is
+  unlimited cards cycle freely. A depleted HE1 returns to the hand but is
   unplayable (skipped by cursor movement and auto-select).
 
 ## 7. Telemetry contract
@@ -182,11 +226,11 @@ semantic assertion names.
 | Scenario | Proves |
 |---|---|
 | `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
-| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW3 SW3 SH2 SH2 SW4 from the 12-card table) |
+| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW1 SW1 SH1 SH1 SW3 from the 10-card table) |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
 | `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |
-| `reshuffle_preserves_limits` | HE5 (ring) depletes after 3 plays and stays dead across reshuffle; SW keeps cycling |
+| `reshuffle_preserves_limits` | HE1 (ring) depletes after 3 plays and stays dead across reshuffle; SW keeps cycling |
 | `herb_purchase_flow` | buy herb → add to deck → battle heal 5 |
 
 Existing scenarios bound to the old tab/filter/sort keybindings are updated

@@ -1,0 +1,55 @@
+{
+ "name": "dog_greeting_next",
+ "test": true,
+ "description": "The wild dog's second page: A advances from Meow to Bark bark I mean (two-page dialogue, rogue's confession)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "DOG_GREETING"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Bark, bark I mean."
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 15,
+   "contains": "Meow."
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 15,
+   "y": 15,
+   "facing": "UP"
+  },
+  "seed": 8506,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
+}

@@ -2,7 +2,6 @@
  "name": "save_load_roundtrip",
  "test": true,
  "description": "SAVE captures the canonical state to SRAM; mutating state then LOAD restores it exactly",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "save"
@@ -32,8 +31,18 @@
    "expected": 3
   },
   {
+   "type": "variable",
+   "variable": "GEM_OWNED",
+   "expected": 1
+  },
+  {
+   "type": "variable",
+   "variable": "GEM_EQUIPPED",
+   "expected": 1
+  },
+  {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "IRON_RING",
    "expected": 1
   },
   {
@@ -59,7 +68,9 @@
    "MET_MAYOR": true
   },
   "variables": {
-   "MONSTERS_DEFEATED": 3
+    "MONSTERS_DEFEATED": 3,
+    "GEM_OWNED": 1,
+    "GEM_EQUIPPED": 1
   },
   "party": {
    "HERO": {
@@ -68,7 +79,7 @@
    }
   },
   "inventory": {
-   "WOOD_RING": 1
+   "IRON_RING": 1
   },
   "currency": {
    "GOLD": 50

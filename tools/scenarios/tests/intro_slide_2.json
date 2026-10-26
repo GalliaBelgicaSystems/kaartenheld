@@ -1,0 +1,65 @@
+{
+ "name": "intro_slide_2",
+ "test": true,
+ "description": "NEW GAME intro slide 2: advancing twice from slide 0 shows But from the.../with ancient.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "INTRO"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "But from the"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "with ancient"
+  }
+ ]
+}

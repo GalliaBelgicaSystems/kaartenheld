@@ -11,18 +11,16 @@
 /* Hero starter deck in exact draw-pile order.  Count and
  * order come from screens/hero.json; both the new-game
  * grant and the battle fallback deck read this table. */
-const uint8_t g_hero_starter_deck_count = 12;
-const uint8_t g_hero_starter_deck_ids[12] = {
-    CARD_IRON_SWORD,
-    CARD_IRON_SWORD,
+const uint8_t g_hero_starter_deck_count = 10;
+const uint8_t g_hero_starter_deck_ids[10] = {
+    CARD_WOOD_SWORD,
+    CARD_WOOD_SWORD,
     CARD_WOODEN_SHIELD,
     CARD_WOODEN_SHIELD,
     CARD_FIRE_SWORD,
-    CARD_IRON_SWORD,
+    CARD_WOOD_SWORD,
     CARD_WOODEN_SHIELD,
     CARD_FIRE_SWORD,
-    CARD_FIRE_SWORD,
-    CARD_POISON_DAGGER,
-    CARD_POISON_DAGGER,
-    CARD_IRON_SWORD
+    CARD_WOODEN_SHIELD,
+    CARD_WOOD_SWORD
 };

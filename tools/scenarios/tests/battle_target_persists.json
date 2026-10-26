@@ -1,7 +1,7 @@
 {
  "name": "battle_target_persists",
  "test": true,
- "description": "The player's selected enemy stays targeted into the next player turn. On the Mountain Pass trio, DOWN moves the caret to the middle slime, an SW2 attack lands on it (16 -> 14), the enemy counter is deflected/absorbed, and back at turn 2 the caret is STILL on the middle slime (row 4 caret at column 9, the TARGET's 14 HP, caret never reset by the turn boundary). TARGET_CHANGED is emitted exactly once (0 -> 1) by the DOWN move.",
+ "description": "The player's selected enemy stays targeted into the next player turn. On the Mountain Pass trio, DOWN moves the caret to the middle slime, an SW2 attack lands on it (10 -> 8), the enemy counter is deflected/absorbed, and back at turn 2 the caret is STILL on the middle slime (row 4 caret at column 9, the TARGET's 8 HP, caret never reset by the turn boundary). TARGET_CHANGED is emitted exactly once (0 -> 1) by the DOWN move.",
  "actions": [
   {
    "type": "press",
@@ -74,7 +74,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 14
+   "expected": 8
   },
   {
    "type": "event_occurred",

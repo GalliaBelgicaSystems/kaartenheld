@@ -1,18 +1,17 @@
 {
  "name": "inventory_initial",
  "test": true,
- "description": "Declarative initial_state injects card collection quantities into the canonical GameState; injected WOOD_RING x2 coexists with the new-game starter grant (IRON_SWORD x4)",
- "scenario_id": "NEW_GAME",
+ "description": "Declarative initial_state injects card collection quantities into the canonical GameState; injected POISON_DAGGER x2 coexists with the new-game starter grant (WOOD_SWORD x4)",
  "actions": [],
  "assertions": [
   {
    "type": "inventory",
-   "item": "WOOD_RING",
+   "item": "POISON_DAGGER",
    "expected": 2
   },
   {
    "type": "inventory",
-   "item": "IRON_SWORD",
+   "item": "WOOD_SWORD",
    "expected": 4
   }
  ],
@@ -25,7 +24,7 @@
   },
   "seed": 7003,
   "inventory": {
-   "WOOD_RING": 2
+   "POISON_DAGGER": 2
   }
  }
 }

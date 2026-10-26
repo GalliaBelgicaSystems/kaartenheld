@@ -2,7 +2,6 @@
  "name": "movement_stability",
  "test": true,
  "description": "Move right, down, left across overworld with 60-frame waits, asserting player position updates incrementally without triggering full screen redraw events on steps",
- "scenario_id": "NEW_GAME",
  "actions": [
   {
    "type": "press",

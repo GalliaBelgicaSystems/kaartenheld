@@ -1,0 +1,51 @@
+{
+ "name": "alert_rearm_save_menu",
+ "test": true,
+ "description": "Same-map reload re-arms the alert via a real load: after the forest entry alert expires, saving then loading the slot (real load_game_slot path) triggers a fresh entry scan -- the sting plays a second time (sfx_count == 2) and the kobold's ! marker returns.",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "load",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 7
+  },
+  {
+   "type": "oam_tile",
+   "entry": 30,
+   "expected": 126
+  }
+ ]
+}

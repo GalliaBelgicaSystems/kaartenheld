@@ -1,0 +1,94 @@
+{
+ "name": "shop_rider_sweep",
+ "test": true,
+ "description": "Two-line ring+bow stock carries no element riders (both cards are STATUS_NONE): the bow row and empty entries show no rider icon and no phantom icons leak. The iron ring row shows the green health '+' (tile 11): every healing ring carries the health rider (docs/loot.md 34.1).",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 1,
+   "expected": 11
+  },
+  {
+   "type": "oam_tile",
+   "entry": 2,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 4,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 5,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 6,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 7,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 8,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 9,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 10,
+   "expected": 0
+  },
+  {
+   "type": "oam_attr",
+   "entry": 1,
+   "expected": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 6001,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

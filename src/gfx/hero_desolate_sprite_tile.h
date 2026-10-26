@@ -4,7 +4,7 @@ const uint8_t hero_desolate_sprite_tile[32] = {
     0x4C, 0x4C,   /*  #  ##   */
     0x4C, 0x4C,   /*  #  ##   */
     0x5F, 0x5F,   /*  # ##### */
-    0x7D, 0x7D,   /*  ##### # */
+    0x7D, 0x7F,   /*  #####:# */
     0x1F, 0x1F,   /*    ##### */
     0x1E, 0x1E,   /*    ####  */
     0x12, 0x12,   /*    #  #  */
@@ -13,7 +13,7 @@ const uint8_t hero_desolate_sprite_tile[32] = {
     0x4C, 0x4C,   /*  #  ##   */
     0x4C, 0x4C,   /*  #  ##   */
     0x5F, 0x5F,   /*  # ##### */
-    0x7D, 0x7D,   /*  ##### # */
+    0x7D, 0x7F,   /*  #####:# */
     0x1F, 0x1F,   /*    ##### */
     0x1E, 0x1E,   /*    ####  */
     0x12, 0x12,   /*    #  #  */

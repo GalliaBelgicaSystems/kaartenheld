@@ -2,7 +2,6 @@
  "name": "actor_collision_blocking",
  "test": true,
  "description": "Blocking World Actor (Mayor) stops movement and the player position is unchanged",
- "scenario_id": "ACTOR_COLLISION_BLOCKING",
  "actions": [
   {
    "type": "press",

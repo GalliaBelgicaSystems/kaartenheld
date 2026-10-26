@@ -7,8 +7,10 @@
 #include "game_ids.h"
 
 /* ── Dialogue table (game content, banked ROM) ─────────────────────
- * Compiled into MBC5 ROM bank GAME_CONTENT_BANK (the `#pragma bank 2`
- * below) so the fixed bank 0 / _HOME area stays small.  The engine never
+ * Compiled into MBC5 ROM bank 7 (the `#pragma bank 7`
+ * below) so the fixed bank 0 / _HOME area stays small.  Bank 7
+ * has room (bank 2, home of the event/card/shop tables, is full).
+ * The engine never
  * reads this table directly: core/dialogue.c copies the matching row and
  * its text into WRAM staging in dialogue_start_def(), so the banked layout
  * is transparent to the dialogue screen and the bank register is restored
@@ -18,42 +20,15 @@
  * render 18 chars wide.  Unused line slots are left NULL by the
  * partial initializer; dialogue_start_def() only reads the first
  * line_count slots. */
-#pragma bank 2
+#pragma bank 7
 
 const DialogueDefinition g_dialogues[] = {
     {
-        DIALOGUE_ID_ADVICE_HERMIT,
-        "HERMIT:",
-        8,
-        {"Combos beat raw", "power: a PAIR", "beats two lone", "cards.", "", "Rings are wild:", "they can finish", "any straight."},
-        0
-    },
-    {
-        DIALOGUE_ID_ADVICE_KNIGHT,
-        "KNIGHT:",
-        5,
-        {"Beyond this hall", "the throne room", "waits. Steel your", "deck before you", "face the lord."},
-        0
-    },
-    {
-        DIALOGUE_ID_ADVICE_SCOUT,
-        "SCOUT:",
-        4,
-        {"The ridge is thick", "with kobolds and", "bats. Heal up in", "town first!"},
-        0
-    },
-    {
-        DIALOGUE_ID_ADVICE_SHRINE,
-        "",
-        5,
-        {"The forest keeps", "its old secrets.", "Some doors open", "only to those", "who grow strong."},
-        0
-    },
-    {
         DIALOGUE_ID_AMULET_FOUND,
         "",
-        2,
-        {"You found the", "Lost Amulet!"},
+        3,
+        {"FOUND AMULET!!", "Return to the", "merchant!"},
+        0,
         0
     },
     {
@@ -61,6 +36,47 @@ const DialogueDefinition g_dialogues[] = {
         "",
         1,
         {"Nothing here now."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_CARL_CHEST_FIRST,
+        "CARL:",
+        2,
+        {"Open chest,", "then come back!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_CARL_MAILBOX,
+        "",
+        3,
+        {"Carl the Slime", "1, human ", "settlement road"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_GREETING,
+        "WILD DOG:",
+        4,
+        {"Meow.", "", "", "Bark, bark I mean."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_FIELD_CHEST_AP,
+        "CHEST:",
+        4,
+        {"DAGGER! AP up!", "Daggers can poison", "and attack during", "defense phase!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_FIELD_SIGNPOST,
+        "",
+        4,
+        {"NORTH: Passage to", "forest", "EAST: Human ", "settlement"},
+        0,
         0
     },
     {
@@ -68,6 +84,7 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Mayor trusts you.", "Welcome, hero!"},
+        0,
         0
     },
     {
@@ -75,6 +92,95 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Halt! Keep peace.", "Watch for slimes."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_GUARD_KOBOLD_WARNING,
+        "GUARD:",
+        5,
+        {"Be very careful", "of Kobolds. They", "are very", "aggressive. Only", "Nis here is okay."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_ASK,
+        "HEAL MAGE:",
+        3,
+        {"Do you want me to", "heal your wounds?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_DECLINED,
+        "HEAL MAGE:",
+        2,
+        {"Come back when", "you're hurt."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_REFUSED,
+        "HEAL MAGE:",
+        8,
+        {"You need another", "heal? Are you", "the hero or what?", "If you want to", "heal during", "combat, buy the", "ring from the", "merchant!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_RING,
+        "HEAL MAGE:",
+        8,
+        {"Bought the ring?", "Good! Then listen:", "On attack, a ring", "is a joker: the", "whole hand heals.", "On defense, it", "adds no block, but", "heals over-block."},
+        STORY_FLAG_ID_RING_LESSON,
+        0
+    },
+    {
+        DIALOGUE_ID_HEAL_MAGE_THANKS,
+        "HEAL MAGE:",
+        5,
+        {"All healed!", "Rings can heal", "you as well.", "The merchant", "sells one!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_KNIGHT_SPLIT,
+        "KNIGHT:",
+        3,
+        {"Slime Knight was", "in fact 3 Slimes", "in an armor!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_KOBOLD_FAREWELL,
+        "Nis:",
+        1,
+        {"Come back anytime!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_KOBOLD_INVITE,
+        "Nis:",
+        8,
+        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "+20 NET WINS A GEM", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_KOBOLD_PRIZE,
+        "Nis:",
+        4,
+        {"YOU WON A GEM!", "EQUIP IT: GEM TAB.", "SHORT STRAIGHTS", "ARE YOURS NOW!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MAYOR_EARLY,
+        "MAYOR:",
+        6,
+        {"You've already", "slain 5 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
+        0,
         0
     },
     {
@@ -82,20 +188,31 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Hello! I am Mayor.", "Welcome to town!"},
+        0,
         0
     },
     {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
+        8,
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MERCHANT_EQUIP_TIP,
+        "MERCHANT:",
         3,
-        {"I am the Mayor.", "Slimes menace us.", "Please help us!"},
+        {"Don't forget to", "equip your cards", "from START menu!"},
+        0,
         0
     },
     {
         DIALOGUE_ID_MERCHANT_INTRO,
         "MERCHANT:",
-        3,
-        {"A thief stole my", "family heirloom!", "Search the Forest!"},
+        5,
+        {"A thief stole my", "family heirloom!", "Bandits settle", "north, in the", "mountains!"},
+        0,
         0
     },
     {
@@ -103,41 +220,87 @@ const DialogueDefinition g_dialogues[] = {
         "MERCHANT:",
         3,
         {"You found it!", "Thank you, hero!", "My shop is open now."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MIMIC_REWARD,
+        "",
+        2,
+        {"Your power has", "grown! AP up!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_MONSTERS_SLAIN,
+        "",
+        4,
+        {"You have killed", "many monsters,", "return to the", "mayor!"},
+        0,
         0
     },
     {
         DIALOGUE_ID_QUEST_ACTIVE,
         "MAYOR:",
         2,
-        {"Monsters remain.", "Defeat them all!"},
+        {"Defeat 5 monsters!", "Return for power!"},
+        0,
         0
     },
     {
         DIALOGUE_ID_QUEST_COMPLETE,
         "MAYOR:",
         8,
-        {"You did it!", "Take this Sword!", "I have felt a", "disturbance in the", "ether: I believe", "that something", "dreadful waits for", "you at the Castle."},
+        {"I see you hate", "these monsters as", "much as we do!", "They have", "tormented us", "enough!", "Take this power:", "one more AP!"},
+        0,
         0
     },
     {
         DIALOGUE_ID_QUEST_DONE,
         "MAYOR:",
         2,
-        {"The Sword suits you.", "Go forth, hero!"},
+        {"Use your power.", "Go forth, hero!"},
+        0,
         0
     },
     {
-        DIALOGUE_ID_SHOPKEEPER_GREETING,
-        "SHOP:",
-        2,
-        {"Welcome to my shop.", "Rest up, friend."},
+        DIALOGUE_ID_TUTORIAL_CARL_INTRO,
+        "CARL:",
+        8,
+        {"Human? Here danger", "I teach you fight!", "U/D choose target", "Make Poker!", "Attack with Sword", "Dagger or Bow", "Defend with shield", "Fire, ice, poison!"},
+        0,
         0
     },
     {
-        DIALOGUE_ID_SIGNPOST,
+        DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
+        "CARL:",
+        5,
+        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_GUARDS,
+        "GUARD:",
+        6,
+        {"Careful! North of", "here you'll find", "the castle of the", "Lord of Slimes and", "its desolate", "surroundings!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_SIGNPOST,
         "",
         8,
-        {"East: Town. North:", "Forest (danger!).", "", "ATK: A then SELECT", "Shields add to", "combos (no dmg).", "DEF: shields block", "Combos are poker!"},
+        {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_WAKE_STAIRS,
+        "",
+        2,
+        {"I'm not going", "back down there."},
+        0,
         0
     },
 };

@@ -2,7 +2,6 @@
  "name": "south_field_boot",
  "test": true,
  "description": "Boot directly into the overworld on the South Field scene with roaming enemies",
- "scenario_id": "FOREST_BOOT",
  "actions": [],
  "assertions": [
   {

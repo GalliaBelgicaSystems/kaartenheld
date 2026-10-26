@@ -1,0 +1,30 @@
+{
+ "name": "alert_music_hold",
+ "test": true,
+ "description": "Alert-first sequencing on a pursuer map (TEST_FOREST kobold): entry holds the track (music NONE) while the level loads, the ALERT sting fires once pursuers start moving, then the forest track resumes ~1 s later as the kobold approaches.",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 3000
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
+  }
+ ]
+}

@@ -14,5 +14,9 @@ extern const WorldActorTable g_actor_tables[];
 
 void game_actors_register(void)
 {
+#ifdef TEST_LEVELS
+    actor_register_tables(g_actor_tables, GAME_ACTOR_TABLE_COUNT, GAME_TEST_ACTOR_BANK);
+#else
     actor_register_tables(g_actor_tables, GAME_ACTOR_TABLE_COUNT, GAME_ACTOR_BANK);
+#endif
 }

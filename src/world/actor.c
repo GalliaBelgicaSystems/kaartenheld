@@ -11,24 +11,23 @@
  * directly and spawns hostiles into World.actors runtime slots and
  * friendlies into g_static_actors[].  Gameplay lookups are pure WRAM. */
 
-const WorldActorTable *g_actor_registry = NULL;
-uint8_t g_actor_registry_count = 0;
-static uint8_t g_actor_bank = GAME_ACTOR_BANK;
+const WorldActorTable *g_actor_registry;  /* BSS (52.27) */
+uint8_t g_actor_registry_count;  /* BSS zero (AGENTS.md 52.27) */
 
 StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
-uint8_t g_static_actor_count = 0;
+uint8_t g_static_actor_count;  /* BSS zero (AGENTS.md 52.27) */
 
 /* Per-slot display-name staging (fixed WRAM, always mapped).  The banked
  * loader copies each hostile's def literal here at spawn; encounter code
  * dereferences it with any ROM bank mapped.  Data-driven: every hostile
  * shows its level-JSON display_name in battle (no fixed-bank table). */
-char s_actor_names[MAX_WORLD_ACTORS][12];
+char s_actor_names[MAX_WORLD_ACTORS][13];
 
 void actor_register_tables(const WorldActorTable *tables, uint8_t count, uint8_t bank)
 {
+    (void)bank;
     g_actor_registry = tables;
     g_actor_registry_count = count;
-    g_actor_bank = bank;
 }
 
 uint8_t actor_find_hostile_slot(const World *world, uint8_t x, uint8_t y)
@@ -49,7 +48,10 @@ const StaticActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_
 {
     uint8_t i;
     (void)world;
-    for (i = 0; i < g_static_actor_count; i++) {
+    /* Clamped: a battle-turn stack blast can trash this byte with push
+     * residue (see roadmap post-mortem); the loader never exceeds the
+     * cap, so clamping changes nothing in valid states. */
+    for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
         if (g_static_actors[i].x == x && g_static_actors[i].y == y) {
             return &g_static_actors[i];
         }
@@ -60,9 +62,8 @@ const StaticActorDefinition *actor_find_at(const World *world, uint8_t x, uint8_
 ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState *dialogue)
 {
     if (!actor) return ENGAGE_NONE;
-    if (actor->flags & ACTOR_FLAG_HOSTILE) {
-        return ENGAGE_BATTLE;
-    }
+    /* No hostile branch (see interaction_try_at): the loader never
+     * places a HOSTILE-flagged def in the static table. */
 
     if (actor->interaction == INTERACTION_DIALOGUE) {
         dialogue_start_def(dialogue, actor->dialogue_id);
@@ -86,7 +87,11 @@ void actor_load_scene(World *world, MapId map_id, const GameState *state)
      * tables live in the same ROM bank, so the body reads them directly
      * with no staging copies (AGENTS.md 52.11.1).  Hostile display names
      * are staged into s_actor_names there (fixed WRAM). */
+#ifdef TEST_LEVELS
+    g_bk_call_bank = GAME_TEST_ACTOR_BANK;
+#else
     g_bk_call_bank = GAME_ACTOR_BANK;
+#endif
     g_bk_call_target = (uint16_t)&actor_load_scene_banked;
     g_bk_ptr_a = (void *)world;
     g_bk_ptr_b = (void *)state;
