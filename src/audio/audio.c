@@ -47,6 +47,13 @@ uint8_t sfx_noise_idx;  /* BSS zero (AGENTS.md 52.27) */
 static uint8_t sfx_div;  /* BSS (52.27) */
 static uint8_t sfx_muted;  /* BSS (52.27) */
 
+/* SFX preemption priorities by SFX_* id (fixed bank, 11 bytes): UI blips
+ * (CURSOR) < menu confirms (CONFIRM/SELECT/BACK) < combat and event
+ * cues (ATTACK/HIT/BLOCK/ALERT/WIN/HURT/HEAL).  Must stay in enum order
+ * (audio.h); a new SFX id appends its priority here. */
+static const uint8_t s_sfx_prio[SFX_HEAL + 1] =
+    { 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };
+
 extern uint8_t sfx_step_tick(void);
 extern void mimic_chain_tick(void);
 extern uint16_t g_mimic_intro_left;
@@ -57,6 +64,12 @@ void audio_play_sfx(uint8_t s)
 
     if (!g_sound_enabled) return;
     if (s > SFX_HEAL) return;  /* SFX_HEAL is the last id (audio.h) */
+    /* Preemption policy: a new SFX interrupts only a same-or-lower-
+     * priority one.  UI blips (CURSOR) can no longer cut a combat SFX
+     * short -- which also stopped extending the music-channel mute --
+     * and combat SFX always win over menu noise.  Equal priority
+     * restarts as before (repeated attacks stay responsive). */
+    if (sfx_id <= SFX_HEAL && s_sfx_prio[s] < s_sfx_prio[sfx_id]) return;
     sfx_id = s;
     sfx_tick = 0;
     sfx_tone_idx = 0;
@@ -64,6 +77,14 @@ void audio_play_sfx(uint8_t s)
     sfx_div = 0;
     sfx_muted = 0;
     voices = s_sfx_voices[s];
+    /* Unmute-first handover: the previous SFX may have used a voice
+     * this one does not (e.g. CH2 blip over a CH4 noise).  Without
+     * this, sfx_muted's reset drops the old voice's bit and its music
+     * channel stays muted until the next track change.  Each mute is
+     * self-critical (user context); an ISR tick between two calls
+     * leaks at most one music tick. */
+    huge_music_mute_channel(HT_CH2, HT_CH_PLAY);
+    huge_music_mute_channel(HT_CH4, HT_CH_PLAY);
     if (voices & 0x01) {
         huge_music_mute_channel(HT_CH2, HT_CH_MUTE);
         sfx_muted |= 0x01;
