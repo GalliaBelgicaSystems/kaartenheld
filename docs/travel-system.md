@@ -1,5 +1,47 @@
 # Journey / Oregon Trail System — Detailed Implementation Plan
 
+# 0. Game Design Summary
+
+## Premise
+The hero begins as a cocky adventurer who challenges the Lord of Slime, is defeated, and wakes up in a distant biome. To return and defeat the Lord, they must travel across several biomes, grow stronger, and make difficult choices.
+
+## The Countdown
+- A cosmic event called the **Convergence** will occur in approximately 180 days.
+- The Lord of Slime grows stronger as the event approaches, changing the world and its inhabitants.
+- The player must balance developing their strength, helping others, disrupting the Lord's plans, and travelling quickly.
+- Arriving late changes the world but never causes an automatic game over.
+
+## Travel and Choices
+- Travel advances a global day counter.
+- Events offer choices with different time costs and consequences.
+- Helping people may provide allies, shortcuts, or future opportunities.
+- Ignoring events can save time but may close opportunities or create different story paths.
+- Choices influence relationships, routes, factions, and endings.
+
+## Card Materials
+Cards are made from progressively stronger materials:
+
+**Wood → Bronze → Iron → Steel → Mythril**
+
+Mythril cards are exceptionally powerful and have a unique property: they can manipulate time.
+
+## Rewinding Time
+- The player can burn a Mythril card to rewind time.
+- Initial rule: one Mythril card per day rewound, up to a few days.
+- Burned cards are permanently lost.
+- Rewinding restores recent opportunities, but rewards acquired in the erased period are generally lost.
+- The Lord's overall progression is not completely reversed, preserving the countdown's urgency.
+- Rewinding is optional; the game remains completable without it.
+
+## Design Principles
+- Time is valuable, but not every activity should be a waste of time.
+- Rewinding should offer a second chance, not erase every consequence.
+- Missed opportunities should often lead to alternative stories rather than dead ends.
+- Choices should create different adventures, not simply good or bad outcomes.
+- The hero's journey is about learning that strength requires preparation, responsibility, and sacrifice.
+
+---
+
 ## 1. Purpose
 
 Add a data-driven **journey system** to Kaartenheld that handles travel between distant RPG areas.
@@ -1618,4 +1660,198 @@ vs actual from `PASS` / `FAIL` output alone — no human "looks right
 on screen" step, including the future graphics phase (which asserts
 identical `screen_row` text plus a new `GRAPHICS:` skin block per
 `docs/graphics.md`, never pixel hunts).
+
+---
+
+# 35. Global Day Counter & Convergence Clock (technical)
+
+§0 fixes the design: **~180 days to the Convergence; travel advances a
+global day counter; arriving late changes the world, never game-overs.**
+
+Technical mapping (no new persistent store):
+
+* `VARIABLE_ID_DAY` (new named variable, `game_ids.h`): days elapsed
+  since waking in the distant biome, `0..180+` (`int16`, fits the
+  existing `VariableState.values[]`). `MAX_STATE_VARIABLES` is 16 with
+  8 used, so this consumes one free slot — no struct growth, no SRAM
+  growth, no save-version bump for the slot itself.
+* Increment points (closed list, all through `game_variable_add` so
+  `VARIABLE_SET` telemetry fires): journey day loop (`DAY START`,
+  §12), plus any future wait/rest action. Overworld wandering,
+  dialogue, and battles do **not** tick the clock — only explicit
+  day-advancing actions do. This is what makes "time is valuable, but
+  not every activity is a waste of time" mechanically true.
+* Display: journey screen `Day N / 180` row (§21) plus an overworld
+  HUD readout once the clock exists. Both read the same variable;
+  neither stores a copy (screens hold no persistent state, §54.2).
+* Observability: `VARIABLE_SET` (day), `JOURNEY_DAY_ADVANCED`
+  (day-counter args), semantic `VARIABLES: DAY=N` dump, `variable`
+  scenario assertions. Deterministic under `SET_RNG` like everything
+  else — the clock itself never rolls RNG, it only counts ticks.
+
+# 36. Lord of Slime Progression (technical)
+
+§0: the Lord grows stronger as the Convergence approaches, changing the
+world and its inhabitants.
+
+Technical mapping (derived + one stored variable, no new engine):
+
+* `VARIABLE_ID_LORD_POWER` (new named variable, one more free slot):
+  the Lord's persistent strength. Advanced by the day tick (e.g. +1
+  per N days via the same `DAY START` path) and **reduced** by
+  disruption events (`ADD_VARIABLE` negative amount through the normal
+  journey choice/outcome effects, §15–17). Rewind (§38) deliberately
+  does **not** fully roll this back (see §38).
+* Scaling consumers (all data-driven, no `if (day > X)` in C):
+  - Battle: `battle_init` reads the tier (`LORD_POWER` threshold table
+    in game content, banked like other tuning tables) and applies the
+    existing bonus paths — enemy HP/damage bonus, loot AP-row shift
+    (`LOOT_AP_*` in `src/rpg/loot.h`), status-rider chance. Same
+    functions battles already use; the tier table is content.
+  - Events: route `events.frequency` / pool `weight` entries gain
+    `variable` conditions on `DAY` / `LORD_POWER`, so late-game pools
+    skew toward harder ambushes and Convergence-themed events through
+    the existing first-match / weighted-pick machinery (§14–15).
+  - Dialogue/world: `MAP_ENTER` / `INTERACT` events branch on the same
+    conditions (changed greetings, fortified patrols, closed shortcuts)
+    — again existing `EventCond` vocabulary, not a parallel system.
+* "Never a game over": enforced by content rule, not by engine
+  special-case — no route, event, or scaling tier sets a fail flag or
+  blocks arrival. Late arrival only resolves harder pools/tiers. A
+  `quest_gate`-style scenario pins this (late-day arrival still
+  reaches `ARRIVAL`).
+
+# 37. Card Materials Wood → Mythril (technical)
+
+§0: cards run **Wood → Bronze → Iron → Steel → Mythril**; Mythril is
+exceptionally powerful and manipulates time.
+
+There is **no new material system to build**. The five tiers already
+exist as the loot material axis (`MAT_WOOD..MAT_MYTHRIL`,
+`src/rpg/loot.h`):
+
+* Power bands: `LOOT_POWER(mat, wpn)` — wood 1, bronze 2–3, iron 4–5,
+  steel 6–7, mythril 8–9 (sword/bow high end, shield/dagger/ring low
+  end). Curated cards (`src/game/cards_content.c`) follow the same
+  bands so a material name always implies the same range.
+* Drop gating: `LOOT_AP_BRONZE/IR/STEEL` thresholds on
+  `VARIABLE_ID_ENERGY_POOL` — stronger biomes raise the pool, which
+  unlocks higher material drops through the existing weighted roll
+  (`loot_drop_banked.c`). Biome progression **is** material
+  progression; no journey-specific drop code.
+* Ring charges: `LOOT_RING_USES(mat) = mat + 1` (mythril 5/battle).
+* Time manipulation is **not** a card stat — it is the rewind action
+  (§38), which consumes (burns) a Mythril card through the existing
+  `deck_collection_remove` path (permanent loss, collection + deck
+  counts update, `DECK_MIN_CARDS` floor respected). Any Mythril loot
+  card qualifies; no special "time card" type is needed.
+
+# 38. Rewinding Time by Burning Mythril (technical)
+
+§0 rule: burn one Mythril card per day rewound (up to a few days);
+burned cards are permanently lost; recent opportunities are restored
+but erased-period rewards are lost; the Lord's progression is **not**
+fully reversed; optional, never required for completion.
+
+Implementation shape (checkpoint-restore, bounded for the Game Boy):
+
+* **Dawn checkpoints, not a full history.** SRAM is 8 KB with three
+  1 KB player slots (`SAVE_SLOT_STRIDE 0x0400`, `docs/save-format.md`);
+  ~5 KB is free. Reserve a hidden checkpoint area of 3 × `GameState`
+  (≈3 KB) after the player slots: every `DAY START` copies the current
+  `GameState` into the ring (slot `day % 3`). WRAM cost: none beyond
+  the byte-at-a-time copy loop (no ~800 B stack staging, §52.14).
+  `SAVE_VERSION` bumps when this area is added (format change policy,
+  `src/rpg/save.h`).
+* **Rewind = restore + partial Lord rebate.** Restoring checkpoint
+  `day - N` brings back positions, HP, currency, flags, variables,
+  deck/collection *as of that dawn* — which is exactly why
+  erased-period rewards are lost (they postdate the checkpoint) and
+  why missed opportunities reopen (their trigger flags are un-set
+  again). Then re-apply `LORD_POWER` from a separately-kept running
+  total minus only a small rebate (e.g. restore-then-`+N-1` rather
+  than `+0`), so the countdown's urgency survives the rewind. The
+  Lord total lives outside the checkpoint (one extra SRAM word next
+  to the ring) precisely so the restore cannot zero it.
+* **Burn accounting:** `N` days ←→ `N` Mythril cards, removed via
+  `deck_collection_remove` (each removal emits its normal telemetry;
+  no silent deletes). Guards, all transient menu messages never
+  silent no-ops: no Mythril → no rewind offered; `N` capped by ring
+  depth (3) **and** by cards held; never below day 0; never
+  mid-battle / mid-event-choice (rewind is a dawn/journey-screen
+  action only); deck floor `DECK_MIN_CARDS` enforced per removal.
+* **Observability:** new append-only telemetry `MYTHRIL_REWIND`
+  (`data[4]` = days, card id, day-before, day-after) + reused
+  `VARIABLE_SET` / `CURRENCY_*` / `ACTOR_STATE_CHANGE` from the
+  restore path — but the restore copy itself must **not** emit per-field
+  gameplay telemetry (setup-vs-runtime rule, §53.3); only the rewind
+  event and the burn removals emit. Scenarios: rewind restores flag +
+  position, drops post-checkpoint gold, keeps Lord power within the
+  rebate bound, refuses with no Mythril (`event_not_occurred:
+  MYTHRIL_REWIND` negative test), roundtrip covers the checkpoint
+  area.
+
+# 39. Choices, Relationships, Routes, Factions, Endings (technical)
+
+§0: events cost time and have consequences; helping opens
+allies/shortcuts/futures; ignoring closes some doors and opens others;
+everything feeds relationships, routes, factions, endings.
+
+No new relationship/faction engine. All of it is the existing
+flag/variable/event vocabulary:
+
+* Helping vs ignoring: a journey choice's effects are `SET_FLAG` /
+  `ADD_VARIABLE` / `ADD_CURRENCY` / `SCENE_CHANGE` rows (§17). "Ally"
+  = a flag (e.g. `HELPED_CARAVAN`); "shortcut" = an organizer route
+  or plan with a `requires: flag` condition (§15) that the flag now
+  satisfies; "closed opportunity" = a first-match `INTERACT` /
+  `MAP_ENTER` event whose condition the flag now fails, falling
+  through to the alternative-story event listed after it.
+* Routes: organizer route lists (§7) gain optional per-route `requires`
+  conditions (flag set / variable threshold / currency minimum),
+  validated by `journey_compile.py --check` against the same
+  registries. A new destination, ally shortcut, or faction-locked pass
+  is route JSON + organizer entry — never an engine change.
+* Factions/endings: each faction is one generic variable (standing,
+  e.g. 0–100) and each ending branch is a variable threshold checked
+  by endgame `MAP_ENTER` events setting `VARIABLE_ID_ENDING_SHOWN`.
+  The QUEST menu pattern (§54.6) already proves generic-variable
+  quests render without per-quest screen code; endings reuse it.
+* Design-principles enforcement stays in content review: every
+  significant choice ships **both** branches as events (no dead-end
+  `CONTINUE` with no effect row); "different adventures, not
+  good/bad" means reviewers check that each branch grants *something*
+  (ally, gold, shortcut, lore flag) rather than help = reward /
+  ignore = punishment.
+
+# 40. Save, Memory, and Harness Cost of §35–§39 (normative)
+
+* **WRAM/SRAM:** two generic variable slots (`DAY`,
+  `LORD_POWER`) + one SRAM word for the Lord-rebate total + 3 ×
+  `GameState` hidden checkpoint ring (≈3 KB of the ~5 KB free SRAM).
+  No `GameState` struct growth except the already-planned
+  `JourneyState` (~9 B, §11). Tracked in `make memmap` +
+  `docs/save-format.md` + `docs/roadmap.md` §11; `SAVE_VERSION`
+  bumps once for the checkpoint area.
+* **Banks:** clock/progression math lives in the banked journey body
+  (§26/§33 Phase 1); the checkpoint copy and rewind-restore bodies
+  follow the same `g_bk_call_*` trampoline pattern (§52.11.1),
+  `switch` dispatch only (§52.1), no `%`/`/`/8-bit-`*` in fixed
+  wrappers (§52.18). Content tables (tier thresholds, route
+  `requires`, checkpoint geometry) are compiled JSON in the journey
+  content bank — fixed `_CODE` stays untouched.
+* **Telemetry/snapshot (append-only):** `DAY_ADVANCED` (already
+  `JOURNEY_DAY_ADVANCED`), `LORD_POWER_UP`, `MYTHRIL_REWIND`,
+  `ROUTE_UNLOCKED` as needed; `VARIABLES: DAY / LORD_POWER` lines in
+  the semantic dump; `journey_day`, `variable`, `flag`,
+  `event_occurred / event_not_occurred` assertions only — never byte
+  offsets (§53.7). Descriptor/snapshot version bytes bump with the
+  format change (§53.4).
+* **Phasing:** §35–§37 ride the existing Phase 1–3 (variables exist
+  at P0, tiers/pools at P1–P3); §38 checkpoints + rewind land as a new
+  Phase 6 (after observability lock-in, before any graphics pass);
+  §39 faction/ending content is pure JSON once §35–§36 exist and
+  needs no phase of its own. Each phase still ends green on
+  `make test-harness` + sentinels, `make test`, `make memmap`,
+  `make lint`, `make verify-oam` (§32).
 
