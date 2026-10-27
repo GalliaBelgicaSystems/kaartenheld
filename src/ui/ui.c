@@ -22,6 +22,20 @@ char g_ui_screen_buf[18][21];
 uint8_t g_is_cgb;
 uint8_t g_active_tile_palette[40];
 
+/* BSS (0), and explicitly set to -1 by ui_init() before the first
+ * tileset load (see "Reset tileset cache" there).  A `= -1` initializer
+ * would never be copied by the custom CRT0 (AGENTS.md 52.27) and the
+ * variable would boot as 0 -- a valid tileset id, which could make the
+ * first load a no-op. */
+static int8_t s_loaded_tileset;
+/* BG CRAM kind currently programmed (same cache contract as the tileset
+ * bitmap above: a transition skips the reload when the kind matches, and
+ * every path that programs foreign palettes goes through
+ * ui_invalidate_tileset on the next overworld entry -- screen_change to
+ * OVERWORLD covers battle/menu/shop/dialogue/item returns, scene_change
+ * covers map changes.  Same BSS/-1 discipline as s_loaded_tileset. */
+static int8_t s_loaded_cram;
+
 void ui_set_cram_palette(uint8_t overworld)
 {
     if (!g_is_cgb) return;
@@ -29,6 +43,7 @@ void ui_set_cram_palette(uint8_t overworld)
     g_bk_call_target = (uint16_t)&ui_load_cram_banked;
     g_bk_byte_a = overworld;
     banked_call_run();
+    s_loaded_cram = (int8_t)overworld;
 }
 
 #ifdef DEBUG_BUILD
@@ -62,12 +77,6 @@ extern uint8_t g_anim_count;
 static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
 static void ui_world_tail(const World *world);
-/* BSS (0), and explicitly set to -1 by ui_init() before the first
- * tileset load (see "Reset tileset cache" there).  A `= -1` initializer
- * would never be copied by the custom CRT0 (AGENTS.md 52.27) and the
- * variable would boot as 0 -- a valid tileset id, which could make the
- * first load a no-op. */
-static int8_t s_loaded_tileset;
 
 /* First VRAM tile the font occupies.  Tile 0 is space (0x20), so the tile
  * for char `ch` is base + (ch - ' ').  Also read by the banked battle
@@ -139,8 +148,9 @@ void ui_init(void)
     g_bk_call_target = (uint16_t)&ui_card_tiles_load_banked;
     banked_call_run();
 
-    /* Reset tileset cache; active scene will load its tileset dynamically */
+    /* Reset tileset/CRAM caches; active scene will load its tileset dynamically */
     s_loaded_tileset = -1;
+    s_loaded_cram = -1;
 
     /* Disable GBDK console auto-scroll.  When putchar() advances the cursor
      * past the bottom-right tile, the console normally scrolls the whole
@@ -472,6 +482,7 @@ void ui_load_tileset(uint8_t tileset)
 void ui_invalidate_tileset(void)
 {
     s_loaded_tileset = -1;
+    s_loaded_cram = -1;
 }
 
 static char ui_get_world_tile_glyph(uint8_t t)
@@ -505,7 +516,7 @@ static char ui_get_world_tile_glyph(uint8_t t)
 /* CGB palette for a world cell, from its glyph vocabulary entry
  * (docs/glyphs.md) and tileset kind.  Dedicated small-frame helper: the
  * per-cell path avalanches on inline branches, so the decision lives here
- * (2 params, early returns) and ui_draw_world_cell only pays one call.
+ * (2 params, early returns) and ui_draw_terrain_cell only pays one call.
  * Tree canopy shares field-green, trunks/stumps take wood brown, rocks dim
  * gray, walkable ground takes its tileset's ground color; everything else
  * palette 0 (map changes and power-on attribute garbage stay invisible). */
@@ -538,15 +549,51 @@ static const uint8_t s_castle_ext_slot[16] = {
     26, 8, 17, 18, 19, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 37
 };
 
-static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
+/* Commit one resolved cell to the tilemap ring, the CGB attribute ring,
+ * the DEBUG mirrors, and the semantic screen buffer.  Shared tail of the
+ * terrain pass and the static-actor stamp pass below (one code path, not
+ * two copies, for the fixed-bank budget).  Caller guarantees VBK bank 0
+ * on entry (as ui_draw_world_rect does); leaves it at 0. */
+static void ui_commit_cell_tile(uint8_t col, uint8_t row, uint8_t tile_idx,
+                                char glyph, uint8_t tileset_kind,
+                                uint8_t scroll_x, uint8_t scroll_y)
+{
+    uint8_t sx;
+    uint8_t sy;
+    uint8_t pal;
+    volatile uint8_t *tilemap = (volatile uint8_t *)0x9800;
+
+    ui_vram_sync_write(&tilemap[(row & 31) * 32 + (col & 31)], tile_idx);
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[(row & 31) * 32 + (col & 31)] = tile_idx;
+#endif
+
+    /* CGB ground color (Game Boy Color first; DMG ignores attributes and
+     * keeps grayscale): palette follows the glyph vocabulary
+     * (docs/glyphs.md).  A dedicated small-frame helper (not inline
+     * branches): this cell path avalanches on added locals/branches
+     * (measured +180B for a flat chain), while a 2-param helper compiles
+     * tight. */
+    pal = ui_cell_palette(tile_idx, (uint8_t)glyph, tileset_kind);
+    VBK_REG = 1;
+    ui_vram_sync_write(&((volatile uint8_t *)0x9800)[(row & 31) * 32 + (col & 31)], pal);
+    VBK_REG = 0;
+#ifdef DEBUG_BUILD
+    g_tilemap_attr_mirror[(row & 31) * 32 + (col & 31)] = pal;
+#endif
+
+    sx = (uint8_t)(col - scroll_x);
+    sy = (uint8_t)(row - scroll_y);
+    if (sx < WORLD_VIEW_W && sy < WORLD_VIEW_H) {
+        g_ui_screen_buf[sy][sx] = glyph;
+    }
+}
+
+static void ui_draw_terrain_cell(const World *world, uint8_t col, uint8_t row)
 {
     uint8_t t;
     uint8_t tile_idx;
-    uint8_t sx;
-    uint8_t sy;
     char glyph;
-    const StaticActorDefinition *actor;
-    volatile uint8_t *tilemap = (volatile uint8_t *)0x9800;
 
     if (col >= world->width || row >= world->height) {
         t = TILE_FLOOR;
@@ -554,14 +601,7 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
         t = world->map[row][col];
     }
 
-    actor = actor_find_at(world, col, row);
-    /* Statics are never hostile (the loader spawns every HOSTILE-flagged
-     * def into the runtime slots): ASCII-kind statics own the cell glyph. */
-    if (actor && actor->sprite_kind == SPRITE_KIND_ASCII) {
-        tile_idx = (uint8_t)(ui_font_tile_base + (uint8_t)(actor->visual - ' '));
-        glyph = actor->visual;
-    } else {
-        glyph = ui_get_world_tile_glyph(t);
+    glyph = ui_get_world_tile_glyph(t);
         /* NOTE: no TILE_EXIT branch. Exit gates are invisible triggers:
          * the loader never stamps TILE_EXIT anymore, so gate cells render
          * their underlying terrain art through the ranges below. */
@@ -621,32 +661,33 @@ static void ui_draw_world_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t lookup_id = rpg_lookup_tile_id(world->tileset_kind, glyph);
             tile_idx = lookup_id ? lookup_id : (uint8_t)(ui_font_tile_base + (uint8_t)(glyph - ' '));
         }
-    }
-    ui_vram_sync_write(&tilemap[(row & 31) * 32 + (col & 31)], tile_idx);
-#ifdef DEBUG_BUILD
-    g_tilemap_mirror[(row & 31) * 32 + (col & 31)] = tile_idx;
-#endif
+    ui_commit_cell_tile(col, row, tile_idx, glyph, (uint8_t)world->tileset_kind,
+                        world->scroll_x, world->scroll_y);
+}
 
-    /* CGB ground color (Game Boy Color first; DMG ignores attributes and
-     * keeps grayscale): palette follows the glyph vocabulary
-     * (docs/glyphs.md).  A dedicated small-frame helper (not inline
-     * branches): this cell path avalanches on added locals/branches
-     * (measured +180B for a flat chain), while a 2-param helper compiles
-     * tight. */
-    {
-        uint8_t pal = ui_cell_palette(tile_idx, (uint8_t)glyph, (uint8_t)world->tileset_kind);
-        VBK_REG = 1;
-        ui_vram_sync_write(&((volatile uint8_t *)0x9800)[(row & 31) * 32 + (col & 31)], pal);
-        VBK_REG = 0;
-#ifdef DEBUG_BUILD
-        g_tilemap_attr_mirror[(row & 31) * 32 + (col & 31)] = pal;
-#endif
-    }
-
-    sx = (uint8_t)(col - world->scroll_x);
-    sy = (uint8_t)(row - world->scroll_y);
-    if (sx < WORLD_VIEW_W && sy < WORLD_VIEW_H) {
-        g_ui_screen_buf[sy][sx] = glyph;
+/* Second half of the rect draw: stamp ASCII-kind static actors over the
+ * terrain.  Same end state as the old per-cell actor_find_at scan, but
+ * that scan ran once per cell (up to MAX_STATIC_ACTORS compares x 1024
+ * cells) while this runs once per actor, clamped to the rect so the
+ * dialogue-row restore path keeps its bounds.  Statics are never hostile
+ * (the loader spawns every HOSTILE-flagged def into the runtime slots):
+ * ASCII-kind statics own the cell glyph. */
+static void ui_stamp_static_actors(const World *world, uint8_t c0, uint8_t c1,
+                                   uint8_t r0, uint8_t r1)
+{
+    uint8_t i;
+    uint8_t x;
+    uint8_t y;
+    for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
+        x = g_static_actors[i].x;
+        y = g_static_actors[i].y;
+        if (g_static_actors[i].sprite_kind == SPRITE_KIND_ASCII &&
+            x >= c0 && x < c1 && y >= r0 && y < r1) {
+            ui_commit_cell_tile(x, y,
+                (uint8_t)(ui_font_tile_base + (uint8_t)(g_static_actors[i].visual - ' ')),
+                g_static_actors[i].visual, (uint8_t)world->tileset_kind,
+                world->scroll_x, world->scroll_y);
+        }
     }
 }
 
@@ -704,7 +745,9 @@ void ui_draw_actors_sprites(const World *world)
     banked_call_run();
 }
 
-/* Draw every cell in [c0,c1) x [r0,r1) into the tilemap ring. */
+/* Draw every cell in [c0,c1) x [r0,r1) into the tilemap ring: terrain
+ * pass first, then the static-actor stamp pass (clamped to the same
+ * rect, so the dialogue-row restore path keeps its bounds). */
 static void ui_draw_world_rect(const World *world, uint8_t c0, uint8_t c1,
                                uint8_t r0, uint8_t r1)
 {
@@ -712,9 +755,10 @@ static void ui_draw_world_rect(const World *world, uint8_t c0, uint8_t c1,
     VBK_REG = 0;   /* the tilemap ring lives in VRAM bank 0 */
     for (row = r0; row < r1; row++) {
         for (col = c0; col < c1; col++) {
-            ui_draw_world_cell(world, col, row);
+            ui_draw_terrain_cell(world, col, row);
         }
     }
+    ui_stamp_static_actors(world, c0, c1, r0, r1);
 }
 
 /* Refill the semantic view from the tilemap ring mirror (DEBUG-only).  The
@@ -762,7 +806,7 @@ void ui_draw_world_map(const World *world)
 
     /* Populate the entire 32-column x 32-row background ring during LCD-safe
      * full map redraw. Field: all 32 x 32 cells. Smaller maps: col 20..31 are
-     * filled with floor tiles in ui_draw_world_cell. */
+     * filled with floor tiles in ui_draw_terrain_cell. */
     ui_draw_world_rect(world, 0, 32, 0, 32);
     ui_world_tail(world);
 }
@@ -816,16 +860,24 @@ void ui_draw_world_transition(const World *world)
      * caller ever bypasses game_render, the hide must come back. */
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&ui_wipe_black_banked;
+    g_bk_byte_a = world->scroll_x;
+    g_bk_byte_b = world->scroll_y;
     banked_call_run();
     /* Invisible load: tileset pixels + real CRAM land while every row
      * shows black, so nothing half-loaded can display.  The CRAM load
      * keeps slot 4 black (KEEP bit): re-blackening it afterwards would
-     * cost a whole extra banked dispatch. */
+     * cost a whole extra banked dispatch.  Same-kind crossings skip the
+     * CRAM reload (same cache contract as the tileset bitmap above:
+     * palettes are a pure function of kind, and every foreign programmer
+     * invalidates on overworld re-entry). */
     ui_load_tileset(kind);
-    g_bk_call_bank = 5;
-    g_bk_call_target = (uint16_t)&ui_load_cram_banked;
-    g_bk_byte_a = (uint8_t)(kind | 0x80);
-    banked_call_run();
+    if (s_loaded_cram != (int8_t)kind) {
+        g_bk_call_bank = 5;
+        g_bk_call_target = (uint16_t)&ui_load_cram_banked;
+        g_bk_byte_a = (uint8_t)(kind | 0x80);
+        banked_call_run();
+        s_loaded_cram = (int8_t)kind;
+    }
     /* The old camera dies with the old map: the new one takes effect
      * while the screen is still black, so the viewport never jumps. */
     ui_update_camera(world);

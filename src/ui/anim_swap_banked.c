@@ -61,7 +61,7 @@ uint8_t g_anim_count;
  * no-animation baseline (16.84 ticks/flip both).  A VRAM-index list
  * was chosen over in-draw
  * recording because the record hook would live in fixed-bank
- * ui_draw_world_cell (~38 B of _HOME margin left); the post-redraw
+ * ui_draw_terrain_cell (~38 B of _HOME margin left); the post-redraw
  * rebuild scan needs no fixed-bank loop and no per-cell history.
  * The ring is static between full redraws (hardware SCX/SCY scrolls
  * it, no per-frame redraws) and every redraw rebuilds, so the list is

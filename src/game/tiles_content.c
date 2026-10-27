@@ -213,18 +213,25 @@ void ui_load_tileset_banked(void)
     }
 }
 
-/* Full-ring black wipe for scene transitions (Bank 5).  Blackens CGB
- * slot 4, then paints all 18 ring rows x 32 cols with blank tiles +
- * slot 4 so the viewport is covered whatever SCX shows.  Slot 4 (PAPER)
- * is free in every world tileset, so no map row can need it during the
- * reveal.  All writes go through BANKED_VRAM_WRITE: gate crossings run
- * this wipe with the LCD ON (curtain path skips ui_lcd_off), where an
- * ISR-eclipsed wait would drop the write into Mode 3.  Sole caller is
- * ui_draw_world_transition (always the full ring). */
+/* Viewport-union black wipe for scene transitions (Bank 5).  Blackens CGB
+ * slot 4, then paints the union of the currently displayed viewport
+ * (SCX/SCY: the old map, still on screen) and the incoming viewport
+ * (world scroll staged in g_bk_byte_a/b: what ui_update_camera snaps to
+ * mid-transition) with blank tiles + slot 4.  Cells outside both windows
+ * are never displayed before the reveal repaints the full ring, so the
+ * old whole-ring wipe was ~3x the needed writes on typical chains
+ * (adjacent 20-wide maps share most of the union; worst case degrades
+ * to the full ring, never worse).  Slot 4 (PAPER) is free in every world
+ * tileset, so no map row can need it during the reveal.  All writes go
+ * through BANKED_VRAM_WRITE: gate crossings run this wipe with the LCD
+ * ON (curtain path skips ui_lcd_off), where an ISR-eclipsed wait would
+ * drop the write into Mode 3.  Sole caller is ui_draw_world_transition
+ * (always the full ring reveal). */
 void ui_wipe_black_banked(void)
 {
-    uint8_t r;
-    uint8_t c;
+    uint8_t ox_old, oy_old, ox_new, oy_new;
+    uint8_t x0, x1, y0, y1;
+    uint8_t r, c;
     uint16_t off;
     volatile uint8_t *dst;
     if (g_is_cgb) {
@@ -233,27 +240,40 @@ void ui_wipe_black_banked(void)
             BANKED_VRAM_WRITE(&BCPD_REG, 0);
         }
     }
-    for (r = 0; r < 32; r++) {
-        off = (uint16_t)r << 5;
+    /* Old window: what the PPU shows right now.  New window: what the
+     * transition snaps to (staged scroll; camera_px is already final --
+     * nothing between here and ui_update_camera touches it). */
+    ox_old = (uint8_t)(SCX_REG >> 3);
+    oy_old = (uint8_t)(SCY_REG >> 3);
+    ox_new = g_bk_byte_a;
+    oy_new = g_bk_byte_b;
+    x0 = (ox_old < ox_new) ? ox_old : ox_new;
+    x1 = (uint8_t)(((ox_old < ox_new) ? ox_new : ox_old) + 20);
+    y0 = (oy_old < oy_new) ? oy_old : oy_new;
+    y1 = (uint8_t)(((oy_old < oy_new) ? oy_new : oy_old) + 18);
+    /* Clamp: the camera never parks past 12/14 (world <= 32x32), but a
+     * trashed SCX must bound the loop, not wrap it. */
+    if (x1 > 32) x1 = 32;
+    if (y1 > 32) y1 = 32;
+    for (r = y0; r < y1; r++) {
+        off = (uint16_t)(r & 31) << 5;
         VBK_REG = 0;
-        dst = (volatile uint8_t *)(0x9800u + off);
-        for (c = 0; c < 32; c++) {
+        for (c = x0; c < x1; c++) {
+            dst = (volatile uint8_t *)(0x9800u + off + (c & 31));
             BANKED_VRAM_WRITE(dst, 0);
-            dst++;
         }
         if (g_is_cgb) {
             VBK_REG = 1;
-            dst = (volatile uint8_t *)(0x9800u + off);
-            for (c = 0; c < 32; c++) {
+            for (c = x0; c < x1; c++) {
+                dst = (volatile uint8_t *)(0x9800u + off + (c & 31));
                 BANKED_VRAM_WRITE(dst, (uint8_t)(UI_COLOR_PAPER & 0x07));
-                dst++;
             }
             VBK_REG = 0;
         }
 #ifdef DEBUG_BUILD
-        for (c = 0; c < 32; c++) {
-            g_tilemap_mirror[off + c] = 0;
-            g_tilemap_attr_mirror[off + c] = UI_COLOR_PAPER;
+        for (c = x0; c < x1; c++) {
+            g_tilemap_mirror[off + (c & 31)] = 0;
+            g_tilemap_attr_mirror[off + (c & 31)] = UI_COLOR_PAPER;
         }
 #endif
     }

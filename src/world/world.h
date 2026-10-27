@@ -165,7 +165,7 @@ typedef enum {
      * (g_tiletype_fits_u8; 254 kept clear as buffer), so these live in
      * the free 136..140 gap, NOT contiguously after 71 (72+ belongs to
      * castle/village).  The renderer maps them with (value - 72), not
-     * (value - TILE_FOREST_00): see ui_draw_world_cell.
+     * (value - TILE_FOREST_00): see ui_draw_terrain_cell.
      * value = 72 + VRAM slot.  (141..145 went to the castle exit +
      * extension, 251..253 to the rest of the castle extension.) */
     TILE_FOREST_64 = 136,

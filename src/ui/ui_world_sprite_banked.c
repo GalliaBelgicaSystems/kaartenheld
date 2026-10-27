@@ -157,7 +157,7 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
  * its SPRITE_KIND_* and sub-tile position) and write it straight into shadow
  * OAM; static (non-hostile) actors with sprite art follow in the entries
  * after the hostile slots, while ASCII-kind statics keep their background
- * glyph (see ui_draw_world_cell) and stay hidden here.  The castle boss is
+ * glyph (see ui_draw_terrain_cell) and stay hidden here.  The castle boss is
  * drawn into the background tilemap as a 2x2 block instead.
  * Args: g_bk_ptr_a = const World * (WRAM), g_bk_byte_a = castle flag,
  * g_bk_byte_b = anim_step.  Inactive and SPRITE_KIND_BOSS actors get their
