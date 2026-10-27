@@ -282,16 +282,34 @@ def verify_npc_sprites(sess):
 def verify_obj_map_overrides(sess):
     """Per-map OBJ palette overrides (map.obj_palettes): dog maps program
     OBJ slot 6 with sprites10 (red collar); every other map keeps the
-    canonical sprites9 (merchant orange). Exercises both the declare path
-    and the union-restore path (a same-tileset crossing back must flip
-    slot 6 to orange again). VBlank-gated: mid-scanout CRAM reads back
-    0xFF and pass vacuously."""
+    canonical sprites9 (merchant orange).
+
+    The paired red->orange assertions are mutually non-vacuous: boot state
+    is orange, so red proves the first load applied, and orange-after-red
+    proves the second load reprogrammed (a failed load of either scene
+    fails loudly). The third stage pins the cache-warm branch explicitly
+    (g_loaded_tileset already VILLAGE): TEST_GAMBLE shares TEST_TOWN's
+    tileset but declares no override, so only the union-slot fallback --
+    not the cold-load 24-byte restore -- can flip slot 6 back to orange.
+    VBlank-gated: mid-scanout CRAM reads back 0xFF and pass vacuously."""
     print("== Per-map OBJ palette overrides ==")
     check("OBJ CRAM read in VBlank (dog map)", True, wait_vblank(sess))
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
     check("dog map: OBJ slot 6 is sprites10 (red collar)",
           _ramp_words("sprites10"), obj_cram(sess)[6])
+    # Same-tileset warm restore: TEST_GAMBLE is VILLAGE like TEST_TOWN
+    # but declares no override. The tileset cache must still hold VILLAGE
+    # from the previous load (scenario loads never invalidate it), so the
+    # cold-load canonical restore is skipped and only the union fallback
+    # can produce orange here.
+    check("same-tileset warm cache (VILLAGE)",
+          12, sess._memread(sess.get_symbol("g_loaded_tileset")))
+    check("OBJ CRAM read in VBlank (warm map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "gamble_enter.json"))
+    sess.step(2)
+    check("warm same-tileset map: OBJ slot 6 restored to sprites9 (orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
     check("OBJ CRAM read in VBlank (plain map)", True, wait_vblank(sess))
     sess.load_scenario(load_scenario(sess, "forest_boot.json"))
     sess.step(2)

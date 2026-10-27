@@ -462,7 +462,7 @@ tiles-check:
 # Ramps always win (every tile gets an existing artist ramp); wrongness is
 # reported in generated/tiles/ramp_mismatches.json, never a build failure.
 # See tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
 	@python3 tools/compose_battle_sprites.py
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
@@ -506,6 +506,10 @@ $(GENERATED_TILES_DIR):
 	mkdir -p $(GENERATED_TILES_DIR)
 
 # Consumers rebuild when the generated headers change (they are untracked).
+# obj_map_overrides.inc is read by tiles_content.c (per-map OBJ slot
+# overrides); tile_palette.h already forces that object every run, so this
+# documents the true edge for a future non-phony manifest (review 3.3).
+$(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILES_DIR)/obj_map_overrides.inc
 $(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world/edge_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o $(BUILD_DIR)/debug/world/edge_banked.o: $(GENERATED_TILE_WALK)
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)

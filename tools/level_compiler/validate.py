@@ -470,6 +470,20 @@ def validate_obj_palettes(level_data):
     if errors:
         return errors, warnings
     slot_of_ramp = _obj_ramp_slots()
+    for slot, ramp in overrides.items():
+        # A ramp already assigned to a hardware slot must be overridden in
+        # that same slot: OAM attrs resolve through palette_slots.json
+        # (battle_compile), so programming it elsewhere leaves the sprite
+        # on the canonical slot with the wrong colors. Unslotted ramps
+        # (future new colors) are the point of the system: any slot goes.
+        if ramp in slot_of_ramp and slot_of_ramp[ramp] != slot:
+            errors.append(
+                f"map.obj_palettes slot {slot}: ramp '{ramp}' is assigned to "
+                f"slot {slot_of_ramp[ramp]} in tools/palette_slots.json, not "
+                f"slot {slot} (OAM attrs still resolve to slot "
+                f"{slot_of_ramp[ramp]})")
+    if errors:
+        return errors, warnings
     default_for_slot = _obj_default_ramps()
     for obj in level_data.get("objects", []) or []:
         pal = _object_ow_ramp(obj)
@@ -480,11 +494,19 @@ def validate_obj_palettes(level_data):
         if effective != pal:
             winners = sorted({o.get("id") for o in level_data.get("objects", []) or []
                               if _object_ow_ramp(o) == effective})
-            warnings.append(
-                f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
-                f"but this map programs '{effective}' there (declared winner wins; "
-                f"claimants: {winners}). Declare map.obj_palettes "
-                f"explicitly if the trade is intentional.")
+            if slot in overrides:
+                # The trade was declared on this map: report it, don't
+                # prescribe declaring it.
+                warnings.append(
+                    f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
+                    f"but this map's obj_palettes programs '{effective}' there "
+                    f"(declared winner wins; claimants: {winners}).")
+            else:
+                warnings.append(
+                    f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
+                    f"but this map programs '{effective}' there (declared winner wins; "
+                    f"claimants: {winners}). Declare map.obj_palettes "
+                    f"explicitly if the trade is intentional.")
     return errors, warnings
 
 
