@@ -607,13 +607,13 @@
   "sprites7": {
    "colors": [
     "#f1eb03",
-    "#b6b6b6",
+    "#ffffff",
     "#475ca8",
     "#3f3017"
    ],
    "refs": [
     "SPRITES/background",
-    "SPRITES/npc_beard",
+    "SPRITES/white",
     "SPRITES/mage_cloth",
     "SPRITES/npc"
    ],

@@ -428,7 +428,7 @@
       "label": "exclamation point",
       "gb_constant": "TILE_ACTORS_EXCLAMATION_POINT",
       "walkable": false,
-      "color": "#dbdbdb",
+      "color": "#e4e2de",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_exclamation_point.png",
       "category": "object"
@@ -438,7 +438,7 @@
       "label": "question mark",
       "gb_constant": "TILE_ACTORS_QUESTION_MARK",
       "walkable": false,
-      "color": "#dbdbdb",
+      "color": "#e4e2de",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_question_mark.png",
       "category": "object"

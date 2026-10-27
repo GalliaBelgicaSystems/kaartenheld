@@ -85,10 +85,10 @@
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
-| npc_heal_mage | npc_wizard | sprites8 (7) | ✓ |
+| npc_heal_mage | npc_wizard | sprites8 (7) | ≈ #b6b6b6 |
 | npc_mayor | npc_mayor | sprites8 (7) | ✓ |
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
-| npc_wizard | npc_wizard | sprites7 (5) | ✓ |
+| npc_wizard | npc_wizard | sprites7 (5) | ≈ #b6b6b6 |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
 | slime_knight | slime_knight_frame1, slime_knight_frame2 | sprites11 (3) | ≈ #3c5e26 |
 | slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ✓ |
@@ -160,5 +160,6 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | enemy_ow | [1, 8] | sprites11 | #3c5e26 |
 | enemy_ow | [1, 9] | sprites2 | #b09266 |
 | enemy_ow | [2, 9] | sprites5 | #b09266 |
+| enemy_ow | [3, 5] | sprites7 | #b6b6b6 |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.

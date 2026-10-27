@@ -60,6 +60,7 @@ character_main_outline_bat: #000000
 enemy: #673c3c
 npc: #3f3017
 npc_beard: #b6b6b6
+white: #ffffff
 mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
@@ -128,7 +129,7 @@ sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/c
 sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
 sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
-sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
+sprites7: SPRITES/background, SPRITES/white, SPRITES/mage_cloth, SPRITES/npc
 sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
