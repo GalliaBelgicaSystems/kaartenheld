@@ -5,11 +5,13 @@
 #include <gb/cgb.h>
 #include "tile_palette.h"
 #include "world/world.h"
-#include "actor.h"
-#include "game_ids.h"
 #include "ui/ui.h"
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
+
+/* Set by the game layer on every map entry (marks_banked.c): 1 when the
+ * scene spawns a dog, so OBJ slot 6 carries the red collar ramp. */
+extern uint8_t g_scene_has_dog;
 
 /* Overworld OBJ ramps (same generated source as the fixed-bank copy in
  * ui.c, but static so this bank carries its own: a banked body can only
@@ -214,23 +216,19 @@ void ui_load_tileset_banked(void)
         }
     }
 
-    /* Dog collar: dogs want the red shade (sprites10: key, wood, RED, npc)
-     * but share OBJ slot 6 with the merchant (sprites9: key, wood, ORANGE,
-     * npc).  The two never share a scene (content rule), so on a map that
-     * spawns a dog we patch slot 6's shade 2 to the red that already lives
-     * in slot 7 (sprites8 shade 2) -- no spare OBJ slot, no new data.  The
-     * loop above restored the canonical slot 6 first, so leaving a dog map
-     * restores the merchant ramp automatically. */
+    /* Dog collar: dog maps carry the red shade in OBJ slot 6 (sprites10),
+     * every other map the merchant's orange (sprites9).  g_scene_has_dog is
+     * set on each map entry and is part of the tileset cache key, so this
+     * re-runs even on same-tileset gate crossings.  Slots 5-7 were just
+     * restored canonically above; only shade 2 differs (identical low
+     * byte), so two bytes move the ramp between red and orange. */
     if (g_is_cgb) {
-        for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
-            if (g_static_actors[i].id == ENTITY_ID_DOG) {
-                OCPS_REG = (uint8_t)(0x80 | ((6 << 3) | 4));
-                BANKED_VRAM_WRITE(&OCPD_REG,
-                                  ((const uint8_t *)cgb_obj_palettes)[56 + 4]);
-                BANKED_VRAM_WRITE(&OCPD_REG,
-                                  ((const uint8_t *)cgb_obj_palettes)[56 + 5]);
-                break;
-            }
+        OCPS_REG = (uint8_t)(0x80 | ((6 << 3) | 4));
+        if (g_scene_has_dog) {
+            BANKED_VRAM_WRITE(&OCPD_REG,
+                              ((const uint8_t *)cgb_obj_palettes)[56 + 4]);
+            BANKED_VRAM_WRITE(&OCPD_REG,
+                              ((const uint8_t *)cgb_obj_palettes)[56 + 5]);
         }
     }
 }

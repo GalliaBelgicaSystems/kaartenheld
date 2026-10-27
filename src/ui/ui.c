@@ -445,10 +445,18 @@ void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
 
 
 
+/* Set by the game layer on every map entry (marks_banked.c): 1 when the
+ * scene spawns a dog, so OBJ slot 6 carries the red dog ramp instead of
+ * the merchant's orange.  Part of the tileset cache key: same-kind gate
+ * crossings must re-run the loader when this flips, or the previous map's
+ * slot-6 ramp follows the player (town red -> merchant village). */
+extern uint8_t g_scene_has_dog;
+
 void ui_load_tileset(uint8_t tileset)
 {
-    if (s_loaded_tileset == (int8_t)tileset) return;
-    s_loaded_tileset = (int8_t)tileset;
+    uint8_t key = (uint8_t)(tileset | (uint8_t)(g_scene_has_dog << 7));
+    if ((uint8_t)s_loaded_tileset == key) return;
+    s_loaded_tileset = (int8_t)key;
 
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&ui_load_tileset_banked;
