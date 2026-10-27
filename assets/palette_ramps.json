@@ -472,6 +472,21 @@
    ],
    "slots": []
   },
+  "fightslime_knight": {
+   "colors": [
+    "#ffffff",
+    "#3c5e26",
+    "#5c903a",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_outline_combat_dark",
+    "COMBAT/slime_outline_combat",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
   "fightspider": {
    "colors": [
     "#ffffff",
@@ -526,13 +541,13 @@
     "#f1eb03",
     "#77e331",
     "#5c903a",
-    "#5c903a"
+    "#3c5e26"
    ],
    "refs": [
     "SPRITES/background",
     "SPRITES/slime_light",
     "SPRITES/slime_dark",
-    "SPRITES/slime_dark"
+    "SPRITES/slime_outline"
    ],
    "slots": [
     "obj:3"

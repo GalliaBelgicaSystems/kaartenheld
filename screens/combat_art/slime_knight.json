@@ -6,7 +6,7 @@
   "width": 3,
   "height": 2,
   "oam": true,
-  "obj_palette": "fightslime",
+  "obj_palette": "fightslime_knight",
   "frame0": [
     "combat_top_left_slime_knight",
     "combat_top_middle_slime_knight",

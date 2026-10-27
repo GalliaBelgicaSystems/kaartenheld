@@ -207,10 +207,13 @@ void ui_draw_font_test_banked(void);
  * of a printed '@'. */
 void ui_sprite_init(void);
 void ui_sprite_move(uint8_t px, uint8_t py);
-void ui_sprite_hide(void);
-void ui_sprite_hide_actors_below(uint8_t screen_y);
 void ui_sprite_begin_transition(void);
-void ui_sprite_commit(void);
+/* Aliases (macros, not second fixed-bank functions: the debug fixed bank
+ * has single-digit headroom).  hide == the transition hide; commit == the
+ * frame-boundary shadow-OAM DMA. */
+#define ui_sprite_hide() ui_sprite_begin_transition()
+#define ui_sprite_commit() refresh_OAM()
+void ui_sprite_hide_actors_below(uint8_t screen_y);
 #ifdef DEBUG_BUILD
 /* Transition-hide execution counter (verify-oam): incremented by
  * ui_sprite_begin_transition().  Lets the OAM gate assert the hide RAN
@@ -257,7 +260,13 @@ void ui_lcd_on(void);
 void ui_load_tileset(uint8_t tileset);
 void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);
-void ui_draw_world_full(const World *world);
+/* Full world redraw for a screen that may have clobbered VRAM block 1
+ * (battle/menu -> dialogue backdrop): same body as ui_draw_world_map, so
+ * it is an alias rather than a second fixed-bank function (the debug
+ * fixed bank has no headroom to spare).  The map rect overwrites every
+ * ring cell and the tail resets the semantic NULs, so no ui_clear_screen
+ * is needed. */
+#define ui_draw_world_full(world) ui_draw_world_map(world)
 void ui_draw_world_transition(const World *world);
 void ui_restore_dialogue_rows(const World *world);
 void ui_draw_actors_sprites(const World *world);

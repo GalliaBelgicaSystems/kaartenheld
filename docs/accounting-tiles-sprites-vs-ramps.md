@@ -71,7 +71,7 @@
 | kobold | 3×2 | OAM | fightgoblin (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
 | slime | 3×2 | OAM | fightslime (7) | ✓ |
-| slime_knight | 3×2 | OAM | fightslime (7) | ≈ #3c5e26 |
+| slime_knight | 3×2 | OAM | fightslime_knight (7) | ✓ |
 | spider | 3×2 | OAM | fightspider+fightbat[1] (7+6) | ✓ |
 
 `fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.  Sets with a second ramp (spider eye) program it into scratch slot 6 (BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; their `fit` covers both ramps.
@@ -90,7 +90,7 @@
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
 | npc_wizard | npc_wizard | sprites7 (5) | ✓ |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
-| slime_knight | slime_knight_frame1, slime_knight_frame2 | sprites11 (3) | ≈ #3c5e26 |
+| slime_knight | slime_knight_frame1, slime_knight_frame2 | sprites11 (3) | ✓ |
 | slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ✓ |
 | spider | spider_f0, spider_f1 | sprites (0) | ✓ |
 | treasure_chest | chest_closed, chest_open | sprites5 (1) | ✓ |
@@ -145,19 +145,10 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| battle | [0, 13] | fightslime | #3c5e26 |
-| battle | [0, 14] | fightslime | #3c5e26 |
-| battle | [1, 13] | fightslime | #3c5e26 |
-| battle | [1, 14] | fightslime | #3c5e26 |
-| battle | [2, 13] | fightslime | #3c5e26 |
-| battle | [2, 14] | fightslime | #3c5e26 |
 | enemy_ow | [0, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [0, 8] | sprites11 | #3c5e26 |
 | enemy_ow | [0, 9] | sprites2 | #b09266 |
-| enemy_ow | [0, 11] | sprites11 | #3c5e26 |
 | enemy_ow | [1, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [1, 8] | sprites11 | #3c5e26 |
 | enemy_ow | [1, 9] | sprites2 | #b09266 |
 | enemy_ow | [2, 9] | sprites5 | #b09266 |
 
-Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.
+Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites10, sprites6.

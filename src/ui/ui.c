@@ -254,16 +254,6 @@ void ui_sprite_move(uint8_t px, uint8_t py)
     shadow_OAM[PLAYER_SPRITE_NUM].x = (uint8_t)(px + 8);
 }
 
-/* Hide the player sprite (OAM Y = 0).  Called on transitions away from the
- * overworld so the blob does not float over battle/menu screens.  The sprite
- * is also hidden in real OAM immediately (see ui_sprite_begin_transition)
- * so it is gone before the new screen's full redraw starts wiping the
- * display. */
-void ui_sprite_hide(void)
-{
-    ui_sprite_begin_transition();
-}
-
 #ifdef DEBUG_BUILD
 /* See ui.h: execution evidence for verify-oam (no window breakpoints). */
 volatile uint8_t g_debug_hide_count;
@@ -286,15 +276,6 @@ void ui_sprite_begin_transition(void)
     for (i = 0; i < 40; i++) {
         shadow_OAM[i].y = 0;
     }
-    refresh_OAM();
-}
-
-/* DMA shadow OAM to real OAM.  Called once per frame from main.c right after
- * vsync (during VBlank) so every displayed frame has the sprite in the
- * correct state for that frame; transitions force the hide beforehand in
- * ui_sprite_begin_transition(). */
-void ui_sprite_commit(void)
-{
     refresh_OAM();
 }
 
@@ -950,15 +931,6 @@ void ui_draw_hline(uint8_t y, char ch)
             g_ui_screen_buf[y][x] = ch;
         }
     }
-}
-
-void ui_draw_world_full(const World *world)
-{
-    /* No null guard and no ui_clear_screen(): callers always pass a live
-     * world, and ui_draw_world_map's rect overwrites every ring cell
-     * (32x18 tiles + attrs + mirrors) while the tail resets the
-     * semantic NULs, so the clear was redundant writes. */
-    ui_draw_world_map(world);
 }
 
 /* Restore only the 4 dialogue-box rows (screen rows 14-17) after an

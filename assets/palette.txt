@@ -61,6 +61,7 @@ enemy: #673c3c
 npc: #3f3017
 npc_beard: #b6b6b6
 white: #ffffff
+slime_outline: #3c5e26
 mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
@@ -79,6 +80,7 @@ card_outline: #b09266
 heart_fire_enemy_eyes: #8b1b1b
 slime_combat: #89cc5e
 slime_outline_combat: #5c903a
+slime_outline_combat_dark: #3c5e26
 boss_spider_bat_combat_body: #000000
 boss_combat_body_light: #565656
 spider_combat_knife_handle: #5a4a3d
@@ -133,7 +135,7 @@ sprites7: SPRITES/background, SPRITES/white, SPRITES/mage_cloth, SPRITES/npc
 sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
-sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, SPRITES/slime_outline
 sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/poison_icon
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
@@ -143,6 +145,7 @@ fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/p
 fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+fightslime_knight: COMBAT/background, COMBAT/slime_outline_combat_dark, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
 fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
 fightmimic: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth
