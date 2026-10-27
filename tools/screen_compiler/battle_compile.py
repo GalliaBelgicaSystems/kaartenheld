@@ -47,14 +47,18 @@ def _load_ramp_slots():
     global _ramp_slots
     if _ramp_slots is None:
         try:
-            base = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())["slots"]
-            obj = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())["slots"]
+            base_doc = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())
+            obj_doc = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())
         except (OSError, ValueError, KeyError) as e:
             raise SystemExit(f"ERROR: ramp manifests missing (run make manifest first): {e}")
-        _ramp_slots = (
-            {v["ramp"]: int(k) for k, v in base.items()},
-            {v["ramp"]: int(k) for k, v in obj.items()},
-        )
+        base = base_doc["slots"]
+        obj = obj_doc["slots"]
+        base_map = {v["ramp"]: int(k) for k, v in base.items()}
+        obj_map = {v["ramp"]: int(k) for k, v in obj.items()}
+        # Aliased ramps share an existing slot (never-co-resident owners).
+        for ramp, slot in (obj_doc.get("aliases") or {}).items():
+            obj_map[ramp] = int(slot)
+        _ramp_slots = (base_map, obj_map)
     return _ramp_slots
 
 

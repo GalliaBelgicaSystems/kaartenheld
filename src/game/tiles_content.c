@@ -5,6 +5,8 @@
 #include <gb/cgb.h>
 #include "tile_palette.h"
 #include "world/world.h"
+#include "actor.h"
+#include "game_ids.h"
 #include "ui/ui.h"
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
@@ -209,6 +211,26 @@ void ui_load_tileset_banked(void)
         for (i = 0; i < 24; i++) {
             BANKED_VRAM_WRITE(&OCPD_REG,
                               ((const uint8_t *)cgb_obj_palettes)[40 + i]);
+        }
+    }
+
+    /* Dog collar: dogs want the red shade (sprites10: key, wood, RED, npc)
+     * but share OBJ slot 6 with the merchant (sprites9: key, wood, ORANGE,
+     * npc).  The two never share a scene (content rule), so on a map that
+     * spawns a dog we patch slot 6's shade 2 to the red that already lives
+     * in slot 7 (sprites8 shade 2) -- no spare OBJ slot, no new data.  The
+     * loop above restored the canonical slot 6 first, so leaving a dog map
+     * restores the merchant ramp automatically. */
+    if (g_is_cgb) {
+        for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
+            if (g_static_actors[i].id == ENTITY_ID_DOG) {
+                OCPS_REG = (uint8_t)(0x80 | ((6 << 3) | 4));
+                BANKED_VRAM_WRITE(&OCPD_REG,
+                                  ((const uint8_t *)cgb_obj_palettes)[56 + 4]);
+                BANKED_VRAM_WRITE(&OCPD_REG,
+                                  ((const uint8_t *)cgb_obj_palettes)[56 + 5]);
+                break;
+            }
         }
     }
 }

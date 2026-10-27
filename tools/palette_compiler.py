@@ -93,6 +93,34 @@ def load_slotmap():
     return out
 
 
+def load_aliases(slotmap):
+    """{set: {ramp: slot}} from palette_slots.json "aliases".
+
+    An alias lets a second ramp share an existing hardware slot when the
+    two owners are never on screen together (dogs vs the merchant on OBJ
+    slot 6): the slot map keeps one canonical ramp (what boot programs),
+    and the alias only tells the encoder/OAM-attr resolver that this ramp
+    is slotted, so its colours stay exact instead of nearest-matched.
+    """
+    data = json.loads((REPO_ROOT / "tools" / "palette_slots.json").read_text())
+    raw = data.get("aliases") or {}
+    if not isinstance(raw, dict):
+        raise ValueError("palette_slots.json: 'aliases' wants an object")
+    out = {}
+    for setname, entries in raw.items():
+        if setname not in slotmap:
+            raise ValueError(f"palette_slots.json: alias set '{setname}' is not a slot set")
+        if not isinstance(entries, dict):
+            raise ValueError(f"palette_slots.json: aliases['{setname}'] wants an object")
+        norm = {}
+        for ramp, slot in entries.items():
+            if not isinstance(slot, int) or not (0 <= slot <= 7):
+                raise ValueError(f"palette_slots.json: alias '{ramp}' slot must be 0-7")
+            norm[ramp] = slot
+        out[setname] = norm
+    return out
+
+
 def sheet_cells(png_path):
     """Returns {coord: [rgb...]} unique colors per 8x8 cell."""
     from PIL import Image
@@ -225,6 +253,7 @@ def main():
     import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
     _, ramps = parse_palette()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
 
     for setname, slots in slotmap.items():
         for slot, ramp in slots.items():
@@ -434,6 +463,13 @@ def main():
         for i in sorted(slot_names):
             if slot_names[i] not in [c[0] for c in cand]:
                 cand.append((slot_names[i], slots[i]))
+        # Aliased ramps share a slot with a never-co-resident owner; treat
+        # them as slotted so a declared ramp keeps its exact colours.
+        for _ramp in sorted(aliases.get(setname, {})):
+            if _ramp not in [c[0] for c in cand]:
+                if _ramp not in ramps:
+                    raise ValueError(f"palette_slots.json: alias '{_ramp}' is not a ramp")
+                cand.append((_ramp, ramps[_ramp]))
         cells = sheet_cells(ASSETS_DIR / fname)
         if isinstance(declared, str):
             declared = {c: declared for c in cells}
@@ -582,10 +618,13 @@ def main():
             {"tileset": ts, "palettes": palettes, "tile_ids": ids,
              "tile_palettes": tile_slots, "tile_ramps": tile_ramps}, indent=1))
 
-    # Set manifests for battle_compile + the editor.
+    # Set manifests for battle_compile + the editor.  "aliases" carries the
+    # ramps that share a slot with a never-co-resident owner (dogs -> slot 6),
+    # so battle_compile can resolve them to a palette index.
     for setname in ("base", "obj", "title"):
         (GENERATED_DIR / f"{setname}.json").write_text(json.dumps(
             {"set": setname,
+             "aliases": dict(aliases.get(setname, {})),
              "slots": {str(i): {"ramp": slotmap[setname][i],
                                 "colors": [_hex(c) for c in tables[setname][i]]}
                        for i in sorted(slotmap[setname])}}, indent=1))

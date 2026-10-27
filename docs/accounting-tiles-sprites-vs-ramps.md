@@ -81,7 +81,7 @@
 | sprite | cells | ramp (slot) | fit |
 |---|---|---|---|
 | bat | bat_f0, bat_f1 | sprites (0) | ✓ |
-| dog | dog_f0, dog_f1 | sprites9 (6) | ≈ #8b1b1b |
+| dog | dog_f0, dog_f1 | sprites10 (?) | ✓ |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
@@ -145,10 +145,5 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| enemy_ow | [0, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [0, 9] | sprites2 | #b09266 |
-| enemy_ow | [1, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [1, 9] | sprites2 | #b09266 |
-| enemy_ow | [2, 9] | sprites5 | #b09266 |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites10, sprites6.

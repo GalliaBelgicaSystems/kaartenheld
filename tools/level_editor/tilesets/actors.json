@@ -308,7 +308,7 @@
       "label": "one ap",
       "gb_constant": "TILE_ACTORS_ONE_AP",
       "walkable": false,
-      "color": "#b09266",
+      "color": "#8d754a",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_one_ap.png",
       "category": "object"
@@ -318,7 +318,7 @@
       "label": "two ap",
       "gb_constant": "TILE_ACTORS_TWO_AP",
       "walkable": false,
-      "color": "#b09266",
+      "color": "#8d754a",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_two_ap.png",
       "category": "object"
@@ -328,7 +328,7 @@
       "label": "three ap",
       "gb_constant": "TILE_ACTORS_THREE_AP",
       "walkable": false,
-      "color": "#b09266",
+      "color": "#8d754a",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_three_ap.png",
       "category": "object"
