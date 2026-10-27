@@ -74,13 +74,6 @@ static void ow_oam_stream_cell(uint8_t oam_id, const uint8_t *src)
     }
 }
 static uint8_t s_last_map_init;
-/* 1 when the current scene spawns a dog.  OBJ slot 6 then carries the red
- * collar ramp (sprites10) instead of the merchant's orange (sprites9);
- * dogs and the merchant never share a scene.  Written on every map entry
- * below, read by ui_load_tileset's cache key and the tileset loader's
- * slot-6 patch -- the loader's cache would otherwise keep the previous
- * map's patch across same-tileset gate crossings. */
-uint8_t g_scene_has_dog;
 static uint8_t s_last_map;
 
 /* Alert-first music sequencing, derived from the running alert_ttl
@@ -305,11 +298,6 @@ static void marks_refresh(void)
         s_last_map = 0xFF;
     } else if (g_game.world.map_id != s_last_map) {
         s_last_map = g_game.world.map_id;
-        /* OBJ slot 6: dog red vs merchant orange.  Set the flag the
-         * tileset cache key and the loader's slot-6 patch read; this
-         * runs on every map entry, including same-tileset crossings
-         * where the loader's cache would otherwise keep the old ramp. */
-        g_scene_has_dog = 0;
         pursuers = 0;
         for (k = 0; k < MAX_WORLD_ACTORS; k++) {
             const WorldActorRuntime *a = &g_game.world.actors[k];
@@ -390,16 +378,10 @@ static void marks_refresh(void)
     }
 
     /* Statics: quest "?" from quest state. */
-    g_scene_has_dog = 0;
     for (i = 0; i < MAX_STATIC_ACTORS; i++) {
         uint8_t m = ACTOR_MARK_NONE;
         if (i < g_static_actor_count) {
             const StaticActorDefinition *d = &g_static_actors[i];
-            /* OBJ slot 6 ramp selector (see g_scene_has_dog).  Free here:
-             * the loop already visits every loaded static actor. */
-            if (d->id == ENTITY_ID_DOG) {
-                g_scene_has_dog = 1;
-            }
             if (d->id == ENTITY_ID_MAYOR) {
                 if (quest_monster_hunt == 0 ||
                     (quest_monster_hunt == 1 && monsters_defeated >= 5)) {

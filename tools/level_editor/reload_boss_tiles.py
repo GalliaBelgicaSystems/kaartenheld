@@ -103,6 +103,11 @@ MARK_MAP = [
     (2, 3, "actors_question_mark"),
 ]
 
+# (col, row, actors tile id). Town wizard (cell 1, 1).
+WIZARD_MAP = [
+    (1, 1, "actors_wizard"),
+]
+
 # (col, row, combat tile id). Card-cursor arrows: the single
 # combat_arrow_pointing_up split into light (unselected cursor) and dark
 # (cursor sitting on an already-selected card).  The X icon (col 8, row 5)
@@ -159,6 +164,9 @@ for _tid in [t for _, _, t in AP_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
 for _tid in [t for _, _, t in MARK_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
+                        "tools/level_editor/public/tiles/actors")
+for _tid in [t for _, _, t in WIZARD_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
 for _tid in [t for _, _, t in DOG_MAP]:
@@ -235,6 +243,11 @@ def main():
             "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
         jobs.append((sprites_img, col, row, tid))
     for col, row, tid in MARK_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "actors_" + slugify(label) == tid, \
+            "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in WIZARD_MAP:
         label = sprites_csv[row][col].strip()
         assert "actors_" + slugify(label) == tid, \
             "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)

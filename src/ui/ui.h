@@ -257,6 +257,7 @@ extern uint8_t g_active_tile_palette[40];
 void ui_lcd_off(void);
 void ui_lcd_on(void);
 
+extern int8_t g_loaded_tileset;
 void ui_load_tileset(uint8_t tileset);
 void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);

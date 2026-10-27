@@ -27,13 +27,13 @@ uint8_t g_active_tile_palette[40];
  * would never be copied by the custom CRT0 (AGENTS.md 52.27) and the
  * variable would boot as 0 -- a valid tileset id, which could make the
  * first load a no-op. */
-static int8_t s_loaded_tileset;
+int8_t g_loaded_tileset;
 /* BG CRAM kind currently programmed (same cache contract as the tileset
  * bitmap above: a transition skips the reload when the kind matches, and
  * every path that programs foreign palettes goes through
  * ui_invalidate_tileset on the next overworld entry -- screen_change to
  * OVERWORLD covers battle/menu/shop/dialogue/item returns, scene_change
- * covers map changes.  Same BSS/-1 discipline as s_loaded_tileset. */
+ * covers map changes.  Same BSS/-1 discipline as g_loaded_tileset. */
 static int8_t s_loaded_cram;
 
 void ui_set_cram_palette(uint8_t overworld)
@@ -149,7 +149,7 @@ void ui_init(void)
     banked_call_run();
 
     /* Reset tileset/CRAM caches; active scene will load its tileset dynamically */
-    s_loaded_tileset = -1;
+    g_loaded_tileset = -1;
     s_loaded_cram = -1;
 
     /* Disable GBDK console auto-scroll.  When putchar() advances the cursor
@@ -445,19 +445,8 @@ void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
 
 
 
-/* Set by the game layer on every map entry (marks_banked.c): 1 when the
- * scene spawns a dog, so OBJ slot 6 carries the red dog ramp instead of
- * the merchant's orange.  Part of the tileset cache key: same-kind gate
- * crossings must re-run the loader when this flips, or the previous map's
- * slot-6 ramp follows the player (town red -> merchant village). */
-extern uint8_t g_scene_has_dog;
-
 void ui_load_tileset(uint8_t tileset)
 {
-    uint8_t key = (uint8_t)(tileset | (uint8_t)(g_scene_has_dog << 7));
-    if ((uint8_t)s_loaded_tileset == key) return;
-    s_loaded_tileset = (int8_t)key;
-
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&ui_load_tileset_banked;
     g_bk_byte_a = tileset;
@@ -470,7 +459,7 @@ void ui_load_tileset(uint8_t tileset)
  * cache would otherwise keep the stale battle art on screen). */
 void ui_invalidate_tileset(void)
 {
-    s_loaded_tileset = -1;
+    g_loaded_tileset = -1;
     s_loaded_cram = -1;
 }
 

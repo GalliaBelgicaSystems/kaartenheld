@@ -138,7 +138,7 @@
       "label": "wizard",
       "gb_constant": "TILE_ACTORS_WIZARD",
       "walkable": false,
-      "color": "#596083",
+      "color": "#666d90",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_wizard.png",
       "category": "npc"

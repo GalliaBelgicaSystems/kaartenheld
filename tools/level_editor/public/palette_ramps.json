@@ -534,7 +534,9 @@
     "SPRITES/boss_eyes_scepter",
     "SPRITES/boss_eyes_scepter"
    ],
-   "slots": []
+   "slots": [
+    "obj:6"
+   ]
   },
   "sprites11": {
    "colors": [

@@ -661,6 +661,8 @@ def main():
     write_ramp_export()
 
     slotted = {r for slots in slotmap.values() for r in slots.values()}
+    for ent in aliases.values():
+        slotted.update(ent.keys())
     spare = sorted(set(ramps) - slotted)
     print(f"palette_compiler: {len(ramps)} ramps, {len(slotted)} slotted, "
           f"{len(real)} reported tiles")
@@ -679,15 +681,23 @@ def render_ramp_export():
     _, ramps = parse_palette()
     refs = parse_palette_refs()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
     ramp_obj = {}
     for name in sorted(ramps):
+        slots_list = [
+            f"{setname}:{slot}"
+            for setname, slots in slotmap.items()
+            for slot, ramp in slots.items() if ramp == name
+        ]
+        slots_list += [
+            f"{setname}:{slot}"
+            for setname, ent in aliases.items()
+            for ramp, slot in ent.items() if ramp == name
+        ]
         ramp_obj[name] = {
             "colors": [_hex(c) for c in ramps[name]],
             "refs": refs.get(name, []),
-            "slots": sorted(
-                f"{setname}:{slot}"
-                for setname, slots in slotmap.items()
-                for slot, ramp in slots.items() if ramp == name),
+            "slots": sorted(set(slots_list)),
         }
     slots_obj = {
         setname: {str(slot): ramp for slot, ramp in sorted(slots.items())}
@@ -756,10 +766,14 @@ def write_accounting():
 
     _, ramps = parse_palette()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
     slot_of = {}
     for setname, slots in slotmap.items():
         for i, r in sorted(slots.items()):
             slot_of.setdefault((setname, r), i)
+    for setname, ent in aliases.items():
+        for r, slot in ent.items():
+            slot_of.setdefault((setname, r), slot)
 
     # Battle OAM ramps are programmed into one scratch OBJ slot at battle
     # entry (BATTLE_OBJ_SCRATCH, src/battle/battle.h), not through the
@@ -1008,6 +1022,8 @@ def write_accounting():
                      f"{', '.join(m['off_colors'])} |")
     L.append("")
     slotted = {r for slots in slotmap.values() for r in slots.values()}
+    for ent in aliases.values():
+        slotted.update(ent.keys())
     spare = sorted(set(ramps) - slotted)
     if spare:
         L.append(f"Unslotted ramps (parsed, no hardware slot, info only): "

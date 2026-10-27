@@ -9,9 +9,8 @@
 #include "banked.h"
 #include "gfx/rpg_tile_lookup.h"
 
-/* Set by the game layer on every map entry (marks_banked.c): 1 when the
- * scene spawns a dog, so OBJ slot 6 carries the red collar ramp. */
-extern uint8_t g_scene_has_dog;
+#include "actor.h"
+#include "game_ids.h"
 
 /* Overworld OBJ ramps (same generated source as the fixed-bank copy in
  * ui.c, but static so this bank carries its own: a banked body can only
@@ -149,87 +148,98 @@ void ui_load_tileset_banked(void)
     uint16_t n;
     volatile uint8_t *dst;
 
-    switch (tileset) {
-        case WORLD_TILESET_FOREST:
-            src = g_tileset_forest;
-            pal_src = g_tile_pal_forest;
-            tile_count = 80;
-            break;
-        case WORLD_TILESET_DESOLATE:
-            src = g_tileset_desolate;
-            pal_src = g_tile_pal_desolate;
-            tile_count = 64;
-            break;
-        case WORLD_TILESET_CASTLE:
-            src = g_tileset_castle;
-            pal_src = g_tile_pal_castle;
-            tile_count = 45;
-            break;
-        case WORLD_TILESET_VILLAGE:
-            src = g_tileset_village;
-            pal_src = g_tile_pal_village;
-            tile_count = 48;
-            break;
-        default:
-            src = g_tileset_forest;
-            pal_src = g_tile_pal_forest;
-            tile_count = 80;
-            break;
-    }
+    if (g_loaded_tileset != (int8_t)tileset) {
+        g_loaded_tileset = (int8_t)tileset;
 
-    VBK_REG = 0;
-    dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
-    n = (uint16_t)tile_count << 4;
-    while (n--) {
-        /* Same LCD-on hazard as the CRAM loop above: one-shot tile
-         * bitmap load, so a Mode-3-eclipsed byte corrupts the tile for
-         * the entire map stay. */
-        val = *src++;
-        BANKED_VRAM_WRITE(dst, val);
-        dst++;
-    }
-    for (i = 0; i < 80; i++) {
-        /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
-         * byte): even slots assign the low nibble first, odd slots OR
-         * in the high nibble (ascending i guarantees the order). */
-        uint8_t v = (i < tile_count) ? pal_src[i] : 0;
-        if ((i & 1) == 0) {
-            g_active_tile_palette[i >> 1] = v;
-        } else {
-            g_active_tile_palette[i >> 1] |= (uint8_t)(v << 4);
+        switch (tileset) {
+            case WORLD_TILESET_FOREST:
+                src = g_tileset_forest;
+                pal_src = g_tile_pal_forest;
+                tile_count = 80;
+                break;
+            case WORLD_TILESET_DESOLATE:
+                src = g_tileset_desolate;
+                pal_src = g_tile_pal_desolate;
+                tile_count = 64;
+                break;
+            case WORLD_TILESET_CASTLE:
+                src = g_tileset_castle;
+                pal_src = g_tile_pal_castle;
+                tile_count = 45;
+                break;
+            case WORLD_TILESET_VILLAGE:
+                src = g_tileset_village;
+                pal_src = g_tile_pal_village;
+                tile_count = 48;
+                break;
+            default:
+                src = g_tileset_forest;
+                pal_src = g_tile_pal_forest;
+                tile_count = 80;
+                break;
         }
-    }
 
-    /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites
-     * with exact OBJ ramps (screens/enemy_types/npc_*.json): no overlay.
-     * The village sheet's old NPC cells are plain ground. */
+        VBK_REG = 0;
+        dst = (volatile uint8_t *)(0x8000u + ((uint16_t)RPG_TILE_BASE_WORLD << 4));
+        n = (uint16_t)tile_count << 4;
+        while (n--) {
+            /* Same LCD-on hazard as the CRAM loop above: one-shot tile
+             * bitmap load, so a Mode-3-eclipsed byte corrupts the tile for
+             * the entire map stay. */
+            val = *src++;
+            BANKED_VRAM_WRITE(dst, val);
+            dst++;
+        }
+        for (i = 0; i < 80; i++) {
+            /* Nibble-pack into g_active_tile_palette (two 0-7 indices per
+             * byte): even slots assign the low nibble first, odd slots OR
+             * in the high nibble (ascending i guarantees the order). */
+            uint8_t v = (i < tile_count) ? pal_src[i] : 0;
+            if ((i & 1) == 0) {
+                g_active_tile_palette[i >> 1] = v;
+            } else {
+                g_active_tile_palette[i >> 1] |= (uint8_t)(v << 4);
+            }
+        }
 
-    /* Battles program the scratch OBJ slot for OAM enemy art; restore
-     * the NPC ramps (slots 5-7) on every tileset load so town sprites
-     * keep exact colors after a fight.  Lives here (not fixed bank) for
-     * ROM budget (AGENTS.md 55.5); PPU-safe like the CRAM loop above. */
-    if (g_is_cgb) {
-        OCPS_REG = (uint8_t)(0x80 | (5 << 3));
-        for (i = 0; i < 24; i++) {
-            BANKED_VRAM_WRITE(&OCPD_REG,
-                              ((const uint8_t *)cgb_obj_palettes)[40 + i]);
+        /* Town NPCs (guard, wizard, merchant, mayor) render as OAM sprites
+         * with exact OBJ ramps (screens/enemy_types/npc_*.json): no overlay.
+         * The village sheet's old NPC cells are plain ground. */
+
+        /* Battles program the scratch OBJ slot for OAM enemy art; restore
+         * the NPC ramps (slots 5-7) on every tileset load so town sprites
+         * keep exact colors after a fight.  Lives here (not fixed bank) for
+         * ROM budget (AGENTS.md 55.5); PPU-safe like the CRAM loop above. */
+        if (g_is_cgb) {
+            OCPS_REG = (uint8_t)(0x80 | (5 << 3));
+            for (i = 0; i < 24; i++) {
+                BANKED_VRAM_WRITE(&OCPD_REG,
+                                  ((const uint8_t *)cgb_obj_palettes)[40 + i]);
+            }
         }
     }
 
     /* Dog collar: dog maps carry the red shade in OBJ slot 6 (sprites10),
-     * every other map the merchant's orange (sprites9).  g_scene_has_dog is
-     * set on each map entry and is part of the tileset cache key, so this
-     * re-runs even on same-tileset gate crossings.  Slots 5-7 were just
-     * restored canonically above; only shade 2 differs (identical low
-     * byte), so two bytes move the ramp between red and orange. */
+     * every other map the merchant's orange (sprites9).  Dogs and the
+     * merchant never share a scene, so on dog maps shade 2 is patched to
+     * the red from slot 7 (sprites8 shade 2); on non-dog maps it is set
+     * to the canonical orange (sprites9 shade 2).  Because this runs on
+     * every overworld tileset load, same-tileset gate crossings (town ->
+     * village_area) switch slot 6 cleanly without having to invalidate
+     * the 768-byte VRAM tileset cache. */
     if (g_is_cgb) {
-        OCPS_REG = (uint8_t)(0x80 | ((6 << 3) | 4));
-        if (g_scene_has_dog) {
-            BANKED_VRAM_WRITE(&OCPD_REG,
-                              ((const uint8_t *)cgb_obj_palettes)[56 + 4]);
-            BANKED_VRAM_WRITE(&OCPD_REG,
-                              ((const uint8_t *)cgb_obj_palettes)[56 + 5]);
+        uint8_t off = 48 + 4;
+        for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
+            if (g_static_actors[i].id == ENTITY_ID_DOG) {
+                off = 56 + 4;
+                break;
+            }
         }
+        OCPS_REG = (uint8_t)(0x80 | ((6 << 3) | 4));
+        BANKED_VRAM_WRITE(&OCPD_REG,
+                          ((const uint8_t *)cgb_obj_palettes)[off]);
+        BANKED_VRAM_WRITE(&OCPD_REG,
+                          ((const uint8_t *)cgb_obj_palettes)[(uint8_t)(off + 1)]);
     }
 }
 
