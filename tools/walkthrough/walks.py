@@ -900,6 +900,12 @@ def walk_c(planner, checks):
                     expected="no KNIGHT: box", actual="stuck open")
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
+    # The flip tick itself is a 1-frame window: world_load_map starts the
+    # scene track inside game_update, and the marks tick that applies the
+    # entry hold (MUSIC_NONE) runs on the NEXT frame.  Polling for the
+    # scene change lands on either side of that boundary, so settle two
+    # frames before reading the track (the hold lasts ~90 ticks).
+    s.tick(2)
     # Alert-first: the kobold entry sting holds the track, so right
     # after arrival the music is NONE; the checks below pin the sting
     # actually stepping (sfx 7 while it rings, idle after) and the
