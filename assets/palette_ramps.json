@@ -540,14 +540,14 @@
    "colors": [
     "#f1eb03",
     "#77e331",
-    "#5c903a",
-    "#3c5e26"
+    "#3c5e26",
+    "#5c903a"
    ],
    "refs": [
     "SPRITES/background",
     "SPRITES/slime_light",
-    "SPRITES/slime_dark",
-    "SPRITES/slime_outline"
+    "SPRITES/slime_outline",
+    "SPRITES/slime_dark"
    ],
    "slots": [
     "obj:3"

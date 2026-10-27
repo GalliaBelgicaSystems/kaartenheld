@@ -135,7 +135,7 @@ sprites7: SPRITES/background, SPRITES/white, SPRITES/mage_cloth, SPRITES/npc
 sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
-sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, SPRITES/slime_outline
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_outline, SPRITES/slime_dark
 sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/poison_icon
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
