@@ -124,7 +124,7 @@ town3: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
 town4: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/holes
 town5: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubble
 town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble
-town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
+town7: TOWN/house_wall, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble, TOWN/holes
 sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline

@@ -795,14 +795,14 @@
   "town7": {
    "colors": [
     "#f1cf91",
+    "#8d754a",
     "#645233",
-    "#000000",
     "#000000"
    ],
    "refs": [
     "TOWN/house_wall",
+    "TOWN/barrel_wood_fence",
     "TOWN/wood_outlines_rubble",
-    "TOWN/holes",
     "TOWN/holes"
    ],
    "slots": [
