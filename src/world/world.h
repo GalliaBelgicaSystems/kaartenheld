@@ -18,13 +18,13 @@ typedef enum {
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
  * the scene and scrolls it with the scroll offset.  The caps match the
- * renderer + hardware limits: ui_draw_world_map() draws a 32x18 window
- * once at map load and the 32x32 BG tilemap ring is 32 wide, so a wider
- * or taller scene would wrap/clobber VRAM instead of displaying.  The
- * 32-wide stride also keeps every map[y][x] lookup a shift, not a
- * multiply, on the multiply-less SM83. */
+ * renderer + hardware limits: ui_draw_world_map() draws a 32x32 window
+ * once at map load and the 32x32 BG tilemap ring is 32 wide and 32 tall,
+ * so a wider or taller scene would wrap/clobber VRAM instead of
+ * displaying.  The 32-wide stride also keeps every map[y][x] lookup a
+ * shift, not a multiply, on the multiply-less SM83. */
 #define WORLD_WIDTH  32
-#define WORLD_HEIGHT 18
+#define WORLD_HEIGHT 32
 
 /* Overworld camera view window in tiles.  The camera (World.scroll_x/y)
  * keeps the player inside this window, scrolling as the player crosses its

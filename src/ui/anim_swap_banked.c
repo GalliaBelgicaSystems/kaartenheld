@@ -130,10 +130,10 @@ void world_anim_rebuild_banked(void)
      * on, so reads go through the bounded helper (mode-3 returns 0xFF,
      * which can only under-record, never mis-record: 0xFF decodes past
      * every animation slot).  LCD-off full redraws skip the wait at once.
-     * Every map fits rows 0..17 x cols 0..31 (<=24 wide, <=18 tall). */
+     * Every map fits rows 0..31 x cols 0..31 (<=32 wide, <=32 tall). */
     n = 0;
     idx = 0;
-    for (row = 0; row < 18; row++) {
+    for (row = 0; row < 32; row++) {
         for (col = 0; col < 32; col++) {
             v = anim_read_cell(idx);
             base = (uint8_t)(v - RPG_TILE_BASE_WORLD);

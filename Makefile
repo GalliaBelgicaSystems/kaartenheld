@@ -39,7 +39,7 @@ SRCS = $(BANK5_EARLY_SRCS) $(filter-out $(BANK5_EARLY_SRCS),$(ALL_SRCS))
 # see these symbols (same g_scenes/g_actor_tables names).
 TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors_content_test.c
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
-	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c
+	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c $(SRC_DIR)/game/scenes_terrain_b9.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 4 in
@@ -284,7 +284,7 @@ levels-check:
 	@python3 tools/level_compiler/validate.py levels/*.json
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c --check
 
-src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
+src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/game/scenes_terrain_b9.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c
 # ^ Also (re)generates src/world/scene_ids_generated.h (MAP_*/SCENE_* values
 # from levels/registry.json) as a side effect; the wildcard above includes

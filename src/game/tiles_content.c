@@ -233,7 +233,7 @@ void ui_wipe_black_banked(void)
             BANKED_VRAM_WRITE(&BCPD_REG, 0);
         }
     }
-    for (r = 0; r < 18; r++) {
+    for (r = 0; r < 32; r++) {
         off = (uint16_t)r << 5;
         VBK_REG = 0;
         dst = (volatile uint8_t *)(0x9800u + off);

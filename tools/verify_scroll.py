@@ -210,7 +210,7 @@ def main():
     # Press and hold RIGHT
     pb.button_press("right")
 
-    prev_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
+    prev_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
     prev_scx = pb.memory[0xFF43]
     prev_scy = pb.memory[0xFF42]
     prev_ms = 0
@@ -236,10 +236,10 @@ def main():
         scroll_x = scx // 8
         scroll_y = scy // 8
 
-        curr_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
+        curr_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
 
-        # Compare VRAM map changes across all 32x18 background ring cells
-        diffs = [i for i in range(32 * 18) if curr_vram_map[i] != prev_vram_map[i]]
+        # Compare VRAM map changes across all 32x32 background ring cells
+        diffs = [i for i in range(32 * 32) if curr_vram_map[i] != prev_vram_map[i]]
 
         if scx != prev_scx or scy != prev_scy:
             subtile_scroll_frames += 1

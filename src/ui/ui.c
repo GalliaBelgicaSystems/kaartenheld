@@ -760,10 +760,10 @@ void ui_draw_world_map(const World *world)
     ui_load_tileset((uint8_t)world->tileset_kind);
     ui_set_cram_palette((uint8_t)world->tileset_kind);
 
-    /* Populate the entire 32-column x 18-row background ring during LCD-safe
-     * full map redraw. Field: all 32 x 18 cells. Smaller maps: col 20..31 are
+    /* Populate the entire 32-column x 32-row background ring during LCD-safe
+     * full map redraw. Field: all 32 x 32 cells. Smaller maps: col 20..31 are
      * filled with floor tiles in ui_draw_world_cell. */
-    ui_draw_world_rect(world, 0, 32, 0, 18);
+    ui_draw_world_rect(world, 0, 32, 0, 32);
     ui_world_tail(world);
 }
 
@@ -830,7 +830,7 @@ void ui_draw_world_transition(const World *world)
      * while the screen is still black, so the viewport never jumps. */
     ui_update_camera(world);
     /* Reveal: the new map opens top-to-bottom in write order. */
-    ui_draw_world_rect(world, 0, 32, 0, 18);
+    ui_draw_world_rect(world, 0, 32, 0, 32);
     /* Slot 4 stays black: it is free in every world tileset, and every
      * consumer (dialogue paper, quick-screen tints, menus, battles,
      * world maps) reprograms CRAM on entry. */

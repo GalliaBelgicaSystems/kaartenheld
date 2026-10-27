@@ -424,12 +424,16 @@ def emit_exits(levels_by_id, registry=None):
 # a roomier bank and scene_load_tiles_banked() stages it to WRAM before
 # stamping (SceneDefinition.terrain_bank). Balanced for headroom:
 # desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7.
-# If this map changes, keep Makefile CONTENT_SRCS (the per-bank files) and
-# decompile.py (split-file parsing) in sync.
+# Large 22-tall forest (~1450 B) + field (~1325 B) -> 9 (casino bank,
+# ~10 KB free); bank 5 cannot hold them after the WORLD_HEIGHT 32 growth.
+# If this map changes, keep Makefile CONTENT_SRCS (the per-bank files),
+# scene.c (stamp dispatch) and decompile.py (split-file parsing) in sync.
 OVERFLOW_TERRAIN_BANK = {
     "desolate_field": 6,
     "village_area": 7,
     "castle": 7,
+    "forest": 9,
+    "field": 9,
 }
 
 

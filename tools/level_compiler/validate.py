@@ -5,7 +5,7 @@ validate.py - Level validator for Game Boy RPG Level Editor
 Validates level JSON files against schemas and semantic game rules:
 - Schema validation
 - Tileset and semantic tile validity
-- Map bounds and dimensions (<= 32x18, the renderer + tilemap-ring limit)
+- Map bounds and dimensions (<= 32x32, the renderer + tilemap-ring limit)
 - Player spawn validity and collision
 - Exit placement and target scene validity
 - Object IDs uniqueness and placement
@@ -33,7 +33,7 @@ from collision import (
 )
 
 MAX_WORLD_WIDTH = 32
-MAX_WORLD_HEIGHT = 18
+MAX_WORLD_HEIGHT = 32
 
 
 def known_scene_names(registry=None):
