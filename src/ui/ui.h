@@ -280,16 +280,19 @@ void ui_update_camera(const World *world);
 
 /* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):
  * paints the 4 box rows FULL-WIDTH with the dialogue paper palette and
- * re-syncs SCX to the world camera (scroll_y in g_bk_byte_b shifts the base
- * for vertically scrolled maps; camera in g_bk_byte_c).  Full-width is exact
+ * re-syncs SCX/SCY to the world camera (scroll_y in g_bk_byte_b selects the
+ * base rows for vertically scrolled maps; camera pixels in g_bk_byte_c =
+ * SCX and g_bk_byte_a = SCY -- the camera glides in pixels, so SCY must be
+ * the staged value, not scroll_y << 3).  Full-width is exact
  * where it matters: the viewport always shows a 20-col slice of those rows,
  * and the rows ARE the box (text rows 14-17 + scroll_y).  Painting hidden
  * cols too is safe: ui_lcd_off() wipes the whole attribute map on every
  * transition and the next full redraw repaints world attrs, so stale paper
- * can never scroll into view.  The SCX sync fixes the post-battle victory
- * dialogue, which arrives with SCX = 0 (screen_change zeroes it for battle)
- * while its text is drawn at scrolled tilemap cells -- without this the box
- * shifts right and clips.  SCY needs no sync (0 on every map). */
+ * can never scroll into view.  The SCX/SCY sync fixes the post-battle
+ * victory dialogue, which arrives with SCX = SCY = 0 (screen_change zeroes
+ * them for battle) while its text is drawn at scrolled tilemap cells --
+ * without this the box shifts right/clips, or on a tall map lands off the
+ * bottom of the screen. */
 void ui_dialogue_box_banked(void);
 
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world);

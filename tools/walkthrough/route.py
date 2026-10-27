@@ -253,19 +253,54 @@ class Planner:
         """Walkable tile adjacent to a tunnel landing that is itself no
         portal (neither an exit gate nor a linked edge cell): the safe
         arrival tile for walks ending at a tunnel mouth.  Deterministic
-        N/S/E/W order.  None when the mouth is fully enclosed — the
-        compiler guarantees a walkable landing but not a free neighbor —
-        in which case callers fall back to the gate itself."""
+        N/S/E/W order, but SKIPPING cells unreachable from the scene
+        spawn — a walkable nook reachable only THROUGH the gate (e.g.
+        field (14,1), whose only walkable neighbor is the (15,1) mouth
+        itself) would strand every route staged there.  None when no
+        adjacent cell is both walkable and spawn-connected, in which
+        case callers fall back to the gate itself."""
         scene = self.scenes[name]
         lx, ly = landing
+        spawn = scene.level.get("player", {}).get("spawn", {}) or {}
+        try:
+            home = (int(spawn.get("x", 0)), int(spawn.get("y", 0)))
+        except (TypeError, ValueError):
+            home = (0, 0)
+        # Plain-walkability connected component of the spawn, EXCLUDING
+        # portal cells (exits + linked edges): staging must be reachable
+        # without stepping through another portal (the walk would warp
+        # away), matching the router's avoid_exits discipline.  Patrol
+        # halos and blocking actors are NOT excluded here -- the route
+        # can bump/fight through those, but never through a portal.
+        seen = {home}
+        queue = [home]
+        while queue:
+            cx, cy = queue.pop()
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                nxt = (cx + dx, cy + dy)
+                if nxt in seen:
+                    continue
+                if not (0 <= nxt[0] < scene.width
+                        and 0 <= nxt[1] < scene.height):
+                    continue
+                if nxt in scene.exit_cells or nxt in scene.edge_cells:
+                    continue
+                if not scene.grid[nxt[1]][nxt[0]]:
+                    continue
+                seen.add(nxt)
+                queue.append(nxt)
+        first_walkable = None
         for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
             cell = (lx + dx, ly + dy)
             if cell in scene.exit_cells or cell in scene.edge_cells:
                 continue
             if not scene.walkable(cell[0], cell[1]):
                 continue
-            return cell
-        return None
+            if first_walkable is None:
+                first_walkable = cell
+            if cell in seen:
+                return cell
+        return first_walkable
 
     def scene_of(self, scene_id):
         for s in self.scenes.values():

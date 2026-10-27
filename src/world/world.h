@@ -159,6 +159,11 @@ typedef enum {
     TILE_FOREST_60 = 68,
     TILE_FOREST_61 = 69,
     TILE_FOREST_62 = 70,
+    /* VRAM slot 63 = the water block's last cell (sheet (5,4)):
+     * "water bottom right corner wall" (forest_water_bottom_right_corner_wall).
+     * The sheet cell is remapped into this slot at encode time (Makefile
+     * --tile-coords) because slots 69+ are unreachable from the forest
+     * value range.  This value had no tile before the rewire. */
     TILE_FOREST_63 = 71,
     /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
      * 0xFF is the empty-cell sentinel and the enum must stay <= 0xFE

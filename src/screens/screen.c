@@ -89,13 +89,24 @@ void screen_change(Game *g, ScreenId screen)
 
     /* Screens that own VRAM block-1 art (battle enemy art shares slots
      * 128+ with world tiles) must not leak it into the next overworld
-     * redraw: force a tileset reload there.  Battles also time-share OAM
-     * ids with overworld art (AP pips over hero idle at 96-97, rider icons
-     * over the blob tail at 123-125): restream the overworld side and
-     * re-arm the battle stream (unconditional: idempotent, and dialogue
-     * closes are the only frequent entries). */
+     * redraw, and battles OAM-time-share tile ids with overworld art
+     * (AP pips over hero idle at 96-97, riders over the blob tail at
+     * 123-125).  See the per-branch notes below. */
     if (screen == SCREEN_OVERWORLD) {
-        ui_invalidate_tileset();
+        if (old_screen != SCREEN_DIALOGUE) {
+            /* Non-dialogue screens may own VRAM block-1 art (battle
+             * enemy art shares slots 128+) or foreign CRAM, so force a
+             * reload.  Dialogue never touches either: an overlay box
+             * keeps the world tileset/CRAM, and a dialogue entered from
+             * battle/gamble reloads both itself when it repaints the
+             * backdrop (dialogue_screen.c).  Invalidating here would
+             * leave the caches cold for the rest of the map stay, so
+             * the next same-kind gate crossing could never hit them. */
+            ui_invalidate_tileset();
+        }
+        /* Unconditional: battles time-share OAM tile ids with overworld
+         * art (AP pips over hero idle, riders over the blob tail), and
+         * a dialogue entered from battle never restreams them. */
         ui_restore_ow_oam();
     }
 

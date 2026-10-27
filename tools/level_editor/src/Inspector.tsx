@@ -333,7 +333,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <input
                   type="number"
                   min="4"
-                  max="40"
+                  max="32"
                   value={level.width}
                   onChange={(e) => onUpdateLevelMeta({ width: parseInt(e.target.value) || 20 })}
                 />
@@ -343,7 +343,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <input
                   type="number"
                   min="4"
-                  max="24"
+                  max="32"
                   value={level.height}
                   onChange={(e) => onUpdateLevelMeta({ height: parseInt(e.target.value) || 18 })}
                 />

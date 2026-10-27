@@ -155,9 +155,16 @@ gfx: manifest
 	# exact artist ramps per tile, no luminance guessing). Every rule below
 	# takes --shade-map; off-ramp pixels use the nearest shade of the
 	# tile's ramp and are listed in generated/tiles/ramp_mismatches.json.
-	# Full 80-tile world sheet (g_tileset_forest)
+	# Full 80-tile world sheet (g_tileset_forest).  --tile-coords remaps
+	# ONE cell: sheet cell (5,4) is the artist's new "water bottom right
+	# corner wall", which lands in VRAM slot 63 (TILE_FOREST_63 -- the last
+	# water slot, previously an unreferenced plain-floor duplicate).  Sheet
+	# order alone would put it at slot 69, which no TileType value can
+	# address (8..71 -> slots 0..63, 136..140 -> 64..68).  Keep this list
+	# in sync with tools/level_editor/tilesets/forest.json vram_block.
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
 		--shade-map generated/tiles/shades/forest.json \
+		--tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 9,2 10,2 11,2 12,2 13,2 14,2 15,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3 9,3 10,3 11,3 12,3 13,3 14,3 5,4 0,4 1,4 2,4 3,4 4,4 5,4 6,4 7,4 8,4 9,4 10,4 11,4 12,4 13,4 14,4 15,4" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
@@ -1095,4 +1102,14 @@ memmap: debug release
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
 
 clean:
-	rm -rf $(BUILD_DIR) $(GENERATED_MUSIC_DIR)
+	@# Remove intermediate build artifacts but NEVER the tracked files in
+	@# build/ (kaartenheld.gb, kaartenheld_debug.gb, both .sym, and the
+	@# manual PDF): `rm -rf $(BUILD_DIR)` used to delete tracked content,
+	@# so any `make clean` (routine per AGENTS.md 52.2) left the branch
+	@# dirty with deletions.
+	find $(BUILD_DIR) -mindepth 1 \
+		! -name 'kaartenheld.gb' ! -name 'kaartenheld_debug.gb' \
+		! -name 'kaartenheld.sym' ! -name 'kaartenheld_debug.sym' \
+		! -name 'kaartenheld_manual.pdf' \
+		-exec rm -rf {} + 2>/dev/null || true
+	rm -rf $(GENERATED_MUSIC_DIR)

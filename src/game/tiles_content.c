@@ -218,15 +218,15 @@ void ui_load_tileset_banked(void)
  * (SCX/SCY: the old map, still on screen) and the incoming viewport
  * (world scroll staged in g_bk_byte_a/b: what ui_update_camera snaps to
  * mid-transition) with blank tiles + slot 4.  Cells outside both windows
- * are never displayed before the reveal repaints the full ring, so the
- * old whole-ring wipe was ~3x the needed writes on typical chains
+ * are never displayed before the reveal repaints every in-bounds cell, so
+ * the old whole-ring wipe was ~3x the needed writes on typical chains
  * (adjacent 20-wide maps share most of the union; worst case degrades
  * to the full ring, never worse).  Slot 4 (PAPER) is free in every world
  * tileset, so no map row can need it during the reveal.  All writes go
  * through BANKED_VRAM_WRITE: gate crossings run this wipe with the LCD
  * ON (curtain path skips ui_lcd_off), where an ISR-eclipsed wait would
  * drop the write into Mode 3.  Sole caller is ui_draw_world_transition
- * (always the full ring reveal). */
+ * (which reveals [0, world->width) x [0, world->height)). */
 void ui_wipe_black_banked(void)
 {
     uint8_t ox_old, oy_old, ox_new, oy_new;

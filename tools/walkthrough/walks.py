@@ -657,11 +657,14 @@ def walk_a(planner, checks, sram_out=None):
     # wizard (he never moved). Drop god-mode first so SRAM keeps base
     # 10/10 HP (town/village legs are ambush-free).
     ungod_mode(s)
-    follow(s, planner, "village_area", s.pos(), "town", (6, 11))
+    # Wizard stands at (6,10) with the house walling his south side, so
+    # talk to him from the north ((6,9), facing DOWN).  The old (6,11)
+    # spot is inside the house since the town layout moved it there.
+    follow(s, planner, "village_area", s.pos(), "town", (6, 9))
     s.settle_scene(expected_scene=SCENE_TOWN)
-    _walk_path(s, planner.path("town", s.pos(), (6, 11)) or [])
+    _walk_path(s, planner.path("town", s.pos(), (6, 9)) or [])
     s.check("wizard save menu", s.press_until(
-        "up", lambda: s.text_has("SAVE GAME"), label="save menu"),
+        "down", lambda: s.text_has("SAVE GAME"), label="save menu"),
         expected="SAVE GAME", actual="none")
     s.tick(20)
     s.shoot("12-wizard-save", need="SAVE GAME")
@@ -677,7 +680,7 @@ def walk_a(planner, checks, sram_out=None):
 
     if sram_out is not None:
         sram_out.append((s.stop_save_ram(), dict(
-            scene=SCENE_TOWN, pos=(6, 11),
+            scene=SCENE_TOWN, pos=(6, 9),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
             ring=s.reader.collection_count(CARD_IRON_RING))))
     else:

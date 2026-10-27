@@ -28,7 +28,7 @@ void scene_load_tiles_banked(void)
     MapId map_id = (MapId)g_bk_byte_a;
     const SceneDefinition *def;
     const SceneTerrainBlock *tbl;
-    uint8_t i, x, y;
+    uint8_t x, y;
 
     if (!w) return;
 #ifdef TEST_LEVELS
@@ -60,8 +60,12 @@ void scene_load_tiles_banked(void)
      * bank 4). */
     tbl = def->terrain_blocks;
     if (tbl && def->terrain_bank == SCENE_HOME_BANK) {
-        for (i = 0; ; i++) {
-            const SceneTerrainBlock *b = &tbl[i];
+        /* Pointer iteration, not an 8-bit index: a map may exceed 255
+         * terrain blocks (s_forest_terrain is 284), and `uint8_t i`
+         * would wrap 255 -> 0 before reaching the sentinel, hanging the
+         * ROM on map load.  Matches the generated overflow stampers. */
+        const SceneTerrainBlock *b = tbl;
+        for ( ; ; b++) {
             uint8_t ex, ey;
             if (b->w == 0) break;
             ey = (uint8_t)(b->y + b->h);

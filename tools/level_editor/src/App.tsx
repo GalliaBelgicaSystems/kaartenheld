@@ -801,10 +801,10 @@ export const App: React.FC = () => {
     const warnings: string[] = [];
 
     // Dimensions
-    if (level.width >= 4 && level.width <= 40 && level.height >= 4 && level.height <= 24) {
-      passed.push('Schema valid (Dimensions <= 40x24)');
+    if (level.width >= 4 && level.width <= 32 && level.height >= 4 && level.height <= 32) {
+      passed.push('Schema valid (Dimensions <= 32x32)');
     } else {
-      errors.push(`Dimensions ${level.width}x${level.height} out of engine bounds (max 40x24)`);
+      errors.push(`Dimensions ${level.width}x${level.height} out of engine bounds (max 32x32)`);
     }
 
     // Tileset

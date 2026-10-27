@@ -232,6 +232,7 @@ def main():
         "_title_menu_step_banked": "title menu caret step (bank 4)",
         "_ui_load_cram_banked": "CGB CRAM palette loader (bank 5)",
         "_ui_load_tileset_banked": "tileset VRAM & palette loader (bank 5)",
+        "_ui_wipe_black_banked": "transition black wipe (bank 5)",
     }
     print()
     print("Banked target address validation")
@@ -291,6 +292,9 @@ def main():
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
         "_debug_action_leaf_banked": "debug-action leaf cases (bank 5)",
         "_scenario_load_apply_banked": "scenario descriptor apply (bank 5)",
+        "_terrain_stamp_b6_banked": "overflow terrain stamp (bank 6)",
+        "_terrain_stamp_b7_banked": "overflow terrain stamp (bank 7)",
+        "_terrain_stamp_b9_banked": "overflow terrain stamp (bank 9)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

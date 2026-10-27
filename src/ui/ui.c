@@ -822,8 +822,8 @@ static void ui_world_tail(const World *world)
     uint8_t y;
     /* Re-record animation-frame ring cells (fire/water) for the bank-7
      * swap pass: the ring is static until the next full redraw, so one
-     * LCD-off scan here replaces every per-frame scan.  No staging (the
-     * rebuild reads the ring only); ~12 B fixed for the dispatch. */
+     * scan here replaces every per-frame scan.  No staging: the body
+     * reads the live map rectangle from g_game.world (WRAM). */
     g_bk_call_bank = 8;
     g_bk_call_target = (uint16_t)&world_anim_rebuild_banked;
     banked_call_run();
@@ -1157,6 +1157,7 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
      * below (one dispatch replaces six fixed ui_color_span calls, so the
      * fixed bank shrinks -- AGENTS.md §55.5).  See ui.h for why the body
      * paints full-width rows and re-syncs SCX. */
+    g_bk_byte_a = world->camera_px_y;
     g_bk_byte_b = scroll_y;
     g_bk_byte_c = world->camera_px_x;
     g_bk_call_bank = UI_DIALOGUE_BOX_BANK;
