@@ -145,6 +145,29 @@ def bg_cram(sess):
              for c in range(4)] for p in range(8)]
 
 
+def obj_cram(sess):
+    """All 64 CGB OBJ CRAM bytes via OCPS/OCPD (paused core: safe).
+    Returned as a list of 8 palettes x 4 RGB555 words, for asserting a
+    scene load programmed the map's OBJ ramps (per-map overrides)."""
+    raw = []
+    for i in range(64):
+        sess._memwrite(0xFF6A, i)
+        raw.append(sess._memread(0xFF6B))
+    return [[raw[p * 8 + c * 2] | (raw[p * 8 + c * 2 + 1] << 8)
+             for c in range(4)] for p in range(8)]
+
+
+def _ramp_words(ramp):
+    """Artist ramp colors from assets/palette_ramps.json as RGB555 words."""
+    doc = json.loads(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                       "..", "assets", "palette_ramps.json")).read())
+    out = []
+    for h in doc["ramps"][ramp]["colors"]:
+        r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
+        out.append(((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3))
+    return out
+
+
 def wait_vblank(sess, tries=3):
     """Pause at a VBlank boundary: VRAM is only readable outside scanout
     modes 2/3 (real HW blocks it; mGBA returns 0xFF).  step() pauses at the
@@ -254,6 +277,26 @@ def verify_npc_sprites(sess):
                              ("wizard", 119, 5)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
+
+
+def verify_obj_map_overrides(sess):
+    """Per-map OBJ palette overrides (map.obj_palettes): dog maps program
+    OBJ slot 6 with sprites10 (red collar); every other map keeps the
+    canonical sprites9 (merchant orange). Exercises both the declare path
+    and the union-restore path (a same-tileset crossing back must flip
+    slot 6 to orange again). VBlank-gated: mid-scanout CRAM reads back
+    0xFF and pass vacuously."""
+    print("== Per-map OBJ palette overrides ==")
+    check("OBJ CRAM read in VBlank (dog map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
+    sess.step(2)
+    check("dog map: OBJ slot 6 is sprites10 (red collar)",
+          _ramp_words("sprites10"), obj_cram(sess)[6])
+    check("OBJ CRAM read in VBlank (plain map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "forest_boot.json"))
+    sess.step(2)
+    check("plain map: OBJ slot 6 is sprites9 (canonical orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
 
 
 def verify_hostile_sprites(sess):
@@ -903,6 +946,7 @@ def main():
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
+                      ("obj map overrides", verify_obj_map_overrides),
                        ("battle sprites", verify_battle_oam),
                        ("battle spider", verify_battle_spider_oam),
                        ("boss glow overlay", verify_boss_glow_overlay),

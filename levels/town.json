@@ -6,7 +6,8 @@
     "height": 18,
     "tileset": "village",
     "music": "MUSIC_TOWN",
-    "map_id": "MAP_TOWN"
+    "map_id": "MAP_TOWN",
+    "obj_palettes": { "6": "sprites10" }
   },
   "default_walkable": "village.village_plain_floor_1",
   "layers": {

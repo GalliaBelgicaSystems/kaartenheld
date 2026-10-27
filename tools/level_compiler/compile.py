@@ -660,6 +660,11 @@ def main():
                 for err in errors:
                     print(f"  - ERROR: {err}", file=sys.stderr)
                 has_errors = True
+            # Per-level warnings were silently dropped here; surface them
+            # (build stays green, wrongness reported -- same contract as
+            # the edge/tunnel/point-exit warnings below).
+            for warn in warnings:
+                print(f"WARNING: {data.get('id', lpath)}: {warn}", file=sys.stderr)
             levels_by_id[data["id"]] = data
         except Exception as e:
             print(f"Failed to read/validate {lpath}: {e}", file=sys.stderr)

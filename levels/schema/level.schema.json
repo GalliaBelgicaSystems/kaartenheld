@@ -44,6 +44,12 @@
         "map_id": {
           "type": "string",
           "description": "Engine MapId enum constant (e.g. MAP_FOREST, MAP_TOWN)"
+        },
+        "obj_palettes": {
+          "type": "object",
+          "description": "Sparse per-map OBJ (sprite) palette overrides: hardware slot 0-7 -> artist ramp name (e.g. {\"6\": \"sprites10\"}). Slots absent here keep the palette_slots.json default. Declaring is how maps that need a different ramp in a shared slot (dog red vs merchant orange in slot 6) pick their winner; the ROM programs these on every scene load.",
+          "propertyNames": { "pattern": "^[0-7]$" },
+          "additionalProperties": { "type": "string" }
         }
       }
     },

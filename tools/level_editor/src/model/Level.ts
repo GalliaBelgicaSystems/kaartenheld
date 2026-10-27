@@ -105,6 +105,11 @@ export interface EditorLevel {
   // Level's default_walkable (ground for unpainted cells), preserved
   // verbatim through load/save round-trips.
   defaultWalkable?: string;
+  // Per-map OBJ palette overrides (map.obj_palettes: slot -> ramp name),
+  // preserved verbatim through load/save round-trips. Sparse: absent =
+  // palette_slots.json defaults. The editor has no palette UI; this only
+  // round-trips what the JSON (or another tool) declared.
+  objPalettes?: Record<string, string>;
   // Terrain representation fidelity (JSON is the source of truth both
   // ways): the grid above is the editing model, but on save the level is
   // written back in the form it was loaded in -- unless the terrain was
@@ -504,6 +509,9 @@ export function levelDataToEditor(data: any): EditorLevel {
     terrainBlocks,
     terrainDirty: false,
     defaultWalkable: typeof data.default_walkable === 'string' ? data.default_walkable : undefined,
+    objPalettes: (data.map && typeof data.map.obj_palettes === 'object' && data.map.obj_palettes !== null)
+      ? { ...(data.map.obj_palettes as Record<string, string>) }
+      : undefined,
     spawn: data.player?.spawn || { x: Math.floor(w / 2), y: Math.floor(h / 2), facing: 'DOWN' },
     exits: data.exits || [],
     neighbors: normalizeNeighbors(data.neighbors),
@@ -551,7 +559,11 @@ export function editorToLevelData(lvl: EditorLevel): any {
       height: lvl.height,
       tileset: lvl.tileset,
       music: lvl.music,
-      map_id: lvl.mapId
+      map_id: lvl.mapId,
+      // Preserved verbatim: per-map OBJ palette overrides (sparse slot->ramp).
+      ...(lvl.objPalettes && Object.keys(lvl.objPalettes).length > 0
+        ? { obj_palettes: { ...lvl.objPalettes } }
+        : {}),
     },
     // Preserved verbatim: the single source of truth for unpainted cells.
     ...(lvl.defaultWalkable ? { default_walkable: lvl.defaultWalkable } : {}),

@@ -6,7 +6,8 @@
     "height": 18,
     "tileset": "forest",
     "music": "MUSIC_FOREST",
-    "map_id": "MAP_GRASSY_FOREST"
+    "map_id": "MAP_GRASSY_FOREST",
+    "obj_palettes": { "6": "sprites10" }
   },
   "default_walkable": "forest.forest_plain_floor_2",
   "layers": {

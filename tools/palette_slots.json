@@ -65,7 +65,7 @@
    "5": "sprites7",
    "6": "sprites9",
    "7": "sprites8",
-   "_why": "0 shared OW (hero/bat/kobold/spider); 1 mimic OW (sprites5 exact); 2 selected-card rider ice/poison (sprites12 exact); 3 slime OW; 4 boss OW + rider fire (sprites2 exact for both; slot 4 is never reprogrammed by battle); 5 wizard (sprites7 exact); 6 merchant + dog OW (sprites9 exact for merchant, tan-exact for dogs with red collar nearest-matched); 7 mayor+guard (sprites8 exact; restored with NPC ramps on overworld return). sprites10 (dog-exact) is an ALIAS of slot 6: dogs and the merchant never share a scene, and ui_load_tileset_banked patches slot 6 shade 2 to red on dog maps. Unslotted: battle OAM art (combat_art obj_palettes, slotless by design)."
+   "_why": "0 shared OW (hero/bat/kobold/spider); 1 mimic OW (sprites5 exact); 2 selected-card rider ice/poison (sprites12 exact); 3 slime OW; 4 boss OW + rider fire (sprites2 exact for both; slot 4 is never reprogrammed by battle); 5 wizard (sprites7 exact); 6 merchant (sprites9 exact) with per-map overrides (levels map.obj_palettes -> generated/tiles/obj_map_overrides.inc, programmed by ui_load_tileset_banked on every scene load; dog maps program sprites10 there); 7 mayor+guard (sprites8 exact; restored with NPC ramps on overworld return). sprites10 (dog-exact) is an ALIAS of slot 6 so battle_compile resolves dog OAM attrs; the loader programs it from map data. Unslotted: battle OAM art (combat_art obj_palettes, slotless by design)."
   },
   "title": {
    "0": "title",

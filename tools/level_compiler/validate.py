@@ -344,6 +344,150 @@ def known_entity_ids():
     return _KNOWN_ENTITY_IDS
 
 
+_OBJ_RAMP_SLOTS_CACHE = None
+_ARTIST_RAMPS_CACHE = None
+_ENEMY_OW_PALETTES_CACHE = None
+
+
+def _obj_ramp_slots():
+    """{ramp: hardware slot} for the OBJ set, from tools/palette_slots.json
+    (sets.obj plus aliases.obj).  Dev-owned slotmap, no build needed."""
+    global _OBJ_RAMP_SLOTS_CACHE
+    if _OBJ_RAMP_SLOTS_CACHE is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        data = json.loads((repo_root / "tools" / "palette_slots.json").read_text())
+        sets = (data.get("sets") or {}).get("obj") or {}
+        aliases = (data.get("aliases") or {}).get("obj") or {}
+        out = {}
+        for slot, ramp in sets.items():
+            if slot == "_why":
+                continue
+            out[ramp] = int(slot)
+        for ramp, slot in aliases.items():
+            out[ramp] = int(slot)
+        _OBJ_RAMP_SLOTS_CACHE = out
+    return _OBJ_RAMP_SLOTS_CACHE
+
+
+def _obj_default_ramps():
+    """{slot: ramp} canonical defaults (sets.obj only, no aliases)."""
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    data = json.loads((repo_root / "tools" / "palette_slots.json").read_text())
+    sets = (data.get("sets") or {}).get("obj") or {}
+    return {int(slot): ramp for slot, ramp in sets.items() if slot != "_why"}
+
+
+def _artist_ramps():
+    """Real artist ramp names from assets/palette.txt (single source of
+    truth for color rows; palette_slots.json only maps them to slots)."""
+    global _ARTIST_RAMPS_CACHE
+    if _ARTIST_RAMPS_CACHE is None:
+        tools_dir = Path(__file__).resolve().parent.parent
+        if str(tools_dir) not in sys.path:
+            sys.path.insert(0, str(tools_dir))
+        from palette_parse import parse_palette
+        _, ramps = parse_palette()
+        _ARTIST_RAMPS_CACHE = set(ramps)
+    return _ARTIST_RAMPS_CACHE
+
+
+def _enemy_ow_palettes():
+    """{enemy-type id: overworld ramp} for types with shared overworld art
+    (overworld.cells non-empty) -- the same types compile.py resolves to an
+    OAM slot via resolve_enemy_ow().  Art-less types keep the legacy
+    SPRITE_KIND path and use no OBJ ramp."""
+    global _ENEMY_OW_PALETTES_CACHE
+    if _ENEMY_OW_PALETTES_CACHE is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        out = {}
+        for path in sorted((repo_root / "screens" / "enemy_types").glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            ow = data.get("overworld") or {}
+            if ow.get("cells"):
+                out[data.get("id", path.stem)] = ow.get("palette")
+        _ENEMY_OW_PALETTES_CACHE = out
+    return _ENEMY_OW_PALETTES_CACHE
+
+
+def _object_ow_ramp(obj):
+    """Overworld OBJ ramp for a level object, or None for the legacy
+    SPRITE_KIND path.  Mirrors compile.py resolve_enemy_ow(): explicit
+    properties.enemy_type wins, else the ENTITY_ID_X naming convention."""
+    props = obj.get("properties") or {}
+    want = props.get("enemy_type")
+    if not want:
+        ent = props.get("entity_id", "")
+        if ent.startswith("ENTITY_ID_"):
+            want = ent[len("ENTITY_ID_"):].lower()
+    if not want:
+        return None
+    return _enemy_ow_palettes().get(want)
+
+
+def validate_obj_palettes(level_data):
+    """Per-map OBJ palette overrides (map.obj_palettes: slot -> ramp).
+
+    Errors (build fails): not a dict, slot outside 0-7, value not an
+    artist ramp name from assets/palette.txt.
+    Warnings (build stays green, wrongness reported): a placed actor
+    whose overworld ramp loses its hardware slot under this map's
+    effective set -- the declared override wins and the loser renders
+    in the winner's colors (today: the fixture merchant's coin rides
+    the dog-red slot 6 in test_town/test_gamble).
+    Returns (errors, warnings)."""
+    errors = []
+    warnings = []
+    map_info = level_data.get("map") or {}
+    raw = map_info.get("obj_palettes", None)
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        return ["map.obj_palettes must be an object {slot: ramp}"], []
+    ramps = _artist_ramps()
+    overrides = {}
+    for key, ramp in raw.items():
+        try:
+            slot = int(key)
+        except (TypeError, ValueError):
+            errors.append(f"map.obj_palettes key {key!r} is not a slot 0-7")
+            continue
+        if not 0 <= slot <= 7:
+            errors.append(f"map.obj_palettes slot {slot} is outside 0-7")
+            continue
+        if not isinstance(ramp, str) or not ramp:
+            errors.append(f"map.obj_palettes slot {slot} must name an artist ramp, got {ramp!r}")
+            continue
+        if ramp not in ramps:
+            errors.append(f"map.obj_palettes slot {slot}: unknown OBJ ramp '{ramp}' (assets/palette.txt)")
+            continue
+        if slot in overrides:
+            errors.append(f"map.obj_palettes slot {slot} declared twice")
+            continue
+        overrides[slot] = ramp
+    if errors:
+        return errors, warnings
+    slot_of_ramp = _obj_ramp_slots()
+    default_for_slot = _obj_default_ramps()
+    for obj in level_data.get("objects", []) or []:
+        pal = _object_ow_ramp(obj)
+        if not pal or pal not in slot_of_ramp:
+            continue  # legacy sprite path, or owned by battle_compile's ramp check
+        slot = slot_of_ramp[pal]
+        effective = overrides.get(slot, default_for_slot.get(slot))
+        if effective != pal:
+            winners = sorted({o.get("id") for o in level_data.get("objects", []) or []
+                              if _object_ow_ramp(o) == effective})
+            warnings.append(
+                f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
+                f"but this map programs '{effective}' there (declared winner wins; "
+                f"claimants: {winners}). Declare map.obj_palettes "
+                f"explicitly if the trade is intentional.")
+    return errors, warnings
+
+
 def validate_level(level_data, tilesets=None, all_level_ids=None):
     """Validate a loaded level dict. Returns (is_valid, list_of_errors, list_of_warnings, checks_passed)."""
     errors = []
@@ -769,6 +913,16 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
 
     if objects_ok:
         passed.append("Objects valid")
+
+    # 5b. Per-map OBJ palette overrides (map.obj_palettes): sparse
+    # slot -> artist ramp. Unknown ramps or out-of-range slots fail the
+    # build (typos must never ship silent wrong colors); same-slot
+    # conflicts only warn (declared winner wins, losers reported).
+    opal_errors, opal_warnings = validate_obj_palettes(level_data)
+    errors.extend(opal_errors)
+    warnings.extend(opal_warnings)
+    if not opal_errors:
+        passed.append("OBJ palettes valid")
 
     is_valid = (len(errors) == 0)
     return is_valid, errors, warnings, passed
