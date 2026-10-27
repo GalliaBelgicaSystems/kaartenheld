@@ -138,11 +138,11 @@ void world_anim_swap_banked(void);
  * ring's only writer).  Needs no staging.  Same bank/why as the swap. */
 void world_anim_rebuild_banked(void);
 
-/* Bank-5 full-ring black wipe behind ui_draw_world_transition():
- * blackens CGB slot 4, then paints all 18 ring rows with blank tiles +
- * slot 4.  The fixed driver runs it once (the writes themselves span a
- * display frame); there is no vsync pacing -- the ~1700 Mode-gated
- * writes sweep top-down in write order by themselves. */
+/* Bank-5 viewport-union black wipe behind ui_draw_world_transition():
+ * blackens CGB slot 4, then paints the union of the displayed and the
+ * incoming viewport (see tiles_content.c).  The fixed driver runs it
+ * once; the writes themselves span a display frame, sweeping top-down
+ * in write order by themselves. */
 void ui_wipe_black_banked(void);
 
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):

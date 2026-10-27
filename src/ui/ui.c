@@ -804,10 +804,12 @@ void ui_draw_world_map(const World *world)
     ui_load_tileset((uint8_t)world->tileset_kind);
     ui_set_cram_palette((uint8_t)world->tileset_kind);
 
-    /* Populate the entire 32-column x 32-row background ring during LCD-safe
-     * full map redraw. Field: all 32 x 32 cells. Smaller maps: col 20..31 are
-     * filled with floor tiles in ui_draw_terrain_cell. */
-    ui_draw_world_rect(world, 0, 32, 0, 32);
+    /* Populate the background ring during a full map redraw.
+     * Only in-bounds cells are drawn: the camera clamps scroll to
+     * width-20/height-18, so out-of-bounds ring cells can never scroll
+     * into view (and the ui_lcd_off attr wipe already cleared the ring
+     * on paths that blank).  Smaller maps skip the dead cells entirely. */
+    ui_draw_world_rect(world, 0, world->width, 0, world->height);
     ui_world_tail(world);
 }
 
@@ -842,11 +844,13 @@ static void ui_world_tail(const World *world)
 /* Scene-transition repaint: black wipe, invisible load, row reveal.
  * The LCD never blanks (no white flash) and no half-loaded map is ever
  * visible: every displayed pixel is black until its own row is written.
- * No vsync pacing anywhere: the ~1700 synced writes span several display
- * frames by themselves, so the curtain visibly sweeps top-down in write
- * order, fast.  With no vsync and only Mode-gated writes, this is safe
- * under the harness, with the LCD off (STAT reads idle: waits fall
- * through), and on DMG (grey blanks: still cover, never white). */
+ * Sprites pop in over the black the moment the camera snaps (see below),
+ * so the PPU-gated writes read as a world sweeping in behind live
+ * actors, not a freeze with hidden sprites.  No vsync pacing anywhere:
+ * the synced writes span several display frames by themselves.  With no
+ * vsync and only Mode-gated writes, this is safe under the harness, with
+ * the LCD off (STAT reads idle: waits fall through), and on DMG (grey
+ * blanks: still cover, never white). */
 void ui_draw_world_transition(const World *world)
 {
     uint8_t kind;
@@ -879,10 +883,19 @@ void ui_draw_world_transition(const World *world)
         s_loaded_cram = (int8_t)kind;
     }
     /* The old camera dies with the old map: the new one takes effect
-     * while the screen is still black, so the viewport never jumps. */
+     * while the screen is still black, so the viewport never jumps.
+     * Actors + player sprite + OAM commit go here, ahead of the reveal:
+     * the curtain still has dozens of frames to sweep, but the sprites
+     * are already standing on it (the reveal paints background tiles
+     * only, so it never touches OAM).  The tail re-runs all three
+     * idempotently. */
     ui_update_camera(world);
-    /* Reveal: the new map opens top-to-bottom in write order. */
-    ui_draw_world_rect(world, 0, 32, 0, 32);
+    ui_sprite_move((uint8_t)(world_player_px(world) - world->camera_px_x),
+                   (uint8_t)(world_player_py(world) - world->camera_px_y));
+    ui_draw_actors_sprites(world);
+    ui_sprite_commit();
+    /* Reveal: only in-bounds cells can ever scroll into view. */
+    ui_draw_world_rect(world, 0, world->width, 0, world->height);
     /* Slot 4 stays black: it is free in every world tileset, and every
      * consumer (dialogue paper, quick-screen tints, menus, battles,
      * world maps) reprograms CRAM on entry. */
