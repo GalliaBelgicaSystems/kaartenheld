@@ -637,6 +637,18 @@
       "x": 12,
       "y": 20,
       "facing": "DOWN"
+    },
+    "entry": {
+      "north": {
+        "x": 10,
+        "y": 1,
+        "facing": "DOWN"
+      },
+      "south": {
+        "x": 12,
+        "y": 20,
+        "facing": "UP"
+      }
     }
   },
   "exits": [],

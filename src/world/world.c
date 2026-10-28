@@ -22,7 +22,6 @@ static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0
 
 /* Bank-3 movement bodies (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
-void world_edge_spawn_banked(void);
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -123,7 +122,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
     const SceneDefinition *def;
-    const SceneExit *ex;
 
     if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
     (void)state;
@@ -139,18 +137,12 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     def = scene_definition_for_map(w->map_id);
 
     /* Invisible point-exit triggers fire regardless of the art painted
-     * under them, so the fixed-side table lookup comes first.  The STEPPED
-     * gate tile stays the move target (a normal one-tile walk); the far
-     * destination is staged separately. */
-    ex = scene_exit_at(def, target_x, target_y);
-    if (ex) {
-        w->move_outcome = MOVE_OUTCOME_EXIT;
-        w->move_param = (uint8_t)ex->target_scene;
-        w->move_target_x = target_x;
-        w->move_target_y = target_y;
-        w->move_exit_x = ex->spawn_x;
-        w->move_exit_y = ex->spawn_y;
-    } else {
+     * under them, so the trigger lookup comes first.  It runs banked
+     * (scene home bank: fixed-bank budget, AGENTS.md 52.18) and stages
+     * the EXIT outcome straight through the World pointer on a hit.
+     * The STEPPED gate tile stays the move target (a normal one-tile
+     * walk); the far destination is staged separately. */
+    if (!scene_exit_check(w, def, target_x, target_y)) {
         /* Walkability + whole-edge decide run banked (bank 2 body writes
          * outcome/param/dir/target straight through the staged World
          * pointer).  A missing def stages NULL, which the body treats as
@@ -229,38 +221,28 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
 
         if (w->move_outcome == MOVE_OUTCOME_EXIT || w->move_outcome == MOVE_OUTCOME_EDGE) {
             /* Scene change: point-exit spawns were staged by the decide
-             * path; whole-edge entry spawns run banked (bank 2 body,
-             * fixed-bank budget) from the staged cross-coordinate, edge
-             * dimension and direction. The player never commits
-             * PLAYER_MOVED onto the gate; the map changes. */
+             * path; whole-edge crossings land on the destination's
+             * arrival-side named entry (player.entry, Spawn layer),
+             * falling back to its main spawn when unset.  No row
+             * mirroring, so levels need no edge alignment. The player
+             * never commits PLAYER_MOVED onto the gate; the map changes. */
             SceneId target_scene = (SceneId)w->move_param;
-            uint8_t sx = w->move_target_x;
-            uint8_t sy = w->move_target_y;
             if (w->move_outcome == MOVE_OUTCOME_EDGE) {
-                /* Mirrored entry spawn runs banked (bank 2 body,
-                 * fixed-bank budget): cross-coordinate from the staged
-                 * target, both neighbor dims from a table fetch (the
-                 * predicate body cannot read tables). */
-                const SceneDefinition *nd = scene_definition_for_map((MapId)w->move_param);
-                if (!nd) {
-                    return MOVE_RESULT_BLOCKED;
-                }
-                g_bk_call_bank = 2;
-                g_bk_call_target = (uint16_t)&world_edge_spawn_banked;
-                g_bk_byte_a = (w->move_dir < 2) ? w->move_target_x : w->move_target_y;
-                g_bk_byte_b = nd->width;
-                g_bk_byte_c = nd->height;
-                g_bk_byte_d = w->move_dir;
-                banked_call_run();
-                sx = g_bk_byte_a;
-                sy = g_bk_byte_b;
+                /* Edge entry = the destination's arrival-side named entry
+                 * (player.entry, Spawn layer), falling back to its main
+                 * spawn when unset.  Runs banked (scene_entry: fixed-bank
+                 * budget, AGENTS.md 52.18); the selected entry was
+                 * validated walkable by the compile gate. */
+                scene_entry((MapId)target_scene, w->move_dir);
+                world_change_map(w, scene_id_to_map(target_scene),
+                                 g_bk_byte_b, g_bk_byte_c, state);
+                w->player.facing = (Direction)g_bk_byte_d;
             } else {
                 /* Point exit: the explicit destination staged at decide
                  * time (move_target is the stepped gate tile). */
-                sx = w->move_exit_x;
-                sy = w->move_exit_y;
+                world_change_map(w, scene_id_to_map(target_scene),
+                                 w->move_exit_x, w->move_exit_y, state);
             }
-            world_change_map(w, scene_id_to_map(target_scene), sx, sy, state);
             return MOVE_RESULT_MAP_CHANGED;
         } else if (w->move_outcome == MOVE_OUTCOME_ENCOUNTER) {
             /* The player does not occupy the enemy tile; battle starts from

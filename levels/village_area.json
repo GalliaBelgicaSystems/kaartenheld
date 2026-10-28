@@ -414,6 +414,18 @@
       "x": 10,
       "y": 9,
       "facing": "DOWN"
+    },
+    "entry": {
+      "north": {
+        "x": 10,
+        "y": 1,
+        "facing": "DOWN"
+      },
+      "west": {
+        "x": 1,
+        "y": 9,
+        "facing": "RIGHT"
+      }
     }
   },
   "exits": [],

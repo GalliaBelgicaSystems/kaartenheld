@@ -4,10 +4,10 @@
 #include "banked.h"
 #include "tile_walk.h"
 
-/* Bank-2 movement bodies (see world_try_begin_move/world_update_move).
+/* Bank-2 movement body (see world_try_begin_move).
  * Bank 2 has headroom in both builds; bank 3 (release) does not.
  * Pure WRAM/staged arithmetic: no scene-table access (neighbor bytes
- * arrive staged, dims arrive staged), no fixed-bank calls. */
+ * arrive staged), no fixed-bank calls. */
 
 static uint8_t edge_walkable(const World *w, uint8_t x, uint8_t y)
 {
@@ -71,45 +71,7 @@ void world_gate_check_banked(void)
     }
 }
 
-static uint8_t edge_clamp(uint8_t v, uint8_t lo, uint8_t hi)
-{
-    if (hi < lo) return lo;
-    if (v < lo) return lo;
-    if (v > hi) return hi;
-    return v;
-}
-
-void world_edge_spawn_banked(void)
-{
-    uint8_t cross = g_bk_byte_a;
-    uint8_t nw = g_bk_byte_b;
-    uint8_t nh = g_bk_byte_c;
-    uint8_t dir = g_bk_byte_d;
-    uint8_t xhi;
-    uint8_t yhi;
-    uint8_t sx;
-    uint8_t sy;
-
-    /* dir comes from the staged move (0-3: the predicate body wrote it
-     * on the EDGE path that led here); nw/nh are real map dims from the
-     * validated neighbor def. No degenerate inputs in practice. */
-    xhi = (nw >= 2) ? (uint8_t)(nw - 2) : 0;
-    yhi = (nh >= 2) ? (uint8_t)(nh - 2) : 0;
-    /* Entry is one cell inside the OPPOSITE edge: leaving north enters
-     * through the neighbor's south, leaving east through its west, etc. */
-    if (dir == (uint8_t)NBR_N) {
-        sx = edge_clamp(cross, 1, xhi);
-        sy = yhi;
-    } else if (dir == (uint8_t)NBR_S) {
-        sx = edge_clamp(cross, 1, xhi);
-        sy = 1;
-    } else if (dir == (uint8_t)NBR_E) {
-        sx = 1;
-        sy = edge_clamp(cross, 1, yhi);
-    } else {
-        sx = xhi;
-        sy = edge_clamp(cross, 1, yhi);
-    }
-    g_bk_byte_a = sx;
-    g_bk_byte_b = sy;
-}
+/* Edge crossings land on the neighbor's spawn (player.spawn, per-level
+ * Spawn-layer property): no row mirroring, so linked levels need no edge
+ * alignment. The entry spawn lives in SceneDefinition (scene_spawn_banked);
+ * this file owns only the crossing predicate above. */

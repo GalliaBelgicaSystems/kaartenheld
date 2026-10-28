@@ -578,6 +578,18 @@
       "x": 5,
       "y": 18,
       "facing": "DOWN"
+    },
+    "entry": {
+      "south": {
+        "x": 5,
+        "y": 18,
+        "facing": "UP"
+      },
+      "east": {
+        "x": 24,
+        "y": 7,
+        "facing": "LEFT"
+      }
     }
   },
   "exits": [

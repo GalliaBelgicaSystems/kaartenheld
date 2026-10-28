@@ -27,9 +27,10 @@ from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
 from collision import (
-    derive_collision, edge_link_report, effective_actor_flags,
-    neighbor_pairing_issues, edge_geometry_issues, point_exit_issues,
-    tunnel_id_valid, tunnel_issues, cell_tile_info, level_default_tile,
+    ENTRY_KEYS, derive_collision, edge_link_report, effective_actor_flags,
+    get_entry, main_spawn, neighbor_pairing_issues, edge_geometry_issues,
+    point_exit_issues, resolve_entry_spawn, tunnel_id_valid, tunnel_issues,
+    cell_tile_info, level_default_tile, unused_entry_warnings,
 )
 
 MAX_WORLD_WIDTH = 32
@@ -619,59 +620,96 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         else:
             passed.append("Default ground valid")
 
-    # 3. Collision & Player Spawn Check
-    collision_ok = True
-    spawn_info = level_data.get("player", {}).get("spawn", {})
-    sp_x = spawn_info.get("x", -1)
-    sp_y = spawn_info.get("y", -1)
+    # 3. Collision & Player Spawn Check (main spawn + named entries)
+    FACING_WORDS = ("UP", "DOWN", "LEFT", "RIGHT",
+                    "NORTH", "SOUTH", "WEST", "EAST")
 
-    # The spawn is compiled into SceneDefinition (game_new_game reads the
-    # FIELD row), so the facing spelling must map to a Direction enum.
-    spawn_facing = str(spawn_info.get("facing", "DOWN")).upper()
-    if spawn_facing not in ("UP", "DOWN", "LEFT", "RIGHT",
-                            "NORTH", "SOUTH", "WEST", "EAST"):
-        errors.append(f"Player spawn facing '{spawn_info.get('facing')}' is unknown "
-                      f"(want UP/DOWN/LEFT/RIGHT or a compass alias)")
-        collision_ok = False
-
-    if sp_x < 0 or sp_x >= width or sp_y < 0 or sp_y >= height:
-        errors.append(f"Player spawn ({sp_x}, {sp_y}) is outside map bounds ({width}x{height})")
-        collision_ok = False
-    else:
-        # Check if spawn is on map boundary wall
-        if sp_x == 0 or sp_x == width - 1 or sp_y == 0 or sp_y == height - 1:
-            warnings.append(f"Player spawn ({sp_x}, {sp_y}) is on perimeter boundary wall")
-
-        # Check if spawn tile is walkable
+    def check_point(px, py, facing_raw, label, tileset, width, height,
+                    layers):
+        """Validate one spawn-like point. Returns (ok, messages)."""
+        ok = True
+        msgs = []
+        facing = str(facing_raw or "DOWN").upper()
+        if facing not in FACING_WORDS:
+            msgs.append((False, f"{label} facing '{facing_raw}' is unknown "
+                                f"(want UP/DOWN/LEFT/RIGHT or a compass alias)"))
+            ok = False
+        if px < 0 or px >= width or py < 0 or py >= height:
+            msgs.append((False, f"{label} ({px}, {py}) is outside map bounds "
+                                f"({width}x{height})"))
+            return False, msgs
+        if px == 0 or px == width - 1 or py == 0 or py == height - 1:
+            msgs.append((None, f"{label} ({px}, {py}) is on perimeter "
+                               f"boundary wall"))
         if tileset:
             tile_map = {t["id"]: t for t in tileset.get("tiles", [])}
-            layers = level_data.get("layers", {})
             terrain = layers.get("terrain", [])
-            spawn_blocked = False
+            blocked = False
             if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
-                if sp_y < len(terrain) and sp_x < len(terrain[sp_y]):
-                    cell = terrain[sp_y][sp_x]
+                if py < len(terrain) and px < len(terrain[py]):
+                    cell = terrain[py][px]
                     t_name = cell.split(".")[-1] if "." in cell else cell
                     if t_name in tile_map and not tile_map[t_name].get("walkable", True):
-                        spawn_blocked = True
+                        blocked = True
             elif isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], dict):
                 for block in terrain:
-                    bx = block.get("x", 0)
-                    by = block.get("y", 0)
-                    bw = block.get("width", 0)
-                    bh = block.get("height", 0)
+                    bx, by = block.get("x", 0), block.get("y", 0)
+                    bw, bh = block.get("width", 0), block.get("height", 0)
                     bt = block.get("tile", "")
-                    if bx <= sp_x < bx + bw and by <= sp_y < by + bh:
+                    if bx <= px < bx + bw and by <= py < by + bh:
                         t_name = bt.split(".")[-1] if "." in bt else bt
                         if t_name in tile_map and not tile_map[t_name].get("walkable", True):
-                            spawn_blocked = True
-            if spawn_blocked:
-                errors.append(f"Player spawn at ({sp_x}, {sp_y}) is blocked by non-walkable tile")
+                            blocked = True
+            if blocked:
+                msgs.append((False, f"{label} at ({px}, {py}) is blocked by "
+                                    f"non-walkable tile"))
+                ok = False
+        return ok, msgs
+
+    collision_ok = True
+    spawn_info = level_data.get("player", {}).get("spawn", {})
+    # The spawn is compiled into SceneDefinition (game_new_game reads the
+    # FIELD row), so the facing spelling must map to a Direction enum.
+    _, msgs = check_point(spawn_info.get("x", -1), spawn_info.get("y", -1),
+                          spawn_info.get("facing", "DOWN"), "Player spawn",
+                          tileset, width, height,
+                          level_data.get("layers", {}))
+    for is_err, text in msgs:
+        if is_err is False:
+            errors.append(text)
+            collision_ok = False
+        elif is_err is None:
+            warnings.append(text)
+    # Named arrival entries (player.entry north/.../stairs_down): same
+    # walkability contract as the main spawn; each is optional (unset
+    # entries fall back to the main spawn at runtime).
+    seen_entries = set()
+    for key in ENTRY_KEYS:
+        ent = get_entry(level_data, key)
+        if ent is None:
+            raw = ((level_data.get("player", {}) or {}).get("entry", {}) or {}).get(key)
+            if raw is not None:
+                errors.append(f"Player entry '{key}' has invalid coordinates "
+                              f"({(raw or {}).get('x')},{(raw or {}).get('y')})")
                 collision_ok = False
+            continue
+        seen_entries.add(key)
+        _, msgs = check_point(ent.get("x", -1), ent.get("y", -1),
+                              ent.get("facing", "DOWN"),
+                              f"Player entry '{key}'", tileset, width, height,
+                              level_data.get("layers", {}))
+        for is_err, text in msgs:
+            if is_err is False:
+                errors.append(text)
+                collision_ok = False
+            elif is_err is None:
+                warnings.append(text)
 
     if collision_ok:
         passed.append("Collision valid")
         passed.append("Player spawn valid")
+        if seen_entries:
+            passed.append("Player entries valid (%s)" % ", ".join(sorted(seen_entries)))
 
     # 3b. Default-ground walkability (§52.23): the ROM pre-fills every
     # interior cell with the level default, so a solid default bricks
@@ -712,6 +750,19 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 f"lowercase letters, digits and underscores, starting with "
                 f"a letter, e.g. 'tunnel_town_field')")
             exits_ok = False
+
+        # Named-destination exits: target_entry must name a known entry
+        # key; the landing resolves to that destination entry (or its
+        # main spawn) at compile time.  Combining tunnel + target_entry
+        # is rejected by the tunnel pairing check (mouths must land on
+        # the counterpart gate), not here.
+        target_entry = (exit_obj.get("target_entry") or "").strip()
+        if target_entry:
+            if target_entry not in ENTRY_KEYS:
+                errors.append(
+                    f"Exit {e_idx} target_entry '{target_entry}' is unknown "
+                    f"(want one of: {', '.join(ENTRY_KEYS)})")
+                exits_ok = False
 
     if exits_ok:
         passed.append("Exits valid")
@@ -1175,7 +1226,7 @@ def main():
     # the one implementation; compile.py aborts on the same errors).
     if any(not sid.startswith("test_") for sid in all_level_ids):
         _pair_errors, _pair_warnings = neighbor_pairing_issues(_by_id, tilesets)
-        for warn in _pair_warnings:
+        for warn in _pair_warnings + unused_entry_warnings(_by_id):
             print(f"WARNING: {warn}")
         for err in _pair_errors:
             print(f"ERROR: {err}")

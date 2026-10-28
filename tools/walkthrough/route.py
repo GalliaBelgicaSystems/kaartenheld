@@ -22,7 +22,7 @@ from walkthrough.session import LEVELS_DIR, REPO
 sys.path.insert(0, os.path.join(REPO, "tools", "level_compiler"))
 from validate import load_tilesets          # noqa: E402
 from compile import derive_collision, scene_table_order, is_level_file   # noqa: E402
-from collision import effective_actor_flags   # noqa: E402
+from collision import effective_actor_flags, entry_side_for_link, resolve_entry_spawn, resolve_exit_landing   # noqa: E402
 
 # Patrol boxes (src/world/actor.h): blocked cells for routing — the
 # walkthrough must not steer through a hostile's patrol path.
@@ -64,7 +64,7 @@ def patrol_cells(ai, x, y):
 
 
 # Neighbor edge directions in stable order (matches the engine's
-# N/S/E/W checks and the mirrored-spawn rule).
+# N/S/E/W checks; entry itself is the neighbor spawn, not a mirror).
 EDGE_DIRS = ("north", "south", "east", "west")
 _EDGE_NORMAL = {"north": (0, -1), "south": (0, 1),
                 "west": (-1, 0), "east": (1, 0)}
@@ -97,7 +97,7 @@ class Scene:
         # collision grid marks them.
         self.exit_cells = {(e["x"], e["y"]) for e in self.exits}
         # Whole-edge links (neighbors): every walkable border cell of a
-        # linked edge is a portal node with a mirrored entry spawn.
+        # linked edge is a portal node landing on the neighbor spawn.
         # Corner cells belong to two edges, but the ROM fires in N/S/W/E
         # priority order, so a corner is assigned to the first linked
         # walkable edge in that order (setdefault): planner and ROM can
@@ -485,35 +485,31 @@ class Planner:
         return steps
 
     def _arrival(self, e, goal, direction, to_name):
-        """Landing tile after crossing portal e into to_name: explicit
-        spawn for point exits, mirrored entry from the crossed edge cell
-        for linked edges (mirror of edge_banked.c, using the crossed
-        direction — corners belong to two edges, so position alone
-        cannot decide)."""
+        """Landing tile after crossing portal e into to_name: the
+        resolved landing for point exits (target_entry included), the
+        destination's arrival-side named entry (or its main spawn) for
+        linked edges (mirror of world.c's EDGE path: no mirroring, no
+        alignment)."""
         if "target_x" in e:
-            return (e["target_x"], e["target_y"])
+            by_id = {s.name: s.level for s in self.scenes.values()}
+            tx, ty, _ = resolve_exit_landing(e, by_id)
+            return (tx, ty)
         return self._mirror_entry(goal, direction, to_name)
 
     def _mirror_entry(self, goal, direction, to_name):
-        """Mirror of the ROM's edge-spawn rule (edge_banked.c): leaving
-        via an edge enters one cell inside the OPPOSITE edge, with the
-        crossing coordinate clamped for size mismatches."""
+        """Entry spawn for a linked-edge crossing into `to_name` arriving
+        from `direction`'s side: the destination's arrival-side entry
+        (opposite of the crossed edge), else its main spawn. `goal` is
+        kept for call-shape compatibility: every crossing on one edge
+        lands on the same cell."""
         other = self.scenes[to_name]
-        gx, gy = goal
-        w, h = other.width, other.height
-        if direction == "north":
-            return (max(1, min(gx, w - 2)), h - 2)
-        if direction == "south":
-            return (max(1, min(gx, w - 2)), 1)
-        if direction == "west":
-            return (w - 2, max(1, min(gy, h - 2)))
-        return (1, max(1, min(gy, h - 2)))
+        return resolve_entry_spawn(other.level, entry_side_for_link(direction))
 
     def _entry_ok(self, goal, direction, to_name):
-        """True when the mirrored landing cell in `to_name` is walkable.
-        Trap links (landing inside a wall) are never routed through; the
-        compiler rejects them, this keeps the planner honest on stale
-        content too."""
+        """True when the arrival-side entry (or main-spawn fallback) in
+        `to_name` is walkable. Trap links (entry inside a wall) are never
+        routed through; the compiler rejects them, this keeps the planner
+        honest on stale content too."""
         if to_name not in self.scenes:
             return False
         other = self.scenes[to_name]
@@ -523,8 +519,8 @@ class Planner:
         return other.walkable(ex, ey)
 
     def _edge_reaches(self, from_name, target):
-        """True when some linked-edge cell of `from_name` has a walkable
-        landing cell in `target`."""
+        """True when some linked-edge cell of `from_name` reaches a
+        walkable neighbor spawn in `target`."""
         scene = self.scenes[from_name]
         for cell, (direction, t) in scene.edge_cells.items():
             if t == target and self._entry_ok(cell, direction, target):

@@ -82,6 +82,41 @@ void scene_load_tiles_banked(void)
     }
 }
 
+/* Banked body of scene_exit_check() (see scene.h).  Same bank-5/4
+ * residency as the scene tables it reads, so the exit rows are plain
+ * same-bank ROM reads (never banked_copy: switching banks mid-body
+ * would unmap the running body).  In: g_bk_ptr_a = World* (WRAM, always
+ * mapped), g_bk_ptr_b = SceneDefinition* (the WRAM scratch from
+ * scene_definition_for_map, likewise mapped), g_bk_byte_a/b = gate
+ * tile; out: g_bk_byte_c = hit flag.  On a hit the EXIT outcome is
+ * staged straight through the World pointer (the stepped gate tile
+ * stays the move target; the far destination goes to move_exit_*).
+ * Self-contained: no fixed-bank calls. */
+void scene_exit_check_banked(void)
+{
+    World *w = (World *)g_bk_ptr_a;
+    const SceneDefinition *def = (const SceneDefinition *)g_bk_ptr_b;
+    uint8_t x = g_bk_byte_a;
+    uint8_t y = g_bk_byte_b;
+    uint8_t i;
+
+    g_bk_byte_c = 0;
+    if (!w || !def) return;
+    for (i = 0; i < def->exit_count; i++) {
+        const SceneExit *e = &def->exits[i];
+        if (e->gate_x == x && e->gate_y == y) {
+            w->move_outcome = MOVE_OUTCOME_EXIT;
+            w->move_param = e->target_scene;
+            w->move_target_x = x;
+            w->move_target_y = y;
+            w->move_exit_x = e->spawn_x;
+            w->move_exit_y = e->spawn_y;
+            g_bk_byte_c = 1;
+            return;
+        }
+    }
+}
+
 /* Banked body of scene_spawn() (see scene.c).  Same bank-5 residency as
  * scene_load_tiles_banked: reads the spawn compiled from the level JSON's
  * player.spawn directly out of g_scenes, so no fixed-bank code ever touches
@@ -114,4 +149,69 @@ void scene_spawn_banked(void)
     g_bk_byte_b = def->spawn_x;
     g_bk_byte_c = def->spawn_y;
     g_bk_byte_d = def->spawn_facing;
+}
+
+/* Banked body of scene_entry() (see scene.h).  Same bank-5/4 residency
+ * as scene_spawn_banked: reads the edge entries compiled from the level
+ * JSON's player.entry directly out of g_scenes, so no fixed-bank code
+ * ever touches the scene table for this (the fixed-bank _CODE budget
+ * sits hard against 0x8000; see AGENTS.md 52.18/55.5).  Map id in
+ * g_bk_byte_a, crossed edge (NbrEdge: the side left through) in
+ * g_bk_byte_b; entry (x, y, facing) out via g_bk_byte_b/c/d.  The
+ * entered side is opposite the crossed edge: leaving north arrives from
+ * the south, leaving east arrives from the west, etc.  Absent sides
+ * (entry facing == SCENE_ENTRY_ABSENT) and out-of-range maps yield the
+ * main spawn (or the historic (4,4)/DOWN fallback).  Self-contained: no
+ * fixed-bank calls. */
+void scene_entry_banked(void)
+{
+    MapId map_id = (MapId)g_bk_byte_a;
+    uint8_t crossed = g_bk_byte_b;
+    const SceneDefinition *def;
+    uint8_t ex;
+    uint8_t ey;
+    uint8_t ef;
+
+#ifdef TEST_LEVELS
+    if (map_id < MAP_TEST_FIELD || map_id >= (MapId)(MAP_TEST_FIELD + MAP_TEST_COUNT)) {
+        g_bk_byte_b = 4;
+        g_bk_byte_c = 4;
+        g_bk_byte_d = (uint8_t)DIRECTION_DOWN;
+        return;
+    }
+    def = &g_scenes[map_id - MAP_TEST_FIELD];
+#else
+    if (map_id >= MAP_REAL_COUNT) {
+        g_bk_byte_b = 4;
+        g_bk_byte_c = 4;
+        g_bk_byte_d = (uint8_t)DIRECTION_DOWN;
+        return;
+    }
+    def = &g_scenes[map_id];
+#endif
+    if (crossed == (uint8_t)NBR_N) {
+        ex = def->entry_s_x;
+        ey = def->entry_s_y;
+        ef = def->entry_s_facing;
+    } else if (crossed == (uint8_t)NBR_S) {
+        ex = def->entry_n_x;
+        ey = def->entry_n_y;
+        ef = def->entry_n_facing;
+    } else if (crossed == (uint8_t)NBR_E) {
+        ex = def->entry_w_x;
+        ey = def->entry_w_y;
+        ef = def->entry_w_facing;
+    } else {
+        ex = def->entry_e_x;
+        ey = def->entry_e_y;
+        ef = def->entry_e_facing;
+    }
+    if (ef == SCENE_ENTRY_ABSENT) {
+        ex = def->spawn_x;
+        ey = def->spawn_y;
+        ef = def->spawn_facing;
+    }
+    g_bk_byte_b = ex;
+    g_bk_byte_c = ey;
+    g_bk_byte_d = ef;
 }

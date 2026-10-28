@@ -13,11 +13,17 @@ export interface LevelExit {
    *  the target scene (same id on both mouths, mutual targets, each
    *  landing on the other's gate). Absent = one-way exit. */
   tunnel?: string;
+  /** Optional named landing: the destination's player.entry key
+   *  (north/south/east/west/stairs_up/stairs_down).  The compiler
+   *  resolves it to that entry (or the destination spawn when unset)
+   *  instead of target_x/target_y.  Cannot combine with tunnel. */
+  target_entry?: string;
 }
 
 /** Whole-edge map links (the "ocean"): stepping onto a non-wall cell of
- *  a linked border crosses to the neighbor scene with a mirrored entry
- *  spawn. Empty string = no link. A point exit on the same cell wins. */
+ *  a linked border crosses to the neighbor scene at its arrival-side
+ *  entry (player.entry, Spawn layer), falling back to its main spawn.
+ *  Empty string = no link. A point exit on the same cell wins. */
 export interface LevelNeighbors {
   north?: string;
   south?: string;
@@ -60,6 +66,34 @@ export interface PlayerSpawn {
   animation_speed?: number;
 }
 
+/** Named arrival spawn points (player.entry in the level JSON).
+ *  Edge keys (north/south/east/west) are selected by the side of this
+ *  level the player arrives on; stair keys (stairs_up/stairs_down) are
+ *  selected explicitly by exits via target_entry.  Absent = fall back
+ *  to the main spawn. */
+export type EntryKey = 'north' | 'south' | 'east' | 'west' | 'stairs_up' | 'stairs_down';
+
+export interface EntrySpawn {
+  x: number;
+  y: number;
+  facing?: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | string;
+}
+
+export const ENTRY_KEYS: EntryKey[] = ['north', 'south', 'east', 'west', 'stairs_up', 'stairs_down'];
+export const EDGE_ENTRY_KEYS: EntryKey[] = ['north', 'south', 'east', 'west'];
+
+export function normalizeEntries(raw: any): Partial<Record<EntryKey, EntrySpawn>> {
+  const out: Partial<Record<EntryKey, EntrySpawn>> = {};
+  const src = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  for (const k of ENTRY_KEYS) {
+    const v = src[k] as any;
+    if (v && typeof v === 'object' && typeof v.x === 'number' && typeof v.y === 'number') {
+      out[k] = { x: v.x, y: v.y, facing: typeof v.facing === 'string' ? v.facing : 'DOWN' };
+    }
+  }
+  return out;
+}
+
 export interface MapMetadata {
   width: number;
   height: number;
@@ -87,6 +121,7 @@ export interface LevelData {
   };
   player: {
     spawn: PlayerSpawn;
+    entry?: Partial<Record<EntryKey, EntrySpawn>>;
   };
   exits: LevelExit[];
   objects: LevelObject[];
@@ -120,6 +155,8 @@ export interface EditorLevel {
   terrainBlocks: TerrainBlock[];
   terrainDirty: boolean;
   spawn: PlayerSpawn;
+  /** Named arrival entries (player.entry); absent keys fall back to spawn. */
+  entrySpawns: Partial<Record<EntryKey, EntrySpawn>>;
   exits: LevelExit[];
   /** Whole-edge links; absent on screens (levels only). */
   neighbors?: LevelNeighbors;
@@ -244,6 +281,7 @@ export function titleScreenToEditor(data: any): EditorLevel {
     terrainBlocks: [],
     terrainDirty: false,
     spawn: { x: data.menu?.caret_x ?? 3, y: data.menu?.first_row ?? 10, facing: 'RIGHT' },
+    entrySpawns: {},
     exits: [],
     objects,
     regions,
@@ -344,6 +382,7 @@ export function battleScreenToEditor(data: any): EditorLevel {
     terrainBlocks: [],
     terrainDirty: false,
     spawn: { x: data.hud_layout?.caret_x ?? 2, y: data.hud_layout?.timer_row ?? 15, facing: 'RIGHT' },
+    entrySpawns: {},
     exits: [],
     objects,
     regions,
@@ -405,6 +444,7 @@ export function createEmptyEditorLevel(id: string = 'new_scene', tilesetId: stri
     terrainDirty: false,
     defaultWalkable: `${tilesetId}.${plainFloor}`,
     spawn: { x: Math.floor(width / 2), y: Math.floor(height / 2), facing: 'DOWN' },
+    entrySpawns: {},
     exits: [],
     objects: [],
     regions: []
@@ -513,6 +553,7 @@ export function levelDataToEditor(data: any): EditorLevel {
       ? { ...(data.map.obj_palettes as Record<string, string>) }
       : undefined,
     spawn: data.player?.spawn || { x: Math.floor(w / 2), y: Math.floor(h / 2), facing: 'DOWN' },
+    entrySpawns: normalizeEntries(data.player?.entry),
     exits: data.exits || [],
     neighbors: normalizeNeighbors(data.neighbors),
     objects: data.objects || [],
@@ -576,7 +617,12 @@ export function editorToLevelData(lvl: EditorLevel): any {
         : lvl.grid.map(row => row.map(t => `${lvl.tileset}.${t}`))
     },
     player: {
-      spawn: lvl.spawn
+      spawn: lvl.spawn,
+      // Named arrival entries; omit the key entirely when empty so
+      // view-only saves stay byte-stable.
+      ...(Object.keys(lvl.entrySpawns || {}).length > 0
+        ? { entry: { ...lvl.entrySpawns } }
+        : {}),
     },
     exits: lvl.exits,
     neighbors: {

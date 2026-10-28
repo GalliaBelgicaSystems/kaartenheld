@@ -45,6 +45,9 @@ const tunnelStatus = (tunnel, levels) => {
   if (A.exit.target_scene !== B.level || B.exit.target_scene !== A.level) {
     return { ok: false, error: `tunnel '${tunnel}' targets are not mutual (${A.level} → '${A.exit.target_scene}', ${B.level} → '${B.exit.target_scene}')` };
   }
+  if (A.exit.target_entry || B.exit.target_entry) {
+    return { ok: false, error: `tunnel '${tunnel}' cannot use target_entry — mouths must land on the counterpart gate (remove target_entry or unlink the tunnel)` };
+  }
   if (A.exit.target_x !== B.exit.x || A.exit.target_y !== B.exit.y ||
       B.exit.target_x !== A.exit.x || B.exit.target_y !== A.exit.y) {
     return { ok: false, error: `tunnel '${tunnel}' landings drifted — save the level to re-sync each landing onto the other mouth` };
@@ -82,6 +85,7 @@ const markers = [
   'must live in different levels',
   'targets are not mutual',
   'landings drifted',
+  'target_entry',
   'const findTunnelPartner',
   'const readAllLevels',
   'findTunnelPartner(toPeek.exits',

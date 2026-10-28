@@ -532,8 +532,10 @@ typedef struct {
     uint8_t encounter_cooldown;
 } World;
 
-/* Neighbor edge indices (n,s,e,w), shared by the move decision and the
- * banked edge-spawn body. */
+/* Neighbor edge indices (n,s,e,w), shared by the move decision (the staged
+ * move_dir must match the decide path exactly: corners resolve N/S
+ * before E/W). Edge entry itself is the destination's arrival-side named
+ * entry (or its main spawn), never a mirror. */
 typedef enum {
     NBR_N = 0,
     NBR_S = 1,

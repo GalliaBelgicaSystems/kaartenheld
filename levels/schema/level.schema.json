@@ -115,12 +115,25 @@
               "enum": ["UP", "DOWN", "LEFT", "RIGHT", "NORTH", "SOUTH", "WEST", "EAST"]
             }
           }
+        },
+        "entry": {
+          "type": "object",
+          "description": "Optional per-arrival spawn points, each {x, y, facing}. Edge entries (north/south/east/west) are selected by the side of this level the player arrives on (crossing a neighbor's east edge lands on this level's west entry); stair entries (stairs_up/stairs_down) are selected explicitly by exits via target_entry. A missing entry falls back to the main spawn.",
+          "properties": {
+            "north": { "$ref": "#/definitions/entry_spawn" },
+            "south": { "$ref": "#/definitions/entry_spawn" },
+            "east": { "$ref": "#/definitions/entry_spawn" },
+            "west": { "$ref": "#/definitions/entry_spawn" },
+            "stairs_up": { "$ref": "#/definitions/entry_spawn" },
+            "stairs_down": { "$ref": "#/definitions/entry_spawn" }
+          },
+          "additionalProperties": false
         }
       }
     },
     "neighbors": {
       "type": "object",
-      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene with a mirrored entry one cell inside the neighbor's opposite edge. A point exit on the same cell wins over the edge rule. Because the landing cell is inside the neighbor, that entry line must be walkable too or the player is trapped; the compiler refuses to build a pairing that drops the player into a wall. Empty string or absent = no link on that edge.",
+      "description": "Whole-edge map links (the 'ocean'): stepping onto a non-wall cell of a linked border crosses to the neighbor scene at its arrival-side entry (player.entry.<side>, Spawn layer), falling back to its main spawn when unset. A point exit on the same cell wins over the edge rule. Because every crossing on one edge lands on the same cell, that entry must be walkable; the compiler refuses to build a link whose used entry is a wall. Empty string or absent = no link on that edge.",
       "properties": {
         "north": { "type": "string" },
         "south": { "type": "string" },
@@ -143,7 +156,8 @@
           "target_y": { "type": "integer" },
           "direction": { "type": "string" },
           "tile_char": { "type": "string" },
-          "tunnel": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Two-way tunnel id linking this exit to exactly one return exit in the target scene (same id on both mouths, mutual targets, each landing on the other's gate). Absent = one-way exit." }
+          "tunnel": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Two-way tunnel id linking this exit to exactly one return exit in the target scene (same id on both mouths, mutual targets, each landing on the other's gate). Absent = one-way exit." },
+          "target_entry": { "type": "string", "enum": ["north", "south", "east", "west", "stairs_up", "stairs_down"], "description": "Optional named landing: resolve to the destination's player.entry key (or its main spawn when unset) instead of target_x/target_y. Cannot combine with tunnel." }
         }
       }
     },
@@ -240,6 +254,22 @@
           }
         }
       }
+    }
+  },
+  "definitions": {
+    "entry_spawn": {
+      "type": "object",
+      "required": ["x", "y"],
+      "description": "A named arrival spawn point {x, y, facing}.",
+      "properties": {
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "facing": {
+          "type": "string",
+          "enum": ["UP", "DOWN", "LEFT", "RIGHT", "NORTH", "SOUTH", "WEST", "EAST"]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

@@ -450,10 +450,12 @@ def walk_a(planner, checks, sram_out=None):
 
     # Route into town via the grove corridor; capture the
     # camera-scrolled field shot on the way.
-    # Town entry is the field-east mirrored spawn (1,7): one inside the
-    # west edge at the crossed row.
+    # Town landing is the resolved west entry (player.entry.west, else
+    # the main spawn): edge crossings land on the arrival-side entry,
+    # not a mirrored row.
     field_pos = _boot_to_field(s, planner)
-    follow(s, planner, "field", field_pos, "town", (1, 7),
+    town_landing = planner._arrival({"target_scene": "town"}, None, "east", "town")
+    follow(s, planner, "field", field_pos, "town", town_landing,
            capture_when=lambda: s.pos()[0] >= 22,
            capture_label="01-field-scrolled")
     s.settle_scene(expected_scene=SCENE_TOWN)
@@ -463,7 +465,7 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("ARRIVED_TOWN flag",
                s.reader.flag(STORY_FLAG_ID_ARRIVED_TOWN), True)
     s.check_eq("scene pos synced", (st["player_x"], st["player_y"]),
-               (1, 7))
+               town_landing)
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
     # Three-line pages show both guard lines at once plus a blank third

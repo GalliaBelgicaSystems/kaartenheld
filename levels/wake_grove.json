@@ -414,6 +414,13 @@
       "x": 10,
       "y": 8,
       "facing": "UP"
+    },
+    "entry": {
+      "east": {
+        "x": 18,
+        "y": 8,
+        "facing": "LEFT"
+      }
     }
   },
   "exits": [],

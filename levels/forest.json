@@ -682,6 +682,18 @@
         "actors.actors_hero_frame_1",
         "actors.actors_hero_frame_2"
       ]
+    },
+    "entry": {
+      "north": {
+        "x": 12,
+        "y": 1,
+        "facing": "DOWN"
+      },
+      "south": {
+        "x": 10,
+        "y": 20,
+        "facing": "UP"
+      }
     }
   },
   "exits": [
