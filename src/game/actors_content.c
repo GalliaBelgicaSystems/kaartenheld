@@ -151,7 +151,7 @@ static const WorldActorDefinition g_mountain_pass_actors[] = {
          SPRITE_KIND_ENEMY, 9, 0
     },
     {
-        0, ENTITY_ID_AMULET, 13, 2, DIRECTION_DOWN,
+        0, ENTITY_ID_AMULET, 10, 2, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
@@ -516,7 +516,7 @@ const WorldActorTable g_actor_tables[] = {
 uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
-    if (g_game.world.map_id == MAP_MOUNTAIN_PASS && g_bk_byte_b == 13 && g_bk_byte_c == 2 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    if (g_game.world.map_id == MAP_MOUNTAIN_PASS && g_bk_byte_b == 10 && g_bk_byte_c == 2 && (g_game.state.flags.bytes[0] & 8)) return 1;
     return 0;
 }
 

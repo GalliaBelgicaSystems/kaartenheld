@@ -550,16 +550,18 @@ def walk_a(planner, checks, sram_out=None):
 
     # Mountain detour for the amulet (position from the level JSON; the
     # planner routes around patrol boxes and blocking actors, goal
-    # exempt).  The amulet chest is blocking: bump from the west.
+    # exempt).  The amulet chest is blocking and guarded by the kobold
+    # standing east of it: step onto the kobold's cell (transit fight),
+    # then bump west into the chest.
     mountain = _level("mountain_pass")
     amulet = next(o for o in mountain["objects"]
                   if (o.get("properties") or {}).get("entity_id")
                   == "ENTITY_ID_AMULET")
     ax, ay = amulet["position"]["x"], amulet["position"]["y"]
-    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax - 1, ay))
+    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax + 1, ay))
     s.settle_scene(expected_scene=SCENE_MOUNTAIN_PASS)
     s.check("amulet found",
-            bump_actor(s, planner, "mountain_pass", (ax - 1, ay), "right",
+            bump_actor(s, planner, "mountain_pass", (ax + 1, ay), "left",
                        "FOUND AMULET"),
             expected="FOUND AMULET", actual="none")
     close_dialogue(s, "FOUND AMULET")
