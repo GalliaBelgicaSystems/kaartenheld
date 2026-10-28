@@ -293,9 +293,9 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1"
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1"
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -343,11 +343,11 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_top_left_corner_wall_interior",
-        "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_4",
-        "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_4"
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1",
+        "desolate_landscape.desolate_landscape_fire_frame_1"
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -369,11 +369,11 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_right_wall_2",
-        "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_black_emptyness"
+        "desolate_landscape.desolate_landscape_top_left_corner_wall_interior",
+        "desolate_landscape.desolate_landscape_bottom_wall_1",
+        "desolate_landscape.desolate_landscape_bottom_wall_4",
+        "desolate_landscape.desolate_landscape_bottom_wall_1",
+        "desolate_landscape.desolate_landscape_bottom_wall_4"
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -514,7 +514,7 @@
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_bottom_left_corner_wall",
+        "desolate_landscape.desolate_landscape_left_wall_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -540,16 +540,16 @@
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_4",
-        "desolate_landscape.desolate_landscape_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_bottom_wall_4",
-        "desolate_landscape.desolate_landscape_top_right_corner_wall_interior",
+        "desolate_landscape.desolate_landscape_left_wall_3",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_top_left_corner_wall_interior",
+        "desolate_landscape.desolate_landscape_bottom_wall_1",
+        "desolate_landscape.desolate_landscape_bottom_wall_4",
+        "desolate_landscape.desolate_landscape_bottom_wall_1",
+        "desolate_landscape.desolate_landscape_bottom_wall_4",
+        "desolate_landscape.desolate_landscape_bottom_wall_2",
+        "desolate_landscape.desolate_landscape_bottom_wall_1",
         "desolate_landscape.desolate_landscape_bottom_right_corner_wall",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -637,7 +637,7 @@
   "neighbors": {
     "north": "mountain_pass",
     "south": "south_field",
-    "east": "",
+    "east": "castle_entry",
     "west": ""
   },
   "objects": [
@@ -782,6 +782,60 @@
         "battle": "BATTLE_SPIDER",
         "ai": "AI_PATROL_CROSS",
         "enemy_type": "spider"
+      }
+    },
+    {
+      "id": "obj_3254",
+      "type": "enemy",
+      "position": {
+        "x": 20,
+        "y": 10
+      },
+      "properties": {
+        "display_name": "SLIME KNIGHT",
+        "battle": "BATTLE_SLIME_KNIGHT",
+        "ai": "AI_NONE",
+        "enemy_type": "slime_knight",
+        "entity_id": "ENTITY_ID_NPC_GUARD",
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 15,
+        "max_hp": 15,
+        "gold_reward": 12,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "actor_id": 73
+      }
+    },
+    {
+      "id": "obj_3254_copy",
+      "type": "enemy",
+      "position": {
+        "x": 20,
+        "y": 12
+      },
+      "properties": {
+        "display_name": "SLIME KNIGHT",
+        "battle": "BATTLE_SLIME_KNIGHT",
+        "ai": "AI_NONE",
+        "enemy_type": "slime_knight",
+        "entity_id": "ENTITY_ID_NPC_GUARD",
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 15,
+        "max_hp": 15,
+        "gold_reward": 12,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "actor_id": 74
       }
     }
   ],

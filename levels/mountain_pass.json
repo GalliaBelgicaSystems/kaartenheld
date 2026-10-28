@@ -162,8 +162,8 @@
         "desolate_landscape.desolate_landscape_black_emptyness"
       ],
       [
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -187,8 +187,8 @@
         "desolate_landscape.desolate_landscape_black_emptyness"
       ],
       [
-        "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -213,7 +213,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -238,7 +238,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
@@ -263,7 +263,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_top_left_corner_wall",
@@ -288,7 +288,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_top_left_corner_wall",
         "desolate_landscape.desolate_landscape_top_wall_1",
         "desolate_landscape.desolate_landscape_bottom_right_corner_interior",
@@ -313,7 +313,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_left_wall_2",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -338,7 +338,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_left_wall_1",
         "desolate_landscape.desolate_landscape_floor_with_stuff_walkable_3",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -363,7 +363,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_black_emptyness",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_left_wall_4",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -388,7 +388,7 @@
       ],
       [
         "desolate_landscape.desolate_landscape_top_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_top_wall_2",
         "desolate_landscape.desolate_landscape_bottom_right_corner_interior",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -398,7 +398,7 @@
         "desolate_landscape.desolate_landscape_water_top_left_interior_corner",
         "desolate_landscape.desolate_landscape_watter_bottom_wall",
         "desolate_landscape.desolate_landscape_water_bottom_wall_1",
-        "desolate_landscape.desolate_landscape_plain_floor_1",
+        "desolate_landscape.desolate_landscape_water_bottom_right_corner_wall",
         "desolate_landscape.desolate_landscape_plain_water",
         "desolate_landscape.desolate_landscape_plain_water",
         "desolate_landscape.desolate_landscape_water_right_wall_2",
@@ -412,7 +412,7 @@
         "desolate_landscape.desolate_landscape_black_emptyness"
       ],
       [
-        "desolate_landscape.desolate_landscape_black_emptyness",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
@@ -437,7 +437,7 @@
         "desolate_landscape.desolate_landscape_black_emptyness"
       ],
       [
-        "desolate_landscape.desolate_landscape_black_emptyness",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_floor_with_stuff_walkable_4",
@@ -653,7 +653,7 @@
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_black_emptyness",
         "desolate_landscape.desolate_landscape_left_wall_3",
-        "desolate_landscape.desolate_landscape_left_wall_3",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_right_wall_1",
