@@ -434,6 +434,13 @@ OVERFLOW_TERRAIN_BANK = {
     "castle": 7,
     "forest": 9,
     "field": 9,
+    # New-bank-5 residents from the enlarged-maps pass (bank 5 overflowed
+    # by ~1KB): bank 9 has the room, and its stamp body already exists,
+    # so no scene.c dispatch change is needed (unlike a new bank number,
+    # which would cost fixed-bank bytes per the comment in scene.c).
+    "grassy_forest": 9,
+    "mountain_pass": 9,
+    "south_ridge": 9,
 }
 
 
