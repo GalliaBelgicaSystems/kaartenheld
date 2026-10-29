@@ -375,10 +375,24 @@ WorldMoveResult world_update_actors(World *w)
     if (!w) return MOVE_RESULT_NONE;
 
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
+        WorldActorRuntime *a = &w->actors[slot];
         /* Inactive slots have no patrol state (the banked body returns
          * immediately for them): skip the trampoline round-trip.  Peaceful
-         * maps (town, cleared scenes) run zero patrol dispatches/frame. */
-        if (!w->actors[slot].active) continue;
+         * maps (town, cleared scenes) run zero patrol dispatches/frame.
+         * Idle actives skip it too: an actor that is neither animating a
+         * step nor due one only needs its step timer ticked down, which
+         * is plain WRAM work (no bank switch).  The banked body runs only
+         * on moving frames and step-decision frames -- identical outcomes
+         * on identical frames (the timer hits 0 on the same frame either
+         * way), at ~1/8th the dispatches.  Without this, crowded maps
+         * (4+ actives) overrun VBlank and the whole game drops to half
+         * speed while the music (timer ISR) stays fine. */
+        if (!a->active) continue;
+        if (a->ai_type == AI_NONE || a->ai_type == AI_TUTOR) continue;
+        if (!a->move_state && a->ai_timer != 0) {
+            a->ai_timer--;
+            continue;
+        }
         g_patrol_outcome = 0;
         g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;
