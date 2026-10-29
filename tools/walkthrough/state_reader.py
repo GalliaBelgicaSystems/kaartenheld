@@ -57,7 +57,7 @@ CHARACTER_STATE_MAX_HP = 2
 
 # ── World (src/world/world.h) — needed to reach g_game.battle ────────
 # Packed layout: width, height, map_id, encounter_actor_index,
-# map_changed(bool), player Entity, actors[4], map[32][32], camera_px_x,
+# map_changed(bool), player Entity, actors[7], map[32][32], camera_px_x,
 # camera_px_y, scroll_x, scroll_y, move_state, move_target_x,
 # move_target_y, move_progress, move_outcome, tileset_kind, move_param,
 # move_dir, move_exit_x, move_exit_y, encounter_cooldown.
@@ -65,7 +65,7 @@ CHARACTER_STATE_MAX_HP = 2
 # facing, id = 7 bytes (validated at boot: it is exactly the pattern
 # the old PLAYER_BOOT locate found).
 ENTITY_SIZE = 7
-MAX_WORLD_ACTORS = 4        # src/world/world.h
+MAX_WORLD_ACTORS = 7        # src/world/world.h
 WORLD_WIDTH = 32            # src/world/world.h (32x32 renderer limit)
 WORLD_HEIGHT = 32
 

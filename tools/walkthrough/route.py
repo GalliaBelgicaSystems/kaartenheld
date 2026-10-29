@@ -172,6 +172,18 @@ class Scene:
             cells |= patrol_cells(ai, x, y)
         return cells
 
+    def chase_cells(self):
+        """Union of chase-halo cells (AI_CHASE / AI_CHASE_FAST hostiles).
+        Chasers converge on the player by design (the whole scene is the
+        zone), so no static routing can avoid them on a sealed corridor;
+        the planner may route through these cells as a last resort and
+        let the walk fight through (transit ambush machinery)."""
+        cells = set()
+        for x, y, ai in self.hostiles:
+            if ai in (AI_CHASE, AI_CHASE_FAST):
+                cells |= patrol_cells(ai, x, y)
+        return cells
+
     def breachable_cells(self):
         """Stationary hostile cells (waiting guardians like the south
         slime knight): stepping on one starts a fight instead of
@@ -309,16 +321,75 @@ class Planner:
         raise KeyError("no scene with id %d" % scene_id)
 
     # ── BFS ──────────────────────────────────────────────────────────
-    def _bfs_breach(self, scene, start, goal, avoid=None):
+    # Crossing a chase halo costs CHASE_COST (>> any detour): the
+    # planner prefers halo-free routes when they exist and crosses the
+    # fewest halo cells when they don't.  Chasers converge by design, so
+    # a sealed corridor guarded by them cannot be routed around -- the
+    # walk fights through via the standard ambush machinery instead of
+    # failing loudly.
+    CHASE_COST = 2000
+
+    def _bfs_breach(self, scene, start, goal, avoid=None, keep=None):
         """BFS that falls back to routing through stationary, non-solo
         hostile cells (Scene.breachable_cells) when the strict avoid-set
         leaves no path: the walk bumps the guardian and fights through
-        via the standard ambush machinery instead of failing loudly."""
-        path = self._bfs(scene, start, goal, avoid)
-        if path is None and avoid:
+        via the standard ambush machinery instead of failing loudly.
+        A final tier crosses chase halos (AI_CHASE/_FAST) at CHASE_COST
+        per cell, preferring halo-free detours and crossing the fewest
+        halo cells where sealed corridors leave no choice.  `keep`
+        cells stay impassable through every tier: approaching a hostile
+        objective must never step onto the objective itself."""
+        base = avoid or set()
+        keep = keep or set()
+        path = self._bfs(scene, start, goal, base | keep)
+        if path is None and base:
             path = self._bfs(scene, start, goal,
-                             avoid - scene.breachable_cells())
+                             (base - scene.breachable_cells()) | keep)
+        if path is None and base:
+            path = self._bfs_cost(scene, start, goal,
+                                 (base - scene.breachable_cells()) | keep,
+                                 scene.chase_cells() - keep)
         return path
+
+    def _bfs_cost(self, scene, start, goal, avoid=None, costly=None):
+        """Dijkstra over walkable cells: `avoid` (minus `costly`) is
+        impassable, `costly` cells cost CHASE_COST each, everything else
+        costs 1.  Returns the cheapest move list, or None when even the
+        costly cells cannot connect start to goal."""
+        import heapq
+        if start == goal:
+            return []
+        costly = costly or set()
+        best = {start: 0}
+        prev = {start: None}
+        q = [(0, start)]
+        found = None
+        while q:
+            cost, cur = heapq.heappop(q)
+            if cost != best[cur]:
+                continue
+            if cur == goal:
+                found = cur
+                break
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                nxt = (cur[0] + dx, cur[1] + dy)
+                if not scene.walkable(nxt[0], nxt[1], avoid - costly):
+                    continue
+                step = self.CHASE_COST if nxt in costly else 1
+                nc = cost + step
+                if nxt not in best or nc < best[nxt]:
+                    best[nxt] = nc
+                    prev[nxt] = cur
+                    heapq.heappush(q, (nc, nxt))
+        if found is None:
+            return None
+        path = []
+        node = found
+        while prev[node] is not None:
+            p = prev[node]
+            path.append((node[0] - p[0], node[1] - p[1]))
+            node = p
+        return list(reversed(path))
 
     def _bfs(self, scene, start, goal, avoid=None):
         """Shortest walkable path start->goal as a list of (dx, dy)
@@ -348,13 +419,18 @@ class Planner:
                 q.append(nxt)
         return None
 
-    def path(self, scene_name, start, goal, avoid_exits=False):
+    def path(self, scene_name, start, goal, avoid_exits=False,
+             extra_avoid=None):
         """Path within one scene.  `avoid` = patrol cells + blocking
         actors, EXCEPT cells that are the start/goal themselves (the
         start may sit inside a patrol box right after boot, and the
         goal may be a bump-adjacent cell next to a blocking actor).
         `avoid_exits` also routes AROUND every exit gate except the goal
-        and start, so a walk to one gate never warps through another."""
+        and start, so a walk to one gate never warps through another.
+        `extra_avoid` cells stay impassable through every fallback tier:
+        reaching an approach cell next to a hostile objective must never
+        step ONTO the objective itself (the walk would kill what it
+        came to engage)."""
         scene = self.scenes[scene_name]
         avoid = scene.patrol_blocked() | scene.blocked_actors
         if avoid_exits:
@@ -362,7 +438,7 @@ class Planner:
             avoid |= (set(scene.edge_cells) - {(start[0], start[1]), (goal[0], goal[1])})
         avoid.discard(start)
         avoid.discard(goal)
-        return self._bfs_breach(scene, start, goal, avoid)
+        return self._bfs_breach(scene, start, goal, avoid, extra_avoid)
 
     def path_to_exit(self, scene_name, start, target_scene_name):
         """Path to the exit tile whose target_scene is target_scene_name.

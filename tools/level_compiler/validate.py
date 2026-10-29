@@ -925,19 +925,20 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 objects_ok = False
 
     # Engine actor-slot caps: actor_load_banked() spawns hostile rows into
-    # World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
-    # g_static_actors (MAX_STATIC_ACTORS, parsed from src/world/actor.h —
-    # single source of truth).  Rows beyond the cap are SILENTLY DROPPED
-    # at runtime -- catch the overflow at validation time instead.
-    def _engine_cap(name):
+    # World.actors (MAX_WORLD_ACTORS, parsed from src/world/world.h --
+    # single source of truth) and friendly rows into g_static_actors
+    # (MAX_STATIC_ACTORS, src/world/actor.h).  Rows beyond the cap are
+    # SILENTLY DROPPED at runtime -- catch the overflow at validation
+    # time instead.
+    def _engine_cap(name, header):
         import re
         src = (Path(__file__).resolve().parent.parent.parent
-               / "src" / "world" / "actor.h").read_text()
+               / "src" / "world" / header).read_text()
         m = re.search(r"#define %s\s+(\d+)" % name, src)
         return int(m.group(1)) if m else None
 
-    hostile_cap = _engine_cap("MAX_WORLD_ACTORS")
-    static_cap = _engine_cap("MAX_STATIC_ACTORS")
+    hostile_cap = _engine_cap("MAX_WORLD_ACTORS", "world.h")
+    static_cap = _engine_cap("MAX_STATIC_ACTORS", "actor.h")
     hostile_rows = [o.get("id") for o in objects
                     if (o.get("properties") or {}).get("entity_id")
                     and "HOSTILE" in effective_actor_flags(

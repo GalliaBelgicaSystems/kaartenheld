@@ -265,8 +265,8 @@ def verify_npc_sprites(sess):
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
     found = set()
-    # Entries 1-4 are reserved hostile slots (hidden when empty); static
-    # actors start at entry 5, so scan wide and match order-insensitively.
+    # Entries 1-7 are reserved hostile slots (hidden when empty); static
+    # actors start at entry 8, so scan wide and match order-insensitively.
     for slot in range(1, 13):
         tile = shadow_oam_slot_tile(sess, slot)
         pal = shadow_oam_slot_pal(sess, slot)
@@ -342,12 +342,12 @@ def verify_hostile_sprites(sess):
     forest_amulet = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest_amulet)
     sess.step(2)
-    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
+    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (8).
     # Closed-chest frame (shared-blob tile 122: base 100 + offset 22, after
     # the slime-knight walk row); the floor cell stays plain floor (VRAM
     # tile 128 + 62 = 190), never chest paint.
     check("forest amulet owns closed-chest OAM sprite (tile 122)",
-          122, shadow_oam_slot_tile(sess, 5))
+          122, shadow_oam_slot_tile(sess, 8))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
@@ -365,7 +365,7 @@ def verify_hostile_sprites(sess):
     sess.press("A")
     sess.step(20)
     check("looted amulet shows open-chest OAM sprite (tile 123)",
-          123, shadow_oam_slot_tile(sess, 5))
+          123, shadow_oam_slot_tile(sess, 8))
     check("looted amulet cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
@@ -840,7 +840,7 @@ def verify_restart_clears_boss_oam(sess):
 
     # The boss footprint must be hidden.  Pin entry 4 precisely: with
     # slot 3 inactive the body hides exactly that entry, so a visible
-    # entry 4 here is the resurrected boss grid (entries 5+ legitimately
+    # entry 4 here is the resurrected boss grid (entries 8+ legitimately
     # hold field statics -- see below -- so they are not pinned)...
     post_y4 = sess._memread(0xC000 + 4 * 4)
     check("restart: ex-boss OAM entry 4 hidden", 0, post_y4)

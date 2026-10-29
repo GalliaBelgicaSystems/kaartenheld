@@ -11,6 +11,12 @@
  *   bytes 20+   : scene actors as (id, x, y, facing) entries */
 #define SNAPSHOT_BASE_SIZE      20
 
+/* Only the first this many ACTIVE hostiles (then statics) are reported;
+ * deliberately decoupled from MAX_WORLD_ACTORS (world.h): crowded
+ * scenes still fit the harness wire format, and fixtures never exceed
+ * 4 actives, so later hostiles are invisible to snapshot asserts (their
+ * defeat/victory still emits telemetry).  Bumping this moves every
+ * offset below -- treat as a wire-contract change (AGENTS.md 53.4). */
 #define MAX_SNAPSHOT_ACTORS     4
 
 #define SNAPSHOT_ACTOR_ENTRY_SIZE 4

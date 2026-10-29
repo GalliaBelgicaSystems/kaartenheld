@@ -53,7 +53,7 @@
   },
   {
    "type": "oam_tile",
-   "entry": 5,
+   "entry": 8,
    "expected": 123
   }
  ],

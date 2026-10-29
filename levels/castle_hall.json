@@ -427,7 +427,28 @@
       }
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 10,
+      "y": 5,
+      "target_scene": "castle",
+      "target_x": 10,
+      "target_y": 16,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_castle_hall_castle"
+    },
+    {
+      "x": 9,
+      "y": 5,
+      "target_scene": "castle",
+      "target_x": 9,
+      "target_y": 16,
+      "direction": "NORTH",
+      "tile_char": "<",
+      "tunnel": "tunnel_castle_hall_castle_2"
+    }
+  ],
   "neighbors": {
     "north": "",
     "south": "",

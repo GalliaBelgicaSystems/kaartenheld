@@ -32,8 +32,16 @@ typedef enum {
 #define WORLD_VIEW_W 20
 #define WORLD_VIEW_H 18
 
-/* Maximum concurrent hostile actors in a scene (compile-time constant). */
-#define MAX_WORLD_ACTORS 4
+/* Maximum concurrent hostile actors in a scene (compile-time constant).
+ * Raised 4 -> 7 for the south corridor overlap (south_ridge runs kobold
+ * + bat + slime + 2 spiders + 2 slime knights; south_field runs 2
+ * slimes + bat + spider + knight).  OAM still fits: worst case
+ * 1 + 7*4 = 29 actor entries, markers live at fixed slots 30-37
+ * (ui_world_sprite_banked.c).  The debug snapshot still reports only
+ * the first MAX_SNAPSHOT_ACTORS actives (telemetry.h): bumping the
+ * snapshot would rewrite the harness wire format for no fixture
+ * benefit (fixtures never exceed 4). */
+#define MAX_WORLD_ACTORS 7
 
 /* Pursuit-alert display length (frames at 60 fps) after entering a map
  * with live chasers.  Set by the bank-8 marks refresh on entry (it

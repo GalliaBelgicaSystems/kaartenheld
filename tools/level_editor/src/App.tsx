@@ -1025,7 +1025,7 @@ export const App: React.FC = () => {
 
     // Engine actor-slot caps (mirrors tools/level_compiler/validate.py):
     // actor_load_banked() spawns hostile rows into
-    // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
+    // World.actors[MAX_WORLD_ACTORS=7] and friendly rows into
     // g_static_actors (MAX_STATIC_ACTORS=10; src/world/actor.h); rows past
     // the cap are silently dropped at runtime.  Flags default by type
     // (compile.py default_actor_flags) when `flags` is absent.
@@ -1041,10 +1041,10 @@ export const App: React.FC = () => {
     const staticRows = level.objects
       .filter((o) => (o.properties || {}).entity_id && !isHostile(o))
       .map((o) => o.id);
-    if (hostileRows.length > 4) {
+    if (hostileRows.length > 7) {
       errors.push(
         `Level has ${hostileRows.length} hostile actors but the engine spawns at most ` +
-        `MAX_WORLD_ACTORS=4; extra would be silently dropped: ${JSON.stringify(hostileRows.slice(4))}`);
+        `MAX_WORLD_ACTORS=7; extra would be silently dropped: ${JSON.stringify(hostileRows.slice(7))}`);
       objectsOk = false;
     }
     if (staticRows.length > 10) {

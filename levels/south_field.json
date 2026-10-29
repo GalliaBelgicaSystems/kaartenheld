@@ -683,6 +683,34 @@
         "reward_currency": "CURRENCY_ID_GOLD",
         "actor_id": 75
       }
+    },
+    {
+      "id": "south_knight",
+      "type": "enemy",
+      "position": {
+        "x": 13,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SLIME_KNIGHT",
+        "enemy_type": "slime_knight",
+        "display_name": "SLIME KNIGHT",
+        "actor_id": 67,
+        "facing": "DOWN",
+        "flags": [
+          "HOSTILE",
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "K",
+        "hp": 15,
+        "max_hp": 15,
+        "gold_reward": 12,
+        "reward_currency": "CURRENCY_ID_GOLD",
+        "battle": "BATTLE_SLIME_KNIGHT",
+        "ai": "AI_NONE",
+        "solo": true
+      }
     }
   ],
   "regions": [
