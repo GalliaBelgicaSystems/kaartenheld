@@ -153,6 +153,44 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
 }
 
 
+/* Per-actor OAM tile cache (hostile loop only).
+ *
+ * The hostile OAM pass overruns VBlank at 6-7 actives: every active actor
+ * ran sprite_tile_for (banked table derefs) plus a second enemy-table
+ * deref for the multi-tile branch every frame, and vsync then catches
+ * every 2nd VBlank -- the whole game drops to half speed while the
+ * timer-ISR music stays fine (PyBoy: 17-18 ticks/move-commit vs 9-10).
+ *
+ * This caches the resolve instead: tile/prop/size are a PURE function of
+ * (sprite_kind, visual, ow_type, ai_type-as-still, anim, g_bk_byte_c) --
+ * no position, map, screen, or identity inputs (verified by inspection of
+ * sprite_tile_for and the multi-tile branch above; ui_font_tile_base is
+ * boot-constant, g_enemy_types static).  Positions, markers, and OAM
+ * writes still run every frame, so nothing is ever stale; only the table
+ * work is skipped on frames where the global key matches.
+ *
+ * Invalidation is event-driven, not per-slot-checked (a per-slot input
+ * compare costs nearly as much as the resolve under SDCC codegen):
+ * a recompute-all runs when anim flips (1 in 16 frames), when the blink
+ * reveal bit flips, or when g_oam_tilecache_valid is clear.  The flag is
+ * cleared by the ONLY two sites that mutate resolve inputs mid-stay --
+ * actor_load_scene_banked (respawns) and slime_trio_spawn_banked (morphs
+ * a dead knight slot into trio members in place).  Verified exhaustive by
+ * grep: no other writer of visual/sprite_kind/ow_type/ai_type on
+ * WorldActorRuntime exists.  Kills only flip active (live-checked every
+ * frame; stale entries are never read while inactive) and every
+ * reactivation flows through one of the two clearing sites.  ~31 B BSS;
+ * no fixed-bank cost (AGENTS.md 52.18). */
+static uint8_t s_oc_tile[MAX_WORLD_ACTORS];
+static uint8_t s_oc_prop[MAX_WORLD_ACTORS];
+static uint8_t s_oc_gw[MAX_WORLD_ACTORS];
+static uint8_t s_oc_gh[MAX_WORLD_ACTORS];
+static uint8_t s_oc_anim;
+static uint8_t s_oc_bc;
+/* Cleared by spawn/mutation sites in other banks (loader, trio morph);
+ * WRAM is bank-independent so they write it directly. */
+uint8_t g_oam_tilecache_valid;
+
 /* Compute the OAM tile/prop/position for every active non-boss actor (from
  * its SPRITE_KIND_* and sub-tile position) and write it straight into shadow
  * OAM; static (non-hostile) actors with sprite art follow in the entries
@@ -177,21 +215,36 @@ void ui_actors_sprites_banked(void)
     uint8_t i;
     uint8_t oam_slot = OAM_SLOT_ACTOR0;  /* running OAM entry cursor */
     uint8_t mark_slot = MARK_OAM_BASE;   /* fixed HUD-marker entries */
+    uint8_t fresh;
 
     if (!w) return;
+    /* Recompute-all frame: first run, anim/reveal flip, or a spawn-site
+     * invalidation (see cache note above).  One full pass every ~16
+     * frames; every other frame reuses the stored resolve. */
+    fresh = (uint8_t)(!g_oam_tilecache_valid ||
+                      anim != s_oc_anim || g_bk_byte_c != s_oc_bc);
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
         const WorldActorRuntime *a = &w->actors[slot];
         uint8_t tile = 0;
         uint8_t prop = 0;
         uint8_t px, py;
-        uint8_t gw, gh;
+        uint8_t gw = 1;
+        uint8_t gh = 1;
         uint8_t gx, gy;
 
         if (a->active) {
-            tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
-                                   anim, a->ow_type, &prop, a->ai_type);
-        }
-        /* Multi-tile shared enemy sprite: replace the single tile with the
+            if (!fresh) {
+                /* Cache hit: resolve inputs unchanged -- reuse the
+                 * stored tile/prop/size (positions still recomputed
+                 * below every frame, so OAM never goes stale). */
+                tile = s_oc_tile[slot];
+                prop = s_oc_prop[slot];
+                gw = s_oc_gw[slot];
+                gh = s_oc_gh[slot];
+            } else {
+                tile = sprite_tile_for((uint8_t)a->sprite_kind, a->visual,
+                                       anim, a->ow_type, &prop, a->ai_type);
+                /* Multi-tile shared enemy sprite: replace the single tile with the
          * grid base + palette and write w*h OAM entries.  The blob is
          * frame-major: the frame offset is anim*cell_count.  Gated on
          * active like sprite_tile_for above: the loader clears only the
@@ -199,9 +252,8 @@ void ui_actors_sprites_banked(void)
          * and ow_type -- without this gate a stale multi-tile ENEMY kind
          * resurrects its old sprite (visible boss ghost after restart)
          * and the single-hide below only covers the first of its w*h
-         * entries. */
-        gw = 1;
-        gh = 1;
+         * entries.  (gw/gh arrive as 1 from the declaration; the branch
+         * below only widens them for multi-tile enemies.) */
         if (a->active &&
             (int)a->sprite_kind == SPRITE_KIND_ENEMY &&
             a->ow_type < g_enemy_type_count) {
@@ -217,6 +269,14 @@ void ui_actors_sprites_banked(void)
                 if (t->ow_frames > 1 && anim) {
                     tile = (uint8_t)(tile + ccount);
                 }
+            }
+        }
+            /* Store the fresh resolve (runs for every recompute,
+             * including 1x1 actors that skip the branch above). */
+            s_oc_tile[slot] = tile;
+            s_oc_prop[slot] = prop;
+            s_oc_gw[slot] = gw;
+            s_oc_gh[slot] = gh;
             }
         }
         if (tile) {
@@ -256,6 +316,12 @@ void ui_actors_sprites_banked(void)
             e[0] = 0;  /* hidden */
         }
         oam_slot = (uint8_t)(oam_slot + (gh == 2 ? (gw == 2 ? 4 : 2) : gw));
+    }
+    if (fresh) {
+        /* Latch the key the stored resolve was computed under. */
+        s_oc_anim = anim;
+        s_oc_bc = g_bk_byte_c;
+        g_oam_tilecache_valid = 1;
     }
     for (i = 0; i < MAX_STATIC_ACTORS; i++) {
         const StaticActorDefinition *d;

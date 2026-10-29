@@ -270,7 +270,7 @@ def _walk_path(s, path):
 
 
 def follow(s, planner, from_scene, start, to_scene, goal,
-           capture_when=None, capture_label=None):
+           capture_when=None, capture_label=None, on_scene=None):
     """Execute a cross-scene BFS route; optional mid-route screenshot."""
     steps = planner.route(from_scene, start, to_scene, goal)
     for step in steps:
@@ -312,6 +312,8 @@ def follow(s, planner, from_scene, start, to_scene, goal,
         if capture_when and capture_label and capture_when():
             s.shoot(capture_label)
             capture_when, capture_label = None, None
+        if on_scene is not None:
+            on_scene(s)
     return s.pos()
 
 
@@ -1058,13 +1060,28 @@ def walk_e(planner, checks):
             expected="reachable walkable neighbor", actual="walled in")
     if adj is None:
         return
-    follow(s, planner, "south_field", s.pos(), "castle", adj[0])
+    entry = {}
+
+    def latch_castle_hold(s):
+        # First castle frame only.  The entry hold applies on the frame
+        # after the scene flip (same 1-frame window as walk-c's forest
+        # check), so settle two frames before reading.
+        if s.reader.scene_state()["scene_id"] == SCENE_CASTLE and \
+                "music" not in entry:
+            s.tick(2)
+            entry["music"] = s.reader.music_track()
+
+    follow(s, planner, "south_field", s.pos(), "castle", adj[0],
+           on_scene=latch_castle_hold)
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
     # Alert-first: the slime-knight entry sting holds the track here
     # too (the restart is pinned by walk-c/the sweep; the knight flow
-    # below replays DUNGEON through battle exit anyway).
-    s.check_eq("castle music held for sting", s.reader.music_track(),
+    # below replays DUNGEON through battle exit anyway).  Latched at the
+    # first castle frame: later transit battles on the walk to `adj`
+    # legitimately outlast the hold window, so asserting here (after the
+    # full walk) would be timing-fragile.
+    s.check_eq("castle music held for sting", entry.get("music"),
                MUSIC_NONE)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have

@@ -115,6 +115,11 @@ void dice_tiles_load_banked(void);
  * fixed bank under 0x8000. */
 void ui_actors_sprites_banked(void);
 
+/* OAM tile-resolve cache validity (WRAM, defined in
+ * ui_world_sprite_banked.c).  Cleared by actor spawn/mutation sites in
+ * other banks (scene loader, trio morph); the next OAM pass recomputes. */
+extern uint8_t g_oam_tilecache_valid;
+
 /* Overworld-entry OAM restore (see ui.c): restreams time-shared overworld
  * art (hero idle + blob tail) after battles.  Called from screen_change()
  * on overworld entries. */
