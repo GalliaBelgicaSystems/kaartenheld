@@ -621,7 +621,7 @@
       "properties": {
         "display_name": "BAT",
         "battle": "BATTLE_BAT",
-        "ai": "AI_CHASE",
+        "ai": "AI_PATROL_CIRCLE",
         "enemy_type": "bat",
         "entity_id": "ENTITY_ID_BAT",
         "facing": "DOWN",
@@ -702,7 +702,7 @@
       "properties": {
         "display_name": "BAT",
         "battle": "BATTLE_BAT",
-        "ai": "AI_CHASE",
+        "ai": "AI_PATROL_CIRCLE",
         "enemy_type": "bat",
         "entity_id": "ENTITY_ID_BAT",
         "facing": "DOWN",

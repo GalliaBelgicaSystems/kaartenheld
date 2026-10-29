@@ -640,7 +640,7 @@
     },
     "entry": {
       "north": {
-        "x": 10,
+        "x": 5,
         "y": 1,
         "facing": "DOWN"
       },

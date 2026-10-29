@@ -418,33 +418,19 @@
         "actors.actors_hero_frame_1",
         "actors.actors_hero_frame_2"
       ]
+    },
+    "entry": {
+      "south": {
+        "x": 9,
+        "y": 16,
+        "facing": "UP"
+      }
     }
   },
-  "exits": [
-    {
-      "x": 10,
-      "y": 17,
-      "target_scene": "castle",
-      "target_x": 10,
-      "target_y": 1,
-      "direction": "SOUTH",
-      "tile_char": ">",
-      "tunnel": "tunnel_castle_throne_room"
-    },
-    {
-      "x": 9,
-      "y": 17,
-      "target_scene": "castle",
-      "target_x": 9,
-      "target_y": 1,
-      "direction": "SOUTH",
-      "tile_char": ">",
-      "tunnel": "tunnel_castle_throne_room_2"
-    }
-  ],
+  "exits": [],
   "neighbors": {
     "north": "",
-    "south": "",
+    "south": "castle",
     "east": "",
     "west": ""
   },
