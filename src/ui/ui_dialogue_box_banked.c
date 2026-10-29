@@ -47,9 +47,11 @@ void ui_dialogue_box_banked(void)
      * ui.h): sy shifts the base down on vertically scrolled maps.  The
      * box is a top bar plus three text rows (14-17): top with the
      * speaker name, then plain full-width text to the screen edge (no
-     * bottom border).  The validator caps height at 24 (sy <= 6), so
-     * (sy << 5) fits in a byte and rows never wrap the 32-row ring. */
-    dst = (volatile uint8_t *)((uint16_t)(0x99C0u + ((uint8_t)(sy << 5))));
+     * bottom border).  Height is capped at 32 (sy <= 14), so 14+sy..17+sy
+     * stay <= 31 and never wrap the 32-row ring; sy must be promoted to
+     * 16 bits because sy << 5 >= 256 once sy >= 8 (an 8-bit shift
+     * overflowed and stamped the paper attrs on the wrong rows). */
+    dst = (volatile uint8_t *)(0x99C0u + ((uint16_t)sy << 5));
     if (g_is_cgb) {
         BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
         for (i = 0; i < 8; i++) {
@@ -73,6 +75,12 @@ void ui_dialogue_box_banked(void)
         dst++;
     } while (--i != 0);
     VBK_REG = 0;
-    /* SCX re-sync (SCY is 0 on every map: all are 18 tall). */
+    /* SCX/SCY re-sync after the post-battle/post-gamble backdrop redraw:
+     * direct dialogue entries draw over the live map (regs already right),
+     * but battle/gamble zeroed them, and on maps taller than the viewport
+     * SCY must come back or the box is drawn off-screen.  g_bk_byte_a is
+     * the camera's PIXEL y (the camera glides in pixels, so deriving SCY
+     * from the tile-aligned sy would shift the viewport by up to 7 px). */
     SCX_REG = g_bk_byte_c;
+    SCY_REG = g_bk_byte_a;
 }

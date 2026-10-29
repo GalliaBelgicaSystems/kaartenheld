@@ -1,7 +1,8 @@
 """Compose assets/hero_sprites.png (canonical shared overworld hero sheet).
 
 Reads the curated 8x8 hero PNGs (transparent background) and lays out
-1 row of cells: hero_f0, hero_f1.
+1 row of cells: hero_f0, hero_f1 (walk frames), hero_idle_1,
+hero_idle_2 (standing frames, shown when the player is not moving).
 
 Deterministic: rerunning reproduces the sheet byte-identically.
 """
@@ -12,7 +13,7 @@ PUB = 'tools/level_editor/public/tiles/hero'
 # OAM chroma-key: shade 0 of every OBJ ramp (SPRITES/background).
 OAM_KEY = (241, 235, 3)
 LAYOUT = [
-    ['hero_f0', 'hero_f1'],
+    ['hero_f0', 'hero_f1', 'hero_idle_1', 'hero_idle_2'],
 ]
 
 # Tile-name -> sheet (x, y): single source of truth for hero cell addressing.
@@ -27,7 +28,7 @@ for _y, _row in enumerate(LAYOUT):
 def main():
     # RGB sheet, byte-exact curated colors; transparency -> OAM chroma-key.
     # No quantization: off-ramp pixels are reported, not hidden.
-    sheet = Image.new('RGB', (16, 8), OAM_KEY)
+    sheet = Image.new('RGB', (8 * len(LAYOUT[0]), 8 * len(LAYOUT)), OAM_KEY)
     for y, row in enumerate(LAYOUT):
         for x, name in enumerate(row):
             if name is None:

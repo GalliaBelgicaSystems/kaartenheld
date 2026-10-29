@@ -472,6 +472,21 @@
    ],
    "slots": []
   },
+  "fightslime_knight": {
+   "colors": [
+    "#ffffff",
+    "#3c5e26",
+    "#5c903a",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_outline_combat_dark",
+    "COMBAT/slime_outline_combat",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
   "fightspider": {
    "colors": [
     "#ffffff",
@@ -519,19 +534,21 @@
     "SPRITES/boss_eyes_scepter",
     "SPRITES/boss_eyes_scepter"
    ],
-   "slots": []
+   "slots": [
+    "obj:6"
+   ]
   },
   "sprites11": {
    "colors": [
     "#f1eb03",
     "#77e331",
-    "#5c903a",
+    "#3c5e26",
     "#5c903a"
    ],
    "refs": [
     "SPRITES/background",
     "SPRITES/slime_light",
-    "SPRITES/slime_dark",
+    "SPRITES/slime_outline",
     "SPRITES/slime_dark"
    ],
    "slots": [
@@ -607,13 +624,13 @@
   "sprites7": {
    "colors": [
     "#f1eb03",
-    "#b6b6b6",
+    "#ffffff",
     "#475ca8",
     "#3f3017"
    ],
    "refs": [
     "SPRITES/background",
-    "SPRITES/npc_beard",
+    "SPRITES/white",
     "SPRITES/mage_cloth",
     "SPRITES/npc"
    ],
@@ -795,14 +812,14 @@
   "town7": {
    "colors": [
     "#f1cf91",
+    "#8d754a",
     "#645233",
-    "#000000",
     "#000000"
    ],
    "refs": [
     "TOWN/house_wall",
+    "TOWN/barrel_wood_fence",
     "TOWN/wood_outlines_rubble",
-    "TOWN/holes",
     "TOWN/holes"
    ],
    "slots": [

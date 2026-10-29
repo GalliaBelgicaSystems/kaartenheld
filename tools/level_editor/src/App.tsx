@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
-import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, createEmptyEditorLevel, levelDataToEditor, normalizeNeighbors } from './model/Level';
+import { EditorLevel, EntryKey, LevelExit, LevelNeighbors, LevelRegion, createEmptyEditorLevel, levelDataToEditor, normalizeNeighbors } from './model/Level';
 import { LevelObject } from './model/Objects';
 import { Toolbar, ToolType } from './Toolbar';
 import { EditLayer } from './LayerPanel';
@@ -69,6 +69,10 @@ export const App: React.FC = () => {
   const [selectedTileId, setSelectedTileId] = useState<string>('tree');
   const [selectedEntityIndex, setSelectedEntityIndex] = useState<number | null>(null);
   const [clonePattern, setClonePattern] = useState<string[][] | null>(null);
+  // Which spawn point the Spawn layer edits: the main spawn or one of the
+  // named arrival entries (player.entry).  Clicking the map in Spawn mode
+  // moves the selected point; entries unset stay on main-spawn fallback.
+  const [selectedSpawnKey, setSelectedSpawnKey] = useState<'main' | EntryKey>('main');
 
   // View Options
   const [zoom, setZoom] = useState<number>(1);
@@ -682,9 +686,20 @@ export const App: React.FC = () => {
     pushState({ ...level, grid: newGrid, terrainDirty: true });
   };
 
-  // Spawn Move
+  // Spawn Move (main spawn or the selected named entry)
   const handleSpawnMoved = (x: number, y: number) => {
-    pushState({ ...level, spawn: { ...level.spawn, x, y } });
+    if (selectedSpawnKey === 'main') {
+      pushState({ ...level, spawn: { ...level.spawn, x, y } });
+      return;
+    }
+    const prev = level.entrySpawns?.[selectedSpawnKey];
+    pushState({
+      ...level,
+      entrySpawns: {
+        ...(level.entrySpawns || {}),
+        [selectedSpawnKey]: { x, y, facing: prev?.facing || 'DOWN' },
+      },
+    });
   };
 
   // Object Operations
@@ -801,10 +816,10 @@ export const App: React.FC = () => {
     const warnings: string[] = [];
 
     // Dimensions
-    if (level.width >= 4 && level.width <= 40 && level.height >= 4 && level.height <= 24) {
-      passed.push('Schema valid (Dimensions <= 40x24)');
+    if (level.width >= 4 && level.width <= 32 && level.height >= 4 && level.height <= 32) {
+      passed.push('Schema valid (Dimensions <= 32x32)');
     } else {
-      errors.push(`Dimensions ${level.width}x${level.height} out of engine bounds (max 40x24)`);
+      errors.push(`Dimensions ${level.width}x${level.height} out of engine bounds (max 32x32)`);
     }
 
     // Tileset
@@ -1010,7 +1025,7 @@ export const App: React.FC = () => {
 
     // Engine actor-slot caps (mirrors tools/level_compiler/validate.py):
     // actor_load_banked() spawns hostile rows into
-    // World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
+    // World.actors[MAX_WORLD_ACTORS=7] and friendly rows into
     // g_static_actors (MAX_STATIC_ACTORS=10; src/world/actor.h); rows past
     // the cap are silently dropped at runtime.  Flags default by type
     // (compile.py default_actor_flags) when `flags` is absent.
@@ -1026,10 +1041,10 @@ export const App: React.FC = () => {
     const staticRows = level.objects
       .filter((o) => (o.properties || {}).entity_id && !isHostile(o))
       .map((o) => o.id);
-    if (hostileRows.length > 4) {
+    if (hostileRows.length > 7) {
       errors.push(
         `Level has ${hostileRows.length} hostile actors but the engine spawns at most ` +
-        `MAX_WORLD_ACTORS=4; extra would be silently dropped: ${JSON.stringify(hostileRows.slice(4))}`);
+        `MAX_WORLD_ACTORS=7; extra would be silently dropped: ${JSON.stringify(hostileRows.slice(7))}`);
       objectsOk = false;
     }
     if (staticRows.length > 10) {
@@ -1055,8 +1070,9 @@ export const App: React.FC = () => {
         tileset: level.tileset,
         music: level.music,
         player_start: [level.spawn.x, level.spawn.y],
+        player_entries: { ...(level.entrySpawns || {}) },
         connections: level.exits.map(
-          (e) => `${e.direction?.toLowerCase() || 'exit'} -> ${e.target_scene} (spawn ${e.target_x},${e.target_y})`
+          (e) => `${e.direction?.toLowerCase() || 'exit'} -> ${e.target_scene} (${e.target_entry ? `entry ${e.target_entry}` : `spawn ${e.target_x},${e.target_y}`})`
         ),
         neighbors: normalizeNeighbors(level.neighbors),
         regions: level.regions.map((r) => ({
@@ -1079,11 +1095,21 @@ export const App: React.FC = () => {
     lines.push(`# ${level.name.toUpperCase()} (\`${level.id}\`)`);
     lines.push(`\n**Size:** ${level.width}×${level.height} tiles | **Tileset:** \`${level.tileset}\` | **Music:** \`${level.music}\``);
     lines.push(`**Player Start:** \`(${level.spawn.x}, ${level.spawn.y})\` facing ${level.spawn.facing || 'DOWN'}`);
+    {
+      const defined = (['north', 'south', 'east', 'west', 'stairs_up', 'stairs_down'] as const)
+        .filter((k) => (level.entrySpawns as any)?.[k]);
+      if (defined.length > 0) {
+        lines.push(`**Arrival entries:** ${defined.map((k) => {
+          const e = (level.entrySpawns as any)[k];
+          return `${k} \`(${e.x}, ${e.y})\` facing ${e.facing || 'DOWN'}`;
+        }).join(' | ')} (unset sides fall back to Player Start)`);
+      }
+    }
 
     lines.push('\n## Connections');
     if (level.exits.length > 0) {
       level.exits.forEach((e) => {
-        lines.push(`- ${e.direction || 'Exit'} (at ${e.x},${e.y}) → **${e.target_scene}** (spawn at ${e.target_x},${e.target_y})`);
+        lines.push(`- ${e.direction || 'Exit'} (at ${e.x},${e.y}) → **${e.target_scene}** (${e.target_entry ? `entry ${e.target_entry}` : `spawn at ${e.target_x},${e.target_y}`})`);
       });
     } else {
       lines.push('- None');
@@ -1095,7 +1121,7 @@ export const App: React.FC = () => {
         .filter((d) => (neighbors[d] || '').trim());
       if (linked.length > 0) {
         linked.forEach((d) => {
-          lines.push(`- ${d} edge → **${neighbors[d]}** (mirrored entry)`);
+          lines.push(`- ${d} edge → **${neighbors[d]}** (lands on its ${d === 'north' ? 'south' : d === 'south' ? 'north' : d === 'east' ? 'west' : 'east'} entry, else main spawn)`);
         });
       } else {
         lines.push('- None');
@@ -1333,6 +1359,7 @@ export const App: React.FC = () => {
                 setActiveTool('brush');
               }}
               onSpawnMoved={handleSpawnMoved}
+              spawnEditKey={selectedSpawnKey}
               onObjectMoved={handleObjectMoved}
               onExitMoved={handleExitMoved}
               onAddObjectAt={(x, y) => {
@@ -1378,6 +1405,16 @@ export const App: React.FC = () => {
               onSelectEntityIndex={setSelectedEntityIndex}
               onUpdateLevelMeta={handleUpdateLevelMeta}
               onUpdateSpawn={(spawn) => pushState({ ...level, spawn })}
+              spawnEditKey={selectedSpawnKey}
+              onSelectSpawnKey={setSelectedSpawnKey}
+              onUpdateEntry={(key, entry) =>
+                pushState({ ...level, entrySpawns: { ...(level.entrySpawns || {}), [key]: entry } })
+              }
+              onClearEntry={(key) => {
+                const next = { ...(level.entrySpawns || {}) };
+                delete next[key];
+                pushState({ ...level, entrySpawns: next });
+              }}
               onAddExit={handleAddExit}
               onUpdateExit={handleUpdateExit}
               onDeleteExit={handleDeleteExit}

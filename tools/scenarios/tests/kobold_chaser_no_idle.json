@@ -1,0 +1,31 @@
+{
+ "name": "kobold_chaser_no_idle",
+ "test": true,
+ "description": "Moving-capable kobold never shows the idle pose: the TEST_FOREST chaser (AI_CHASE) waiting far from the hero shows walk frames, not idle 124. Only AI_NONE statics idle (knight_idle_standing).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 103
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 12345
+ }
+}

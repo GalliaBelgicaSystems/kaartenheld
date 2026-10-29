@@ -18,13 +18,13 @@ typedef enum {
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
  * the scene and scrolls it with the scroll offset.  The caps match the
- * renderer + hardware limits: ui_draw_world_map() draws a 32x18 window
- * once at map load and the 32x32 BG tilemap ring is 32 wide, so a wider
- * or taller scene would wrap/clobber VRAM instead of displaying.  The
- * 32-wide stride also keeps every map[y][x] lookup a shift, not a
- * multiply, on the multiply-less SM83. */
+ * renderer + hardware limits: ui_draw_world_map() draws a 32x32 window
+ * once at map load and the 32x32 BG tilemap ring is 32 wide and 32 tall,
+ * so a wider or taller scene would wrap/clobber VRAM instead of
+ * displaying.  The 32-wide stride also keeps every map[y][x] lookup a
+ * shift, not a multiply, on the multiply-less SM83. */
 #define WORLD_WIDTH  32
-#define WORLD_HEIGHT 18
+#define WORLD_HEIGHT 32
 
 /* Overworld camera view window in tiles.  The camera (World.scroll_x/y)
  * keeps the player inside this window, scrolling as the player crosses its
@@ -32,8 +32,16 @@ typedef enum {
 #define WORLD_VIEW_W 20
 #define WORLD_VIEW_H 18
 
-/* Maximum concurrent hostile actors in a scene (compile-time constant). */
-#define MAX_WORLD_ACTORS 4
+/* Maximum concurrent hostile actors in a scene (compile-time constant).
+ * Raised 4 -> 7 for the south corridor overlap (south_ridge runs kobold
+ * + bat + slime + 2 spiders + 2 slime knights; south_field runs 2
+ * slimes + bat + spider + knight).  OAM still fits: worst case
+ * 1 + 7*4 = 29 actor entries, markers live at fixed slots 30-37
+ * (ui_world_sprite_banked.c).  The debug snapshot still reports only
+ * the first MAX_SNAPSHOT_ACTORS actives (telemetry.h): bumping the
+ * snapshot would rewrite the harness wire format for no fixture
+ * benefit (fixtures never exceed 4). */
+#define MAX_WORLD_ACTORS 7
 
 /* Pursuit-alert display length (frames at 60 fps) after entering a map
  * with live chasers.  Set by the bank-8 marks refresh on entry (it
@@ -159,13 +167,18 @@ typedef enum {
     TILE_FOREST_60 = 68,
     TILE_FOREST_61 = 69,
     TILE_FOREST_62 = 70,
+    /* VRAM slot 63 = the water block's last cell (sheet (5,4)):
+     * "water bottom right corner wall" (forest_water_bottom_right_corner_wall).
+     * The sheet cell is remapped into this slot at encode time (Makefile
+     * --tile-coords) because slots 69+ are unreachable from the forest
+     * value range.  This value had no tile before the rewire. */
     TILE_FOREST_63 = 71,
     /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
      * 0xFF is the empty-cell sentinel and the enum must stay <= 0xFE
      * (g_tiletype_fits_u8; 254 kept clear as buffer), so these live in
      * the free 136..140 gap, NOT contiguously after 71 (72+ belongs to
      * castle/village).  The renderer maps them with (value - 72), not
-     * (value - TILE_FOREST_00): see ui_draw_world_cell.
+     * (value - TILE_FOREST_00): see ui_draw_terrain_cell.
      * value = 72 + VRAM slot.  (141..145 went to the castle exit +
      * extension, 251..253 to the rest of the castle extension.) */
     TILE_FOREST_64 = 136,
@@ -174,8 +187,8 @@ typedef enum {
     TILE_FOREST_67 = 139,
     TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 36 tiles in sheet scan order (0..35),
-     * mapping 1:1 to the 36 castle VRAM slots (RPG_TILE_BASE_WORLD):
+    /* Castle Landscape tiles: 45 tiles in sheet scan order (0..44),
+     * mapping 1:1 to the 45 castle VRAM slots (RPG_TILE_BASE_WORLD):
      * TILE_CASTLE_<i> renders VRAM block slot i.  Suffixes stay scan
      * indices, NOT values.
      *
@@ -185,12 +198,14 @@ typedef enum {
      * evicted legacy desolate WALL_00..WALL_10 (unreferenced by every
      * level; the legacy engine ranges in ui.c now start at WALL_11).
      * 251..253 (top of the u8 range, still <= 0xFE per g_tiletype_fits_u8)
-     * stay with the chandelier/vase row as before.  Values 184..186
-     * (ex-red-square/MERCHANT/STAIRCASE) are free again.  Both empty
-     * cells share one tile id.  ui.c maps the 141..156 block through a
-     * 16-byte slot table (one range check instead of a branch ladder);
-     * the generated walk/glyph tables absorb the values with no hand
-     * edits. */
+     * stay with the chandelier/vase row as before.  The sheet's fifth
+     * row takes the last free values 184..186 (ex-red-square/MERCHANT/
+     * STAIRCASE) for the carpet corners + exit up; the row's remaining
+     * empty cells share the black-emptiness value 156 under new
+     * TILE_CASTLE_37..44 ids.  ui.c maps the 141..156 block through a
+     * 16-byte slot table plus a 3-byte table for 184..186 (one range
+     * check each instead of a branch ladder); the generated walk/glyph
+     * tables absorb the values with no hand edits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -225,7 +240,17 @@ typedef enum {
     TILE_CASTLE_31 = 153,
     TILE_CASTLE_32 = 154,
     TILE_CASTLE_33 = 155,
-    TILE_CASTLE_34 = 156,
+    TILE_CASTLE_34 = 184,
+    TILE_CASTLE_35 = 185,
+    TILE_CASTLE_36 = 186,
+    TILE_CASTLE_37 = 156,
+    TILE_CASTLE_38 = 156,
+    TILE_CASTLE_39 = 156,
+    TILE_CASTLE_40 = 156,
+    TILE_CASTLE_41 = 156,
+    TILE_CASTLE_42 = 156,
+    TILE_CASTLE_43 = 156,
+    TILE_CASTLE_44 = 156,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -515,8 +540,10 @@ typedef struct {
     uint8_t encounter_cooldown;
 } World;
 
-/* Neighbor edge indices (n,s,e,w), shared by the move decision and the
- * banked edge-spawn body. */
+/* Neighbor edge indices (n,s,e,w), shared by the move decision (the staged
+ * move_dir must match the decide path exactly: corners resolve N/S
+ * before E/W). Edge entry itself is the destination's arrival-side named
+ * entry (or its main spawn), never a mirror. */
 typedef enum {
     NBR_N = 0,
     NBR_S = 1,

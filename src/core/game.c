@@ -198,11 +198,13 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    /* LCD-on transitions (no wipe white-flash): overworld -> dialogue
+    /* LCD-on transitions (no white flash): overworld -> dialogue
      * entry paints the box over the live map; dialogue -> overworld exit
      * restores just the box rows; an overworld map crossing runs the
-     * black-wipe + invisible-load + row-reveal transition.  Every other
-     * full redraw (battle, menus, boot) blanks via LCD-off.
+     * black-wipe + invisible-load + row-reveal transition, with sprites
+     * committed ahead of the reveal so they stand on the sweep instead
+     * of appearing after it.  Every other full redraw (battle, menus,
+     * boot) blanks via LCD-off.
      *
      * Exit classification reads rc->prev_screen (the last RENDERED
      * screen), never g->prev_screen (the last CHANGED-FROM screen, which
@@ -214,15 +216,15 @@ void game_render(Game *g)
      * follows a synchronous screen_change, which refreshes it -- see
      * the exemption disjunct below.)
      * A dialogue exit that somehow lands on a different map still takes
-     * the LCD-on path: overworld_screen_render() routes any map mismatch
-     * to the full transition repaint (which reloads the tileset), so no
-     * white flash and no stale tiles either way. */
+     * the transition path: overworld_screen_render() routes any map
+     * mismatch to the full transition repaint (which reloads the
+     * tileset), so no stale tiles either way. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
           (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
         /* A full redraw hides the sprite in real OAM first: the redraw
-         * spans several display sweeps, and the sprite must not float
-         * over it at a stale position.  The frame-boundary commit
+         * runs synchronously inside this frame, and the sprite must not
+         * float over it at a stale position.  The frame-boundary commit
          * (ui_sprite_commit in main.c) reveals it at the new position. */
         ui_sprite_begin_transition();
         if (rc->prev_screen != SCREEN_OVERWORLD || g->screen != SCREEN_OVERWORLD) {

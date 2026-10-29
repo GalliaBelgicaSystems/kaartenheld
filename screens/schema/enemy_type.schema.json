@@ -69,6 +69,16 @@
             { "type": "integer", "minimum": 0, "maximum": 7 }
           ],
           "description": "CGB OAM palette: an OBJ ramp name (preferred) or a legacy hardware slot index."
+        },
+        "idle_cells": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Standing-pose art (compose-layout tile names): exactly width*height entries = ONE idle frame, shown whenever the actor is not moving between tiles (move_state == idle). Absent = keep alternating the walk cells while standing. A 1x1 sprite lists one tile (e.g. kobold_idle)."
+        },
+        "blink": {
+          "type": "boolean",
+          "description": "Asymmetric reveal blink (mimic): needs exactly 2 cells on a 1x1 sprite. Frame0 (rest pose) shows ~54/64 frames, frame1 (reveal flash) only ~10/64. Absent/false = even 16/16 global toggle."
         }
       },
       "required": ["cells", "palette"],

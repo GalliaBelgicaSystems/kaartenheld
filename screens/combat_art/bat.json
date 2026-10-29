@@ -5,7 +5,6 @@
   "order": 1,
   "width": 3,
   "height": 2,
-  "palette": "fightmimic",
   "oam": true,
   "obj_palette": "fightbat",
   "frame0": [

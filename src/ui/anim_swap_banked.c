@@ -61,7 +61,7 @@ uint8_t g_anim_count;
  * no-animation baseline (16.84 ticks/flip both).  A VRAM-index list
  * was chosen over in-draw
  * recording because the record hook would live in fixed-bank
- * ui_draw_world_cell (~38 B of _HOME margin left); the post-redraw
+ * ui_draw_terrain_cell (~38 B of _HOME margin left); the post-redraw
  * rebuild scan needs no fixed-bank loop and no per-cell history.
  * The ring is static between full redraws (hardware SCX/SCY scrolls
  * it, no per-frame redraws) and every redraw rebuilds, so the list is
@@ -93,6 +93,8 @@ void world_anim_rebuild_banked(void)
     uint8_t i;
     uint8_t row;
     uint8_t col;
+    uint8_t width;
+    uint8_t height;
     uint8_t v;
     uint8_t n;
     uint8_t s;
@@ -130,11 +132,18 @@ void world_anim_rebuild_banked(void)
      * on, so reads go through the bounded helper (mode-3 returns 0xFF,
      * which can only under-record, never mis-record: 0xFF decodes past
      * every animation slot).  LCD-off full redraws skip the wait at once.
-     * Every map fits rows 0..17 x cols 0..31 (<=24 wide, <=18 tall). */
+     * Scan only the LIVE map rectangle (g_game.world is WRAM, always
+     * mapped, so this body needs no staging): out-of-bounds ring cells
+     * are never redrawn (the reveal draws [0,width) x [0,height)), so on
+     * a map smaller than the ring they can retain stale tile ids from a
+     * previous, larger map -- recording one would burn an ANIM_CELL_CAP
+     * slot on a cell the swap pass would then animate invisibly. */
+    width = g_game.world.width;
+    height = g_game.world.height;
     n = 0;
-    idx = 0;
-    for (row = 0; row < 18; row++) {
-        for (col = 0; col < 32; col++) {
+    for (row = 0; row < height; row++) {
+        for (col = 0; col < width; col++) {
+            idx = ((uint16_t)row << 5) + col;
             v = anim_read_cell(idx);
             base = (uint8_t)(v - RPG_TILE_BASE_WORLD);
             /* v is an animation id iff v >= 128 and its slot is listed.
@@ -151,7 +160,6 @@ void world_anim_rebuild_banked(void)
                     }
                 }
             }
-            idx++;
         }
     }
     g_anim_count = n;

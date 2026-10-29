@@ -12,9 +12,10 @@ Usage:
     python3 tools/screen_compiler/title_compile.py screens/title.json
     python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-The output is a #pragma bank 4 C file that title_content.c #include's
-(or references via extern) so the generated data lives in bank 4 where the
-renderer can read it directly.
+The output is a #pragma bank 9 C file that title_content.c #include's
+(or references via extern) so the generated data lives in bank 9 where the
+renderer can read it directly (moved from bank 4 when release bank 4
+overflowed on the enlarged-maps pass; title_content.c moved with it).
 """
 
 import sys
@@ -143,7 +144,7 @@ def emit_data_table(f, data: dict):
     f.write(" * Do not edit directly — edit screens/title.json and re-run.\n")
     f.write(" */\n\n")
 
-    f.write("#pragma bank 4\n\n")
+    f.write("#pragma bank 9\n\n")
 
     f.write("#include <stdint.h>\n\n")
 
@@ -309,7 +310,7 @@ def build_title_c_output(data: dict) -> str:
     lines.append(" * Do not edit directly — edit screens/title.json and re-run.")
     lines.append(" */")
     lines.append("")
-    lines.append("#pragma bank 4")
+    lines.append("#pragma bank 9")
     lines.append("")
     lines.append("#include <stdint.h>")
     lines.append("")

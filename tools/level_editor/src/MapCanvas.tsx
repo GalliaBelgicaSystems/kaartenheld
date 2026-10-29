@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { EditorLevel, LevelExit, LevelRegion } from './model/Level';
+import { EditorLevel, EntryKey, LevelExit, LevelRegion } from './model/Level';
 import { LevelObject, OBJECT_TEMPLATES } from './model/Objects';
 import { BUILTIN_TILESETS, TileDefinition, TilesetDefinition } from './model/Tileset';
 import { SHEET_TILE_NAMES, COMBAT_TILE_URL, fetchCombatArtList, fetchCombatArtSet, fetchEnemyTypeList, fetchEnemyType } from './io/combatArt';
@@ -30,6 +30,8 @@ interface MapCanvasProps {
   onFill: (startX: number, startY: number, newTileId: string) => void;
   onTilePicked: (tileId: string) => void;
   onSpawnMoved: (x: number, y: number) => void;
+  /** Which spawn point Spawn-mode clicks move ('main' or an entry key). */
+  spawnEditKey?: 'main' | EntryKey;
   onObjectMoved: (index: number, x: number, y: number) => void;
   onExitMoved: (index: number, x: number, y: number) => void;
   onAddObjectAt: (x: number, y: number) => void;
@@ -101,6 +103,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   onAddObjectAt,
   onAddExitAt,
   clonePattern,
+  spawnEditKey = 'main',
   onClonePatternCaptured,
   onStampPattern,
   fidelity = 'raw',
@@ -1268,6 +1271,37 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       }
     }
 
+    // 8b. Render named arrival entries (player.entry)
+    const entryMarks: { key: string; label: string }[] = [
+      { key: 'north', label: 'N' },
+      { key: 'south', label: 'S' },
+      { key: 'east', label: 'E' },
+      { key: 'west', label: 'W' },
+      { key: 'stairs_up', label: 'U' },
+      { key: 'stairs_down', label: 'D' },
+    ];
+    entryMarks.forEach(({ key, label }) => {
+      const ent = (level.entrySpawns as any)?.[key];
+      if (!ent || typeof ent.x !== 'number' || typeof ent.y !== 'number') return;
+      const px = ent.x * tileSize;
+      const py = ent.y * tileSize;
+      const isSel = activeLayer === 'spawn' && spawnEditKey === key;
+      ctx.fillStyle = isSel ? '#f39c12' : '#8e44ad';
+      ctx.beginPath();
+      ctx.arc(px + tileSize / 2, py + tileSize / 2, Math.max(2, tileSize * 0.3), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isSel ? '#ffffff' : '#5e3370';
+      ctx.lineWidth = isSel ? 2 : 1;
+      ctx.stroke();
+      if (tileSize >= 16) {
+        ctx.font = `bold ${Math.floor(tileSize * 0.4)}px sans-serif`;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, px + tileSize / 2, py + tileSize / 2);
+      }
+    });
+
     // 9. Render Hover Cursor
     if (hoverTile) {
       const hpx = hoverTile.x * tileSize;
@@ -1293,6 +1327,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     isMouseDown,
     dragStartTile,
     hoverTile,
+    spawnEditKey,
     canvasWidth,
     canvasHeight,
     tileSize,

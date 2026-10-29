@@ -33,7 +33,9 @@ void title_screen_render(Game *g)
 #endif
         g_bk_call_target = (uint16_t)&ui_title_logo_load_banked;
         banked_call_run();
-        g_bk_call_bank = 4;
+        /* Title content + data moved bank 4 -> 9 (release bank 4 overflowed
+         * on the enlarged-maps pass); same-bank direct reads preserved. */
+        g_bk_call_bank = 9;
         g_bk_call_target = (uint16_t)&title_content_render;
         g_bk_byte_a = g->title_menu_showing;
         g_bk_byte_b = g->title_menu_index;
@@ -47,13 +49,13 @@ void title_screen_render(Game *g)
 void title_content_render(void);
 void title_menu_step_banked(void);
 
-/* Targeted caret move (AGENTS.md 36).  The bank-4 body computes the next
+/* Targeted caret move (AGENTS.md 36).  The bank-9 body computes the next
  * index from the staged direction, writes it back through g_bk_ptr_a, and
  * repaints only the two '>' cells, so a pure UP/DOWN never touches the
  * render cache and the full title redraw is avoided. */
 static void title_menu_step(Game *g, uint8_t direction)
 {
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 9;
     g_bk_call_target = (uint16_t)&title_menu_step_banked;
     g_bk_ptr_a = (void *)g;
     g_bk_byte_b = direction;

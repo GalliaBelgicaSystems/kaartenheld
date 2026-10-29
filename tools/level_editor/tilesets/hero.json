@@ -22,6 +22,26 @@
       "ascii": "@",
       "image_url": "/tiles/hero/hero_f1.png",
       "category": "hero"
+    },
+    {
+      "id": "hero_idle_2",
+      "label": "hero idle 2",
+      "gb_constant": "TILE_HERO_IDLE_2",
+      "walkable": false,
+      "color": "#27ae60",
+      "ascii": "@",
+      "image_url": "/tiles/hero/hero_idle_2.png",
+      "category": "hero"
+    },
+    {
+      "id": "hero_idle_1",
+      "label": "hero idle 1",
+      "gb_constant": "TILE_HERO_IDLE_1",
+      "walkable": false,
+      "color": "#27ae60",
+      "ascii": "@",
+      "image_url": "/tiles/hero/hero_idle_1.png",
+      "category": "hero"
     }
   ]
 }

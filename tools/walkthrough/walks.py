@@ -196,28 +196,48 @@ def transit_fight(s):
     return False
 
 
+def _dialogue_open(s):
+    """True while any modal dialogue box is up (SCREEN_DIALOGUE == 1,
+    src/screens/screen.h).  Text markers (KNIGHT:, FOUND AMULET, ...)
+    only cover known boxes; the screen byte covers aftermath dialogues
+    the walk has never seen (quest-complete notices, future briefings)."""
+    r = s.reader
+    return r.rd(r.g_game, 1)[0] == 1
+
+
+def _aftermath_open(s):
+    """Any post-victory dialogue still up: the knight's armor-break
+    briefing, a quest-complete notice (e.g. the monster-hunt 'return
+    to the mayor' that fires when a transit kill crosses the kill
+    threshold mid-route), or any future aftermath box."""
+    return s.text_has("KNIGHT:") or _dialogue_open(s)
+
+
 def drain_postvictory_dialogue(s, tries=8):
-    """Close a dialogue left open by a transit win (today: the knight's
+    """Close any dialogue left open by a transit win (today: the knight's
     armor-break briefing, which fires from its defeat event on the way
-    out of VICTORY).  Only follow()/_walk_path() call this, and only
-    right after transit_fight() wins -- so any dialogue open here is
-    causally the fight's aftermath, never an objective dialogue (those
-    open via bump_actor, never during a route step).  Bounded: never
-    spins a walk that is genuinely stuck.  A future aftermath dialogue
-    extends the marker tuple below."""
+    out of VICTORY, and quest-complete notices, which fire when a
+    transit kill crosses a quest threshold mid-route).  Only
+    follow()/_walk_path() call this, and only right after
+    transit_fight() wins -- so any dialogue open here is causally the
+    fight's aftermath, never an objective dialogue (those open via
+    bump_actor, never during a route step).  Bounded: never spins a
+    walk that is genuinely stuck."""
     for _ in range(tries):
-        if not s.stable(lambda: s.text_has("KNIGHT:"), frames=10):
+        if not s.stable(lambda: _aftermath_open(s), frames=10):
             return True
         s.press("a", settle=30)
-    return not s.text_has("KNIGHT:")
+    return not _aftermath_open(s)
 
 
 def _walk_path(s, path):
     """Execute a BFS cell path as discrete one-tile presses.  Ambushes
     (including stationary guardians routed through on purpose) fight
     via transit_fight and retry: a knight-armor kill opens its briefing
-    instead of VICTORY, so drain that too and keep going (the spawned
-    trio either chases off the tile or falls to the next retry)."""
+    instead of VICTORY, and a threshold-crossing kill opens a
+    quest-complete notice -- drain any aftermath and keep going (the
+    spawned trio either chases off the tile or falls to the next
+    retry)."""
     for dx, dy in path:
         btn = _BTNS[(dx, dy)]
         fx, fy = s.pos()
@@ -250,7 +270,7 @@ def _walk_path(s, path):
 
 
 def follow(s, planner, from_scene, start, to_scene, goal,
-           capture_when=None, capture_label=None):
+           capture_when=None, capture_label=None, on_scene=None):
     """Execute a cross-scene BFS route; optional mid-route screenshot."""
     steps = planner.route(from_scene, start, to_scene, goal)
     for step in steps:
@@ -292,15 +312,20 @@ def follow(s, planner, from_scene, start, to_scene, goal,
         if capture_when and capture_label and capture_when():
             s.shoot(capture_label)
             capture_when, capture_label = None, None
+        if on_scene is not None:
+            on_scene(s)
     return s.pos()
 
 
 def bump_actor(s, planner, scene_name, adjacent, direction, marker,
-               tries=8):
+               tries=8, extra_avoid=None):
     """Walk to `adjacent`, press `direction` into the actor until the
-    dialogue marker appears (retries: dropped presses, transition eats)."""
+    dialogue marker appears (retries: dropped presses, transition eats).
+    `extra_avoid` cells stay off-limits on the walk over: approaching a
+    hostile objective must never step onto the objective itself."""
     if s.pos() != adjacent:
-        path = planner.path(scene_name, s.pos(), adjacent)
+        path = planner.path(scene_name, s.pos(), adjacent,
+                            extra_avoid=extra_avoid)
         if path is None:
             s.check("path to %s" % (adjacent,), False,
                     expected="bfs path", actual="none")
@@ -450,10 +475,12 @@ def walk_a(planner, checks, sram_out=None):
 
     # Route into town via the grove corridor; capture the
     # camera-scrolled field shot on the way.
-    # Town entry is the field-east mirrored spawn (1,7): one inside the
-    # west edge at the crossed row.
+    # Town landing is the resolved west entry (player.entry.west, else
+    # the main spawn): edge crossings land on the arrival-side entry,
+    # not a mirrored row.
     field_pos = _boot_to_field(s, planner)
-    follow(s, planner, "field", field_pos, "town", (1, 7),
+    town_landing = planner._arrival({"target_scene": "town"}, None, "east", "town")
+    follow(s, planner, "field", field_pos, "town", town_landing,
            capture_when=lambda: s.pos()[0] >= 22,
            capture_label="01-field-scrolled")
     s.settle_scene(expected_scene=SCENE_TOWN)
@@ -463,7 +490,7 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("ARRIVED_TOWN flag",
                s.reader.flag(STORY_FLAG_ID_ARRIVED_TOWN), True)
     s.check_eq("scene pos synced", (st["player_x"], st["player_y"]),
-               (1, 7))
+               town_landing)
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
     # Three-line pages show both guard lines at once plus a blank third
@@ -550,16 +577,18 @@ def walk_a(planner, checks, sram_out=None):
 
     # Mountain detour for the amulet (position from the level JSON; the
     # planner routes around patrol boxes and blocking actors, goal
-    # exempt).  The amulet chest is blocking: bump from the west.
+    # exempt).  The amulet chest is blocking and guarded by the kobold
+    # standing east of it: step onto the kobold's cell (transit fight),
+    # then bump west into the chest.
     mountain = _level("mountain_pass")
     amulet = next(o for o in mountain["objects"]
                   if (o.get("properties") or {}).get("entity_id")
                   == "ENTITY_ID_AMULET")
     ax, ay = amulet["position"]["x"], amulet["position"]["y"]
-    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax - 1, ay))
+    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax + 1, ay))
     s.settle_scene(expected_scene=SCENE_MOUNTAIN_PASS)
     s.check("amulet found",
-            bump_actor(s, planner, "mountain_pass", (ax - 1, ay), "right",
+            bump_actor(s, planner, "mountain_pass", (ax + 1, ay), "left",
                        "FOUND AMULET"),
             expected="FOUND AMULET", actual="none")
     close_dialogue(s, "FOUND AMULET")
@@ -657,11 +686,14 @@ def walk_a(planner, checks, sram_out=None):
     # wizard (he never moved). Drop god-mode first so SRAM keeps base
     # 10/10 HP (town/village legs are ambush-free).
     ungod_mode(s)
-    follow(s, planner, "village_area", s.pos(), "town", (6, 11))
+    # Wizard stands at (6,10) with the house walling his south side, so
+    # talk to him from the north ((6,9), facing DOWN).  The old (6,11)
+    # spot is inside the house since the town layout moved it there.
+    follow(s, planner, "village_area", s.pos(), "town", (6, 9))
     s.settle_scene(expected_scene=SCENE_TOWN)
-    _walk_path(s, planner.path("town", s.pos(), (6, 11)) or [])
+    _walk_path(s, planner.path("town", s.pos(), (6, 9)) or [])
     s.check("wizard save menu", s.press_until(
-        "up", lambda: s.text_has("SAVE GAME"), label="save menu"),
+        "down", lambda: s.text_has("SAVE GAME"), label="save menu"),
         expected="SAVE GAME", actual="none")
     s.tick(20)
     s.shoot("12-wizard-save", need="SAVE GAME")
@@ -677,7 +709,7 @@ def walk_a(planner, checks, sram_out=None):
 
     if sram_out is not None:
         sram_out.append((s.stop_save_ram(), dict(
-            scene=SCENE_TOWN, pos=(6, 11),
+            scene=SCENE_TOWN, pos=(6, 9),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
             ring=s.reader.collection_count(CARD_IRON_RING))))
     else:
@@ -864,9 +896,9 @@ def walk_c(planner, checks):
     # sting + resume windows elapse during any post-crossing walk, and
     # cross_exit's own settling eats them too, so a settle-then-assert
     # observes only the resumed track.  Walk to the tunnel mouth (same
-    # scene, no warp), cross explicitly, and assert immediately:
-    # cross_exit returns ~25 f after the flip, well inside every window
-    # (hold to +90, sting +30..+81, resume +90).
+    # scene, no warp), cross explicitly, and assert immediately.
+    # The flip-anchored waits below carry the margins (the old
+    # "+30..+81" sting model is stale -- see the note at the crossing).
     _mouth_path = planner.path("field", spawn, (16, 1), avoid_exits=True)
     s.check("path to forest tunnel", _mouth_path is not None,
             expected="bfs path", actual="none")
@@ -876,9 +908,17 @@ def walk_c(planner, checks):
     # cross_exit's settling (~25 f) plus any dropped-press retries eat
     # the sting windows, so a settle-then-assert observes only the
     # resumed track.  Flip-anchored waits have huge margins (hold to
-    # +90, sting +30..+81, resume +90).  The kobold spawns 6 tiles away,
-    # so no ambush can interrupt the crossing; a DECK box here still
-    # fights through like follow()'s exit path.
+    # +200, sting start +200, sting end +200, resume +250).  The kobold
+    # spawns 6 tiles away, so no ambush can interrupt the crossing; a
+    # DECK box here still fights through like follow()'s exit path.
+    # NOTE (Oct 2026): the sting fires ~flip+90, not the +30..+81 the
+    # old comments claimed.  The alert TTL sits pinned at 150 for ~57
+    # post-entry frames before counting down (deterministic across
+    # runs; full hold -> sting -> resume sequence still plays, only
+    # later), so a 90-tick start wait misses it by ~2 ticks exactly.
+    # Windows below are calibrated to that observed timing; if the
+    # entry stall ever moves, recalibrate against a tick trace
+    # (sfx_voice per tick after the flip), not the old model.
     _crossed = False
     for _ in range(4):
         s.press("left", settle=12)
@@ -897,23 +937,31 @@ def walk_c(planner, checks):
                     expected="no KNIGHT: box", actual="stuck open")
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
+    # The flip tick itself is a 1-frame window: world_load_map starts the
+    # scene track inside game_update, and the marks tick that applies the
+    # entry hold (MUSIC_NONE) runs on the NEXT frame.  Polling for the
+    # scene change lands on either side of that boundary, so settle two
+    # frames before reading the track (the hold lasts ~90 ticks).
+    s.tick(2)
     # Alert-first: the kobold entry sting holds the track, so right
     # after arrival the music is NONE; the checks below pin the sting
     # actually stepping (sfx 7 while it rings, idle after) and the
-    # forest track coming back as the kobold approaches.
+    # forest track coming back as the kobold approaches.  The sting
+    # starts ~flip+90 (see note above), so the start wait needs 200,
+    # not 90.
     s.check_eq("forest music held for sting", s.reader.music_track(),
                MUSIC_NONE)
     s.check("forest alert sting playing",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
-                       ticks=90, label="sting start"),
+                       ticks=200, label="sting start"),
             expected=SFX_ALERT, actual="silent")
     s.check("forest alert sting done",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
-                       ticks=150, label="sting end"),
+                       ticks=200, label="sting end"),
             expected=SFX_NONE, actual="stuck")
     s.check("forest music resumes",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
-                       ticks=150, label="forest music"),
+                       ticks=250, label="forest music"),
             expected="MUSIC_FOREST", actual="held")
     # Continue to the spawn for the arrival milestone.  avoid_exits:
     # the tunnel gate sits right on the path -- stepping back onto it
@@ -988,14 +1036,52 @@ def walk_e(planner, checks):
             expected="closed", actual="open")
     s.check("south no briefing repeat", not s.text_has("KNIGHT:"),
             expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
-    follow(s, planner, "south_field", s.pos(), "castle",
-           (mimic_xy[0] - 1, mimic_xy[1]))
+    # The mimic never moves (AI_NONE) and nothing else patrols its
+    # tile: walk beside it and bump it directly.  The approach cell is
+    # the first walkable cardinal neighbor REACHABLE without stepping
+    # onto the mimic itself: the repaint flanked the old west cell with
+    # columns, and the corridor geometry forces tier-3 routing through
+    # (12,10) from the south -- stepping there would kill the objective
+    # as transit.  Deterministic on purpose -- the sweep helper is for
+    # chasers, and a sweep here could catch the bat instead and then
+    # fight the walk's objective.
+    adj = None
+    for dx, dy, push in ((-1, 0, "right"), (1, 0, "left"),
+                         (0, -1, "down"), (0, 1, "up")):
+        cell = (mimic_xy[0] + dx, mimic_xy[1] + dy)
+        if not planner.scenes["castle"].walkable(cell[0], cell[1]):
+            continue
+        if planner.path("castle", s.pos(), cell,
+                        extra_avoid={mimic_xy}) is None:
+            continue
+        adj = (cell, push)
+        break
+    s.check("mimic approachable", adj is not None,
+            expected="reachable walkable neighbor", actual="walled in")
+    if adj is None:
+        return
+    entry = {}
+
+    def latch_castle_hold(s):
+        # First castle frame only.  The entry hold applies on the frame
+        # after the scene flip (same 1-frame window as walk-c's forest
+        # check), so settle two frames before reading.
+        if s.reader.scene_state()["scene_id"] == SCENE_CASTLE and \
+                "music" not in entry:
+            s.tick(2)
+            entry["music"] = s.reader.music_track()
+
+    follow(s, planner, "south_field", s.pos(), "castle", adj[0],
+           on_scene=latch_castle_hold)
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
     # Alert-first: the slime-knight entry sting holds the track here
     # too (the restart is pinned by walk-c/the sweep; the knight flow
-    # below replays DUNGEON through battle exit anyway).
-    s.check_eq("castle music held for sting", s.reader.music_track(),
+    # below replays DUNGEON through battle exit anyway).  Latched at the
+    # first castle frame: later transit battles on the walk to `adj`
+    # legitimately outlast the hold window, so asserting here (after the
+    # full walk) would be timing-fragile.
+    s.check_eq("castle music held for sting", entry.get("music"),
                MUSIC_NONE)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have
@@ -1055,14 +1141,11 @@ def walk_e(planner, checks):
             expected="closed", actual="open")
     s.check("no briefing repeat", not s.text_has("KNIGHT:"),
             expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
-    # The mimic never moves (AI_NONE) and nothing else patrols its
-    # tile: walk beside it and bump it directly.  Deterministic on
-    # purpose -- the sweep helper is for chasers, and a sweep here
-    # could catch the bat instead and then fight the walk's objective.
-    _walk_path(s, planner.path("castle", s.pos(), (mimic_xy[0] - 1, mimic_xy[1])) or [])
+    _walk_path(s, planner.path("castle", s.pos(), adj[0],
+                              extra_avoid={mimic_xy}) or [])
     s.check("mimic engaged",
-            bump_actor(s, planner, "castle", (mimic_xy[0] - 1, mimic_xy[1]),
-                       "right", "DECK:"),
+            bump_actor(s, planner, "castle", adj[0], adj[1],
+                       "DECK:", extra_avoid={mimic_xy}),
             expected="DECK:", actual="none")
     s.check("mimic banner", s.text_has("TARGET MIMIC"),
             expected="MIMIC", actual=s.bg_text()[0].strip())

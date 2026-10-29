@@ -22,7 +22,7 @@ from walkthrough.session import LEVELS_DIR, REPO
 sys.path.insert(0, os.path.join(REPO, "tools", "level_compiler"))
 from validate import load_tilesets          # noqa: E402
 from compile import derive_collision, scene_table_order, is_level_file   # noqa: E402
-from collision import effective_actor_flags   # noqa: E402
+from collision import effective_actor_flags, entry_side_for_link, resolve_entry_spawn, resolve_exit_landing   # noqa: E402
 
 # Patrol boxes (src/world/actor.h): blocked cells for routing — the
 # walkthrough must not steer through a hostile's patrol path.
@@ -64,7 +64,7 @@ def patrol_cells(ai, x, y):
 
 
 # Neighbor edge directions in stable order (matches the engine's
-# N/S/E/W checks and the mirrored-spawn rule).
+# N/S/E/W checks; entry itself is the neighbor spawn, not a mirror).
 EDGE_DIRS = ("north", "south", "east", "west")
 _EDGE_NORMAL = {"north": (0, -1), "south": (0, 1),
                 "west": (-1, 0), "east": (1, 0)}
@@ -97,7 +97,7 @@ class Scene:
         # collision grid marks them.
         self.exit_cells = {(e["x"], e["y"]) for e in self.exits}
         # Whole-edge links (neighbors): every walkable border cell of a
-        # linked edge is a portal node with a mirrored entry spawn.
+        # linked edge is a portal node landing on the neighbor spawn.
         # Corner cells belong to two edges, but the ROM fires in N/S/W/E
         # priority order, so a corner is assigned to the first linked
         # walkable edge in that order (setdefault): planner and ROM can
@@ -170,6 +170,18 @@ class Scene:
         cells = set()
         for x, y, ai in self.hostiles:
             cells |= patrol_cells(ai, x, y)
+        return cells
+
+    def chase_cells(self):
+        """Union of chase-halo cells (AI_CHASE / AI_CHASE_FAST hostiles).
+        Chasers converge on the player by design (the whole scene is the
+        zone), so no static routing can avoid them on a sealed corridor;
+        the planner may route through these cells as a last resort and
+        let the walk fight through (transit ambush machinery)."""
+        cells = set()
+        for x, y, ai in self.hostiles:
+            if ai in (AI_CHASE, AI_CHASE_FAST):
+                cells |= patrol_cells(ai, x, y)
         return cells
 
     def breachable_cells(self):
@@ -253,19 +265,54 @@ class Planner:
         """Walkable tile adjacent to a tunnel landing that is itself no
         portal (neither an exit gate nor a linked edge cell): the safe
         arrival tile for walks ending at a tunnel mouth.  Deterministic
-        N/S/E/W order.  None when the mouth is fully enclosed — the
-        compiler guarantees a walkable landing but not a free neighbor —
-        in which case callers fall back to the gate itself."""
+        N/S/E/W order, but SKIPPING cells unreachable from the scene
+        spawn — a walkable nook reachable only THROUGH the gate (e.g.
+        field (14,1), whose only walkable neighbor is the (15,1) mouth
+        itself) would strand every route staged there.  None when no
+        adjacent cell is both walkable and spawn-connected, in which
+        case callers fall back to the gate itself."""
         scene = self.scenes[name]
         lx, ly = landing
+        spawn = scene.level.get("player", {}).get("spawn", {}) or {}
+        try:
+            home = (int(spawn.get("x", 0)), int(spawn.get("y", 0)))
+        except (TypeError, ValueError):
+            home = (0, 0)
+        # Plain-walkability connected component of the spawn, EXCLUDING
+        # portal cells (exits + linked edges): staging must be reachable
+        # without stepping through another portal (the walk would warp
+        # away), matching the router's avoid_exits discipline.  Patrol
+        # halos and blocking actors are NOT excluded here -- the route
+        # can bump/fight through those, but never through a portal.
+        seen = {home}
+        queue = [home]
+        while queue:
+            cx, cy = queue.pop()
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                nxt = (cx + dx, cy + dy)
+                if nxt in seen:
+                    continue
+                if not (0 <= nxt[0] < scene.width
+                        and 0 <= nxt[1] < scene.height):
+                    continue
+                if nxt in scene.exit_cells or nxt in scene.edge_cells:
+                    continue
+                if not scene.grid[nxt[1]][nxt[0]]:
+                    continue
+                seen.add(nxt)
+                queue.append(nxt)
+        first_walkable = None
         for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
             cell = (lx + dx, ly + dy)
             if cell in scene.exit_cells or cell in scene.edge_cells:
                 continue
             if not scene.walkable(cell[0], cell[1]):
                 continue
-            return cell
-        return None
+            if first_walkable is None:
+                first_walkable = cell
+            if cell in seen:
+                return cell
+        return first_walkable
 
     def scene_of(self, scene_id):
         for s in self.scenes.values():
@@ -274,16 +321,75 @@ class Planner:
         raise KeyError("no scene with id %d" % scene_id)
 
     # ── BFS ──────────────────────────────────────────────────────────
-    def _bfs_breach(self, scene, start, goal, avoid=None):
+    # Crossing a chase halo costs CHASE_COST (>> any detour): the
+    # planner prefers halo-free routes when they exist and crosses the
+    # fewest halo cells when they don't.  Chasers converge by design, so
+    # a sealed corridor guarded by them cannot be routed around -- the
+    # walk fights through via the standard ambush machinery instead of
+    # failing loudly.
+    CHASE_COST = 2000
+
+    def _bfs_breach(self, scene, start, goal, avoid=None, keep=None):
         """BFS that falls back to routing through stationary, non-solo
         hostile cells (Scene.breachable_cells) when the strict avoid-set
         leaves no path: the walk bumps the guardian and fights through
-        via the standard ambush machinery instead of failing loudly."""
-        path = self._bfs(scene, start, goal, avoid)
-        if path is None and avoid:
+        via the standard ambush machinery instead of failing loudly.
+        A final tier crosses chase halos (AI_CHASE/_FAST) at CHASE_COST
+        per cell, preferring halo-free detours and crossing the fewest
+        halo cells where sealed corridors leave no choice.  `keep`
+        cells stay impassable through every tier: approaching a hostile
+        objective must never step onto the objective itself."""
+        base = avoid or set()
+        keep = keep or set()
+        path = self._bfs(scene, start, goal, base | keep)
+        if path is None and base:
             path = self._bfs(scene, start, goal,
-                             avoid - scene.breachable_cells())
+                             (base - scene.breachable_cells()) | keep)
+        if path is None and base:
+            path = self._bfs_cost(scene, start, goal,
+                                 (base - scene.breachable_cells()) | keep,
+                                 scene.chase_cells() - keep)
         return path
+
+    def _bfs_cost(self, scene, start, goal, avoid=None, costly=None):
+        """Dijkstra over walkable cells: `avoid` (minus `costly`) is
+        impassable, `costly` cells cost CHASE_COST each, everything else
+        costs 1.  Returns the cheapest move list, or None when even the
+        costly cells cannot connect start to goal."""
+        import heapq
+        if start == goal:
+            return []
+        costly = costly or set()
+        best = {start: 0}
+        prev = {start: None}
+        q = [(0, start)]
+        found = None
+        while q:
+            cost, cur = heapq.heappop(q)
+            if cost != best[cur]:
+                continue
+            if cur == goal:
+                found = cur
+                break
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                nxt = (cur[0] + dx, cur[1] + dy)
+                if not scene.walkable(nxt[0], nxt[1], avoid - costly):
+                    continue
+                step = self.CHASE_COST if nxt in costly else 1
+                nc = cost + step
+                if nxt not in best or nc < best[nxt]:
+                    best[nxt] = nc
+                    prev[nxt] = cur
+                    heapq.heappush(q, (nc, nxt))
+        if found is None:
+            return None
+        path = []
+        node = found
+        while prev[node] is not None:
+            p = prev[node]
+            path.append((node[0] - p[0], node[1] - p[1]))
+            node = p
+        return list(reversed(path))
 
     def _bfs(self, scene, start, goal, avoid=None):
         """Shortest walkable path start->goal as a list of (dx, dy)
@@ -313,13 +419,18 @@ class Planner:
                 q.append(nxt)
         return None
 
-    def path(self, scene_name, start, goal, avoid_exits=False):
+    def path(self, scene_name, start, goal, avoid_exits=False,
+             extra_avoid=None):
         """Path within one scene.  `avoid` = patrol cells + blocking
         actors, EXCEPT cells that are the start/goal themselves (the
         start may sit inside a patrol box right after boot, and the
         goal may be a bump-adjacent cell next to a blocking actor).
         `avoid_exits` also routes AROUND every exit gate except the goal
-        and start, so a walk to one gate never warps through another."""
+        and start, so a walk to one gate never warps through another.
+        `extra_avoid` cells stay impassable through every fallback tier:
+        reaching an approach cell next to a hostile objective must never
+        step ONTO the objective itself (the walk would kill what it
+        came to engage)."""
         scene = self.scenes[scene_name]
         avoid = scene.patrol_blocked() | scene.blocked_actors
         if avoid_exits:
@@ -327,7 +438,7 @@ class Planner:
             avoid |= (set(scene.edge_cells) - {(start[0], start[1]), (goal[0], goal[1])})
         avoid.discard(start)
         avoid.discard(goal)
-        return self._bfs_breach(scene, start, goal, avoid)
+        return self._bfs_breach(scene, start, goal, avoid, extra_avoid)
 
     def path_to_exit(self, scene_name, start, target_scene_name):
         """Path to the exit tile whose target_scene is target_scene_name.
@@ -450,35 +561,31 @@ class Planner:
         return steps
 
     def _arrival(self, e, goal, direction, to_name):
-        """Landing tile after crossing portal e into to_name: explicit
-        spawn for point exits, mirrored entry from the crossed edge cell
-        for linked edges (mirror of edge_banked.c, using the crossed
-        direction — corners belong to two edges, so position alone
-        cannot decide)."""
+        """Landing tile after crossing portal e into to_name: the
+        resolved landing for point exits (target_entry included), the
+        destination's arrival-side named entry (or its main spawn) for
+        linked edges (mirror of world.c's EDGE path: no mirroring, no
+        alignment)."""
         if "target_x" in e:
-            return (e["target_x"], e["target_y"])
+            by_id = {s.name: s.level for s in self.scenes.values()}
+            tx, ty, _ = resolve_exit_landing(e, by_id)
+            return (tx, ty)
         return self._mirror_entry(goal, direction, to_name)
 
     def _mirror_entry(self, goal, direction, to_name):
-        """Mirror of the ROM's edge-spawn rule (edge_banked.c): leaving
-        via an edge enters one cell inside the OPPOSITE edge, with the
-        crossing coordinate clamped for size mismatches."""
+        """Entry spawn for a linked-edge crossing into `to_name` arriving
+        from `direction`'s side: the destination's arrival-side entry
+        (opposite of the crossed edge), else its main spawn. `goal` is
+        kept for call-shape compatibility: every crossing on one edge
+        lands on the same cell."""
         other = self.scenes[to_name]
-        gx, gy = goal
-        w, h = other.width, other.height
-        if direction == "north":
-            return (max(1, min(gx, w - 2)), h - 2)
-        if direction == "south":
-            return (max(1, min(gx, w - 2)), 1)
-        if direction == "west":
-            return (w - 2, max(1, min(gy, h - 2)))
-        return (1, max(1, min(gy, h - 2)))
+        return resolve_entry_spawn(other.level, entry_side_for_link(direction))
 
     def _entry_ok(self, goal, direction, to_name):
-        """True when the mirrored landing cell in `to_name` is walkable.
-        Trap links (landing inside a wall) are never routed through; the
-        compiler rejects them, this keeps the planner honest on stale
-        content too."""
+        """True when the arrival-side entry (or main-spawn fallback) in
+        `to_name` is walkable. Trap links (entry inside a wall) are never
+        routed through; the compiler rejects them, this keeps the planner
+        honest on stale content too."""
         if to_name not in self.scenes:
             return False
         other = self.scenes[to_name]
@@ -488,8 +595,8 @@ class Planner:
         return other.walkable(ex, ey)
 
     def _edge_reaches(self, from_name, target):
-        """True when some linked-edge cell of `from_name` has a walkable
-        landing cell in `target`."""
+        """True when some linked-edge cell of `from_name` reaches a
+        walkable neighbor spawn in `target`."""
         scene = self.scenes[from_name]
         for cell, (direction, t) in scene.edge_cells.items():
             if t == target and self._entry_ok(cell, direction, target):

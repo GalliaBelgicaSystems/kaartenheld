@@ -1,4 +1,4 @@
-#pragma bank 4
+#pragma bank 9
 #pragma disable_warning 110
 
 #include "ui.h"
@@ -24,7 +24,7 @@ extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_sound_enabled;
 
-/* Generated title screen data (bank 4, read directly by the renderer) */
+/* Generated title screen data (bank 9, read directly by the renderer) */
 extern const char g_title_logo[][21];
 extern uint8_t g_title_logo_x, g_title_logo_y, g_title_logo_count;
 extern uint8_t const g_title_logo_image_enabled, g_title_logo_image_x,

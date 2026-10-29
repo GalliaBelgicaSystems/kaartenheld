@@ -261,24 +261,20 @@ class Session:
                     break
         return bool(goal())
 
-    def wiped(self, frames=90):
-        for _ in range(frames):
-            self.tick()
-            if not self.screen_alnum():
-                return True
-        return False
-
     def cross_exit(self, btn, expect_scene, tries=4):
-        """Step onto an exit tile and ride out the transition wipe.  A
-        dropped press leaves us unmoved — only the wipe tells them
-        apart, so a wipe-free arrival is retried, never trusted.
-        A 4-tick press that lands fully inside an LCD-off blackout
-        (arrival redraws, transition wipes) never samples, so a wipe
-        seen WITHOUT the scene changing must also retry: only return
-        early on an actual scene match, never on a wipe alone."""
+        """Step onto an exit tile and ride out the transition.  A dropped
+        press leaves us unmoved -- only an actual scene change counts:
+        the LCD-off gate redraw writes final tiles straight through, so
+        VRAM never blanks and wipe-watching cannot see the crossing.
+        An ambush overrides the crossing (DECK: appears instead of the
+        new scene); the caller fights and retries."""
         for _ in range(tries):
             self.press(btn, settle=12)
-            if self.wiped() and self.settle_scene():
+            for _ in range(90):
+                self.tick()
+                if self.reader.scene_state()["scene_id"] == expect_scene:
+                    break
+            if self.settle_scene():
                 if self.reader.scene_state()["scene_id"] == expect_scene:
                     return True
         return self.reader.scene_state()["scene_id"] == expect_scene

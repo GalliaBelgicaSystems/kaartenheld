@@ -145,6 +145,29 @@ def bg_cram(sess):
              for c in range(4)] for p in range(8)]
 
 
+def obj_cram(sess):
+    """All 64 CGB OBJ CRAM bytes via OCPS/OCPD (paused core: safe).
+    Returned as a list of 8 palettes x 4 RGB555 words, for asserting a
+    scene load programmed the map's OBJ ramps (per-map overrides)."""
+    raw = []
+    for i in range(64):
+        sess._memwrite(0xFF6A, i)
+        raw.append(sess._memread(0xFF6B))
+    return [[raw[p * 8 + c * 2] | (raw[p * 8 + c * 2 + 1] << 8)
+             for c in range(4)] for p in range(8)]
+
+
+def _ramp_words(ramp):
+    """Artist ramp colors from assets/palette_ramps.json as RGB555 words."""
+    doc = json.loads(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                       "..", "assets", "palette_ramps.json")).read())
+    out = []
+    for h in doc["ramps"][ramp]["colors"]:
+        r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
+        out.append(((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3))
+    return out
+
+
 def wait_vblank(sess, tries=3):
     """Pause at a VBlank boundary: VRAM is only readable outside scanout
     modes 2/3 (real HW blocks it; mGBA returns 0xFF).  step() pauses at the
@@ -242,8 +265,8 @@ def verify_npc_sprites(sess):
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
     found = set()
-    # Entries 1-4 are reserved hostile slots (hidden when empty); static
-    # actors start at entry 5, so scan wide and match order-insensitively.
+    # Entries 1-7 are reserved hostile slots (hidden when empty); static
+    # actors start at entry 8, so scan wide and match order-insensitively.
     for slot in range(1, 13):
         tile = shadow_oam_slot_tile(sess, slot)
         pal = shadow_oam_slot_pal(sess, slot)
@@ -254,6 +277,44 @@ def verify_npc_sprites(sess):
                              ("wizard", 119, 5)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
+
+
+def verify_obj_map_overrides(sess):
+    """Per-map OBJ palette overrides (map.obj_palettes): dog maps program
+    OBJ slot 6 with sprites10 (red collar); every other map keeps the
+    canonical sprites9 (merchant orange).
+
+    The paired red->orange assertions are mutually non-vacuous: boot state
+    is orange, so red proves the first load applied, and orange-after-red
+    proves the second load reprogrammed (a failed load of either scene
+    fails loudly). The third stage pins the cache-warm branch explicitly
+    (g_loaded_tileset already VILLAGE): TEST_GAMBLE shares TEST_TOWN's
+    tileset but declares no override, so only the union-slot fallback --
+    not the cold-load 24-byte restore -- can flip slot 6 back to orange.
+    VBlank-gated: mid-scanout CRAM reads back 0xFF and pass vacuously."""
+    print("== Per-map OBJ palette overrides ==")
+    check("OBJ CRAM read in VBlank (dog map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
+    sess.step(2)
+    check("dog map: OBJ slot 6 is sprites10 (red collar)",
+          _ramp_words("sprites10"), obj_cram(sess)[6])
+    # Same-tileset warm restore: TEST_GAMBLE is VILLAGE like TEST_TOWN
+    # but declares no override. The tileset cache must still hold VILLAGE
+    # from the previous load (scenario loads never invalidate it), so the
+    # cold-load canonical restore is skipped and only the union fallback
+    # can produce orange here.
+    check("same-tileset warm cache (VILLAGE)",
+          12, sess._memread(sess.get_symbol("g_loaded_tileset")))
+    check("OBJ CRAM read in VBlank (warm map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "gamble_enter.json"))
+    sess.step(2)
+    check("warm same-tileset map: OBJ slot 6 restored to sprites9 (orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
+    check("OBJ CRAM read in VBlank (plain map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "forest_boot.json"))
+    sess.step(2)
+    check("plain map: OBJ slot 6 is sprites9 (canonical orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
 
 
 def verify_hostile_sprites(sess):
@@ -267,10 +328,10 @@ def verify_hostile_sprites(sess):
     forest = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest)
     sess.step(2)
-    # Player on MAP_FOREST renders the HERO_DESOLATE sprite (98|99), same as
-    # south_field; every other map uses PLAYER (102).
-    check("forest player renders as hero OAM tile (98|99)",
-          1, (98 <= shadow_sprite_tile(sess) <= 99))
+    # Player on MAP_FOREST renders the standing-hero idle sprite (96|97),
+    # same as south_field; moving heroes show walk frames 98|99.
+    check("forest player renders as hero idle OAM tile (96|97)",
+          1, (96 <= shadow_sprite_tile(sess) <= 97))
     attr_mirror = sess.get_symbol("g_tilemap_attr_mirror")
     check("forest treetop (3, 3) has field2 canopy palette (2)",
           2, mirror_at(sess, attr_mirror, 3, 3))
@@ -281,12 +342,12 @@ def verify_hostile_sprites(sess):
     forest_amulet = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest_amulet)
     sess.step(2)
-    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
-    # Closed-chest frame (shared-blob tile 121: 120 + the slime-knight
-    # overworld cell); the floor cell stays plain floor (VRAM tile
-    # 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 121)",
-          121, shadow_oam_slot_tile(sess, 5))
+    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (8).
+    # Closed-chest frame (shared-blob tile 122: base 100 + offset 22, after
+    # the slime-knight walk row); the floor cell stays plain floor (VRAM
+    # tile 128 + 62 = 190), never chest paint.
+    check("forest amulet owns closed-chest OAM sprite (tile 122)",
+          122, shadow_oam_slot_tile(sess, 8))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
@@ -295,7 +356,7 @@ def verify_hostile_sprites(sess):
     # Loot it through the real interact path (amulet_open_sprite spawns
     # the player beside the amulet facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
-    # (122) and stay there across redraws.
+    # (123) and stay there across redraws.
     loot = load_scenario(sess, "amulet_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
@@ -303,8 +364,8 @@ def verify_hostile_sprites(sess):
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 122)",
-          122, shadow_oam_slot_tile(sess, 5))
+    check("looted amulet shows open-chest OAM sprite (tile 123)",
+          123, shadow_oam_slot_tile(sess, 8))
     check("looted amulet cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
@@ -462,9 +523,10 @@ def verify_battle_transition(sess):
     sess.step(1)
 
     # 1. Overworld steady: player at (13,8), camera (24,0) ->
-    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.
+    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.  Standing hero shows
+    #    the idle frames (96|97).
     check("overworld @ sprite position (shadow OAM)", (80, 88), shadow_oam(sess))
-    check("overworld sprite tile (shadow OAM)", 98, shadow_sprite_tile(sess))
+    check("overworld sprite tile (shadow OAM)", 1, (96 <= shadow_sprite_tile(sess) <= 97))
 
     # 2. Walk right into the slime at (14,8): Carl teaches first, so the
     #    bump opens his lesson (dialogue); closing it auto-starts the spar
@@ -778,7 +840,7 @@ def verify_restart_clears_boss_oam(sess):
 
     # The boss footprint must be hidden.  Pin entry 4 precisely: with
     # slot 3 inactive the body hides exactly that entry, so a visible
-    # entry 4 here is the resurrected boss grid (entries 5+ legitimately
+    # entry 4 here is the resurrected boss grid (entries 8+ legitimately
     # hold field statics -- see below -- so they are not pinned)...
     post_y4 = sess._memread(0xC000 + 4 * 4)
     check("restart: ex-boss OAM entry 4 hidden", 0, post_y4)
@@ -902,6 +964,7 @@ def main():
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
+                      ("obj map overrides", verify_obj_map_overrides),
                        ("battle sprites", verify_battle_oam),
                        ("battle spider", verify_battle_spider_oam),
                        ("boss glow overlay", verify_boss_glow_overlay),

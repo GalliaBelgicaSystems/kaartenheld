@@ -62,8 +62,12 @@ typedef struct EnemyTypeDef {
     uint8_t ow_tile;  // shared overworld OAM base tile (ENEMY_OW_BASE + blob offset), 0xFF = legacy SPRITE_KIND path
     uint8_t ow_w;  // overworld sprite width in tiles (1 = single-tile sprite, 2 = 2x2 grid)
     uint8_t ow_h;  // overworld sprite height in tiles (1 = single-tile sprite, 2 = 2x2 grid)
-    uint8_t ow_frames;  // overworld animation frames (cells / (ow_w*ow_h), 0 when ow_tile is 0xFF)
+    uint8_t ow_frames;  // overworld animation frames (cells / (ow_w*ow_h), 0 when ow_tile is 0xFF).
+                        // Bit 7 set = asymmetric reveal blink (see overworld.blink in enemy_type.schema.json):
+                        // frame0 rest pose ~54/64 frames, frame1 flash ~10/64. Low 7 bits stay the frame count.
     uint8_t ow_palette;  // CGB OAM palette index
+    uint8_t ow_idle_tile;  // standing-pose base tile (blob offset + ENEMY_OW_BASE), 0 = none
+                        // (shown only for never-moving AI_NONE actors; movers always take walk frames).
 } EnemyTypeDef;
 
 /* WRAM cache for the active battle screen's HUD layout.

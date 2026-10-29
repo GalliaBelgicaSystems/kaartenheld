@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EditorLevel, LevelExit, LevelNeighbors, LevelRegion, NEIGHBOR_DIRS, PlayerSpawn, normalizeNeighbors } from './model/Level';
+import { EditorLevel, EntryKey, EntrySpawn, LevelExit, LevelNeighbors, LevelRegion, NEIGHBOR_DIRS, PlayerSpawn, normalizeNeighbors } from './model/Level';
 import { LevelObject, OBJECT_TEMPLATES } from './model/Objects';
 import { EditLayer, LayerPanel } from './LayerPanel';
 import { BUILTIN_TILESETS, TileDefinition } from './model/Tileset';
@@ -32,6 +32,11 @@ interface InspectorProps {
   onSelectEntityIndex: (index: number | null) => void;
   onUpdateLevelMeta: (updates: Partial<EditorLevel>) => void;
   onUpdateSpawn: (spawn: PlayerSpawn) => void;
+  /** Which spawn point the Spawn layer edits (main or a named entry). */
+  spawnEditKey?: 'main' | EntryKey;
+  onSelectSpawnKey?: (key: 'main' | EntryKey) => void;
+  onUpdateEntry?: (key: EntryKey, entry: EntrySpawn) => void;
+  onClearEntry?: (key: EntryKey) => void;
   onAddExit: (exit: LevelExit) => void;
   onUpdateExit: (index: number, exit: LevelExit) => void;
   onDeleteExit: (index: number) => void;
@@ -150,6 +155,10 @@ export const Inspector: React.FC<InspectorProps> = ({
   onSelectEntityIndex,
   onUpdateLevelMeta,
   onUpdateSpawn,
+  spawnEditKey = 'main',
+  onSelectSpawnKey,
+  onUpdateEntry,
+  onClearEntry,
   onAddExit,
   onUpdateExit,
   onDeleteExit,
@@ -333,7 +342,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <input
                   type="number"
                   min="4"
-                  max="40"
+                  max="32"
                   value={level.width}
                   onChange={(e) => onUpdateLevelMeta({ width: parseInt(e.target.value) || 20 })}
                 />
@@ -343,7 +352,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <input
                   type="number"
                   min="4"
-                  max="24"
+                  max="32"
                   value={level.height}
                   onChange={(e) => onUpdateLevelMeta({ height: parseInt(e.target.value) || 18 })}
                 />
@@ -1092,8 +1101,25 @@ export const Inspector: React.FC<InspectorProps> = ({
 
         {tab === 'context' && activeLayer === 'spawn' && (
           <div className="inspector-section">
-            <h4>Player Spawn Position</h4>
-            <p className="hint-text">Click anywhere on the map in Spawn mode to move player spawn.</p>
+            <h4>Player Spawn Points</h4>
+            <p className="hint-text">The main spawn is the new-game start. Named entries are arrival points: edge crossings land on the destination's arrival-side entry (west entry when entering from the west), exits land on their target_entry. Click the map in Spawn mode to move the selected point. Unset entries fall back to the main spawn.</p>
+            <div className="form-group">
+              <label>Edit point</label>
+              <select
+                value={spawnEditKey}
+                onChange={(e) => onSelectSpawnKey?.(e.target.value as 'main' | EntryKey)}
+              >
+                <option value="main">Main spawn (new game)</option>
+                <option value="north">North entry (arrive from north)</option>
+                <option value="south">South entry (arrive from south)</option>
+                <option value="east">East entry (arrive from east)</option>
+                <option value="west">West entry (arrive from west)</option>
+                <option value="stairs_up">Stairs up entry</option>
+                <option value="stairs_down">Stairs down entry</option>
+              </select>
+            </div>
+            {spawnEditKey === 'main' ? (
+              <>
             <div className="form-row">
               <div className="form-group">
                 <label>Spawn X</label>
@@ -1132,8 +1158,79 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <option value="RIGHT">RIGHT / East</option>
               </select>
             </div>
+              </>
+            ) : (
+              <>
+                {(() => {
+                  const key = spawnEditKey as EntryKey;
+                  const ent = level.entrySpawns?.[key];
+                  if (!ent) {
+                    return (
+                      <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
+                        <p><strong>{key}</strong> entry is unset — arrivals fall back to the main spawn ({level.spawn.x},{level.spawn.y}).</p>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => onUpdateEntry?.(key, { x: level.spawn.x, y: level.spawn.y, facing: level.spawn.facing || 'DOWN' })}
+                        >
+                          ➕ Set {key} entry here (copy main spawn)
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>{key} X</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max={level.width - 1}
+                            value={ent.x}
+                            onChange={(e) =>
+                              onUpdateEntry?.(key, { ...ent, x: parseInt(e.target.value) || 0 })
+                            }
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>{key} Y</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max={level.height - 1}
+                            value={ent.y}
+                            onChange={(e) =>
+                              onUpdateEntry?.(key, { ...ent, y: parseInt(e.target.value) || 0 })
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>{key} Facing</label>
+                        <select
+                          value={ent.facing || 'DOWN'}
+                          onChange={(e) => onUpdateEntry?.(key, { ...ent, facing: e.target.value })}
+                        >
+                          <option value="UP">UP / North</option>
+                          <option value="DOWN">DOWN / South</option>
+                          <option value="LEFT">LEFT / West</option>
+                          <option value="RIGHT">RIGHT / East</option>
+                        </select>
+                      </div>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => onClearEntry?.(key)}
+                      >
+                        🗑️ Clear {key} entry (use main spawn)
+                      </button>
+                    </>
+                  );
+                })()}
+              </>
+            )}
 
-            {/* Hero Animation Frames */}
+            {/* Hero Animation Frames (hero art lives on the main spawn) */}
+            {spawnEditKey === 'main' && (
             <div className="form-group animation-frames-group" style={{ marginTop: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <label style={{ margin: 0, fontWeight: 600 }}>🎞️ Hero Animation Frames</label>
@@ -1357,6 +1454,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 </div>
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -1486,6 +1584,33 @@ export const Inspector: React.FC<InspectorProps> = ({
                   </div>
                 </div>
 
+                <div className="form-group">
+                  <label>Named landing (target entry)</label>
+                  <select
+                    value={selectedExit.target_entry || ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      const next = { ...selectedExit } as LevelExit;
+                      if (v) next.target_entry = v;
+                      else delete next.target_entry;
+                      onUpdateExit(selectedEntityIndex, next);
+                    }}
+                  >
+                    <option value="">Raw coordinates (target_x/target_y)</option>
+                    <option value="north">Destination north entry</option>
+                    <option value="south">Destination south entry</option>
+                    <option value="east">Destination east entry</option>
+                    <option value="west">Destination west entry</option>
+                    <option value="stairs_up">Destination stairs_up entry</option>
+                    <option value="stairs_down">Destination stairs_down entry</option>
+                  </select>
+                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
+                    {selectedExit.target_entry
+                      ? `Lands on ${selectedExit.target_scene} ${selectedExit.target_entry} (or its main spawn when unset).`
+                      : 'Lands exactly on the coordinates above.'}
+                  </div>
+                </div>
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>Direction</label>
@@ -1586,7 +1711,9 @@ export const Inspector: React.FC<InspectorProps> = ({
                       {ex.tunnel ? '🔗' : '🚪'} ({ex.x},{ex.y}) → <strong>{ex.target_scene}</strong>
                       {ex.tunnel ? <span style={{ color: '#16a085' }}> [{ex.tunnel}]</span> : null}
                     </span>
-                    <span className="item-sub">spawn ({ex.target_x},{ex.target_y})</span>
+                    <span className="item-sub">
+                      {ex.target_entry ? `entry ${ex.target_entry}` : `spawn (${ex.target_x},${ex.target_y})`}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1597,9 +1724,12 @@ export const Inspector: React.FC<InspectorProps> = ({
             </div>
             <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>
               Whole-edge links: stepping onto a non-wall cell of a linked
-              border crosses to that scene (mirrored entry). A point exit
-              on the same cell wins. Paint open ground on the border (or
-              leave it unpainted); walls stay walls.
+              border crosses to that scene at its arrival-side entry
+              (Spawn layer: west entry for an east-edge link, etc.),
+              falling back to its main spawn when unset.
+              A point exit on the same cell wins. Paint open ground on the
+              border (or leave it unpainted); walls stay walls. No edge
+              alignment needed.
             </div>
             {(() => {
               const neighbors = normalizeNeighbors(level.neighbors);

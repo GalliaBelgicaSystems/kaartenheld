@@ -5,7 +5,7 @@ validate.py - Level validator for Game Boy RPG Level Editor
 Validates level JSON files against schemas and semantic game rules:
 - Schema validation
 - Tileset and semantic tile validity
-- Map bounds and dimensions (<= 32x18, the renderer + tilemap-ring limit)
+- Map bounds and dimensions (<= 32x32, the renderer + tilemap-ring limit)
 - Player spawn validity and collision
 - Exit placement and target scene validity
 - Object IDs uniqueness and placement
@@ -27,13 +27,14 @@ from scene_registry import (
     TEST_SCENE_ORDER, load_registry, is_level_file,
 )
 from collision import (
-    derive_collision, edge_link_report, effective_actor_flags,
-    neighbor_pairing_issues, edge_geometry_issues, point_exit_issues,
-    tunnel_id_valid, tunnel_issues, cell_tile_info, level_default_tile,
+    ENTRY_KEYS, derive_collision, edge_link_report, effective_actor_flags,
+    get_entry, main_spawn, neighbor_pairing_issues, edge_geometry_issues,
+    point_exit_issues, resolve_entry_spawn, tunnel_id_valid, tunnel_issues,
+    cell_tile_info, level_default_tile, unused_entry_warnings,
 )
 
 MAX_WORLD_WIDTH = 32
-MAX_WORLD_HEIGHT = 18
+MAX_WORLD_HEIGHT = 32
 
 
 def known_scene_names(registry=None):
@@ -344,6 +345,172 @@ def known_entity_ids():
     return _KNOWN_ENTITY_IDS
 
 
+_OBJ_RAMP_SLOTS_CACHE = None
+_ARTIST_RAMPS_CACHE = None
+_ENEMY_OW_PALETTES_CACHE = None
+
+
+def _obj_ramp_slots():
+    """{ramp: hardware slot} for the OBJ set, from tools/palette_slots.json
+    (sets.obj plus aliases.obj).  Dev-owned slotmap, no build needed."""
+    global _OBJ_RAMP_SLOTS_CACHE
+    if _OBJ_RAMP_SLOTS_CACHE is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        data = json.loads((repo_root / "tools" / "palette_slots.json").read_text())
+        sets = (data.get("sets") or {}).get("obj") or {}
+        aliases = (data.get("aliases") or {}).get("obj") or {}
+        out = {}
+        for slot, ramp in sets.items():
+            if slot == "_why":
+                continue
+            out[ramp] = int(slot)
+        for ramp, slot in aliases.items():
+            out[ramp] = int(slot)
+        _OBJ_RAMP_SLOTS_CACHE = out
+    return _OBJ_RAMP_SLOTS_CACHE
+
+
+def _obj_default_ramps():
+    """{slot: ramp} canonical defaults (sets.obj only, no aliases)."""
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    data = json.loads((repo_root / "tools" / "palette_slots.json").read_text())
+    sets = (data.get("sets") or {}).get("obj") or {}
+    return {int(slot): ramp for slot, ramp in sets.items() if slot != "_why"}
+
+
+def _artist_ramps():
+    """Real artist ramp names from assets/palette.txt (single source of
+    truth for color rows; palette_slots.json only maps them to slots)."""
+    global _ARTIST_RAMPS_CACHE
+    if _ARTIST_RAMPS_CACHE is None:
+        tools_dir = Path(__file__).resolve().parent.parent
+        if str(tools_dir) not in sys.path:
+            sys.path.insert(0, str(tools_dir))
+        from palette_parse import parse_palette
+        _, ramps = parse_palette()
+        _ARTIST_RAMPS_CACHE = set(ramps)
+    return _ARTIST_RAMPS_CACHE
+
+
+def _enemy_ow_palettes():
+    """{enemy-type id: overworld ramp} for types with shared overworld art
+    (overworld.cells non-empty) -- the same types compile.py resolves to an
+    OAM slot via resolve_enemy_ow().  Art-less types keep the legacy
+    SPRITE_KIND path and use no OBJ ramp."""
+    global _ENEMY_OW_PALETTES_CACHE
+    if _ENEMY_OW_PALETTES_CACHE is None:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        out = {}
+        for path in sorted((repo_root / "screens" / "enemy_types").glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            ow = data.get("overworld") or {}
+            if ow.get("cells"):
+                out[data.get("id", path.stem)] = ow.get("palette")
+        _ENEMY_OW_PALETTES_CACHE = out
+    return _ENEMY_OW_PALETTES_CACHE
+
+
+def _object_ow_ramp(obj):
+    """Overworld OBJ ramp for a level object, or None for the legacy
+    SPRITE_KIND path.  Mirrors compile.py resolve_enemy_ow(): explicit
+    properties.enemy_type wins, else the ENTITY_ID_X naming convention."""
+    props = obj.get("properties") or {}
+    want = props.get("enemy_type")
+    if not want:
+        ent = props.get("entity_id", "")
+        if ent.startswith("ENTITY_ID_"):
+            want = ent[len("ENTITY_ID_"):].lower()
+    if not want:
+        return None
+    return _enemy_ow_palettes().get(want)
+
+
+def validate_obj_palettes(level_data):
+    """Per-map OBJ palette overrides (map.obj_palettes: slot -> ramp).
+
+    Errors (build fails): not a dict, slot outside 0-7, value not an
+    artist ramp name from assets/palette.txt.
+    Warnings (build stays green, wrongness reported): a placed actor
+    whose overworld ramp loses its hardware slot under this map's
+    effective set -- the declared override wins and the loser renders
+    in the winner's colors (today: the fixture merchant's coin rides
+    the dog-red slot 6 in test_town/test_gamble).
+    Returns (errors, warnings)."""
+    errors = []
+    warnings = []
+    map_info = level_data.get("map") or {}
+    raw = map_info.get("obj_palettes", None)
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        return ["map.obj_palettes must be an object {slot: ramp}"], []
+    ramps = _artist_ramps()
+    overrides = {}
+    for key, ramp in raw.items():
+        try:
+            slot = int(key)
+        except (TypeError, ValueError):
+            errors.append(f"map.obj_palettes key {key!r} is not a slot 0-7")
+            continue
+        if not 0 <= slot <= 7:
+            errors.append(f"map.obj_palettes slot {slot} is outside 0-7")
+            continue
+        if not isinstance(ramp, str) or not ramp:
+            errors.append(f"map.obj_palettes slot {slot} must name an artist ramp, got {ramp!r}")
+            continue
+        if ramp not in ramps:
+            errors.append(f"map.obj_palettes slot {slot}: unknown OBJ ramp '{ramp}' (assets/palette.txt)")
+            continue
+        if slot in overrides:
+            errors.append(f"map.obj_palettes slot {slot} declared twice")
+            continue
+        overrides[slot] = ramp
+    if errors:
+        return errors, warnings
+    slot_of_ramp = _obj_ramp_slots()
+    for slot, ramp in overrides.items():
+        # A ramp already assigned to a hardware slot must be overridden in
+        # that same slot: OAM attrs resolve through palette_slots.json
+        # (battle_compile), so programming it elsewhere leaves the sprite
+        # on the canonical slot with the wrong colors. Unslotted ramps
+        # (future new colors) are the point of the system: any slot goes.
+        if ramp in slot_of_ramp and slot_of_ramp[ramp] != slot:
+            errors.append(
+                f"map.obj_palettes slot {slot}: ramp '{ramp}' is assigned to "
+                f"slot {slot_of_ramp[ramp]} in tools/palette_slots.json, not "
+                f"slot {slot} (OAM attrs still resolve to slot "
+                f"{slot_of_ramp[ramp]})")
+    if errors:
+        return errors, warnings
+    default_for_slot = _obj_default_ramps()
+    for obj in level_data.get("objects", []) or []:
+        pal = _object_ow_ramp(obj)
+        if not pal or pal not in slot_of_ramp:
+            continue  # legacy sprite path, or owned by battle_compile's ramp check
+        slot = slot_of_ramp[pal]
+        effective = overrides.get(slot, default_for_slot.get(slot))
+        if effective != pal:
+            winners = sorted({o.get("id") for o in level_data.get("objects", []) or []
+                              if _object_ow_ramp(o) == effective})
+            if slot in overrides:
+                # The trade was declared on this map: report it, don't
+                # prescribe declaring it.
+                warnings.append(
+                    f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
+                    f"but this map's obj_palettes programs '{effective}' there "
+                    f"(declared winner wins; claimants: {winners}).")
+            else:
+                warnings.append(
+                    f"Object '{obj.get('id')}' needs OBJ ramp '{pal}' in slot {slot} "
+                    f"but this map programs '{effective}' there (declared winner wins; "
+                    f"claimants: {winners}). Declare map.obj_palettes "
+                    f"explicitly if the trade is intentional.")
+    return errors, warnings
+
+
 def validate_level(level_data, tilesets=None, all_level_ids=None):
     """Validate a loaded level dict. Returns (is_valid, list_of_errors, list_of_warnings, checks_passed)."""
     errors = []
@@ -453,59 +620,96 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         else:
             passed.append("Default ground valid")
 
-    # 3. Collision & Player Spawn Check
-    collision_ok = True
-    spawn_info = level_data.get("player", {}).get("spawn", {})
-    sp_x = spawn_info.get("x", -1)
-    sp_y = spawn_info.get("y", -1)
+    # 3. Collision & Player Spawn Check (main spawn + named entries)
+    FACING_WORDS = ("UP", "DOWN", "LEFT", "RIGHT",
+                    "NORTH", "SOUTH", "WEST", "EAST")
 
-    # The spawn is compiled into SceneDefinition (game_new_game reads the
-    # FIELD row), so the facing spelling must map to a Direction enum.
-    spawn_facing = str(spawn_info.get("facing", "DOWN")).upper()
-    if spawn_facing not in ("UP", "DOWN", "LEFT", "RIGHT",
-                            "NORTH", "SOUTH", "WEST", "EAST"):
-        errors.append(f"Player spawn facing '{spawn_info.get('facing')}' is unknown "
-                      f"(want UP/DOWN/LEFT/RIGHT or a compass alias)")
-        collision_ok = False
-
-    if sp_x < 0 or sp_x >= width or sp_y < 0 or sp_y >= height:
-        errors.append(f"Player spawn ({sp_x}, {sp_y}) is outside map bounds ({width}x{height})")
-        collision_ok = False
-    else:
-        # Check if spawn is on map boundary wall
-        if sp_x == 0 or sp_x == width - 1 or sp_y == 0 or sp_y == height - 1:
-            warnings.append(f"Player spawn ({sp_x}, {sp_y}) is on perimeter boundary wall")
-
-        # Check if spawn tile is walkable
+    def check_point(px, py, facing_raw, label, tileset, width, height,
+                    layers):
+        """Validate one spawn-like point. Returns (ok, messages)."""
+        ok = True
+        msgs = []
+        facing = str(facing_raw or "DOWN").upper()
+        if facing not in FACING_WORDS:
+            msgs.append((False, f"{label} facing '{facing_raw}' is unknown "
+                                f"(want UP/DOWN/LEFT/RIGHT or a compass alias)"))
+            ok = False
+        if px < 0 or px >= width or py < 0 or py >= height:
+            msgs.append((False, f"{label} ({px}, {py}) is outside map bounds "
+                                f"({width}x{height})"))
+            return False, msgs
+        if px == 0 or px == width - 1 or py == 0 or py == height - 1:
+            msgs.append((None, f"{label} ({px}, {py}) is on perimeter "
+                               f"boundary wall"))
         if tileset:
             tile_map = {t["id"]: t for t in tileset.get("tiles", [])}
-            layers = level_data.get("layers", {})
             terrain = layers.get("terrain", [])
-            spawn_blocked = False
+            blocked = False
             if isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], list):
-                if sp_y < len(terrain) and sp_x < len(terrain[sp_y]):
-                    cell = terrain[sp_y][sp_x]
+                if py < len(terrain) and px < len(terrain[py]):
+                    cell = terrain[py][px]
                     t_name = cell.split(".")[-1] if "." in cell else cell
                     if t_name in tile_map and not tile_map[t_name].get("walkable", True):
-                        spawn_blocked = True
+                        blocked = True
             elif isinstance(terrain, list) and len(terrain) > 0 and isinstance(terrain[0], dict):
                 for block in terrain:
-                    bx = block.get("x", 0)
-                    by = block.get("y", 0)
-                    bw = block.get("width", 0)
-                    bh = block.get("height", 0)
+                    bx, by = block.get("x", 0), block.get("y", 0)
+                    bw, bh = block.get("width", 0), block.get("height", 0)
                     bt = block.get("tile", "")
-                    if bx <= sp_x < bx + bw and by <= sp_y < by + bh:
+                    if bx <= px < bx + bw and by <= py < by + bh:
                         t_name = bt.split(".")[-1] if "." in bt else bt
                         if t_name in tile_map and not tile_map[t_name].get("walkable", True):
-                            spawn_blocked = True
-            if spawn_blocked:
-                errors.append(f"Player spawn at ({sp_x}, {sp_y}) is blocked by non-walkable tile")
+                            blocked = True
+            if blocked:
+                msgs.append((False, f"{label} at ({px}, {py}) is blocked by "
+                                    f"non-walkable tile"))
+                ok = False
+        return ok, msgs
+
+    collision_ok = True
+    spawn_info = level_data.get("player", {}).get("spawn", {})
+    # The spawn is compiled into SceneDefinition (game_new_game reads the
+    # FIELD row), so the facing spelling must map to a Direction enum.
+    _, msgs = check_point(spawn_info.get("x", -1), spawn_info.get("y", -1),
+                          spawn_info.get("facing", "DOWN"), "Player spawn",
+                          tileset, width, height,
+                          level_data.get("layers", {}))
+    for is_err, text in msgs:
+        if is_err is False:
+            errors.append(text)
+            collision_ok = False
+        elif is_err is None:
+            warnings.append(text)
+    # Named arrival entries (player.entry north/.../stairs_down): same
+    # walkability contract as the main spawn; each is optional (unset
+    # entries fall back to the main spawn at runtime).
+    seen_entries = set()
+    for key in ENTRY_KEYS:
+        ent = get_entry(level_data, key)
+        if ent is None:
+            raw = ((level_data.get("player", {}) or {}).get("entry", {}) or {}).get(key)
+            if raw is not None:
+                errors.append(f"Player entry '{key}' has invalid coordinates "
+                              f"({(raw or {}).get('x')},{(raw or {}).get('y')})")
                 collision_ok = False
+            continue
+        seen_entries.add(key)
+        _, msgs = check_point(ent.get("x", -1), ent.get("y", -1),
+                              ent.get("facing", "DOWN"),
+                              f"Player entry '{key}'", tileset, width, height,
+                              level_data.get("layers", {}))
+        for is_err, text in msgs:
+            if is_err is False:
+                errors.append(text)
+                collision_ok = False
+            elif is_err is None:
+                warnings.append(text)
 
     if collision_ok:
         passed.append("Collision valid")
         passed.append("Player spawn valid")
+        if seen_entries:
+            passed.append("Player entries valid (%s)" % ", ".join(sorted(seen_entries)))
 
     # 3b. Default-ground walkability (§52.23): the ROM pre-fills every
     # interior cell with the level default, so a solid default bricks
@@ -546,6 +750,19 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 f"lowercase letters, digits and underscores, starting with "
                 f"a letter, e.g. 'tunnel_town_field')")
             exits_ok = False
+
+        # Named-destination exits: target_entry must name a known entry
+        # key; the landing resolves to that destination entry (or its
+        # main spawn) at compile time.  Combining tunnel + target_entry
+        # is rejected by the tunnel pairing check (mouths must land on
+        # the counterpart gate), not here.
+        target_entry = (exit_obj.get("target_entry") or "").strip()
+        if target_entry:
+            if target_entry not in ENTRY_KEYS:
+                errors.append(
+                    f"Exit {e_idx} target_entry '{target_entry}' is unknown "
+                    f"(want one of: {', '.join(ENTRY_KEYS)})")
+                exits_ok = False
 
     if exits_ok:
         passed.append("Exits valid")
@@ -708,19 +925,20 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 objects_ok = False
 
     # Engine actor-slot caps: actor_load_banked() spawns hostile rows into
-    # World.actors[MAX_WORLD_ACTORS=4] and friendly rows into
-    # g_static_actors (MAX_STATIC_ACTORS, parsed from src/world/actor.h —
-    # single source of truth).  Rows beyond the cap are SILENTLY DROPPED
-    # at runtime -- catch the overflow at validation time instead.
-    def _engine_cap(name):
+    # World.actors (MAX_WORLD_ACTORS, parsed from src/world/world.h --
+    # single source of truth) and friendly rows into g_static_actors
+    # (MAX_STATIC_ACTORS, src/world/actor.h).  Rows beyond the cap are
+    # SILENTLY DROPPED at runtime -- catch the overflow at validation
+    # time instead.
+    def _engine_cap(name, header):
         import re
         src = (Path(__file__).resolve().parent.parent.parent
-               / "src" / "world" / "actor.h").read_text()
+               / "src" / "world" / header).read_text()
         m = re.search(r"#define %s\s+(\d+)" % name, src)
         return int(m.group(1)) if m else None
 
-    hostile_cap = _engine_cap("MAX_WORLD_ACTORS")
-    static_cap = _engine_cap("MAX_STATIC_ACTORS")
+    hostile_cap = _engine_cap("MAX_WORLD_ACTORS", "world.h")
+    static_cap = _engine_cap("MAX_STATIC_ACTORS", "actor.h")
     hostile_rows = [o.get("id") for o in objects
                     if (o.get("properties") or {}).get("entity_id")
                     and "HOSTILE" in effective_actor_flags(
@@ -769,6 +987,16 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
 
     if objects_ok:
         passed.append("Objects valid")
+
+    # 5b. Per-map OBJ palette overrides (map.obj_palettes): sparse
+    # slot -> artist ramp. Unknown ramps or out-of-range slots fail the
+    # build (typos must never ship silent wrong colors); same-slot
+    # conflicts only warn (declared winner wins, losers reported).
+    opal_errors, opal_warnings = validate_obj_palettes(level_data)
+    errors.extend(opal_errors)
+    warnings.extend(opal_warnings)
+    if not opal_errors:
+        passed.append("OBJ palettes valid")
 
     is_valid = (len(errors) == 0)
     return is_valid, errors, warnings, passed
@@ -999,7 +1227,7 @@ def main():
     # the one implementation; compile.py aborts on the same errors).
     if any(not sid.startswith("test_") for sid in all_level_ids):
         _pair_errors, _pair_warnings = neighbor_pairing_issues(_by_id, tilesets)
-        for warn in _pair_warnings:
+        for warn in _pair_warnings + unused_entry_warnings(_by_id):
             print(f"WARNING: {warn}")
         for err in _pair_errors:
             print(f"ERROR: {err}")

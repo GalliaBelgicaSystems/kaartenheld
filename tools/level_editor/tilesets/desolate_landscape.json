@@ -708,6 +708,16 @@
    "ascii": "#",
    "image_url": "/tiles/desolate_landscape/desolate_landscape_plain_water.png",
    "category": "terrain"
+  },
+  {
+   "id": "desolate_landscape_water_bottom_right_corner_wall",
+   "label": "water bottom right corner wall",
+   "gb_constant": "TILE_DESOLATE_LANDSCAPE_63",
+   "walkable": false,
+   "color": "#784da5",
+   "ascii": "#",
+   "image_url": "/tiles/desolate_landscape/desolate_landscape_water_bottom_right_corner_wall.png",
+   "category": "wall"
   }
  ],
  "vram_block": {
@@ -1097,7 +1107,7 @@
     "x": 15,
     "y": 3,
     "index": 63,
-    "tile": "desolate_landscape_plain_floor_1"
+    "tile": "desolate_landscape_water_bottom_right_corner_wall"
    }
   ]
  }

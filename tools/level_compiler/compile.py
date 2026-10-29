@@ -39,10 +39,13 @@ from scene_registry import (
 # truth; validate.py imports them too, avoiding the compile<->validate
 # cycle).  Re-exported here so decompile.py / route.py imports are stable.
 from collision import (  # noqa: E402,F401
-    NEIGHBOR_DIRS, cell_tile_info, default_actor_flags, derive_collision,
-    first_plain_tile, level_default_tile, load_level, map_base_tile_const,
-    neighbor_pairing_issues, neighbor_targets, point_exit_issues,
-    resolve_tiles, tunnel_issues,
+    EDGE_ENTRY_KEYS, ENTRY_ABSENT_FACING, ENTRY_KEYS, NEIGHBOR_DIRS,
+    cell_tile_info, default_actor_flags, derive_collision,
+    entry_side_for_link, first_plain_tile, get_entry, level_default_tile,
+    load_level, main_spawn, map_base_tile_const, neighbor_pairing_issues,
+    neighbor_targets, point_exit_issues, resolve_entry_spawn,
+    resolve_exit_landing, unused_entry_warnings, resolve_tiles,
+    tunnel_issues, used_entry_keys,
 )
 def scene_maps(registry=None):
     """(map_enum, scene_enum) dicts for every known sid, derived from the
@@ -398,11 +401,20 @@ def emit_exits(levels_by_id, registry=None):
                     f"'{target_scene_id}'. Point it at a registered scene "
                     f"(or save that level in the editor to register it).")
             tile_char = e.get("tile_char", ">")
+            # A target_entry names a destination entry (stairs_up, ...):
+            # resolve it now so the ROM row stays plain coordinates.
+            tx, ty, via_entry = resolve_exit_landing(e, levels_by_id)
+            if via_entry and target_scene_id in levels_by_id:
+                key = (e.get("target_entry") or "").strip()
+                if get_entry(levels_by_id[target_scene_id], key) is None:
+                    print(f"WARNING: exit in '{sid}' at ({e['x']},{e['y']}) "
+                          f"names missing entry '{key}' on '{target_scene_id}': "
+                          f"landing on its main spawn.", file=sys.stderr)
             all_exits.append({
                 "gate_x": e["x"],
                 "gate_y": e["y"],
-                "spawn_x": e["target_x"],
-                "spawn_y": e["target_y"],
+                "spawn_x": tx,
+                "spawn_y": ty,
                 "target_scene": target_enum,
                 "tile_char": tile_char
             })
@@ -423,13 +435,25 @@ def emit_exits(levels_by_id, registry=None):
 # array. Bank 5 (world bank) is exhausted; overflow scenes keep terrain in
 # a roomier bank and scene_load_tiles_banked() stages it to WRAM before
 # stamping (SceneDefinition.terrain_bank). Balanced for headroom:
-# desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7.
-# If this map changes, keep Makefile CONTENT_SRCS (the per-bank files) and
-# decompile.py (split-file parsing) in sync.
+# desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7, castle
+# (~270 B, moved here Oct 2026: its repaint outgrew bank 7) -> 9.
+# Large 22-tall forest (~1450 B) + field (~1325 B) -> 9 (casino bank,
+# ~10 KB free); bank 5 cannot hold them after the WORLD_HEIGHT 32 growth.
+# If this map changes, keep Makefile CONTENT_SRCS (the per-bank files),
+# scene.c (stamp dispatch) and decompile.py (split-file parsing) in sync.
 OVERFLOW_TERRAIN_BANK = {
     "desolate_field": 6,
     "village_area": 7,
-    "castle": 7,
+    "castle": 9,
+    "forest": 9,
+    "field": 9,
+    # New-bank-5 residents from the enlarged-maps pass (bank 5 overflowed
+    # by ~1KB): bank 9 has the room, and its stamp body already exists,
+    # so no scene.c dispatch change is needed (unlike a new bank number,
+    # which would cost fixed-bank bytes per the comment in scene.c).
+    "grassy_forest": 9,
+    "mountain_pass": 9,
+    "south_ridge": 9,
 }
 
 
@@ -558,9 +582,10 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
             # Retired hole: inert row keeps direct indexing valid.
             # Unreachable (release guard rejects unknown ids; exits can
             # only target registered scenes; no save system replays old
-            # ids) — belt and braces, not a playable scene.
+            # ids) — belt and braces, not a playable scene.  Entry bytes
+            # stay absent (ENTRY_ABSENT_FACING).
             scene_defs.append(
-                "    { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0 }"
+                f"    {{ 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }}"
             )
             continue
         lvl = levels_by_id[sid]
@@ -581,9 +606,23 @@ def emit_c_code(levels_by_id, tilesets, bank=5, registry=None):
             str(spawn.get("facing", "DOWN")).upper(), "DIRECTION_DOWN")
         default_const = level_default_const(lvl, tilesets.get(lvl["map"]["tileset"], {}))
         nbr_n, nbr_s, nbr_e, nbr_w = neighbor_enums(lvl, registry)
+        # Named edge entries (player.entry north/south/east/west): the
+        # ROM selects them by arrival side at runtime.  Absent entries
+        # emit 0,0 + ENTRY_ABSENT_FACING (0xFF) so the ROM falls back to
+        # the main spawn.  Stair entries stay JSON-only (exits resolve
+        # them to coordinates above).
+        entry_bytes = []
+        for key in EDGE_ENTRY_KEYS:
+            ent = get_entry(lvl, key)
+            if ent is None:
+                entry_bytes += ["0", "0", "0xFF"]
+                continue
+            ef = SPAWN_FACING_MAP.get(str(ent.get("facing", "DOWN")).upper(),
+                                      "DIRECTION_DOWN")
+            entry_bytes += [str(int(ent.get("x", 0))), str(int(ent.get("y", 0))), ef]
 
         scene_defs.append(
-            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const}, {nbr_n + ',':<20s} {nbr_s + ',':<20s} {nbr_e + ',':<20s} {nbr_w + ',':<6s} {tbank} }}"
+            f"    {{ {map_id_enum + ',':<20s} {music_enum + ',':<18s} {width:2d}, {height:2d}, {exits_ptr + ',':<20s} {count}, {tileset_kind + ',':<24s} {terrain_ptr + ',':<20s} {spawn.get('x', 0)}, {spawn.get('y', 0)}, {spawn_facing + ',':<16s} {default_const}, {nbr_n + ',':<20s} {nbr_s + ',':<20s} {nbr_e + ',':<20s} {nbr_w + ',':<6s} {tbank}, {', '.join(entry_bytes)} }}"
         )
     output.append(",\n".join(scene_defs))
     output.append("};\n")
@@ -656,6 +695,11 @@ def main():
                 for err in errors:
                     print(f"  - ERROR: {err}", file=sys.stderr)
                 has_errors = True
+            # Per-level warnings were silently dropped here; surface them
+            # (build stays green, wrongness reported -- same contract as
+            # the edge/tunnel/point-exit warnings below).
+            for warn in warnings:
+                print(f"WARNING: {data.get('id', lpath)}: {warn}", file=sys.stderr)
             levels_by_id[data["id"]] = data
         except Exception as e:
             print(f"Failed to read/validate {lpath}: {e}", file=sys.stderr)
@@ -677,11 +721,12 @@ def main():
             print("\nCompilation aborted due to validation errors.", file=sys.stderr)
             sys.exit(1)
 
-    # Whole-edge links must pair up geometrically (collision.py): a
-    # crossing must always land on walkable ground, and a declared return
-    # must be usable. Abort so a trapping ROM can never be built.
+    # Whole-edge links must land on a walkable entry (collision.py):
+    # a crossing lands on the destination's arrival-side entry (or its
+    # main spawn), and a declared return must be usable. Abort so a
+    # trapping ROM can never be built.
     pair_errors, pair_warnings = neighbor_pairing_issues(levels_by_id, tilesets)
-    for warn in pair_warnings:
+    for warn in pair_warnings + unused_entry_warnings(levels_by_id):
         print(f"WARNING: {warn}", file=sys.stderr)
     if pair_errors:
         for err in pair_errors:

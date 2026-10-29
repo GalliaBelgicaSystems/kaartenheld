@@ -13,6 +13,8 @@
  * separately via HERO_DESOLATE_SPRITE_TILE_ID and never from
  * this blob, so the blob and this count must not include hero
  * cells (they would shift every enemy ow_tile offset by 2).
- * Rider HUD icons ride the same stream at the blob tail, so
- * the count DOES include them. */
+ * Idle rows ride the same stream at the blob tail, so the
+ * count DOES include them.  Rider icons are NOT in this blob
+ * (own battle-entry stream at fixed RIDER_TILE_BASE, sharing
+ * tail ids 123-125). */
 const uint8_t g_enemy_ow_tile_count = 26;

@@ -27,24 +27,25 @@
 |---|---|
 | field1 (0) | forest_black_emptyness, forest_bottom_left_corner_wall, forest_bottom_left_interior_corner, forest_bottom_right_corner_wall, forest_bottom_right_interior_corner, forest_bottom_wall_1, forest_bottom_wall_2, forest_bottom_wall_3, forest_bottom_wall_4, forest_floor_with_stuff_walkable_2, forest_left_wall_1, forest_left_wall_2, forest_left_wall_3, forest_left_wall_4, forest_postsign, forest_right_wall_1, forest_right_wall_2, forest_right_wall_3, forest_right_wall_4, forest_stairs, forest_top_left_corner_wall, forest_top_left_interior_corner, forest_top_right_corner_wall, forest_top_right_interior_corner, forest_top_wall_1, forest_top_wall_2, forest_top_wall_3, forest_top_wall_4 |
 | field2 (2) | forest_floor_with_stuff_walkable_3, forest_floor_with_stuff_walkable_4, forest_plain_floor_2, forest_top_left_treetop, forest_top_right_tree_top |
-| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_bottom_right_tree_stump_2 (≈ #2a4f1a, #5ea4c8), forest_mailbox, forest_top_left_tree_stump |
+| field3 (5) | forest_bottom_left_tree_stump, forest_bottom_right_tree_stump, forest_mailbox, forest_top_left_tree_stump |
 | field4 (6) | forest_bottom_left_treetrunk, forest_bottom_right_tree_trunk, forest_top_right_tree_stump |
 | field5 (7) | forest_bottom_left_hut, forest_bottom_right_hut, forest_floor_with_stuff_walkable_1, forest_top_left_hut, forest_top_right_hut |
 | field6 (1) | forest_fire_frame_1, forest_fire_frame_2 |
-| water (3) | forest_water_bottom_left_corner_wall, forest_water_bottom_left_interior_corner, forest_water_bottom_right_interior_corner, forest_water_bottom_wall_1, forest_water_bottom_wall_2, forest_water_bottom_wall_3, forest_water_frame_1, forest_water_frame_2, forest_water_left_wall, forest_water_right_wall_1, forest_water_right_wall_2, forest_water_top_left_corner_wall, forest_water_top_left_interior_corner, forest_water_top_right_corner_wall, forest_water_top_right_interior_corner, forest_water_top_wall_1, forest_water_top_wall_2, forest_water_top_wall_3, forest_water_top_wall_4, forest_watter_bottom_wall |
+| water (3) | forest_water_bottom_left_corner_wall, forest_water_bottom_left_interior_corner, forest_water_bottom_right_corner_wall, forest_water_bottom_right_interior_corner, forest_water_bottom_wall_1, forest_water_bottom_wall_2, forest_water_bottom_wall_3, forest_water_frame_1, forest_water_frame_2, forest_water_left_wall, forest_water_left_wall_2, forest_water_right_wall_1, forest_water_right_wall_2, forest_water_top_left_corner_wall, forest_water_top_left_interior_corner, forest_water_top_right_corner_wall, forest_water_top_right_interior_corner, forest_water_top_wall_1, forest_water_top_wall_2, forest_water_top_wall_3, forest_water_top_wall_4, forest_watter_bottom_wall |
 
 ### castle (set `castle`)
 
 | ramp (slot) | tiles |
 |---|---|
 | castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table_left_half, castle_table_right_half, castle_table_top_empty, castle_table_with_plate_1, castle_table_with_plate_2, castle_top_left_throne, castle_top_right_throne |
-| castle3 (1) | castle_bottom_chandelier, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
-| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
+| castle3 (1) | castle_bottom_chandelier, castle_carpet_exterior_corner, castle_carpet_interior_corner, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
+| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_exit_up, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
 
 ### desolate_landscape (set `desolate_landscape`)
 
 | ramp (slot) | tiles |
 |---|---|
+| (untagged) (–) | desolate_landscape_water_bottom_right_corner_wall |
 | desolate1 (3) | desolate_landscape_black_emptyness, desolate_landscape_bottom_left_corner_interior, desolate_landscape_bottom_left_corner_wall, desolate_landscape_bottom_left_treetrunk, desolate_landscape_bottom_right_corner_interior, desolate_landscape_bottom_right_corner_wall, desolate_landscape_bottom_right_tree_trunk, desolate_landscape_bottom_wall_1, desolate_landscape_bottom_wall_2, desolate_landscape_bottom_wall_3, desolate_landscape_bottom_wall_4, desolate_landscape_exit_desolate_landscape, desolate_landscape_floor_with_stuff_walkable_3, desolate_landscape_floor_with_stuff_walkable_4, desolate_landscape_left_wall_1, desolate_landscape_left_wall_2, desolate_landscape_left_wall_3, desolate_landscape_left_wall_4, desolate_landscape_plain_floor_1, desolate_landscape_right_wall_1, desolate_landscape_right_wall_2, desolate_landscape_right_wall_3, desolate_landscape_right_wall_4, desolate_landscape_top_left_corner_wall, desolate_landscape_top_left_corner_wall_interior, desolate_landscape_top_left_treetop, desolate_landscape_top_right_corner_wall, desolate_landscape_top_right_corner_wall_interior, desolate_landscape_top_right_tree_top, desolate_landscape_top_wall_1, desolate_landscape_top_wall_2, desolate_landscape_top_wall_3, desolate_landscape_top_wall_4 |
 | desolate2 (0) | desolate_landscape_bottom_left_rock, desolate_landscape_bottom_right_rock, desolate_landscape_floor_with_stuff_walkable_1, desolate_landscape_floor_with_stuff_walkable_2, desolate_landscape_top_left_rock, desolate_landscape_top_right_rock |
 | desolate3 (1) | desolate_landscape_fire_frame_1, desolate_landscape_fire_frame_2 |
@@ -60,7 +61,7 @@
 | town4 (0) | village_bottom_left_well, village_bottom_right_well, village_floor_with_puddle_on_it |
 | town5 (2) | village_top_left_well, village_top_right_well |
 | town6 (3) | village_barrel |
-| town7 (7) | village_middle_house_closed_door (≈ #8d754a), village_middle_house_open_door |
+| town7 (7) | village_middle_house_closed_door, village_middle_house_open_door |
 
 ## Battle sprites (display ramp + draw path)
 
@@ -71,7 +72,7 @@
 | kobold | 3×2 | OAM | fightgoblin (7) | ✓ |
 | mimic | 3×2 | OAM | sprites6 (7) | ✓ |
 | slime | 3×2 | OAM | fightslime (7) | ✓ |
-| slime_knight | 3×2 | OAM | fightslime (7) | ≈ #3c5e26 |
+| slime_knight | 3×2 | OAM | fightslime_knight (7) | ✓ |
 | spider | 3×2 | OAM | fightspider+fightbat[1] (7+6) | ✓ |
 
 `fit` is measured against the display ramp (the OBJ ramp for OAM sets, the BG ramp for the boss).  Every OAM ramp is programmed into the single battle OBJ scratch slot (7) at entry (BATTLE_OBJ_SCRATCH), so the slot column shows 7, not the overworld `obj` slot map.  Sets with a second ramp (spider eye) program it into scratch slot 6 (BATTLE_OBJ_SCRATCH2) for the listed frame-relative cells; their `fit` covers both ramps.
@@ -81,7 +82,7 @@
 | sprite | cells | ramp (slot) | fit |
 |---|---|---|---|
 | bat | bat_f0, bat_f1 | sprites (0) | ✓ |
-| dog | dog_f0, dog_f1 | sprites9 (6) | ≈ #8b1b1b |
+| dog | dog_f0, dog_f1 | sprites10 (6) | ✓ |
 | kobold | kobold_f0, kobold_f1 | sprites (0) | ✓ |
 | mimic | mimic_f0, mimic_f1 | sprites5 (1) | ✓ |
 | npc_guard | npc_guard | sprites8 (7) | ✓ |
@@ -90,7 +91,7 @@
 | npc_merchant | npc_merchant | sprites9 (6) | ✓ |
 | npc_wizard | npc_wizard | sprites7 (5) | ✓ |
 | slime | slime_f0, slime_f1 | sprites11 (3) | ✓ |
-| slime_knight | slime_knight_frame1 | sprites11 (3) | ≈ #3c5e26 |
+| slime_knight | slime_knight_frame1, slime_knight_frame2 | sprites11 (3) | ✓ |
 | slime_lord | boss_ow_tl, boss_ow_tr, boss_ow_bl, boss_ow_br | sprites2 (4) | ✓ |
 | spider | spider_f0, spider_f1 | sprites (0) | ✓ |
 | treasure_chest | chest_closed, chest_open | sprites5 (1) | ✓ |
@@ -145,20 +146,5 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| forest | [15, 2] | field3 | #2a4f1a, #5ea4c8 |
-| village | [14, 2] | town7 | #8d754a |
-| battle | [0, 13] | fightslime | #3c5e26 |
-| battle | [0, 14] | fightslime | #3c5e26 |
-| battle | [1, 13] | fightslime | #3c5e26 |
-| battle | [1, 14] | fightslime | #3c5e26 |
-| battle | [2, 13] | fightslime | #3c5e26 |
-| battle | [2, 14] | fightslime | #3c5e26 |
-| enemy_ow | [0, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [0, 8] | sprites11 | #3c5e26 |
-| enemy_ow | [0, 9] | sprites2 | #b09266 |
-| enemy_ow | [1, 4] | sprites9 | #8b1b1b |
-| enemy_ow | [1, 8] | sprites11 | #3c5e26 |
-| enemy_ow | [1, 9] | sprites2 | #b09266 |
-| enemy_ow | [2, 9] | sprites5 | #b09266 |
 
-Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, sprites10, sprites6.
+Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites6.

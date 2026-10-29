@@ -31,12 +31,18 @@ def describe_level_dict(level_data):
     spawn = level_data.get("player", {}).get("spawn", {})
     player_start = [spawn.get("x", 0), spawn.get("y", 0)]
     facing = spawn.get("facing", "DOWN")
+    entries = {}
+    for k, v in ((level_data.get("player", {}) or {}).get("entry", {}) or {}).items():
+        if isinstance(v, dict):
+            entries[k] = [v.get("x", 0), v.get("y", 0)]
 
     connections = []
     for e in level_data.get("exits", []):
         direction = e.get("direction", "exit").lower()
         target = e.get("target_scene", "unknown")
-        connections.append(f"{direction} (at {e.get('x')},{e.get('y')}) -> {target} (spawn {e.get('target_x')},{e.get('target_y')})")
+        landing = (f"entry {e['target_entry']}" if e.get("target_entry")
+                   else f"spawn {e.get('target_x')},{e.get('target_y')}")
+        connections.append(f"{direction} (at {e.get('x')},{e.get('y')}) -> {target} ({landing})")
 
     regions = []
     for r in level_data.get("regions", []):
@@ -67,6 +73,7 @@ def describe_level_dict(level_data):
         "music": music,
         "player_start": player_start,
         "player_facing": facing,
+        "player_entries": entries,
         "connections": connections,
         "regions": regions,
         "objects": objects
@@ -79,6 +86,10 @@ def format_markdown(desc):
     lines.append(f"# {desc['name'].upper()} (`{desc['level']}`)")
     lines.append(f"\n**Size:** {desc['size']} tiles | **Tileset:** `{desc['tileset']}` | **Music:** `{desc['music']}`")
     lines.append(f"**Player Start:** `({desc['player_start'][0]}, {desc['player_start'][1]})` facing {desc['player_facing']}")
+    if desc.get("player_entries"):
+        lines.append("**Arrival entries:** " + ", ".join(
+            f"{k} `({v[0]}, {v[1]})`" for k, v in sorted(desc["player_entries"].items())) +
+            " (unset sides fall back to Player Start)")
 
     lines.append("\n## Connections / Exits")
     if desc["connections"]:

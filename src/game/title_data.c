@@ -3,7 +3,7 @@
  * Do not edit directly — edit screens/title.json and re-run.
  */
 
-#pragma bank 4
+#pragma bank 9
 
 #include <stdint.h>
 

@@ -54,34 +54,60 @@ VALID_ACTOR_STATES = set(ACTOR_STATE_NAME_MAP)
 _AP_TILES_CACHE = None
 
 
-def _load_ap_tiles():
-    """Parse generated src/gfx/ap_tiles.h into {name: [16 bytes]}.
+def _parse_gfx_tiles(path, names):
+    """Parse a png2gb-generated header into {name: [16 bytes]}.
 
-    Tile order in the file is the png2gb --ap-coords order, which matches
-    AP_TILE_IDS: ap_1, ap_2, exclaim, question.  Comparing live OAM tile
-    data against this file (rather than hand-written hex) keeps one
-    source of truth: art changes update both sides together, while a
-    runtime VRAM clobber still fails loudly.  Anchored to the repo root
-    (not the cwd): a missing file is a loud error, never a silent {} that
-    misreads as 'unknown ap_tiles entry'.
+    Tile order in the file is the --tile-coords order; callers pass the
+    matching names.  Each tile must decode to exactly 16 bytes or the
+    file failed to regenerate (loud, never silently short).
     """
-    global _AP_TILES_CACHE
-    if _AP_TILES_CACHE is not None:
-        return _AP_TILES_CACHE
-    names = ["ap_1", "ap_2", "exclaim", "question"]
-    tiles = {}
-    ap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "..", "src", "gfx", "ap_tiles.h")
-    try:
-        with open(ap_path) as f:
-            text = f.read()
-    except OSError as e:
-        raise FileNotFoundError(f"ap_tiles.h not found at {ap_path}: {e}")
+    with open(path) as f:
+        text = f.read()
     blocks = re.findall(r"/\* tile \d+ \*/(.*?)(?=/\* tile \d+ \*/|\Z)", text, re.S)
+    tiles = {}
     for name, block in zip(names, blocks):
         vals = [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{2})", block)]
         if len(vals) == 16:
             tiles[name] = vals
+    return tiles
+
+
+def _load_ap_tiles():
+    """Parse generated OAM art headers into {name: [16 bytes]}.
+
+    ap_tiles.h (AP_TILE_IDS order: ap_1, ap_2, exclaim, question),
+    hero_desolate_sprite_tile.h (compose order: hero_f0, hero_f1,
+    hero_idle_1, hero_idle_2), rider_tiles.h (--rider-coords order:
+    rider_fire, rider_ice, rider_poison) and enemy_ow_tiles.h (blob order,
+    named ow_00..ow_25 by index: pinned layout + the == 26 tail contract
+    keep indices stable; a layout change fails these asserts loudly).
+    Comparing live OAM tile data against these files (rather than
+    hand-written hex) keeps one source of truth: art changes update both
+    sides together, while a runtime VRAM clobber still fails loudly.
+    Anchored to the repo root (not the cwd): a missing file is a loud
+    error, never a silent {} that misreads as 'unknown ap_tiles entry'.
+    """
+    global _AP_TILES_CACHE
+    if _AP_TILES_CACHE is not None:
+        return _AP_TILES_CACHE
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "src", "gfx")
+    tiles = {}
+    try:
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "ap_tiles.h"),
+            ["ap_1", "ap_2", "exclaim", "question"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "hero_desolate_sprite_tile.h"),
+            ["hero_f0", "hero_f1", "hero_idle_1", "hero_idle_2"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "rider_tiles.h"),
+            ["rider_fire", "rider_ice", "rider_poison"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "enemy_ow_tiles.h"),
+            ["ow_%02d" % i for i in range(32)]))
+    except OSError as e:
+        raise FileNotFoundError(f"OAM art header missing: {e}")
     _AP_TILES_CACHE = tiles
     return tiles
 VALID_CURRENCY_NAMES = set(CURRENCY_ID_MAP)
@@ -390,8 +416,8 @@ def run_scenario(scenario):
         # before disconnect: evaluation runs after the session closes.
         has_oam_assert = any(a.get("type") in ("oam_tile", "oam_attr", "oam_bytes") for a in scenario.get("assertions", []))
         oam_entries = {}
-        # Expected AP/mark tile bytes come from the generated ap_tiles.h
-        # (same file the ROM links): tile order is the --ap-coords order.
+        # Expected OAM tile bytes come from the generated gfx headers
+        # (same files the ROM links); see _load_ap_tiles for the set.
         ap_tiles = {}
         if has_oam_assert:
             ap_tiles = _load_ap_tiles()
@@ -564,8 +590,9 @@ def run_scenario(scenario):
             # Live OAM tile DATA (not just the tile id): gates VRAM-truth
             # vs tile-id-truth rendering bugs (AGENTS.md 52.22 family --
             # same class as vram_row).  Reads happen in VBlank; expected
-            # bytes come from the generated ap_tiles.h so art changes
-            # update both sides while a runtime clobber still fails.
+            # bytes come from the generated gfx headers (see
+            # _load_ap_tiles) so art changes update both sides while a
+            # runtime clobber still fails.
             addr = a.get("addr", 0)
             tile_name = a.get("tile", "")
             live = oam_entries.get((addr, tile_name))
@@ -574,7 +601,7 @@ def run_scenario(scenario):
                 actual = "oam-bytes unreadable"
                 passed = False
             elif want is None:
-                actual = f"unknown ap_tiles entry {tile_name!r}"
+                actual = f"unknown OAM art entry {tile_name!r}"
                 passed = False
             else:
                 actual = " ".join("%02X" % b for b in live)

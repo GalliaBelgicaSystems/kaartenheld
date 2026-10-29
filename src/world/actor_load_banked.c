@@ -34,6 +34,7 @@ extern char s_actor_names[MAX_WORLD_ACTORS][13];
 extern StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 extern uint8_t g_static_actor_count;
 extern const uint8_t g_actor_table_count;   /* generated, bank-local */
+extern uint8_t g_oam_tilecache_valid;   /* OAM tile cache (ui bank); WRAM */
 
 static void actor_spawn(WorldActorRuntime *r, const WorldActorDefinition *def)
 {
@@ -164,4 +165,7 @@ void actor_load_scene_banked(void)
         }
         break;
     }
+    /* Respawns rewrite resolve inputs: drop the OAM tile cache (WRAM,
+     * bank-independent) so the next pass recomputes. */
+    g_oam_tilecache_valid = 0;
 }

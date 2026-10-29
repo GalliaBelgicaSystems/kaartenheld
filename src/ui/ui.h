@@ -88,6 +88,12 @@ void dice_tiles_load_banked(void);
  * actor glyphs, PLAYER (102) or HERO (98). */
 #define HERO_DESOLATE_SPRITE_TILE_ID 98u
 #define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
+/* Standing-hero idle frames (hero_idle_1/2, streamed at boot beside the
+ * walk frames): OAM 96-97, time-shared with the battle AP pips (boot and
+ * overworld show idle; battle entry streams pips over them, overworld
+ * entry restores idle -- see ui_draw_actors_sprites).  Battle never needs
+ * idle art (hero hidden), overworld never needs pips. */
+#define HERO_IDLE_SPRITE_TILE_ID 96u
 /* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
  * owned by screens/enemy_types/treasure_chest.json).  Collision rules:
  * must not overlap the font-duplicate block 0..95 used for ASCII
@@ -109,6 +115,16 @@ void dice_tiles_load_banked(void);
  * fixed bank under 0x8000. */
 void ui_actors_sprites_banked(void);
 
+/* OAM tile-resolve cache validity (WRAM, defined in
+ * ui_world_sprite_banked.c).  Cleared by actor spawn/mutation sites in
+ * other banks (scene loader, trio morph); the next OAM pass recomputes. */
+extern uint8_t g_oam_tilecache_valid;
+
+/* Overworld-entry OAM restore (see ui.c): restreams time-shared overworld
+ * art (hero idle + blob tail) after battles.  Called from screen_change()
+ * on overworld entries. */
+void ui_restore_ow_oam(void);
+
 /* Bank-5 no-arg body behind ui_draw_actors_sprites(): swaps background
  * cells showing an animation frame tile to the current anim step's frame
  * (fire flicker / water shimmer, data-driven from generated
@@ -127,11 +143,11 @@ void world_anim_swap_banked(void);
  * ring's only writer).  Needs no staging.  Same bank/why as the swap. */
 void world_anim_rebuild_banked(void);
 
-/* Bank-5 full-ring black wipe behind ui_draw_world_transition():
- * blackens CGB slot 4, then paints all 18 ring rows with blank tiles +
- * slot 4.  The fixed driver runs it once (the writes themselves span a
- * display frame); there is no vsync pacing -- the ~1700 Mode-gated
- * writes sweep top-down in write order by themselves. */
+/* Bank-5 viewport-union black wipe behind ui_draw_world_transition():
+ * blackens CGB slot 4, then paints the union of the displayed and the
+ * incoming viewport (see tiles_content.c).  The fixed driver runs it
+ * once; the writes themselves span a display frame, sweeping top-down
+ * in write order by themselves. */
 void ui_wipe_black_banked(void);
 
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
@@ -196,10 +212,13 @@ void ui_draw_font_test_banked(void);
  * of a printed '@'. */
 void ui_sprite_init(void);
 void ui_sprite_move(uint8_t px, uint8_t py);
-void ui_sprite_hide(void);
-void ui_sprite_hide_actors_below(uint8_t screen_y);
 void ui_sprite_begin_transition(void);
-void ui_sprite_commit(void);
+/* Aliases (macros, not second fixed-bank functions: the debug fixed bank
+ * has single-digit headroom).  hide == the transition hide; commit == the
+ * frame-boundary shadow-OAM DMA. */
+#define ui_sprite_hide() ui_sprite_begin_transition()
+#define ui_sprite_commit() refresh_OAM()
+void ui_sprite_hide_actors_below(uint8_t screen_y);
 #ifdef DEBUG_BUILD
 /* Transition-hide execution counter (verify-oam): incremented by
  * ui_sprite_begin_transition().  Lets the OAM gate assert the hide RAN
@@ -243,10 +262,17 @@ extern uint8_t g_active_tile_palette[40];
 void ui_lcd_off(void);
 void ui_lcd_on(void);
 
+extern int8_t g_loaded_tileset;
 void ui_load_tileset(uint8_t tileset);
 void ui_invalidate_tileset(void);
 void ui_draw_world_map(const World *world);
-void ui_draw_world_full(const World *world);
+/* Full world redraw for a screen that may have clobbered VRAM block 1
+ * (battle/menu -> dialogue backdrop): same body as ui_draw_world_map, so
+ * it is an alias rather than a second fixed-bank function (the debug
+ * fixed bank has no headroom to spare).  The map rect overwrites every
+ * ring cell and the tail resets the semantic NULs, so no ui_clear_screen
+ * is needed. */
+#define ui_draw_world_full(world) ui_draw_world_map(world)
 void ui_draw_world_transition(const World *world);
 void ui_restore_dialogue_rows(const World *world);
 void ui_draw_actors_sprites(const World *world);
@@ -269,16 +295,19 @@ void ui_update_camera(const World *world);
 
 /* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):
  * paints the 4 box rows FULL-WIDTH with the dialogue paper palette and
- * re-syncs SCX to the world camera (scroll_y in g_bk_byte_b shifts the base
- * for vertically scrolled maps; camera in g_bk_byte_c).  Full-width is exact
+ * re-syncs SCX/SCY to the world camera (scroll_y in g_bk_byte_b selects the
+ * base rows for vertically scrolled maps; camera pixels in g_bk_byte_c =
+ * SCX and g_bk_byte_a = SCY -- the camera glides in pixels, so SCY must be
+ * the staged value, not scroll_y << 3).  Full-width is exact
  * where it matters: the viewport always shows a 20-col slice of those rows,
  * and the rows ARE the box (text rows 14-17 + scroll_y).  Painting hidden
  * cols too is safe: ui_lcd_off() wipes the whole attribute map on every
  * transition and the next full redraw repaints world attrs, so stale paper
- * can never scroll into view.  The SCX sync fixes the post-battle victory
- * dialogue, which arrives with SCX = 0 (screen_change zeroes it for battle)
- * while its text is drawn at scrolled tilemap cells -- without this the box
- * shifts right and clips.  SCY needs no sync (0 on every map). */
+ * can never scroll into view.  The SCX/SCY sync fixes the post-battle
+ * victory dialogue, which arrives with SCX = SCY = 0 (screen_change zeroes
+ * them for battle) while its text is drawn at scrolled tilemap cells --
+ * without this the box shifts right/clips, or on a tall map lands off the
+ * bottom of the screen. */
 void ui_dialogue_box_banked(void);
 
 void ui_draw_dialogue(const DialogueState *dialogue, const World *world);

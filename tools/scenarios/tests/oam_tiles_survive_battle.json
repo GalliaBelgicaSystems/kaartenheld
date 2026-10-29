@@ -1,7 +1,7 @@
 {
  "name": "oam_tiles_survive_battle",
  "test": true,
- "description": "OAM HUD tile VRAM survives a full battle roundtrip: boot TEST_FIELD, beat Carl, return to the overworld, then assert the AP-cost + mark tile bytes (96/97/126/127) still match the generated ap_tiles.h byte-for-byte (a battle-time VRAM clobber would fail here while every tile-id assert stays green).",
+ "description": "OAM tile VRAM survives a full battle roundtrip under the time-share contract: boot TEST_FIELD, beat Carl, return to the overworld, then assert the overworld-owned ids hold overworld art byte-for-byte (hero idle at 96/97, blob tail chest-open + kobold/knight idle at 123/124/125, marks at 126/127). Battles stream pips over 96/97 and riders over 123-125; overworld entry restores both. A missing restore fails here while every tile-id assert stays green.",
  "actions": [
   {
    "type": "wait",
@@ -173,12 +173,27 @@
   {
    "type": "oam_bytes",
    "addr": 34304,
-   "tile": "ap_1"
+   "tile": "hero_idle_1"
   },
   {
    "type": "oam_bytes",
    "addr": 34320,
-   "tile": "ap_2"
+   "tile": "hero_idle_2"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34736,
+   "tile": "ow_23"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34752,
+   "tile": "ow_24"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34768,
+   "tile": "ow_25"
   },
   {
    "type": "oam_bytes",

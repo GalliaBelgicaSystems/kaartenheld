@@ -5,6 +5,8 @@
 #include "game.h"
 #include "game_ids.h"
 
+extern uint8_t g_oam_tilecache_valid;
+
 /* Slime-trio spawn (game content, ROM bank 2).  Dispatched from
  * the event executor's EVENT_ACTION_SPAWN_SLIME_TRIO branch via the
  * WRAM trampoline (nothing staged: this body resolves its own ow byte
@@ -90,6 +92,10 @@ void game_slime_trio_spawn_banked(void)
             a->battle_type = BATTLE_SLIME;
             a->solo = 0;
             a->actor_id = 0;
+            /* The morph rewrites resolve inputs (kind/visual/ow/ai) in
+             * place: drop the OAM tile cache (WRAM, bank-independent)
+             * so the next pass recomputes. */
+            g_oam_tilecache_valid = 0;
             return;
         }
     }

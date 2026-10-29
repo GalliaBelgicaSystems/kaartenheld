@@ -707,6 +707,30 @@
       "off_colors": [
         "#8d754a"
       ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        0,
+        11
+      ],
+      "declared": "sprites11",
+      "used_ramp": "sprites11",
+      "off_colors": [
+        "#3c5e26"
+      ]
+    },
+    {
+      "sheet": "enemy_ow",
+      "tile": [
+        1,
+        8
+      ],
+      "declared": "sprites11",
+      "used_ramp": "sprites11",
+      "off_colors": [
+        "#3c5e26"
+      ]
     }
   ]
 }

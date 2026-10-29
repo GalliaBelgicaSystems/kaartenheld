@@ -39,7 +39,7 @@ SRCS = $(BANK5_EARLY_SRCS) $(filter-out $(BANK5_EARLY_SRCS),$(ALL_SRCS))
 # see these symbols (same g_scenes/g_actor_tables names).
 TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors_content_test.c
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
-	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c
+	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c $(SRC_DIR)/game/scenes_terrain_b9.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 4 in
@@ -155,9 +155,16 @@ gfx: manifest
 	# exact artist ramps per tile, no luminance guessing). Every rule below
 	# takes --shade-map; off-ramp pixels use the nearest shade of the
 	# tile's ramp and are listed in generated/tiles/ramp_mismatches.json.
-	# Full 80-tile world sheet (g_tileset_forest)
+	# Full 80-tile world sheet (g_tileset_forest).  --tile-coords remaps
+	# ONE cell: sheet cell (5,4) is the artist's new "water bottom right
+	# corner wall", which lands in VRAM slot 63 (TILE_FOREST_63 -- the last
+	# water slot, previously an unreferenced plain-floor duplicate).  Sheet
+	# order alone would put it at slot 69, which no TileType value can
+	# address (8..71 -> slots 0..63, 136..140 -> 64..68).  Keep this list
+	# in sync with tools/level_editor/tilesets/forest.json vram_block.
 	@python3 tools/png2gb.py assets/forest-tile.png --name rpg_forest_world_tiles \
 		--shade-map generated/tiles/shades/forest.json \
+		--tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 11,1 12,1 13,1 14,1 15,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 9,2 10,2 11,2 12,2 13,2 14,2 15,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3 9,3 10,3 11,3 12,3 13,3 14,3 5,4 0,4 1,4 2,4 3,4 4,4 5,4 6,4 7,4 8,4 9,4 10,4 11,4 12,4 13,4 14,4 15,4" \
 		--raw -o $(GFX_OUT_DIR)/rpg_forest_world_tiles.inc
 	# ── Battle enemy art (assets/battle_sprites.png, 3 cols × N rows) ────
 	# Cell order comes from screens/combat_art/*.json (set order, frame0
@@ -186,8 +193,8 @@ gfx: manifest
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
 	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
-	# Four single-cell icons streamed once at boot to fixed OAM ids
-	# (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
+	# Four single-cell icons streamed on the first battle tick to fixed OAM
+	# ids (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
 	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
 	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
 	# untouched (these ride their own stream, not the enemy blob).
@@ -196,21 +203,32 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$AP_COORDS" \
 		-o $(GFX_OUT_DIR)/ap_tiles.h
+	# ── Battle OAM rider icons (fire/ice/poison, assets/enemy_sprites.png) ──
+	# Three single-cell icons streamed on the first battle tick to fixed OAM
+	# ids 123-125 (RIDER_TILE_BASE in battle_compile.py --rider-coords),
+	# time-sharing blob-tail ids with the last walk cell + idle rows
+	# (restored on overworld entry).  Same own-stream pattern as ap_tiles.
+	@RIDER_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --rider-coords) || { echo "FATAL: battle_compile --rider-coords failed" >&2; exit 1; }; \
+	[ -n "$$RIDER_COORDS" ] || { echo "FATAL: battle_compile --rider-coords produced no tiles" >&2; exit 1; }; \
+	python3 tools/png2gb.py assets/enemy_sprites.png --name rider_tiles \
+		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$RIDER_COORDS" \
+		-o $(GFX_OUT_DIR)/rider_tiles.h
 	# ── Desolate landscape (assets/desolate-tile.png) ──
 	# Full world sheet (g_tileset_desolate)
 	@python3 tools/png2gb.py assets/desolate-tile.png --name rpg_desolate_world_tiles \
 		--shade-map generated/tiles/shades/desolate_landscape.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_desolate_world_tiles.inc
-	# Player sprite tiles from assets/hero_sprites.png (hero frames 1 & 2)
+	# Player sprite tiles from assets/hero_sprites.png (walk frames 1 & 2,
+	# then idle frames 1 & 2 for the standing hero)
 	@python3 tools/png2gb.py assets/hero_sprites.png --name hero_desolate_sprite_tile \
 		--shade-map generated/tiles/shades/hero_ow.json \
 		-o $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-	# ── Castle tileset (assets/castle-tile.png, 9 cols × 4 rows) ─────────
-	# The full 36-tile sheet encodes in scan order, VRAM slot == scan
+	# ── Castle tileset (assets/castle-tile.png, 9 cols × 5 rows) ─────────
+	# The full 45-tile sheet encodes in scan order, VRAM slot == scan
 	# index (see world.h TILE_CASTLE_* and palette_compiler).  Sized by
 	# the rule.
 	@python3 tools/png2gb.py assets/castle-tile.png --name rpg_castle_tiles \
-		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
+		--shade-map generated/tiles/shades/castle.json --tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 0,2 1,2 2,2 3,2 4,2 5,2 6,2 7,2 8,2 0,3 1,3 2,3 3,3 4,3 5,3 6,3 7,3 8,3 0,4 1,4 2,4 3,4 4,4 5,4 6,4 7,4 8,4" --raw -o $(GFX_OUT_DIR)/rpg_castle_tiles.inc
 	# ── Village tileset (assets/village-tile.png, 16 cols × 3 rows) ────────
 	# Full 48-tile world sheet (g_tileset_village). Arranged in SheetIndex
 	# order (the tileset JSON's vram_block section numbering = scanning order).
@@ -273,7 +291,7 @@ levels-check:
 	@python3 tools/level_compiler/validate.py levels/*.json
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c --check
 
-src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
+src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/game/scenes_terrain_b9.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c
 # ^ Also (re)generates src/world/scene_ids_generated.h (MAP_*/SCENE_* values
 # from levels/registry.json) as a side effect; the wildcard above includes
@@ -444,7 +462,7 @@ tiles-check:
 # Ramps always win (every tile gets an existing artist ramp); wrongness is
 # reported in generated/tiles/ramp_mismatches.json, never a build failure.
 # See tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
 	@python3 tools/compose_battle_sprites.py
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
@@ -488,6 +506,10 @@ $(GENERATED_TILES_DIR):
 	mkdir -p $(GENERATED_TILES_DIR)
 
 # Consumers rebuild when the generated headers change (they are untracked).
+# obj_map_overrides.inc is read by tiles_content.c (per-map OBJ slot
+# overrides); tile_palette.h already forces that object every run, so this
+# documents the true edge for a future non-phony manifest (review 3.3).
+$(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILES_DIR)/obj_map_overrides.inc
 $(BUILD_DIR)/world/world.o $(BUILD_DIR)/world/patrol_banked.o $(BUILD_DIR)/world/edge_banked.o $(BUILD_DIR)/debug/world/world.o $(BUILD_DIR)/debug/world/patrol_banked.o $(BUILD_DIR)/debug/world/edge_banked.o: $(GENERATED_TILE_WALK)
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GENERATED_TILE_GLYPH)
 $(BUILD_DIR)/game/tiles_content.o $(BUILD_DIR)/debug/game/tiles_content.o: $(GENERATED_TILE_PALETTE)
@@ -539,6 +561,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 # Ensure UI modules rebuild when generated sprite headers change
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
+$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path
@@ -1083,4 +1106,14 @@ memmap: debug release
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
 
 clean:
-	rm -rf $(BUILD_DIR) $(GENERATED_MUSIC_DIR)
+	@# Remove intermediate build artifacts but NEVER the tracked files in
+	@# build/ (kaartenheld.gb, kaartenheld_debug.gb, both .sym, and the
+	@# manual PDF): `rm -rf $(BUILD_DIR)` used to delete tracked content,
+	@# so any `make clean` (routine per AGENTS.md 52.2) left the branch
+	@# dirty with deletions.
+	find $(BUILD_DIR) -mindepth 1 \
+		! -name 'kaartenheld.gb' ! -name 'kaartenheld_debug.gb' \
+		! -name 'kaartenheld.sym' ! -name 'kaartenheld_debug.sym' \
+		! -name 'kaartenheld_manual.pdf' \
+		-exec rm -rf {} + 2>/dev/null || true
+	rm -rf $(GENERATED_MUSIC_DIR)
