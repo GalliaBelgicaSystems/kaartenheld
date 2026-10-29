@@ -433,7 +433,7 @@
     "north": "",
     "south": "",
     "east": "castle_hall",
-    "west": "south_field"
+    "west": "south_ridge"
   },
   "objects": [
     {

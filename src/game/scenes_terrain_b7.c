@@ -11,30 +11,6 @@
  * them from outside.
  */
 
-const SceneTerrainBlock s_castle_terrain[] = {
-    { 0, 0, 1, 1, TILE_CASTLE_00 },
-    { 1, 0, 18, 1, TILE_CASTLE_01 },
-    { 19, 0, 1, 1, TILE_CASTLE_02 },
-    { 0, 1, 1, 16, TILE_CASTLE_03 },
-    { 9, 1, 2, 1, TILE_CASTLE_26 },
-    { 19, 1, 1, 16, TILE_CASTLE_04 },
-    { 9, 2, 1, 14, TILE_CASTLE_18 },
-    { 10, 2, 1, 14, TILE_CASTLE_19 },
-    { 3, 3, 1, 6, TILE_CASTLE_03 },
-    { 4, 3, 2, 1, TILE_CASTLE_01 },
-    { 6, 3, 1, 6, TILE_CASTLE_04 },
-    { 13, 3, 1, 6, TILE_CASTLE_03 },
-    { 14, 3, 2, 1, TILE_CASTLE_01 },
-    { 16, 3, 1, 6, TILE_CASTLE_04 },
-    { 4, 8, 2, 1, TILE_CASTLE_10 },
-    { 14, 8, 2, 1, TILE_CASTLE_10 },
-    { 9, 16, 2, 1, TILE_CASTLE_26 },
-    { 0, 17, 1, 1, TILE_CASTLE_09 },
-    { 1, 17, 18, 1, TILE_CASTLE_10 },
-    { 19, 17, 1, 1, TILE_CASTLE_11 },
-    { 0, 0, 0, 0, 0 }
-};
-
 const SceneTerrainBlock s_village_area_terrain[] = {
     { 0, 0, 1, 1, TILE_VILLAGE_00 },
     { 1, 0, 8, 1, TILE_VILLAGE_01 },

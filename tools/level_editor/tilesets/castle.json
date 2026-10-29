@@ -384,7 +384,7 @@
       "label": "empty",
       "gb_constant": "TILE_CASTLE_37",
       "walkable": false,
-      "color": "#d7d7d7",
+      "color": "#000000",
       "ascii": "#",
       "image_url": "/tiles/castle/castle_black_emptyness.png",
       "category": "terrain"

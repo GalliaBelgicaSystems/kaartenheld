@@ -631,6 +631,11 @@
         "x": 10,
         "y": 21,
         "facing": "UP"
+      },
+      "east": {
+        "x": 22,
+        "y": 11,
+        "facing": "LEFT"
       }
     }
   },
@@ -806,7 +811,7 @@
       "properties": {
         "display_name": "SLIME KNIGHT",
         "battle": "BATTLE_SLIME_KNIGHT",
-        "ai": "AI_NONE",
+        "ai": "AI_CHASE_FAST",
         "enemy_type": "slime_knight",
         "entity_id": "ENTITY_ID_NPC_GUARD",
         "facing": "DOWN",
@@ -833,7 +838,7 @@
       "properties": {
         "display_name": "SLIME KNIGHT",
         "battle": "BATTLE_SLIME_KNIGHT",
-        "ai": "AI_NONE",
+        "ai": "AI_CHASE_FAST",
         "enemy_type": "slime_knight",
         "entity_id": "ENTITY_ID_NPC_GUARD",
         "facing": "DOWN",

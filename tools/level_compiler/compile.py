@@ -435,7 +435,8 @@ def emit_exits(levels_by_id, registry=None):
 # array. Bank 5 (world bank) is exhausted; overflow scenes keep terrain in
 # a roomier bank and scene_load_tiles_banked() stages it to WRAM before
 # stamping (SceneDefinition.terrain_bank). Balanced for headroom:
-# desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7.
+# desolate (~690 B incl. sentinel) -> 6, village (~515 B) -> 7, castle
+# (~270 B, moved here Oct 2026: its repaint outgrew bank 7) -> 9.
 # Large 22-tall forest (~1450 B) + field (~1325 B) -> 9 (casino bank,
 # ~10 KB free); bank 5 cannot hold them after the WORLD_HEIGHT 32 growth.
 # If this map changes, keep Makefile CONTENT_SRCS (the per-bank files),
@@ -443,7 +444,7 @@ def emit_exits(levels_by_id, registry=None):
 OVERFLOW_TERRAIN_BANK = {
     "desolate_field": 6,
     "village_area": 7,
-    "castle": 7,
+    "castle": 9,
     "forest": 9,
     "field": 9,
     # New-bank-5 residents from the enlarged-maps pass (bank 5 overflowed
