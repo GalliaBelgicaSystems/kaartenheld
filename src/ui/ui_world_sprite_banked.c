@@ -280,33 +280,54 @@ void ui_actors_sprites_banked(void)
             }
         }
         if (tile) {
-            px = (uint8_t)(spr_axis_px(a, 0) - w->camera_px_x);
-            py = (uint8_t)(spr_axis_px(a, 1) - w->camera_px_y);
+            if (!a->move_state) {
+                px = (uint8_t)((uint8_t)(a->x << 3) - w->camera_px_x);
+                py = (uint8_t)((uint8_t)(a->y << 3) - w->camera_px_y);
+            } else {
+                px = (uint8_t)(spr_axis_px(a, 0) - w->camera_px_x);
+                py = (uint8_t)(spr_axis_px(a, 1) - w->camera_px_y);
+            }
             if ((int)a->sprite_kind != SPRITE_KIND_BOSS) {
-                uint8_t row = 0;
-                for (gy = 0; gy < gh; gy++) {
-                    uint8_t col = 0;
-                    for (gx = 0; gx < gw; gx++) {
-                        volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
-                                                                   ((uint16_t)(oam_slot + row + col) << 2));
-                        uint8_t tx = (uint8_t)(px + (gx << 3));
-                        uint8_t ty = (uint8_t)(py + (gy << 3));
-                        if (tx < 160 && ty < 144) {
-                            e[0] = (uint8_t)(ty + 16);
-                            e[1] = (uint8_t)(tx + 8);
-                            e[2] = (uint8_t)(tile + row + col);
-                            e[3] = prop;
-                        } else {
-                            e[0] = 0;
-                        }
-                        col = (uint8_t)(col + 1);
+                if (gw == 1 && gh == 1) {
+                    volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
+                                                               ((uint16_t)oam_slot << 2));
+                    if (px < 160 && py < 144) {
+                        e[0] = (uint8_t)(py + 16);
+                        e[1] = (uint8_t)(px + 8);
+                        e[2] = tile;
+                        e[3] = prop;
+                    } else {
+                        e[0] = 0;
                     }
-                    row = (uint8_t)(row + gw);
+                    oam_slot = (uint8_t)(oam_slot + 1);
+                } else {
+                    uint8_t row = 0;
+                    for (gy = 0; gy < gh; gy++) {
+                        uint8_t col = 0;
+                        for (gx = 0; gx < gw; gx++) {
+                            volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
+                                                                       ((uint16_t)(oam_slot + row + col) << 2));
+                            uint8_t tx = (uint8_t)(px + (gx << 3));
+                            uint8_t ty = (uint8_t)(py + (gy << 3));
+                            if (tx < 160 && ty < 144) {
+                                e[0] = (uint8_t)(ty + 16);
+                                e[1] = (uint8_t)(tx + 8);
+                                e[2] = (uint8_t)(tile + row + col);
+                                e[3] = prop;
+                            } else {
+                                e[0] = 0;
+                            }
+                            col = (uint8_t)(col + 1);
+                        }
+                        row = (uint8_t)(row + gw);
+                    }
+                    /* w*h entries (no mult: w,h <= 2) */
+                    oam_slot = (uint8_t)(oam_slot + (gh == 2 ? (gw == 2 ? 4 : 2) : gw));
                 }
-                /* w*h entries (no mult: w,h <= 2) */
-                oam_slot = (uint8_t)(oam_slot + (gh == 2 ? (gw == 2 ? 4 : 2) : gw));
                 /* HUD marker ("?" quest / "!" pursuer) above this actor. */
-                mark_draw(px, py, g_actor_marks[slot], &mark_slot);
+                if (g_actor_marks[slot]) {
+                    mark_draw(px, py, g_actor_marks[slot], &mark_slot);
+                }
                 continue;
             }
         }
@@ -323,60 +344,58 @@ void ui_actors_sprites_banked(void)
         s_oc_bc = g_bk_byte_c;
         g_oam_tilecache_valid = 1;
     }
-    for (i = 0; i < MAX_STATIC_ACTORS; i++) {
-        const StaticActorDefinition *d;
-        volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
-                                                   ((uint16_t)(oam_slot + i) << 2));
-        uint8_t tile;
-        uint8_t prop = 0;
-        uint8_t px, py;
-        /* Clamped (see actor_find_at): a trashed count must neither
-         * render garbage rows as phantom sprites nor hide valid ones.
-         * Valid counts never exceed the cap (loader enforces it), so an
-         * over-cap count means corruption: hide everything rather than
-         * draw stale rows. */
-        if (g_static_actor_count > MAX_STATIC_ACTORS ||
-            i >= g_static_actor_count) {
-            e[0] = 0;  /* no static here: hide any stale sprite */
-            continue;
+    if (g_static_actor_count == 0 || g_static_actor_count > MAX_STATIC_ACTORS) {
+        volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE + ((uint16_t)oam_slot << 2));
+        for (i = 0; i < MAX_STATIC_ACTORS; i++) {
+            *e = 0;
+            e += 4;
         }
-        d = &g_static_actors[i];
-        if (d->sprite_kind == SPRITE_KIND_ASCII ||
-            d->sprite_kind == SPRITE_KIND_BOSS ||
-            d->sprite_kind == SPRITE_KIND_TILE) {
-            e[0] = 0;  /* glyph / boss / background-art actors own these */
-            continue;
-        }
-        tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                               anim, d->ow_type, &prop, 0);
-        if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
-            /* State-driven frame: the shared-blob closed tile, or the
-             * next tile (open frame) once the chest was looted.  The
-             * resolver reads the map from g_game (WRAM, always mapped);
-             * only the chest position stages through the banked-call
-             * globals (same bank: plain call). */
-            g_bk_byte_b = d->x;
-            g_bk_byte_c = d->y;
-            if (chest_is_open_banked()) {
-                tile = (uint8_t)(tile + 1);
+    } else {
+        for (i = 0; i < MAX_STATIC_ACTORS; i++) {
+            const StaticActorDefinition *d;
+            volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
+                                                       ((uint16_t)(oam_slot + i) << 2));
+            uint8_t tile;
+            uint8_t prop = 0;
+            uint8_t px, py;
+            if (i >= g_static_actor_count) {
+                e[0] = 0;
+                continue;
             }
+            d = &g_static_actors[i];
+            if (d->sprite_kind == SPRITE_KIND_ASCII ||
+                d->sprite_kind == SPRITE_KIND_BOSS ||
+                d->sprite_kind == SPRITE_KIND_TILE) {
+                e[0] = 0;  /* glyph / boss / background-art actors own these */
+                continue;
+            }
+            tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
+                                   anim, d->ow_type, &prop, 0);
+            if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
+                g_bk_byte_b = d->x;
+                g_bk_byte_c = d->y;
+                if (chest_is_open_banked()) {
+                    tile = (uint8_t)(tile + 1);
+                }
+            }
+            if (!tile) {
+                e[0] = 0;
+                continue;
+            }
+            px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
+            py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
+            if (px < 160 && py < 144) {
+                e[0] = (uint8_t)(py + 16);
+                e[1] = (uint8_t)(px + 8);
+                e[2] = tile;
+                e[3] = prop;
+                if (g_static_marks[i]) {
+                    mark_draw(px, py, g_static_marks[i], &mark_slot);
+                }
+                continue;
+            }
+            e[0] = 0;  /* hidden */
         }
-        if (!tile) {
-            e[0] = 0;
-            continue;
-        }
-        px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
-        py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
-        if (px < 160 && py < 144) {
-            e[0] = (uint8_t)(py + 16);
-            e[1] = (uint8_t)(px + 8);
-            e[2] = tile;
-            e[3] = prop;
-            /* HUD marker ("?" quest / "!" pursuer) above this actor. */
-            mark_draw(px, py, g_static_marks[i], &mark_slot);
-            continue;
-        }
-        e[0] = 0;  /* hidden */
     }
     /* Hide unused marker slots so a disappearing "?" / "!" never leaves
      * a stale sprite from an earlier frame (mark_draw only consumes

@@ -381,20 +381,24 @@ WorldMoveResult world_update_actors(World *w)
          * maps (town, cleared scenes) run zero patrol dispatches/frame.
          * Idle actives skip it too: an actor that is neither animating a
          * step nor due one only needs its step timer ticked down, which
-         * is plain WRAM work (no bank switch).  The banked body runs only
-         * on moving frames and step-decision frames -- identical outcomes
-         * on identical frames (the timer hits 0 on the same frame either
-         * way), at ~1/8th the dispatches.  Without this, crowded maps
-         * (4+ actives) overrun VBlank and the whole game drops to half
-         * speed while the music (timer ISR) stays fine. */
+         * is plain WRAM work (no bank switch).  Intermediate move frames
+         * (move_progress < MOVE_FRAMES - 1) only increment progress in
+         * WRAM; the banked body runs only on decision frames and commit
+         * frames -- cutting moving-frame dispatches by 7/8ths with identical
+         * outcomes on identical frames.  Without this, crowded maps (4+
+         * actives) overrun VBlank and drop to half speed. */
         if (!a->active) continue;
         if (a->ai_type == AI_NONE || a->ai_type == AI_TUTOR) continue;
-        if (!a->move_state && a->ai_timer != 0) {
+        if (a->move_state) {
+            if (a->move_progress < (MOVE_FRAMES - 1)) {
+                a->move_progress++;
+                continue;
+            }
+        } else if (a->ai_timer != 0) {
             a->ai_timer--;
             continue;
         }
         g_patrol_outcome = 0;
-        g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;
         g_patrol_slot = slot;
 #ifdef DEBUG_BUILD
