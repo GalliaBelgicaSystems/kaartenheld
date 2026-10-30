@@ -597,8 +597,8 @@
       "x": 22,
       "y": 11,
       "target_scene": "underground_tunnel_south",
-      "target_x": 2,
-      "target_y": 15,
+      "target_x": 6,
+      "target_y": 5,
       "direction": "SOUTH",
       "tile_char": ">",
       "tunnel": "tunnel_desolate_underground"
