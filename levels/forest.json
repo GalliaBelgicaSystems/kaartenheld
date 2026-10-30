@@ -701,8 +701,8 @@
       "x": 8,
       "y": 16,
       "target_scene": "underground_tunnel",
-      "target_x": 17,
-      "target_y": 2,
+      "target_x": 16,
+      "target_y": 3,
       "direction": "SOUTH",
       "tile_char": ">",
       "tunnel": "tunnel_underground_forest"

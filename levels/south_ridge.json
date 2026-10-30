@@ -644,8 +644,8 @@
       "x": 6,
       "y": 16,
       "target_scene": "underground_tunnel_south",
-      "target_x": 17,
-      "target_y": 2,
+      "target_x": 13,
+      "target_y": 12,
       "direction": "NORTH",
       "tile_char": "<",
       "tunnel": "tunnel_south_underground"
