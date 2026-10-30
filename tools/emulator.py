@@ -1158,6 +1158,20 @@ class EmulatorSession:
         count = (lo or 0) | ((hi or 0) << 8)
         return count, self._memread(last_addr)
 
+    def get_sfx_mute(self):
+        """Read the music-mute budget: dosound ticks charged per SFX
+        trigger against the CH2 / CH4 music voices (see audio.c).  The
+        core is halted at the frame breakpoint during harness reads,
+        so the 16-bit values cannot tear mid-read."""
+        def rd16(name):
+            addr = self.get_symbol(name)
+            lo = self._memread(addr)
+            hi = self._memread(addr + 1)
+            if lo is None or hi is None:
+                return None
+            return lo | (hi << 8)
+        return rd16("g_sfx_mute_ch2"), rd16("g_sfx_mute_ch4")
+
     # Stack high-water canary (AGENTS.md §52.24): the static stack-budget
     # model cannot see ISR nesting or layout-sensitive codegen, so this
     # measures the real thing.  The heap+stack gap (linker _DATA end ..
