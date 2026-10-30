@@ -40,15 +40,14 @@ void carl_tutorial_banked(void)
         g->battle.enemy_battle_id == BATTLE_CARL &&
         g->battle.result == BATTLE_RESULT_FLED &&
         (g_carl_tut_flags & CARL_TUT_FLAG_FLEE_SHOWN) != 0) {
-        /* Fleeing a finished lesson shows Carl's farewell (the 99 HP
-         * spar can no longer be won, so the graduation speech is
-         * unreachable in real play; the farewell carries no AP -- the
-         * pool stays on the chest/hunt/mimic track).  Gated on the full
-         * lesson so an immediate first-turn flee earns nothing but a
-         * quiet exit.  Consuming FLEE_SHOWN makes the speech one-shot:
-         * the RESULT screen re-arms nothing, so closing it lands on
-         * FLED! instead of reopening (re-accepting re-inits everything
-         * through YES). */
+        /* Fleeing a finished lesson shows Carl's farewell box (a
+         * win would show the graduation speech instead, but the spar
+         * takes real effort at 30 HP; the farewell carries no AP).
+         * Gated on the full lesson so an immediate first-turn flee
+         * earns nothing but a quiet exit.  Consuming FLEE_SHOWN makes
+         * the speech one-shot: the RESULT screen re-arms nothing, so
+         * closing it lands on FLED! instead of reopening (re-accepting
+         * re-inits everything through YES). */
         g_carl_tut_flags &= (uint8_t)~(CARL_TUT_FLAG_FLEE_SHOWN | CARL_TUT_FLAG_HURT_ARMED);
         g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FAREWELL;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FAREWELL;

@@ -747,9 +747,9 @@ def walk_b(planner, checks):
     rows = s.bg_text()
     s.check("carl tutor rows exact",
             rows[14] == "+--CARL:-----------+"
-            and rows[15] == "Human? Here danger  "
-            and rows[16] == "I teach you fight!  "
-            and rows[17] == "Want to learn?     ?",
+            and rows[15] == "HUMAN? HERE DANGER  "
+            and rows[16] == "I TEACH YOU FIGHT!  "
+            and rows[17] == "WANT TO LEARN?     ?",
             expected="exact box text",
             actual=" / ".join(rows[14:18]))
     # The offer is a YES/NO ask: advance to the choice row, confirm YES
@@ -761,9 +761,9 @@ def walk_b(planner, checks):
                           tries=6, settle=30, label="> YES"),
             expected="> YES", actual="none")
     s.check("carl spar accepted",
-            s.press_until("a", lambda: s.text_has("Pick cards with A!"),
+            s.press_until("a", lambda: s.text_has("PICK CARDS WITH A!"),
                           tries=6, settle=30, label="attack lesson"),
-            expected="Pick cards with A!", actual="none")
+            expected="PICK CARDS WITH A!", actual="none")
     # Closing by battle-open (not by CARL: gone): the two-page attack
     # box closes into the SELECT phase, and press_until self-heals
     # dropped presses, stopping at the first DECK: sighting.
@@ -806,8 +806,8 @@ def walk_b(planner, checks):
     # The first DEFEND phase raises the shield coaching box; close its
     # two pages, then the battle's own DEFEND banner owns row 0.
     s.check("defend lesson",
-            s.wait_for(lambda: s.text_has("Pick SHIELD"), ticks=150),
-            expected="Pick SHIELD", actual="none")
+            s.wait_for(lambda: s.text_has("PICK SHIELD"), ticks=150),
+            expected="PICK SHIELD", actual="none")
     s.check("defend lesson closed", close_box(s),
             expected="closed", actual="open")
     # The close lands back on the battle screen through a full LCD-off
@@ -823,8 +823,8 @@ def walk_b(planner, checks):
     # The way back to SELECT raises the poker-hands box, then the flee
     # box: close both (3 pages + 1) to reach a plain SELECT phase.
     s.check("poker lesson",
-            s.wait_for(lambda: s.text_has("Pairs hit harder!"), ticks=240),
-            expected="Pairs hit harder!", actual="none")
+            s.wait_for(lambda: s.text_has("PAIRS HIT HARDER!"), ticks=240),
+            expected="PAIRS HIT HARDER!", actual="none")
     s.check("poker+flee lessons closed", close_box(s),
             expected="closed", actual="open")
     # Same full-redraw settle on the way back to SELECT: the cursor and
@@ -835,7 +835,7 @@ def walk_b(planner, checks):
     prev_total = s.reader.battle_enemy_hp(0)
     # One full round with the jeer drained: the way back to SELECT is
     # plain now (all four coaching boxes showed once), but every
-    # confirmed attack raises exactly one looping jeer box (Uch! first)
+    # confirmed attack raises exactly one looping jeer box (UCH! first)
     # on ANIM -- close it, defend through, and the spar is back to a
     # plain SELECT with strictly less enemy HP.  Carl's 99 HP cannot
     # drop, so the lesson ends by fleeing, not by winning.
@@ -852,8 +852,8 @@ def walk_b(planner, checks):
     s.check("post-attack box", s.text_has("CARL:"),
             expected="CARL: box", actual="none")
     s.check("jeer or reminder",
-            s.text_has("Uch!") or s.text_has("YOU CAN FLEE"),
-            expected="Uch! or YOU CAN FLEE", actual="none")
+            s.text_has("UCH!") or s.text_has("YOU CAN FLEE"),
+            expected="UCH! or YOU CAN FLEE", actual="none")
     s.check("post-attack box closed", close_box(s),
             expected="closed", actual="open")
     s.check("defend banner 2",
@@ -879,9 +879,9 @@ def walk_b(planner, checks):
     # and Carl alive for a rematch.
     s.press("b", settle=40)
     s.check("farewell speech",
-            s.wait_for(lambda: s.text_has("Grow stronger!"), ticks=240),
-            expected="Grow stronger!", actual="none")
-    s.shoot("11-farewell-speech", need="Grow stronger!")
+            s.wait_for(lambda: s.text_has("GROW STRONGER!"), ticks=240),
+            expected="GROW STRONGER!", actual="none")
+    s.shoot("11-farewell-speech", need="GROW STRONGER!")
     s.check("farewell closed",
             close_box(s),
             expected="closed", actual="open")

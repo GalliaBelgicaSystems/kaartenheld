@@ -1,7 +1,7 @@
 {
  "name": "battle_run",
  "test": true,
- "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (98/99 after one SW1 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. Carl is asserted ALIVE via his persistent lifecycle.",
+ "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (29/30 after one SW1 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. Carl is asserted ALIVE via his persistent lifecycle.",
  "actions": [
   {
    "type": "press",
@@ -179,7 +179,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 98
+   "expected": 29
   },
   {
    "type": "event_occurred",

@@ -118,7 +118,7 @@ const EventDefinition g_events[] = {
      * Felling the mimic (a solo miniboss with a persistent actor_id,
      * so this fires exactly once like the knight split) grants +1
      * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
-     * chest/Monster Hunt milestones, and narrates the next step
+     * tutorial/chest/Monster Hunt milestones, and narrates the next step
      * (speakerless box, like FOUND AMULET: the dead mimic gives no
      * speech).  The grant is observable through VARIABLE_SET plus
      * the snapshot. */
@@ -263,15 +263,14 @@ const EventDefinition g_events[] = {
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────
      * Carl is TWO co-located actors on one tile: a tutor hostile
-     * (actor_id 1, AI_TUTOR, 99 HP, 0-power spar deck) and a dialogue
+     * (actor_id 1, AI_TUTOR, 30 HP, 0-power spar deck) and a dialogue
      * static (actor_id 0, never defeat-gated, carries the YES/NO spar
      * offer).  Both share ENTITY_ID_CARL; only the runtime hostile slot
      * can be defeated, so TUTORIAL_COMPLETE below fires exactly once on
-     * the (debug-only, at 99 HP) spar win.  Carl cannot be beaten in
-     * real play, so fleeing a finished lesson shows a farewell speech
-     * instead (staged by the banked tick through the post-tick opener,
-     * no event row needed); the +1 AP stays on the chest/hunt/mimic
-     * track.  The spar is gated on the field cache: talking or bumping the
+     * the spar win (a real -- if long -- fight at 30 HP).  Fleeing a
+     * finished lesson instead shows a farewell box (staged by the
+     * banked tick through the post-tick opener, no event row needed)
+     * and grants nothing.  The spar is gated on the field cache: talking or bumping the
      * tile while STORY_FLAG_ID_FIELD_CHEST is clear matches
      * CARL_CHEST_FIRST instead ("Open chest, then come back!"), which
      * returns ENGAGE_DIALOGUE without stashing the spar slot
@@ -292,10 +291,11 @@ const EventDefinition g_events[] = {
      * despawns by design: post-victory the spar is gone, so bumps
      * replay the offer as a remedial with no fight (locked by the
      * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
-     * every milestone (chest, Monster Hunt, mimic) adds exactly one to
-     * the base-1 pool, reaching 4 in any completion order (the tutorial
-     * spar grants none).  Carl's defeat is persistent (one-shot via
-     * GameState.world), so the kill reward fires exactly once. */
+     * every milestone (tutorial win, chest, Monster Hunt, mimic) adds
+     * exactly one to the base-1 pool, reaching 5 in any completion
+     * order (fleeing the lesson grants nothing).  Carl's defeat is
+     * persistent (one-shot via GameState.world), so the kill reward
+     * fires exactly once. */
     {
         EVENT_ID_CARL_CHEST_FIRST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CARL, EVENT_MAP_ANY,
         1,

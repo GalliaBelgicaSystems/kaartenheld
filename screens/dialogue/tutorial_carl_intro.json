@@ -2,9 +2,10 @@
   "id": "tutorial_carl_intro",
   "speaker": "CARL:",
   "lines": [
-    "Human? Here danger",
-    "I teach you fight!",
-    "Want to learn?",
+    "HUMAN? HERE DANGER",
+    "I TEACH YOU FIGHT!",
+    "WANT TO LEARN?",
+    "BEAT ME FOR POWER!",
     "> YES   NO"
   ],
   "choice": "yes_no"

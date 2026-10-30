@@ -110,7 +110,7 @@
     {
       "type": "set_enemy_hp",
       "index": 0,
-      "hp": 80
+      "hp": 20
     },
     {
       "type": "press",

@@ -17,8 +17,9 @@ stumps and grass tufts. Walk into him and a dialogue box opens first:
 it is dangerous to go alone, and he asks if you want to learn how to
 fight — answer **YES** (the default) and the spar starts by itself, no
 second bump needed. Answer NO and he lets you walk away; bump him any
-time to hear the offer again. He never leaves: his 99 HP spar cannot be
-won, so talk to him again any time to spar again.
+time to hear the offer again. He never leaves: come back any time to
+spar again — and if you manage to bring down his 30 HP, the win is
+worth **+1 action point**.
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
@@ -31,10 +32,10 @@ it is him speaking.
 
 ![Carl's offer](../screenshots/08-carl-tutor.png)
 
-Walk into him and say YES to spar: a solo fight against his 99 HP. His
+Walk into him and say YES to spar: a solo fight against his 30 HP. His
 practice deck deals **0 damage**, so you cannot lose — learn the round
 below at your own pace (the battle timer still runs, but nothing can hurt
-you, and you cannot kill him either). With a single foe the target arrow
+you). With a single foe the target arrow
 stays parked on him; on your turn the top reads `TARGET CARL`. Carl coaches through
 normal dialogue boxes: how to attack (pick cards with `A`, move the cursor
 with `L/R`, confirm the hand with `SELECT`) when the spar opens, how to
@@ -52,10 +53,11 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
-Flee whenever you are done (the lesson has no AP reward -- the pool
-grows on the chest/hunt/mimic track, up to **4**): Carl sees you off with
-a farewell and stays for a rematch. AP limits how many cards you can
-play (your pool starts at **1 AP** per phase and grows by story rewards).
+Flee whenever you are done -- Carl sees you off with a farewell and
+stays for a rematch. Beat his 30 HP and he graduates you instead, with
+**+1 action point**. AP limits how many cards you can play (your pool
+starts at **1 AP** per phase and grows by story rewards, up to **5**
+with Carl's win included).
 
 ![Wise to flee](../screenshots/11-farewell-speech.png)
 

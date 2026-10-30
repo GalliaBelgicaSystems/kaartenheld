@@ -44,7 +44,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_CARL_CHEST_FIRST,
         "CARL:",
         2,
-        {"Open chest,", "then come back!"},
+        {"OPEN CHEST,", "THEN COME BACK!"},
         0,
         0
     },
@@ -268,7 +268,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_ATTACK,
         "CARL:",
         4,
-        {"Pick cards with A!", "L/R moves cursor.", "SELECT confirms", "the attack!"},
+        {"PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
         0,
         0
     },
@@ -276,7 +276,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_DECLINE,
         "CARL:",
         2,
-        {"Suit yourself!", "Come back anytime!"},
+        {"SUIT YOURSELF!", "COME BACK ANYTIME!"},
         0,
         0
     },
@@ -284,7 +284,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_DEFEND,
         "CARL:",
         4,
-        {"Carl attacks now!", "Pick SHIELD cards!", "SELECT confirms", "the block!"},
+        {"CARL ATTACKS NOW!", "PICK SHIELD CARDS!", "SELECT CONFIRMS", "THE BLOCK!"},
         0,
         0
     },
@@ -292,7 +292,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_FAREWELL,
         "CARL:",
         3,
-        {"Wise to flee!", "Grow stronger!", "Then try again!"},
+        {"WISE TO FLEE!", "GROW STRONGER!", "THEN TRY AGAIN!"},
         0,
         0
     },
@@ -300,7 +300,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_FLEE,
         "CARL:",
         3,
-        {"To flee, press B", "with empty hand!", "Try it now!"},
+        {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!"},
         0,
         0
     },
@@ -316,15 +316,15 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_HURT,
         "CARL:",
         7,
-        {"Uch!", "Ew!", "That all you got?", "Ouch!", "Enough already!", "It hurts!", "Please stop!"},
+        {"UCH!", "EW!", "THAT ALL YOU GOT?", "OUCH!", "ENOUGH ALREADY!", "IT HURTS!", "PLEASE STOP!"},
         0,
         0
     },
     {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
-        4,
-        {"Human? Here danger", "I teach you fight!", "Want to learn?", "> YES   NO"},
+        5,
+        {"HUMAN? HERE DANGER", "I TEACH YOU FIGHT!", "WANT TO LEARN?", "BEAT ME FOR POWER!", "> YES   NO"},
         0,
         1
     },
@@ -332,7 +332,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_POKER,
         "CARL:",
         8,
-        {"Pairs hit harder!", "PAIR: 2 the same.", "TRIPS: 3 the same.", "STRAIGHT: 5 in row", "FLUSH: same suit.", "FULL HOUSE: 3 + 2.", "4 KIND is massive!", "SUITED: +25%!"},
+        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +25%!"},
         0,
         0
     },
@@ -340,7 +340,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
         5,
-        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
+        {"REAL FIGHTS BEGIN!", "AP LIMITS CARDS!", "HAVE 1 MORE AP!", "MORE INCREASE AP", "TO SURVIVE!"},
         0,
         0
     },

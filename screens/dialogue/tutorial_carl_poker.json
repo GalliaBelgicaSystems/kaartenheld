@@ -2,13 +2,13 @@
   "id": "tutorial_carl_poker",
   "speaker": "CARL:",
   "lines": [
-    "Pairs hit harder!",
-    "PAIR: 2 the same.",
-    "TRIPS: 3 the same.",
-    "STRAIGHT: 5 in row",
-    "FLUSH: same suit.",
+    "PAIRS HIT HARDER!",
+    "PAIR: 2 THE SAME.",
+    "TRIPS: 3 THE SAME.",
+    "STRAIGHT: 5 IN ROW",
+    "FLUSH: SAME SUIT.",
     "FULL HOUSE: 3 + 2.",
-    "4 KIND is massive!",
+    "4 KIND IS MASSIVE!",
     "SUITED: +25%!"
   ]
 }

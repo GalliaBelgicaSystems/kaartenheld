@@ -110,7 +110,7 @@
     {
       "type": "set_enemy_hp",
       "index": 0,
-      "hp": 95
+      "hp": 27
     },
     {
       "type": "press",
@@ -139,7 +139,7 @@
     {
       "type": "set_enemy_hp",
       "index": 0,
-      "hp": 95
+      "hp": 27
     },
     {
       "type": "press",
@@ -162,7 +162,7 @@
     {
       "type": "screen_row",
       "row": 15,
-      "contains": "Ew!"
+      "contains": "EW!"
     },
     {
       "type": "event_arg",

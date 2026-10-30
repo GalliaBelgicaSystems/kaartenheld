@@ -29,7 +29,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
 | Shop | merchant (shop_id=2, opened by delivering the amulet) sells one CARD_IRON_RING + one CARD_BOW_9 (one-copy rows, then out of stock); A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
-| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP, no gold -- the pool comes from the field chest: `ENERGY_POOL` 2) |
+| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP -- the +1 needs a real win, still reachable at 30 HP; the pool comes from the field chest: `ENERGY_POOL` 2) |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
@@ -153,7 +153,7 @@ tools/walkthrough/
 
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
   (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
-  1x99 HP practice spar (0-damage deck, unkillable); fleeing shows his
+  1x30 HP practice spar (0-damage deck, tough but beatable); fleeing shows his
   farewell box deferred on the FLED! result (no AP, no gold).
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection
