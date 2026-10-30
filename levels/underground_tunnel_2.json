@@ -5,7 +5,7 @@
     "width": 20,
     "height": 18,
     "tileset": "underground",
-    "music": "MUSIC_DUNGEON",
+    "music": "MUSIC_UNDERGROUND",
     "map_id": "MAP_UNDERGROUND_TUNNEL_2"
   },
   "default_walkable": "underground.underground_floor_with_debris_1",

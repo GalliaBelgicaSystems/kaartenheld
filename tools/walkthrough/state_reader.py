@@ -159,6 +159,8 @@ MUSIC_FOREST = 10
 MUSIC_CHEST = 11
 MUSIC_GAMEOVER = 12
 MUSIC_ENDING = 13
+MUSIC_CASINO = 14
+MUSIC_UNDERGROUND = 15
 
 # SFX ids (src/audio/audio.h) + engine idle value (audio.c SFX_NONE)
 SFX_ALERT = 7

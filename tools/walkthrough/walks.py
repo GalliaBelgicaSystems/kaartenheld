@@ -39,7 +39,7 @@ from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
                                       BATTLE_HAND, CARD_SIZE, CARD_TYPE,
-                                      CARD_VALUE)
+                                      CARD_VALUE, MUSIC_UNDERGROUND)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
 # list cannot silently break this module.
@@ -942,7 +942,7 @@ def walk_c(planner, checks):
     s.check("underground tunnel entered", _crossed,
             expected="underground_tunnel", actual="no crossing")
     s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
-    s.check_eq("underground music", s.reader.music_track(), MUSIC_DUNGEON)
+    s.check_eq("underground music", s.reader.music_track(), MUSIC_UNDERGROUND)
     # Walk the tunnel to the top-right stairs and cross into the forest:
     # the gate sits at (17,2), so stop one cell south and step north onto
     # it (avoid_exits keeps the entry gate from warping us back out).

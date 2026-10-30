@@ -107,6 +107,9 @@ void music_play_banked(void)
     } else if (track == MUSIC_CASINO) {
         song = &song_casino;
         bank = HUGE_MUSIC_BANK_B9;
+    } else if (track == MUSIC_UNDERGROUND) {
+        song = &song_underground;
+        bank = HUGE_MUSIC_BANK_B9;
     }
     g_audio_current_track = track;
     g_bk_ptr_a = (void *)song;

@@ -33,7 +33,8 @@ OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio")
 
 SONGS = ["battle", "desolate_landscape", "forest", "boss_fight",
          "village", "castle", "mimic", "mimic_intro",
-         "opening", "chest_opening", "game_over", "demo_complete"]
+         "opening", "chest_opening", "game_over", "demo_complete",
+         "underground"]
 
 SR = 22050          # output sample rate
 TICK_HZ = 64        # hUGE_dosound rate (256 Hz timer / 4)
@@ -154,8 +155,12 @@ def parse_song_c(path, note_names):
 # ── GB hardware models ────────────────────────────────────────────────
 
 def period_to_freq(period):
-    if period >= 2048 or period < 0:
-        raise RenderError(f"period {period} out of range")
+    # GB period registers (NRx3/NRx4) are 11 bits: the driver writes the
+    # full 16-bit portamento value and the hardware keeps the low 11
+    # (hUGEDriver never masks; update_channel_freq splits DE straight
+    # into LOW/HIGH).  Mask here instead of erroring: slides that cross
+    # 2047 wrap on hardware, and the preview must follow.
+    period &= 0x7FF
     return 131072.0 / (2048 - period)
 
 
@@ -421,7 +426,7 @@ class Emu:
             v = self.chans[ch]
             if inner == 0:
                 # row tick: attack path (porta skipped on tick 0, like the driver)
-                if fx not in (0, 1, 2, 0xE):
+                if fx not in (0, 1, 2, 0xC, 0xE):
                     raise RenderError(f"pattern effect {fx} unsupported")
                 arp = fx == 0 and param != 0
                 if note < LAST_NOTE:
@@ -439,6 +444,27 @@ class Emu:
                     raise RenderError(f"note value {note} unsupported")
                 if fx == 0xE and param == 0:
                     v.cut = True
+                if fx == 0xC:
+                    # set volume (driver fx_set_volume, tick 0 only): the
+                    # channel's volume becomes param's low nibble, applied
+                    # on top of whatever the row attacked (the driver then
+                    # replays the note at the new volume).  CH3's wave
+                    # volume is quantized exactly like the driver.
+                    set_vol = param & 0x0F
+                    if ch == 3:
+                        if set_vol == 0:
+                            v.wavevol = 0x00
+                        elif set_vol < 5:
+                            v.wavevol = 0x60
+                        elif set_vol < 10:
+                            v.wavevol = 0x40
+                        else:
+                            v.wavevol = 0x20
+                    else:
+                        # pace 0 + direction 0: env_vol() reads it back
+                        # as a constant volume.
+                        v.env = set_vol << 4
+                        v.env_t0 = self.tick
                 self.table_step(ch)
                 if ch == 0:
                     self.sweep_step(self.tick)
@@ -454,6 +480,10 @@ class Emu:
                 elif fx == 0xE:
                     if inner == param:
                         v.cut = True
+                elif fx == 0xC:
+                    # set volume acts tick-0 only (driver ret nz); inner
+                    # ticks ignore it.
+                    pass
                 else:
                     raise RenderError(f"pattern effect {fx} on inner tick unsupported")
                 self.table_step(ch)
