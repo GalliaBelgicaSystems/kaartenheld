@@ -115,12 +115,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 9
+   "expected": 98
   },
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "9/10"
+   "contains": "98/99"
   }
  ],
  "initial_state": {

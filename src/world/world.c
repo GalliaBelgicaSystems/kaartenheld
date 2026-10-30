@@ -344,6 +344,7 @@ void world_on_battle_end(Game *g, bool victory)
 void world_on_battle_fled(Game *g)
 {
     World *w;
+    WorldActorRuntime *act;
     uint8_t idx;
     if (!g) return;
     w = &g->world;
@@ -358,8 +359,11 @@ void world_on_battle_fled(Game *g)
     w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
     if (idx == NO_ACTOR_INDEX) return;
 
-    if (w->actors[idx].active) {
-        w->actors[idx].hp = g->battle.enemies[0].hp;
+    /* Hoisted (AGENTS.md 52.18): one 16-bit indexed address instead of
+     * re-deriving it per field access. */
+    act = &w->actors[idx];
+    if (act->active) {
+        act->hp = g->battle.enemies[0].hp;
     }
 }
 

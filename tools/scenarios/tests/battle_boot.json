@@ -18,12 +18,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 10
+   "expected": 99
   },
   {
    "type": "screen_row",
    "row": 0,
-   "contains": "CARL: PICK CARDS"
+   "contains": "TARGET CARL"
   },
   {
    "type": "screen_row_not_contains",

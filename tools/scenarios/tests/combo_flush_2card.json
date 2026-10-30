@@ -1,11 +1,16 @@
 {
  "name": "combo_flush_2card",
  "test": true,
- "description": "Flush (SW1+SW2+SW4+SW5+SW9: all one symbol, not sequential -- strict poker requires five cards).  Tier FLUSH, multiplier 240+25=265, damage 21*265/100=55.  Kills the slime.  Two-card same-symbol hands are HIGH CARD now.",
+ "description": "Flush (SW1+SW2+SW4+SW5+SW9: all one symbol, not sequential -- strict poker requires five cards).  Tier FLUSH, multiplier 240+25=265, damage 21*265/100=55.  Kills Carl (staged HP; unkillable at 99 in real play).  Two-card same-symbol hands are HIGH CARD now.",
  "actions": [
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 55
   },
   {
    "type": "set_hand_card",

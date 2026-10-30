@@ -1269,9 +1269,9 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
-  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1,
-  chest +1, Monster Hunt +1, mimic +1 from the base-1 pool, reaching 5
-  in any order);
+  events raise the variable with `ADD_VARIABLE` (no cap; chest +1,
+  Monster Hunt +1, mimic +1 from the base-1 pool, reaching 4 in any
+  order -- the tutorial spar grants none);
   battles stage the
   pool at entry and reuse it for the whole fight. Affordability is checked
   at selection time against `energy - combo_reserved_cost()` and paid at

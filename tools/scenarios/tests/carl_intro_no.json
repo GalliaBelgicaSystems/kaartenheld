@@ -1,0 +1,89 @@
+{
+  "name": "carl_intro_no",
+  "test": true,
+  "description": "Answering NO to Carl's spar offer clears the stashed spar and opens the decline line instead: closing it returns to the overworld with no fight",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 1,
+      "value": 1
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_DECLINE"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BATTLE_STARTED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true
+    }
+  }
+}

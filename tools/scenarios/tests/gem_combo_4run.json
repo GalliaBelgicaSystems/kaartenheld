@@ -1,7 +1,7 @@
 {
   "name": "gem_combo_4run",
   "test": true,
-  "description": "Short straight top-three rule (gem equipped): a 4-run stages SW1 + BO2 + SW3 + BO4, only the highest three count (2+3+4=9), damage 9*130/100=11. Kills the 5 HP slime.",
+  "description": "Short straight top-three rule (gem equipped): a 4-run stages SW1 + BO2 + SW3 + BO4, only the highest three count (2+3+4=9), damage 9*130/100=11. Kills Carl (staged HP; unkillable at 99 in real play).",
   "initial_state": {
    "scene": "TEST_FIELD",
    "player": {
@@ -21,6 +21,11 @@
     "frames": 5
    },
    {
+    "type": "set_enemy_hp",
+    "index": 0,
+    "hp": 11
+  },
+  {
     "type": "set_hand_card",
     "index": 0,
     "card_type": "SW",

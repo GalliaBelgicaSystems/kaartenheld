@@ -1,11 +1,16 @@
 {
  "name": "combo_3card",
  "test": true,
- "description": "Three of a kind (SW3 + SW3 + SW3, suited): tier THREE KIND, multiplier 180+25=205, damage 9*205/100=18.  Kills the 5 HP slime.  Locks COMBO_RESOLVED payload (tier=3) and EFFECT_RESOLVED amount.",
+ "description": "Three of a kind (SW3 + SW3 + SW3, suited): tier THREE KIND, multiplier 180+25=205, damage 9*205/100=18.  Kills Carl (staged to 18 HP; unkillable at 99 in real play).  Locks COMBO_RESOLVED payload (tier=3) and EFFECT_RESOLVED amount.",
  "actions": [
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 18
   },
   {
    "type": "set_hand_card",

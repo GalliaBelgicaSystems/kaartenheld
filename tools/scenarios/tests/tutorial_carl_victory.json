@@ -1,217 +1,207 @@
 {
- "name": "tutorial_carl_victory",
- "test": true,
- "description": "Beating Carl's 10 HP practice spar (0-damage deck) fires TUTORIAL_COMPLETE: energy pool gains a uniform +1 (2 to 3 here), his good-luck speech shows deferred at the battle exit, and the field spar is recorded defeated",
- "actions": [
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 13
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "set_enemy_hp",
-   "index": 0,
-   "hp": 1
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "wait",
-   "frames": 200
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
+  "name": "tutorial_carl_victory",
+  "test": true,
+  "description": "Beating Carl's 99 HP practice spar (forced kill via debug HP staging, unkillable in real play) (0-damage deck) after sitting through his full coaching (attack, defend, poker, flee boxes; the killing blow lands with battle over, so no jeer fires) fires TUTORIAL_COMPLETE: energy pool gains a uniform +1 (2 to 3 here), his good-luck speech shows deferred at the battle exit, and the field spar is recorded defeated",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 13
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 1
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_WON"
+    },
+    {
+      "type": "event_occurred",
+      "event": "SCRIPT_TRIGGERED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_STARTED"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_FLEE"
+    },
+    {
+      "type": "variable",
+      "variable": "ENERGY_POOL",
+      "expected": 3
+    },
+    {
+      "type": "actor_state",
+      "actor": "SLIME_FIELD",
+      "expected_state": "DEFEATED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "seed": 5002,
+    "flags": {
+      "FIELD_CHEST": true
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    },
+    "variables": {
+      "ENERGY_POOL": 2
+    }
   }
- ],
- "assertions": [
-  {
-   "type": "game_state",
-   "expected": "OVERWORLD"
-  },
-  {
-   "type": "event_occurred",
-   "event": "BATTLE_WON"
-  },
-  {
-   "type": "event_occurred",
-   "event": "SCRIPT_TRIGGERED"
-  },
-  {
-   "type": "event_occurred",
-   "event": "DIALOGUE_STARTED"
-  },
-  {
-   "type": "variable",
-   "variable": "ENERGY_POOL",
-   "expected": 3
-  },
-  {
-   "type": "actor_state",
-   "actor": "SLIME_FIELD",
-   "expected_state": "DEFEATED"
-  }
- ],
- "initial_state": {
-  "scene": "TEST_FIELD",
-  "player": {
-   "x": 13,
-   "y": 8,
-   "facing": "DOWN"
-  },
-  "seed": 5002,
-  "flags": {
-   "FIELD_CHEST": true
-  },
-  "party": {
-   "HERO": {
-    "hp": 60,
-    "max_hp": 60
-   }
-  },
-  "variables": {
-   "ENERGY_POOL": 2
-  }
- }
 }

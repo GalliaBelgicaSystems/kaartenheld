@@ -1,0 +1,73 @@
+{
+  "name": "carl_intro_yes",
+  "test": true,
+  "description": "Answering YES to Carl's spar offer (default cursor) closes the lesson into the stashed spar: battle starts, and the first frame opens his attack coaching box",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "DIALOGUE"
+    },
+    {
+      "type": "dialogue_id",
+      "expected": "TUTORIAL_CARL_ATTACK"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_CHOICE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 0,
+      "value": "TUTORIAL_CARL_INTRO"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_CHOICE",
+      "index": 1,
+      "value": 0
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_STARTED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true
+    }
+  }
+}

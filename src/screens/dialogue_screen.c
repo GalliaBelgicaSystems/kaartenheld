@@ -6,25 +6,29 @@
 #include "ui.h"
 #include "banked.h"
 
-/* Bank-8 choice nav body (src/game/heal_mage_banked.c): evaluates pad
+/* Bank-10 choice nav body (src/game/choice_nav_banked.c): evaluates pad
  * edges, toggles/confirms, and repaints the cursor cells inline, so the
- * fixed bank pays just the dispatch (AGENTS.md 52.11.1/52.18). */
+ * fixed bank pays just the dispatch (AGENTS.md 52.11.1/52.18).  One body
+ * arbitrates every YES/NO dialogue (Heal Mage, kobold table invite,
+ * Carl's spar offer); what an answer means is game-owned data below. */
 void dialogue_choice_nav_banked(void);
 
 void dialogue_screen_update(Game *g)
 {
     if (!g || !g->dialogue.active) return;
 
-    /* YES/NO choice arbitration lives in the game-owned banked body
-     * (fixed-bank cost: staging + call -- the fixed bank sits hard
+    /* YES/NO choice arbitration lives in the game-owned bank-10 choice
+     * body (fixed-bank cost: staging + call -- the fixed bank sits hard
      * against 0x8000, AGENTS.md §52.18).  It reports 3 to open the
-     * staged follow-up (stay), 2 to confirm (advance), 6 for a
-     * confirmed heal (jingle plus the staged HEALED / STORY_FLAG_SET
-     * telemetry are still owed here -- banked code cannot reach the
-     * fixed-bank audio/telemetry -- then the staged thanks opens
-     * instead of advancing), and 0/1/5 to stay/advance plainly.  The
-     * staged ids are opaque data to the engine (never game branches). */
-    g_bk_call_bank = 8;
+     * staged follow-up (stay), 2 to confirm (advance), 6 for a confirmed
+     * heal (jingle plus the staged HEALED / STORY_FLAG_SET telemetry are
+     * still owed here -- banked code cannot reach the fixed-bank
+     * audio/telemetry -- then the staged thanks opens instead of
+     * advancing), 7 for a confirmed table invite (close through the real
+     * API so DIALOGUE_ENDED stays paired, then the bank-8 tick opens the
+     * table), and 0/1/5 to stay/advance plainly.  The staged ids are
+     * opaque data to the engine (never game branches). */
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
     if (g_bk_byte_a == 5) {
@@ -62,6 +66,18 @@ void dialogue_screen_update(Game *g)
 
     if (!dialogue_next(&g->dialogue)) {
         interaction_on_dialogue_end(&g->dialogue, &g->state);
+        /* Mid-battle Carl box (msg 9 parked by the banked tick when it
+         * staged the box, and by nothing else): return to the fight --
+         * never restart it through the stashed-slot path below.  This
+         * also covers the fled-lesson farewell (battle already over):
+         * it lands back on the FLED! result screen, whose exit press
+         * then runs the normal fled exit.  Clearing consumes the
+         * one-shot. */
+        if (g->battle.msg_id == 9) {
+            g->battle.msg_id = 0;
+            screen_change(g, SCREEN_BATTLE);
+            return;
+        }
         /* Stashed spar: closing a lesson that detoured from an
          * encounter (Carl) starts the battle instead of returning
          * to the overworld.  The slot is set only by the encounter

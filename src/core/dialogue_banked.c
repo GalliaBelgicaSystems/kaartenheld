@@ -1,4 +1,4 @@
-#pragma bank 7
+#pragma bank 10
 
 #include "dialogue.h"
 #include "banked.h"
@@ -9,7 +9,7 @@
  * banked_copy, no per-row scratch) and stages speaker + lines into the
  * WRAM buffers.  Sets d->active on success; the fixed-bank wrapper emits
  * DIALOGUE_STARTED afterwards.  All pointers stored into DialogueState
- * target WRAM buffers, never bank 7 rodata. */
+ * target WRAM buffers, never bank-10 rodata. */
 
 static DialogueState *s_dlg_d;
 static DialogueId s_dlg_id;

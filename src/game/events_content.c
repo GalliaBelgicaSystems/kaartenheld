@@ -118,7 +118,7 @@ const EventDefinition g_events[] = {
      * Felling the mimic (a solo miniboss with a persistent actor_id,
      * so this fires exactly once like the knight split) grants +1
      * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
-     * tutorial/chest/Monster Hunt milestones, and narrates the next step
+     * chest/Monster Hunt milestones, and narrates the next step
      * (speakerless box, like FOUND AMULET: the dead mimic gives no
      * speech).  The grant is observable through VARIABLE_SET plus
      * the snapshot. */
@@ -263,36 +263,39 @@ const EventDefinition g_events[] = {
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────
      * Carl is TWO co-located actors on one tile: a tutor hostile
-     * (actor_id 1, AI_TUTOR, 15 HP, 0-power spar deck) and a dialogue
-     * static (actor_id 0, never defeat-gated, carries
-     * DIALOGUE_ID_TUTORIAL_CARL_INTRO).  Both share ENTITY_ID_CARL;
-     * only the runtime hostile slot can be defeated, so
-     * TUTORIAL_COMPLETE below fires exactly once on the spar win.
-     * The spar is gated on the field cache: talking or bumping the
+     * (actor_id 1, AI_TUTOR, 99 HP, 0-power spar deck) and a dialogue
+     * static (actor_id 0, never defeat-gated, carries the YES/NO spar
+     * offer).  Both share ENTITY_ID_CARL; only the runtime hostile slot
+     * can be defeated, so TUTORIAL_COMPLETE below fires exactly once on
+     * the (debug-only, at 99 HP) spar win.  Carl cannot be beaten in
+     * real play, so fleeing a finished lesson shows a farewell speech
+     * instead (staged by the banked tick through the post-tick opener,
+     * no event row needed); the +1 AP stays on the chest/hunt/mimic
+     * track.  The spar is gated on the field cache: talking or bumping the
      * tile while STORY_FLAG_ID_FIELD_CHEST is clear matches
      * CARL_CHEST_FIRST instead ("Open chest, then come back!"), which
      * returns ENGAGE_DIALOGUE without stashing the spar slot
      * (interaction.c syncs the slot only on the actor-dialogue path),
      * so closing it returns to the overworld with no fight -- and the
      * hero enters the spar with the chest's +1 AP (pool 2).  Once the
-     * chest is open no event matches and the ordinary lesson path
-     * (lesson + stashed spar + auto-start on close) runs.
-     * Bumping or facing-talking the tile opens the static's lesson
+     * chest is open no event matches and the ordinary offer path
+     * (offer + stashed spar + auto-start on YES close) runs.
+     * Bumping or facing-talking the tile opens the static's offer
      * through the ordinary dialogue path while the spar slot stays
      * stashed (synced when the dialogue opens, interaction.c);
-     * closing the lesson auto-starts the spar via dialogue_screen's
+     * confirming YES auto-starts the spar via dialogue_screen's
      * stashed-slot test.  Stale-index safety is structural (every
      * gameplay writer stores NO or a live slot, dialogues are modal,
      * every battle exit clears it), not a slot-active guard -- the
      * full vetting call was measured at 136 B and does not fit the
      * debug fixed bank.  The static never
      * despawns by design: post-victory the spar is gone, so bumps
-     * replay the lesson as a remedial with no fight (locked by the
+     * replay the offer as a remedial with no fight (locked by the
      * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
-     * every milestone (tutorial, chest, Monster Hunt) adds exactly one to the
-     * base-1 pool, reaching 5 in any completion order.  Carl's defeat is
-     * persistent (one-shot via GameState.world), so the reward fires
-     * exactly once. */
+     * every milestone (chest, Monster Hunt, mimic) adds exactly one to
+     * the base-1 pool, reaching 4 in any completion order (the tutorial
+     * spar grants none).  Carl's defeat is persistent (one-shot via
+     * GameState.world), so the kill reward fires exactly once. */
     {
         EVENT_ID_CARL_CHEST_FIRST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CARL, EVENT_MAP_ANY,
         1,
@@ -313,8 +316,8 @@ const EventDefinition g_events[] = {
     /* ── Field cache (first poison dagger + AP unlock) ───────────────
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
-     * more) and a +1 AP pool grant (ADD, pairing with the tutorial and
-     * Monster Hunt +1 one-shots toward 5 in any order from the base-1 pool),
+     * more) and a +1 AP pool grant (ADD, pairing with the Monster Hunt
+     * and mimic +1 one-shots toward 4 in any order from the base-1 pool),
      * announced by its own dialogue.  One-shot via
      * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM

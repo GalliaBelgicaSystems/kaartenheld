@@ -1,0 +1,14 @@
+{
+  "id": "tutorial_carl_poker",
+  "speaker": "CARL:",
+  "lines": [
+    "Pairs hit harder!",
+    "PAIR: 2 the same.",
+    "TRIPS: 3 the same.",
+    "STRAIGHT: 5 in row",
+    "FLUSH: same suit.",
+    "FULL HOUSE: 3 + 2.",
+    "4 KIND is massive!",
+    "SUITED: +25%!"
+  ]
+}

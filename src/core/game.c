@@ -145,12 +145,21 @@ void game_update(Game *g)
             audio_play_music(MUSIC_CASINO);
         }
         /* Post-tick dialogue request (e.g. Nis's farewell after leaving
-         * the table): the banked producer cannot call dialogue_start_def,
-         * so it stages the id here.  Generic engine data -- the id is an
-         * opaque value, never a fixed-bank game branch (AGENTS.md 55.1). */
+         * the table, Carl's in-battle coaching boxes): the banked producer
+         * cannot call dialogue_start_def, so it stages the id here.
+         * Generic engine data -- the id is an opaque value, never a
+         * fixed-bank game branch (AGENTS.md 55.1).  The single-line
+         * override (non-zero count) shows one page instead of the full
+         * text; both bytes clear with the id. */
         if (g_bk_dlg_id != 0) {
             dialogue_start_def(&g->dialogue, (DialogueId)g_bk_dlg_id);
+            if (g_bk_dlg_count != 0) {
+                g->dialogue.current_line = g_bk_dlg_line;
+                g->dialogue.line_count = g_bk_dlg_count;
+            }
             g_bk_dlg_id = 0;
+            g_bk_dlg_line = 0;
+            g_bk_dlg_count = 0;
             screen_change(g, SCREEN_DIALOGUE);
         }
     }
