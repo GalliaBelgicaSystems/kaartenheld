@@ -56,11 +56,13 @@ CANONICAL_FLOOR = {
     "forest": "forest_plain_floor_2",
     "desolate_landscape": "desolate_landscape_plain_floor_1",
     "castle": "castle_plain_floor",
+    "underground": "underground_floor_with_debris_1",
 }
 CANONICAL_WALL = {
     "forest": "forest_top_wall_1",
     "desolate_landscape": "desolate_landscape_top_wall_1",
     "castle": "castle_top_wall",
+    "underground": "underground_top_wall_1",
 }
 
 # Canonical sprite refs per tileset, keyed by SPRITE_KIND suffix. Every id
@@ -240,14 +242,25 @@ def parse_flag_names(text):
 def load_tiletype_numbers():
     mapping = {}
     for m in re.finditer(r"^\s*(TILE_[A-Z0-9_]+)\s*=\s*(\d+)", WORLD_H.read_text(), re.M):
-        mapping[int(m.group(2))] = m.group(1)
+        # First wins: aliased values (TILE_UNDERGROUND_*, see world.h)
+        # resolve to their original owner's name, so existing tilesets
+        # keep decompiling to their own art.
+        mapping.setdefault(int(m.group(2)), m.group(1))
     if 0 not in mapping or 1 not in mapping or 2 not in mapping:
         raise DecompileError("TileType enum missing TILE_FLOOR/WALL/EXIT")
     return mapping
 
 
-def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tileset):
-    """Reverse map_base_tile_const: ROM grid value -> 'tileset.tile_id'."""
+def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tileset,
+                       name_to_value=None):
+    """Reverse map_base_tile_const: ROM grid value -> 'tileset.tile_id'.
+
+    Aliased values (TILE_UNDERGROUND_*, see world.h) share their number
+    with a live tile from another tileset, so the bare value->name map
+    cannot pick the home art.  The home manifest wins: name_to_value
+    resolves the home tileset's own constants to values first."""
+    if name_to_value is None:
+        name_to_value = {n: v for v, n in const_by_value.items()}
     if value == 0:
         try:
             return f"{tileset_id}.{CANONICAL_FLOOR[tileset_id]}"
@@ -258,6 +271,11 @@ def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tiles
             return f"{tileset_id}.{CANONICAL_WALL[tileset_id]}"
         except KeyError:
             raise DecompileError(f"no canonical wall for tileset '{tileset_id}'")
+    for (ts, const), tid in gb_to_tileid.items():
+        if ts != home_tileset:
+            continue
+        if name_to_value.get(const) == value:
+            return f"{home_tileset}.{tid}"
     name = const_by_value.get(value)
     if name is None:
         raise DecompileError(f"terrain holds unknown TileType value {value}")

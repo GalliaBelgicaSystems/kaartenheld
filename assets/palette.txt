@@ -37,6 +37,12 @@ curtain_dark: #621212
 window_frame: #2e2e2e
 stairs: #b3b0b0
 
+UNDERGROUND
+ground: #916c33
+wall_light: #b68e50
+wall_dark: #5a431f
+void: #000000
+
 TOWN
 ground: #b6a27e
 puddle_stone: #b6b6b6
@@ -120,6 +126,7 @@ castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
 castle2: CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED
 castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
 castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
+underground1: UNDERGROUND/ground, UNDERGROUND/wall_light, UNDERGROUND/wall_dark, UNDERGROUND/void
 town1: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
 town2: TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble
 town3: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base

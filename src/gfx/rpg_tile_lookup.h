@@ -10,11 +10,13 @@ extern const uint8_t g_tileset_forest[1280];
 extern const uint8_t g_tileset_desolate[1024];
 extern const uint8_t g_tileset_castle[720];
 extern const uint8_t g_tileset_village[768];
+extern const uint8_t g_tileset_underground[576];
 extern const uint8_t g_intrepid_font_tiles[1536];
 extern const uint8_t g_tile_pal_forest[80];
 extern const uint8_t g_tile_pal_desolate[64];
 extern const uint8_t g_tile_pal_castle[45];
 extern const uint8_t g_tile_pal_village[48];
+extern const uint8_t g_tile_pal_underground[36];
 
 static inline uint8_t rpg_lookup_tile_id(uint8_t tileset_kind, char glyph)
 {

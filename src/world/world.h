@@ -12,7 +12,8 @@ typedef enum {
     WORLD_TILESET_FOREST   = 2,
     WORLD_TILESET_VILLAGE  = 12,
     WORLD_TILESET_DESOLATE = 14,
-    WORLD_TILESET_CASTLE   = 15
+    WORLD_TILESET_CASTLE   = 15,
+    WORLD_TILESET_UNDERGROUND = 16
 } WorldTilesetKind;
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.
@@ -408,6 +409,67 @@ typedef enum {
     TILE_DESOLATE_LANDSCAPE_61 = 248,
     TILE_DESOLATE_LANDSCAPE_62 = 249,
     TILE_DESOLATE_LANDSCAPE_63 = 250,
+    /* Underground tiles: 30 defs in sheet scan order (vram slots 0..35;
+     * slots 30..35 share the slot-29 void def, like castle 37..44).
+     * The u8 TileType space is exhausted (only 254 is free), so these
+     * ALIAS live values from kind-gated ranges instead of taking new
+     * ones.  Aliasing is safe because every renderer branch except the
+     * gateless castle runs (141..156, 184..186, 251..253 -- all avoided
+     * here) is gated on tileset kind: a value shared with a forest /
+     * village / desolate tile can never render as that tile while kind
+     * is UNDERGROUND, and vice versa.  The aliasing contract (enforced
+     * by tools/level_compiler/generate_tiles.py, which fails the build
+     * on a mismatch): each TILE_UNDERGROUND_<i> must match the live
+     * tile's (walkable, glyph) EXACTLY, or movement/palette/screen-buffer
+     * behavior corrupts BOTH tilesets sharing the value.
+     * Mapping (vram slot -> value -> donor):
+     *   00..19 walls            -> 228..247 (desolate solid '#')
+     *   20,22,23,24 floors      -> 208..211 (desolate walkable ',')
+     *   21 stairs (exit)         -> 227 (desolate exit, walkable '>')
+     *   25..28 interior corners  -> 212..214 + 220 (desolate solid '#';
+     *                             215/216 are treetrunk 't' art and are
+     *                             never aliased)
+     *   29..35 void (one def)    -> 221 (desolate solid '#'; the manifest
+     *                             forces glyph '#' over the object default
+     *                             so the entry matches)
+     * All values sit in one contiguous run (208..216, 220/221, 227..250),
+     * so the renderer maps them through a single fixed-bank slot table
+     * (s_ug_slot in ui.c; the fixed bank has room again after the
+     * semantic-refill move-out).  A banked-table read was tried first,
+     * but fixed-bank code itself executes from the switchable window
+     * (ROM bank 1: ui.c links above 0x4000), so an inline bank select
+     * would unmap the code mid-execution -- only the WRAM trampoline
+     * may switch banks. */
+    TILE_UNDERGROUND_00 = 228,
+    TILE_UNDERGROUND_01 = 229,
+    TILE_UNDERGROUND_02 = 230,
+    TILE_UNDERGROUND_03 = 231,
+    TILE_UNDERGROUND_04 = 232,
+    TILE_UNDERGROUND_05 = 233,
+    TILE_UNDERGROUND_06 = 234,
+    TILE_UNDERGROUND_07 = 235,
+    TILE_UNDERGROUND_08 = 236,
+    TILE_UNDERGROUND_09 = 237,
+    TILE_UNDERGROUND_10 = 238,
+    TILE_UNDERGROUND_11 = 239,
+    TILE_UNDERGROUND_12 = 240,
+    TILE_UNDERGROUND_13 = 241,
+    TILE_UNDERGROUND_14 = 242,
+    TILE_UNDERGROUND_15 = 243,
+    TILE_UNDERGROUND_16 = 244,
+    TILE_UNDERGROUND_17 = 245,
+    TILE_UNDERGROUND_18 = 246,
+    TILE_UNDERGROUND_19 = 247,
+    TILE_UNDERGROUND_20 = 208,
+    TILE_UNDERGROUND_21 = 227,
+    TILE_UNDERGROUND_22 = 209,
+    TILE_UNDERGROUND_23 = 210,
+    TILE_UNDERGROUND_24 = 211,
+    TILE_UNDERGROUND_25 = 212,
+    TILE_UNDERGROUND_26 = 213,
+    TILE_UNDERGROUND_27 = 214,
+    TILE_UNDERGROUND_28 = 220,
+    TILE_UNDERGROUND_29 = 221,
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel

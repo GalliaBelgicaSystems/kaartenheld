@@ -26,7 +26,7 @@ REGISTRY_VERSION = 1
 # _test_base (a fixed block that never moves); only the NAMES live here.
 TEST_SCENE_ORDER = ["test_field", "test_town", "test_forest",
                     "test_mountain_pass", "test_castle", "test_south_field",
-                    "test_gamble"]
+                    "test_gamble", "test_underground"]
 
 
 def registry_path():

@@ -253,6 +253,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
     { MAP_TEST_GAMBLE,     g_test_gamble_actors,
         (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])) },
+    { MAP_TEST_UNDERGROUND, 0,
+        0 },
 };
 
-const uint8_t g_actor_table_count = 7;
+const uint8_t g_actor_table_count = 8;

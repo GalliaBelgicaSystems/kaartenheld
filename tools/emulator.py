@@ -27,7 +27,7 @@ def _scene_id_maps():
         scenes, base = {}, 240
     test_names = ["test_field", "test_town", "test_forest",
                   "test_mountain_pass", "test_castle", "test_south_field",
-                  "test_gamble"]
+                  "test_gamble", "test_underground"]
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}

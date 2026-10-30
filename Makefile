@@ -235,6 +235,12 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
 		--shade-map generated/tiles/shades/village.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
+	# ── Underground tileset (assets/underground.png, 12 cols × 3 rows) ───
+	# Full 36-tile world sheet (g_tileset_underground), scan order like
+	# village (VRAM slot == scan index, see world.h TILE_UNDERGROUND_*).
+	@python3 tools/png2gb.py assets/underground.png --name rpg_underground_tiles \
+		--shade-map generated/tiles/shades/underground.json \
+		--raw -o $(GFX_OUT_DIR)/rpg_underground_tiles.inc
 	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 10 rows) ──
 	# 9 border/background tiles for the boxed battle-hand cards (TL TM TR /
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
@@ -462,7 +468,7 @@ tiles-check:
 # Ramps always win (every tile gets an existing artist ramp); wrongness is
 # reported in generated/tiles/ramp_mismatches.json, never a build failure.
 # See tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/level_editor/tilesets/underground.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
 	@python3 tools/compose_battle_sprites.py
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
@@ -499,7 +505,7 @@ GENERATED_TILE_PALETTE = $(GENERATED_TILES_DIR)/tile_palette.h
 GENERATED_TILE_ANIM = $(GENERATED_TILES_DIR)/anim_pairs.h
 tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM)
 
-$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
+$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_editor/tilesets/underground.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
 	python3 tools/level_compiler/generate_tiles.py --out "$(GENERATED_TILES_DIR)"
 
 $(GENERATED_TILES_DIR):

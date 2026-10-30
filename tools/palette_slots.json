@@ -45,6 +45,17 @@
    "7": "town7",
    "_why": "5 ground-fence=town1 (18 tiles, merchant NPC); 6 houses=town2 (14 tiles, mayor NPC); 3 fence=town6 (guard/wizard/dog NPC); 1 fire=town3; 0/2 stone=town4/town5; 7 house-wall=town7; 4 = PAPER slot (UI_COLOR_PAPER): ui_draw_dialogue re-programs it to a white/black ramp, so NO world tile may use it (enforced by tools/verify_palette_manifest.py); it holds town4 as an inert placeholder"
   },
+  "underground": {
+   "0": "underground1",
+   "1": "underground1",
+   "2": "underground1",
+   "3": "underground1",
+   "4": "underground1",
+   "5": "underground1",
+   "6": "underground1",
+   "7": "underground1",
+   "_why": "single-ramp set (brown stone: ground/wall_light/wall_dark/void); every tile encodes slot 0; 4 = PAPER slot holds the same ramp as an inert placeholder, never referenced by tile_palettes (enforced by tools/verify_palette_manifest.py)"
+  },
   "base": {
    "0": "fight1",
    "1": "fight4",

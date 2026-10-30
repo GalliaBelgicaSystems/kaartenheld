@@ -87,6 +87,7 @@ def landscape_entries(tilesets, const_by_value):
                 if info:
                     exit_consts.add(info["gb_constant"])
     entries = []
+    seen_value = {}
     for ts_id, ts in sorted(tilesets.items()):
         if not ts.get("vram_block"):
             continue
@@ -109,6 +110,23 @@ def landscape_entries(tilesets, const_by_value):
                 glyph = "."
             else:
                 glyph = "#"
+            # Value aliasing (see world.h TILE_UNDERGROUND_*): the u8
+            # TileType space is exhausted, so a new tileset may reuse a
+            # live value whose tile already matches.  The match must be
+            # EXACT -- a divergent alias would corrupt movement/palette/
+            # screen-buffer behavior for BOTH tilesets sharing the value,
+            # so it fails the build here instead of shipping.  First
+            # (alphabetical-tileset) entry wins; the alias adds no range.
+            if value in seen_value:
+                prev_name, prev_walk, prev_glyph = seen_value[value]
+                if (walkable, glyph) != (prev_walk, prev_glyph):
+                    raise SystemExit(
+                        f"generate_tiles: value {value} shared by "
+                        f"'{prev_name}' ({prev_walk},{prev_glyph}) and "
+                        f"'{name}' ({walkable},{glyph}): aliased tiles "
+                        f"must match exactly (see world.h).")
+                continue
+            seen_value[value] = (name, walkable, glyph)
             entries.append((name, value, walkable, glyph))
     entries.sort(key=lambda e: e[1])
     return entries
@@ -338,9 +356,11 @@ def emit_palette():
     out.append("")
 
     kind_id_map = {"forest": "FOREST", "desolate_landscape": "DESOLATE",
-                   "castle": "CASTLE", "village": "VILLAGE"}
+                   "castle": "CASTLE", "village": "VILLAGE",
+                   "underground": "UNDERGROUND"}
 
-    for ts_id in ("forest", "desolate_landscape", "castle", "village"):
+    for ts_id in ("forest", "desolate_landscape", "castle", "village",
+                    "underground"):
         kind = kind_id_map.get(ts_id, ts_id.upper())
 
         manifest = load_palette_manifest(ts_id)
@@ -348,7 +368,7 @@ def emit_palette():
             print(f"generate_tiles: missing manifest generated/tiles/{ts_id}.json "
                   f"(run make manifest)", file=sys.stderr)
             return None
-        # Full VRAM-slot-order array, emitted as-is (lengths 80/64/16/48
+        # Full VRAM-slot-order array, emitted as-is (lengths 80/64/45/48/36
         # must match rpg_tile_lookup.h; SDCC fails loudly otherwise).
         pal_values = manifest["tile_palettes"]
 
@@ -407,14 +427,15 @@ def main(argv):
     # exit indices per tileset kind (WORLD_TILESET_* numbering lives in
     # scene.h; 2 = FOREST, 14 = DESOLATE, 15 = CASTLE).
     kind_of = {"forest": "FOREST", "desolate_landscape": "DESOLATE",
-               "castle": "CASTLE", "village": "VILLAGE"}
+               "castle": "CASTLE", "village": "VILLAGE",
+               "underground": "UNDERGROUND"}
     exit_idx = {}
     for ts_id, kind in kind_of.items():
         ts = tilesets.get(ts_id, {})
         for e in ts.get("vram_block", {}).get("tiles", []):
             if e.get("exit"):
                 exit_idx[kind] = e["index"]
-    for kind in ("FOREST", "DESOLATE", "CASTLE", "VILLAGE"):
+    for kind in ("FOREST", "DESOLATE", "CASTLE", "VILLAGE", "UNDERGROUND"):
         if kind not in exit_idx:
             print(f"generate_tiles: no exit marked for {kind}", file=sys.stderr)
             return 1

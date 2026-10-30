@@ -15,6 +15,7 @@
 | desolate_landscape | desolate2 | desolate3 | desolate_water | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town4 | town1 | town2 | town7 |
+| underground | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 |
 | base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fightspider | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
@@ -39,7 +40,7 @@
 |---|---|
 | castle2 (5) | castle_bottom_left_throne, castle_bottom_right_throne, castle_chair_facing_left, castle_chair_facing_right, castle_table_left_half, castle_table_right_half, castle_table_top_empty, castle_table_with_plate_1, castle_table_with_plate_2, castle_top_left_throne, castle_top_right_throne |
 | castle3 (1) | castle_bottom_chandelier, castle_carpet_exterior_corner, castle_carpet_interior_corner, castle_curtain, castle_left_rug, castle_left_rug_rotated, castle_red_carpet, castle_right_rug, castle_right_rug_rotated, castle_top_chandelier |
-| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_exit_up, castle_floor_with_debris, castle_left_wall, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
+| castle4 (0) | castle_black_emptyness, castle_bottom_left_corner_wall, castle_bottom_right_corner_wall, castle_bottom_wall, castle_exit, castle_exit_up, castle_floor_with_debris, castle_left_wall, castle_plain_floor, castle_right_wall, castle_roman_column_base, castle_roman_column_top, castle_top_left_corner_wall, castle_top_right_corner_wall, castle_top_wall, castle_vase, castle_vase_2, castle_window |
 
 ### desolate_landscape (set `desolate_landscape`)
 
@@ -62,6 +63,12 @@
 | town5 (2) | village_top_left_well, village_top_right_well |
 | town6 (3) | village_barrel |
 | town7 (7) | village_middle_house_closed_door, village_middle_house_open_door |
+
+### underground (set `underground`)
+
+| ramp (slot) | tiles |
+|---|---|
+| underground1 (0) | underground_black_emptyness_1, underground_bottom_left_corner_wall, underground_bottom_left_interior_corner, underground_bottom_right_corner_wall, underground_bottom_right_interior_corner, underground_bottom_wall_1, underground_bottom_wall_2, underground_bottom_wall_3, underground_bottom_wall_4, underground_floor_with_debris_1, underground_floor_with_debris_2, underground_floor_with_debris_3, underground_floor_with_light (≈ #dbaf6c), underground_left_wall_1, underground_left_wall_2, underground_left_wall_3, underground_left_wall_4, underground_right_wall_1, underground_right_wall_2, underground_right_wall_3, underground_right_wall_4, underground_stairs (≈ #dbaf6c), underground_top_left_corner_wall, underground_top_left_interior_corner, underground_top_right_corner_wall, underground_top_right_interior_corner, underground_top_wall_1, underground_top_wall_2, underground_top_wall_3, underground_top_wall_4 |
 
 ## Battle sprites (display ramp + draw path)
 
@@ -146,5 +153,7 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
+| underground | [9, 1] | underground1 | #dbaf6c |
+| underground | [10, 1] | underground1 | #dbaf6c |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites6.

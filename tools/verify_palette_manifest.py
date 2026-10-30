@@ -7,7 +7,8 @@ ordering code, what palette each VRAM slot SHOULD get and compares that with
 generated/tiles/<tileset>.json (which becomes g_tile_pal_* in tile_palette.h,
 indexed by VRAM slot at runtime: g_active_tile_palette[i] = pal_src[i]).
 
-Checks, per world tileset (forest, desolate_landscape, castle, village):
+Checks, per world tileset (forest, desolate_landscape, castle, village,
+underground):
 
   1. Length equals the C array size declared in src/gfx/rpg_tile_lookup.h.
   2. VRAM slot i sits at the sheet cell the gfx rule encodes into slot i:
@@ -49,12 +50,13 @@ LOOKUP_H = REPO_ROOT / "src" / "gfx" / "rpg_tile_lookup.h"
 PAPER_SLOT = 4  # UI_COLOR_PAPER in src/ui/ui.h
 
 # tileset -> (sheet png, C array suffix in rpg_tile_lookup.h, VRAM pack width)
-# pack width None = the sheet's own width (all four sets scan order).
+# pack width None = the sheet's own width (all five sets scan order).
 WORLD = {
     "forest": ("forest-tile.png", "forest", None),
     "desolate_landscape": ("desolate-tile.png", "desolate", None),
     "castle": ("castle-tile.png", "castle", None),
     "village": ("village-tile.png", "village", None),
+    "underground": ("underground.png", "underground", None),
 }
 
 
