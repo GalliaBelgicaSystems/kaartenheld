@@ -21,6 +21,11 @@
     "frames": 5
    },
    {
+    "type": "set_enemy_hp",
+    "index": 0,
+    "hp": 21
+  },
+  {
     "type": "set_hand_card",
     "index": 0,
     "card_type": "SW",

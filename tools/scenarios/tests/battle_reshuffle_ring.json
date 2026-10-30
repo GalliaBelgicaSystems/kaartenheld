@@ -10,17 +10,17 @@
   {
    "type": "set_enemy_hp",
    "index": 0,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "set_enemy_hp",
    "index": 1,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "set_enemy_hp",
    "index": 2,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "press",

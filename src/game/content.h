@@ -27,6 +27,13 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Per-frame tutorial tick for Carl's spar: stages each coaching dialogue
+ * box once (attack, defend, poker, flee, then one looping jeer per
+ * player attack) for game_update's post-tick opener.  Called at the top
+ * of battle_screen_update(); returns true when a box was staged (the
+ * caller yields the frame).  Never fires for other battles. */
+bool game_carl_tutorial_update(Game *g);
+
 /* Victory loot drop (docs/loot.md §17/§34.5): runs the bank-3
  * profile + roll body and returns the derived CardId (always drops).
  * Uses the isolated loot RNG only -- never consumes the shared stream. */

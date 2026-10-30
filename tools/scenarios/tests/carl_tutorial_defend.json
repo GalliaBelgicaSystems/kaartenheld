@@ -1,0 +1,110 @@
+{
+  "name": "carl_tutorial_defend",
+  "test": true,
+  "description": "After the first player attack resolves, Carl's 0-damage swing telegraphs into the first DEFEND phase, which opens his shield coaching box instead of a row hint",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "FOE ATTACKS! DEFEND!"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_DEFEND"
+    },
+    {
+      "type": "event_occurred",
+      "event": "ENEMY_CARD_PLAYED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    }
+  }
+}

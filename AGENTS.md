@@ -3359,12 +3359,12 @@ the commit/PR without booting anything.
 08-quests-tab        QUEST tab
 08-carl-field        overworld beside Carl (single field slime)
 08-carl-mark         Carl with the quest "?" overhead (pre-lesson)
-08-carl-tutor        Carl's lesson dialogue (name + warning)
-09-battle            Carl spar opens (select hints on rows 5/9)
+08-carl-tutor        Carl's spar offer (YES/NO ask)
+09-battle            Carl spar opens (plain solo screen, TARGET CARL)
 10-battle-attack     after a player attack (damage dealt)
-10-battle-defend     Carl's telegraph + defend hints
-11-battle-victory    VICTORY result over the solo spar (loot gold asserted)
-11-victory-speech    Carl's good-luck speech (AP 2 -> 3)
+10-battle-defend     Carl's DEFEND phase (shield lesson closed)
+11-battle-fled       FLED! result after fleeing the spar (no reward)
+11-farewell-speech   Carl's farewell box (no AP for fleeing)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)
 12-wizard-save       save menu at the wizard
 13-wizard-saved      after saving to Slot 1

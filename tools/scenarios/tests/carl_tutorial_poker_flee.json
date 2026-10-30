@@ -1,0 +1,194 @@
+{
+  "name": "carl_tutorial_poker_flee",
+  "test": true,
+  "description": "After the first defend resolves, Carl explains poker hands, then tells the hero to flee with B; pressing B on the empty attack hand flees the spar and earns his graduation speech (no AP: the lesson's reward is knowledge), closing back to the overworld",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "B"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "game_state",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_POKER"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_FLEE"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_FAREWELL"
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_FLED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BATTLE_WON"
+    },
+    {
+      "type": "variable",
+      "variable": "ENERGY_POOL",
+      "expected": 1
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    }
+  }
+}

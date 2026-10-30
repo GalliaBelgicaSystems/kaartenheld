@@ -34,7 +34,6 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SFX_ALERT, SFX_NONE)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
-MAX_BATTLE_ROUNDS = 26
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
@@ -136,7 +135,6 @@ def transit_fight(s):
             break
         poke_hand_99(s)
         s.wait_for(lambda: s.text_has("TARGET ")
-                   or s.text_has("PICK CARDS")
                    or s.text_has("PLAYER TURN"), ticks=180)
         poke_hand_99(s)
         # Select exactly one attack card (first attack slot). If the
@@ -159,7 +157,7 @@ def transit_fight(s):
             s.press("select", settle=40)
             if s.text_has("VICTORY") or s.text_has("DEFEATED"):
                 break
-            # Synchronize phases like _battle_round: the attack execute
+            # Synchronize phases: the attack execute
             # runs an animation before DEFEND opens (~240 ticks). Firing
             # blind selects into DEFEND (or into the next round before a
             # card is picked) desyncs the whole fight.
@@ -174,7 +172,6 @@ def transit_fight(s):
             if s.text_has("VICTORY") or s.text_has("DEFEATED"):
                 break
             if s.wait_for(lambda: s.text_has("TARGET ")
-                           or s.text_has("PICK CARDS")
                            or s.text_has("PLAYER TURN"), ticks=240):
                 break
     if s.text_has("VICTORY"):
@@ -344,6 +341,17 @@ def close_dialogue(s, marker, frames=45):
                          label="close " + marker)
 
 
+def close_box(s, tries=8):
+    """Close a modal box opened over the battle screen (Carl's coaching
+    boxes, jeers, farewell): press A until the DIALOGUE screen itself is
+    gone.  Unlike close_dialogue (which stops when one marker row goes
+    away), this drains every page however many the box holds, and never
+    mistakes a mid-wipe torn read for progress."""
+    return s.press_until("a", lambda: not _dialogue_open(s),
+                         tries=tries, settle=30, timeout=120,
+                         label="close box")
+
+
 def _cursor_to(s, idx):
     """Move the battle hand cursor to slot idx (WRAM-read, bounded)."""
     for _ in range(8):
@@ -376,43 +384,6 @@ def _select_cards(s, wanted_types):
                 continue
             s.tick(2)    # reset frame between same-button edges (52.10)
     return picked
-
-
-def _battle_round(s):
-    """One full round: select attack cards + execute, then select shield
-    cards + execute.  True when the battle reached a result banner.
-    Phase waits are input-free (the game advances automatically after
-    each execute).  Both executes are retried like the opening round
-    below: a press eaten by edge timing leaves the phase open instead
-    of advancing, and over a long fight (Carl's 10 HP still needs
-    10+ single-card rounds at the flat-1 opening pool) a single desync
-    cascades into rounds
-    of phase-mismatched presses dealing nothing."""
-    # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
-    # fallback literal PLAYER TURN).
-    s.wait_for(lambda: s.text_has("TARGET ")
-               or s.text_has("PICK CARDS")
-               or s.text_has("PLAYER TURN"), ticks=180)
-    _select_cards(s, ATTACK_TYPES)
-    for _ in range(4):
-        s.press("select", settle=40)     # execute attack
-        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-            return True
-        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
-            break
-    if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-        return True
-    # Defense phase: <name>: DEFEND! banner.
-    _select_cards(s, (BT_SHIELD,))
-    for _ in range(4):
-        s.press("select", settle=40)     # execute defense
-        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-            return True
-        if s.wait_for(lambda: s.text_has("TARGET ")
-                      or s.text_has("PICK CARDS")
-                      or s.text_has("PLAYER TURN"), ticks=240):
-            break
-    return s.text_has("VICTORY") or s.text_has("DEFEATED")
 
 
 def engage_hostile(s, planner, scene_name, hostile_xy):
@@ -745,13 +716,14 @@ def walk_b(planner, checks):
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
-    # sprite now: bumping him opens the lesson first, and closing it
-    # auto-starts the spar from the stashed encounter (no second bump).
+    # sprite now: bumping him opens the spar offer first (YES/NO ask),
+    # and confirming YES auto-starts the spar from the stashed encounter
+    # (no second bump).
     # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
     # Walk adjacent first and capture the quest "?" floating over him
     # (milestone 08-carl-mark): the field cache above already opened his
     # lesson, and the spar is still unwon.  The bump below opens the
-    # lesson, so the mark must be shot BEFORE it.
+    # offer, so the mark must be shot BEFORE it.
     if s.pos() != (14, 12):
         _carl_path = planner.path("field", s.pos(), (14, 12))
         if _carl_path is None:
@@ -775,16 +747,27 @@ def walk_b(planner, checks):
     rows = s.bg_text()
     s.check("carl tutor rows exact",
             rows[14] == "+--CARL:-----------+"
-            and rows[15] == "Human? Here danger  "
-            and rows[16] == "I teach you fight!  "
-            and rows[17] == "U/D choose target  ?",
+            and rows[15] == "HUMAN? HERE DANGER  "
+            and rows[16] == "I TEACH YOU FIGHT!  "
+            and rows[17] == "WANT TO LEARN?     ?",
             expected="exact box text",
             actual=" / ".join(rows[14:18]))
-    # Closing by battle-open (not by CARL: gone): the spar banner itself
-    # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
-    # the fight.  Three advances close the 8-line lesson; press_until
-    # self-heals dropped presses and stops at the first DECK: sighting.
-    s.check("lesson closed into spar",
+    # The offer is a YES/NO ask: advance to the choice row, confirm YES
+    # (the default cursor), and the spar starts by itself.  The spar's
+    # first frame raises the attack coaching box (a normal dialogue box
+    # over the world, not a battle-row hint).
+    s.check("carl choice page",
+            s.press_until("a", lambda: s.text_has("> YES"),
+                          tries=6, settle=30, label="> YES"),
+            expected="> YES", actual="none")
+    s.check("carl spar accepted",
+            s.press_until("a", lambda: s.text_has("PICK CARDS WITH A!"),
+                          tries=6, settle=30, label="attack lesson"),
+            expected="PICK CARDS WITH A!", actual="none")
+    # Closing by battle-open (not by CARL: gone): the two-page attack
+    # box closes into the SELECT phase, and press_until self-heals
+    # dropped presses, stopping at the first DECK: sighting.
+    s.check("attack lesson closed",
             s.press_until("a", lambda: s.text_has("DECK:"),
                           tries=8, settle=30, label="DECK:"),
             expected="DECK:", actual="none")
@@ -801,15 +784,14 @@ def walk_b(planner, checks):
     # (variance-safe: enemy HP strictly decreases per landed hit; never
     # assert exact damage).  Bounded rounds + defeat detection.  Carl's
     # practice deck deals 0, so the hero must still be full afterwards.
-    # His stepwise sparring hints show per phase: the card-pick lesson
-    # while choosing the attack, the shield lesson while defending.
+    # His coaching shows once per phase as normal dialogue boxes: the
+    # attack lesson on spar entry (closed above), the shield lesson on
+    # the first DEFEND, the poker-hands + flee lessons on the way back
+    # to SELECT, then one looping jeer per attack (drained per round).
     prev_total = s.reader.battle_enemy_hp(0)
-    start_total = prev_total
-    victory = False
-    defeated = False
-    # Select-stage banner and hint are up while choosing the attack.
-    s.check("select hint", s.text_has("PICK CARDS"),
-            expected="PICK CARDS", actual="none")
+    # Select-stage banner is up while choosing the attack.
+    s.check("select banner", s.text_has("TARGET CARL"),
+            expected="TARGET CARL", actual="none")
     _select_cards(s, ATTACK_TYPES)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.
@@ -821,58 +803,104 @@ def walk_b(planner, checks):
             break
     s.check("defend banner", s.text_has("DEFEND"),
             expected="DEFEND", actual="none")
-    # The hint shares row 9 with transient messages (a selection
-    # rejection's 45-frame TTL freezes through attack animations, so it
-    # can still own the row when DEFEND opens): wait for the lesson.
-    s.check("defend hint",
-            s.wait_for(lambda: s.text_has("SHIELD"), ticks=150),
-            expected="SHIELD", actual="none")
+    # The first DEFEND phase raises the shield coaching box; close its
+    # two pages, then the battle's own DEFEND banner owns row 0.
+    s.check("defend lesson",
+            s.wait_for(lambda: s.text_has("PICK SHIELD"), ticks=150),
+            expected="PICK SHIELD", actual="none")
+    s.check("defend lesson closed", close_box(s),
+            expected="closed", actual="open")
+    # The close lands back on the battle screen through a full LCD-off
+    # redraw; wait for the DEFEND banner to own row 0 again before
+    # shooting or selecting (inputs eaten mid-wipe desync the fight).
+    s.check("defend banner back",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=180),
+            expected="DEFEND", actual="none")
     s.shoot("10-battle-defend", need="DEFEND")
     _select_cards(s, (BT_SHIELD,))
     s.press("select", settle=40)     # execute defense
     s.shoot("10-battle-attack")
+    # The way back to SELECT raises the poker-hands box, then the flee
+    # box: close both (3 pages + 1) to reach a plain SELECT phase.
+    s.check("poker lesson",
+            s.wait_for(lambda: s.text_has("PAIRS HIT HARDER!"), ticks=240),
+            expected="PAIRS HIT HARDER!", actual="none")
+    s.check("poker+flee lessons closed", close_box(s),
+            expected="closed", actual="open")
+    # Same full-redraw settle on the way back to SELECT: the cursor and
+    # hand must be live before the jeer-round selection runs.
+    s.check("select banner back",
+            s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
+            expected="TARGET CARL", actual="none")
     prev_total = s.reader.battle_enemy_hp(0)
-    for round_no in range(1, MAX_BATTLE_ROUNDS):
-        done = _battle_round(s)
-        if done:
-            victory = s.text_has("VICTORY")
-            defeated = s.text_has("DEFEATED")
+    # One full round with the jeer drained: the way back to SELECT is
+    # plain now (all four coaching boxes showed once), but every
+    # confirmed attack raises exactly one looping jeer box (UCH! first)
+    # on ANIM -- close it, defend through, and the spar is back to a
+    # plain SELECT with strictly less enemy HP.  Carl's 99 HP cannot
+    # drop, so the lesson ends by fleeing, not by winning.
+    _select_cards(s, ATTACK_TYPES)
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
-        if s.reader.battle_player_hp() == 0:
-            defeated = True
+        if s.text_has("CARL:"):          # jeer/reminder box on ANIM
             break
-        total = s.reader.battle_enemy_hp(0)
-        if total < prev_total:
-            s.check("damage dealt round %d" % round_no, True)
-            prev_total = total
-    s.check("battle victory", victory, expected="VICTORY",
-            actual="enemy hp %d/%d after %d rounds%s"
-            % (prev_total, start_total, MAX_BATTLE_ROUNDS,
-               " (hero defeated)" if defeated else ""))
-    s.shoot("11-battle-victory", need="VICTORY")
-
-    # Leave the result screen; Carl's good-luck speech shows deferred
-    # before the overworld return.  The loot hook credits gold on battle
-    # end, so assert gold AFTER the exit.  The exit press is retried: screen
-    # transitions eat input for a few dozen frames.
-    s.check("victory speech",
-            s.press_until("a", lambda: s.text_has("CARL:"), tries=6),
-            expected="CARL:", actual="none")
-    s.shoot("11-victory-speech", need="CARL:")
-    s.check("speech closed",
-            close_dialogue(s, "CARL:"),
+    # Either looping line is fine here (burn ticks can push the dealt
+    # total over a reminder milestone on some RNG rolls): the seeded
+    # scenarios pin the exact lines, the walk pins the flow.
+    s.check("post-attack box", s.text_has("CARL:"),
+            expected="CARL: box", actual="none")
+    s.check("jeer or reminder",
+            s.text_has("UCH!") or s.text_has("YOU CAN FLEE"),
+            expected="UCH! or YOU CAN FLEE", actual="none")
+    s.check("post-attack box closed", close_box(s),
+            expected="closed", actual="open")
+    s.check("defend banner 2",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=240),
+            expected="DEFEND", actual="none")
+    _select_cards(s, (BT_SHIELD,))
+    for _ in range(4):
+        s.press("select", settle=40)     # execute defense
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
+    total = s.reader.battle_enemy_hp(0)
+    s.check("damage dealt", total < prev_total,
+            expected="hp %d < %d" % (total, prev_total),
+            actual="hp %d" % total)
+    # Flee the lesson (B on the empty attack hand): FLED! flashes for
+    # a frame before Carl's farewell box auto-opens over it, so the
+    # farewell is the stable sync point; closing it lands back on the
+    # (now stable) FLED! result, and leaving that returns to the field
+    # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
+    # and Carl alive for a rematch.
+    s.press("b", settle=40)
+    s.check("farewell speech",
+            s.wait_for(lambda: s.text_has("GROW STRONGER!"), ticks=240),
+            expected="GROW STRONGER!", actual="none")
+    s.shoot("11-farewell-speech", need="GROW STRONGER!")
+    s.check("farewell closed",
+            close_box(s),
+            expected="closed", actual="open")
+    s.check("fled", s.wait_for(lambda: s.text_has("FLED!"), ticks=120),
+            expected="FLED!", actual="none")
+    s.shoot("11-battle-fled", need="FLED!")
+    s.check("fled exit", close_dialogue(s, "FLED!"),
             expected="closed", actual="open")
     s.check("aftermath overworld",
             s.wait_for(lambda: s.reader.scene_state()["scene_id"]
                        == SCENE_FIELD, ticks=180),
             expected="SCENE_FIELD",
             actual="scene %d" % s.reader.scene_state()["scene_id"])
-    s.check_eq("victory gold", s.reader.gold(),
-               HERO_START_GOLD + props.get("gold_reward", 0))
+    s.check_eq("no victory gold (fled, not won)", s.reader.gold(),
+               HERO_START_GOLD)
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool 2 -> 3",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("energy pool stays 2 (no AP for fleeing)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
     s.tick(30)

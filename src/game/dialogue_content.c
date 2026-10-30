@@ -7,9 +7,10 @@
 #include "game_ids.h"
 
 /* ── Dialogue table (game content, banked ROM) ─────────────────────
- * Compiled into MBC5 ROM bank 7 (the `#pragma bank 7`
- * below) so the fixed bank 0 / _HOME area stays small.  Bank 7
- * has room (bank 2, home of the event/card/shop tables, is full).
+ * Compiled into MBC5 ROM bank 10 (the `#pragma bank 10`
+ * below) so the fixed bank 0 / _HOME area stays small.  Bank 10
+ * has room (bank 2, home of the event/card/shop tables, is full,
+ * and bank 7 filled with tracker songs).
  * The engine never
  * reads this table directly: core/dialogue.c copies the matching row and
  * its text into WRAM staging in dialogue_start_def(), so the banked layout
@@ -20,7 +21,7 @@
  * render 18 chars wide.  Unused line slots are left NULL by the
  * partial initializer; dialogue_start_def() only reads the first
  * line_count slots. */
-#pragma bank 7
+#pragma bank 10
 
 const DialogueDefinition g_dialogues[] = {
     {
@@ -43,7 +44,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_CARL_CHEST_FIRST,
         "CARL:",
         2,
-        {"Open chest,", "then come back!"},
+        {"OPEN CHEST,", "THEN COME BACK!"},
         0,
         0
     },
@@ -264,10 +265,74 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_TUTORIAL_CARL_ATTACK,
+        "CARL:",
+        4,
+        {"PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_DECLINE,
+        "CARL:",
+        2,
+        {"SUIT YOURSELF!", "COME BACK ANYTIME!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_DEFEND,
+        "CARL:",
+        4,
+        {"CARL ATTACKS NOW!", "PICK SHIELD CARDS!", "SELECT CONFIRMS", "THE BLOCK!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_FAREWELL,
+        "CARL:",
+        3,
+        {"WISE TO FLEE!", "GROW STRONGER!", "THEN TRY AGAIN!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_FLEE,
+        "CARL:",
+        3,
+        {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_FLEE_REMINDER,
+        "CARL:",
+        2,
+        {"YOU CAN FLEE: B", "AND STOP"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_HURT,
+        "CARL:",
+        7,
+        {"UCH!", "EW!", "THAT ALL YOU GOT?", "OUCH!", "ENOUGH ALREADY!", "IT HURTS!", "PLEASE STOP!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_TUTORIAL_CARL_INTRO,
         "CARL:",
+        5,
+        {"HUMAN? HERE DANGER", "I TEACH YOU FIGHT!", "WANT TO LEARN?", "BEAT ME FOR POWER!", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_POKER,
+        "CARL:",
         8,
-        {"Human? Here danger", "I teach you fight!", "U/D choose target", "Make Poker!", "Attack with Sword", "Dagger or Bow", "Defend with shield", "Fire, ice, poison!"},
+        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +25%!"},
         0,
         0
     },
@@ -275,7 +340,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
         5,
-        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
+        {"REAL FIGHTS BEGIN!", "AP LIMITS CARDS!", "HAVE 1 MORE AP!", "MORE INCREASE AP", "TO SURVIVE!"},
         0,
         0
     },

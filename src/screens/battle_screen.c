@@ -21,6 +21,13 @@ void battle_screen_update(Game *g)
 
     if (!g) return;
 
+    /* Carl's sparring tutorial (game layer): opens each coaching dialogue
+     * box once at the right phase.  True means a dialogue opened this
+     * frame -- yield, the dialogue screen owns input now. */
+    if (game_carl_tutorial_update(g)) {
+        return;
+    }
+
     if (vg->battle.battle_over) {
         /* Grant combat loot exactly once, when the VICTORY screen first
          * appears (docs/loot.md §34.5) -- the drop was ROLLED at battle
