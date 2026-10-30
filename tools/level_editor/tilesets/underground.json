@@ -244,7 +244,7 @@
       "ascii": ".",
       "image_url": "/tiles/underground/underground_stairs.png",
       "category": "terrain",
-      "palette": "underground1"
+      "palette": "underground2"
     },
     {
       "id": "underground_floor_with_light",
@@ -255,7 +255,7 @@
       "ascii": ".",
       "image_url": "/tiles/underground/underground_floor_with_light.png",
       "category": "terrain",
-      "palette": "underground1",
+      "palette": "underground2",
       "glyph": ","
     },
     {

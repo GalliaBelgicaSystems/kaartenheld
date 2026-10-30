@@ -15,7 +15,7 @@
 | desolate_landscape | desolate2 | desolate3 | desolate_water | desolate1 | desolate1 | desolate2 | desolate1 | desolate1 |
 | castle | castle4 | castle3 | castle1 | castle4 | castle1 | castle2 | castle3 | castle4 |
 | village | town4 | town3 | town5 | town6 | town4 | town1 | town2 | town7 |
-| underground | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 |
+| underground | underground1 | underground2 | underground1 | underground1 | underground1 | underground1 | underground1 | underground1 |
 | base | fight1 | fight4 | fight6 | fight3 | fight5 | fight2 | fightspider | fightboss |
 | obj | sprites | sprites5 | sprites12 | sprites11 | sprites2 | sprites7 | sprites9 | sprites8 |
 | title | title | title_logo | – | – | – | – | – | – |
@@ -46,11 +46,10 @@
 
 | ramp (slot) | tiles |
 |---|---|
-| (untagged) (–) | desolate_landscape_water_bottom_right_corner_wall |
 | desolate1 (3) | desolate_landscape_black_emptyness, desolate_landscape_bottom_left_corner_interior, desolate_landscape_bottom_left_corner_wall, desolate_landscape_bottom_left_treetrunk, desolate_landscape_bottom_right_corner_interior, desolate_landscape_bottom_right_corner_wall, desolate_landscape_bottom_right_tree_trunk, desolate_landscape_bottom_wall_1, desolate_landscape_bottom_wall_2, desolate_landscape_bottom_wall_3, desolate_landscape_bottom_wall_4, desolate_landscape_exit_desolate_landscape, desolate_landscape_floor_with_stuff_walkable_3, desolate_landscape_floor_with_stuff_walkable_4, desolate_landscape_left_wall_1, desolate_landscape_left_wall_2, desolate_landscape_left_wall_3, desolate_landscape_left_wall_4, desolate_landscape_plain_floor_1, desolate_landscape_right_wall_1, desolate_landscape_right_wall_2, desolate_landscape_right_wall_3, desolate_landscape_right_wall_4, desolate_landscape_top_left_corner_wall, desolate_landscape_top_left_corner_wall_interior, desolate_landscape_top_left_treetop, desolate_landscape_top_right_corner_wall, desolate_landscape_top_right_corner_wall_interior, desolate_landscape_top_right_tree_top, desolate_landscape_top_wall_1, desolate_landscape_top_wall_2, desolate_landscape_top_wall_3, desolate_landscape_top_wall_4 |
 | desolate2 (0) | desolate_landscape_bottom_left_rock, desolate_landscape_bottom_right_rock, desolate_landscape_floor_with_stuff_walkable_1, desolate_landscape_floor_with_stuff_walkable_2, desolate_landscape_top_left_rock, desolate_landscape_top_right_rock |
 | desolate3 (1) | desolate_landscape_fire_frame_1, desolate_landscape_fire_frame_2 |
-| desolate_water (2) | desolate_landscape_plain_water, desolate_landscape_water_bottom_left_corner_wall, desolate_landscape_water_bottom_left_interior_corner, desolate_landscape_water_bottom_right_interior_corner, desolate_landscape_water_bottom_wall_1, desolate_landscape_water_bottom_wall_2, desolate_landscape_water_bottom_wall_3, desolate_landscape_water_frame_1, desolate_landscape_water_frame_2, desolate_landscape_water_left_wall, desolate_landscape_water_right_wall_1, desolate_landscape_water_right_wall_2, desolate_landscape_water_right_wall_3, desolate_landscape_water_top_left_corner_wall, desolate_landscape_water_top_left_interior_corner, desolate_landscape_water_top_right_corner_wall, desolate_landscape_water_top_right_interior_corner, desolate_landscape_water_top_wall_1, desolate_landscape_water_top_wall_2, desolate_landscape_water_top_wall_3, desolate_landscape_water_top_wall_4, desolate_landscape_watter_bottom_wall |
+| desolate_water (2) | desolate_landscape_plain_water, desolate_landscape_water_bottom_left_corner_wall, desolate_landscape_water_bottom_left_interior_corner, desolate_landscape_water_bottom_right_corner_wall, desolate_landscape_water_bottom_right_interior_corner, desolate_landscape_water_bottom_wall_1, desolate_landscape_water_bottom_wall_2, desolate_landscape_water_bottom_wall_3, desolate_landscape_water_frame_1, desolate_landscape_water_frame_2, desolate_landscape_water_left_wall, desolate_landscape_water_right_wall_1, desolate_landscape_water_right_wall_2, desolate_landscape_water_right_wall_3, desolate_landscape_water_top_left_corner_wall, desolate_landscape_water_top_left_interior_corner, desolate_landscape_water_top_right_corner_wall, desolate_landscape_water_top_right_interior_corner, desolate_landscape_water_top_wall_1, desolate_landscape_water_top_wall_2, desolate_landscape_water_top_wall_3, desolate_landscape_water_top_wall_4, desolate_landscape_watter_bottom_wall |
 
 ### village (set `village`)
 
@@ -68,7 +67,8 @@
 
 | ramp (slot) | tiles |
 |---|---|
-| underground1 (0) | underground_black_emptyness_1, underground_bottom_left_corner_wall, underground_bottom_left_interior_corner, underground_bottom_right_corner_wall, underground_bottom_right_interior_corner, underground_bottom_wall_1, underground_bottom_wall_2, underground_bottom_wall_3, underground_bottom_wall_4, underground_floor_with_debris_1, underground_floor_with_debris_2, underground_floor_with_debris_3, underground_floor_with_light (≈ #dbaf6c), underground_left_wall_1, underground_left_wall_2, underground_left_wall_3, underground_left_wall_4, underground_right_wall_1, underground_right_wall_2, underground_right_wall_3, underground_right_wall_4, underground_stairs (≈ #dbaf6c), underground_top_left_corner_wall, underground_top_left_interior_corner, underground_top_right_corner_wall, underground_top_right_interior_corner, underground_top_wall_1, underground_top_wall_2, underground_top_wall_3, underground_top_wall_4 |
+| underground1 (0) | underground_black_emptyness_1, underground_bottom_left_corner_wall, underground_bottom_left_interior_corner, underground_bottom_right_corner_wall, underground_bottom_right_interior_corner, underground_bottom_wall_1, underground_bottom_wall_2, underground_bottom_wall_3, underground_bottom_wall_4, underground_floor_with_debris_1, underground_floor_with_debris_2, underground_floor_with_debris_3, underground_left_wall_1, underground_left_wall_2, underground_left_wall_3, underground_left_wall_4, underground_right_wall_1, underground_right_wall_2, underground_right_wall_3, underground_right_wall_4, underground_top_left_corner_wall, underground_top_left_interior_corner, underground_top_right_corner_wall, underground_top_right_interior_corner, underground_top_wall_1, underground_top_wall_2, underground_top_wall_3, underground_top_wall_4 |
+| underground2 (1) | underground_floor_with_light, underground_stairs |
 
 ## Battle sprites (display ramp + draw path)
 
@@ -153,7 +153,5 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 
 | sheet | cell | used ramp | off-ramp colors |
 |---|---|---|---|
-| underground | [9, 1] | underground1 | #dbaf6c |
-| underground | [10, 1] | underground1 | #dbaf6c |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites6.

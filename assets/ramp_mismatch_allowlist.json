@@ -731,30 +731,6 @@
       "off_colors": [
         "#3c5e26"
       ]
-    },
-    {
-      "sheet": "underground",
-      "tile": [
-        9,
-        1
-      ],
-      "declared": "underground1",
-      "used_ramp": "underground1",
-      "off_colors": [
-        "#dbaf6c"
-      ]
-    },
-    {
-      "sheet": "underground",
-      "tile": [
-        10,
-        1
-      ],
-      "declared": "underground1",
-      "used_ramp": "underground1",
-      "off_colors": [
-        "#dbaf6c"
-      ]
     }
   ]
 }

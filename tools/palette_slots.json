@@ -47,14 +47,14 @@
   },
   "underground": {
    "0": "underground1",
-   "1": "underground1",
+   "1": "underground2",
    "2": "underground1",
    "3": "underground1",
    "4": "underground1",
    "5": "underground1",
    "6": "underground1",
    "7": "underground1",
-   "_why": "single-ramp set (brown stone: ground/wall_light/wall_dark/void); every tile encodes slot 0; 4 = PAPER slot holds the same ramp as an inert placeholder, never referenced by tile_palettes (enforced by tools/verify_palette_manifest.py)"
+   "_why": "0/2-7 stone-ground=underground1 (28 tiles: walls, corners, debris, void); 1 light=underground2 (2 tiles: stairs, lit floor); 4 = PAPER slot (UI_COLOR_PAPER): ui_draw_dialogue re-programs it to a white/black ramp, so NO world tile may use it (enforced by tools/verify_palette_manifest.py); it holds underground1 as an inert placeholder"
   },
   "base": {
    "0": "fight1",

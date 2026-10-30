@@ -828,26 +828,42 @@
   },
   "underground1": {
    "colors": [
+    "#000000",
     "#916c33",
-    "#b68e50",
     "#5a431f",
-    "#000000"
+    "#5a431f"
    ],
    "refs": [
-    "UNDERGROUND/ground",
-    "UNDERGROUND/wall_light",
-    "UNDERGROUND/wall_dark",
-    "UNDERGROUND/void"
+    "UNDERGROUND/under_void",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border",
+    "UNDERGROUND/under_border"
    ],
    "slots": [
     "underground:0",
-    "underground:1",
     "underground:2",
     "underground:3",
     "underground:4",
     "underground:5",
     "underground:6",
     "underground:7"
+   ]
+  },
+  "underground2": {
+   "colors": [
+    "#dbaf6c",
+    "#b68e50",
+    "#916c33",
+    "#5a431f"
+   ],
+   "refs": [
+    "UNDERGROUND/under_lightshade2",
+    "UNDERGROUND/under_lightshade1",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border"
+   ],
+   "slots": [
+    "underground:1"
    ]
   },
   "water": {
@@ -925,7 +941,7 @@
   },
   "underground": {
    "0": "underground1",
-   "1": "underground1",
+   "1": "underground2",
    "2": "underground1",
    "3": "underground1",
    "4": "underground1",
