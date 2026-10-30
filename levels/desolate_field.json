@@ -232,7 +232,7 @@
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1",
-        "desolate_landscape.desolate_landscape_exit_desolate_landscape",
+        "desolate_landscape.desolate_landscape_plain_floor_1",
         "desolate_landscape.desolate_landscape_plain_floor_1"
       ],
       [
@@ -584,6 +584,11 @@
         "x": 5,
         "y": 18,
         "facing": "UP"
+      },
+      "east": {
+        "x": 24,
+        "y": 7,
+        "facing": "LEFT"
       }
     }
   },
@@ -591,20 +596,10 @@
     {
       "x": 22,
       "y": 11,
-      "target_scene": "south_ridge",
-      "target_x": 6,
-      "target_y": 16,
-      "direction": "SOUTH",
-      "tile_char": ">",
-      "tunnel": "tunnel_desolate_field_south_ridge"
-    },
-    {
-      "x": 24,
-      "y": 7,
-      "target_scene": "underground_tunnel_2",
+      "target_scene": "underground_tunnel_south",
       "target_x": 2,
       "target_y": 15,
-      "direction": "EAST",
+      "direction": "SOUTH",
       "tile_char": ">",
       "tunnel": "tunnel_desolate_underground"
     }
@@ -612,7 +607,7 @@
   "neighbors": {
     "north": "",
     "south": "grassy_forest",
-    "east": "",
+    "east": "mountain_pass",
     "west": ""
   },
   "objects": [

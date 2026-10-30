@@ -77,7 +77,6 @@ const SceneTerrainBlock s_desolate_field_terrain[] = {
     { 4, 7, 1, 1, TILE_DESOLATE_LANDSCAPE_60 },
     { 5, 7, 1, 1, TILE_DESOLATE_LANDSCAPE_50 },
     { 8, 7, 1, 1, TILE_DESOLATE_LANDSCAPE_21 },
-    { 24, 7, 1, 1, TILE_DESOLATE_LANDSCAPE_40 },
     { 0, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_45 },
     { 1, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_42 },
     { 2, 8, 1, 1, TILE_DESOLATE_LANDSCAPE_44 },

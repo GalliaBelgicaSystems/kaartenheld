@@ -1,12 +1,12 @@
 {
-  "id": "underground_tunnel_2",
-  "name": "Underground Tunnel East",
+  "id": "underground_tunnel_south",
+  "name": "Underground Tunnel South",
   "map": {
     "width": 20,
     "height": 18,
     "tileset": "underground",
     "music": "MUSIC_UNDERGROUND",
-    "map_id": "MAP_UNDERGROUND_TUNNEL_2"
+    "map_id": "MAP_UNDERGROUND_TUNNEL_SOUTH"
   },
   "default_walkable": "underground.underground_floor_with_debris_1",
   "layers": {
@@ -183,8 +183,8 @@
       "x": 2,
       "y": 15,
       "target_scene": "desolate_field",
-      "target_x": 24,
-      "target_y": 7,
+      "target_x": 22,
+      "target_y": 11,
       "direction": "SOUTH",
       "tile_char": ">",
       "tunnel": "tunnel_desolate_underground"
@@ -192,12 +192,12 @@
     {
       "x": 17,
       "y": 2,
-      "target_scene": "mountain_pass",
-      "target_x": 1,
+      "target_scene": "south_ridge",
+      "target_x": 6,
       "target_y": 16,
       "direction": "NORTH",
       "tile_char": "<",
-      "tunnel": "tunnel_underground_mountain"
+      "tunnel": "tunnel_south_underground"
     }
   ],
   "neighbors": {
@@ -209,14 +209,14 @@
   "objects": [],
   "regions": [
     {
-      "id": "dark_tunnel_east",
+      "id": "dark_tunnel_south",
       "bounds": {
         "x": 2,
         "y": 2,
         "width": 16,
         "height": 14
       },
-      "description": "A second unlit stone tunnel linking the Desolate Field stairs to the Mountain Pass stairs.",
+      "description": "A second unlit stone tunnel linking the Desolate Field stairs to the South Ridge stairs.",
       "gameplay": {
         "purpose": "passage",
         "difficulty": 1

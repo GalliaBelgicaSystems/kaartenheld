@@ -6,14 +6,12 @@
 const SceneExit g_all_exits[] = {
     { 15,  1,  2, 15, SCENE_UNDERGROUND_TUNNEL, '<' },
     {  8, 16, 17,  2, SCENE_UNDERGROUND_TUNNEL, '>' },
-    {  1, 16, 17,  2, SCENE_UNDERGROUND_TUNNEL_2, '<' },
-    {  6, 16, 22, 11, SCENE_DESOLATE_FIELD, '<' },
-    { 22, 11,  6, 16, SCENE_SOUTH_RIDGE,   '>' },
-    { 24,  7,  2, 15, SCENE_UNDERGROUND_TUNNEL_2, '>' },
+    {  6, 16, 17,  2, SCENE_UNDERGROUND_TUNNEL_SOUTH, '<' },
+    { 22, 11,  2, 15, SCENE_UNDERGROUND_TUNNEL_SOUTH, '>' },
     {  2, 15, 15,  1, SCENE_FIELD,         '>' },
     { 17,  2,  8, 16, SCENE_FOREST,        '<' },
-    {  2, 15, 24,  7, SCENE_DESOLATE_FIELD, '>' },
-    { 17,  2,  1, 16, SCENE_MOUNTAIN_PASS, '<' }
+    {  2, 15, 22, 11, SCENE_DESOLATE_FIELD, '>' },
+    { 17,  2,  6, 16, SCENE_SOUTH_RIDGE,   '<' }
 };
 
 static const SceneTerrainBlock s_town_terrain[] = {
@@ -738,7 +736,7 @@ static const SceneTerrainBlock s_underground_tunnel_terrain[] = {
     { 0, 0, 0, 0, 0 }
 };
 
-static const SceneTerrainBlock s_underground_tunnel_2_terrain[] = {
+static const SceneTerrainBlock s_underground_tunnel_south_terrain[] = {
     { 0, 0, 1, 1, TILE_UNDERGROUND_00 },
     { 1, 0, 18, 1, TILE_UNDERGROUND_01 },
     { 19, 0, 1, 1, TILE_UNDERGROUND_05 },
@@ -776,7 +774,7 @@ const SceneDefinition g_scenes[] = {
     { MAP_FIELD,           MUSIC_OVERWORLD,   24, 18, &g_all_exits[0],     1, WORLD_TILESET_FOREST,    s_field_terrain,     17, 7, DIRECTION_LEFT,  TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_TOWN,            MAP_WAKE_GROVE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 22, 8, DIRECTION_LEFT, 1, 8, DIRECTION_RIGHT },
     { MAP_TOWN,            MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_town_terrain,      2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_FOREST,          MAP_NONE,            MAP_VILLAGE_AREA,    MAP_FIELD, 5, 9, 1, DIRECTION_DOWN, 0, 0, 0xFF, 18, 7, DIRECTION_LEFT, 1, 9, DIRECTION_RIGHT },
     { MAP_FOREST,          MUSIC_FOREST,      28, 22, &g_all_exits[1],     1, WORLD_TILESET_FOREST,    s_forest_terrain,    12, 10, DIRECTION_UP,    TILE_FOREST_62, MAP_GRASSY_FOREST,   MAP_TOWN,            MAP_NONE,            MAP_NONE, 9, 12, 1, DIRECTION_DOWN, 19, 20, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_MOUNTAIN_PASS,   MUSIC_DESOLATE,    23, 26, &g_all_exits[2],     1, WORLD_TILESET_DESOLATE,  s_mountain_pass_terrain, 1, 16, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_SOUTH_RIDGE,     MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 16, 24, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
+    { MAP_MOUNTAIN_PASS,   MUSIC_DESOLATE,    23, 26, 0,                   0, WORLD_TILESET_DESOLATE,  s_mountain_pass_terrain, 1, 16, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_SOUTH_RIDGE,     MAP_NONE,            MAP_DESOLATE_FIELD, 9, 0, 0, 0xFF, 16, 24, DIRECTION_UP, 0, 0, 0xFF, 1, 16, DIRECTION_RIGHT },
     { MAP_CASTLE,          MUSIC_DUNGEON,     20, 18, 0,                   0, WORLD_TILESET_CASTLE,    s_castle_terrain,    10, 10, DIRECTION_UP,    TILE_CASTLE_15, MAP_THRONE_ROOM,     MAP_CASTLE_HALL,     MAP_NONE,            MAP_NONE, 9, 9, 1, DIRECTION_UP, 9, 16, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_SOUTH_FIELD,     MUSIC_DESOLATE,    24, 20, 0,                   0, WORLD_TILESET_DESOLATE,  s_south_field_terrain, 10, 1, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_SOUTH_RIDGE,     MAP_VILLAGE_AREA,    MAP_NONE,            MAP_NONE, 5, 10, 1, DIRECTION_DOWN, 10, 18, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
@@ -785,14 +783,14 @@ const SceneDefinition g_scenes[] = {
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_SOUTH_RIDGE,     MUSIC_DESOLATE,    24, 23, &g_all_exits[3],     1, WORLD_TILESET_DESOLATE,  s_south_ridge_terrain, 17, 1, DIRECTION_RIGHT, TILE_DESOLATE_LANDSCAPE_39, MAP_MOUNTAIN_PASS,   MAP_SOUTH_FIELD,     MAP_CASTLE_ENTRY,    MAP_NONE, 9, 17, 1, DIRECTION_DOWN, 10, 21, DIRECTION_UP, 22, 11, DIRECTION_LEFT, 0, 0, 0xFF },
+    { MAP_SOUTH_RIDGE,     MUSIC_DESOLATE,    24, 23, &g_all_exits[2],     1, WORLD_TILESET_DESOLATE,  s_south_ridge_terrain, 17, 1, DIRECTION_RIGHT, TILE_DESOLATE_LANDSCAPE_39, MAP_MOUNTAIN_PASS,   MAP_SOUTH_FIELD,     MAP_CASTLE_ENTRY,    MAP_NONE, 9, 17, 1, DIRECTION_DOWN, 10, 21, DIRECTION_UP, 22, 11, DIRECTION_LEFT, 0, 0, 0xFF },
     { MAP_CASTLE_ENTRY,    MUSIC_DUNGEON,     20, 18, 0,                   0, WORLD_TILESET_CASTLE,    s_castle_entry_terrain, 10, 9, DIRECTION_DOWN,  TILE_CASTLE_15, MAP_NONE,            MAP_NONE,            MAP_CASTLE_HALL,     MAP_SOUTH_RIDGE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 18, 7, DIRECTION_LEFT, 1, 7, DIRECTION_RIGHT },
     { MAP_CASTLE_HALL,     MUSIC_DUNGEON,     20, 18, 0,                   0, WORLD_TILESET_CASTLE,    s_castle_hall_terrain, 1, 7, DIRECTION_UP,    TILE_CASTLE_15, MAP_CASTLE,          MAP_NONE,            MAP_NONE,            MAP_CASTLE_ENTRY, 5, 9, 1, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF, 1, 7, DIRECTION_RIGHT },
     { MAP_THRONE_ROOM,     MUSIC_DUNGEON,     20, 18, 0,                   0, WORLD_TILESET_CASTLE,    s_throne_room_terrain, 10, 16, DIRECTION_UP,    TILE_CASTLE_15, MAP_NONE,            MAP_CASTLE,          MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 9, 16, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_GRASSY_FOREST,   MUSIC_FOREST,      26, 22, 0,                   0, WORLD_TILESET_FOREST,    s_grassy_forest_terrain, 12, 20, DIRECTION_DOWN,  TILE_FOREST_62, MAP_DESOLATE_FIELD,  MAP_FOREST,          MAP_NONE,            MAP_NONE, 9, 5, 1, DIRECTION_DOWN, 12, 20, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_VILLAGE_AREA,    MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_village_area_terrain, 10, 9, DIRECTION_DOWN,  TILE_VILLAGE_06, MAP_SOUTH_FIELD,     MAP_NONE,            MAP_NONE,            MAP_TOWN, 7, 10, 1, DIRECTION_DOWN, 0, 0, 0xFF, 0, 0, 0xFF, 1, 9, DIRECTION_RIGHT },
-    { MAP_DESOLATE_FIELD,  MUSIC_DESOLATE,    26, 20, &g_all_exits[4],     2, WORLD_TILESET_DESOLATE,  s_desolate_field_terrain, 5, 18, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_GRASSY_FOREST,   MAP_NONE,            MAP_NONE, 6, 0, 0, 0xFF, 5, 18, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
+    { MAP_DESOLATE_FIELD,  MUSIC_DESOLATE,    26, 20, &g_all_exits[3],     1, WORLD_TILESET_DESOLATE,  s_desolate_field_terrain, 5, 18, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_GRASSY_FOREST,   MAP_MOUNTAIN_PASS,   MAP_NONE, 6, 0, 0, 0xFF, 5, 18, DIRECTION_UP, 24, 7, DIRECTION_LEFT, 0, 0, 0xFF },
     { MAP_WAKE_GROVE,      MUSIC_OVERWORLD,   20, 18, 0,                   0, WORLD_TILESET_FOREST,    s_wake_grove_terrain, 10, 8, DIRECTION_UP,    TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_FIELD,           MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 18, 8, DIRECTION_LEFT, 0, 0, 0xFF },
-    { MAP_UNDERGROUND_TUNNEL, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[6],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_terrain, 3, 15, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_UNDERGROUND_TUNNEL_2, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[8],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_2_terrain, 3, 15, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
+    { MAP_UNDERGROUND_TUNNEL, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[4],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_terrain, 3, 15, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
+    { MAP_UNDERGROUND_TUNNEL_SOUTH, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[6],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_south_terrain, 3, 15, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
 };

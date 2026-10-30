@@ -521,7 +521,7 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
     { MAP_UNDERGROUND_TUNNEL, 0,
         0 },
-    { MAP_UNDERGROUND_TUNNEL_2, 0,
+    { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
         0 },
 };
 
