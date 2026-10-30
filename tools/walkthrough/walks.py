@@ -19,6 +19,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_MOUNTAIN_PASS, SCENE_CASTLE,
                                       SCENE_SOUTH_FIELD, SCENE_FIELD,
                                       SCENE_VILLAGE_AREA, SCENE_DESOLATE_FIELD,
+                                      SCENE_UNDERGROUND_TUNNEL,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
@@ -886,10 +887,13 @@ def walk_c(planner, checks):
     god_mode(s)
     field = _level("field")
     spawn = _boot_to_field(s, planner)
-    # Forest arrival = the field->forest stairs tunnel (content-coupled).
-    assert any(e.get("target_scene") == "forest"
+    # Forest arrival = the field->underground stairs tunnel, then the
+    # tunnel walk, then the underground->forest stairs (content-coupled:
+    # field's north stairs land in the tunnel's bottom-left, the tunnel's
+    # top-right stairs land in the forest).
+    assert any(e.get("target_scene") == "underground_tunnel"
                for e in (field.get("exits", []) or [])), \
-        "walk_c expects a field->forest tunnel exit"
+        "walk_c expects a field->underground_tunnel tunnel exit"
     forest = _level("forest")
     goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
     # Assert the alert sequence AT the crossing, not at the goal: the
@@ -900,7 +904,7 @@ def walk_c(planner, checks):
     # The flip-anchored waits below carry the margins (the old
     # "+30..+81" sting model is stale -- see the note at the crossing).
     _mouth_path = planner.path("field", spawn, (16, 1), avoid_exits=True)
-    s.check("path to forest tunnel", _mouth_path is not None,
+    s.check("path to underground tunnel", _mouth_path is not None,
             expected="bfs path", actual="none")
     if _mouth_path:
         _walk_path(s, _mouth_path)
@@ -922,6 +926,35 @@ def walk_c(planner, checks):
     _crossed = False
     for _ in range(4):
         s.press("left", settle=12)
+        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_UNDERGROUND_TUNNEL,
+                      ticks=90):
+            _crossed = True
+            break
+        if s.text_has("DECK:"):
+            _win = transit_fight(s)
+            s.check("transit fight victory", _win,
+                    expected="VICTORY", actual="defeat")
+            if not _win:
+                break
+            s.check("transit aftermath drained",
+                    drain_postvictory_dialogue(s),
+                    expected="no KNIGHT: box", actual="stuck open")
+    s.check("underground tunnel entered", _crossed,
+            expected="underground_tunnel", actual="no crossing")
+    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
+    s.check_eq("underground music", s.reader.music_track(), MUSIC_DUNGEON)
+    # Walk the tunnel to the top-right stairs and cross into the forest:
+    # the gate sits at (17,2), so stop one cell south and step north onto
+    # it (avoid_exits keeps the entry gate from warping us back out).
+    _tunnel_path = planner.path("underground_tunnel", s.pos(), (17, 3),
+                                avoid_exits=True)
+    s.check("path through tunnel", _tunnel_path is not None,
+            expected="bfs path", actual="none")
+    if _tunnel_path:
+        _walk_path(s, _tunnel_path)
+    _crossed = False
+    for _ in range(4):
+        s.press("up", settle=12)
         if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_FOREST,
                       ticks=90):
             _crossed = True

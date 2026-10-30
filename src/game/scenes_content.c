@@ -4,10 +4,12 @@
 #include "scene.h"
 
 const SceneExit g_all_exits[] = {
-    { 15,  1,  8, 16, SCENE_FOREST,        '<' },
-    {  8, 16, 15,  1, SCENE_FIELD,         '>' },
+    { 15,  1,  2, 15, SCENE_UNDERGROUND_TUNNEL, '<' },
+    {  8, 16, 17,  2, SCENE_UNDERGROUND_TUNNEL, '>' },
     {  6, 16, 22, 11, SCENE_DESOLATE_FIELD, '<' },
-    { 22, 11,  6, 16, SCENE_SOUTH_RIDGE,   '>' }
+    { 22, 11,  6, 16, SCENE_SOUTH_RIDGE,   '>' },
+    {  2, 15, 15,  1, SCENE_FIELD,         '>' },
+    { 17,  2,  8, 16, SCENE_FOREST,        '<' }
 };
 
 static const SceneTerrainBlock s_town_terrain[] = {
@@ -706,6 +708,32 @@ static const SceneTerrainBlock s_wake_grove_terrain[] = {
     { 0, 0, 0, 0, 0 }
 };
 
+static const SceneTerrainBlock s_underground_tunnel_terrain[] = {
+    { 0, 0, 1, 1, TILE_UNDERGROUND_00 },
+    { 1, 0, 18, 1, TILE_UNDERGROUND_01 },
+    { 19, 0, 1, 1, TILE_UNDERGROUND_05 },
+    { 0, 1, 1, 16, TILE_UNDERGROUND_16 },
+    { 19, 1, 1, 16, TILE_UNDERGROUND_12 },
+    { 0, 17, 1, 1, TILE_UNDERGROUND_06 },
+    { 1, 17, 18, 1, TILE_UNDERGROUND_07 },
+    { 19, 17, 1, 1, TILE_UNDERGROUND_11 },
+    { 1, 1, 16, 4, TILE_UNDERGROUND_02 },
+    { 18, 1, 1, 4, TILE_UNDERGROUND_13 },
+    { 17, 1, 1, 1, TILE_UNDERGROUND_03 },
+    { 1, 5, 11, 5, TILE_UNDERGROUND_03 },
+    { 1, 10, 5, 1, TILE_UNDERGROUND_16 },
+    { 1, 11, 1, 5, TILE_UNDERGROUND_17 },
+    { 3, 11, 3, 4, TILE_UNDERGROUND_08 },
+    { 7, 11, 12, 5, TILE_UNDERGROUND_09 },
+    { 13, 6, 6, 4, TILE_UNDERGROUND_14 },
+    { 13, 10, 6, 1, TILE_UNDERGROUND_15 },
+    { 18, 5, 1, 1, TILE_UNDERGROUND_12 },
+    { 1, 16, 18, 1, TILE_UNDERGROUND_10 },
+    { 2, 15, 1, 1, TILE_UNDERGROUND_21 },
+    { 17, 2, 1, 1, TILE_UNDERGROUND_21 },
+    { 0, 0, 0, 0, 0 }
+};
+
 extern const SceneTerrainBlock s_desolate_field_terrain[];
 extern const SceneTerrainBlock s_village_area_terrain[];
 extern const SceneTerrainBlock s_field_terrain[];
@@ -734,5 +762,6 @@ const SceneDefinition g_scenes[] = {
     { MAP_GRASSY_FOREST,   MUSIC_FOREST,      26, 22, 0,                   0, WORLD_TILESET_FOREST,    s_grassy_forest_terrain, 12, 20, DIRECTION_DOWN,  TILE_FOREST_62, MAP_DESOLATE_FIELD,  MAP_FOREST,          MAP_NONE,            MAP_NONE, 9, 5, 1, DIRECTION_DOWN, 12, 20, DIRECTION_UP, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_VILLAGE_AREA,    MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_village_area_terrain, 10, 9, DIRECTION_DOWN,  TILE_VILLAGE_06, MAP_SOUTH_FIELD,     MAP_NONE,            MAP_NONE,            MAP_TOWN, 7, 10, 1, DIRECTION_DOWN, 0, 0, 0xFF, 0, 0, 0xFF, 1, 9, DIRECTION_RIGHT },
     { MAP_DESOLATE_FIELD,  MUSIC_DESOLATE,    26, 20, &g_all_exits[3],     1, WORLD_TILESET_DESOLATE,  s_desolate_field_terrain, 5, 18, DIRECTION_DOWN,  TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_GRASSY_FOREST,   MAP_MOUNTAIN_PASS,   MAP_NONE, 6, 0, 0, 0xFF, 5, 18, DIRECTION_UP, 24, 7, DIRECTION_LEFT, 0, 0, 0xFF },
-    { MAP_WAKE_GROVE,      MUSIC_OVERWORLD,   20, 18, 0,                   0, WORLD_TILESET_FOREST,    s_wake_grove_terrain, 10, 8, DIRECTION_UP,    TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_FIELD,           MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 18, 8, DIRECTION_LEFT, 0, 0, 0xFF }
+    { MAP_WAKE_GROVE,      MUSIC_OVERWORLD,   20, 18, 0,                   0, WORLD_TILESET_FOREST,    s_wake_grove_terrain, 10, 8, DIRECTION_UP,    TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_FIELD,           MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 18, 8, DIRECTION_LEFT, 0, 0, 0xFF },
+    { MAP_UNDERGROUND_TUNNEL, MUSIC_DUNGEON,     20, 18, &g_all_exits[4],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_terrain, 3, 15, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
 };
