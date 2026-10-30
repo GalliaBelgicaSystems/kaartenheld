@@ -521,6 +521,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
     { MAP_UNDERGROUND_TUNNEL, 0,
         0 },
+    { MAP_UNDERGROUND_TUNNEL_2, 0,
+        0 },
 };
 
 #include "game.h"
@@ -543,4 +545,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 15;
+const uint8_t g_actor_table_count = 16;

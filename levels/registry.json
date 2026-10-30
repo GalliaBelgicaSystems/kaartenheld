@@ -15,7 +15,8 @@
     "village_area": 17,
     "desolate_field": 18,
     "wake_grove": 19,
-    "underground_tunnel": 20
+    "underground_tunnel": 20,
+    "underground_tunnel_2": 21
   },
   "_retired": {
     "forest2": 6,
