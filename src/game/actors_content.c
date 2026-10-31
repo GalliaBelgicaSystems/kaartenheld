@@ -490,6 +490,16 @@ static const WorldActorDefinition g_wake_grove_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_strange_grove_actors[] = {
+    {
+        0, ENTITY_ID_STAIRS, 10, 6, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '>', "STAIRCASE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WAKE_STAIRS, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -523,6 +533,8 @@ const WorldActorTable g_actor_tables[] = {
         0 },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
         0 },
+    { MAP_STRANGE_GROVE,   g_strange_grove_actors,
+        (uint8_t)(sizeof(g_strange_grove_actors) / sizeof(g_strange_grove_actors[0])) },
 };
 
 #include "game.h"
@@ -545,4 +557,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 16;
+const uint8_t g_actor_table_count = 17;

@@ -61,7 +61,14 @@ CALL_OVERHEAD = 3
 # per-edge overhead above is approximate, so only DELTAS gate. Bump the
 # constant only with reviewer eyes on the responsible frame growth, and
 # re-run game_over_quit plus the sentinels (AGENTS.md 52.19/52.24).
-BASELINE = 142
+# 142 -> 144 (Nov 2026, unwinnable final battle): battle_screen_update's
+# frame grew 8 -> 10 B -- the slime-lord desperation exit keeps the Game*
+# addressable across its new branch, so SDCC spills it to the frame
+# instead of BC.  No new call depth (verified via .lst prologues:
+# execute_combo -24, battle_update -21, combo_resolve -22, all identical
+# to the 142 tree); the outro it calls is a leaf off the combo chain.
+# True depth stays canary-measured <= 125 B, margin ~770 B.
+BASELINE = 144
 
 # Fixed main-loop prefix live under every battle chain.
 PREFIX = ["main", "game_update", "screen_update"]

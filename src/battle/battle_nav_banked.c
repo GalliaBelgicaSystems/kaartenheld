@@ -177,6 +177,21 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_ALL_DEAD:
         g_bk_byte_c = 0;
+        /* Lord of Slimes (BATTLE_NONE boss) can never die: clamp any
+         * lethal blow back to 1 HP on every liveness check, so counter
+         * and poison-tick kills can never sneak past the attack path's
+         * desperation trigger into a victory.  The attack path ends the
+         * demo with the 99-damage reprisal once he drops to 20 or less.
+         * Pure WRAM writes (staging discipline: the fixed wrappers own
+         * telemetry), roomy bank 4. */
+        if (b->enemy_battle_id == 0) {
+            uint8_t k;
+            for (k = 0; k < b->enemy_count; k++) {
+                if (b->enemies[k].hp == 0) {
+                    b->enemies[k].hp = 1;
+                }
+            }
+        }
         {
             uint8_t i;
             for (i = 0; i < b->enemy_count; i++) {

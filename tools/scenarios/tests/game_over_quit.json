@@ -91,13 +91,13 @@
   },
   {
    "type": "screen_row",
-   "row": 4,
-   "contains": "Thanks for playing"
+   "row": 3,
+   "contains": "Congratulations for"
   },
   {
    "type": "screen_row",
-   "row": 11,
-   "contains": "Full game in 2027!"
+   "row": 9,
+   "contains": "Full game out"
   },
   {
    "type": "stack_margin_min",

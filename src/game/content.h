@@ -27,6 +27,19 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Slime-lord desperation outro (unwinnable final battle, game-owned flow):
+ * cut to white, wake in the strange grove with the "Where am I?"
+ * dialogue, then THANKS (via the dialogue close).  Called by the shared
+ * battle screen's defeat exit when g_slime_despair is set; the flag stays
+ * set for the dialogue close and battle_start clears it for the next
+ * fight.  Reads the single global Game directly (no parameter) so the
+ * caller's frame stays lean (fixed _CODE budget + stack budget,
+ * AGENTS.md 52.18/52.24).  Lives here (not inline in battle_screen_update)
+ * so that function keeps its frame.  scene_load clears the encounter via
+ * world_load_map and replays the scene track, so no world_on_battle_end /
+ * music call is needed. */
+void game_slime_despair_outro(void);
+
 /* Per-frame tutorial tick for Carl's spar: stages each coaching dialogue
  * box once (attack, defend, poker, flee, then one looping jeer per
  * player attack) for game_update's post-tick opener.  Called at the top

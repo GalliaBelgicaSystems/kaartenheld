@@ -1,7 +1,7 @@
 {
  "name": "thanks_boot",
  "test": true,
- "description": "Boot directly into the terminal Thanks for playing! screen",
+ "description": "Boot directly into the terminal demo-complete Thanks screen",
  "actions": [],
  "assertions": [
   {
