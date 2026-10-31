@@ -508,12 +508,12 @@
     {
       "x": 15,
       "y": 1,
-      "target_scene": "forest",
-      "target_x": 8,
-      "target_y": 16,
+      "target_scene": "underground_tunnel",
+      "target_x": 7,
+      "target_y": 13,
       "direction": "NORTH",
       "tile_char": "<",
-      "tunnel": "tunnel_field_forest"
+      "tunnel": "tunnel_field_underground"
     }
   ],
   "neighbors": {
@@ -547,8 +547,8 @@
           "INTERACTABLE"
         ],
         "visual": "C",
-        "hp": 10,
-        "max_hp": 10,
+        "hp": 30,
+        "max_hp": 30,
         "gold_reward": 5,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_CARL",

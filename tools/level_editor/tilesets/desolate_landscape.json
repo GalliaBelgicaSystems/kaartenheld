@@ -711,6 +711,7 @@
   },
   {
    "id": "desolate_landscape_water_bottom_right_corner_wall",
+   "palette": "desolate_water",
    "label": "water bottom right corner wall",
    "gb_constant": "TILE_DESOLATE_LANDSCAPE_63",
    "walkable": false,

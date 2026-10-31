@@ -826,6 +826,46 @@
     "village:7"
    ]
   },
+  "underground1": {
+   "colors": [
+    "#000000",
+    "#916c33",
+    "#5a431f",
+    "#5a431f"
+   ],
+   "refs": [
+    "UNDERGROUND/under_void",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border",
+    "UNDERGROUND/under_border"
+   ],
+   "slots": [
+    "underground:0",
+    "underground:2",
+    "underground:3",
+    "underground:4",
+    "underground:5",
+    "underground:6",
+    "underground:7"
+   ]
+  },
+  "underground2": {
+   "colors": [
+    "#dbaf6c",
+    "#b68e50",
+    "#916c33",
+    "#5a431f"
+   ],
+   "refs": [
+    "UNDERGROUND/under_lightshade2",
+    "UNDERGROUND/under_lightshade1",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border"
+   ],
+   "slots": [
+    "underground:1"
+   ]
+  },
   "water": {
    "colors": [
     "#7bb660",
@@ -898,6 +938,16 @@
   "title": {
    "0": "title",
    "1": "title_logo"
+  },
+  "underground": {
+   "0": "underground1",
+   "1": "underground2",
+   "2": "underground1",
+   "3": "underground1",
+   "4": "underground1",
+   "5": "underground1",
+   "6": "underground1",
+   "7": "underground1"
   },
   "village": {
    "0": "town4",

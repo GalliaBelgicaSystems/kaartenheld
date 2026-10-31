@@ -36,7 +36,8 @@ ALLOWLIST = REPO_ROOT / "assets" / "ramp_mismatch_allowlist.json"
 MISMATCHES = REPO_ROOT / "generated" / "tiles" / "ramp_mismatches.json"
 TILESETS_DIR = REPO_ROOT / "tools" / "level_editor" / "tilesets"
 
-WORLD_SETS = ["forest", "castle", "desolate_landscape", "village"]
+WORLD_SETS = ["forest", "castle", "desolate_landscape", "village",
+              "underground"]
 
 
 def load_json(path):

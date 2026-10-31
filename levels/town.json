@@ -7,7 +7,9 @@
     "tileset": "village",
     "music": "MUSIC_TOWN",
     "map_id": "MAP_TOWN",
-    "obj_palettes": { "6": "sprites10" }
+    "obj_palettes": {
+      "6": "sprites10"
+    }
   },
   "default_walkable": "village.village_plain_floor_1",
   "layers": {
@@ -422,7 +424,7 @@
     },
     "entry": {
       "north": {
-        "x": 5,
+        "x": 9,
         "y": 1,
         "facing": "DOWN"
       },
@@ -433,7 +435,7 @@
       },
       "west": {
         "x": 1,
-        "y": 7,
+        "y": 9,
         "facing": "RIGHT"
       }
     }

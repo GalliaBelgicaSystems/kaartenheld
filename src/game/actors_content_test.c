@@ -18,7 +18,7 @@ static const WorldActorDefinition g_test_field_actors[] = {
     {
         1, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 10, 10, 5, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 30, 30, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 9, 1
     },
@@ -253,6 +253,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
     { MAP_TEST_GAMBLE,     g_test_gamble_actors,
         (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])) },
+    { MAP_TEST_UNDERGROUND, 0,
+        0 },
 };
 
-const uint8_t g_actor_table_count = 7;
+const uint8_t g_actor_table_count = 8;

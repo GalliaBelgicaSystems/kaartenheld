@@ -74,6 +74,7 @@ const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_TOWN: '/audio/village.wav',
   MUSIC_DUNGEON: '/audio/castle.wav',
   MUSIC_OVERWORLD: '/audio/opening.wav',
+  MUSIC_UNDERGROUND: '/audio/underground.wav',
 };
 
 const MusicPreviewToggle: React.FC<{ music: string; levelId: string }> = ({
@@ -372,6 +373,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                 <option value="MUSIC_DESOLATE">MUSIC_DESOLATE (desolate_landscape.uge)</option>
                 <option value="MUSIC_FOREST">MUSIC_FOREST (Forest.uge)</option>
                 <option value="MUSIC_BOSS">MUSIC_BOSS (Boss fight.uge)</option>
+                <option value="MUSIC_UNDERGROUND">MUSIC_UNDERGROUND (underground pass.uge)</option>
                 </select>
                 <MusicPreviewToggle music={level.music} levelId={level.id} />
               </div>

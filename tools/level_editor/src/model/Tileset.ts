@@ -7,6 +7,7 @@ import desolateLandscapeJson from '../../tilesets/desolate_landscape.json';
 import heroJson from '../../tilesets/hero.json';
 import intrepidJson from '../../tilesets/intrepid.json';
 import villageJson from '../../tilesets/village.json';
+import undergroundJson from '../../tilesets/underground.json';
 
 export interface TileDefinition {
   id: string;
@@ -66,6 +67,7 @@ export const BUILTIN_TILESETS: Record<string, TilesetDefinition> = {
   hero: parseTilesetJson(heroJson),
   intrepid: parseTilesetJson(intrepidJson),
   village: parseTilesetJson(villageJson),
+  underground: parseTilesetJson(undergroundJson),
 };
 
 export const TILESET_CASTLE = BUILTIN_TILESETS.castle;
@@ -77,6 +79,7 @@ export const TILESET_FOREST = BUILTIN_TILESETS.forest;
 export const TILESET_DESOLATE_LANDSCAPE = BUILTIN_TILESETS.desolate_landscape;
 export const TILESET_INTREPID = BUILTIN_TILESETS.intrepid;
 export const TILESET_VILLAGE = BUILTIN_TILESETS.village;
+export const TILESET_UNDERGROUND = BUILTIN_TILESETS.underground;
 
 export function getTileset(id: string): TilesetDefinition {
   if (!BUILTIN_TILESETS[id]) {

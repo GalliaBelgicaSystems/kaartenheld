@@ -643,12 +643,12 @@
     {
       "x": 6,
       "y": 16,
-      "target_scene": "desolate_field",
-      "target_x": 22,
-      "target_y": 11,
+      "target_scene": "underground_tunnel_south",
+      "target_x": 13,
+      "target_y": 12,
       "direction": "NORTH",
       "tile_char": "<",
-      "tunnel": "tunnel_desolate_field_south_ridge"
+      "tunnel": "tunnel_south_underground"
     }
   ],
   "neighbors": {
@@ -689,8 +689,8 @@
       "id": "ridge_bat",
       "type": "enemy",
       "position": {
-        "x": 17,
-        "y": 2
+        "x": 15,
+        "y": 3
       },
       "properties": {
         "entity_id": "ENTITY_ID_BAT",

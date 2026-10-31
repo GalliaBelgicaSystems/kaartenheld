@@ -35,6 +35,9 @@ typedef enum {
                         bank 9 with its own driver copy): plays on
                         Nis's table; the gamble body restores the scene
                         track on exit */
+    MUSIC_UNDERGROUND, /* underground tunnel theme (underground pass.uge,
+                        loops, bank 9 with the casino driver copy):
+                        plays on both underground tunnel maps */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE

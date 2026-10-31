@@ -141,6 +141,13 @@ extern uint8_t g_bk_byte_d;
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */
 extern uint8_t g_bk_dlg_id;
+/* Single-line page override for the post-tick request: when non-zero,
+ * the opened dialogue shows only line [g_bk_dlg_line] (count byte =
+ * line + 1) instead of the full text.  Staged by the producer,
+ * consumed and cleared with g_bk_dlg_id.  Generic bytes, never game
+ * ids (AGENTS.md 55.1). */
+extern uint8_t g_bk_dlg_line;
+extern uint8_t g_bk_dlg_count;
 
 /* Linker-allocated home for the banked-call trampoline (WRAM), copied by
  * banked_call_init() at boot (game_init calls it, like banked_copy_init). */

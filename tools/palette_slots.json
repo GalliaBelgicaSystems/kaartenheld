@@ -45,6 +45,17 @@
    "7": "town7",
    "_why": "5 ground-fence=town1 (18 tiles, merchant NPC); 6 houses=town2 (14 tiles, mayor NPC); 3 fence=town6 (guard/wizard/dog NPC); 1 fire=town3; 0/2 stone=town4/town5; 7 house-wall=town7; 4 = PAPER slot (UI_COLOR_PAPER): ui_draw_dialogue re-programs it to a white/black ramp, so NO world tile may use it (enforced by tools/verify_palette_manifest.py); it holds town4 as an inert placeholder"
   },
+  "underground": {
+   "0": "underground1",
+   "1": "underground2",
+   "2": "underground1",
+   "3": "underground1",
+   "4": "underground1",
+   "5": "underground1",
+   "6": "underground1",
+   "7": "underground1",
+   "_why": "0/2-7 stone-ground=underground1 (28 tiles: walls, corners, debris, void); 1 light=underground2 (2 tiles: stairs, lit floor); 4 = PAPER slot (UI_COLOR_PAPER): ui_draw_dialogue re-programs it to a white/black ramp, so NO world tile may use it (enforced by tools/verify_palette_manifest.py); it holds underground1 as an inert placeholder"
+  },
   "base": {
    "0": "fight1",
    "1": "fight4",

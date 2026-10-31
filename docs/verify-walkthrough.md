@@ -29,7 +29,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
 | Shop | merchant (shop_id=2, opened by delivering the amulet) sells one CARD_IRON_RING + one CARD_BOW_9 (one-copy rows, then out of stock); A buys; `g_game.shop_message` readable; gold/collection WRAM-readable |
-| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; victory loot hook credits Carl's `gold_reward` from `levels/field.json`; his defeat sets `ENERGY_POOL` 2 |
+| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP -- the +1 needs a real win, still reachable at 30 HP; the pool comes from the field chest: `ENERGY_POOL` 2) |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
@@ -87,11 +87,15 @@ tools/walkthrough/
 1. **Shop purchase** (Walk A): buy IRON_RING → assert
    gold==20−cost, `shop_message==BOUGHT`, collection gained the card.
 2. **Mayor flag**: interact mayor → assert STORY_FLAG MET_MAYOR set.
-3. **Battle victory** (Walk B): loop select+execute (bounded;
-   variance-safe: enemy HP strictly decreased per hit) until
-   `result==VICTORY` → assert hero gold == 20+slime.gold_reward,
-   overworld restored.  Replaces the flee exit (same overworld-redraw
-   + VRAM-restore coverage); `11-battle-run` → `11-battle-victory`.
+3. **Battle lesson** (Walk B): fight Carl's 30 HP spar through the
+   full coaching flow (attack/defend/poker boxes, then the flee lesson
+   with its reward tease on the next attack, then one jeer) until the
+   first flee → assert `result==FLED`, the
+   farewell box shows, the pool stays 2 and gold stays 20 (no reward
+   for fleeing).  Replaces the old kill-to-victory loop (same
+   overworld-redraw + VRAM-restore coverage); `11-battle-fled` +
+   `11-farewell-speech` replace `11-battle-victory` +
+   `11-victory-speech`.
 4. **Save/load roundtrip** (new session pair S→L): save at wizard →
    `pb.stop(ram_file=)` → new `PyBoy(rom, ram_file=)` → title START →
    DOWN → CONTINUE → A → LOAD slot 1 → assert restored scene/pos/gold
@@ -150,14 +154,14 @@ tools/walkthrough/
 
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
   (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
-  1x10 HP practice spar (0-damage deck); his defeat raises ENERGY_POOL
-  0 -> 2 and shows his good-luck speech deferred at the battle exit.
+  1x30 HP practice spar (0-damage deck, tough but beatable); fleeing shows his
+  farewell box deferred on the FLED! result (no AP, no gold).
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection
   must be verified against `combo_count` and retried (§52.10).
 * The starter hand is mostly swords/shields; combos of 3 swords deal
-  ~5 damage — Carl's 10 HP spar takes about five single-card rounds
-  at the flat-1 starting pool.
+  ~5 damage — the spar is fought for the lesson (attack, defend, jeers,
+  flee reminder), then fled; the pool stays at the chest's 2 AP.
 * `+429` in the Battle struct (mapped as `energy`) does not behave like
   a plain energy budget under scripted play; selection therefore keys
   off `combo_count`, not energy.

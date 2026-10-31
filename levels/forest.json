@@ -700,12 +700,12 @@
     {
       "x": 8,
       "y": 16,
-      "target_scene": "field",
-      "target_x": 15,
-      "target_y": 1,
+      "target_scene": "underground_tunnel",
+      "target_x": 16,
+      "target_y": 3,
       "direction": "SOUTH",
       "tile_char": ">",
-      "tunnel": "tunnel_field_forest"
+      "tunnel": "tunnel_underground_forest"
     }
   ],
   "neighbors": {

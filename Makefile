@@ -59,7 +59,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -235,6 +235,12 @@ gfx: manifest
 	@python3 tools/png2gb.py assets/village-tile.png --name rpg_village_world_tiles \
 		--shade-map generated/tiles/shades/village.json \
 		--raw -o $(GFX_OUT_DIR)/rpg_village_world_tiles.inc
+	# ── Underground tileset (assets/underground.png, 12 cols × 3 rows) ───
+	# Full 36-tile world sheet (g_tileset_underground), scan order like
+	# village (VRAM slot == scan index, see world.h TILE_UNDERGROUND_*).
+	@python3 tools/png2gb.py assets/underground.png --name rpg_underground_tiles \
+		--shade-map generated/tiles/shades/underground.json \
+		--raw -o $(GFX_OUT_DIR)/rpg_underground_tiles.inc
 	# ── Battle hand-card frame (assets/card_frames.png, 3 cols × 10 rows) ──
 	# 9 border/background tiles for the boxed battle-hand cards (TL TM TR /
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
@@ -462,7 +468,7 @@ tiles-check:
 # Ramps always win (every tile gets an existing artist ramp); wrongness is
 # reported in generated/tiles/ramp_mismatches.json, never a build failure.
 # See tools/palette_compiler.py.
-manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
+manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/village.json tools/level_editor/tilesets/underground.json tools/palette_parse.py tools/palette_compiler.py tools/palette_slots.json assets/palette.txt screens/combat_art/*.json screens/enemy_types/*.json screens/hero.json screens/cards_skin.json screens/battle_hud.json levels/*.json tools/scenarios/fixtures/levels/*.json | $(GENERATED_TILES_DIR)
 	@python3 tools/compose_battle_sprites.py
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
@@ -499,7 +505,7 @@ GENERATED_TILE_PALETTE = $(GENERATED_TILES_DIR)/tile_palette.h
 GENERATED_TILE_ANIM = $(GENERATED_TILES_DIR)/anim_pairs.h
 tiles: manifest $(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM)
 
-$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
+$(GENERATED_TILE_WALK) $(GENERATED_TILE_GLYPH) $(GENERATED_TILE_PALETTE) $(GENERATED_TILE_ANIM): manifest tools/level_editor/tilesets/desolate_landscape.json tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/castle.json tools/level_editor/tilesets/village.json tools/level_editor/tilesets/underground.json tools/level_compiler/generate_tiles.py | $(GENERATED_TILES_DIR)
 	python3 tools/level_compiler/generate_tiles.py --out "$(GENERATED_TILES_DIR)"
 
 $(GENERATED_TILES_DIR):
@@ -733,8 +739,14 @@ $(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/co
 # window, so driver + song must share a bank.
 $(GENERATED_MUSIC_DIR)/casino.c: assets/music/casino.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 9 song_casino "$@"
-$(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+
+# Underground tunnel theme (assets/music/underground pass.uge, loops)
+# for both underground tunnel maps.  Bank 7 has no room left for its
+# ~1.3 KB, so it shares bank 9 with the casino song (one driver copy
+# covers the whole bank: the driver reads song bytes through the mapped
+# ROM window, so driver + songs only need to share a bank).
+$(GENERATED_MUSIC_DIR)/underground.c: assets/music/underground\ pass.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 9 song_underground "$@"
 
 # Game-over theme (assets/music/game over.uge, loops).  Played the moment
 # the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
@@ -747,7 +759,7 @@ $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/co
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav $(MUSIC_PREVIEW_DIR)/underground.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

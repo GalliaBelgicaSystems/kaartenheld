@@ -27,7 +27,7 @@ def _scene_id_maps():
         scenes, base = {}, 240
     test_names = ["test_field", "test_town", "test_forest",
                   "test_mountain_pass", "test_castle", "test_south_field",
-                  "test_gamble"]
+                  "test_gamble", "test_underground"]
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
@@ -46,7 +46,7 @@ SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
                    9: "DESOLATE", 10: "FOREST", 11: "CHEST", 12: "GAMEOVER",
-                   13: "ENDING", 14: "CASINO"}
+                   13: "ENDING", 14: "CASINO", 15: "UNDERGROUND"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
@@ -142,7 +142,8 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 19: "MIMIC_REWARD",
                 GAME_ID_BASE + 20: "QUEST_NUDGE",
                 GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
-                GAME_ID_BASE + 22: "QUEST_EARLY_DONE"}
+                GAME_ID_BASE + 22: "QUEST_EARLY_DONE",
+}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -1157,6 +1158,20 @@ class EmulatorSession:
         hi = self._memread(count_addr + 1)
         count = (lo or 0) | ((hi or 0) << 8)
         return count, self._memread(last_addr)
+
+    def get_sfx_mute(self):
+        """Read the music-mute budget: dosound ticks charged per SFX
+        trigger against the CH2 / CH4 music voices (see audio.c).  The
+        core is halted at the frame breakpoint during harness reads,
+        so the 16-bit values cannot tear mid-read."""
+        def rd16(name):
+            addr = self.get_symbol(name)
+            lo = self._memread(addr)
+            hi = self._memread(addr + 1)
+            if lo is None or hi is None:
+                return None
+            return lo | (hi << 8)
+        return rd16("g_sfx_mute_ch2"), rd16("g_sfx_mute_ch4")
 
     # Stack high-water canary (AGENTS.md §52.24): the static stack-budget
     # model cannot see ISR nesting or layout-sensitive codegen, so this

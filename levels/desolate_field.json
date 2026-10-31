@@ -596,12 +596,12 @@
     {
       "x": 22,
       "y": 11,
-      "target_scene": "south_ridge",
+      "target_scene": "underground_tunnel_south",
       "target_x": 6,
-      "target_y": 16,
+      "target_y": 5,
       "direction": "SOUTH",
       "tile_char": ">",
-      "tunnel": "tunnel_desolate_field_south_ridge"
+      "tunnel": "tunnel_desolate_underground"
     }
   ],
   "neighbors": {
@@ -621,7 +621,7 @@
       "properties": {
         "display_name": "BAT",
         "battle": "BATTLE_BAT",
-        "ai": "AI_CHASE",
+        "ai": "AI_PATROL_CIRCLE",
         "enemy_type": "bat",
         "entity_id": "ENTITY_ID_BAT",
         "facing": "DOWN",
@@ -702,7 +702,7 @@
       "properties": {
         "display_name": "BAT",
         "battle": "BATTLE_BAT",
-        "ai": "AI_CHASE",
+        "ai": "AI_PATROL_CIRCLE",
         "enemy_type": "bat",
         "entity_id": "ENTITY_ID_BAT",
         "facing": "DOWN",

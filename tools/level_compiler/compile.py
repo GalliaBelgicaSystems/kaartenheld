@@ -155,6 +155,7 @@ TILESET_KIND_MAP = {
     "desolate_landscape": "WORLD_TILESET_DESOLATE",
     "desolate": "WORLD_TILESET_DESOLATE",
     "castle": "WORLD_TILESET_CASTLE",
+    "underground": "WORLD_TILESET_UNDERGROUND",
 }
 
 # player.spawn facing spellings (schema allows compass aliases) to the

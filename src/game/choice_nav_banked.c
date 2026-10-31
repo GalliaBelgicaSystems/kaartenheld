@@ -1,4 +1,4 @@
-#pragma bank 8
+#pragma bank 10
 
 #include <gb/gb.h>
 #include "game.h"
@@ -6,14 +6,17 @@
 #include "ui.h"
 #include "banked.h"
 #include "game/gamble.h"
+#include "carl_tutorial.h"
 
-/* ── Heal-mage YES/NO choice navigation + resolve, bank-8 body ─────
+/* ── YES/NO choice navigation + resolve, bank-10 body ─────────
  * Dispatched from dialogue_screen_update() when a choice dialogue sits
  * on its last page unconfirmed (fixed-bank cost: one predicate +
  * staging + call -- the fixed bank sits hard against 0x8000, AGENTS.md
  * §52.18).  Follows the quest-tab nav precedent (item_quest_banked.c):
  * pad edges read directly from WRAM (always mapped), compile-time
- * bitmasks, no helper calls.
+ * bitmasks, no helper calls.  Bank 10 (not 8): the fixed bank-8 budget
+ * fits no new bodies, while bank 10 has room in both builds (AGENTS.md
+ * 55.5: banks 8-15 need no asm change to reach).
  *
  * The engine owns the choice UI contract (last line "> YES   NO",
  * cursor cells 0/7); this game-owned body owns what an answer means.
@@ -29,6 +32,12 @@
  *                  the flag id is staged for it below.  The ASK row only
  *                  matches while USED is clear, so reaching here with it
  *                  set is unreachable.
+ *   - CARL INTRO + NO  -> clear the stashed spar (no battle) and open
+ *                  the decline line (staged follow-up).
+ *   - CARL INTRO + YES -> assign LESSON progress (full re-init, so
+ *                  re-accepting replays the lesson) and close into the
+ *                  stashed spar (plain confirm: the dialogue close starts
+ *                  the battle through the stashed slot).
  *   - other choice dialogue + either answer -> plain confirm (no game
  *                  effect; future choice dialogues reuse the UI free).
  *
@@ -109,6 +118,23 @@ void dialogue_choice_nav_banked(void)
     }
     if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         g_game.dialogue.choice_made = 1;
+        if (g_game.dialogue.id == DIALOGUE_ID_TUTORIAL_CARL_INTRO) {
+            /* Carl's spar offer: NO clears the stashed spar so closing
+             * the follow-up returns to the overworld with no fight; YES
+             * assigns LESSON progress (full re-init, so re-accepting
+             * replays the lesson) and closes into the stashed spar. */
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_game.world.encounter_actor_index = NO_ACTOR_INDEX;
+                g_bk_byte_a = 3;
+                g_bk_byte_c = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DECLINE;
+                return;
+            }
+            g_carl_tut_flags = CARL_TUT_FLAG_LESSON;
+            g_carl_tut_hurt = 0;
+            g_carl_tut_mile = CARL_TUT_MILE_START;
+            g_bk_byte_a = 2;
+            return;
+        }
         if (g_game.dialogue.id == DIALOGUE_ID_KOBOLD_INVITE) {
             /* Chuck-a-luck invite: YES reports code 7 and leaves the
              * dialogue ACTIVE (the fixed side ends it through

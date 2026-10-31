@@ -18,5 +18,6 @@ extern const hUGESong_t song_chest_opening; /* bank 7: chest-loot jingle (one-sh
 extern const hUGESong_t song_game_over;     /* bank 7: game-over theme (loops) */
 extern const hUGESong_t song_demo_complete; /* bank 7: end-credits theme (loops) */
 extern const hUGESong_t song_casino;        /* bank 9: chuck-a-luck table (loops) */
+extern const hUGESong_t song_underground;   /* bank 9: underground tunnel (loops) */
 
 #endif /* HUGE_MUSIC_DATA_H */

@@ -1,0 +1,90 @@
+{
+  "name": "carl_tutorial_attack",
+  "test": true,
+  "description": "Carl's battle opens with a plain solo screen plus his attack coaching box (pick cards with A, L/R cursor, SELECT confirms); closing it lands on a standard TARGET CARL banner with no leftover hint rows",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "TARGET CARL"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 5,
+      "contains": "CARL:"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 9,
+      "contains": "SELECT: CONFIRM"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_ATTACK"
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_STARTED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true
+    }
+  }
+}

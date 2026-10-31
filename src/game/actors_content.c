@@ -18,7 +18,7 @@ static const WorldActorDefinition g_field_actors[] = {
     {
         1, ENTITY_ID_CARL, 15, 12, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 10, 10, 5, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 30, 30, 5, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 9, 1
     },
@@ -258,7 +258,7 @@ static const WorldActorDefinition g_south_ridge_actors[] = {
          SPRITE_KIND_ENEMY, 2, 0
     },
     {
-        31, ENTITY_ID_BAT, 17, 2, DIRECTION_DOWN,
+        31, ENTITY_ID_BAT, 15, 3, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'V', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_PATROL_CIRCLE, 12, 12, 8, CURRENCY_ID_GOLD,
         0, 0,
@@ -453,7 +453,7 @@ static const WorldActorDefinition g_desolate_field_actors[] = {
     {
         64, ENTITY_ID_BAT, 19, 3, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_CHASE, 8, 8, 8, CURRENCY_ID_GOLD,
+        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_PATROL_CIRCLE, 8, 8, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 0, 0
     },
@@ -474,7 +474,7 @@ static const WorldActorDefinition g_desolate_field_actors[] = {
     {
         63, ENTITY_ID_BAT, 9, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_CHASE, 8, 8, 8, CURRENCY_ID_GOLD,
+        'B', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_PATROL_CIRCLE, 8, 8, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 0, 0
     },
@@ -519,6 +519,10 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
     { MAP_WAKE_GROVE,      g_wake_grove_actors,
         (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
+    { MAP_UNDERGROUND_TUNNEL, 0,
+        0 },
+    { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
+        0 },
 };
 
 #include "game.h"
@@ -541,4 +545,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 14;
+const uint8_t g_actor_table_count = 16;

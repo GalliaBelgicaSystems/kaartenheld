@@ -1,0 +1,67 @@
+{
+ "name": "underground_walk",
+ "test": true,
+ "description": "Walk the Underground floor (PLAYER_MOVED) then bump the proving wall (blocked: position holds, no encounter)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_UNDERGROUND"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 9,
+   "expected_y": 8
+  },
+  {
+   "type": "event_occurred",
+   "event": "PLAYER_MOVED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  },
+  {
+   "type": "music_track",
+   "expected": "UNDERGROUND"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 10,
+   "y": 9,
+   "facing": "UP"
+  },
+  "seed": 5007
+ }
+}

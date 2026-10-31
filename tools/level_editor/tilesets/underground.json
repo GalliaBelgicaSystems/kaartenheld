@@ -1,0 +1,566 @@
+{
+  "id": "underground",
+  "label": "Underground",
+  "gb_tileset_kind": "WORLD_TILESET_UNDERGROUND",
+  "tiles": [
+    {
+      "id": "underground_top_left_corner_wall",
+      "label": "top left corner wall",
+      "gb_constant": "TILE_UNDERGROUND_00",
+      "walkable": false,
+      "color": "#281e0e",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_left_corner_wall.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_wall_1",
+      "label": "top wall",
+      "gb_constant": "TILE_UNDERGROUND_01",
+      "walkable": false,
+      "color": "#312411",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_wall_1.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_wall_2",
+      "label": "top wall",
+      "gb_constant": "TILE_UNDERGROUND_02",
+      "walkable": false,
+      "color": "#302411",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_wall_2.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_wall_3",
+      "label": "top wall",
+      "gb_constant": "TILE_UNDERGROUND_03",
+      "walkable": false,
+      "color": "#3e2e15",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_wall_3.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_wall_4",
+      "label": "top wall",
+      "gb_constant": "TILE_UNDERGROUND_04",
+      "walkable": false,
+      "color": "#3c2c15",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_wall_4.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_right_corner_wall",
+      "label": "top right corner wall",
+      "gb_constant": "TILE_UNDERGROUND_05",
+      "walkable": false,
+      "color": "#20180b",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_right_corner_wall.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_left_corner_wall",
+      "label": "bottom left corner wall",
+      "gb_constant": "TILE_UNDERGROUND_06",
+      "walkable": false,
+      "color": "#2f2310",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_left_corner_wall.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_wall_1",
+      "label": "bottom wall",
+      "gb_constant": "TILE_UNDERGROUND_07",
+      "walkable": false,
+      "color": "#281e0e",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_wall_1.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_wall_2",
+      "label": "bottom wall",
+      "gb_constant": "TILE_UNDERGROUND_08",
+      "walkable": false,
+      "color": "#3e2e15",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_wall_2.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_wall_3",
+      "label": "bottom wall",
+      "gb_constant": "TILE_UNDERGROUND_09",
+      "walkable": false,
+      "color": "#2f2310",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_wall_3.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_wall_4",
+      "label": "bottom wall",
+      "gb_constant": "TILE_UNDERGROUND_10",
+      "walkable": false,
+      "color": "#2a200f",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_wall_4.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_right_corner_wall",
+      "label": "bottom right corner wall",
+      "gb_constant": "TILE_UNDERGROUND_11",
+      "walkable": false,
+      "color": "#191208",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_right_corner_wall.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_right_wall_1",
+      "label": "right wall",
+      "gb_constant": "TILE_UNDERGROUND_12",
+      "walkable": false,
+      "color": "#4c391a",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_right_wall_1.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_right_wall_2",
+      "label": "right wall",
+      "gb_constant": "TILE_UNDERGROUND_13",
+      "walkable": false,
+      "color": "#483619",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_right_wall_2.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_right_wall_3",
+      "label": "right wall",
+      "gb_constant": "TILE_UNDERGROUND_14",
+      "walkable": false,
+      "color": "#342712",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_right_wall_3.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_right_wall_4",
+      "label": "right wall",
+      "gb_constant": "TILE_UNDERGROUND_15",
+      "walkable": false,
+      "color": "#483519",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_right_wall_4.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_left_wall_1",
+      "label": "left wall",
+      "gb_constant": "TILE_UNDERGROUND_16",
+      "walkable": false,
+      "color": "#433117",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_left_wall_1.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_left_wall_2",
+      "label": "left wall",
+      "gb_constant": "TILE_UNDERGROUND_17",
+      "walkable": false,
+      "color": "#4f3b1b",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_left_wall_2.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_left_wall_3",
+      "label": "left wall",
+      "gb_constant": "TILE_UNDERGROUND_18",
+      "walkable": false,
+      "color": "#493619",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_left_wall_3.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_left_wall_4",
+      "label": "left wall",
+      "gb_constant": "TILE_UNDERGROUND_19",
+      "walkable": false,
+      "color": "#4c391a",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_left_wall_4.png",
+      "category": "wall",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_floor_with_debris_1",
+      "label": "floor with debris",
+      "gb_constant": "TILE_UNDERGROUND_20",
+      "walkable": true,
+      "color": "#8f6a32",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_floor_with_debris_1.png",
+      "category": "terrain",
+      "palette": "underground1",
+      "glyph": ","
+    },
+    {
+      "id": "underground_stairs",
+      "label": "stairs",
+      "gb_constant": "TILE_UNDERGROUND_21",
+      "walkable": true,
+      "color": "#76592b",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_stairs.png",
+      "category": "terrain",
+      "palette": "underground2"
+    },
+    {
+      "id": "underground_floor_with_light",
+      "label": "floor with light",
+      "gb_constant": "TILE_UNDERGROUND_22",
+      "walkable": true,
+      "color": "#a57e43",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_floor_with_light.png",
+      "category": "terrain",
+      "palette": "underground2",
+      "glyph": ","
+    },
+    {
+      "id": "underground_floor_with_debris_2",
+      "label": "floor with debris",
+      "gb_constant": "TILE_UNDERGROUND_23",
+      "walkable": true,
+      "color": "#88652f",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_floor_with_debris_2.png",
+      "category": "terrain",
+      "palette": "underground1",
+      "glyph": ","
+    },
+    {
+      "id": "underground_floor_with_debris_3",
+      "label": "floor with debris",
+      "gb_constant": "TILE_UNDERGROUND_24",
+      "walkable": true,
+      "color": "#8e6a32",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_floor_with_debris_3.png",
+      "category": "terrain",
+      "palette": "underground1",
+      "glyph": ","
+    },
+    {
+      "id": "underground_bottom_left_interior_corner",
+      "label": "bottom left interior corner",
+      "gb_constant": "TILE_UNDERGROUND_25",
+      "walkable": false,
+      "color": "#4b381a",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_left_interior_corner.png",
+      "category": "terrain",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_right_interior_corner",
+      "label": "top right interior corner",
+      "gb_constant": "TILE_UNDERGROUND_26",
+      "walkable": false,
+      "color": "#553f1d",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_right_interior_corner.png",
+      "category": "terrain",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_bottom_right_interior_corner",
+      "label": "bottom right interior corner",
+      "gb_constant": "TILE_UNDERGROUND_27",
+      "walkable": false,
+      "color": "#5b431f",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_bottom_right_interior_corner.png",
+      "category": "terrain",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_top_left_interior_corner",
+      "label": "top left interior corner",
+      "gb_constant": "TILE_UNDERGROUND_28",
+      "walkable": false,
+      "color": "#6a4f25",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_top_left_interior_corner.png",
+      "category": "terrain",
+      "palette": "underground1"
+    },
+    {
+      "id": "underground_black_emptyness_1",
+      "label": "empty",
+      "gb_constant": "TILE_UNDERGROUND_29",
+      "walkable": false,
+      "color": "#000000",
+      "ascii": "#",
+      "image_url": "/tiles/underground/underground_black_emptyness_1.png",
+      "category": "object",
+      "palette": "underground1",
+      "glyph": "#"
+    }
+  ],
+  "indexed": true,
+  "vram_block": {
+    "palette": "auto",
+    "source_sheet": "assets/underground.png",
+    "tiles": [
+      {
+        "x": 0,
+        "y": 0,
+        "index": 0,
+        "tile": "underground_top_left_corner_wall"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "index": 1,
+        "tile": "underground_top_wall_1"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "index": 2,
+        "tile": "underground_top_wall_2"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "index": 3,
+        "tile": "underground_top_wall_3"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "index": 4,
+        "tile": "underground_top_wall_4"
+      },
+      {
+        "x": 5,
+        "y": 0,
+        "index": 5,
+        "tile": "underground_top_right_corner_wall"
+      },
+      {
+        "x": 6,
+        "y": 0,
+        "index": 6,
+        "tile": "underground_bottom_left_corner_wall"
+      },
+      {
+        "x": 7,
+        "y": 0,
+        "index": 7,
+        "tile": "underground_bottom_wall_1"
+      },
+      {
+        "x": 8,
+        "y": 0,
+        "index": 8,
+        "tile": "underground_bottom_wall_2"
+      },
+      {
+        "x": 9,
+        "y": 0,
+        "index": 9,
+        "tile": "underground_bottom_wall_3"
+      },
+      {
+        "x": 10,
+        "y": 0,
+        "index": 10,
+        "tile": "underground_bottom_wall_4"
+      },
+      {
+        "x": 11,
+        "y": 0,
+        "index": 11,
+        "tile": "underground_bottom_right_corner_wall"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "index": 12,
+        "tile": "underground_right_wall_1"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "index": 13,
+        "tile": "underground_right_wall_2"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "index": 14,
+        "tile": "underground_right_wall_3"
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "index": 15,
+        "tile": "underground_right_wall_4"
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "index": 16,
+        "tile": "underground_left_wall_1"
+      },
+      {
+        "x": 5,
+        "y": 1,
+        "index": 17,
+        "tile": "underground_left_wall_2"
+      },
+      {
+        "x": 6,
+        "y": 1,
+        "index": 18,
+        "tile": "underground_left_wall_3"
+      },
+      {
+        "x": 7,
+        "y": 1,
+        "index": 19,
+        "tile": "underground_left_wall_4"
+      },
+      {
+        "x": 8,
+        "y": 1,
+        "index": 20,
+        "tile": "underground_floor_with_debris_1"
+      },
+      {
+        "x": 9,
+        "y": 1,
+        "index": 21,
+        "tile": "underground_stairs",
+        "exit": true
+      },
+      {
+        "x": 10,
+        "y": 1,
+        "index": 22,
+        "tile": "underground_floor_with_light"
+      },
+      {
+        "x": 11,
+        "y": 1,
+        "index": 23,
+        "tile": "underground_floor_with_debris_2"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "index": 24,
+        "tile": "underground_floor_with_debris_3"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "index": 25,
+        "tile": "underground_bottom_left_interior_corner"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "index": 26,
+        "tile": "underground_top_right_interior_corner"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "index": 27,
+        "tile": "underground_bottom_right_interior_corner"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "index": 28,
+        "tile": "underground_top_left_interior_corner"
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "index": 29,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "index": 30,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 7,
+        "y": 2,
+        "index": 31,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "index": 32,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "index": 33,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 10,
+        "y": 2,
+        "index": 34,
+        "tile": "underground_black_emptyness_1"
+      },
+      {
+        "x": 11,
+        "y": 2,
+        "index": 35,
+        "tile": "underground_black_emptyness_1"
+      }
+    ]
+  }
+}

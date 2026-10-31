@@ -424,33 +424,17 @@
         "x": 1,
         "y": 7,
         "facing": "RIGHT"
+      },
+      "north": {
+        "x": 9,
+        "y": 1,
+        "facing": "UP"
       }
     }
   },
-  "exits": [
-    {
-      "x": 10,
-      "y": 5,
-      "target_scene": "castle",
-      "target_x": 10,
-      "target_y": 16,
-      "direction": "NORTH",
-      "tile_char": "<",
-      "tunnel": "tunnel_castle_hall_castle"
-    },
-    {
-      "x": 9,
-      "y": 5,
-      "target_scene": "castle",
-      "target_x": 9,
-      "target_y": 16,
-      "direction": "NORTH",
-      "tile_char": "<",
-      "tunnel": "tunnel_castle_hall_castle_2"
-    }
-  ],
+  "exits": [],
   "neighbors": {
-    "north": "",
+    "north": "castle",
     "south": "",
     "east": "",
     "west": "castle_entry"

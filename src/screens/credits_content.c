@@ -1,4 +1,4 @@
-#pragma bank 5
+#pragma bank 10
 #pragma disable_warning 110
 
 #include <gb/gb.h>
@@ -7,18 +7,19 @@
 #include "screen.h"
 #include "banked.h"
 
-/* ── Credits: static contributor screen (bank-5 body) ──────────────
+/* ── Credits: static contributor screen (bank-10 body) ─────────
  * One page (the slide byte is unused): header, four credit blocks, and
  * an exit footer.  Lines are hardcoded like the intro slides in
  * title_content.c (banked data, no compiler step).  All lines fit 20
  * columns; the font is unaccented ASCII, so "Berault" carries no accent.
  *
- * Lives in bank 5, not bank 4 with the other title bodies: the credits
- * text + draw loop overflowed bank 4's 16 KB budget (AGENTS.md 52.18).
- * The text/color helpers mirror title_content.c's bank-local pair (same
- * buffer-checked VRAM protocol, same g_ui_screen_buf mirror): a banked
- * body cannot call across banks, so sharing one copy is impossible.
- * KEEP IN SYNC if that protocol changes. */
+ * Lives in bank 10, not bank 4 with the other title bodies: the credits
+ * text + draw loop overflowed bank 4's 16 KB budget (AGENTS.md 52.18),
+ * and release bank 5 (scene rows) has no room either.  The text/color
+ * helpers mirror title_content.c's bank-local pair (same buffer-checked
+ * VRAM protocol, same g_ui_screen_buf mirror): a banked body cannot
+ * call across banks, so sharing one copy is impossible.  KEEP IN SYNC
+ * if that protocol changes. */
 
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;

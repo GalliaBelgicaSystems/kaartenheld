@@ -119,9 +119,9 @@ void ui_init(void)
 
     oam_dma_init();
 
-    /* Load font tiles from Bank 5 (96 tiles = 1536 bytes) using g_ui_screen_buf as temporary buffer */
+    /* Load font tiles from Bank 10 (96 tiles = 1536 bytes) using g_ui_screen_buf as temporary buffer */
     for (p = 0; p < 96; p += 8) {
-        banked_copy(5, g_ui_screen_buf, g_intrepid_font_tiles + ((uint16_t)p << 4), 128);
+        banked_copy(10, g_ui_screen_buf, g_intrepid_font_tiles + ((uint16_t)p << 4), 128);
         set_bkg_data(p, 8, (const uint8_t *)g_ui_screen_buf);
         /* The overworld renders actors as OAM sprites that reference the
          * font glyph tiles, but sprites always read from the 0x8000 VRAM
@@ -527,6 +527,27 @@ static const uint8_t s_castle_ext_slot[16] = {
     26, 8, 17, 18, 19, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 37
 };
 
+/* Underground value->VRAM-slot table (fixed bank, 43 bytes): slot for
+ * every aliased value 208..250 (see world.h).  Dead values map to void.
+ * A bank-10 copy was tried first, but fixed-bank code itself executes
+ * from the switchable window (ROM bank 1: ui.c links above 0x4000), so
+ * an inline bank select would unmap the code mid-execution -- only the
+ * WRAM trampoline may switch banks, and a per-cell trampoline call is
+ * too slow.  The table lives here instead; the fixed bank has room
+ * again after the refill move (see below). */
+static const uint8_t s_ug_slot[43] = {
+    20, 22, 23, 24,                 /* 208..211 floors */
+    25, 26, 27, 28,                 /* 212..215 interior corners */
+    29,                             /* 216 (unused; void) */
+    29, 29, 29,                     /* 217..219 (unused; void) */
+    28,                             /* 220 interior corner */
+    29,                             /* 221 void */
+    29, 29, 29, 29, 29,             /* 222..226 (unused; void) */
+    21,                             /* 227 stairs exit */
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    29, 29, 29,                     /* 248..250 (unused; void) */
+};
+
 /* Commit one resolved cell to the tilemap ring, the CGB attribute ring,
  * the DEBUG mirrors, and the semantic screen buffer.  Shared tail of the
  * terrain pass and the static-actor stamp pass below (one code path, not
@@ -635,6 +656,17 @@ static void ui_draw_terrain_cell(const World *world, uint8_t col, uint8_t row)
                    t >= TILE_VILLAGE_00 && t <= TILE_VILLAGE_47) {
             uint8_t v_idx = (uint8_t)(t - TILE_VILLAGE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + v_idx);
+        } else if (world->tileset_kind == WORLD_TILESET_UNDERGROUND &&
+                   (uint8_t)(t - TILE_UNDERGROUND_20) <= 42) {
+            /* Single kind gate + one range check: every UG value lives
+             * in one aliased run (208..250, see world.h), mapped through
+             * the fixed-bank slot table above (slots for floors, corners,
+             * void, stairs, walls; dead values map to void).  Values
+             * outside the run (the TILE_WALL border pre-fill and anything
+             * invalid) fall through to the generic lookup below, whose
+             * slots 0..3 hold UG wall art while this tileset is loaded
+             * -- the same quality as the castle border fallback. */
+            tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + s_ug_slot[(uint8_t)(t - TILE_UNDERGROUND_20)]);
         } else {
             uint8_t lookup_id = rpg_lookup_tile_id(world->tileset_kind, glyph);
             tile_idx = lookup_id ? lookup_id : (uint8_t)(ui_font_tile_base + (uint8_t)(glyph - ' '));
@@ -744,33 +776,18 @@ static void ui_draw_world_rect(const World *world, uint8_t c0, uint8_t c1,
  * ASCII console-font tile (terrain and actors both draw via the font), so
  * decoding back to a char is base + tile_index - ui_font_tile_base. */
 #ifdef DEBUG_BUILD
+void ui_refill_semantic_banked(void);
+
+/* DEBUG-only semantic refill lives in bank 10 (see ui_refill_banked.c);
+ * thin fixed wrapper stages the World pointer and runs it through the
+ * WRAM banked-call trampoline (same pattern as the scenario loader
+ * bodies).  Called on every full world redraw. */
 static void ui_refill_semantic(const World *world)
 {
-    uint8_t x, y, col, row, slot;
-    const WorldActorRuntime *a;
-    uint8_t sx, sy;
-
-    for (y = 0; y < WORLD_VIEW_H; y++) {
-        for (x = 0; x < WORLD_VIEW_W; x++) {
-            col = (uint8_t)(world->scroll_x + x);
-            row = (uint8_t)(world->scroll_y + y);
-            if (col >= world->width || row >= world->height) {
-                g_ui_screen_buf[y][x] = '.';
-            } else {
-                g_ui_screen_buf[y][x] = ui_get_world_tile_glyph(world->map[row][col]);
-            }
-        }
-    }
-
-    for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
-        a = &world->actors[slot];
-        if (!a->active) continue;
-        sx = (uint8_t)(a->x - world->scroll_x);
-        sy = (uint8_t)(a->y - world->scroll_y);
-        if (sx < WORLD_VIEW_W && sy < WORLD_VIEW_H) {
-            g_ui_screen_buf[sy][sx] = (char)a->visual;
-        }
-    }
+    g_bk_ptr_a = (void *)world;
+    g_bk_call_bank = 10;
+    g_bk_call_target = (uint16_t)&ui_refill_semantic_banked;
+    banked_call_run();
 }
 #endif
 

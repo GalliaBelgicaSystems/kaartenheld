@@ -1,0 +1,38 @@
+{
+ "name": "underground_boot",
+ "test": true,
+ "description": "Boot directly into the overworld on the Underground scene (new tileset wiring proof)",
+ "actions": [],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_UNDERGROUND"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 10,
+   "expected_y": 9
+  },
+  {
+   "type": "music_track",
+   "expected": "UNDERGROUND"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 10,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "seed": 5007
+ }
+}
