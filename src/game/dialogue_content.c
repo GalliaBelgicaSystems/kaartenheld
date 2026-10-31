@@ -283,8 +283,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_DEFEND,
         "CARL:",
-        4,
-        {"CARL ATTACKS NOW!", "PICK SHIELD CARDS!", "SELECT CONFIRMS", "THE BLOCK!"},
+        8,
+        {"CARL ATTACKS NOW!", "PICK SHIELD CARDS!", "SELECT CONFIRMS", "THE BLOCK!", "DAGGERS CAN ATTACK", "DURING DEFENSE!", "ADD NEW CARDS WITH", "THE START MENU!"},
         0,
         0
     },

@@ -24,7 +24,7 @@
 00:D8AD 00000003
 00:6F2E 0000007D
 00:C940 00000F6D
-00:A4000 00001FBA
+00:A4000 00002000
 00:74000 00003153
 00:44000 00003931
 00:34000 00003BB1
@@ -342,8 +342,8 @@
 00:C944 _console_
 00:C944 _console_mode
 00:C942 _cpu
-00:A5B69 _credits_
-00:A5B69 _credits_content_render
+00:A5BAF _credits_
+00:A5BAF _credits_content_render
 00:3279 _credits_screen_render
 00:24A3 _currency
 00:24A3 _currency_add
@@ -552,8 +552,8 @@
 00:D3A4 _g_inp_prev
 00:238A _g_input_
 00:238A _g_input_button_bits
-00:A54A3 _g_intrep
-00:A54A3 _g_intrepid_font_tiles
+00:A54E9 _g_intrep
+00:A54E9 _g_intrepid_font_tiles
 00:D64C _g_is_cgb
 00:D354 _g_jingle
 00:D354 _g_jingle_done
@@ -1066,8 +1066,8 @@
 00:563B7 _ui_load_cram_banked
 00:553E _ui_load_tileset
 00:566A1 _ui_load_tileset_banked
-00:A5D2B _ui_refil
-00:A5D2B _ui_refill_semantic_banked
+00:A5D71 _ui_refil
+00:A5D71 _ui_refill_semantic_banked
 00:5DD0 _ui_resto
 00:5DD0 _ui_restore_dialogue_rows
 00:51D8 _ui_restore_ow_oam
@@ -1217,8 +1217,8 @@
 00:C944 console_
 00:C944 console_mode
 00:C942 cpu
-00:A5B69 credits_
-00:A5B69 credits_content_render
+00:A5BAF credits_
+00:A5BAF credits_content_render
 00:3279 credits_screen_render
 00:24A3 currency
 00:24A3 currency_add
@@ -1425,8 +1425,8 @@
 00:D3A4 g_inp_prev
 00:238A g_input_
 00:238A g_input_button_bits
-00:A54A3 g_intrep
-00:A54A3 g_intrepid_font_tiles
+00:A54E9 g_intrep
+00:A54E9 g_intrepid_font_tiles
 00:D64C g_is_cgb
 00:D354 g_jingle
 00:D354 g_jingle_done
@@ -1655,8 +1655,8 @@
 00:0000 l__BSS
 00:0000 l__CABS
 00:6D2E l__CODE
-00:1FBA l__CODE_1
-00:1FBA l__CODE_10
+00:2000 l__CODE_1
+00:2000 l__CODE_10
 00:3D96 l__CODE_2
 00:3BB1 l__CODE_3
 00:3931 l__CODE_4
@@ -1996,8 +1996,8 @@
 00:563B7 ui_load_cram_banked
 00:553E ui_load_tileset
 00:566A1 ui_load_tileset_banked
-00:A5D2B ui_refil
-00:A5D2B ui_refill_semantic_banked
+00:A5D71 ui_refil
+00:A5D71 ui_refill_semantic_banked
 00:5DD0 ui_resto
 00:5DD0 ui_restore_dialogue_rows
 00:51D8 ui_restore_ow_oam
