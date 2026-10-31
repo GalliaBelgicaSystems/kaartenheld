@@ -235,6 +235,12 @@ extern uint8_t g_scen_state_buf[STATE_LOAD_DESC_SIZE];
 extern GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
 extern uint8_t g_telemetry_count;
 extern uint8_t g_telemetry_head;
+/* Telemetry-append staging + sequence state (telemetry.c, WRAM): the
+ * bank-2 append body's inputs.  Not part of the host contract (the host
+ * reads only the ring + count + head). */
+extern uint8_t g_telemetry_emit_args[5];
+extern uint32_t g_telemetry_seq;
+extern const uint32_t *g_telemetry_frame_ptr;
 
 #ifdef DEBUG_BUILD
 
@@ -254,6 +260,9 @@ void debug_snapshot(void);
 #define debug_snapshot() ((void)0)
 
 #endif /* DEBUG_BUILD */
+/* Bank-2 append body (src/debug/telemetry_emit_banked.c) dispatched by the
+ * telemetry_emit() wrapper. */
+void telemetry_emit_banked(void);
 /* Bank-2 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
 void debug_snapshot_banked(void);
 void debug_state_snapshot(void);

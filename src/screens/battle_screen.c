@@ -83,8 +83,21 @@ void battle_screen_update(Game *g)
                     screen_change(g, SCREEN_OVERWORLD);
                 }
             } else {
+                /* Slime-lord desperation outro (unwinnable final battle):
+                 * game-owned flow in content.c (own function keeps this
+                 * frame lean, AGENTS.md 52.18); the flag stays set for the
+                 * dialogue close (which routes to THANKS) and battle_start
+                 * clears it for the next fight. */
+                if (g_slime_despair != 0) {
+                    game_slime_despair_outro();
+                    return;
+                }
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
+                /* Stop everything: the per-frame tick is gated off on
+                 * terminal screens, so without this the game-over theme
+                 * from the defeat would drone on under GAME_OVER. */
+                audio_play_music(MUSIC_NONE);
                 screen_change(g, SCREEN_GAME_OVER);
             }
         }

@@ -1,7 +1,7 @@
 {
  "name": "boss_battle_ending",
  "test": true,
- "description": "Defeating the LORD OF SLIMES sets ENDING_SHOWN via the BOSS_DEFEATED script, routes victory to the ENDING screen, and starts the end-credits theme (demo complete.uge, MUSIC_ENDING).  The castle bat is pre-defeated and SET_ENEMY_HP pins the boss to 20 HP.  Blind SELECT flushes auto-execute drawn cards each round (flat-1 fire swords, so the flush sequence runs long); a single trailing A advances the result phase -- exactly one, because A on the ENDING screen restarts the game.",
+ "description": "The Lord of Slimes is unwinnable: dropping him to 20 HP or less triggers his 99-damage desperation (he survives even a 0-HP hit), then a whiteout wakes the hero in the strange grove with the Where-am-I dialogue, routing to the demo-complete THANKS screen. Castle bat pre-defeated; boss pinned to 20 HP. Blind SELECT flushes attacks; two trailing As exit the defeat result (whiteout+dialogue) and close the dialogue to THANKS.",
  "actions": [
   {
    "type": "wait",
@@ -458,31 +458,56 @@
   },
   {
    "type": "wait",
-   "frames": 1200
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 200
   }
  ],
  "assertions": [
   {
    "type": "screen",
-   "expected": "ENDING"
+   "expected": "THANKS"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FOREST"
   },
   {
    "type": "variable",
    "variable": "ENDING_SHOWN",
-   "expected": 1
+   "expected": 0
   },
   {
    "type": "variable",
    "variable": "MONSTERS_DEFEATED",
-   "expected": 4
+   "expected": 3
   },
   {
    "type": "event_occurred",
+   "event": "BATTLE_LOST"
+  },
+  {
+   "type": "event_not_occurred",
    "event": "BATTLE_WON"
   },
   {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
    "type": "music_track",
-   "expected": "ENDING"
+   "expected": "FOREST"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "Congratulations"
   }
  ],
  "initial_state": {

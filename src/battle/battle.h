@@ -199,12 +199,20 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp);
  * uses the standard 3-slot screen ("default").  Read directly by
  * battle_hud_load_banked() in the same bank-4 dispatch. */
 extern uint8_t g_battle_solo;
+/* Slime-lord desperation flag (WRAM, BSS zero): set when the BATTLE_NONE
+ * boss drops to 20 HP or less and survives with a 99-damage reprisal.
+ * battle_screen consumes it on the defeat exit to route the whiteout /
+ * strange-grove / wake-dialogue / THANKS outro instead of GAME_OVER. */
+extern uint8_t g_slime_despair;
 void battle_cursor_move(Battle *b, int8_t dir);
 void battle_target_move(Battle *b, int8_t dir);
 bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);
 void battle_card_undo_banked(void);
+/* Slime-lord desperation check+apply (src/battle/battle_despair_banked.c,
+ * ROM bank 8): reads g_game.battle directly, reports via g_bk_byte_c. */
+void battle_despair_banked(void);
 void battle_execute_combo(Battle *b);
 void battle_update(Battle *b);
 bool battle_is_card_selected(const Battle *b, uint8_t hand_idx);

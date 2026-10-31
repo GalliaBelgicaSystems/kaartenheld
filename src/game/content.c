@@ -125,3 +125,23 @@ ScreenId game_screen_after_victory(const Game *g)
     }
     return SCREEN_OVERWORLD;
 }
+
+void game_slime_despair_outro(void)
+{
+    volatile uint8_t a, b;
+    /* The battle screen guarantees a live game; the single global Game
+     * instance is always the battle owner (main.c drives everything from
+     * &g_game). */
+    ui_lcd_off();
+    for (a = 0; a < 80; a++) {
+        for (b = 0; b < 200; b++) {
+        }
+    }
+#ifdef TEST_LEVELS
+    scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
+#else
+    scene_load(&g_game, SCENE_STRANGE_GROVE, 10, 8);
+#endif
+    dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
+    screen_change(&g_game, SCREEN_DIALOGUE);
+}

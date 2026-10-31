@@ -455,6 +455,11 @@ OVERFLOW_TERRAIN_BANK = {
     "grassy_forest": 9,
     "mountain_pass": 9,
     "south_ridge": 9,
+    # Strange grove (demo-outro waking map, a wake-grove copy): bank 5
+    # cannot hold another ~1KB terrain (release bank 5 overflows), bank 9
+    # is too full in release, and bank 7 already has a stamp body plus
+    # kilobytes free in both builds -- no scene.c dispatch change needed.
+    "strange_grove": 7,
 }
 
 

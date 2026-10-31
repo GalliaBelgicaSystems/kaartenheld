@@ -16,7 +16,8 @@
     "desolate_field": 18,
     "wake_grove": 19,
     "underground_tunnel": 20,
-    "underground_tunnel_south": 21
+    "underground_tunnel_south": 21,
+    "strange_grove": 22
   },
   "_retired": {
     "forest2": 6,

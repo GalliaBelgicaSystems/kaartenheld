@@ -8,39 +8,43 @@ uint8_t g_state_snap_buf[STATE_SNAP_TOTAL_SIZE];
 GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
 uint8_t g_telemetry_count;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_telemetry_head;  /* BSS zero (AGENTS.md 52.27) */
-static uint32_t event_seq = 0;
-static const uint32_t *telemetry_frame_ptr;  /* BSS (52.27) */
+/* Event-arg staging + sequence state for the banked append body
+ * (telemetry_emit_banked.c, ROM bank 2): WRAM, always mapped, BSS zero
+ * (AGENTS.md 52.27).  Names are part of NO host contract (the host reads
+ * only the ring + count + head); the GameEvent layout is unchanged. */
+uint8_t g_telemetry_emit_args[5];
+uint32_t g_telemetry_seq;
+const uint32_t *g_telemetry_frame_ptr;
 
 void telemetry_init(void)
 {
     g_telemetry_count = 0;
     g_telemetry_head = 0;
-    event_seq = 0;
-    telemetry_frame_ptr = NULL;
+    g_telemetry_seq = 0;
+    g_telemetry_frame_ptr = NULL;
 }
 
 void telemetry_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
-    GameEvent *ev = &g_telemetry_buffer[g_telemetry_head];
-    ev->seq = event_seq++;
-    ev->frame = telemetry_frame_ptr ? *telemetry_frame_ptr : 0;
-    ev->type = (uint8_t)type;
-    ev->data[0] = d0;
-    ev->data[1] = d1;
-    ev->data[2] = d2;
-    ev->data[3] = d3;
-
-    g_telemetry_head = (uint8_t)((g_telemetry_head + 1) & (MAX_TELEMETRY_EVENTS - 1));
-    if (g_telemetry_count < MAX_TELEMETRY_EVENTS) {
-        g_telemetry_count++;
-    }
+    /* Thin fixed-bank wrapper: stage the 5 event bytes and dispatch the
+     * bank-2 append body through the WRAM trampoline (fixed _CODE
+     * budget, AGENTS.md 52.18).  Synchronous: the body appends before
+     * this returns, so back-to-back emits keep ring order. */
+    g_telemetry_emit_args[0] = type;
+    g_telemetry_emit_args[1] = d0;
+    g_telemetry_emit_args[2] = d1;
+    g_telemetry_emit_args[3] = d2;
+    g_telemetry_emit_args[4] = d3;
+    g_bk_call_bank = 2;
+    g_bk_call_target = (uint16_t)&telemetry_emit_banked;
+    banked_call_run();
 }
 
 
 
 void telemetry_set_frame_ptr(const uint32_t *frame_ptr)
 {
-    telemetry_frame_ptr = frame_ptr;
+    g_telemetry_frame_ptr = frame_ptr;
 }
 
 #ifdef DEBUG_BUILD

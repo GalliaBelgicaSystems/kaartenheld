@@ -56,6 +56,10 @@ HudSkinDef g_hud_skin_wram;
  * battle_hud_load_banked to pick the single-enemy boss screen. */
 uint8_t g_battle_solo;
 
+/* Slime-lord desperation (see battle.h): BSS zero, set once per battle
+ * when the BATTLE_NONE boss hits 20 HP or less. */
+uint8_t g_slime_despair;
+
 /* ── Bridge: persistent DeckState → battle Deck ───────────────────
  * When a DeckState is provided (player has cards), build the battle
  * deck from the player's owned cards.  When NULL, fall back to the
@@ -153,6 +157,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * which re-stages g_bk_byte_a for its own dispatch. */
     g_battle_solo = solo;
     g_battle_multiframe = 0;
+    g_slime_despair = 0;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
@@ -702,13 +707,24 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
+        /* Lord of Slimes desperation (unwinnable final battle): the
+         * check+apply lives in the bank-8 body (fixed _HOME budget,
+         * AGENTS.md 52.18); this only owns the observable tail. */
+        g_bk_call_bank = 8;
+        g_bk_call_target = (uint16_t)&battle_despair_banked;
+        banked_call_run();
+        if (g_bk_byte_c != 0) {
+            telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
+            battle_set_result(b, BATTLE_RESULT_DEFEAT);
+        } else {
 #ifdef DEBUG_BUILD
-        if (b->enemies[b->target_idx].hp == 0) {
-            telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-        }
+            if (b->enemies[b->target_idx].hp == 0) {
+                telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
+            }
 #endif
-        if (battle_all_enemies_dead(b)) {
-            battle_set_result(b, BATTLE_RESULT_VICTORY);
+            if (battle_all_enemies_dead(b)) {
+                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            }
         }
     } else if (b->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         /* STATUS_FREEZE on the player (see the attack gate above): a frozen

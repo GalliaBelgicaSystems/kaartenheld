@@ -88,7 +88,15 @@ void dialogue_screen_update(Game *g)
             start_battle_from_world(g);
             return;
         }
-        screen_change(g, SCREEN_OVERWORLD);
+        /* Demo outro: the slime-lord wake dialogue ("Where am I?")
+         * routes to THANKS and marks the demo completed (the banked
+         * thanks body shows congratulations); every other dialogue
+         * returns to the overworld (game-over quits show the try-again
+         * text).  The despair flag is cleared here; battle_start clears
+         * it for the next fight.  Single screen_change call (fixed-bank
+         * budget, AGENTS.md 52.18). */
+        screen_change(g, g_slime_despair ? (g_slime_despair = 0, g_demo_completed = 1, SCREEN_THANKS)
+                                         : SCREEN_OVERWORLD);
     }
 }
 

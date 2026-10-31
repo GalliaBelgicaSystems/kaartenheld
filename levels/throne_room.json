@@ -427,7 +427,17 @@
       }
     }
   },
-  "exits": [],
+  "exits": [
+    {
+      "x": 5,
+      "y": 5,
+      "target_scene": "strange_grove",
+      "target_x": 10,
+      "target_y": 8,
+      "direction": "NORTH",
+      "tile_char": ">"
+    }
+  ],
   "neighbors": {
     "north": "",
     "south": "castle",
