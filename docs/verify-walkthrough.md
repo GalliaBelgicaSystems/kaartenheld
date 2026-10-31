@@ -87,9 +87,10 @@ tools/walkthrough/
 1. **Shop purchase** (Walk A): buy IRON_RING → assert
    gold==20−cost, `shop_message==BOUGHT`, collection gained the card.
 2. **Mayor flag**: interact mayor → assert STORY_FLAG MET_MAYOR set.
-3. **Battle lesson** (Walk B): fight Carl's unkillable spar through the
-   full coaching flow (attack/defend/poker/flee boxes, one jeer, one
-   flee-reminder) until the first flee → assert `result==FLED`, the
+3. **Battle lesson** (Walk B): fight Carl's 30 HP spar through the
+   full coaching flow (attack/defend/poker boxes, then the flee lesson
+   with its reward tease on the next attack, then one jeer) until the
+   first flee → assert `result==FLED`, the
    farewell box shows, the pool stays 2 and gold stays 20 (no reward
    for fleeing).  Replaces the old kill-to-victory loop (same
    overworld-redraw + VRAM-restore coverage); `11-battle-fled` +

@@ -19,8 +19,9 @@
  * assigns LESSON progress and closes into the stashed spar, NO clears
  * the stash and opens the decline line.  The fight itself is a plain
  * solo battle screen; Carl coaches through normal dialogue boxes once
- * each (attack, defend, poker, flee), then one looping jeer per player
- * attack (plus a flee reminder every 10 HP removed).
+ * each (attack, defend, poker), then the flee lesson once -- on the
+ * first attack landed after the defend lesson -- then one looping jeer
+ * per player attack (plus a flee reminder every 10 HP removed).
  *
  * State is three BSS bytes.  Non-Carl battles reset them in the tick
  * body; YES assigns them on accept; the battle-start hook is gone by

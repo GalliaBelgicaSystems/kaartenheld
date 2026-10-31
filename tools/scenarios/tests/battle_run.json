@@ -1,7 +1,7 @@
 {
  "name": "battle_run",
  "test": true,
- "description": "Running away flees without winning: the enemy stays on the map at its damaged HP (29/30 after one SW1 hit), no gold/defeat/quest progress. The defend phase must be executed (SELECT) before the next SELECT phase opens, where B with an empty combo flees. Carl is asserted ALIVE via his persistent lifecycle.",
+ "description": "Running away flees without winning: fleeing Carl's spar on the first turn (empty combo) leaves him at full HP (30/30, never touched), no gold/defeat/quest progress and no farewell (the lesson was never taught). Carl is asserted ALIVE via his persistent lifecycle.",
  "actions": [
   {
    "type": "press",
@@ -10,110 +10,6 @@
   {
    "type": "wait",
    "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 125
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
   },
   {
    "type": "press",
@@ -162,22 +58,6 @@
   {
    "type": "wait",
    "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
   }
  ],
  "assertions": [
@@ -187,7 +67,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 29
+   "expected": 30
   },
   {
    "type": "event_occurred",

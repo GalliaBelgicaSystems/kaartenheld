@@ -175,12 +175,6 @@
       "event": "DIALOGUE_STARTED"
     },
     {
-      "type": "event_arg",
-      "event": "DIALOGUE_STARTED",
-      "index": 0,
-      "value": "TUTORIAL_CARL_FLEE"
-    },
-    {
       "type": "variable",
       "variable": "ENERGY_POOL",
       "expected": 3

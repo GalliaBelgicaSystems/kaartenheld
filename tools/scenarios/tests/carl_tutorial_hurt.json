@@ -1,7 +1,7 @@
 {
   "name": "carl_tutorial_hurt",
   "test": true,
-  "description": "Ignoring the flee lesson and attacking again earns one looping jeer per attack (Uch!, Ew!, ...) instead of re-teaching the tutorial; each coaching box shows exactly once",
+  "description": "Ignoring the flee lesson and attacking again earns one looping jeer per attack (UCH!, EW!, ...) instead of re-teaching the tutorial; each coaching box shows exactly once and the second jeer proves the loop index advances",
   "actions": [
     {
       "type": "press",
@@ -108,17 +108,9 @@
       "frames": 20
     },
     {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 20
-    },
-    {
       "type": "set_enemy_hp",
       "index": 0,
-      "hp": 27
+      "hp": 28
     },
     {
       "type": "press",
@@ -134,6 +126,18 @@
     },
     {
       "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "wait",
       "frames": 80
     },
     {
@@ -147,7 +151,40 @@
     {
       "type": "set_enemy_hp",
       "index": 0,
-      "hp": 27
+      "hp": 28
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 60
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 28
     },
     {
       "type": "press",

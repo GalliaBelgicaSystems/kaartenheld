@@ -109,11 +109,39 @@
     },
     {
       "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
       "button": "A"
     },
     {
       "type": "wait",
       "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "wait",
+      "frames": 60
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
     },
     {
       "type": "press",
@@ -148,12 +176,6 @@
     {
       "type": "game_state",
       "expected": "OVERWORLD"
-    },
-    {
-      "type": "event_arg",
-      "event": "DIALOGUE_STARTED",
-      "index": 0,
-      "value": "TUTORIAL_CARL_POKER"
     },
     {
       "type": "event_arg",

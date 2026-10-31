@@ -1,7 +1,7 @@
 {
   "name": "carl_tutorial_reminder",
   "test": true,
-  "description": "Every 10 HP removed earns Carl's flee reminder instead of a jeer: with 19 damage dealt the next attack opens YOU CAN FLEE WITH B AND STOP (single page), proving the milestone replaces the loop for that attack",
+  "description": "Every 10 HP removed earns Carl's flee reminder instead of a jeer: with 10+ damage dealt the third attack opens YOU CAN FLEE: B (single page), proving the milestone replaces the loop for that attack. The second attack still teaches fleeing first.",
   "actions": [
     {
       "type": "press",
@@ -108,6 +108,19 @@
       "frames": 20
     },
     {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 20
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 60
+    },
+    {
       "type": "press",
       "button": "A"
     },
@@ -116,9 +129,24 @@
       "frames": 20
     },
     {
-      "type": "set_enemy_hp",
-      "index": 0,
-      "hp": 20
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "wait",
+      "frames": 80
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 80
     },
     {
       "type": "press",

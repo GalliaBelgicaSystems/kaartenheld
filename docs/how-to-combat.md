@@ -39,12 +39,14 @@ you). With a single foe the target arrow
 stays parked on him; on your turn the top reads `TARGET CARL`. Carl coaches through
 normal dialogue boxes: how to attack (pick cards with `A`, move the cursor
 with `L/R`, confirm the hand with `SELECT`) when the spar opens, how to
-defend (pick `SHIELD` cards, `SELECT` confirms the block) on his first
-attack, what the poker hands mean (pairs hit harder, trips more, straights,
-flushes, suited bonus) plus how to flee (`B` with an empty hand) on the way
-back. Every 10 HP you remove earns a flee reminder instead of a jeer.
-Keep fighting instead of fleeing and he skips the lessons, jeering
-you once per attack instead (`Uch!`, `Ew!`, ... looping).
+defend (pick `SHIELD` cards, `SELECT` confirms the block — and daggers
+counterattack during defense) on his first attack, what the poker hands
+mean (pairs hit harder, trips more, straights, flushes, suited bonus)
+when the round comes back to you, and finally how to flee (`B` with an
+empty hand) — plus a reminder that he is worth beating — once you have
+hurt him again. Every 10 HP you remove earns a flee reminder instead of
+a jeer. Keep fighting instead of fleeing and he skips the lessons,
+jeering you once per attack instead (`UCH!`, `EW!`, ... looping).
 
 ![Pick cards, then SELECT](../screenshots/09-battle.png)
 

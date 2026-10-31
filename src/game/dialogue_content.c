@@ -299,8 +299,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_FLEE,
         "CARL:",
-        3,
-        {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!"},
+        5,
+        {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!", "COME BACK AND", "BEAT ME FOR POWER"},
         0,
         0
     },

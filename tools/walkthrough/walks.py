@@ -786,8 +786,9 @@ def walk_b(planner, checks):
     # practice deck deals 0, so the hero must still be full afterwards.
     # His coaching shows once per phase as normal dialogue boxes: the
     # attack lesson on spar entry (closed above), the shield lesson on
-    # the first DEFEND, the poker-hands + flee lessons on the way back
-    # to SELECT, then one looping jeer per attack (drained per round).
+    # the first DEFEND, the poker-hands lesson on the way back to
+    # SELECT, then the flee lesson on the next attack landed, and from
+    # then on one looping jeer per attack (drained per round).
     prev_total = s.reader.battle_enemy_hp(0)
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
@@ -825,36 +826,33 @@ def walk_b(planner, checks):
     s.check("poker lesson",
             s.wait_for(lambda: s.text_has("PAIRS HIT HARDER!"), ticks=240),
             expected="PAIRS HIT HARDER!", actual="none")
-    s.check("poker+flee lessons closed", close_box(s),
+    s.check("poker lesson closed", close_box(s),
             expected="closed", actual="open")
     # Same full-redraw settle on the way back to SELECT: the cursor and
-    # hand must be live before the jeer-round selection runs.
+    # hand must be live before the next attack.
     s.check("select banner back",
             s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
             expected="TARGET CARL", actual="none")
     prev_total = s.reader.battle_enemy_hp(0)
-    # One full round with the jeer drained: the way back to SELECT is
-    # plain now (all four coaching boxes showed once), but every
-    # confirmed attack raises exactly one looping jeer box (UCH! first)
-    # on ANIM -- close it, defend through, and the spar is back to a
-    # plain SELECT with strictly less enemy HP.  Carl's 99 HP cannot
-    # drop, so the lesson ends by fleeing, not by winning.
+    # The next attack is the first one landed since the defend lesson,
+    # so it raises the flee lesson (with its reward tease) -- not a
+    # jeer.  Close it, defend through the round, and the spar is back
+    # to a plain SELECT with strictly less enemy HP.
     _select_cards(s, ATTACK_TYPES)
     for _ in range(4):
         s.press("select", settle=40)     # execute attack
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
-        if s.text_has("CARL:"):          # jeer/reminder box on ANIM
+        if s.text_has("CARL:"):          # flee lesson on ANIM
             break
-    # Either looping line is fine here (burn ticks can push the dealt
-    # total over a reminder milestone on some RNG rolls): the seeded
-    # scenarios pin the exact lines, the walk pins the flow.
-    s.check("post-attack box", s.text_has("CARL:"),
-            expected="CARL: box", actual="none")
-    s.check("jeer or reminder",
-            s.text_has("UCH!") or s.text_has("YOU CAN FLEE"),
-            expected="UCH! or YOU CAN FLEE", actual="none")
-    s.check("post-attack box closed", close_box(s),
+    s.check("flee lesson",
+            s.wait_for(lambda: s.text_has("TO FLEE, PRESS B"), ticks=180),
+            expected="TO FLEE, PRESS B", actual="none")
+    s.check("flee lesson reward tease",
+            s.press_until("a", lambda: s.text_has("BEAT ME FOR POWER"),
+                          tries=6, settle=30, label="power tease"),
+            expected="BEAT ME FOR POWER", actual="none")
+    s.check("flee lesson closed", close_box(s),
             expected="closed", actual="open")
     s.check("defend banner 2",
             s.wait_for(lambda: s.text_has("DEFEND"), ticks=240),
@@ -871,6 +869,38 @@ def walk_b(planner, checks):
     s.check("damage dealt", total < prev_total,
             expected="hp %d < %d" % (total, prev_total),
             actual="hp %d" % total)
+    # One more attack: now that the lesson is over, it earns a looping
+    # jeer (or the flee reminder, if burn ticks crossed a milestone).
+    _select_cards(s, ATTACK_TYPES)
+    for _ in range(4):
+        s.press("select", settle=40)
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.text_has("CARL:"):
+            break
+    s.check("post-attack box", s.text_has("CARL:"),
+            expected="CARL: box", actual="none")
+    s.check("jeer or reminder",
+            s.text_has("UCH!") or s.text_has("YOU CAN FLEE"),
+            expected="UCH! or YOU CAN FLEE", actual="none")
+    s.check("post-attack box closed", close_box(s),
+            expected="closed", actual="open")
+    # Finish the round that attack started (defend through it) so the
+    # next phase is a plain SELECT -- B only flees from there.
+    s.check("defend banner 3",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=240),
+            expected="DEFEND", actual="none")
+    _select_cards(s, (BT_SHIELD,))
+    for _ in range(4):
+        s.press("select", settle=40)
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
+    s.check("flee window",
+            s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
+            expected="TARGET CARL", actual="none")
     # Flee the lesson (B on the empty attack hand): FLED! flashes for
     # a frame before Carl's farewell box auto-opens over it, so the
     # farewell is the stable sync point; closing it lands back on the
