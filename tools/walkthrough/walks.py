@@ -971,10 +971,11 @@ def walk_c(planner, checks):
             expected="underground_tunnel", actual="no crossing")
     s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
     s.check_eq("underground music", s.reader.music_track(), MUSIC_UNDERGROUND)
-    # Walk the tunnel to the top-right stairs and cross into the forest:
-    # the gate sits at (17,2), so stop one cell south and step north onto
-    # it (avoid_exits keeps the entry gate from warping us back out).
-    _tunnel_path = planner.path("underground_tunnel", s.pos(), (17, 3),
+    # Walk the tunnel to the top stairs and cross into the forest:
+    # the gate sits at (16,3), so stop one cell south and step north
+    # onto it (avoid_exits keeps the entry gate from warping us back
+    # out).
+    _tunnel_path = planner.path("underground_tunnel", s.pos(), (16, 4),
                                 avoid_exits=True)
     s.check("path through tunnel", _tunnel_path is not None,
             expected="bfs path", actual="none")
