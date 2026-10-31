@@ -112,8 +112,15 @@ void game_update(Game *g)
      * g_bk_byte_c (1 = entry: hold the scene track; 2 = sting now, once
      * the level is loaded and pursuers start moving) and the held-track
      * replay through g_bk_byte_d (scene track restarts after the sting
-     * so the alert is heard first, then the music). */
-    {
+     * so the alert is heard first, then the music).
+     *
+     * Terminal screens (GAME_OVER / THANKS / ENDING) run no world
+     * simulation: the tick is skipped there, or a re-armed pursuit
+     * alert would count down over the death screen and fire its sting
+     * plus a scene-track restart behind it (the banked body excludes
+     * battle/game-over/ending, but not THANKS). */
+    if (g->screen != SCREEN_GAME_OVER && g->screen != SCREEN_THANKS &&
+        g->screen != SCREEN_ENDING) {
         const SceneDefinition *def;
         extern void game_frame_tick_banked(void);
         g_bk_call_bank = 8;

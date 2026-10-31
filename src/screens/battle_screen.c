@@ -94,6 +94,10 @@ void battle_screen_update(Game *g)
                 }
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
+                /* Stop everything: the per-frame tick is gated off on
+                 * terminal screens, so without this the game-over theme
+                 * from the defeat would drone on under GAME_OVER. */
+                audio_play_music(MUSIC_NONE);
                 screen_change(g, SCREEN_GAME_OVER);
             }
         }

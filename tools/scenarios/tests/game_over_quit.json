@@ -1,7 +1,7 @@
 {
  "name": "game_over_quit",
  "test": true,
- "description": "On the Game Over Continue? prompt, choosing NO shows the battle-demo Thanks screen (which auto-restarts after ~5 s; this scenario asserts the text well before the timeout). The hero starts at 2 HP and the battle runs on the decision timer (no input): the hero auto-attacks, the forest slime's first card (SWORD 2) is lethal once the hero's inert auto-defend expires, so the battle ends in defeat after ~2520 frames.",
+ "description": "On the Game Over Continue? prompt, choosing NO silences everything (no scene track, no pursuer sting: the per-frame tick is gated off terminal screens) and shows the try-again Thanks text (normal death, no congratulations). After the ~5 s hold the game reboots cleanly into a fresh overworld with the scene track back.",
  "actions": [
   {
    "type": "wait",
@@ -80,6 +80,10 @@
    "button": "A"
   },
   {
+   "type": "press",
+   "button": "A"
+  },
+  {
    "type": "wait",
    "frames": 20
   }
@@ -91,13 +95,17 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "Congratulations for"
+   "row": 5,
+   "contains": "Try to beat the"
   },
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "Full game out"
+   "contains": "complete the demo!"
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
   },
   {
    "type": "stack_margin_min",

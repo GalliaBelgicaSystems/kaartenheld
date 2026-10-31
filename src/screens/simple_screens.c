@@ -17,12 +17,20 @@
  * game-over NO branch below; BSS-zero covers direct boot-into-THANKS. */
 static uint16_t s_thanks_frames;
 
+/* Demo-outro flag (WRAM, BSS zero): set when the slime-lord wake dialogue
+ * routes to THANKS (the demo was completed via the desperation outro),
+ * clear when THANKS restarts.  A normal death reaching THANKS through
+ * game-over NO leaves it clear, so the banked render body can show the
+ * "try again" text instead of the congratulations. */
+uint8_t g_demo_completed;
+
 void thanks_screen_update(Game *g)
 {
     if (!g) return;
     /* Demo outro: hold the thanks text, then restart the game. */
     if (++s_thanks_frames >= THANKS_HOLD_FRAMES) {
         s_thanks_frames = 0;
+        g_demo_completed = 0;
         game_restart(g);
     }
 }
