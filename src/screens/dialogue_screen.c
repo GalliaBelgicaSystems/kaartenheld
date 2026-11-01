@@ -26,8 +26,11 @@ void dialogue_screen_update(Game *g)
      * audio/telemetry -- then the staged thanks opens instead of
      * advancing), 7 for a confirmed table invite (close through the real
      * API so DIALOGUE_ENDED stays paired, then the bank-8 tick opens the
-     * table), and 0/1/5 to stay/advance plainly.  The staged ids are
-     * opaque data to the engine (never game branches). */
+     * table), 8 for a confirmed staged grant (Carl's skip-the-tutorial
+     * offer: variable add + one-shot flag through the real APIs, which
+     * own the VARIABLE_SET / STORY_FLAG_SET telemetry, then the staged
+     * follow-up line), and 0/1/5 to stay/advance plainly.  The staged ids
+     * are opaque data to the engine (never game branches). */
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
@@ -47,6 +50,18 @@ void dialogue_screen_update(Game *g)
         }
         if (g_bk_byte_a == 3) {
             dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_c);
+            return;
+        }
+        if (g_bk_byte_a == 8) {
+            /* Staged grant resolved by a choice dialogue (Carl's
+             * skip-the-tutorial offer): apply the variable add and the
+             * one-shot flag through the real APIs -- they own the
+             * VARIABLE_SET / STORY_FLAG_SET telemetry -- then open the
+             * staged follow-up line.  Ids are opaque data, never engine
+             * game branches (AGENTS.md 55.1). */
+            game_variable_add(&g->state, (VariableId)g_bk_byte_b, 1);
+            game_flag_set(&g->state, (FlagId)g_bk_byte_c);
+            dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
             return;
         }
         if (g_bk_byte_a == 6) {

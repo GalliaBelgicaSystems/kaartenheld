@@ -123,18 +123,17 @@ void battle_screen_update(Game *g)
             battle_execute_combo((Battle *)&vg->battle);
         }
     } else if (vg->battle.phase == BATTLE_PHASE_SLIME_DESPAIR) {
-        /* The telegraph waits for A: the scripted reprisal lands here
-         * (not at trigger time), then the normal defeat exit routes the
-         * outro.  All other buttons are ignored while he focuses.  The
-         * reprisal deals exactly the hero's remaining HP (never a fixed
-         * 99 a high-HP hero survives), so HUD, telemetry and the DEFEAT
-         * result agree.  No explicit return: the defeat result makes
-         * battle_update return at once, otherwise it keeps ticking the
-         * flash cadence below. */
+        /* The telegraph waits for A: the fixed 99-damage reprisal lands
+         * here (not at trigger time), then the normal defeat exit routes
+         * the outro.  All other buttons are ignored while he focuses.
+         * 99 is always lethal (hero HP never reaches it through this
+         * fight), so HUD and the DEFEAT result agree by construction.
+         * No explicit return: the defeat result makes battle_update
+         * return at once, otherwise it keeps ticking the flash cadence
+         * below. */
         if (input_pressed(INPUT_A)) {
-            uint8_t hp = vg->battle.player.hp;
-            combatant_take_damage(&vg->battle.player, hp);
-            telemetry_emit(EVENT_DAMAGE_RECEIVED, hp, 0, 0, 0);
+            combatant_take_damage(&vg->battle.player, 99);
+            telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
             battle_set_result((Battle *)&vg->battle, BATTLE_RESULT_DEFEAT);
         }
     }

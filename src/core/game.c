@@ -49,9 +49,14 @@ static void game_prepare_new_game(Game *g)
 void game_restart(Game *g)
 {
     if (!g) return;
-    g->screen = SCREEN_OVERWORLD;
-    g->prev_screen = SCREEN_OVERWORLD;
     game_prepare_new_game(g);
+    /* Go through the real overworld screen change instead of assigning
+     * the screen: it restores the overworld OAM (battles time-share tile
+     * ids 96-97 with the hero's standing frames, so a battle -> death ->
+     * restart used to idle with the AP pips), drops the stale tileset
+     * cache (battle art owns VRAM block 1) and reseeds the render cache
+     * for the full redraw. */
+    screen_change(g, SCREEN_OVERWORLD);
 }
 
 void game_init(Game *g)
@@ -98,45 +103,54 @@ void game_update(Game *g)
 
     screen_update(g);
     /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
-     * overworld HUD marker refresh (quest "?" / pursuer "!"): one
-     * bank-8 round-trip per frame through the game-layer bodies
-     * (game_frame_tick_banked runs the marks refresh then the jingle:
-     * marks must observe the jingle's pre-seed edge to re-arm the
-     * entry alert on real loads).  Same position as the old standalone jingle dispatch (after
-     * screen_update): the edge sees this frame's state, which the
-     * 240-frame harness backstop race depends on.  Ticks here rather
-     * than in the overworld screen so menus, dialogue and shops don't
-     * freeze the restore timer while the driver loops the one-shot
-     * song.  Engine-generic restore (scene track lookup); action codes
-     * come back through g_bk_byte_b (jingle) and the pursuit alert through
-     * g_bk_byte_c (1 = entry: hold the scene track; 2 = sting now, once
-     * the level is loaded and pursuers start moving) and the held-track
-     * replay through g_bk_byte_d (scene track restarts after the sting
-     * so the alert is heard first, then the music).
+     * overworld HUD marker refresh (quest "?" / pursuer "!") and Carl's
+     * leave-the-field offer: two banked round-trips per frame through the
+     * game-layer bodies (game_frame_tick_banked runs the marks refresh
+     * then the jingle: marks must observe the jingle's pre-seed edge to
+     * re-arm the entry alert on real loads; the bank-10 offer body runs
+     * second and stages only the dialogue request).  Same position as
+     * the old standalone jingle dispatch (after screen_update): the edge
+     * sees this frame's state, which the 240-frame harness backstop race
+     * depends on.  Ticks here rather than in the overworld screen so
+     * menus, dialogue and shops don't freeze the restore timer while
+     * the driver loops the one-shot song.  Engine-generic restore
+     * (scene track lookup); action codes come back through g_bk_byte_b
+     * (jingle) and the pursuit alert through g_bk_byte_c (2 = sting
+     * now, once the chaser is awake and moving).  The alert no longer
+     * stops or replays the track (it pauses mid-song and continues in
+     * bank 8), so the old hold/replay codes are gone: byte_b == 3 is
+     * the title play-once stop only.
      *
      * Terminal screens (GAME_OVER / THANKS / ENDING) run no world
      * simulation: the tick is skipped there, or a re-armed pursuit
      * alert would count down over the death screen and fire its sting
-     * plus a scene-track restart behind it (the banked body excludes
-     * battle/game-over/ending, but not THANKS). */
+     * behind it (the banked body excludes battle/game-over/ending, but
+     * not THANKS). */
     if (g->screen != SCREEN_GAME_OVER && g->screen != SCREEN_THANKS &&
         g->screen != SCREEN_ENDING) {
         const SceneDefinition *def;
         extern void game_frame_tick_banked(void);
+        extern void carl_skip_offer_banked(void);
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
-        /* byte_b == 2 (jingle restore) and byte_d == 1 (held-track
-         * replay) are the same action: restart the scene track. */
+        /* Carl's leave-the-field offer (bank 10: bank 8 sits hard
+         * against 16 KB, so the tick cannot host it).  Own dispatch:
+         * a banked body can never nest another trampoline call
+         * (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
+         * below with the other post-tick requests. */
+        g_bk_call_bank = 10;
+        g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
+        banked_call_run();
+        /* byte_b == 2 (jingle restore) restarts the scene track. */
         if (g_bk_byte_b == 1) {
             audio_play_music(MUSIC_CHEST);
-        } else if (g_bk_byte_b == 2 || g_bk_byte_d == 1) {
+        } else if (g_bk_byte_b == 2) {
             def = scene_definition_for_map(g->world.map_id);
             audio_play_music(def ? def->music : MUSIC_OVERWORLD);
-        } else if (g_bk_byte_b == 3 || g_bk_byte_c == 1) {
-            /* Title play-once stop, or the pursuit-alert hold: stop
-             * in silence (the sting fires later via byte_c == 2; the
-             * byte_d replay restarts the track from the top). */
+        } else if (g_bk_byte_b == 3) {
+            /* Title play-once stop: silence (the sting fires later via
+             * byte_c == 2). */
             audio_play_music(MUSIC_NONE);
         }
         /* byte_c == 2 is the one-shot SFX slot: the id rides byte_d.

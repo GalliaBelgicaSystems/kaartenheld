@@ -1,7 +1,7 @@
 {
  "name": "alert_music_resume",
  "test": true,
- "description": "Held track resumes after the alert sting: 130 frames after entering TEST_FOREST (kobold pursuers, sting at ~30 f) the forest track plays again.",
+ "description": "Paused track continues after the alert sting (never restarts): 130 frames after the TEST_FOREST kobold spots the hero (pursuers, sting at ~30 f) the forest track plays again from its frozen position -- no MUSIC_CHANGED fired in between.",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -25,6 +25,10 @@
   {
    "type": "music_track",
    "expected": "FOREST"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "MUSIC_CHANGED"
   },
   {
    "type": "sfx_count",

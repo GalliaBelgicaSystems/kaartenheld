@@ -18,6 +18,12 @@ extern uint16_t g_title_frames;
  * inheriting a stale count. */
 extern volatile uint8_t g_jingle_frames;
 
+/* Pursuit-alert pause flag (src/game/marks_banked.c, same bank-8 BSS):
+ * cleared on EVERY track dispatch, so a deliberate switch (battle,
+ * chest, jingle, stop) always cancels a pause -- the ttl-60 resume edge
+ * then only ever unpauses the still-current paused song. */
+extern uint8_t g_music_paused;
+
 /* ── Track mapping body (bank-8) ────────────────────────────────────
  * Dispatched by audio_play_music() through the WRAM trampoline (the
  * fixed bank is full, §52.18).  PURE mapping: stop-inline (sound regs
@@ -34,19 +40,15 @@ extern volatile uint8_t g_jingle_frames;
  * pure (WRAM + regs + same-bank calls only).  The jingle body obeys
  * the same rule (no selects, no cross-bank calls). */
 
-static void huge_stop_inline(void)
+/* Shared voice-silence helper (same bank: plain direct call, never a
+ * trampoline target).  The sole register-write contract for stopping
+ * AND pausing: identical writes, no __critical (banked bodies must not
+ * emit di/ei -- lint gate -- and none is needed).  Split out of
+ * huge_stop_inline so the pursuit-alert pause (marks_banked.c, same
+ * bank) silences without duplicating 7 volatile writes in a full bank
+ * (bank 8 sits hard against 16 KB). */
+void huge_silence_banked(void)
 {
-    /* Sole stop implementation (the fixed-bank twin was removed to fund
-     * the farewell dialogue): identical register writes, no __critical.  Banked bodies must not emit
-     * di/ei (lint gate; a held di would stall the music clock), and none
-     * is needed: the banked mapping body stops playback first
-     * (g_huge_playing = 0) before resolving the new track, so a
-     * preempting timer ISR always sees either silence or a fully-switched
-     * song.  This body is the only stop path left, so every channel it
-     * silences here is the whole contract. */
-    g_huge_playing = 0;
-    g_huge_current_song = 0;
-    /* Silence active sound channels */
     NR12_REG = 0x00;
     NR14_REG = 0x80;
     NR22_REG = 0x00;
@@ -54,6 +56,19 @@ static void huge_stop_inline(void)
     NR32_REG = 0x00;
     NR42_REG = 0x00;
     NR44_REG = 0x80;
+}
+
+static void huge_stop_inline(void)
+{
+    /* Sole stop implementation (the fixed-bank twin was removed to fund
+     * the farewell dialogue).  Stops playback first
+     * (g_huge_playing = 0) before resolving the new track, so a
+     * preempting timer ISR always sees either silence or a fully-switched
+     * song.  This body is the only stop path left, so every channel it
+     * silences here is the whole contract. */
+    g_huge_playing = 0;
+    g_huge_current_song = 0;
+    huge_silence_banked();
 }
 
 /* Track -> (song, bank) + stop + set, one round-trip.  Reads the track
@@ -68,6 +83,7 @@ void music_play_banked(void)
     uint8_t bank = HUGE_MUSIC_BANK;
     uint8_t track = g_bk_byte_a;
     huge_stop_inline();
+    g_music_paused = 0;
     if (track == MUSIC_TITLE) g_title_frames = 0;
     if (track == MUSIC_BATTLE) {
         song = &song_battle;

@@ -94,11 +94,20 @@ void world_patrol_slot_banked(void)
     }
 
     if (ai_type_v == AI_CHASE || ai_type_v == AI_CHASE_FAST) {
-        /* Chase: one greedy step toward the player each AI tick (whole
-         * scene is the zone).  FAST chases twice as often: its timer
-         * resets to half the interval (see below).  Falls through to
-         * the shared walkability, encounter, and commit blocks below;
-         * ai_step is unused. */
+        /* Line of sight: a chaser only moves once it has spotted the hero
+         * (ACTOR_STATE_ALERTED, set by the bank-8 sight scan when the hero
+         * came within AI_CHASE_SIGHT tiles).  A sleeping chaser holds its
+         * ground and re-arms its tick, so distant chasers never converge
+         * across the whole scene (they used to). */
+        if (!(bp[ACTOR_OFFSET(flags)] & ACTOR_STATE_ALERTED)) {
+            bp[ACTOR_OFFSET(ai_timer)] = (ai_type_v == AI_CHASE_FAST) ?
+                (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
+            return;
+        }
+        /* Chase: one greedy step toward the player each AI tick.  FAST
+         * chases twice as often: its timer resets to half the interval
+         * (see below).  Falls through to the shared walkability,
+         * encounter, and commit blocks below; ai_step is unused. */
         uint8_t px;
         uint8_t py;
         uint8_t dx;

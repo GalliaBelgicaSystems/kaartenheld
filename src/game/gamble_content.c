@@ -842,8 +842,7 @@ void gamble_audio_tick(void)
      * the id in byte_d), which the fixed side already consumes.  Both
      * bytes are reset to 0 by marks_refresh() at the top of every tick,
      * so they cannot carry a stale value across frames; the guards only
-     * yield to a same-frame claimant (pursuit alert sting, held-track
-     * replay flag). */
+     * yield to a same-frame claimant (pursuit alert sting). */
     if (g_gamble_sfx != 0 && g_bk_byte_c == 0 && g_bk_byte_d == 0) {
         g_bk_byte_c = 2;
         g_bk_byte_d = (uint8_t)(g_gamble_sfx - 1);

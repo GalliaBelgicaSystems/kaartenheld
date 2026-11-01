@@ -44,6 +44,9 @@
    "y": 7,
    "facing": "DOWN"
   },
-  "seed": 999
+  "seed": 999,
+  "flags": {
+   "TUTORIAL_SKIPPED": true
+  }
  }
 }

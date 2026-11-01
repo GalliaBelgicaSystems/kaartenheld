@@ -1472,6 +1472,9 @@ void ui_update_battle_banked(void)
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else {
+                /* Full-width clear (20, not 12): the despair line is 18
+                 * columns and a short clear would strand its tail on the
+                 * result screen. */
                 battle_draw_text_line(0, 9,
                     (battle->msg_id == 1) ? "NO ENERGY!" :
                     (battle->msg_id == 2) ? "OUT OF USES!" :

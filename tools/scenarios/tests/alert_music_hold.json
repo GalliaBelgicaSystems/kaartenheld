@@ -1,7 +1,7 @@
 {
  "name": "alert_music_hold",
  "test": true,
- "description": "Alert-first sequencing on a pursuer map (TEST_FOREST kobold): entry holds the track (music NONE) while the level loads, the ALERT sting fires once pursuers start moving, then the forest track resumes ~1 s later as the kobold approaches.",
+ "description": "Alert-first sequencing on a chaser map (TEST_FOREST kobold): the kobold spotting the hero pauses the track mid-song (music stays FOREST, no MUSIC_CHANGED -- pause is not a track change) while the level loads, the ALERT sting fires once pursuers start moving, then the forest track continues from the frozen position ~1 s later as the kobold approaches.",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -24,7 +24,11 @@
   },
   {
    "type": "music_track",
-   "expected": "NONE"
+   "expected": "FOREST"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "MUSIC_CHANGED"
   }
  ]
 }

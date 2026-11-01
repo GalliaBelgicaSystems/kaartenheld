@@ -77,25 +77,45 @@ static uint8_t s_last_map_init;
 static uint8_t s_last_map;
 
 /* Alert-first music sequencing, derived from the running alert_ttl
- * countdown (150 at entry on pursuer maps, drained per frame): the
- * track holds at entry, the sting fires at ttl 120 (~30 f later, once
- * the level is loaded and pursuers start moving), and the track resumes
- * at ttl 60 (60 f after the sting; ALERT is 55 tracker ticks ≈ 0.86 s).
- * Zero new WRAM: added BSS bytes shift 256 globals and flip
- * layout-sensitive codegen (AGENTS.md 52.19/52.24, defend_warn_block). */
+ * countdown (150 when a chaser spots the hero -- on the first overworld
+ * tick if one spawns within sight -- drained per frame): the track
+ * PAUSES at the wake-up (driver frozen mid-song, voices cut) and
+ * CONTINUES from the frozen position at ttl 60 (60 f after the sting;
+ * ALERT is 55 tracker ticks ≈ 0.86 s), never restarting from the top.
+ * One new WRAM byte (g_music_paused, BSS tail: appended globals do not
+ * shift existing layout, AGENTS.md 52.19). */
 #define ALERT_STING_TTL 120
 #define ALERT_MUSIC_TTL 60
 
 /* Overworld HUD marker state (WRAM BSS globals, NOT World fields: growing
  * World shifts every later Game field and trips the layout-sensitive
  * miscompile family, AGENTS.md 52.19.  Appending globals only costs BSS
- * tail).  g_alert_ttl counts down the pursuit-entry alert; g_actor_marks /
+ * tail).  g_alert_ttl counts down the pursuit alert; g_actor_marks /
  * g_static_marks carry per-actor marks for the bank-4 OAM pass (fixed
- * entries 30+).  Zero-init: no marks, no alert until the first map-entry
- * scan fires. */
+ * entries 30+).  Zero-init: no marks, no alert until a chaser spots the
+ * hero (sight scan in marks_refresh). */
 uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
+
+/* Music-pause flag (WRAM BSS, appended: BSS-tail only, no layout shift):
+ * set when the pursuit alert pauses the scene track mid-song, cleared
+ * when the resume edge unpauses it.  The pause itself (driver freeze +
+ * voice silence) is applied inline below; resume re-checks it so a
+ * deliberate track switch in between (battle, chest, jingle) is never
+ * clobbered. */
+uint8_t g_music_paused;
+
+/* Driver play flag (fixed-bank WRAM, huge_music.c): cleared to freeze the
+ * tracker mid-song, set to continue from the frozen position.  Single
+ * byte store, atomic against the 256 Hz ISR reader. */
+extern uint8_t g_huge_playing;
+
+/* Same-bank voice silence (huge_music_banked.c, bank 8): plain direct
+ * call -- both bodies execute with bank 8 mapped, so no trampoline and
+ * no bank switch (AGENTS.md 52.11.1).  Shared with the stop path so the
+ * pause pays one call instead of 7 volatile writes. */
+extern void huge_silence_banked(void);
 
 /* Jingle edge bits (jingle_full_banked.c, same bank): bit 7 is the
  * seeded flag.  load_game_slot clears the whole byte on a real load;
@@ -149,6 +169,11 @@ static uint8_t marks_carl_defeated(const GameState *st)
     }
     return 0;
 }
+
+/* ── Carl's "leaving without the lesson" offer ─────────────────────
+ * Lives in src/game/carl_offer_banked.c (ROM bank 10: bank 8 sits hard
+ * against 16 KB).  Dispatched from the per-frame tick below through the
+ * WRAM trampoline; see that file for the contract. */
 
 /* Stream the overworld HUD mark glyphs (!/?) to OAM 126-127 on the first
  * tick (the OAM passes need them resident before any marker draws; LCD
@@ -217,6 +242,20 @@ void ow_oam_restore_banked(void)
     s_battle_tiles_loaded = 0;
 }
 
+/* Unpause the scene track in place (same frozen position).  Shared by
+ * the ttl-60 resume edge and the map-change cancel below: paused implies
+ * no track switch since (every switch clears the flag in
+ * music_play_banked), so this only ever continues the paused song --
+ * never clobbers a battle, chest or jingle.  One static body (not two
+ * inline copies): bank 8 sits hard against 16 KB. */
+static void music_unpause_inline(void)
+{
+    if (g_music_paused != 0) {
+        g_huge_playing = 1;
+        g_music_paused = 0;
+    }
+}
+
 /* Recompute every overworld HUD marker from game state (see ACTOR_MARK_*
  * in actor.h, drawn at fixed OAM entries 30+ by the bank-4 sprite pass):
  * - Quest "?": an NPC whose talk advances or turns in a quest.
@@ -229,21 +268,19 @@ void ow_oam_restore_banked(void)
  *   Hidden while its quest is in progress and once its reward is
  *   claimed.  The mimic
  *   grants AP but is a hostile, never a quest NPC: no mark by design.
- * - Pursuer "!": live AI_CHASE/AI_CHASE_FAST hostiles from the sting
- *   edge (ttl 120) until the entry alert runs out.  The bubble debuts
- *   with the alert, never before it.  The TTL starts on the first tick
- *   after a map entry with live chasers (self-detected below; the
- *   fixed bank has no room for the scan); the track holds at entry,
- *   the sting fires once the level is loaded and pursuers move, and
- *   the scene track resumes
- *   after it (fixed wrapper: byte_c codes + byte_d replay).
+ * - Pursuer "!": awake (alerted) AI_CHASE/AI_CHASE_FAST hostiles from
+ *   the sting edge (ttl 120) until the alert runs out.  The bubble
+ *   debuts with the alert, never before it.  The TTL starts when the
+ *   hero first comes within a chaser's line of sight (sight scan below;
+ *   the fixed bank has no room for the scan); the track pauses then, the
+ *   sting fires once the chaser is awake and moving, and the track
+ *   continues from the frozen position after it (inline in bank 8: no
+ *   byte codes, no MUSIC_CHANGED -- pause is not a track change).
  * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
 static void marks_refresh(void)
 {
     uint8_t i;
-    uint8_t k;
-    uint8_t pursuers;
     int16_t quest_monster_hunt;
     int16_t monsters_defeated;
     int16_t merchant_quest;
@@ -272,7 +309,7 @@ static void marks_refresh(void)
      * intact, so returning from the menu stays silent.  TITLE and
      * GAME_OVER keep the always-re-arm poll below: leaving them always
      * means a reload by construction.  Battle/ending screens are
-     * excluded: the entry scan's track-hold must never cut their music
+     * excluded: the pursuit alert's pause must never cut their music
      * (loads always land on the overworld anyway). */
     if (g_game.screen != SCREEN_BATTLE &&
         g_game.screen != SCREEN_GAME_OVER &&
@@ -290,39 +327,32 @@ static void marks_refresh(void)
         g_game.screen == SCREEN_GAME_OVER) {
         s_last_map = 0xFF;
     } else if (!s_last_map_init) {
-        /* Map entry edge: scan once for live pursuers.  s_last_map
-         * starts 0, which is a valid map id (MAP_FIELD), so the first
-         * tick arms explicitly -- a boot directly onto a pursuer map
-         * must alert. */
+        /* Map entry edge.  s_last_map starts 0, which is a valid map id
+         * (MAP_FIELD), so the first tick arms explicitly -- a boot
+         * directly onto a pursuer map must scan like an entry. */
         s_last_map_init = 1;
         s_last_map = 0xFF;
     } else if (g_game.world.map_id != s_last_map) {
+        /* Map change: no alert yet.  The sight scan below arms it the
+         * moment a chaser actually notices the hero (spawn actors start
+         * sleeping, so entering a map full of distant chasers is
+         * silent).  Cancels any alert from the previous map -- and any
+         * pause with it (same-track loads replay idempotently without
+         * touching the driver; a different track re-inits through
+         * music_play_banked, which clears the flag there). */
         s_last_map = g_game.world.map_id;
-        pursuers = 0;
-        for (k = 0; k < MAX_WORLD_ACTORS; k++) {
-            const WorldActorRuntime *a = &g_game.world.actors[k];
-            if (a->active &&
-                (a->ai_type == AI_CHASE || a->ai_type == AI_CHASE_FAST)) {
-                pursuers = 1;
-                break;
-            }
-        }
-        g_alert_ttl = pursuers ? ALERT_TTL_FRAMES : 0;
-        if (pursuers) {
-            /* Alert-first: hold the scene track at once (the fixed
-             * wrapper stops it; the sting + resume below ride the
-             * running ttl).  Cancelled by any map change. */
-            g_bk_byte_c = 1;
-        }
+        g_alert_ttl = 0;
+        music_unpause_inline();
     } else if (g_alert_ttl != 0) {
         g_alert_ttl--;
-        /* Sting edge at 120 (~30 f after entry: level loaded, pursuers
-         * moving) -- never inside a battle / game-over / ending that
-         * owns the music (the entry hold already silenced the track).
-         * Music resumes at 60, same screen rule (battle exit restores
-         * the area track itself; the jingle path owns the title).
+        /* Sting edge at 120 (~30 f after the wake-up: the chaser is
+         * awake and moving) -- never inside a battle / game-over / ending
+         * that owns the music (the pause already silenced it).
+         * Music continues at 60 (unpause: same frozen position, never a
+         * restart), same screen rule (battle exit restores the area track
+         * itself; the jingle path owns the title).
          * Menus, dialogue and shops are overworld-attached: the sting
-         * and the track resume under them. */
+         * and the continue play under them. */
         if (g_alert_ttl == ALERT_STING_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
@@ -332,11 +362,55 @@ static void marks_refresh(void)
         } else if (g_alert_ttl == ALERT_MUSIC_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
-            g_game.screen != SCREEN_ENDING &&
-            /* Don't clobber an active chest jingle with the resume:
-             * its own restore replays the scene track when it ends. */
-            g_audio_current_track != MUSIC_CHEST) {
-            g_bk_byte_d = 1;
+            g_game.screen != SCREEN_ENDING) {
+            /* Unpause the scene track in place (same frozen position).
+             * paused implies no track switch since (every switch clears
+             * the flag in music_play_banked), so this is always the
+             * paused song -- never clobber a battle, chest or jingle. */
+            music_unpause_inline();
+        }
+    }
+
+    /* Line of sight (AI_CHASE / AI_CHASE_FAST, actor.h AI_CHASE_SIGHT):
+     * the hero coming within range wakes a sleeping chaser for the rest
+     * of the scene (ACTOR_STATE_ALERTED, gating the chase in
+     * world_patrol_slot_banked) and arms the alert above: the track
+     * pauses now, the sting fires at ttl 120, the track continues at
+     * ttl 60 from the frozen position (never a restart).
+     * Overworld only -- menus and dialogue pause the world, and a battle
+     * must never arm the alert (pausing would cut the battle music).
+     * Scene loads respawn actors with the bit clear, so every visit
+     * starts asleep. */
+    if (g_game.screen == SCREEN_OVERWORLD) {
+        uint8_t px = g_game.world.player.position.x;
+        uint8_t py = g_game.world.player.position.y;
+        for (i = 0; i < MAX_WORLD_ACTORS; i++) {
+            WorldActorRuntime *a = &g_game.world.actors[i];
+            uint8_t dx;
+            uint8_t dy;
+            if (!a->active) continue;
+            if (a->ai_type != AI_CHASE && a->ai_type != AI_CHASE_FAST) continue;
+            if (a->flags & ACTOR_STATE_ALERTED) continue;
+            dx = (px >= a->x) ? (uint8_t)(px - a->x) : (uint8_t)(a->x - px);
+            dy = (py >= a->y) ? (uint8_t)(py - a->y) : (uint8_t)(a->y - py);
+            if (dx > AI_CHASE_SIGHT || dy > AI_CHASE_SIGHT) continue;
+            a->flags |= ACTOR_STATE_ALERTED;
+            if (g_alert_ttl == 0) {
+                g_alert_ttl = ALERT_TTL_FRAMES;
+                /* Alert-first: pause the scene track mid-song (freeze the
+                 * driver + cut the voices inline here in bank 8: the
+                 * fixed bank has no room for a pause call, and stopping
+                 * via the fixed wrapper would restart the song on
+                 * resume).  The sting + continue ride the running ttl;
+                 * no MUSIC_CHANGED fires -- pause is not a track change.
+                 * playing != 0 implies a song is live (every stop
+                 * clears it), so sound-off needs no extra guard. */
+                if (g_huge_playing != 0) {
+                    g_huge_playing = 0;
+                    g_music_paused = 1;
+                    huge_silence_banked();
+                }
+            }
         }
     }
 
@@ -363,15 +437,15 @@ static void marks_refresh(void)
     }
     carl_done = marks_carl_defeated(&g_game.state);
 
-    /* Hostiles: pursuer "!" once the entry sting has fired (ttl at or
-     * below the sting edge) until the entry alert runs out.  The bubble
-     * debuts with the alert, never before it. */
+    /* Hostiles: pursuer "!" over the chasers that spotted the hero, once
+     * the alert sting has fired (ttl at or below the sting edge) until
+     * the alert runs out.  The bubble debuts with the alert, never before
+     * it; a sleeping chaser never shows one. */
     for (i = 0; i < MAX_WORLD_ACTORS; i++) {
         const WorldActorRuntime *a = &g_game.world.actors[i];
         uint8_t m = ACTOR_MARK_NONE;
-        if (a->active && g_alert_ttl != 0 &&
-            g_alert_ttl <= ALERT_STING_TTL &&
-            (a->ai_type == AI_CHASE || a->ai_type == AI_CHASE_FAST)) {
+        if (a->active && (a->flags & ACTOR_STATE_ALERTED) &&
+            g_alert_ttl != 0 && g_alert_ttl <= ALERT_STING_TTL) {
             m = ACTOR_MARK_ALERT;
         }
         g_actor_marks[i] = m;
@@ -463,7 +537,9 @@ void game_frame_tick_banked(void)
      * same tick, so running it first would hide the edge.  The two
      * bodies touch disjoint staging bytes (marks: c/d, jingle: b) and
      * the fixed side reads all three after the return, so the order is
-     * otherwise irrelevant. */
+     * otherwise irrelevant.  (Carl's leave-the-field offer runs as its
+     * own bank-10 dispatch from the fixed wrapper above -- a banked body
+     * can never nest another trampoline call.) */
     marks_refresh();
     jingle_full_banked();
     /* Chuck-a-luck: the table's whole frame body (entry paint, input,

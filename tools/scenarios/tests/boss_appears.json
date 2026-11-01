@@ -1,7 +1,7 @@
 {
  "name": "boss_appears",
  "test": true,
- "description": "The Lord of Slimes (99 HP) is always present in the Castle and reachable without completing the Monster Hunt quest",
+ "description": "The Lord of Slimes (70 HP) is always present in the Castle and reachable without completing the Monster Hunt quest",
  "actions": [
   {
    "type": "press",
@@ -23,7 +23,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 99
+   "expected": 70
   },
   {
    "type": "event_occurred",

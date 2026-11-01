@@ -240,12 +240,21 @@ def _walk_path(s, path):
         btn = _BTNS[(dx, dy)]
         fx, fy = s.pos()
         ok = False
+        handled = False
         for _ in range(3):
             ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
-            if ok or not s.text_has("DECK:"):
+            if ok:
+                break
+            if not s.text_has("DECK:"):
+                if _drain_skip_offer(s):
+                    continue
                 break
             win = transit_fight(s)
-            knight = (not win) and s.text_has("KNIGHT:")
+            # KNIGHT: means the armor split (slime knights break open
+            # into a briefing + trio instead of VICTORY) -- on a win as
+            # well as a no-VICTORY armor kill.  Drain it before anything
+            # else or the open box eats every later input.
+            knight = s.text_has("KNIGHT:")
             s.check("transit fight victory", win or knight,
                     expected="VICTORY or KNIGHT: box",
                     actual="defeat" if not (win or knight) else "win")
@@ -253,12 +262,20 @@ def _walk_path(s, path):
                 s.check("transit knight briefing drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
+                handled = True
             elif win:
                 s.check("transit aftermath drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
+                handled = True
             else:
                 break
+        # A step consumed by a HANDLED ambush did not commit, but the
+        # walk is fine: follow() re-plans the rest of the leg from the
+        # hero's actual cell.  Only a genuinely blocked step is a
+        # failure, so the "route move" check stays quiet for the ambush.
+        if not ok and handled:
+            continue
         banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
         s.check("route move %s" % btn, ok,
                 expected="tile commit",
@@ -269,49 +286,93 @@ def _walk_path(s, path):
 
 def follow(s, planner, from_scene, start, to_scene, goal,
            capture_when=None, capture_label=None, on_scene=None):
-    """Execute a cross-scene BFS route; optional mid-route screenshot."""
-    steps = planner.route(from_scene, start, to_scene, goal)
-    for step in steps:
-        if step[0] == "move":
-            _walk_path(s, [step[1:]])
-        else:
-            _, direction, e = step
-            # Ambush on the exit step overrides the transition
-            # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight, retry
-            # the crossing, and repeat while still ambushed (bounded, so
-            # back-to-back patrols can't spin forever). The check logs
-            # only the final outcome, never an intermediate ambush.
-            res = False
-            for _ in range(3):
-                res = s.cross_exit(
-                    direction, planner.scenes[e["target_scene"]].scene_id)
-                if res or not s.text_has("DECK:"):
+    """Execute a cross-scene BFS route; optional mid-route screenshot.
+
+    The route's steps are RELATIVE deltas, so one lost step (an ambush
+    fought off the planned cell, a hostile standing on the next cell, a
+    cancelled departure) shifts EVERY later step off the planned cells
+    and the walk grinds into walls far from the route.  A mid-route
+    ambush in south_ridge did exactly that: the fight left the hero a few
+    tiles off, the stale suffix walked it into the rock band, and every
+    further press was a no-op.  So each leg is re-planned from the hero's
+    ACTUAL position whenever a step does not land where the plan said.
+    Bounded (24 legs) so a genuinely stuck walk fails loudly instead of
+    spinning."""
+    pos = start
+    scene = from_scene
+    for _leg in range(24):
+        steps = planner.route(scene, pos, to_scene, goal)
+        replan = False
+        for step in steps:
+            if step[0] == "move":
+                want = (pos[0] + step[1], pos[1] + step[2])
+                _walk_path(s, [step[1:]])
+                pos = s.pos()
+                if pos != want:
+                    replan = True
                     break
-                win = transit_fight(s)
-                knight = (not win) and s.text_has("KNIGHT:")
-                s.check("transit fight victory", win or knight,
-                        expected="VICTORY or KNIGHT: box",
-                        actual="defeat" if not (win or knight) else "win")
-                if knight:
-                    # Armor kill (no VICTORY screen): drain the reveal
-                    # briefing, then retry past whatever it spawned.
-                    s.check("transit knight briefing drained",
+            else:
+                _, direction, e = step
+                # Ambush on the exit step overrides the transition
+                # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight,
+                # retry the crossing, and repeat while still ambushed
+                # (bounded, so back-to-back patrols can't spin forever).
+                # The check logs only the final outcome, never an
+                # intermediate ambush.
+                res = False
+                for _ in range(3):
+                    res = s.cross_exit(
+                        direction,
+                        planner.scenes[e["target_scene"]].scene_id)
+                    if res:
+                        break
+                    if not s.text_has("DECK:"):
+                        # Carl's leave-the-field offer (fresh game):
+                        # answer TALK and retry -- TALK disarms the
+                        # offered tile so the retry exits instead of
+                        # re-asking.
+                        if _drain_skip_offer(s):
+                            continue
+                        break
+                    win = transit_fight(s)
+                    # KNIGHT: means the armor split (slime knights break
+                    # open into a briefing + trio instead of VICTORY) --
+                    # on a win as well as a no-VICTORY armor kill.  Drain
+                    # it before anything else or the open box eats every
+                    # later input.
+                    knight = s.text_has("KNIGHT:")
+                    s.check("transit fight victory", win or knight,
+                            expected="VICTORY or KNIGHT: box",
+                            actual="defeat" if not (win or knight) else "win")
+                    if knight:
+                        # Armor kill (no VICTORY screen): drain the
+                        # reveal briefing, then retry past whatever it
+                        # spawned.
+                        s.check("transit knight briefing drained",
+                                drain_postvictory_dialogue(s),
+                                expected="no KNIGHT: box",
+                                actual="stuck open")
+                        continue
+                    if not win:
+                        break
+                    s.check("transit aftermath drained",
                             drain_postvictory_dialogue(s),
                             expected="no KNIGHT: box", actual="stuck open")
-                    continue
-                if not win:
+                s.check("exit %s -> %s" % (direction, e["target_scene"]),
+                        res, expected=e["target_scene"],
+                        actual="scene %d" % s.reader.scene_state()["scene_id"])
+                if not res:
+                    replan = True
                     break
-                s.check("transit aftermath drained",
-                        drain_postvictory_dialogue(s),
-                        expected="no KNIGHT: box", actual="stuck open")
-            s.check("exit %s -> %s" % (direction, e["target_scene"]), res,
-                    expected=e["target_scene"],
-                    actual="scene %d" % s.reader.scene_state()["scene_id"])
-        if capture_when and capture_label and capture_when():
-            s.shoot(capture_label)
-            capture_when, capture_label = None, None
-        if on_scene is not None:
-            on_scene(s)
+                scene = e["target_scene"]
+                pos = s.pos()
+            if capture_when and capture_label and capture_when():
+                s.shoot(capture_label)
+                capture_when, capture_label = None, None
+            if on_scene is not None:
+                on_scene(s)
+        if not replan:
+            break
     return s.pos()
 
 
@@ -359,6 +420,39 @@ def _cursor_to(s, idx):
             return True
         s.press("right", settle=10)
     return s.reader.battle_cursor() == idx
+
+
+def _drain_skip_offer(s):
+    """Answer Carl's leave-the-field offer with TALK (not LEAVE, which
+    would grant AP and change the walk's battle math): advance to the
+    choice page if needed, ensure the cursor sits on YES, confirm, and
+    close.  The row is read before any press, so an already-open choice
+    page is never confirmed blind.  TALK disarms the offered tile, so
+    the caller's crossing retry exits instead of re-asking.  Returns
+    True when an offer box was handled."""
+    if not s.text_has("HEY! WANNA"):
+        return False
+    s.check("skip offer asked", True,
+            expected="HEY! WANNA", actual="asked")
+    for _ in range(6):
+        rows = s.bg_text()
+        # The cursor row carries the '>' marker; the label line above it
+        # ("TALK:YES LEAVE:NO") also names both options but has no
+        # cursor -- matching it would toggle forever without confirming.
+        row = next((r for r in rows if ">" in r and "YES" in r
+                    and "NO" in r), None)
+        if row is not None:
+            break
+        # Choice page not up yet: advance a page (never a confirming
+        # press -- the row check above gates the confirm below).
+        s.press("a", settle=12)
+    else:
+        return False
+    if not row.startswith(">"):
+        s.press("left", settle=12)  # toggle to TALK
+    s.press("a", settle=12)  # confirm TALK
+    close_dialogue(s, "HEY! WANNA")
+    return not s.text_has("HEY! WANNA")
 
 
 def _select_cards(s, wanted_types):
@@ -997,6 +1091,13 @@ def walk_c(planner, checks):
             s.check("transit aftermath drained",
                     drain_postvictory_dialogue(s),
                     expected="no KNIGHT: box", actual="stuck open")
+            continue
+        # Carl's leave-the-field offer: answer TALK and retry -- TALK
+        # disarms the offered tile so the retry exits instead of
+        # re-asking.
+        if _drain_skip_offer(s):
+            continue
+        break
     s.check("underground tunnel entered", _crossed,
             expected="underground_tunnel", actual="no crossing")
     s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
@@ -1027,22 +1128,30 @@ def walk_c(planner, checks):
             s.check("transit aftermath drained",
                     drain_postvictory_dialogue(s),
                     expected="no KNIGHT: box", actual="stuck open")
+            continue
+        # Carl's leave-the-field offer: answer TALK and retry -- TALK
+        # disarms the offered tile so the retry exits instead of
+        # re-asking.
+        if _drain_skip_offer(s):
+            continue
+        break
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
     # The flip tick itself is a 1-frame window: world_load_map starts the
     # scene track inside game_update, and the marks tick that applies the
-    # entry hold (MUSIC_NONE) runs on the NEXT frame.  Polling for the
-    # scene change lands on either side of that boundary, so settle two
-    # frames before reading the track (the hold lasts ~90 ticks).
+    # entry pause runs on the NEXT frame.  Polling for the scene change
+    # lands on either side of that boundary, so settle two frames before
+    # reading the track (the pause lasts ~90 ticks).
     s.tick(2)
-    # Alert-first: the kobold entry sting holds the track, so right
-    # after arrival the music is NONE; the checks below pin the sting
-    # actually stepping (sfx 7 while it rings, idle after) and the
-    # forest track coming back as the kobold approaches.  The sting
+    # Alert-first: the kobold entry sting pauses the track mid-song, so
+    # right after arrival the music is still FOREST (frozen, no restart);
+    # the checks below pin the sting actually stepping (sfx 7 while it
+    # rings, idle after) and the forest track continuing from the frozen
+    # position as the kobold approaches.  The sting
     # starts ~flip+90 (see note above), so the start wait needs 200,
     # not 90.
-    s.check_eq("forest music held for sting", s.reader.music_track(),
-               MUSIC_NONE)
+    s.check_eq("forest music paused for sting", s.reader.music_track(),
+               MUSIC_FOREST)
     s.check("forest alert sting playing",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
                        ticks=200, label="sting start"),
@@ -1051,10 +1160,10 @@ def walk_c(planner, checks):
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
                        ticks=200, label="sting end"),
             expected=SFX_NONE, actual="stuck")
-    s.check("forest music resumes",
+    s.check("forest music continues",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
                        ticks=250, label="forest music"),
-            expected="MUSIC_FOREST", actual="held")
+            expected="MUSIC_FOREST", actual="paused")
     # Continue to the spawn for the arrival milestone.  avoid_exits:
     # the tunnel gate sits right on the path -- stepping back onto it
     # would warp out to the field.
@@ -1092,42 +1201,13 @@ def walk_e(planner, checks):
     s.settle_scene(expected_scene=SCENE_SOUTH_FIELD)
     s.check_eq("south scene", s.reader.scene_state()["scene_id"],
                SCENE_SOUTH_FIELD)
-    # South waiting knight (13,7): guardian of the castle corridor
-    # (stationary, bump-to-combat).  Engage it directly, win the armor
-    # fight, drain the reveal briefing, then beat the trio it spawns --
-    # mirroring the castle-knight interlude below.  Proves the real-map
-    # guardian end to end (the harness covers the fixture twin).
-    s.check("south guardian engaged",
-            engage_hostile(s, planner, "south_field", (13, 7)),
-            expected="DECK:", actual="none")
-    s.check("south guardian banner readable",
-            s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
-            expected="TARGET banner", actual=s.bg_text()[0].strip())
-    s.check("south guardian armor fight",
-            transit_fight(s),
-            expected="VICTORY", actual="defeat")
-    s.tick(90)
-    s.check("south guardian reveal opened",
-            s.text_has("KNIGHT:"),
-            expected="KNIGHT:", actual=s.bg_text()[0].strip())
-    s.check("south guardian reveal closed",
-            close_dialogue(s, "KNIGHT:"),
-            expected="closed", actual="open")
-    s.check("south guardian trio engaged",
-            engage_hostile(s, planner, "south_field", (13, 7)),
-            expected="DECK:", actual="none")
-    s.check("south guardian trio banner",
-            s.text_has("TARGET SLIME"),
-            expected="TARGET SLIME", actual=s.bg_text()[0].strip())
-    s.check("south guardian trio fight",
-            transit_fight(s),
-            expected="VICTORY", actual="defeat")
-    s.check("south guardian trio exit",
-            s.press_until("a", lambda: not s.text_has("DECK:"),
-                          tries=4, label="battle exit"),
-            expected="closed", actual="open")
-    s.check("south no briefing repeat", not s.text_has("KNIGHT:"),
-            expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
+    # The south waiting knight is gone (content removal): the castle
+    # corridor at (13,7) is plain floor now, so the walk continues
+    # straight through -- no guardian, no spawned trio.  (The harness
+    # covers the fixture twin: south_knight_bump on TEST_SOUTH_FIELD.)
+    s.check("south corridor clear",
+            planner.scenes["south_field"].walkable(13, 7),
+            expected="walkable", actual="blocked")
     # The mimic never moves (AI_NONE) and nothing else patrols its
     # tile: walk beside it and bump it directly.  The approach cell is
     # the first walkable cardinal neighbor REACHABLE without stepping
@@ -1155,7 +1235,7 @@ def walk_e(planner, checks):
     entry = {}
 
     def latch_castle_hold(s):
-        # First castle frame only.  The entry hold applies on the frame
+        # First castle frame only.  The entry pause applies on the frame
         # after the scene flip (same 1-frame window as walk-c's forest
         # check), so settle two frames before reading.
         if s.reader.scene_state()["scene_id"] == SCENE_CASTLE and \
@@ -1167,14 +1247,14 @@ def walk_e(planner, checks):
            on_scene=latch_castle_hold)
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
-    # Alert-first: the slime-knight entry sting holds the track here
-    # too (the restart is pinned by walk-c/the sweep; the knight flow
-    # below replays DUNGEON through battle exit anyway).  Latched at the
+    # Alert-first: the slime-knight entry sting pauses the track here
+    # too (continuation, never a restart; the knight flow below replays
+    # DUNGEON through battle exit anyway).  Latched at the
     # first castle frame: later transit battles on the walk to `adj`
-    # legitimately outlast the hold window, so asserting here (after the
+    # legitimately outlast the pause window, so asserting here (after the
     # full walk) would be timing-fragile.
-    s.check_eq("castle music held for sting", entry.get("music"),
-               MUSIC_NONE)
+    s.check_eq("castle music paused for sting", entry.get("music"),
+               MUSIC_DUNGEON)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have
     # ambushed en route already (transit win + drained briefing).  Either

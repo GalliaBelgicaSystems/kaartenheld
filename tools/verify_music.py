@@ -271,14 +271,39 @@ def main():
     print(f"boot: player at {sample()[:2]} ticks={samples[-1][2]}")
     ok = walk("right", lambda x, y: x >= 30)
     ok = walk("down", lambda x, y: y == 7) and ok
-    ok = walk("right", lambda x, y: x == 2) and ok          # gate crossing
+
+    # Carl's leave-the-field offer intercepts the FIRST attempt to leave
+    # the field (a fresh game, spar not won, skip not taken): the gate
+    # step is cancelled and a YES/NO box opens instead of the crossing.
+    # Answer TALK and retry -- the offer disarms the offered tile, so the
+    # retry crosses.  Same contract as the walkthrough's
+    # _drain_skip_offer; keep them in sync.  The dialogue is polled every
+    # press: walking blind would burn the whole step budget before the
+    # box was noticed, which both failed the crossing and skewed the
+    # clean-frame sample budget.
+    def in_dialogue():
+        return pb.memory[game_addr] == 1
+
+    def cross_to_town(budget=80):
+        for _ in range(budget):
+            if pos()[0] == 2:
+                return True
+            if in_dialogue():
+                press("a", settle=16)   # advance to the choice page
+                press("a", settle=16)   # confirm TALK (cursor on YES)
+                for _ in range(8):
+                    if not in_dialogue():
+                        break
+                    press("a", settle=30)
+                continue
+            press("right", settle=8)
+        return pos()[0] == 2
+
+    ok = cross_to_town() and ok                             # gate crossing
     ok = walk("down", lambda x, y: y == 8) and ok
     ok = walk("right", lambda x, y: x == 9) and ok
 
     # Bump the guard: a blocked RIGHT press opens dialogue (SCREEN_DIALOGUE = 1).
-    def in_dialogue():
-        return pb.memory[game_addr] == 1
-
     for _ in range(8):
         if in_dialogue():
             break

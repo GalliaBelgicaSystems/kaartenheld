@@ -44,11 +44,10 @@ typedef enum {
  * benefit (fixtures never exceed 4). */
 #define MAX_WORLD_ACTORS 7
 
-/* Pursuit-alert display length (frames at 60 fps) after entering a map
- * with live chasers.  Set by the bank-8 marks refresh on entry (it
- * self-detects the map change; world_load_map only spawns the actors),
- * drained per frame by the same refresh; the "!" OAM marks show while
- * it runs. */
+/* Pursuit-alert display length (frames at 60 fps) after a chaser
+ * (AI_CHASE / AI_CHASE_FAST) first spots the hero (actor.h
+ * AI_CHASE_SIGHT).  Armed by the bank-8 marks sight scan, drained per
+ * frame by the same refresh; the "!" OAM marks show while it runs. */
 #define ALERT_TTL_FRAMES 150
 #define NO_ACTOR_INDEX   0xFF
 
