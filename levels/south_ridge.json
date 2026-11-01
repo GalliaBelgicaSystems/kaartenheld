@@ -813,7 +813,7 @@
         "battle": "BATTLE_SLIME_KNIGHT",
         "ai": "AI_CHASE_FAST",
         "enemy_type": "slime_knight",
-        "entity_id": "ENTITY_ID_NPC_GUARD",
+        "entity_id": "ENTITY_ID_SLIME_KNIGHT",
         "facing": "DOWN",
         "flags": [
           "HOSTILE",
@@ -841,7 +841,7 @@
         "battle": "BATTLE_SLIME_KNIGHT",
         "ai": "AI_CHASE_FAST",
         "enemy_type": "slime_knight",
-        "entity_id": "ENTITY_ID_NPC_GUARD",
+        "entity_id": "ENTITY_ID_SLIME_KNIGHT",
         "facing": "DOWN",
         "flags": [
           "HOSTILE",

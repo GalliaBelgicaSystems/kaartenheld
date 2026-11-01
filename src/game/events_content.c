@@ -3,7 +3,7 @@
 #include "audio.h"
 
 /* ── Event table (game content, banked ROM) ────────────────────────
- * Compiled into MBC5 ROM bank GAME_CONTENT_BANK (the `#pragma bank 2`
+ * Compiled into MBC5 ROM bank GAME_EVENT_BANK (the `#pragma bank 10`
  * below) so the fixed bank 0 / _HOME area stays small.  The engine never
  * reads this table directly: core/event.c copies each row into a WRAM
  * scratch copy via banked_copy() before matching, so the banked layout is
@@ -36,7 +36,7 @@
  *                    MONSTERS_DEFEATED counter (no quest gating), so kills
  *                    before the quest starts still count.
  */
-#pragma bank 2
+#pragma bank 10
 
 const EventDefinition g_events[] = {
     {
@@ -295,7 +295,9 @@ const EventDefinition g_events[] = {
      * exactly one to the base-1 pool, reaching 5 in any completion
      * order (fleeing the lesson grants nothing).  Carl's defeat is
      * persistent (one-shot via GameState.world), so the kill reward
-     * fires exactly once. */
+     * fires exactly once.  After the AP skip (Carl's leaving-the-field
+     * offer) the row's TUTORIAL_SKIPPED condition suppresses the grant:
+     * the point was already handed over without the fight. */
     {
         EVENT_ID_CARL_CHEST_FIRST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CARL, EVENT_MAP_ANY,
         1,
@@ -304,9 +306,13 @@ const EventDefinition g_events[] = {
         {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_CARL_CHEST_FIRST, 0, 0 }}
     },
     {
+        /* No second point after the AP skip: leaving the field without the
+         * lesson (Carl's offer, choice_nav_banked.c) already handed over
+         * the tutorial's +1 AP and set TUTORIAL_SKIPPED, so a later spar
+         * win grants nothing (the result screen still plays). */
         EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
-        0,
-        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_TUTORIAL_SKIPPED, 0, false, false }},
         2,
         {
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },

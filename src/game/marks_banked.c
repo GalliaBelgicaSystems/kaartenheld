@@ -170,6 +170,11 @@ static uint8_t marks_carl_defeated(const GameState *st)
     return 0;
 }
 
+/* ── Carl's "leaving without the lesson" offer ─────────────────────
+ * Lives in src/game/carl_offer_banked.c (ROM bank 10: bank 8 sits hard
+ * against 16 KB).  Dispatched from the per-frame tick below through the
+ * WRAM trampoline; see that file for the contract. */
+
 /* Stream the overworld HUD mark glyphs (!/?) to OAM 126-127 on the first
  * tick (the OAM passes need them resident before any marker draws; LCD
  * may be on, so every write waits for an accessible VRAM window like the
@@ -304,7 +309,7 @@ static void marks_refresh(void)
      * intact, so returning from the menu stays silent.  TITLE and
      * GAME_OVER keep the always-re-arm poll below: leaving them always
      * means a reload by construction.  Battle/ending screens are
-     * excluded: the pursuit alert's track-hold must never cut their music
+     * excluded: the pursuit alert's pause must never cut their music
      * (loads always land on the overworld anyway). */
     if (g_game.screen != SCREEN_BATTLE &&
         g_game.screen != SCREEN_GAME_OVER &&
@@ -532,7 +537,9 @@ void game_frame_tick_banked(void)
      * same tick, so running it first would hide the edge.  The two
      * bodies touch disjoint staging bytes (marks: c/d, jingle: b) and
      * the fixed side reads all three after the return, so the order is
-     * otherwise irrelevant. */
+     * otherwise irrelevant.  (Carl's leave-the-field offer runs as its
+     * own bank-10 dispatch from the fixed wrapper above -- a banked body
+     * can never nest another trampoline call.) */
     marks_refresh();
     jingle_full_banked();
     /* Chuck-a-luck: the table's whole frame body (entry paint, input,

@@ -83,7 +83,12 @@ typedef enum {
     STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
                                        * (shown once, on first talk while
                                        * owning the Iron Ring) */
-    STORY_FLAG_ID_COUNT        = 8
+    STORY_FLAG_ID_TUTORIAL_SKIPPED = 8, /* Carl's leave-the-field offer was
+                                         * taken: the tutorial's +1 AP was
+                                         * granted without the spar
+                                         * (one-shot; the offer never
+                                         * repeats) */
+    STORY_FLAG_ID_COUNT        = 9
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -127,6 +132,12 @@ typedef enum {
  * no gameplay code ever reads banked data directly.  The *_COUNT values are
  * compile-time-asserted against the tables in the content files. */
 #define GAME_CONTENT_BANK 2
+
+/* Bank holding the event table (src/game/events_content.c).  The engine
+ * reads rows through banked_copy(), so the table is free to live in any
+ * bank: bank 10 hosts it because bank 2 (cards catalog + the DECK view
+ * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
+#define GAME_EVENT_BANK  10
 #define GAME_EVENT_COUNT 24
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */

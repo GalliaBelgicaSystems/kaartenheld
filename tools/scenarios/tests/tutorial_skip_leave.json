@@ -1,0 +1,105 @@
+{
+ "name": "tutorial_skip_leave",
+ "test": true,
+ "description": "Leaving the field before the spar stops at Carl's offer: walking into the east exit stages the skip ask (departure cancelled, hero stays), answering NO (LEAVE) grants the spar's +1 AP through the real APIs (VARIABLE_SET), sets TUTORIAL_SKIPPED once (STORY_FLAG_SET), and opens the granted line; closing it returns to the overworld with no fight",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 30,
+   "expected_y": 7
+  },
+  {
+   "type": "flag",
+   "flag": "TUTORIAL_SKIPPED",
+   "expected": true
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_CHOICE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STORY_FLAG_SET"
+  },
+  {
+   "type": "event_occurred",
+   "event": "VARIABLE_SET"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 30,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 6100
+ }
+}

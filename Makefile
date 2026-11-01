@@ -632,6 +632,15 @@ build/debug/game/content.o: src/game/content.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DDEBUG_BUILD -DTEST_LEVELS $(INCLUDES) -o $@ $<
 
+# Carl's leave-the-field offer scans the TEST_FIELD fixture under the
+# harness (MAP_TEST_FIELD only exists in fixture scenes): same explicit
+# -DTEST_LEVELS routing as the content readers above (AGENTS.md 42.1).
+# Verify the three sentinels after touching this (layout-sensitive
+# codegen, AGENTS.md 52.19).
+build/debug/game/carl_offer_banked.o: src/game/carl_offer_banked.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DDEBUG_BUILD -DTEST_LEVELS $(INCLUDES) -o $@ $<
+
 music: $(MUSIC_SRCS) sfx
 
 # Tracker SFX -> synth step tables (Path C transcription). Deterministic:

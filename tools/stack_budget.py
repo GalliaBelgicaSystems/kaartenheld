@@ -68,7 +68,15 @@ CALL_OVERHEAD = 3
 # execute_combo -24, battle_update -21, combo_resolve -22, all identical
 # to the 142 tree); the outro it calls is a leaf off the combo chain.
 # True depth stays canary-measured <= 125 B, margin ~770 B.
-BASELINE = 144
+# 144 -> 145 (Nov 2026, many-fixes merge: one-row-per-card deck fold):
+# the loot-grant chain gains deck_collection_merge_duplicates (11 B frame)
+# -> cards_same_identity (24 B frame: one CardDefinition scratch copy --
+# a smaller 8-byte signature was tried and reverted, it traded the stack
+# for fixed-bank ROM the budget does not have, AGENTS.md 52.18) ->
+# card_get_def -> loot_synth_banked -> synth_name.  No existing frame
+# grew (battle_screen_update is 8 B on both trees; the fixed-99 reprisal
+# keeps it lean).  Margin ~770 B.
+BASELINE = 145
 
 # Fixed main-loop prefix live under every battle chain.
 PREFIX = ["main", "game_update", "screen_update"]

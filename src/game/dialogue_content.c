@@ -345,6 +345,22 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_TUTORIAL_CARL_SKIP_ASK,
+        "CARL:",
+        4,
+        {"HEY! WANNA LEARN", "HOW FIGHT?", "TALK:YES LEAVE:NO", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_SKIP_GRANTED,
+        "CARL:",
+        2,
+        {"SUIT YOURSELF!", "TAKE THIS AP!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
         5,

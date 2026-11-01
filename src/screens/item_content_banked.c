@@ -494,13 +494,89 @@ static uint8_t ic_collection_count(const CardState *cs, CardId id)
     return 0;
 }
 
-/* NOTE: the filtered/sorted view (s_view_indices/s_view_count) is built
- * by the fixed-bank side (item_screen.c: on every full redraw, plus
- * explicitly after picker filter/sort changes) and consumed here
- * read-only.  A bank-2 duplicate used to rebuild it on every full
- * redraw; besides wasting ROM it could DIVERGE from the action view
- * (it resolved loot ids to NULL while the fixed side synthesizes them),
- * shifting every selection at/after a loot card onto the wrong card. */
+/* ── Filtered/sorted collection view (single source of truth) ──────
+ * Built HERE (bank 2: same bank as the card catalog and the loot synth)
+ * at the start of every full redraw; item_screen.c's fixed-bank actions
+ * consume s_view_indices/s_view_count read-only and every mutation path
+ * there invalidates the render cache, so a rebuild always lands before
+ * the next consumer.  Living in one place is what keeps the DECK list
+ * and the actions that index it from disagreeing -- a former fixed-bank
+ * duplicate resolved loot ids to NULL while this side synthesizes them,
+ * which shifted every selection at/after a loot card onto the wrong
+ * card.  The fixed bank (at 0x8000) simply cannot host this code. */
+
+/* SPECIAL cards (quest items like the Lost Amulet) are LISTED but never
+ * deckable -- pressing A shows a transient QUEST ITEM message instead. */
+static uint8_t ic_card_deckable(const CardDefinition *def)
+{
+    return (uint8_t)(def != NULL && def->type != CARD_TYPE_SPECIAL);
+}
+
+static uint8_t ic_filter_matches(Game *g, CardId id)
+{
+    const CardDefinition *def;
+    if (g->item_menu_filter == FILTER_ALL) return 1;
+    def = ic_card_get_def(id);
+    return (uint8_t)(def != NULL && def->type == g->item_menu_filter);
+}
+
+static uint8_t ic_sort_value(const CardDefinition *def, uint8_t sort)
+{
+    switch (sort) {
+        case SORT_TYPE:  return def->type;
+        case SORT_POWER:
+        case SORT_POWER_DESC: return def->power;
+        case SORT_COST:
+        case SORT_COST_DESC:  return def->cost;
+        default: return 0;
+    }
+}
+
+static void ic_sort_view(Game *g)
+{
+    uint8_t i, j, tmp, va, vb;
+    uint8_t desc = (uint8_t)(g->item_menu_sort == SORT_POWER_DESC ||
+                             g->item_menu_sort == SORT_COST_DESC);
+
+    for (i = 1; i < s_view_count; i++) {
+        tmp = s_view_indices[i];
+        va = ic_sort_value(
+                ic_card_get_def(g->state.cards.collection.entries[tmp].id),
+                g->item_menu_sort);
+        j = i;
+        while (j > 0) {
+            vb = ic_sort_value(
+                    ic_card_get_def(
+                        g->state.cards.collection.entries[
+                            s_view_indices[j - 1]].id),
+                    g->item_menu_sort);
+            if (desc ? (vb < va) : (vb > va)) {
+                s_view_indices[j] = s_view_indices[j - 1];
+                j--;
+            } else {
+                break;
+            }
+        }
+        s_view_indices[j] = tmp;
+    }
+}
+
+static void ic_build_view(Game *g)
+{
+    uint8_t i;
+    CardId id;
+
+    s_view_count = 0;
+    for (i = 0; i < g->state.cards.collection.count; i++) {
+        id = g->state.cards.collection.entries[i].id;
+        if (!ic_card_deckable(ic_card_get_def(id))) continue;
+        if (!ic_filter_matches(g, id)) continue;
+        s_view_indices[s_view_count] = i;
+        s_view_count = (uint8_t)(s_view_count + 1);
+    }
+    if (g->item_menu_sort != SORT_NONE && s_view_count > 1)
+        ic_sort_view(g);
+}
 
 static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
     "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
@@ -816,6 +892,11 @@ void item_screen_render_banked(void)
     Game *g = (Game *)g_bk_ptr_a;
     uint8_t e;
     if (!g) return;
+
+    /* The shared DECK view is rebuilt here, before anything indexes it
+     * (see ic_build_view): oracle for both this render and the fixed-bank
+     * actions. */
+    ic_build_view(g);
 
     /* Sweep rider entries first: picker/emptied rows leave nothing
      * behind, and list/detail set exactly what they show below.  (The

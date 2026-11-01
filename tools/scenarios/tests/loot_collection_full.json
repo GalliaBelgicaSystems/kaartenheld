@@ -1,7 +1,7 @@
 {
  "name": "loot_collection_full",
  "test": true,
- "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'. The filler set is eight legal, distinct plain wood/bronze combos (96,97,98,100,128,129,130,131) plus the bow, deliberately excluding seed 5002's id 99 so the drop must ask for a new slot. Illegal combos (e.g. wood+rider id 104) are covered separately by loot_rider_strip.",
+ "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'. The filler set is eight legal, distinct plain combos (iron sword/shield 160/161, wood bow/ring 98/100, bronze sword/shield/bow/dagger 128-131) plus the mythril bow, deliberately excluding seed 5002's id 99 so the drop must ask for a new slot -- and excluding every loot twin of the starter rows (96/97 fold into the starter sword/shield, so iron takes their place) so the fold cannot free a slot. Illegal combos (e.g. wood+rider id 104) are covered separately by loot_rider_strip.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,12 +21,12 @@
  "actions": [
   {
    "type": "collection_add",
-   "card_id": 96,
+   "card_id": 160,
    "quantity": 1
   },
   {
    "type": "collection_add",
-   "card_id": 97,
+   "card_id": 161,
    "quantity": 1
   },
   {
