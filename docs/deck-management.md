@@ -226,7 +226,8 @@ semantic assertion names.
 | Scenario | Proves |
 |---|---|
 | `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
-| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (opening hand renders SW1 SW1 SH1 SH1 SW3 from the 10-card table) |
+| `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (the pile unpacks to all ten cards and deals only real card type codes) |
+| `battle_start_shuffle` | battle start shuffles the draw pile: the opening hand is not the persistent DECK-menu order |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
 | `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |

@@ -302,6 +302,33 @@ def run_scenario(scenario):
                 # an absolute GB address (save slot N base = 0xA000 +
                 # N*0x400; version byte at base+2).
                 session.write_mem(act.get("addr", 0), act.get("value", 0))
+            elif act_type == "set_hand":
+                # Stage a whole opening hand in one action.  `cards` is an
+                # ordered list of up to 5 specs: {type, value, cost, uses,
+                # status?, chance?, ring?}.  Applies the same ROM debug
+                # actions as set_hand_card / set_hand_card_meta (plus the
+                # optional rider ones), so the staged cards are ordinary
+                # mechanic state and assertions still read the real hand.
+                # Battle start shuffles the draw pile, so scenarios that
+                # assert specific card slots pin them here instead of
+                # trusting the dealt order.
+                for hand_idx, spec in enumerate(act.get("cards", [])[:5]):
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD,
+                                         hand_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD_META,
+                                         hand_idx,
+                                         spec.get("cost", 1) & 0xFF,
+                                         spec.get("uses", 0xFF) & 0xFF)
+                    if "status" in spec:
+                        session.debug_action(session.DBG_ACT_SET_HAND_CARD_STATUS,
+                                             hand_idx,
+                                             int(spec["status"]) & 0xFF,
+                                             int(spec.get("chance", 255)) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_HAND_RING,
+                                             hand_idx, 0, 0)
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by
@@ -321,6 +348,25 @@ def run_scenario(scenario):
                                      act.get("index", 0) & 0xFF,
                                      act.get("cost", 1) & 0xFF,
                                      act.get("uses", 0xFF) & 0xFF)
+            elif act_type == "set_deck":
+                # Stage the battle's UNDRAWN draw pile (the scripted-order
+                # counterpart to set_hand).  Battle start shuffles the pile,
+                # so scenarios that choreograph a specific draw/refill order
+                # restage it here: `cards` is the pile from the next card
+                # drawn onwards, `draw_idx` defaults to 0.  Same ROM debug
+                # state writes as set_hand -- no test-only gameplay path.
+                deck_cards = act.get("cards", [])[:20]
+                for deck_idx, spec in enumerate(deck_cards):
+                    session.debug_action(session.DBG_ACT_SET_DECK_CARD,
+                                         deck_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_DECK_RING,
+                                             deck_idx, 0, 0)
+                session.debug_action(session.DBG_ACT_SET_DECK_STATE,
+                                     len(deck_cards),
+                                     act.get("draw_idx", 0) & 0xFF, 0)
             elif act_type == "set_enemy_hp":
                 # Pin an enemy combatant's current HP in the active battle
                 # (scenario setup: deterministic fight lengths).

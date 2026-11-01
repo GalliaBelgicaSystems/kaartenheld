@@ -1286,8 +1286,11 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   play (in-play iron swords are derived loot ids, e.g. `0xA0`).
 - **Starter deck granted at new game**: a new game grants the collection
   WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
-  ten, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW3),
-  so the first battle already draws from the real deck system. The engine's
+  ten), so the first battle already draws from the real deck system.
+  Battle start shuffles the battle copy of the pile (seeded
+  Fisher–Yates, `deck_shuffle_pile`), so the opening hand is a random five
+  — the persistent deck order is only the DECK-menu order and is never
+  mutated by a battle. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:
   `deck_add_card` emits no telemetry; callers do.

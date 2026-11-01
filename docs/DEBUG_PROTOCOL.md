@@ -533,6 +533,24 @@ as a loot RING (docs/loot.md §34.3): joker classification, defense shield
 value, one-ring selection gate.  See `ring_one_ring_gate` /
 `ring_joker_heal`.
 
+`set_hand` stages a whole opening hand in one action -- an ordered list of
+up to five cards, each `{type, value, cost?, uses?, status?, chance?, ring?}`
+(type `SW`/`SH`/`BO`/`HE`/`DA`):
+`{"type": "set_hand", "cards": [{"type": "SW", "value": 5, "cost": 1}]}`.
+It applies the same ROM debug actions as `set_hand_card` /
+`set_hand_card_meta` (plus the rider ones), so the staged cards are ordinary
+mechanic state and assertions still read the real hand.  Battle start
+shuffles the draw pile (`deck_shuffle_pile`), so scenarios that assert
+specific card slots pin them here instead of trusting the deal order.
+
+`set_deck` (`DBG_ACT_SET_DECK_CARD` / `_STATE` / `_RING`) stages the battle's
+UNDRAWN draw pile -- the scripted-order counterpart to `set_hand`:
+`{"type": "set_deck", "cards": [{"type": "HE", "value": 4, "ring": true}],
+"draw_idx": 0}` writes `cards[0..n)` and sets the pile count (draw cursor
+defaults to 0, i.e. "the next draws are exactly these cards").  Scenarios that
+choreograph a specific draw/refill order use it to restore the pile the
+battle-start shuffle randomized (`battle_discard_ring`).
+
 `collection_add` (`DBG_ACT_ADD_ITEM`) grants cards to the collection by
 RAW id: `{"type": "collection_add", "card_id": 99, "quantity": 1}` --
 raw ids let scenarios reach derived loot-range CardIds that have no name

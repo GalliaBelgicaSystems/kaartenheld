@@ -1,5 +1,5 @@
 {
- "description": "Regression for the battle fallback deck: initial_state constructs an intentionally EMPTY persistent deck (descriptor deck-present section; the CARDS menu can no longer empty a deck because of DECK_MIN_CARDS) which forces battle_init_from_deck_state onto the packed starter-deck fallback. The 10-card table mirrors the granted composition (4x SW1, 4x SH1, 2x SW3); the first five entries keep the granted deal order so the opening hand must render SW1 SW1 SH1 SH1 SW3 -- a mis-packed table would show a shuffled order and garbage type-15 codes",
+ "description": "Regression for the battle fallback deck: initial_state constructs an intentionally EMPTY persistent deck (descriptor deck-present section; the CARDS menu can no longer empty a deck because of DECK_MIN_CARDS) which forces battle_init_from_deck_state onto the packed starter-deck fallback. The 10-card table mirrors the granted composition (4x SW1, 4x SH1, 2x SW3): the pile must unpack to all ten cards (five dealt, five left) and deal only real card type codes -- a mis-packed table shows garbage type-15 codes or a short pile. Battle start shuffles the deal, so the hand order itself is not asserted here (battle_start_shuffle pins that the deal is a random permutation)",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -102,19 +102,13 @@
    "count": 0
   },
   {
-   "type": "screen_row",
-   "row": 13,
-   "contains": "SW1 SW1"
+   "type": "battle_draw_remaining",
+   "expected": 5
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 13,
-   "contains": "SH1 SH1"
-  },
-  {
-   "type": "screen_row",
-   "row": 13,
-   "contains": "SW3"
+   "contains": "15"
   },
   {
    "type": "tilemap_cell",

@@ -9,8 +9,10 @@
  * Small decks for each enemy type.  Each enemy draws one card per
  * attack turn; the card's power is the incoming damage the player
  * must defend against.  Decks reshuffle when exhausted.
- * Fixed order (no startup shuffle) — the starter deck follows the
- * same pattern (see deck_init.c). */
+ * Fixed order (no startup shuffle): enemy swings stay readable and
+ * scriptable.  The player's battle deck is shuffled at battle start
+ * (deck_shuffle_pile, see deck_init.c) -- enemies deliberately keep
+ * their authored order. */
 
 static const EnemyCard s_slime_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
