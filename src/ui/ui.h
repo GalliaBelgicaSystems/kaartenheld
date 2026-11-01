@@ -23,7 +23,9 @@ extern uint8_t g_is_cgb;
 /* Turn-timer bar segment tiles (HUD skin; generated card_frame_tiles.h
  * sheet row 3, loaded explicitly at these ids by ui_init).  Together with
  * the card frames these fully allocate the 117-127 BG window between the
- * icon block (104-116) and the world / battle-art blocks (128+). */
+ * icon block (104-116) and the world / battle-art blocks (128+).  The
+ * EMPTY segment's art is blank on purpose: a drained bar leaves nothing
+ * behind (no hollow pip grid), just the screen background. */
 #define UI_TILE_TIMER_FILLED     117u
 #define UI_TILE_TIMER_EMPTY      127u
 /* Up-arrow select icons (combat tileset "arrow pointing up light/dark",
