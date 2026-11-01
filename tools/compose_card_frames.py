@@ -21,7 +21,8 @@ LAYOUT = [
     ['combat_top_left_card_corner', 'combat_top_middle_card', 'combat_top_right_card_corner'],
     ['combat_left_card_side', 'combat_center_card', 'combat_right_card_side'],
     ['combat_bottom_left_card_corner', 'combat_bottom_middle_card', 'combat_bottom_right_card_corner'],
-    # Turn-timer bar segments (HUD skin): filled / empty, then the HUD
+    # Turn-timer bar segments (HUD skin): filled / empty (the empty cell's
+    # art is a blank tile so drained columns leave no hollow pips), then the HUD
     # icons from the combat tileset (combat-tileset-description.csv):
     # hp / ap / deck, the light/dark up-arrow select icons (light = cursor,
     # dark = cursor on an already-selected card; both replace the '^'

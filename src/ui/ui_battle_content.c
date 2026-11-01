@@ -1206,7 +1206,10 @@ static void battle_draw_banner_line(uint8_t y, const char *text, uint8_t width)
 /* Turn-timer bar (bank-3 body behind the fixed-bank ui_draw_battle_timer
  * wrapper): one segment tile per column -- filled while the timer has
  * time left (count staged in g_bk_byte_a by the wrapper via
- * ui_calc_timer_bar), empty after.  Geometry/tiles/color come from the
+ * ui_calc_timer_bar), the skin's EMPTY segment after.  That empty tile's
+ * art is blank, so a drained column leaves nothing on screen; never give
+ * it a visible outline (an empty-pip grid is the old bug).
+ * Geometry/tiles/color come from the
  * staged HUD skin (battle_hud.json via hud_skin.c); the semantic screen
  * buffer keeps '=' / space semantics for harness text assertions. */
 void ui_draw_battle_timer_banked(void)

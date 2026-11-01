@@ -24,7 +24,8 @@
  * render as the plain font capital 'G'; the old coin tile 115 is now
  * the ring X.) */
 /* Sheet order (compose_card_frames.py): frames are tiles 0-8 (VRAM
- * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127),
+ * 118-126), filled is tile 9 (VRAM 117), empty is tile 10 (VRAM 127,
+ * blank art -- a drained bar cell shows the background, not a pip),
  * HUD icons are tiles 11-13 (VRAM 113/114/116), the light select arrow
  * is tile 14 (VRAM 96), the dark select arrow is tile 15 (VRAM 110). */
 static const uint8_t s_card_tile_vram_ids[32] = {
