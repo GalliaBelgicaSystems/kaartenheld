@@ -8,7 +8,12 @@ typedef enum {
     MUSIC_NONE,
     MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
     MUSIC_BATTLE,
-    MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
+    MUSIC_VICTORY,   /* battle-victory fanfare (victory.uge, bank 7),
+                        played once: the ROM driver loops whole songs, so
+                        the bank-8 jingle body stops it in the song's
+                        silent tail (VICTORY_JINGLE_TICKS; frame backstop
+                        under the harness) and the track goes NONE until
+                        the result-screen exit restores the area track */
     MUSIC_TITLE,     /* title screen theme (title short.uge, bank 7):
                          plays ONCE per title visit (~2.5 s notes + decay),
                          then stops in silence (TITLE_SONG_FRAMES game frames,
@@ -74,7 +79,8 @@ enum {
     SFX_HIT = 5,
     SFX_BLOCK = 6,
     /* Alert sting for pursuer levels (kobolds, slime knights): plays once
-     * on entry, then the level track resumes (screens/sfx.json ALERT). */
+     * on entry over the paused scene track, which then continues
+     * mid-song (screens/sfx.json ALERT). */
     SFX_ALERT = 7,
     /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
      * transcribes to 3 CH2 tone steps), so the table theme keeps playing

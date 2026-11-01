@@ -1,7 +1,7 @@
 {
  "name": "alert_pursuit_expires",
  "test": true,
- "description": "The pursuer ! marker clears when the entry alert TTL (150 frames) drains: after a 170-frame wait the kobold's entry 30 is hidden again (tile 0). The alert sting played exactly once (sfx_count == 1).",
+ "description": "The pursuer ! marker clears when the alert TTL (150 frames) drains: after a 170-frame wait the kobold's entry 30 is hidden again (tile 0). The alert sting played exactly once (sfx_count == 1).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {

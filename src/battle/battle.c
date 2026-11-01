@@ -164,6 +164,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     g_battle_solo = solo;
     g_battle_multiframe = 0;
     g_slime_despair = 0;
+    g_despair_slot = 0xFF;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;

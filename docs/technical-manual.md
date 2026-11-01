@@ -50,7 +50,7 @@ and the game reaches its ending.
 ### 1.2 The villain
 
 The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
-**Throne Room** is where the **Lord of Slimes** (99 HP) waits.  He is
+**Throne Room** is where the **Lord of Slimes** (70 HP) waits.  He is
 always present and reachable, so the final fight is open from the start.
 
 ---
@@ -202,7 +202,7 @@ kobold, a bat, a slime and a spider, plus a scout's advice.
 **CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, slime), the
 GREAT HALL (kobold, spider, bat, slime; a knight's advice), CASTLE
 (a bat, a spider, a kobold and the solo Mimic), and the THRONE ROOM,
-where the Lord of Slimes (99 HP, always present) waits with a bat and
+where the Lord of Slimes (70 HP, always present) waits with a bat and
 a spider.
 
 ### 3.4 Encounters
@@ -258,7 +258,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 4. **Finished.** Talking to the Mayor after completion is a short "go
    forth, hero!" line ("Use your power. Go forth, hero!").
 
-The **Lord of Slimes** (99 HP) in the Castle is always present and
+The **Lord of Slimes** (70 HP) in the Castle is always present and
 reachable — it is not gated behind this quest.
 
 ### 4.3 Lost Amulet — the side quest
@@ -748,7 +748,7 @@ on the enemy type:
 | Kobold | 15 | 8 |
 | Spider | 10 | 15 |
 | Mimic (solo) | 50 | 0 |
-| Lord of Slimes (solo boss) | 99 | 50 |
+| Lord of Slimes (solo boss) | 70 | 50 |
 
 ### 9.3 Shops
 

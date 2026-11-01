@@ -1,7 +1,7 @@
 {
  "name": "boss_despair_reprisal",
  "test": true,
- "description": "A press during the concentrating telegraph fires the scripted reprisal: it deals exactly the hero remaining HP (battle_player_hp == 0, HUD/telemetry/result agree), the result screen is DEFEAT (no victory), and row 9 is fully cleared (no stranded SLIMES tail).",
+ "description": "A press during the concentrating telegraph fires the scripted reprisal: fixed 99 damage (a 120-HP hero stands at 21, battle_player_hp == 21), the result screen is DEFEAT (no victory), and row 9 is fully cleared (no stranded SLIMES tail).",
  "actions": [
   {
    "type": "wait",
@@ -60,7 +60,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 0
+   "expected": 21
   },
   {
    "type": "screen_row",

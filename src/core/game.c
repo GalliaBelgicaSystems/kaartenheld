@@ -109,9 +109,10 @@ void game_update(Game *g)
      * freeze the restore timer while the driver loops the one-shot
      * song.  Engine-generic restore (scene track lookup); action codes
      * come back through g_bk_byte_b (jingle) and the pursuit alert through
-     * g_bk_byte_c (1 = entry: hold the scene track; 2 = sting now, once
-     * the level is loaded and pursuers start moving) and the held-track
-     * replay through g_bk_byte_d (scene track restarts after the sting
+     * g_bk_byte_c (1 = a chaser just spotted the hero: hold the scene
+     * track; 2 = sting now, once the chaser is awake and moving) and the
+     * held-track replay through g_bk_byte_d (scene track restarts after
+     * the sting
      * so the alert is heard first, then the music).
      *
      * Terminal screens (GAME_OVER / THANKS / ENDING) run no world
