@@ -42,6 +42,9 @@ void thanks_screen_render(Game *g)
     rc = &g->render_cache;
 
     if (!rc->valid || rc->prev_screen != SCREEN_THANKS) {
+        /* Fresh hold every entry (LOAD mid-hold must not inherit a
+         * part-used counter, AGENTS.md §20). */
+        s_thanks_frames = 0;
         ui_clear_screen();
         g_bk_call_bank = 9;
         g_bk_call_target = (uint16_t)&thanks_content_render;

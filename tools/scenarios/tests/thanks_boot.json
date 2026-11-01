@@ -1,7 +1,7 @@
 {
  "name": "thanks_boot",
  "test": true,
- "description": "Boot directly into the terminal demo-complete Thanks screen",
+ "description": "Boot directly into the Thanks screen with the demo NOT completed: shows the try-again variant (Try to beat the Lord of Slimes...) rather than the demo-complete congratulations.",
  "actions": [],
  "assertions": [
   {
@@ -15,6 +15,11 @@
   {
    "type": "game_state",
    "expected": "THANKS"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "Try to beat the"
   }
  ],
  "initial_state": {

@@ -177,19 +177,17 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_ALL_DEAD:
         g_bk_byte_c = 0;
-        /* Lord of Slimes (BATTLE_NONE boss) can never die: clamp any
-         * lethal blow back to 1 HP on every liveness check, so counter
-         * and poison-tick kills can never sneak past the attack path's
-         * desperation trigger into a victory.  The attack path ends the
-         * demo with the 99-damage reprisal once he drops to 20 or less.
-         * Pure WRAM writes (staging discipline: the fixed wrappers own
-         * telemetry), roomy bank 4. */
-        if (b->enemy_battle_id == 0) {
-            uint8_t k;
-            for (k = 0; k < b->enemy_count; k++) {
-                if (b->enemies[k].hp == 0) {
-                    b->enemies[k].hp = 1;
-                }
+        /* Unkillable desperation boss (game-owned table, slot cached in
+         * WRAM by the bank-8 check body, 0xFF when no such battle): clamp
+         * any lethal blow back to 1 HP on every liveness check, so
+         * counter and poison-tick kills can never sneak past the attack
+         * path's trigger into a victory.  The engine names no game ids
+         * here (AGENTS.md 55.1); the same floor runs in the check body
+         * itself.  Pure WRAM writes (staging discipline: the fixed
+         * wrappers own telemetry), roomy bank 4. */
+        if (g_despair_slot != 0xFF && g_despair_slot < b->enemy_count) {
+            if (b->enemies[g_despair_slot].hp == 0) {
+                b->enemies[g_despair_slot].hp = 1;
             }
         }
         {

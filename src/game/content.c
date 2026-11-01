@@ -44,6 +44,14 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
+    /* Cross-session outro state is NOT GameState (module WRAM) and would
+     * otherwise leak across a LOAD/RESET mid-session (AGENTS.md §20):
+     * a fresh game never starts demo-completed, mid-despair, or
+     * partway through the THANKS hold.  BSS zero covers boot; this
+     * covers scenario_load_state() and every new-game path. */
+    g_demo_completed = 0;
+    g_slime_despair = 0;
+
     /* Player start is compiled from the wake-grove spawn (the single source of
      * truth).  scene_spawn() runs the banked table read; the fallback for
      * bad map ids lives in that banked body, so this fixed-bank call site
@@ -128,20 +136,23 @@ ScreenId game_screen_after_victory(const Game *g)
 
 void game_slime_despair_outro(void)
 {
-    volatile uint8_t a, b;
     /* The battle screen guarantees a live game; the single global Game
      * instance is always the battle owner (main.c drives everything from
-     * &g_game). */
+     * &g_game).  Wakes on the real wake grove (no separate copy map: the
+     * wake dialogue opens immediately and closes straight to THANKS, so
+     * the player never walks here -- the old throne-room point exit was
+     * an invisible warp with no portal art and is gone).  Immediate cut:
+     * no white-hold loop (an uncalibrated spin loop stalls the main loop
+     * without advancing the frame counter). */
     ui_lcd_off();
-    for (a = 0; a < 80; a++) {
-        for (b = 0; b < 200; b++) {
-        }
-    }
 #ifdef TEST_LEVELS
     scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
 #else
-    scene_load(&g_game, SCENE_STRANGE_GROVE, 10, 8);
+    scene_load(&g_game, SCENE_WAKE_GROVE, 10, 8);
 #endif
+    /* scene_load leaves facing untouched, so route it explicitly to the
+     * authored spawn facing (UP) instead of the engage direction. */
+    g_game.world.player.facing = DIRECTION_UP;
     dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
     screen_change(&g_game, SCREEN_DIALOGUE);
 }

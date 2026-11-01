@@ -1,55 +1,226 @@
 {
-  "name": "battle_mutual_ko_survive",
-  "test": true,
-  "description": "REGRESSION: mutual KO (poisoned 1HP hero + poisoned 1HP last enemy, shared tick kills both, VICTORY shadows the death). Victory stands with full loot, but the exit path clamps the corpse to 1HP instead of stranding a 0-HP hero in the overworld.",
-  "initial_state": {
-    "scene": "TEST_MOUNTAIN_PASS",
-    "player": { "x": 13, "y": 7, "facing": "RIGHT" },
-    "party": { "HERO": { "hp": 1, "max_hp": 60 } },
-    "seed": 5002
+ "name": "battle_mutual_ko_survive",
+ "test": true,
+ "description": "REGRESSION: mutual KO (poisoned 1HP hero + poisoned 1HP last enemy, shared tick kills both, VICTORY shadows the death). The second SELECT is a real staged SH9 defend against the incoming strike (no freeze): the swing is fully blocked, then the round-2 entry tick kills both sides at once. Victory exits clamp the corpse to 1HP instead of stranding a 0-HP hero in the overworld.",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
   },
-  "actions": [
-    { "type": "press", "button": "RIGHT" },
-    { "type": "wait", "frames": 10 },
-    { "type": "set_enemy_hp", "index": 0, "hp": 1 },
-    { "type": "set_enemy_hp", "index": 1, "hp": 0 },
-    { "type": "set_enemy_hp", "index": 2, "hp": 0 },
-    { "type": "apply_status", "slot": 1, "status": 1, "duration": 3 },
-    { "type": "apply_status", "slot": 0, "status": 1, "duration": 3 },
-    { "type": "apply_status", "slot": 1, "status": 3, "duration": 3 },
-    { "type": "set_hand", "cards": [
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255}
-    ] },
-    { "type": "wait", "frames": 30 },
-    { "type": "press", "button": "SELECT" },
-    { "type": "wait", "frames": 70 },
-    { "type": "set_hand", "cards": [
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-      {"type": "SH", "value": 1, "cost": 1, "uses": 255}
-    ] },
-    { "type": "press", "button": "SELECT" },
-    { "type": "wait", "frames": 55 },
-    { "type": "wait", "frames": 100 },
-    { "type": "press", "button": "A" },
-    { "type": "wait", "frames": 60 },
-    { "type": "press", "button": "RIGHT" },
-    { "type": "wait", "frames": 10 },
-    { "type": "wait", "frames": 60 }
-  ],
-  "assertions": [
-    { "type": "game_state", "expected": "OVERWORLD" },
-    { "type": "event_occurred", "event": "BATTLE_WON" },
-    { "type": "event_occurred", "event": "ENTITY_DEFEATED" },
-    { "type": "event_arg", "event": "ENTITY_DEFEATED", "index": 0, "value": 1 },
-    { "type": "event_arg", "event": "ENTITY_DEFEATED", "index": 0, "value": 0 },
-    { "type": "party_hp", "member": 0, "expected": 1 },
-    { "type": "player_hp", "expected": 1 }
-  ]
+  "party": {
+   "HERO": {
+    "hp": 1,
+    "max_hp": 60
+   }
+  },
+  "seed": 5002
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 0
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 0
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 3
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 1,
+   "duration": 3
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "SH",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 150
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "SH",
+     "value": 9,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 9,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 9,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 9,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SH",
+     "value": 9,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_arg",
+   "event": "ENTITY_DEFEATED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "ENTITY_DEFEATED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "party_hp",
+   "member": 0,
+   "expected": 1
+  },
+  {
+   "type": "player_hp",
+   "expected": 1
+  }
+ ]
 }

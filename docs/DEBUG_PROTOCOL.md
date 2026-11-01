@@ -599,9 +599,13 @@ Quest state and objectives are generic variables owned by the event table in
 * `QUEST_MONSTER_HUNT` = 0 (NOT_STARTED), 1 (ACTIVE), 2 (COMPLETE).
 * `MONSTERS_DEFEATED` — a **global** counter incremented on every hostile
   defeat (no quest gating), so kills before the quest starts still count.
-* `ENDING_SHOWN` — set when the final boss (Lord of Slimes) is defeated;
-  the battle victory then goes to the `SCREEN_ENDING` instead of the
-  overworld.  A on the ending restarts the game.
+* `ENDING_SHOWN` — legacy victory flag for the final boss (Lord of
+  Slimes): when set, a battle victory goes to `SCREEN_ENDING` instead of
+  the overworld.  The boss is unwinnable in normal play (at its HP
+  threshold the desperation telegraph opens and the scripted reprisal
+  routes the wake-grove outro to THANKS), so this flag no longer sets in
+  normal play; only the `ending_boot` scenario reaches the ending screen.
+  A on the ending restarts the game.
 
 The event engine supports generic conditions (flag is/not set, variable
 `>=`/`==`) and actions (dialogue, set/clear flag, set/add variable, give

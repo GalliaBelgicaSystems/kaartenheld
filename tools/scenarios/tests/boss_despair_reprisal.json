@@ -1,0 +1,117 @@
+{
+ "name": "boss_despair_reprisal",
+ "test": true,
+ "description": "A press during the concentrating telegraph fires the scripted reprisal: it deals exactly the hero remaining HP (battle_player_hp == 0, HUD/telemetry/result agree), the result screen is DEFEAT (no victory), and row 9 is fully cleared (no stranded SLIMES tail).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_result",
+   "expected": "DEFEAT"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "DEFEATED"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 9,
+   "contains": "SLIMES"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "music_track",
+   "expected": "GAMEOVER"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true,
+  "world": {
+   "BAT_CASTLE": "DEFEATED"
+  },
+  "deck": {
+   "FIRE_SWORD": 20
+  }
+ }
+}

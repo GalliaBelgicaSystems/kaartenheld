@@ -57,8 +57,14 @@ HudSkinDef g_hud_skin_wram;
 uint8_t g_battle_solo;
 
 /* Slime-lord desperation (see battle.h): BSS zero, set once per battle
- * when the BATTLE_NONE boss hits 20 HP or less. */
+ * when the desperation boss hits its game-table threshold. */
 uint8_t g_slime_despair;
+/* Desperation slot cache + staged message text (see battle.h): WRAM,
+ * BSS zero.  The bank-8 game body re-derives the slot every call. */
+uint8_t g_despair_slot;
+char g_despair_banner[16];
+char g_despair_row9[19];
+char g_despair_row10[20];
 
 /* ── Bridge: persistent DeckState → battle Deck ───────────────────
  * When a DeckState is provided (player has cards), build the battle
@@ -509,7 +515,11 @@ static uint8_t battle_defend_counter(Battle *b)
         battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
     }
 #ifdef DEBUG_BUILD
-    else {
+    /* No defeat telemetry for the unkillable desperation boss (its slot
+     * is cached in WRAM, 0xFF when no such battle): the floor keeps it
+     * at 1 HP and the hold opens instead.  Reporting a defeat that never
+     * happened breaks AGENTS.md §8/§22. */
+    else if (atk != g_despair_slot) {
         telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
     }
 #endif
@@ -559,11 +569,16 @@ static bool battle_turn_draw(Battle *b)
 static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
 {
     ComboPhase phase = attack_phase ? COMBO_PHASE_ATTACK : COMBO_PHASE_DEFEND;
-    uint8_t i, fx;
+    uint8_t fx;
 
-    for (i = 0; i < b->combo_count; i++) {
-        b->last_combo.cards[i] = b->hand[b->selected_indices[i]];
-    }
+    /* Combo staging lives in the bank-4 body (fixed _HOME budget,
+     * AGENTS.md 52.18): hand -> last_combo copies via the WRAM
+     * trampoline.  The dispatch staging below still runs here (a banked
+     * body cannot nest another trampoline call). */
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_stage_combo_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
     fx = attack_phase ? b->last_combo.cards[0].effect
                       : (uint8_t)CARD_EFFECT_BLOCK_DAMAGE;
     /* Single-level dispatch (stack discipline): the combo_resolve()
@@ -695,12 +710,14 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
-        /* Lord of Slimes desperation (unwinnable final battle): the
-         * check lives in the bank-8 body (fixed _HOME budget,
+        /* Desperation (unwinnable final battle): the check + HP floor
+         * live in the game-owned bank-8 body (fixed _HOME budget,
          * AGENTS.md 52.18); a trigger opens the telegraph hold below
-         * instead of ending the fight at once. */
+         * instead of ending the fight at once.  battle_update re-runs
+         * the same body every frame, so counter and status-tick damage
+         * trigger uniformly there. */
         g_bk_call_bank = 8;
-        g_bk_call_target = (uint16_t)&battle_despair_banked;
+        g_bk_call_target = (uint16_t)&game_despair_check_banked;
         banked_call_run();
         if (g_bk_byte_c != 0) {
             /* Telegraph hold: the boss flashes (shared telegraph blink,
@@ -806,7 +823,9 @@ static void battle_tick_statuses(Battle *b)
         if (dmg == 0) continue;
         combatant_take_damage(&b->enemies[i], dmg);
 #ifdef DEBUG_BUILD
-        if (b->enemies[i].hp == 0) {
+        /* Same unkillable-boss rule as the counter path above: the floor
+         * keeps the boss at 1 HP, so a defeat event here would be false. */
+        if (b->enemies[i].hp == 0 && (i != g_despair_slot)) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(i + 1), 0, 0, 0);
         }
 #endif
@@ -842,6 +861,23 @@ void battle_update(Battle *b)
     volatile Battle *vb = b;
 
     if (!b || vb->battle_over) return;
+
+    /* Desperation trigger for non-attack damage (dagger counters,
+     * status ticks): the attack tail above only covers the SELECT
+     * attack path.  This re-runs the same game-owned check every
+     * frame, so any source that drops the boss to its threshold opens
+     * the hold on the next frame.  The body itself is one-shot per
+     * battle and refuses a dead hero (mutual KO takes the normal
+     * defeat exit), so this stays a bare dispatch. */
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&game_despair_check_banked;
+    banked_call_run();
+    if (g_bk_byte_c != 0) {
+        vb->phase = BATTLE_PHASE_SLIME_DESPAIR;
+        vb->msg_id = 10;
+        vb->msg_ttl = 0;
+        vb->dirty = BATTLE_DIRTY_ALL;
+    }
 
     if (vb->phase == BATTLE_PHASE_PLAYER_SELECT || vb->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         if (vb->msg_ttl > 0 && --vb->msg_ttl == 0) {

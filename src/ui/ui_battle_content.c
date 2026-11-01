@@ -987,11 +987,11 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
     /* Desperation telegraph (unwinnable final boss): the combo line
-     * carries the sentence's second half ("IS CONCENTRATING..."; row 9
-     * shows the first half while the hold lasts).  Drawn unconditionally
+     * carries the sentence's second half (staged game text; row 9 shows
+     * the first half while the hold lasts).  Drawn unconditionally
      * like the clear above, so no skip-guard can leave a stale row. */
     if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
-        battle_draw_text_line(0, combo_row, "IS CONCENTRATING...", 19);
+        battle_draw_text_line(0, combo_row, (const char *)g_despair_row10, 19);
         battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
         battle_draw_text_line(19, combo_row, NULL, 1);
         return;
@@ -1298,9 +1298,9 @@ static const char *battle_banner_text(const volatile Battle *battle)
     if (battle->result == BATTLE_RESULT_FLED) return "FLED!";
 
     /* Desperation telegraph (unwinnable final boss): the row 9+10 pair
-     * carries the sentence ("THE LORD OF SLIMES" / "IS CONCENTRATING..."),
-     * so the banner just names the threat. */
-    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) return "L.OF SLIMES FOCUSING";
+     * carries the sentence (staged WRAM text from the game table, exact
+     * buffer widths), so the banner just names the threat. */
+    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) return (const char *)g_despair_banner;
 
     if (battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
         /* Live target: follows UP/DOWN cycling (BATTLE_DIRTY_BANNER set
@@ -1460,21 +1460,23 @@ void ui_update_battle_banked(void)
         } else {
             /* Transient gameplay messages live on row 9 (below the
              * DECK/AP line, above the COMBO row): rows 11-14 are the
-             * card boxes now.  msg_id 10 is the slime-lord desperation
-             * telegraph ("THE LORD OF SLIMES", completed on row 10 by
-             * the combo painter): keyed on the DESPAIR phase too, so
-             * the line cannot linger past the hold (the defeat result
-             * repaints with the same dirty bit). */
+             * card boxes now.  msg_id 10 is the desperation telegraph
+             * (staged game text, completed on row 10 by the combo
+             * painter): keyed on the DESPAIR phase too, so the line
+             * cannot linger past the hold (the defeat result repaints
+             * with the same dirty bit).  The else branch clears the FULL
+             * row width (20, not 12): the despair line is 18 columns and
+             * a short clear would strand its tail on the result screen. */
             if (battle->msg_id == 10 &&
                 battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
-                battle_draw_text_line(0, 9, "THE LORD OF SLIMES", 18);
+                battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else {
                 battle_draw_text_line(0, 9,
                     (battle->msg_id == 1) ? "NO ENERGY!" :
                     (battle->msg_id == 2) ? "OUT OF USES!" :
-                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
-                battle_color_span(0, 9, 12, UI_COLOR_FIELD);
+                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 20);
+                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
         }
     }

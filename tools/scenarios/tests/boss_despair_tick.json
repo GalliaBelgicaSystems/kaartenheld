@@ -1,0 +1,201 @@
+{
+ "name": "boss_despair_tick",
+ "test": true,
+ "description": "A poison tick that drops the Lord of Slimes to 20 or less does NOT kill him: the floor clamps him with no ENTITY_DEFEATED telemetry, and the hold opens (flashing art, FOCUSING banner, waits for A). Covers the status-tick damage source; hero attacks heal so only the tick damages the boss.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 60
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 8
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 21
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "HE",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "FOCUSING"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "music_track",
+   "expected": "BOSS"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true,
+  "world": {
+   "BAT_CASTLE": "DEFEATED"
+  },
+  "deck": {
+   "FIRE_SWORD": 20
+  }
+ }
+}

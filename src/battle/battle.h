@@ -206,23 +206,35 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp);
  * uses the standard 3-slot screen ("default").  Read directly by
  * battle_hud_load_banked() in the same bank-4 dispatch. */
 extern uint8_t g_battle_solo;
-/* Slime-lord desperation flag (WRAM, BSS zero): set when the BATTLE_NONE
- * boss drops to 20 HP or less and survives with a 99-damage reprisal.
- * battle_screen consumes it on the defeat exit to route the whiteout /
- * strange-grove / wake-dialogue / THANKS outro instead of GAME_OVER. */
+/* Slime-lord desperation flag (WRAM, BSS zero): set by the game-owned
+ * bank-8 check body when the desperation boss reaches its threshold.
+ * battle_screen consumes it on the defeat exit to route the wake-grove /
+ * wake-dialogue / THANKS outro instead of GAME_OVER. */
 extern uint8_t g_slime_despair;
+/* Unkillable-boss slot cache (WRAM, 0xFF = none): re-derived every call
+ * by the game-owned bank-8 check body (src/game/despair_banked.c) from
+ * its battle table, so the engine never names a game battle id.  The
+ * nav clamp and the counter/tick defeat-telemetry guards key off this;
+ * battle_start resets it to none. */
+extern uint8_t g_despair_slot;
+/* Desperation message staging (WRAM): the game table's banner + two
+ * message lines, copied here by the bank-8 body at trigger time.  The
+ * bank-3 battle render reads these while the hold lasts. */
+extern char g_despair_banner[16];
+extern char g_despair_row9[19];
+extern char g_despair_row10[20];
 void battle_cursor_move(Battle *b, int8_t dir);
 void battle_target_move(Battle *b, int8_t dir);
 bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);
 void battle_card_undo_banked(void);
+/* Banked combo-staging body (src/battle/battle_stage_combo_banked.c,
+ * ROM bank 4): g_bk_ptr_a = Battle*, stages hand -> last_combo. */
+void battle_stage_combo_banked(void);
 /* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
  * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
-/* Slime-lord desperation check+apply (src/battle/battle_despair_banked.c,
- * ROM bank 8): reads g_game.battle directly, reports via g_bk_byte_c. */
-void battle_despair_banked(void);
 void battle_execute_combo(Battle *b);
 void battle_set_result(Battle *b, uint8_t res);
 void battle_update(Battle *b);
