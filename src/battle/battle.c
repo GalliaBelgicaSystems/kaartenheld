@@ -56,6 +56,16 @@ HudSkinDef g_hud_skin_wram;
  * battle_hud_load_banked to pick the single-enemy boss screen. */
 uint8_t g_battle_solo;
 
+/* Slime-lord desperation (see battle.h): BSS zero, set once per battle
+ * when the desperation boss hits its game-table threshold. */
+uint8_t g_slime_despair;
+/* Desperation slot cache + staged message text (see battle.h): WRAM,
+ * BSS zero.  The bank-8 game body re-derives the slot every call. */
+uint8_t g_despair_slot;
+char g_despair_banner[16];
+char g_despair_row9[19];
+char g_despair_row10[20];
+
 /* ── Bridge: persistent DeckState → battle Deck ───────────────────
  * When a DeckState is provided (player has cards), build the battle
  * deck from the player's owned cards.  When NULL, fall back to the
@@ -153,6 +163,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * which re-stages g_bk_byte_a for its own dispatch. */
     g_battle_solo = solo;
     g_battle_multiframe = 0;
+    g_slime_despair = 0;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
@@ -504,7 +515,11 @@ static uint8_t battle_defend_counter(Battle *b)
         battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
     }
 #ifdef DEBUG_BUILD
-    else {
+    /* No defeat telemetry for the unkillable desperation boss (its slot
+     * is cached in WRAM, 0xFF when no such battle): the floor keeps it
+     * at 1 HP and the hold opens instead.  Reporting a defeat that never
+     * happened breaks AGENTS.md §8/§22. */
+    else if (atk != g_despair_slot) {
         telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
     }
 #endif
@@ -527,31 +542,19 @@ static uint8_t battle_defend_counter(Battle *b)
  * (pile + hand + discard == total deck size minus exiled spent cards, and
  * the reshuffle preserves the undrawn remainder), so an empty discard
  * pile implies the pile covers every open slot.  The only dry-pile loop
- * entry is the fully-dry case handled by the early return above. */
+ * entry is the fully-dry case handled by the early return above.
+ *
+ * Thin fixed-bank wrapper: the decision body lives in ROM bank 4
+ * (src/battle/battle_turn_draw_banked.c), dispatched via the WRAM
+ * trampoline; the boolean result returns in g_bk_byte_c.  Moved out of
+ * the fixed bank which sits hard against 0x8000 (AGENTS.md 52.18). */
 static bool battle_turn_draw(Battle *b)
 {
-    uint8_t i, need = 0;
-    for (i = 0; i < BATTLE_HAND_SIZE; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) need++;
-    }
-    if (need == 0) return true;
-    if (b->deck.draw_idx >= b->deck.count) {
-        return (b->deck.discard_count == 0);
-    }
-    /* Partial cover plus a non-empty discard: deal nothing so the caller
-     * reshuffles first (see header comment).  Additive form keeps the
-     * 8-bit compare cheap (draw_idx + need cannot wrap: both are tiny). */
-    if (b->deck.discard_count != 0 &&
-        (uint8_t)(b->deck.draw_idx + need) > b->deck.count) {
-        return false;
-    }
-    for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) {
-            deck_draw(&b->deck, &b->hand[i]);
-            need--;
-        }
-    }
-    return true;
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
+    return g_bk_byte_c != 0;
 }
 
 /* Evaluate the pending selection AND resolve its effect in one banked
@@ -566,11 +569,16 @@ static bool battle_turn_draw(Battle *b)
 static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
 {
     ComboPhase phase = attack_phase ? COMBO_PHASE_ATTACK : COMBO_PHASE_DEFEND;
-    uint8_t i, fx;
+    uint8_t fx;
 
-    for (i = 0; i < b->combo_count; i++) {
-        b->last_combo.cards[i] = b->hand[b->selected_indices[i]];
-    }
+    /* Combo staging lives in the bank-4 body (fixed _HOME budget,
+     * AGENTS.md 52.18): hand -> last_combo copies via the WRAM
+     * trampoline.  The dispatch staging below still runs here (a banked
+     * body cannot nest another trampoline call). */
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_stage_combo_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
     fx = attack_phase ? b->last_combo.cards[0].effect
                       : (uint8_t)CARD_EFFECT_BLOCK_DAMAGE;
     /* Single-level dispatch (stack discipline): the combo_resolve()
@@ -702,13 +710,33 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
+        /* Desperation (unwinnable final battle): the check + HP floor
+         * live in the game-owned bank-8 body (fixed _HOME budget,
+         * AGENTS.md 52.18); a trigger opens the telegraph hold below
+         * instead of ending the fight at once.  battle_update re-runs
+         * the same body every frame, so counter and status-tick damage
+         * trigger uniformly there. */
+        g_bk_call_bank = 8;
+        g_bk_call_target = (uint16_t)&game_despair_check_banked;
+        banked_call_run();
+        if (g_bk_byte_c != 0) {
+            /* Telegraph hold: the boss flashes (shared telegraph blink,
+             * re-armed below), rows 9+10 announce the focus, and the
+             * phase waits for A (never auto-advances).  The 99-damage
+             * reprisal lands on the A press, not here. */
+            b->phase = BATTLE_PHASE_SLIME_DESPAIR;
+            b->msg_id = 10;
+            b->msg_ttl = 0;
+            b->dirty = BATTLE_DIRTY_ALL;
+        } else {
 #ifdef DEBUG_BUILD
-        if (b->enemies[b->target_idx].hp == 0) {
-            telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-        }
+            if (b->enemies[b->target_idx].hp == 0) {
+                telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
+            }
 #endif
-        if (battle_all_enemies_dead(b)) {
-            battle_set_result(b, BATTLE_RESULT_VICTORY);
+            if (battle_all_enemies_dead(b)) {
+                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            }
         }
     } else if (b->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         /* STATUS_FREEZE on the player (see the attack gate above): a frozen
@@ -795,7 +823,9 @@ static void battle_tick_statuses(Battle *b)
         if (dmg == 0) continue;
         combatant_take_damage(&b->enemies[i], dmg);
 #ifdef DEBUG_BUILD
-        if (b->enemies[i].hp == 0) {
+        /* Same unkillable-boss rule as the counter path above: the floor
+         * keeps the boss at 1 HP, so a defeat event here would be false. */
+        if (b->enemies[i].hp == 0 && (i != g_despair_slot)) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(i + 1), 0, 0, 0);
         }
 #endif
@@ -832,6 +862,23 @@ void battle_update(Battle *b)
 
     if (!b || vb->battle_over) return;
 
+    /* Desperation trigger for non-attack damage (dagger counters,
+     * status ticks): the attack tail above only covers the SELECT
+     * attack path.  This re-runs the same game-owned check every
+     * frame, so any source that drops the boss to its threshold opens
+     * the hold on the next frame.  The body itself is one-shot per
+     * battle and refuses a dead hero (mutual KO takes the normal
+     * defeat exit), so this stays a bare dispatch. */
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&game_despair_check_banked;
+    banked_call_run();
+    if (g_bk_byte_c != 0) {
+        vb->phase = BATTLE_PHASE_SLIME_DESPAIR;
+        vb->msg_id = 10;
+        vb->msg_ttl = 0;
+        vb->dirty = BATTLE_DIRTY_ALL;
+    }
+
     if (vb->phase == BATTLE_PHASE_PLAYER_SELECT || vb->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         if (vb->msg_ttl > 0 && --vb->msg_ttl == 0) {
             vb->msg_id = 0;
@@ -854,6 +901,21 @@ void battle_update(Battle *b)
             }
         } else {
             battle_execute_combo(b);
+        }
+    } else if (vb->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        /* Telegraph hold: the battle clock keeps running as the flash
+         * cadence (the stamper blinks on the timer edges, same as the
+         * defend telegraph) and re-arms silently on expiry instead of
+         * auto-advancing -- only A continues (below).  The message never
+         * expires (ttl 0 skips the SELECT/DEFEND tick above). */
+        if (vb->timer_ticks > 0) {
+            vb->timer_ticks--;
+        } else {
+            vb->timer_ticks = BATTLE_TIMER_MAX_FRAMES;
+        }
+        if (((vb->timer_ticks & 15) == 15) ||
+            ((vb->timer_ticks & 15) == 0)) {
+            vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
         }
     } else if (vb->delay_timer > 0) {
         vb->delay_timer--;

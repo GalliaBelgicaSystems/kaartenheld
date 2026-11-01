@@ -1,0 +1,131 @@
+{
+ "name": "game_over_reboot",
+ "test": true,
+ "description": "After a normal death, game-over NO shows the silent try-again Thanks screen; riding out its ~5 s hold reboots cleanly into a fresh overworld (fresh TEST_FIELD state, full HP, scene track back, no stuck defeat/actor state).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 40
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  },
+  {
+   "type": "wait",
+   "frames": 250
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "music_track",
+   "expected": "FOREST"
+  },
+  {
+   "type": "party_hp",
+   "expected": 15
+  },
+  {
+   "type": "stack_margin_min",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 9,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4000,
+  "party": {
+   "HERO": {
+    "hp": 2
+   }
+  }
+ }
+}

@@ -27,6 +27,19 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Slime-lord desperation outro (unwinnable final battle, game-owned flow):
+ * immediate cut to the wake grove with the "Where am I?" dialogue, then
+ * THANKS (via the dialogue close).  Called by the shared battle screen's
+ * defeat exit when g_slime_despair is set; the flag stays set for the
+ * dialogue close and battle_start clears it for the next fight.  Reads
+ * the single global Game directly (no parameter) so the caller's frame
+ * stays lean (fixed _CODE budget + stack budget, AGENTS.md 52.18/52.24).
+ * Lives here (not inline in battle_screen_update) so that function keeps
+ * its frame.  scene_load clears the encounter via world_load_map and
+ * replays the scene track, so no world_on_battle_end / music call is
+ * needed. */
+void game_slime_despair_outro(void);
+
 /* Per-frame tutorial tick for Carl's spar: stages each coaching dialogue
  * box once (attack, defend, poker, flee, then one looping jeer per
  * player attack) for game_update's post-tick opener.  Called at the top
@@ -38,6 +51,15 @@ bool game_carl_tutorial_update(Game *g);
  * profile + roll body and returns the derived CardId (always drops).
  * Uses the isolated loot RNG only -- never consumes the shared stream. */
 uint8_t game_loot_drop(uint8_t battle_type);
+
+/* Unwinnable-boss desperation check (src/game/despair_banked.c, ROM
+ * bank 8): re-derives the engine's g_despair_slot cache from the game
+ * battle table, floors the boss HP at 1, stages the banner + message
+ * strings into the engine WRAM buffers, sets g_slime_despair and
+ * reports 1 in g_bk_byte_c on trigger (0 otherwise).  The engine
+ * dispatches this after every damage source (attack tail, per-frame
+ * battle_update) and opens the DESPAIR hold itself. */
+void game_despair_check_banked(void);
 
 /* Banked body (bank 4): loads the active battle screen's HUD layout from
  * g_battle_screens into WRAM g_battle_hud.  Called via banked_call_run(). */

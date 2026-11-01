@@ -218,6 +218,9 @@ def main():
         "_game_loot_drop_banked": "victory drop roll (bank 9)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",
         "_battle_nav_banked": "battle hand/target nav cluster (bank 4)",
+        "_battle_turn_draw_banked": "battle hand-refill decision (bank 4)",
+        "_battle_stage_combo_banked": "battle combo stager (bank 4)",
+        "_game_despair_check_banked": "desperation gate + HP floor (bank 8)",
         "_title_content_render": "title screen render (bank 4)",
         "_tutorial_content_render": "tutorial screen render (bank 4)",
         "_thanks_content_render": "thanks screen render (bank 4)",
@@ -287,6 +290,7 @@ def main():
     # gate runs against both build/kaartenheld_debug.map and
     # build/kaartenheld.map.
     optional_banked_targets = {
+        "_telemetry_emit_banked": "telemetry ring emit (bank 2, debug only)",
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",
         "_debug_action_leaf_banked": "debug-action leaf cases (bank 5)",

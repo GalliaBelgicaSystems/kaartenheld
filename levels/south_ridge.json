@@ -825,7 +825,8 @@
         "max_hp": 15,
         "gold_reward": 12,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "actor_id": 73
+        "actor_id": 73,
+        "solo": true
       }
     },
     {
@@ -852,7 +853,8 @@
         "max_hp": 15,
         "gold_reward": 12,
         "reward_currency": "CURRENCY_ID_GOLD",
-        "actor_id": 74
+        "actor_id": 74,
+        "solo": true
       }
     }
   ],

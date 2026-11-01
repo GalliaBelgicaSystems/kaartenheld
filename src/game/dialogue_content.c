@@ -265,6 +265,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_STRANGE_WAKE,
+        "",
+        2,
+        {"Where am I?", "What happened?"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_TUTORIAL_CARL_ATTACK,
         "CARL:",
         4,

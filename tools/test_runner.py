@@ -30,7 +30,7 @@ VALID_ASSERTION_TYPES = {
     "battle_energy", "battle_draw_remaining", "battle_discard_count",
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
-    "screen_row", "screen_row_not_contains", "vram_row", "actor_at",
+    "screen_row", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
     "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
@@ -132,6 +132,19 @@ def validate_scenario(data, filepath):
             actor = act.get("actor")
             if actor and actor not in VALID_ENTITY_IDS:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown interact actor '{actor}'. Valid entities: {sorted(list(VALID_ENTITY_IDS))}")
+        # set_deck only forwards type/value/ring to the ROM (cost, uses,
+        # status and chance are silently dropped -- the ROM pins cost = 1,
+        # uses = 0xFF, no rider).  Fail loudly so a scenario that stages
+        # those keys cannot pass while testing different cards than staged.
+        if act.get("type") == "set_deck":
+            for spec in act.get("cards", []):
+                dropped = [k for k in ("cost", "uses", "status", "chance")
+                           if k in spec]
+                if dropped:
+                    raise ValueError(
+                        f"SCENARIO ERROR in {filepath}: set_deck card "
+                        f"{spec} stages unsupported keys {dropped} "
+                        f"(only type/value/ring reach the ROM).")
 
     for a in data.get("assertions", []):
         a_type = a.get("type")
@@ -302,6 +315,33 @@ def run_scenario(scenario):
                 # an absolute GB address (save slot N base = 0xA000 +
                 # N*0x400; version byte at base+2).
                 session.write_mem(act.get("addr", 0), act.get("value", 0))
+            elif act_type == "set_hand":
+                # Stage a whole opening hand in one action.  `cards` is an
+                # ordered list of up to 5 specs: {type, value, cost, uses,
+                # status?, chance?, ring?}.  Applies the same ROM debug
+                # actions as set_hand_card / set_hand_card_meta (plus the
+                # optional rider ones), so the staged cards are ordinary
+                # mechanic state and assertions still read the real hand.
+                # Battle start shuffles the draw pile, so scenarios that
+                # assert specific card slots pin them here instead of
+                # trusting the dealt order.
+                for hand_idx, spec in enumerate(act.get("cards", [])[:5]):
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD,
+                                         hand_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD_META,
+                                         hand_idx,
+                                         spec.get("cost", 1) & 0xFF,
+                                         spec.get("uses", 0xFF) & 0xFF)
+                    if "status" in spec:
+                        session.debug_action(session.DBG_ACT_SET_HAND_CARD_STATUS,
+                                             hand_idx,
+                                             int(spec["status"]) & 0xFF,
+                                             int(spec.get("chance", 255)) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_HAND_RING,
+                                             hand_idx, 0, 0)
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by
@@ -321,6 +361,28 @@ def run_scenario(scenario):
                                      act.get("index", 0) & 0xFF,
                                      act.get("cost", 1) & 0xFF,
                                      act.get("uses", 0xFF) & 0xFF)
+            elif act_type == "set_deck":
+                # Stage the battle's UNDRAWN draw pile (the scripted-order
+                # counterpart to set_hand).  Battle start shuffles the pile,
+                # so scenarios that choreograph a specific draw/refill order
+                # restage it here: `cards` is the pile from the next card
+                # drawn onwards, `draw_idx` defaults to 0.  Only
+                # type/value/ring reach the ROM (cost, uses, status and
+                # chance are pinned by the debug action and rejected by
+                # validate_scenario) -- same ROM debug state writes as
+                # set_hand, no test-only gameplay path.
+                deck_cards = act.get("cards", [])[:20]
+                for deck_idx, spec in enumerate(deck_cards):
+                    session.debug_action(session.DBG_ACT_SET_DECK_CARD,
+                                         deck_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_DECK_RING,
+                                             deck_idx, 0, 0)
+                session.debug_action(session.DBG_ACT_SET_DECK_STATE,
+                                     len(deck_cards),
+                                     act.get("draw_idx", 0) & 0xFF, 0)
             elif act_type == "set_enemy_hp":
                 # Pin an enemy combatant's current HP in the active battle
                 # (scenario setup: deterministic fight lengths).
@@ -732,6 +794,17 @@ def run_scenario(scenario):
             expected = f"VRAM row {row_idx} contains '{contains_str}'"
             actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
             passed = contains_str in actual_row
+            actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
+
+        elif a_type == "vram_row_not_contains":
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"vram_row_not_contains assertion row {row_idx} requires 'contains'")
+            expected = f"VRAM row {row_idx} does not contain '{contains_str}'"
+            actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
+            passed = contains_str not in actual_row
             actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
 
         elif a_type == "screen_row_not_contains":

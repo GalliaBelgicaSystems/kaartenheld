@@ -44,6 +44,16 @@
    "frames": 20
   },
   {
+   "type": "set_hand",
+   "cards": [
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
+   ]
+  },
+  {
    "type": "press",
    "button": "A"
   },

@@ -70,6 +70,10 @@ void deck_init_default_banked(void)
             d->cards[i].ring = 0;
         }
     }
+
+    /* Same bank: shuffle the fixed-order fallback so the opening hand of
+     * a deck-less battle varies like every other fight. */
+    deck_shuffle_pile(d);
 }
 
 /* deck_reshuffle_banked and its card_copy/swap helpers used to live here;

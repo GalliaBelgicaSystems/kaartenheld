@@ -364,9 +364,10 @@ Deck rules (`src/rpg/deck.h`):
 
 A new game grants this 10-card deck (`content.c`, from `screens/hero.json`):
 **4× Wood Sword (`SW1`), 4× Wooden Shield (`SH1`), 2× Fire Sword
-(`SW3`)**.  The opening hand is always `SW SW SH SH SW` (the first
-five copies are the two swords, two shields and a fire sword; the extras
-only deepen the draw pile).
+(`SW3`)**.  Battle start shuffles the draw pile (`deck_shuffle_pile`, a
+seeded Fisher-Yates through the game RNG), so a fight opens with a random
+five of the ten cards: the DECK-menu order is not the deal order.  Enemy
+decks keep their authored order (readable telegraphs).
 
 ---
 
@@ -886,7 +887,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 ## 13. Reference: quick numbers
 
-* Hero: HP 15, gold 20, deck 10, opening hand `SW SW SH SH SW`.
+* Hero: HP 15, gold 20, deck 10, opening hand = a random 5 of that 10 (shuffled per battle).
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
 * Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.

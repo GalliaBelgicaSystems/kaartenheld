@@ -177,6 +177,19 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_ALL_DEAD:
         g_bk_byte_c = 0;
+        /* Unkillable desperation boss (game-owned table, slot cached in
+         * WRAM by the bank-8 check body, 0xFF when no such battle): clamp
+         * any lethal blow back to 1 HP on every liveness check, so
+         * counter and poison-tick kills can never sneak past the attack
+         * path's trigger into a victory.  The engine names no game ids
+         * here (AGENTS.md 55.1); the same floor runs in the check body
+         * itself.  Pure WRAM writes (staging discipline: the fixed
+         * wrappers own telemetry), roomy bank 4. */
+        if (g_despair_slot != 0xFF && g_despair_slot < b->enemy_count) {
+            if (b->enemies[g_despair_slot].hp == 0) {
+                b->enemies[g_despair_slot].hp = 1;
+            }
+        }
         {
             uint8_t i;
             for (i = 0; i < b->enemy_count; i++) {
