@@ -1470,11 +1470,14 @@ void ui_update_battle_banked(void)
                 battle_draw_text_line(0, 9, "THE LORD OF SLIMES", 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else {
+                /* Full-width clear (20, not 12): the despair line is 18
+                 * columns and a short clear would strand its tail on the
+                 * result screen. */
                 battle_draw_text_line(0, 9,
                     (battle->msg_id == 1) ? "NO ENERGY!" :
                     (battle->msg_id == 2) ? "OUT OF USES!" :
-                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
-                battle_color_span(0, 9, 12, UI_COLOR_FIELD);
+                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 20);
+                battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
         }
     }

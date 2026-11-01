@@ -132,6 +132,19 @@ def validate_scenario(data, filepath):
             actor = act.get("actor")
             if actor and actor not in VALID_ENTITY_IDS:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown interact actor '{actor}'. Valid entities: {sorted(list(VALID_ENTITY_IDS))}")
+        # set_deck only forwards type/value/ring to the ROM (cost, uses,
+        # status and chance are silently dropped -- the ROM pins cost = 1,
+        # uses = 0xFF, no rider).  Fail loudly so a scenario that stages
+        # those keys cannot pass while testing different cards than staged.
+        if act.get("type") == "set_deck":
+            for spec in act.get("cards", []):
+                dropped = [k for k in ("cost", "uses", "status", "chance")
+                           if k in spec]
+                if dropped:
+                    raise ValueError(
+                        f"SCENARIO ERROR in {filepath}: set_deck card "
+                        f"{spec} stages unsupported keys {dropped} "
+                        f"(only type/value/ring reach the ROM).")
 
     for a in data.get("assertions", []):
         a_type = a.get("type")
@@ -353,8 +366,11 @@ def run_scenario(scenario):
                 # counterpart to set_hand).  Battle start shuffles the pile,
                 # so scenarios that choreograph a specific draw/refill order
                 # restage it here: `cards` is the pile from the next card
-                # drawn onwards, `draw_idx` defaults to 0.  Same ROM debug
-                # state writes as set_hand -- no test-only gameplay path.
+                # drawn onwards, `draw_idx` defaults to 0.  Only
+                # type/value/ring reach the ROM (cost, uses, status and
+                # chance are pinned by the debug action and rejected by
+                # validate_scenario) -- same ROM debug state writes as
+                # set_hand, no test-only gameplay path.
                 deck_cards = act.get("cards", [])[:20]
                 for deck_idx, spec in enumerate(deck_cards):
                     session.debug_action(session.DBG_ACT_SET_DECK_CARD,

@@ -222,8 +222,8 @@
           "INTERACTABLE"
         ],
         "visual": "L",
-        "hp": 99,
-        "max_hp": 99,
+        "hp": 70,
+        "max_hp": 70,
         "gold_reward": 50,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_NONE",
