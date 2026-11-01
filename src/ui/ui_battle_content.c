@@ -548,7 +548,8 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
 {
     uint8_t k, x;
     const Combatant *e;
-    bool blink_name = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND) &&
+    bool blink_name = (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+                       battle->phase == BATTLE_PHASE_SLIME_DESPAIR) &&
                       (((battle->timer_ticks >> 4) & 1) == 0);
     /* Staged rows/cols (WRAM copy of the active BattleScreenDef).  Row 2
      * (the former enemy-name row) is blank: enemy identity moved to the
@@ -985,6 +986,16 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         g_ui_screen_buf[combo_row][r] = '\0';
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
+    /* Desperation telegraph (unwinnable final boss): the combo line
+     * carries the sentence's second half ("IS CONCENTRATING..."; row 9
+     * shows the first half while the hold lasts).  Drawn unconditionally
+     * like the clear above, so no skip-guard can leave a stale row. */
+    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        battle_draw_text_line(0, combo_row, "IS CONCENTRATING...", 19);
+        battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
+        battle_draw_text_line(19, combo_row, NULL, 1);
+        return;
+    }
     /* Enemy forecast owns the row while a strike is incoming (defend
      * phase, telegraphed damage): "DMG <n>" red on the left, "DEF <m>"
      * green on the right (warn text paints its own spans). */
@@ -1286,6 +1297,11 @@ static const char *battle_banner_text(const volatile Battle *battle)
     if (battle->result == BATTLE_RESULT_DEFEAT) return "DEFEATED!";
     if (battle->result == BATTLE_RESULT_FLED) return "FLED!";
 
+    /* Desperation telegraph (unwinnable final boss): the row 9+10 pair
+     * carries the sentence ("THE LORD OF SLIMES" / "IS CONCENTRATING..."),
+     * so the banner just names the threat. */
+    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) return "L.OF SLIMES FOCUSING";
+
     if (battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
         /* Live target: follows UP/DOWN cycling (BATTLE_DIRTY_BANNER set
          * by the banked nav body on every target move). */
@@ -1444,12 +1460,22 @@ void ui_update_battle_banked(void)
         } else {
             /* Transient gameplay messages live on row 9 (below the
              * DECK/AP line, above the COMBO row): rows 11-14 are the
-             * card boxes now. */
-            battle_draw_text_line(0, 9,
-                (battle->msg_id == 1) ? "NO ENERGY!" :
-                (battle->msg_id == 2) ? "OUT OF USES!" :
-                (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
-            battle_color_span(0, 9, 12, UI_COLOR_FIELD);
+             * card boxes now.  msg_id 10 is the slime-lord desperation
+             * telegraph ("THE LORD OF SLIMES", completed on row 10 by
+             * the combo painter): keyed on the DESPAIR phase too, so
+             * the line cannot linger past the hold (the defeat result
+             * repaints with the same dirty bit). */
+            if (battle->msg_id == 10 &&
+                battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+                battle_draw_text_line(0, 9, "THE LORD OF SLIMES", 18);
+                battle_color_span(0, 9, 18, UI_COLOR_FIELD);
+            } else {
+                battle_draw_text_line(0, 9,
+                    (battle->msg_id == 1) ? "NO ENERGY!" :
+                    (battle->msg_id == 2) ? "OUT OF USES!" :
+                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 12);
+                battle_color_span(0, 9, 12, UI_COLOR_FIELD);
+            }
         }
     }
     /* Per-card rider icons (same bank, plain call -- no dispatch).

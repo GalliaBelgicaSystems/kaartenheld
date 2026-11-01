@@ -50,8 +50,15 @@ typedef enum {
     BATTLE_PHASE_PLAYER_DEFEND = 3,    /* Player selecting shield defense cards */
     BATTLE_PHASE_DEFENSE_RESOLVE = 4,  /* Resolving defense & damage taken */
     BATTLE_PHASE_RESULT = 5,           /* Victory / Defeat / Fled */
-    BATTLE_PHASE_SHUFFLE = 6           /* Deck exhausted: reshuffling consumes
+    BATTLE_PHASE_SHUFFLE = 6,          /* Deck exhausted: reshuffling consumes
                                         * the player's action (enemy still acts) */
+    BATTLE_PHASE_SLIME_DESPAIR = 7     /* Lord of Slimes desperation telegraph:
+                                        * unwinnable final-boss hold.  The boss
+                                        * flashes (shared telegraph blink),
+                                        * rows 9+10 announce the focus, and
+                                        * the phase waits for A: it never
+                                        * auto-advances (the timer re-arms
+                                        * on expiry) and no other input acts. */
 } BattlePhase;
 
 /* BattleTurn enum preserved for telemetry & backward compatibility */
@@ -210,10 +217,14 @@ bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);
 void battle_card_undo_banked(void);
+/* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
+ * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
+void battle_turn_draw_banked(void);
 /* Slime-lord desperation check+apply (src/battle/battle_despair_banked.c,
  * ROM bank 8): reads g_game.battle directly, reports via g_bk_byte_c. */
 void battle_despair_banked(void);
 void battle_execute_combo(Battle *b);
+void battle_set_result(Battle *b, uint8_t res);
 void battle_update(Battle *b);
 bool battle_is_card_selected(const Battle *b, uint8_t hand_idx);
 void battle_defend_resolve(Battle *b);

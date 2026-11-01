@@ -122,6 +122,17 @@ void battle_screen_update(Game *g)
         } else if (input_pressed(INPUT_SELECT)) {
             battle_execute_combo((Battle *)&vg->battle);
         }
+    } else if (vg->battle.phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        /* The telegraph waits for A: the 99-damage reprisal lands here
+         * (not at trigger time), then the normal defeat exit routes the
+         * outro.  All other buttons are ignored while he focuses.  No
+         * explicit return: the defeat result makes battle_update return
+         * at once, otherwise it keeps ticking the flash cadence below. */
+        if (input_pressed(INPUT_A)) {
+            combatant_take_damage(&vg->battle.player, 99);
+            telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
+            battle_set_result((Battle *)&vg->battle, BATTLE_RESULT_DEFEAT);
+        }
     }
 
     battle_update((Battle *)&vg->battle);

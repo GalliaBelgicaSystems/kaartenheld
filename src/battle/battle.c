@@ -532,31 +532,19 @@ static uint8_t battle_defend_counter(Battle *b)
  * (pile + hand + discard == total deck size minus exiled spent cards, and
  * the reshuffle preserves the undrawn remainder), so an empty discard
  * pile implies the pile covers every open slot.  The only dry-pile loop
- * entry is the fully-dry case handled by the early return above. */
+ * entry is the fully-dry case handled by the early return above.
+ *
+ * Thin fixed-bank wrapper: the decision body lives in ROM bank 4
+ * (src/battle/battle_turn_draw_banked.c), dispatched via the WRAM
+ * trampoline; the boolean result returns in g_bk_byte_c.  Moved out of
+ * the fixed bank which sits hard against 0x8000 (AGENTS.md 52.18). */
 static bool battle_turn_draw(Battle *b)
 {
-    uint8_t i, need = 0;
-    for (i = 0; i < BATTLE_HAND_SIZE; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) need++;
-    }
-    if (need == 0) return true;
-    if (b->deck.draw_idx >= b->deck.count) {
-        return (b->deck.discard_count == 0);
-    }
-    /* Partial cover plus a non-empty discard: deal nothing so the caller
-     * reshuffles first (see header comment).  Additive form keeps the
-     * 8-bit compare cheap (draw_idx + need cannot wrap: both are tiny). */
-    if (b->deck.discard_count != 0 &&
-        (uint8_t)(b->deck.draw_idx + need) > b->deck.count) {
-        return false;
-    }
-    for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) {
-            deck_draw(&b->deck, &b->hand[i]);
-            need--;
-        }
-    }
-    return true;
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
+    return g_bk_byte_c != 0;
 }
 
 /* Evaluate the pending selection AND resolve its effect in one banked
@@ -708,14 +696,21 @@ void battle_execute_combo(Battle *b)
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
         /* Lord of Slimes desperation (unwinnable final battle): the
-         * check+apply lives in the bank-8 body (fixed _HOME budget,
-         * AGENTS.md 52.18); this only owns the observable tail. */
+         * check lives in the bank-8 body (fixed _HOME budget,
+         * AGENTS.md 52.18); a trigger opens the telegraph hold below
+         * instead of ending the fight at once. */
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&battle_despair_banked;
         banked_call_run();
         if (g_bk_byte_c != 0) {
-            telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
-            battle_set_result(b, BATTLE_RESULT_DEFEAT);
+            /* Telegraph hold: the boss flashes (shared telegraph blink,
+             * re-armed below), rows 9+10 announce the focus, and the
+             * phase waits for A (never auto-advances).  The 99-damage
+             * reprisal lands on the A press, not here. */
+            b->phase = BATTLE_PHASE_SLIME_DESPAIR;
+            b->msg_id = 10;
+            b->msg_ttl = 0;
+            b->dirty = BATTLE_DIRTY_ALL;
         } else {
 #ifdef DEBUG_BUILD
             if (b->enemies[b->target_idx].hp == 0) {
@@ -870,6 +865,21 @@ void battle_update(Battle *b)
             }
         } else {
             battle_execute_combo(b);
+        }
+    } else if (vb->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        /* Telegraph hold: the battle clock keeps running as the flash
+         * cadence (the stamper blinks on the timer edges, same as the
+         * defend telegraph) and re-arms silently on expiry instead of
+         * auto-advancing -- only A continues (below).  The message never
+         * expires (ttl 0 skips the SELECT/DEFEND tick above). */
+        if (vb->timer_ticks > 0) {
+            vb->timer_ticks--;
+        } else {
+            vb->timer_ticks = BATTLE_TIMER_MAX_FRAMES;
+        }
+        if (((vb->timer_ticks & 15) == 15) ||
+            ((vb->timer_ticks & 15) == 0)) {
+            vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
         }
     } else if (vb->delay_timer > 0) {
         vb->delay_timer--;
