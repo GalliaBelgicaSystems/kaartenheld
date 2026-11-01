@@ -9,6 +9,11 @@
  * restore). */
 extern volatile uint8_t g_jingle_frames;
 
+/* Victory-fanfare stop clock (same bank-8 BSS, jingle_full_banked.c):
+ * counted here while the fanfare owns the track, so the stop lands in
+ * the song's silent tail instead of drifting with frame pacing. */
+extern volatile uint8_t g_victory_frames;
+
 /* Driver state (WRAM globals, not static: the bank-7 mimic intro -> loop
  * body (mimic_chain.c) runs in the timer ISR and must touch these
  * directly.
@@ -117,6 +122,8 @@ void huge_music_update(void)
          * restore cannot drift against the song it times. */
         if (g_audio_current_track == MUSIC_CHEST) {
             ++g_jingle_frames;
+        } else if (g_audio_current_track == MUSIC_VICTORY) {
+            ++g_victory_frames;
         }
         /* No restore here: audio_update's tail re-establishes the live
          * bank once for the whole ISR (same contract as the ISR mute). */
