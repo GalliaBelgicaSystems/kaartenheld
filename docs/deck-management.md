@@ -28,10 +28,12 @@ field cache — a chest east of Carl on the field (`EVENT_ID_FIELD_CHEST`,
 one-shot via `STORY_FLAG_ID_FIELD_CHEST`, announced by its own reward
 speech that also grants +1 AP).
 
-The deck is inserted in deal order SW SW SH SH SW first, then the extras, so
-the opening battle hand is `SW1 SW1 SH1 SH1 SW3` and the draw pile starts at
-5. The original five-card grant was enlarged so a fresh file can actually
-cycle its deck (draw → discard → reshuffle) without shopping first.
+The deck is inserted in deal order SW SW SH SH SW first, then the extras.
+Battle start shuffles the battle copy of the pile (`deck_shuffle_pile`), so
+the opening hand is a random five of those ten and the authored order only
+decides the DECK-menu listing. The original five-card grant was enlarged so
+a fresh file can actually cycle its deck (draw → discard → reshuffle)
+without shopping first.
 
 Consequences:
 
@@ -39,8 +41,8 @@ Consequences:
   (`deck_init_default_banked` in `src/battle/deck_init.c`) remains only as
   a safety net for empty/legacy state and unpacks the same generated
   `g_hero_starter_deck` table through the card catalog, so it always
-  mirrors the granted set byte-for-byte (including the first-five deal
-  order).
+  mirrors the granted set byte-for-byte (same ten cards, same authored
+  order) before the same battle-start shuffle runs.
 - Healing is **not** free at the start. The only guaranteed heal source is
   the shop's IRON RING card — **RG4** (power 4, `uses_per_battle` 3,
   price 20g).  Buy it, then add it to the deck from the DECK menu.
