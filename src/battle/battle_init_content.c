@@ -121,4 +121,9 @@ void battle_init_deck_banked(void)
             b->deck.cards[i].ring = 0;
         }
     }
+
+    /* Shuffle the draw pile before battle_start deals the hand: the
+     * persistent order is the DECK-menu order, so dealing from index 0
+     * would open every fight with the same hand.  Same bank, direct call. */
+    deck_shuffle_pile(&b->deck);
 }

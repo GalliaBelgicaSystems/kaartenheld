@@ -1,0 +1,82 @@
+{
+ "name": "battle_start_shuffle",
+ "test": true,
+ "description": "Battle start shuffles the draw pile: Carl's spar deals a random five from the 10-card starter deck instead of the persistent DECK-menu order, so the opening hand is NOT 'SW1 SW1 SH1 SH1 SW3' (fails on the pre-shuffle ROM, where the deal was always the first five entries). The pile still holds the other five cards",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 5
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 13,
+   "contains": "SW1 SW1 SH1 SH1 SW3"
+  }
+ ]
+}

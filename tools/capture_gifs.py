@@ -5,7 +5,9 @@ Produces four headless PyBoy recordings of the RELEASE ROM, assembled to GIF
 with Pillow:
 
   screenshots/boot.gif       Gallia Belgica splash -> Kaartenheld title
-  screenshots/battle.gif     kobold trio: TWO PAIR combo selection + attack
+  screenshots/battle.gif     kobold trio: combo selection + attack
+                             (the hand is whatever battle start deals from
+                             the shuffled pile, not a fixed opening hand)
   screenshots/overworld.gif  Field -> forest gate -> wander to the chest
   screenshots/boss.gif       Lord of Slimes: glowing eyes blink in battle
 
@@ -24,7 +26,8 @@ sys.path.insert(0, os.path.join(REPO, "tools"))
 from PIL import Image  # noqa: E402
 from walkthrough.session import Session, ROM  # noqa: E402
 from walkthrough.route import Planner  # noqa: E402
-from walkthrough.state_reader import SymTable, BT_SWORD, BT_SHIELD  # noqa: E402
+from walkthrough.state_reader import (SymTable, BT_SWORD, BT_SHIELD,  # noqa: E402
+                                      OFF_VARIABLES, VARIABLE_ID_ENERGY_POOL)
 from walkthrough import walks as W  # noqa: E402
 
 SCALE = 3
@@ -101,8 +104,20 @@ def capture_boot():
     return frames
 
 
+def stage_energy_pool(s, amount=5):
+    """Capture-only AP poke (god_mode precedent): a fresh file starts with
+    1 AP (VARIABLE_ID_ENERGY_POOL, src/game/content.c), which stages a
+    single card -- not enough to show a combo, which is the point of the
+    battle clip.  Raise the pool before the fight so battle_start opens the
+    hand with energy for every card.  Never a gameplay claim: the walkthrough
+    and scenarios assert the real 1-2 AP economy."""
+    base = s.reader.state + OFF_VARIABLES + 2 * (VARIABLE_ID_ENERGY_POOL - 1)
+    s.pb.memory[base] = amount
+    s.pb.memory[base + 1] = 0
+
+
 def capture_battle():
-    """Kobold trio: select a TWO PAIR hand, then execute the attack."""
+    """Kobold trio: select the combo the dealt hand offers, then attack."""
     checks = []
     planner = Planner()
     s = Session(checks, "gif-battle")
@@ -112,6 +127,7 @@ def capture_battle():
         # fight.  The kobold lives in the forest now (the field is
         # Carl's solo spar); walk the walk-c gate first, then engage.
         W.god_mode(s)
+        stage_energy_pool(s)
         field = W._level("field")
         spawn = W._boot_to_field(s, planner)
         forest = W._level("forest")
@@ -123,7 +139,16 @@ def capture_battle():
                       if (o.get("properties") or {}).get("entity_id")
                       == "ENTITY_ID_KOBOLD")
         kxy = (kobold["position"]["x"], kobold["position"]["y"])
-        if not W.engage_hostile(s, planner, "forest", kxy):
+        # Walk toward the kobold one press at a time and stop the instant it
+        # engages: W.engage_hostile() routes with _walk_path, which resolves a
+        # transit ambush itself (auto-win), leaving nothing to record.
+        engaged = False
+        for _ in range(14):
+            if s.text_has("DECK:"):
+                engaged = True
+                break
+            s.press("left" if s.pos()[0] > kxy[0] else "right", settle=24)
+        if not engaged:
             raise SystemExit("kobold battle did not engage")
         # Settle into the player select phase (TARGET banner).
         s.wait_for(lambda: s.text_has("TARGET ")
@@ -140,10 +165,14 @@ def capture_battle():
 
         s.tick = cap_tick
 
-        # Opening hand is SW SW SH SH SW: selecting every sword + shield
-        # yields TWO PAIR (3,3 / 2,2 + kicker).
-        W._select_cards(s, (BT_SWORD, BT_SHIELD))
-        s.tick(120)                     # hold on the formed TWO PAIR
+        # The opening hand is a random five of the starter deck, so select
+        # every sword + shield the deal contains: with only three distinct
+        # (type, value) cards in the starter deck, five cards always hold a
+        # duplicate, so some combo always forms whichever five are dealt.
+        hand = s.reader.battle_hand()[:5]
+        picked = W._select_cards(s, (BT_SWORD, BT_SHIELD))
+        print("  battle.gif: dealt %s, selected %d card(s)" % (hand, picked))
+        s.tick(120)                     # hold on the formed combo
         s.press("select", settle=20)    # execute the attack
         # Capture the attack resolution only; stop before the enemy
         # telegraph / defend phase so the GIF ends on the hit.
@@ -220,8 +249,15 @@ def capture_boss():
         # into the throne room early).
         castle_arrival = planner.arrival_pos("castle") or spawn
         W.follow(s, planner, "field", field_entry, "castle", castle_arrival)
-        # Cross into the throne room and stop south of the boss at (10,7).
-        W.follow(s, planner, "castle", s.pos(), "throne_room", (10, 8))
+        # Cross into the throne room and stop one tile south of the boss
+        # (position from the level JSON, so it follows content moves).
+        throne = W._level("throne_room")
+        lord = next(o for o in throne["objects"]
+                    if (o.get("properties") or {}).get("entity_id")
+                    == "ENTITY_ID_SLIME_LORD")
+        lxy = (lord["position"]["x"], lord["position"]["y"])
+        W.follow(s, planner, "castle", s.pos(), "throne_room",
+                 (lxy[0], lxy[1] + 1))
         throne_id = planner.scenes["throne_room"].scene_id
         s.settle_scene(expected_scene=throne_id)
         if not s.text_has("DECK:"):

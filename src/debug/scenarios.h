@@ -34,7 +34,13 @@ enum {
     DBG_ACT_SET_HAND_CARD_STATUS = 17,
     DBG_ACT_SET_ENEMY_HP = 18,
     DBG_ACT_APPLY_STATUS = 19,
-    DBG_ACT_SET_HAND_RING = 20
+    DBG_ACT_SET_HAND_RING = 20,
+    /* Battle draw-pile staging (below-battle shuffle era): scenarios that
+     * choreograph a specific draw/refill order restore the pile after
+     * battle start has shuffled it. */
+    DBG_ACT_SET_DECK_CARD = 21,
+    DBG_ACT_SET_DECK_STATE = 22,
+    DBG_ACT_SET_DECK_RING = 23
 };
 
 #endif /* SCENARIOS_H */

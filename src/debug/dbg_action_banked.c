@@ -99,6 +99,48 @@ void debug_action_leaf_banked(void)
                 g_game.battle.hand[a0].uses_remaining = a2;
             }
             break;
+        case DBG_ACT_SET_DECK_CARD:
+            /* Stage one card of the battle draw pile: a0 = pile index,
+             * a1 = BattleCardType, a2 = value.  Battle start now shuffles
+             * the pile, so scenarios that choreograph a draw/refill order
+             * restage the pile they want (same state-write semantics as
+             * SET_HAND_CARD: no telemetry, effect derived from the type). */
+            if (a0 < MAX_DECK_SIZE) {
+                uint8_t t = (uint8_t)((uint16_t)a1 & 0xFF);
+                uint8_t fx = CARD_EFFECT_DAMAGE_TARGET;
+                if (t == BATTLE_CARD_TYPE_SHIELD) {
+                    fx = CARD_EFFECT_BLOCK_DAMAGE;
+                } else if (t == BATTLE_CARD_TYPE_HEAL) {
+                    fx = CARD_EFFECT_HEAL_HP;
+                }
+                g_game.battle.deck.cards[a0].type = (BattleCardType)t;
+                g_game.battle.deck.cards[a0].value = a2;
+                g_game.battle.deck.cards[a0].uses_remaining = 0xFF;
+                g_game.battle.deck.cards[a0].cost = 1;
+                g_game.battle.deck.cards[a0].effect = fx;
+                g_game.battle.deck.cards[a0].status_id = STATUS_NONE;
+                g_game.battle.deck.cards[a0].status_chance = 0;
+                g_game.battle.deck.cards[a0].ring = 0;
+            }
+            break;
+
+        case DBG_ACT_SET_DECK_RING:
+            /* Loot-RING flag on a staged pile card (docs/loot.md §34.3). */
+            if (a0 < MAX_DECK_SIZE) {
+                g_game.battle.deck.cards[a0].ring = 1;
+            }
+            break;
+
+        case DBG_ACT_SET_DECK_STATE:
+            /* Pile size + draw cursor: a0 = count, a1 = draw_idx.  The
+             * staged cards[0..count) are the UNDRAWN pile, so draw_idx
+             * 0 with count N means "the next N draws are exactly these". */
+            if (a0 <= MAX_DECK_SIZE) {
+                g_game.battle.deck.count = a0;
+                g_game.battle.deck.draw_idx = (a1 < a0) ? a1 : 0;
+            }
+            break;
+
         case DBG_ACT_SET_FILTER:
             g_game.item_menu_filter = a0;
             g_game.render_cache.valid = false;

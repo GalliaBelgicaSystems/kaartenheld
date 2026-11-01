@@ -37,6 +37,13 @@ void deck_reshuffle(Deck *d);
 /* Banked no-arg body (ROM bank 7) dispatched by deck_reshuffle(). */
 void deck_reshuffle_banked(void);
 
+/* Fisher-Yates the draw pile through g_rng_state, leaving draw_idx at 0
+ * (discard untouched).  Each battle-deck builder calls this once, at the
+ * end, so a fight deals a random hand instead of the persistent deck
+ * order (which is the DECK-menu order).  Bank-2 body; both callers live
+ * in bank 2, so no fixed-bank wrapper is needed. */
+void deck_shuffle_pile(Deck *d);
+
 /* Add a card to the discard pile. */
 void deck_discard(Deck *d, const Card *c);
 
