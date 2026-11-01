@@ -1,7 +1,7 @@
 {
  "name": "alert_music_resume",
  "test": true,
- "description": "Held track resumes after the alert sting: 130 frames after entering TEST_FOREST (kobold pursuers, sting at ~30 f) the forest track plays again.",
+ "description": "Held track resumes after the alert sting: 130 frames after the TEST_FOREST kobold spots the hero (pursuers, sting at ~30 f) the forest track plays again.",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {

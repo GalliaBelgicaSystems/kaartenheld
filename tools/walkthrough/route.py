@@ -55,9 +55,10 @@ def patrol_cells(ai, x, y):
     if ai == AI_PATROL_CIRCLE:
         return {(dx, dy) for dx in (x - 1, x) for dy in (y - 1, y)}
     if ai == AI_CHASE or ai == AI_CHASE_FAST:
-        # Chasers close on the player from anywhere: block a generous
-        # halo so routes keep their distance (FAST covers more ground
-        # per tick, so it shares the same halo).
+        # Chasers sleep until the player comes within their line of sight
+        # (AI_CHASE_SIGHT = 10 tiles, actor.h) and then close in: block a
+        # generous halo so routes keep their distance (FAST covers more
+        # ground per tick, so it shares the same halo).
         return {(dx, dy) for dx in range(x - 2, x + 3)
                 for dy in range(y - 2, y + 3)}
     return {(x, y)}
@@ -174,10 +175,11 @@ class Scene:
 
     def chase_cells(self):
         """Union of chase-halo cells (AI_CHASE / AI_CHASE_FAST hostiles).
-        Chasers converge on the player by design (the whole scene is the
-        zone), so no static routing can avoid them on a sealed corridor;
-        the planner may route through these cells as a last resort and
-        let the walk fight through (transit ambush machinery)."""
+        Chasers wake once the player is within their line of sight
+        (AI_CHASE_SIGHT tiles) and then converge, so no static routing can
+        avoid them on a sealed corridor; the planner may route through
+        these cells as a last resort and let the walk fight through
+        (transit ambush machinery)."""
         cells = set()
         for x, y, ai in self.hostiles:
             if ai in (AI_CHASE, AI_CHASE_FAST):

@@ -1,7 +1,7 @@
 {
  "name": "alert_mark_hidden_before_sting",
  "test": true,
- "description": "The pursuer ! bubble debuts WITH the alert sting, never at entry: 10 frames after entering TEST_FOREST (kobold pursuers, sting at ~30 f) the track is already held (NONE) but entry 30 is still hidden (tile 0).",
+ "description": "The pursuer ! bubble debuts WITH the alert sting, never at the wake-up: 10 frames after the TEST_FOREST kobold spots the hero (pursuers, sting at ~30 f) the track is already held (NONE) but entry 30 is still hidden (tile 0).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {

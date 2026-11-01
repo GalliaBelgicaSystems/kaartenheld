@@ -77,10 +77,11 @@ static uint8_t s_last_map_init;
 static uint8_t s_last_map;
 
 /* Alert-first music sequencing, derived from the running alert_ttl
- * countdown (150 at entry on pursuer maps, drained per frame): the
- * track holds at entry, the sting fires at ttl 120 (~30 f later, once
- * the level is loaded and pursuers start moving), and the track resumes
- * at ttl 60 (60 f after the sting; ALERT is 55 tracker ticks ≈ 0.86 s).
+ * countdown (150 when a chaser spots the hero -- on the first overworld
+ * tick if one spawns within sight -- drained per frame): the track holds
+ * at the wake-up, the sting fires at ttl 120 (~30 f later, once the
+ * chaser starts moving), and the track resumes at ttl 60 (60 f after the
+ * sting; ALERT is 55 tracker ticks ≈ 0.86 s).
  * Zero new WRAM: added BSS bytes shift 256 globals and flip
  * layout-sensitive codegen (AGENTS.md 52.19/52.24, defend_warn_block). */
 #define ALERT_STING_TTL 120
@@ -89,10 +90,10 @@ static uint8_t s_last_map;
 /* Overworld HUD marker state (WRAM BSS globals, NOT World fields: growing
  * World shifts every later Game field and trips the layout-sensitive
  * miscompile family, AGENTS.md 52.19.  Appending globals only costs BSS
- * tail).  g_alert_ttl counts down the pursuit-entry alert; g_actor_marks /
+ * tail).  g_alert_ttl counts down the pursuit alert; g_actor_marks /
  * g_static_marks carry per-actor marks for the bank-4 OAM pass (fixed
- * entries 30+).  Zero-init: no marks, no alert until the first map-entry
- * scan fires. */
+ * entries 30+).  Zero-init: no marks, no alert until a chaser spots the
+ * hero (sight scan in marks_refresh). */
 uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
@@ -229,21 +230,18 @@ void ow_oam_restore_banked(void)
  *   Hidden while its quest is in progress and once its reward is
  *   claimed.  The mimic
  *   grants AP but is a hostile, never a quest NPC: no mark by design.
- * - Pursuer "!": live AI_CHASE/AI_CHASE_FAST hostiles from the sting
- *   edge (ttl 120) until the entry alert runs out.  The bubble debuts
- *   with the alert, never before it.  The TTL starts on the first tick
- *   after a map entry with live chasers (self-detected below; the
- *   fixed bank has no room for the scan); the track holds at entry,
- *   the sting fires once the level is loaded and pursuers move, and
- *   the scene track resumes
- *   after it (fixed wrapper: byte_c codes + byte_d replay).
+ * - Pursuer "!": awake (alerted) AI_CHASE/AI_CHASE_FAST hostiles from
+ *   the sting edge (ttl 120) until the alert runs out.  The bubble
+ *   debuts with the alert, never before it.  The TTL starts when the
+ *   hero first comes within a chaser's line of sight (sight scan below;
+ *   the fixed bank has no room for the scan); the track holds then, the
+ *   sting fires once the chaser is awake and moving, and the scene track
+ *   resumes after it (fixed wrapper: byte_c codes + byte_d replay).
  * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
 static void marks_refresh(void)
 {
     uint8_t i;
-    uint8_t k;
-    uint8_t pursuers;
     int16_t quest_monster_hunt;
     int16_t monsters_defeated;
     int16_t merchant_quest;
@@ -272,7 +270,7 @@ static void marks_refresh(void)
      * intact, so returning from the menu stays silent.  TITLE and
      * GAME_OVER keep the always-re-arm poll below: leaving them always
      * means a reload by construction.  Battle/ending screens are
-     * excluded: the entry scan's track-hold must never cut their music
+     * excluded: the pursuit alert's track-hold must never cut their music
      * (loads always land on the overworld anyway). */
     if (g_game.screen != SCREEN_BATTLE &&
         g_game.screen != SCREEN_GAME_OVER &&
@@ -290,35 +288,23 @@ static void marks_refresh(void)
         g_game.screen == SCREEN_GAME_OVER) {
         s_last_map = 0xFF;
     } else if (!s_last_map_init) {
-        /* Map entry edge: scan once for live pursuers.  s_last_map
-         * starts 0, which is a valid map id (MAP_FIELD), so the first
-         * tick arms explicitly -- a boot directly onto a pursuer map
-         * must alert. */
+        /* Map entry edge.  s_last_map starts 0, which is a valid map id
+         * (MAP_FIELD), so the first tick arms explicitly -- a boot
+         * directly onto a pursuer map must scan like an entry. */
         s_last_map_init = 1;
         s_last_map = 0xFF;
     } else if (g_game.world.map_id != s_last_map) {
+        /* Map change: no alert yet.  The sight scan below arms it the
+         * moment a chaser actually notices the hero (spawn actors start
+         * sleeping, so entering a map full of distant chasers is
+         * silent).  Cancels any alert from the previous map. */
         s_last_map = g_game.world.map_id;
-        pursuers = 0;
-        for (k = 0; k < MAX_WORLD_ACTORS; k++) {
-            const WorldActorRuntime *a = &g_game.world.actors[k];
-            if (a->active &&
-                (a->ai_type == AI_CHASE || a->ai_type == AI_CHASE_FAST)) {
-                pursuers = 1;
-                break;
-            }
-        }
-        g_alert_ttl = pursuers ? ALERT_TTL_FRAMES : 0;
-        if (pursuers) {
-            /* Alert-first: hold the scene track at once (the fixed
-             * wrapper stops it; the sting + resume below ride the
-             * running ttl).  Cancelled by any map change. */
-            g_bk_byte_c = 1;
-        }
+        g_alert_ttl = 0;
     } else if (g_alert_ttl != 0) {
         g_alert_ttl--;
-        /* Sting edge at 120 (~30 f after entry: level loaded, pursuers
-         * moving) -- never inside a battle / game-over / ending that
-         * owns the music (the entry hold already silenced the track).
+        /* Sting edge at 120 (~30 f after the wake-up: the chaser is
+         * awake and moving) -- never inside a battle / game-over / ending
+         * that owns the music (the alert hold already silenced it).
          * Music resumes at 60, same screen rule (battle exit restores
          * the area track itself; the jingle path owns the title).
          * Menus, dialogue and shops are overworld-attached: the sting
@@ -337,6 +323,38 @@ static void marks_refresh(void)
              * its own restore replays the scene track when it ends. */
             g_audio_current_track != MUSIC_CHEST) {
             g_bk_byte_d = 1;
+        }
+    }
+
+    /* Line of sight (AI_CHASE / AI_CHASE_FAST, actor.h AI_CHASE_SIGHT):
+     * the hero coming within range wakes a sleeping chaser for the rest
+     * of the scene (ACTOR_STATE_ALERTED, gating the chase in
+     * world_patrol_slot_banked) and arms the alert above: the track holds
+     * now, the sting fires at ttl 120, the track resumes at ttl 60.
+     * Overworld only -- menus and dialogue pause the world, and a battle
+     * must never arm the alert (its track hold would cut the battle
+     * music).  Scene loads respawn actors with the bit clear, so every
+     * visit starts asleep. */
+    if (g_game.screen == SCREEN_OVERWORLD) {
+        uint8_t px = g_game.world.player.position.x;
+        uint8_t py = g_game.world.player.position.y;
+        for (i = 0; i < MAX_WORLD_ACTORS; i++) {
+            WorldActorRuntime *a = &g_game.world.actors[i];
+            uint8_t dx;
+            uint8_t dy;
+            if (!a->active) continue;
+            if (a->ai_type != AI_CHASE && a->ai_type != AI_CHASE_FAST) continue;
+            if (a->flags & ACTOR_STATE_ALERTED) continue;
+            dx = (px >= a->x) ? (uint8_t)(px - a->x) : (uint8_t)(a->x - px);
+            dy = (py >= a->y) ? (uint8_t)(py - a->y) : (uint8_t)(a->y - py);
+            if (dx > AI_CHASE_SIGHT || dy > AI_CHASE_SIGHT) continue;
+            a->flags |= ACTOR_STATE_ALERTED;
+            if (g_alert_ttl == 0) {
+                g_alert_ttl = ALERT_TTL_FRAMES;
+                /* Alert-first: hold the scene track (the fixed wrapper
+                 * stops it; the sting + resume ride the running ttl). */
+                g_bk_byte_c = 1;
+            }
         }
     }
 
@@ -363,15 +381,15 @@ static void marks_refresh(void)
     }
     carl_done = marks_carl_defeated(&g_game.state);
 
-    /* Hostiles: pursuer "!" once the entry sting has fired (ttl at or
-     * below the sting edge) until the entry alert runs out.  The bubble
-     * debuts with the alert, never before it. */
+    /* Hostiles: pursuer "!" over the chasers that spotted the hero, once
+     * the alert sting has fired (ttl at or below the sting edge) until
+     * the alert runs out.  The bubble debuts with the alert, never before
+     * it; a sleeping chaser never shows one. */
     for (i = 0; i < MAX_WORLD_ACTORS; i++) {
         const WorldActorRuntime *a = &g_game.world.actors[i];
         uint8_t m = ACTOR_MARK_NONE;
-        if (a->active && g_alert_ttl != 0 &&
-            g_alert_ttl <= ALERT_STING_TTL &&
-            (a->ai_type == AI_CHASE || a->ai_type == AI_CHASE_FAST)) {
+        if (a->active && (a->flags & ACTOR_STATE_ALERTED) &&
+            g_alert_ttl != 0 && g_alert_ttl <= ALERT_STING_TTL) {
             m = ACTOR_MARK_ALERT;
         }
         g_actor_marks[i] = m;
