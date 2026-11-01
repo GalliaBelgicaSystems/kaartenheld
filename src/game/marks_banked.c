@@ -78,12 +78,12 @@ static uint8_t s_last_map;
 
 /* Alert-first music sequencing, derived from the running alert_ttl
  * countdown (150 when a chaser spots the hero -- on the first overworld
- * tick if one spawns within sight -- drained per frame): the track holds
- * at the wake-up, the sting fires at ttl 120 (~30 f later, once the
- * chaser starts moving), and the track resumes at ttl 60 (60 f after the
- * sting; ALERT is 55 tracker ticks ≈ 0.86 s).
- * Zero new WRAM: added BSS bytes shift 256 globals and flip
- * layout-sensitive codegen (AGENTS.md 52.19/52.24, defend_warn_block). */
+ * tick if one spawns within sight -- drained per frame): the track
+ * PAUSES at the wake-up (driver frozen mid-song, voices cut) and
+ * CONTINUES from the frozen position at ttl 60 (60 f after the sting;
+ * ALERT is 55 tracker ticks ≈ 0.86 s), never restarting from the top.
+ * One new WRAM byte (g_music_paused, BSS tail: appended globals do not
+ * shift existing layout, AGENTS.md 52.19). */
 #define ALERT_STING_TTL 120
 #define ALERT_MUSIC_TTL 60
 
@@ -97,6 +97,19 @@ static uint8_t s_last_map;
 uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
+
+/* Music-pause flag (WRAM BSS, appended: BSS-tail only, no layout shift):
+ * set when the pursuit alert pauses the scene track mid-song, cleared
+ * when the resume edge unpauses it.  The pause itself (driver freeze +
+ * voice silence) is applied inline below; resume re-checks it so a
+ * deliberate track switch in between (battle, chest, jingle) is never
+ * clobbered. */
+uint8_t g_music_paused;
+
+/* Driver play flag (fixed-bank WRAM, huge_music.c): cleared to freeze the
+ * tracker mid-song, set to continue from the frozen position.  Single
+ * byte store, atomic against the 256 Hz ISR reader. */
+extern uint8_t g_huge_playing;
 
 /* Jingle edge bits (jingle_full_banked.c, same bank): bit 7 is the
  * seeded flag.  load_game_slot clears the whole byte on a real load;
@@ -234,9 +247,10 @@ void ow_oam_restore_banked(void)
  *   the sting edge (ttl 120) until the alert runs out.  The bubble
  *   debuts with the alert, never before it.  The TTL starts when the
  *   hero first comes within a chaser's line of sight (sight scan below;
- *   the fixed bank has no room for the scan); the track holds then, the
- *   sting fires once the chaser is awake and moving, and the scene track
- *   resumes after it (fixed wrapper: byte_c codes + byte_d replay).
+ *   the fixed bank has no room for the scan); the track pauses then, the
+ *   sting fires once the chaser is awake and moving, and the track
+ *   continues from the frozen position after it (inline in bank 8: no
+ *   byte codes, no MUSIC_CHANGED -- pause is not a track change).
  * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
 static void marks_refresh(void)
@@ -304,11 +318,12 @@ static void marks_refresh(void)
         g_alert_ttl--;
         /* Sting edge at 120 (~30 f after the wake-up: the chaser is
          * awake and moving) -- never inside a battle / game-over / ending
-         * that owns the music (the alert hold already silenced it).
-         * Music resumes at 60, same screen rule (battle exit restores
-         * the area track itself; the jingle path owns the title).
+         * that owns the music (the pause already silenced it).
+         * Music continues at 60 (unpause: same frozen position, never a
+         * restart), same screen rule (battle exit restores the area track
+         * itself; the jingle path owns the title).
          * Menus, dialogue and shops are overworld-attached: the sting
-         * and the track resume under them. */
+         * and the continue play under them. */
         if (g_alert_ttl == ALERT_STING_TTL &&
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
@@ -319,22 +334,29 @@ static void marks_refresh(void)
             g_game.screen != SCREEN_BATTLE &&
             g_game.screen != SCREEN_GAME_OVER &&
             g_game.screen != SCREEN_ENDING &&
-            /* Don't clobber an active chest jingle with the resume:
+            /* Don't clobber an active chest jingle with the continue:
              * its own restore replays the scene track when it ends. */
             g_audio_current_track != MUSIC_CHEST) {
-            g_bk_byte_d = 1;
+            /* Unpause the scene track in place (same frozen position).
+             * A deliberate track switch since the pause (battle, chest,
+             * jingle) owns the music instead: never touch it here. */
+            if (g_music_paused != 0 && g_audio_current_track != MUSIC_NONE) {
+                g_huge_playing = 1;
+                g_music_paused = 0;
+            }
         }
     }
 
     /* Line of sight (AI_CHASE / AI_CHASE_FAST, actor.h AI_CHASE_SIGHT):
      * the hero coming within range wakes a sleeping chaser for the rest
      * of the scene (ACTOR_STATE_ALERTED, gating the chase in
-     * world_patrol_slot_banked) and arms the alert above: the track holds
-     * now, the sting fires at ttl 120, the track resumes at ttl 60.
+     * world_patrol_slot_banked) and arms the alert above: the track
+     * pauses now, the sting fires at ttl 120, the track continues at
+     * ttl 60 from the frozen position (never a restart).
      * Overworld only -- menus and dialogue pause the world, and a battle
-     * must never arm the alert (its track hold would cut the battle
-     * music).  Scene loads respawn actors with the bit clear, so every
-     * visit starts asleep. */
+     * must never arm the alert (pausing would cut the battle music).
+     * Scene loads respawn actors with the bit clear, so every visit
+     * starts asleep. */
     if (g_game.screen == SCREEN_OVERWORLD) {
         uint8_t px = g_game.world.player.position.x;
         uint8_t py = g_game.world.player.position.y;
@@ -351,9 +373,25 @@ static void marks_refresh(void)
             a->flags |= ACTOR_STATE_ALERTED;
             if (g_alert_ttl == 0) {
                 g_alert_ttl = ALERT_TTL_FRAMES;
-                /* Alert-first: hold the scene track (the fixed wrapper
-                 * stops it; the sting + resume ride the running ttl). */
-                g_bk_byte_c = 1;
+                /* Alert-first: pause the scene track mid-song (freeze the
+                 * driver + cut the voices inline here in bank 8: the
+                 * fixed bank has no room for a pause call, and stopping
+                 * via the fixed wrapper would restart the song on
+                 * resume).  The sting + continue ride the running ttl;
+                 * no MUSIC_CHANGED fires -- pause is not a track change.
+                 * No-op when nothing is playing (sound off): the resume
+                 * edge re-checks before touching the driver. */
+                if (g_audio_current_track != MUSIC_NONE && g_huge_playing != 0) {
+                    g_huge_playing = 0;
+                    g_music_paused = 1;
+                    NR12_REG = 0x00;
+                    NR14_REG = 0x80;
+                    NR22_REG = 0x00;
+                    NR24_REG = 0x80;
+                    NR32_REG = 0x00;
+                    NR42_REG = 0x00;
+                    NR44_REG = 0x80;
+                }
             }
         }
     }
