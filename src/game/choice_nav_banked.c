@@ -118,6 +118,23 @@ void dialogue_choice_nav_banked(void)
     }
     if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         g_game.dialogue.choice_made = 1;
+        if (g_game.dialogue.id == DIALOGUE_ID_TUTORIAL_CARL_SKIP_ASK) {
+            /* Leaving the field without the lesson.  TALK closes plainly
+             * (the hero stays put and can walk back to Carl); LEAVE hands
+             * over the +1 AP the spar would have granted: code 8 has the
+             * fixed wrapper apply the staged variable add + one-shot skip
+             * flag through the real APIs (VARIABLE_SET / STORY_FLAG_SET
+             * telemetry) and open the "TAKE THIS AP!" line. */
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_bk_byte_a = 8;
+                g_bk_byte_b = VARIABLE_ID_ENERGY_POOL;
+                g_bk_byte_c = STORY_FLAG_ID_TUTORIAL_SKIPPED;
+                g_bk_byte_d = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_SKIP_GRANTED;
+                return;
+            }
+            g_bk_byte_a = 2;
+            return;
+        }
         if (g_game.dialogue.id == DIALOGUE_ID_TUTORIAL_CARL_INTRO) {
             /* Carl's spar offer: NO clears the stashed spar so closing
              * the follow-up returns to the overworld with no fight; YES

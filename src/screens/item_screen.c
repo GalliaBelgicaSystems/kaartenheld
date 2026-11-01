@@ -56,16 +56,14 @@ void item_gem_render_banked(void);
 #define SORT_COST_DESC  5
 
 /* Filtered/sorted view over the deckable collection entries.  s_view_indices
- * holds collection indices; s_view_count is the number of visible cards. */
+ * holds collection indices; s_view_count is the number of visible cards.
+ * BUILT BY THE BANK-2 RENDER BODY (item_content_banked.c ic_build_view) at
+ * the start of every full redraw, and consumed read-only here: the fixed
+ * bank sits at 0x8000, so the view code lives with the card catalog it
+ * needs (AGENTS.md 52.18).  Every mutation path below invalidates the
+ * render cache, so the rebuild lands before the next consumer. */
 uint8_t s_view_indices[MAX_CARD_COLLECTION];
 uint8_t s_view_count;
-
-/* SPECIAL cards (quest items like the Lost Amulet) are LISTED but never
- * deckable -- pressing A shows a transient QUEST ITEM message instead. */
-static bool card_deckable(const CardDefinition *def)
-{
-    return def && def->type != CARD_TYPE_SPECIAL;
-}
 
 static CardId view_card_id(Game *g, uint8_t pos)
 {
@@ -114,68 +112,6 @@ static void card_detail_sell(Game *g)
      * sold-out entry simply disappears and the OWN digit drops -- the
      * CARD_SOLD event is the authoritative feedback for tests. */
     g->item_menu_mode = MODE_LIST;
-}
-
-static bool filter_matches(Game *g, CardId id)
-{
-    const CardDefinition *def;
-    if (g->item_menu_filter == FILTER_ALL) return true;
-    def = card_get_def(id);
-    if (!def) return false;
-    return def->type == g->item_menu_filter;
-}
-
-static uint8_t sort_value(const CardDefinition *def, uint8_t sort)
-{
-    switch (sort) {
-        case SORT_TYPE:  return def->type;
-        case SORT_POWER:
-        case SORT_POWER_DESC: return def->power;
-        case SORT_COST:
-        case SORT_COST_DESC:  return def->cost;
-        default: return 0;
-    }
-}
-
-static void sort_view(Game *g)
-{
-    uint8_t i, j, tmp, va, vb;
-    uint8_t desc = (g->item_menu_sort == SORT_POWER_DESC ||
-                    g->item_menu_sort == SORT_COST_DESC);
-
-    for (i = 1; i < s_view_count; i++) {
-        tmp = s_view_indices[i];
-        va = sort_value(card_get_def(g->state.cards.collection.entries[tmp].id), g->item_menu_sort);
-        j = i;
-        while (j > 0) {
-            vb = sort_value(card_get_def(g->state.cards.collection.entries[s_view_indices[j - 1]].id),
-                            g->item_menu_sort);
-            if (desc ? (vb < va) : (vb > va)) {
-                s_view_indices[j] = s_view_indices[j - 1];
-                j--;
-            } else {
-                break;
-            }
-        }
-        s_view_indices[j] = tmp;
-    }
-}
-
-static void build_view(Game *g)
-{
-    uint8_t total, i;
-    const CardDefinition *def;
-
-    s_view_count = 0;
-    total = g->state.cards.collection.count;
-    for (i = 0; i < total; i++) {
-        def = card_get_def(g->state.cards.collection.entries[i].id);
-        if (!card_deckable(def)) continue;
-        if (filter_matches(g, g->state.cards.collection.entries[i].id))
-            s_view_indices[s_view_count++] = i;
-    }
-    if (g->item_menu_sort != SORT_NONE && s_view_count > 1)
-        sort_view(g);
 }
 
 static void cycle_filter(Game *g)
@@ -288,7 +224,6 @@ void item_screen_update(Game *g)
                 if (g->item_menu_mode == MODE_PICKER) {
                     g->item_menu_filter = g->item_menu_prev_filter;
                     g->item_menu_sort = g->item_menu_prev_sort;
-                    build_view(g);
                 }
                 g->item_menu_mode = MODE_LIST;
                 break;
@@ -347,7 +282,6 @@ void item_screen_update(Game *g)
             } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
                 if (g->item_menu_pick_row == 0) cycle_filter(g);
                 else cycle_sort(g);
-                build_view(g);
                 g->render_cache.valid = false;
             } else if (input_pressed(INPUT_A)) {
                 g->item_menu_mode = MODE_LIST;
@@ -364,14 +298,15 @@ void item_screen_update(Game *g)
         return;
     }
 
-    /* NOTE: no per-frame build_view here.  The view is rebuilt on every
-     * full redraw (see item_screen_render) plus explicitly after picker
-     * filter/sort changes.  That covers every consumer: at most one menu
-     * action runs per frame, every collection mutation invalidates the
-     * cache (same-frame rebuild before the next frame's consumption), and
-     * the SELECT/A/detail guards reject out-of-range indices.  A per-frame
-     * rebuild would cost fixed-bank bytes we do not have (see the render
-     * note; _HOME must stay below 0x8000). */
+    /* NOTE: no per-frame view build here.  The bank-2 render body rebuilds
+     * the filtered/sorted view at the start of every full redraw, and each
+     * action below that can change the view (picker filter/sort, tab
+     * switch, sell, deck add/remove) invalidates the render cache -- so the
+     * rebuild always lands before the next action reads it.  That covers
+     * every consumer: at most one menu action runs per frame and the
+     * SELECT/A/detail guards reject out-of-range indices.  Keeping the
+     * build out of the fixed bank is what funds the collection merge (see
+     * deck_collection_merge_duplicates; _HOME must stay below 0x8000). */
     if (input_pressed(INPUT_SELECT)) {
         if (g->item_menu_index >= FIRST_CARD &&
             (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
@@ -457,14 +392,11 @@ void item_screen_render(Game *g)
          * (already base). */
         ui_set_cram_palette(0);
 
-        /* The banked body consumes the view read-only (single shared
-         * view; see build_view).  The update no longer rebuilds it every
-         * frame (fixed-bank budget — see its note), so every full redraw
-         * rebuilds it here instead: the open frame can otherwise run
-         * before any update (same-frame screen_change), painting blank
-         * rows from the BSS-zero view that the valid cache then freezes.
-         * Detail-page sells also mutate and redraw in the same frame. */
-        build_view(g);
+        /* The banked body builds the filtered/sorted view first (it owns
+         * the card catalog; fixed-bank budget) and then consumes it: the
+         * open frame can run before any update (same-frame screen_change),
+         * so the build cannot wait for an update.  Detail-page sells also
+         * mutate and redraw in the same frame. */
 
         /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
          * both render in bank 8 with their registries (AGENTS.md

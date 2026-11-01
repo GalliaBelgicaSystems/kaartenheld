@@ -49,9 +49,14 @@ static void game_prepare_new_game(Game *g)
 void game_restart(Game *g)
 {
     if (!g) return;
-    g->screen = SCREEN_OVERWORLD;
-    g->prev_screen = SCREEN_OVERWORLD;
     game_prepare_new_game(g);
+    /* Go through the real overworld screen change instead of assigning
+     * the screen: it restores the overworld OAM (battles time-share tile
+     * ids 96-97 with the hero's standing frames, so a battle -> death ->
+     * restart used to idle with the AP pips), drops the stale tileset
+     * cache (battle art owns VRAM block 1) and reseeds the render cache
+     * for the full redraw. */
+    screen_change(g, SCREEN_OVERWORLD);
 }
 
 void game_init(Game *g)

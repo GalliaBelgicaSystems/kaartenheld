@@ -53,6 +53,13 @@ bool deck_collection_remove(CardState *cs, CardId id, uint8_t quantity);
 /* How many copies of a card the player owns. */
 uint8_t deck_collection_count(const CardState *cs, CardId id);
 
+/* Fold collection rows that describe the same card into one (a curated
+ * catalog row and its mechanically identical loot twin), retargeting
+ * decked copies onto the survivor.  Idempotent; deck_collection_add runs
+ * it after opening a new row and save load runs it on the restored
+ * state. */
+void deck_collection_merge_duplicates(CardState *cs);
+
 /* ── Deck API ───────────────────────────────────────────────────── */
 
 /* Add a card to the deck.  The card must be owned in the collection.

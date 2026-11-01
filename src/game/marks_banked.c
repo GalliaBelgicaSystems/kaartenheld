@@ -151,6 +151,64 @@ static uint8_t marks_carl_defeated(const GameState *st)
     return 0;
 }
 
+/* ── Carl's "leaving without the lesson" offer ─────────────────────
+ * The field is where Carl teaches.  Walking out of it -- a gate/edge
+ * step that would cross the map boundary -- before winning the spar and
+ * before taking the AP skip stops the step (the position has not
+ * committed yet) and stages Carl's offer through the generic post-tick
+ * dialogue request ("HEY! WANNA LEARN HOW FIGHT?  TALK / LEAVE"); the
+ * bank-10 choice body resolves the answer: LEAVE grants the spar's +1 AP
+ * once and sets STORY_FLAG_ID_TUTORIAL_SKIPPED (so the offer never
+ * repeats and the tutorial victory grants no second point), TALK just
+ * closes so the hero can walk back to Carl.  Runs in the per-frame tick,
+ * so the fixed bank pays nothing.
+ *
+ * The offered tile is remembered so pushing on after TALK cannot loop
+ * the box: while the hero still stands on it the offer stays disarmed;
+ * any other tile re-arms.  Leaving the field (or any other map) parks
+ * the record, so a later visit asks again. */
+#define CARL_OFFER_PARKED 0xFFu
+static uint8_t s_carl_offer_x;
+static uint8_t s_carl_offer_y;
+
+static uint8_t carl_offer_map(void)
+{
+    if (g_game.world.map_id == MAP_FIELD) return 1;
+#ifdef TEST_LEVELS
+    /* Harness fixture of the same field (scenarios stage it). */
+    if (g_game.world.map_id == MAP_TEST_FIELD) return 1;
+#endif
+    return 0;
+}
+
+static void carl_skip_offer_check(void)
+{
+    World *w = &g_game.world;
+    uint8_t px = w->player.position.x;
+    uint8_t py = w->player.position.y;
+
+    if (!carl_offer_map()) {
+        s_carl_offer_x = CARL_OFFER_PARKED;
+        s_carl_offer_y = CARL_OFFER_PARKED;
+        return;
+    }
+    if (px == s_carl_offer_x && py == s_carl_offer_y) return;
+    if (g_game.screen != SCREEN_OVERWORLD) return;
+    if (w->move_state != MOVE_STATE_MOVING) return;
+    if (w->move_outcome != MOVE_OUTCOME_EDGE &&
+        w->move_outcome != MOVE_OUTCOME_EXIT) return;
+    if (marks_carl_defeated(&g_game.state)) return;
+    if (marks_flag_is_set(&g_game.state, STORY_FLAG_ID_TUTORIAL_SKIPPED)) return;
+
+    s_carl_offer_x = px;
+    s_carl_offer_y = py;
+    /* Cancel the departure: the hero stays on the field to answer. */
+    w->move_state = MOVE_STATE_IDLE;
+    w->move_progress = 0;
+    w->move_outcome = MOVE_OUTCOME_NONE;
+    g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_SKIP_ASK;
+}
+
 /* Stream the overworld HUD mark glyphs (!/?) to OAM 126-127 on the first
  * tick (the OAM passes need them resident before any marker draws; LCD
  * may be on, so every write waits for an accessible VRAM window like the
@@ -482,6 +540,7 @@ void game_frame_tick_banked(void)
      * bodies touch disjoint staging bytes (marks: c/d, jingle: b) and
      * the fixed side reads all three after the return, so the order is
      * otherwise irrelevant. */
+    carl_skip_offer_check();
     marks_refresh();
     jingle_full_banked();
     /* Chuck-a-luck: the table's whole frame body (entry paint, input,

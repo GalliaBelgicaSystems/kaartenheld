@@ -1,4 +1,5 @@
 #include "save.h"
+#include "rpg/deck.h"
 #include "banked.h"
 
 /* Slot capacity mirror (WRAM): the bank-3 guard reads this instead of a
@@ -48,6 +49,11 @@ bool load_game_slot(uint8_t slot, GameState *state)
     ok = save_dispatch(2, slot, state);
     if (ok) {
         g_jingle_done = 0;
+        /* Saves written before one-row-per-card can hold a curated card
+         * and its loot twin as two collection rows: fold them so the
+         * DECK menu lists the card once (and the deck cannot take a copy
+         * from each row). */
+        deck_collection_merge_duplicates(&state->cards);
     }
     return ok;
 }
