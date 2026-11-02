@@ -1,0 +1,61 @@
+{
+  "name": "throne_room_playable",
+  "test": false,
+  "description": "Manual playground: spawn next to the Slime Lord in TEST_CASTLE (throne-room fixture) with the mythril bow + strong deck, 120 HP and AP 5. No scripted inputs -- the player walks up (facing UP), presses A, and plays the final battle by hand.",
+  "actions": [],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "scene",
+      "expected": "TEST_CASTLE"
+    },
+    {
+      "type": "player_position",
+      "expected_x": 10,
+      "expected_y": 6
+    },
+    {
+      "type": "variable",
+      "variable": "ENERGY_POOL",
+      "expected": 5
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_CASTLE",
+    "player": {
+      "x": 10,
+      "y": 6,
+      "facing": "UP"
+    },
+    "seed": 9001,
+    "flags": {
+      "ARRIVED_TOWN": true
+    },
+    "variables": {
+      "QUEST_MONSTER_HUNT": 0,
+      "MONSTERS_DEFEATED": 3,
+      "ENERGY_POOL": 5
+    },
+    "party": {
+      "HERO": {
+        "hp": 120,
+        "max_hp": 120
+      }
+    },
+    "currency": {
+      "GOLD": 50
+    },
+    "deck": {
+      "BOW_9": 1,
+      "IRON_SWORD": 4,
+      "FIRE_SWORD": 3,
+      "POISON_DAGGER": 3,
+      "WOODEN_SHIELD": 4,
+      "IRON_RING": 1,
+      "WOOD_SWORD": 4
+    }
+  }
+}
