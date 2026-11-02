@@ -143,7 +143,9 @@ extern uint8_t g_battle_multiframe;
  * green twice on a white base over the 50-frame heal jingle
  * (g_battle_heal_phase stages the current pulse so the bank-3 painter
  * stays branch-light: release bank 3 has ~40 B left and cannot afford
- * threshold math). Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * threshold math; the DIM slot holds the flash ramp only during the
+ * pulses, so greyed cards and the boss stamp read fightboss the rest
+ * of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
  * through HP, so every present and future source feeds the same feedback
  * with no per-source wiring.  g_battle_fx_epoch (bumped by
  * battle_start) re-arms the caches and zeroes stale timers, so a new

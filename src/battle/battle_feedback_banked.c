@@ -11,10 +11,11 @@
  * heart red = slot-1 entry 3, HP brown = slot-3 entry 3 = numbers
  * ink), so the green MUST live in entry 3 -- entries 0-2 stay
  * fightboss.  #77E331 -> RGB555 (14,28,6) -> 0x1B8E, little-endian
- * 8E 1B.  Programmed for the flash duration only; the fightboss
- * restore ramp below is its hardcoded twin (bank 9 cannot read the
- * bank-5 ROM table, so the bytes are duplicated here -- keep in sync
- * with generated/tiles/cgb_palettes.inc if the artist ramp moves). */
+ * 8E 1B.  Programmed ONLY during green pulse frames (see the tick):
+ * greyed cards and the boss stamp (both DIM users) read fightboss
+ * the rest of the time.  The restore twin below is a hardcoded copy
+ * because bank 9 cannot read the bank-5 ROM table -- keep in sync
+ * with generated/tiles/cgb_palettes.inc if the artist ramp moves. */
 static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x8E, 0x1B };
 /* fightboss slot-7 restore ramp: white; (141,117,74) -> 0x25D1; grey
  * (86,86,86) -> 0x294A; black. */
@@ -42,21 +43,26 @@ static void battle_heal_cram(uint8_t flash_on)
  * functions).  An enemy HP drop judders those slots (mask bits, 12
  * frames), a player HP drop judders the whole hand with one shared
  * offset (5 frames), a player HP rise flashes green twice on a white
- * base over the 50-frame heal jingle.  Status ticks, counters,
+ * base over the 50-frame heal jingle (the DIM slot holds the flash
+ * ramp only during the two green pulses; every other screen and
+ * phase reads fightboss).  Status ticks, counters,
  * overblock heals and debug HP pokes all funnel through HP,
  * so every present and future source feeds the same feedback with no
  * per-source wiring and no fixed-bank bytes in the resolve paths.  The
  * epoch (bumped by battle_start) re-arms the caches, so a new fight
- * never inherits stale deltas; off-battle ticks see a static Battle
- * and stay silent.  Timer countdown re-arms the matching dirty bits
- * so the bank-3/bank-5 painters re-run each frame (battle_update's
- * delay branch sets no dirty flags of its own).  Lives in bank 9
- * (release bank 5 cannot hold it); dispatched every frame from
- * game_update under the same non-terminal gate as the frame tick. */
+ * never inherits stale deltas; off-battle ticks cancel the flash
+ * without touching CRAM (every transition reloads its own set) and
+ * otherwise see a static Battle.  Timer countdown re-arms the
+ * matching dirty bits so the bank-3/bank-5 painters re-run each frame
+ * (battle_update's delay branch sets no dirty flags of its own).
+ * Lives in bank 9 (release bank 5 cannot hold it); dispatched every
+ * frame from game_update under the same non-terminal gate as the
+ * frame tick. */
 void battle_feedback_tick_banked(void)
 {
     Battle *b = &g_game.battle;
     uint8_t k;
+    uint8_t np;
 
     if (g_battle_fx_seen != g_battle_fx_epoch) {
         g_battle_fx_seen = g_battle_fx_epoch;
@@ -96,11 +102,11 @@ void battle_feedback_tick_banked(void)
     } else if (b->player.hp > g_battle_fx_php) {
         /* 50-frame flash, white base with two slime-light green pulses
          * (10 frames each), spanning the 47-tick heal jingle: green
-         * appears twice instead of vanishing twice.  Programs BG slot
-         * DIM to #77E331 for the duration (restored below); DIM's
-         * fightboss ramp is otherwise untouched. */
+         * appears twice instead of vanishing twice.  The DIM slot is
+         * programmed only on green-pulse frames below (never for the
+         * whole flash), so greyed cards and the boss stamp keep their
+         * fightboss ramp except during the pulses themselves. */
         g_battle_heal_flash = 50;
-        battle_heal_cram(1);
     }
     g_battle_fx_php = b->player.hp;
     /* Fresh judder replaces the old mask (a previous shake always
@@ -134,16 +140,17 @@ void battle_feedback_tick_banked(void)
         /* Pulse phase for the 50-frame flash: white 50-41, green 40-31,
          * white 30-21, green 20-11, white 10-1 (two green pulses over
          * the heal jingle, snapping back to steady green at the end).
-         * Thresholds live here, not in the painter: release bank 3
-         * has no room for the math. */
-        g_battle_heal_phase = (uint8_t)(((g_battle_heal_flash <= 40 &&
+         * The CRAM program follows the phase edges, not the flash:
+         * DIM holds the flash ramp only while a green pulse is on
+         * screen (greyed cards and the boss stamp read fightboss the
+         * rest of the time).  Thresholds live here, not in the painter:
+         * release bank 3 has no room for the math. */
+        np = (uint8_t)(((g_battle_heal_flash <= 40 &&
             g_battle_heal_flash > 30) || (g_battle_heal_flash <= 20 &&
             g_battle_heal_flash > 10)) ? 1 : 0);
-        if (g_battle_heal_flash == 0) {
-            /* Flash over: put DIM's fightboss ramp back.  Off-battle
-             * exits never reach this branch (see the screen gate
-             * above); their transitions reload CRAM themselves. */
-            battle_heal_cram(0);
+        if (np != g_battle_heal_phase) {
+            battle_heal_cram(np);
+            g_battle_heal_phase = np;
         }
         b->dirty |= BATTLE_DIRTY_HERO;
     }

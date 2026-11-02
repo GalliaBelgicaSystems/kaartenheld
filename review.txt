@@ -1,0 +1,230 @@
+================================================================================
+CODE REVIEW: COMMITS b20ba102 .. 64138d48
+Target: feature/slime-reprisal-message (HEAD: 64138d48)
+Focus: Actual bugs, logic flaws, hardware/palette conflicts, memory issues.
+================================================================================
+
+1. CRITICAL BUG: WRAM MEMORY CORRUPTION IN capture_gifs.py (DIRTY_OFF)
+--------------------------------------------------------------------------------
+File: tools/capture_gifs.py:293-305 (capture_heal)
+Commit: c8c31be0 ("Green heal flash for real: ink lives in palette entry 3")
+
+Problem:
+In `capture_heal()`, the script manually stages an HE5 card in the battle hand
+and attempts to mark the hand dirty by writing directly to `b->dirty`:
+
+    CARD_EFFECT_HEAL_HP = 3
+    BATTLE_DIRTY_HAND = 0x10
+    DIRTY_OFF = 14 + 3 * 14 + 2
+    ...
+    daddr = r._resolve_battle_base() + DIRTY_OFF
+    s.pb.memory[daddr] = s.pb.memory[daddr] | BATTLE_DIRTY_HAND
+
+The calculation `DIRTY_OFF = 14 + 3 * 14 + 2` evaluates to 58. It assumes:
+  player (14 B) + enemies[3] (3 * 14 B) + enemy_count (1 B) + target_idx (1 B)
+
+However, since commit 9615f71e ("SLIME KNIGHT rename..."), `Combatant.name` was
+grown from `char name[12]` to `char name[13]`. Therefore:
+  sizeof(Combatant) = hp (1) + max_hp (1) + name (13) = 15 bytes.
+
+In the actual `Battle` struct (src/battle/battle.h:78):
+  - player:              15 bytes (offsets 0..14)
+  - enemies[0]:          15 bytes (offsets 15..29)
+  - enemies[1]:          15 bytes (offsets 30..44)
+  - enemies[2]:          15 bytes (offsets 45..59)
+  - enemy_count:          1 byte  (offset 60)
+  - target_idx:           1 byte  (offset 61)
+  - dirty:                1 byte  (offset 62)
+
+Consequence:
+At offset 58, the script writes `BATTLE_DIRTY_HAND` (0x10) directly into
+`b->enemies[2].name[11]`, causing WRAM memory corruption of enemy slot 2's name
+string buffer. `b->dirty` at offset 62 is NEVER set by this write. The test only
+appeared to function because a subsequent `s.press("a")` called
+`battle_card_select()`, which set `b->dirty` as a side effect.
+(Note: the same stale calculation exists in capture_bow_shot.py and
+capture_rider_shot.py).
+
+
+2. MAJOR VISUAL BUG: PALETTE COLLISION ON BG SLOT 7 (UI_COLOR_DIM)
+   BOSS SPRITE & GREYED CARDS CORRUPTED DURING HEAL FLASH
+--------------------------------------------------------------------------------
+Files: src/battle/battle_feedback_banked.c:9-37
+       src/game/battle_types.c:288
+       src/ui/ui_battle_content.c:1253
+Commits: 17e0d64e, c8c31be0, 64138d48
+
+Problem:
+To render the green heal flash, `battle_heal_cram(1)` reprograms CGB background
+palette slot 7 (`UI_COLOR_DIM`) with `s_heal_flash_ramp`:
+
+    static const uint8_t s_heal_flash_ramp[8] =
+        { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x8E, 0x1B };
+
+This sets palette entry 3 of slot 7 to slime-light green (`0x1B8E` / #77E331).
+
+However, BG palette slot 7 is already actively shared by two other major battle
+elements:
+
+a) Lord of Slimes (Boss battle BG stamp art):
+   In `src/game/battle_types.c`, `g_enemy_type_slime_lord` specifies:
+     `art_palette = 7` (UI_COLOR_DIM).
+   Unlike minion enemies which render via OAM sprites, the Lord of Slimes is
+   BG-stamped (`g_battle_enemy_art_oam` is 0). In `cgb_bg_palettes`, slot 7 is
+   `fightboss`, where entry 3 is black (`0x0000`).
+   While the player's 50-frame heal flash is active, entry 3 in slot 7 is green.
+   As a result, all black outline and dark-shade ink of the Lord of Slimes turns
+   bright slime-light green whenever the player heals during the boss battle.
+
+b) Inactive / Greyed-out Cards in Player's Hand:
+   In `src/ui/ui_battle_content.c:1253`:
+     if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
+         ((ctype == g_card_skin_wram.uses_type ||
+           ctype == BATTLE_CARD_TYPE_HEAL) && cuses == 0)) {
+         ccolor = UI_COLOR_DIM;
+     }
+     for (r = 0; r < bh; r++) {
+         battle_color_span(ccol, (uint8_t)(top + r), 3, ccolor);
+     }
+   Greyed cards (such as poison grey-out, exhausted arrows, or spent heal cards)
+   have their 3x4 card box borders painted with `UI_COLOR_DIM` (slot 7).
+   When slot 7 is reprogrammed during a heal flash, the borders and text of all
+   greyed cards in hand flash bright green instead of staying dim.
+
+
+3. LOGIC BUG: SHAKE MASK ACCUMULATION ON SEQUENTIAL ENEMY DAMAGE
+--------------------------------------------------------------------------------
+File: src/battle/battle_feedback_banked.c:109-120
+Commits: b20ba102, 64138d48
+
+Problem:
+In `battle_feedback_tick_banked()`:
+
+    /* Fresh judder replaces the old mask (a previous shake always
+     * clears it on expiry below, so a set mask here means genuinely
+     * simultaneous damage -- e.g. one poison tick felling two slots). */
+    if (g_battle_shake_timer == 0) {
+        g_battle_shake_mask = 0;
+    }
+    for (k = 0; k < b->enemy_count; k++) {
+        if (b->enemies[k].hp < g_battle_fx_ehp[k] && b->enemies[k].hp != 0) {
+            g_battle_shake_mask |= (uint8_t)(1u << k);
+            g_battle_shake_timer = 12;
+        }
+        g_battle_fx_ehp[k] = b->enemies[k].hp;
+    }
+
+The assumption in the comment ("a set mask here means genuinely simultaneous
+damage") is incorrect whenever damage occurs across consecutive frames while a
+shake timer is still running:
+  1. Enemy 0 is damaged on frame T. `g_battle_shake_timer` is set to 12.
+     `g_battle_shake_mask` = 0x01.
+  2. Four frames later (frame T+4), Enemy 1 takes damage (e.g. from a sequential
+     status tick, second hit, or script).
+  3. On frame T+4, `g_battle_shake_timer` is 8 (non-zero), so
+     `g_battle_shake_mask` is NOT cleared.
+  4. `g_battle_shake_mask |= (1u << 1)` makes the mask 0x03, and the timer is
+     reset to 12.
+
+Consequence:
+Enemy 0 (which took no damage on frame T+4) continues shaking for an additional
+12 frames (16 frames total). A previous enemy's shake mask is erroneously
+extended because `g_battle_shake_timer == 0` was used as a proxy for
+"simultaneous damage", rather than checking whether damage occurred on the
+current frame.
+
+
+4. EDGE CASE BUG: STRANDED CARD TILES ON RESULT SCREEN IF SHAKE WAS ACTIVE
+--------------------------------------------------------------------------------
+File: src/ui/ui_battle_content.c:1169, 1535
+Commit: 64138d48
+
+Problem:
+When the player takes damage, the entire hand shifts by +1 column (`ccol = col + 1`).
+To prevent stranded border tiles, `battle_clear_hand_zone` runs on shake expiry:
+
+    if ((g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) &&
+        battle->result == BATTLE_RESULT_NONE) {
+        battle_clear_hand_zone(top, bh, mark_row);
+        g_battle_deck_wipe = 0;
+    }
+
+Notice that `battle_clear_hand_zone` is explicitly gated on:
+  `battle->result == BATTLE_RESULT_NONE`
+
+Now consider what happens if victory occurs while the hand is shaken (for example,
+the player takes a hit that reduces hero HP, but a counter-attack or thorns
+kills the enemy on that exchange):
+  1. `b->result` becomes `BATTLE_RESULT_VICTORY`.
+  2. The victory loot reveal handler at line 1535 takes over rows 10-12 and
+     attempts to clear the hand cards:
+         for (i = 0; i < BATTLE_HAND_SIZE; i++) {
+             battle_clear_card_box((uint8_t)(i << 2), g_battle_hud.cards_row);
+         }
+  3. `battle_clear_card_box` clears columns `(i << 2)` .. `(i << 2) + 2`
+     (the unshifted column positions: columns 16..18 for card 4).
+
+Consequence:
+Because card 4 was shifted +1, it was rendered across columns 17..19.
+`battle_clear_card_box` only clears columns 16..18.
+Column 19 on rows 13 and 14 retains leftover card frame border tiles.
+Furthermore, row 15 (where the hand cursor/marker was rendered at column 18)
+is never cleared by `battle_clear_card_box` at all.
+
+
+5. STATE LEAK: STALE CRAM RETAINED ON IMMEDIATE BATTLE RE-ENTRY
+--------------------------------------------------------------------------------
+File: src/battle/battle_feedback_banked.c:76-87
+Commit: 17e0d64e, 64138d48
+
+Problem:
+In `battle_feedback_tick_banked()`:
+
+    if (g_game.screen != SCREEN_BATTLE) {
+        /* Off-battle: cancel an in-flight flash WITHOUT touching CRAM.
+         * Every transition reloads its own set (overworld/item/shop/
+         * dialogue/battle all program CRAM on entry) ... */
+        g_battle_heal_flash = 0;
+        g_battle_heal_phase = 0;
+        return;
+    }
+
+The comment asserts that every transition reloads CRAM on entry.
+However, in `src/ui/ui.c`:
+  `ui_set_cram_palette(0)` caches `s_loaded_cram = 0`.
+When exiting battle to dialogue or an immediate battle scenario/debug reset:
+If the next battle starts while `s_loaded_cram` is still 0 (or if battle render
+takes the incremental update path `rc->prev_screen == SCREEN_BATTLE`),
+`ui_set_cram_palette(0)` is skipped.
+Slot 7 remains programmed with `s_heal_flash_ramp` (slime green entry 3),
+leaking into subsequent battle renders.
+
+
+6. TIMING & SPEC MISMATCH: HEAL PULSE DELAY AND "WHITE BASE"
+--------------------------------------------------------------------------------
+Files: src/battle/battle_feedback_banked.c:134-142
+       src/ui/ui_battle_content.c:220-225
+Commits: b20ba102, dcc7eca5, c8c31be0, 64138d48
+
+Problem:
+The commit logs and comments state:
+  "Pulse phase for the 50-frame flash: white 50-41, green 40-31, white 30-21,
+   green 20-11, white 10-1 (two green pulses over the heal jingle, snapping
+   back to steady green at the end)."
+
+However:
+1. In battle mode (`cgb_bg_palettes[3]`), `UI_COLOR_FIELD` (palette 3, fight3)
+   ink is brown (`RGB8(117, 89, 48)`), NOT green and NOT white.
+2. In `ui_battle_content.c:220`:
+       if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
+           battle_color_span(..., UI_COLOR_DIM);
+       } else {
+           battle_color_span(..., UI_COLOR_FIELD);
+       }
+   When `g_battle_heal_phase == 0`, it renders `UI_COLOR_FIELD` (steady brown).
+   There is no white base anywhere in the render path.
+3. Because `g_battle_heal_phase` is 0 for `flash` in 50..41:
+   For the first 10 frames (167 ms) after the heal card resolves and the jingle
+   begins, the HP block displays its normal steady brown text. The first green
+   pulse only appears starting at frame 40.
+================================================================================

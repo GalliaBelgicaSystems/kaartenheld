@@ -202,7 +202,7 @@ def capture_heal():
     # Battle struct layout mirrors (src/battle/battle.h): player(14) +
     # enemies[3](42) + enemy_count + target_idx, then the dirty byte.
     # Same hardcoded mirror as the bow-shot script's hand staging.
-    DIRTY_OFF = 14 + 3 * 14 + 2
+    DIRTY_OFF = 15 + 3 * 15 + 2  # Combatant is 15 B (hp+max+name[13]); dirty sits at +62
     checks = []
     planner = Planner()
     s = Session(checks, "gif-heal")
