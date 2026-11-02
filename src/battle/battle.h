@@ -131,6 +131,30 @@ extern uint8_t g_battle_pool_max;
  * single-frame stamps).  Cleared by battle_start; read by the battle
  * clock to skip the re-stamp for fully static lineups. */
 extern uint8_t g_battle_multiframe;
+/* Hit feedback (WRAM, BSS zero, staged per battle): the engine never
+ * trusts fixed-bank code size for this (AGENTS.md 52.18), so NOTHING
+ * here is set from fixed-bank resolve paths.  Instead the bank-8 frame
+ * tick watches HP deltas (same-bank WRAM reads, no dispatch): an enemy
+ * HP drop judders that slot (g_battle_shake_slot, 0xFF = none,
+ * g_battle_shake_timer frames, +-1 cell BG / +-4 px OAM alternating
+ * every 2 frames), a player HP drop judders the whole hand
+ * (g_battle_deck_timer frames, each card +-1 cell alternating in
+ * counter-phase), and a player HP rise blinks the hero HP block green
+ * twice (g_battle_heal_flash frames, on/off every 4).  g_battle_fx_epoch
+ * (bumped by battle_start) re-arms the per-HP caches in the tick, so a
+ * new fight never inherits stale deltas.  Painted by the bank-3 (BG
+ * stamp, hero row, hand) and bank-5 (OAM sprites, AP pips) renderers.
+ * Module scope, never in Battle: Battle sits mid-Game, so any growth
+ * shifts every later Game field (see the art arrays above).  Never
+ * persisted (Battle is temporary runtime state, AGENTS.md 53.1). */
+extern uint8_t g_battle_shake_slot;
+extern uint8_t g_battle_shake_timer;
+extern uint8_t g_battle_heal_flash;
+extern uint8_t g_battle_deck_timer;
+extern uint8_t g_battle_fx_epoch;
+extern uint8_t g_battle_fx_seen;
+extern uint8_t g_battle_fx_php;
+extern uint8_t g_battle_fx_ehp[MAX_BATTLE_ENEMIES];
 
 /* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
  * engage clones of one type). Programmed at battle entry, restored with
@@ -176,6 +200,12 @@ void battle_art_load_banked(void);
  * ui_update_battle wrapper right after the bank-3 render (sequential
  * trampoline calls, never nested). */
 void battle_oam_draw_banked(void);
+
+/* Banked hit-feedback tick (src/battle/battle_feedback_banked.c, ROM
+ * bank 9): no staging, reads the live battle straight from g_game.
+ * Dispatched every frame from game_update (same non-terminal gate as
+ * the frame tick). */
+void battle_feedback_tick_banked(void);
 
 /* Bank-3 rider-HUD helper (src/battle/battle_rider_content.c): draws /
  * hides one OAM rider icon per hand slot (entry 19+i) inset over that
