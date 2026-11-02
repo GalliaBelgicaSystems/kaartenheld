@@ -90,14 +90,27 @@ void game_despair_check_banked(void)
     g_bk_byte_c = 1;
 }
 
-/* Reprisal message (scripted 99-damage answer to the hero's A press):
+/* Reprisal damage + message (scripted 99-damage answer to the hero's A press):
  * restages the row buffers the telegraph used, so the DEFEATED! result
  * screen keeps its banner and rows 9+10 read "L. OF SLIMES CASTS /
  * POWERFUL SPELL!" instead of stranding the concentrating text or
  * clearing to bare rows.  Buffer sizes bound the split: row9 19,
- * row10 20 (NUL-included). */
+ * row10 20 (NUL-included).
+ *
+ * The 99 damage lands here too, as pure WRAM arithmetic with the same
+ * clamp as combatant_take_damage (99 >= hp -> 0, else hp - 99): the
+ * fixed-bank A-press path in battle_screen.c spends no second engine
+ * call for it (fixed-bank budget, AGENTS.md 52.18).  Equivalent in all
+ * cases, including a dead hero (stays 0, same as take_damage). */
 void game_despair_reprisal_banked(void)
 {
+    Battle *b = &g_game.battle;
+
     despair_stage(g_despair_row9, "L. OF SLIMES CASTS", 19);
     despair_stage(g_despair_row10, "POWERFUL SPELL!", 20);
+    if (b->player.hp <= 99) {
+        b->player.hp = 0;
+    } else {
+        b->player.hp = (uint8_t)(b->player.hp - 99);
+    }
 }

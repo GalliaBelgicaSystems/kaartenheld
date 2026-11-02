@@ -4,6 +4,9 @@
   "label": "Battle Top-Left OAM AP-Cost HUD",
   "cells": {
     "ap_1": "sprites5",
-    "ap_2": "sprites5"
+    "ap_2": "sprites5",
+    "ap_3": "sprites5",
+    "ap_4": "sprites5",
+    "ap_5": "sprites5"
   }
 }

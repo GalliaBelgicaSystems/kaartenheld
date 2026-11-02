@@ -90,8 +90,8 @@ void screen_change(Game *g, ScreenId screen)
     /* Screens that own VRAM block-1 art (battle enemy art shares slots
      * 128+ with world tiles) must not leak it into the next overworld
      * redraw, and battles OAM-time-share tile ids with overworld art
-     * (AP pips over hero idle at 96-97, riders over the blob tail at
-     * 123-125).  See the per-branch notes below. */
+     * (AP pips 1-4 over hero idle/walk at 96-99, pip 5 plus riders over
+     * the blob tail at 122-125).  See the per-branch notes below. */
     if (screen == SCREEN_OVERWORLD) {
         if (old_screen != SCREEN_DIALOGUE) {
             /* Non-dialogue screens may own VRAM block-1 art (battle
@@ -105,8 +105,9 @@ void screen_change(Game *g, ScreenId screen)
             ui_invalidate_tileset();
         }
         /* Unconditional: battles time-share OAM tile ids with overworld
-         * art (AP pips over hero idle, riders over the blob tail), and
-         * a dialogue entered from battle never restreams them. */
+         * art (AP pips over hero idle/walk, pip 5 plus riders over the
+         * blob tail), and a dialogue entered from battle never restreams
+         * them. */
         ui_restore_ow_oam();
     }
 

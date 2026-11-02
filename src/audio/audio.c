@@ -49,12 +49,12 @@ uint8_t sfx_noise_idx;  /* BSS zero (AGENTS.md 52.27) */
 static uint8_t sfx_div;  /* BSS (52.27) */
 static uint8_t sfx_muted;  /* BSS (52.27) */
 
-/* SFX preemption priorities by SFX_* id (fixed bank, 11 bytes): UI blips
+/* SFX preemption priorities by SFX_* id (fixed bank, 12 bytes): UI blips
  * (CURSOR) < menu confirms (CONFIRM/SELECT/BACK) < combat and event
- * cues (ATTACK/HIT/BLOCK/ALERT/WIN/HURT/HEAL).  Must stay in enum order
- * (audio.h); a new SFX id appends its priority here. */
-static const uint8_t s_sfx_prio[SFX_HEAL + 1] =
-    { 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2 };
+ * cues (ATTACK/HIT/BLOCK/ALERT/WIN/HURT/HEAL/EXPLOSION).  Must stay in
+ * enum order (audio.h); a new SFX id appends its priority here. */
+static const uint8_t s_sfx_prio[SFX_EXPLOSION + 1] =
+    { 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2 };
 
 extern uint8_t sfx_step_tick(void);
 extern void mimic_chain_tick(void);
@@ -65,7 +65,7 @@ void audio_play_sfx(uint8_t s)
     uint8_t voices;
 
     if (!g_sound_enabled) return;
-    if (s > SFX_HEAL) return;  /* SFX_HEAL is the last id (audio.h) */
+    if (s > SFX_EXPLOSION) return;  /* SFX_EXPLOSION is the last id (audio.h) */
     /* Preemption policy: a new SFX interrupts only a same-or-lower-
      * priority one.  UI blips (CURSOR) can no longer cut a combat SFX
      * short -- which also stopped extending the music-channel mute --
@@ -77,7 +77,7 @@ void audio_play_sfx(uint8_t s)
      * there -- a same-id drop would diverge harness behavior from
      * hardware (where a 0.14 s blip is long done) and silence
      * fast menu navigation. */
-    if (sfx_id <= SFX_HEAL && s_sfx_prio[s] < s_sfx_prio[sfx_id]) return;
+    if (sfx_id <= SFX_EXPLOSION && s_sfx_prio[s] < s_sfx_prio[sfx_id]) return;
     sfx_id = s;
     sfx_tick = 0;
     sfx_tone_idx = 0;
@@ -211,7 +211,7 @@ void audio_update(void)
      * bank-8 stepper body (inline select-8/call/restore-live; the music path
      * below selects bank 6 separately in the same ISR). At the table
      * end the used voices are silenced and their music channels unmuted. */
-    if (sfx_id <= SFX_HEAL) {  /* last id; see audio_play_sfx's guard */
+    if (sfx_id <= SFX_EXPLOSION) {  /* last id; see audio_play_sfx's guard */
         if (++sfx_div >= 4) {
             sfx_div = 0;
             *(volatile uint8_t *)0x2000 = SFX_STEP_BANK;

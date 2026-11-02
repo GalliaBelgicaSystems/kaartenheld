@@ -59,7 +59,7 @@ SFX_BANK_BUDGET = 3072
 
 # SFX id order must match the SFX_* enum in src/audio/audio.h
 SFX_IDS = ["CURSOR", "CONFIRM", "SELECT", "BACK", "ATTACK", "HIT", "BLOCK",
-           "ALERT", "WIN", "HURT", "HEAL"]
+           "ALERT", "WIN", "HURT", "HEAL", "EXPLOSION"]
 # Which .uge voices each SFX id is DATA, not code: screens/sfx.json maps
 # each fixed SFX id to a .uge path (assets/sfx/* or assets/music/*).  The
 # editor's Sound view edits that registry; this tool reads it so the two

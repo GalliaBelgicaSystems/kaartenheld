@@ -53,7 +53,7 @@ extern const uint8_t enemy_ow_tiles[];
 #endif
 
 /* Fixed OAM ids for the HUD AP tiles (must match AP_TILE_* above). */
-static const uint8_t s_ap_vram_ids[4] = { AP_TILE_1, AP_TILE_2, EXCLAIM_TILE, QUESTION_TILE };
+static const uint8_t s_ap_vram_ids[7] = { AP_TILE_1, AP_TILE_2, AP_TILE_3, AP_TILE_4, AP_TILE_5, EXCLAIM_TILE, QUESTION_TILE };
 /* Fixed OAM ids for the battle rider icons (must match RIDER_TILE_*:
  * time-share blob-tail ids 123-125, restored on overworld entry). */
 static const uint8_t s_rider_vram_ids[3] = { RIDER_TILE_BURN, RIDER_TILE_FREEZE, RIDER_TILE_POISON };
@@ -186,24 +186,25 @@ static void marks_load_mark_tiles(void)
 
     if (s_mark_tiles_loaded) return;
     s_mark_tiles_loaded = 1;
-    for (i = 2; i < 4; i++) {
+    for (i = 5; i < 7; i++) {
         ow_oam_stream_cell(s_ap_vram_ids[i], ap_tiles + ((uint16_t)i << 4));
     }
 }
 
 /* Stream the battle OAM tiles on the first battle/item tick (same LCD-safe
- * pattern).  AP pips (ap_tiles 0-1) plus the rider icons (rider_tiles,
- * over blob-tail ids 123-125): 5 cells, one loop, one flag.
- * Battle/item-only: in the overworld OAM 96-97 hold the standing-hero
- * idle frames and 123-125 the blob tail, so streaming here would clobber
- * live overworld art (overworld entry restores both and re-arms this). */
+ * pattern).  AP pips (ap_tiles 0-4) plus the rider icons (rider_tiles,
+ * over blob-tail ids 123-125): 8 cells, one loop, one flag.
+ * Battle/item-only: in the overworld OAM 96-99 hold the standing-hero
+ * idle/walk frames and 122-125 the blob tail, so streaming here would
+ * clobber live overworld art (overworld entry restores both and re-arms
+ * this). */
 static void marks_load_battle_tiles(void)
 {
     uint8_t i;
 
     if (s_battle_tiles_loaded) return;
     s_battle_tiles_loaded = 1;
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 5; i++) {
         ow_oam_stream_cell(s_ap_vram_ids[i], ap_tiles + ((uint16_t)i << 4));
     }
     for (i = 0; i < 3; i++) {
@@ -212,7 +213,8 @@ static void marks_load_battle_tiles(void)
 }
 
 /* Re-arm the battle tile stream after overworld entry restores the
- * time-shared OAM ids (hero idle at 96-97, blob tail at 123-125).
+ * time-shared OAM ids (AP pips 1-4 over hero idle/walk at 96-99, pip 5
+ * plus riders over the blob tail at 122-125).
  * No-arg trampoline target for the fixed-bank overworld-entry path. */
 void marks_battle_tiles_invalidate_banked(void)
 {
@@ -221,12 +223,14 @@ void marks_battle_tiles_invalidate_banked(void)
 
 /* Overworld-entry OAM restore (same bank: direct reads; LCD-safe writes).
  * Battles time-share OAM ids with overworld art, so coming home restreams
- * the overworld side: hero idle frames 1 & 2 to 96-97 (battles stream AP
- * pips over them) and the blob tail (offsets 23-25: chest-open +
- * kobold/knight idle) to 123-125 (battles stream rider icons over them).
- * Every write waits for an accessible VRAM window (same pattern as the
- * battle loader above), so this is safe with the LCD on and under the
- * harness.  No-arg trampoline target behind ui_restore_ow_oam(). */
+ * the overworld side: hero idle frames 1 & 2 to 96-97 and walk frames 1 &
+ * 2 to 98-99 (battles stream AP pips 1-4 over them) and the blob tail
+ * (offset 22 plus offsets 23-25: chest-open + kobold/knight idle) to
+ * 122-125 (battles stream AP pip 5 over 122 and rider icons over
+ * 123-125).  Every write waits for an accessible VRAM window (same
+ * pattern as the battle loader above), so this is safe with the LCD on
+ * and under the harness.  No-arg trampoline target behind
+ * ui_restore_ow_oam(). */
 void ow_oam_restore_banked(void)
 {
     uint8_t i;
@@ -235,6 +239,14 @@ void ow_oam_restore_banked(void)
         ow_oam_stream_cell((uint8_t)(HERO_IDLE_SPRITE_TILE_ID + i),
                            hero_desolate_sprite_tile + 32 + ((uint16_t)i << 4));
     }
+    for (i = 0; i < 2; i++) {
+        ow_oam_stream_cell((uint8_t)(HERO_DESOLATE_SPRITE_TILE_ID + i),
+                           hero_desolate_sprite_tile + ((uint16_t)i << 4));
+    }
+    /* AP pip 5 time-shares blob offset 22 (OAM 122): restore it from the
+     * blob like the rider tail below.  AP_TILE_5 == RIDER_TILE_BURN - 1
+     * only by adjacency, so spell out the tile and offset plainly. */
+    ow_oam_stream_cell(AP_TILE_5, enemy_ow_tiles + ((uint16_t)(AP_TILE_5 - ENEMY_OW_BASE) << 4));
     for (i = 0; i < 3; i++) {
         ow_oam_stream_cell((uint8_t)(RIDER_TILE_BURN + i),
                            enemy_ow_tiles + (((uint16_t)(RIDER_TILE_BURN - ENEMY_OW_BASE + i)) << 4));
@@ -293,9 +305,10 @@ static void marks_refresh(void)
     g_bk_byte_d = 0;
     /* Mark glyphs (!/? at 126-127) stream on the first tick of any screen
      * (free ids everywhere).  Pips + riders stream only on battle/item
-     * ticks: in the overworld those ids hold hero-idle/blob-tail art.
-     * Same-tick guarantee as before (this runs in game_update before the
-     * render), so the first battle/item frame already draws resident art. */
+     * ticks: in the overworld those ids hold hero idle/walk + blob-tail
+     * art.  Same-tick guarantee as before (this runs in game_update
+     * before the render), so the first battle/item frame already draws
+     * resident art. */
     marks_load_mark_tiles();
     if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM) {
         marks_load_battle_tiles();

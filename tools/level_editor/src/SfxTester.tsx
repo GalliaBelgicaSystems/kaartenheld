@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-// Sound registry editor (screens/sfx.json).  The 7 SFX ids are fixed by
+// Sound registry editor (screens/sfx.json).  The SFX ids are fixed by
 // the SFX_* enum in src/audio/audio.h; each one maps to an authored .uge
 // (assets/sfx/* or assets/music/*).  tools/transcribe_sfx.py reads this
 // same registry to emit the step tables (make sfx), so saving here then
@@ -13,6 +13,11 @@ const SFX_LIST: { id: string; blurb: string }[] = [
   { id: 'ATTACK', blurb: 'player slash (noise)' },
   { id: 'HIT', blurb: 'enemy strike (noise)' },
   { id: 'BLOCK', blurb: 'successful defend' },
+  { id: 'ALERT', blurb: 'pursuer-entry sting' },
+  { id: 'WIN', blurb: 'chuck-a-luck win cue' },
+  { id: 'HURT', blurb: 'player takes damage' },
+  { id: 'HEAL', blurb: 'ring-heal cue' },
+  { id: 'EXPLOSION', blurb: 'slime-lord desperation spell' },
 ];
 
 type UgeFile = { path: string; name: string; dir: string };

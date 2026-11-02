@@ -51,6 +51,8 @@ AP_FILES = {
     'ap_1': 'actors_one_ap',
     'ap_2': 'actors_two_ap',
     'ap_3': 'actors_three_ap',
+    'ap_4': 'actors_four_ap',
+    'ap_5': 'actors_five_ap',
 }
 
 # Battle OAM mark glyphs (! and ?): curated from assets/sprites.png
@@ -91,18 +93,23 @@ LAYOUT = [
     # blob offset moves.
     ['slime_knight_frame1', 'slime_knight_frame2', None, None],
     # AP-cost pips (battle top-left OAM HUD, owned by screens/ap_icons.json
-    # with the sprites2 OBJ ramp).  Appended last so no existing blob
-    # offset moves.
-    ['ap_1', 'ap_2', 'ap_3', None],
+    # with the sprites5 OBJ ramp).  ap_4 fills the row's spare cell (no
+    # coordinate moves); ap_5 rides a new LAST row after the idle row so
+    # no existing cell shifts (sheet coords pin the ramp allowlist).
+    ['ap_1', 'ap_2', 'ap_3', 'ap_4'],
     # Battle OAM mark glyphs (! and ?, owned by screens/mark_icons.json
     # with the wizard's sprites7 OBJ ramp: white bubble + dark
     # face-brown detailing on slot 5.  Battle scratch is slots 6/7 and
     # tileset loads restore 5-7, so slot 5 survives fights.  Appended
     # last so no existing blob offset moves.
     ['exclaim', 'question', None, None],
-    # Slime-knight standing pose (idle_cells): very last row, after marks,
-    # so no existing sheet coordinate moves when idle art lands.
+    # Slime-knight standing pose (idle_cells): after marks, so no
+    # existing sheet coordinate moves when idle art lands.
     ['slime_knight_idle', None, None, None],
+    # Fifth AP pip (screens/ap_icons.json ap_5, sprites5): appended very
+    # last, after the idle row, so every existing coordinate above stays
+    # put (ramp allowlist + shade map key on sheet coords).
+    ['ap_5', None, None, None],
 ]
 
 # Tile-name -> sheet (x, y): the single source of truth for enemy

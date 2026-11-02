@@ -865,10 +865,11 @@ def _load_icon_table(filename, required):
 def load_ap_types():
     """Load + validate screens/ap_icons.json (battle AP-cost OAM pips).
 
-    Returns {cell: ramp} or None on error.  One icon per energy cost 1-2
-    (cost 0 shows none); the three-ap art stays staged in the sheet until
-    a 3-cost card exists (no free OAM tile below the BG-art aliasing)."""
-    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2"])
+    Returns {cell: ramp} or None on error.  One icon per energy cost 1-5
+    (cost 0 shows none).  The pips time-share OAM ids with overworld art
+    (1-2 over hero idle 96-97, 3-4 over hero walk 98-99, 5 over blob
+    cell 122); battle entry streams them, overworld entry restores."""
+    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5"])
 
 
 def load_mark_types():
@@ -930,11 +931,14 @@ def build_rider_output(enemy_types, rider_types):
 
 # Fixed OAM tile ids for the battle HUD pips.  Below the BG-art aliasing
 # (OAM 128+ shares physical tiles with BG 128+), clear of the font dup
-# (OAM 0-95) and the hero tiles (98-99); the enemy blob streams to 100+.
-# AP_1/2 sit at 96-97, the marks at 126-127 (blob-adjacent spare); the
+# (OAM 0-95).  AP_1/2 sit at 96-97 (time-share hero idle, restored on
+# overworld entry), AP_3/4 at 98-99 (time-share hero walk, same restore),
+# AP_5 at 122 (time-shares blob offset 22, restored with the rider tail),
+# the marks at 126-127 (blob-adjacent spare, always resident); the
 # blob is capped at 26 tiles so growth fails loudly instead of
 # clobbering them (see ow_blob_layout).
-AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "exclaim": 126, "question": 127}
+AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "ap_3": 98, "ap_4": 99, "ap_5": 122,
+               "exclaim": 126, "question": 127}
 
 
 def build_ap_output(ap_types, mark_types):
@@ -963,7 +967,8 @@ def build_ap_output(ap_types, mark_types):
     lines.append("#ifndef AP_TILES_GENERATED_H")
     lines.append("#define AP_TILES_GENERATED_H")
     lines.append("")
-    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2")):
+    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2"), ("ap_3", "3"),
+                        ("ap_4", "4"), ("ap_5", "5")):
         _ramp = ap_types.get(_cell)
         if _ramp is None:
             sys.stderr.write("ERROR: ap_icons.json missing '%s'\n" % _cell)
@@ -1630,15 +1635,14 @@ def main(args=None):
         return 0
 
     if args.ap_coords:
-        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1,
-        # ap_2, then the marks -- matches AP_TILE_IDS; ap_3 stays staged
-        # until a 3-cost card exists and is deliberately excluded here).
+        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1
+        # through ap_5, then the marks -- matches AP_TILE_IDS).
         _ap_types = load_ap_types()
         _mark_types = load_mark_types()
         if _ap_types is None or _mark_types is None:
             return 1
         coords = []
-        for n in ["ap_1", "ap_2", "exclaim", "question"]:
+        for n in ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5", "exclaim", "question"]:
             if n not in ENEMY_TILE_COORDS:
                 print("ERROR: --ap-coords: '%s' not on the enemy sheet" % n, file=sys.stderr)
                 return 1
