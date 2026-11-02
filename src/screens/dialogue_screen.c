@@ -145,6 +145,14 @@ void dialogue_screen_render(Game *g)
              * reload: without this the world redraw keeps enemy art. */
             ui_invalidate_tileset();
             ui_draw_world_full(w);
+            /* Battle OAM time-shares tile ids with overworld art (AP pips
+             * over the hero idle frames at 96-97, rider icons over the
+             * blob tail at 123-125): the ids are right but VRAM still
+             * holds battle pixels, so the hero would render as pips
+             * behind the box.  Restores the overworld data (LCD-safe);
+             * the return trip to battle restreams via the cleared
+             * s_battle_tiles_loaded flag on the next battle tick. */
+            ui_restore_ow_oam();
             ui_draw_dialogue(d, w);
             ui_lcd_on();
         } else {

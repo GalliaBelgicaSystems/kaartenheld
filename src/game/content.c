@@ -138,19 +138,19 @@ void game_slime_despair_outro(void)
 {
     /* The battle screen guarantees a live game; the single global Game
      * instance is always the battle owner (main.c drives everything from
-     * &g_game).  Wakes on the real wake grove (no separate copy map: the
-     * wake dialogue opens immediately and closes straight to THANKS, so
-     * the player never walks here -- the old throne-room point exit was
-     * an invisible warp with no portal art and is gone).  No LCD change
-     * here: game_render() performs the full LCD-off redraw after the
-     * frame's vsync().  Turning the LCD off in update context hangs
-     * vsync() (no VBlank while the LCD is off), stranding the release
-     * ROM on a white screen with the area track playing -- a hang the
-     * harness never sees (it skips vsync). */
+     * &g_game).  Wakes in the demo-end wake scene (vast empty
+     * underground -- the finale backdrop, reachable only through this
+     * teleport: the wake dialogue opens immediately and closes straight
+     * to THANKS, so the player never walks here).  No LCD change here:
+     * game_render() performs the full LCD-off redraw after the frame's
+     * vsync().  Turning the LCD off in update context hangs vsync() (no
+     * VBlank while the LCD is off), stranding the release ROM on a
+     * white screen with the area track playing -- a hang the harness
+     * never sees (it skips vsync). */
 #ifdef TEST_LEVELS
     scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
 #else
-    scene_load(&g_game, SCENE_WAKE_GROVE, 10, 8);
+    scene_load(&g_game, SCENE_DEMO_END_WAKE_SCENE, 12, 10);
 #endif
     /* scene_load leaves facing untouched, so route it explicitly to the
      * authored spawn facing (UP) instead of the engage direction. */
