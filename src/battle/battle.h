@@ -139,11 +139,11 @@ extern uint8_t g_battle_multiframe;
  * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
  * judders the whole hand with one shared offset (5 frames, 0 one
  * frame / +1 cell the next, alternating every 2 -- uniform motion
- * never overlaps neighboring 3-wide boxes), a player HP rise blinks
- * the hero HP block off-green twice over the 48-frame heal jingle
- * (12 on / 12 off, g_battle_heal_phase stages the current pulse so
- * the bank-3 painter stays branch-light: release bank 3 has ~40 B
- * left and cannot afford threshold math). Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * never overlaps neighboring 3-wide boxes), a player HP rise flashes
+ * green twice on a white base over the 50-frame heal jingle
+ * (g_battle_heal_phase stages the current pulse so the bank-3 painter
+ * stays branch-light: release bank 3 has ~40 B left and cannot afford
+ * threshold math). Status ticks, counters, overblock heals and debug HP pokes all funnel
  * through HP, so every present and future source feeds the same feedback
  * with no per-source wiring.  g_battle_fx_epoch (bumped by
  * battle_start) re-arms the caches and zeroes stale timers, so a new
