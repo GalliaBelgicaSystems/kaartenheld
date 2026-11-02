@@ -115,7 +115,7 @@ void battle_rider_draw(const volatile Battle *battle)
          * the same +-1 cell cadence as the BG box (same guard: never on
          * result screens). */
         if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-            doff = (int8_t)((((i + (g_battle_deck_timer >> 1)) & 1) != 0) ? 1 : -1);
+            doff = (int8_t)((((i + (g_battle_deck_timer >> 2)) & 1) != 0) ? 1 : -1);
             if (col == 0 && doff < 0) {
                 doff = 1;
             }

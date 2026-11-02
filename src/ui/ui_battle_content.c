@@ -1133,8 +1133,14 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
      * combo draw owns that row (full-width clear on DIRTY_COMBO). */
 
     /* Deck shake (player hit): wipe the zone first (see helper), then
-     * every card draws at its shaken column below. */
-    battle_clear_hand_zone(top, bh, mark_row);
+     * every card draws at its shaken column below.  The wipe runs only
+     * while shaking or on the one-shot wipe frame after -- steady
+     * cursor moves keep the cheap incremental path (a wipe on every
+     * DIRTY_HAND flickers the whole hand). */
+    if (g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) {
+        battle_clear_hand_zone(top, bh, mark_row);
+        g_battle_deck_wipe = 0;
+    }
 
     for (k = 0; k < BATTLE_HAND_SIZE; k++) {
         sel[k] = (k < cc) ? battle->selected_indices[k] : 0xFF;
@@ -1148,7 +1154,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
          * Card 0 never shifts left off the row. */
         ccol = col;
         if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-            doff = (int8_t)((((i + (g_battle_deck_timer >> 1)) & 1) != 0) ? 1 : -1);
+            doff = (int8_t)((((i + (g_battle_deck_timer >> 2)) & 1) != 0) ? 1 : -1);
             if (col == 0 && doff < 0) {
                 doff = 1;
             }

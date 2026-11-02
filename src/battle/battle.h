@@ -151,6 +151,11 @@ extern uint8_t g_battle_shake_slot;
 extern uint8_t g_battle_shake_timer;
 extern uint8_t g_battle_heal_flash;
 extern uint8_t g_battle_deck_timer;
+/* One-shot hand-zone wipe (see the hand painter): set by the tick when
+ * the deck timer expires, consumed by the next hand redraw.  Without
+ * it the steady path would need a full wipe every DIRTY_HAND (visible
+ * flicker on every cursor move) or strand shifted pixels. */
+extern uint8_t g_battle_deck_wipe;
 extern uint8_t g_battle_fx_epoch;
 extern uint8_t g_battle_fx_seen;
 extern uint8_t g_battle_fx_php;

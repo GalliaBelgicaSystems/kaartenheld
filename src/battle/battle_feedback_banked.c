@@ -28,13 +28,17 @@ void battle_feedback_tick_banked(void)
     if (g_battle_fx_seen != g_battle_fx_epoch) {
         g_battle_fx_seen = g_battle_fx_epoch;
         g_battle_fx_php = b->player.hp;
+        g_battle_deck_wipe = 0;
         for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
             g_battle_fx_ehp[k] = b->enemies[k].hp;
         }
         return;
     }
     if (b->player.hp < g_battle_fx_php) {
-        g_battle_deck_timer = 12;
+        /* Shorter than the enemy judder (8 frames): a nudge, not a
+         * rattle.  OAM riders/pips ride at half a cell (see the
+         * painters) for the same reason. */
+        g_battle_deck_timer = 8;
     } else if (b->player.hp > g_battle_fx_php) {
         g_battle_heal_flash = 16;
     }
@@ -57,5 +61,11 @@ void battle_feedback_tick_banked(void)
     if (g_battle_deck_timer != 0) {
         g_battle_deck_timer--;
         b->dirty |= BATTLE_DIRTY_HAND;
+        if (g_battle_deck_timer == 0) {
+            /* One-shot wipe (see the hand painter): the next hand
+             * redraw clears the zone once, so no shifted frame,
+             * marker or tint strands after the judder. */
+            g_battle_deck_wipe = 1;
+        }
     }
 }

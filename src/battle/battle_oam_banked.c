@@ -240,7 +240,7 @@ static void battle_ap_draw(const volatile Battle *battle)
             /* Deck shake (player hit): pips ride their card's top-left
              * corner with the same cadence as the BG box. */
             if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-                doff = (int8_t)((((i + (g_battle_deck_timer >> 1)) & 1) != 0) ? 1 : -1);
+                doff = (int8_t)((((i + (g_battle_deck_timer >> 2)) & 1) != 0) ? 1 : -1);
                 if (i == 0 && doff < 0) {
                     doff = 1;
                 }
