@@ -1,7 +1,7 @@
 {
  "name": "tutorial_skip_talk",
  "test": true,
- "description": "Answering YES (TALK) on Carl's leave-the-field offer just closes: back on the field where the hero stood, no AP granted, no skip flag, no fight -- walking back to Carl still starts the lesson",
+ "description": "Answering STAY on Carl's leave-the-field offer just closes: back on the field where the hero stood, no AP granted, no skip flag, no fight -- walking back to Carl still starts the lesson",
  "actions": [
   {
    "type": "press",

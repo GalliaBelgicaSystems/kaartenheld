@@ -14,11 +14,13 @@
  * step that would cross the map boundary -- before winning the spar and
  * before taking the AP skip stops the step (the position has not
  * committed yet) and stages Carl's offer through the generic post-tick
- * dialogue request ("HEY! WANNA LEARN HOW FIGHT?  TALK / LEAVE"); the
- * bank-10 choice body resolves the answer: LEAVE grants the spar's +1 AP
- * once and sets STORY_FLAG_ID_TUTORIAL_SKIPPED (so the offer never
- * repeats and the tutorial victory grants no second point), TALK just
- * closes so the hero can walk back to Carl.
+ * dialogue request ("HEY! WANNA LEARN HOW FIGHT?" with a STAY / LEAVE
+ * option row); the bank-10 choice body resolves the answer: LEAVE grants
+ * the spar's +1 AP once and sets STORY_FLAG_ID_TUTORIAL_SKIPPED (so the
+ * offer never repeats and the tutorial victory grants no second point),
+ * STAY just closes so the hero can walk back to Carl -- and the next
+ * attempt to leave asks again (the offer deliberately does NOT disarm
+ * the departure tile: STAY must keep blocking the exit, not open it).
  *
  * Lives here (not bank 8 with the rest of the per-frame tick) because
  * bank 8 sits hard against 16 KB (AGENTS.md 52.18/55.5): the tick
@@ -30,39 +32,25 @@
  * purpose -- sharing them would need a cross-bank call, which would
  * fetch this body's continuation through the wrong window.
  *
- * The offered tile is remembered so pushing on after TALK cannot loop
- * the box: while the hero still stands on it the offer stays disarmed;
- * any other tile re-arms.  Leaving the field (or any other map) parks
- * the record, so a later visit asks again. */
-#define CARL_OFFER_PARKED 0xFFu
+ * No departure-tile memory: the cancelled step already sets move_state
+ * back to IDLE, and the screen guard below suppresses the offer while
+ * the dialogue is open, so holding the exit direction re-asks on the
+ * next fresh EDGE attempt instead of looping inside one frame. */
 #define ACTOR_ID_CARL_TUTOR 1
-static uint8_t s_carl_offer_x;
-static uint8_t s_carl_offer_y;
-
-static uint8_t carl_offer_map(void)
-{
-    if (g_game.world.map_id == MAP_FIELD) return 1;
-#ifdef TEST_LEVELS
-    /* Harness fixture of the same field (scenarios stage it). */
-    if (g_game.world.map_id == MAP_TEST_FIELD) return 1;
-#endif
-    return 0;
-}
 
 void carl_skip_offer_banked(void)
 {
     World *w = &g_game.world;
-    uint8_t px = w->player.position.x;
-    uint8_t py = w->player.position.y;
     uint8_t i;
     uint8_t f;
 
-    if (!carl_offer_map()) {
-        s_carl_offer_x = CARL_OFFER_PARKED;
-        s_carl_offer_y = CARL_OFFER_PARKED;
+    if (g_game.world.map_id != MAP_FIELD
+#ifdef TEST_LEVELS
+        && g_game.world.map_id != MAP_TEST_FIELD
+#endif
+        ) {
         return;
     }
-    if (px == s_carl_offer_x && py == s_carl_offer_y) return;
     if (g_game.screen != SCREEN_OVERWORLD) return;
     if (w->move_state != MOVE_STATE_MOVING) return;
     if (w->move_outcome != MOVE_OUTCOME_EDGE &&
@@ -82,8 +70,6 @@ void carl_skip_offer_banked(void)
         return;
     }
 
-    s_carl_offer_x = px;
-    s_carl_offer_y = py;
     /* Cancel the departure: the hero stays on the field to answer. */
     w->move_state = MOVE_STATE_IDLE;
     w->move_progress = 0;

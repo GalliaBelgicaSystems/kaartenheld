@@ -1,0 +1,102 @@
+{
+ "name": "tutorial_skip_stay_reask",
+ "test": true,
+ "description": "Answering STAY on Carl's leave-the-field offer keeps blocking the exit: closing the ask and pushing into the east exit again re-opens the STAY/LEAVE ask (hero still on the field, no skip flag, no AP, no fight)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "TUTORIAL_CARL_SKIP_ASK"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "STAY"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FIELD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 30,
+   "expected_y": 7
+  },
+  {
+   "type": "flag",
+   "flag": "TUTORIAL_SKIPPED",
+   "expected": false
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 1
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_CHOICE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 30,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 6100
+ }
+}

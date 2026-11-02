@@ -4,8 +4,7 @@
   "lines": [
     "HEY! WANNA LEARN",
     "HOW FIGHT?",
-    "TALK:YES LEAVE:NO",
-    "> YES   NO"
+    "> STAY  LEAVE"
   ],
   "choice": "yes_no"
 }
