@@ -45,7 +45,7 @@ void battle_feedback_tick_banked(void)
          * on the same frame -- shaking then would clobber the loot
          * reveal rows the hand painter wipes). */
         if (b->result == BATTLE_RESULT_NONE) {
-            g_battle_deck_timer = 8;
+            g_battle_deck_timer = 5;
         }
     } else if (b->player.hp > g_battle_fx_php) {
         g_battle_heal_flash = 16;

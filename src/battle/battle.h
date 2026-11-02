@@ -137,7 +137,7 @@ extern uint8_t g_battle_multiframe;
  * tick watches HP deltas (direct WRAM reads, no dispatch): an enemy HP
  * drop judders those slots (g_battle_shake_mask bits, 12 frames, +-1
  * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
- * judders the whole hand with one shared offset (8 frames, 0 one
+ * judders the whole hand with one shared offset (5 frames, 0 one
  * frame / +1 cell the next, alternating every 2 -- uniform motion
  * never overlaps neighboring 3-wide boxes), a player HP rise blinks
  * the hero HP block off-green twice (16 frames, on/off every 4).
