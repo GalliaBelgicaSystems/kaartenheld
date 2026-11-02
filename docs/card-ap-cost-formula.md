@@ -18,8 +18,7 @@ cost without anyone choosing a number.
 ```text
 value = power  +  (material << 2)  +  (rider << 3)
 
-AP    = (value + 7) >> 3           /* = ceil(value / 8) */
-AP    = min(AP, 5)                 /* demo pool ceiling */
+AP    = (value + 7) >> 3           /* = ceil(value / 8); 1..5 by construction */
 ```
 
 * `power` — the card's face value, meaning **damage dealt** (sword/bow/
@@ -38,9 +37,12 @@ W SW   power 1, wood    -> 1 AP        (the brief's "very simple wood sword")
 M F SW power 9, mythril + fire -> 5 AP (the brief's "mythril fire sword")
 ```
 
-No division, no multiplication, no table: two shifts and two adds.  The
-natural maximum is 5 for any card the content tables can produce
-(`9 + 16 + 8 = 33 -> 5`), so the clamp only guards injected/out-of-band ids.
+No division, no multiplication, no table lookup.  The `1..5` range is a
+property of the inputs rather than a clamp in the expression: the largest
+legal value is `9 + 4·4 + 8 = 33`, which already yields 5, so the ROM
+formula never needs a `min()`.  Only paths that can be handed an id the
+tables never produce (debug hand injection) clamp, against `CARD_AP_MAX`
+(§6.2).
 
 ---
 
@@ -59,11 +61,12 @@ cost therefore answers exactly one question:
 
 > How much of this phase's turn does this card consume?
 
-It is **not** the card's gold value.  Price is a separate, already
-deterministic formula (`docs/loot.md` §16/§34.6: `power + 2·tier` (+2 for a
-poison rider), stored in `CardDefinition.price`).  AP buys *tempo*, price
-buys *economy*; the two ladders are allowed to disagree (a mythril bow is
-worth 30 gold but costs 4 AP, not 30).
+It is **not** the card's gold value.  Price is a separate economy: sell
+value is synthesized as `power + 2·tier` (+2 for a poison rider,
+`docs/loot.md` §16/§34.6, stored in `CardDefinition.price`), while shop rows
+carry authored prices (the Merchant sells the mythril bow for 30 g).  AP
+buys *tempo*, price buys *economy*, and the two ladders disagree by design:
+the bow costs 4 AP, and a loot roll of the same combo sells for 17 g.
 
 And AP is **not** a rarity signal: rarity is the loot roll
 (`docs/loot.md` §34.5).  Cost tracks what the card *does*, gate AP tracks
@@ -75,16 +78,18 @@ how likely it is to *drop*.
 
 | Rule | Where | Values |
 |---|---|---|
-| Authored per row | `src/game/cards_content.c` | 1, 1, 1, 1, 1, 0, 2, 1 |
+| Authored per row | `src/game/cards_content.c` | one byte per row: 1, 1, 1, 1, 1, 0, 2, 1 (table order; §4.3 lists them per card) |
 | Loot weapon table | `src/rpg/loot_banked.c:101` | all weapons 1 |
 | Inline loot path | `src/battle/battle_init_content.c:67` | `(wpn <= WPN_RING) ? 1 : 0` |
 | Screen path | `src/screens/item_content_banked.c:435` | same expression |
 | Phantom/fallback card | `src/battle/deck_init.c:66`, `battle_turn_draw_banked.c:61` | 1 |
 
-Five places, four rules, one visible value.  Adding one card today means
-guessing a byte in a table; adding one *material* means remembering to edit
-three copies.  That is the whole problem this document solves: **the cost
-must be a property of the card, not a decision by the author.**
+Six locations across five files, four distinct rules (authored per row; a
+table of 1s; the same inline expression copied twice; the same fallback `1`
+copied twice), one visible value.  Adding one card today means guessing a
+byte in a table; adding one *material* means remembering to edit three
+copies.  That is the whole problem this document solves: **the cost must be
+a property of the card, not a decision by the author.**
 
 ---
 
@@ -103,7 +108,7 @@ must be a property of the card, not a decision by the author.**
 
 Swords and bows sit one point above their band, daggers/shields/rings at the
 band floor — that gap is what makes a mythril shield cheaper than a mythril
-sword (§6.3).
+sword (§7.3).
 
 Reasoning for weight 1: damage is the unit the player is already budgeting
 in, and every other term can be expressed as "how many damage points is this
@@ -267,10 +272,14 @@ future tuning knob must preserve it (§8.4).
 
 ### 6.2 It never exceeds the pool ceiling
 
-Max legal input: `9 + 4·4 + 8 = 33 -> 5`.  The formula cannot emit 6 or 7 for
+Max legal input: `9 + 4·4 + 8 = 33 -> 5`, and the largest intermediate,
+`33 + 7 = 40`, still fits a byte.  The formula cannot emit 6 or 7 for
 table-built cards, so the demo's 5-AP pool ceiling is never violated and no
-card is ever *unplayable* purely by arithmetic.  The `min(AP, 5)` is a guard
-for injected/debug ids, not a real clamp.
+card is ever *unplayable* purely by arithmetic.
+
+That is why the expression carries no `min()`: the ceiling is a consequence
+of the inputs, not a clamp.  `CARD_AP_MAX` exists only for paths that accept
+ids from outside the tables, which must clamp before staging a card.
 
 ### 6.3 Monotone in every axis
 
@@ -317,12 +326,21 @@ The starter deck (`screens/hero.json`) is four wood swords, four wood
 shields and **two bronze fire swords**.  Under this formula the fire swords
 cost 2 while the hero's pool starts at 1
 (`src/game/content.c:83`), so they are dead cards until the first AP grant.
-That is arguably correct — they are the deck's "you are growing" card — but
-it must be a decision, not a surprise:
+**This is a gating decision, not a follow-up.**  Accepting the formula with
+the pool at 1 leaves the starter deck's only non-wood cards dead until the
+first AP grant, and §7.1(b) compounds it for the rest of the game — while
+the player manual already promises otherwise.  Settle it before
+implementing:
 
-* either accept it and document it in the manual,
-* or start the pool at 2, which is what the player manual already claims
-  (`docs/manual.md:167`: "You get **2 Energy** each round").
+* **(a) start the pool at 2**, matching `docs/manual.md:167` ("You get
+  **2 Energy** each round") and correcting the "flat 1 AP start" comment in
+  `src/battle/battle.h`, or
+* **(b) keep 1** and accept that the two fire swords are the first thing the
+  first AP grant buys, saying so in the manual.
+
+Recommendation: (a).  It is one byte in `game_new_game`, it agrees with what
+the manual already tells players, and it keeps the starter deck's strongest
+cards live on turn one.
 
 ### 7.3 Block and heal are cheaper than damage, on purpose
 
@@ -351,22 +369,31 @@ nothing.
 
 ### 8.1 Add the formula
 
-`src/rpg/loot.h`, next to `LOOT_POWER` (same arc, same constants):
+`src/rpg/loot.h`, next to `LOOT_POWER` — same arc, same constants, and
+`MAT_*` already lives there (game layer including an engine header is the
+allowed direction, AGENTS.md §55.1; a separate `card_ap.h` would have to
+import `loot.h` for the material enum anyway, so it would only add a file):
 
 ```c
 /* docs/card-ap-cost-formula.md: one AP step = 8 value points. */
 #define CARD_AP_MATERIAL_PTS 4
 #define CARD_AP_RIDER_PTS    8
-#define CARD_AP_MAX          5
+#define CARD_AP_MAX          5   /* guard for injected ids, see below */
 
 #define CARD_AP_VALUE(power, material, rider)                    \
-    ((uint16_t)((uint16_t)(power) +                              \
-                ((uint16_t)(material) << 2) +                    \
-                ((uint16_t)(rider) << 3)))
+    ((uint8_t)((power) + ((material) << 2) + ((rider) << 3)))
 
 #define CARD_AP(power, material, rider)                          \
     ((uint8_t)((CARD_AP_VALUE(power, material, rider) + 7) >> 3))
 ```
+
+Everything fits a byte — the largest value is 33 and the largest
+intermediate 40 — so the `uint8_t` types are exact and a 16-bit widen would
+buy nothing.  (SDCC still does the adds in `int`, which C89 promotion makes
+unavoidable, but no value leaves `0..40` and the truncated result is
+provably correct.)  Deliberately unclamped: `CARD_AP_MAX` is applied by the
+debug hand-injection path, which can be handed an id the tables never
+produce.
 
 All three runtime call sites are already banked files
 (`src/battle/battle_init_content.c` and `src/screens/item_content_banked.c`
@@ -393,8 +420,10 @@ The rider term is free at all three runtime sites: they already compute
 
 ### 8.3 Order of work
 
-1. `loot.h` macros + `loot_card_ap()`; no behavior change (verify: the four
-   runtime sites still emit 1s and the catalog still matches §4.3 by hand).
+1. `loot.h` macros only; no behavior change (verify: the three runtime sites
+   still emit 1s and the catalog still matches §4.3 by hand), plus the
+   `make card-costs` gate from §9 so §6.1 is already guarded before any
+   number moves.
 2. Switch the three runtime sites; run `loot_drop_victory`,
    `loot_ap_iron_cap`, `loot_ap_steel`, `cards_menu_loot_shift`,
    `loot_ring_uses_mythril`, `merchant_sell_loot`.
@@ -402,7 +431,8 @@ The rider term is free at all three runtime sites: they already compute
    `card_battle_heal`, `card_shield_defend`, `defend_dagger_preview_highcard`.
 4. Pips 3–5 (`screens/ap_icons.json` + the OAM chain); `make memmap` and a
    sprite-budget check, then `make verify-oam`.
-5. Balance pass on §7.1/§7.2 (pool start, tier grants) as a separate commit.
+5. The §7.2 pool decision — gating: the change is not accepted without it —
+   then the §7.1 pool-growth path as an explicit follow-up.
 
 Steps 1–3 touch no struct, no WRAM layout, and no banked placement, so they
 do not require the §52.19 sentinel run — but `make memmap` is still the gate
@@ -411,13 +441,23 @@ the macro calls).
 
 ### 8.4 Tuning knobs (ranked)
 
-1. **Pool growth** — the real lever (§7.1).  No formula change.
-2. **Rider weight** — 8 (one step) today; 0 would make riders free, 16
-   would price them at two steps.  Any change must keep §6.1.
-3. **Material weight** — 4 today.  5 would push mythril plain swords to
-   6 AP (a violation of §6.2), so this knob is effectively frozen unless
-   the cap moves.
-4. **Effect-specific riders** — see open questions.
+The weights are **not** balance dials.  Material 4 and rider 8 are fixed by
+the ladder in §4, and the top of that ladder is pinned by the 5-AP ceiling:
+any shift-legal increase saturates it (material weight 8 puts a mythril
+plain sword at `9 + 32 + 7 = 41`, i.e. 6 before the cap, so every mythril
+card becomes a clamped 5; weight 5 is not a shift and does not even move the
+mythril sword, `29 -> 4`).  Rider 16 makes every bronze rider cost 3 and
+breaks §6.1; rider 0 makes statuses free.  Treat both weights as part of the
+card language, like the bands themselves.
+
+The real levers, in order:
+
+1. **The pool** (§7.1/§7.2) — the only way to change what a given cost
+   *buys*.  No formula change.
+2. **The band table** (`LOOT_POWER`, `docs/loot.md` §34.1) — moves power,
+   and so cost and the loot gate together, preserving §6.1 by construction.
+3. **Effect-specific riders** — a per-effect weight table would replace the
+   flat `rider` bit without touching the expression (open question 1).
 
 ---
 
@@ -427,13 +467,17 @@ the macro calls).
 |---|---|
 | New scenario `card_ap_formula` | Stage the anchors with the existing hand-injection debug action (`set_hand_card`): `W SW` → 1, `B F SW` → 2, `I SW` → 2, `M BO` → 4, `M F SW` → 5. Assert the OAM pip tile per card (`oam_tile`) and, on the DECK tab, the AP digit on the row (`screen_row`). |
 | New scenario `card_ap_loot_gate` | At AP 2 / 4 / 5, run the loot roll and assert `cost(drop) <= pool` for the dropped id (the §6.1 invariant on real drops, not on a hand-picked card). |
-| `tools/dev.py` host check (optional, `make card-costs`) | Recompute the formula over the 40 legal (material, weapon, effect) triples and diff against §4.1/§4.2 of this document, so the tables here cannot rot. |
-| Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 6 of the 8 catalog cards (only wood stays 1). Expect to update `card_cost_energy` and the DECK-tab assertions. |
+| `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` (§6.1), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
+| Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Amulet are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
 
-The negative test for §6.1 is cheap and worth writing: temporarily set the
-steel rider row to weight 16 and confirm `card_ap_loot_gate` fails (a steel
-fire sword would cost 6 > the pool).  A check that cannot fail is not a check
+The negative test for §6.1 is cheap and worth writing, but it has to target a
+row where it actually fires.  With rider weight 16, steel lands on exactly 5
+(`7 + 12 + 16 = 35 -> 5`, inside the gate) and mythril only exceeds its gate
+*before* the cap (`41 -> 6`, clamped to 5), so neither proves anything on
+its own; **bronze** is the honest target: `3 + 4 + 16 = 23 -> 3 AP` against a
+gate of 2.  Confirm both `make card-costs` and `card_ap_loot_gate` fail on
+that edit, then restore.  A check that cannot fail is not a check
 (AGENTS.md §52.16).
 
 ---
@@ -442,12 +486,11 @@ fire sword would cost 6 > the pool).  A check that cannot fail is not a check
 
 | Alternative | Why not |
 |---|---|
-| **Hand-maintained 100-cell cost table** (one number per material × effect × weapon) | Exactly the status quo with more cells: four copies of the rule, no guarantee of monotonicity, and a new material means 20 new numbers. |
-| **Power only** (`AP = ceil(power / 2)`) | Bronze fire sword = 3 AP while its material only unlocks at pool 3, and the rider is free at the top (a mythril fire sword would cost the same as a plain one). |
-| **Ceil(power / 2) with clamping** | Clamping hides the rider: mythril plain and mythril fire both land on 5, so the strongest card's best rider is free. |
-| **Price-proportional** (`AP = price / 10`) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the mythril bow (30 g) would cost 3 AP by coincidence, not by design. |
+| **Hand-maintained 100-cell cost table** (one number per material × effect × weapon) | Exactly the status quo with more cells: the same six locations to keep in sync, no guarantee of monotonicity, and a new material means 20 new numbers plus 8 new gate expectations. |
+| **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire sword (p3) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire sword (p9) costs the same 5 as a plain one, which the cap then hides.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
+| **Price-proportional** (`AP = price / 10`) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the Merchant's mythril bow (30 g, authored) would cost 3 AP by coincidence, not by design — while a loot roll of the same combo (17 g) would cost 2. |
 | **Percent-of-card rider** (`power × 1.2` for a rider) | Backwards: it charges the most for the rider on the card where the rider matters least (a flat 3-damage status). |
-| **Exponential tiers** (`2^material`) | Only three usable steps (1, 2, 4) before the pool cap, and it makes bronze fire swords unplayable at their own gate. |
+| **Exponential tiers** (`2^material`) | Saturates immediately: wood 1, bronze 2, iron 4, then steel and mythril both clamp to 5, so the top half of the ladder is flat and every rider there is free. |
 | **Cost stored per card and verified by a test** | Keeps two sources of truth and fails *late* (at test time). Computing at the definition makes a wrong cost unrepresentable. |
 
 ---
@@ -455,10 +498,11 @@ fire sword would cost 6 > the pool).  A check that cannot fail is not a check
 ## 11. Open questions
 
 1. **Freeze at weight 16?**  Freeze denies a whole enemy attack, worth more
-   than 3 burn damage.  Pricing it at a second step breaks §6.1 for bronze
-   ice swords (3 AP at gate 2).  Either accept the invariant break for that
-   one row, or move the bronze gate to 3 — a loot-table change, not a cost
-   change.
+   than 3 burn damage, and it is the only status whose value is not flat in
+   practice.  A second step breaks §6.1 for the bronze row (3 AP at gate 2).
+   Recommendation: keep it at 8 for now and revisit with playtest data —
+   moving the bronze gate to 3 to pay for it would stop bronze dropping at
+   AP 2, a bigger change than the one it fixes.
 2. **Does the bow deserve a reach premium?**  A bow already takes the
    high-power band, so it matches a same-material sword.  A +1 role step
    would make every wood bow cost 2, violating §6.1 at AP 1.  If reach ever
