@@ -122,6 +122,7 @@ uint8_t g_battle_shake_mask;
 uint8_t g_battle_shake_timer;
 uint8_t g_battle_shake_wipe;
 uint8_t g_battle_heal_flash;
+uint8_t g_battle_heal_phase;
 uint8_t g_battle_deck_timer;
 uint8_t g_battle_deck_wipe;
 uint8_t g_battle_fx_epoch;

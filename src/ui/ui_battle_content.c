@@ -668,9 +668,10 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
-    /* Heal flash: two off-green pulses (16 frames, on/off every 4)
-     * after a player heal; otherwise the block keeps its steady green. */
-    if (g_battle_heal_flash != 0 && ((g_battle_heal_flash >> 2) & 1) != 0) {
+    /* Heal flash: two off-green pulses over the heal jingle (phase
+     * staged by the bank-9 tick); otherwise the block keeps its
+     * steady green. */
+    if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_NONE);
     } else {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);

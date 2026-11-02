@@ -31,6 +31,7 @@ void battle_feedback_tick_banked(void)
         g_battle_shake_timer = 0;
         g_battle_shake_wipe = 0;
         g_battle_heal_flash = 0;
+        g_battle_heal_phase = 0;
         g_battle_deck_timer = 0;
         g_battle_deck_wipe = 0;
         g_battle_fx_php = b->player.hp;
@@ -48,7 +49,9 @@ void battle_feedback_tick_banked(void)
             g_battle_deck_timer = 5;
         }
     } else if (b->player.hp > g_battle_fx_php) {
-        g_battle_heal_flash = 16;
+        /* 48-frame flash: spans the 50-tick heal jingle (64 Hz) with
+         * two off-green pulses (phase staged below). */
+        g_battle_heal_flash = 48;
     }
     g_battle_fx_php = b->player.hp;
     for (k = 0; k < b->enemy_count; k++) {
@@ -67,6 +70,12 @@ void battle_feedback_tick_banked(void)
     }
     if (g_battle_heal_flash != 0) {
         g_battle_heal_flash--;
+        /* Pulse phase for the 48-frame flash: green 47-37, off 36-25,
+         * green 24-13, off 12-1 (two off-green pulses over the heal
+         * jingle).  Thresholds live here, not in the painter:
+         * release bank 3 has no room for the math. */
+        g_battle_heal_phase = (uint8_t)((g_battle_heal_flash > 36 ||
+            (g_battle_heal_flash > 12 && g_battle_heal_flash <= 24)) ? 1 : 0);
         b->dirty |= BATTLE_DIRTY_HERO;
     }
     /* The deck timer only runs while undecided (see the arming gate):
