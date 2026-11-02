@@ -171,12 +171,14 @@ void battle_oam_draw_banked(void)
         gart_row = g_battle_hud.enemy_sprite_row;
         /* Hit shake rides the glow overlay with the stamp (same +-1
          * cell cadence -- pixel offsets would drift up to 4 px off
-         * the shifted stamp). */
+         * the shifted stamp).  Mirrors the stamp's guard exactly
+         * (stay on 0 when the cadence bit is clear) so the two can
+         * never disagree by a cell. */
         if (((g_battle_shake_mask & (uint8_t)(1u << k)) != 0) &&
             g_battle_shake_timer != 0) {
-            if (((g_battle_shake_timer & 2) != 0) || gx == 0) {
+            if ((g_battle_shake_timer & 2) != 0) {
                 gx = (uint8_t)(gx + 1);
-            } else {
+            } else if (gx != 0) {
                 gx = (uint8_t)(gx - 1);
             }
         }

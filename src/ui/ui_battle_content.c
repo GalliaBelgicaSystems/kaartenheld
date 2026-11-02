@@ -1097,10 +1097,10 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 /* Deck-shake support: wipe the whole hand zone (card rows + marker
  * row: tiles, buffer chars, mirror tiles, attribute spans) so shifted
  * boxes/markers/spans never strand pixels outside their home
- * footprints.  Runs on every DIRTY_HAND -- the steady state rewrites
- * identical bytes, so the only cost is the writes themselves.  The
- * clear starts at row 11 even if a future skin grows box_h: row 10 is
- * the combo line and owns its own clear. */
+ * footprints.  Runs only while shaking or on the one-shot wipe frame
+ * after (see the call site) -- never on result screens, and never on
+ * steady frames.  The clear starts at row 11 even if a future skin
+ * grows box_h: row 10 is the combo line and owns its own clear. */
 static void battle_clear_hand_zone(uint8_t top, uint8_t bh, uint8_t mark_row)
 {
     uint8_t r, x;
@@ -1178,15 +1178,14 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
 
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
         col = (uint8_t)(i << 2);
-        /* Shaken column: each card judders +-1 cell in counter-phase
-         * (alternating every 2 frames) while the deck timer runs.
-         * Skipped on result screens (the loot reveal owns the zone).
-         * Card 0 never shifts left off the row. */
+        /* Shaken column while the deck timer runs (never on result
+         * screens: the loot reveal owns the zone). */
         ccol = col;
         if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-            /* Whole-hand offset (same sign every card, 0/+1 alternating
-             * every 2 frames): uniform motion never overlaps neighboring
-             * 3-wide boxes, and card 0 never leaves the row. */
+            /* Whole-hand offset (same sign every card, a single
+             * out-and-back nudge over the 5-frame timer): uniform motion
+             * never overlaps neighboring 3-wide boxes, and card 0 never
+             * leaves the row. */
             if ((g_battle_deck_timer & 2) != 0) {
                 ccol = (uint8_t)(col + 1);
             }

@@ -1,7 +1,7 @@
 {
  "name": "defend_hit_deck_settles",
  "test": true,
- "description": "Deck-shake settle check: a 0-block defend vs the forest slime's 2 incoming deals net 2 (hero 10 -> 8, arming the whole-hand judder). After the shake expires, the hand zone must be pristine: gap columns hold no stranded frame tiles and no stranded tint, and the marker row holds no stranded carets (one-shot zone wipe).",
+ "description": "Deck-shake settle check: a 0-block defend vs the forest slime's 2 incoming deals net 2 (hero 10 -> 8, arming the whole-hand judder). After the shake expires, the hand zone must be pristine: gap columns hold no stranded frame tiles and no stranded tint, and the marker row holds no stranded carets (one-shot zone wipe). Gap cells assert tile/mirror 0 == ui_font_tile_base, which ui_init pins to 0 exactly once (src/ui/ui.c).",
  "actions": [
   {
    "type": "wait",

@@ -1406,11 +1406,12 @@ def walk_sweep(planner, checks):
         if name == "demo_end_wake_scene":
             # Teleport-only finale (despair outro): no portal targets it
             # by design, so the sweep cannot walk there.  Recorded as an
-            # explicit skip -- not a silent pass, not a failure.  The
-            # release scene_load path is covered by hand, not by walk.
-            s.check("sweep %s reachable" % name, True,
-                    expected="isolated finale (no inbound portal by design)",
-                    actual="skipped: teleport-only")
+            # explicit SKIP (not a pass, not silent): capture_walkthrough
+            # tallies "SKIP" statuses separately from passes/failures.
+            # The release scene_load path is exercised by hand, not here.
+            checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
+                           "isolated finale (no inbound portal by design)",
+                           "skipped: teleport-only"))
             s.close()
             continue
         if name == "wake_grove":

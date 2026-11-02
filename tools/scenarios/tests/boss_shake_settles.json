@@ -1,0 +1,148 @@
+{
+ "name": "boss_shake_settles",
+ "test": true,
+ "description": "BG-stamp shake settle: a SW9 hit drops the Lord of Slimes (staying above the 20 HP telegraph floor) and judders its 3-wide BG stamp. After the shake expires the one-shot enemy-band wipe must leave the fringe columns blank with no stranded tint, while the hero HP block on row 7 keeps its FIELD tint (the wipe covers rows 2-6 only).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 50
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "DEFEND"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 8,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 3,
+   "col": 8,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 12,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 3,
+   "col": 12,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 5,
+   "col": 8,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 5,
+   "col": 8,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 5,
+   "col": 12,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 5,
+   "col": 12,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 14,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 17,
+   "expected": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true,
+  "world": {
+   "BAT_CASTLE": "DEFEATED"
+  },
+  "deck": {
+   "FIRE_SWORD": 20
+  }
+ }
+}

@@ -65,7 +65,6 @@ void battle_feedback_tick_banked(void)
         g_battle_shake_wipe = 0;
         g_battle_heal_flash = 0;
         g_battle_heal_phase = 0;
-        g_battle_heal_cram = 0;
         g_battle_deck_timer = 0;
         g_battle_deck_wipe = 0;
         g_battle_fx_php = b->player.hp;
@@ -84,7 +83,6 @@ void battle_feedback_tick_banked(void)
          * clears them). */
         g_battle_heal_flash = 0;
         g_battle_heal_phase = 0;
-        g_battle_heal_cram = 0;
         return;
     }
     if (b->player.hp < g_battle_fx_php) {
@@ -103,7 +101,6 @@ void battle_feedback_tick_banked(void)
          * fightboss ramp is otherwise untouched. */
         g_battle_heal_flash = 50;
         battle_heal_cram(1);
-        g_battle_heal_cram = 1;
     }
     g_battle_fx_php = b->player.hp;
     /* Fresh judder replaces the old mask (a previous shake always
@@ -113,7 +110,9 @@ void battle_feedback_tick_banked(void)
         g_battle_shake_mask = 0;
     }
     for (k = 0; k < b->enemy_count; k++) {
-        if (b->enemies[k].hp < g_battle_fx_ehp[k]) {
+        if (b->enemies[k].hp < g_battle_fx_ehp[k] && b->enemies[k].hp != 0) {
+            /* A killing blow never judders: the slot blanks instead,
+             * and the result screen needs no shake timers running. */
             g_battle_shake_mask |= (uint8_t)(1u << k);
             g_battle_shake_timer = 12;
         }
@@ -145,7 +144,6 @@ void battle_feedback_tick_banked(void)
              * exits never reach this branch (see the screen gate
              * above); their transitions reload CRAM themselves. */
             battle_heal_cram(0);
-            g_battle_heal_cram = 0;
         }
         b->dirty |= BATTLE_DIRTY_HERO;
     }

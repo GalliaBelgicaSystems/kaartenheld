@@ -27,8 +27,8 @@ from PIL import Image  # noqa: E402
 from walkthrough.session import Session, ROM  # noqa: E402
 from walkthrough.route import Planner  # noqa: E402
 from walkthrough.state_reader import (SymTable, BT_SWORD, BT_SHIELD,  # noqa: E402
-                                      BT_HEAL, BATTLE_HAND, CARD_SIZE,
-                                      BATTLE_CURSOR, CARD_USES,
+                                      BT_HEAL, BATTLE_HAND,
+                                      BATTLE_CURSOR,
                                       OFF_VARIABLES, VARIABLE_ID_ENERGY_POOL,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, HERO_START_HP)
@@ -199,6 +199,9 @@ def capture_heal():
     # script's hardcoded damage effect).
     CARD_EFFECT_HEAL_HP = 3
     BATTLE_DIRTY_HAND = 0x10
+    # Battle struct layout mirrors (src/battle/battle.h): player(14) +
+    # enemies[3](42) + enemy_count + target_idx, then the dirty byte.
+    # Same hardcoded mirror as the bow-shot script's hand staging.
     DIRTY_OFF = 14 + 3 * 14 + 2
     checks = []
     planner = Planner()

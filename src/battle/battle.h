@@ -137,9 +137,9 @@ extern uint8_t g_battle_multiframe;
  * tick watches HP deltas (direct WRAM reads, no dispatch): an enemy HP
  * drop judders those slots (g_battle_shake_mask bits, 12 frames, +-1
  * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
- * judders the whole hand with one shared offset (5 frames, 0 one
- * frame / +1 cell the next, alternating every 2 -- uniform motion
- * never overlaps neighboring 3-wide boxes), a player HP rise flashes
+ * judders the whole hand with one shared offset (a single out-and-back
+ * nudge over 5 frames -- uniform motion never overlaps neighboring
+ * 3-wide boxes), a player HP rise flashes
  * green twice on a white base over the 50-frame heal jingle
  * (g_battle_heal_phase stages the current pulse so the bank-3 painter
  * stays branch-light: release bank 3 has ~40 B left and cannot afford
@@ -164,11 +164,6 @@ extern uint8_t g_battle_shake_timer;
 extern uint8_t g_battle_shake_wipe;
 extern uint8_t g_battle_heal_flash;
 extern uint8_t g_battle_heal_phase;
-/* Nonzero while BG slot DIM holds the slime-light flash ramp (see the
- * bank-9 tick): the tick programs it on arm and restores fightboss on
- * expiry, and cancels without touching CRAM off-battle (transitions
- * reload their own sets). */
-extern uint8_t g_battle_heal_cram;
 extern uint8_t g_battle_deck_timer;
 extern uint8_t g_battle_deck_wipe;
 extern uint8_t g_battle_fx_epoch;

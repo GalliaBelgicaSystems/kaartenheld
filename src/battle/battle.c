@@ -123,7 +123,6 @@ uint8_t g_battle_shake_timer;
 uint8_t g_battle_shake_wipe;
 uint8_t g_battle_heal_flash;
 uint8_t g_battle_heal_phase;
-uint8_t g_battle_heal_cram;
 uint8_t g_battle_deck_timer;
 uint8_t g_battle_deck_wipe;
 uint8_t g_battle_fx_epoch;
@@ -181,7 +180,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     g_battle_multiframe = 0;
     g_slime_despair = 0;
     g_despair_slot = 0xFF;
-    /* Feedback epoch: the bank-8 frame tick re-arms its HP caches on a
+    /* Feedback epoch: the bank-9 frame tick re-arms its HP caches on a
      * mismatch, so a new fight never inherits stale deltas.  One store;
      * everything else the tick owns (fixed-bank budget, 52.18). */
     g_battle_fx_epoch++;
