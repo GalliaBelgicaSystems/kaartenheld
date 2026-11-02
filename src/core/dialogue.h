@@ -21,9 +21,12 @@ typedef struct {
     const char *lines[MAX_DIALOGUE_LINES];
     uint8_t completion_flag;   /* FlagId set when this dialogue ends (0 = none) */
     /* YES/NO choice prompt (0 = none, DIALOGUE_CHOICE_YES_NO = the player
-     * picks YES or NO on the last page with UP/DOWN/LEFT/RIGHT + A).
-     * The last line MUST be the option row "> YES   NO" (validated by
-     * dialogue_compile.py); the choice UI only repaints its cursor cells. */
+     * picks the first or second option on the last page with UP/DOWN/LEFT/RIGHT + A).
+     * The last line MUST be an option row ("> YES   NO" for most prompts,
+     * "> STAY  LEAVE" for Carl's leave-the-field offer -- both keep the
+     * second option at col 8 so the choice UI's cursor repaints at cols 0/7
+     * stay valid); validated by dialogue_compile.py; the choice UI only
+     * repaints its cursor cells. */
     uint8_t choice;
 } DialogueDefinition;
 

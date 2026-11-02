@@ -489,17 +489,19 @@ dialogue + sets `MET_MAYOR`), `MAYOR_GREETING` (already met),
 A dialogue row may carry `"choice": "yes_no"` (`screens/dialogue/*.json`,
 validated and compiled by `dialogue_compile.py` into
 `DialogueDefinition.choice`). On the dialogue's last page the choice UI is
-active: `UP`/`DOWN`/`LEFT`/`RIGHT` move the cursor between `YES` (default)
-and `NO`, `A`/`START` confirms (and then advances). The option row is the
-dialogue's last line and must read exactly `> YES   NO` (cursor cells at
-columns 0 and 7); only those cells repaint on a cursor move.
+active: `UP`/`DOWN`/`LEFT`/`RIGHT` move the cursor between the first
+option (default) and the second, `A`/`START` confirms (and then advances).
+The option row is the dialogue's last line and must read `> YES   NO`
+(most prompts) or `> STAY  LEAVE` (Carl's leave-the-field offer -- same
+cursor cells at columns 0 and 7, second option still at col 8); only
+those cells repaint on a cursor move.
 
 Confirming emits:
 
 ```text
 DIALOGUE_CHOICE
   dialogue: HEAL_MAGE_ASK
-  choice: 0 (= YES) or 1 (= NO)
+  choice: 0 (= first option: YES / STAY) or 1 (= second: NO / LEAVE)
 ```
 
 (`EVENT_DIALOGUE_CHOICE`; `data[0]` is the `DialogueId`, `data[1]` the

@@ -87,11 +87,15 @@ def validate_dialogue(data, path, story_flags):
     if choice == "yes_no":
         # Engine contract (dialogue_screen.c): the choice cursor only
         # repaints the option row's two cursor cells (cols 0 and 7), so a
-        # choice dialogue must end with the exact option row.
-        if not lines or lines[-1] != "> YES   NO":
+        # choice dialogue must end with a known option row.  The classic
+        # row is "> YES   NO"; Carl's leave-the-field offer uses
+        # "> STAY  LEAVE" (same cursor cells: second option starts at
+        # col 8, so the col-7 repaint still lands on its blank).
+        if not lines or lines[-1] not in ("> YES   NO", "> STAY  LEAVE"):
             errors.append(
                 f"{path}: choice dialogue must end with the option row "
-                f"'> YES   NO' (cursor cols 0/7)")
+                f"'> YES   NO' (or '> STAY  LEAVE' for the stay/leave offer; "
+                f"cursor cols 0/7)")
     return errors, warnings
 
 

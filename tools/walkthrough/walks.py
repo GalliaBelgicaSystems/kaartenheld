@@ -328,9 +328,10 @@ def follow(s, planner, from_scene, start, to_scene, goal,
                         break
                     if not s.text_has("DECK:"):
                         # Carl's leave-the-field offer (fresh game):
-                        # answer TALK and retry -- TALK disarms the
-                        # offered tile so the retry exits instead of
-                        # re-asking.
+                        # answer LEAVE (the skip) and retry -- LEAVE
+                        # sets the one-shot skip so the retry exits
+                        # instead of re-asking (STAY would block and
+                        # re-ask).
                         if _drain_skip_offer(s):
                             continue
                         break
@@ -423,24 +424,26 @@ def _cursor_to(s, idx):
 
 
 def _drain_skip_offer(s):
-    """Answer Carl's leave-the-field offer with TALK (not LEAVE, which
-    would grant AP and change the walk's battle math): advance to the
-    choice page if needed, ensure the cursor sits on YES, confirm, and
-    close.  The row is read before any press, so an already-open choice
-    page is never confirmed blind.  TALK disarms the offered tile, so
-    the caller's crossing retry exits instead of re-asking.  Returns
-    True when an offer box was handled."""
+    """Answer Carl's leave-the-field offer with LEAVE (the skip path:
+    grants the spar's +1 AP once and sets TUTORIAL_SKIPPED, so the
+    crossing retry exits instead of re-asking).  STAY would keep
+    blocking the exit and re-ask on every attempt, which is correct
+    for players but cannot cross -- walks always take LEAVE here.
+    Advance to the choice page if needed, ensure the cursor sits on
+    LEAVE, confirm, then close both the ask and the granted line.
+    The row is read before any press, so an already-open choice page
+    is never confirmed blind.  Returns True when an offer box was
+    handled."""
     if not s.text_has("HEY! WANNA"):
         return False
     s.check("skip offer asked", True,
             expected="HEY! WANNA", actual="asked")
     for _ in range(6):
         rows = s.bg_text()
-        # The cursor row carries the '>' marker; the label line above it
-        # ("TALK:YES LEAVE:NO") also names both options but has no
-        # cursor -- matching it would toggle forever without confirming.
-        row = next((r for r in rows if ">" in r and "YES" in r
-                    and "NO" in r), None)
+        # The cursor row carries the '>' marker; match the STAY/LEAVE
+        # option row specifically (other '>' rows must not confirm).
+        row = next((r for r in rows if ">" in r and "STAY" in r
+                    and "LEAVE" in r), None)
         if row is not None:
             break
         # Choice page not up yet: advance a page (never a confirming
@@ -448,10 +451,14 @@ def _drain_skip_offer(s):
         s.press("a", settle=12)
     else:
         return False
-    if not row.startswith(">"):
-        s.press("left", settle=12)  # toggle to TALK
-    s.press("a", settle=12)  # confirm TALK
+    if row.startswith(">"):
+        s.press("right", settle=12)  # toggle STAY -> LEAVE
+    s.press("a", settle=12)  # confirm LEAVE
     close_dialogue(s, "HEY! WANNA")
+    # LEAVE opens the one-shot granted line ("SUIT YOURSELF! TAKE THIS
+    # AP!"): close it too so the caller retries on a clean overworld.
+    if s.text_has("SUIT YOURSELF"):
+        close_dialogue(s, "SUIT YOURSELF")
     return not s.text_has("HEY! WANNA")
 
 
@@ -1092,9 +1099,9 @@ def walk_c(planner, checks):
                     drain_postvictory_dialogue(s),
                     expected="no KNIGHT: box", actual="stuck open")
             continue
-        # Carl's leave-the-field offer: answer TALK and retry -- TALK
-        # disarms the offered tile so the retry exits instead of
-        # re-asking.
+        # Carl's leave-the-field offer: answer LEAVE (the skip) and
+        # retry -- LEAVE sets the one-shot skip so the retry exits
+        # instead of re-asking (STAY would block and re-ask).
         if _drain_skip_offer(s):
             continue
         break
@@ -1129,9 +1136,9 @@ def walk_c(planner, checks):
                     drain_postvictory_dialogue(s),
                     expected="no KNIGHT: box", actual="stuck open")
             continue
-        # Carl's leave-the-field offer: answer TALK and retry -- TALK
-        # disarms the offered tile so the retry exits instead of
-        # re-asking.
+        # Carl's leave-the-field offer: answer LEAVE (the skip) and
+        # retry -- LEAVE sets the one-shot skip so the retry exits
+        # instead of re-asking (STAY would block and re-ask).
         if _drain_skip_offer(s):
             continue
         break

@@ -1,7 +1,7 @@
 {
  "name": "tutorial_skip_leave",
  "test": true,
- "description": "Leaving the field before the spar stops at Carl's offer: walking into the east exit stages the skip ask (departure cancelled, hero stays), answering NO (LEAVE) grants the spar's +1 AP through the real APIs (VARIABLE_SET), sets TUTORIAL_SKIPPED once (STORY_FLAG_SET), and opens the granted line; closing it returns to the overworld with no fight",
+ "description": "Leaving the field before the spar stops at Carl's offer: walking into the east exit stages the STAY/LEAVE ask (departure cancelled, hero stays), toggling to LEAVE and confirming grants the spar's +1 AP through the real APIs (VARIABLE_SET), sets TUTORIAL_SKIPPED once (STORY_FLAG_SET), and opens the granted line; closing it returns to the overworld with no fight",
  "actions": [
   {
    "type": "press",
@@ -13,7 +13,7 @@
   },
   {
    "type": "press",
-   "button": "A"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
@@ -21,7 +21,7 @@
   },
   {
    "type": "press",
-   "button": "RIGHT"
+   "button": "A"
   },
   {
    "type": "wait",

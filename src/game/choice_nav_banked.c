@@ -18,8 +18,10 @@
  * fits no new bodies, while bank 10 has room in both builds (AGENTS.md
  * 55.5: banks 8-15 need no asm change to reach).
  *
- * The engine owns the choice UI contract (last line "> YES   NO",
- * cursor cells 0/7); this game-owned body owns what an answer means.
+ * The engine owns the choice UI contract (option row on the last line,
+ * cursor cells 0/7 -- "> YES   NO" for most prompts, "> STAY  LEAVE"
+ * for Carl's leave-the-field offer with the second option still at
+ * col 8); this game-owned body owns what an answer means.
  * UP/DOWN/LEFT/RIGHT toggles the answer and repaints the cursor cells inline
  * (scroll-aware through the ring, exactly like ui_draw_dialogue_line,
  * with the buffer-checked skip).  A/START confirms:
@@ -96,7 +98,8 @@ void dialogue_choice_nav_banked(void)
     }
     /* Pressed edges in one pass (item_quest_nav_banked idiom). */
     edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
-    /* The option row reads "> YES   NO" left-to-right: all four D-pad
+    /* The option row reads "> YES   NO" (or "> STAY  LEAVE" for the
+     * skip offer, same cursor cells) left-to-right: all four D-pad
      * directions toggle (one compile-time immediate, no extra ROM). */
     if (edges & (uint8_t)((1u << INPUT_UP) | (1u << INPUT_DOWN) | (1u << INPUT_LEFT) | (1u << INPUT_RIGHT))) {
         if (!g_game.dialogue.line_count) {
@@ -119,12 +122,15 @@ void dialogue_choice_nav_banked(void)
     if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         g_game.dialogue.choice_made = 1;
         if (g_game.dialogue.id == DIALOGUE_ID_TUTORIAL_CARL_SKIP_ASK) {
-            /* Leaving the field without the lesson.  TALK closes plainly
-             * (the hero stays put and can walk back to Carl); LEAVE hands
-             * over the +1 AP the spar would have granted: code 8 has the
-             * fixed wrapper apply the staged variable add + one-shot skip
-             * flag through the real APIs (VARIABLE_SET / STORY_FLAG_SET
-             * telemetry) and open the "TAKE THIS AP!" line. */
+            /* Leaving the field without the lesson.  STAY (first option)
+             * closes plainly (the hero stays put and can walk back to
+             * Carl; the next exit attempt asks again -- the offer keeps
+             * no departure-tile memory, so STAY never opens the exit);
+             * LEAVE (second option) hands over the +1 AP the spar would
+             * have granted: code 8 has the fixed wrapper apply the staged
+             * variable add + one-shot skip flag through the real APIs
+             * (VARIABLE_SET / STORY_FLAG_SET telemetry) and open the
+             * "TAKE THIS AP!" line. */
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_bk_byte_a = 8;
                 g_bk_byte_b = VARIABLE_ID_ENERGY_POOL;

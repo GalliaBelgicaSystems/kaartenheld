@@ -274,9 +274,10 @@ def main():
 
     # Carl's leave-the-field offer intercepts the FIRST attempt to leave
     # the field (a fresh game, spar not won, skip not taken): the gate
-    # step is cancelled and a YES/NO box opens instead of the crossing.
-    # Answer TALK and retry -- the offer disarms the offered tile, so the
-    # retry crosses.  Same contract as the walkthrough's
+    # step is cancelled and a STAY/LEAVE box opens instead of the crossing.
+    # Answer LEAVE (the skip: grants the spar's AP once, sets the
+    # one-shot flag) and retry -- the retry crosses.  STAY would keep
+    # blocking and re-ask.  Same contract as the walkthrough's
     # _drain_skip_offer; keep them in sync.  The dialogue is polled every
     # press: walking blind would burn the whole step budget before the
     # box was noticed, which both failed the crossing and skewed the
@@ -289,8 +290,11 @@ def main():
             if pos()[0] == 2:
                 return True
             if in_dialogue():
-                press("a", settle=16)   # advance to the choice page
-                press("a", settle=16)   # confirm TALK (cursor on YES)
+                # Single-page STAY/LEAVE ask (choice live on open):
+                # toggle STAY -> LEAVE, confirm, then close the ask +
+                # the granted follow-up line.
+                press("right", settle=16)  # toggle to LEAVE
+                press("a", settle=16)      # confirm LEAVE
                 for _ in range(8):
                     if not in_dialogue():
                         break
