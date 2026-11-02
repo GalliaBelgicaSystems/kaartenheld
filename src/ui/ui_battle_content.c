@@ -673,7 +673,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
      * duration; phase staged by the bank-9 tick); otherwise the block
      * keeps its steady green. */
     if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
-        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_NONE);
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_DIM);
     } else {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
     }
