@@ -185,14 +185,20 @@ def run(clean=False):
                              "<= %ds" % WALK_SECONDS, "%.1fs" % dt))
 
     print()
-    bad = [c for c in failures if not c[2]]
+    bad = [c for c in failures if c[2] is False]
+    skipped = [c for c in failures if c[2] == "SKIP"]
     if bad:
         print("%d/%d check(s) failed:" % (len(bad), len(failures)))
         for label, name, _ok, expected, actual in bad:
             print("  [%s] %s\n      expected: %s\n      actual:   %s"
                   % (label, name, expected, actual))
         return 1
-    print("walkthrough: %d check(s) passed" % len(failures))
+    print("walkthrough: %d check(s) passed%s"
+          % (len(failures) - len(skipped),
+             (", %d skipped:" % len(skipped)) if skipped else ""))
+    for label, name, _ok, expected, actual in skipped:
+        print("  [%s] %s\n      expected: %s\n      actual:   %s"
+              % (label, name, expected, actual))
     return 0
 
 

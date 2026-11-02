@@ -455,6 +455,7 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     uint8_t base;
     uint8_t cx, cy;
     uint8_t w, h, ftiles, t;
+    uint8_t sx;
     volatile uint8_t *dst;
     /* Staged screen row (WRAM copy of the active BattleScreenDef). */
     uint8_t art_row = g_battle_hud.enemy_sprite_row;
@@ -469,6 +470,21 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
     /* Center the art footprint on the name slot (blank path clears the
      * same centered footprint it stamps). */
     x = battle_enemy_art_x(x, slot);
+    /* Hit shake: +-1 cell judder while the timer runs.  Only live
+     * slots in the shake mask shift (and only the stamp branch below
+     * uses sx): dead slots keep clearing the un-offset footprint, and
+     * the one-shot band wipe in the column painter covers the fringe,
+     * so no shifted tiles strand. */
+    sx = x;
+    if (slot < MAX_BATTLE_ENEMIES &&
+        ((g_battle_shake_mask & (uint8_t)(1u << slot)) != 0) &&
+        g_battle_shake_timer != 0 && battle->enemies[slot].hp != 0) {
+        if ((g_battle_shake_timer & 2) != 0) {
+            sx = (uint8_t)(x + 1);
+        } else if (x != 0) {
+            sx = (uint8_t)(x - 1);
+        }
+    }
 
     if (!blank && slot < MAX_BATTLE_ENEMIES &&
         g_battle_enemy_art[slot] != 0xFF) {
@@ -496,11 +512,11 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
         if (frame) t = (uint8_t)(t + ftiles);
         VBK_REG = 0;
         for (cy = 0; cy < h; cy++) {
-            dst = (volatile uint8_t *)(0x9800 + ((uint16_t)(art_row + cy) << 5) + x);
+            dst = (volatile uint8_t *)(0x9800 + ((uint16_t)(art_row + cy) << 5) + sx);
             for (cx = 0; cx < w; cx++) {
                 battle_vram_sync_write(dst, t);
 #ifdef DEBUG_BUILD
-                g_tilemap_mirror[(art_row + cy) * 32 + (x + cx)] = t;
+                g_tilemap_mirror[(art_row + cy) * 32 + (sx + cx)] = t;
 #endif
                 t++;
                 dst++;
@@ -509,7 +525,7 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
         /* CGB art color (no-op on DMG, which falls back to grayscale):
          * the loader cached one palette per enemy slot. */
         for (cy = 0; cy < h; cy++) {
-            battle_color_span(x, (uint8_t)(art_row + cy), w, g_battle_enemy_art_pal[slot]);
+            battle_color_span(sx, (uint8_t)(art_row + cy), w, g_battle_enemy_art_pal[slot]);
         }
         return;
     }
@@ -556,6 +572,31 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
      * dynamic row-0 banner ("TARGET <name>" / "ATTACK <name>" / ...). */
     uint8_t hp_row = g_battle_hud.enemy_hp_row;
     uint8_t cur_row = g_battle_hud.enemy_cursor_row;
+    uint8_t art_row = g_battle_hud.enemy_sprite_row;
+    uint8_t wr, wx;
+    volatile uint8_t *wdst;
+
+    /* Hit-shake one-shot wipe: clear the enemy band (HP row through
+     * the tallest art footprint) once after a judder, so shifted
+     * stamp cells never strand outside their home footprint.  The
+     * loop below repaints HP numbers, art, blanks and carets, so the
+     * steady state is byte-identical afterwards. */
+    if (g_battle_shake_wipe != 0) {
+        g_battle_shake_wipe = 0;
+        for (wr = hp_row; wr <= (uint8_t)(art_row + 3) && wr < 18; wr++) {
+            wdst = (volatile uint8_t *)(0x9800 + ((uint16_t)wr << 5));
+            VBK_REG = 0;
+            for (wx = 0; wx < 20; wx++) {
+                battle_vram_sync_write(wdst, ui_font_tile_base);
+                g_ui_screen_buf[wr][wx] = ' ';
+                wdst++;
+#ifdef DEBUG_BUILD
+                g_tilemap_mirror[wr * 32 + wx] = ui_font_tile_base;
+#endif
+            }
+            battle_color_span(0, wr, 20, UI_COLOR_NONE);
+        }
+    }
 
     for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
         x = g_battle_hud.enemy_positions[k][0];
@@ -627,7 +668,15 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
-    battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
+    /* Heal flash: two slime-light green pulses on a white base over
+     * the heal jingle (BG slot DIM is reprogrammed to #77E331 for the
+     * duration; phase staged by the bank-9 tick); otherwise the block
+     * keeps its steady green. */
+    if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_DIM);
+    } else {
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
+    }
 
     /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + hp_col);
@@ -989,8 +1038,12 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Desperation telegraph (unwinnable final boss): the combo line
      * carries the sentence's second half (staged game text; row 9 shows
      * the first half while the hold lasts).  Drawn unconditionally
-     * like the clear above, so no skip-guard can leave a stale row. */
-    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+     * like the clear above, so no skip-guard can leave a stale row.
+     * After the reprisal the phase is RESULT, but the despair-defeat
+     * branch keeps the spell's second half ("POWERFUL SPELL!") up
+     * instead of blanking to bare rows. */
+    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR ||
+        (g_slime_despair != 0 && battle->result == BATTLE_RESULT_DEFEAT)) {
         battle_draw_text_line(0, combo_row, (const char *)g_despair_row10, 19);
         battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
         battle_draw_text_line(19, combo_row, NULL, 1);
@@ -1041,10 +1094,48 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
 }
 
+/* Deck-shake support: wipe the whole hand zone (card rows + marker
+ * row: tiles, buffer chars, mirror tiles, attribute spans) so shifted
+ * boxes/markers/spans never strand pixels outside their home
+ * footprints.  Runs only while shaking or on the one-shot wipe frame
+ * after (see the call site) -- never on result screens, and never on
+ * steady frames.  The clear starts at row 11 even if a future skin
+ * grows box_h: row 10 is the combo line and owns its own clear. */
+static void battle_clear_hand_zone(uint8_t top, uint8_t bh, uint8_t mark_row)
+{
+    uint8_t r, x;
+    uint8_t ctop = (top < 11) ? 11 : top;
+    volatile uint8_t *dst;
+    for (r = ctop; r < (uint8_t)(ctop + bh) && r < 18; r++) {
+        dst = (volatile uint8_t *)(0x9800 + ((uint16_t)r << 5));
+        VBK_REG = 0;
+        for (x = 0; x < 20; x++) {
+            battle_vram_sync_write(dst, ui_font_tile_base);
+            g_ui_screen_buf[r][x] = ' ';
+            dst++;
+#ifdef DEBUG_BUILD
+            g_tilemap_mirror[r * 32 + x] = ui_font_tile_base;
+#endif
+        }
+        battle_color_span(0, r, 20, UI_COLOR_NONE);
+    }
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)mark_row << 5));
+    VBK_REG = 0;
+    for (x = 0; x < 20; x++) {
+        battle_vram_sync_write(dst, ui_font_tile_base);
+        g_ui_screen_buf[mark_row][x] = ' ';
+        dst++;
+#ifdef DEBUG_BUILD
+        g_tilemap_mirror[mark_row * 32 + x] = ui_font_tile_base;
+#endif
+    }
+    battle_color_span(0, mark_row, 20, UI_COLOR_NONE);
+}
+
 static void battle_draw_battle_hand(const volatile Battle *battle)
 {
     uint8_t i, k;
-    uint8_t col, ctype, cvalue, cstat, cring, ceffect, ccolor, cuses;
+    uint8_t col, ccol, ctype, cvalue, cstat, cring, ceffect, ccolor, cuses;
     /* Snapshot ALL volatile struct fields into locals before the loops.
      * SDCC 4.4.1 caches &struct.field in stack slots (§52.19); the
      * battle_draw_card_at call + timer ISR (di/wait/ei on real hardware)
@@ -1069,12 +1160,36 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
     /* Row (top - 1) is the COMBO line now: no band clear here -- the
      * combo draw owns that row (full-width clear on DIRTY_COMBO). */
 
+    /* Deck shake (player hit): wipe the zone first (see helper), then
+     * every card draws at its shaken column below.  The wipe runs only
+     * while shaking or on the one-shot wipe frame after, and never on
+     * result screens (the loot reveal owns rows 10-12) -- steady cursor
+     * moves keep the cheap incremental path (a wipe on every DIRTY_HAND
+     * flickers the whole hand). */
+    if ((g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) &&
+        battle->result == BATTLE_RESULT_NONE) {
+        battle_clear_hand_zone(top, bh, mark_row);
+        g_battle_deck_wipe = 0;
+    }
+
     for (k = 0; k < BATTLE_HAND_SIZE; k++) {
         sel[k] = (k < cc) ? battle->selected_indices[k] : 0xFF;
     }
 
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
         col = (uint8_t)(i << 2);
+        /* Shaken column while the deck timer runs (never on result
+         * screens: the loot reveal owns the zone). */
+        ccol = col;
+        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
+            /* Whole-hand offset (same sign every card, a single
+             * out-and-back nudge over the 5-frame timer): uniform motion
+             * never overlaps neighboring 3-wide boxes, and card 0 never
+             * leaves the row. */
+            if ((g_battle_deck_timer & 2) != 0) {
+                ccol = (uint8_t)(col + 1);
+            }
+        }
         ctype   = battle->hand[i].type;
         cvalue  = battle->hand[i].value;
         cstat   = battle->hand[i].status_id;
@@ -1090,7 +1205,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         uint8_t is_heal = (cring != 0) || (ctype == BATTLE_CARD_TYPE_HEAL) || (ceffect == CARD_EFFECT_HEAL_HP);
         cuses = battle->hand[i].uses_remaining;
-        battle_draw_card_at(col, cards_row, ctype, cvalue, cuses, is_heal, cstat);
+        battle_draw_card_at(ccol, cards_row, ctype, cvalue, cuses, is_heal, cstat);
         /* EMPTY slots stay fully blank: stale status/ring/effect fields are
          * left on the discarded Card (see battle_resolve_hand_discard), so
          * painting icon/rider palettes from them would leave a tinted
@@ -1098,27 +1213,27 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         if (ctype == BATTLE_CARD_TYPE_EMPTY) {
             /* Box clearing lives here (sequential, not nested inside
              * battle_draw_card_at above): same pixels, shallower peak. */
-            battle_clear_card_box(col, cards_row);
+            battle_clear_card_box(ccol, cards_row);
             drow_empty = (uint8_t)(top + bh - 2);
             for (r = 0; r < bh; r++) {
-                battle_color_span(col, (uint8_t)(top + r), 3, UI_COLOR_NONE);
+                battle_color_span(ccol, (uint8_t)(top + r), 3, UI_COLOR_NONE);
             }
-            battle_color_span((uint8_t)(col + 1), (uint8_t)(top + 1), 1, UI_COLOR_NONE);
+            battle_color_span((uint8_t)(ccol + 1), (uint8_t)(top + 1), 1, UI_COLOR_NONE);
             if (drow_empty != (uint8_t)(top + 1)) {
-                battle_color_span((uint8_t)(col + 1), drow_empty, 1, UI_COLOR_NONE);
+                battle_color_span((uint8_t)(ccol + 1), drow_empty, 1, UI_COLOR_NONE);
             }
             if (i == cur) {
                 /* Cursor stays where it is after a select (no auto-advance):
                  * light arrow on a plain card, dark arrow on a card already
                  * in the combo.  Moving away reveals the 1-5 digit below. */
-                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                battle_put_marker_tile((uint8_t)(ccol + 1), mark_row,
                                        UI_TILE_SELECT_ARROW);
-                battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
+                battle_color_span((uint8_t)(ccol + 1), mark_row, 1, UI_COLOR_ARROW);
             } else {
-                battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
-                battle_color_span((uint8_t)(col + 1), mark_row, 1, 0);
+                battle_put_char((uint8_t)(ccol + 1), mark_row, s_sel_marker);
+                battle_color_span((uint8_t)(ccol + 1), mark_row, 1, 0);
 #ifdef DEBUG_BUILD
-                g_tilemap_mirror[mark_row * 32 + (col + 1)] =
+                g_tilemap_mirror[mark_row * 32 + (ccol + 1)] =
                     (uint8_t)(ui_font_tile_base + (uint8_t)(s_sel_marker - ' '));
 #endif
             }
@@ -1138,7 +1253,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             ccolor = UI_COLOR_DIM;
         }
         for (r = 0; r < bh; r++) {
-            battle_color_span(col, (uint8_t)(top + r), 3, ccolor);
+            battle_color_span(ccol, (uint8_t)(top + r), 3, ccolor);
         }
         /* Icon/digit cells stay on the weapon slot (encode ramp ==
          * display ramp) even when greyed: painting them DIM (slot 7
@@ -1153,16 +1268,16 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             wt = is_heal ? BATTLE_CARD_TYPE_HEAL : (uint8_t)(ctype < 5 ? ctype : 0);
             icell = g_card_skin_wram.weapon_color[wt];
             drow = (uint8_t)(top + bh - 2);
-            battle_color_span((uint8_t)(col + 1), (uint8_t)(top + 1), 1, icell);
+            battle_color_span((uint8_t)(ccol + 1), (uint8_t)(top + 1), 1, icell);
             if (drow != (uint8_t)(top + 1)) {
-                battle_color_span((uint8_t)(col + 1), drow, 1, icell);
+                battle_color_span((uint8_t)(ccol + 1), drow, 1, icell);
             }
             if (cuses != 0xFF && (ctype == g_card_skin_wram.uses_type ||
                                  ctype == BATTLE_CARD_TYPE_HEAL)) {
                 /* Floor counter rides the weapon slot like the bow's:
                  * rings share the counter glyphs, so a bare box span
                  * would leave the counter on the paper (white) ramp. */
-                battle_color_span((uint8_t)(col + 1), (uint8_t)(top + bh - 1), 1, icell);
+                battle_color_span((uint8_t)(ccol + 1), (uint8_t)(top + bh - 1), 1, icell);
             }
         }
         /* No rider BG spans: riders are per-card OAM sprites. */
@@ -1170,20 +1285,20 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             if (s_sel_marker != ' ') {
                 /* Cursor on an already-selected card: dark arrow stays on
                  * the card (no auto-advance after select). */
-                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                battle_put_marker_tile((uint8_t)(ccol + 1), mark_row,
                                        UI_TILE_SELECT_ARROW_DARK);
             } else {
-                battle_put_marker_tile((uint8_t)(col + 1), mark_row,
+                battle_put_marker_tile((uint8_t)(ccol + 1), mark_row,
                                        UI_TILE_SELECT_ARROW);
             }
             /* Arrow tile palette: single-sourced in ui.h (UI_COLOR_ARROW). */
-            battle_color_span((uint8_t)(col + 1), mark_row, 1, UI_COLOR_ARROW);
+            battle_color_span((uint8_t)(ccol + 1), mark_row, 1, UI_COLOR_ARROW);
         } else {
-            battle_put_char((uint8_t)(col + 1), mark_row, s_sel_marker);
-            battle_color_span((uint8_t)(col + 1), mark_row, 1,
+            battle_put_char((uint8_t)(ccol + 1), mark_row, s_sel_marker);
+            battle_color_span((uint8_t)(ccol + 1), mark_row, 1,
                               (s_sel_marker != ' ') ? ccolor : 0);
 #ifdef DEBUG_BUILD
-            g_tilemap_mirror[mark_row * 32 + (col + 1)] =
+            g_tilemap_mirror[mark_row * 32 + (ccol + 1)] =
                 (uint8_t)(ui_font_tile_base + (uint8_t)(s_sel_marker - ' '));
 #endif
         }
@@ -1466,12 +1581,16 @@ void ui_update_battle_banked(void)
              * card boxes now.  msg_id 10 is the desperation telegraph
              * (staged game text, completed on row 10 by the combo
              * painter): keyed on the DESPAIR phase too, so the line
-             * cannot linger past the hold (the defeat result repaints
+             * cannot linger past the hold -- except the despair defeat,
+             * which keeps the spell's first half ("L. OF SLIMES CASTS")
+             * up under the DEFEATED! banner (the defeat result repaints
              * with the same dirty bit).  The else branch clears the FULL
              * row width (20, not 12): the despair line is 18 columns and
              * a short clear would strand its tail on the result screen. */
             if (battle->msg_id == 10 &&
-                battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+                (battle->phase == BATTLE_PHASE_SLIME_DESPAIR ||
+                 (g_slime_despair != 0 &&
+                  battle->result == BATTLE_RESULT_DEFEAT))) {
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else {

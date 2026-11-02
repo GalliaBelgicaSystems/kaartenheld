@@ -131,6 +131,47 @@ extern uint8_t g_battle_pool_max;
  * single-frame stamps).  Cleared by battle_start; read by the battle
  * clock to skip the re-stamp for fully static lineups. */
 extern uint8_t g_battle_multiframe;
+/* Hit feedback (WRAM, BSS zero, staged per battle): the engine never
+ * trusts fixed-bank code size for this (AGENTS.md 52.18), so NOTHING
+ * here is set from fixed-bank resolve paths.  Instead the bank-9 frame
+ * tick watches HP deltas (direct WRAM reads, no dispatch): an enemy HP
+ * drop judders those slots (g_battle_shake_mask bits, 12 frames, +-1
+ * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
+ * judders the whole hand with one shared offset (a single out-and-back
+ * nudge over 5 frames -- uniform motion never overlaps neighboring
+ * 3-wide boxes), a player HP rise flashes
+ * green twice on a white base over the 50-frame heal jingle
+ * (g_battle_heal_phase stages the current pulse so the bank-3 painter
+ * stays branch-light: release bank 3 has ~40 B left and cannot afford
+ * threshold math; the DIM slot holds the flash ramp only during the
+ * pulses, so greyed cards and the boss stamp read fightboss the rest
+ * of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * through HP, so every present and future source feeds the same feedback
+ * with no per-source wiring.  g_battle_fx_epoch (bumped by
+ * battle_start) re-arms the caches and zeroes stale timers, so a new
+ * fight never inherits a previous one.  g_battle_shake_wipe /
+ * g_battle_deck_wipe are one-shot zone wipes consumed by the next
+ * painter run, so no shifted pixel strands after a judder.  Off-battle
+ * ticks see a static Battle and stay silent.  Timer countdown re-arms
+ * the matching dirty bits so the painters re-run each frame
+ * (battle_update's delay branch sets no dirty flags of its own).
+ * Painted by the bank-3 (BG stamp, hero row, hand) and bank-5 (OAM
+ * sprites, AP pips) renderers.  The deck shake is skipped on result
+ * screens (the loot reveal owns rows 10-12 there).  Module scope, never
+ * in Battle: Battle sits mid-Game, so any growth shifts every later
+ * Game field (see the art arrays above).  Never persisted (Battle is
+ * temporary runtime state, AGENTS.md 53.1). */
+extern uint8_t g_battle_shake_mask;
+extern uint8_t g_battle_shake_timer;
+extern uint8_t g_battle_shake_wipe;
+extern uint8_t g_battle_heal_flash;
+extern uint8_t g_battle_heal_phase;
+extern uint8_t g_battle_deck_timer;
+extern uint8_t g_battle_deck_wipe;
+extern uint8_t g_battle_fx_epoch;
+extern uint8_t g_battle_fx_seen;
+extern uint8_t g_battle_fx_php;
+extern uint8_t g_battle_fx_ehp[MAX_BATTLE_ENEMIES];
 
 /* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
  * engage clones of one type). Programmed at battle entry, restored with
@@ -176,6 +217,12 @@ void battle_art_load_banked(void);
  * ui_update_battle wrapper right after the bank-3 render (sequential
  * trampoline calls, never nested). */
 void battle_oam_draw_banked(void);
+
+/* Banked hit-feedback tick (src/battle/battle_feedback_banked.c, ROM
+ * bank 9): no staging, reads the live battle straight from g_game.
+ * Dispatched every frame from game_update (same non-terminal gate as
+ * the frame tick). */
+void battle_feedback_tick_banked(void);
 
 /* Bank-3 rider-HUD helper (src/battle/battle_rider_content.c): draws /
  * hides one OAM rider icon per hand slot (entry 19+i) inset over that

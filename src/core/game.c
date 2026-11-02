@@ -142,6 +142,14 @@ void game_update(Game *g)
         g_bk_call_bank = 10;
         g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
         banked_call_run();
+        /* Battle hit feedback (bank 9 body, no staging: it reads the
+         * live battle straight from g_game).  Own dispatch like the
+         * tick above -- HP deltas arm the shake/flash timers and the
+         * countdown re-arms dirty bits here, every non-terminal frame.
+         * Fixed-bank resolve paths pay nothing (AGENTS.md 52.18). */
+        g_bk_call_bank = 9;
+        g_bk_call_target = (uint16_t)&battle_feedback_tick_banked;
+        banked_call_run();
         /* byte_b == 2 (jingle restore) restarts the scene track. */
         if (g_bk_byte_b == 1) {
             audio_play_music(MUSIC_CHEST);

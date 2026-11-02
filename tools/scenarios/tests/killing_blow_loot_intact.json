@@ -1,0 +1,236 @@
+{
+ "name": "killing_blow_loot_intact",
+ "test": true,
+ "description": "Counter-kill victory keeps the loot reveal intact: three 1-HP kobolds die across an attack, an attack, and a dagger-counter defend (the final swing lands on the player the same frame the counter kills, arming the deck judder while deciding the fight). The result gate must freeze it: the YOU FOUND block, fringe cells and hero row are pristine on the DEFEAT-free VICTORY screen. Row 12 asserts real VRAM (vram_row), not the screen buffer -- box stamps never touch the buffer, so only VRAM truth catches a clobber.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 1
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "DA",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "DA",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "DA",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 3,
+   "card_type": "DA",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 3,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 4,
+   "card_type": "DA",
+   "value": 9
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 4,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 90
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_result",
+   "expected": "VICTORY"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "YOU FOUND"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 3,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 4,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 15,
+   "expected": 3
+  },
+  {
+   "type": "vram_row",
+   "row": 12,
+   "contains": "WOOD DAGGER"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 30,
+    "max_hp": 30
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

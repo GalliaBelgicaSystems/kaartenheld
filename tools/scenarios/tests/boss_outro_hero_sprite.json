@@ -1,0 +1,109 @@
+{
+ "name": "boss_outro_hero_sprite",
+ "test": true,
+ "description": "After the reprisal DEFEAT, exiting the battle runs the despair outro (wake dialogue over the overworld): the hero overworld sprite must be real hero pixels, not the battle AP-cost pips that time-share VRAM ids 96-97. Guards the battle->dialogue OAM tile-data restore.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_FOREST"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34304,
+   "tile": "hero_idle_1"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34320,
+   "tile": "hero_idle_2"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true,
+  "world": {
+   "BAT_CASTLE": "DEFEATED"
+  },
+  "deck": {
+   "FIRE_SWORD": 20
+  }
+ }
+}

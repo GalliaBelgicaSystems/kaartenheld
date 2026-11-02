@@ -95,10 +95,18 @@ void battle_oam_draw_banked(void)
             uint8_t ftiles, t, n;
             uint8_t e0 = BATTLE_OAM_BASE;
             uint8_t art_row = g_battle_hud.enemy_sprite_row;
+            int8_t pox = 0;
             volatile uint8_t *e;
             if (k >= 1) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
             if (k >= 2) e0 = (uint8_t)(e0 + BATTLE_OAM_STRIDE);
             x = battle_oam_x(g_battle_hud.enemy_positions[k][0], w);
+            /* Hit shake: +-4 px judder on the scratch-sprite cells
+             * (live gate above already excluded dead slots; the mask
+             * covers multi-slot status-tick hits). */
+            if (((g_battle_shake_mask & (uint8_t)(1u << k)) != 0) &&
+                g_battle_shake_timer != 0) {
+                pox = ((g_battle_shake_timer & 2) != 0) ? 4 : -4;
+            }
             if (g_battle_enemy_art_frames[k] > 1) {
                 frame = (uint8_t)((battle->timer_ticks >> 4) & 1);
             }
@@ -113,7 +121,7 @@ void battle_oam_draw_banked(void)
                     e = (volatile uint8_t *)(0xC000u +
                         ((uint16_t)(e0 + n) << 2));
                     e[0] = (uint8_t)(((art_row + cy) << 3) + 16);
-                    e[1] = (uint8_t)(((x + cx) << 3) + 8);
+                    e[1] = (uint8_t)(((x + cx) << 3) + 8 + pox);
                     e[2] = t;
                     if ((uint8_t)(alt & (uint8_t)(1u << n)) != 0)
                         e[3] = BATTLE_OBJ_SCRATCH2;
@@ -161,6 +169,19 @@ void battle_oam_draw_banked(void)
         if (gh == 0 || gh > 4) gh = 2;
         gx = battle_oam_x(g_battle_hud.enemy_positions[k][0], gw);
         gart_row = g_battle_hud.enemy_sprite_row;
+        /* Hit shake rides the glow overlay with the stamp (same +-1
+         * cell cadence -- pixel offsets would drift up to 4 px off
+         * the shifted stamp).  Mirrors the stamp's guard exactly
+         * (stay on 0 when the cadence bit is clear) so the two can
+         * never disagree by a cell. */
+        if (((g_battle_shake_mask & (uint8_t)(1u << k)) != 0) &&
+            g_battle_shake_timer != 0) {
+            if ((g_battle_shake_timer & 2) != 0) {
+                gx = (uint8_t)(gx + 1);
+            } else if (gx != 0) {
+                gx = (uint8_t)(gx - 1);
+            }
+        }
         ge0 = BATTLE_OAM_BASE;
         if (k >= 1) ge0 = (uint8_t)(ge0 + BATTLE_OAM_STRIDE);
         if (k >= 2) ge0 = (uint8_t)(ge0 + BATTLE_OAM_STRIDE);
@@ -224,6 +245,12 @@ static void battle_ap_draw(const volatile Battle *battle)
         if (tile) {
             re[0] = (uint8_t)((top << 3) + 16);
             re[1] = (uint8_t)(((uint8_t)(i << 2) << 3) + 8);
+            /* Deck shake (player hit): pips ride their card's top-left
+             * corner with the same whole-hand offset as the BG box. */
+            if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE &&
+                (g_battle_deck_timer & 2) != 0) {
+                re[1] = (uint8_t)(re[1] + 8);
+            }
             re[2] = tile;
             re[3] = slot;
         } else {

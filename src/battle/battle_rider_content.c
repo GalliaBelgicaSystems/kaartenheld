@@ -110,6 +110,13 @@ void battle_rider_draw(const volatile Battle *battle)
             }
         }
         col = (uint8_t)(i << 2);
+        /* Deck shake (player hit): ride the card's top-right corner
+         * with the same whole-hand offset as the BG box (never on
+         * result screens). */
+        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE &&
+            (g_battle_deck_timer & 2) != 0) {
+            col = (uint8_t)(col + 1);
+        }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(19 + i) << 2));
         if (tile) {
             re[0] = (uint8_t)((top << 3) + 16);

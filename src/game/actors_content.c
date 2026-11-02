@@ -516,6 +516,8 @@ const WorldActorTable g_actor_tables[] = {
         0 },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
         0 },
+    { MAP_DEMO_END_WAKE_SCENE, 0,
+        0 },
 };
 
 #include "game.h"
@@ -538,4 +540,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 16;
+const uint8_t g_actor_table_count = 17;

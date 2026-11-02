@@ -455,6 +455,9 @@ OVERFLOW_TERRAIN_BANK = {
     "grassy_forest": 9,
     "mountain_pass": 9,
     "south_ridge": 9,
+    # Finale backdrop (teleport-only, never walked): its 24x18 scattered
+    # floor is ~930 B of terrain blocks, which bank 5 cannot hold.
+    "demo_end_wake_scene": 9,
 }
 
 

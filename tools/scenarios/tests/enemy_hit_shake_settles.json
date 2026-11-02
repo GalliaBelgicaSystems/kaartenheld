@@ -1,0 +1,125 @@
+{
+ "name": "enemy_hit_shake_settles",
+ "test": true,
+ "description": "Enemy shake settles cleanly: a SW3 attack damages the forest slime (arming the slot judder), and after the shake expires the art footprint fringe holds no stranded tiles or tints while the hero HP block on row 7 keeps its FIELD tint (the enemy-band wipe covers rows 2-6 only, proving the boundary).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 3,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 3,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 3,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 4,
+   "col": 0,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 4,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 4,
+   "col": 4,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 14,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 17,
+   "expected": 3
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

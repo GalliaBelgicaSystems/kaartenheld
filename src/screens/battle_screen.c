@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "telemetry.h"
 #include "audio.h"
+#include "banked.h"
 #include "content.h"
 #include "ui.h"
 #include "rpg/cards.h"
@@ -128,10 +129,16 @@ void battle_screen_update(Game *g)
          * the outro.  All other buttons are ignored while he focuses.
          * 99 is always lethal (hero HP never reaches it through this
          * fight), so HUD and the DEFEAT result agree by construction.
-         * No explicit return: the defeat result makes battle_update
-         * return at once, otherwise it keeps ticking the flash cadence
-         * below. */
+         * The spell message is restaged first (bank 8, roomy -- the
+         * literals would eat fixed-bank budget): the buffers still hold
+         * the concentrating text and the defeat painters read them
+         * through the despair-defeat branch.  No explicit return: the
+         * defeat result makes battle_update return at once, otherwise
+         * it keeps ticking the flash cadence below. */
         if (input_pressed(INPUT_A)) {
+            g_bk_call_bank = 8;
+            g_bk_call_target = (uint16_t)&game_despair_reprisal_banked;
+            banked_call_run();
             combatant_take_damage(&vg->battle.player, 99);
             telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
             battle_set_result((Battle *)&vg->battle, BATTLE_RESULT_DEFEAT);

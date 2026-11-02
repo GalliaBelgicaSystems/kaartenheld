@@ -115,6 +115,21 @@ static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
  * lean); read by the bank-3 renderer. */
 char g_battle_anim_target_name[13];
 
+/* Hit feedback state (see battle.h): BSS zero, owned entirely by the
+ * bank-9 frame tick (HP deltas arm the timers, the tick counts them
+ * down).  Fixed-bank resolve paths never touch these. */
+uint8_t g_battle_shake_mask;
+uint8_t g_battle_shake_timer;
+uint8_t g_battle_shake_wipe;
+uint8_t g_battle_heal_flash;
+uint8_t g_battle_heal_phase;
+uint8_t g_battle_deck_timer;
+uint8_t g_battle_deck_wipe;
+uint8_t g_battle_fx_epoch;
+uint8_t g_battle_fx_seen;
+uint8_t g_battle_fx_php;
+uint8_t g_battle_fx_ehp[MAX_BATTLE_ENEMIES];
+
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
                   uint8_t enemy_hp, uint8_t enemy_max_hp,
@@ -165,6 +180,10 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     g_battle_multiframe = 0;
     g_slime_despair = 0;
     g_despair_slot = 0xFF;
+    /* Feedback epoch: the bank-9 frame tick re-arms its HP caches on a
+     * mismatch, so a new fight never inherits stale deltas.  One store;
+     * everything else the tick owns (fixed-bank budget, 52.18). */
+    g_battle_fx_epoch++;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;

@@ -1,0 +1,163 @@
+{
+ "name": "defend_hit_deck_settles",
+ "test": true,
+ "description": "Deck-shake settle check: a 0-block defend vs the forest slime's 2 incoming deals net 2 (hero 10 -> 8, arming the whole-hand judder). After the shake expires, the hand zone must be pristine: gap columns hold no stranded frame tiles and no stranded tint, and the marker row holds no stranded carets (one-shot zone wipe). Gap cells assert tile/mirror 0 == ui_font_tile_base, which ui_init pins to 0 exactly once (src/ui/ui.c).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "BO",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 8
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 12,
+   "col": 3,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 12,
+   "col": 3,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 11,
+   "col": 11,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 11,
+   "col": 11,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 14,
+   "col": 15,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 14,
+   "col": 15,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 15,
+   "col": 6,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 15,
+   "col": 6,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 15,
+   "col": 10,
+   "expected": 0
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 15,
+   "col": 10,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

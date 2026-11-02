@@ -138,6 +138,18 @@ lint: gfx tiles sfx $(SRCS)
 			fi; \
 		fi; \
 	done; \
+	for f in $(SRCS); do \
+		case " $$f" in \
+			*" src/ui/ui.c") continue;; \
+			*" src/core/game.c") continue;; \
+			*" src/screens/dialogue_screen.c") continue;; \
+			*" src/screens/battle_screen.c") continue;; \
+		esac; \
+		if sed -e 's|//.*$$||' "$$f" | grep -nE "ui_lcd_off[[:space:]]*\(" | grep -vqE '^[0-9]+:[[:space:]]*\*'; then \
+			echo "$$f: ui_lcd_off outside the render allowlist (ui.c, game.c, dialogue_screen.c, battle_screen.c)"; \
+			echo "LCD-OFF: ui_lcd_off in update context hangs vsync() -- no VBlank while the LCD is off (see the despair-outro hang)"; ok=0; \
+		fi; \
+	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).
