@@ -79,8 +79,7 @@ enum {
     SFX_HIT = 5,
     SFX_BLOCK = 6,
     /* Alert sting for pursuer levels (kobolds, slime knights): plays once
-     * on entry over the paused scene track, which then continues
-     * mid-song (screens/sfx.json ALERT). */
+     * on top of the running scene track (screens/sfx.json ALERT). */
     SFX_ALERT = 7,
     /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
      * transcribes to 3 CH2 tone steps), so the table theme keeps playing

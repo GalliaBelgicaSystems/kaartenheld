@@ -1145,19 +1145,19 @@ def walk_c(planner, checks):
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
     # The flip tick itself is a 1-frame window: world_load_map starts the
-    # scene track inside game_update, and the marks tick that applies the
-    # entry pause runs on the NEXT frame.  Polling for the scene change
+    # scene track inside game_update, and the marks tick that arms the
+    # entry alert runs on the NEXT frame.  Polling for the scene change
     # lands on either side of that boundary, so settle two frames before
-    # reading the track (the pause lasts ~90 ticks).
+    # reading the track.
     s.tick(2)
-    # Alert-first: the kobold entry sting pauses the track mid-song, so
-    # right after arrival the music is still FOREST (frozen, no restart);
-    # the checks below pin the sting actually stepping (sfx 7 while it
-    # rings, idle after) and the forest track continuing from the frozen
-    # position as the kobold approaches.  The sting
+    # Alert sting plays on top of the running track, so right after
+    # arrival the music is still FOREST (no restart, no pause); the
+    # checks below pin the sting actually stepping (sfx 7 while it
+    # rings, idle after) and the forest track still playing as the
+    # kobold approaches.  The sting
     # starts ~flip+90 (see note above), so the start wait needs 200,
     # not 90.
-    s.check_eq("forest music paused for sting", s.reader.music_track(),
+    s.check_eq("forest music playing under sting", s.reader.music_track(),
                MUSIC_FOREST)
     s.check("forest alert sting playing",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
@@ -1170,7 +1170,7 @@ def walk_c(planner, checks):
     s.check("forest music continues",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
                        ticks=250, label="forest music"),
-            expected="MUSIC_FOREST", actual="paused")
+            expected="MUSIC_FOREST", actual="switched")
     # Continue to the spawn for the arrival milestone.  avoid_exits:
     # the tunnel gate sits right on the path -- stepping back onto it
     # would warp out to the field.
