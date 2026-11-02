@@ -41,7 +41,6 @@ void battle_rider_draw(const volatile Battle *battle)
     uint8_t ctype, cstat;
     uint8_t tile, slot;
     uint8_t col;
-    int8_t doff = 0;
     uint8_t len, block, lx;
     volatile uint8_t *re;
 
@@ -111,15 +110,12 @@ void battle_rider_draw(const volatile Battle *battle)
             }
         }
         col = (uint8_t)(i << 2);
-        /* Deck shake (player hit): ride the card's top-right corner with
-         * the same +-1 cell cadence as the BG box (same guard: never on
+        /* Deck shake (player hit): ride the card's top-right corner
+         * with the same whole-hand offset as the BG box (never on
          * result screens). */
-        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-            doff = (int8_t)((((i + (g_battle_deck_timer >> 2)) & 1) != 0) ? 1 : -1);
-            if (col == 0 && doff < 0) {
-                doff = 1;
-            }
-            col = (uint8_t)(col + doff);
+        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE &&
+            (g_battle_deck_timer & 2) != 0) {
+            col = (uint8_t)(col + 1);
         }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(19 + i) << 2));
         if (tile) {

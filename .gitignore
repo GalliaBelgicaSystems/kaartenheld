@@ -2,7 +2,6 @@ build/*
 !build/.gitkeep
 !build/kaartenheld.gb
 !build/kaartenheld_debug.gb
-!build/kaartenheld_debug.gb.sav
 !build/kaartenheld_manual.pdf
 *.o
 *.map

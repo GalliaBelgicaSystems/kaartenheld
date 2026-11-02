@@ -30,7 +30,7 @@ VALID_ASSERTION_TYPES = {
     "battle_energy", "battle_draw_remaining", "battle_discard_count",
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
-    "screen_row", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
+    "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
     "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
@@ -806,6 +806,20 @@ def run_scenario(scenario):
             actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
             passed = contains_str not in actual_row
             actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
+
+        elif a_type == "screen_row_exact":
+            # Exact full-row comparison (trailing padding ignored): a
+            # stranded tail ("L. OF SLIMES CASTS TAIL") fails where
+            # `contains` would pass.  Leading spaces are significant.
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"screen_row_exact assertion row {row_idx} requires 'contains'")
+            expected = f"row {row_idx} exactly '{contains_str}'"
+            actual_row = screen_lines[row_idx] if row_idx < len(screen_lines) and screen_lines[row_idx] else ""
+            passed = (actual_row.rstrip() == contains_str)
+            actual = f"row {row_idx}: '{actual_row.strip()}'"
 
         elif a_type == "screen_row_not_contains":
             row_idx = a.get("row", 0)

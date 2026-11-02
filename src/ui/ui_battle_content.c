@@ -471,12 +471,14 @@ static void battle_draw_enemy_art(uint8_t x, uint8_t slot,
      * same centered footprint it stamps). */
     x = battle_enemy_art_x(x, slot);
     /* Hit shake: +-1 cell judder while the timer runs.  Only live
-     * slots shift (and only the stamp branch below uses sx): dead
-     * slots keep clearing the un-offset footprint so no shifted
-     * tiles strand behind. */
+     * slots in the shake mask shift (and only the stamp branch below
+     * uses sx): dead slots keep clearing the un-offset footprint, and
+     * the one-shot band wipe in the column painter covers the fringe,
+     * so no shifted tiles strand. */
     sx = x;
-    if (slot == g_battle_shake_slot && g_battle_shake_timer != 0 &&
-        slot < MAX_BATTLE_ENEMIES && battle->enemies[slot].hp != 0) {
+    if (slot < MAX_BATTLE_ENEMIES &&
+        ((g_battle_shake_mask & (uint8_t)(1u << slot)) != 0) &&
+        g_battle_shake_timer != 0 && battle->enemies[slot].hp != 0) {
         if ((g_battle_shake_timer & 2) != 0) {
             sx = (uint8_t)(x + 1);
         } else if (x != 0) {
@@ -570,6 +572,31 @@ static void battle_draw_enemy_columns(const volatile Battle *battle)
      * dynamic row-0 banner ("TARGET <name>" / "ATTACK <name>" / ...). */
     uint8_t hp_row = g_battle_hud.enemy_hp_row;
     uint8_t cur_row = g_battle_hud.enemy_cursor_row;
+    uint8_t art_row = g_battle_hud.enemy_sprite_row;
+    uint8_t wr, wx;
+    volatile uint8_t *wdst;
+
+    /* Hit-shake one-shot wipe: clear the enemy band (HP row through
+     * the tallest art footprint) once after a judder, so shifted
+     * stamp cells never strand outside their home footprint.  The
+     * loop below repaints HP numbers, art, blanks and carets, so the
+     * steady state is byte-identical afterwards. */
+    if (g_battle_shake_wipe != 0) {
+        g_battle_shake_wipe = 0;
+        for (wr = hp_row; wr <= (uint8_t)(art_row + 3) && wr < 18; wr++) {
+            wdst = (volatile uint8_t *)(0x9800 + ((uint16_t)wr << 5));
+            VBK_REG = 0;
+            for (wx = 0; wx < 20; wx++) {
+                battle_vram_sync_write(wdst, ui_font_tile_base);
+                g_ui_screen_buf[wr][wx] = ' ';
+                wdst++;
+#ifdef DEBUG_BUILD
+                g_tilemap_mirror[wr * 32 + wx] = ui_font_tile_base;
+#endif
+            }
+            battle_color_span(0, wr, 20, UI_COLOR_NONE);
+        }
+    }
 
     for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
         x = g_battle_hud.enemy_positions[k][0];
@@ -641,8 +668,8 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
-    /* Heal flash: two green pulses (16 frames, on/off every 4) after a
-     * player heal; otherwise the block keeps its steady green. */
+    /* Heal flash: two off-green pulses (16 frames, on/off every 4)
+     * after a player heal; otherwise the block keeps its steady green. */
     if (g_battle_heal_flash != 0 && ((g_battle_heal_flash >> 2) & 1) != 0) {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_NONE);
     } else {
@@ -1107,7 +1134,6 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
 {
     uint8_t i, k;
     uint8_t col, ccol, ctype, cvalue, cstat, cring, ceffect, ccolor, cuses;
-    int8_t doff;
     /* Snapshot ALL volatile struct fields into locals before the loops.
      * SDCC 4.4.1 caches &struct.field in stack slots (§52.19); the
      * battle_draw_card_at call + timer ISR (di/wait/ei on real hardware)
@@ -1134,10 +1160,12 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
 
     /* Deck shake (player hit): wipe the zone first (see helper), then
      * every card draws at its shaken column below.  The wipe runs only
-     * while shaking or on the one-shot wipe frame after -- steady
-     * cursor moves keep the cheap incremental path (a wipe on every
-     * DIRTY_HAND flickers the whole hand). */
-    if (g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) {
+     * while shaking or on the one-shot wipe frame after, and never on
+     * result screens (the loot reveal owns rows 10-12) -- steady cursor
+     * moves keep the cheap incremental path (a wipe on every DIRTY_HAND
+     * flickers the whole hand). */
+    if ((g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) &&
+        battle->result == BATTLE_RESULT_NONE) {
         battle_clear_hand_zone(top, bh, mark_row);
         g_battle_deck_wipe = 0;
     }
@@ -1154,11 +1182,12 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
          * Card 0 never shifts left off the row. */
         ccol = col;
         if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
-            doff = (int8_t)((((i + (g_battle_deck_timer >> 2)) & 1) != 0) ? 1 : -1);
-            if (col == 0 && doff < 0) {
-                doff = 1;
+            /* Whole-hand offset (same sign every card, 0/+1 alternating
+             * every 2 frames): uniform motion never overlaps neighboring
+             * 3-wide boxes, and card 0 never leaves the row. */
+            if ((g_battle_deck_timer & 2) != 0) {
+                ccol = (uint8_t)(col + 1);
             }
-            ccol = (uint8_t)(col + doff);
         }
         ctype   = battle->hand[i].type;
         cvalue  = battle->hand[i].value;

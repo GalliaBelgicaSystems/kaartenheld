@@ -133,28 +133,35 @@ extern uint8_t g_battle_pool_max;
 extern uint8_t g_battle_multiframe;
 /* Hit feedback (WRAM, BSS zero, staged per battle): the engine never
  * trusts fixed-bank code size for this (AGENTS.md 52.18), so NOTHING
- * here is set from fixed-bank resolve paths.  Instead the bank-8 frame
- * tick watches HP deltas (same-bank WRAM reads, no dispatch): an enemy
- * HP drop judders that slot (g_battle_shake_slot, 0xFF = none,
- * g_battle_shake_timer frames, +-1 cell BG / +-4 px OAM alternating
- * every 2 frames), a player HP drop judders the whole hand
- * (g_battle_deck_timer frames, each card +-1 cell alternating in
- * counter-phase), and a player HP rise blinks the hero HP block green
- * twice (g_battle_heal_flash frames, on/off every 4).  g_battle_fx_epoch
- * (bumped by battle_start) re-arms the per-HP caches in the tick, so a
- * new fight never inherits stale deltas.  Painted by the bank-3 (BG
- * stamp, hero row, hand) and bank-5 (OAM sprites, AP pips) renderers.
- * Module scope, never in Battle: Battle sits mid-Game, so any growth
- * shifts every later Game field (see the art arrays above).  Never
- * persisted (Battle is temporary runtime state, AGENTS.md 53.1). */
-extern uint8_t g_battle_shake_slot;
+ * here is set from fixed-bank resolve paths.  Instead the bank-9 frame
+ * tick watches HP deltas (direct WRAM reads, no dispatch): an enemy HP
+ * drop judders those slots (g_battle_shake_mask bits, 12 frames, +-1
+ * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
+ * judders the whole hand with one shared offset (8 frames, 0 one
+ * frame / +1 cell the next, alternating every 2 -- uniform motion
+ * never overlaps neighboring 3-wide boxes), a player HP rise blinks
+ * the hero HP block off-green twice (16 frames, on/off every 4).
+ * Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * through HP, so every present and future source feeds the same feedback
+ * with no per-source wiring.  g_battle_fx_epoch (bumped by
+ * battle_start) re-arms the caches and zeroes stale timers, so a new
+ * fight never inherits a previous one.  g_battle_shake_wipe /
+ * g_battle_deck_wipe are one-shot zone wipes consumed by the next
+ * painter run, so no shifted pixel strands after a judder.  Off-battle
+ * ticks see a static Battle and stay silent.  Timer countdown re-arms
+ * the matching dirty bits so the painters re-run each frame
+ * (battle_update's delay branch sets no dirty flags of its own).
+ * Painted by the bank-3 (BG stamp, hero row, hand) and bank-5 (OAM
+ * sprites, AP pips) renderers.  The deck shake is skipped on result
+ * screens (the loot reveal owns rows 10-12 there).  Module scope, never
+ * in Battle: Battle sits mid-Game, so any growth shifts every later
+ * Game field (see the art arrays above).  Never persisted (Battle is
+ * temporary runtime state, AGENTS.md 53.1). */
+extern uint8_t g_battle_shake_mask;
 extern uint8_t g_battle_shake_timer;
+extern uint8_t g_battle_shake_wipe;
 extern uint8_t g_battle_heal_flash;
 extern uint8_t g_battle_deck_timer;
-/* One-shot hand-zone wipe (see the hand painter): set by the tick when
- * the deck timer expires, consumed by the next hand redraw.  Without
- * it the steady path would need a full wipe every DIRTY_HAND (visible
- * flicker on every cursor move) or strand shifted pixels. */
 extern uint8_t g_battle_deck_wipe;
 extern uint8_t g_battle_fx_epoch;
 extern uint8_t g_battle_fx_seen;

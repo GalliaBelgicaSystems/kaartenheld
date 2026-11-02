@@ -116,10 +116,11 @@ static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
 char g_battle_anim_target_name[13];
 
 /* Hit feedback state (see battle.h): BSS zero, owned entirely by the
- * bank-8 frame tick (HP deltas arm the timers, the tick counts them
+ * bank-9 frame tick (HP deltas arm the timers, the tick counts them
  * down).  Fixed-bank resolve paths never touch these. */
-uint8_t g_battle_shake_slot;
+uint8_t g_battle_shake_mask;
 uint8_t g_battle_shake_timer;
+uint8_t g_battle_shake_wipe;
 uint8_t g_battle_heal_flash;
 uint8_t g_battle_deck_timer;
 uint8_t g_battle_deck_wipe;

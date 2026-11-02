@@ -27,25 +27,33 @@ void battle_feedback_tick_banked(void)
 
     if (g_battle_fx_seen != g_battle_fx_epoch) {
         g_battle_fx_seen = g_battle_fx_epoch;
-        g_battle_fx_php = b->player.hp;
+        g_battle_shake_mask = 0;
+        g_battle_shake_timer = 0;
+        g_battle_shake_wipe = 0;
+        g_battle_heal_flash = 0;
+        g_battle_deck_timer = 0;
         g_battle_deck_wipe = 0;
+        g_battle_fx_php = b->player.hp;
         for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
             g_battle_fx_ehp[k] = b->enemies[k].hp;
         }
         return;
     }
     if (b->player.hp < g_battle_fx_php) {
-        /* Shorter than the enemy judder (8 frames): a nudge, not a
-         * rattle.  OAM riders/pips ride at half a cell (see the
-         * painters) for the same reason. */
-        g_battle_deck_timer = 8;
+        /* Player hit: the whole hand judders, unless the fight is
+         * already decided (a killing counter lands damage and victory
+         * on the same frame -- shaking then would clobber the loot
+         * reveal rows the hand painter wipes). */
+        if (b->result == BATTLE_RESULT_NONE) {
+            g_battle_deck_timer = 8;
+        }
     } else if (b->player.hp > g_battle_fx_php) {
         g_battle_heal_flash = 16;
     }
     g_battle_fx_php = b->player.hp;
     for (k = 0; k < b->enemy_count; k++) {
         if (b->enemies[k].hp < g_battle_fx_ehp[k]) {
-            g_battle_shake_slot = k;
+            g_battle_shake_mask |= (uint8_t)(1u << k);
             g_battle_shake_timer = 12;
         }
         g_battle_fx_ehp[k] = b->enemies[k].hp;
@@ -53,12 +61,18 @@ void battle_feedback_tick_banked(void)
     if (g_battle_shake_timer != 0) {
         g_battle_shake_timer--;
         b->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
+        if (g_battle_shake_timer == 0) {
+            g_battle_shake_wipe = 1;
+        }
     }
     if (g_battle_heal_flash != 0) {
         g_battle_heal_flash--;
         b->dirty |= BATTLE_DIRTY_HERO;
     }
-    if (g_battle_deck_timer != 0) {
+    /* The deck timer only runs while undecided (see the arming gate):
+     * freezing it on a result screen leaves nothing to strand, and
+     * the epoch re-arm clears it for the next fight. */
+    if (g_battle_deck_timer != 0 && b->result == BATTLE_RESULT_NONE) {
         g_battle_deck_timer--;
         b->dirty |= BATTLE_DIRTY_HAND;
         if (g_battle_deck_timer == 0) {

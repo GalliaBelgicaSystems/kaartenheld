@@ -68,12 +68,12 @@
    "contains": "DEFEATED"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_exact",
    "row": 9,
    "contains": "L. OF SLIMES CASTS"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_exact",
    "row": 10,
    "contains": "POWERFUL SPELL!"
   },
