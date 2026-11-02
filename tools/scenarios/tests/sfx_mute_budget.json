@@ -1,7 +1,7 @@
 {
  "name": "sfx_mute_budget",
  "test": true,
- "description": "Mute-budget gate: one battle card select (SELECT, CH2, 8 dosound ticks) must mute CH2 for ~9 ticks and CH4 for 0. Pins the SFX policy: any change that mutes more music (longer tables, retrigger spam, stuck mutes) fails loudly.",
+ "description": "Mute-budget gate: one battle card select (SELECT, CH4 noise snap, 9 dosound ticks) must mute CH4 for ~10 ticks and CH2 for 0. Pins the SFX policy: any change that mutes more music (longer tables, retrigger spam, stuck mutes) fails loudly.",
  "actions": [
   {
    "type": "press",
@@ -59,11 +59,11 @@
   },
   {
    "type": "sfx_mute_ch2_max",
-   "expected": 12
+   "expected": 2
   },
   {
    "type": "sfx_mute_ch4_max",
-   "expected": 2
+   "expected": 12
   }
  ],
  "initial_state": {

@@ -426,7 +426,7 @@ class Emu:
             v = self.chans[ch]
             if inner == 0:
                 # row tick: attack path (porta skipped on tick 0, like the driver)
-                if fx not in (0, 1, 2, 0xC, 0xE):
+                if fx not in (0, 1, 2, 0xA, 0xC, 0xE):
                     raise RenderError(f"pattern effect {fx} unsupported")
                 arp = fx == 0 and param != 0
                 if note < LAST_NOTE:
@@ -444,6 +444,23 @@ class Emu:
                     raise RenderError(f"note value {note} unsupported")
                 if fx == 0xE and param == 0:
                     v.cut = True
+                if fx == 0xA:
+                    # volume slide (driver fx_vol_slide, tick 0 only):
+                    # take the channel's current envelope volume, subtract
+                    # the low nibble (floor 0), add the high nibble
+                    # (cap 15), and replay the note at the new constant
+                    # volume (the driver writes vol<<4, clearing pace and
+                    # direction). CH3's wave channel gets the same NR32
+                    # write the driver performs.
+                    slide_vol = ((v.wavevol if ch == 3 else v.env) >> 4) & 0x0F
+                    slide_vol = max(0, slide_vol - (param & 0x0F))
+                    slide_vol = min(15, slide_vol + ((param >> 4) & 0x0F))
+                    if ch == 3:
+                        v.wavevol = slide_vol << 4
+                    else:
+                        v.env = slide_vol << 4
+                        v.env_t0 = self.tick
+                    self.attack(self.tick, ch, v.base_note)
                 if fx == 0xC:
                     # set volume (driver fx_set_volume, tick 0 only): the
                     # channel's volume becomes param's low nibble, applied
@@ -480,6 +497,10 @@ class Emu:
                 elif fx == 0xE:
                     if inner == param:
                         v.cut = True
+                elif fx == 0xA:
+                    # volume slide acts tick-0 only (driver ret nz); inner
+                    # ticks ignore it.
+                    pass
                 elif fx == 0xC:
                     # set volume acts tick-0 only (driver ret nz); inner
                     # ticks ignore it.

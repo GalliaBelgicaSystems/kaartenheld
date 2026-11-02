@@ -673,8 +673,13 @@ $(BUILD_DIR)/debug/sfx/%.o: $(GENERATED_SFX_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR)/audio/audio.o $(BUILD_DIR)/audio/sfx_step.o \
 $(BUILD_DIR)/debug/audio/audio.o $(BUILD_DIR)/debug/audio/sfx_step.o: $(SFX_TABLES)
 
+# Battle BGM (bank 7: bank 6 — driver + six songs — is full, and the
+# re-scored Battle BGM overflowed it. Bank 9 was next in line but is
+# itself nearly full (loot/terrain bodies + driver + casino), while
+# bank 7 has room; the song uses the second driver copy. See
+# music_play_banked MUSIC_BATTLE.)
 $(GENERATED_MUSIC_DIR)/battle.c: assets/music/Battle\ BGM.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 6 song_battle "$@"
+	python3 tools/compile_music.py "$<" 7 song_battle "$@"
 
 $(GENERATED_MUSIC_DIR)/desolate_landscape.c: assets/music/desolate_landscape.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 6 song_desolate_landscape "$@"
@@ -755,7 +760,7 @@ $(GENERATED_MUSIC_DIR)/casino.c: assets/music/casino.uge tools/compile_music.py 
 # covers the whole bank: the driver reads song bytes through the mapped
 # ROM window, so driver + songs only need to share a bank).
 $(GENERATED_MUSIC_DIR)/underground.c: assets/music/underground\ pass.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 9 song_underground "$@"
+	python3 tools/compile_music.py "$<" 6 song_underground "$@"
 
 # Game-over theme (assets/music/game over.uge, loops).  Played the moment
 # the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!

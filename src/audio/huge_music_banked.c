@@ -86,7 +86,11 @@ void music_play_banked(void)
     g_music_paused = 0;
     if (track == MUSIC_TITLE) g_title_frames = 0;
     if (track == MUSIC_BATTLE) {
+        /* Bank 7: the re-scored Battle BGM overflowed bank 6 (driver +
+         * six songs, full); bank 9 is nearly full too, so it uses the
+         * second driver copy. */
         song = &song_battle;
+        bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_OVERWORLD) {
         song = &song_opening;
         bank = HUGE_MUSIC_BANK_B7;
@@ -124,8 +128,10 @@ void music_play_banked(void)
         song = &song_casino;
         bank = HUGE_MUSIC_BANK_B9;
     } else if (track == MUSIC_UNDERGROUND) {
+        /* Bank 6 (home bank): moved back from bank 9 to make room for
+         * the re-scored Battle BGM — bank 6 regained ~3 KB when battle
+         * left for bank 9. */
         song = &song_underground;
-        bank = HUGE_MUSIC_BANK_B9;
     }
     g_audio_current_track = track;
     g_bk_ptr_a = (void *)song;
