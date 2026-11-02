@@ -164,6 +164,11 @@ extern uint8_t g_battle_shake_timer;
 extern uint8_t g_battle_shake_wipe;
 extern uint8_t g_battle_heal_flash;
 extern uint8_t g_battle_heal_phase;
+/* Nonzero while BG slot DIM holds the slime-light flash ramp (see the
+ * bank-9 tick): the tick programs it on arm and restores fightboss on
+ * expiry, and cancels without touching CRAM off-battle (transitions
+ * reload their own sets). */
+extern uint8_t g_battle_heal_cram;
 extern uint8_t g_battle_deck_timer;
 extern uint8_t g_battle_deck_wipe;
 extern uint8_t g_battle_fx_epoch;

@@ -3,6 +3,37 @@
 
 #include "battle.h"
 #include "game.h"
+#include "banked.h"
+#include "ui/ui.h"
+
+/* Slime-light heal-flash ramp for BG slot DIM (7): paper white, then
+ * #77E331 twice (font ink may ride entry 1 or 2, so both carry the
+ * green), then black.  Programmed for the flash duration only; the
+ * fightboss restore ramp below is its hardcoded twin (bank 9 cannot
+ * read the bank-5 ROM table, so the bytes are duplicated here -- keep
+ * in sync with generated/tiles/cram_tables.h if the artist ramp
+ * moves).  RGB555 little-endian: white FF 7F; #77E331 -> r14 g28 b6
+ * -> 0x1B8E; black 00 00. */
+static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0x8E, 0x1B, 0x8E, 0x1B, 0x00, 0x00 };
+/* fightboss slot-7 restore ramp: white; (141,117,74) -> 0x25D1; grey
+ * (86,86,86) -> 0x294A; black. */
+static const uint8_t s_heal_flash_restore[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x00, 0x00 };
+
+/* Program (or restore) BG slot DIM for the heal flash.  Same LCD-safe
+ * per-store pattern as ui_load_cram_banked (BANKED_VRAM_WRITE); a
+ * no-op on DMG, where BCPS/BCPD are unmapped. */
+static void battle_heal_cram(uint8_t flash_on)
+{
+    const uint8_t *ramp;
+    uint8_t c;
+    if (!g_is_cgb) return;
+    ramp = flash_on ? s_heal_flash_ramp : s_heal_flash_restore;
+    VBK_REG = 0;
+    BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_DIM << 3));
+    for (c = 0; c < 8; c++) {
+        BANKED_VRAM_WRITE(&BCPD_REG, ramp[c]);
+    }
+}
 
 /* Battle hit feedback via HP deltas (self-contained body, AGENTS.md
  * 52.11.1: reads the live battle straight from g_game (WRAM, always
@@ -33,12 +64,26 @@ void battle_feedback_tick_banked(void)
         g_battle_shake_wipe = 0;
         g_battle_heal_flash = 0;
         g_battle_heal_phase = 0;
+        g_battle_heal_cram = 0;
         g_battle_deck_timer = 0;
         g_battle_deck_wipe = 0;
         g_battle_fx_php = b->player.hp;
         for (k = 0; k < MAX_BATTLE_ENEMIES; k++) {
             g_battle_fx_ehp[k] = b->enemies[k].hp;
         }
+        return;
+    }
+    if (g_game.screen != SCREEN_BATTLE) {
+        /* Off-battle: cancel an in-flight flash WITHOUT touching CRAM.
+         * Every transition reloads its own set (overworld/item/shop/
+         * dialogue/battle all program CRAM on entry), and terminal
+         * screens never read DIM -- so the programmed slot is already
+         * correct wherever we landed.  Shake/deck timers freeze
+         * harmlessly (no painter runs off-battle; the epoch re-arm
+         * clears them). */
+        g_battle_heal_flash = 0;
+        g_battle_heal_phase = 0;
+        g_battle_heal_cram = 0;
         return;
     }
     if (b->player.hp < g_battle_fx_php) {
@@ -50,11 +95,14 @@ void battle_feedback_tick_banked(void)
             g_battle_deck_timer = 5;
         }
     } else if (b->player.hp > g_battle_fx_php) {
-        /* 50-frame flash, white base with two green pulses (10 frames
-         * each), spanning the 47-tick heal jingle: green appears
-         * twice instead of vanishing twice, so the flash reads green.
-         * Ends white so the return to steady green snaps visibly. */
+        /* 50-frame flash, white base with two slime-light green pulses
+         * (10 frames each), spanning the 47-tick heal jingle: green
+         * appears twice instead of vanishing twice.  Programs BG slot
+         * DIM to #77E331 for the duration (restored below); DIM's
+         * fightboss ramp is otherwise untouched. */
         g_battle_heal_flash = 50;
+        battle_heal_cram(1);
+        g_battle_heal_cram = 1;
     }
     g_battle_fx_php = b->player.hp;
     /* Fresh judder replaces the old mask (a previous shake always
@@ -91,6 +139,13 @@ void battle_feedback_tick_banked(void)
         g_battle_heal_phase = (uint8_t)(((g_battle_heal_flash <= 40 &&
             g_battle_heal_flash > 30) || (g_battle_heal_flash <= 20 &&
             g_battle_heal_flash > 10)) ? 1 : 0);
+        if (g_battle_heal_flash == 0) {
+            /* Flash over: put DIM's fightboss ramp back.  Off-battle
+             * exits never reach this branch (see the screen gate
+             * above); their transitions reload CRAM themselves. */
+            battle_heal_cram(0);
+            g_battle_heal_cram = 0;
+        }
         b->dirty |= BATTLE_DIRTY_HERO;
     }
     /* The deck timer only runs while undecided (see the arming gate):
