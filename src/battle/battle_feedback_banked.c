@@ -6,15 +6,16 @@
 #include "banked.h"
 #include "ui/ui.h"
 
-/* Slime-light heal-flash ramp for BG slot DIM (7): paper white, then
- * #77E331 twice (font ink may ride entry 1 or 2, so both carry the
- * green), then black.  Programmed for the flash duration only; the
- * fightboss restore ramp below is its hardcoded twin (bank 9 cannot
- * read the bank-5 ROM table, so the bytes are duplicated here -- keep
- * in sync with generated/tiles/cram_tables.h if the artist ramp
- * moves).  RGB555 little-endian: white FF 7F; #77E331 -> r14 g28 b6
- * -> 0x1B8E; black 00 00. */
-static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0x8E, 0x1B, 0x8E, 0x1B, 0x00, 0x00 };
+/* Slime-light heal-flash ramp for BG slot DIM (7): font ink is palette
+ * entry 3 (proved by the steady HUD: banner tan = slot-0 entry 3,
+ * heart red = slot-1 entry 3, HP brown = slot-3 entry 3 = numbers
+ * ink), so the green MUST live in entry 3 -- entries 0-2 stay
+ * fightboss.  #77E331 -> RGB555 (14,28,6) -> 0x1B8E, little-endian
+ * 8E 1B.  Programmed for the flash duration only; the fightboss
+ * restore ramp below is its hardcoded twin (bank 9 cannot read the
+ * bank-5 ROM table, so the bytes are duplicated here -- keep in sync
+ * with generated/tiles/cgb_palettes.inc if the artist ramp moves). */
+static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x8E, 0x1B };
 /* fightboss slot-7 restore ramp: white; (141,117,74) -> 0x25D1; grey
  * (86,86,86) -> 0x294A; black. */
 static const uint8_t s_heal_flash_restore[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x00, 0x00 };
