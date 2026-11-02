@@ -141,10 +141,12 @@ void game_slime_despair_outro(void)
      * &g_game).  Wakes on the real wake grove (no separate copy map: the
      * wake dialogue opens immediately and closes straight to THANKS, so
      * the player never walks here -- the old throne-room point exit was
-     * an invisible warp with no portal art and is gone).  Immediate cut:
-     * no white-hold loop (an uncalibrated spin loop stalls the main loop
-     * without advancing the frame counter). */
-    ui_lcd_off();
+     * an invisible warp with no portal art and is gone).  No LCD change
+     * here: game_render() performs the full LCD-off redraw after the
+     * frame's vsync().  Turning the LCD off in update context hangs
+     * vsync() (no VBlank while the LCD is off), stranding the release
+     * ROM on a white screen with the area track playing -- a hang the
+     * harness never sees (it skips vsync). */
 #ifdef TEST_LEVELS
     scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
 #else

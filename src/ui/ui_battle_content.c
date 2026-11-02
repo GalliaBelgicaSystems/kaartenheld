@@ -989,8 +989,12 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Desperation telegraph (unwinnable final boss): the combo line
      * carries the sentence's second half (staged game text; row 9 shows
      * the first half while the hold lasts).  Drawn unconditionally
-     * like the clear above, so no skip-guard can leave a stale row. */
-    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+     * like the clear above, so no skip-guard can leave a stale row.
+     * After the reprisal the phase is RESULT, but the despair-defeat
+     * branch keeps the spell's second half ("POWERFUL SPELL!") up
+     * instead of blanking to bare rows. */
+    if (battle->phase == BATTLE_PHASE_SLIME_DESPAIR ||
+        (g_slime_despair != 0 && battle->result == BATTLE_RESULT_DEFEAT)) {
         battle_draw_text_line(0, combo_row, (const char *)g_despair_row10, 19);
         battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
         battle_draw_text_line(19, combo_row, NULL, 1);
@@ -1466,12 +1470,16 @@ void ui_update_battle_banked(void)
              * card boxes now.  msg_id 10 is the desperation telegraph
              * (staged game text, completed on row 10 by the combo
              * painter): keyed on the DESPAIR phase too, so the line
-             * cannot linger past the hold (the defeat result repaints
+             * cannot linger past the hold -- except the despair defeat,
+             * which keeps the spell's first half ("L. OF SLIMES CASTS")
+             * up under the DEFEATED! banner (the defeat result repaints
              * with the same dirty bit).  The else branch clears the FULL
              * row width (20, not 12): the despair line is 18 columns and
              * a short clear would strand its tail on the result screen. */
             if (battle->msg_id == 10 &&
-                battle->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+                (battle->phase == BATTLE_PHASE_SLIME_DESPAIR ||
+                 (g_slime_despair != 0 &&
+                  battle->result == BATTLE_RESULT_DEFEAT))) {
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else {

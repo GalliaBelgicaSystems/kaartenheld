@@ -61,6 +61,13 @@ uint8_t game_loot_drop(uint8_t battle_type);
  * battle_update) and opens the DESPAIR hold itself. */
 void game_despair_check_banked(void);
 
+/* Desperation reprisal message (same file, ROM bank 8): restages the
+ * row buffers with the spell text ("L. OF SLIMES CASTS" / "POWERFUL
+ * SPELL!"), read by the bank-3 painters through the despair-defeat
+ * branch.  Dispatched once by the battle screen's A-press handler
+ * before it lands the scripted 99 damage. */
+void game_despair_reprisal_banked(void);
+
 /* Banked body (bank 4): loads the active battle screen's HUD layout from
  * g_battle_screens into WRAM g_battle_hud.  Called via banked_call_run(). */
 void battle_hud_load_banked(void);
