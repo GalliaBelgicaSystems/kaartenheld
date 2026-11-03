@@ -72,8 +72,18 @@ void battle_defend_resolve_banked(void)
      * a ring staged, which a plain incoming-zero would have granted). */
     atk = (b->attacking_enemy_idx < b->enemy_count) ? b->attacking_enemy_idx : 0;
     if (b->enemies[atk].hp == 0) {
-        g_bk_byte_d = SFX_BLOCK;
-        return;
+        /* Unkillable desperation boss: the counter floored it to 0, but
+         * the floor gives 1 HP back and its swing still lands -- falling
+         * through to the normal resolve below.  A killing swing then
+         * takes the ordinary defeat exit (never the scripted outro);
+         * skipping it here would ghost-cancel the attack and strand the
+         * hero alive into the hold. */
+        if (atk == g_despair_slot) {
+            b->enemies[atk].hp = 1;
+        } else {
+            g_bk_byte_d = SFX_BLOCK;
+            return;
+        }
     }
 
     for (di = 0; di < b->combo_count; di++) {

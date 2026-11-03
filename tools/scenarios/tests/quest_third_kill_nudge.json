@@ -1,5 +1,5 @@
 {
- "name": "quest_fifth_kill_nudge",
+ "name": "quest_third_kill_nudge",
  "test": true,
  "description": "The 3rd victorious battle pops the next-step notice: with the quest ACTIVE and MONSTERS_DEFEATED staged at 2, beating Carl (count 3) sets HUNT_NOTIFIED and opens a dialogue (Carl's own victory speech wins the modal; the flag proves the nudge row ran)",
  "actions": [

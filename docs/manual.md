@@ -89,7 +89,7 @@ and press **A** to talk.
 
 Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
 
-When you have beaten all five, go back to him and he will grant you
+When you have beaten all three, go back to him and he will grant you
 wonderful power: **one extra AP** every round. Then he warns you that a
 darkness stirs at the castle.
 

@@ -792,9 +792,18 @@ static char s_sel_marker;
 static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
                                                 uint8_t *is_heal)
 {
+    uint8_t save_type;
+    uint8_t save_amount;
     *dmg = 0;
     *is_heal = 0;
     if (battle->combo_count == 0) return "";
+    /* Side-effect-free rendering: the dispatch below overwrites the
+     * shared g_effect_last scratch (a later apply reads it as the burn
+     * basis), so save and restore it around the call -- staging previews
+     * must never leak a previewed total into gameplay (AGENTS.md §52.25
+     * family). */
+    save_type = g_effect_last.type;
+    save_amount = g_effect_last.amount;
     /* Run the REAL bank-local resolver (combo_resolve_banked, same ROM
      * bank 3 -- direct call, no trampoline) over battle->hand indexed
      * by selected_indices (g_bk_byte_d = 1, cleared by the resolver):
@@ -810,10 +819,20 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         CARD_EFFECT_DAMAGE_TARGET);
     g_bk_byte_d = 1;
     combo_resolve_banked();
-    if (battle->last_combo.eff_count == 0) return "";
+    if (battle->last_combo.eff_count == 0) {
+        g_effect_last.type = save_type;
+        g_effect_last.amount = save_amount;
+        return "";
+    }
     *dmg = g_effect_last.amount;
     if (g_effect_last.type == CARD_EFFECT_HEAL_HP) *is_heal = 1;
-    if (battle->last_combo.tier == HAND_NONE && *dmg == 0) return "";
+    if (battle->last_combo.tier == HAND_NONE && *dmg == 0) {
+        g_effect_last.type = save_type;
+        g_effect_last.amount = save_amount;
+        return "";
+    }
+    g_effect_last.type = save_type;
+    g_effect_last.amount = save_amount;
     return battle_combo_tier_name(battle->last_combo.tier);
 }
 

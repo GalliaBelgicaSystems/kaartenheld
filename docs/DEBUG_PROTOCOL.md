@@ -1454,9 +1454,12 @@ STATUS_APPLIED
   data[2] = duration in turns
 
 STATUS_TICKED
-  data[0] = flat tick damage (POISON 1, BURN 2, FREEZE 0 per round
-            regardless of stacks; extra applications refresh duration
-            and deepen stacks for telemetry only)
+  data[0] = tick damage for the round (POISON 0 -- control-only, so a
+            poison TICKED fires only on the expiry round; BURN scales
+            per instance at 10% of the inflicting hit, min 1; FREEZE 0.
+            Extra applications refresh duration and deepen stacks for
+            telemetry only, except a stronger re-applied burn keeps its
+            higher tick)
   data[1] = actor slot (0 = player; otherwise enemy index)
   data[2] = instances expired by this tick
   data[3] = first expired status id (valid when data[2] != 0)

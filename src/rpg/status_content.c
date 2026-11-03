@@ -29,7 +29,7 @@
 static const StatusDefinition s_status_defs[STATUS_DEF_COUNT] = {
     /* id            tick  max  dur */
     { STATUS_NONE,     0,   0,   0 },
-    { STATUS_POISON,   0,   5,   3 },
+    { STATUS_POISON,   0,   5,   2 },
     /* BURN tick is per-instance scaled at apply (10% of the inflicting
      * hit, min 1); the table slot stays 0 so no flat fallback exists. */
     { STATUS_BURN,     0,   3,   3 },
@@ -72,8 +72,10 @@ void status_apply_banked(void)
     /* Burn basis (inflicting hit's damage): g_effect_last.amount, left
      * by the combo dispatch every hit runs.  Gameplay rider paths run
      * immediately after their hit's dispatch, so this is always their
-     * own hit (status.h).  Cached in a local on entry. */
+     * own hit (status.h).  Consumed AND cleared on entry, so a spent
+     * basis can never leak into a later debug/organic apply. */
     uint8_t basis = g_effect_last.amount;
+    g_effect_last.amount = 0;
 
     if (!slots || id == STATUS_NONE) return;
     def = status_def(id);

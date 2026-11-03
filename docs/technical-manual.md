@@ -238,11 +238,10 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 
 ### 4.2 Monster Hunt — the main quest
 
-1. **Start.** Talk to the **Mayor** for the first time:
-
-   > I am the Mayor.
-   > Defeat 3 monsters!
-   > Gain extra AP!
+1. **Start.** Talk to the **Mayor** for the first time (he tells you
+   this is Slime country and begs to see the monsters die), which starts
+   the hunt; while it is active he says "Defeat 3 monsters! Return for
+   power!":
 
 2. **Objective.** Defeat **3 monsters in total** — any hostile counts
    (field/forest slimes, bats, even the boss).  Kills made *before* the
@@ -683,7 +682,7 @@ Statuses (`src/rpg/status_content.c`):
 
 | Status | Tick (dmg/round) | Max stacks | Duration | Effect |
 |---|---|---|---|---|
-| POISON | 0 | 5 | 3 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
+| POISON | 0 | 5 | 2 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
 | BURN | 10% of the inflicting hit (min 1) | 3 | 3 rounds | Scales with the hit that lands it; re-applied burns keep the stronger tick. |
 | FREEZE | 0 | 1 | 3 rounds | Victim **skips its whole action** (no attack for the player, no swing for the enemy) each round it lasts. |
 

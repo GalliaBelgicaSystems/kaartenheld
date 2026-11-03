@@ -154,8 +154,9 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
 
     /* Combat loot roll happens HERE, at battle start (docs/loot.md
      * §34.5): the isolated loot RNG is consumed deterministically once
-     * per battle, and the synthesized identity sits ready in
-     * g_card_scratch for the VICTORY reveal message.  Grant happens at
+     * per battle and the derived id sits ready in g_loot_id for the
+     * VICTORY reveal (battle_screen.c synthesizes the identity via
+     * card_get_def at reveal time).  Grant happens at
      * world_on_battle_end() (victory only). */
     g_loot_id = game_loot_drop(battle_id);
 

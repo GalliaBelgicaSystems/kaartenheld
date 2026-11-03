@@ -22,7 +22,7 @@ in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
 (1/255 units, §17/§18).  Poison is control-only (tick 0, no damage):
-it lasts 3 rounds greying the victim's cards, then expires, with deaths
+it lasts 2 rounds greying the victim's cards, then expires, with deaths
 resolving like combat deaths only for damaging statuses.
 Telemetry: `STATUS_APPLIED` / `STATUS_TICKED` (payloads in
 DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
