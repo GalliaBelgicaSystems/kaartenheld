@@ -68,11 +68,12 @@ enum {
 
 /* ── Card AP cost (docs/card-ap-cost-formula.md) ──
  * One AP step = 8 value points: power 1, material tier 4, mythril
- * premium 12 (plain mythril always costs 5), rider 8.  Deliberately
- * unclamped: the largest legal input is 9 + 4·4 + 12 + 8 = 45 -> 6,
- * and only paths handed an id the tables never produce (debug hand
- * injection) clamp against CARD_AP_MAX.  Pure shifts/compare, no
- * div/mod (AGENTS.md §52.18); safe in every banked copy. */
+ * premium 12 (plain mythril always costs 5), rider 8.  Never clamped at
+ * runtime: the largest legal input is 9 + 4·4 + 12 + 8 = 45 -> 6.
+ * CARD_AP_MAX is the specification ceiling -- make card-costs asserts
+ * every table-built combo against it -- not a clamp; it has no C
+ * call sites by design.  Pure shifts/compare, no div/mod (AGENTS.md
+ * §52.18); safe in every banked copy. */
 #define CARD_AP_MATERIAL_PTS 4
 #define CARD_AP_RIDER_PTS    8
 #define CARD_AP_MYTHRIL_PTS  12

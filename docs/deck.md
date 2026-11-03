@@ -1266,7 +1266,7 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   uncapped). Enforced in `src/rpg/deck.c`; capping the collection too keeps
   the fixed-size entry array honest at 12 slots.
 - **Energy model**: per-turn pool from the `ENERGY_POOL` variable
-  (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
+  (default 2 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
   events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1 on

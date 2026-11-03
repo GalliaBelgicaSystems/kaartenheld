@@ -462,12 +462,19 @@ def _drain_skip_offer(s):
     return not s.text_has("HEY! WANNA")
 
 
-def _select_cards(s, wanted_types):
+def _select_cards(s, wanted_types, max_cards=None):
     """Toggle-select every hand card whose type is in wanted_types.
     Each A press is verified against combo_count (an A can be eaten by
-    input edge timing, AGENTS.md §52.10 — retry with a reset frame)."""
+    input edge timing, AGENTS.md §52.10 — retry with a reset frame).
+
+    max_cards caps how many cards join the combo.  walk-b uses it: at 3 AP
+    a full 3+3 round empties the 10-card starter deck's draw pile and
+    triggers a RESHUFFLE turn, which consumes the next PLAYER_SELECT and
+    delays Carl's poker lesson past the walk's fixed choreography."""
     picked = 0
     for idx in range(5):
+        if max_cards is not None and picked >= max_cards:
+            break
         if not _cursor_to(s, idx):
             continue
         ctype = s.reader.battle_hand()[idx][0]
@@ -894,7 +901,11 @@ def walk_b(planner, checks):
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
             expected="TARGET CARL", actual="none")
-    _select_cards(s, ATTACK_TYPES)
+    # Two cards per phase (not the full 3 AP): a 3+3 opening round empties
+    # the 10-card starter draw pile and triggers a RESHUFFLE turn that
+    # consumes the round-2 PLAYER_SELECT, delaying Carl's poker lesson past
+    # this walk's fixed choreography.
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.
     for _ in range(4):
@@ -905,6 +916,8 @@ def walk_b(planner, checks):
             break
     s.check("defend banner", s.text_has("DEFEND"),
             expected="DEFEND", actual="none")
+    # Attack landed (Carl's HP dropped): capture the battle frame here.
+    s.shoot("10-battle-attack")
     # The first DEFEND phase raises the shield coaching box; close its
     # two pages, then the battle's own DEFEND banner owns row 0.
     s.check("defend lesson",
@@ -919,9 +932,8 @@ def walk_b(planner, checks):
             s.wait_for(lambda: s.text_has("DEFEND"), ticks=180),
             expected="DEFEND", actual="none")
     s.shoot("10-battle-defend", need="DEFEND")
-    _select_cards(s, (BT_SHIELD,))
+    _select_cards(s, (BT_SHIELD,), max_cards=2)
     s.press("select", settle=40)     # execute defense
-    s.shoot("10-battle-attack")
     # The way back to SELECT raises the poker-hands box, then the flee
     # box: close both (3 pages + 1) to reach a plain SELECT phase.
     s.check("poker lesson",
@@ -1008,7 +1020,17 @@ def walk_b(planner, checks):
     # (now stable) FLED! result, and leaving that returns to the field
     # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
     # and Carl alive for a rematch.
-    s.press("b", settle=40)
+    # At 3 AP a stray card may still be staged (B unselects before it
+    # flees), so drain the combo first or the flee press only clears it.
+    for _ in range(4):
+        if s.reader.battle_combo_count() == 0:
+            break
+        s.press("b", settle=12)
+    for _ in range(3):
+        s.press("b", settle=40)
+        if s.wait_for(lambda: s.text_has("GROW STRONGER!")
+                      or s.text_has("FLED!"), ticks=120):
+            break
     s.check("farewell speech",
             s.wait_for(lambda: s.text_has("GROW STRONGER!"), ticks=240),
             expected="GROW STRONGER!", actual="none")

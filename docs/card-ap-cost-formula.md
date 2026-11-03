@@ -46,9 +46,10 @@ M F SW power 9, mythril + fire -> 6 AP (a mythril rider costs more than
 No division, no multiplication, no table lookup.  The `1..6` range is a
 property of the inputs rather than a clamp in the expression: the largest
 legal value is `9 + 4·4 + 12 + 8 = 45`, which already yields 6, so the ROM
-formula never needs a `min()`.  Only paths that can be handed an id the
-tables never produce (debug hand injection) clamp, against `CARD_AP_MAX`
-(§6.2).
+formula never needs a `min()`.  `CARD_AP_MAX` (6) is a *specification*
+constant: `make card-costs` and the six AP pip tiles assert the table-built
+range never exceeds it.  No runtime path clamps — the debug hand-injection
+action stages an arbitrary byte cost deliberately (§6.2).
 
 ---
 
@@ -343,8 +344,10 @@ reaches 6 the generator simply never rolls one (§6.1), so no 6-cost card
 can drop that the pool cannot play.
 
 That is why the expression carries no `min()`: the ceiling is a consequence
-of the inputs, not a clamp.  `CARD_AP_MAX` exists only for paths that accept
-ids from outside the tables, which clamp before staging a card.
+of the inputs, not a clamp.  `CARD_AP_MAX` is the compile-time assertion of
+that ceiling — `make card-costs` recomputes every combo against it, and the
+AP pip art covers exactly 1..`CARD_AP_MAX`.  Nothing clamps at runtime; it
+has no `.c` call sites by design.
 
 ### 6.3 Monotone in every axis
 
@@ -499,7 +502,7 @@ import `loot.h` for the material enum anyway, so it would only add a file):
 #define CARD_AP_MATERIAL_PTS 4
 #define CARD_AP_RIDER_PTS    8
 #define CARD_AP_MYTHRIL_PTS  12  /* §3.4 premium: mythril floor of 5 AP */
-#define CARD_AP_MAX          6   /* guard for injected ids, see below */
+#define CARD_AP_MAX          6   /* spec ceiling, asserted by card-costs */
 
 #define CARD_AP_VALUE(power, material, rider)                    \
     ((uint8_t)((power) + ((material) << 2) + ((rider) << 3) +    \
@@ -514,12 +517,11 @@ intermediate 52 — so the `uint8_t` types are exact and a 16-bit widen would
 buy nothing.  (SDCC still does the adds in `int`, which C89 promotion makes
 unavoidable, but no value leaves `0..52` and the truncated result is
 provably correct.  The `== MAT_MYTHRIL` ternary compiles to a compare and
-two shifts — no table, no division.)  Deliberately unclamped: `CARD_AP_MAX`
-is applied by the debug hand-injection path, which can be handed an id the
-tables never produce.  Note that the `(uint8_t)` cast in `CARD_AP_VALUE`
-truncates *before* any clamp could see the value, so that path must bound
-its **inputs** (power, material, rider) or the final result, and never rely
-on the macro to enforce the ceiling.
+two shifts — no table, no division.)  `CARD_AP_MAX` never appears in C: it
+is a specification constant asserted by `make card-costs` (every table-built
+combo <= 6) and mirrored by the six pip tiles, not a runtime clamp.  The
+debug hand-injection action (`DBG_ACT_SET_HAND_CARD_META`) stages whatever
+cost byte a scenario asks for, including out-of-range ones, deliberately.
 
 All three runtime call sites are already banked files
 (`src/battle/battle_init_content.c` and `src/screens/item_content_banked.c`

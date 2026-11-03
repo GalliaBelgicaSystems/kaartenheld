@@ -1,4 +1,4 @@
-#pragma bank 2
+#pragma bank 10
 
 #include <stdint.h>
 #include "banked.h"
@@ -7,11 +7,11 @@
 
 extern uint8_t g_oam_tilecache_valid;
 
-/* Slime-trio spawn (game content, ROM bank 2).  Dispatched from
- * the event executor's EVENT_ACTION_SPAWN_SLIME_TRIO branch via the
- * WRAM trampoline (nothing staged: this body resolves its own ow byte
- * from the event row, keeping the fixed-bank dispatch to branch +
- * call only).
+/* Slime-trio spawn (game content, ROM bank 10 = GAME_EVENT_BANK).
+ * Dispatched from the event executor's EVENT_ACTION_SPAWN_SLIME_TRIO
+ * branch via the WRAM trampoline.  Lives in the event-table bank
+ * precisely so its row scan is an in-bank read (a bank-2 body would
+ * read garbage: the table is not mapped there).
  *
  * The slime knight's armor breaks open on defeat: its runtime slot
  * becomes a slime-trio encounter in place (same tile, solo=0 so the
@@ -31,9 +31,8 @@ extern uint8_t g_oam_tilecache_valid;
  * walkthrough and any nearby hero reliably re-engage it wherever
  * the knight fell.
  *
- * Self-contained: same-bank reads (event table), WRAM
- * (g_game, s_actor_names), compile-time constants.  No fixed-bank
- * calls. */
+ * Self-contained: WRAM (g_game, s_actor_names) plus in-bank reads of the
+ * event table (this file shares GAME_EVENT_BANK).  No fixed-bank calls. */
 extern char s_actor_names[MAX_WORLD_ACTORS][13];
 extern const EventDefinition g_events[];
 
@@ -43,24 +42,18 @@ void game_slime_trio_spawn_banked(void)
     uint8_t ow = 8;
     uint8_t i, j;
     uint8_t found;
-    /* Function-local volatiles (AGENTS.md §52.19): the ow-resolve scan
-     * below miscompiles under some bank-2 layouts (pointer-cache family:
-     * a cached table read survives the branch join and the SPAWN row is
-     * never found, so the body returns before reaching the slot loop).
-     * The slot loop alone was proven innocent by isolation.  Volatile
-     * locals force a fresh read per row; default flags stay global. */
-    volatile uint8_t type_v;
-    volatile uint8_t count_v;
 
     /* Resolve our ow byte from our own event row (first
-     * SPAWN_SLIME_TRIO action in the table). */
+     * SPAWN_SLIME_TRIO action in the table).  This file lives in bank 10
+     * (GAME_EVENT_BANK) precisely so these are in-bank reads: the event
+     * table is NOT mapped while other banks run, so this scan must never
+     * move to another bank (that cross-bank wild read was the 2026-11-03
+     * spawn failure). */
     found = 0;
     for (i = 0; i < GAME_EVENT_COUNT; i++) {
         const EventDefinition *d = &g_events[i];
-        count_v = d->action_count;
-        for (j = 0; j < count_v && j < MAX_EVENT_ACTIONS; j++) {
-            type_v = d->actions[j].type;
-            if (type_v == EVENT_ACTION_SPAWN_SLIME_TRIO) {
+        for (j = 0; j < d->action_count && j < MAX_EVENT_ACTIONS; j++) {
+            if (d->actions[j].type == EVENT_ACTION_SPAWN_SLIME_TRIO) {
                 ow = d->actions[j].arg0;
                 found = 1;
                 break;

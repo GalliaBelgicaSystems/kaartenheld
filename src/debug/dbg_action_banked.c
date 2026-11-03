@@ -55,6 +55,13 @@ void debug_action_leaf_banked(void)
                 g_game.battle.hand[a0].type = (BattleCardType)t;
                 g_game.battle.hand[a0].value = a2;
                 g_game.battle.hand[a0].effect = fx;
+                /* Baseline cost 1, like DBG_ACT_SET_DECK_CARD: without
+                 * this the overwritten slot inherits whatever the dealt
+                 * card cost (1 or 2 now that the starter deck mixes
+                 * W/F swords), making scenarios seed-dependent.
+                 * SET_HAND_CARD_META overrides it when a scenario wants
+                 * a specific cost. */
+                g_game.battle.hand[a0].cost = 1;
                 /* Injected cards carry no status rider; reset both fields
                  * so a previously injected rider cannot leak into a slot
                  * that was played earlier in the same battle. */

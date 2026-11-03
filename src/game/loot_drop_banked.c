@@ -3,6 +3,7 @@
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
+#include "battle.h"
 #include "core/game.h"
 #include "game_ids.h"
 
@@ -79,8 +80,13 @@ void game_loot_drop_banked(void)
     {
         uint8_t mat_roll = (uint8_t)g_loot_rng_state;
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);
+        /* Same normalization as battle_hud_load_banked (the authority for
+         * the live pool): an unset variable means "use the default", not
+         * "AP 0 drops" -- without this an unset pool ran the battle on 2
+         * AP but rolled the AP-1 wood-only profile. */
         uint8_t ap = (uint8_t)g_game.state.variables.values[
             VARIABLE_ID_ENERGY_POOL - 1];
+        if (ap < 1) ap = BATTLE_ENERGY_PER_TURN;
         uint8_t row;
         uint8_t cap;
         uint8_t material = MAT_WOOD;

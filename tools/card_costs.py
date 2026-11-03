@@ -85,9 +85,10 @@ def parse_doc_tables():
     text = FORMULA_DOC.read_text(encoding="utf-8")
     cells = []
     # §4.1 rows: | **wood** (gate AP 1) | 1 AP (p1) | ... (6 cols)
+    sec41 = text.split("### 4.1", 1)[1].split("### 4.2", 1)[0]
     for m in re.finditer(
             r"\|\s*\*\*(\w+)\*\*\s*\(gate AP \d+\)((?:\s*\|\s*(?:\d+ AP \(p\d+\)|n/a))+) \|",
-            text):
+            sec41):
         mat_name = m.group(1)
         if mat_name not in MATERIALS:
             continue
@@ -138,20 +139,76 @@ def parse_doc_tables():
     return cells, catalog
 
 
+def parse_loot_power_guard(loot_h_text):
+    """LOOT_POWER is the band table's single source of truth; band_power()
+    mirrors it in Python.  Parse-guard the macro's canonical closed form so
+    a band edit that changes the shape fails loudly here instead of silently
+    diverging from the mirrored function."""
+    m = re.search(r"#define\s+LOOT_POWER\([^)]*\)\s*(.*?)\n\n", loot_h_text, re.S)
+    if not m:
+        fail("loot.h: LOOT_POWER macro not found (band table moved?)")
+        return
+    body = m.group(1)
+    for token in ("<< 1", "WPN_SWORD", "WPN_BOW", "? 1 :"):
+        if token not in body:
+            fail("loot.h: LOOT_POWER no longer has the documented closed "
+                 "form (missing %r) -- update band_power() in card_costs.py" % token)
+
+
+def split_top_level(body):
+    """Split a C initializer body on commas that are not inside ()."""
+    out, depth, cur = [], 0, ""
+    for ch in body:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            out.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        out.append(cur.strip())
+    return out
+
+
 def parse_catalog_calls():
-    """cards_content.c rows -> {ROW name: (cost_expr, power_lit)}."""
+    """cards_content.c rows -> {ROW name: CARD_AP args or None}.
+
+    Cross-checks the CARD_AP(...) arguments against the SAME row's struct
+    fields: the macro's power argument must equal `.power`, and its rider
+    flag must equal (`.status_id` != STATUS_NONE).  A future edit that
+    changes one without the other now fails `make card-costs`."""
     text = CARDS_C.read_text(encoding="utf-8")
     rows = {}
     for m in re.finditer(
             r"\{\s*CARD_[A-Z0-9_]+\s*,.*?,\s*\"([A-Z ]+)\"\s*\}", text, re.S):
         name = m.group(1)
-        body = m.group(0)
+        fields = split_top_level(m.group(0).strip()[1:-1])
+        if len(fields) < 12:
+            fail("catalog: row %s has %d fields, expected 12" % (name, len(fields)))
+            continue
+        try:
+            struct_power = int(fields[2])
+        except ValueError:
+            fail("catalog: row %s has a non-literal .power (%r)"
+                 % (name, fields[2]))
+            continue
+        struct_rider = 0 if "STATUS_NONE" in fields[9] else 1
         cm = re.search(
-            r"CARD_AP\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)", body)
+            r"CARD_AP\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)", fields[3])
         if cm:
-            rows[name] = ((int(cm.group(1)), cm.group(2), int(cm.group(3))), None)
+            p, mat_name, r = int(cm.group(1)), cm.group(2), int(cm.group(3))
+            if p != struct_power:
+                fail("catalog: row %s CARD_AP power %d but .power is %d"
+                     % (name, p, struct_power))
+            if r != struct_rider:
+                fail("catalog: row %s CARD_AP rider %d but .status_id is %s"
+                     % (name, r, fields[9]))
+            rows[name] = ((p, mat_name, r), None)
         else:
-            zm = re.search(r",\s*0\s*,\s*0\s*,\s*1\s*,", body)
+            zm = re.search(r",\s*0\s*,\s*0\s*,\s*1\s*,", fields[3])
             rows[name] = (None, 0 if zm else None)
     return rows
 
@@ -175,6 +232,7 @@ def main():
         return 1
     if cap != 6:
         fail("CARD_AP_MAX is %d, expected 6 (mythril riders cost 6)" % cap)
+    parse_loot_power_guard(loot_h)
 
     # All 37 legal combos: 5 mats x 5 weapons plain + 4 mats x 3 pairs rider
     combos = []

@@ -322,8 +322,8 @@ const EventDefinition g_events[] = {
     /* ── Field cache (first poison dagger + AP unlock) ───────────────
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
-     * more) and a +1 AP pool grant (ADD, pairing with the Monster Hunt
-     * and mimic +1 one-shots toward 4 in any order from the base-2 pool),
+     * more) and a +1 AP pool grant (ADD, one of the four uniform +1
+     * milestones from the base-2 pool reaching 6),
      * announced by its own dialogue.  One-shot via
      * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM
