@@ -1128,7 +1128,20 @@ class EmulatorSession:
         if stat is not None and (stat & 0x03) <= 1:
             return True
         for _ in range(max_frames):
-            self._cmd("frame")
+            out = self._cmd("frame").decode(errors="ignore")
+            # Under g_harness_mode=1 the frame runs free of vsync(), so
+            # game_render() + ui_sprite_commit() can straddle LY=144: if
+            # `frame` halts at LY=144 while PC sits inside the HRAM OAM
+            # DMA wait loop (0xFF80-0xFF87), the transfer is active and
+            # locks 0x0000-0xFE9F (WRAM/VRAM read as 0xFF) even though IO
+            # 0xFF41 (STAT) already reads Mode 1.  Step out of the loop
+            # (<= ~1.4 scanlines) so DMA finishes inside VBlank.
+            for _ in range(90):
+                m = re.search(r"PC:\s*([0-9A-Fa-f]+)", out)
+                pc = int(m.group(1), 16) if m else 0
+                if not (0xFF80 <= pc <= 0xFF87):
+                    break
+                out = self._cmd("next").decode(errors="ignore")
             try:
                 stat = self._memread(0xFF41)
             except Exception:
