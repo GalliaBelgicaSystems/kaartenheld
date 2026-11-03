@@ -74,7 +74,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 3
+   "expected": 2
   },
   {
    "type": "event_occurred",

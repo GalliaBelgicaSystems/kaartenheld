@@ -467,9 +467,9 @@ def _select_cards(s, wanted_types, max_cards=None):
     Each A press is verified against combo_count (an A can be eaten by
     input edge timing, AGENTS.md §52.10 — retry with a reset frame).
 
-    max_cards caps how many cards join the combo.  walk-b uses it: at 3 AP
-    a full 3+3 round empties the 10-card starter deck's draw pile and
-    triggers a RESHUFFLE turn, which consumes the next PLAYER_SELECT and
+    max_cards caps how many cards join the combo.  walk-b uses it: an
+    uncapped round stages deep into the 10-card starter deck's draw pile
+    and risks a RESHUFFLE turn, which consumes the next PLAYER_SELECT and
     delays Carl's poker lesson past the walk's fixed choreography."""
     picked = 0
     for idx in range(5):
@@ -808,7 +808,7 @@ def walk_b(planner, checks):
     props = carl["properties"]
     # Field cache east of Carl first: Carl withholds the spar until it
     # is opened ("Open chest, then come back!"), so the hero opens it
-    # (first poison dagger plus the AP unlock: pool 2 -> 3) and only
+    # (first poison dagger plus the AP unlock: pool 1 -> 2) and only
     # then walks to the lesson.
     s.check("chest bump",
             bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
@@ -819,8 +819,8 @@ def walk_b(planner, checks):
             expected="closed", actual="open")
     s.check_eq("first poison dagger",
                s.reader.collection_count(CARD_POISON_DAGGER), 1)
-    s.check_eq("energy pool 2 -> 3",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("energy pool 1 -> 2",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
@@ -885,8 +885,8 @@ def walk_b(planner, checks):
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
-    s.check_eq("spar starts at 3 AP (chest opened first)",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("spar starts at 2 AP (chest opened first)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
 
     # Fight with hand-aware selection until the solo spar drops
     # (variance-safe: enemy HP strictly decreases per landed hit; never
@@ -901,10 +901,10 @@ def walk_b(planner, checks):
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
             expected="TARGET CARL", actual="none")
-    # Two cards per phase (not the full 3 AP): a 3+3 opening round empties
-    # the 10-card starter draw pile and triggers a RESHUFFLE turn that
-    # consumes the round-2 PLAYER_SELECT, delaying Carl's poker lesson past
-    # this walk's fixed choreography.
+    # Two cards per phase (capped, not the full affordable set): an
+    # uncapped round stages deeper into the 10-card starter draw pile and
+    # risks a RESHUFFLE turn that consumes the round-2 PLAYER_SELECT,
+    # delaying Carl's poker lesson past this walk's fixed choreography.
     _select_cards(s, ATTACK_TYPES, max_cards=2)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.
@@ -1020,7 +1020,7 @@ def walk_b(planner, checks):
     # (now stable) FLED! result, and leaving that returns to the field
     # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
     # and Carl alive for a rematch.
-    # At 3 AP a stray card may still be staged (B unselects before it
+    # At pool 2 a stray card may still be staged (B unselects before it
     # flees), so drain the combo first or the flee press only clears it.
     for _ in range(4):
         if s.reader.battle_combo_count() == 0:
@@ -1052,8 +1052,8 @@ def walk_b(planner, checks):
                HERO_START_GOLD)
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool stays 3 (no AP for fleeing)",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    s.check_eq("energy pool stays 2 (no AP for fleeing)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
     s.tick(30)

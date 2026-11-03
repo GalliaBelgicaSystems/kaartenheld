@@ -163,6 +163,9 @@
   },
   "seed": 5002,
   "start_battle": true,
+  "variables": {
+   "ENERGY_POOL": 2
+  },
   "deck": {
    "IRON_SWORD": 4,
    "WOODEN_SHIELD": 3,

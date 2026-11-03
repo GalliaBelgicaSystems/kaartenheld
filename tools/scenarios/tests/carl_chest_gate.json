@@ -1,7 +1,7 @@
 {
  "name": "carl_chest_gate",
  "test": true,
- "description": "Carl withholds the spar until the field cache is opened: bumping him with FIELD_CHEST clear opens 'Open chest, then come back!' with no battle staged (pool stays base 2); closing returns to the overworld",
+ "description": "Carl withholds the spar until the field cache is opened: bumping him with FIELD_CHEST clear opens 'Open chest, then come back!' with no battle staged (pool stays base 1); closing returns to the overworld",
  "actions": [
   {
    "type": "press",
@@ -51,7 +51,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 2
+   "expected": 1
   },
   {
    "type": "dialogue_active",

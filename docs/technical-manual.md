@@ -398,8 +398,8 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 
 * **Hand**: 5 cards drawn from your deck at battle start.
 * **Energy**: the **pool** per decision phase (attack and defend each get a
-  fresh refill to full).  It starts at **2**; the tutorial, the field
-  cache, the Monster Hunt quest and the mimic each grant **+1** (up to 6).  Most
+  fresh refill to full).  It starts at **1**; the tutorial, the field
+  cache, the Monster Hunt quest and the mimic each grant **+1** (up to 5).  Most
   cards cost 1–2; iron cards cost 2, steel 3–4, mythril 5 (riders 6).  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
@@ -888,7 +888,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 
 * Hero: HP 15, gold 20, deck 10, opening hand = a random 5 of that 10 (shuffled per battle).
 * Deck: min 5, max 20 copies; collection cap 12 distinct types.
-* Battle: hand 5, energy 2/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 6), timer 20s per decision.
+* Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3

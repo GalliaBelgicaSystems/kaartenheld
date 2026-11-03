@@ -152,6 +152,9 @@
   "flags": {
    "ARRIVED_TOWN": true
   },
+  "variables": {
+   "ENERGY_POOL": 2
+  },
   "party": {
    "HERO": {
     "hp": 60,

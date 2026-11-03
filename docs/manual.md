@@ -164,8 +164,8 @@ play up to **5** cards at once.
 
 ![Choosing cards](manual_images/detail-hand.png)
 
-Every card costs **Energy**. You get **2 Energy** each round, so spend it
-carefully!
+Every card costs **Energy**. You get **1 Energy** each round, so spend it
+carefully! Story rewards raise your pool -- up to **5** by the end.
 
 ### Step 2 — Watch your attack
 

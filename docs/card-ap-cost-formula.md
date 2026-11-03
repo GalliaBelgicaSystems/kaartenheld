@@ -2,7 +2,9 @@
 
 **Status:** accepted and implemented on this branch, 2026-11-03.  The
 formula below is the ROM behavior (`CARD_AP` in `src/rpg/loot.h`, derived
-catalog rows, loot gates, pool base 2); the rollout plan in §8 is kept as
+catalog rows, loot gates, pool base 1 — the base-2 start from 3fe5c0d6 was
+reverted the same day to restore the classic 1 → 5 ladder, so mythril
+riders at 6 AP wait on a pool-6 source); the rollout plan in §8 is kept as
 the record of how it landed.  `make card-costs` guards it.
 
 Today a card's AP cost is either hand-picked (`src/game/cards_content.c`) or
@@ -58,9 +60,9 @@ action stages an arbitrary byte cost deliberately (§6.2).
 AP is the **energy pool**, `VARIABLE_ID_ENERGY_POOL` (`src/game/game_ids.h:101`),
 refilled at battle start and at every transition into a decision phase —
 attack *and* defend each get a fresh pool (`src/battle/battle.h:15-24`,
-`docs/technical-manual.md` §6.2).  It starts at 2 and story grants raise it;
+`docs/technical-manual.md` §6.2).  It starts at 1 and story grants raise it;
 the grants in the demo (tutorial, field cache, Monster Hunt, mimic) top out
-at 6.
+at 5.
 
 So selection is a **budget**: `src/battle/battle_nav_banked.c:38` sums the
 cost of every staged card and line 56 refuses one that would not fit.  AP
@@ -336,12 +338,13 @@ future tuning knob must preserve it (§8.4).
 
 Max legal input: `9 + 4·4 + 12 + 8 = 45 -> 6`, and the largest
 intermediate, `45 + 7 = 52`, still fits a byte.  Plain mythril sits
-exactly on the pool's mid-ladder (5); mythril riders cost 6, which the
-demo's grant ladder reaches at full completion (base 2 + tutorial, chest,
-Monster Hunt, mimic).  A 6-cost card is therefore playable in exactly the
-battles that can still happen after the last grant — and until the pool
-reaches 6 the generator simply never rolls one (§6.1), so no 6-cost card
-can drop that the pool cannot play.
+exactly on the pool's top rung (5); mythril riders cost 6, which the grant
+ladder no longer reaches (base 1 + tutorial, chest, Monster Hunt, mimic
+tops out at 5 — the base-2 start was reverted to restore the classic
+1 → 5 progression).  No 6-cost card can be played today, and until the
+pool reaches 6 the generator simply never rolls one (§6.1), so no 6-cost
+card can drop that the pool cannot play.  A fifth +1 source (or a pool-6
+source, §7.1) is required before mythril riders can enter play.
 
 That is why the expression carries no `min()`: the ceiling is a consequence
 of the inputs, not a clamp.  `CARD_AP_MAX` is the compile-time assertion of
@@ -385,7 +388,8 @@ roundtrip.  Nothing new enters `GameState`; `BattleCard.cost`
 
 With a mid-demo pool, a plain mythril card can never be combined with
 anything, and a mythril rider (6 AP) cannot be played at all — it is a card
-for a completed grant ladder (base 2 + all four +1s).  Meanwhile five 1-AP
+for a pool-6 source that does not exist yet (the completed grant ladder,
+base 1 + all four +1s, tops out at 5).  Meanwhile five 1-AP
 cards can form a straight (210%) or five of a kind (400%,
 `docs/combo-system.md`), so raw damage-per-AP favours combos.  The
 expensive card is therefore an *option*, not an upgrade: it buys certainty
@@ -393,23 +397,24 @@ expensive card is therefore an *option*, not an upgrade: it buys certainty
 the table.
 
 The pool grows with the ladder by construction (`VARIABLE_ID_ENERGY_POOL`
-is uncapped and the four story grants take it 2 → 6), so the top of the
-ladder stays playable without any separate pool-growth feature: a mythril
-card sits next to two 1-AP cards once the pool allows, and the full-completion
-pool plays even a mythril rider.  Recommended: keep average cost per staged
-card near 2, so a 3–4 card combo stays affordable at every stage of the
+is uncapped and the four story grants take it 1 → 5), so plain mythril
+stays playable at full completion without any separate pool-growth
+feature: a 5-cost mythril card owns the whole phase once the pool allows.
+Mythril riders (6) wait on a pool-6 source (§7.1, §8 Q4).  Recommended:
+keep average cost per staged card near 2, so a 3–4 card combo stays
+affordable at every stage of the
 game.
 
-### 7.2 The floor is 2, matching the manual
+### 7.2 The floor is 1, the classic start
 
 The starter deck (`screens/hero.json`) is four wood swords, four wood
 shields and **two bronze fire swords**.  Under this formula the fire swords
-cost 2, so the hero's pool starts at 2 (`src/game/content.c`) — the manual
-already promises "You get **2 Energy** each round" (`docs/manual.md:167`),
-and the old "flat 1 AP start" comment in `src/battle/battle.h` agreed with
-the code instead of the manual.  Starting at 2 keeps the starter deck's
-strongest cards live on turn one; starting at 1 would leave the only
-non-wood cards dead until the first AP grant.
+cost 2, so at the hero's pool of 1 (`src/game/content.c`) only the wood
+cards are live on turn one — the manual promises "You get **1 Energy**
+each round" (`docs/manual.md:167`).  The two fire swords come online with
+the first +1 grant (the field-cache dagger chest, pool 2), which is the
+intended progression beat: start 1, dagger 2, tutorial 3, Monster Hunt 4,
+mimic 5.
 
 ### 7.3 Block and heal match damage, point for point
 
@@ -568,7 +573,9 @@ The rider term is free at all three runtime sites: they already compute
    after it: the formula prices the starter fire swords at 2, so the change
    is not accepted with the pool at 1.  No separate pool-growth follow-up:
    the four +1 grants already take the pool 2 → 6, which plays even mythril
-   riders at full completion.
+   riders at full completion.  (Reverted 2026-11-03: base back to 1,
+   ladder 1 → 5, fire swords dead until the first grant — see §7.2.
+   Mythril riders at 6 are unplayable until a pool-6 source exists.)
 
 Run `make test-sentinels` after steps 1–3 regardless: the edits shrink
 banked code, and per AGENTS.md §52.19 even a shrink/move can flip a latent
@@ -663,10 +670,12 @@ cannot fail is not a check (AGENTS.md §52.16).
 3. **Should `uses_per_battle` discount?**  A 1-use wood ring at 2 AP is poor
    value by any measure, but a discount would let a 1-use ring undercut the
    heal premium that keeps rings scarce.
-4. **Should the pool move past 6?**  Pool 6 is settled, not open: mythril
-   riders already cost 6, so a pool-6 source is required (§7.1).  The open
-   part is 7–8 — the only lever that makes the top of the ladder feel like
-   an upgrade rather than a trade.
+4. **Should the pool reach 6?**  Not yet, and nothing else changes until
+   it does: mythril riders already cost 6, but the ladder tops out at 5
+   (base 1 + all four +1s), so no 6-cost card can be played or rolled
+   today (§6.1 withholds them).  If a fifth +1 source ever lands, the open
+   question after it is 7–8 — the only lever that makes the top of the
+   ladder feel like an upgrade rather than a trade.
 5. **Editor surfacing.**  Costs become derived, so the Hero/DECK views need
    no input — but a read-only AP badge on the card detail page would make
    the formula visible to players ("why does this cost 5?" → "9 damage +
