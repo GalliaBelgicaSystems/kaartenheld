@@ -37,17 +37,16 @@ static const struct {
 };
 
 static const struct {
-    uint8_t cost;
     char symbol[3];        /* 2-letter weapon code (§34.1) */
 } s_weapons[LOOT_NWEAPONS] = {
-    { 1, "SW" },   /* sword */
-    { 1, "SH" },   /* shield */
-    { 1, "BO" },   /* bow */
-    { 1, "DA" },   /* dagger */
-    { 1, "RG" },   /* ring (heal amount = power) */
-    { 0, "??" },   /* reserved */
-    { 0, "??" },   /* reserved */
-    { 0, "??" }    /* reserved */
+    { "SW" },   /* sword */
+    { "SH" },   /* shield */
+    { "BO" },   /* bow */
+    { "DA" },   /* dagger */
+    { "RG" },   /* ring (heal amount = power) */
+    { "??" },   /* reserved */
+    { "??" },   /* reserved */
+    { "??" }    /* reserved */
 };
 
 /* Build the compact identity name "[material][ effect] weapon" into the
@@ -98,7 +97,6 @@ void loot_synth_banked(void)
     g_card_scratch.id = id;
     g_card_scratch.type = CARD_TYPE_ATTACK;
     g_card_scratch.power = LOOT_POWER(material, wi);
-    g_card_scratch.cost = s_weapons[weapon].cost;
     /* Centralized sell value (docs/loot.md §16/§34.6): synthesized
      * power + material tier*2 (+2 poison rider).  Stored in the def's
      * price field so every consumer (shop SELL mode) reads it like any
@@ -154,6 +152,11 @@ void loot_synth_banked(void)
         g_card_scratch.status_id = s_effects[effect].status_id;
         g_card_scratch.status_chance = s_effects[effect].chance;
     }
+    /* Derived AP cost (docs/card-ap-cost-formula.md): the mythril premium
+     * rides along inside the macro via `material`, and reserved weapons
+     * keep cost 0 (not playable, §5.3). */
+    g_card_scratch.cost = (weapon <= WPN_RING)
+        ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
 
     synth_name(material, effect, weapon, has_rider);
 }

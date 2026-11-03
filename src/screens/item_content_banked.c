@@ -432,7 +432,6 @@ static const CardDefinition *ic_loot_synth(CardId id)
         g_card_scratch.uses_per_battle = LOOT_RING_USES(material);
     }
     g_card_scratch.power = LOOT_POWER(material, wi);
-    g_card_scratch.cost = (weapon <= WPN_RING) ? 1 : 0;
     g_card_scratch.price = (uint8_t)(g_card_scratch.power +
         (uint8_t)(material << 1) +
         ((effect == EFF_POISON && weapon == WPN_DAGGER) ? 2 : 0));
@@ -445,6 +444,11 @@ static const CardDefinition *ic_loot_synth(CardId id)
         g_card_scratch.status_id = s_ic_loot_status[effect];
         g_card_scratch.status_chance = s_ic_loot_chance[effect];
     }
+    /* Derived AP cost (docs/card-ap-cost-formula.md), staged after the
+     * rider above so the status bit is final; reserved weapon ids keep
+     * cost 0 (not playable, §5.3). */
+    g_card_scratch.cost = (weapon <= WPN_RING)
+        ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
     n = g_card_scratch.name;
     *n++ = s_ic_loot_mat[material];
     *n++ = ' ';

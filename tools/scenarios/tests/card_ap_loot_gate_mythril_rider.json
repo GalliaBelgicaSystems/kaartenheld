@@ -1,0 +1,180 @@
+{
+ "name": "card_ap_loot_gate_mythril_rider",
+ "test": true,
+ "description": "Mythril-rider suppression (docs/card-ap-cost-formula.md §6.1): seed 210 at pool 5 rolls mythril + a rider-eligible fire roll (eff 5 < 32), which the LOOT_AP_MYTHRIL_RIDER gate withholds until pool 6. The drop is a plain MYTHRIL SWORD (derived id 224): without the gate it would be id 240 (M F SW, cost 6, unplayable at pool 5). Delete the suppression and this scenario drops 240.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 210,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "variables": {
+   "ENERGY_POOL": 5
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "event_occurred",
+   "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 0,
+   "value": 224
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "M SW"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "MYTHRIL SWORD"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 12,
+   "contains": "FIRE"
+  }
+ ]
+}

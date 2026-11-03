@@ -216,6 +216,12 @@ void battle_oam_draw_banked(void)
  * layout contract lives on the file-header comment above). */
 static void battle_ap_draw(const volatile Battle *battle)
 {
+    /* Pip tile per cost 1-5 (index 0 = hidden).  AP_TILE_5 (122) breaks
+     * the 96-99 run, so this is a table, not arithmetic and not a
+     * branch ladder (docs/card-ap-cost-formula.md §7.4). */
+    static const uint8_t s_pip_tiles[6] = {
+        0, AP_TILE_1, AP_TILE_2, AP_TILE_3, AP_TILE_4, AP_TILE_5
+    };
     uint8_t cards_row = g_battle_hud.cards_row;
     uint8_t bh = g_card_skin_wram.box_h;
     uint8_t top;
@@ -231,23 +237,11 @@ static void battle_ap_draw(const volatile Battle *battle)
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
         uint8_t tile = 0;
         uint8_t slot = 0;
-        if (!hide && battle->hand[i].type != BATTLE_CARD_TYPE_EMPTY) {
-            if (battle->hand[i].cost == 1) {
-                tile = AP_TILE_1;
-                slot = AP_OBJ_1;
-            } else if (battle->hand[i].cost == 2) {
-                tile = AP_TILE_2;
-                slot = AP_OBJ_2;
-            } else if (battle->hand[i].cost == 3) {
-                tile = AP_TILE_3;
-                slot = AP_OBJ_3;
-            } else if (battle->hand[i].cost == 4) {
-                tile = AP_TILE_4;
-                slot = AP_OBJ_4;
-            } else if (battle->hand[i].cost == 5) {
-                tile = AP_TILE_5;
-                slot = AP_OBJ_5;
-            }
+        uint8_t cost = battle->hand[i].cost;
+        if (!hide && battle->hand[i].type != BATTLE_CARD_TYPE_EMPTY &&
+            cost >= 1 && cost <= 5) {
+            tile = s_pip_tiles[cost];
+            slot = AP_OBJ_1;
         }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(24 + i) << 2));
         if (tile) {

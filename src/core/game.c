@@ -116,9 +116,9 @@ void game_update(Game *g)
      * the driver loops the one-shot song.  Engine-generic restore
      * (scene track lookup); action codes come back through g_bk_byte_b
      * (jingle) and the pursuit alert through g_bk_byte_c (2 = sting
-     * now, once the chaser is awake and moving).  The alert no longer
-     * stops or replays the track (it pauses mid-song and continues in
-     * bank 8), so the old hold/replay codes are gone: byte_b == 3 is
+     * now, once the chaser is awake and moving, over the still-playing
+     * scene track).  The alert never stops, pauses, or replays the track,
+     * so the old hold/replay codes are gone: byte_b == 3 is
      * the title play-once stop only.
      *
      * Terminal screens (GAME_OVER / THANKS / ENDING) run no world

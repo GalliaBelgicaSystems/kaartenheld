@@ -64,7 +64,6 @@ void battle_init_deck_banked(void)
              * every other loot card is unlimited-use. */
             b->deck.cards[i].uses_remaining =
                 (wpn == WPN_RING) ? LOOT_RING_USES(mat) : 0xFF;
-            b->deck.cards[i].cost = (wpn <= WPN_RING) ? 1 : 0;
             b->deck.cards[i].status_id = STATUS_NONE;
             b->deck.cards[i].status_chance = 0;
 
@@ -109,6 +108,12 @@ void battle_init_deck_banked(void)
             }
 
             b->deck.cards[i].ring = (wpn == WPN_RING) ? 1 : 0;
+            /* Derived AP cost (docs/card-ap-cost-formula.md), staged after
+             * the rider above so the status bit is final; reserved weapon
+             * ids keep cost 0 (not playable, §5.3). */
+            b->deck.cards[i].cost = (wpn <= WPN_RING)
+                ? CARD_AP(b->deck.cards[i].value, mat,
+                          b->deck.cards[i].status_id != STATUS_NONE) : 0;
         } else {
             /* Unknown id: safety-net sword, mirroring the phantom draw. */
             b->deck.cards[i].type = BATTLE_CARD_TYPE_SWORD;
