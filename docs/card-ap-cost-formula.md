@@ -84,7 +84,7 @@ how likely it is to *drop*.
 | Screen path | `src/screens/item_content_banked.c:435` | same expression |
 | Phantom/fallback card | `src/battle/deck_init.c:66`, `battle_turn_draw_banked.c:61` | 1 |
 
-Six locations across five files, four distinct rules (authored per row; a
+Six locations across six files, four distinct rules (authored per row; a
 table of 1s; the same inline expression copied twice; the same fallback `1`
 copied twice), one visible value.  Adding one card today means guessing a
 byte in a table; adding one *material* means remembering to edit three
@@ -239,8 +239,10 @@ Explicit `MAT_*` is one byte in ROM and self-documenting.
 `/`, no `%` (AGENTS.md §52.18: those pull the SDCC div/mod library into the
 fixed bank), and 8-bit multiply is avoided too.  In the catalog the whole
 expression folds to a constant at compile time; at runtime (loot synth, the
-inline battle path, the card list) it is a handful of bytes, cheaper than
-the `s_weapons[]` table lookup it replaces.
+inline battle path, the card list) it is a handful of bytes and it removes a
+per-weapon column (`s_weapons[].cost`) that had to be kept in step with the
+ladder.  Power and material still come from that same table -- the win is
+one fewer source of truth for the cost, not a saved lookup.
 
 ### 5.3 SPECIAL cards
 
@@ -393,7 +395,10 @@ buy nothing.  (SDCC still does the adds in `int`, which C89 promotion makes
 unavoidable, but no value leaves `0..40` and the truncated result is
 provably correct.)  Deliberately unclamped: `CARD_AP_MAX` is applied by the
 debug hand-injection path, which can be handed an id the tables never
-produce.
+produce.  Note that the `(uint8_t)` cast in `CARD_AP_VALUE` truncates
+*before* any clamp could see the value, so that path must bound its
+**inputs** (power, material, rider) or the final result, and never rely on
+the macro to enforce the ceiling.
 
 All three runtime call sites are already banked files
 (`src/battle/battle_init_content.c` and `src/screens/item_content_banked.c`
@@ -444,11 +449,12 @@ the macro calls).
 The weights are **not** balance dials.  Material 4 and rider 8 are fixed by
 the ladder in §4, and the top of that ladder is pinned by the 5-AP ceiling:
 any shift-legal increase saturates it (material weight 8 puts a mythril
-plain sword at `9 + 32 + 7 = 41`, i.e. 6 before the cap, so every mythril
-card becomes a clamped 5; weight 5 is not a shift and does not even move the
-mythril sword, `29 -> 4`).  Rider 16 makes every bronze rider cost 3 and
-breaks §6.1; rider 0 makes statuses free.  Treat both weights as part of the
-card language, like the bands themselves.
+plain sword's value at `9 + 32 = 41`, i.e. `(41 + 7) >> 3 = 6` before the
+cap, so every mythril card becomes a clamped 5; weight 5 is not a shift and
+does not even move the mythril sword, which stays at value `29 -> 4`).
+Rider 16 makes every bronze rider cost 3 and breaks §6.1; rider 0 makes
+statuses free.  Treat both weights as part of the card language, like the
+bands themselves.
 
 The real levers, in order:
 
@@ -488,7 +494,7 @@ that edit, then restore.  A check that cannot fail is not a check
 |---|---|
 | **Hand-maintained 100-cell cost table** (one number per material × effect × weapon) | Exactly the status quo with more cells: the same six locations to keep in sync, no guarantee of monotonicity, and a new material means 20 new numbers plus 8 new gate expectations. |
 | **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire sword (p3) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire sword (p9) costs the same 5 as a plain one, which the cap then hides.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
-| **Price-proportional** (`AP = price / 10`) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the Merchant's mythril bow (30 g, authored) would cost 3 AP by coincidence, not by design — while a loot roll of the same combo (17 g) would cost 2. |
+| **Price-proportional** (`AP = ceil(price / 10)`, rounding up) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the Merchant's mythril bow (30 g, authored) would cost 3 AP by coincidence, not by design — while a loot roll of the same combo (17 g) would cost 2.  The division rule is itself arbitrary: with C integer division those same two prices give 3 and 1 instead, so the mapping has to be specified *and* justified, which the value ladder does not. |
 | **Percent-of-card rider** (`power × 1.2` for a rider) | Backwards: it charges the most for the rider on the card where the rider matters least (a flat 3-damage status). |
 | **Exponential tiers** (`2^material`) | Saturates immediately: wood 1, bronze 2, iron 4, then steel and mythril both clamp to 5, so the top half of the ladder is flat and every rider there is free. |
 | **Cost stored per card and verified by a test** | Keeps two sources of truth and fails *late* (at test time). Computing at the definition makes a wrong cost unrepresentable. |
@@ -545,6 +551,9 @@ p7 -> steel     plain 3 AP   rider 4 AP
 p8 -> mythril   plain 3 AP   rider 4 AP
 p9 -> mythril   plain 4 AP   rider 5 AP
 ```
+
+(The p1 rider cell is arithmetic only: wood cannot carry an effect (§4.2),
+so no legal wood card ever reaches 2 AP.)
 
 Any card that breaks this ladder (a curated off-band card, a future weapon
 with a different band) is still priced correctly, because the formula reads
