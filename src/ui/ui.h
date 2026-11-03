@@ -91,10 +91,12 @@ void dice_tiles_load_banked(void);
 #define HERO_DESOLATE_SPRITE_TILE_ID 98u
 #define PLAYER_SPRITE_TILE_ID    HERO_DESOLATE_SPRITE_TILE_ID
 /* Standing-hero idle frames (hero_idle_1/2, streamed at boot beside the
- * walk frames): OAM 96-97, time-shared with the battle AP pips (boot and
- * overworld show idle; battle entry streams pips over them, overworld
- * entry restores idle -- see ui_draw_actors_sprites).  Battle never needs
- * idle art (hero hidden), overworld never needs pips. */
+ * walk frames): OAM 96-97, time-shared with battle AP pips 1-2 (boot
+ * and overworld show idle; battle entry streams pips over them,
+ * overworld entry restores idle -- see ui_draw_actors_sprites).
+ * Walk frames at 98-99 time-share the same way with AP pips 3-4.
+ * Battle never needs hero art (hero hidden), overworld never needs
+ * pips. */
 #define HERO_IDLE_SPRITE_TILE_ID 96u
 /* Pickup-chest OAM sprite art (shared overworld blob, base + open frame;
  * owned by screens/enemy_types/treasure_chest.json).  Collision rules:

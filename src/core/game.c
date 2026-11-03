@@ -52,7 +52,7 @@ void game_restart(Game *g)
     game_prepare_new_game(g);
     /* Go through the real overworld screen change instead of assigning
      * the screen: it restores the overworld OAM (battles time-share tile
-     * ids 96-97 with the hero's standing frames, so a battle -> death ->
+     * ids 96-99 with the hero's idle/walk frames, so a battle -> death ->
      * restart used to idle with the AP pips), drops the stale tileset
      * cache (battle art owns VRAM block 1) and reseeds the render cache
      * for the full redraw. */

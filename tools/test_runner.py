@@ -75,7 +75,7 @@ def _parse_gfx_tiles(path, names):
 def _load_ap_tiles():
     """Parse generated OAM art headers into {name: [16 bytes]}.
 
-    ap_tiles.h (AP_TILE_IDS order: ap_1, ap_2, exclaim, question),
+    ap_tiles.h (AP_TILE_IDS order: ap_1..ap_5, exclaim, question),
     hero_desolate_sprite_tile.h (compose order: hero_f0, hero_f1,
     hero_idle_1, hero_idle_2), rider_tiles.h (--rider-coords order:
     rider_fire, rider_ice, rider_poison) and enemy_ow_tiles.h (blob order,
@@ -96,7 +96,7 @@ def _load_ap_tiles():
     try:
         tiles.update(_parse_gfx_tiles(
             os.path.join(base, "ap_tiles.h"),
-            ["ap_1", "ap_2", "exclaim", "question"]))
+            ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5", "exclaim", "question"]))
         tiles.update(_parse_gfx_tiles(
             os.path.join(base, "hero_desolate_sprite_tile.h"),
             ["hero_f0", "hero_f1", "hero_idle_1", "hero_idle_2"]))

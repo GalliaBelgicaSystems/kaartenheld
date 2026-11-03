@@ -201,8 +201,9 @@ void ui_sprite_init(void)
 
     /* Hero overworld art (bank-8 hero_desolate_sprite_tile: walk frames
      * 1 & 2, then idle frames 1 & 2): walk loads at 98-99
-     * (HERO_DESOLATE_SPRITE_TILE_ID), idle at 96-97 (time-shared with the
-     * battle AP pips; overworld entry restores idle after battles). */
+     * (HERO_DESOLATE_SPRITE_TILE_ID), idle at 96-97 (both time-shared
+     * with the battle AP pips; overworld entry restores them after
+     * battles). */
     banked_copy(8, (void *)g_ui_screen_buf,
                 (const void *)&hero_desolate_sprite_tile[0], 64);
     set_sprite_data(HERO_DESOLATE_SPRITE_TILE_ID, 2,
@@ -234,9 +235,9 @@ void ui_sprite_init(void)
 }
 
 /* Overworld-entry OAM restore: battles time-share OAM ids with overworld
- * art (AP pips over hero idle at 96-97, rider icons over the blob tail at
- * 123-125), so coming home restreams the overworld side and re-arms the
- * battle stream.  Thin wrapper: the body lives in bank 8 beside the blob
+ * art (AP pips 1-4 over hero idle/walk at 96-99, pip 5 plus riders over
+ * the blob tail at 122-125), so coming home restreams the overworld side
+ * and re-arms the battle stream.  Thin wrapper: the body lives in bank 8 beside the blob
  * (fixed bank stays lean, AGENTS.md 52.18).  Called from screen_change()
  * on every overworld entry except dialogue returns (dialogue never
  * streams OAM data). */

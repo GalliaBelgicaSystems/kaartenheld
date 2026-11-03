@@ -67,7 +67,7 @@ SFX_UGE = assets/sfx/sfx\ accept.uge assets/sfx/sfx\ back.uge \
           assets/sfx/sfx\ block.uge assets/sfx/sfx\ cursor.uge \
           assets/sfx/sfx\ heal.uge assets/sfx/sfx\ hurt.uge \
           assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge \
-          assets/sfx/alert.uge
+          assets/sfx/alert.uge assets/sfx/explosion.uge
 # screens/sfx.json may map any SFX id to any .uge (assets/sfx or
 # assets/music), so the tables depend on the registry plus both pools.
 SFX_REGISTRY = screens/sfx.json
@@ -204,12 +204,14 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
-	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
-	# Four single-cell icons streamed on the first battle tick to fixed OAM
-	# ids (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
-	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
-	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
-	# untouched (these ride their own stream, not the enemy blob).
+	# ── Battle HUD OAM pips (AP cost 1-5 + !/? marks, assets/enemy_sprites.png) ──
+	# Seven single-cell icons streamed on the first battle tick to fixed OAM
+	# ids (AP_1/2 at 96/97 over hero idle, AP_3/4 at 98/99 over hero walk,
+	# AP_5 at 122 over blob offset 22, EXCLAIM/QUESTION at 126/127; see
+	# AP_TILE_IDS in battle_compile.py --ap-coords).  Cells are
+	# enemy_sprites.png coords (compose_enemy_sprites.py TILE_COORDS); the
+	# blob budget stays untouched (these ride their own stream, not the
+	# enemy blob; overworld entry restores the time-shared art).
 	@AP_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ap-coords) || { echo "FATAL: battle_compile --ap-coords failed" >&2; exit 1; }; \
 	[ -n "$$AP_COORDS" ] || { echo "FATAL: battle_compile --ap-coords produced no tiles" >&2; exit 1; }; \
 	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \

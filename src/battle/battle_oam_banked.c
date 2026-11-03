@@ -11,13 +11,12 @@
  * strides above: no new trampoline call).  Every non-empty hand card
  * shows its energy cost as an OAM sprite inset over its own top-LEFT
  * frame corner (mirroring the top-right element riders in
- * battle_rider_content.c): cost 1 -> one-ap pip, cost 2 -> two-ap pip.
- * Cost 0 (free) and costs above 2 show nothing -- no 3-cost card exists
- * (the three-ap art stays staged in the enemy sheet until one does).
- * Hand slot i owns OAM entry 24+i (entries 24-28: the rider pass owns
- * 19-23, enemy strides 1-18, nothing else writes OAM during battle).
- * Loot reveal (msg_id 4) hides all five, like the rider tail.  No
- * multiply/div/mod anywhere (AGENTS.md 52.18): shifts and adds only. */
+ * battle_rider_content.c): cost 1-5 -> one- through five-ap pip, cost 0
+ * (free) shows none.  Hand slot i owns OAM entry 24+i (entries 24-28:
+ * the rider pass owns 19-23, enemy strides 1-18, nothing else writes OAM
+ * during battle).  Loot reveal (msg_id 4) hides all five, like the
+ * rider tail.  No multiply/div/mod anywhere (AGENTS.md 52.18): shifts
+ * and adds only. */
 
 /* Battle enemy OAM sprites (Florent's model), bank-5 body.  Dispatch from
  * the fixed-bank ui_update_battle wrapper right after the bank-3 render
@@ -239,6 +238,15 @@ static void battle_ap_draw(const volatile Battle *battle)
             } else if (battle->hand[i].cost == 2) {
                 tile = AP_TILE_2;
                 slot = AP_OBJ_2;
+            } else if (battle->hand[i].cost == 3) {
+                tile = AP_TILE_3;
+                slot = AP_OBJ_3;
+            } else if (battle->hand[i].cost == 4) {
+                tile = AP_TILE_4;
+                slot = AP_OBJ_4;
+            } else if (battle->hand[i].cost == 5) {
+                tile = AP_TILE_5;
+                slot = AP_OBJ_5;
             }
         }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(24 + i) << 2));

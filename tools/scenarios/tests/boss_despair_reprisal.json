@@ -1,7 +1,7 @@
 {
  "name": "boss_despair_reprisal",
  "test": true,
- "description": "A press during the concentrating telegraph fires the scripted reprisal: fixed 99 damage (a 120-HP hero stands at 21, battle_player_hp == 21), the DEFEATED! result screen names the spell on rows 9+10 (L. OF SLIMES CASTS / POWERFUL SPELL!), and row 9 keeps no concentrating tail.",
+ "description": "A press during the concentrating telegraph fires the scripted reprisal: fixed 99 damage (a 120-HP hero stands at 21, battle_player_hp == 21), the explosion SFX cue fires (sfx_last == 11), the DEFEATED! result screen names the spell on rows 9+10 (L. OF SLIMES CASTS / POWERFUL SPELL!), and row 9 keeps no concentrating tail.",
  "actions": [
   {
    "type": "wait",
@@ -85,6 +85,10 @@
   {
    "type": "event_occurred",
    "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 11
   },
   {
    "type": "event_not_occurred",

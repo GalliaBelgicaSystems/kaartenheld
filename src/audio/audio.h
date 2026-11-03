@@ -91,9 +91,13 @@ enum {
      * Replaces the old always-on defend thump for those cases. */
     SFX_HURT = 9,
     /* Ring-heal cue (assets/sfx/sfx heal.uge): played when a ring
-     * converts an attack hand to healing.  Must stay the LAST id:
-     * audio.c range-checks against it. */
-    SFX_HEAL = 10
+     * converts an attack hand to healing. */
+    SFX_HEAL = 10,
+    /* Desperation-move cue (assets/sfx/explosion.uge): played when the
+     * Lord of Slimes casts his scripted reprisal (POWERFUL SPELL) on the
+     * A press during the SLIME_DESPAIR telegraph hold.  Must stay the
+     * LAST id: audio.c range-checks against it. */
+    SFX_EXPLOSION = 11
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

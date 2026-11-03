@@ -334,7 +334,7 @@ All catalogue cards (`src/game/cards_content.c`):
 | Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
-| Mythril Bow | `M BO` | `BO9` | ATK | 9 | 2 | 2/battle | 1 | — | 30g |
+| Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
 
 The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
 entry: it has no shop row, is not in the starter deck, and never drops.

@@ -23,8 +23,9 @@ const CardDefinition g_cards[] = {
      * played hand's multiplier (docs/combo-system.md §13). */
     { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  2, 1,  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, STATUS_POISON,   128,  "P DA" },
     { CARD_AMULET,        CARD_TYPE_SPECIAL, 0, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "AMULET"  },
-    /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2). */
-    { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  2,  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, STATUS_NONE,       0,   "M BO"  },
+    /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2).
+     * Costs the full 5 AP pool: the 4/5-ap pips exist for this card. */
+    { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  5,  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, STATUS_NONE,       0,   "M BO"  },
     /* Wood sword: the tier-1 starter blade (hero.json).  Plain; wood can
      * never carry a rider. */
     { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, 1,  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "W SW" }
