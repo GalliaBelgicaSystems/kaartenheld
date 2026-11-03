@@ -1115,10 +1115,13 @@ def validate_spawn_refs():
     want_bank = int(m_bank.group(1))
     for label, src, pat in (
             ("events_content.c",
-             text, r"#pragma\s+bank\s+(\d+)"),
+             text, r"^#pragma\s+bank\s+(\d+)"),
             ("slime_trio_spawn_banked.c",
-             spawn_c, r"#pragma\s+bank\s+(\d+)")):
-        m_pragma = re.search(pat, src)
+             spawn_c, r"^#pragma\s+bank\s+(\d+)")):
+        # Anchored to start-of-line (re.M): events_content.c mentions
+        # "#pragma bank 10" inside its own block comment (line 6), which
+        # an unanchored search would match instead of the directive.
+        m_pragma = re.search(pat, src, re.M)
         if not m_pragma:
             errors.append(f"{label}: no #pragma bank found")
         elif int(m_pragma.group(1)) != want_bank:

@@ -301,7 +301,7 @@ def main():
              % len(doc_catalog))
     for row, (args, expected) in doc_catalog.items():
         if row == "AMULET":
-            if cat_calls.get(row, (None, None))[1] != 0:
+            if cat_calls.get(row, (None, None))[1] != 0 or expected != 0:
                 fail("catalog: AMULET cost must stay literal 0 (not playable)")
             continue
         if row not in cat_calls or cat_calls[row][0] is None:
