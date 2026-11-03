@@ -1270,8 +1270,8 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
   events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1 on
-  a win, chest +1, Monster Hunt +1, mimic +1 from the base-1 pool,
-  reaching 5 in any completion order); fleeing the lesson grants nothing.
+  a win, chest +1, Monster Hunt +1, mimic +1 from the base-2 pool,
+  reaching 6 in any completion order); fleeing the lesson grants nothing.
   battles stage the
   pool at entry and reuse it for the whole fight. Affordability is checked
   at selection time against `energy - combo_reserved_cost()` and paid at

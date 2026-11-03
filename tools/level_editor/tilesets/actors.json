@@ -334,6 +334,26 @@
       "category": "object"
     },
     {
+      "id": "actors_four_ap",
+      "label": "four ap",
+      "gb_constant": "TILE_ACTORS_FOUR_AP",
+      "walkable": false,
+      "color": "#8d754a",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_four_ap.png",
+      "category": "object"
+    },
+    {
+      "id": "actors_five_ap",
+      "label": "five ap",
+      "gb_constant": "TILE_ACTORS_FIVE_AP",
+      "walkable": false,
+      "color": "#8d754a",
+      "ascii": "#",
+      "image_url": "/tiles/actors/actors_five_ap.png",
+      "category": "object"
+    },
+    {
       "id": "actors_black_emptyness_1",
       "label": "empty",
       "gb_constant": "TILE_ACTORS_BLACK_EMPTYNESS",

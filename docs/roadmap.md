@@ -76,8 +76,8 @@ testable, save/load works, and the memory budget is understood.
     still fits);
     the live pool is the uncapped `ENERGY_POOL` variable
     (staged at battle entry), raised by story events (+1 tutorial win,
-    +1 chest, +1 Monster Hunt, +1 mimic from the base-1 pool,
-    reaching 5);
+    +1 chest, +1 Monster Hunt, +1 mimic from the base-2 pool,
+    reaching 6);
     rejected selections flash NO ENERGY! / OUT OF USES! on
     the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
@@ -128,6 +128,28 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
   failures and for missing scenario files; `python3 tools/dev.py scenario`
   now exits 2 (not-found) vs 1 (fail) and suggests close names.  Do not
   treat make's rc alone as evidence.
+
+### SPAWN-SCAN POST-MORTEM (found 2026-11-03, card-AP-cost work)
+
+`battle_slime_trio_spawn` lost its second fight (SAVE_LOAD instead of
+OVERWORLD, 32 instead of 37 gold, no SCRIPT_TRIGGERED): the slime-trio
+spawn silently no-op'd, so the round-3 inputs spilled into the overworld
+and a stray SELECT opened the save menu.  Bisected with temp scenarios
+(not by reading state): round 1 wins identically on both builds, the
+post-victory scripts/dialogue/loot match exactly, and the trio slot
+reads correct — but the body never finds its event row.  Root cause is
+the §52.19 family again: adding any AP-cost code to bank 2 flipped the
+ow-resolve scan in `game_slime_trio_spawn_banked` (a cached table read
+survives the branch join, `found` stays 0, early return).  Proven by
+perturbation: the F0/F1-instrumented body matched slot 2 fine, the
+unconditional slot-2 morph spawned fine, the slot loop alone matched
+fine — only the full body with the ow scan failed, deterministically
+(3/3 absent).  Fix follows the validated remedy: function-local
+volatile reads for the scan (`type_v`, `count_v`), default flags
+global, slot loop untouched.  Green 3/3 after; full trio scenario
+passes.  Lesson for the next bank-2 addition: run
+`battle_slime_trio_spawn` in the touched-build smoke set alongside the
+sentinels — it is the only scenario that executes this body.
 
 ### STATIC-WIPE POST-MORTEM (found 2026-10-11, Carl/chest work)
 

@@ -105,8 +105,11 @@ void game_loot_drop_banked(void)
         }
 
         /* Plain-heavy (§34.5): only 25% of rolls carry a rider, and
-         * wood can never carry one (docs/loot.md §34.1). */
-        if (material >= MAT_BRONZE && eff_roll < 64) {
+         * wood can never carry one (docs/loot.md §34.1).  Mythril riders
+         * cost 6 (docs/card-ap-cost-formula.md §6.1), so the generator
+         * withholds them until the pool reaches LOOT_AP_MYTHRIL_RIDER. */
+        if (material >= MAT_BRONZE && eff_roll < 64 &&
+            (material < MAT_MYTHRIL || ap >= LOOT_AP_MYTHRIL_RIDER)) {
             if (weapon == WPN_DAGGER) {
                 effect = EFF_POISON;
             } else if (weapon == WPN_SWORD) {

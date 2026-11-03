@@ -43,14 +43,24 @@ void game_slime_trio_spawn_banked(void)
     uint8_t ow = 8;
     uint8_t i, j;
     uint8_t found;
+    /* Function-local volatiles (AGENTS.md §52.19): the ow-resolve scan
+     * below miscompiles under some bank-2 layouts (pointer-cache family:
+     * a cached table read survives the branch join and the SPAWN row is
+     * never found, so the body returns before reaching the slot loop).
+     * The slot loop alone was proven innocent by isolation.  Volatile
+     * locals force a fresh read per row; default flags stay global. */
+    volatile uint8_t type_v;
+    volatile uint8_t count_v;
 
     /* Resolve our ow byte from our own event row (first
      * SPAWN_SLIME_TRIO action in the table). */
     found = 0;
     for (i = 0; i < GAME_EVENT_COUNT; i++) {
         const EventDefinition *d = &g_events[i];
-        for (j = 0; j < d->action_count && j < MAX_EVENT_ACTIONS; j++) {
-            if (d->actions[j].type == EVENT_ACTION_SPAWN_SLIME_TRIO) {
+        count_v = d->action_count;
+        for (j = 0; j < count_v && j < MAX_EVENT_ACTIONS; j++) {
+            type_v = d->actions[j].type;
+            if (type_v == EVENT_ACTION_SPAWN_SLIME_TRIO) {
                 ow = d->actions[j].arg0;
                 found = 1;
                 break;

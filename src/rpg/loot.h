@@ -32,10 +32,13 @@ enum {
 
 /* AP (VARIABLE_ID_ENERGY_POOL) gates which material tiers can drop.
  * Steel and above only appear at AP 5+; the weighted roll keeps them
- * rare even then.  docs/loot.md §34.5. */
+ * rare even then.  docs/loot.md §34.5.
+ * Mythril riders cost 6 (docs/card-ap-cost-formula.md §6.1): the
+ * generator withholds them until the pool reaches 6. */
 #define LOOT_AP_BRONZE 2
 #define LOOT_AP_IRON   4
 #define LOOT_AP_STEEL  5
+#define LOOT_AP_MYTHRIL_RIDER 6
 
 enum {
     EFF_PLAIN = 0, EFF_POISON, EFF_FIRE, EFF_ICE
@@ -62,6 +65,25 @@ enum {
  * per charge.  The curated shop ring follows the same band as loot
  * iron (3 uses). */
 #define LOOT_RING_USES(mat) ((uint8_t)((mat) + 1))
+
+/* ── Card AP cost (docs/card-ap-cost-formula.md) ──
+ * One AP step = 8 value points: power 1, material tier 4, mythril
+ * premium 12 (plain mythril always costs 5), rider 8.  Deliberately
+ * unclamped: the largest legal input is 9 + 4·4 + 12 + 8 = 45 -> 6,
+ * and only paths handed an id the tables never produce (debug hand
+ * injection) clamp against CARD_AP_MAX.  Pure shifts/compare, no
+ * div/mod (AGENTS.md §52.18); safe in every banked copy. */
+#define CARD_AP_MATERIAL_PTS 4
+#define CARD_AP_RIDER_PTS    8
+#define CARD_AP_MYTHRIL_PTS  12
+#define CARD_AP_MAX          6
+
+#define CARD_AP_VALUE(power, material, rider)                    \
+    ((uint8_t)((power) + ((material) << 2) + ((rider) << 3) +    \
+               (((material) == MAT_MYTHRIL) ? CARD_AP_MYTHRIL_PTS : 0)))
+
+#define CARD_AP(power, material, rider)                          \
+    ((uint8_t)((CARD_AP_VALUE(power, material, rider) + 7) >> 3))
 
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "screens/schema/ap_icons.schema.json",
   "title": "Battle Top-Left OAM AP-Cost HUD",
-  "description": "Selected-card AP-cost pips (OAM sprites, not BG tiles): one icon per energy cost, shown top-left of each hand card (cost 0 shows none). Cells are enemy_sprites sheet names (compose_enemy_sprites.py TILE_COORDS); values are slotted OBJ ramps (palette.txt) used both to encode the tile bytes and to program the battle OBJ slot the icon renders with (ap_tiles_generated.h). The three-ap art stays staged in the sheet until a 3-cost card exists (no free OAM tile below the BG-art aliasing today).",
+  "description": "Selected-card AP-cost pips (OAM sprites, not BG tiles): one icon per energy cost, shown top-left of each hand card (cost 0 shows none). Cells are enemy_sprites sheet names (compose_enemy_sprites.py TILE_COORDS); values are slotted OBJ ramps (palette.txt) used both to encode the tile bytes and to program the battle OBJ slot the icon renders with (ap_tiles_generated.h). AP pips time-share OAM ids with overworld art (1-2 over hero idle 96-97, 3-4 over hero walk 98-99, 5 over blob cell 122); battle entry streams them and overworld entry restores the overworld side.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "label", "cells"],
@@ -18,10 +18,13 @@
     "cells": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ap_1", "ap_2"],
+      "required": ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5"],
       "properties": {
         "ap_1": { "type": "string" },
-        "ap_2": { "type": "string" }
+        "ap_2": { "type": "string" },
+        "ap_3": { "type": "string" },
+        "ap_4": { "type": "string" },
+        "ap_5": { "type": "string" }
       }
     }
   }

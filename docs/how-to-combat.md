@@ -58,7 +58,7 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 Flee whenever you are done -- Carl sees you off with a farewell and
 stays for a rematch. Beat his 30 HP and he graduates you instead, with
 **+1 action point**. AP limits how many cards you can play (your pool
-starts at **1 AP** per phase and grows by story rewards, up to **5**
+starts at **2 AP** per phase and grows by story rewards, up to **6**
 with Carl's win included).
 
 ![Wise to flee](../screenshots/11-farewell-speech.png)

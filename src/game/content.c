@@ -74,13 +74,15 @@ void game_new_game(GameState *state)
     state->party.members[0].max_hp = HERO_START_HP;
 
     state->variables.values[VARIABLE_ID_CHAPTER - 1] = 1;
-    /* Base energy pool: every milestone (tutorial, chest, Monster Hunt,
-     * mimic) grants a uniform ADD 1 from here, reaching 5 in any
-     * completion order.
+    /* Base energy pool: the manual promises 2 per round
+     * (docs/manual.md:167, docs/card-ap-cost-formula.md §7.2), and the
+     * formula prices the starter deck's fire swords at 2 AP, so the pool
+     * starts at 2.  Later milestones (tutorial, chest, Monster Hunt,
+     * mimic) grant a uniform ADD 1 from here.
      * Initializing (not relying on the stager's < 1 fallback) keeps the
      * variable equal to the visible pool, so staged values, snapshots
      * and the debugger never disagree about what a fight will stage. */
-    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
+    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 2;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated

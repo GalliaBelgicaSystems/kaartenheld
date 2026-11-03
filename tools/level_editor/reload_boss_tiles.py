@@ -89,11 +89,14 @@ RIDER_MAP = [
 
 # (col, row, actors tile id). AP-cost pips (OAM HUD): the one/two/three
 # ap sprites.png cells are the battle top-left OAM, one per hand card,
-# selected by its energy cost (cost 0 shows none).
+# selected by its energy cost (cost 0 shows none). Four/five ap (row 3
+# cols 6-7) cover the mythril bow's 5 AP cost.
 AP_MAP = [
     (10, 2, "actors_one_ap"),
     (11, 2, "actors_two_ap"),
     (0, 3, "actors_three_ap"),
+    (6, 3, "actors_four_ap"),
+    (7, 3, "actors_five_ap"),
 ]
 
 # (col, row, actors tile id). Battle OAM mark glyphs (! and ?), same

@@ -27,10 +27,22 @@
    "value": 2
   },
   {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
    "type": "set_hand_card",
    "index": 1,
    "card_type": "BO",
    "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 1,
+   "uses": 255
   },
   {
    "type": "press",

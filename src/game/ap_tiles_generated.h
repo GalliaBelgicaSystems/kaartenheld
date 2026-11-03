@@ -13,6 +13,12 @@
 #define AP_OBJ_1 1
 #define AP_TILE_2 97
 #define AP_OBJ_2 1
+#define AP_TILE_3 98
+#define AP_OBJ_3 1
+#define AP_TILE_4 99
+#define AP_OBJ_4 1
+#define AP_TILE_5 122
+#define AP_OBJ_5 1
 #define EXCLAIM_TILE 126
 #define EXCLAIM_OBJ 5
 #define QUESTION_TILE 127

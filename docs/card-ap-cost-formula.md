@@ -1,7 +1,9 @@
 # Card AP Cost — A Deterministic Formula (Proposal)
 
-**Status:** proposal, 2026-11-02. Not implemented. Nothing in `src/` changes
-until this document is accepted.
+**Status:** accepted and implemented on this branch, 2026-11-03.  The
+formula below is the ROM behavior (`CARD_AP` in `src/rpg/loot.h`, derived
+catalog rows, loot gates, pool base 2); the rollout plan in §8 is kept as
+the record of how it landed.  `make card-costs` guards it.
 
 Today a card's AP cost is either hand-picked (`src/game/cards_content.c`) or
 one of three separate "loot costs 1" copies
@@ -55,9 +57,9 @@ tables never produce (debug hand injection) clamp, against `CARD_AP_MAX`
 AP is the **energy pool**, `VARIABLE_ID_ENERGY_POOL` (`src/game/game_ids.h:101`),
 refilled at battle start and at every transition into a decision phase —
 attack *and* defend each get a fresh pool (`src/battle/battle.h:15-24`,
-`docs/technical-manual.md` §6.2).  It starts at 1 and story grants raise it;
+`docs/technical-manual.md` §6.2).  It starts at 2 and story grants raise it;
 the grants in the demo (tutorial, field cache, Monster Hunt, mimic) top out
-at 5.
+at 6.
 
 So selection is a **budget**: `src/battle/battle_nav_banked.c:38` sums the
 cost of every staged card and line 56 refuses one that would not fit.  AP
@@ -333,12 +335,12 @@ future tuning knob must preserve it (§8.4).
 
 Max legal input: `9 + 4·4 + 12 + 8 = 45 -> 6`, and the largest
 intermediate, `45 + 7 = 52`, still fits a byte.  Plain mythril sits
-exactly on the demo's 5-AP pool ceiling; mythril riders cost 6, one step
-beyond it.  That is intentional, not a leak: the pool variable
-(`VARIABLE_ID_ENERGY_POOL`) is uncapped — only the demo's *grants* top out
-at 5 — so a 6-cost card is a promise of a future pool, not an unplayable
-card.  Until a pool-6 source exists the generator simply never rolls one
-(§6.1), so no 6-cost card can drop that the pool cannot play.
+exactly on the pool's mid-ladder (5); mythril riders cost 6, which the
+demo's grant ladder reaches at full completion (base 2 + tutorial, chest,
+Monster Hunt, mimic).  A 6-cost card is therefore playable in exactly the
+battles that can still happen after the last grant — and until the pool
+reaches 6 the generator simply never rolls one (§6.1), so no 6-cost card
+can drop that the pool cannot play.
 
 That is why the expression carries no `min()`: the ceiling is a consequence
 of the inputs, not a clamp.  `CARD_AP_MAX` exists only for paths that accept
@@ -376,54 +378,35 @@ roundtrip.  Nothing new enters `GameState`; `BattleCard.cost`
 
 ## 7. Design consequences
 
-### 7.1 A 5-AP card is a whole turn, a 6-AP card is a future
+### 7.1 A 5-AP card is a whole turn, a 6-AP card is the endgame
 
-With the demo's pool ceiling, a plain mythril card can never be combined
-with anything, and a mythril rider (6 AP) cannot be played at all — it is a
-card for a pool that does not exist yet.  Meanwhile five 1-AP cards can
-form a straight (210%) or five of a kind (400%, `docs/combo-system.md`),
-so raw damage-per-AP favours combos.  The expensive card is therefore an
-*option*, not an upgrade: it buys certainty (a single card always
-"combos"), a rider, and the highest single value on the table.
+With a mid-demo pool, a plain mythril card can never be combined with
+anything, and a mythril rider (6 AP) cannot be played at all — it is a card
+for a completed grant ladder (base 2 + all four +1s).  Meanwhile five 1-AP
+cards can form a straight (210%) or five of a kind (400%,
+`docs/combo-system.md`), so raw damage-per-AP favours combos.  The
+expensive card is therefore an *option*, not an upgrade: it buys certainty
+(a single card always "combos"), a rider, and the highest single value on
+the table.
 
-Two coherent answers, both fine, but pick one:
+The pool grows with the ladder by construction (`VARIABLE_ID_ENERGY_POOL`
+is uncapped and the four story grants take it 2 → 6), so the top of the
+ladder stays playable without any separate pool-growth feature: a mythril
+card sits next to two 1-AP cards once the pool allows, and the full-completion
+pool plays even a mythril rider.  Recommended: keep average cost per staged
+card near 2, so a 3–4 card combo stays affordable at every stage of the
+game.
 
-* **(a) Grow the pool with the ladder.**  `VARIABLE_ID_ENERGY_POOL` is
-  uncapped — only the *loot gate* clamps at 5 (`docs/loot.md` §34.5).  A
-  pool-6 source is now *required*, not optional: mythril riders already
-  cost 6, and until the pool can reach 6 they are cards the generator must
-  withhold (§6.1).  If future AP sources take the pool to 7–8, a mythril
-  card can sit next to two 1-AP cards and the top of the ladder becomes
-  combo fodder instead of a finisher.  Recommended: keep average cost per
-  staged card near 2, so a 3–4 card combo stays affordable at every stage
-  of the game.
-* **(b) Keep 5 as the hard ceiling.**  Then mythril riders are permanently
-  unplayable and the generator's 6-gate is dead code — the honest version
-  of (b) deletes the rider-on-mythril combinations from the generator
-  entirely instead of gating them.  The ladder reads as "one big hit *or*
-  a hand of small ones".
-
-### 7.2 The floor is 1, and the early game gets tighter
+### 7.2 The floor is 2, matching the manual
 
 The starter deck (`screens/hero.json`) is four wood swords, four wood
 shields and **two bronze fire swords**.  Under this formula the fire swords
-cost 2 while the hero's pool starts at 1
-(`src/game/content.c:83`), so they are dead cards until the first AP grant.
-**This is a gating decision, not a follow-up.**  Accepting the formula with
-the pool at 1 leaves the starter deck's only non-wood cards dead until the
-first AP grant, and §7.1(b) compounds it for the rest of the game — while
-the player manual already promises otherwise.  Settle it before
-implementing:
-
-* **(a) start the pool at 2**, matching `docs/manual.md:167` ("You get
-  **2 Energy** each round") and correcting the "flat 1 AP start" comment in
-  `src/battle/battle.h`, or
-* **(b) keep 1** and accept that the two fire swords are the first thing the
-  first AP grant buys, saying so in the manual.
-
-Recommendation: (a).  It is one byte in `game_new_game`, it agrees with what
-the manual already tells players, and it keeps the starter deck's strongest
-cards live on turn one.
+cost 2, so the hero's pool starts at 2 (`src/game/content.c`) — the manual
+already promises "You get **2 Energy** each round" (`docs/manual.md:167`),
+and the old "flat 1 AP start" comment in `src/battle/battle.h` agreed with
+the code instead of the manual.  Starting at 2 keeps the starter deck's
+strongest cards live on turn one; starting at 1 would leave the only
+non-wood cards dead until the first AP grant.
 
 ### 7.3 Block and heal match damage, point for point
 
@@ -450,8 +433,11 @@ sheet does not have yet (`one`–`five ap` only).  The art already
 exists on the shared sheet (`one/two/three/four/five ap` cells, also listed
 in `tools/level_editor/tilesets/actors.json`), but only cells 1 and 2 are
 wired; 3–5 need tile slots from the sprite budget and a lookup instead of
-the if-chain.  Cost 6 needs no pip work today (nothing can stage it), but
-see §7.1: the pool-6 source and the sixth pip arrive together.
+the if-chain.  Cost 6 has no pip: no sixth cell exists on the shared
+sheet and no free OAM id sits below the BG-art aliasing, so a staged 6-cost
+card (full-completion pool + a mythril rider drop + the draw) shows no pip
+— the DECK-tab BG digit still shows its cost.  The sixth pip is art + sprite-
+budget work for when post-completion battles make it matter.
 
 ### 7.5 Cheap cards are fuel: sell or fuse
 
@@ -573,13 +559,14 @@ The rider term is free at all three runtime sites: they already compute
 3. Switch the catalog rows; re-run `card_cost_energy`,
    `card_battle_heal`, `card_shield_defend`, `defend_dagger_preview_highcard`.
 4. Pips 3–5 (`screens/ap_icons.json` + the OAM chain); `make memmap` and a
-   sprite-budget check, then `make verify-oam`.  (If the `new-pips` branch
-   lands first, this step becomes a rebase onto its wiring plus a
-   `verify-oam` re-run, and the `M BO` cost reverts from its hand-set 5 to
-   the derived 5 — same number, different provenance.)
-5. The §7.2 pool decision — gating: the change is not accepted without it —
-   then a pool-6 source as an explicit follow-up (mythril riders cost 6,
-   so §7.1(a) is now required rather than optional).
+   sprite-budget check, then `make verify-oam`.  (Ported from the `new-pips`
+   branch's wiring: same art cells and OAM ids, while `M BO` keeps the
+   derived 5 from the formula instead of the hand-set 5.)
+5. The §7.2 pool start (base 2) — implemented with the ROM change, not
+   after it: the formula prices the starter fire swords at 2, so the change
+   is not accepted with the pool at 1.  No separate pool-growth follow-up:
+   the four +1 grants already take the pool 2 → 6, which plays even mythril
+   riders at full completion.
 
 Run `make test-sentinels` after steps 1–3 regardless: the edits shrink
 banked code, and per AGENTS.md §52.19 even a shrink/move can flip a latent
@@ -622,8 +609,9 @@ means the AP side cannot be the cause.
 
 | Check | What it proves |
 |---|---|
-| New scenario `card_ap_formula` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  Use the descriptor deck section to deal catalog cards (`W SW` → 1, `B F SW` → 2, `I SW` → 2, `M BO` → 5) and assert the OAM pip tile per card (`oam_tile`) and, on the DECK tab, the AP digit on the row (`screen_row`).  `M F SW` (6) cannot be staged this way until a pool-6 source exists — assert it via `make card-costs`, not via a battle. |
-| New scenario `card_ap_loot_gate` | At AP 2 / 4 / 5, run the loot roll and assert `cost(drop) <= pool` for the dropped id (the §6.1 invariant on real drops, not on a hand-picked card).  At pool 5, additionally assert no dropped id is a mythril rider (seeded roll loop, deterministic seed): the §6.1 rider suppression firing is observable. |
+| New scenarios `card_ap_formula_wood` / `_rider` / `_mythril` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  The descriptor deck section deals five identical catalog cards (`WOOD_SWORD` → pip 96, `FIRE_SWORD` → pip 97, `BOW_9` → pip 122) and asserts the OAM pip tile on all five hand slots (`oam_tile`).  The cost travels catalog def → battle deck → render with no injection anywhere in the path.  `M F SW` (6) cannot be staged this way until a pool-6 battle exists — assert it via `make card-costs`, not via a battle. |
+| New scenario `card_ap_loot_gate` | Seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3): victory grants it, the reveal names it (`S SW` / `STEEL SWORD`), and the DECK tab row shows AP digit 3, which the pool affords.  The §6.1 invariant on a real drop, not on a hand-picked card. |
+| New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll (eff 5 < 32), which the `LOOT_AP_MYTHRIL_RIDER` gate withholds: the drop is plain id 224 (`M SW`, cost 5).  Without the gate it would be id 240 (`M F SW`, cost 6, unplayable at pool 5) — asserted by `event_arg` and by the reveal showing no `FIRE`. |
 | `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), assert pairwise no-inversion (for every pair where B dominates A on all three inputs with at least one strict, `cost(B) >= cost(A)` — the §6.3/§7.5 fusion ordering) and strict riders (every rider pair costs exactly one AP more than the same card plain), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
 | Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Amulet are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
@@ -634,11 +622,11 @@ row where it actually fires.  With rider weight 16, steel lands on exactly 5
 **bronze** is the honest target: `3 + 4 + 16 = 23 -> 3 AP` against a gate of
 2.  (Mythril would also fire under that edit — `9 + 16 + 12 + 16 = 53 -> 7`
 against a gate of 6 — but it exercises the premium on top of the weight
-change, so it is a worse minimal case.)  Confirm both `make card-costs` and
-`card_ap_loot_gate` fail on the bronze edit, then restore.  A check that
-cannot fail is not a check (AGENTS.md §52.16).  The symmetric negative test
-for the new gate is free: delete the `loot_drop_banked.c` rider suppression
-and confirm the pool-5 `card_ap_loot_gate` run drops a mythril rider.
+change, so it is a worse minimal case.)  Confirm `make card-costs` fails on
+the bronze edit, then restore.  The symmetric negative test for the new
+gate is free: delete the `loot_drop_banked.c` rider suppression and confirm
+`card_ap_loot_gate_mythril_rider` drops id 240 instead of 224.  A check that
+cannot fail is not a check (AGENTS.md §52.16).
 
 ---
 

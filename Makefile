@@ -204,12 +204,14 @@ gfx: manifest
 	python3 tools/png2gb.py assets/enemy_sprites.png --name enemy_ow_tiles \
 		--shade-map generated/tiles/shades/enemy_ow.json --tile-coords "$$OW_COORDS" \
 		-o $(GFX_OUT_DIR)/enemy_ow_tiles.h
-	# ── Battle HUD OAM pips (AP cost 1/2 + !/? marks, assets/enemy_sprites.png) ──
-	# Four single-cell icons streamed on the first battle tick to fixed OAM
-	# ids (AP_1/2 at 96/97, EXCLAIM/QUESTION at 126/127; see AP_TILE_IDS in
-	# battle_compile.py --ap-coords).  Cells are enemy_sprites.png coords
-	# (compose_enemy_sprites.py TILE_COORDS); the blob budget stays
-	# untouched (these ride their own stream, not the enemy blob).
+	# ── Battle HUD OAM pips (AP cost 1-5 + !/? marks, assets/enemy_sprites.png) ──
+	# Seven single-cell icons streamed on the first battle tick to fixed OAM
+	# ids (AP_1/2 at 96/97 over hero idle, AP_3/4 at 98/99 over hero walk,
+	# AP_5 at 122 over blob offset 22, EXCLAIM/QUESTION at 126/127; see
+	# AP_TILE_IDS in battle_compile.py --ap-coords).  Cells are
+	# enemy_sprites.png coords (compose_enemy_sprites.py TILE_COORDS); the
+	# blob budget stays untouched (these ride their own stream, not the
+	# enemy blob; overworld entry restores the time-shared art).
 	@AP_COORDS=$$(python3 tools/screen_compiler/battle_compile.py --ap-coords) || { echo "FATAL: battle_compile --ap-coords failed" >&2; exit 1; }; \
 	[ -n "$$AP_COORDS" ] || { echo "FATAL: battle_compile --ap-coords produced no tiles" >&2; exit 1; }; \
 	python3 tools/png2gb.py assets/enemy_sprites.png --name ap_tiles \
@@ -986,6 +988,12 @@ test: $(TARGET)
 test-harness: debug
 	python3 tools/dev.py test --jobs $(JOBS)
 
+# Card AP cost gate (docs/card-ap-cost-formula.md §9, required): recomputes
+# the formula over all 37 legal combos from loot.h constants and fails on
+# any gate/ordering/parity violation.  Host-side only, no ROM rebuild.
+card-costs:
+	python3 tools/card_costs.py
+
 # Fast iteration gate: the three layout-sensitive sentinel scenarios
 # (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or
 # banked-body change BEFORE trusting the build; run the full suite at the end.
@@ -997,6 +1005,7 @@ test-sentinels: debug
 # Full validation gate (AGENTS.md Step 6), in order, in one invocation so
 # agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
 validate: memmap lint
+	$(MAKE) card-costs
 	$(MAKE) test-harness JOBS=$(JOBS)
 	$(MAKE) test
 	$(MAKE) verify-oam

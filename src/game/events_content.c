@@ -276,7 +276,7 @@ const EventDefinition g_events[] = {
      * returns ENGAGE_DIALOGUE without stashing the spar slot
      * (interaction.c syncs the slot only on the actor-dialogue path),
      * so closing it returns to the overworld with no fight -- and the
-     * hero enters the spar with the chest's +1 AP (pool 2).  Once the
+     * hero enters the spar with the chest's +1 AP (pool 3).  Once the
      * chest is open no event matches and the ordinary offer path
      * (offer + stashed spar + auto-start on YES close) runs.
      * Bumping or facing-talking the tile opens the static's offer
@@ -292,7 +292,7 @@ const EventDefinition g_events[] = {
      * replay the offer as a remedial with no fight (locked by the
      * actor_defeat_initial scenario).  The grant is a uniform ADD 1:
      * every milestone (tutorial win, chest, Monster Hunt, mimic) adds
-     * exactly one to the base-1 pool, reaching 5 in any completion
+     * exactly one to the base-2 pool, reaching 6 in any completion
      * order (fleeing the lesson grants nothing).  Carl's defeat is
      * persistent (one-shot via GameState.world), so the kill reward
      * fires exactly once.  After the AP skip (Carl's leaving-the-field
@@ -323,7 +323,7 @@ const EventDefinition g_events[] = {
      * A chest east of Carl holds one POISON_DAGGER (the first the
      * player can own: starter deck carries none; the Merchant sells
      * more) and a +1 AP pool grant (ADD, pairing with the Monster Hunt
-     * and mimic +1 one-shots toward 4 in any order from the base-1 pool),
+     * and mimic +1 one-shots toward 4 in any order from the base-2 pool),
      * announced by its own dialogue.  One-shot via
      * STORY_FLAG_ID_FIELD_CHEST; repeats
      * fall through to no interaction.  The chest is an OAM
