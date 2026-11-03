@@ -7,8 +7,8 @@
 #include "banked.h"
 
 /* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
- * ROM bank 2).  Declared here so the fixed-bank executor can take its
- * address for the trampoline. */
+ * ROM bank 10 = GAME_EVENT_BANK).  Declared here so the fixed-bank
+ * executor can take its address for the trampoline. */
 void game_slime_trio_spawn_banked(void);
 
 /* ── Event engine ──────────────────────────────────────────────────

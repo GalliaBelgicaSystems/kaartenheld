@@ -125,14 +125,11 @@ def parse_doc_tables():
             sec43):
         row, power, mat_name, rider_txt, expected = m.groups()
         row = row.strip()
-        if row == "AMULET":
-            catalog[row] = (None, int(expected))
-            continue
         rider = 0 if rider_txt.strip() in ("—", "-", "") else 1
         catalog[row] = ((int(power), MATERIALS.index(mat_name), rider),
                         int(expected))
     # AMULET row has no power/material triple ("SPECIAL, not playable")
-    m = re.search(r"\|\s*Amulet\s*\|\s*`AMULET`[^|]*\|\s*\*\*(\d+)\*\*",
+    m = re.search(r"\|\s*Amulet\s*\|\s*`AMULET`\s*\|[^|]*\|\s*\*\*(\d+)\*\*",
                   sec43)
     if m:
         catalog["AMULET"] = (None, int(m.group(1)))
@@ -208,8 +205,8 @@ def parse_catalog_calls():
                      % (name, r, fields[9]))
             rows[name] = ((p, mat_name, r), None)
         else:
-            zm = re.search(r",\s*0\s*,\s*0\s*,\s*1\s*,", fields[3])
-            rows[name] = (None, 0 if zm else None)
+            cost_txt = fields[3].strip()
+            rows[name] = (None, int(cost_txt) if cost_txt.isdigit() else None)
     return rows
 
 
@@ -296,6 +293,12 @@ def main():
 
     # Catalog parity with §4.3
     cat_calls = parse_catalog_calls()
+    if set(doc_catalog.keys()) != set(cat_calls.keys()):
+        fail("catalog keys diverge from §4.3: doc=%s catalog=%s"
+             % (sorted(doc_catalog.keys()), sorted(cat_calls.keys())))
+    if len(doc_catalog) != 8:
+        fail("parsed %d §4.3 catalog rows from the doc, expected 8"
+             % len(doc_catalog))
     for row, (args, expected) in doc_catalog.items():
         if row == "AMULET":
             if cat_calls.get(row, (None, None))[1] != 0:
