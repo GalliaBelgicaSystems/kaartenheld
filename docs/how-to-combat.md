@@ -217,7 +217,7 @@ iron ring once his shop opens, and loot can contain more:
 | Status | Does | From |
 |---|---|---|
 | POISON | **greys out 2 of your hand cards** for 2 rounds (no damage) | poison daggers, bat/spider swings |
-| BURN | 1 HP/round | fire swords |
+| BURN | 10% of the hit that lit it (min 1 HP/round) | fire swords |
 | FREEZE | you skip your whole action (attack *and* the incoming block); enemies skip their swing | ice swords |
 
 Greyed cards can't be selected (cursor skips them). Re-poisoning

@@ -404,7 +404,8 @@ void battle_defend_resolve(Battle *b)
      * hand via status_grey_apply.  A lethal counter leaves the player at
      * 0 HP: the rider must not apply to a corpse (same guard as the
      * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED, no
-     * hand grey-out. */
+     * hand grey-out.  Burn basis needs no staging here: no enemy card
+     * carries burn, and the apply body reads g_effect_last (status.h). */
     if (g_bk_byte_c != 0 && b->player.hp != 0) {
         status_apply(status_slots(0), 0, g_bk_byte_c, 1, 0);
         if (g_status_applied.id == STATUS_POISON) {
@@ -448,7 +449,8 @@ static void battle_resolve_hand_discard(Battle *b)
  * cards[0].status_chance by the full 16-bit multiplier, capped at 255)
  * and applies status_id through status_apply, with poison also greying
  * the victim's pool (Phase D).  slot = target combatant slot (1..n);
- * grey_n = shared enemy-deck width.  Callers guarantee the victim
+ * grey_n = shared enemy-deck width.  Burn basis comes from
+ * g_effect_last (see status.h).  Callers guarantee the victim
  * stands.  One copy keeps the fixed bank small (AGENTS.md 52.18). */
 static void battle_leader_rider(uint8_t slot, uint8_t status_id,
                                 uint8_t grey_n)

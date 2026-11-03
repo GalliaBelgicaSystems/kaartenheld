@@ -29,7 +29,8 @@ DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
 duration + expiry with no damage, payload-locked) and
 `status_poison_resist` (roll fails).
 
-**Phase D (implemented)**: BURN (tick 2/round, max 3 stacks, duration 2)
+**Phase D (implemented)**: BURN (10% of the inflicting hit's damage per
+round, min 1 -- scaled per application, max 3 stacks, duration 3)
 and FREEZE (no tick, no stacking, duration 1 -- a frozen combatant skips
 its next attack; battle consumes the frozen bitmask that apply + the
 tick body maintain, emitting `TURN_SKIPPED`; player-side freeze skips

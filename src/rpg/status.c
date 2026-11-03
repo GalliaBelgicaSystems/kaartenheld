@@ -2,7 +2,7 @@
 #include "banked.h"
 #include "telemetry.h"
 
-/* Fixed-bank wrappers around the bank-3 bodies (src/rpg/status_content.c),
+/* Fixed-bank wrappers around the bank-10 bodies (src/rpg/status_content.c),
  * keeping the stacking/ticking logic out of the fixed-bank budget.  The
  * trampoline exposes two pointers + two bytes; the apply call packs
  * stacks/duration into byte_b (both <= 15).  Telemetry is emitted HERE,
@@ -26,7 +26,7 @@ StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
 
 /* Poison grey-out (status.h): mask/duration per actor slot.  Battle-scoped
  * runtime state, cleared at battle start; written by status_grey_apply
- * (wrapper + bank-3 pick body), read by battle gating and the bank-3 HUD. */
+ * (wrapper + bank-10 pick body), read by battle gating and the bank-3 HUD. */
 uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 
@@ -52,7 +52,7 @@ bool status_apply(StatusSlots *slots, uint8_t actor_slot, uint8_t id,
 {
     g_status_applied.id = STATUS_NONE;
 
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&status_apply_banked;
     g_bk_ptr_a = (void *)slots;
     g_bk_byte_a = id;
@@ -80,7 +80,7 @@ bool status_apply(StatusSlots *slots, uint8_t actor_slot, uint8_t id,
 
 uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
 {
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&status_tick_banked;
     g_bk_ptr_a = (void *)slots;
     g_bk_byte_a = actor_slot;
@@ -132,7 +132,7 @@ void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
 #endif
     if (actor_slot >= STATUS_ROUND_SLOTS) return;
 
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&status_grey_apply_banked;
     g_bk_byte_a = actor_slot;
     g_bk_byte_b = pool_size;
@@ -153,7 +153,7 @@ void status_grey_tick(uint8_t actor_slot)
     if (actor_slot >= STATUS_ROUND_SLOTS) return;
     if (s_grey_dur[actor_slot] == 0) return;
 
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&status_grey_tick_banked;
     g_bk_byte_a = actor_slot;
     banked_call_run();

@@ -1759,7 +1759,8 @@ Illegal combinations are unrepresentable: the generator only rolls legal
 * Poison rider: poison-effect daggers carry the on-hit status rider
   (existing status system); chance tuned like DA1.  Poison itself deals
   no damage -- it only greys out the victim's cards for
-  POISON_GREY_TURNS rounds.  IMPLEMENTED.
+  POISON_GREY_TURNS rounds.  Burn rider: fire swords burn for 10% of the
+  hit per round (min 1), scaled per application.  IMPLEMENTED.
 
 ## 34.5 Generation (Phase 2, implemented)
 

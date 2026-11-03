@@ -234,7 +234,8 @@ more you heal).
 - **Rings** heal you, count as any number in a combo, or act as
   wildcards on defence (0 block themselves, but they complete your hand
   and let over-block healing trigger).
-- **Burn** hurts a little every turn. Watch the little marks
+- **Burn** hurts every turn for a tenth of the hit that lit it
+  (at least 1 HP). Watch the little marks
   beside a fighter.
 - **Poison** never hurts -- instead, a couple of your cards turn grey
   and cannot be used until the poison wears off.

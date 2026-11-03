@@ -6,7 +6,7 @@
 
 /* ── Status system foundation (docs/combo-system.md Phase C, §12-§21) ──
  * Three distinct concepts, per plan §12:
- *   StatusDefinition -- what a status IS (bank-3 table, status_content.c)
+ *   StatusDefinition -- what a status IS (bank-10 table, status_content.c)
  *   StatusInstance   -- a status currently affecting one combatant
  *                       (runtime Battle state, never GameState/save)
  *   Application      -- the event of trying to inflict one (battle flow
@@ -32,6 +32,10 @@ typedef struct {
     uint8_t id;        /* StatusId */
     uint8_t stacks;    /* 1..max_stacks (definition) */
     uint8_t duration;  /* turns remaining */
+    uint8_t tick;      /* per-round damage for THIS instance.  Burn scales:
+                        * 10% of the inflicting hit's damage (min 1),
+                        * staged per application (see status_apply); poison
+                        * and freeze stay 0. */
 } StatusInstance;
 
 typedef struct {
@@ -46,7 +50,10 @@ typedef struct {
 typedef struct {
     uint8_t id;              /* StatusId */
     uint8_t tick;            /* FLAT damage per round (Phase C decision);
-                              * stacks only refresh duration/telemetry */
+                              * stacks only refresh duration/telemetry.
+                              * Burn ignores this: its per-instance tick is
+                              * scaled at apply time (10% of the inflicting
+                              * hit, min 1 -- see StatusInstance.tick). */
     uint8_t max_stacks;      /* stacking cap (plan §16 STACK rule) */
     uint8_t duration;        /* default duration when applying */
 } StatusDefinition;
@@ -61,7 +68,7 @@ typedef struct {
 
 extern StatusTickResult g_status_tick;
 
-/* Frozen-combatant bitmask, maintained by the bank-3 tick body: bit N
+/* Frozen-combatant bitmask, maintained by the bank-10 tick body: bit N
  * set = slots[N] holds STATUS_FREEZE (bit 0 = player, 1..n = enemies).
  * Written at each end-of-round tick; battle consumes (tests and clears)
  * the bit when a frozen enemy's attack comes up -- one skipped swing per
@@ -102,22 +109,22 @@ extern uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 
 /* Re-apply a poisoned victim's grey-out.  pool_size is the victim's card
  * pool (BATTLE_HAND_SIZE for the player, the enemy battle deck's count for
- * an enemy).  On a fresh grey the bank-3 body picks POISON_GREY_CARDS
+ * an enemy).  On a fresh grey the bank-10 body picks POISON_GREY_CARDS
  * distinct indices from the deterministic RNG; an already-active grey is
  * only refreshed (same cards, same duration).  Emits EVENT_CARDS_GREYED.
- * Fixed-bank wrapper around the ROM-bank-3 body; see banked.h. */
+ * Fixed-bank wrapper around the ROM-bank-10 body; see banked.h. */
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size);
 
-/* Bank-3 body dispatched by status_grey_apply(). */
+/* Bank-10 body dispatched by status_grey_apply(). */
 void status_grey_apply_banked(void);
 
 /* One round boundary for a greyed combatant: decrement the duration and,
  * when it hits zero, clear the mask and emit EVENT_CARDS_UNGREYED.  Called
  * by the battle tick loop alongside status_tick().  Fixed wrapper around
- * the ROM-bank-3 body; see banked.h. */
+ * the ROM-bank-10 body; see banked.h. */
 void status_grey_tick(uint8_t actor_slot);
 
-/* Bank-3 body dispatched by status_grey_tick(). */
+/* Bank-10 body dispatched by status_grey_tick(). */
 void status_grey_tick_banked(void);
 
 /* Decode the two set-bit positions of a grey mask into out-a/out-b
@@ -141,24 +148,31 @@ extern StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
  * definition's default.  Both are packed 4-bit by the wrapper -- pass 0
  * rather than >15.  actor_slot is the combatant's status slot index
  * (0 = player, 1..n = enemy; used for the frozen bitmask).
+ * Burn scaling: the banked body reads the basis (inflicting hit's
+ * damage, 10% per round, min 1) from g_effect_last.amount -- the combo
+ * dispatch every hit runs leaves it there, so gameplay rider paths
+ * (attack strike, dagger counter) always see their own hit.  Debug and
+ * organic applies see whatever the last dispatch left (bounded below by
+ * the min-1 floor; no shipped scenario depends on more).  Poison/freeze
+ * ignore the basis.
  * Emits STATUS_APPLIED when a new instance or new stack lands; returns
  * true when the actor is now afflicted.
  *
- * Fixed-bank wrapper around the ROM-bank-3 body; see banked.h. */
+ * Fixed-bank wrapper around the ROM-bank-10 body; see banked.h. */
 bool status_apply(StatusSlots *slots, uint8_t actor_slot, uint8_t id,
                   uint8_t stacks, uint8_t duration);
 
-/* Bank-3 body dispatched by status_apply(). */
+/* Bank-10 body dispatched by status_apply(). */
 void status_apply_banked(void);
 
 /* Run one end-of-turn tick over an actor's slots: accumulate tick damage
- * (per stack), decrement durations, expire finished instances.  Returns
+ * (per instance), decrement durations, expire finished instances.  Returns
  * total damage taken (caller applies it to HP and checks deaths).
  * Emits STATUS_TICKED and one STATUS_EXPIRED per removed instance.
  * actor_slot: 0 = player, 1..n = enemy index (telemetry context only). */
 uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot);
 
-/* Bank-3 body dispatched by status_tick(). */
+/* Bank-10 body dispatched by status_tick(). */
 void status_tick_banked(void);
 
 #endif /* RPG_STATUS_H */
