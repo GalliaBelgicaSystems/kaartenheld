@@ -135,17 +135,26 @@ cost, or late cards become unplayable (see §7.1).
 
 ### 3.3 Rider (weight 8) — a full step, flat
 
-Any on-hit status (poison, burn, freeze) costs **one whole AP**, regardless
-of tier.  Flat, not scaled, because the statuses are flat: `STATUS_POISON`
-and `STATUS_BURN` tick 1 damage for 3 rounds and `STATUS_FREEZE` denies one
-enemy attack (`src/rpg/status_content.c`) — the rider's *absolute* value is
-constant whether it rides a p2 dagger or a p9 sword, so its *relative* price
-must fall as power rises.  A percentage-of-card price would charge the most
-for the rider on the biggest card, which is backwards.
+Any status effect on the card — debuff or buff — costs **one whole AP**,
+regardless of tier.  Today that means the on-hit statuses (poison, burn,
+freeze); tomorrow it means buffs too (`docs/combo-system.md` §14/§19 plans
+buffs in the same status system).  Flat, not scaled, because the statuses
+are flat: `STATUS_POISON` and `STATUS_BURN` tick 1 damage for 3 rounds and
+`STATUS_FREEZE` denies one enemy attack (`src/rpg/status_content.c`) — the
+effect's *absolute* value is constant whether it rides a p2 dagger or a p9
+sword, so its *relative* price must fall as power rises.
+A percentage-of-card price would charge the most for the effect on the
+biggest card, which is backwards.
 
 `rider` is readable from the definition itself
 (`status_id != STATUS_NONE`), so no new field is needed: both the loot
-synth and the catalog already decide whether a card carries one.
+synth and the catalog already decide whether a card carries one.  Because
+the macro keys off `status_id` and not off a named status, a future buff
+status prices automatically the day it lands — no formula change, just a
+new row in §4.2 and a new case in `make card-costs`.  The one property
+fusion needs is strictness (§7.5): the step always lands.  It does, for all
+twelve rider-capable pairs — bronze 1→2, iron 2→3, steel 3→4, mythril 5→6 —
+verified cell by cell and asserted by `make card-costs` (§9).
 
 ### 3.4 Mythril premium (weight 12) — the top tier never discounts
 
@@ -343,6 +352,18 @@ the mythril premium is a step up from steel, never a discount).
 That is the property that lets designers *reason* about cards without
 consulting a table: "strictly better card, never cheaper".
 
+Read backwards, it is the property fusion needs (§7.5): "cheaper card,
+weaker card".  The contrapositive holds along every comparable line — more
+power, higher material, or an added effect never lowers the cost, so a card
+that costs less is never the stronger card.  Equal costs are allowed (a
+steel sword and a steel shield both cost 3); strict inversions are not, and
+there are none in §4.1/§4.2.  Stronger still, the rider step is strict, not
+just non-decreasing: adding an effect to any rider-capable card always costs
+exactly one AP more than the same card plain (§3.3).  `make card-costs`
+asserts both — pairwise no-inversion over all 37 combos and strictness for
+all twelve rider pairs — so a future card or band edit that inverts the
+ladder fails the gate before it reaches a scenario.
+
 ### 6.4 Deterministic and save-neutral
 
 The cost is a pure function of immutable definition bytes: no RNG, no game
@@ -429,7 +450,50 @@ sheet does not have yet (`one`–`five ap` only).  The art already
 exists on the shared sheet (`one/two/three/four/five ap` cells, also listed
 in `tools/level_editor/tilesets/actors.json`), but only cells 1 and 2 are
 wired; 3–5 need tile slots from the sprite budget and a lookup instead of
-the if-chain.  The DECK tab already prints the cost as a BG digit
+the if-chain.  Cost 6 needs no pip work today (nothing can stage it), but
+see §7.1: the pool-6 source and the sixth pip arrive together.
+
+### 7.5 Cheap cards are fuel: sell or fuse
+
+A weak card is not a dead card.  It has four futures: played for tempo (a
+1-AP wood sword still swings every turn, and five 1-AP cards form a straight
+or five of a kind, §7.1), sold for gold (§1: a loot roll sells for `power +
+2·tier`), fused into a powerful card (future mechanic: combine cheap weak
+cards into one strong card), and — once buffs land — carried for its effect
+rather than its face value (§3.3).  The formula's job is to make the fusion
+future safe without knowing its recipes:
+
+1. **Ordering.**  Fusion trades up in stats, so it must trade up in cost.
+   §6.3 guarantees it: any recipe whose output gains power, material, or an
+   effect over its inputs gains AP over them too.  The fusion system can
+   therefore price its recipes in *cards* (how many inputs per output)
+   without ever re-checking tempo — the output's cost is derived from its
+   own stats, so fusing into something underpriced for its power is
+   unrepresentable, the same way a mispriced catalog row is (§10,
+   last row).  A useful rung on that ladder: a rider at tier *m* costs the
+   same as plain at tier *m+1* (bronze rider 2 = iron plain 2, iron rider
+   3 = steel plain 3), so tier-by-tier fusion trades equal tempo until
+   mythril, where the premium charges one extra AP (steel rider 4 vs plain
+   mythril 5) — the top tier is never free.
+2. **No knowledge.**  The formula never sees recipes and recipes never set
+   costs.  The fusion exchange rate (how many weak cards one strong card
+   costs) is the fusion system's dial, tuned by playtest, not by AP
+   weights — §8.4 stays closed.
+3. **Effects always cost.**  A fused poison dagger costs strictly more than
+   a fused plain dagger (§3.3 strictness), so "add an effect" is never a
+   free upgrade on either side of the fusion.
+4. **Sell and fuse agree on order.**  Sell value (`power + 2·tier`) and AP
+   cost are both monotone non-decreasing in power and material, so the two
+   sinks rank cards the same way even though they price them differently
+   (§1).  No card is simultaneously "trash to sell, treasure to fuse" in a
+   way that breaks either sink: the fuse-or-sell decision is a real
+   economic choice, not an arbitrage.
+
+What the formula does *not* do is conserve AP across a fusion: three 1-AP
+cards fusing into one 2-AP card is quantity becoming quality, and that is
+the point.  AP is per-turn tempo, cards are stock; fusion converts stock
+into tempo efficiency, and the output pays the correct tempo price for what
+it does.  The DECK tab already prints the cost as a BG digit
 (`docs/deck-management.md`: "AP cost digit at cols 3-4"), so it needs
 nothing.
 
@@ -546,6 +610,12 @@ The real levers, in order:
 3. **Effect-specific riders** — a per-effect weight table would replace the
    flat `rider` bit without touching the expression (open question 1).
 
+Not a lever, by design: the **fusion exchange rate** (how many weak cards
+fuse into one strong card, §7.5).  That rate lives entirely in the future
+fusion system; it must never feed back into AP weights.  If a fusion
+recipe ever feels wrong, the recipe is wrong — the ordering guarantee (§6.3)
+means the AP side cannot be the cause.
+
 ---
 
 ## 9. Verification
@@ -554,7 +624,7 @@ The real levers, in order:
 |---|---|
 | New scenario `card_ap_formula` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  Use the descriptor deck section to deal catalog cards (`W SW` → 1, `B F SW` → 2, `I SW` → 2, `M BO` → 5) and assert the OAM pip tile per card (`oam_tile`) and, on the DECK tab, the AP digit on the row (`screen_row`).  `M F SW` (6) cannot be staged this way until a pool-6 source exists — assert it via `make card-costs`, not via a battle. |
 | New scenario `card_ap_loot_gate` | At AP 2 / 4 / 5, run the loot roll and assert `cost(drop) <= pool` for the dropped id (the §6.1 invariant on real drops, not on a hand-picked card).  At pool 5, additionally assert no dropped id is a mythril rider (seeded roll loop, deterministic seed): the §6.1 rider suppression firing is observable. |
-| `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
+| `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), assert pairwise no-inversion (for every pair where B dominates A on all three inputs with at least one strict, `cost(B) >= cost(A)` — the §6.3/§7.5 fusion ordering) and strict riders (every rider pair costs exactly one AP more than the same card plain), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
 | Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Amulet are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
 
@@ -611,6 +681,11 @@ and confirm the pool-5 `card_ap_loot_gate` run drops a mythril rider.
    no input — but a read-only AP badge on the card detail page would make
    the formula visible to players ("why does this cost 5?" → "9 damage +
    mythril").
+6. **Fusion exchange rate.**  How many weak cards fuse into one strong card
+   is the future fusion system's decision, not this document's — §7.5 only
+   constrains it to trade up in cost whenever it trades up in stats, which
+   the formula guarantees by construction.  The rate itself waits for the
+   fusion design and playtest data.
 
 ---
 
