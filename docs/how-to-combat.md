@@ -173,15 +173,16 @@ better tiers (a lone ring can't form a hand, so ring-only selections
 still block 0).
 
 **Daggers are the exception:** played alone (daggers plus optionally
-rings, but no shields/swords/bows), they **counterattack** — the
+rings, but no shields/swords/bows), they **counterattack first** — the
 attacker takes dagger damage (attack-phase poker scaling, poison
-included) while you still take the full incoming swing. Mixed with
-shields, swords or bows the daggers are simply lost. A dagger + ring
+included) before the swing, and when the counter kills the attacker the
+swing never lands (no damage to you).  Otherwise you still take the full
+incoming swing.  Mixed with
+shields, swords or bows the daggers are simply lost.  A dagger + ring
 deck can therefore always attack and heal, never blocking.
 
 While staging, the COMBO row forecasts the swing (`DMG`) beside your
-pending counter (`CNT`) — or `DEF` for shield hands. No counter is
-shown when the incoming hit would kill you.
+pending counter (`CNT`) — or `DEF` for shield hands.
 
 ```
 net = incoming - (participating shields, scaled)
@@ -215,7 +216,7 @@ iron ring once his shop opens, and loot can contain more:
 
 | Status | Does | From |
 |---|---|---|
-| POISON | 1 HP/round **and greys out 2 of your hand cards** for 2 rounds | poison daggers, bat/spider swings |
+| POISON | **greys out 2 of your hand cards** for 2 rounds (no damage) | poison daggers, bat/spider swings |
 | BURN | 1 HP/round | fire swords |
 | FREEZE | you skip your whole action (attack *and* the incoming block); enemies skip their swing | ice swords |
 

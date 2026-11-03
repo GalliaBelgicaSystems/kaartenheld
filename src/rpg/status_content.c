@@ -13,12 +13,15 @@
  * Stacking rule (plan §16): POISON/BURN STACK up to max_stacks and
  * refresh duration; FREEZE does not stack (control status -- a frozen
  * combatant can neither attack nor defend for the whole duration,
- * battle-side).  Balance values are deliberately provisional (§26). */
+ * battle-side).  Balance values are deliberately provisional (§26).
+ * POISON is control-only (tick 0): it never deals damage, it only greys
+ * out the victim's cards for POISON_GREY_TURNS rounds.  BURN is the
+ * damage-over-time status (flat 1 HP/round). */
 
 static const StatusDefinition s_status_defs[STATUS_DEF_COUNT] = {
     /* id            tick  max  dur */
     { STATUS_NONE,     0,   0,   0 },
-    { STATUS_POISON,   1,   5,   3 },
+    { STATUS_POISON,   0,   5,   3 },
     { STATUS_BURN,     1,   3,   3 },
     { STATUS_FREEZE,   0,   1,   3 }
 };
@@ -99,10 +102,11 @@ void status_tick_banked(void)
         StatusInstance *inst = &slots->slot[i];
         const StatusDefinition *def = status_def(inst->id);
         if (def != (const StatusDefinition *)0) {
-            /* FLAT tick (docs/combo-system.md Phase C decision): poison
+            /* FLAT tick (docs/combo-system.md Phase C decision): burn
              * deals def->tick HP per round regardless of stacks; extra
              * applications only refresh duration and deepen stacks for
-             * telemetry. */
+             * telemetry.  Poison's tick is 0 (control-only: the grey-out
+             * is its whole effect), so it contributes nothing here. */
             damage += def->tick;
         }
         inst->duration--;

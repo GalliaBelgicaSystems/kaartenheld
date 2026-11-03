@@ -1750,13 +1750,24 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   the scaled participating value with the ring at its substituted value
   (`EVENT_HEALED` cause d1=1); a lone ring heals its face value.
   IMPLEMENTED.
+* Defense with daggers: a daggers-only selection (rings allowed)
+  counterattacks with an attack-phase poker evaluation over the dagger
+  subset, and the counter lands FIRST -- when it kills the telegraphed
+  attacker the incoming swing never lands (no damage, block cue, no
+  organic rider).  Otherwise the hero takes the resolved net on top of
+  the counter.  IMPLEMENTED.
 * Poison rider: poison-effect daggers carry the on-hit status rider
-  (existing status system); chance tuned like DA1.  IMPLEMENTED.
+  (existing status system); chance tuned like DA1.  Poison itself deals
+  no damage -- it only greys out the victim's cards for
+  POISON_GREY_TURNS rounds.  IMPLEMENTED.
 
 ## 34.5 Generation (Phase 2, implemented)
 
 Every victory drops exactly one combat card (no rng gate — quality is
-what varies, not presence):
+what varies, not presence).  Balancing grant: the very first victory
+(zero monsters defeated so far) always drops a BRONZE SHIELD (derived id
+`0x81`), so the opening loot teaches blocking; every later drop rolls
+naturally:
 
 ```text
 archetype weapon <- enemy profile bias (game layer, docs/loot.md §17)
@@ -1795,9 +1806,9 @@ is ONE bank-9 body (`src/game/loot_drop_banked.c`) behind the thin
 never shift shared-RNG scenario outcomes.  The drop path must stay nearly
 fixed-bank-free — overflowing `_CODE`/`_HOME` past 0x8000 corrupts bank 2
 and hangs the guest (AGENTS.md §52.18).  Regression:
-`tools/scenarios/tests/loot_drop_victory.json` (AP 1 wood/no rider),
-`loot_ap_iron_cap.json` (AP 4 cap) and `loot_ap_steel.json` (AP 5
-unlock; seed 76 is a clean per-AP ladder).
+`tools/scenarios/tests/loot_drop_victory.json` (first victory always
+bronze shield), `loot_ap_iron_cap.json` (AP 4 cap) and
+`loot_ap_steel.json` (AP 5 unlock; seed 76 is a clean per-AP ladder).
 
 The reveal is a three-line centered block on the otherwise-blank rows 10-12
 of the battle victory banner: row 10 shows "YOU FOUND:", row 11 shows the

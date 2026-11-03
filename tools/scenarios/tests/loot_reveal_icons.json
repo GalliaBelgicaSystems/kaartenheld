@@ -1,7 +1,7 @@
 {
  "name": "loot_reveal_icons",
  "test": true,
- "description": "Loot reveal regression with a rider card (docs/loot.md 34.5): at AP 2 seed 29 deterministically yields a BRONZE POISON DAGGER (derived id 0x8B = 139). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name B P DA on row 11, full English description BRONZE POISON DAGGER on row 12, and the poison rider OAM icon. The riderless wood case is pinned by loot_drop_victory instead.",
+ "description": "Loot reveal regression with a rider card (docs/loot.md 34.5): at AP 2 seed 29 deterministically yields a BRONZE POISON DAGGER (derived id 0x8B = 139). Driving a victory (one prior kill staged, so the natural roll applies instead of the first-victory bronze shield) must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name B P DA on row 11, full English description BRONZE POISON DAGGER on row 12, and the poison rider OAM icon. The riderless wood case is pinned by loot_drop_victory instead.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -14,6 +14,7 @@
    "FIELD_CHEST": true
   },
   "variables": {
+   "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 2
   },
   "party": {

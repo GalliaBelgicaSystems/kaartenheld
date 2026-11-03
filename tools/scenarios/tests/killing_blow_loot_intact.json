@@ -1,7 +1,7 @@
 {
  "name": "killing_blow_loot_intact",
  "test": true,
- "description": "Counter-kill victory keeps the loot reveal intact: three 1-HP kobolds die across an attack, an attack, and a dagger-counter defend (the final swing lands on the player the same frame the counter kills, arming the deck judder while deciding the fight). The result gate must freeze it: the YOU FOUND block, fringe cells and hero row are pristine on the DEFEAT-free VICTORY screen. Row 12 asserts real VRAM (vram_row), not the screen buffer -- box stamps never touch the buffer, so only VRAM truth catches a clobber.",
+ "description": "Counter-kill victory keeps the loot reveal intact: three 1-HP kobolds die across an attack, a defend that takes the swing, and a dagger-counter defend (the counter lands first and kills, so the final swing never lands -- one DAMAGE_RECEIVED is the full swing, one is 0). The result gate must freeze it: the YOU FOUND block, fringe cells and hero row are pristine on the DEFEAT-free VICTORY screen. Row 12 asserts real VRAM (vram_row), not the screen buffer -- box stamps never touch the buffer, so only VRAM truth catches a clobber.",
  "actions": [
   {
    "type": "wait",
@@ -177,6 +177,12 @@
    "event": "DAMAGE_RECEIVED"
   },
   {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 0
+  },
+  {
    "type": "screen_row",
    "row": 10,
    "contains": "YOU FOUND"
@@ -231,6 +237,9 @@
    }
   },
   "seed": 5002,
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  },
   "start_battle": true
  }
 }

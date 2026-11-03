@@ -130,5 +130,17 @@ void game_loot_drop_banked(void)
         /* Derived id: BASE + mat*32 + eff*8 + wpn (shifts only). */
         g_loot_id = (uint8_t)(LOOT_ID_BASE +
                               (((material << 2) + effect) << 3) + weapon);
+
+        /* First-victory grant (balancing): the very first fight's drop is
+         * always a bronze shield, so the opening loot teaches blocking.
+         * Gated on the global kill counter (0 kills = no victory yet), so
+         * every later drop rolls naturally.  Placed AFTER the rolls so the
+         * isolated stream keeps its positions for a given seed. */
+        if (g_game.state.variables.values[
+                VARIABLE_ID_MONSTERS_DEFEATED - 1] == 0) {
+            g_loot_id = (uint8_t)(LOOT_ID_BASE +
+                                  (((MAT_BRONZE << 2) + EFF_PLAIN) << 3) +
+                                  WPN_SHIELD);
+        }
     }
 }

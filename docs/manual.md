@@ -87,7 +87,7 @@ and press **A** to talk.
 
 ### The Monster Hunt
 
-Talk to the **Mayor** in town. He asks you to defeat **5 monsters**.
+Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
 
 When you have beaten all five, go back to him and he will grant you
 wonderful power: **one extra AP** every round. Then he warns you that a
@@ -130,7 +130,7 @@ you own:
 | **Shield** (`SH`) | Blocks damage when the monster attacks. |
 | **Bow** (`BO`) | Hurts from far away. The mighty Mythril Bow costs extra Energy. |
 | **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
-| **Dagger** (`DA`) | A small hit that can poison. |
+| **Dagger** (`DA`) | A small hit that can poison. Played alone on defence, it strikes first -- a killing blow takes no damage. |
 
 Some cards are extra special: a **Fire Sword** burns, a **Poison Dagger**
 poisons, and the **Mythril Bow** hits very, very hard.
@@ -234,11 +234,11 @@ more you heal).
 - **Rings** heal you, count as any number in a combo, or act as
   wildcards on defence (0 block themselves, but they complete your hand
   and let over-block healing trigger).
-- **Poison** and **Burn** hurt a little every turn. Watch the little marks
+- **Burn** hurts a little every turn. Watch the little marks
   beside a fighter.
+- **Poison** never hurts -- instead, a couple of your cards turn grey
+  and cannot be used until the poison wears off.
 - **Freeze** is nasty: a frozen fighter **misses a whole turn!**
-- When you are **poisoned**, a couple of your cards turn grey and cannot be
-  used until the poison wears off.
 - Badly hurt between fights? Find the red-robed **Heal Mage** in town —
   talking to him restores all your HP for free, with a happy little jingle.
 
@@ -314,7 +314,7 @@ ending. The land is saved, thanks to you!
   heal.
 - **Watch your Energy.** Two points a round goes fast.
 - **Do not waste your timer.** Decide, then press **SELECT**.
-- **Beat the 5 monsters early** to win an extra AP.
+- **Beat the 3 monsters early** to win an extra AP.
 - **Sell cards you do not need** and buy a Healing Ring.
 - **Save often** at the Wizard — you never know what is around the corner!
 
@@ -332,6 +332,6 @@ ending. The land is saved, thanks to you!
 | Starter deck | **12 cards** |
 | Biggest deck | **20 cards** |
 | Collection limit | **12 different cards** |
-| Main quest | Defeat **5 monsters** for the Mayor |
+| Main quest | Defeat **3 monsters** for the Mayor |
 
 Now go, hero — the cards are in your hands!

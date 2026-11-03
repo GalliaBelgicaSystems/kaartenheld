@@ -1,7 +1,7 @@
 {
  "name": "loot_reveal_message",
  "test": true,
- "description": "Always-drop + victory reveal (docs/loot.md 34.5): every victory grants a loot card and the battle result banner shows the 'YOU FOUND:' block. At AP 1 seed 5002 yields a WOOD PLAIN DAGGER (W DA); asserts BATTLE_WON + LOOT_CARD_ADDED and the row-10 reveal header.",
+ "description": "Always-drop + victory reveal (docs/loot.md 34.5): every victory grants a loot card and the battle result banner shows the 'YOU FOUND:' block. This first victory (zero kills) yields the guaranteed BRONZE SHIELD (id 129); asserts BATTLE_WON + LOOT_CARD_ADDED payload and the row-10 reveal header.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -175,6 +175,12 @@
   {
    "type": "event_occurred",
    "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 0,
+   "value": 129
   },
   {
    "type": "screen_row",

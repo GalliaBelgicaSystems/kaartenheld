@@ -23,10 +23,12 @@
  * room for the rider OAM pass in the release layout.
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
- * (the staged Battle* and g_effect_last) and its own bank-local code; it
- * must NOT call any fixed-bank function (the bank is switched away).  The
- * block sum rides in g_effect_last.amount (set by the bank-3 resolver),
- * the ring flag is scanned from last_combo.cards[] here.
+ * (the staged Battle* and the stashed block sum) and its own bank-local
+ * code; it must NOT call any fixed-bank function (the bank is switched
+ * away).  The block sum rides in g_defend_block_save (stashed by the
+ * counter prep, which runs first -- the counter eval would otherwise
+ * overwrite g_effect_last.amount), the ring flag is scanned from
+ * last_combo.cards[] here.
  *
  * Defense over-block rule (docs/loot.md §34.4): a defense net
  * <= 0 is CLAMPED to zero (no damage); HP is restored only when a ring
@@ -54,16 +56,33 @@ void battle_defend_resolve_banked(void)
     int16_t net;
     uint8_t di;
     uint8_t combo_has_ring = 0;
+    uint8_t atk;
 
     g_bk_byte_a = 0;
     g_bk_byte_b = 0;
     g_bk_byte_c = 0;
     if (!b) return;
 
+    /* Counter-first cancel: the dagger counter (when staged) already ran
+     * and may have dropped the telegraphed attacker -- nothing else in
+     * the defend window deals damage, and the telegraph always advances
+     * past the dead, so a dead attacker here means the counter killed it
+     * and its swing never lands.  Resolve as an exact block (no damage,
+     * block cue, no rider -- and crucially no over-block heal even with
+     * a ring staged, which a plain incoming-zero would have granted). */
+    atk = (b->attacking_enemy_idx < b->enemy_count) ? b->attacking_enemy_idx : 0;
+    if (b->enemies[atk].hp == 0) {
+        g_bk_byte_d = SFX_BLOCK;
+        return;
+    }
+
     for (di = 0; di < b->combo_count; di++) {
         if (b->last_combo.cards[di].ring) combo_has_ring = 1;
     }
-    net = (int16_t)b->enemy_incoming_dmg - (int16_t)g_effect_last.amount;
+    /* The block sum rides in g_defend_block_save (stashed by the counter
+     * prep -- the counter eval overwrote g_effect_last), the ring flag
+     * is scanned from last_combo.cards[] here. */
+    net = (int16_t)b->enemy_incoming_dmg - (int16_t)g_defend_block_save;
     if (net > 0) {
         uint8_t dmg = (uint8_t)net;
         if (dmg >= b->player.hp) {

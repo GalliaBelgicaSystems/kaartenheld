@@ -17,15 +17,17 @@ Phase B (generic effect layer), and the core of Phase C (status system) are
 implemented.**  Status foundation (§12-§19 minus per-effect scaling):
 `src/rpg/status.{h,c}` + bank-2 bodies (`status_content.c`) provide
 StatusDefinition / StatusInstance / application with STACK+refresh rules
-(POISON: tick 1/stack, max 5 stacks, duration 3); battle-scoped slots live
+(POISON: tick 0 -- control-only, max 5 stacks, duration 3); battle-scoped slots live
 in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
-(1/255 units, §17/§18) and poison ticks once per round at the
-player-select boundary, with deaths resolving like combat deaths.
+(1/255 units, §17/§18).  Poison is control-only (tick 0, no damage):
+it lasts 3 rounds greying the victim's cards, then expires, with deaths
+resolving like combat deaths only for damaging statuses.
 Telemetry: `STATUS_APPLIED` / `STATUS_TICKED` (payloads in
-DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply + 3
-ticks + expiry, payload-locked) and `status_poison_resist` (roll fails).
+DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
+duration + expiry with no damage, payload-locked) and
+`status_poison_resist` (roll fails).
 
 **Phase D (implemented)**: BURN (tick 2/round, max 3 stacks, duration 2)
 and FREEZE (no tick, no stacking, duration 1 -- a frozen combatant skips
@@ -100,7 +102,7 @@ result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
 damage, base poison chance 50% scaled by the hand multiplier.  Poison
-ticks a flat 1 HP per round after the afflicted actor's turn resolves;
+deals no damage -- it greys out the victim's cards while it lasts;
 re-applications refresh duration (stacks deepen for telemetry only).
 
 Deviations from the plan's sketches, all

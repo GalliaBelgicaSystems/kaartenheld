@@ -78,7 +78,7 @@ typedef enum {
     STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
                                        * its one free heal (later talks get
                                        * the refusal, no heal, no jingle) */
-    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 5-kill "return to the mayor"
+    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 3-kill "return to the mayor"
                                        * notice already showed (one-shot) */
     STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
                                        * (shown once, on first talk while

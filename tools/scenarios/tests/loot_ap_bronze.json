@@ -17,6 +17,7 @@
    }
   },
   "variables": {
+   "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 2
   },
   "start_battle": true

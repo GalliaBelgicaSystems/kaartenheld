@@ -115,7 +115,7 @@ Battle and menus have their own controls, covered in §6 and §7.
 4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
 5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
    daggers hit back.
-6. **BURN POISON FREEZE** — poison wounds and locks cards; ice skips
+6. **BURN POISON FREEZE** — burn wounds, poison locks cards; ice skips
    your turn.
 7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
@@ -233,7 +233,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 
 | Quest | Status var | Objective | Reward note |
 |---|---|---|---|
-| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 5 monsters | "+1 AP" |
+| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
 
 ### 4.2 Monster Hunt — the main quest
@@ -241,14 +241,14 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 1. **Start.** Talk to the **Mayor** for the first time:
 
    > I am the Mayor.
-   > Defeat 5 monsters!
+   > Defeat 3 monsters!
    > Gain extra AP!
 
-2. **Objective.** Defeat **5 monsters in total** — any hostile counts
+2. **Objective.** Defeat **3 monsters in total** — any hostile counts
    (field/forest slimes, bats, even the boss).  Kills made *before* the
    quest starts still count toward the total.  While the quest is active
-   the Mayor says "Defeat 5 monsters! Return for power!"
-3. **Complete.** Talk to the Mayor again once 5 are defeated.  He grants
+   the Mayor says "Defeat 3 monsters! Return for power!"
+3. **Complete.** Talk to the Mayor again once 3 are defeated.  He grants
    **one extra AP** (ENERGY_POOL +1) and warns that a darkness stirs at
    the Castle:
 
@@ -576,8 +576,8 @@ entry shows the quest name and a status line:
 * `complete - SWORD` when done.
 
 `SELECT` on a quest opens its **detail page**: the quest name, who gave it
-(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 5 MONSTERS`), and where
-you stand (e.g. `3/5 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
+(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 3 MONSTERS`), and where
+you stand (e.g. `3/3 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
 counter-less quests).
 
 **HERO tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
@@ -683,7 +683,7 @@ Statuses (`src/rpg/status_content.c`):
 
 | Status | Tick (dmg/round) | Max stacks | Duration | Effect |
 |---|---|---|---|---|
-| POISON | 1 | 5 | 3 rounds | Deals flat 1 HP/round. Also **greys out** the victim's cards (§8.7). |
+| POISON | 0 | 5 | 3 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
 | BURN | 1 | 3 | 3 rounds | Deals flat 1 HP/round. |
 | FREEZE | 0 | 1 | 3 rounds | Victim **skips its whole action** (no attack for the player, no swing for the enemy) each round it lasts. |
 

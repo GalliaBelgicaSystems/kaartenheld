@@ -1,7 +1,7 @@
 {
  "name": "status_poison_apply",
  "test": true,
- "description": "On-hit status rider (Phase C): a SW1 hand card carrying POISON(chance 255=guaranteed) applies POISON (stacks 1, duration 3) to the slime; poison then ticks 1 damage per round for 3 rounds and expires, leaving the 5HP slime at 1 HP",
+ "description": "On-hit status rider (Phase C): a SW1 hand card carrying POISON(chance 255=guaranteed) applies POISON (stacks 1, duration 3) to the slime; poison deals no damage (control-only: grey-out), lasts 3 rounds, then expires -- a single STATUS_TICKED with 0 damage on the expiry round plus STATUS_EXPIRED.",
  "actions": [
   {
    "type": "wait",
@@ -180,13 +180,13 @@
   {
    "type": "event_count",
    "event": "STATUS_TICKED",
-   "count": 3
+   "count": 1
   },
   {
    "type": "event_arg",
    "event": "STATUS_TICKED",
    "index": 0,
-   "value": 1
+   "value": 0
   },
   {
    "type": "event_arg",

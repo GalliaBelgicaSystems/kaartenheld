@@ -25,7 +25,7 @@ typedef struct {
     uint8_t id;                 /* stable quest id */
     char name[14];              /* display label, e.g. "MONSTER HUNT" */
     char giver[17];             /* quest giver, e.g. "MAYOR IN TOWN" */
-    char objective[20];         /* what to do, e.g. "KILL 5 MONSTERS" */
+    char objective[20];         /* what to do, e.g. "KILL 3 MONSTERS" */
     VariableId status_variable; /* quest status variable (see QuestStatus) */
     int16_t status_active;      /* var == this -> ACTIVE */
     int16_t status_complete;    /* var == this -> COMPLETE */

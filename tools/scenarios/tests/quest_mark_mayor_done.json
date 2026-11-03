@@ -12,7 +12,7 @@
   "seed": 8504,
   "variables": {
    "QUEST_MONSTER_HUNT": 2,
-   "MONSTERS_DEFEATED": 5,
+   "MONSTERS_DEFEATED": 3,
    "MERCHANT_QUEST": 2
   }
  },

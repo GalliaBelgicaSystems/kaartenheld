@@ -180,7 +180,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_EARLY,
         "MAYOR:",
         6,
-        {"You've already", "slain 5 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
+        {"You've already", "slain 3 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
         0,
         0
     },
@@ -244,7 +244,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_QUEST_ACTIVE,
         "MAYOR:",
         2,
-        {"Defeat 5 monsters!", "Return for power!"},
+        {"Defeat 3 monsters!", "Return for power!"},
         0,
         0
     },

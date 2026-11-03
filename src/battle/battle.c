@@ -469,15 +469,18 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
  * can be played on defense.  A daggers-only selection (at least one
  * dagger; no shields, swords or bows; rings allowed and unchanged) hits
  * the telegraphed attacker back with an attack-phase poker evaluation
- * over the dagger subset, while the hero still takes the (unblocked)
- * incoming swing.  Mixed selections lose the daggers: the block
- * evaluation above already ignored them, and the prep body reports 0.
- * Returns 1 when counter damage was dealt (the caller gates its victory
- * check on this so defend flows without a counter emit no new
- * telemetry).  Victory is NOT set here: the caller checks it after the
- * phase advance.  Precedence note: the prep skips dead heroes, so a
- * lethal swing always ends in defeat with no counter; a living hero
- * whose counter drops the last enemy wins.
+ * over the dagger subset, and it lands FIRST: when the counter kills the
+ * attacker, the incoming swing never lands (the caller skips the net
+ * resolution).  Otherwise the hero still takes the resolved swing on top
+ * of the counter.  Mixed selections lose the daggers: the block
+ * evaluation ignores them, and the prep body reports 0 without touching
+ * the staged combo.
+ * Returns 0 when no counter fired, 1 when counter damage was dealt
+ * (the caller gates its victory check on this so defend flows without
+ * a counter emit no new telemetry).  A killing counter needs no special
+ * return: the following net resolution observes the dead attacker and
+ * degrades to a no-op block on its own (see the resolve body).  Victory
+ * is NOT set here: the caller checks it after the phase advance.
  *
  * Fixed-bank budget (AGENTS.md 52.18): the prep body stages everything
  * the resolve needs (count, attacker, rider, deck width) because every
@@ -495,9 +498,10 @@ static uint8_t battle_defend_counter(Battle *b)
      * (fixed-bank budget -- every branch counts, AGENTS.md 52.18). */
     /* Prep dispatch (bank 5 in both builds -- see battle_counter_banked.c):
      * dagger-only detection, subset compaction into the front of
-     * last_combo.cards (dead since the defend resolution above; the
-     * discard below reads hand/selected_indices), and full staging.
-     * g_bk_byte_a = dagger count (0 = no counter). */
+     * last_combo.cards (the defend resolution below only needs the block
+     * sum, restored by the caller, plus a ring scan that is vacuous for
+     * daggers-only hands; the discard below reads hand/selected_indices),
+     * and full staging.  g_bk_byte_a = dagger count (0 = no counter). */
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&battle_counter_prep_banked;
     g_bk_ptr_a = (void *)b;
@@ -789,22 +793,23 @@ void battle_execute_combo(Battle *b)
         battle_play_hand(b, false, &res);
         /* Net-damage defense (docs/loot.md §34.4): computed and applied in
          * the banked body (battle_defend_content.c) to keep the fixed bank
-         * small; the wrapper above emits the damage/heal telemetry.
+         * small; the wrapper emits the damage/heal telemetry.
          *
-         * Contract for the banked body: the immediately-preceding
-         * battle_play_hand() populated last_combo (count == combo_count,
-         * cards[0..combo_count) are the defend hand) and resolved the block
-         * sum into g_effect_last.amount.  The banked body relies on both --
-         * its ring scan walks last_combo.cards[0..combo_count) and its net
-         * uses g_effect_last.amount -- so nothing may run between this call
-         * and battle_defend_resolve(). */
-        battle_defend_resolve(b);
-        /* Dagger counterattack (see battle_defend_counter): a daggers-only
-         * selection hits the attacker back on top of the resolved swing.
-         * Runs before the discard so the played daggers still pay their
-         * energy cost and leave play like any other staged cards. */
+         * The dagger counter lands FIRST (see battle_defend_counter): a
+         * daggers-only selection hits the attacker back before the swing,
+         * and a killing counter degrades the resolve below to a no-op
+         * block (the body observes the dead attacker).  The counter eval
+         * overwrites g_effect_last, so the prep stashes the block sum for
+         * the body; its whitelist pass leaves last_combo.cards pristine
+         * on a mixed abort, and a daggers-only run needs no ring scan
+         * (daggers/rings block nothing, so net can never go negative and
+         * no heal path exists). */
         {
             uint8_t counter_hit = battle_defend_counter(b);
+            battle_defend_resolve(b);
+            /* Runs before the discard so the played daggers still pay
+             * their energy cost and leave play like any other staged
+             * cards. */
             battle_resolve_hand_discard(b);
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;

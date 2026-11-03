@@ -1,7 +1,7 @@
 {
  "name": "loot_drop_victory",
  "test": true,
- "description": "Victory loot drop hook (docs/loot.md 34.5): defeating Carl's solo spar always rolls one combat card from the isolated loot RNG. At AP 1 the roll is wood-only and wood carries no rider, so seed 5002 yields a WOOD PLAIN DAGGER (derived id 0x63 = 99); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W DA). Two-line pages: 5-line victory closes in 2 presses.",
+ "description": "First-victory loot grant (docs/loot.md 34.5): the very first fight's drop is always a BRONZE SHIELD (balancing: the opening loot teaches blocking), regardless of the isolated loot RNG stream. Defeating Carl's solo spar with zero kills so far yields the bronze plain shield (derived id 0x81 = 129); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name. Two-line pages: 5-line victory closes in 2 presses.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -202,7 +202,7 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 99
+   "value": 129
   },
   {
    "type": "event_arg",
@@ -217,7 +217,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "WOOD DAGGER"
+   "contains": "BRONZE SHIELD"
   }
  ]
 }

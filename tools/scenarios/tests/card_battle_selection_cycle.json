@@ -1,7 +1,7 @@
 {
  "name": "card_battle_selection_cycle",
  "test": true,
- "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact (heal cards show the X joker glyph: HE7 reads HEX)",
+ "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact (heal cards show the X joker glyph: HE7 reads HEX; daggers read Dagger: counter even with no rider)",
  "actions": [
   {
    "type": "wait",
@@ -16,7 +16,7 @@
   {
    "type": "set_hand_card",
    "index": 1,
-   "card_type": "SH",
+   "card_type": "DA",
    "value": 2
   },
   {
@@ -91,7 +91,7 @@
    "type": "tilemap_cell",
    "row": 12,
    "col": 5,
-   "expected": 105
+   "expected": 107
   },
   {
    "type": "tilemap_cell",
@@ -137,7 +137,7 @@
   {
    "type": "screen_row",
    "row": 13,
-   "contains": "SW3 SH2 BO4 SW4 HEX"
+   "contains": "SW3 DA2 BO4 SW4 HEX"
   },
   {
    "type": "screen_row",
@@ -152,7 +152,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "Shield: block dmg"
+   "contains": "Dagger: counter"
   }
  ],
  "initial_state": {

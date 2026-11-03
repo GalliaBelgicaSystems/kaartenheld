@@ -10,6 +10,9 @@
    "facing": "DOWN"
   },
   "seed": 5002,
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  },
   "party": {
    "HERO": {
     "hp": 60,

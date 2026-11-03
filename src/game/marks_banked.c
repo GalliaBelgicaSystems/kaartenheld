@@ -262,7 +262,7 @@ void ow_oam_restore_banked(void)
  *   the fixed bank has no room for the scan); the sting fires once the
  *   chaser is awake and moving, over the still-playing scene track
  *   (no byte codes, no MUSIC_CHANGED -- a sting is not a track change).
- * MONSTERS_DEFEATED threshold 5 mirrors the QUEST_COMPLETE event row
+ * MONSTERS_DEFEATED threshold 3 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
 static void marks_refresh(void)
 {
@@ -419,7 +419,7 @@ static void marks_refresh(void)
             const StaticActorDefinition *d = &g_static_actors[i];
             if (d->id == ENTITY_ID_MAYOR) {
                 if (quest_monster_hunt == 0 ||
-                    (quest_monster_hunt == 1 && monsters_defeated >= 5)) {
+                    (quest_monster_hunt == 1 && monsters_defeated >= 3)) {
                     m = ACTOR_MARK_QUEST;
                 }
             } else if (d->id == ENTITY_ID_CARL) {
