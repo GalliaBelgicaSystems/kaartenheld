@@ -462,12 +462,19 @@ def _drain_skip_offer(s):
     return not s.text_has("HEY! WANNA")
 
 
-def _select_cards(s, wanted_types):
+def _select_cards(s, wanted_types, max_cards=None):
     """Toggle-select every hand card whose type is in wanted_types.
     Each A press is verified against combo_count (an A can be eaten by
-    input edge timing, AGENTS.md §52.10 — retry with a reset frame)."""
+    input edge timing, AGENTS.md §52.10 — retry with a reset frame).
+
+    max_cards caps how many cards join the combo.  walk-b uses it: an
+    uncapped round stages deep into the 10-card starter deck's draw pile
+    and risks a RESHUFFLE turn, which consumes the next PLAYER_SELECT and
+    delays Carl's poker lesson past the walk's fixed choreography."""
     picked = 0
     for idx in range(5):
+        if max_cards is not None and picked >= max_cards:
+            break
         if not _cursor_to(s, idx):
             continue
         ctype = s.reader.battle_hand()[idx][0]
@@ -894,7 +901,11 @@ def walk_b(planner, checks):
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
             expected="TARGET CARL", actual="none")
-    _select_cards(s, ATTACK_TYPES)
+    # Two cards per phase (capped, not the full affordable set): an
+    # uncapped round stages deeper into the 10-card starter draw pile and
+    # risks a RESHUFFLE turn that consumes the round-2 PLAYER_SELECT,
+    # delaying Carl's poker lesson past this walk's fixed choreography.
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.
     for _ in range(4):
@@ -905,6 +916,8 @@ def walk_b(planner, checks):
             break
     s.check("defend banner", s.text_has("DEFEND"),
             expected="DEFEND", actual="none")
+    # Attack landed (Carl's HP dropped): capture the battle frame here.
+    s.shoot("10-battle-attack")
     # The first DEFEND phase raises the shield coaching box; close its
     # two pages, then the battle's own DEFEND banner owns row 0.
     s.check("defend lesson",
@@ -919,9 +932,8 @@ def walk_b(planner, checks):
             s.wait_for(lambda: s.text_has("DEFEND"), ticks=180),
             expected="DEFEND", actual="none")
     s.shoot("10-battle-defend", need="DEFEND")
-    _select_cards(s, (BT_SHIELD,))
+    _select_cards(s, (BT_SHIELD,), max_cards=2)
     s.press("select", settle=40)     # execute defense
-    s.shoot("10-battle-attack")
     # The way back to SELECT raises the poker-hands box, then the flee
     # box: close both (3 pages + 1) to reach a plain SELECT phase.
     s.check("poker lesson",
@@ -1008,7 +1020,17 @@ def walk_b(planner, checks):
     # (now stable) FLED! result, and leaving that returns to the field
     # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
     # and Carl alive for a rematch.
-    s.press("b", settle=40)
+    # At pool 2 a stray card may still be staged (B unselects before it
+    # flees), so drain the combo first or the flee press only clears it.
+    for _ in range(4):
+        if s.reader.battle_combo_count() == 0:
+            break
+        s.press("b", settle=12)
+    for _ in range(3):
+        s.press("b", settle=40)
+        if s.wait_for(lambda: s.text_has("GROW STRONGER!")
+                      or s.text_has("FLED!"), ticks=120):
+            break
     s.check("farewell speech",
             s.wait_for(lambda: s.text_has("GROW STRONGER!"), ticks=240),
             expected="GROW STRONGER!", actual="none")
@@ -1145,19 +1167,19 @@ def walk_c(planner, checks):
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
     # The flip tick itself is a 1-frame window: world_load_map starts the
-    # scene track inside game_update, and the marks tick that applies the
-    # entry pause runs on the NEXT frame.  Polling for the scene change
+    # scene track inside game_update, and the marks tick that arms the
+    # entry alert runs on the NEXT frame.  Polling for the scene change
     # lands on either side of that boundary, so settle two frames before
-    # reading the track (the pause lasts ~90 ticks).
+    # reading the track.
     s.tick(2)
-    # Alert-first: the kobold entry sting pauses the track mid-song, so
-    # right after arrival the music is still FOREST (frozen, no restart);
-    # the checks below pin the sting actually stepping (sfx 7 while it
-    # rings, idle after) and the forest track continuing from the frozen
-    # position as the kobold approaches.  The sting
+    # Alert sting plays on top of the running track, so right after
+    # arrival the music is still FOREST (no restart, no pause); the
+    # checks below pin the sting actually stepping (sfx 7 while it
+    # rings, idle after) and the forest track still playing as the
+    # kobold approaches.  The sting
     # starts ~flip+90 (see note above), so the start wait needs 200,
     # not 90.
-    s.check_eq("forest music paused for sting", s.reader.music_track(),
+    s.check_eq("forest music playing under sting", s.reader.music_track(),
                MUSIC_FOREST)
     s.check("forest alert sting playing",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
@@ -1170,7 +1192,7 @@ def walk_c(planner, checks):
     s.check("forest music continues",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
                        ticks=250, label="forest music"),
-            expected="MUSIC_FOREST", actual="paused")
+            expected="MUSIC_FOREST", actual="switched")
     # Continue to the spawn for the arrival milestone.  avoid_exits:
     # the tunnel gate sits right on the path -- stepping back onto it
     # would warp out to the field.

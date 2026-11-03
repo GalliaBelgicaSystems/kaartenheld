@@ -1096,6 +1096,50 @@ def validate_spawn_refs():
                 f"resolver)")
     if not found:
         errors.append("No EVENT_ACTION_SPAWN_SLIME_TRIO row in events_content.c")
+    # Bank agreement: the spawn body, the event table, and the trampoline
+    # dispatch must all live on GAME_EVENT_BANK, else the body's in-bank
+    # row scan becomes a cross-bank wild read (2026-11-03 spawn failure).
+    try:
+        game_ids_h = (repo_root / "src" / "game" / "game_ids.h").read_text(
+            encoding="utf-8")
+        event_c = (repo_root / "src" / "core" / "event.c").read_text(
+            encoding="utf-8")
+        spawn_c = (repo_root / "src" / "game"
+                   / "slime_trio_spawn_banked.c").read_text(encoding="utf-8")
+    except OSError as exc:
+        return errors + [f"Cannot read bank-agreement sources: {exc}"]
+    m_bank = re.search(r"#define\s+GAME_EVENT_BANK\s+(\d+)", game_ids_h)
+    if not m_bank:
+        errors.append("game_ids.h: GAME_EVENT_BANK not found")
+        return errors
+    want_bank = int(m_bank.group(1))
+    for label, src, pat in (
+            ("events_content.c",
+             text, r"^#pragma\s+bank\s+(\d+)"),
+            ("slime_trio_spawn_banked.c",
+             spawn_c, r"^#pragma\s+bank\s+(\d+)")):
+        # Anchored to start-of-line (re.M): events_content.c mentions
+        # "#pragma bank 10" inside its own block comment (line 6), which
+        # an unanchored search would match instead of the directive.
+        m_pragma = re.search(pat, src, re.M)
+        if not m_pragma:
+            errors.append(f"{label}: no #pragma bank found")
+        elif int(m_pragma.group(1)) != want_bank:
+            errors.append(
+                f"{label}: #pragma bank {m_pragma.group(1)} "
+                f"but GAME_EVENT_BANK is {want_bank}")
+    m_dispatch = re.search(
+        r"g_bk_call_bank\s*=\s*(\d+)\s*;"
+        r"\s*\n\s*g_bk_call_target\s*=\s*\(uint16_t\)"
+        r"&game_slime_trio_spawn_banked",
+        event_c)
+    if not m_dispatch:
+        errors.append(
+            "event.c: slime-trio g_bk_call_bank dispatch not found")
+    elif int(m_dispatch.group(1)) != want_bank:
+        errors.append(
+            f"event.c: g_bk_call_bank {m_dispatch.group(1)} "
+            f"but GAME_EVENT_BANK is {want_bank}")
     return errors
 
 

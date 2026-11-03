@@ -302,7 +302,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 `BO9`, **`HE4`** for a heal ring, `DA2`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
-| **Cost** | Energy price to play in battle (most cards cost 1). |
+| **Cost** | Energy price to play in battle (wood/bronze 1, iron 2, steel 3–4, mythril 5, riders 6). |
 | **Uses** | Limited uses per battle (rings: 3). `-` = unlimited. |
 | **Max copies** | How many copies may be decked at once. |
 | **Rider** | On-hit status rider (fire → BURN, poison → POISON) with a base chance, scaled by your combo. |
@@ -328,11 +328,11 @@ All catalogue cards (`src/game/cards_content.c`):
 | Card | Name | Code | Type | Pwr | Cost | Uses | Max | Rider | Price |
 |---|---|---|---|---|---|---|---|---|---|
 | Wood Sword | `W SW` | `SW1` | ATK | 1 | 1 | – | 4 | — | — |
-| Iron Sword | `I SW` | `SW5` | ATK | 5 | 1 | – | 4 | — | — (test) |
+| Iron Sword | `I SW` | `SW5` | ATK | 5 | 2 | – | 4 | — | — (test) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
-| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 1 | 3/battle | 1 | — | 20g |
-| Fire Sword | `F SW` | `SW3` | ATK | 3 | 1 | – | 3 | BURN 128 | — |
-| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 1 | – | 3 | POISON 128 | — |
+| Ring (shop) | `I RG` | `RG4` | HEL | 4 | 2 | 3/battle | 1 | — | 20g |
+| Fire Sword | `F SW` | `SW3` | ATK | 3 | 2 | – | 3 | BURN 128 | — |
+| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 128 | — |
 | Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
 
@@ -400,8 +400,7 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
 * **Energy**: the **pool** per decision phase (attack and defend each get a
   fresh refill to full).  It starts at **1**; the tutorial, the field
   cache, the Monster Hunt quest and the mimic each grant **+1** (up to 5).  Most
-  cards cost 1; the Mythril Bow
-  costs 2.  Selecting a card reserves its cost; you cannot select a card
+  cards cost 1–2; iron cards cost 2, steel 3–4, mythril 5 (riders 6).  Selecting a card reserves its cost; you cannot select a card
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
   (1200 frames).  It runs in the attack *and* defend decision phases.

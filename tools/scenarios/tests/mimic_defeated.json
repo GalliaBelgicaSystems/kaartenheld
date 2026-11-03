@@ -126,7 +126,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 2
+   "expected": 3
   },
   {
    "type": "event_occurred",
@@ -151,6 +151,9 @@
   "seed": 778,
   "flags": {
    "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "ENERGY_POOL": 2
   },
   "party": {
    "HERO": {

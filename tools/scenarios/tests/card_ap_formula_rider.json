@@ -1,0 +1,71 @@
+{
+ "name": "card_ap_formula_rider",
+ "test": true,
+ "description": "AP formula rider step (docs/card-ap-cost-formula.md §3.3/§4.2): a real deck of five bronze fire swords (power 3 + bronze + burn = 2 AP) dealt through deck_init draws pip tile 97 (AP_TILE_2) on all five hand slots. The strict +1 over the same card plain is what fusion pricing needs.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "deck": {
+   "FIRE_SWORD": 5
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 24,
+   "expected": 97
+  },
+  {
+   "type": "oam_tile",
+   "entry": 25,
+   "expected": 97
+  },
+  {
+   "type": "oam_tile",
+   "entry": 26,
+   "expected": 97
+  },
+  {
+   "type": "oam_tile",
+   "entry": 27,
+   "expected": 97
+  },
+  {
+   "type": "oam_tile",
+   "entry": 28,
+   "expected": 97
+  }
+ ]
+}

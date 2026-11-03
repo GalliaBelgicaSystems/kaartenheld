@@ -3,6 +3,7 @@
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
+#include "battle.h"
 #include "core/game.h"
 #include "game_ids.h"
 
@@ -79,12 +80,21 @@ void game_loot_drop_banked(void)
     {
         uint8_t mat_roll = (uint8_t)g_loot_rng_state;
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);
-        uint8_t ap = (uint8_t)g_game.state.variables.values[
-            VARIABLE_ID_ENERGY_POOL - 1];
+        int16_t pool;
+        uint8_t ap;
         uint8_t row;
         uint8_t cap;
         uint8_t material = MAT_WOOD;
         uint8_t effect = EFF_PLAIN;
+        /* Same normalization as battle_hud_load_banked (the authority for
+         * the live pool): an unset variable means "use the default", not
+         * "AP 0 drops" -- without this an unset pool ran the battle on 2
+         * AP but rolled the AP-1 wood-only profile. */
+        pool = g_game.state.variables.values[
+            VARIABLE_ID_ENERGY_POOL - 1];
+        if (pool < 1) pool = BATTLE_ENERGY_PER_TURN;
+        if (pool > 255) pool = 255;
+        ap = (uint8_t)pool;
 
         /* Map AP to the weighted-roll row.  The LOOT_AP_* thresholds are
          * the unlock contract (docs/loot.md §34.5): AP 1 wood; AP 2-3
@@ -105,8 +115,11 @@ void game_loot_drop_banked(void)
         }
 
         /* Plain-heavy (§34.5): only 25% of rolls carry a rider, and
-         * wood can never carry one (docs/loot.md §34.1). */
-        if (material >= MAT_BRONZE && eff_roll < 64) {
+         * wood can never carry one (docs/loot.md §34.1).  Mythril riders
+         * cost 6 (docs/card-ap-cost-formula.md §6.1), so the generator
+         * withholds them until the pool reaches LOOT_AP_MYTHRIL_RIDER. */
+        if (material >= MAT_BRONZE && eff_roll < 64 &&
+            (material < MAT_MYTHRIL || ap >= LOOT_AP_MYTHRIL_RIDER)) {
             if (weapon == WPN_DAGGER) {
                 effect = EFF_POISON;
             } else if (weapon == WPN_SWORD) {

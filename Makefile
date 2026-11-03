@@ -988,6 +988,12 @@ test: $(TARGET)
 test-harness: debug
 	python3 tools/dev.py test --jobs $(JOBS)
 
+# Card AP cost gate (docs/card-ap-cost-formula.md §9, required): recomputes
+# the formula over all 37 legal combos from loot.h constants and fails on
+# any gate/ordering/parity violation.  Host-side only, no ROM rebuild.
+card-costs:
+	python3 tools/card_costs.py
+
 # Fast iteration gate: the three layout-sensitive sentinel scenarios
 # (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or
 # banked-body change BEFORE trusting the build; run the full suite at the end.
@@ -999,6 +1005,7 @@ test-sentinels: debug
 # Full validation gate (AGENTS.md Step 6), in order, in one invocation so
 # agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
 validate: memmap lint
+	$(MAKE) card-costs
 	$(MAKE) test-harness JOBS=$(JOBS)
 	$(MAKE) test
 	$(MAKE) verify-oam
