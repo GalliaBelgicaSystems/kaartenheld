@@ -153,8 +153,12 @@ extern StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
  * dispatch every hit runs leaves it there, so gameplay rider paths
  * (attack strike, dagger counter) always see their own hit.  Debug and
  * organic applies see whatever the last dispatch left (bounded below by
- * the min-1 floor; no shipped scenario depends on more).  Poison/freeze
- * ignore the basis.
+ * the min-1 floor; no shipped scenario depends on more) -- in
+ * particular, a riderless or resisted hit leaves a stale amount behind
+ * (no apply runs to consume-clear it), so a later debug burn apply in
+ * the same battle would scale off it.  No shipped scenario stages that
+ * order; a future one must apply burn before the first hit.  Poison and
+ * freeze ignore the basis.
  * Emits STATUS_APPLIED when a new instance or new stack lands; returns
  * true when the actor is now afflicted.
  *

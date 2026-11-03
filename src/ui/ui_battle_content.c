@@ -801,7 +801,12 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
      * shared g_effect_last scratch (a later apply reads it as the burn
      * basis), so save and restore it around the call -- staging previews
      * must never leak a previewed total into gameplay (AGENTS.md §52.25
-     * family). */
+     * family).  The three restore sites are deliberately NOT merged into
+     * one: a behavior-identical single-restore refactor deterministically
+     * broke defend_dagger_preview_mixed (all-0xFF snapshot reads) with
+     * correct-looking codegen -- suspected §52.19 bank-3 layout
+     * sensitivity.  Do not re-merge without diagnosing that first; bank 3
+     * has ample room, so the ~20 B savings are not needed. */
     save_type = g_effect_last.type;
     save_amount = g_effect_last.amount;
     /* Run the REAL bank-local resolver (combo_resolve_banked, same ROM

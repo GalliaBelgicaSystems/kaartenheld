@@ -890,8 +890,9 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 * Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
-* Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3
-  rounds skip; poison greys 2 cards for 2 rounds.
+* Statuses: POISON tick 0 (control-only, 2 rounds) / BURN 10%-of-hit
+  (min 1) × 3 rounds (5/3 max stacks), FREEZE 3 rounds skip; poison
+  greys 2 cards for 2 rounds.
 * Combos: 10 poker tiers, 100–400%, +25% if suited.
 
 > Source of truth for every number above: the code tree (`src/`).  Where

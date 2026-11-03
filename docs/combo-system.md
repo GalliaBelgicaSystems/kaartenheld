@@ -15,9 +15,9 @@ That separation is important because eventually a strong hand should be able to 
 **Phase A (cards → deck → selection → combo evaluator → attack/defend → HUD),
 Phase B (generic effect layer), and the core of Phase C (status system) are
 implemented.**  Status foundation (§12-§19 minus per-effect scaling):
-`src/rpg/status.{h,c}` + bank-2 bodies (`status_content.c`) provide
+`src/rpg/status.{h,c}` + bank-10 bodies (`status_content.c`) provide
 StatusDefinition / StatusInstance / application with STACK+refresh rules
-(POISON: tick 0 -- control-only, max 5 stacks, duration 3); battle-scoped slots live
+(POISON: tick 0 -- control-only, max 5 stacks, duration 2); battle-scoped slots live
 in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
