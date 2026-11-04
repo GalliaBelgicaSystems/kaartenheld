@@ -66,6 +66,27 @@ extern volatile uint8_t g_rom_bank_live;
         } \
     } while (0)
 
+/* CGB CRAM read with the same Mode-3 discipline (banked bodies only;
+ * the index register must already select the target byte: CRAM reads
+ * never auto-increment, so set BCPS/OCPS before EVERY byte, and a
+ * Mode-3 read returns 0xFF -- the same silent-corruption class as the
+ * VRAM map cell the map-entry scan guards above). */
+#define BANKED_CRAM_READ(dst, reg) \
+    do { \
+        uint8_t _bcr_t; \
+        if (LCDC_REG & 0x80) { \
+            __asm di __endasm; \
+            _bcr_t = 200; \
+            while (_bcr_t--) { \
+                if (!(STAT_REG & 0x02)) break; \
+            } \
+            (dst) = (reg); \
+            __asm ei __endasm; \
+        } else { \
+            (dst) = (reg); \
+        } \
+    } while (0)
+
 /* RAM-resident MBC5 bank-switch + copy (src/crt0.s).  banked_copy() copies
  * `n` bytes from a banked ROM source into a WRAM destination, running the
  * MBC5 bank switch from a WRAM trampoline so it is safe regardless of the

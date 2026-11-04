@@ -1854,7 +1854,11 @@ shop; finding it is what makes the delivery (and the shop) available:
   shop into `(out of stock)`.  Ownership counts the card identity, not the
   row id: a loot twin already owned merges under the capped curated id,
   so the one-copy row hides and rebuys refuse instead of stacking past
-  the cap.  Rings are THE healing vector, so healing is purchasable but
+  the cap.  A capped fold keeps a remainder row: the curated row holds the
+  cap and the excess stays under the loot id (nothing is lost, nothing
+  stacks over cap), and decking enforces the same identity-wide cap --
+  the twin cannot double-deck past max_copies through its own row id.
+  Rings are THE healing vector, so healing is purchasable but
   never free.  Leaving the shop after a purchase opens the merchant's
   equip tip as a normal dialogue box (the in-shop hint lines are gone);
   browsing without buying quits straight back to the overworld.  The

@@ -155,9 +155,82 @@ def check_deck_bands(types, decks):
                  % (battle_id, rank, riders, band["riders"]))
 
 
+def check_cut_tables():
+    """Rank cut/gate parity + shape (docs/enemies_ranking.md App. A).
+
+    The loot body walks `mat_roll > s_rank_cut[rank][material]`, so each
+    R1-R6 row must partition all 256 outcomes (last cut 255,
+    non-decreasing cuts) and rows must be strictly increasing in
+    expected material -- that is what makes "rank = quality" a
+    comparison rather than a label.  Gates must be non-decreasing and
+    even (the fire/ice half-split needs an exact gate/2).  The code
+    rows must also match Appendix A exactly, so a table edit that
+    the doc doesn't bless fails here, not in a playtest."""
+    text = (REPO / "src" / "game" / "loot_drop_banked.c").read_text()
+    m = re.search(r"s_rank_cut\[7\]\[5\] = \{(.*?)\};", text, re.S)
+    if not m:
+        fail("loot_drop_banked.c: s_rank_cut table not parseable")
+        return
+    rows = [[int(v) for v in row.split(",")]
+            for row in re.findall(r"\{([0-9,\s]+)\}", m.group(1))]
+    g = re.search(r"s_rank_gate\[7\] = \{([^}]*)\}", text)
+    gates = [int(v) for v in g.group(1).split(",")] if g else []
+    if len(rows) != 7 or any(len(r) != 5 for r in rows):
+        fail("s_rank_cut: want 7x5, got %dx%s"
+             % (len(rows), [len(r) for r in rows]))
+        return
+    if len(gates) != 7:
+        fail("s_rank_gate: want 7 entries, got %d" % len(gates))
+        return
+    # Doc parity (Appendix A lists the exact rows).
+    doc = (REPO / "docs" / "enemies_ranking.md").read_text()
+    dm = re.search(r"s_rank_cut\[7\]\[5\] = \{(.*?)\};", doc, re.S)
+    drows = ([[int(v) for v in row.split(",")]
+              for row in re.findall(r"\{([0-9,\s]+)\}", dm.group(1))]
+             if dm else [])
+    if drows != rows:
+        fail("s_rank_cut drifts from docs/enemies_ranking.md Appendix A "
+             "(code=%s doc=%s)" % (rows, drows))
+    dg = re.search(r"s_rank_gate\[7\] = \{([^}]*)\}", doc)
+    dgates = [int(v) for v in dg.group(1).split(",")] if dg else []
+    if dgates != gates:
+        fail("s_rank_gate drifts from Appendix A (code=%s doc=%s)"
+             % (gates, dgates))
+    # R0 is the never-rolled lesson row.
+    if rows[0] != [0, 0, 0, 0, 0]:
+        fail("s_rank_cut R0 %s != [0,0,0,0,0] (never rolled, §4.3)" % rows[0])
+    # Partition shape + strictly increasing expected material.
+    prev_e = None
+    for r in range(1, 7):
+        row = rows[r]
+        if row[-1] != 255:
+            fail("s_rank_cut R%d last cut %d != 255 (outcomes leak past "
+                 "mythril, §4.3)" % (r, row[-1]))
+        if any(row[i] > row[i + 1] for i in range(4)):
+            fail("s_rank_cut R%d cuts decrease: %s (§4.3)" % (r, row))
+        # E[material] over the 256 realized outcomes: P(m=0) covers
+        # 0..cut[0], P(m) covers cut[m-1]+1..cut[m].
+        e = 0
+        for i in range(1, 5):
+            e += i * (row[i] - row[i - 1])
+        e = e / 256.0
+        if prev_e is not None and not (e > prev_e):
+            fail("s_rank_cut R%d expected material %.3f not above R%d %.3f "
+                 "(rank must mean quality, App. A)" % (r, e, r - 1, prev_e))
+        prev_e = e
+    # Gate shape: non-decreasing, even (exact gate/2 fire/ice split).
+    for r in range(1, 7):
+        if gates[r] < gates[r - 1]:
+            fail("s_rank_gate R%d %d below R%d %d (§4.3)"
+                 % (r, gates[r], r - 1, gates[r - 1]))
+    for r in range(7):
+        if gates[r] % 2 != 0:
+            fail("s_rank_gate R%d %d is odd (fire/ice needs gate/2, §4.3/§4.5)"
+                 % (r, gates[r]))
+
+
 def check_lord_fallback():
     text = (REPO / "src" / "battle" / "battle_telegraph_banked.c").read_text()
-    m = re.search(r"b->enemy_incoming_dmg = (\d+);", text)
     # The deckless fallback is the last assignment in the file (the Lord
     # is the only deckless battler); earlier assignments set 0.
     vals = [int(v) for v in re.findall(r"b->enemy_incoming_dmg = (\d+);", text)]
@@ -252,6 +325,12 @@ def level_actors():
     return out
 
 
+PLACEMENT_RANK = {
+    "BATTLE_SLIME": 1, "BATTLE_SLIME_TRIO": 1, "BATTLE_BAT": 2,
+    "BATTLE_SPIDER": 2, "BATTLE_KOBOLD": 3, "BATTLE_MIMIC": 5,
+}
+
+
 def check_level_placements():
     for path, oid, battle, hp, max_hp, gold, solo in level_actors():
         if battle == "BATTLE_CARL":
@@ -275,6 +354,26 @@ def check_level_placements():
                 if not (blo <= hp <= bhi) or not (glo <= gold <= ghi):
                     fail("%s %s: knight %d HP %d g outside R4 %d-%d HP / %d-%d g"
                          % (path, oid, hp, gold, blo, bhi, glo, ghi))
+        elif battle in PLACEMENT_RANK:
+            # Every ranked trash placement carries its band (the doc §5.2
+            # "passes" claims cover actor rows, not just the JSON/SQL
+            # defaults -- the battle pays the row).  wall_slime is the
+            # one exempt test double: wall-embedded, walk-in bumps never
+            # encounter, and its scenarios never assert its purse.
+            if (path, oid) == ("tools/scenarios/fixtures/levels/test_mountain_pass.json",
+                               "wall_slime"):
+                continue
+            rank = PLACEMENT_RANK[battle]
+            band = BANDS[rank]
+            hp_lo, hp_hi = band["hp_solo"] if solo else band["hp_member"]
+            glo, ghi = band["gold"]
+            if hp_lo is None or not (hp_lo <= hp <= hp_hi):
+                fail("%s %s: %s %d HP outside R%d %s %d-%d (§5.1)"
+                     % (path, oid, battle, hp, rank,
+                        "solo" if solo else "member", hp_lo, hp_hi))
+            if not (glo <= gold <= ghi):
+                fail("%s %s: %s %d g outside R%d %d-%d (§5.1)"
+                     % (path, oid, battle, gold, rank, glo, ghi))
 
 
 def main():
@@ -284,6 +383,7 @@ def main():
         check_deck_bands(types, parse_enemy_decks())
         check_rank_table(types)
         check_split_chain(types)
+        check_cut_tables()
     check_lord_fallback()
     check_level_placements()
     if FAILURES:

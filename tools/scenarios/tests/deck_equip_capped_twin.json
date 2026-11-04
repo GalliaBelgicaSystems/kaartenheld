@@ -1,0 +1,82 @@
+{
+ "name": "deck_equip_capped_twin",
+ "test": true,
+ "description": "Identity-wide deck cap (docs/loot.md §34, docs/enemies_ranking.md §4.8): the curated IRON_RING (cap 1) and its loot twin (id 164, same type/power/cost/uses/effect/battle type/rider) are one card in two rows after a capped fold. Decking the curated ring then attempting the twin refuses (identity total already at cap) -- no CARD_ADDED_TO_DECK, no lock (pool 5 covers cost 2), curated row intact. Pins that the twin cannot double-deck past max_copies through its own id.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 11,
+  "variables": {
+   "ENERGY_POOL": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_add",
+   "card": "IRON_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_add",
+   "card_id": 164
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_count",
+   "expected": "CARD_ADDED_TO_DECK x1"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_EQUIP_LOCKED"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 1
+  },
+  {
+   "type": "collection_count",
+   "card_id": 164,
+   "expected": 1
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 164,
+   "expected": 0
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  }
+ ]
+}

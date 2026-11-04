@@ -210,7 +210,92 @@ def parse_catalog_calls():
     return rows
 
 
+MERGE_C = REPO / "src" / "rpg" / "deck_merge_banked.c"
+
+_TYPE_MAP = {"CARD_TYPE_ATTACK": 0, "CARD_TYPE_DEFENSE": 1,
+             "CARD_TYPE_HEAL": 2, "CARD_TYPE_SPECIAL": 5}
+_FX_MAP = {"CARD_EFFECT_NONE": 0, "CARD_EFFECT_DAMAGE_TARGET": 1,
+           "CARD_EFFECT_BLOCK_DAMAGE": 2, "CARD_EFFECT_HEAL_HP": 3}
+_BT_MAP = {"BATTLE_CARD_TYPE_SWORD": 0, "BATTLE_CARD_TYPE_SHIELD": 1,
+           "BATTLE_CARD_TYPE_BOW": 2, "BATTLE_CARD_TYPE_HEAL": 3,
+           "BATTLE_CARD_TYPE_DAGGER": 4}
+_ST_MAP = {"STATUS_NONE": 0, "STATUS_POISON": 1, "STATUS_BURN": 2,
+           "STATUS_FREEZE": 3}
+_MAT_IDX = {"WOOD": 0, "BRONZE": 1, "IRON": 2, "STEEL": 3, "MYTHRIL": 4}
+
+
+def check_identity():
+    """Merge-table parity: s_ident_catalog in deck_merge_banked.c must
+    match the curated catalog in cards_content.c field-for-field
+    (type, power, cost, uses, effect, battle type, rider id, rider
+    chance, max_copies).  The merge folds loot twins onto these
+    identities, so a drift silently mis-merges.  Exit 0 = parity,
+    1 = drift (with row/field expected/actual)."""
+    text = CARDS_C.read_text(encoding="utf-8")
+    want = []
+    for m in re.finditer(
+            r"\{\s*CARD_[A-Z0-9_]+\s*,.*?,\s*\"([A-Z ]+)\"\s*\}", text, re.S):
+        name = m.group(1)
+        fields = split_top_level(m.group(0).strip()[1:-1])
+        if len(fields) < 12:
+            fail("identity: row %s has %d fields, expected 12" % (name, len(fields)))
+            continue
+        cm = re.search(r"CARD_AP\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)",
+                       fields[3])
+        if cm:
+            p, mat_name, r = int(cm.group(1)), cm.group(2), int(cm.group(3))
+            mat = _MAT_IDX[mat_name]
+            cost = (p + mat * 4 + r * 8 + (12 if mat == 4 else 0) + 7) // 8
+        else:
+            cost = int(fields[3].strip()) if fields[3].strip().isdigit() else 0
+        try:
+            want.append((name, (_TYPE_MAP[fields[1].strip()],
+                                int(fields[2]), cost, int(fields[4]),
+                                _FX_MAP[fields[6].strip()],
+                                _BT_MAP[fields[7].strip()],
+                                _ST_MAP[fields[9].strip()],
+                                int(fields[10]), int(fields[5]))))
+        except (KeyError, ValueError) as e:
+            fail("identity: row %s has an unmapped field (%s)" % (name, e))
+    mtext = MERGE_C.read_text(encoding="utf-8")
+    m = re.search(r"s_ident_catalog\[GAME_CARD_COUNT\]\[9\]\s*=\s*\{(.*?)\};",
+                  mtext, re.S)
+    if not m:
+        fail("identity: s_ident_catalog table not found in deck_merge_banked.c")
+        got = []
+    else:
+        got = [tuple(int(x) for x in row.split(","))
+               for row in re.findall(r"\{([0-9,\s]+)\}", m.group(1))]
+    if len(want) != 9:
+        fail("identity: parsed %d catalog rows, expected 9" % len(want))
+    if len(got) != 9:
+        fail("identity: parsed %d merge rows, expected 9" % len(got))
+    for k in range(min(len(want), len(got))):
+        name, w = want[k]
+        g = got[k]
+        if len(g) != 9:
+            fail("identity: merge row %d (%s) has %d cells, expected 9"
+                 % (k, name, len(g)))
+            continue
+        if tuple(w) != tuple(g):
+            labels = ("type", "power", "cost", "uses", "effect",
+                      "battle", "rider", "chance", "cap")
+            for idx, lbl in enumerate(labels):
+                if w[idx] != g[idx]:
+                    fail("identity: row %d (%s) field %s: catalog=%d merge=%d"
+                         % (k, name, lbl, w[idx], g[idx]))
+    if FAILURES:
+        print("identity FAIL (%d):" % len(FAILURES))
+        for f in FAILURES:
+            print("  - " + f)
+        return 1
+    print("identity OK: 9 curated rows match s_ident_catalog")
+    return 0
+
+
 def main():
+    if "--check-identity" in sys.argv:
+        return check_identity()
     loot_h = LOOT_H.read_text(encoding="utf-8")
     gates = {
         "bronze": parse_define_int(loot_h, "LOOT_AP_BRONZE"),

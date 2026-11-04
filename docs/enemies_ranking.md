@@ -666,7 +666,7 @@ generated loot* is gated.
   predict is worse than no gate.
 * The harness `deck add` debug action uses the same wrapper, so scenarios drive
   the real gate rather than a test-only path (§44).
-* Telemetry `CARD_EQUIP_LOCKED` (`d1` card id, `d2` required AP) makes the
+* Telemetry `CARD_EQUIP_LOCKED` (`d0` card id, `d1` required AP) makes the
   rejection assertable, and no `CARD_ADDED_TO_DECK` fires with it.
 
 **Why it is not a shop gate.**  Buying a card you cannot wear yet is allowed
@@ -784,7 +784,15 @@ code (and any 8-bit multiply would pull `__mulsuchar` into the fixed bank,
   every enemy type's `hp`/`max_hp`/`gold_reward` against the band and every
   `BattleId`'s deck swings/riders against the band of the rank that battle
   resolves to, and fails loudly with expected/actual — same shape as
-  `validate.py` and `card-costs`;
+  `validate.py` and `card-costs`.  It also checks **both** number sources
+  the battles actually read: the JSON type defaults *and* every actor-row
+  placement in `levels/` + the test fixtures (HP/gold against the member
+  band, or the solo band for solo placements; the wall-embedded
+  `wall_slime` test double is the one exempt row).  The Lord's deckless
+  fallback swing and the loot cut/gate tables are pinned the same way
+  (partition shape, strictly increasing expected material, Appendix A
+  parity), so `loot_rank_boss` can cite the audit for the R6 shape it
+  cannot roll for itself;
 * the same audit must know about **split chains** (§1.6): it reads the
   `EVENT_ACTION_SPAWN_SLIME_TRIO` row, adds the spawned trio's HP/gold to the
   owning enemy's totals, checks the sum instead of the single battle, and
@@ -898,8 +906,8 @@ pay for, so it is a dead deck slot instead of a goal.
    pressing A.
 4. Harness: the `deck add` debug action goes through `deck_equip_card` too, so
    scenarios exercise the real gate (`AGENTS.md` §44).
-5. Telemetry: `EVENT_CARD_EQUIP_LOCKED` with `d1 = card id`,
-   `d2 = required AP`; document in `docs/DEBUG_PROTOCOL.md`.  No
+5. Telemetry: `EVENT_CARD_EQUIP_LOCKED` with `d0 = card id`,
+   `d1 = required AP`; document in `docs/DEBUG_PROTOCOL.md`.  No
    `CARD_ADDED_TO_DECK` fires on a locked attempt.
 6. Scenario `deck_equip_locked_loot`: pool 2 with an `S F SW` (cost 4) in the
    collection → A rejected, `NEED AP 4` message, `CARD_EQUIP_LOCKED` emitted,

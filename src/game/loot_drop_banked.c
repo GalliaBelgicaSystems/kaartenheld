@@ -120,12 +120,16 @@ void game_loot_drop_banked(void)
         /* Rider chance steps with rank (s_rank_gate); wood can never
          * carry one (docs/loot.md §34.1).  No mythril hold-back: the
          * equip gate covers unaffordable cards, so the generator hands
-         * them out and the collection shows the locked goal. */
+         * them out and the collection shows the locked goal.  The
+         * fire/ice split scales with the gate (half each,
+         * docs/enemies_ranking.md §4.3/§4.5) instead of the old flat 32,
+         * which only matched at gate 64 (R0-R1). */
         if (material >= MAT_BRONZE && eff_roll < s_rank_gate[rank]) {
             if (weapon == WPN_DAGGER) {
                 effect = EFF_POISON;
             } else if (weapon == WPN_SWORD) {
-                effect = (eff_roll < 32) ? EFF_FIRE : EFF_ICE;
+                effect = (eff_roll < (uint8_t)(s_rank_gate[rank] >> 1)) ?
+                    EFF_FIRE : EFF_ICE;
             }
         }
 

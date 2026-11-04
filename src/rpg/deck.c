@@ -24,116 +24,31 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * the same physical card: identical type/power/cost/uses/effect/battle
  * type/rider, differing only in name, price and caps.  Two rows made one
  * card look like two in the DECK menu and let the deck take a copy from
- * each row.  The collection therefore holds ONE row per identity.
+ * each row.
  *
- * The merge folds duplicates, preferring a capped id (a curated catalog
- * row with max_copies) when the pair has one: caps keep working across
- * twins, so shop one-copy rows hide once the identity is owned and rebuys
- * refuse instead of stacking past the cap.  Uncapped pairs keep the loot
- * id (unlimited, as before).  It runs after every collection add that
+ * The merge itself lives in the banked body deck_merge_banked (ROM bank
+ * 10 -- bank 2, the catalog's bank, is full): the identity compare needs
+ * real definitions, and card_get_def is a fixed-bank trampoline a banked
+ * body must never call (AGENTS.md §52.11.1), so the banked body reads a
+ * hand-written identity table (parity-gated by card-costs
+ * --check-identity) and synthesizes loot identities with pure macros.
+ * Capped folds keep a remainder row and capped deck retargeting, so
+ * nothing is ever lost and nothing stacks or decks past max_copies;
+ * uncapped pairs fold fully.  It runs after every collection add that
  * opens a new row and on save load (an old save can already hold the
- * duplicate) and is idempotent.  Decked copies follow their card to the
- * surviving id.
- *
- * Never hold a CardDefinition pointer across these calls: card_get_def
- * reuses g_card_scratch. */
+ * duplicate) and is idempotent. */
 
-/* The identity bytes inside CardDefinition: type..uses (1..4), effect +
- * battle type (6..7) and the rider (9..10).  id, max_copies, price and
- * name are NOT identity -- a curated row and its loot twin differ
- * exactly there.  Layout is asserted below, so a field reorder is a
- * compile error rather than a silent mis-merge. */
-static const int g_card_identity_layout_ok[
-    (offsetof(CardDefinition, type) == 1 &&
-     offsetof(CardDefinition, uses_per_battle) == 4 &&
-     offsetof(CardDefinition, effect) == 6 &&
-     offsetof(CardDefinition, battle_type) == 7 &&
-     offsetof(CardDefinition, status_id) == 9 &&
-     offsetof(CardDefinition, status_chance) == 10) ? 1 : -1];
-
-static const uint8_t s_card_identity_bytes[] = {
-    1, 2, 3, 4,      /* type, power, cost, uses_per_battle   */
-    6, 7,            /* effect, battle type                  */
-    9, 10            /* status id, status chance (the rider) */
-};
-
-static bool cards_same_identity(CardId a, CardId b)
-{
-    CardDefinition x;
-    const CardDefinition *d;
-    uint8_t i;
-
-    if (a == b) return true;
-    d = card_get_def(a);
-    if (!d) return false;
-    x = *d;                 /* second lookup overwrites the scratch */
-    d = card_get_def(b);
-    if (!d) return false;
-    for (i = 0; i < sizeof(s_card_identity_bytes); i++) {
-        if (((const uint8_t *)&x)[s_card_identity_bytes[i]] !=
-            ((const uint8_t *)d)[s_card_identity_bytes[i]])
-            return false;
-    }
-    return true;
-}
-
-/* Decked copies follow their card to the surviving id. */
-static void deck_retarget(DeckState *d, CardId from, CardId to)
-{
-    uint8_t i;
-
-    if (from == to) return;
-    for (i = 0; i < d->count; i++) {
-        if (d->cards[i] == from) d->cards[i] = to;
-    }
-}
+/* Banked merge body (src/rpg/deck_merge_banked.c, ROM bank 10):
+ * g_bk_ptr_a = CardState*.  Dispatched by the wrapper below. */
+void deck_merge_banked(void);
 
 void deck_collection_merge_duplicates(CardState *cs)
 {
-    CardCollectionEntry *keep;
-    CardCollectionEntry *drop;
-    CardId from;
-    CardId to;
-    uint8_t i;
-    uint8_t j;
-
     if (!cs) return;
-    for (i = 0; i < cs->collection.count; i++) {
-        keep = &cs->collection.entries[i];
-        j = (uint8_t)(i + 1);
-        while (j < cs->collection.count) {
-            drop = &cs->collection.entries[j];
-            if (!cards_same_identity(keep->id, drop->id)) {
-                j++;
-                continue;
-            }
-            /* Same card: fold `drop` into `keep`.  The survivor is the
-             * capped id when the pair has one (a curated row with
-             * max_copies; card_get_def reuses the scratch, so the cap
-             * bytes are read out one at a time).  Otherwise the first
-             * row survives (loot twins are unlimited). */
-            from = drop->id;
-            to = keep->id;
-            {
-                const CardDefinition *kd = card_get_def(keep->id);
-                const CardDefinition *dd;
-                uint8_t keep_capped;
-                uint8_t drop_capped;
-                keep_capped = (uint8_t)(kd && kd->max_copies > 0);
-                dd = card_get_def(drop->id);
-                drop_capped = (uint8_t)(dd && dd->max_copies > 0);
-                if (!keep_capped && drop_capped) {
-                    from = keep->id;
-                    to = drop->id;
-                    keep->id = to;
-                }
-            }
-            deck_retarget(&cs->deck, from, to);
-            keep->count = (uint8_t)(keep->count + drop->count);
-            /* Swap the last row in; re-examine this slot (j unchanged). */
-            *drop = cs->collection.entries[--cs->collection.count];
-        }
-    }
+    g_bk_call_bank = 10;
+    g_bk_call_target = (uint16_t)&deck_merge_banked;
+    g_bk_ptr_a = (void *)cs;
+    banked_call_run();
 }
 
 /* ── Collection API ─────────────────────────────────────────────── */
@@ -206,6 +121,13 @@ uint8_t deck_count_in_deck(const DeckState *d, CardId id)
 
 /* ── Deck API ───────────────────────────────────────────────────── */
 
+/* Identity signature: the 8 bytes that make a curated row and its loot
+ * twin the same physical card (id, max_copies, price and name are NOT
+ * identity).  Resolved through the banked gate below (bank 10, with the
+ * curated table): card_get_def reuses its scratch and the fixed bank has
+ * no room for a per-card scan (AGENTS.md §52.18). */
+void deck_ident_gate_banked(void);
+
 bool deck_add_card(CardState *cs, CardId id)
 {
     const CardDefinition *def;
@@ -220,6 +142,18 @@ bool deck_add_card(CardState *cs, CardId id)
     in_deck = deck_count_in_deck(&cs->deck, id);
     if (def->max_copies > 0 && in_deck >= def->max_copies) return false;
     if (in_deck >= deck_collection_count(cs, id)) return false;
+
+    /* Cross-row cap (docs/loot.md §34): a capped curated row and its loot
+     * twin are one card in two collection rows after a capped fold, so
+     * the per-id checks above cannot see the pair's total.  The banked
+     * gate counts decked copies of the same identity and enforces the
+     * tighter cap -- otherwise the twin decks past it. */
+    g_bk_call_bank = 10;
+    g_bk_call_target = (uint16_t)&deck_ident_gate_banked;
+    g_bk_ptr_a = (void *)cs;
+    g_bk_byte_a = id;
+    banked_call_run();
+    if (!g_bk_byte_c) return false;
 
     cs->deck.cards[cs->deck.count] = id;
     cs->deck.count++;

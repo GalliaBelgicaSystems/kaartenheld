@@ -55,9 +55,20 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
 
 /* Fold collection rows that describe the same card into one (a curated
  * catalog row and its mechanically identical loot twin), retargeting
- * decked copies onto the survivor.  Idempotent; deck_collection_add runs
- * it after opening a new row and save load runs it on the restored
- * state. */
+ * decked copies onto the survivor.  Capped folds keep a remainder row so
+ * nothing is lost or stacked past max_copies.  Idempotent;
+ * deck_collection_add runs it after opening a new row and save load runs
+ * it on the restored state. */
+/* Banked duplicate-fold (src/rpg/deck_merge_banked.c, ROM bank 10):
+ * g_bk_ptr_a = CardState*.  Dispatched by deck_collection_merge_duplicates'
+ * thin wrapper (this file) and never called directly. */
+void deck_merge_banked(void);
+
+/* Banked capped-twin gate (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id; g_bk_byte_c = allow/deny.  Dispatched by
+ * deck_add_card's thin wrapper below. */
+void deck_ident_gate_banked(void);
+
 void deck_collection_merge_duplicates(CardState *cs);
 
 /* ── Deck API ───────────────────────────────────────────────────── */

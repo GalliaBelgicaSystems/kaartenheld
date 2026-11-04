@@ -344,9 +344,17 @@ void item_screen_update(Game *g)
                 g->render_cache.valid = false;
                 return;
             }
-            pool = (uint8_t)g->state.variables.values[
-                VARIABLE_ID_ENERGY_POOL - 1];
-            if (pool < 1) pool = 1;
+            /* Clamp through int16_t first (same normalization as ic_pool
+             * and the battle HUD loader): a pool above 255 would otherwise
+             * wrap the uint8_t cast, and a negative poke would unlock
+             * everything.  Unset/zero means the default pool, never AP 0. */
+            {
+                int16_t pv = g->state.variables.values[
+                    VARIABLE_ID_ENERGY_POOL - 1];
+                if (pv < 1) pv = 1;
+                if (pv > 255) pv = 255;
+                pool = (uint8_t)pv;
+            }
             equip = deck_equip_card(cs, id, pool);
             if (equip == EQUIP_OK) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_DECK, id, 0, 0, 0);

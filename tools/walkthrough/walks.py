@@ -708,12 +708,10 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
-    # Transit loot can already hold the ring's loot twin (rank rows drop
-    # iron from R3 up, so the mountain kobold can pay one): the purchase
-    # merges under the capped curated id, hence count 2, and the one-copy
-    # row hides so the bow slides up.
+    # The ring merges under its capped curated id (one row, count 1);
+    # the one-copy row hides so the bow slides up.
     s.check_eq("ring in collection", s.reader.collection_count(
-        CARD_IRON_RING), 2)
+        CARD_IRON_RING), 1)
     s.check("bow row slides up", "BO9" in s.bg_text()[5],
             expected="BO9 at row 5", actual=s.bg_text()[5])
     s.press_until("b", lambda: s.stable(

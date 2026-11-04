@@ -242,6 +242,20 @@ void ui_load_tileset_banked(void)
         }
     }
 
+    /* Hero/enemy/NPC base ramps (slots 0-4) are programmed once at boot
+     * and never touched by battles -- except the despair white-out, which
+     * bleaches every CRAM slot.  Restore them on every tileset load
+     * (inside or outside the cache guard above, like the union overrides
+     * below) so the wake scene and every game_restart start from exact
+     * colors even after a fade. */
+    if (g_is_cgb) {
+        OCPS_REG = (uint8_t)(0x80 | 0);
+        for (i = 0; i < 40; i++) {
+            BANKED_VRAM_WRITE(&OCPD_REG,
+                              ((const uint8_t *)cgb_obj_palettes)[i]);
+        }
+    }
+
     /* Per-map OBJ palette overrides (map.obj_palettes, sparse slot ->
      * artist ramp).  Each union slot is programmed from the current map's
      * row when declared, else from the canonical ramp, so same-tileset

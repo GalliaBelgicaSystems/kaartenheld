@@ -111,6 +111,25 @@ static void despair_box_wait(void)
     }
 }
 
+/* One CRAM byte with the index explicitly selected first: CRAM reads
+ * never auto-increment BCPS/OCPS, and a Mode-3 read returns 0xFF, so
+ * every byte gets its own index write plus the Mode-3 guard (the same
+ * discipline as BANKED_VRAM_WRITE). */
+static uint8_t despair_cram_read(uint8_t is_obj, uint8_t pal,
+                                 uint8_t col, uint8_t byte_ix)
+{
+    uint8_t v = 0xFF;
+    uint8_t idx = (uint8_t)((uint8_t)(pal << 3) | (uint8_t)(col << 1) | byte_ix);
+    if (is_obj) {
+        OCPS_REG = idx;
+        BANKED_CRAM_READ(v, OCPD_REG);
+    } else {
+        BCPS_REG = idx;
+        BANKED_CRAM_READ(v, BCPD_REG);
+    }
+    return v;
+}
+
 void game_despair_fade_out_banked(void)
 {
     uint8_t slot;
@@ -142,13 +161,10 @@ void game_despair_fade_out_banked(void)
                     OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
                 }
                 for (col = 0; col < 4; col++) {
-                    if (slot < 8) {
-                        lo = BCPD_REG;
-                        hi = BCPD_REG;
-                    } else {
-                        lo = OCPD_REG;
-                        hi = OCPD_REG;
-                    }
+                    uint8_t is_obj = (uint8_t)(slot >= 8);
+                    uint8_t pal = (uint8_t)(slot & 7);
+                    lo = despair_cram_read(is_obj, pal, col, 0);
+                    hi = despair_cram_read(is_obj, pal, col, 1);
                     r = (uint8_t)(lo & 31);
                     g = (uint8_t)(((lo >> 5) | (hi << 3)) & 31);
                     b = (uint8_t)((hi >> 2) & 31);
@@ -217,19 +233,11 @@ static void despair_box_fade_in(void)
     }
     snap = &g_ui_screen_buf[0][0];
     for (slot = 0; slot < 16; slot++) {
-        if (slot < 8) {
-            BCPS_REG = (uint8_t)(0x80u | (slot << 3));
-        } else {
-            OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
-        }
         for (n = 0; n < 4; n++) {
-            if (slot < 8) {
-                *snap++ = (char)BCPD_REG;
-                *snap++ = (char)BCPD_REG;
-            } else {
-                *snap++ = (char)OCPD_REG;
-                *snap++ = (char)OCPD_REG;
-            }
+            uint8_t is_obj = (uint8_t)(slot >= 8);
+            uint8_t pal = (uint8_t)(slot & 7);
+            *snap++ = (char)despair_cram_read(is_obj, pal, n, 0);
+            *snap++ = (char)despair_cram_read(is_obj, pal, n, 1);
         }
     }
     s = 1;

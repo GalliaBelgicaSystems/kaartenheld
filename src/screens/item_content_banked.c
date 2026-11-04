@@ -393,7 +393,9 @@ static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
 
-static const CardDefinition *ic_loot_synth(CardId id)
+/* Shared with the banked collection merge (deck_merge_banked.c,
+ * same bank: plain call, no trampoline). */
+const CardDefinition *ic_loot_synth(CardId id)
 {
     uint8_t material = loot_id_material(id);
     uint8_t effect = loot_id_effect(id);
@@ -831,9 +833,12 @@ static void ic_draw_card_detail_page(Game *g)
     ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
     IC_DRAW_TEXT(9, 10, "DECK", 4);
     ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
-    /* Row 11: merchant sell value (price 0 = not buyable). */
+    /* Row 11: merchant sell value.  Shown only when the card can actually
+     * be sold (a loot id at a buying shop): curated rows carry catalog
+     * prices but the merchant never buys those, so showing a price would
+     * promise a SELL the detail page withholds. */
     IC_DRAW_TEXT(0, 11, "SELL", 4);
-    if (s_ic_def->price) {
+    if (s_ic_def->price && loot_is_loot_id(s_ic_id) && ic_merchant_buys(g)) {
         ic_draw_rjust(11, 17, s_ic_def->price);
         IC_DRAW_TEXT(18, 11, "G", 1);
     } else {
