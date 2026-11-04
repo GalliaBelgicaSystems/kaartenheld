@@ -4,6 +4,11 @@
 `balancing`.  Code references are to the current tree; numbers in §3–§6 are
 computed exactly from the 1/256 roll tables (not sampled).
 
+**Updated 2026-11-04:** a slime knight is not one encounter — felling it
+spawns a **slime trio in place**, so one kill is two battles and two loot
+rolls.  That chain is now part of the model (§1.6, §4.7, §5.2) instead of
+being silently folded into "one roll per encounter".
+
 **Why this document exists.**  Loot quality today depends on exactly one
 thing: the player's energy pool (AP).  A slime and a slime knight fought at
 the same AP drop from the identical distribution, so the game has no way to
@@ -52,6 +57,11 @@ struck actor plus two clones of its stats), but there is still exactly **one
 roll per encounter** — one card per victory, not one per enemy.  Gold works
 the same way (`act->gold_reward` is granted once), so all per-encounter
 numbers below are per *encounter*.
+
+One enemy breaks that rule by being **two encounters in a row**: the slime
+knight's defeat spawns a slime trio on the same tile, so one kill pays twice
+(§1.6).  Every number in this document that says "per encounter" is
+per encounter; the knight chain is two of them.
 
 Two consequences that matter for this proposal:
 
@@ -153,6 +163,74 @@ derived by `docs/card-ap-cost-formula.md`:
 value = power + 4·material + (mythril ? 12 : 0) + (rider ? 8 : 0)
 AP    = ceil(value / 8)                       /* 1..6 */
 ```
+
+### 1.6 The slime-knight split: one kill, two encounters
+
+A slime knight is the one enemy whose death is a **chain**, and the rank
+model has to account for it: felling the knight does not end the reward,
+because the armor breaks open and the crew inside becomes a second
+encounter.
+
+```text
+bump the knight actor                start_battle_from_world()
+        ▼
+knight battle (BATTLE_SLIME_KNIGHT)  trio of 3 knights (3 × 15 = 45 HP)
+        │  loot roll #1, +12 gold
+        ▼
+world_on_battle_end(victory)         src/world/world.c
+        │  actor deactivated, gold paid, defeat recorded,
+        │  then event_resolve_actor_defeated()
+        ▼
+EVENT_ID_KNIGHT_SPLIT                src/game/events_content.c
+        │  trigger ACTOR_DEFEATED, actor ENTITY_ID_SLIME_KNIGHT, any map
+        │  action 1: DIALOGUE_ID_KNIGHT_SPLIT ("... in fact 3 Slimes")
+        │  action 2: EVENT_ACTION_SPAWN_SLIME_TRIO, ow 9
+        ▼
+game_slime_trio_spawn_banked()       src/game/slime_trio_spawn_banked.c (bank 10)
+        │  the knight's runtime slot is rewritten IN PLACE at the same
+        │  tile: id SLIME, hp/max 10, gold 5, BATTLE_SLIME, solo = 0,
+        │  AI_CHASE, actor_id = 0 (untracked)
+        ▼
+bump that tile                      trio of 3 slimes (3 × 10 = 30 HP)
+        │  loot roll #2, +5 gold
+        ▼
+overworld
+```
+
+So one knight kill is **two battles, 75 enemy HP, two loot rolls, two gold
+grants (12 + 5 = 17 g) and six loot-RNG draws** (three per roll; a bat's bow
+roll is two).  The "trio" in the action name is not a bespoke spawn of
+three: the spawned actor is `solo = 0`, so the ordinary trio rule (struck
+actor + two clones) yields three slimes.  The knight's own battle is a trio
+for the same reason unless its actor row is flagged `solo` (the three castle
+knights), which is why a field knight costs 45 HP and a castle solo knight
+only 15 HP before the split.
+
+Four consequences the rest of this document depends on:
+
+* **The loot path needs no change.**  The spawned actor carries
+  `BATTLE_SLIME`, i.e. rank **R1**, so the rank table already resolves the
+  second roll as a fodder roll.  A knight chain is "one R4 roll + one R1
+  roll" — not one R4 roll, and not two R4 rolls.
+* **The second card is optional in practice.**  The trio is dynamic and
+  untracked (`actor_id = 0`), chases the player, and despawns on scene reload
+  like all runtime-only actors (`AGENTS.md` §53.1); the knight's own defeat
+  is persistent.  A player who walks away after the briefing keeps the
+  knight's card + 12 g and forgoes the second roll + 5 g.  Rank must be
+  judged on the full chain, but content must not *assume* the player
+  collects all of it.
+* **The knight's own reveal is skipped.**  The split event opens a dialogue
+  inside `world_on_battle_end`, so the VICTORY screen and its loot reveal
+  never show for the knight battle — the card is still granted and still
+  emits `LOOT_CARD_ADDED`.  Only the follow-up trio's victory shows a reveal
+  card.  (`tests/battle_slime_knight_split.json` pins the dialogue,
+  `tests/battle_slime_trio_spawn.json` pins the second reward and the total
+  37 g = 20 staged + 12 + 5.)
+* **The trio's stats are duplicated content.**  `slime_trio_spawn_banked.c`
+  hardcodes HP 10, gold 5, the name `SLIME` and `ow 9` instead of reading the
+  slime's content row.  Any rank/stat audit has to compare those constants
+  against `screens/enemy_types/slime.json` and `src/game/actors_content.c`, or
+  the chain drifts from the rank bands silently (§5.3).
 
 ---
 
@@ -331,6 +409,10 @@ rank audit in §5.2 must check both until the duplication is removed.
 Three castle slime knights are also flagged `solo` (one 15 HP enemy
 instead of three); see §5.2 for why that is a finding.
 
+Every slime-knight number in this table is **per battle**.  A knight kill is
+two battles (§1.6): add the spawned trio's 30 HP, 5 g and one R1 roll before
+comparing a knight to a kobold or a mimic.
+
 ### 4.3 How rank enters the loot roll
 
 Rank does not replace AP.  The two are separate knobs with separate jobs:
@@ -422,7 +504,8 @@ Relative to today, at a given AP:
   iron-or-steel at AP 4 (vs 19.9% today).
 * **slime knight (R4)**: the headline case — **70.3% iron-or-steel at AP 4**
   and 65.2% at AP 5, versus 19.9% / 32.8% for a slime.  Expected sale value
-  6.9 / 8.3 g against 3.5 / 5.1 g today.
+  6.9 / 8.3 g against 3.5 / 5.1 g today — per roll, and a knight kill rolls
+  twice because of the armor split (§4.7).
 * **mimic (R5)**: centered on steel (50%), with 15.2% mythril.
 * **Lord (R6)**: centered on steel, 30.1% mythril — the only reliable
   mythril source.
@@ -466,12 +549,58 @@ for every weapon roll, so a bat at AP 2 drops a bronze bow 65.2% of the
 time (R2 outranks AP 2, and the AP cap pulls the steel/mythril mass down
 onto bronze).
 
-At full shape (the rank row actually outranks the AP row) the expected
-sell values are **3.4 / 4.6 / 6.3 / 8.3 / 11.1 / 12.4 g** for R1–R6, to be
-compared with the flat **5.1 g** every enemy offers at AP 5 today.  The
-low-rank rows (R1 3.4 g, R2 4.6 g) only apply while AP is below them —
-from AP 5 on, the AP row wins and a slime keeps today's 5.1 g.  Rank never
-makes a drop worse than the pre-rank game.
+At full shape (the rank row with **no AP cap** — what the row pays once the
+player's AP no longer clamps it down) the expected sell values are
+**3.4 / 4.6 / 6.3 / 8.3 / 11.1 / 12.4 g** for R1–R6, to be compared with the
+flat **5.1 g** every enemy offers at AP 5 today.  Under an AP cap the same
+rows pay less (R1 at AP 2 is 2.6 g, the slime row in §4.6) — the rank row is
+the *shape*, the AP cap still decides the ceiling.
+
+### 4.7 The slime-knight chain under ranks
+
+Because one knight kill is two encounters (§1.6), the rank rows compose:
+the knight rolls R4, the spawned trio rolls R1 at the same live AP.  Phase 1
+needs **no extra code** for this — the mapping is a consequence of
+`BATTLE_SLIME → R1` in §4.2 — but the payout is the sum, and a rank table
+that only quotes the first battle overstates what a knight is worth.
+
+| AP | knight roll (R4) E[sell] | trio roll (R1) E[sell] | chain E[sell] | P(≥ 1 iron+) | gold |
+|---|---|---|---|---|---|
+| 2 | 4.2 g | 2.5 g | 6.7 g | 0% | 17 |
+| 3 | 4.2 g | 2.5 g | 6.7 g | 0% | 17 |
+| 4 | 6.9 g | 3.5 g | **10.4 g** | 76.2% | 17 |
+| 5 | 8.3 g | 5.1 g | **13.4 g** | 80.6% | 17 |
+
+Same convention as §4.6 (the poison dagger's +2 excluded from E[sell]);
+`P(≥ 1 iron+) = 1 − (1 − P_knight)(1 − P_trio)`, with the knight's P from
+§4.6 and the slime's from the matching AP row of §3 (AP 4: 19.9%, AP 5: 34.8%).
+
+Against the neighbours at AP 4: a kobold pays 5.5 g of cards + 8 g gold for
+45 HP of trio.  The knight chain pays 10.4 g of cards + 17 g gold for 75 HP —
+**≈ 1.9× the card value and ≈ 2.1× the gold for ≈ 1.7× the HP**, and roughly
+twice the AP spend (two battles of turn costs, not one).  That reads as
+proportionate, not as a jackpot; but it *is* two cards, which is a different
+thing from "a high rank drops a better single card".
+
+Three ways to treat that:
+
+1. **Accept it (recommended).**  The second card is an R1 roll: fodder
+   quality, matching the second fight.  The chain is "a veteran card plus a
+   fodder card", which is exactly the shape the two battles have.  No code,
+   no new state, and no scenario edits beyond pinning both rolls.
+2. **Treat the chain as one reward** — suppress the spawned trio's roll
+   (rank 0: gold only).  The spawned actor carries `BATTLE_SLIME`,
+   indistinguishable from a wild slime on the map, so suppression needs a
+   new actor field, a WRAM flag or a dedicated BattleId.  That is engine or
+   WRAM growth (`AGENTS.md` §52.18/§52.24) to answer a balance question —
+   rejected unless playtesting says the chain is too generous.
+3. **Downgrade the knight's own roll to R3** so the chain ≈ one R4 payout.
+   Rejected: it erases "a slime knight is a real step up", which is the
+   reason this document exists.
+
+If the chain ever does need tightening, the cheapest lever is the knight's
+*gold* (12 → 10 keeps the chain at 15 g, the bottom of the R4 + R1 band)
+rather than the roll shape — gold is a content constant, the ladder is code.
 
 ---
 
@@ -499,6 +628,11 @@ Rules behind the table:
 
 * the trio is 3 × the member, so the "trio member" column is what a normal
   encounter costs in total (rank 4 trio = 48–66 HP, versus 45 today);
+* a **splitting** enemy (today only the slime knight, §1.6) is audited as a
+  **chain**: its own band plus the spawned trio's R1 band.  R4 + R1 =
+  66–96 HP, 15–24 g, 2 rolls per kill — the current 75 HP / 17 g already
+  fits, so do not raise the knight's HP to the member band *and* re-rank the
+  trio in the same change;
 * a solo build must be 2.5–3× a trio member or the solo flag turns a
   miniboss into a speed bump;
 * **one enemy swings per round** (shared deck, one attacker), so the swing
@@ -518,13 +652,14 @@ Rules behind the table:
 | spider HP 10, deck 2–3 + poison, gold 8 | R2 | 8–12 / 2–4 / 6–10 | passes (low end) |
 | kobold HP 15, gold 8 | R3 | 14–18 / 8–12 | HP and gold pass |
 | **kobold deck 2, 2, 3** | R3 | **3–4** | **fails — below rank** |
-| slime knight HP 15, gold 12 | R4 | 16–22 / 12–18 | **HP fails (15 < 16)** |
+| slime knight HP 15, gold 12 (member) | R4 | 16–22 / 12–18 | **HP fails by 1 (15 < 16)** |
+| slime knight **chain**: 3×15 + 3×10 = 75 HP, 17 g, 2 rolls | R4 + R1 | 66–96 / 15–24 | passes |
 | **slime knight deck 3, 3, 4** | R4 | **4–5** | **fails — below rank** |
 | mimic HP 50 (solo), gold 0 | R5 | 50–65 / 0 | passes |
 | **mimic deck 4, 4, 5, 3** | R5 | **5–6** | **fails — the 3 and 4s are below rank** |
 | Lord HP 70 (solo), gold 50 | R6 | 70–99 / 40–60 | passes |
 | **Lord swing flat 4** | R6 | **5–8** | **fails, but it is the two-`SH2` shield puzzle** |
-| **castle slime knights: solo, HP 15** | R4 solo | **48–64** | **fails — a solo miniboss weaker than a trio** |
+| **castle slime knights: solo 15 HP, then the spawn trio (45 HP chain, 17 g, 2 rolls)** | R4 solo + R1 | **48–64** / 15–24 | **fails — weaker than a field knight, yet it pays the same two rolls** |
 | **Carl gold 5, spar rolls loot** | R0 | 0 / no drop | **fails — lesson fight pays out** |
 
 Recommended content nudges (proposal, not applied here):
@@ -534,11 +669,19 @@ kobold deck      {3,3,4, heal 3}                 (was 2,2,3, heal 2)
 slime knight hp  20   (was 15)   gold 15 (was 12)
 slime knight deck {4,4,5, heal 3}                (was 3,3,4, heal 2)
 mimic deck       {5,5,6, 4, heal 4}              (was 4,4,5,3, heal 3)
-castle solo knights  hp 45-50, or drop the solo flag (back to a trio)
+castle solo knights  hp 45-50, or drop the solo flag (back to a trio,
+                     45 + 30 = 75 HP chain like the field knights)
 Carl             rank 0 → no loot, gold 0
 Lord swing       keep flat 4 (puzzle) as a documented R6 exception, or
                  raise to 6 and re-tune the intended shield count
 ```
+
+Chain check on those nudges: knight HP 20 puts the kill at
+3×20 + 3×10 = **90 HP** (inside the 66–96 chain band) and gold 15 at
+**20 g** (inside 15–24), so the nudges stay legal *because* the spawn trio is
+counted.  The current 15 / 12 already fit the chain bands too (75 HP, 17 g);
+the HP nudge is about the member band and the "step up" feel, not about the
+chain, and it must not be paired with a second trio buff.
 
 The Lord exception is the only place where the recommended band has to be
 overridden by a puzzle: the enemy-strike telegraph (`src/battle/battle.c`
@@ -561,6 +704,13 @@ code (and any 8-bit multiply would pull `__mulsuchar` into the fixed bank,
   `BattleId`'s deck swings/riders against the band of the rank that battle
   resolves to, and fails loudly with expected/actual — same shape as
   `validate.py` and `card-costs`;
+* the same audit must know about **split chains** (§1.6): it reads the
+  `EVENT_ACTION_SPAWN_SLIME_TRIO` row, adds the spawned trio's HP/gold to the
+  owning enemy's totals, checks the sum instead of the single battle, and
+  checks that the constants hardcoded in `src/game/slime_trio_spawn_banked.c`
+  (HP 10, gold 5, name `SLIME`, `ow 9`) still match the slime's content row
+  and `screens/enemy_types/slime.json`.  If a second splitting enemy is ever
+  added, the action type — not the entity id — is what the audit keys on;
 * the deck tables stay hand-authored C in `src/battle/enemy_deck_content.c`
   for now.  Moving them into the enemy JSON and generating the file is a
   follow-up only if the audit proves too weak (decks are shared by battle
@@ -627,6 +777,12 @@ reads yet) — a clean baseline for the loot change.
      (cap) and never iron;
    * `loot_rank_knight_ap4` — AP 4, slime knight: iron-or-steel is the
      dominant outcome; pin the exact id for the chosen seed;
+   * `loot_rank_knight_chain` — kill the knight, then clear the spawned
+     slime trio: two `LOOT_CARD_ADDED` events, the first R4-shaped, the
+     second a plain R1-shaped roll at the same AP, with the stream advanced
+     by two rolls (six draws).  Pin both ids for the seed, and keep
+     `battle_slime_knight_split` / `battle_slime_trio_spawn` green (the
+     knight's reveal is skipped, the trio's is not — §1.6);
    * `loot_rank_cap_ap2` — AP 2, slime knight: no iron/steel/mythril
      (the AP gate survives rank);
    * `loot_rank_mimic` — mimic drop is steel-heavy and never wood/bronze
@@ -647,7 +803,9 @@ reads yet) — a clean baseline for the loot change.
    non-zero exit on a violation).  Wire it into `validate`.
 2. Apply the content nudges from §5.2 (decks, knight HP/gold, solo
    knights, Carl rank 0).  Each is a `src/game/` content change, not an
-   engine change (`AGENTS.md` §55.1).
+   engine change (`AGENTS.md` §55.1).  The knight's HP/gold nudge is
+   validated against the **chain** totals (knight battle + spawn trio,
+   §1.6), not the single battle.
 3. Re-run the battle-heavy sentinels and the walkthrough: HP changes alter
    battle lengths, and `verify-walkthrough` asserts party HP after the
    Carl spar and the field fights.
@@ -677,7 +835,8 @@ reads yet) — a clean baseline for the loot change.
 * **No `di`/`ei`** in the banked body (`§52.11.3`); the drop body is pure
   WRAM + same-bank reads today and stays that way.
 * **Determinism:** same seed + same state ⇒ same id.  Keep the draw
-  count; new scenarios pin seeds explicitly.
+  count; new scenarios pin seeds explicitly.  A knight kill consumes two
+  rolls (six draws, §1.6), so a chain scenario pins both resulting ids.
 * **Memory:** bank 4 +14 B (enemy rows), bank 9 ≈ +78 B (11×5 ladder,
   12 B index maps, 11 B battle→rank).  Release bank 9 has ~5.4 KB free;
   bank 4 is the fixture bank in debug and must be checked.
@@ -730,9 +889,12 @@ reads yet) — a clean baseline for the loot change.
    or drop the `solo` flag and let them fight as a trio?
 6. **Do ranks appear in the player-facing UI** (battle name plate, loot
    reveal) or stay debug/tooling vocabulary?
+7. **The knight chain pays twice** — accept the R4 + R1 double roll
+   (recommended, §4.7), suppress the spawned trio's roll (needs new state),
+   or trim the knight's gold instead?
 
 Answers here can also arrive as follow-up content edits; nothing in Phases
-0–1 depends on 3–6 except the content audit's pass/fail list.
+0–1 depends on 3–7 except the content audit's pass/fail list.
 
 ---
 
