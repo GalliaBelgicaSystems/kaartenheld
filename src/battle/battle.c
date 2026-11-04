@@ -776,9 +776,10 @@ void battle_execute_combo(Battle *b)
         /* Poison-wracked foe (telegraph staged msg 5): nothing incoming,
          * so the timer/SELECT path converges with the A-press gate in
          * battle_screen_update -- no hand play, no discard, no damage
-         * math.  Consumed here (it only ever reads in DEFEND renders). */
+         * math.  The message is NOT consumed here: it stays up through
+         * the DEFENSE_RESOLVE beat (combo row keeps naming the fizzle,
+         * banner stays quiet) and the next telegraph consumes it. */
         if (b->msg_id == BATTLE_MSG_POISONED_FOE) {
-            b->msg_id = 0;
             b->combo_count = 0;
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;

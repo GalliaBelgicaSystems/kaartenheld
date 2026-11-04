@@ -30,7 +30,8 @@
  * fails: incoming 0, TURN_SKIPPED (cause POISON), the attacker judders
  * like a hit victim (shake mask + 12-frame timer, read by the bank-3
  * BG judder and the bank-5 OAM judder), and msg 5 stages the
- * "FOE IS POISONED!" beat the bank-3 banner/combo painters read.  The
+ * "FOE IS POISONED!" beat the bank-3 combo painter reads (combo row
+ * only, never the banner).  The
  * draw position does NOT advance, so an enemy whose lead card is greyed
  * stays locked out for the grey-out duration (docs/combo-system.md).
  * Freeze keeps its silent skip (no card, no message). */
@@ -69,6 +70,12 @@ void battle_telegraph_banked(void)
     uint8_t di;
 
     if (!b) return;
+    /* A poison-skip message (msg 5) survives its acknowledge press through
+     * the DEFENSE_RESOLVE beat so the fizzle stays named; consume it here
+     * at the next telegraph instead (re-staged below if this swing fizzles
+     * too).  Reads are phase-gated and SELECT never matches, so the stale
+     * value in between is invisible. */
+    b->msg_id = 0;
     b->phase = BATTLE_PHASE_ENEMY_TELEGRAPH;
     b->turn = BATTLE_TURN_ENEMY;
     /* gi doubles as the advance counter (stack discipline). */

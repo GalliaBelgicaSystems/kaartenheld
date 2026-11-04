@@ -121,10 +121,10 @@ void battle_screen_update(Game *g)
                    vg->battle.msg_id == BATTLE_MSG_POISONED_FOE) {
             /* Poison-wracked foe: acknowledge the failed swing -- no
              * defense to stage, nothing incoming.  A skips straight to
-             * the resolve beat; the timer/SELECT path converges in
-             * battle_execute_combo's matching gate. */
+             * the resolve beat (the message stays up through it and the
+             * next telegraph consumes it); the timer/SELECT path
+             * converges in battle_execute_combo's matching gate. */
             vg->battle.combo_count = 0;
-            vg->battle.msg_id = 0;
             vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             vg->battle.delay_timer = 30;
             vg->battle.dirty = BATTLE_DIRTY_ALL;

@@ -1065,9 +1065,13 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     }
     /* Poison-wracked foe (msg 5, staged by the telegraph body): the
      * strike never lands, so the row names the failed swing instead of
-     * a bare "DMG 0" forecast or a stale pending preview. */
+     * a bare "DMG 0" forecast or a stale pending preview.  The name lives
+     * on this row only (never the row-0 banner): it survives the
+     * acknowledge press into DEFENSE_RESOLVE so the 30-frame beat keeps
+     * naming the fizzle, and battle_update clears it on the resolve exit. */
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
-         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
+         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+         battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) &&
         battle->msg_id == BATTLE_MSG_POISONED_FOE) {
         battle_draw_text_line(0, combo_row, "FOE IS POISONED!", 20);
         battle_color_span(0, combo_row, 16, UI_COLOR_POISON);
@@ -1478,18 +1482,22 @@ static const char *battle_banner_text(const volatile Battle *battle)
     }
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
-     * 20 chars, filling the centered row-0 banner in one screen.
-     * A poison-wracked foe names its failed swing instead. */
-    if ((battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
-         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) &&
-        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
-        return "FOE IS POISONED!";
-    }
+     * 20 chars, filling the centered row-0 banner in one screen.  The
+     * poisoned foe's failed swing is named on the combo row instead
+     * (never here), so the banner stays the standard enemy-turn text
+     * even when nothing is incoming. */
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         return "FOE ATTACKS! DEFEND!";
     }
-    if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) return "BLOCKED ATTACK!";
+    if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
+        /* A poison-skip resolve (msg 5 survives the acknowledge press)
+         * blocked nothing, so claiming "BLOCKED ATTACK!" would lie --
+         * the beat stays quiet while the combo row below keeps naming
+         * the fizzle. */
+        if (battle->msg_id == BATTLE_MSG_POISONED_FOE) return "";
+        return "BLOCKED ATTACK!";
+    }
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
     return "";
 }
