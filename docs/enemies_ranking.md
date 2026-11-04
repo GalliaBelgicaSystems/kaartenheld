@@ -1,13 +1,21 @@
 # Enemy Ranking & Rank-Driven Loot
 
-**Status:** proposal, nothing implemented. Written 2026-11-04 on branch
-`balancing`.  Code references are to the current tree; numbers in §3–§6 are
-computed exactly from the 1/256 roll tables (not sampled).
+**Status:** proposal, nothing implemented.  Written 2026-11-04 on branch
+`balancing`; **decisions resolved 2026-11-04** (see §8).  Code references are
+to the current tree; numbers in §3–§6 are computed exactly from the 1/256 roll
+tables (not sampled).
 
-**Updated 2026-11-04:** a slime knight is not one encounter — felling it
-spawns a **slime trio in place**, so one kill is two battles and two loot
-rolls.  That chain is now part of the model (§1.6, §4.7, §5.2) instead of
-being silently folded into "one roll per encounter".
+**Mechanism (decided).**  The drop roll is **rank-only**; the energy pool (AP)
+becomes an **equip unlock**.  An enemy always rolls from its rank's row no
+matter what the player's pool is, so a slime knight can hand over iron or steel
+even at AP 2 — but a card whose derived AP cost exceeds the live pool cannot be
+*decked* until the pool grows (§4.3, §4.8).  This replaces the earlier draft's
+"`max(AP row, rank row)` + AP cap": rank alone decides quality, AP decides what
+you can wear.
+
+**Chain note.**  A slime knight is not one encounter: felling it spawns a
+**slime trio in place**, so one kill is two battles and two loot rolls.  That
+chain is part of the model (§1.6, §4.7, §5.2).
 
 **Why this document exists.**  Loot quality today depends on exactly one
 thing: the player's energy pool (AP).  A slime and a slime knight fought at
@@ -131,7 +139,8 @@ A rider is rolled only when the material is bronze or better and
 and a *mythril* rider is withheld until the pool reaches
 `LOOT_AP_MYTHRIL_RIDER` (6), because a mythril rider card costs 6 AP
 (`docs/card-ap-cost-formula.md` §6.1).  At AP 5 mythril is therefore always
-plain.
+plain.  (Both the ceiling and this rider hold-back are what §4.3 removes: the
+proposed roll never reads AP.)
 
 **Weapon — fixed archetype mix.**  Non-bat enemies pick sword/shield/
 dagger/ring at 25% each.  Bats always drop a **bow**; the bow is otherwise
@@ -144,7 +153,8 @@ only purchasable (the merchant's `M BO`).
   happen first, so the stream keeps its shape; this is rank-independent by
   design.
 * The **mimic** pays AP through its story event instead of gold; its loot
-  roll is a normal roll.
+  roll is a normal roll.  (Decision §8.3 adds a purse on top; the AP grant
+  stays.)
 
 ### 1.5 What the drop is worth
 
@@ -384,8 +394,8 @@ read "VETERAN"):
 
 The user-facing ordering this encodes: *slime knights are a real step up;
 slimes, bats and spiders are trash; kobolds sit in the middle; the mimic is
-elite (and pays its AP through the story instead of gold); the Lord is the
-boss.*
+elite (and pays its AP through the story *and*, by decision §8.3, a purse); the
+Lord is the boss.*
 
 ### 4.2 Rank against current content
 
@@ -397,17 +407,18 @@ boss.*
 | Spider | `BATTLE_SPIDER` | 10 | 2, 3, 3, heal 2, 3 | poison 70/255 | 8 | **R2** |
 | Kobold | `BATTLE_KOBOLD` | 15 | 2, 2, 3, heal 2 | – | 8 | **R3** |
 | Slime Knight | `BATTLE_SLIME_KNIGHT` | 15 | 3, 3, 4, heal 2 | – | 12 | **R4** |
-| Mimic | `BATTLE_MIMIC` | 50 (solo) | 4, 4, 5, 3, heal 3 | – | 0 (AP) | **R5** |
-| Lord of Slimes | `BATTLE_NONE` (solo) | 70 (solo) | flat 4 (no deck) | – | 50 | **R6** |
-| Carl's spar | `BATTLE_CARL` | 30 | 0 | – | 5 | **R0** |
+| Mimic | `BATTLE_MIMIC` | 50 (solo) | 4, 4, 5, 3, heal 3 | – | 0 (AP) → 20 (§8.3) | **R5** |
+| Lord of Slimes | `BATTLE_NONE` (solo) | 70 (solo) | flat 4 → 6 (no deck, §8.4) | – | 50 | **R6** |
+| Carl's spar | `BATTLE_CARL` | 30 | 0 | – | 5 → 0 (§8.2) | **R0** |
 
 Note the duplicate HP sources: the battle uses the **actor row** from
 `src/game/actors_content.c` (Lord 70), while `screens/enemy_types/*.json`
 carries its own `hp` (Lord 99) that only the editor and tooling read.  The
 rank audit in §5.2 must check both until the duplication is removed.
 
-Three castle slime knights are also flagged `solo` (one 15 HP enemy
-instead of three); see §5.2 for why that is a finding.
+Three slime knights are also flagged `solo` (one 15 HP enemy instead of a trio).
+That stays as it is by decision §8.5: they split into three slimes on death, so
+the split is the encounter (§5.2 records the exception).
 
 Every slime-knight number in this table is **per battle**.  A knight kill is
 two battles (§1.6): add the spawned trio's 30 HP, 5 g and one R1 roll before
@@ -415,59 +426,57 @@ comparing a knight to a kobold or a mimic.
 
 ### 4.3 How rank enters the loot roll
 
-Rank does not replace AP.  The two are separate knobs with separate jobs:
+**Decided (§8.1): rank = shape, AP = unlock.**  The material walk reads the
+rank row only — the drop body no longer looks at the pool at all:
 
-* **AP = ceiling.**  Raising the pool unlocks higher tiers and is the
-  story-gated progression lever the demo already ships.  It must not be
-  weakened: at AP 2 nothing above bronze may drop, no matter the enemy.
-* **Rank = shape.**  It decides *where inside the allowed range the mass
-  sits* — peaked on a material, per §4.1's "loot centre".
+```c
+row = g_enemy_rank_by_battle[battle_type];       /* 0..6 */
+if (row == 0) { g_loot_id = CARD_NONE; return; } /* rank 0 = no drop */
 
-Recommended rule, five lines of bank-9 code:
-
-```text
-ap_row   = ladder index of the live AP (1→0, 2→1, 3→2, 4→4, 5+→6)
-rank_row = ladder index of the rank (0→0, 1→3, 2→5, 3→7, 4→8, 5→9, 6→10)
-row      = max(ap_row, rank_row)          /* the better of the two ladders */
-material = walk cut[row] with mat_roll
-if (material > ap_cap) material = ap_cap  /* preserve the AP unlock contract */
+material = MAT_WOOD;
+while (material < MAT_MYTHRIL && mat_roll > s_rank_cut[row][material])
+    material++;
 ```
 
-**Why a single ordered ladder.**  The rows are frozen in one order by
-expected material tier, so `max()` is meaningful and quality is monotone in
-both knobs:
+Three consequences, each deliberate:
 
-| idx | Row | wood | bronze | iron | steel | mythril | E[mat] |
+* **No AP read at all.**  `game_loot_drop_banked` stops reading
+  `VARIABLE_ID_ENERGY_POOL`, and with it goes the unset-pool normalization
+  (an unset variable used to roll the AP-1 wood-only row).  A drop becomes a
+  function of (BattleId → rank, weapon roll, material roll, effect roll) only,
+  so the same seed yields the same card at every pool.  That is the point of
+  the decision: **a slime knight is a slime knight**, and the reason to hunt
+  one is its rank, not the player's current AP.
+* **No AP cap.**  At AP 2 a slime knight can drop steel (25.0%) and mythril
+  (5.1%).  The gate moves to *equipping* (§4.8), where it is visible
+  ("NEED AP 4") and lifts by itself when the pool grows, instead of silently
+  clamping every high-rank roll down onto iron.
+* **No mythril-rider hold-back.**  `LOOT_AP_MYTHRIL_RIDER` exists today only
+  because a mythril rider costs 6 AP; with the equip gate the generator can
+  hand one out early and the player simply cannot deck it yet.  One less AP
+  dependency in the roll, and the locked card becomes a visible "come back
+  with AP 6" marker in the collection.
+
+**The rank rows** (one ordered table; row index = rank):
+
+| Rank | Name | wood | bronze | iron | steel | mythril | E[mat] |
 |---|---|---|---|---|---|---|---|
-| 0 | AP 1 | 100% | – | – | – | – | 0.00 |
-| 1 | AP 2 | 80.1% | 19.9% | – | – | – | 0.20 |
-| 2 | AP 3 | 65.2% | 34.8% | – | – | – | 0.35 |
-| 3 | **R1** | 54.7% | 30.1% | 12.1% | 2.3% | 0.8% | 0.64 |
-| 4 | AP 4 | 50.4% | 29.7% | 19.9% | – | – | 0.70 |
-| 5 | **R2** | 34.8% | 37.9% | 22.3% | 4.3% | 0.8% | 0.98 |
-| 6 | AP 5+ | 35.2% | 30.1% | 25.0% | 7.8% | 2.0% | 1.11 |
-| 7 | **R3** | 19.9% | 34.8% | 30.1% | 12.1% | 3.1% | 1.44 |
-| 8 | **R4** | 9.8% | 19.9% | **40.2%** | 25.0% | 5.1% | 1.96 |
-| 9 | **R5** | 2.0% | 7.8% | 25.0% | **50.0%** | 15.2% | 2.69 |
-| 10 | **R6** | 0.4% | 4.3% | 20.3% | 44.9% | **30.1%** | 3.00 |
+| 0 | LESSON | – | – | – | – | – | – |
+| 1 | FODDER | 54.7% | 30.1% | 12.1% | 2.3% | 0.8% | 0.65 |
+| 2 | VERMIN | 34.8% | 37.9% | 22.3% | 4.3% | 0.8% | 0.98 |
+| 3 | GRUNT | 19.9% | 34.8% | 30.1% | 12.1% | 3.1% | 1.44 |
+| 4 | VETERAN | 9.8% | 19.9% | **40.2%** | 25.0% | 5.1% | 1.96 |
+| 5 | ELITE | 2.0% | 7.8% | 25.0% | **50.0%** | 15.2% | 2.69 |
+| 6 | BOSS | 0.4% | 4.3% | 20.3% | 44.9% | **30.1%** | 3.00 |
 
-Cut rows in 1/256 form (the ROM representation; `s_ap_cut` rows are
-unchanged and simply move to indices 0/1/2/4/6):
+The cut rows in 1/256 form (the ROM representation) are in Appendix A.  The
+percentages are the realized outcomes of the 1/256 walk, not design targets;
+each row sums to 100% (±0.4 for quantization).  Rows are also the reason the
+"centered on a material" requirement works: R4 peaks on iron, R5 on steel, R6
+on mythril.
 
-```text
-R1  { 139, 216, 247, 253, 255 }
-R2  {  88, 185, 242, 253, 255 }
-R3  {  50, 139, 216, 247, 255 }
-R4  {  24,  75, 178, 242, 255 }
-R5  {   4,  24,  88, 216, 255 }
-R6  {   0,  11,  63, 178, 255 }
-```
-
-The percentages above are the realized 1/256 outcomes, not the design
-targets (quantization moves things by up to ~0.5 points).
-
-**Rider gate by rank.**  Rank also raises the chance of a rider (it is a
-quality signal that does not shift material), one step per rank:
+**Rider gate by rank.**  Rank also raises the chance of a rider (a quality
+signal that does not shift material), one step per rank:
 
 | Rank | `eff_roll` gate | P(rider) | fire (sword) | ice (sword) | poison (dagger) |
 |---|---|---|---|---|---|
@@ -477,130 +486,190 @@ quality signal that does not shift material), one step per rank:
 | 4 | 112 | 43.75% | 21.9% | 21.9% | 43.75% |
 | 5–6 | 128 | 50% | 25.0% | 25.0% | 50% |
 
-The fire/ice figures are conditional on a sword and material ≥ bronze
-(the only legal pairing); the poison figure is conditional on a dagger.
-Unconditional per-drop chances are those numbers × 25% (the sword or
-dagger share of the weapon roll).
+The fire/ice figures are conditional on a sword and material ≥ bronze (the
+only legal pairing); the poison figure is conditional on a dagger.
+Unconditional per-drop chances are those numbers × 25% (the sword's or
+dagger's share of the weapon roll).  Wood is still always plain; bows, shields
+and rings never carry a rider.
 
-Unchanged: wood is still always plain, bows/shields/rings never carry a
-rider, and the mythril-rider hold-back at AP < 6 stays.
+**Rank 0 means no drop** (decided, §8.2): the body writes `CARD_NONE`, which
+both `world_on_battle_end` and the victory reveal in `battle_screen.c` already
+treat as "no card".  Gold is not part of the drop path, so rank-0 no-gold is a
+content change (Carl's actor row → 0, §5.2).  Today a won spar rolls loot and
+can even consume the first-victory bronze-shield grant, which is a lesson
+fight paying out like a real one.
 
-**Rank 0 means no drop.**  `game_loot_drop` returns `CARD_NONE` (0), which
-both `world_on_battle_end` and the victory reveal in `battle_screen.c`
-already treat as "no card".  Gold is not part of the drop path, so rank 0
-no-gold is a content change (Carl's actor row), not engine logic.  Today a
-won spar against Carl rolls loot and can even consume the first-victory
-bronze shield grant, which is a lesson fight paying out like a real one.
+### 4.3.1 What AP still buys
+
+The pool no longer touches odds; it decides **how much of what drops can be
+worn**.  A card's AP cost is a pure function of (material, rider) — the weapon
+does not matter, because the sword/bow +1 power is exactly absorbed by the
+`ceil(value/8)` step (`docs/card-ap-cost-formula.md`):
+
+| Material | plain | with a rider |
+|---|---|---|
+| wood | 1 | – (riders are bronze and above) |
+| bronze | 1 | 2 |
+| iron | 2 | 3 |
+| steel | 3 | 4 |
+| mythril | 5 | 6 |
+
+That makes the **wearable share of a drop** the table that motivates raising
+AP (share of drops whose card can be decked at that pool):
+
+| Rank | pool 1 | pool 2 | pool 3 | pool 4 | pool 5 |
+|---|---|---|---|---|---|
+| R1 FODDER | 81% | 95% | 99% | 99% | 100% |
+| R2 VERMIN | 67% | 91% | 99% | 99% | 100% |
+| R3 GRUNT | 48% | 79% | 95% | 97% | 99% |
+| R4 VETERAN | 25% | 61% | 89% | 95% | 99% |
+| R5 ELITE | 8% | 29% | 72% | 85% | 96% |
+| R6 BOSS | 4% | 20% | 59% | 70% | 92% |
+
+Read the R4 row as the design statement: a knight killed at the starting pool
+hands over a card the hero can wear one time in four, and by pool 4 that is
+95%.  The locked remainder is the "I want more AP" pressure, and at pool 5 a
+knight owes the player nothing.
 
 ### 4.4 What changes, concretely
 
-Relative to today, at a given AP:
+Every rank now has one fixed distribution, so the comparison is against today's
+*ceiling* (AP 5) as well as today's floor (AP 2):
 
-* **slime (R1)**: unchanged in shape once AP ≥ 4 (the AP row outranks it);
-  at AP 2–3 it is better than today (45.3% bronze instead of 20–35%),
-  because R1 sits above the AP 2/3 rows.
-* **spider (R2)**: better from AP 3 on; ~27.3% iron once AP 4 allows it.
-* **kobold (R3)**: a clear upgrade — 30.1% iron at full shape, 45.3%
-  iron-or-steel at AP 4 (vs 19.9% today).
-* **slime knight (R4)**: the headline case — **70.3% iron-or-steel at AP 4**
-  and 65.2% at AP 5, versus 19.9% / 32.8% for a slime.  Expected sale value
-  6.9 / 8.3 g against 3.5 / 5.1 g today — per roll, and a knight kill rolls
-  twice because of the armor split (§4.7).
-* **mimic (R5)**: centered on steel (50%), with 15.2% mythril.
-* **Lord (R6)**: centered on steel, 30.1% mythril — the only reliable
-  mythril source.
+| Rank | E[sell] under rank | today at AP 2 | today at AP 5 | P(iron+) under rank | P(iron+) today (AP 5) |
+|---|---|---|---|---|---|
+| R1 slime | **3.29 g** | 1.67 g | 5.05 g | 15.2% | 34.8% |
+| R2 bat / spider | **4.55 g** | 1.67 g | 5.05 g | 27.3% | 34.8% |
+| R3 kobold | **6.30 g** | 1.67 g | 5.05 g | 45.3% | 34.8% |
+| R4 slime knight | **8.35 g** | 1.67 g | 5.05 g | 70.3% | 34.8% |
+| R5 mimic | **11.26 g** | 1.67 g | 5.05 g | 90.2% | 34.8% |
+| R6 Lord | **12.50 g** | 1.67 g | 5.05 g | 95.3% | 34.8% |
+
+* **Fodder is worth less than today's AP-5 roll** (3.29 vs 5.05 g) and more
+  than today's AP-2 roll (1.67 g): the pool stops subsidising trash, so
+  farming slimes no longer converges on the same loot as killing knights.
+* **The top ranks are 2–2.5× the old ceiling** (11.26 / 12.50 g vs 5.05 g):
+  the mimic and the Lord now read as prizes rather than as slightly luckier
+  slimes.
+* **The early game gets richer.**  At the starting pool of 1 a slime can drop
+  bronze (30.1%) and even iron (12.1%), where today it is wood-only until
+  AP 2.  The first-victory bronze shield still overrides the very first drop,
+  so the taught lesson is unchanged; whether the fodder tail is *too*
+  generous is open question §8.8.
+* **Nothing else about the ladder changes**: same weapon mix, same rider
+  legality, same material band → power / sell / uses mapping.
 
 ### 4.5 `I F SW` under ranks
 
-`P(I F SW) = 0.25 × P(iron) × gate/512`:
+`P(I F SW) = 0.25 × P(iron | rank) × gate/256 × 0.5` — one number per rank, no
+AP column, because AP no longer enters the roll:
 
-| Rank | AP 1 | AP 2 | AP 3 | AP 4 | AP 5 |
-|---|---|---|---|---|---|
-| R1 (slime) | 0% | 0% | 0% | 0.62% | 0.78% |
-| R2 (spider) | 0% | 0% | 0% | 1.07% | 0.98% |
-| R3 (kobold) | 0% | 0% | 0% | 2.12% | 1.41% |
-| R4 (slime knight) | 0% | 0% | 0% | **3.85%** | **2.20%** |
-| R5 (mimic) | 0% | 0% | 0% | 5.64% | 1.56% |
-| R6 (Lord) | 0% | 0% | 0% | 5.96% | 1.27% |
+| Rank | P(`I F SW`) | ≈ 1 in | P(`S F SW`) | P(`M F SW`) |
+|---|---|---|---|---|
+| R1 (slime) | 0.38% | 263 encounters | 0.07% | 0.02% |
+| R2 (spider) | 0.87% | 115 | 0.17% | 0.03% |
+| R3 (kobold) | 1.41% | 71 | 0.57% | 0.15% |
+| R4 (slime knight) | **2.20%** | 45 | 1.37% | 0.28% |
+| R5 (mimic) | 1.56% | 64 | **3.12%** | 0.95% |
+| R6 (Lord) | 1.27% | 79 | 2.81% | **1.88%** |
 
-The AP 4 column being *higher* than AP 5 for high ranks is not a bug: at
-AP 4 the steel/mythril rolls are clamped down onto iron (the ceiling), so
-"iron fire sword" is more likely precisely because better cards are
-impossible.  At AP 5 the same mass spreads into steel and mythril
-(`S F SW`: 1.37% from a knight, 3.12% from a mimic, 2.81% from the Lord).
+The iron fire sword peaks at **R4** and then *falls* at R5/R6 — the "centered on
+a material" requirement in table form: above R4 the mass has moved to
+steel/mythril, so the chase card changes (`S F SW` 3.12% from a mimic,
+`M F SW` 1.88% from the Lord).  A player specifically hunting `I F SW` is best
+served by knights, which is exactly what the rank vocabulary claims.
 
-### 4.6 Per-enemy spot check (plausible AP for where the enemy appears)
+Plain swords on the same rows, for scale (`I SW` / `S SW` / `M SW`): R4
+10.06% / 6.25% / 1.27%, R5 6.25% / 12.50% / 3.81%, R6 5.08% / 11.23% / 7.52%.
 
-| Enemy | Rank | AP | `B SW` | `I SW` | `I F SW` | P(iron+) | P(iron or steel) | E[sell] |
-|---|---|---|---|---|---|---|---|---|
-| slime | R1 | 2 | 8.50% | – | – | 0% | 0% | 2.6 g |
-| spider | R2 | 3 | 11.21% | – | – | 0% | 0% | 3.2 g |
-| kobold | R3 | 4 | 5.43% | 7.08% | 2.12% | 45.3% | 45.3% | 5.5 g |
-| slime knight | R4 | 4 | 2.80% | 9.89% | 3.85% | 70.3% | 70.3% | 6.9 g |
-| slime knight | R4 | 5 | 2.80% | 5.66% | 2.20% | 70.3%* | 65.2% | 8.3 g |
-| mimic | R5 | 5 | 0.98% | 3.12% | 1.56% | 90.2% | 75.0% | 11.1 g |
-| Lord | R6 | 5 | 0.54% | 2.54% | 1.27% | 95.3% | 65.2% | 12.4 g |
+### 4.6 Per-enemy spot check
 
-`P(iron+)` counts iron + steel + mythril; the "iron or steel" column
-excludes mythril.  The two coincide whenever the AP cap clamps the
-steel/mythril mass down onto iron (AP 4); at AP 5 the knight keeps its
-5.1% mythril outside the "iron or steel" figure.  Bats substitute the bow
-for every weapon roll, so a bat at AP 2 drops a bronze bow 65.2% of the
-time (R2 outranks AP 2, and the AP cap pulls the steel/mythril mass down
-onto bronze).
+The pool each enemy is typically met at (walkthrough progression) and the share
+of its drops that pool can actually wear (§4.3):
 
-At full shape (the rank row with **no AP cap** — what the row pays once the
-player's AP no longer clamps it down) the expected sell values are
-**3.4 / 4.6 / 6.3 / 8.3 / 11.1 / 12.4 g** for R1–R6, to be compared with the
-flat **5.1 g** every enemy offers at AP 5 today.  Under an AP cap the same
-rows pay less (R1 at AP 2 is 2.6 g, the slime row in §4.6) — the rank row is
-the *shape*, the AP cap still decides the ceiling.
+| Enemy | Rank | E[sell] | P(iron+) | P(steel+) | typical pool | wearable there |
+|---|---|---|---|---|---|---|
+| slime | R1 | 3.29 g | 15.2% | 3.1% | 2 | 95% |
+| spider | R2 | 4.55 g | 27.3% | 5.1% | 3 | 99% |
+| kobold | R3 | 6.30 g | 45.3% | 15.2% | 4 | 97% |
+| slime knight | R4 | 8.35 g | 70.3% | 30.1% | 4 | 95% |
+| mimic | R5 | 11.26 g | 90.2% | 65.2% | 5 | 96% |
+| Lord | R6 | 12.50 g | 95.3% | 75.0% | 5 | 92% |
+
+Bats substitute the bow for every weapon roll (no riders, same 25% share), so
+a bat's card is always a plain bow of its rolled material: `B BO` 37.9%,
+`I BO` 22.3%, `S BO` 4.3%, `M BO` 0.8% at R2.
+
+E[sell] follows §3.3 (sell = power + 2·material, plus the poison dagger's +2
+weighted by its rider chance).  It is the merchant's price, not the card's
+power.
 
 ### 4.7 The slime-knight chain under ranks
 
-Because one knight kill is two encounters (§1.6), the rank rows compose:
-the knight rolls R4, the spawned trio rolls R1 at the same live AP.  Phase 1
-needs **no extra code** for this — the mapping is a consequence of
-`BATTLE_SLIME → R1` in §4.2 — but the payout is the sum, and a rank table
-that only quotes the first battle overstates what a knight is worth.
+Because one knight kill is two encounters (§1.6), the rank rows compose: the
+knight rolls R4, the spawned trio rolls R1.  Phase 1 needs **no extra code** for
+this — the mapping is a consequence of `BATTLE_SLIME → R1` in §4.2 — and the
+double roll is **kept by decision** (§8.7).
 
-| AP | knight roll (R4) E[sell] | trio roll (R1) E[sell] | chain E[sell] | P(≥ 1 iron+) | gold |
+| Roll | Row | E[sell] | P(iron+) | P(steel+) | gold |
 |---|---|---|---|---|---|
-| 2 | 4.2 g | 2.5 g | 6.7 g | 0% | 17 |
-| 3 | 4.2 g | 2.5 g | 6.7 g | 0% | 17 |
-| 4 | 6.9 g | 3.5 g | **10.4 g** | 76.2% | 17 |
-| 5 | 8.3 g | 5.1 g | **13.4 g** | 80.6% | 17 |
+| knight battle | R4 | 8.35 g | 70.3% | 30.1% | 12 |
+| spawned trio | R1 | 3.29 g | 15.2% | 3.1% | 5 |
+| **chain** | R4 + R1 | **11.64 g** | **74.8%** (≥ 1) | 32.5% (≥ 1) | **17** |
 
-Same convention as §4.6 (the poison dagger's +2 excluded from E[sell]);
-`P(≥ 1 iron+) = 1 − (1 − P_knight)(1 − P_trio)`, with the knight's P from
-§4.6 and the slime's from the matching AP row of §3 (AP 4: 19.9%, AP 5: 34.8%).
+Same convention as §4.6; `P(≥ 1) = 1 − (1 − p₁)(1 − p₂)`.  AP no longer appears
+in the table at all: a knight chain pays the same cards at pool 1 and at pool 5
+— only the wearable share moves (knight 25% → 99%, trio 81% → 100%).
 
-Against the neighbours at AP 4: a kobold pays 5.5 g of cards + 8 g gold for
-45 HP of trio.  The knight chain pays 10.4 g of cards + 17 g gold for 75 HP —
-**≈ 1.9× the card value and ≈ 2.1× the gold for ≈ 1.7× the HP**, and roughly
-twice the AP spend (two battles of turn costs, not one).  That reads as
-proportionate, not as a jackpot; but it *is* two cards, which is a different
-thing from "a high rank drops a better single card".
+Why keeping it is right: the second card is an R1 roll, i.e. fodder quality,
+matching the second fight, so the chain is "a veteran card plus a fodder card"
+— exactly the shape of the two battles, with no code and no new state.
 
-Three ways to treat that:
+The two rejected variants, for the record: **suppressing the spawned trio's
+roll** would need new actor/WRAM state to tell the spawned slime apart from a
+wild one (`AGENTS.md` §52.18/§52.24), and **downgrading the knight to R3**
+erases the "a slime knight is a real step up" claim this document exists for.
+If playtesting says the chain is too generous, the cheapest lever is the
+knight's *gold* (12 → 10 keeps the chain at 15 g) — a content constant, not the
+ladder.
 
-1. **Accept it (recommended).**  The second card is an R1 roll: fodder
-   quality, matching the second fight.  The chain is "a veteran card plus a
-   fodder card", which is exactly the shape the two battles have.  No code,
-   no new state, and no scenario edits beyond pinning both rolls.
-2. **Treat the chain as one reward** — suppress the spawned trio's roll
-   (rank 0: gold only).  The spawned actor carries `BATTLE_SLIME`,
-   indistinguishable from a wild slime on the map, so suppression needs a
-   new actor field, a WRAM flag or a dedicated BattleId.  That is engine or
-   WRAM growth (`AGENTS.md` §52.18/§52.24) to answer a balance question —
-   rejected unless playtesting says the chain is too generous.
-3. **Downgrade the knight's own roll to R3** so the chain ≈ one R4 payout.
-   Rejected: it erases "a slime knight is a real step up", which is the
-   reason this document exists.
+### 4.8 The equip gate (how "AP only unlocks" is enforced)
 
-If the chain ever does need tightening, the cheapest lever is the knight's
-*gold* (12 → 10 keeps the chain at 15 g, the bottom of the R4 + R1 band)
-rather than the roll shape — gold is a content constant, the ladder is code.
+Without a gate the decision in §8.1 is half-implemented: a knight could drop a
+6-AP card at pool 1, the player could deck it, and every battle would reject
+it at selection — a dead deck slot with no explanation.  The gate is therefore
+part of the loot feature, not a follow-up.
+
+**Rule.**  A **loot-derived** card (`loot_is_loot_id(id)`, i.e. id ≥
+`LOOT_ID_BASE`) whose synthesized `cost` exceeds the live pool cannot be added
+to the deck.  Curated cards are exempt on purpose: the starter deck itself
+carries two cost-2 fire swords while the pool starts at 1, and shop/quest cards
+are authored against the pool they appear at.  Only *player-chosen equipping of
+generated loot* is gated.
+
+**Shape.**
+
+* `deck_equip_card(cs, id, pool)` in `src/rpg/deck.c` — the existing
+  `deck_add_card` rules plus the lock, returning a reason
+  (`EQUIP_OK` / `EQUIP_FULL` / `EQUIP_MIN` / `EQUIP_LOCKED` / `EQUIP_REJECTED`).
+  `deck_add_card` stays ungated for authored grant paths, so `game_new_game`,
+  scenario staging and shop grants keep working unchanged.
+* The quick screen's A action calls the gated wrapper with the pool it already
+  has in `g->state.variables`, and maps `EQUIP_LOCKED` to a `NEED AP n`
+  message.  The digit is read from the selected card's `cost` at draw time, so
+  **no new `Game` field and no WRAM growth** (§52.24).
+* The DECK list shows the lock before the keypress (the AP column renders the
+  digit differently on a locked row), because a rejection the player cannot
+  predict is worse than no gate.
+* The harness `deck add` debug action uses the same wrapper, so scenarios drive
+  the real gate rather than a test-only path (§44).
+* Telemetry `CARD_EQUIP_LOCKED` (`d1` card id, `d2` required AP) makes the
+  rejection assertable, and no `CARD_ADDED_TO_DECK` fires with it.
+
+**Why it is not a shop gate.**  Buying a card you cannot wear yet is allowed
+(§8.11): the locked card in the collection is exactly the "keep looking for AP"
+motivation, and refusing the sale would hide it.  Selling a locked card stays
+allowed too.
 
 ---
 
@@ -621,7 +690,7 @@ rank only constrains it.
 | 2 | 8–12 | 24–32 | 2–4 | ≤ 1 | 6–10 |
 | 3 | 14–18 | 36–48 | 3–4 | ≤ 1 | 8–12 |
 | 4 | 16–22 | 48–64 | 4–5 | ≤ 2 | 12–18 |
-| 5 | 30–40 | 50–65 | 5–6 | ≤ 2 | 0 (AP) or 15–25 |
+| 5 | 30–40 | 50–65 | 5–6 | ≤ 2 | 15–25 |
 | 6 | – (solo only) | 70–99 | 5–8 | ≤ 2 | 40–60 |
 
 Rules behind the table:
@@ -630,17 +699,22 @@ Rules behind the table:
   encounter costs in total (rank 4 trio = 48–66 HP, versus 45 today);
 * a **splitting** enemy (today only the slime knight, §1.6) is audited as a
   **chain**: its own band plus the spawned trio's R1 band.  R4 + R1 =
-  66–96 HP, 15–24 g, 2 rolls per kill — the current 75 HP / 17 g already
-  fits, so do not raise the knight's HP to the member band *and* re-rank the
-  trio in the same change;
-* a solo build must be 2.5–3× a trio member or the solo flag turns a
-  miniboss into a speed bump;
-* **one enemy swings per round** (shared deck, one attacker), so the swing
-  band is per round, not per enemy;
-* gold is granted once per victory, so the gold band is per encounter, not
-  per clone;
-* "rider cards" counts poison/burn/freeze entries in the deck, not the
-  chance: the chance stays authored (60–70/255 style).
+  66–96 HP, 15–24 g, 2 rolls per kill — the current 75 HP / 17 g already fits,
+  so do not raise the knight's HP to the member band *and* re-rank the trio in
+  the same change;
+* a solo build must be 2.5–3× a trio member, or the solo flag turns a
+  miniboss into a speed bump.  The castle knights are the one documented
+  exception (§5.2, decision §8.5);
+* **one enemy swings per round** (shared deck, one attacker), so the swing band
+  is per round, not per enemy.  Rank 6's floor is 5, and the Lord sits at 6
+  after decision §8.4 — no exception needed any more;
+* gold is granted once per victory, so the gold band is per encounter, not per
+  clone.  **Rank 5 earns gold** (decision §8.3): the mimic's AP story grant is
+  a separate reward, not a substitute for a purse;
+* **rank 0 earns nothing** (decision §8.2): no drop, no gold — a lesson is not
+  a farm;
+* "rider cards" counts poison/burn/freeze entries in the deck, not the chance:
+  the chance stays authored (60–70/255 style).
 
 ### 5.2 Current content audit
 
@@ -655,41 +729,45 @@ Rules behind the table:
 | slime knight HP 15, gold 12 (member) | R4 | 16–22 / 12–18 | **HP fails by 1 (15 < 16)** |
 | slime knight **chain**: 3×15 + 3×10 = 75 HP, 17 g, 2 rolls | R4 + R1 | 66–96 / 15–24 | passes |
 | **slime knight deck 3, 3, 4** | R4 | **4–5** | **fails — below rank** |
-| mimic HP 50 (solo), gold 0 | R5 | 50–65 / 0 | passes |
+| mimic HP 50 (solo), gold 0 | R5 | 50–65 / 15–25 | HP passes, **gold fails (decided: 20)** |
 | **mimic deck 4, 4, 5, 3** | R5 | **5–6** | **fails — the 3 and 4s are below rank** |
 | Lord HP 70 (solo), gold 50 | R6 | 70–99 / 40–60 | passes |
-| **Lord swing flat 4** | R6 | **5–8** | **fails, but it is the two-`SH2` shield puzzle** |
-| **castle slime knights: solo 15 HP, then the spawn trio (45 HP chain, 17 g, 2 rolls)** | R4 solo + R1 | **48–64** / 15–24 | **fails — weaker than a field knight, yet it pays the same two rolls** |
-| **Carl gold 5, spar rolls loot** | R0 | 0 / no drop | **fails — lesson fight pays out** |
+| **Lord swing flat 4** | R6 | **5–8** | **fails (decided: raise to 6)** |
+| castle slime knights: solo 15 HP, then the spawned trio (45 HP chain, 17 g, 2 rolls) | R4 solo + R1 | 48–64 | **accepted exception (decided §8.5) — do not "fix"** |
+| **Carl gold 5, spar rolls loot** | R0 | 0 / no drop | **fails (decided: no drop, gold 0)** |
 
-Recommended content nudges (proposal, not applied here):
+Recommended content changes (proposal, not applied here; §8 items marked as
+decided):
 
 ```text
 kobold deck      {3,3,4, heal 3}                 (was 2,2,3, heal 2)
 slime knight hp  20   (was 15)   gold 15 (was 12)
 slime knight deck {4,4,5, heal 3}                (was 3,3,4, heal 2)
 mimic deck       {5,5,6, 4, heal 4}              (was 4,4,5,3, heal 3)
-castle solo knights  hp 45-50, or drop the solo flag (back to a trio,
-                     45 + 30 = 75 HP chain like the field knights)
-Carl             rank 0 → no loot, gold 0
-Lord swing       keep flat 4 (puzzle) as a documented R6 exception, or
-                 raise to 6 and re-tune the intended shield count
+mimic gold       20                              (was 0)   decided §8.3
+Carl             rank 0 -> no loot, gold 0       (was drop + 5)  decided §8.2
+Lord swing       6                               (was flat 4)    decided §8.4
+                 + the merchant stocks a shield so the answer is always
+                   purchasable: either CARD_WOODEN_SHIELD (owned 4x at new
+                   game, so it only helps a player who sold them) or a new
+                   S SH catalog card (power 6, AP 3, ~12 g) that answers the
+                   swing alone (open question §8.10)
+castle knights   unchanged: solo 15 HP, split trio, 2 rolls  decided §8.5
 ```
 
-Chain check on those nudges: knight HP 20 puts the kill at
-3×20 + 3×10 = **90 HP** (inside the 66–96 chain band) and gold 15 at
-**20 g** (inside 15–24), so the nudges stay legal *because* the spawn trio is
-counted.  The current 15 / 12 already fit the chain bands too (75 HP, 17 g);
-the HP nudge is about the member band and the "step up" feel, not about the
-chain, and it must not be paired with a second trio buff.
+Chain check on the stat nudges: knight HP 20 puts the kill at
+3×20 + 3×10 = **90 HP** (inside the 66–96 chain band) and gold 15 at **20 g**
+(inside 15–24), so the nudges stay legal *because* the spawn trio is counted.
+The current 15 / 12 already fit the chain bands too (75 HP, 17 g); the HP nudge
+is about the member band and the "step up" feel, and it must not be paired with
+a second trio buff.
 
-The Lord exception is the only place where the recommended band has to be
-overridden by a puzzle: the enemy-strike telegraph (`src/battle/battle.c`
-today; `src/battle/battle_telegraph_banked.c` on the working tree's battle
-split) says two `SH2` shields block the flat 4 exactly, which is a designed
-puzzle rather than a balance number.  Either keep the band's lower bound at 4 and document the
-exception, or raise the swing and accept that the puzzle becomes "three
-shields".  This is a **decision**, not an implementation detail.
+**The Lord's swing.**  With decision §8.4 the flat fallback in
+`src/battle/battle_telegraph_banked.c` (`b->enemy_incoming_dmg = 4`) becomes
+**6**.  The old two-`SH2` answer now leaves 2 damage through, so the puzzle
+becomes three `SH2` (3 × 2 = 6) or one steel shield (`S SH`, power 6) — which
+is why a shield has to be purchasable (§8.10).  The Lord is deckless, so this
+constant is the whole of its offense and the band no longer needs an exception.
 
 ### 5.3 Where the numbers live
 
@@ -721,216 +799,258 @@ code (and any 8-bit multiply would pull `__mulsuchar` into the fixed bank,
 
 ## 6. Implementation plan
 
-No code is written yet.  The change is deliberately staged so each phase is
-independently testable and reversible.
+No code is written yet.  The change is staged so each phase is independently
+testable and reversible.
 
 ### Phase 0 — data model (no gameplay change)
 
-1. `screens/schema/enemy_type.schema.json`: add `rank` (integer 0–6,
-   required; 0 for non-combat types).
+1. `screens/schema/enemy_type.schema.json`: add `rank` (integer 0–6, required;
+   0 for non-combat types).
 2. `screens/enemy_types/*.json`: add the ranks from §4.2.
-3. `tools/level_editor/src/EnemyManager.tsx`: rank selector with the
-   names from §4.1 (the editor is the source of content truth; the rank must
-   be editable there, not in JSON by hand).
+3. `tools/level_editor/src/EnemyManager.tsx`: rank selector with the names from
+   §4.1 (the editor is the source of content truth; the rank must be editable
+   there, not in JSON by hand).  The selector is tooling — the rank never
+   reaches a player-facing screen (§8.6).
 4. `tools/screen_compiler/battle_compile.py`:
    * validate `rank` (range, required);
    * emit `rank` into each `EnemyTypeDef` row (`src/game/battle_types.c`,
      bank 4 — +1 byte per type, 14 B total);
    * emit `src/game/loot_rank_content.c` (`#pragma bank 9`) with
-     `const uint8_t g_enemy_rank_by_battle[N]`, built from the enemy types
-     plus one authored mapping table for battle ids that have no owning
-     enemy type (`BATTLE_SLIME_TRIO → slime`, `BATTLE_CARL → 0`,
-     `BATTLE_NONE → slime_lord`).  The mapping mirrors
-     `game_battle_enemy_type_id()` in `src/game/enemy_art_content.c`; when
-     that hand-written switch is eventually replaced by compiler output,
-     both should come from one table.
-5. `src/battle/battle_data.h`: append `uint8_t rank;` to `EnemyTypeDef`
-   (last field, so existing offsets in the generated table stay readable).
-6. Makefile: build the new bank-9 object (and keep debug/release in sync).
+     `const uint8_t g_enemy_rank_by_battle[N]`, built from the enemy types plus
+     one authored mapping table for battle ids with no owning enemy type
+     (`BATTLE_SLIME_TRIO → slime`, `BATTLE_CARL → 0`, `BATTLE_NONE →
+     slime_lord`).  The mapping mirrors `game_battle_enemy_type_id()` in
+     `src/game/enemy_art_content.c`; when that hand-written switch is replaced
+     by compiler output, both should come from one table.
+5. `src/battle/battle_data.h`: append `uint8_t rank;` to `EnemyTypeDef` (last
+   field, so the existing generated offsets stay readable).
+6. Makefile: build the new bank-9 object (debug and release in sync).
 7. `make memmap`; update `docs/loot.md` §17 to point at this document.
 
-Phase 0 ships a ROM that behaves exactly like today (rank is data nobody
-reads yet) — a clean baseline for the loot change.
+Phase 0 ships a ROM that behaves exactly like today (rank is data nobody reads
+yet) — a clean baseline for the loot change.
 
-### Phase 1 — rank-driven loot
+### Phase 1 — rank-only loot
 
 1. `src/game/loot_drop_banked.c`:
-   * replace `s_ap_cut` with the 11-row ladder (§4.3), keep the existing
-     five AP rows byte-identical at indices 0/1/2/4/6;
-   * add the two index maps (`ap → ladder`, `rank → ladder`) and
-     `rank = g_enemy_rank_by_battle[battle_type]` (same bank 9: no
-     trampoline, no fixed-bank cost);
-   * `row = max(...)`, then the existing walk, then the AP cap compare;
-   * rider gate = `s_rank_gate[rank]` (rank 0 uses 64);
-   * rank 0 → `g_loot_id = CARD_NONE`;
-   * **keep the draw count identical** (1 warm-up + weapon + material, bat
-     = 2) so the stream structure stays stable and only the table mapping
-     changes.
+   * replace `s_ap_cut` + `s_ap_cap` with `s_rank_cut[7][5]` (§Appendix A);
+   * `row = g_enemy_rank_by_battle[battle_type]`; write `CARD_NONE` for rank 0
+     and return;
+   * delete the pool read (`VARIABLE_ID_ENERGY_POOL`), the unset-pool
+     normalization and the `if (pool > 255)` clamp — the body no longer needs
+     `BATTLE_ENERGY_PER_TURN`, `game.h` or `battle.h` for this path;
+   * delete the `LOOT_AP_MYTHRIL_RIDER` condition (the equip gate covers it);
+   * rider gate = `s_rank_gate[rank]`;
+   * **keep the draw count identical** (1 warm-up + weapon + material, bat = 2)
+     so the stream structure stays stable and only the table mapping changes.
 2. Battle victory reveal: confirm a `CARD_NONE` drop shows no reveal card
    (`battle_screen.c` already gates on `g_loot_id != CARD_NONE`; the
-   `loot_rank_carl_no_drop` scenario pins the behavior).
+   `loot_rank_carl_no_drop` scenario pins it).
 3. Telemetry: `LOOT_CARD_ADDED` gains the rank as `d2` (the host prints
-   `rank=`); document it in `docs/DEBUG_PROTOCOL.md`.  The derived id
-   already identifies material/effect/weapon, so no new id encoding.
-4. Scenarios (new, deterministic seeds pinned via the harness):
-   * `loot_rank_slime_ap2` — AP 2, slime: material must be wood/bronze
-     (cap) and never iron;
-   * `loot_rank_knight_ap4` — AP 4, slime knight: iron-or-steel is the
-     dominant outcome; pin the exact id for the chosen seed;
-   * `loot_rank_knight_chain` — kill the knight, then clear the spawned
-     slime trio: two `LOOT_CARD_ADDED` events, the first R4-shaped, the
-     second a plain R1-shaped roll at the same AP, with the stream advanced
-     by two rolls (six draws).  Pin both ids for the seed, and keep
-     `battle_slime_knight_split` / `battle_slime_trio_spawn` green (the
-     knight's reveal is skipped, the trio's is not — §1.6);
-   * `loot_rank_cap_ap2` — AP 2, slime knight: no iron/steel/mythril
-     (the AP gate survives rank);
-   * `loot_rank_mimic` — mimic drop is steel-heavy and never wood/bronze
-     beyond the low-percentage tail (assert the material band);
-   * `loot_rank_boss` — Lord: steel/mythril only;
+   `rank=`); document it in `docs/DEBUG_PROTOCOL.md`.  The derived id already
+   identifies material/effect/weapon, so no new id encoding.
+4. Scenarios (new; seeds pinned through the harness):
+   * `loot_rank_slime` — R1: material never above the R1 tail, `I F SW`
+     unlikely, id pinned for the seed;
+   * `loot_rank_knight` — R4: iron-or-steel is the dominant outcome; pin the
+     exact id;
+   * `loot_rank_same_at_any_pool` — the same knight + seed at pool 2 and pool 5
+     yields the **same card id** (the point of §8.1: AP no longer shapes
+     drops);
+   * `loot_rank_knight_chain` — kill the knight, clear the spawned trio: two
+     `LOOT_CARD_ADDED` events, R4-shaped then R1-shaped, six draws consumed.
+     Keep `battle_slime_knight_split` / `battle_slime_trio_spawn` green;
+   * `loot_rank_mimic` — R5: steel-heavy (assert the material band);
+   * `loot_rank_boss` — R6: steel/mythril only;
    * `loot_rank_carl_no_drop` — rank 0 grants no card and no gold.
-   Re-pin the existing loot scenarios whose expected ids move:
-   `loot_ap_steel`, `loot_ap_iron_cap`, `loot_ap_bronze*`,
-   `loot_drop_slime`, `loot_drop_victory`, `card_ap_loot_gate*`,
-   `loot_rider_strip*`, `killing_blow_loot_intact`, `loot_reveal_*`.
-5. `make memmap`, `make test-sentinels` (§52.19), then the touched
-   scenarios; full `make validate` only at the end of the work.
+   Re-pin the existing loot scenarios whose expectations move:
+   `loot_ap_steel`, `loot_ap_iron_cap`, `loot_ap_bronze*`, `loot_drop_slime`,
+   `loot_drop_victory`, `card_ap_loot_gate*`, `loot_rider_strip*`,
+   `killing_blow_loot_intact`, `loot_reveal_*` (the AP-named ones now mean
+   "pool staged, drop unaffected").
+5. `make memmap`, `make test-sentinels` (§52.19), then the touched scenarios;
+   the full `make validate` only at the end of the work.
+
+### Phase 1b — the equip gate (decision §8.1)
+
+Without this phase a high-rank drop is a card the player can deck but can never
+pay for, so it is a dead deck slot instead of a goal.
+
+1. `src/rpg/deck.{h,c}`: add `deck_equip_card(CardState *cs, CardId id,
+   uint8_t pool)` returning an outcome (`EQUIP_OK`, `EQUIP_FULL`,
+   `EQUIP_MIN`, `EQUIP_LOCKED`, `EQUIP_REJECTED`).  It applies the existing
+   `deck_add_card` rules plus one new one: **a loot-derived id
+   (`loot_is_loot_id(id)`) whose `card_get_def(id)->cost` exceeds `pool` cannot
+   be decked.**  `deck_add_card` itself stays ungated, because authored grant
+   paths — `game_new_game`'s starter deck (which carries cost-2 fire swords
+   while the pool starts at 1), shop grants and scenario setup — are written
+   against the pool they appear at.  Only player-chosen equipping is gated.
+2. `src/screens/item_screen.c`: the A action calls `deck_equip_card(...)` with
+   the live pool (already in `g->state.variables`), maps `EQUIP_LOCKED` to a new
+   `MSG_NEED_AP`, and keeps the existing `DECK FULL` / `DECK MIN` messages.
+3. `src/screens/item_content_banked.c`: draw `NEED AP n` on row 16 by reading
+   the selected card's `cost` at draw time — **no new `Game` field**, so no WRAM
+   layout shift (`AGENTS.md` §52.24).  In the list, the AP column renders
+   locked rows distinctly (e.g. `!` + digit) so the player sees the lock before
+   pressing A.
+4. Harness: the `deck add` debug action goes through `deck_equip_card` too, so
+   scenarios exercise the real gate (`AGENTS.md` §44).
+5. Telemetry: `EVENT_CARD_EQUIP_LOCKED` with `d1 = card id`,
+   `d2 = required AP`; document in `docs/DEBUG_PROTOCOL.md`.  No
+   `CARD_ADDED_TO_DECK` fires on a locked attempt.
+6. Scenario `deck_equip_locked_loot`: pool 2 with an `S F SW` (cost 4) in the
+   collection → A rejected, `NEED AP 4` message, `CARD_EQUIP_LOCKED` emitted,
+   no `CARD_ADDED_TO_DECK`; raise the pool to 4 and the same A succeeds.
+7. Fixed-bank budget: this adds a compare, a call and a message id to `_HOME`.
+   Run `make memmap` and watch for `Possible overflow` (§52.18).  If the debug
+   fixed bank is too tight, keep the whole check inside `deck.c` as a bare
+   `def->cost > pool` compare and let the screen set the existing message byte —
+   no new state either way.
 
 ### Phase 2 — stat bands
 
-1. `tools/enemy_audit.py` + `make enemy-ranks` implementing §5.2's checks
-   (reads the JSONs and the deck tables; prints expected/actual and a
-   non-zero exit on a violation).  Wire it into `validate`.
-2. Apply the content nudges from §5.2 (decks, knight HP/gold, solo
-   knights, Carl rank 0).  Each is a `src/game/` content change, not an
-   engine change (`AGENTS.md` §55.1).  The knight's HP/gold nudge is
-   validated against the **chain** totals (knight battle + spawn trio,
-   §1.6), not the single battle.
+1. `tools/enemy_audit.py` + `make enemy-ranks` implementing §5.2's checks (reads
+   the JSONs and the deck tables; prints expected/actual and exits non-zero on a
+   violation).  Wire it into `validate`.  It carries an explicit **exception
+   list** (the castle knights, §8.5) so a deliberate departure is visible in
+   the tool rather than silently passing.
+2. Apply the content changes from §5.2: decks, knight HP/gold, mimic gold 20,
+   Carl rank 0 with no drop and no gold, Lord swing 4 → 6, and a purchasable
+   shield.  Each is a `src/game/` content change, not an engine change
+   (`AGENTS.md` §55.1).  The knight's HP/gold nudge is validated against the
+   **chain** totals (knight battle + spawn trio, §1.6), not the single battle.
 3. Re-run the battle-heavy sentinels and the walkthrough: HP changes alter
-   battle lengths, and `verify-walkthrough` asserts party HP after the
-   Carl spar and the field fights.
+   battle lengths, and `verify-walkthrough` asserts party HP and gold across the
+   Carl spar and the field fights — Carl paying 0 gold and the Lord hitting for
+   6 both touch expected values there.
 
 ### Phase 3 — later (explicitly not now)
 
-* Rank-gated **archetype** pools (e.g. rings only from rank ≥ 3, more bows
-  from rank ≥ 4).  Phase 1 keeps the fixed 25% archetype mix; changing it
-  is a second, independent balance lever and would need its own scenario
-  matrix.
-* Rank in the UI (name plate colour, a "VETERAN" tag).  Recommend not
-  shipping the vocabulary to players yet.
-* Area/luck modifiers and procedural rank drift (a rank-2 enemy that
-  spawns as rank 3 in a later area).  The ladder makes this easy later:
-  a rank is just an index.
+* Rank-gated **archetype** pools (e.g. rings only from rank ≥ 3, more bows from
+  rank ≥ 4).  Phase 1 keeps the fixed 25% archetype mix; changing it is a
+  second, independent balance lever and would need its own scenario matrix.
+* Area/luck modifiers and procedural rank drift (a rank-2 enemy that spawns as
+  rank 3 in a later area).  The table makes this easy later: a rank is an
+  index.
+* **Not** rank in the UI (decision §8.6): no name-plate colour, no "VETERAN"
+  tag.  The player's rank vocabulary is the card AP and the `NEED AP n` gate.
 
 ### Constraints checklist (must hold)
 
-* **No fixed-bank growth.** The wrapper already exists; all new logic is
-  bank 9.  `make memmap` must stay green (`AGENTS.md` §52.18/§55.5).
+* **Fixed bank: at most a compare.**  The drop wrapper already exists and all
+  loot logic is bank 9; Phase 1b's gate (a compare + a message id) is the only
+  fixed-bank addition.  `make memmap` must stay green and the link must not
+  print `Possible overflow` (`AGENTS.md` §52.18/§55.5).
 * **No WRAM growth.** The rank table lives in ROM (bank 9); the battle→rank
-  byte is read from ROM.  A WRAM layout shift is the documented cause of
-  the `battle_boot` ghost-input regression (`AGENTS.md` §52.24) — do not
-  add a global for this.
-* **No multiply/divide, no function pointers** in the roll (`§52.1`,
-  `§52.18`); the walk, `max`, and cap compare are compare-only.
-* **No `di`/`ei`** in the banked body (`§52.11.3`); the drop body is pure
-  WRAM + same-bank reads today and stays that way.
-* **Determinism:** same seed + same state ⇒ same id.  Keep the draw
-  count; new scenarios pin seeds explicitly.  A knight kill consumes two
-  rolls (six draws, §1.6), so a chain scenario pins both resulting ids.
-* **Memory:** bank 4 +14 B (enemy rows), bank 9 ≈ +78 B (11×5 ladder,
-  12 B index maps, 11 B battle→rank).  Release bank 9 has ~5.4 KB free;
-  bank 4 is the fixture bank in debug and must be checked.
-* **Engine purity:** rank is game content.  The engine (`battle.c`) still
-  only passes the `BattleId` through `game_loot_drop`; no engine file
-  learns about ranks, and no engine file branches on a rank.
-
----
+  byte is read from ROM; the gate reads the pool through the screen's existing
+  state pointer and derives the digit at draw time.  A WRAM layout shift is the
+  documented cause of the `battle_boot` ghost-input regression
+  (`AGENTS.md` §52.24) — do not add a global for this.
+* **No multiply/divide, no function pointers** in the roll (§52.1, §52.18);
+  the walk and the compares are compare-only.
+* **No `di`/`ei`** in the banked body (§52.11.3); the drop body is pure WRAM +
+  same-bank reads today and stays that way.
+* **Determinism:** same seed + same state ⇒ same id, and now *independently of
+  the pool* — which is also the regression the new scenario pins.
+* **Memory:** bank 4 +14 B (enemy rows), bank 9 ≈ +44 B (7×5 cut rows, 7 gate
+  bytes, 7 battle→rank bytes) and −(the 5×5 `s_ap_cut` + `s_ap_cap` it
+  replaces).  Release bank 9 has ~5.4 KB free; bank 4 is the fixture bank in
+  debug and must be checked.
+* **Engine purity:** rank is game content.  The engine (`battle.c`) still only
+  passes the `BattleId` through `game_loot_drop`; no engine file learns about
+  ranks and none branches on one.
 
 ## 7. Alternatives considered
 
-1. **`row = max(AP row, rank row)` without the cap.**  Simplest possible
-   rule, but a rank-4 enemy met at AP 2 would roll steel and mythril,
-   breaking the AP unlock contract (`docs/loot.md` §34.5: "steel and
-   mythril never drop below AP 5").  Rejected.
-2. **Pure rank shape (no ladder, no AP row).**  `material = min(rank roll,
-   AP cap)` only.  It gives the cleanest identity (a slime is always a
-   wood/bronze source) but makes AP *punitive*: at AP 5 a slime would drop
-   54.7% wood versus 35.2% today, i.e. the player's progression makes
-   trash loot worse than before.  Rejected — but it is a legitimate
-   design if we ever want "AP = ceiling only, grind high ranks".
-3. **Rank as extra AP rows.**  Treat rank as a bonus to the AP row index
-   (`row = ap_row + rank`).  Trivial, but it cannot be *centered* on a
-   material (the shape is always "monotone toward the top"), which is the
-   user's stated goal.  Rejected.
-4. **Weighted blending of the AP table and the rank table.**  Mathematically
-   nicest, but it needs an 8-bit multiply (pulls `__mulsuchar` into the
-   fixed bank, `§52.18`) and a renormalizing divide.  Rejected for ROM
-   cost; the ladder achieves the same monotonicity with compares.
-5. **Explicit card rarity (common/rare/epic) instead of material.**
-   Matches the earlier `docs/loot.md` §6 vocabulary, but would need a
-   second axis in the id space and a duplicated definition of quality.
-   Material already *is* the quality ladder; rank composes with it instead
-   of duplicating it.
+1. **"The better ladder wins, AP still caps."**  The first recommendation: rows
+   frozen by expected material, `row = max(ap_row, rank_row)`, then clamp to the
+   AP cap.  Rejected by decision §8.1.  It cannot express the intended
+   motivation: at AP 2 a slime knight's steel/mythril mass would be clamped down
+   onto iron, so a knight met early is *the same loot as a slime* — rank would
+   only matter after the story had already raised AP, which is the situation the
+   proposal set out to fix.  The chosen design costs one thing the cap got for
+   free: a locked card in the collection, and therefore a gate in the equip path
+   (§4.8 / Phase 1b).
+2. **Pure rank shape with no equip gate.**  Simplest possible rule (just the
+   roll change), but a 6-AP card decked at pool 1 is a deck slot that can never
+   be paid for — battle selection rejects it every turn and the player has to
+   work out why.  Rejected: the gate names the reason (`NEED AP 4`) instead of
+   hiding it, which is what makes the locked drop motivating rather than
+   confusing.
+3. **Rank as extra AP rows** (`row = ap_row + rank`).  Trivial, but it cannot be
+   *centered* on a material (the shape is always monotone toward the top), which
+   is the stated goal.  Rejected.
+4. **Weighted blending of an AP table and a rank table.**  Mathematically
+   nicest, but it needs an 8-bit multiply (pulls `__mulsuchar` into the fixed
+   bank, §52.18) and a renormalizing divide.  Rejected for ROM cost.
+5. **Explicit card rarity (common/rare/epic) instead of material.**  Matches the
+   earlier `docs/loot.md` §6 vocabulary, but would need a second axis in the id
+   space and a duplicated definition of quality.  Material already *is* the
+   quality ladder; rank composes with it instead of duplicating it.
 
----
+## 8. Decisions (resolved 2026-11-04)
 
-## 8. Decisions needed before Phase 1
+| # | Question | Decision | Where it lands |
+|---|---|---|---|
+| 1 | AP vs rank precedence | **Rank wins; AP only unlocks.**  The roll is rank-only; a card above the pool cannot be equipped until the pool grows. | §4.3, Phase 1, Phase 1b |
+| 2 | Rank 0 loot | **No loot** for Carl's spar and lesson fights (and no gold), so a spar can no longer consume the first-victory bronze shield. | §5.1, §5.2, Phase 2 |
+| 3 | Mimic gold | **Rank 5 earns gold too** (band 15–25; recommend 20).  The AP story grant stays a separate reward. | §5.1, §5.2 |
+| 4 | Lord's flat swing | **Raise 4 → 6.**  The answer becomes three `SH2` or one steel shield, and a shield is added to the merchant's stock so preparation is always possible.  No band exception needed. | §5.2, Phase 2 |
+| 5 | Solo castle knights | **Leave them alone.**  They are slime knights and they split into three; the split is the encounter, not the HP number.  Recorded as an explicit audit exception. | §5.1, §5.2, Phase 2 |
+| 6 | Ranks in the player UI | **No.**  Rank stays debug/tooling vocabulary; the player sees card AP and the `NEED AP n` gate, nothing rank-shaped. | Phase 0, Phase 3 |
+| 7 | Knight chain double roll | **Keep it** (R4 + R1).  The second roll is fodder quality, matching the second fight. | §4.7 |
 
-1. **AP vs rank precedence** — accept the recommended "the better ladder
-   wins, AP still caps" (AP 2 can never see iron even from a knight)?  The
-   alternative is "rank wins, AP only unlocks" (§7.2).
-2. **Rank 0 = no loot** for Carl's spar and other lesson fights?  (Today a
-   won spar rolls loot and can consume the first-victory bronze shield.)
-3. **Mimic gold stays 0** with the AP story grant, or does rank 5 earn
-   gold too?
-4. **The Lord's flat 4** — keep the two-`SH2` puzzle as a documented R6
-   exception, or raise its swing to 6 and re-tune the shield count?
-5. **Solo castle knights** — raise their HP to the R4 solo band (~45–50),
-   or drop the `solo` flag and let them fight as a trio?
-6. **Do ranks appear in the player-facing UI** (battle name plate, loot
-   reveal) or stay debug/tooling vocabulary?
-7. **The knight chain pays twice** — accept the R4 + R1 double roll
-   (recommended, §4.7), suppress the spawned trio's roll (needs new state),
-   or trim the knight's gold instead?
+Remaining open questions (none blocks Phase 0/1):
 
-Answers here can also arrive as follow-up content edits; nothing in Phases
-0–1 depends on 3–7 except the content audit's pass/fail list.
-
----
+8. **Fodder tail.**  With no AP cap, R1 can drop iron (12.1%), and at the
+   starting pool a slime can hand over bronze (30.1%).  Is that "rewards
+   exploring" or "the tutorial enemy is too generous"?  A one-row shift — e.g.
+   `R1 { 166, 236, 253, 255, 255 }` → wood 65.2% / bronze 27.3% / iron 6.6% /
+   steel 0.8% / mythril 0% — halves the iron tail without touching another row.
+9. **Mimic gold value.**  20 is the proposal (top of 15–25, because the mimic is
+   a solo set-piece); 18 is the conservative pick.
+10. **Which shield the merchant stocks.**  The existing `CARD_WOODEN_SHIELD`
+    (owned 4× at new game, so it only helps a player who sold them) or a new
+    `S SH` catalog card (power 6, AP 3, ~12 g) that answers the Lord's swing
+    alone.  The second is a `g_cards` row plus a `CARD_` id — content, not
+    engine.
+11. **Does the gate apply to shop purchases?**  Proposal: no.  Buying is
+    allowed, equipping is gated; a locked card sitting in the collection is the
+    motivation to raise AP, and refusing the sale would hide it.
 
 ## Appendix A — exact cut tables and reproduction notes
 
 Rank cut rows (as they would appear in `src/game/loot_drop_banked.c`):
 
-```text
-static const uint8_t s_ladder_cut[11][5] = {
-    { 255,   0,   0,   0,   0 },   /* idx 0  AP 1        */
-    { 204, 255,   0,   0,   0 },   /* idx 1  AP 2        */
-    { 166, 255,   0,   0,   0 },   /* idx 2  AP 3        */
-    { 139, 216, 247, 253, 255 },   /* idx 3  R1 FODDER   */
-    { 128, 204, 255,   0,   0 },   /* idx 4  AP 4        */
-    {  88, 185, 242, 253, 255 },   /* idx 5  R2 VERMIN   */
-    {  89, 166, 230, 250, 255 },   /* idx 6  AP 5+       */
-    {  50, 139, 216, 247, 255 },   /* idx 7  R3 GRUNT    */
-    {  24,  75, 178, 242, 255 },   /* idx 8  R4 VETERAN  */
-    {   4,  24,  88, 216, 255 },   /* idx 9  R5 ELITE    */
-    {   0,  11,  63, 178, 255 }    /* idx 10 R6 BOSS     */
+```c
+static const uint8_t s_rank_cut[7][5] = {
+    {   0,   0,   0,   0,   0 },   /* R0 LESSON   (never rolled) */
+    { 139, 216, 247, 253, 255 },   /* R1 FODDER   */
+    {  88, 185, 242, 253, 255 },   /* R2 VERMIN   */
+    {  50, 139, 216, 247, 255 },   /* R3 GRUNT    */
+    {  24,  75, 178, 242, 255 },   /* R4 VETERAN  */
+    {   4,  24,  88, 216, 255 },   /* R5 ELITE    */
+    {   0,  11,  63, 178, 255 }    /* R6 BOSS     */
 };
 
-static const uint8_t s_ap_ladder[5]   = { 0, 1, 2, 4, 6 };   /* AP 1..5+ */
-static const uint8_t s_rank_ladder[7] = { 0, 3, 5, 7, 8, 9, 10 }; /* R0..R6 */
-static const uint8_t s_rank_gate[7]   = { 64, 64, 80, 96, 112, 128, 128 };
+static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
 ```
+
+`s_ap_cut` and `s_ap_cap` disappear from the body (the AP row is no longer
+read), and the index maps from the earlier draft (`s_ap_ladder`,
+`s_rank_ladder`) go with them — the rank *is* the row index now.
 
 Sanity checks a reader (or a future test) can redo by hand:
 
 * each row's percentages sum to 100% (±0.4 for 1/256 quantization);
-* `s_ap_ladder` / `s_rank_ladder` indices are strictly increasing in
-  expected material, which is what makes `max()` a quality comparison;
-* a row with `255` in a slot can never advance past that tier (the walk
-  compares `mat_roll > cut`, and `mat_roll ≤ 255`);
-* `P(I F SW) = P(sword) · P(iron | row) · (gate/256) · 0.5 = 0.125 ·
-  P(iron | row) · gate/256`;
-* the AP cap keeps `material ≤ cap(ap)` for every rank (the §4.5 AP 1–3
-  columns are all zero for every rank, which is that property in table
-  form).
+* rows are strictly increasing in expected material (0.65 → 3.00), which is what
+  makes "rank = quality" a comparison rather than a label;
+* a row with `255` in a slot can never advance past that tier (the walk compares
+  `mat_roll > cut`, and `mat_roll ≤ 255`);
+* `P(I F SW) = P(sword) · P(iron | row) · (gate/256) · 0.5
+  = 0.125 · P(iron | row) · gate/256`;
+* card AP = `1 + {wood 0, bronze 0, iron 1, steel 2, mythril 4} + (rider ? 1 :
+  0)`, the same for every weapon (the sword/bow +1 power is absorbed by the
+  `/8` ceiling step);
+* a row's wearable share at pool `p` is the probability mass of (material,
+  rider) pairs with `AP ≤ p`, which reproduces the §4.3 table.
