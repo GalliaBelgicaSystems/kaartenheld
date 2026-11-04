@@ -669,11 +669,11 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
     /* Heal flash: two slime-light green pulses on a white base over
-     * the heal jingle (BG slot DIM is reprogrammed to #77E331 for the
+     * the heal jingle (BG slot GOLD is reprogrammed to #77E331 for the
      * duration; phase staged by the bank-9 tick); otherwise the block
      * keeps its steady green. */
     if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
-        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_DIM);
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_GOLD);
     } else {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
     }
@@ -1061,6 +1061,16 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(0, combo_row, (const char *)g_despair_row10, 19);
         battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
         battle_draw_text_line(19, combo_row, NULL, 1);
+        return;
+    }
+    /* Poison-wracked foe (msg 5, staged by the telegraph body): the
+     * strike never lands, so the row names the failed swing instead of
+     * a bare "DMG 0" forecast or a stale pending preview. */
+    if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
+        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
+        battle_draw_text_line(0, combo_row, "FOE IS POISONED!", 20);
+        battle_color_span(0, combo_row, 16, UI_COLOR_POISON);
         return;
     }
     /* Enemy forecast owns the row while a strike is incoming (defend
@@ -1468,7 +1478,13 @@ static const char *battle_banner_text(const volatile Battle *battle)
     }
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
-     * 20 chars, filling the centered row-0 banner in one screen. */
+     * 20 chars, filling the centered row-0 banner in one screen.
+     * A poison-wracked foe names its failed swing instead. */
+    if ((battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) &&
+        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
+        return "FOE IS POISONED!";
+    }
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         return "FOE ATTACKS! DEFEND!";

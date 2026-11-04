@@ -766,6 +766,18 @@ void battle_execute_combo(Battle *b)
             }
         }
     } else if (b->phase == BATTLE_PHASE_PLAYER_DEFEND) {
+        /* Poison-wracked foe (telegraph staged msg 5): nothing incoming,
+         * so the timer/SELECT path converges with the A-press gate in
+         * battle_screen_update -- no hand play, no discard, no damage
+         * math.  Consumed here (it only ever reads in DEFEND renders). */
+        if (b->msg_id == BATTLE_MSG_POISONED_FOE) {
+            b->msg_id = 0;
+            b->combo_count = 0;
+            b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
+            b->delay_timer = 30;
+            b->dirty = BATTLE_DIRTY_ALL;
+            return;
+        }
         /* STATUS_FREEZE on the player (see the attack gate above): a frozen
          * player cannot defend either.  The enemy's already-telegraphed
          * swing lands unblocked (full enemy_incoming_dmg), the defend hand
@@ -950,81 +962,15 @@ void battle_update(Battle *b)
     } else {
         if (vb->phase == BATTLE_PHASE_PLAYER_ANIM ||
             vb->phase == BATTLE_PHASE_SHUFFLE) {
-            uint8_t grey_mask = 0;
-            uint8_t gi;
-            vb->phase = BATTLE_PHASE_ENEMY_TELEGRAPH;
-            vb->turn = BATTLE_TURN_ENEMY;
-            /* gi doubles as the advance counter (stack discipline). */
-            gi = 0;
-            while (gi < vb->enemy_count && vb->enemies[vb->attacking_enemy_idx].hp == 0) {
-                /* Wrap instead of % -- keeps the SDCC int-mod library
-                 * out of the tight fixed bank. */
-                vb->attacking_enemy_idx++;
-                if (vb->attacking_enemy_idx >= vb->enemy_count) {
-                    vb->attacking_enemy_idx = 0;
-                }
-                gi++;
-            }
-            /* The enemy deck and its draw position are SHARED by the whole
-             * hostile party (every encounter engages as a trio).  A poisoned
-             * victim's grey-out therefore applies to the shared deck, not to
-             * one attacker's slot: a greyed deck position never plays, no
-             * matter which enemy is up.  OR the per-victim masks (they carry
-             * independent durations, so the union is only the currently
-             * active grey set). */
-            for (gi = 1; gi <= vb->enemy_count; gi++) {
-                grey_mask |= s_grey_mask[gi];
-            }
-            /* STATUS_FREEZE (docs/combo-system.md §12): the frozen-mask
-             * bit is TESTED here but never consumed -- status_apply sets
-             * it and status_tick_banked clears it each round and re-sets
-             * it while a freeze instance remains (see the player attack
-             * gate above).  Mask bits follow status SLOTS (player = 0,
-             * enemies = 1..n).  A frozen attacker skips its swing: no
-             * enemy card, nothing incoming this cycle. */
-            if ((g_status_frozen_mask &
-                 (uint8_t)(1u << (vb->attacking_enemy_idx + 1))) != 0 &&
-                vb->enemies[vb->attacking_enemy_idx].hp != 0) {
-                vb->enemy_incoming_dmg = 0;
-                telemetry_emit(EVENT_TURN_SKIPPED,
-                               (uint8_t)(vb->attacking_enemy_idx + 1),
-                               STATUS_FREEZE, 0, 0);
-            } else if (vb->enemy_deck.count > 0 &&
-                       /* Poison grey-out (Phase D): a greyed deck position
-                        * never plays -- the enemy skips its swing while its
-                        * current draw position is greyed (no card, nothing
-                        * incoming).  The draw position does NOT advance, so
-                        * an enemy whose lead card is greyed is locked out
-                        * for the grey-out duration.  Bit = shared deck
-                        * position; the union of per-victim masks is tested
-                        * because the deck is shared by the whole party. */
-                       (grey_mask &
-                        (uint8_t)(1u << vb->enemy_deck.draw_idx)) != 0 &&
-                       vb->enemies[vb->attacking_enemy_idx].hp != 0) {
-                vb->enemy_incoming_dmg = 0;
-                telemetry_emit(EVENT_TURN_SKIPPED,
-                               (uint8_t)(vb->attacking_enemy_idx + 1),
-                               STATUS_POISON, 0, 0);
-            } else if (vb->enemy_deck.count > 0) {
-                vb->enemy_played_card = vb->enemy_deck.cards[vb->enemy_deck.draw_idx];
-                vb->enemy_incoming_dmg = vb->enemy_played_card.value;
-                telemetry_emit(EVENT_ENEMY_CARD_PLAYED,
-                               vb->enemy_deck.draw_idx,
-                               vb->enemy_played_card.type,
-                               vb->enemy_played_card.value, 0);
-                vb->enemy_deck.draw_idx++;
-                if (vb->enemy_deck.draw_idx >= vb->enemy_deck.count) {
-                    vb->enemy_deck.draw_idx = 0;
-                }
-            } else {
-                vb->enemy_incoming_dmg = 4;
-                /* No enemy card: the fallback flat 4-damage swipe still
-                 * marks an inbound strike.  Only deckless battlers (the
-                 * Lord of Slimes) reach this: two SH2 shields block it
-                 * exactly. */
-            }
-            /* The enemy swung -- play its strike sound (shared tail:
-             * both branches above mark an inbound strike). */
+            /* Enemy telegraph card draw (bank-10 body: freeze / poison /
+             * normal / deckless branches, msg + shake staging, telemetry).
+             * The SFX tail and the delay stay fixed (shared tail: every
+             * telegraph path above marks an inbound strike or a
+             * poison-wracked skip, and the SFX id needs no staging). */
+            g_bk_call_bank = 10;
+            g_bk_call_target = (uint16_t)&battle_telegraph_banked;
+            g_bk_ptr_a = (void *)b;
+            banked_call_run();
             audio_play_sfx(SFX_HIT);
             vb->delay_timer = 20;
         } else {

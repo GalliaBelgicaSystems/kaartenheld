@@ -1,0 +1,102 @@
+{
+ "name": "battle_poison_foe_ack",
+ "test": true,
+ "description": "Poisoned foe acknowledge: pressing A on the FOE IS POISONED! defend beat skips the failed swing with no defense to stage (no card burned, no DAMAGE_RECEIVED) and the battle continues into the next player turn with the hero unharmed and the message cleared.",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "seed": 777,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 60
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENEMY_CARD_PLAYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "TURN_SKIPPED"
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 1,
+   "value": 1
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 10,
+   "contains": "FOE IS POISONED!"
+  }
+ ]
+}

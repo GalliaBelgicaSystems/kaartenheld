@@ -48,8 +48,12 @@ position covered by the victim's grey mask never plays -- for enemies the
 mask ORs across ALL enemy slots against the party's single shared battle
 deck, because every hostile encounter engages as a trio (three attackers
 rotate through one draw position), so a greyed position must never be
-drawn no matter which enemy is up.  A greyed draw emits `TURN_SKIPPED`
-(cause `STATUS_POISON`) without advancing the draw position.  Scenarios:
+drawn no matter which enemy is up.  A greyed draw still selects its card
+(`ENEMY_CARD_PLAYED` with the lead card's identity) but the swing fails:
+`TURN_SKIPPED` (cause `STATUS_POISON`) without advancing the draw
+position, the attacker judders like a hit victim, and the defend beat
+names the failed swing (`FOE IS POISONED!` on the banner + combo row)
+until the player acknowledges with A (or the timer path converges).  Scenarios:
 `status_poison_apply` (apply + ticks + expiry + grey gate), `status_poison_reshuffle`
 (5-stack cap, greyed cards recycled out of reshuffles, skips).  Still open
 from Phase C/D: HEAL ALL; per-effect scaling refinements.

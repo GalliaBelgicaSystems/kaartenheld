@@ -16,8 +16,8 @@
 
 static const EnemyCard s_slime_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_bat_deck[] = {
@@ -32,8 +32,8 @@ static const EnemyCard s_bat_deck[] = {
 static const EnemyCard s_slime_trio_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_kobold_deck[] = {

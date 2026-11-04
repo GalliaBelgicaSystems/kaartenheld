@@ -116,6 +116,18 @@ void battle_screen_update(Game *g)
         } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
             audio_play_sfx(SFX_CURSOR);
             battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
+        } else if (input_pressed(INPUT_A) &&
+                   vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
+                   vg->battle.msg_id == BATTLE_MSG_POISONED_FOE) {
+            /* Poison-wracked foe: acknowledge the failed swing -- no
+             * defense to stage, nothing incoming.  A skips straight to
+             * the resolve beat; the timer/SELECT path converges in
+             * battle_execute_combo's matching gate. */
+            vg->battle.combo_count = 0;
+            vg->battle.msg_id = 0;
+            vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
+            vg->battle.delay_timer = 30;
+            vg->battle.dirty = BATTLE_DIRTY_ALL;
         } else if (input_pressed(INPUT_A)) {
             battle_card_select((Battle *)&vg->battle);
         } else if (input_pressed(INPUT_B)) {

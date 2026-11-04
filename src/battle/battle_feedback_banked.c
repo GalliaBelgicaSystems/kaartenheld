@@ -6,24 +6,28 @@
 #include "banked.h"
 #include "ui/ui.h"
 
-/* Slime-light heal-flash ramp for BG slot DIM (7): font ink is palette
+/* Slime-light heal-flash ramp for BG slot GOLD (6): font ink is palette
  * entry 3 (proved by the steady HUD: banner tan = slot-0 entry 3,
  * heart red = slot-1 entry 3, HP brown = slot-3 entry 3 = numbers
  * ink), so the green MUST live in entry 3 -- entries 0-2 stay
- * fightboss.  #77E331 -> RGB555 (14,28,6) -> 0x1B8E, little-endian
+ * fightspider.  #77E331 -> RGB555 (14,28,6) -> 0x1B8E, little-endian
  * 8E 1B.  Programmed ONLY during green pulse frames (see the tick):
- * greyed cards and the boss stamp (both DIM users) read fightboss
- * the rest of the time.  The restore twin below is a hardcoded copy
- * because bank 9 cannot read the bank-5 ROM table -- keep in sync
- * with generated/tiles/cgb_palettes.inc if the artist ramp moves. */
-static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x8E, 0x1B };
-/* fightboss slot-7 restore ramp: white; (141,117,74) -> 0x25D1; grey
- * (86,86,86) -> 0x294A; black. */
-static const uint8_t s_heal_flash_restore[8] = { 0xFF, 0x7F, 0xD1, 0x25, 0x4A, 0x29, 0x00, 0x00 };
+ * greyed cards (DIM) and the boss stamp (DIM/fightboss) keep their own
+ * ramps the whole time, so only the hero HP block -- the flash's one
+ * GOLD user -- ever flashes green.  The restore twin below is a
+ * hardcoded copy because bank 9 cannot read the bank-5 ROM table --
+ * keep in sync with generated/tiles/base.json slot 6 (fightspider)
+ * if the artist ramp moves. */
+static const uint8_t s_heal_flash_ramp[8] = { 0xFF, 0x7F, 0x31, 0x46, 0x2B, 0x1D, 0x8E, 0x1B };
+/* fightspider slot-6 restore ramp: white; (143,143,143) -> 0x4631; grey
+ * (90,74,61) -> 0x1D2B; black. */
+static const uint8_t s_heal_flash_restore[8] = { 0xFF, 0x7F, 0x31, 0x46, 0x2B, 0x1D, 0x00, 0x00 };
 
-/* Program (or restore) BG slot DIM for the heal flash.  Same LCD-safe
+/* Program (or restore) BG slot GOLD for the heal flash.  Same LCD-safe
  * per-store pattern as ui_load_cram_banked (BANKED_VRAM_WRITE); a
- * no-op on DMG, where BCPS/BCPD are unmapped. */
+ * no-op on DMG, where BCPS/BCPD are unmapped.  GOLD (fightspider) is
+ * otherwise unused by battle BG spans, so the flash never tints enemy
+ * art, greyed cards, or the boss stamp. */
 static void battle_heal_cram(uint8_t flash_on)
 {
     const uint8_t *ramp;
@@ -31,7 +35,7 @@ static void battle_heal_cram(uint8_t flash_on)
     if (!g_is_cgb) return;
     ramp = flash_on ? s_heal_flash_ramp : s_heal_flash_restore;
     VBK_REG = 0;
-    BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_DIM << 3));
+    BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_GOLD << 3));
     for (c = 0; c < 8; c++) {
         BANKED_VRAM_WRITE(&BCPD_REG, ramp[c]);
     }
@@ -43,9 +47,9 @@ static void battle_heal_cram(uint8_t flash_on)
  * functions).  An enemy HP drop judders those slots (mask bits, 12
  * frames), a player HP drop judders the whole hand with one shared
  * offset (5 frames), a player HP rise flashes green twice on a white
- * base over the 50-frame heal jingle (the DIM slot holds the flash
+ * base over the 50-frame heal jingle (the GOLD slot holds the flash
  * ramp only during the two green pulses; every other screen and
- * phase reads fightboss).  Status ticks, counters,
+ * phase reads fightspider).  Status ticks, counters,
  * overblock heals and debug HP pokes all funnel through HP,
  * so every present and future source feeds the same feedback with no
  * per-source wiring and no fixed-bank bytes in the resolve paths.  The
@@ -102,10 +106,10 @@ void battle_feedback_tick_banked(void)
     } else if (b->player.hp > g_battle_fx_php) {
         /* 50-frame flash, white base with two slime-light green pulses
          * (10 frames each), spanning the 47-tick heal jingle: green
-         * appears twice instead of vanishing twice.  The DIM slot is
+         * appears twice instead of vanishing twice.  The GOLD slot is
          * programmed only on green-pulse frames below (never for the
          * whole flash), so greyed cards and the boss stamp keep their
-         * fightboss ramp except during the pulses themselves. */
+         * own ramps except during the pulses themselves. */
         g_battle_heal_flash = 50;
     }
     g_battle_fx_php = b->player.hp;
@@ -141,9 +145,9 @@ void battle_feedback_tick_banked(void)
          * white 30-21, green 20-11, white 10-1 (two green pulses over
          * the heal jingle, snapping back to steady green at the end).
          * The CRAM program follows the phase edges, not the flash:
-         * DIM holds the flash ramp only while a green pulse is on
-         * screen (greyed cards and the boss stamp read fightboss the
-         * rest of the time).  Thresholds live here, not in the painter:
+         * GOLD holds the flash ramp only while a green pulse is on
+         * screen (greyed cards and the boss stamp read their own ramps
+         * the whole time).  Thresholds live here, not in the painter:
          * release bank 3 has no room for the math. */
         np = (uint8_t)(((g_battle_heal_flash <= 40 &&
             g_battle_heal_flash > 30) || (g_battle_heal_flash <= 20 &&
