@@ -1,0 +1,213 @@
+{
+ "name": "loot_rank_same_pool2",
+ "test": true,
+ "description": "Pool-independence (docs/enemies_ranking.md \u00a78.1: rank wins, AP only unlocks): seed 7006 on the slime knight at pool 2 rolls the identical STEEL SHIELD (id 0xC1 = 193, rank 4) as at the other pool -- the same seed yields the same card at every pool, because the roll never reads AP. (Companion file: loot_rank_same_pool5.) The kill hands off to the spawned trio, which instantly re-engages (adjacent chase step), so the run ends in the trio fight: the split briefing's close (DIALOGUE_ENDED KNIGHT_SPLIT) and the trio ambush (the loader-driven first fight emits no ENCOUNTER_STARTED; the patrol bump re-engaging it emits the one) pins the handoff. The trio's own R1 roll is covered by loot_rank_knight_chain.",
+ "initial_state": {
+  "scene": "TEST_SOUTH_FIELD",
+  "player": {
+   "x": 16,
+   "y": 15,
+   "facing": "RIGHT"
+  },
+  "seed": 7006,
+  "variables": {
+   "MONSTERS_DEFEATED": 1,
+   "ENERGY_POOL": 2
+  },
+  "party": {
+   "HERO": {
+    "hp": 99,
+    "max_hp": 99
+   }
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "wait",
+   "frames": 300
+  },
+  {
+   "type": "wait",
+   "frames": 300
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 0,
+   "value": 193
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 4
+  },
+  {
+   "type": "event_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_ENDED",
+   "index": 0,
+   "value": "KNIGHT_SPLIT"
+  },
+  {
+   "type": "event_count",
+   "event": "ENCOUNTER_STARTED",
+   "count": 1
+  }
+ ]
+}

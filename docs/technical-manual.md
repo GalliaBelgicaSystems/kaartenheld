@@ -778,9 +778,10 @@ sword).
 * Effects are legal per weapon: daggers may carry **P**oison, swords may
   carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
   plain.  Illegal pairs carry no rider.
-* Loot material is **AP-gated** (docs/loot.md §34.5): AP 1 is wood-only,
-  AP 2–3 bronze, AP 4 iron, AP 5+ steel/mythril.  Steel and mythril stay
-  low-probability even at AP 5.
+* Loot material is **rank-centered** (docs/loot.md §34.5,
+  docs/enemies_ranking.md §4.3): each enemy's rank owns a material row
+  (R4 lives in iron, R5 in steel); the pool no longer shapes odds, it only
+  unlocks equipping through the `deck_equip_card` gate.
 
 Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).

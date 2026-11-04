@@ -969,6 +969,17 @@ Do not calculate sell values separately throughout the game.
 
 # 17. Enemy Loot Profiles
 
+Enemy rank owns loot quality (docs/enemies_ranking.md §4): each enemy
+type carries a `rank` (R0 lesson through R6 boss, `screens/enemy_types/`
++ `screens/schema/enemy_type.schema.json`, compiled into `EnemyTypeDef`
+and the `g_enemy_rank_by_battle` row in `src/game/loot_rank_content.c`),
+and the victory drop rolls that rank's material row only -- the energy
+pool (AP) no longer shapes odds, it only unlocks equipping (the
+`deck_equip_card` gate).  A slime knight lives in iron/steel, a mimic in
+steel, the Lord in steel/mythril; the slime-knight chain rolls R4 for the
+knight plus R1 for the spawned trio.  Rank 0 (Carl's spar, NPCs, chests,
+dogs) grants no drop and no gold.
+
 Enemies should influence the kinds of cards they can generate.
 
 Each enemy or enemy family should have a loot profile.
@@ -1768,48 +1779,59 @@ Every victory drops exactly one combat card (no rng gate — quality is
 what varies, not presence).  Balancing grant: the very first victory
 (zero monsters defeated so far) always drops a BRONZE SHIELD (derived id
 `0x81`), so the opening loot teaches blocking; every later drop rolls
-naturally:
+naturally.  Rank-0 lesson fights (Carl's spar) grant no card at all and
+never consume this grant (docs/enemies_ranking.md §8.2):
 
 ```text
 archetype weapon <- enemy profile bias (game layer, docs/loot.md §17)
-material         <- AP-gated weighted roll (see the table below)
+material         <- rank-centered weighted roll (see the table below)
 effect           <- legal-for-weapon weighted roll (plain/poison-heavy);
                     forced plain at wood (§34.1)
 ```
 
-**AP gate (demo scope).**  The roll reads the live battle energy pool
-(`VARIABLE_ID_ENERGY_POOL`) and maps it to a maximum material tier.  AP
-above 5 clamps to 5.  The demo ships no new AP-earning content; the
-existing tutorial/chest/Monster Hunt/mimic +1 grants are the whole ladder, and
-this table is the contract future AP sources plug into:
+**Rank decides quality (docs/enemies_ranking.md §4.3).**  The roll reads
+the enemy rank R0–R6 for the battle (`g_enemy_rank_by_battle`, compiled
+from the enemy-type JSON ranks) and walks that rank's cut row — it never
+reads the energy pool.  The same seed yields the same card at every pool;
+a slime knight is a slime knight.  AP (the pool) no longer shapes odds:
+it only unlocks equipping, through the `deck_equip_card` gate (§4.8),
+which refuses a loot card whose cost exceeds the pool (`NEED AP n`,
+`CARD_EQUIP_LOCKED` telemetry) instead of silently clamping the roll.
 
-| AP | Highest material | Approx. weights |
+| Rank | Centre | Approx. weights (wood/bronze/iron/steel/mythril) |
 |---|---|---|
-| 1 | wood | wood 100% |
-| 2 | bronze | wood 80 / bronze 20 |
-| 3 | bronze | wood 65 / bronze 35 |
-| 4 | iron | wood 50 / bronze 30 / iron 20 |
-| 5+ | mythril | wood 35 / bronze 30 / iron 25 / steel 8 / mythril 2 |
+| R1 FODDER | wood/bronze | 55 / 30 / 12 / 2 / 1 |
+| R2 VERMIN | bronze | 35 / 38 / 22 / 4 / 1 |
+| R3 GRUNT | bronze/iron | 20 / 35 / 30 / 12 / 3 |
+| R4 VETERAN | **iron** | 10 / 20 / 40 / 25 / 5 |
+| R5 ELITE | **steel** | 2 / 8 / 25 / 50 / 15 |
+| R6 BOSS | steel/mythril | 0 / 4 / 20 / 45 / 30 |
 
-Steel and mythril therefore **never** drop below AP 5; even at AP 5 they
-stay low-probability.  Higher AP broadens the pool, it does not
-guarantee a high tier.
+The rider chance steps with rank too (25% at R0–R1 up to 50% at R5–R6;
+riders still need bronze+ and a legal weapon).  There is no mythril
+hold-back: a mythril rider costs 6 AP and the equip gate covers it, so
+the generator hands one out early and the collection shows the locked
+goal.  The slime-knight chain rolls twice (R4 for the knight, R1 for the
+spawned trio) — kept deliberately (§4.7).
 
 Deterministic per seed (§26).  Telemetry: LOOT_CARD_ADDED
-(d0=derived id, d1=count after) -- the id itself identifies the
-material/effect/weapon roll via the §34.1 macros (the id range also
-proves the AP gate's lower bound: at AP 1 every drop is `0x60..0x7F`).
+(d0=derived id, d1=count after, d2=enemy rank R0–R6) -- the id itself
+identifies the material/effect/weapon roll via the §34.1 macros.
 
 Implementation: the whole decision (profile pick + roll + encode)
-is ONE bank-9 body (`src/game/loot_drop_banked.c`) behind the thin
-`game_loot_drop()` wrapper; it steps the ISOLATED loot stream
-(`g_loot_rng_state`, seeded from the main seed by `rng_set_seed`) so drops
-never shift shared-RNG scenario outcomes.  The drop path must stay nearly
-fixed-bank-free — overflowing `_CODE`/`_HOME` past 0x8000 corrupts bank 2
-and hangs the guest (AGENTS.md §52.18).  Regression:
+is ONE bank-9 body (`src/game/loot_drop_banked.c`, with the rank row in
+`src/game/loot_rank_content.c` and the gate/rank helpers in
+`src/game/loot_gate_banked.c`) behind thin fixed-bank wrappers; it steps
+the ISOLATED loot stream (`g_loot_rng_state`, seeded from the main seed
+by `rng_set_seed`) so drops never shift shared-RNG scenario outcomes.
+The drop path must stay nearly fixed-bank-free — overflowing
+`_CODE`/`_HOME` past 0x8000 corrupts bank 2 and hangs the guest
+(AGENTS.md §52.18).  Regression:
 `tools/scenarios/tests/loot_drop_victory.json` (first victory always
-bronze shield), `loot_ap_iron_cap.json` (AP 4 cap) and
-`loot_ap_steel.json` (AP 5 unlock; seed 76 is a clean per-AP ladder).
+bronze shield), `loot_rank_slime.json` (R1 shape), `loot_rank_knight.json`
+(R4 shape), `loot_rank_same_pool2/5.json` (pool independence),
+`loot_rank_knight_chain.json` (R4+R1 double roll),
+`deck_equip_locked_loot.json` (the equip gate).
 
 The reveal is a three-line centered block on the otherwise-blank rows 10-12
 of the battle victory banner: row 10 shows "YOU FOUND:", row 11 shows the
@@ -1825,16 +1847,20 @@ The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
 the amulet completes the quest (+15g, amulet removed) and opens the
 shop; finding it is what makes the delivery (and the shop) available:
 
-* BUY: one-copy stock -- the curated IRON RING (**RG4**, 20g) and the
-  mythril bow (**BO9**, 30g), one of each.  A row shows only while the
-  player owns no copy; buying both empties the shop into `(out of
-  stock)`.  Rings are THE healing vector, so healing is purchasable but
+* BUY: one-copy stock -- the curated IRON RING (**RG4**, 20g), the
+  mythril bow (**BO9**, 30g), and the steel shield (**SH6**, 12g, the
+  merchant-stocked answer to the Lord's flat-6 swing), one of each.  A row
+  shows only while the player owns no copy; buying all three empties the
+  shop into `(out of stock)`.  Ownership counts the card identity, not the
+  row id: a loot twin already owned merges under the capped curated id,
+  so the one-copy row hides and rebuys refuse instead of stacking past
+  the cap.  Rings are THE healing vector, so healing is purchasable but
   never free.  Leaving the shop after a purchase opens the merchant's
   equip tip as a normal dialogue box (the in-shop hint lines are gone);
   browsing without buying quits straight back to the overworld.  The
   iron sword / poison dagger are gone from the stock:
   the starter deck carries a wood sword, iron and better swords come
-  from loot as derived ids (iron unlocks at AP 4; the catalog
+  from loot as derived ids (knights live in iron/steel; the catalog
   `CARD_IRON_SWORD` is test-only and never drops), and daggers come
   from the field cache and loot.
 * TRADE/SELL (implemented): pick an owned loot card in the DECK tab ->
@@ -1850,8 +1876,9 @@ shield plus two bronze fire swords (the starter rider exception).
 
 * DONE: identity tables + derived-id synthesis; joker rings (both phases,
   one-ring gate -- battle Cards carry a `ring` flag set at deck init from
-  the derived id); net-damage defense; AP-gated generation roll +
-  profiles; wood/bronze starter; merchant buy stock; sell via CARDS-tab
+  the derived id); net-damage defense; rank-centered generation roll +
+  profiles (rank decides, AP only unlocks equipping); wood/bronze starter;
+  merchant buy stock (ring/bow/steel shield); sell via CARDS-tab
   detail page (§34.6).
 * FOLLOW-UP increments: affix catalogue growth; fire/ice statuses
   (DONE, see §34.1); HEAL ALL.

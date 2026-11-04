@@ -549,7 +549,7 @@
         "visual": "C",
         "hp": 30,
         "max_hp": 30,
-        "gold_reward": 5,
+        "gold_reward": 0,
         "reward_currency": "CURRENCY_ID_GOLD",
         "battle": "BATTLE_CARL",
         "solo": true,

@@ -1,28 +1,35 @@
 {
  "name": "card_ap_loot_gate_mythril_rider",
  "test": true,
- "description": "Mythril-rider suppression (docs/card-ap-cost-formula.md §6.1): seed 210 at pool 5 rolls mythril + a rider-eligible fire roll (eff 5 < 32), which the LOOT_AP_MYTHRIL_RIDER gate withholds until pool 6. The drop is a plain MYTHRIL SWORD (derived id 224): without the gate it would be id 240 (M F SW, cost 6, unplayable at pool 5). Delete the suppression and this scenario drops 240.",
+ "description": "Mythril rider gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.3/\u00a74.8): no mythril hold-back exists anymore -- seed 210 on the R5 mimic rolls a MYTHRIL FIRE SWORD (id 0xF0 = 240, formula cost 6) and the reveal names the rider. The card cannot be decked until the pool reaches 6 (deck_equip_locked_loot covers the refusal); the locked card is the motivation to raise AP. (The R3 kobold rolls the same id for seed 210, but the seed-210 shuffle leaves a trio standing -- the solo mimic is the deterministic stage.)",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_CASTLE",
   "player": {
-   "x": 13,
-   "y": 8,
-   "facing": "DOWN"
+   "x": 11,
+   "y": 10,
+   "facing": "RIGHT"
   },
   "seed": 210,
-  "party": {
-   "HERO": {
-    "hp": 60,
-    "max_hp": 60
-   }
-  },
   "variables": {
    "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 5
   },
-  "start_battle": true
+  "party": {
+   "HERO": {
+    "hp": 99,
+    "max_hp": 99
+   }
+  }
  },
  "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
   {
    "type": "set_enemy_hp",
    "index": 0,
@@ -37,6 +44,14 @@
    "type": "set_enemy_hp",
    "index": 2,
    "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
   },
   {
    "type": "press",
@@ -160,20 +175,26 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 224
+   "value": 240
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 5
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "M SW"
+   "contains": "M F SW"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "MYTHRIL SWORD"
+   "contains": "MYTHRIL FIRE SWORD"
   },
   {
-   "type": "screen_row_not_contains",
+   "type": "screen_row",
    "row": 12,
    "contains": "FIRE"
   }

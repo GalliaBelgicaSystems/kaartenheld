@@ -1,9 +1,9 @@
 {
  "name": "loot_ap_steel",
  "test": true,
- "description": "AP-gated loot unlock (docs/loot.md 34.5): the same isolated loot stream yields different material tiers by AP. At AP 5 seed 76 deterministically rolls a STEEL SWORD (derived id 0xC0 = 192, material 3); asserts LOOT_CARD_ADDED and the reveal name. The same seed at AP 1 rolls a wood sword (id 96); loot_drop_victory covers the AP 1 wood/no-rider case with seed 5002.",
+ "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): the pool is staged at 5 but no longer shapes the drop -- seed 76 on the R3 kobold rolls a plain STEEL SWORD (derived id 0xC0 = 192, rank 3). The same seed at pool 4 (loot_ap_iron_cap) yields the identical card: AP only unlocks equipping.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
@@ -185,6 +185,12 @@
    "event": "LOOT_CARD_ADDED",
    "index": 0,
    "value": 192
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 3
   },
   {
    "type": "screen_row",

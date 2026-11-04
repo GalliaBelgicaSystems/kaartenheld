@@ -1,9 +1,12 @@
 # Enemy Ranking & Rank-Driven Loot
 
-**Status:** proposal, nothing implemented.  Written 2026-11-04 on branch
-`balancing`; **decisions resolved 2026-11-04** (see §8).  Code references are
-to the current tree; numbers in §3–§6 are computed exactly from the 1/256 roll
-tables (not sampled).
+**Status:** implemented 2026-11-04 on branch `balancing` (Phases 0–2
+landed: rank data model, rank-only loot, the equip gate, stat bands, the
+audit gate and the scenario matrix).  Decisions resolved 2026-11-04
+(see §8).  Code references are to the tree the proposal was written
+against; numbers in §3–§6 are computed exactly from the 1/256 roll
+tables (not sampled).  §1.3 documents the pre-rank AP-gated roll the
+proposal replaced; §6 is the implementation plan as executed.
 
 **Mechanism (decided).**  The drop roll is **rank-only**; the energy pool (AP)
 becomes an **equip unlock**.  An enemy always rolls from its rank's row no
@@ -799,8 +802,8 @@ code (and any 8-bit multiply would pull `__mulsuchar` into the fixed bank,
 
 ## 6. Implementation plan
 
-No code is written yet.  The change is staged so each phase is independently
-testable and reversible.
+Implemented as staged (each phase independently testable and reversible).
+What follows is the plan as executed.
 
 ### Phase 0 — data model (no gameplay change)
 

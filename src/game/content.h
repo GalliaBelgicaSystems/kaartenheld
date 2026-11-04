@@ -52,6 +52,12 @@ bool game_carl_tutorial_update(Game *g);
  * Uses the isolated loot RNG only -- never consumes the shared stream. */
 uint8_t game_loot_drop(uint8_t battle_type);
 
+/* Battle -> enemy rank R0-R6 (src/game/loot_gate_banked.c, ROM bank 9
+ * with the rank table): g_bk_byte_a = battle id, result in g_bk_byte_b.
+ * Fixed-bank victory code reports it as LOOT_CARD_ADDED d2 (no WRAM
+ * growth, docs/enemies_ranking.md §4.3). */
+void game_loot_rank_banked(void);
+
 /* Unwinnable-boss desperation check (src/game/despair_banked.c, ROM
  * bank 8): re-derives the engine's g_despair_slot cache from the game
  * battle table, floors the boss HP at 1, stages the banner + message

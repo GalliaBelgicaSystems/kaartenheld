@@ -30,7 +30,12 @@ const CardDefinition g_cards[] = {
     { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  CARD_AP(9, MAT_MYTHRIL, 0),  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, STATUS_NONE,       0,   "M BO"  },
     /* Wood sword: the tier-1 starter blade (hero.json).  Plain; wood can
      * never carry a rider. */
-    { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "W SW" }
+    { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "W SW" },
+    /* Steel shield (power 6, AP 3, 12 g): the merchant-stocked answer to
+     * the Lord of Slimes' flat-6 swing (docs/enemies_ranking.md §5.2/§8.4
+     * decided) -- blocks it alone, where the old two-SH2 answer leaves 2
+     * through.  Curated steel following the same band as loot steel. */
+    { CARD_STEEL_SHIELD,  CARD_TYPE_DEFENSE, 6, CARD_AP(6, MAT_STEEL, 0), 0, 2, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,   12, STATUS_NONE,       0,   "S SH" }
 };
 
 /* Keep the register-time count in game_ids.h in sync with this table. */

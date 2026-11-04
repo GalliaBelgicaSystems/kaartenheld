@@ -146,10 +146,11 @@ void battle_telegraph_banked(void)
             b->enemy_deck.draw_idx = 0;
         }
     } else {
-        b->enemy_incoming_dmg = 4;
-        /* No enemy card: the fallback flat 4-damage swipe still
+        b->enemy_incoming_dmg = 6;
+        /* No enemy card: the fallback flat 6-damage swipe still
          * marks an inbound strike.  Only deckless battlers (the
-         * Lord of Slimes) reach this: two SH2 shields block it
-         * exactly. */
+         * Lord of Slimes) reach this: three SH2 shields (3 x 2 = 6)
+         * or one steel shield (power 6, stocked by the merchant)
+         * blocks it exactly (docs/enemies_ranking.md §5.2). */
     }
 }

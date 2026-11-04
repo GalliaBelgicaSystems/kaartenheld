@@ -5,7 +5,7 @@
   "description": "Semantic source of truth for an enemy type. The web enemy type editor and the JSON->C compiler both read this; it must not be edited by hand except through the editor.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "label", "category", "sprite", "name", "hp", "max_hp", "battle_id", "gold_reward", "reward_currency"],
+  "required": ["id", "label", "category", "sprite", "name", "hp", "max_hp", "battle_id", "rank", "gold_reward", "reward_currency"],
   "properties": {
     "id": {
       "type": "string",
@@ -105,6 +105,12 @@
       "type": "string",
       "pattern": "^BATTLE_[A-Z_]+$",
       "description": "Engine battle ID constant (e.g., BATTLE_SLIME, BATTLE_BOSS)."
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6,
+      "description": "Enemy rank R0-R6 (docs/enemies_ranking.md §4.1): 0 lesson (no drop), 1 fodder, 2 vermin, 3 grunt, 4 veteran, 5 elite, 6 boss. Loot quality is centered on this rank's material row."
     },
     "ai_types": {
       "type": "array",

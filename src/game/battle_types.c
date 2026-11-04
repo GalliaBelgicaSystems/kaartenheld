@@ -30,7 +30,8 @@ static const EnemyTypeDef g_enemy_type_bat = {
     1,
     2,
     0,
-    0
+    0,
+    2
 };
 
 static const EnemyTypeDef g_enemy_type_dog = {
@@ -54,6 +55,7 @@ static const EnemyTypeDef g_enemy_type_dog = {
     1,
     2,
     6,
+    0,
     0
 };
 
@@ -78,7 +80,8 @@ static const EnemyTypeDef g_enemy_type_kobold = {
     1,
     2,
     0,
-    124
+    124,
+    3
 };
 
 static const EnemyTypeDef g_enemy_type_mimic = {
@@ -89,7 +92,7 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     50,
     50,
     "BATTLE_MIMIC",
-    0,
+    20,
     CURRENCY_ID_GOLD,
     3,
     1,
@@ -102,7 +105,8 @@ static const EnemyTypeDef g_enemy_type_mimic = {
     1,
     130,
     1,
-    0
+    0,
+    5
 };
 
 static const EnemyTypeDef g_enemy_type_npc_guard = {
@@ -126,6 +130,7 @@ static const EnemyTypeDef g_enemy_type_npc_guard = {
     1,
     1,
     7,
+    0,
     0
 };
 
@@ -150,6 +155,7 @@ static const EnemyTypeDef g_enemy_type_npc_heal_mage = {
     1,
     1,
     7,
+    0,
     0
 };
 
@@ -174,6 +180,7 @@ static const EnemyTypeDef g_enemy_type_npc_mayor = {
     1,
     1,
     7,
+    0,
     0
 };
 
@@ -198,6 +205,7 @@ static const EnemyTypeDef g_enemy_type_npc_merchant = {
     1,
     1,
     6,
+    0,
     0
 };
 
@@ -222,6 +230,7 @@ static const EnemyTypeDef g_enemy_type_npc_wizard = {
     1,
     1,
     5,
+    0,
     0
 };
 
@@ -246,7 +255,8 @@ static const EnemyTypeDef g_enemy_type_slime = {
     1,
     2,
     3,
-    0
+    0,
+    1
 };
 
 static const EnemyTypeDef g_enemy_type_slime_knight = {
@@ -254,10 +264,10 @@ static const EnemyTypeDef g_enemy_type_slime_knight = {
     "Slime Knight",
     0,
     "SLIME KNIGHT",
-    15,
-    15,
+    20,
+    20,
     "BATTLE_SLIME_KNIGHT",
-    12,
+    15,
     CURRENCY_ID_GOLD,
     6,
     1,
@@ -270,7 +280,8 @@ static const EnemyTypeDef g_enemy_type_slime_knight = {
     1,
     2,
     3,
-    125
+    125,
+    4
 };
 
 static const EnemyTypeDef g_enemy_type_slime_lord = {
@@ -294,7 +305,8 @@ static const EnemyTypeDef g_enemy_type_slime_lord = {
     2,
     1,
     4,
-    0
+    0,
+    6
 };
 
 static const EnemyTypeDef g_enemy_type_spider = {
@@ -305,7 +317,7 @@ static const EnemyTypeDef g_enemy_type_spider = {
     10,
     10,
     "BATTLE_SPIDER",
-    15,
+    8,
     CURRENCY_ID_GOLD,
     5,
     1,
@@ -318,7 +330,8 @@ static const EnemyTypeDef g_enemy_type_spider = {
     1,
     2,
     0,
-    0
+    0,
+    2
 };
 
 static const EnemyTypeDef g_enemy_type_treasure_chest = {
@@ -342,6 +355,7 @@ static const EnemyTypeDef g_enemy_type_treasure_chest = {
     1,
     2,
     1,
+    0,
     0
 };
 

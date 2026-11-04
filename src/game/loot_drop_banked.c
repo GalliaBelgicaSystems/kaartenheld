@@ -3,45 +3,60 @@
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
-#include "battle.h"
 #include "core/game.h"
 #include "game_ids.h"
 
-/* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5) ─────
+/* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5,
+ * docs/enemies_ranking.md §4.3) ─────────────────────────────
  * SINGLE banked entry for the whole drop decision: archetype weapon
- * pick from the enemy family's profile, material + legal-effect roll,
- * derived-id encode.  Every victory drops exactly one card -- quality
- * (material/effect) is what varies.
+ * pick from the enemy family's profile, rank-centered material +
+ * legal-effect roll, derived-id encode.  Every victory drops exactly
+ * one card -- quality (material/effect) is what varies.
  *
  * Runs from ROM bank 9 via the WRAM trampoline.  Self-contained: reads
- * the battle id from g_bk_byte_a, steps g_loot_rng_state inline (never
- * a fixed-bank call), and reports through g_loot_id.
+ * the battle id from g_bk_byte_a, the rank from the compiled
+ * g_enemy_rank_by_battle row (same bank), steps g_loot_rng_state inline
+ * (never a fixed-bank call), and reports through g_loot_id.
+ *
+ * Rank-only (no AP read): the material walk reads the rank row, so the
+ * same seed yields the same card at every pool -- a slime knight is a
+ * slime knight.  The equip gate (deck_equip_card) keeps unpayable cards
+ * out of the deck instead of clamping the roll.  Rank 0 (lesson fights)
+ * writes CARD_NONE: no card, and the first-victory grant below is
+ * skipped so a spar cannot consume it.
  *
  * The profile table is game content and lives here with the body; the
  * fixed-bank cost of drops is one tiny wrapper in src/game/content.c.
  */
 
-/* AP-gated material roll (docs/loot.md §34.5).  s_ap_cap is the highest
- * material index that AP can roll (AP 1 = wood only; AP 2-3 = bronze;
- * AP 4 = iron; AP 5+ = steel/mythril).  s_ap_cut is the cumulative
- * 1/255 threshold for each material: the roll walks up while it exceeds
- * the current cut.  High tiers stay rare even at AP 5 (steel ~8%,
- * mythril ~2%).  AP 5 and above share row 4; see LOOT_AP_* in loot.h. */
-static const uint8_t s_ap_cap[5] = {
-    MAT_WOOD, MAT_BRONZE, MAT_BRONZE, MAT_IRON, MAT_MYTHRIL
+/* Rank-centered material roll (docs/enemies_ranking.md Appendix A).
+ * The roll walks up while it exceeds the current cut.  Rows are the
+ * realized 1/256 outcomes, strictly increasing in expected material
+ * (R1 0.65 -> R6 3.00): R4 peaks on iron, R5 on steel, R6 on mythril. */
+static const uint8_t s_rank_cut[7][5] = {
+    {   0,   0,   0,   0,   0 },   /* R0 LESSON   (never rolled) */
+    { 139, 216, 247, 253, 255 },   /* R1 FODDER   */
+    {  88, 185, 242, 253, 255 },   /* R2 VERMIN   */
+    {  50, 139, 216, 247, 255 },   /* R3 GRUNT    */
+    {  24,  75, 178, 242, 255 },   /* R4 VETERAN  */
+    {   4,  24,  88, 216, 255 },   /* R5 ELITE    */
+    {   0,  11,  63, 178, 255 }    /* R6 BOSS     */
 };
-static const uint8_t s_ap_cut[5][5] = {
-    { 255,   0,   0,   0,   0 },   /* AP 1: wood only */
-    { 204, 255,   0,   0,   0 },   /* AP 2: ~80/20 wood/bronze */
-    { 166, 255,   0,   0,   0 },   /* AP 3: ~65/35 wood/bronze */
-    { 128, 204, 255,   0,   0 },   /* AP 4: ~50/30/20 */
-    {  89, 166, 230, 250, 255 }    /* AP 5+: ~35/30/25/8/2 */
-};
+
+/* Rank-stepped rider gate (docs/enemies_ranking.md §4.3): R0-1 25%,
+ * R2 31.25%, R3 37.5%, R4 43.75%, R5-6 50% of bronze+ sword/dagger
+ * rolls carry the legal rider. */
+static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
+
+/* BattleId -> rank R0-R6 (compiled by battle_compile.py from the
+ * enemy_type JSON ranks; same bank, direct read). */
+extern const uint8_t g_enemy_rank_by_battle[9];
 
 void game_loot_drop_banked(void)
 {
     uint8_t battle_type = g_bk_byte_a;
     uint8_t weapon;
+    uint8_t rank;
 
     /* Always-drop (docs/loot.md §34.5): the 50% gate is gone -- every
      * victory yields a card, quality varies instead of presence.  The
@@ -69,9 +84,9 @@ void game_loot_drop_banked(void)
         }
     }
 
-    /* Roll material + legal effect for the weapon (AP-gated weights;
-     * legal non-plain effects per §34.2: daggers poison, swords burn or
-     * chill, everything else stays plain).  Rings follow the same
+    /* Roll material + legal effect for the weapon (rank-centered
+     * weights; legal non-plain effects per §34.2: daggers poison, swords
+     * burn or chill, everything else stays plain).  Rings follow the same
      * material roll -- healing uses the same material bands as attack
      * and defense. */
     g_loot_rng_state ^= g_loot_rng_state << 7;
@@ -80,46 +95,33 @@ void game_loot_drop_banked(void)
     {
         uint8_t mat_roll = (uint8_t)g_loot_rng_state;
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);
-        int16_t pool;
-        uint8_t ap;
-        uint8_t row;
-        uint8_t cap;
         uint8_t material = MAT_WOOD;
         uint8_t effect = EFF_PLAIN;
-        /* Same normalization as battle_hud_load_banked (the authority for
-         * the live pool): an unset variable means "use the default", not
-         * "AP 0 drops" -- without this an unset pool ran the battle on 2
-         * AP but rolled the AP-1 wood-only profile. */
-        pool = g_game.state.variables.values[
-            VARIABLE_ID_ENERGY_POOL - 1];
-        if (pool < 1) pool = BATTLE_ENERGY_PER_TURN;
-        if (pool > 255) pool = 255;
-        ap = (uint8_t)pool;
 
-        /* Map AP to the weighted-roll row.  The LOOT_AP_* thresholds are
-         * the unlock contract (docs/loot.md §34.5): AP 1 wood; AP 2-3
-         * bronze; AP 4 iron; AP 5+ steel/mythril. */
-        if (ap < LOOT_AP_BRONZE) {
-            row = 0;
-        } else if (ap < LOOT_AP_IRON) {
-            row = (uint8_t)(1 + (ap - LOOT_AP_BRONZE));
-        } else if (ap < LOOT_AP_STEEL) {
-            row = 3;
+        /* Rank = shape (docs/enemies_ranking.md §4.3/§8.1).  Unknown
+         * battle ids fall back to the fodder row (never CARD_NONE: only
+         * rank 0 means no drop). */
+        if (battle_type < 9) {
+            rank = g_enemy_rank_by_battle[battle_type];
         } else {
-            row = 4;
+            rank = 1;
         }
-        cap = s_ap_cap[row];
-        while (material < cap &&
-               mat_roll > s_ap_cut[row][material]) {
+        if (rank > 6) rank = 1;
+        if (rank == 0) {
+            g_loot_id = CARD_NONE;
+            return;
+        }
+
+        while (material < MAT_MYTHRIL &&
+               mat_roll > s_rank_cut[rank][material]) {
             material++;
         }
 
-        /* Plain-heavy (§34.5): only 25% of rolls carry a rider, and
-         * wood can never carry one (docs/loot.md §34.1).  Mythril riders
-         * cost 6 (docs/card-ap-cost-formula.md §6.1), so the generator
-         * withholds them until the pool reaches LOOT_AP_MYTHRIL_RIDER. */
-        if (material >= MAT_BRONZE && eff_roll < 64 &&
-            (material < MAT_MYTHRIL || ap >= LOOT_AP_MYTHRIL_RIDER)) {
+        /* Rider chance steps with rank (s_rank_gate); wood can never
+         * carry one (docs/loot.md §34.1).  No mythril hold-back: the
+         * equip gate covers unaffordable cards, so the generator hands
+         * them out and the collection shows the locked goal. */
+        if (material >= MAT_BRONZE && eff_roll < s_rank_gate[rank]) {
             if (weapon == WPN_DAGGER) {
                 effect = EFF_POISON;
             } else if (weapon == WPN_SWORD) {
@@ -135,7 +137,8 @@ void game_loot_drop_banked(void)
          * always a bronze shield, so the opening loot teaches blocking.
          * Gated on the global kill counter (0 kills = no victory yet), so
          * every later drop rolls naturally.  Placed AFTER the rolls so the
-         * isolated stream keeps its positions for a given seed. */
+         * isolated stream keeps its positions for a given seed.  Rank-0
+         * lesson fights return above and never reach (or consume) this. */
         if (g_game.state.variables.values[
                 VARIABLE_ID_MONSTERS_DEFEATED - 1] == 0) {
             g_loot_id = (uint8_t)(LOOT_ID_BASE +

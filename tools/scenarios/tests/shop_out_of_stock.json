@@ -1,11 +1,19 @@
 {
  "name": "shop_out_of_stock",
  "test": true,
- "description": "One-copy stock: buying the ring hides its row (bow slides up to the cursor) and buying the bow empties the shop into (out of stock); gold spent exactly",
+ "description": "One-copy stock: buying the ring hides its row (bow slides up to the cursor), buying the bow and the steel shield empties the shop into (out of stock); gold spent exactly (20 + 30 + 12 = 62 of 70 staged).",
  "actions": [
   {
    "type": "interact",
    "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",
@@ -49,14 +57,19 @@
    "expected": 1
   },
   {
+   "type": "inventory",
+   "item": "STEEL_SHIELD",
+   "expected": 1
+  },
+  {
    "type": "currency",
-   "expected": 10,
+   "expected": 8,
    "currency": "GOLD"
   },
   {
    "type": "event_count",
    "event": "CARD_PURCHASED",
-   "count": 2
+   "count": 3
   }
  ],
  "initial_state": {
@@ -71,7 +84,7 @@
    "ARRIVED_TOWN": true
   },
   "currency": {
-   "GOLD": 60
+   "GOLD": 70
   },
   "variables": {
    "MERCHANT_QUEST": 2

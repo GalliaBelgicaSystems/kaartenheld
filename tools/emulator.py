@@ -119,6 +119,7 @@ EVENT_TYPE_MAP = {
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
     65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
+    67: "CARD_EQUIP_LOCKED",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -238,7 +239,8 @@ ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_9": 0x46, "WOOD_SWORD": 0x47}
+               "BOW_9": 0x46, "WOOD_SWORD": 0x47,
+               "STEEL_SHIELD": 0x48}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}

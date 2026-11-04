@@ -296,8 +296,8 @@ def main():
     if set(doc_catalog.keys()) != set(cat_calls.keys()):
         fail("catalog keys diverge from §4.3: doc=%s catalog=%s"
              % (sorted(doc_catalog.keys()), sorted(cat_calls.keys())))
-    if len(doc_catalog) != 8:
-        fail("parsed %d §4.3 catalog rows from the doc, expected 8"
+    if len(doc_catalog) != 9:
+        fail("parsed %d §4.3 catalog rows from the doc, expected 9"
              % len(doc_catalog))
     for row, (args, expected) in doc_catalog.items():
         if row == "AMULET":

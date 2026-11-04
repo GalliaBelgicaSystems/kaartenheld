@@ -398,9 +398,10 @@ def run_scenario(scenario):
                                      act.get("status", 1) & 0xFF,
                                      act.get("chance", 255) & 0xFF)
             elif act_type == "deck_add":
-                # Direct deck_add_card() call (real mechanic, all validations:
-                # ownership, SPECIAL exclusion, max_copies, 20-card size).
-                # Emits CARD_ADDED_TO_DECK on success only.
+                # Direct deck_equip_card() call (real gated mechanic, all validations:
+                # ownership, SPECIAL exclusion, max_copies, 20-card size, loot AP lock).
+                # Emits CARD_ADDED_TO_DECK on success, CARD_EQUIP_LOCKED on a locked
+                # loot card.
                 session.debug_action(session.DBG_ACT_DECK_ADD,
                                      ITEM_ID_MAP[act.get("card")], 0, 0)
             elif act_type == "deck_remove":

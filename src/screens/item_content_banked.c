@@ -39,6 +39,7 @@
 #define MSG_DECK_FULL  1
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
+#define MSG_NEED_AP    4
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -603,11 +604,23 @@ static const char *ic_sort_name(uint8_t s)
     }
 }
 
+/* Live energy pool for the equip gate (docs/enemies_ranking.md §4.8):
+ * an unset variable means the default pool (same normalization as the
+ * battle HUD loader), never AP 0. */
+static uint8_t ic_pool(const Game *g)
+{
+    int16_t p = g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+    if (p < 1) return 1;
+    if (p > 255) return 255;
+    return (uint8_t)p;
+}
+
 /* One card per row (new layout):
  *   col 0: cursor caret
  *   col 1: element cell (blank BG tile; rider OAM overlays it) + element color
  *   col 2: weapon BG tile (wood palette)
- *   col 3-4: AP cost (2-wide, right-aligned)
+ *   col 3-4: AP cost (2-wide, right-aligned; locked rows show `!` + digit
+ *            so the gate is visible before the keypress)
  *   col 5-18: full "<MAT> <WPN>" name, element-colored
  *   col 19: decked-copy count (as before) */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
@@ -639,6 +652,12 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     }
 
     IC_DRAW_NUM2(3, y, s_ic_def->cost);
+    /* Equip-gate lock (docs/enemies_ranking.md §4.8): a loot card above
+     * the pool shows `!` + digit in the AP column, so the player sees
+     * the lock before pressing A. */
+    if (loot_is_loot_id(s_ic_id) && s_ic_def->cost > ic_pool(g)) {
+        IC_DRAW_TEXT(3, y, "!", 1);
+    }
     ic_draw_full_name(5, y, s_ic_def);
 
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
@@ -694,7 +713,21 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "DECK MIN 5", 10);
     else if (g->item_menu_message == MSG_QUEST_ITEM)
         IC_DRAW_TEXT(0, 16, "QUEST ITEM", 10);
-    else
+    else if (g->item_menu_message == MSG_NEED_AP) {
+        /* The digit reads the selected card's cost at draw time -- no
+         * new Game field, no WRAM growth (AGENTS.md §52.24). */
+        uint8_t need = 0;
+        if (g->item_menu_index >= FIRST_CARD &&
+            (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
+            const CardDefinition *nd =
+                ic_card_get_def(ic_view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD)));
+            if (nd) need = nd->cost;
+        }
+        IC_DRAW_TEXT(0, 16, "NEED AP", 7);
+        s_ic_code[0] = (char)('0' + need);
+        s_ic_code[1] = '\0';
+        IC_DRAW_TEXT(8, 16, s_ic_code, 1);
+    } else
         IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
 }
 

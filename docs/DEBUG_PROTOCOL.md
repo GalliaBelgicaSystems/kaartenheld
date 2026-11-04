@@ -577,11 +577,13 @@ in the host maps (docs/loot.md §34).
   `add_item`, `remove_item`, `add_currency`, `add_progress`, `buy_item`,
   `use_item_direct`, `deck_add`, `deck_remove` (via the ROM
   `g_debug_action` channel).  The button-driven `use_item` action still
-  tests the item menu UI.  `deck_add`/`deck_remove` call the real
-  `deck_add_card`/`deck_remove_card`, so every validation (ownership,
-  per-card caps, `DECK_MIN_CARDS`) applies; they emit
-  `CARD_ADDED_TO_DECK` / `CARD_REMOVED_FROM_DECK` on success only, so
-  scenarios assert rejection via event counts.
+  tests the item menu UI.  `deck_add` calls the real gated
+  `deck_equip_card` (ownership, per-card caps, `DECK_MIN_CARDS`, plus the
+  loot AP lock), `deck_remove` calls `deck_remove_card`; they emit
+  `CARD_ADDED_TO_DECK` / `CARD_EQUIP_LOCKED` / `CARD_REMOVED_FROM_DECK`
+  on their respective outcomes only, so scenarios assert rejection via
+  event counts.  A locked `deck_add` emits `CARD_EQUIP_LOCKED`
+  (`d0` = card id, `d1` = required AP) and no `CARD_ADDED_TO_DECK`.
 * Save/load: the `save` and `load` scenario actions (via the `g_debug_action`
   channel, codes 8 and 9) call `save_game`/`load_game`
   (`src/rpg/save.{h,c}`) — SRAM battery persistence of `GameState`.  After a
@@ -1531,12 +1533,22 @@ LOOT_CARD_ADDED
             material = (id-0x60)>>5, effect = (id>>3)&3, weapon = id&7;
             material 0=wood 1=bronze 2=iron 3=steel 4=mythril)
   data[1] = collection count after the add
+  data[2] = enemy rank R0-R6 (docs/enemies_ranking.md §4.3: the rank row
+            the drop rolled; rank 0 never emits this event -- lesson
+            fights grant no card)
 
 CARD_SOLD (docs/loot.md §34.6)
   data[0] = CardId sold
   data[1] = gold received (the def's price -- the centralized sell
             value for loot ids)
   data[2] = collection count after the sale
+
+CARD_EQUIP_LOCKED (docs/enemies_ranking.md §4.8)
+  data[0] = CardId refused (loot-derived, cost above the live pool)
+  data[1] = required AP (the card's cost; the quick screen shows
+            NEED AP <d1>)
+  data[2] = 0
+  No CARD_ADDED_TO_DECK fires with it.
 ```
 
 ---

@@ -167,7 +167,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 7
   },
   {
    "type": "battle_enemy_hp",
@@ -194,7 +194,7 @@
    "type": "event_arg",
    "event": "DAMAGE_RECEIVED",
    "index": 0,
-   "value": 2
+   "value": 3
   },
   {
    "type": "event_count",

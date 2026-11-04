@@ -250,6 +250,7 @@ comparison.
 | Iron Sword | `I SW` | 5 / iron / — | **2** | 1 |
 | Iron Ring | `I RG` | 4 / iron / — | **2** | 1 |
 | Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
+| Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
 | Amulet | `AMULET` | SPECIAL, not playable | **0** | 0 |
 
 Every curated row happens to be band-built, which is why the formula
@@ -322,17 +323,18 @@ drop unplayable:
 
 * wood+riders (would cost 2 at gate 1), which the generator and the
   synthesiser both forbid (§34.1, `rider_legal()`);
-* mythril+riders (cost 6 at material gate 5), which the generator must not
-  roll until the pool reaches 6: a new `LOOT_AP_MYTHRIL_RIDER 6` threshold
-  in `src/rpg/loot.h`, enforced in `src/game/loot_drop_banked.c` next to
-  the wood rule (`material >= MAT_BRONZE` gains `&& (material <
-  MAT_MYTHRIL || ap >= LOOT_AP_MYTHRIL_RIDER)` around the rider roll).
-  The synth's `has_rider` strip stays the last line of defense for
-  hand-encoded ids.
+* mythril+riders (cost 6 at material gate 5): the generator rolls them
+  freely now that drops are rank-decided (docs/enemies_ranking.md §4.3) --
+  the old `LOOT_AP_MYTHRIL_RIDER` hold-back is gone, and the equip gate
+  (`deck_equip_card`, §4.8) covers it instead: a 6-AP card cannot be
+  decked until the pool reaches 6, so the locked card sits in the
+  collection as a visible "come back with AP 6" marker.  The synth's
+  `has_rider` strip stays the last line of defense for hand-encoded ids.
 
-This is the invariant that makes the loot AP gate coherent: a card that can
-drop is a card you can play, in the same battle, on the same pool.  Any
-future tuning knob must preserve it (§8.4).
+Coherence now comes from the equip gate, not the generator: a card that
+can drop is a card you can *own*, and the gate names the price of wearing
+it (`NEED AP n`) instead of hiding it.  Any future tuning knob must
+preserve that (§8.4).
 
 ### 6.2 The ceiling is 6, and only mythril riders live there
 
@@ -619,8 +621,8 @@ means the AP side cannot be the cause.
 | Check | What it proves |
 |---|---|
 | New scenarios `card_ap_formula_wood` / `_rider` / `_mythril` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  The descriptor deck section deals five identical catalog cards (`WOOD_SWORD` → pip 96, `FIRE_SWORD` → pip 97, `BOW_9` → pip 122) and asserts the OAM pip tile on all five hand slots (`oam_tile`).  The cost travels catalog def → battle deck → render with no injection anywhere in the path.  `M F SW` (6) cannot be staged this way until a pool-6 battle exists — assert it via `make card-costs`, not via a battle. |
-| New scenario `card_ap_loot_gate` | Seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3): victory grants it, the reveal names it (`S SW` / `STEEL SWORD`), and the DECK tab row shows AP digit 3, which the pool affords.  The §6.1 invariant on a real drop, not on a hand-picked card. |
-| New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll (eff 5 < 32), which the `LOOT_AP_MYTHRIL_RIDER` gate withholds: the drop is plain id 224 (`M SW`, cost 5).  Without the gate it would be id 240 (`M F SW`, cost 6, unplayable at pool 5) — asserted by `event_arg` and by the reveal showing no `FIRE`. |
+| New scenario `card_ap_loot_gate` | Seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3) on the rank row (R3 kobold -- the pool is staged, not read): victory grants it, the reveal names it (`S SW` / `STEEL SWORD`), and the DECK tab row shows AP digit 3, which the pool affords.  Rank-decided cost on a real drop, not on a hand-picked card. |
+| New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll on the R5 mimic: the drop is id 240 (`M F SW`, cost 6) and the reveal names the rider -- no hold-back exists anymore.  The card cannot be decked until the pool reaches 6 (`deck_equip_locked_loot` pins the `NEED AP 6` refusal); the locked card is the motivation to raise AP. |
 | `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), assert pairwise no-inversion (for every pair where B dominates A on all three inputs with at least one strict, `cost(B) >= cost(A)` — the §6.3/§7.5 fusion ordering) and strict riders (every rider pair costs exactly one AP more than the same card plain), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
 | Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Amulet are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
@@ -672,10 +674,11 @@ cannot fail is not a check (AGENTS.md §52.16).
    heal premium that keeps rings scarce.
 4. **Should the pool reach 6?**  Not yet, and nothing else changes until
    it does: mythril riders already cost 6, but the ladder tops out at 5
-   (base 1 + all four +1s), so no 6-cost card can be played or rolled
-   today (§6.1 withholds them).  If a fifth +1 source ever lands, the open
-   question after it is 7–8 — the only lever that makes the top of the
-   ladder feel like an upgrade rather than a trade.
+   (base 1 + all four +1s), so no 6-cost card can be decked today -- it can
+   be *dropped* (rank rows have no AP ceiling), just not worn.  If a fifth
+   +1 source ever lands, the open question after it is 7–8 — the only
+   lever that makes the top of the ladder feel like an upgrade rather
+   than a trade.
 5. **Editor surfacing.**  Costs become derived, so the Hero/DECK views need
    no input — but a read-only AP badge on the card detail page would make
    the formula visible to players ("why does this cost 5?" → "9 damage +

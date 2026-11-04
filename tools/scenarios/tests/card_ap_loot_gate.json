@@ -1,9 +1,9 @@
 {
  "name": "card_ap_loot_gate",
  "test": true,
- "description": "AP gate end-to-end (docs/card-ap-cost-formula.md §6.1/§9): seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3). Victory grants it, the reveal names it, and the DECK tab row shows AP digit 3, which the pool of 5 affords. A real drop through loot_drop -> synth -> display, not a hand-picked card.",
+ "description": "AP gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.8): pool 5 is staged but the R3 kobold roll (seed 76) is rank-decided -- a plain STEEL SWORD (id 192, formula cost 3). Victory grants it, the reveal names it, and the DECK tab row shows AP digit 3, which the pool of 5 affords. A real drop through loot_drop -> synth -> display, not a unit test.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
@@ -197,6 +197,12 @@
    "event": "LOOT_CARD_ADDED",
    "index": 0,
    "value": 192
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 3
   },
   {
    "type": "screen",

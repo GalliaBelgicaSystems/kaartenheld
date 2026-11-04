@@ -113,7 +113,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 7
   },
   {
    "type": "battle_enemy_hp",

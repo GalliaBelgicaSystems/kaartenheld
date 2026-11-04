@@ -1,6 +1,7 @@
 #include "rpg/deck.h"
 #include "rpg/cards.h"
 #include "rpg/loot.h"
+#include "telemetry.h"
 #include "banked.h"
 #include <stddef.h>
 
@@ -25,11 +26,14 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * card look like two in the DECK menu and let the deck take a copy from
  * each row.  The collection therefore holds ONE row per identity.
  *
- * The merge folds duplicates, preferring the unlimited id (loot twins
- * carry max_copies 0, so the merged stack is not capped by the curated
- * row) and retargeting decked copies onto the survivor.  It runs after
- * every collection add that opens a new row and on save load (an old
- * save can already hold the duplicate) and is idempotent.
+ * The merge folds duplicates, preferring a capped id (a curated catalog
+ * row with max_copies) when the pair has one: caps keep working across
+ * twins, so shop one-copy rows hide once the identity is owned and rebuys
+ * refuse instead of stacking past the cap.  Uncapped pairs keep the loot
+ * id (unlimited, as before).  It runs after every collection add that
+ * opens a new row and on save load (an old save can already hold the
+ * duplicate) and is idempotent.  Decked copies follow their card to the
+ * surviving id.
  *
  * Never hold a CardDefinition pointer across these calls: card_get_def
  * reuses g_card_scratch. */
@@ -103,14 +107,26 @@ void deck_collection_merge_duplicates(CardState *cs)
                 j++;
                 continue;
             }
-            /* Same card: fold `drop` into `keep`, keeping the unlimited
-             * id (a loot twin) when the pair has one. */
+            /* Same card: fold `drop` into `keep`.  The survivor is the
+             * capped id when the pair has one (a curated row with
+             * max_copies; card_get_def reuses the scratch, so the cap
+             * bytes are read out one at a time).  Otherwise the first
+             * row survives (loot twins are unlimited). */
             from = drop->id;
             to = keep->id;
-            if (loot_is_loot_id(from) && !loot_is_loot_id(to)) {
-                from = to;
-                to = drop->id;
-                keep->id = to;
+            {
+                const CardDefinition *kd = card_get_def(keep->id);
+                const CardDefinition *dd;
+                uint8_t keep_capped;
+                uint8_t drop_capped;
+                keep_capped = (uint8_t)(kd && kd->max_copies > 0);
+                dd = card_get_def(drop->id);
+                drop_capped = (uint8_t)(dd && dd->max_copies > 0);
+                if (!keep_capped && drop_capped) {
+                    from = keep->id;
+                    to = drop->id;
+                    keep->id = to;
+                }
             }
             deck_retarget(&cs->deck, from, to);
             keep->count = (uint8_t)(keep->count + drop->count);
@@ -208,6 +224,31 @@ bool deck_add_card(CardState *cs, CardId id)
     cs->deck.cards[cs->deck.count] = id;
     cs->deck.count++;
     return true;
+}
+
+uint8_t deck_equip_card(CardState *cs, CardId id, uint8_t pool)
+{
+    if (!cs || id == CARD_NONE) return EQUIP_REJECTED;
+    /* The lock check runs banked (loot bank has room; fixed does not):
+     * same cost math as the synth, so gate and def never disagree.
+     * g_bk_byte_c carries the required AP out for the telemetry below. */
+    if (loot_is_loot_id(id)) {
+        g_bk_call_bank = 9;
+        g_bk_call_target = (uint16_t)&deck_equip_gate_banked;
+        g_bk_byte_a = id;
+        g_bk_byte_b = pool;
+        banked_call_run();
+        if (g_bk_byte_c) {
+            /* Locked (docs/enemies_ranking.md §4.8): the rejection is
+             * assertable; no CARD_ADDED_TO_DECK fires with it.  In release
+             * telemetry_emit compiles out (telemetry.h). */
+            telemetry_emit(EVENT_CARD_EQUIP_LOCKED, id, g_bk_byte_c, 0, 0);
+            return EQUIP_LOCKED;
+        }
+    }
+    if (cs->deck.count >= MAX_DECK_CARDS) return EQUIP_FULL;
+    if (deck_add_card(cs, id)) return EQUIP_OK;
+    return EQUIP_REJECTED;
 }
 
 bool deck_remove_card(CardState *cs, CardId id)

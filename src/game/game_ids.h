@@ -31,7 +31,10 @@
 #define CARD_AMULET        (CARD_FIRST_GAME + 5)
 #define CARD_BOW_9        (CARD_FIRST_GAME + 6)
 #define CARD_WOOD_SWORD   (CARD_FIRST_GAME + 7)
-#define GAME_CARD_COUNT    8
+#define CARD_STEEL_SHIELD (CARD_FIRST_GAME + 8)   /* steel SH6 (docs/enemies_ranking.md §5.2):
+                                                   * the merchant-stocked answer to the
+                                                   * Lord's flat-6 swing (blocks alone) */
+#define GAME_CARD_COUNT    9
 
 /* ── Events (engine range: NONE=0; game range >= 0x80) ── */
 #define EVENT_ID_TOWN_ARRIVAL    (EVENT_ID_FIRST_GAME + 0)

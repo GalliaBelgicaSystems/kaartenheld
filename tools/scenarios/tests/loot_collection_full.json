@@ -3,21 +3,21 @@
  "test": true,
  "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'. The filler set is eight legal, distinct plain combos (iron sword/shield 160/161, wood bow/ring 98/100, bronze sword/shield/bow/dagger 128-131) plus the mythril bow, deliberately excluding seed 5002's id 99 so the drop must ask for a new slot -- and excluding every loot twin of the starter rows (96/97 fold into the starter sword/shield, so iron takes their place) so the fold cannot free a slot. Illegal combos (e.g. wood+rider id 104) are covered separately by loot_rider_strip.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
-   "x": 13,
-   "y": 8,
+   "x": 12,
+   "y": 10,
    "facing": "DOWN"
   },
   "seed": 5002,
-  "variables": {
-   "MONSTERS_DEFEATED": 1
-  },
   "party": {
    "HERO": {
     "hp": 60,
     "max_hp": 60
    }
+  },
+  "variables": {
+   "MONSTERS_DEFEATED": 1
   },
   "start_battle": true
  },
@@ -69,7 +69,15 @@
   },
   {
    "type": "wait",
-   "frames": 5
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   },
   {
    "type": "set_enemy_hp",
@@ -85,6 +93,14 @@
    "type": "set_enemy_hp",
    "index": 2,
    "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
   },
   {
    "type": "press",
