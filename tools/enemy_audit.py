@@ -63,7 +63,8 @@ def load_enemy_types():
     out = {}
     for p in sorted((REPO / "screens" / "enemy_types").glob("*.json")):
         try:
-            out[json.loads(p.read_text())["id"]] = json.loads(p.read_text())
+            doc = json.loads(p.read_text())
+            out[doc["id"]] = doc
         except (OSError, ValueError, KeyError) as e:
             fail("%s: unreadable (%s)" % (p.name, e))
     return out
@@ -302,8 +303,8 @@ def check_split_chain(types):
 
 
 def level_actors():
-    """(path, obj_id, battle, hp, max_hp, gold, solo) for every actor with
-    a battle in levels/ + fixture levels/."""
+    """(path, obj_id, entity_id, battle, hp, max_hp, gold, solo) for every
+    actor with a battle in levels/ + fixture levels/."""
     out = []
     roots = [REPO / "levels", REPO / "tools" / "scenarios" / "fixtures" / "levels"]
     for root in roots:
@@ -318,29 +319,55 @@ def level_actors():
                 pr = o.get("properties", {})
                 if not pr.get("battle"):
                     continue
-                out.append((str(p.relative_to(REPO)), o.get("id"), pr.get("battle"),
+                out.append((str(p.relative_to(REPO)), o.get("id"),
+                            pr.get("entity_id"), pr.get("battle"),
                             pr.get("hp", 0), pr.get("max_hp", 0),
                             pr.get("gold_reward", 0),
                             bool(pr.get("solo", False))))
     return out
 
 
+# Placement battle id -> rank.  BATTLE_MIMIC is NOT here: the mimic branch
+# below pins its decided 50 HP / 20 g row before the band lookup (it would
+# make this entry unreachable), and the Lord of Slimes names no BattleId at
+# all -- BATTLE_NONE resolves through the loot rank fallback, so its
+# placement is checked by entity id instead (check_level_placements).
 PLACEMENT_RANK = {
     "BATTLE_SLIME": 1, "BATTLE_SLIME_TRIO": 1, "BATTLE_BAT": 2,
-    "BATTLE_SPIDER": 2, "BATTLE_KOBOLD": 3, "BATTLE_MIMIC": 5,
+    "BATTLE_SPIDER": 2, "BATTLE_KOBOLD": 3,
 }
 
 
 def check_level_placements():
-    for path, oid, battle, hp, max_hp, gold, solo in level_actors():
-        if battle == "BATTLE_CARL":
+    for path, oid, eid, battle, hp, max_hp, gold, solo in level_actors():
+        if eid == "ENTITY_ID_SLIME_LORD":
+            # The Lord is the only deckless battler: its placement names
+            # BATTLE_NONE (the loot rank table falls back to its type), so
+            # band it by entity id -- R6 boss, solo, 70 HP / 50 g decided
+            # (§5.2).  Without this branch the placement was never checked.
+            blo, bhi = BANDS[6]["hp_solo"]
+            glo, ghi = BANDS[6]["gold"]
+            if battle != "BATTLE_NONE":
+                fail("%s %s: Lord battle %s != BATTLE_NONE (§1.6)"
+                     % (path, oid, battle))
+            if not solo:
+                fail("%s %s: Lord placement is not solo (§5.2)" % (path, oid))
+            if not (blo <= hp <= bhi) or not (blo <= max_hp <= bhi):
+                fail("%s %s: Lord %d/%d HP outside R6 %d-%d (§5.1)"
+                     % (path, oid, hp, max_hp, blo, bhi))
+            if hp > max_hp:
+                fail("%s %s: Lord hp %d > max_hp %d" % (path, oid, hp, max_hp))
+            if not (glo <= gold <= ghi):
+                fail("%s %s: Lord %d g outside R6 %d-%d (§5.1)"
+                     % (path, oid, gold, glo, ghi))
+        elif battle == "BATTLE_CARL":
             if gold != 0:
                 fail("%s %s: Carl gold %s != 0 (R0 earns nothing, §5.1/§8.2)"
                      % (path, oid, gold))
         elif battle == "BATTLE_MIMIC":
-            if gold != 20 or hp != 50:
-                fail("%s %s: mimic %d HP / %d g != 50 HP / 20 g (§5.2 decided)"
-                     % (path, oid, hp, gold))
+            if gold != 20 or hp != 50 or max_hp != 50:
+                fail("%s %s: mimic %d/%d HP / %d g != 50/50 HP / 20 g (§5.2 decided)"
+                     % (path, oid, hp, max_hp, gold))
         elif battle == "BATTLE_SLIME_KNIGHT":
             if solo:
                 # Documented exception (decided §8.5): the solo castle
@@ -351,9 +378,15 @@ def check_level_placements():
             else:
                 blo, bhi = BANDS[4]["hp_member"]
                 glo, ghi = BANDS[4]["gold"]
-                if not (blo <= hp <= bhi) or not (glo <= gold <= ghi):
-                    fail("%s %s: knight %d HP %d g outside R4 %d-%d HP / %d-%d g"
-                         % (path, oid, hp, gold, blo, bhi, glo, ghi))
+                if not (blo <= hp <= bhi) or not (blo <= max_hp <= bhi):
+                    fail("%s %s: knight %d/%d HP outside R4 %d-%d HP"
+                         % (path, oid, hp, max_hp, blo, bhi))
+                if hp > max_hp:
+                    fail("%s %s: knight hp %d > max_hp %d"
+                         % (path, oid, hp, max_hp))
+                if not (glo <= gold <= ghi):
+                    fail("%s %s: knight %d g outside R4 %d-%d g"
+                         % (path, oid, gold, glo, ghi))
         elif battle in PLACEMENT_RANK:
             # Every ranked trash placement carries its band (the doc §5.2
             # "passes" claims cover actor rows, not just the JSON/SQL
@@ -367,10 +400,22 @@ def check_level_placements():
             band = BANDS[rank]
             hp_lo, hp_hi = band["hp_solo"] if solo else band["hp_member"]
             glo, ghi = band["gold"]
-            if hp_lo is None or not (hp_lo <= hp <= hp_hi):
+            if hp_lo is None:
+                fail("%s %s: %s has no R%d %s band (§5.1)"
+                     % (path, oid, battle, rank,
+                        "solo" if solo else "member"))
+                continue
+            if not (hp_lo <= hp <= hp_hi):
                 fail("%s %s: %s %d HP outside R%d %s %d-%d (§5.1)"
                      % (path, oid, battle, hp, rank,
                         "solo" if solo else "member", hp_lo, hp_hi))
+            if not (hp_lo <= max_hp <= hp_hi):
+                fail("%s %s: %s max_hp %d outside R%d %s %d-%d (§5.1)"
+                     % (path, oid, battle, max_hp, rank,
+                        "solo" if solo else "member", hp_lo, hp_hi))
+            if hp > max_hp:
+                fail("%s %s: %s hp %d > max_hp %d"
+                     % (path, oid, battle, hp, max_hp))
             if not (glo <= gold <= ghi):
                 fail("%s %s: %s %d g outside R%d %d-%d (§5.1)"
                      % (path, oid, battle, gold, rank, glo, ghi))

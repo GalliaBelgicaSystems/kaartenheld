@@ -334,33 +334,38 @@ void world_on_battle_end(Game *g, bool victory)
          * grants it to the collection.  CARD_NONE = rank-0 lesson fight
          * (no drop) or a full collection (no room to grant). */
         if (g_loot_id != CARD_NONE) {
-#ifdef DEBUG_BUILD
-            /* Telemetry args are hoisted into locals first: argument
-             * evaluation order is unspecified, so the count must be read
-             * before the add (the merge below can fold the id into a
-             * curated twin, which would report count 0), and the rank
-             * byte must be captured before any nested banked call can
-             * stage over it.  The Battle's own battle id feeds the rank
-             * lookup: the split event above rewrites the runtime actor
-             * slot in place (knight -> slime trio), so act->battle_type
-             * already names the SECOND fight here -- the roll happened
-             * for the first.  enemy_battle_id is never rewritten
-             * (docs/enemies_ranking.md §1.6). */
-            uint8_t loot_count = deck_collection_count(&g->state.cards,
-                                                       g_loot_id);
-#endif
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
 #ifdef DEBUG_BUILD
                 {
+                    uint8_t loot_rank;
+                    uint8_t loot_total;
                     g_bk_call_bank = 9;
                     g_bk_call_target = (uint16_t)&game_loot_rank_banked;
                     g_bk_byte_a = g->battle.enemy_battle_id;
                     banked_call_run();
-                    /* g_bk_byte_b still holds the rank here: nothing
-                     * between the dispatch and this read stages over it
-                     * (the count above was hoisted for the same reason). */
+                    /* Hoist the rank first: the total lookup below is a
+                     * second banked dispatch and stages over g_bk_byte_b
+                     * (same staging hazard the pre-add count hoist used
+                     * to cover for the merge).  The Battle's own battle
+                     * id feeds the rank lookup: the split event above
+                     * rewrites the runtime actor slot in place (knight
+                     * -> slime trio), so act->battle_type already names
+                     * the SECOND fight here -- the roll happened for the
+                     * first.  enemy_battle_id is never rewritten
+                     * (docs/enemies_ranking.md §1.6). */
+                    loot_rank = g_bk_byte_b;
+                    /* d1 is the identity total AFTER the grant (banked:
+                     * folds move copies onto curated ids, so the loot
+                     * row's own count would go stale -- e.g. always 1 on
+                     * a fold into a non-empty curated row). */
+                    g_bk_call_bank = 11;
+                    g_bk_call_target = (uint16_t)&deck_ident_total_banked;
+                    g_bk_ptr_a = (void *)&g->state.cards;
+                    g_bk_byte_a = g_loot_id;
+                    banked_call_run();
+                    loot_total = g_bk_byte_b;
                     telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
-                                   (uint8_t)(loot_count + 1), g_bk_byte_b, 0);
+                                   loot_total, loot_rank, 0);
                 }
 #endif
             } else {

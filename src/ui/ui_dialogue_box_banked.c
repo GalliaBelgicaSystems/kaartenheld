@@ -16,7 +16,16 @@ extern uint8_t g_slime_despair;
 extern char g_ui_screen_buf[18][21];
 
 static void despair_box_fade_in(void);
+static void despair_box_fade_prepare(void);
 static void despair_box_wait(void);
+/* Wake-entry fade stage: 0 = idle, 1 = target snapshotted + CRAM whitened
+ * (prepare ran with the LCD off), 2 = fade steps ran.  The entry paints
+ * twice (LCD-off base, LCD-on repaint); the repaint must run the fade
+ * steps ONLY, and any later repaint with the LCD on must paint normally
+ * (a follow-up box after the fade, or an entry path that never prepared,
+ * degrades to a normal paint -- never a fade over garbage).  One WRAM
+ * byte: the snapshot itself reuses the screen buffer (see below). */
+static uint8_t s_fade_stage;
 
 /* Dialogue box paper + camera sync, banked body (see ui.h).  Reads the
  * camera low byte from g_bk_byte_c.  The paper palette (CRAM slot 4,
@@ -44,6 +53,17 @@ void ui_dialogue_box_banked(void)
     uint8_t sy = g_bk_byte_b;
     uint8_t i;
     volatile uint8_t *dst;
+    if (g_slime_despair && s_fade_stage == 1 && (LCDC_REG & 0x80)) {
+        /* Wake-entry repaint with the LCD on: draw1 already painted the
+         * target tiles+palettes with the LCD off and prepare snapshotted
+         * them to white -- run the fade steps ONLY (no repaint: its
+         * slot-4 program + tile/attr writes + CRAM reads would scan out
+         * full color before step 1).  Any later LCD-on repaint paints
+         * normally (tri-state above). */
+        despair_box_fade_in();
+        s_fade_stage = 2;
+        return;
+    }
     /* First box row in tilemap space.  Rows are painted full-width (see
      * ui.h): sy shifts the base down on vertically scrolled maps.  The
      * box is a top bar plus three text rows (14-17): top with the
@@ -84,15 +104,13 @@ void ui_dialogue_box_banked(void)
      * from the tile-aligned sy would shift the viewport by up to 7 px). */
     SCX_REG = g_bk_byte_c;
     SCY_REG = g_bk_byte_a;
-    /* Despair fade-in (demo finale): the defeat faded out to white on the
-     * result screen; fade the wake area back in here, over the freshly
-     * redrawn world.  Gated on the still-set flag (cleared at close) AND
-     * the LCD: the entry repaints with the LCD off (skipped then -- LY
-     * stalls at 0 with the LCD off), the repaint right below runs with
-     * the LCD on, and page turns go through ui_draw_dialogue_page (a
-     * different function), so normal dialogues never see it. */
-    if (g_slime_despair && (LCDC_REG & 0x80)) {
-        despair_box_fade_in();
+    if (g_slime_despair && !(LCDC_REG & 0x80)) {
+        /* Wake-entry base with the LCD off: snapshot the just-painted
+         * target palettes and program pure white (no visible flash when
+         * dialogue_screen turns the LCD on next).  Idempotent: paint
+         * always precedes it here, so a repeated base re-snapshots the
+         * same target. */
+        despair_box_fade_prepare();
     }
 }
 
@@ -155,11 +173,6 @@ void game_despair_fade_out_banked(void)
         uint8_t b;
         while (pass--) {
             for (slot = 0; slot < 16; slot++) {
-                if (slot < 8) {
-                    BCPS_REG = (uint8_t)(0x80u | (slot << 3));
-                } else {
-                    OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
-                }
                 for (col = 0; col < 4; col++) {
                     uint8_t is_obj = (uint8_t)(slot >= 8);
                     uint8_t pal = (uint8_t)(slot & 7);
@@ -206,13 +219,56 @@ void game_despair_fade_out_banked(void)
     }
 }
 
+/* Wake-entry prepare (LCD off): snapshot the just-painted target palettes
+ * into the screen buffer, program pure white over all 16 CRAM slots, and
+ * arm the fade.  Runs at the end of the LCD-off base paint (see the body
+ * above), so dialogue_screen turning the LCD on next shows white -- no
+ * full-color flash -- before the repaint runs only the steps below.
+ * LCD-off reads/writes take the direct (no-wait) macro paths. */
+static void despair_box_fade_prepare(void)
+{
+    uint8_t slot;
+    uint8_t n;
+    char *snap;
+
+    s_fade_stage = 1;
+    if (!g_is_cgb) return;
+    snap = &g_ui_screen_buf[0][0];
+    for (slot = 0; slot < 16; slot++) {
+        for (n = 0; n < 4; n++) {
+            uint8_t is_obj = (uint8_t)(slot >= 8);
+            uint8_t pal = (uint8_t)(slot & 7);
+            *snap++ = (char)despair_cram_read(is_obj, pal, n, 0);
+            *snap++ = (char)despair_cram_read(is_obj, pal, n, 1);
+        }
+    }
+    for (slot = 0; slot < 16; slot++) {
+        if (slot < 8) {
+            BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+        } else {
+            OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
+        }
+        for (n = 0; n < 4; n++) {
+            if (slot < 8) {
+                BANKED_VRAM_WRITE(&BCPD_REG, 0xFF);
+                BANKED_VRAM_WRITE(&BCPD_REG, 0x7F);
+            } else {
+                BANKED_VRAM_WRITE(&OCPD_REG, 0xFF);
+                BANKED_VRAM_WRITE(&OCPD_REG, 0x7F);
+            }
+        }
+    }
+}
+
 /* White-to-current fade for the despair entry (see above).  Per color:
- * snapshot the target, then step white -> target in quarters (shifts
- * only).  All colors share the step frame so the area materializes
- * evenly.  DMG steps 50 -> E4 (BGP/OBP, the only values the ROM ever
- * programs besides the fade's own).  Snapshot + step math mirrors
- * game_despair_fade_out_banked: no WRAM growth, the 128 scratch bytes
- * are text rows 0-6, rebuilt by the next full redraw. */
+ * step white -> target in quarters (shifts only) from the snapshot the
+ * prepare left in the screen buffer.  All colors share the step frame
+ * so the area materializes evenly.  DMG steps 50 -> E4 (BGP/OBP, the
+ * only values the ROM ever programs besides the fade's own).  The 128
+ * snapshot bytes are text rows 0-6: after the last step they are zeroed
+ * (NUL never equals text, so the next world redraw rewrites them
+ * unconditionally instead of skip-matching stale CRAM bytes -- the
+ * 52.25 class). */
 static void despair_box_fade_in(void)
 {
     uint8_t slot;
@@ -230,15 +286,6 @@ static void despair_box_fade_in(void)
         OBP1_REG = 0xE4;
         despair_box_wait();
         return;
-    }
-    snap = &g_ui_screen_buf[0][0];
-    for (slot = 0; slot < 16; slot++) {
-        for (n = 0; n < 4; n++) {
-            uint8_t is_obj = (uint8_t)(slot >= 8);
-            uint8_t pal = (uint8_t)(slot & 7);
-            *snap++ = (char)despair_cram_read(is_obj, pal, n, 0);
-            *snap++ = (char)despair_cram_read(is_obj, pal, n, 1);
-        }
     }
     s = 1;
     while (s <= 4) {
@@ -282,5 +329,12 @@ static void despair_box_fade_in(void)
         }
         s++;
         despair_box_wait();
+    }
+    /* Invalidate the scratch rows (see above): zeroed NULs force the
+     * next world redraw to rewrite them instead of skip-matching. */
+    snap = &g_ui_screen_buf[0][0];
+    {
+        uint16_t k;
+        for (k = 0; k < 147; k++) *snap++ = 0;
     }
 }

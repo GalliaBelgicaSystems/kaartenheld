@@ -1,0 +1,132 @@
+{
+  "name": "deck_remainder_row_at_cap",
+  "test": true,
+  "description": "Capped-fold remainder row A-button honesty (docs/loot.md §34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) survives as a remainder row, so the DECK list legitimately shows the same card twice. Pressing A on the remainder row must not clear anything or flash a bogus DECK MIN 5: the row has room to add but the identity is saturated, so it reports AT CAP and leaves the deck unchanged. Pre-fix the row-count branch called deck_equip_card (rejected) and then cleared zero copies silently.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8412,
+    "variables": {
+      "ENERGY_POOL": 5
+    }
+  },
+  "actions": [
+    {
+      "type": "collection_add",
+      "card_id": 66,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "collection_add",
+      "card_id": 164,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "deck_add",
+      "card": "IRON_RING"
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "AT CAP"
+    },
+    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 1
+    },
+    {
+      "type": "event_count",
+      "event": "CARD_REMOVED_FROM_DECK",
+      "count": 0
+    },
+    {
+      "type": "deck_contains",
+      "card_id": 66,
+      "expected": 1
+    },
+    {
+      "type": "deck_contains",
+      "card_id": 164,
+      "expected": 0
+    }
+  ]
+}

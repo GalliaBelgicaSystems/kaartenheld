@@ -47,6 +47,7 @@ void item_gem_render_banked(void);
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
 #define MSG_NEED_AP    4
+#define MSG_DECK_CAPPED 5
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -366,14 +367,31 @@ void item_screen_update(Game *g)
                        cs->deck.count >= MAX_DECK_CARDS) {
                 g->item_menu_message = MSG_DECK_FULL;
                 g->item_menu_msg_ttl = 45;
-            } else if ((uint8_t)(cs->deck.count -
-                                 deck_count_in_deck(&cs->deck, id)) <
-                       DECK_MIN_CARDS) {
-                g->item_menu_message = MSG_DECK_MIN;
-                g->item_menu_msg_ttl = 45;
             } else {
-                while (deck_remove_card(cs, id))
-                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, id, 0, 0, 0);
+                /* Refused for a per-card reason (not a full deck): count
+                 * up only when the ROW still has room -- a capped twin
+                 * (docs/loot.md §34) can leave this row under-decked
+                 * while the identity is saturated, and adding must refuse
+                 * without destroying what is already decked.  A fully
+                 * decked row clears (guarded by the MIN floor); anything
+                 * else names the cap instead of flashing a bogus MIN or
+                 * silently clearing nothing. */
+                uint8_t row_decked = deck_count_in_deck(&cs->deck, id);
+                uint8_t row_owned = deck_collection_count(cs, id);
+                if (row_decked >= row_owned && row_owned > 0) {
+                    if ((uint8_t)(cs->deck.count -
+                                  row_decked) < DECK_MIN_CARDS) {
+                        g->item_menu_message = MSG_DECK_MIN;
+                        g->item_menu_msg_ttl = 45;
+                    } else {
+                        while (deck_remove_card(cs, id))
+                            telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                           id, 0, 0, 0);
+                    }
+                } else {
+                    g->item_menu_message = MSG_DECK_CAPPED;
+                    g->item_menu_msg_ttl = 45;
+                }
             }
         }
         g->render_cache.valid = false;

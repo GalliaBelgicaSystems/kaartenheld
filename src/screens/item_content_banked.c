@@ -40,6 +40,7 @@
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
 #define MSG_NEED_AP    4
+#define MSG_DECK_CAPPED 5
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -393,8 +394,9 @@ static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
 
-/* Shared with the banked collection merge (deck_merge_banked.c,
- * same bank: plain call, no trampoline). */
+/* Shared with the bank-2 shop map (screen_content.c, same bank: plain
+ * call, no trampoline): identity checks for one-copy rows resolve loot
+ * twins through here.  External linkage for that single user. */
 const CardDefinition *ic_loot_synth(CardId id)
 {
     uint8_t material = loot_id_material(id);
@@ -713,6 +715,8 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "DECK FULL", 9);
     else if (g->item_menu_message == MSG_DECK_MIN)
         IC_DRAW_TEXT(0, 16, "DECK MIN 5", 10);
+    else if (g->item_menu_message == MSG_DECK_CAPPED)
+        IC_DRAW_TEXT(0, 16, "AT CAP", 6);
     else if (g->item_menu_message == MSG_QUEST_ITEM)
         IC_DRAW_TEXT(0, 16, "QUEST ITEM", 10);
     else if (g->item_menu_message == MSG_NEED_AP) {

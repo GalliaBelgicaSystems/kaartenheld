@@ -284,18 +284,15 @@ def check_identity():
                 if w[idx] != g[idx]:
                     fail("identity: row %d (%s) field %s: catalog=%d merge=%d"
                          % (k, name, lbl, w[idx], g[idx]))
-    if FAILURES:
-        print("identity FAIL (%d):" % len(FAILURES))
-        for f in FAILURES:
-            print("  - " + f)
-        return 1
-    print("identity OK: 9 curated rows match s_ident_catalog")
-    return 0
 
 
 def main():
-    if "--check-identity" in sys.argv:
-        return check_identity()
+    # Identity parity (curated catalog vs s_ident_catalog) is part of the
+    # card-cost contract, not an optional extra pass: run it on every
+    # invocation so one process covers both.  --check-identity stays
+    # accepted as an explicit alias for existing recipes; it adds nothing
+    # now that the check always runs.
+    check_identity()
     loot_h = LOOT_H.read_text(encoding="utf-8")
     gates = {
         "bronze": parse_define_int(loot_h, "LOOT_AP_BRONZE"),
@@ -408,7 +405,8 @@ def main():
         for f in FAILURES:
             print("  - " + f)
         return 1
-    print("card-costs OK: 37 combos, gates + ordering + strict riders + doc parity + catalog parity")
+    print("card-costs OK: 37 combos, gates + ordering + strict riders + "
+          "doc parity + catalog parity + identity parity")
     return 0
 
 

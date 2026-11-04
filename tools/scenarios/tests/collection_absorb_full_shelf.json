@@ -1,0 +1,86 @@
+{
+  "name": "collection_absorb_full_shelf",
+  "test": true,
+  "description": "Loot folding at a full 12-row collection (docs/loot.md §34.5, AGENTS.md §52.19): the starter FIRE_SWORD row (2 of cap 3) plus nine distinct plain filler ids fill every shelf slot; a bronze fire sword (derived id 0x90) matching the owned curated identity must fold into that row (2 -> 3) instead of vanishing as a false 'collection full' failure. Pre-fix deck_collection_add rejected the grant before the merge could fold it.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8414
+  },
+  "actions": [
+    {
+      "type": "collection_add",
+      "card_id": 160,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 161,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 98,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 100,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 128,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 129,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 130,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 131,
+      "quantity": 1
+    },
+    {
+      "type": "collection_add",
+      "card_id": 70,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "collection_add",
+      "card_id": 144,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    }
+  ],
+  "assertions": [
+    {
+      "type": "inventory",
+      "item": "FIRE_SWORD",
+      "expected": 3
+    },
+    {
+      "type": "collection_count",
+      "card_id": 144,
+      "expected": 0
+    }
+  ]
+}

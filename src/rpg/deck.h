@@ -59,7 +59,7 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
  * nothing is lost or stacked past max_copies.  Idempotent;
  * deck_collection_add runs it after opening a new row and save load runs
  * it on the restored state. */
-/* Banked duplicate-fold (src/rpg/deck_merge_banked.c, ROM bank 10):
+/* Banked duplicate-fold (src/rpg/deck_merge_banked.c, ROM bank 11):
  * g_bk_ptr_a = CardState*.  Dispatched by deck_collection_merge_duplicates'
  * thin wrapper (this file) and never called directly. */
 void deck_merge_banked(void);
@@ -68,6 +68,19 @@ void deck_merge_banked(void);
  * g_bk_byte_a = candidate id; g_bk_byte_c = allow/deny.  Dispatched by
  * deck_add_card's thin wrapper below. */
 void deck_ident_gate_banked(void);
+
+/* Banked full-collection absorb (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
+ * when the candidate folded into an existing same-identity row
+ * (all-or-nothing), 0 otherwise.  Dispatched by deck_collection_add's
+ * full-collection path. */
+void deck_absorb_banked(void);
+
+/* Banked identity total (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = id; g_bk_byte_b = owned copies across every
+ * same-identity row.  Dispatched by the loot-grant path for truthful
+ * LOOT_CARD_ADDED counts after folds. */
+void deck_ident_total_banked(void);
 
 void deck_collection_merge_duplicates(CardState *cs);
 

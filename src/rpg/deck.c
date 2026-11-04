@@ -38,14 +38,14 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * opens a new row and on save load (an old save can already hold the
  * duplicate) and is idempotent. */
 
-/* Banked merge body (src/rpg/deck_merge_banked.c, ROM bank 10):
+/* Banked merge body (src/rpg/deck_merge_banked.c, ROM bank 11):
  * g_bk_ptr_a = CardState*.  Dispatched by the wrapper below. */
 void deck_merge_banked(void);
 
 void deck_collection_merge_duplicates(CardState *cs)
 {
     if (!cs) return;
-    g_bk_call_bank = 10;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&deck_merge_banked;
     g_bk_ptr_a = (void *)cs;
     banked_call_run();
@@ -67,17 +67,39 @@ bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
             (uint8_t)(e->count + quantity) > def->max_copies)
             return false;
         e->count = (uint8_t)(e->count + quantity);
+        /* Stacking onto an existing row can complete a capped pair
+         * (e.g. capped row below cap + remainder row): always re-merge,
+         * a same-id stack never creates a new row so this cannot fail. */
+        deck_collection_merge_duplicates(cs);
         return true;
     }
 
-    if (cs->collection.count >= MAX_CARD_COLLECTION) return false;
+    /* Full shelf: the merge may still absorb the candidate into an
+     * existing same-identity row (all-or-nothing, no new row needed),
+     * so a folding drop never vanishes silently on a full collection. */
+    if (cs->collection.count >= MAX_CARD_COLLECTION) {
+        deck_collection_merge_duplicates(cs);
+        if (cs->collection.count >= MAX_CARD_COLLECTION) {
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&deck_absorb_banked;
+            g_bk_ptr_a = (void *)cs;
+            g_bk_byte_a = id;
+            g_bk_byte_b = quantity;
+            banked_call_run();
+            return g_bk_byte_c ? true : false;
+        }
+    }
     if (def && def->max_copies > 0 && quantity > def->max_copies) return false;
     e = &cs->collection.entries[cs->collection.count];
     e->id = id;
     e->count = quantity;
     cs->collection.count++;
-    /* A curated row and its loot twin are one card to the player: fold
-     * them so the DECK menu never lists the same card twice. */
+    /* A curated row and its loot twin are one card to the player.  The
+     * merge folds duplicates, keeping a capped remainder row when the
+     * pair would otherwise stack past max_copies -- so the DECK menu
+     * can list the same card twice (curated row + loot twin row), each
+     * row honestly showing its own owned/decked counts, while caps and
+     * the identity-wide deck gate keep every copy legal. */
     deck_collection_merge_duplicates(cs);
     return true;
 }
@@ -148,7 +170,7 @@ bool deck_add_card(CardState *cs, CardId id)
      * the per-id checks above cannot see the pair's total.  The banked
      * gate counts decked copies of the same identity and enforces the
      * tighter cap -- otherwise the twin decks past it. */
-    g_bk_call_bank = 10;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&deck_ident_gate_banked;
     g_bk_ptr_a = (void *)cs;
     g_bk_byte_a = id;

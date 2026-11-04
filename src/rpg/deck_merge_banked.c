@@ -1,4 +1,4 @@
-#pragma bank 10
+#pragma bank 11
 #pragma disable_warning 110
 
 #include <stdint.h>
@@ -10,8 +10,9 @@
 #include "game_ids.h"
 #include "banked.h"
 
-/* ── Banked collection merge (ROM bank 10: bank 2, the catalog's bank,
- * is full, and the fixed bank cannot host the compare loop) ───────
+/* ── Banked collection merge (ROM bank 11: bank 2, the catalog's bank,
+ * is full, bank 10 filled up with the fade pair plus this file's own
+ * growth, and the fixed bank cannot host the compare loop) ─────────────────────────────
  * Entry point: deck_merge_banked, g_bk_ptr_a = CardState*.  Moved out
  * of the fixed bank (AGENTS.md §52.11.1/§52.18): the identity compare
  * needs real definitions, and card_get_def is a fixed-bank trampoline
@@ -56,53 +57,78 @@ static const uint8_t s_ident_battle[5] = { 0, 1, 2, 4, 3 };
 static const uint8_t s_ident_fx[5] = { 1, 2, 1, 1, 3 };
 static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
 
-/* Rider legality as a macro (not a call): deck_ident_of sits on the
+/* Rider legality as a macro (not a call): deck_ident_cmp sits on the
  * loot-grant stack chain, and a separate frame there costs worst-case
  * depth (AGENTS.md §52.24).  Effect id doubles as the status id. */
 #define DECK_RIDER_OK(fx, wpn) \
     ((uint8_t)(((fx) == EFF_POISON) ? ((wpn) == WPN_DAGGER) : \
                (((fx) == EFF_FIRE || (fx) == EFF_ICE) ? ((wpn) == WPN_SWORD) : 0)))
 
-/* Resolve-then-stream identity compare.  Returns 1 when a and b are
+/* Loot identity synthesis as a macro (not a call): deck_ident_cmp sits
+ * on the loot-grant stack chain, and a separate frame there costs
+ * worst-case depth (AGENTS.md §52.24).  Same pure macros as
+ * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES). */
+#define DECK_LOOT_IDENT(lid, out)                                          \
+    do {                                                                   \
+        uint8_t _m = loot_id_material(lid);                                \
+        uint8_t _e = loot_id_effect(lid);                                  \
+        uint8_t _w = loot_id_weapon(lid);                                  \
+        uint8_t _wi = ((_w) <= WPN_RING) ? (_w) : WPN_SWORD;                \
+        uint8_t _wr = ((_w) <= WPN_RING) ? (_w) : WPN_RING;                 \
+        uint8_t _hr = ((_m) >= MAT_BRONZE && (_e) != EFF_PLAIN &&           \
+                       DECK_RIDER_OK((_e), (_w)));                          \
+        (out)[0] = s_ident_type[_wr];                                      \
+        (out)[1] = LOOT_POWER((_m), (_wi));                                 \
+        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) : 0;                   \
+        (out)[4] = s_ident_fx[_wr];                                        \
+        (out)[5] = s_ident_battle[_wr];                                    \
+        if (_hr) {                                                         \
+            (out)[6] = (_e);                                               \
+            (out)[7] = s_ident_chance[_e];                                 \
+        } else {                                                           \
+            (out)[6] = STATUS_NONE;                                        \
+            (out)[7] = 0;                                                  \
+        }                                                                  \
+        (out)[2] = ((_w) <= WPN_RING) ?                                     \
+            CARD_AP((out)[1], (_m), (_hr)) : 0;                             \
+    } while (0)
+
+/* Resolve-and-compare identity check.  Returns 1 when a and b are
  * the same physical card (identical type/power/cost/uses/effect/
  * battle type/rider; id, max_copies, price and name are NOT identity),
- * with *cap_out the tighter of the two caps (0 = uncapped pair).
- * Returns 0 for unknown ids or different cards.
- *
- * Only side A is ever materialized (ab[9]: 8 identity bytes + cap):
- * side B streams field-by-field against it, so the caller keeps no
- * buffers -- the merge loop above stays lean on the loot-grant stack
- * chain (AGENTS.md §52.24).  Loot identities use the same pure macros
- * as loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES). */
+ * with *cap_out the pair's cap (0 = uncapped).  The cap always rides
+ * side A: a curated A row carries its table cap, a loot A resolves its
+ * curated twin's cap through the inline catalog scan below (the cap
+ * travels with the identity, so loot-vs-loot pairs of a capped card
+ * stay capped) -- and any matching B shares the identity, hence the
+ * cap, so no second lookup is needed.  Catalog identities must be
+ * unique rows for this to hold (tools/card_costs.py --check-identity
+ * asserts it).  Synthesis and scan are inline (macros + unrolled
+ * loops), never calls: this compare sits on the loot-grant stack chain
+ * (AGENTS.md §52.24). */
 static uint8_t deck_ident_cmp(CardId a, CardId b, uint8_t *cap_out)
 {
     uint8_t ab[9];
+    uint8_t bb[8];
     uint8_t f;
-    uint8_t cap_b = 0;
     if (loot_is_loot_id(a)) {
-        uint8_t material = loot_id_material(a);
-        uint8_t effect = loot_id_effect(a);
-        uint8_t weapon = loot_id_weapon(a);
-        uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
-        uint8_t wr = (weapon <= WPN_RING) ? weapon : WPN_RING;
-        uint8_t has_rider = (material >= MAT_BRONZE &&
-                             effect != EFF_PLAIN &&
-                             DECK_RIDER_OK(effect, weapon));
-        ab[0] = s_ident_type[wr];
-        ab[1] = LOOT_POWER(material, wi);
-        ab[3] = (wr == 4) ? LOOT_RING_USES(material) : 0;
-        ab[4] = s_ident_fx[wr];
-        ab[5] = s_ident_battle[wr];
-        if (has_rider) {
-            ab[6] = effect;
-            ab[7] = s_ident_chance[effect];
-        } else {
-            ab[6] = STATUS_NONE;
-            ab[7] = 0;
-        }
-        ab[2] = (weapon <= WPN_RING) ?
-            CARD_AP(ab[1], material, has_rider) : 0;
+        uint8_t k;
+        DECK_LOOT_IDENT(a, ab);
+        /* The cap travels with the identity, not the row: scan the
+         * curated table for the same 8 bytes (a loot twin of a capped
+         * card is capped even with no curated row in the collection).
+         * Inlined (not a call): this compare sits on the loot-grant
+         * stack chain (AGENTS.md §52.24). */
         ab[8] = 0;
+        for (k = 0; k < GAME_CARD_COUNT; k++) {
+            for (f = 0; f < 8; f++) {
+                if (s_ident_catalog[k][f] != ab[f]) break;
+            }
+            if (f == 8) {
+                ab[8] = s_ident_catalog[k][8];
+                break;
+            }
+        }
     } else {
         uint8_t k;
         if (a < CARD_FIRST_GAME) return 0;
@@ -111,39 +137,18 @@ static uint8_t deck_ident_cmp(CardId a, CardId b, uint8_t *cap_out)
         for (f = 0; f < 9; f++) ab[f] = s_ident_catalog[k][f];
     }
     if (loot_is_loot_id(b)) {
-        uint8_t material = loot_id_material(b);
-        uint8_t effect = loot_id_effect(b);
-        uint8_t weapon = loot_id_weapon(b);
-        uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
-        uint8_t wr = (weapon <= WPN_RING) ? weapon : WPN_RING;
-        uint8_t has_rider = (material >= MAT_BRONZE &&
-                             effect != EFF_PLAIN &&
-                             DECK_RIDER_OK(effect, weapon));
-        uint8_t cost = (weapon <= WPN_RING) ?
-            CARD_AP(LOOT_POWER(material, wi), material, has_rider) : 0;
-        if (s_ident_type[wr] != ab[0]) return 0;
-        if (LOOT_POWER(material, wi) != ab[1]) return 0;
-        if (cost != ab[2]) return 0;
-        if (((wr == 4) ? LOOT_RING_USES(material) : 0) != ab[3]) return 0;
-        if (s_ident_fx[wr] != ab[4]) return 0;
-        if (s_ident_battle[wr] != ab[5]) return 0;
-        if ((has_rider ? effect : STATUS_NONE) != ab[6]) return 0;
-        if ((has_rider ? s_ident_chance[effect] : 0) != ab[7]) return 0;
+        DECK_LOOT_IDENT(b, bb);
     } else {
         uint8_t k;
         if (b < CARD_FIRST_GAME) return 0;
         k = (uint8_t)(b - CARD_FIRST_GAME);
         if (k >= GAME_CARD_COUNT) return 0;
-        for (f = 0; f < 8; f++) {
-            if (s_ident_catalog[k][f] != ab[f]) return 0;
-        }
-        cap_b = s_ident_catalog[k][8];
+        for (f = 0; f < 8; f++) bb[f] = s_ident_catalog[k][f];
     }
-    {
-        uint8_t cap = ab[8];
-        if (cap_b > 0 && (cap == 0 || cap_b < cap)) cap = cap_b;
-        *cap_out = cap;
+    for (f = 0; f < 8; f++) {
+        if (ab[f] != bb[f]) return 0;
     }
+    *cap_out = ab[8];
     return 1;
 }
 
@@ -183,9 +188,10 @@ static void deck_retarget_capped(DeckState *d, CardId from, CardId to,
  * fixed-bank wrapper): g_bk_ptr_a = CardState*, g_bk_byte_a = candidate
  * id; g_bk_byte_c = 1 when decking keeps every identity at-or-under its
  * cap, 0 when the candidate's identity is already saturated (tighter of
- * the pair's max_copies; loot twins are uncapped) or the id is unknown.
- * deck_add_card's fixed-side def check already rejects unknown ids; this
- * just never waves garbage through. */
+ * the pair's max_copies; loot twins resolve their curated cap through
+ * the catalog) or the id is unknown.  deck_add_card's fixed-side def
+ * check already rejects unknown ids; this just never waves garbage
+ * through. */
 void deck_ident_gate_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -204,6 +210,102 @@ void deck_ident_gate_banked(void)
         if (c > 0 && (cap == 0 || c < cap)) cap = c;
     }
     g_bk_byte_c = (uint8_t)(cap == 0 || total < cap);
+}
+
+/* Full-collection absorb (same bank): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
+ * when the candidate folded into an existing same-identity row (atomic:
+ * all-or-nothing), 0 when no row matches or a capped fold would need a
+ * remainder row that does not fit.  Dispatched by deck_collection_add's
+ * full-collection path -- a drop that matches an owned identity must
+ * never vanish silently just because the 12-row shelf is full. */
+void deck_absorb_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t qty = g_bk_byte_b;
+    uint8_t i;
+    g_bk_byte_c = 0;
+    if (!cs || qty == 0) return;
+    for (i = 0; i < cs->collection.count; i++) {
+        uint8_t cap = 0;
+        uint8_t total;
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id, &cap))
+            continue;
+        total = (uint8_t)(cs->collection.entries[i].count + qty);
+        if (total < cs->collection.entries[i].count) total = 255;
+        /* Capped overflow needs a remainder row: with no free row the
+         * whole grant is refused (the caller keeps collection unchanged
+         * and reports failure) rather than stacking past the cap. */
+        if (cap > 0 && total > cap) return;
+        cs->collection.entries[i].count = total;
+        deck_retarget_capped(&cs->deck, id,
+                             cs->collection.entries[i].id, cap);
+        g_bk_byte_c = 1;
+        return;
+    }
+}
+
+/* Identity total (same bank): g_bk_ptr_a = CardState*, g_bk_byte_a = id;
+ * g_bk_byte_b = owned copies across every same-identity row (0 for
+ * unknown ids).  Dispatched by the loot-grant path for truthful
+ * LOOT_CARD_ADDED counts after folds move copies onto curated ids. */
+void deck_ident_total_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t total = 0;
+    uint8_t i;
+    if (!cs) {
+        g_bk_byte_b = 0;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        uint8_t cap = 0;
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id, &cap))
+            continue;
+        total = (uint8_t)(total + cs->collection.entries[i].count);
+        if (total < cs->collection.entries[i].count) total = 255;
+    }
+    g_bk_byte_b = total;
+}
+
+/* Legacy-deck eviction helper: after a capped fold, the deck may still hold
+ * more copies of the folded identity than cap (twins decked before the gate
+ * existed, or stacked identically-capped rows).  Unreachable through current
+ * gameplay (the gate refuses the over-cap add and the retarget above moves
+ * at most up to the cap), so this only fires for pre-fix states -- and then
+ * it must not strand the deck below DECK_MIN_CARDS.  Counts via the tiny
+ * per-id counter (no identity scan: only the folded pair can be over cap).
+ * Silent: the state was never legal, and the repair is idempotent. */
+static void deck_evict_overcap(DeckState *d, CardId keep_id, CardId drop_id,
+                               uint8_t cap)
+{
+    uint8_t have;
+    uint8_t n;
+    if (!d || cap == 0) return;
+    have = (uint8_t)(deck_in_deck(d, keep_id) + deck_in_deck(d, drop_id));
+    while (have > cap && d->count > DECK_MIN_CARDS) {
+        uint8_t victim = 0xFF;
+        for (n = 0; n < d->count; n++) {
+            if (d->cards[n] == drop_id) {
+                victim = n;
+                break;
+            }
+        }
+        if (victim == 0xFF) {
+            for (n = 0; n < d->count; n++) {
+                if (d->cards[n] == keep_id) {
+                    victim = n;
+                    break;
+                }
+            }
+        }
+        if (victim == 0xFF) return;
+        d->count--;
+        d->cards[victim] = d->cards[d->count];
+        have--;
+    }
 }
 
 void deck_merge_banked(void)
@@ -248,6 +350,7 @@ void deck_merge_banked(void)
                 drop_count = (uint8_t)(total - cap);
                 cs->collection.entries[j].count = drop_count;
                 deck_retarget_capped(&cs->deck, drop_id, keep_id, cap);
+                deck_evict_overcap(&cs->deck, keep_id, drop_id, cap);
                 j++;
             } else {
                 keep_count = total;

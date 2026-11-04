@@ -155,24 +155,39 @@ void dialogue_screen_render(Game *g)
              * the next battle tick. */
             ui_restore_ow_oam();
             ui_draw_dialogue(d, w);
+            if (g_slime_despair) {
+                /* Wake-entry fade: the base paint above snapshotted the
+                 * target and whitened CRAM (LCD off).  Position sprites
+                 * and commit OAM before turning the LCD on, so the hero
+                 * is visible from the first faded frame instead of
+                 * popping in after the 24-frame block below. */
+                ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
+                               (uint8_t)(world_player_py(w) - w->camera_px_y));
+                ui_draw_actors_sprites(w);
+                ui_sprite_hide_actors_below((uint8_t)(14 * 8));
+                ui_sprite_commit();
+            }
             ui_lcd_on();
             /* Despair outro (demo finale): the defeat faded out to white
              * on the result screen -- fade the wake area back in over the
              * just-redrawn world.  The box body carries the fade (same
-             * bank, no new dispatch): it runs again right below with the
-             * LCD on, gated on the still-set flag, so normal
-             * battle->dialogue entries pay only one redundant box paint. */
+             * bank, no new dispatch): with the flag set this repaint runs
+             * only the fade steps (no repaint -- the base above already
+             * painted and whitened CRAM), so normal battle->dialogue
+             * entries pay only one redundant box paint. */
             ui_draw_dialogue(d, w);
         } else {
             ui_draw_dialogue(d, w);
         }
 
+        if (!g_slime_despair) {
         ui_sprite_move((uint8_t)(world_player_px(w) - w->camera_px_x),
                        (uint8_t)(world_player_py(w) - w->camera_px_y));
         ui_draw_actors_sprites(w);
         /* The box is background tiles at rows 14-17; hide any actor sprite
          * (e.g. the town fire/dog) that would draw over the text. */
         ui_sprite_hide_actors_below((uint8_t)(14 * 8));
+        }
         rc->valid = true;
         rc->prev_screen = SCREEN_DIALOGUE;
         rc->prev_dialogue_active = true;
