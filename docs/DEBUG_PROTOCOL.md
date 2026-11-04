@@ -607,9 +607,10 @@ Quest state and objectives are generic variables owned by the event table in
   Slimes): when set, a battle victory goes to `SCREEN_ENDING` instead of
   the overworld.  The boss is unwinnable in normal play (at its HP
   threshold the desperation telegraph opens and the scripted reprisal
-  routes the wake-grove outro to THANKS), so this flag no longer sets in
-  normal play; only the `ending_boot` scenario reaches the ending screen.
-  A on the ending restarts the game.
+  whites out, teleports to the wake grove, plays the "Where am I?"
+  dialogue and routes to the ENDING screen), so this flag no longer sets
+  in normal play; only the `ending_boot` scenario reaches the ending
+  screen through it.  A on the ending restarts the game.
 
 The event engine supports generic conditions (flag is/not set, variable
 `>=`/`==`) and actions (dialogue, set/clear flag, set/add variable, give

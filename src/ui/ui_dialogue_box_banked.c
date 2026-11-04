@@ -1,21 +1,22 @@
-/* Bank split (memory budget): the dialogue paper/camera body lives here
- * instead of ui_color_banked.c so release bank 3 keeps room for battle
- * HUD work.  Per-build bank (debug 5 / release 4): both have room, and
- * the fixed-bank wrapper (ui_draw_dialogue in ui.c) dispatches through
- * UI_DIALOGUE_BOX_BANK (ui.h), so pragma and dispatch can never
- * disagree.  Self-contained: hardware regs + WRAM staging only, no
- * banked_copy (which would restore the home bank mid-body -- see the
- * shops_lookup revert). */
-#ifdef DEBUG_BUILD
-#pragma bank 5
-#else
-#pragma bank 4
-#endif
+/* Bank split (memory budget): this file lives in ROM bank 10 in both
+ * builds -- release bank 4 is full and the despair fades need a roomy
+ * bank with no per-build split.  The fixed-bank wrapper (ui_draw_dialogue
+ * in ui.c) dispatches through UI_DIALOGUE_BOX_BANK (ui.h), so pragma and
+ * dispatch can never disagree.  Self-contained: hardware regs + WRAM
+ * staging only, no banked_copy (which would restore the home bank
+ * mid-body -- see the shops_lookup revert). */
+#pragma bank 10
 
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include "ui.h"
 #include "banked.h"
+
+extern uint8_t g_slime_despair;
+extern char g_ui_screen_buf[18][21];
+
+static void despair_box_fade_in(void);
+static void despair_box_wait(void);
 
 /* Dialogue box paper + camera sync, banked body (see ui.h).  Reads the
  * camera low byte from g_bk_byte_c.  The paper palette (CRAM slot 4,
@@ -83,4 +84,195 @@ void ui_dialogue_box_banked(void)
      * from the tile-aligned sy would shift the viewport by up to 7 px). */
     SCX_REG = g_bk_byte_c;
     SCY_REG = g_bk_byte_a;
+    /* Despair fade-in (demo finale): the defeat faded out to white on the
+     * result screen; fade the wake area back in here, over the freshly
+     * redrawn world.  Gated on the still-set flag (cleared at close) AND
+     * the LCD: the entry repaints with the LCD off (skipped then -- LY
+     * stalls at 0 with the LCD off), the repaint right below runs with
+     * the LCD on, and page turns go through ui_draw_dialogue_page (a
+     * different function), so normal dialogues never see it. */
+    if (g_slime_despair && (LCDC_REG & 0x80)) {
+        despair_box_fade_in();
+    }
+}
+
+/* Despair white fade-out (demo finale): whites the current palettes out.
+ * Dispatched from game_slime_despair_outro() on the DEFEATED result
+ * screen (the fade-in twin lives below, next to its call site).  Same
+ * self-containment contract as the paper body above. */
+static void despair_box_wait(void)
+{
+    uint8_t n = 6;
+    while (n--) {
+        while (LY_REG != 144) {
+        }
+        while (LY_REG == 144) {
+        }
+    }
+}
+
+void game_despair_fade_out_banked(void)
+{
+    uint8_t slot;
+    uint8_t col;
+
+    if (!g_is_cgb) {
+        BGP_REG = 0x50;
+        OBP0_REG = 0x50;
+        OBP1_REG = 0x50;
+        despair_box_wait();
+        BGP_REG = 0x00;
+        OBP0_REG = 0x00;
+        OBP1_REG = 0x00;
+        despair_box_wait();
+        return;
+    }
+    {
+        uint8_t pass = 5;
+        uint8_t lo;
+        uint8_t hi;
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        while (pass--) {
+            for (slot = 0; slot < 16; slot++) {
+                if (slot < 8) {
+                    BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+                } else {
+                    OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
+                }
+                for (col = 0; col < 4; col++) {
+                    if (slot < 8) {
+                        lo = BCPD_REG;
+                        hi = BCPD_REG;
+                    } else {
+                        lo = OCPD_REG;
+                        hi = OCPD_REG;
+                    }
+                    r = (uint8_t)(lo & 31);
+                    g = (uint8_t)(((lo >> 5) | (hi << 3)) & 31);
+                    b = (uint8_t)((hi >> 2) & 31);
+                    r = (uint8_t)(r + ((uint8_t)(31 - r) >> 1));
+                    g = (uint8_t)(g + ((uint8_t)(31 - g) >> 1));
+                    b = (uint8_t)(b + ((uint8_t)(31 - b) >> 1));
+                    lo = (uint8_t)((g << 5) | r);
+                    hi = (uint8_t)((b << 2) | (g >> 3));
+                    if (slot < 8) {
+                        BCPS_REG = (uint8_t)(0x80u | (slot << 3) | (col << 1));
+                        BANKED_VRAM_WRITE(&BCPD_REG, lo);
+                        BANKED_VRAM_WRITE(&BCPD_REG, hi);
+                    } else {
+                        OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3) | (col << 1));
+                        BANKED_VRAM_WRITE(&OCPD_REG, lo);
+                        BANKED_VRAM_WRITE(&OCPD_REG, hi);
+                    }
+                }
+            }
+            despair_box_wait();
+        }
+        for (slot = 0; slot < 16; slot++) {
+            if (slot < 8) {
+                BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+            } else {
+                OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
+            }
+            for (col = 0; col < 4; col++) {
+                if (slot < 8) {
+                    BANKED_VRAM_WRITE(&BCPD_REG, 0xFF);
+                    BANKED_VRAM_WRITE(&BCPD_REG, 0x7F);
+                } else {
+                    BANKED_VRAM_WRITE(&OCPD_REG, 0xFF);
+                    BANKED_VRAM_WRITE(&OCPD_REG, 0x7F);
+                }
+            }
+        }
+        despair_box_wait();
+    }
+}
+
+/* White-to-current fade for the despair entry (see above).  Per color:
+ * snapshot the target, then step white -> target in quarters (shifts
+ * only).  All colors share the step frame so the area materializes
+ * evenly.  DMG steps 50 -> E4 (BGP/OBP, the only values the ROM ever
+ * programs besides the fade's own).  Snapshot + step math mirrors
+ * game_despair_fade_out_banked: no WRAM growth, the 128 scratch bytes
+ * are text rows 0-6, rebuilt by the next full redraw. */
+static void despair_box_fade_in(void)
+{
+    uint8_t slot;
+    uint8_t n;
+    uint8_t s;
+    char *snap;
+
+    if (!g_is_cgb) {
+        BGP_REG = 0x50;
+        OBP0_REG = 0x50;
+        OBP1_REG = 0x50;
+        despair_box_wait();
+        BGP_REG = 0xE4;
+        OBP0_REG = 0xE4;
+        OBP1_REG = 0xE4;
+        despair_box_wait();
+        return;
+    }
+    snap = &g_ui_screen_buf[0][0];
+    for (slot = 0; slot < 16; slot++) {
+        if (slot < 8) {
+            BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+        } else {
+            OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
+        }
+        for (n = 0; n < 4; n++) {
+            if (slot < 8) {
+                *snap++ = (char)BCPD_REG;
+                *snap++ = (char)BCPD_REG;
+            } else {
+                *snap++ = (char)OCPD_REG;
+                *snap++ = (char)OCPD_REG;
+            }
+        }
+    }
+    s = 1;
+    while (s <= 4) {
+        snap = &g_ui_screen_buf[0][0];
+        for (n = 0; n < 64; n++) {
+            uint8_t lo = (uint8_t)*snap++;
+            uint8_t hi = (uint8_t)*snap++;
+            uint8_t r = (uint8_t)(lo & 31);
+            uint8_t g = (uint8_t)(((lo >> 5) | (hi << 3)) & 31);
+            uint8_t b = (uint8_t)((hi >> 2) & 31);
+            uint8_t dr = (uint8_t)(31 - r);
+            uint8_t dg = (uint8_t)(31 - g);
+            uint8_t db = (uint8_t)(31 - b);
+            uint8_t col;
+            if (s == 1) {
+                r = (uint8_t)(31 - (dr >> 2));
+                g = (uint8_t)(31 - (dg >> 2));
+                b = (uint8_t)(31 - (db >> 2));
+            } else if (s == 2) {
+                r = (uint8_t)(31 - (dr >> 1));
+                g = (uint8_t)(31 - (dg >> 1));
+                b = (uint8_t)(31 - (db >> 1));
+            } else if (s == 3) {
+                r = (uint8_t)(31 - (uint8_t)((dr >> 1) + (dr >> 2)));
+                g = (uint8_t)(31 - (uint8_t)((dg >> 1) + (dg >> 2)));
+                b = (uint8_t)(31 - (uint8_t)((db >> 1) + (db >> 2)));
+            }
+            lo = (uint8_t)((g << 5) | r);
+            hi = (uint8_t)((b << 2) | (g >> 3));
+            slot = (uint8_t)(n >> 2);
+            col = (uint8_t)(n & 3);
+            if (slot < 8) {
+                BCPS_REG = (uint8_t)(0x80u | (slot << 3) | (col << 1));
+                BANKED_VRAM_WRITE(&BCPD_REG, lo);
+                BANKED_VRAM_WRITE(&BCPD_REG, hi);
+            } else {
+                OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3) | (col << 1));
+                BANKED_VRAM_WRITE(&OCPD_REG, lo);
+                BANKED_VRAM_WRITE(&OCPD_REG, hi);
+            }
+        }
+        s++;
+        despair_box_wait();
+    }
 }

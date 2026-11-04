@@ -5,6 +5,7 @@
 #include "screen.h"
 #include "banked.h"
 #include <gb/gb.h>
+#include <gb/cgb.h>
 
 /* Bank-2 self-contained render bodies for the simple screens (thanks /
  * ending / game-over).  The fixed _CODE/_HOME area is at its size limit
@@ -80,6 +81,28 @@ void ending_content_render(void)
         "[A] RESTART"
     };
     static const uint8_t s_rows[7] = { 1, 2, 4, 5, 7, 9, 14 };
+    /* Ending page: pure white background, black text.  Program every BG
+     * slot to the document ramp (both light shades read white, both dark
+     * read black) so the whole screen is one sheet whatever attribute a
+     * cell carries -- no attribute rewrite needed.  The cleared tiles are
+     * shade-0 paper and the font ink is shade 3, so on DMG (BGP 0xE4 from
+     * boot, the only value the ROM ever programs) this is black on white
+     * with no CRAM write at all. */
+    if (g_is_cgb) {
+        static const uint8_t s_paper[8] = {
+            0xFF, 0x7F,   /* RGB8(255,255,255) */
+            0xFF, 0x7F,   /* light pair reads white: one sheet */
+            0x00, 0x00,   /* RGB8(0,0,0) */
+            0x00, 0x00    /* dark pair reads black: one ink */
+        };
+        uint8_t p;
+        for (p = 0; p < 8; p++) {
+            BCPS_REG = (uint8_t)(0x80u | (p << 3));
+            for (i = 0; i < 8; i++) {
+                BANKED_VRAM_WRITE(&BCPD_REG, s_paper[i]);
+            }
+        }
+    }
 
     for (i = 0; i < 7; i++) {
         simple_draw_text(0, s_rows[i], s_lines[i], 20);

@@ -152,7 +152,10 @@ void battle_screen_update(Game *g)
             telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
             /* Desperation move: the Lord of Slimes casts POWERFUL SPELL
              * (assets/sfx/explosion.uge, SFX_EXPLOSION) over the boss
-             * track, which keeps playing underneath. */
+             * track, which keeps playing underneath.  No game-over music
+             * starts on this path (battle_set_result skips it for the
+             * despair hold), so the DEFEATED! result screen plays out over
+             * the boss track under the explosion tail. */
             audio_play_sfx(SFX_EXPLOSION);
             battle_set_result((Battle *)&vg->battle, BATTLE_RESULT_DEFEAT);
         }

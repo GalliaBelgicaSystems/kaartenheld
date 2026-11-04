@@ -265,7 +265,7 @@ extern uint8_t g_battle_solo;
 /* Slime-lord desperation flag (WRAM, BSS zero): set by the game-owned
  * bank-8 check body when the desperation boss reaches its threshold.
  * battle_screen consumes it on the defeat exit to route the wake-grove /
- * wake-dialogue / THANKS outro instead of GAME_OVER. */
+ * wake-dialogue / ENDING outro instead of GAME_OVER. */
 extern uint8_t g_slime_despair;
 /* Unkillable-boss slot cache (WRAM, 0xFF = none): re-derived every call
  * by the game-owned bank-8 check body (src/game/despair_banked.c) from

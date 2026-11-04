@@ -5,6 +5,7 @@
 #include "telemetry.h"
 #include "ui.h"
 #include "banked.h"
+#include "content.h"
 
 /* Bank-10 choice nav body (src/game/choice_nav_banked.c): evaluates pad
  * edges, toggles/confirms, and repaints the cursor cells inline, so the
@@ -104,14 +105,13 @@ void dialogue_screen_update(Game *g)
             return;
         }
         /* Demo outro: the slime-lord wake dialogue ("Where am I?")
-         * routes to THANKS and marks the demo completed (the banked
-         * thanks body shows congratulations); every other dialogue
-         * returns to the overworld (game-over quits show the try-again
-         * text).  The despair flag is cleared here; battle_start clears
-         * it for the next fight.  Single screen_change call (fixed-bank
-         * budget, AGENTS.md 52.18). */
-        screen_change(g, g_slime_despair ? (g_slime_despair = 0, g_demo_completed = 1, SCREEN_THANKS)
-                                         : SCREEN_OVERWORLD);
+         * routes to the ENDING screen (white document page) -- the run is
+         * over, win or lose; the wake area's track keeps playing
+         * underneath.  Every other dialogue returns to the overworld
+         * (game-over quits show the try-again text).  The despair flag is
+         * cleared here; battle_start clears it for the next fight.
+         * Single screen_change call (fixed-bank budget, AGENTS.md 52.18). */
+        screen_change(g, g_slime_despair ? (g_slime_despair = 0, SCREEN_ENDING) : SCREEN_OVERWORLD);
     }
 }
 
@@ -156,6 +156,13 @@ void dialogue_screen_render(Game *g)
             ui_restore_ow_oam();
             ui_draw_dialogue(d, w);
             ui_lcd_on();
+            /* Despair outro (demo finale): the defeat faded out to white
+             * on the result screen -- fade the wake area back in over the
+             * just-redrawn world.  The box body carries the fade (same
+             * bank, no new dispatch): it runs again right below with the
+             * LCD on, gated on the still-set flag, so normal
+             * battle->dialogue entries pay only one redundant box paint. */
+            ui_draw_dialogue(d, w);
         } else {
             ui_draw_dialogue(d, w);
         }

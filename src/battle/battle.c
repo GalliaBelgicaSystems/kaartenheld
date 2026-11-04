@@ -331,8 +331,15 @@ void battle_set_result(Battle *b, uint8_t res)
         /* Game-over theme starts the instant the hero falls, so the
          * DEFEATED! result screen already carries it; it keeps playing
          * over the game-over choice menu until a map load restores the
-         * scene track (world_init plays it on every map load). */
-        audio_play_music(MUSIC_GAMEOVER);
+         * scene track (world_init plays it on every map load).  The
+         * slime-lord desperation hold is exempt (g_slime_despair is
+         * engine battle state, cleared by battle_start): its reprisal
+         * routes to the wake/ending outro, never the choice menu, so no
+         * game-over music may start -- the result screen plays out in
+         * silence under the explosion tail. */
+        if (!g_slime_despair) {
+            audio_play_music(MUSIC_GAMEOVER);
+        }
     }
 }
 

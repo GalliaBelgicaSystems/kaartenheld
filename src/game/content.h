@@ -27,6 +27,12 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Despair white fade-out (src/game/despair_fade_banked.c, ROM bank 10):
+ * whites the current palettes out.  Dispatched from
+ * game_slime_despair_outro() on the DEFEATED result screen.
+ * Self-contained (palette regs + LY only); the call site runs LCD-on. */
+void game_despair_fade_out_banked(void);
+
 /* Slime-lord desperation outro (unwinnable final battle, game-owned flow):
  * immediate cut to the wake grove with the "Where am I?" dialogue, then
  * THANKS (via the dialogue close).  Called by the shared battle screen's
