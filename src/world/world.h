@@ -469,13 +469,17 @@ typedef enum {
     TILE_UNDERGROUND_27 = 214,
     TILE_UNDERGROUND_28 = 220,
     TILE_UNDERGROUND_29 = 221,
+    TILE_UNDERGROUND_1E = 254,
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
- * (empty/unset cell), so the enum must never reach it -- only 254 is
- * still clear past the castle extension (251..253), and it stays clear
- * as buffer.  Enforced by g_tiletype_fits_u8 in world.c (kept out of
- * this header so the 2 bytes are emitted once). */
+ * (empty/unset cell), so the enum must never reach it -- 254 was the
+ * last clear value past the castle extension (251..253) and now belongs
+ * to the underground skeleton tile (walkable bone art the tunnel
+ * skeleton NPC stands on).  The u8 TileType space is now fully spent:
+ * any further tile needs an alias or a repurposed value (see
+ * generate_tiles.py landscape_entries).  Enforced by g_tiletype_fits_u8
+ * in world.c (kept out of this header so the 2 bytes are emitted once). */
 
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32

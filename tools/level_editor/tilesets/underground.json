@@ -327,6 +327,18 @@
       "palette": "underground1"
     },
     {
+      "id": "underground_skeleton",
+      "label": "skeleton",
+      "gb_constant": "TILE_UNDERGROUND_1E",
+      "walkable": true,
+      "color": "#c9bd9a",
+      "ascii": "S",
+      "image_url": "/tiles/underground/underground_skeleton.png",
+      "category": "terrain",
+      "palette": "underground1",
+      "glyph": "S"
+    },
+    {
       "id": "underground_black_emptyness_1",
       "label": "empty",
       "gb_constant": "TILE_UNDERGROUND_29",
@@ -529,7 +541,7 @@
         "x": 6,
         "y": 2,
         "index": 30,
-        "tile": "underground_black_emptyness_1"
+        "tile": "underground_skeleton"
       },
       {
         "x": 7,

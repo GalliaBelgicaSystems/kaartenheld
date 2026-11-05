@@ -489,7 +489,7 @@ static const WorldActorDefinition g_underground_tunnel_actors[] = {
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'S', "SKELETON", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SKELETON_DESC, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_ASCII, 0xFF, 0
+         SPRITE_KIND_TILE, 0xFF, 0
     },
 };
 
