@@ -993,7 +993,6 @@ test-harness: debug
 # any gate/ordering/parity violation.  Host-side only, no ROM rebuild.
 card-costs:
 	python3 tools/card_costs.py
-	python3 tools/card_costs.py --check-identity
 
 # Fast iteration gate: the three layout-sensitive sentinel scenarios
 # (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or

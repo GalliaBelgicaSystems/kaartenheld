@@ -50,11 +50,11 @@
    "frames": 10
   }
  ],
- "assertions": [
-  {
-   "type": "event_count",
-   "expected": "CARD_ADDED_TO_DECK x1"
-  },
+ "assertions": [    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 1
+    },
   {
    "type": "event_not_occurred",
    "event": "CARD_EQUIP_LOCKED"

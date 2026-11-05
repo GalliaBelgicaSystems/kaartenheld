@@ -289,9 +289,7 @@ def check_identity():
 def main():
     # Identity parity (curated catalog vs s_ident_catalog) is part of the
     # card-cost contract, not an optional extra pass: run it on every
-    # invocation so one process covers both.  --check-identity stays
-    # accepted as an explicit alias for existing recipes; it adds nothing
-    # now that the check always runs.
+    # invocation so one process covers both (no separate pass needed).
     check_identity()
     loot_h = LOOT_H.read_text(encoding="utf-8")
     gates = {

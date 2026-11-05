@@ -288,9 +288,9 @@ void ui_draw_hline(uint8_t y, char ch);
 void ui_update_camera(const World *world);
 
 /* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
- * ROM bank 10 in both builds (4 KB free there), alongside the despair
- * fades.  The fixed-bank wrapper stages through this macro, so pragma
- * and dispatch can never disagree. */
+ * ROM bank 10 in both builds (~2 KB free in release), alongside the
+ * despair fades.  The fixed-bank wrapper stages through this macro,
+ * so pragma and dispatch can never disagree. */
 #define UI_DIALOGUE_BOX_BANK 10
 
 /* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):

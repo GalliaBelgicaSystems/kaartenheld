@@ -75,7 +75,10 @@ void battle_telegraph_banked(void)
      * the DEFENSE_RESOLVE beat so the fizzle stays named; consume it here
      * at the next telegraph instead (re-staged below if this swing fizzles
      * too).  Reads are phase-gated and SELECT never matches, so the stale
-     * value in between is invisible. */
+     * value in between is invisible.  The unconditional clear is safe for
+     * the other staged messages: Carl's msg 9 is consumed by the dialogue
+     * screen on close before battle resumes, and despair's msg 10 lives in
+     * SLIME_DESPAIR, a phase that never dispatches a telegraph. */
     b->msg_id = 0;
     b->phase = BATTLE_PHASE_ENEMY_TELEGRAPH;
     b->turn = BATTLE_TURN_ENEMY;

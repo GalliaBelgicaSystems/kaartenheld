@@ -58,11 +58,11 @@
    "frames": 10
   }
  ],
- "assertions": [
-  {
-   "type": "event_count",
-   "expected": "CARD_ADDED_TO_DECK x2"
-  },
+ "assertions": [    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 2
+    },
   {
    "type": "event_occurred",
    "event": "CARD_REMOVED_FROM_DECK"

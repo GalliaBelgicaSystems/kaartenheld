@@ -102,7 +102,13 @@ extern StatusInstance g_status_applied;
 /* Bit p set = pool position p is greyed for actor slot (0 = player,
  * 1..n = enemy).  Duration drains at each enter-select round boundary
  * in lockstep with the STATUS_POISON instance, so tint and grey-out
- * expire together after POISON_GREY_TURNS rounds (0 = not greyed). */
+ * expire together after POISON_GREY_TURNS rounds (0 = not greyed).
+ * Effective coverage for a mid-round application: the victim's current
+ * round is still ahead for an enemy (same-round swing fizzles) and its
+ * defend select is still ahead for the hero, so both sides feel two
+ * affected rounds (enemy swings N/N+1, hero defends N/N+1 plus select
+ * N+1) -- a single shared counter can never cover more without
+ * outliving the tint (the old +1 desync). */
 extern uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 extern uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 

@@ -344,10 +344,15 @@ void deck_merge_banked(void)
             if (total < keep_count) total = 255;
             if (cap > 0 && total > cap) {
                 /* Capped fold: keep the cap, leave the excess under the
-                 * other id -- nothing lost, nothing over cap. */
+                 * other id -- nothing lost, nothing over cap.  The
+                 * remainder row must carry the drop id: in the swap path
+                 * entries[j] still names the curated id, and without the
+                 * rename both rows would carry it (loot remainder lost,
+                 * merge never converges). */
                 keep_count = cap;
                 cs->collection.entries[i].count = cap;
                 drop_count = (uint8_t)(total - cap);
+                cs->collection.entries[j].id = drop_id;
                 cs->collection.entries[j].count = drop_count;
                 deck_retarget_capped(&cs->deck, drop_id, keep_id, cap);
                 deck_evict_overcap(&cs->deck, keep_id, drop_id, cap);

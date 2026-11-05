@@ -1,0 +1,55 @@
+{
+ "name": "deck_merge_twin_first",
+ "test": true,
+ "description": "Capped-fold swap path (docs/loot.md §34): the loot twin (id 164) is owned BEFORE the curated IRON_RING (cap 1), so the merge's keep row starts as the loot id and must swap. The capped fold keeps the cap under the curated id and leaves the excess under the loot id (rows 66:1 + 164:1). Pre-fix the remainder row kept the curated id (rows 66:1 + 66:1): the loot remainder vanished and the merge never converged.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 11
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 1
+  },
+  {
+   "type": "collection_count",
+   "card_id": 66,
+   "expected": 1
+  },
+  {
+   "type": "collection_count",
+   "card_id": 164,
+   "expected": 1
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  }
+ ]
+}

@@ -27,7 +27,7 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * each row.
  *
  * The merge itself lives in the banked body deck_merge_banked (ROM bank
- * 10 -- bank 2, the catalog's bank, is full): the identity compare needs
+ * 11 -- bank 2, the catalog's bank, is full): the identity compare needs
  * real definitions, and card_get_def is a fixed-bank trampoline a banked
  * body must never call (AGENTS.md §52.11.1), so the banked body reads a
  * hand-written identity table (parity-gated by card-costs
