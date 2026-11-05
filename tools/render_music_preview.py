@@ -33,7 +33,7 @@ OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio")
 
 SONGS = ["battle", "desolate_landscape", "forest", "boss_fight",
          "village", "castle", "mimic", "mimic_intro",
-         "opening", "chest_opening", "game_over", "demo_complete",
+         "another_opening", "chest_opening", "game_over", "demo_complete",
          "underground"]
 
 SR = 22050          # output sample rate
