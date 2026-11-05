@@ -50,7 +50,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED", 9: "MET_DOG", 10: "BONE_TAKEN", 11: "DOG_KEY"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -139,11 +139,17 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
                 GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
-                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 18: "CHEST_LOCKED",
                 GAME_ID_BASE + 19: "MIMIC_REWARD",
                 GAME_ID_BASE + 20: "QUEST_NUDGE",
                 GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
                 GAME_ID_BASE + 22: "QUEST_EARLY_DONE",
+                GAME_ID_BASE + 23: "VILLAGE_GUARDS",
+                GAME_ID_BASE + 24: "SKELETON_ASK",
+                GAME_ID_BASE + 25: "SKELETON_DESC",
+                GAME_ID_BASE + 26: "DOG_HINT",
+                GAME_ID_BASE + 27: "DOG_ASK",
+                GAME_ID_BASE + 28: "DOG_THANKS",
 }
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
@@ -169,6 +175,8 @@ ACTOR_INFO_MAP = {
     "MIMIC":       {"visual": "T", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "MIMIC"},
     "SPIDER":      {"visual": "S", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SPIDER"},
     "SLIME_KNIGHT": {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME_KNIGHT"},
+    "SKELETON":    {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SKELETON_DESC", "battle": "NONE"},
+    "VILLAGE_DOG": {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "DOG_HINT", "battle": "NONE"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's
@@ -229,7 +237,7 @@ STATE_LOAD_DESC_VERSION = 0x04
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8, "MET_DOG": 9, "BONE_TAKEN": 10, "DOG_KEY": 11}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
@@ -240,7 +248,7 @@ ITEM_ID_MAP = {"NONE": 0,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
                "BOW_9": 0x46, "WOOD_SWORD": 0x47,
-               "STEEL_SHIELD": 0x48}
+               "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}

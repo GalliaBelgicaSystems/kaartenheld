@@ -1,0 +1,10 @@
+{
+  "id": "skeleton_ask",
+  "speaker": "SKELETON:",
+  "lines": [
+    "Take a bone from",
+    "the skeleton?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

@@ -22,11 +22,15 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_UNDERGROUND_TUNNEL,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
+                                      STORY_FLAG_ID_FIELD_CHEST,
+                                      STORY_FLAG_ID_MET_DOG,
+                                      STORY_FLAG_ID_BONE_TAKEN,
+                                      STORY_FLAG_ID_DOG_KEY,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
                                       CARD_IRON_RING, CARD_POISON_DAGGER,
-                                      CARD_AMULET,
+                                      CARD_AMULET, CARD_BONE, CARD_OLD_KEY,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON, MUSIC_TOWN,
@@ -808,10 +812,103 @@ def walk_b(planner, checks):
                 None)
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
     props = carl["properties"]
-    # Field cache east of Carl first: Carl withholds the spar until it
-    # is opened ("Open chest, then come back!"), so the hero opens it
-    # (first poison dagger plus the AP unlock: pool 1 -> 2) and only
-    # then walks to the lesson.
+    # Field cache east of Carl first -- but it is key-locked now: bumping
+    # it without the Old Key says "This chest is locked." (pool stays 1,
+    # no dagger).  The key comes from the village dog, which wants a bone
+    # from the tunnel skeleton -- so the walk runs the whole quest chain
+    # before the lesson (god-mode for the transit legs, like walk-a/c/e;
+    # ungod before Carl so the spar asserts stay at base HP).
+    s.check("locked chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.check("locked chest text",
+            s.text_has("This chest"),
+            expected="This chest", actual="none")
+    s.check("locked cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("no dagger without key",
+               s.reader.collection_count(CARD_POISON_DAGGER), 0)
+    s.check_eq("energy pool stays 1 (locked)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 1)
+    s.check("field chest flag clear",
+            not s.reader.flag(STORY_FLAG_ID_FIELD_CHEST),
+            expected="clear", actual="set")
+    god_mode(s)
+    # Town: the village dog holds the field cache's Old Key and will not
+    # give it -- hearing the hint sets MET_DOG, which unlocks the
+    # skeleton's bone offer.
+    town_landing = planner._arrival({"target_scene": "town"}, None,
+                                     "east", "town")
+    follow(s, planner, "field", s.pos(), "town", town_landing)
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("dog hint bump",
+            bump_actor(s, planner, "town", (8, 13), "down", "DOG:"),
+            expected="DOG:", actual="none")
+    s.check("dog hint text",
+            s.text_has("won't"),
+            expected="won't", actual="none")
+    s.check("dog hint closed",
+            close_dialogue(s, "DOG:"),
+            expected="closed", actual="open")
+    s.check("met dog flag",
+            s.reader.flag(STORY_FLAG_ID_MET_DOG),
+            expected="set", actual="clear")
+    # Tunnel skeleton: with MET_DOG set, the bump offers "Take a bone
+    # from the skeleton?" -- YES (default cursor) grants the bone.
+    follow(s, planner, "town", s.pos(), "underground_tunnel", (13, 4))
+    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
+    s.check_eq("underground music",
+               s.reader.music_track(), MUSIC_UNDERGROUND)
+    s.check("skeleton ask bump",
+            bump_actor(s, planner, "underground_tunnel", (13, 4), "right",
+                       "SKELETON:"),
+            expected="SKELETON:", actual="none")
+    s.shoot("08-skeleton-ask", need="Take a bone")
+    s.check("skeleton bone taken",
+            s.press_until("a", lambda: s.text_has("You take a bone"),
+                          tries=6, settle=30, label="taken"),
+            expected="You take a bone", actual="none")
+    # The taken box is narration with an empty speaker (no SKELETON:
+    # tag), so close on its content line: closing on the speaker tag
+    # would pass vacuously with the box still open and wedge every
+    # later move on the open modal.
+    s.check("skeleton taken closed",
+            close_dialogue(s, "You take a bone"),
+            expected="closed", actual="open")
+    s.check_eq("bone in collection",
+               s.reader.collection_count(CARD_BONE), 1)
+    s.check("bone taken flag",
+            s.reader.flag(STORY_FLAG_ID_BONE_TAKEN),
+            expected="set", actual="clear")
+    # Back to town: trade the bone for the Old Key (YES, then the thanks
+    # sets DOG_KEY on close and the ? mark goes away).
+    follow(s, planner, "underground_tunnel", s.pos(), "town", (8, 13))
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("dog trade bump",
+            bump_actor(s, planner, "town", (8, 13), "down", "DOG:"),
+            expected="DOG:", actual="none")
+    s.check("dog trade thanks",
+            s.press_until("a", lambda: s.text_has("OLD KEY"),
+                          tries=6, settle=30, label="thanks"),
+            expected="OLD KEY", actual="none")
+    s.shoot("08-dog-key", need="OLD KEY")
+    s.check("dog thanks closed",
+            close_dialogue(s, "DOG:"),
+            expected="closed", actual="open")
+    s.check_eq("old key in collection",
+               s.reader.collection_count(CARD_OLD_KEY), 1)
+    s.check_eq("bone traded away",
+               s.reader.collection_count(CARD_BONE), 0)
+    s.check("dog key flag",
+            s.reader.flag(STORY_FLAG_ID_DOG_KEY),
+            expected="set", actual="clear")
+    # Field cache with the key: first poison dagger plus the AP unlock.
+    # Pool reaches 3 here: base 1, +1 from Carl's leave-the-field offer
+    # (leaving for town pre-lesson grants the tutorial point and sets
+    # TUTORIAL_SKIPPED), +1 from the cache.
+    follow(s, planner, "town", s.pos(), "field", (20, 8))
+    s.settle_scene(expected_scene=SCENE_FIELD)
     s.check("chest bump",
             bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
             expected="CHEST:", actual="none")
@@ -821,8 +918,9 @@ def walk_b(planner, checks):
             expected="closed", actual="open")
     s.check_eq("first poison dagger",
                s.reader.collection_count(CARD_POISON_DAGGER), 1)
-    s.check_eq("energy pool 1 -> 2",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
+    s.check_eq("energy pool 1 -> 3 (skip + cache)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    ungod_mode(s)
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
@@ -887,8 +985,9 @@ def walk_b(planner, checks):
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
-    s.check_eq("spar starts at 2 AP (chest opened first)",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
+    s.check_eq("spar starts at 3 AP (skip + cache)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    gold_before = s.reader.gold()
 
     # Fight with hand-aware selection until the solo spar drops
     # (variance-safe: enemy HP strictly decreases per landed hit; never
@@ -1022,7 +1121,7 @@ def walk_b(planner, checks):
     # (now stable) FLED! result, and leaving that returns to the field
     # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
     # and Carl alive for a rematch.
-    # At pool 2 a stray card may still be staged (B unselects before it
+    # At pool 3 a stray card may still be staged (B unselects before it
     # flees), so drain the combo first or the flee press only clears it.
     for _ in range(4):
         if s.reader.battle_combo_count() == 0:
@@ -1051,11 +1150,11 @@ def walk_b(planner, checks):
             expected="SCENE_FIELD",
             actual="scene %d" % s.reader.scene_state()["scene_id"])
     s.check_eq("no victory gold (fled, not won)", s.reader.gold(),
-               HERO_START_GOLD)
+               gold_before)
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool stays 2 (no AP for fleeing)",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
+    s.check_eq("energy pool stays 3 (no AP for fleeing)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
     s.tick(30)

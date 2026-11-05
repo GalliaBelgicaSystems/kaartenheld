@@ -82,9 +82,9 @@ static const WorldActorDefinition g_town_actors[] = {
          SPRITE_KIND_ENEMY, 5, 0
     },
     {
-        0, ENTITY_ID_DOG, 8, 14, DIRECTION_DOWN,
+        0, ENTITY_ID_VILLAGE_DOG, 8, 14, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        '?', "DOG", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        '?', "VILLAGE_DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_HINT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ENEMY, 1, 0
     },
@@ -483,6 +483,16 @@ static const WorldActorDefinition g_wake_grove_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_underground_tunnel_actors[] = {
+    {
+        0, ENTITY_ID_SKELETON, 14, 4, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SKELETON", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SKELETON_DESC, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -512,8 +522,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
     { MAP_WAKE_GROVE,      g_wake_grove_actors,
         (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
-    { MAP_UNDERGROUND_TUNNEL, 0,
-        0 },
+    { MAP_UNDERGROUND_TUNNEL, g_underground_tunnel_actors,
+        (uint8_t)(sizeof(g_underground_tunnel_actors) / sizeof(g_underground_tunnel_actors[0])) },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
         0 },
     { MAP_DEMO_END_WAKE_SCENE, 0,

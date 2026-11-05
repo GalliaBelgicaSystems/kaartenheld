@@ -45,6 +45,8 @@ static const uint8_t s_ident_catalog[GAME_CARD_COUNT][9] = {
     /* CARD_BOW_9         */ { 0, 9, 5, 2, 1, 2, 0, 0, 1 },
     /* CARD_WOOD_SWORD    */ { 0, 1, 1, 0, 1, 0, 0, 0, 4 },
     /* CARD_STEEL_SHIELD  */ { 1, 6, 3, 0, 2, 1, 0, 0, 2 },
+    /* CARD_BONE          */ { 5, 1, 0, 0, 0, 0, 0, 0, 1 },
+    /* CARD_OLD_KEY       */ { 5, 2, 0, 0, 0, 0, 0, 0, 1 },
 };
 
 /* (type, battle type, effect) per loot weapon, index 0..4

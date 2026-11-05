@@ -6,6 +6,7 @@
 #include "ui.h"
 #include "banked.h"
 #include "content.h"
+#include "rpg/deck.h"
 
 /* Bank-10 choice nav body (src/game/choice_nav_banked.c): evaluates pad
  * edges, toggles/confirms, and repaints the cursor cells inline, so the
@@ -30,8 +31,13 @@ void dialogue_screen_update(Game *g)
      * table), 8 for a confirmed staged grant (Carl's skip-the-tutorial
      * offer: variable add + one-shot flag through the real APIs, which
      * own the VARIABLE_SET / STORY_FLAG_SET telemetry, then the staged
-     * follow-up line), and 0/1/5 to stay/advance plainly.  The staged ids
-     * are opaque data to the engine (never game branches). */
+     * follow-up line), 9 for a confirmed item handover (skeleton's
+     * bone: staged item add + one-shot flag + follow-up; a failed add
+     * falls through to the plain advance so the offer can be retried),
+     * 10 for a confirmed item swap (dog's key trade: staged add, then
+     * staged remove, then the staged thanks whose completion_flag owns
+     * the one-shot flag), and 0/1/5 to stay/advance plainly.  The staged
+     * ids are opaque data to the engine (never game branches). */
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
@@ -65,7 +71,35 @@ void dialogue_screen_update(Game *g)
             dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
             return;
         }
-        if (g_bk_byte_a == 6) {
+        if (g_bk_byte_a == 9) {
+            /* Item handover resolved by a choice dialogue (skeleton's
+             * bone): grant through the real collection API -- it owns
+             * caps and the add result -- then the one-shot flag and the
+             * staged follow-up, like code 8's variable grant.  A failed
+             * add (full shelf) falls through to the plain advance below:
+             * the ask just closes with nothing set, so it can be
+             * retried. */
+            /* No per-grant telemetry: DIALOGUE_CHOICE (emitted above)
+             * plus the inventory snapshot cover the handover -- the
+             * fixed bank has no room for three more emit sites (the
+             * debug _HOME sits 27 B past 0x8000 with them). */
+            if (deck_collection_add(&g->state.cards, (CardId)g_bk_byte_b, 1)) {
+                game_flag_set(&g->state, (FlagId)g_bk_byte_c);
+                dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
+                return;
+            }
+        } else if (g_bk_byte_a == 10) {
+            /* Item swap resolved by a choice dialogue (dog's key trade):
+             * add the key first so a full shelf keeps the bone (the
+             * trade can be retried), then remove it and open the staged
+             * thanks.  The thanks dialogue's completion_flag owns the
+             * one-shot flag, so no fourth staging byte is needed. */
+            if (deck_collection_add(&g->state.cards, (CardId)g_bk_byte_c, 1)) {
+                deck_collection_remove(&g->state.cards, (CardId)g_bk_byte_b, 1);
+                dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
+                return;
+            }
+        } else if (g_bk_byte_a == 6) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
 #endif

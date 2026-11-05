@@ -154,7 +154,32 @@
    "tile_char": "^"
   }
  ],
- "objects": [],
+ "objects": [
+    {
+      "id": "test_underground_skeleton",
+      "type": "npc",
+      "position": {
+        "x": 12,
+        "y": 10
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SKELETON",
+        "display_name": "SKELETON",
+        "dialogue": "DIALOGUE_ID_SKELETON_DESC",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    }
+  ],
  "regions": [
   {
    "id": "dark_halls",

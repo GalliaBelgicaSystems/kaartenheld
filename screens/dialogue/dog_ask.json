@@ -1,0 +1,9 @@
+{
+  "id": "dog_ask",
+  "speaker": "DOG:",
+  "lines": [
+    "Give Bone to dog?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

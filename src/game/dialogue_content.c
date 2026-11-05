@@ -41,14 +41,6 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
-        DIALOGUE_ID_CARL_CHEST_FIRST,
-        "CARL:",
-        2,
-        {"OPEN CHEST,", "THEN COME BACK!"},
-        0,
-        0
-    },
-    {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
         3,
@@ -57,11 +49,43 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_CHEST_LOCKED,
+        "CHEST:",
+        2,
+        {"This chest", "is locked."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_ASK,
+        "DOG:",
+        2,
+        {"Give Bone to dog?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_DOG_GREETING,
         "WILD DOG:",
         4,
         {"Meow.", "", "", "Bark, bark I mean."},
         0,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_HINT,
+        "DOG:",
+        3,
+        {"The dog is holding", "a key and won't", "give it."},
+        STORY_FLAG_ID_MET_DOG,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_THANKS,
+        "DOG:",
+        2,
+        {"Bark! You got", "the OLD KEY!"},
+        STORY_FLAG_ID_DOG_KEY,
         0
     },
     {
@@ -261,6 +285,30 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Use your power.", "Go forth, hero!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SKELETON_ASK,
+        "SKELETON:",
+        3,
+        {"Take a bone from", "the skeleton?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_SKELETON_DESC,
+        "SKELETON:",
+        1,
+        {"An old skeleton."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SKELETON_TAKEN,
+        "",
+        1,
+        {"You take a bone."},
         0,
         0
     },

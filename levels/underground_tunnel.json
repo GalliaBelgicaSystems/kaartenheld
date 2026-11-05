@@ -448,7 +448,32 @@
     "east": "",
     "west": ""
   },
-  "objects": [],
+  "objects": [
+    {
+      "id": "tunnel_skeleton",
+      "type": "npc",
+      "position": {
+        "x": 14,
+        "y": 4
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SKELETON",
+        "display_name": "SKELETON",
+        "dialogue": "DIALOGUE_ID_SKELETON_DESC",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "S",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    }
+  ],
   "regions": [
     {
       "id": "dark_tunnel",

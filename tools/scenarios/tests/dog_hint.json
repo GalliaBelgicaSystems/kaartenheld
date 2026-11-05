@@ -1,0 +1,54 @@
+{
+ "name": "dog_hint",
+ "test": true,
+ "description": "Bumping the village dog without the bone plays its hint ('The dog is holding a key and won't give it.'): closing it sets MET_DOG through the dialogue completion flag, which unlocks the skeleton's bone offer",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "VILLAGE_DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_HINT"
+  },
+  {
+   "type": "flag",
+   "flag": "MET_DOG",
+   "expected": true
+  },
+  {
+   "type": "flag",
+   "flag": "DOG_KEY",
+   "expected": false
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 4,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 4242
+ }
+}

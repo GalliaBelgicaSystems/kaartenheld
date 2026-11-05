@@ -1,0 +1,57 @@
+{
+ "name": "skeleton_desc_after_take",
+ "test": true,
+ "description": "Bumping the skeleton after taking the bone only describes it again (actor fallback dialogue, no event fires): the take is one-shot and no second bone is granted",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "SKELETON"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "dialogue_active",
+   "expected": false
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "SCRIPT_TRIGGERED"
+  },
+  {
+   "type": "inventory",
+   "item": "BONE",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 12,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true,
+   "BONE_TAKEN": true,
+   "DOG_KEY": true
+  },
+  "inventory": {"OLD_KEY": 1}
+ }
+}

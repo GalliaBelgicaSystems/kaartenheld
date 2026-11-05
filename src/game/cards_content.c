@@ -35,7 +35,20 @@ const CardDefinition g_cards[] = {
      * the Lord of Slimes' flat-6 swing (docs/enemies_ranking.md §5.2/§8.4
      * decided) -- blocks it alone, where the old two-SH2 answer leaves 2
      * through.  Curated steel following the same band as loot steel. */
-    { CARD_STEEL_SHIELD,  CARD_TYPE_DEFENSE, 6, CARD_AP(6, MAT_STEEL, 0), 0, 2, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,   12, STATUS_NONE,       0,   "S SH" }
+    { CARD_STEEL_SHIELD,  CARD_TYPE_DEFENSE, 6, CARD_AP(6, MAT_STEEL, 0), 0, 2, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,   12, STATUS_NONE,       0,   "S SH" },
+    /* Quest bone (tunnel skeleton -> village dog trade): SPECIAL like
+     * the amulet -- listed in the DECK tab, never deckable, never
+     * sold (sell is loot-only).  Sword battle type reuses the
+     * amulet's icon path (no new art).  Power 1/2 (vs the amulet's 0)
+     * keeps the three SPECIAL identities distinct: the collection
+     * merge folds identical rows, so equal bytes would collapse the
+     * bone, the key, and the amulet into one row.  Power is inert
+     * here (SPECIAL cards never enter a deck or a battle). */
+    { CARD_BONE,          CARD_TYPE_SPECIAL, 1, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "BONE"  },
+    /* Quest key (the dog's field-cache key): same SPECIAL treatment.
+     * Held as a card so the trade, the locked chest, and the snapshot
+     * all ride the existing item-count machinery. */
+    { CARD_OLD_KEY,       CARD_TYPE_SPECIAL, 2, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, STATUS_NONE,       0,   "OLD KEY"  }
 };
 
 /* Keep the register-time count in game_ids.h in sync with this table. */

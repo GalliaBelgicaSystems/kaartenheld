@@ -366,6 +366,17 @@ static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
         IC_DRAW_TEXT(x, y, "AMULET", 6);
         return 6;
     }
+    /* Quest items share the amulet's sword-icon path (no new art);
+     * only the name differs.  Shown in the DECK list and detail
+     * page exactly as the event dialogues name them. */
+    if (def->id == CARD_BONE) {
+        IC_DRAW_TEXT(x, y, "BONE", 4);
+        return 4;
+    }
+    if (def->id == CARD_OLD_KEY) {
+        IC_DRAW_TEXT(x, y, "OLD KEY", 7);
+        return 7;
+    }
     s_ic_mstr = ic_mat_str(s_ic_mat, &s_ic_mlen);
     s_ic_wstr = ic_wpn_str(s_ic_wpn, &s_ic_wlen);
     IC_DRAW_TEXT(x, y, s_ic_mstr, s_ic_mlen);
