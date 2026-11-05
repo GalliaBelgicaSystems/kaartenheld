@@ -8,6 +8,18 @@ import { BUILTIN_TILESETS } from './model/Tileset';
 import { BATTLE_IDS, AI_IDS } from './model/Objects';
 import { RampSelect } from './RampSelect';
 
+/** Enemy rank (docs/enemies_ranking.md §4.1): loot quality is centered on
+ *  the rank's material row.  R0 lesson fights grant no drop and no gold. */
+export const ENEMY_RANKS = [
+  { value: 0, label: 'R0 LESSON' },
+  { value: 1, label: 'R1 FODDER' },
+  { value: 2, label: 'R2 VERMIN' },
+  { value: 3, label: 'R3 GRUNT' },
+  { value: 4, label: 'R4 VETERAN' },
+  { value: 5, label: 'R5 ELITE' },
+  { value: 6, label: 'R6 BOSS' },
+] as const;
+
 /** Enemies view (art-only): one record per enemy type.  The level view
  *  owns placement; this view owns looks.  Per type it edits the shared
  *  overworld sprite (transparent, every world) and shows the battle-art
@@ -332,6 +344,12 @@ export const EnemyManager: React.FC<{
                 <select style={{ width: '100%' }} value={(full && full.ai_types && full.ai_types[0]) || 'AI_NONE'}
                   onChange={(e) => { setFull((prev: any) => ({ ...prev, ai_types: [e.target.value] })); setDirty(true); }}>
                   {AI_IDS.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </label>
+              <label style={{ fontSize: 12 }}>Rank (loot row)
+                <select style={{ width: '100%' }} value={(full && full.rank) ?? 0}
+                  onChange={(e) => { setFull((prev: any) => ({ ...prev, rank: parseInt(e.target.value) || 0 })); setDirty(true); }}>
+                  {ENEMY_RANKS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </label>
             </div>

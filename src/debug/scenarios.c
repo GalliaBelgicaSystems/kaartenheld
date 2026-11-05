@@ -254,14 +254,25 @@ static void debug_run_action(void)
             break;
 
         case DBG_ACT_DECK_ADD:
-            /* Real mechanic call: all deck_add_card validations apply
-             * (ownership, SPECIAL exclusion, max_copies, size). */
+            /* Real gated mechanic (docs/enemies_ranking.md §4.8): the same
+             * deck_equip_card wrapper the quick screen uses, with the live
+             * pool -- so scenarios drive the real gate (AGENTS.md §44).
+             * CARD_EQUIP_LOCKED fires inside the wrapper on a locked loot
+             * card; CARD_ADDED_TO_DECK fires here on success only. */
 #ifdef DEBUG_BUILD
-            if (deck_add_card(&g_game.state.cards, (CardId)a0)) {
-                telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
+            {
+                uint8_t deck_pool = 1;
+                int16_t deck_pv =
+                    g_game.state.variables.values[
+                        VARIABLE_ID_ENERGY_POOL - 1];
+                if (deck_pv > 1) deck_pool = (uint8_t)(deck_pv > 255 ? 255 : deck_pv);
+                if (deck_equip_card(&g_game.state.cards, (CardId)a0,
+                                    deck_pool) == EQUIP_OK) {
+                    telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
+                }
             }
 #else
-            (void)deck_add_card(&g_game.state.cards, (CardId)a0);
+            (void)deck_equip_card(&g_game.state.cards, (CardId)a0, 1);
 #endif
             break;
         case DBG_ACT_DECK_REMOVE:

@@ -1,0 +1,65 @@
+{
+  "name": "deck_equip_loot_twin_cap",
+  "test": true,
+  "description": "Loot-vs-loot identity cap (docs/loot.md §34, docs/enemies_ranking.md §4.8): two IRON RING loot twins (derived id 164) owned under one uncapped row, with no curated ring in the collection. Decking the first copy succeeds; the second is refused because the cap (1) travels with the card identity and resolves from the curated catalog -- the twin cannot double-deck past max_copies through its own id. Pre-fix deck_ident_cmp returned cap 0 for loot-vs-loot and both copies decked.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "seed": 11,
+    "variables": {
+      "ENERGY_POOL": 5
+    }
+  },
+  "actions": [
+    {
+      "type": "collection_add",
+      "card_id": 164,
+      "quantity": 2
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "deck_add",
+      "card_id": 164
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "deck_add",
+      "card_id": 164
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    }
+  ],
+  "assertions": [
+    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 1
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARD_EQUIP_LOCKED"
+    },
+    {
+      "type": "collection_count",
+      "card_id": 164,
+      "expected": 2
+    },
+    {
+      "type": "deck_contains",
+      "card_id": 164,
+      "expected": 1
+    }
+  ]
+}

@@ -75,6 +75,15 @@ typedef enum {
     BATTLE_RESULT_FLED = 3
 } BattleResult;
 
+/* Transient battle message ids (Battle.msg_id; row 9 unless noted):
+ * 0 = none, 1 = NO ENERGY, 2 = OUT OF USES, 3 = ONE RING (nav rejections,
+ * 45-frame TTL), 4 = loot reveal (result screen, never expires), 5 =
+ * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
+ * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
+ * consumes it; the combo row + banner read it, never row 9), 9 = Carl
+ * tutorial speech, 10 = slime-lord despair telegraph. */
+#define BATTLE_MSG_POISONED_FOE 5
+
 typedef struct {
     Combatant player;
     Combatant enemies[MAX_BATTLE_ENEMIES];
@@ -143,9 +152,9 @@ extern uint8_t g_battle_multiframe;
  * green twice on a white base over the 50-frame heal jingle
  * (g_battle_heal_phase stages the current pulse so the bank-3 painter
  * stays branch-light: release bank 3 has ~40 B left and cannot afford
- * threshold math; the DIM slot holds the flash ramp only during the
- * pulses, so greyed cards and the boss stamp read fightboss the rest
- * of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * threshold math; the GOLD slot holds the flash ramp only during the
+ * pulses, so greyed cards and the boss stamp read their own ramps the
+ * rest of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
  * through HP, so every present and future source feeds the same feedback
  * with no per-source wiring.  g_battle_fx_epoch (bumped by
  * battle_start) re-arms the caches and zeroes stale timers, so a new
@@ -256,7 +265,7 @@ extern uint8_t g_battle_solo;
 /* Slime-lord desperation flag (WRAM, BSS zero): set by the game-owned
  * bank-8 check body when the desperation boss reaches its threshold.
  * battle_screen consumes it on the defeat exit to route the wake-grove /
- * wake-dialogue / THANKS outro instead of GAME_OVER. */
+ * wake-dialogue / ENDING outro instead of GAME_OVER. */
 extern uint8_t g_slime_despair;
 /* Unkillable-boss slot cache (WRAM, 0xFF = none): re-derived every call
  * by the game-owned bank-8 check body (src/game/despair_banked.c) from
@@ -282,6 +291,12 @@ void battle_stage_combo_banked(void);
 /* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
  * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
+/* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
+ * ROM bank 10): g_bk_ptr_a = Battle*.  Draws the next enemy card
+ * (freeze/poison/normal/deckless branches), stages msg + shake state,
+ * and emits its telemetry inline (debug builds).  The SFX tail stays
+ * in the fixed wrapper (battle_update). */
+void battle_telegraph_banked(void);
 void battle_execute_combo(Battle *b);
 void battle_set_result(Battle *b, uint8_t res);
 void battle_update(Battle *b);

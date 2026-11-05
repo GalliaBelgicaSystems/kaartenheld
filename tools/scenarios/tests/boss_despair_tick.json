@@ -1,7 +1,7 @@
 {
  "name": "boss_despair_tick",
  "test": true,
- "description": "A poison tick that drops the Lord of Slimes to 20 or less does NOT kill him: the floor clamps him with no ENTITY_DEFEATED telemetry, and the hold opens (flashing art, FOCUSING banner, waits for A). Covers the status-tick damage source; hero attacks heal so only the tick damages the boss.",
+ "description": "A burn tick that drops the Lord of Slimes to 20 or less does NOT kill him: the floor clamps him with no ENTITY_DEFEATED telemetry, and the hold opens (flashing art, FOCUSING banner, waits for A). Covers the status-tick damage source; hero attacks heal so only the tick damages the boss.",
  "actions": [
   {
    "type": "wait",
@@ -15,7 +15,7 @@
   {
    "type": "apply_status",
    "slot": 1,
-   "status": 1,
+   "status": 2,
    "duration": 8
   },
   {

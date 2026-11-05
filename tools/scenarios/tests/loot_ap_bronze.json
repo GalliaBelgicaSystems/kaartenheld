@@ -1,9 +1,9 @@
 {
  "name": "loot_ap_bronze",
  "test": true,
- "description": "AP 2 bronze unlock (docs/loot.md 34.5): seed 29 at AP 2 rolls a BRONZE POISON DAGGER (derived id 0x8B = 139, material 1) with a live poison rider -- bronze carries riders, wood never does. Asserts LOOT_CARD_ADDED and the reveal name (B P DA / BRONZE POISON DAGGER).",
+ "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 2 is staged (the old AP-2 bronze profile) but the drop is unaffected -- seed 29 on the R3 kobold rolls a STEEL POISON DAGGER (derived id 0xCB = 203, rank 3) with a live poison rider. Riders still gate on bronze+ and the rank gate.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
@@ -17,6 +17,7 @@
    }
   },
   "variables": {
+   "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 2
   },
   "start_battle": true
@@ -183,17 +184,23 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 139
+   "value": 203
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 3
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "B P DA"
+   "contains": "S P DA"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "BRONZE POISON DAGGER"
+   "contains": "STEEL POISON DAGGER"
   },
   {
    "type": "oam_tile",

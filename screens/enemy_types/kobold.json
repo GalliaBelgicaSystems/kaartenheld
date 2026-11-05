@@ -3,13 +3,29 @@
   "id": "kobold",
   "label": "Kobold",
   "category": "minion",
-  "sprite": { "art": "kobold", "frames": 1 },
-  "overworld": { "cells": ["kobold_f0", "kobold_f1"], "palette": "sprites", "idle_cells": ["kobold_idle"] },
+  "sprite": {
+    "art": "kobold",
+    "frames": 1
+  },
+  "overworld": {
+    "cells": [
+      "kobold_f0",
+      "kobold_f1"
+    ],
+    "palette": "sprites",
+    "idle_cells": [
+      "kobold_idle"
+    ]
+  },
   "name": "KOBOLD",
   "hp": 15,
   "max_hp": 15,
   "battle_id": "BATTLE_KOBOLD",
-  "ai_types": ["AI_CHASE", "AI_PATROL_CROSS"],
+  "rank": 3,
+  "ai_types": [
+    "AI_CHASE",
+    "AI_PATROL_CROSS"
+  ],
   "gold_reward": 8,
   "reward_currency": "CURRENCY_ID_GOLD"
 }

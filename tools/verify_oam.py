@@ -69,6 +69,7 @@ Exits non-zero if any assertion fails.
 
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -179,7 +180,17 @@ def wait_vblank(sess, tries=3):
     true.  Returns True in VBlank, False if the bound is hit (callers fail
     loudly instead of asserting on blocked reads)."""
     for _ in range(tries):
-        sess._cmd("frame", timeout=10.0)
+        out = sess._cmd("frame", timeout=10.0).decode(errors="ignore")
+        # Same OAM-DMA straddle as emulator.ensure_vram_readable: a `frame`
+        # halt at LY=144 with PC inside the HRAM DMA wait loop (0xFF80-0xFF87)
+        # leaves the bus locked (VRAM reads 0xFF) despite LY>=144.  Step out
+        # first so the transfer completes inside VBlank.
+        for _ in range(90):
+            m = re.search(r"PC:\s*([0-9A-Fa-f]+)", out)
+            pc = int(m.group(1), 16) if m else 0
+            if not (0xFF80 <= pc <= 0xFF87):
+                break
+            out = sess._cmd("next").decode(errors="ignore")
         ly = sess._memread(0xFF44)
         if ly is not None and ly >= 144:
             return True

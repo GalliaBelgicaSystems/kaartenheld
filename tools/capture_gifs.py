@@ -43,7 +43,7 @@ BOSS_GIF = os.path.join(OUT, "boss.gif")
 HEAL_GIF = os.path.join(OUT, "heal.gif")
 
 # The Lord of Slimes always spawns in the throne room (ungated since the
-# mayor-quest rework: 5 kills grant +1 AP, no spawn gating anywhere).
+# mayor-quest rework: 3 kills grant +1 AP, no spawn gating anywhere).
 
 # Release-ROM screen ids (src/screens/screen.h).
 SCREEN_TITLE = 9

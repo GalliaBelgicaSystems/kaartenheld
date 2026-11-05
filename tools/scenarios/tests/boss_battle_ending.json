@@ -1,7 +1,7 @@
 {
  "name": "boss_battle_ending",
  "test": true,
- "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory), the next A exits to the wake-grove wake dialogue (facing UP), and the last A closes it to the demo-complete THANKS screen.",
+ "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory) with the explosion SFX and no game-over music; the next A exits through the white-out into the wake dialogue (Where am I?), and closing it routes to the ENDING screen (white page, THE END) -- the demo's finale.",
  "actions": [
   {
    "type": "wait",
@@ -68,7 +68,7 @@
  "assertions": [
   {
    "type": "screen",
-   "expected": "THANKS"
+   "expected": "ENDING"
   },
   {
    "type": "scene",
@@ -102,8 +102,13 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "Congratulations"
+   "row": 1,
+   "contains": "THE END"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "land of slimes"
   },
   {
    "type": "battle_player_hp",

@@ -1,0 +1,94 @@
+{
+ "name": "deck_equip_twin_after_remove",
+ "test": true,
+ "description": "Capped-fold remainder row (docs/loot.md §34): after the capped fold leaves the loot twin (id 164) under its own row, removing the decked curated IRON_RING frees the identity and the twin decks. Pins the remainder row (no silent loss: the excess copy survives under the loot id and stays playable) and that the identity cap releases (second CARD_ADDED_TO_DECK).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 11,
+  "variables": {
+   "ENERGY_POOL": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_add",
+   "card": "IRON_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_remove",
+   "card": "IRON_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_add",
+   "card_id": 164
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 2
+    },
+  {
+   "type": "event_occurred",
+   "event": "CARD_REMOVED_FROM_DECK"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_EQUIP_LOCKED"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 1
+  },
+  {
+   "type": "collection_count",
+   "card_id": 164,
+   "expected": 1
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 164,
+   "expected": 1
+  },
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  }
+ ]
+}

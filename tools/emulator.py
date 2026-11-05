@@ -119,6 +119,7 @@ EVENT_TYPE_MAP = {
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
     65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
+    67: "CARD_EQUIP_LOCKED",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -238,7 +239,8 @@ ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_9": 0x46, "WOOD_SWORD": 0x47}
+               "BOW_9": 0x46, "WOOD_SWORD": 0x47,
+               "STEEL_SHIELD": 0x48}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
@@ -1128,7 +1130,20 @@ class EmulatorSession:
         if stat is not None and (stat & 0x03) <= 1:
             return True
         for _ in range(max_frames):
-            self._cmd("frame")
+            out = self._cmd("frame").decode(errors="ignore")
+            # Under g_harness_mode=1 the frame runs free of vsync(), so
+            # game_render() + ui_sprite_commit() can straddle LY=144: if
+            # `frame` halts at LY=144 while PC sits inside the HRAM OAM
+            # DMA wait loop (0xFF80-0xFF87), the transfer is active and
+            # locks 0x0000-0xFE9F (WRAM/VRAM read as 0xFF) even though IO
+            # 0xFF41 (STAT) already reads Mode 1.  Step out of the loop
+            # (<= ~1.4 scanlines) so DMA finishes inside VBlank.
+            for _ in range(90):
+                m = re.search(r"PC:\s*([0-9A-Fa-f]+)", out)
+                pc = int(m.group(1), 16) if m else 0
+                if not (0xFF80 <= pc <= 0xFF87):
+                    break
+                out = self._cmd("next").decode(errors="ignore")
             try:
                 stat = self._memread(0xFF41)
             except Exception:

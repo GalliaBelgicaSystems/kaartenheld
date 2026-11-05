@@ -115,7 +115,7 @@ Battle and menus have their own controls, covered in §6 and §7.
 4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
 5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
    daggers hit back.
-6. **BURN POISON FREEZE** — poison wounds and locks cards; ice skips
+6. **BURN POISON FREEZE** — burn wounds, poison locks cards; ice skips
    your turn.
 7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
@@ -233,22 +233,21 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 
 | Quest | Status var | Objective | Reward note |
 |---|---|---|---|
-| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 5 monsters | "+1 AP" |
+| MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
 
 ### 4.2 Monster Hunt — the main quest
 
-1. **Start.** Talk to the **Mayor** for the first time:
+1. **Start.** Talk to the **Mayor** for the first time (he tells you
+   this is Slime country and begs to see the monsters die), which starts
+   the hunt; while it is active he says "Defeat 3 monsters! Return for
+   power!":
 
-   > I am the Mayor.
-   > Defeat 5 monsters!
-   > Gain extra AP!
-
-2. **Objective.** Defeat **5 monsters in total** — any hostile counts
+2. **Objective.** Defeat **3 monsters in total** — any hostile counts
    (field/forest slimes, bats, even the boss).  Kills made *before* the
    quest starts still count toward the total.  While the quest is active
-   the Mayor says "Defeat 5 monsters! Return for power!"
-3. **Complete.** Talk to the Mayor again once 5 are defeated.  He grants
+   the Mayor says "Defeat 3 monsters! Return for power!"
+3. **Complete.** Talk to the Mayor again once 3 are defeated.  He grants
    **one extra AP** (ENERGY_POOL +1) and warns that a darkness stirs at
    the Castle:
 
@@ -576,8 +575,8 @@ entry shows the quest name and a status line:
 * `complete - SWORD` when done.
 
 `SELECT` on a quest opens its **detail page**: the quest name, who gave it
-(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 5 MONSTERS`), and where
-you stand (e.g. `3/5 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
+(e.g. `MAYOR IN TOWN`), the condition (e.g. `KILL 3 MONSTERS`), and where
+you stand (e.g. `3/3 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
 counter-less quests).
 
 **HERO tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
@@ -683,8 +682,8 @@ Statuses (`src/rpg/status_content.c`):
 
 | Status | Tick (dmg/round) | Max stacks | Duration | Effect |
 |---|---|---|---|---|
-| POISON | 1 | 5 | 3 rounds | Deals flat 1 HP/round. Also **greys out** the victim's cards (§8.7). |
-| BURN | 1 | 3 | 3 rounds | Deals flat 1 HP/round. |
+| POISON | 0 | 5 | 2 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
+| BURN | 10% of the inflicting hit (min 1) | 3 | 3 rounds | Scales with the hit that lands it; re-applied burns keep the stronger tick. |
 | FREEZE | 0 | 1 | 3 rounds | Victim **skips its whole action** (no attack for the player, no swing for the enemy) each round it lasts. |
 
 The tick is **flat per status** regardless of stack count; extra
@@ -718,9 +717,10 @@ for `POISON_GREY_TURNS` **2** rounds (`status.h`):
 
 * **Player**: 2 cards from your 5-card hand grey out — you cannot select
   them.
-* **Enemy**: 2 positions in its **shared deck** grey out — those swings
-  are skipped (and the draw position does not advance, so the enemy is
-  locked out for the grey duration).
+* **Enemy**: 2 positions in its **shared deck** grey out — that
+  attacker's swings on those positions are skipped (the spent card is
+  still consumed, so the shared deck keeps cycling; unpoisoned
+  attackers are never blocked by another foe's grey).
 
 Re-poisoning refreshes the grey without re-rolling which cards are greyed.
 
@@ -779,9 +779,10 @@ sword).
 * Effects are legal per weapon: daggers may carry **P**oison, swords may
   carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
   plain.  Illegal pairs carry no rider.
-* Loot material is **AP-gated** (docs/loot.md §34.5): AP 1 is wood-only,
-  AP 2–3 bronze, AP 4 iron, AP 5+ steel/mythril.  Steel and mythril stay
-  low-probability even at AP 5.
+* Loot material is **rank-centered** (docs/loot.md §34.5,
+  docs/enemies_ranking.md §4.3): each enemy's rank owns a material row
+  (R4 lives in iron, R5 in steel); the pool no longer shapes odds, it only
+  unlocks equipping through the `deck_equip_card` gate.
 
 Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
@@ -891,8 +892,9 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 * Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
-* Statuses: POISON/BURN tick 1 × 3 rounds (5/3 max stacks), FREEZE 3
-  rounds skip; poison greys 2 cards for 2 rounds.
+* Statuses: POISON tick 0 (control-only, 2 rounds) / BURN 10%-of-hit
+  (min 1) × 3 rounds (5/3 max stacks), FREEZE 3 rounds skip; poison
+  greys 2 cards for 2 rounds.
 * Combos: 10 poker tiers, 100–400%, +25% if suited.
 
 > Source of truth for every number above: the code tree (`src/`).  Where

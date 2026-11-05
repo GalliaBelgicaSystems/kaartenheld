@@ -31,7 +31,8 @@ VALID_ASSERTION_TYPES = {
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
     "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
-    "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
+    "flag", "variable", "inventory", "collection_count", "deck_contains",
+    "party_hp", "party_level", "actor_state",
     "currency", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
@@ -398,11 +399,18 @@ def run_scenario(scenario):
                                      act.get("status", 1) & 0xFF,
                                      act.get("chance", 255) & 0xFF)
             elif act_type == "deck_add":
-                # Direct deck_add_card() call (real mechanic, all validations:
-                # ownership, SPECIAL exclusion, max_copies, 20-card size).
-                # Emits CARD_ADDED_TO_DECK on success only.
+                # Direct deck_equip_card() call (real gated mechanic, all validations:
+                # ownership, SPECIAL exclusion, max_copies, 20-card size, loot AP lock).
+                # Emits CARD_ADDED_TO_DECK on success, CARD_EQUIP_LOCKED on a locked
+                # loot card.  Raw card_id reaches derived loot-range CardIds
+                # (docs/loot.md §34) that have no ITEM_ID_MAP name, same as
+                # collection_add.
+                if "card_id" in act:
+                    deck_id = int(act["card_id"]) & 0xFF
+                else:
+                    deck_id = ITEM_ID_MAP[act.get("card")]
                 session.debug_action(session.DBG_ACT_DECK_ADD,
-                                     ITEM_ID_MAP[act.get("card")], 0, 0)
+                                     deck_id, 0, 0)
             elif act_type == "deck_remove":
                 # Direct deck_remove_card() call (real mechanic: membership +
                 # DECK_MIN_CARDS floor).  Emits CARD_REMOVED_FROM_DECK on
@@ -920,6 +928,27 @@ def run_scenario(scenario):
                       if it["item_id"] == ITEM_ID_MAP[exp_item])
             actual = f"item {exp_item} == {qty}"
             passed = (qty == int(a.get("expected")))
+
+        elif a_type == "collection_count":
+            # Raw-id collection rows (loot twins have no ITEM_ID_MAP name):
+            # quantity of the exact row, 0 when the row is absent.
+            exp_id = int(a.get("card_id", 0)) & 0xFF
+            expected = f"collection row {exp_id} == {expected}"
+            items = (state_snap or {}).get("inventory", [])
+            qty = sum(it["quantity"] for it in items
+                      if it["item_id"] == exp_id)
+            actual = f"collection row {exp_id} == {qty}"
+            passed = (qty == int(a.get("expected")))
+
+        elif a_type == "deck_contains":
+            # Raw-id deck membership (loot twins have no ITEM_ID_MAP name):
+            # copies of the exact id currently decked.
+            exp_id = int(a.get("card_id", 0)) & 0xFF
+            expected = f"deck has {exp_id} x{expected}"
+            n = sum(1 for cid in (state_snap or {}).get("deck", [])
+                    if cid == exp_id)
+            actual = f"deck has {exp_id} x{n}"
+            passed = (n == int(a.get("expected")))
 
         elif a_type == "party_hp":
             expected = f"party member {a.get('member', 0)} hp == {expected}"

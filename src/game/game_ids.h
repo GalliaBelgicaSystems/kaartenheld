@@ -31,7 +31,10 @@
 #define CARD_AMULET        (CARD_FIRST_GAME + 5)
 #define CARD_BOW_9        (CARD_FIRST_GAME + 6)
 #define CARD_WOOD_SWORD   (CARD_FIRST_GAME + 7)
-#define GAME_CARD_COUNT    8
+#define CARD_STEEL_SHIELD (CARD_FIRST_GAME + 8)   /* steel SH6 (docs/enemies_ranking.md §5.2):
+                                                   * the merchant-stocked answer to the
+                                                   * Lord's flat-6 swing (blocks alone) */
+#define GAME_CARD_COUNT    9
 
 /* ── Events (engine range: NONE=0; game range >= 0x80) ── */
 #define EVENT_ID_TOWN_ARRIVAL    (EVENT_ID_FIRST_GAME + 0)
@@ -78,7 +81,7 @@ typedef enum {
     STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
                                        * its one free heal (later talks get
                                        * the refusal, no heal, no jingle) */
-    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 5-kill "return to the mayor"
+    STORY_FLAG_ID_HUNT_NOTIFIED = 6, /* the 3-kill "return to the mayor"
                                        * notice already showed (one-shot) */
     STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
                                        * (shown once, on first talk while

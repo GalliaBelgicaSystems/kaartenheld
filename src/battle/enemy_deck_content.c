@@ -16,8 +16,8 @@
 
 static const EnemyCard s_slime_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_bat_deck[] = {
@@ -32,28 +32,28 @@ static const EnemyCard s_bat_deck[] = {
 static const EnemyCard s_slime_trio_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_kobold_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
-};
-static const EnemyCard s_slime_knight_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  3, STATUS_NONE, 0 },
 };
-static const EnemyCard s_mimic_deck[] = {
+static const EnemyCard s_slime_knight_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  3, STATUS_NONE, 0 },
+};
+static const EnemyCard s_mimic_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 6, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  4, STATUS_NONE, 0 },
 };
 static const EnemyCard s_spider_deck[] = {
     { BATTLE_CARD_TYPE_BOW,   2, STATUS_NONE, 0 },

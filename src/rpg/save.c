@@ -52,7 +52,10 @@ bool load_game_slot(uint8_t slot, GameState *state)
         /* Saves written before one-row-per-card can hold a curated card
          * and its loot twin as two collection rows: fold them so the
          * DECK menu lists the card once (and the deck cannot take a copy
-         * from each row). */
+         * from each row).  A capped fold also evicts decked copies above
+         * the folded identity's cap (pre-fix saves may hold twins decked
+         * past it; unreachable through current gameplay, where the gate
+         * refuses the over-cap add). */
         deck_collection_merge_duplicates(&state->cards);
     }
     return ok;

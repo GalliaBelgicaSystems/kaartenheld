@@ -19,17 +19,17 @@
  * (No row uses SCENE_CHANGE today; keep it that way or split the row.)
  *
  * Mayor quest (MONSTER HUNT), expressed as data, not game code:
- *   QUEST_EARLY_DONE : first meeting with 5+ kills already done
+ *   QUEST_EARLY_DONE : first meeting with 3+ kills already done
  *                    (quest NOT_STARTED) grants +1 AP (ENERGY_POOL) at
  *                    once via a new intro and jumps to COMPLETE.
- *   QUEST_START    : first meeting (quest NOT_STARTED, fewer than 5
+ *   QUEST_START    : first meeting (quest NOT_STARTED, fewer than 3
  *                    kills) starts the quest: MAYOR_INTRO dialogue,
  *                    MET_MAYOR, quest=ACTIVE.
- *   QUEST_COMPLETE : quest ACTIVE and >= 5 monsters defeated -> reward
+ *   QUEST_COMPLETE : quest ACTIVE and >= 3 monsters defeated -> reward
  *                    dialogue, +1 AP (ENERGY_POOL), quest=COMPLETE (given once).
- *   QUEST_ACTIVE   : quest ACTIVE (fewer than 5 defeated) -> "still working".
+ *   QUEST_ACTIVE   : quest ACTIVE (fewer than 3 defeated) -> "still working".
  *   QUEST_DONE     : quest COMPLETE -> already-rewarded dialogue.
- *   QUEST_NUDGE    : the exact 5th kill with the quest ACTIVE pops the
+ *   QUEST_NUDGE    : the exact 3rd kill with the quest ACTIVE pops the
  *                    "return to the mayor" notice (one-shot by exactness).
  *                    Kills before the accept stay silent.
  *   MONSTER_DEFEATED : every hostile defeat increments the global
@@ -48,7 +48,7 @@ const EventDefinition g_events[] = {
     },
     {
         /* Early turn-in (kills done before accepting): the hunt is
-         * NOT_STARTED but 5+ monsters are already dead.  Fires a new
+         * NOT_STARTED but 3+ monsters are already dead.  Fires a new
          * intro + the same +1 AP grant as QUEST_COMPLETE and jumps
          * straight to COMPLETE, so the reward is never missed and the
          * ordinary QUEST_START intro never plays.  Placed before
@@ -58,7 +58,7 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 0, false, false },
-            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, true }
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, true }
         },
         4,
         {
@@ -84,7 +84,7 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 1, false, false },
-            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, true }
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, true }
         },
         3,
         {
@@ -139,18 +139,18 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 1, 0 }}
     },
-    /* ── 5-kill "return to the mayor" notice ─────────────────────────
-     * The 5th victorious battle (any hostile: ACTOR_DEFEATED is
+    /* ── 3-kill "return to the mayor" notice ─────────────────────────
+     * The 3rd victorious battle (any hostile: ACTOR_DEFEATED is
      * all-match, and this row sits right after MONSTER_DEFEATED so the
      * counter already includes this kill) pops a speakerless next-step
      * box -- but ONLY when the quest was accepted first (quest ACTIVE).
      * Kills before the accept still count toward the counter, yet stay
      * silent: the first talk then takes the EARLY_DONE path above
-     * instead of a stale "return" prompt.  Exact ==5 (not >=5) keeps
+     * instead of a stale "return" prompt.  Exact ==3 (not >=3) keeps
      * the 2-cond limit (quest + count) and is one-shot by
-     * construction: the counter passes through 5 exactly once in real
+     * construction: the counter passes through 3 exactly once in real
      * gameplay (every defeat adds exactly 1).  Artificial staging that
-     * skips 5 (debug descriptors, future +2 rewards) never fires this
+     * skips 3 (debug descriptors, future +2 rewards) never fires this
      * -- that is the accepted cost of the 2-cond cap; widening
      * MAX_EVENT_CONDS would recover it.
      * STORY_FLAG_ID_HUNT_NOTIFIED is still set for observability.
@@ -162,7 +162,7 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 1, false, false },
-            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 5, false, false }
+            { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, false }
         },
         2,
         {

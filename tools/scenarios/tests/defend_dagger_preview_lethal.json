@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview_lethal",
  "test": true,
- "description": "Lethal preview suppression: hero at 2 HP stages a DA3 pair (not confirmed) vs the telegraphed 2 -- the swing would kill (2>=2), so the prep will skip the counter and the forecast honestly shows DEF 0 with no CNT.",
+ "description": "Counter forecast on a lethal swing: hero at 2 HP stages a DA3 pair (not confirmed) vs the telegraphed 2 -- the counter lands FIRST for 8, so the forecast honestly shows CNT 8 beside DMG 2 (a killing counter would skip the swing entirely).",
  "actions": [
   {
    "type": "wait",
@@ -100,22 +100,17 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "DMG 2"
+   "contains": "DMG 3"
   },
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "DEF 0"
-  },
-  {
-   "type": "screen_row_not_contains",
-   "row": 10,
-   "contains": "CNT"
+   "contains": "CNT 8"
   },
   {
    "type": "vram_row",
    "row": 10,
-   "contains": "DEF 0"
+   "contains": "CNT 8"
   }
  ],
  "initial_state": {

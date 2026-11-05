@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_poison",
  "test": true,
- "description": "Counter poison rider: the leading dagger carries a guaranteed poison rider (chance 255), so the counter applies POISON to the attacker (STATUS_APPLIED) and greys the shared enemy deck (CARDS_GREYED). Opener SW1 leaves the kobold at 14; the suited DA2 pair counters for 5, and the end-of-round poison tick brings it to 8 by the snapshot.",
+ "description": "Counter poison rider: the leading dagger carries a guaranteed poison rider (chance 255), so the counter applies POISON to the attacker (STATUS_APPLIED) and greys the shared enemy deck (CARDS_GREYED). Poison deals no damage -- only the grey-out. Opener SW1 leaves the kobold at 14; the suited DA2 pair counters for 5, leaving it at 9.",
  "actions": [
   {
    "type": "wait",
@@ -113,11 +113,11 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 7
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 8
+   "expected": 9
   },
   {
    "type": "event_arg",

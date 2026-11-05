@@ -200,7 +200,7 @@ static const char *battle_card_get_description(uint8_t type)
         case BATTLE_CARD_TYPE_SHIELD: return "Shield: block dmg";
         case BATTLE_CARD_TYPE_BOW:    return "Bow: ranged dmg";
         case BATTLE_CARD_TYPE_HEAL:   return "Heal: restore HP";
-        case BATTLE_CARD_TYPE_DAGGER: return "Dagger: poison";
+        case BATTLE_CARD_TYPE_DAGGER: return "Dagger: counter";
         default: return "";
     }
 }
@@ -669,11 +669,11 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
     battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
     /* Heal flash: two slime-light green pulses on a white base over
-     * the heal jingle (BG slot DIM is reprogrammed to #77E331 for the
+     * the heal jingle (BG slot GOLD is reprogrammed to #77E331 for the
      * duration; phase staged by the bank-9 tick); otherwise the block
      * keeps its steady green. */
     if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
-        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_DIM);
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_GOLD);
     } else {
         battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
     }
@@ -792,9 +792,21 @@ static char s_sel_marker;
 static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
                                                 uint8_t *is_heal)
 {
+    uint8_t save_type;
+    uint8_t save_amount;
     *dmg = 0;
     *is_heal = 0;
     if (battle->combo_count == 0) return "";
+    /* Side-effect-free rendering: the dispatch below overwrites the
+     * shared g_effect_last scratch (a later apply reads it as the burn
+     * basis), so save and restore it around the call -- staging previews
+     * must never leak a previewed total into gameplay (AGENTS.md §52.25
+     * family).  Restored once, right after reading the preview outputs:
+     * when eff_count == 0 the resolver always leaves amount 0 / a
+     * non-HEAL type, so writing the out-params first is behavior-identical
+     * (verified against combo_resolve_banked + participating_base). */
+    save_type = g_effect_last.type;
+    save_amount = g_effect_last.amount;
     /* Run the REAL bank-local resolver (combo_resolve_banked, same ROM
      * bank 3 -- direct call, no trampoline) over battle->hand indexed
      * by selected_indices (g_bk_byte_d = 1, cleared by the resolver):
@@ -810,9 +822,11 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
         CARD_EFFECT_DAMAGE_TARGET);
     g_bk_byte_d = 1;
     combo_resolve_banked();
-    if (battle->last_combo.eff_count == 0) return "";
     *dmg = g_effect_last.amount;
     if (g_effect_last.type == CARD_EFFECT_HEAL_HP) *is_heal = 1;
+    g_effect_last.type = save_type;
+    g_effect_last.amount = save_amount;
+    if (battle->last_combo.eff_count == 0) return "";
     if (battle->last_combo.tier == HAND_NONE && *dmg == 0) return "";
     return battle_combo_tier_name(battle->last_combo.tier);
 }
@@ -880,11 +894,11 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     uint8_t i, w, h, t, tier, suited, q;
     uint16_t base, mult, prod;
     if (!nb || nb->combo_count == 0) return 0;
-    /* Lethal swing: a daggers-only hand blocks 0, so the hero goes down
-     * exactly when incoming >= hp -- and the prep skips dead heroes, so
-     * no counter fires.  Previewing CNT here would lie at the moment
-     * the player most needs the truth (defend_dagger_lethal). */
-    if (nb->enemy_incoming_dmg >= nb->player.hp) return 0;
+    /* No lethal-swing guard: the counter lands BEFORE the swing, so a
+     * daggers-only hand still hits back even when the incoming would
+     * otherwise drop the hero -- and when the counter kills, the swing
+     * never lands at all.  Previewing CNT here is the truth the player
+     * needs at exactly that moment. */
     /* Cache the array bases: indexing through nb re-derives the full
      * 16-bit Battle offset on every access (~10 B a throw in this
      * bank). */
@@ -1047,6 +1061,20 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(0, combo_row, (const char *)g_despair_row10, 19);
         battle_color_span(0, combo_row, 19, UI_COLOR_FIELD);
         battle_draw_text_line(19, combo_row, NULL, 1);
+        return;
+    }
+    /* Poison-wracked foe (msg 5, staged by the telegraph body): the
+     * strike never lands, so the row names the failed swing instead of
+     * a bare "DMG 0" forecast or a stale pending preview.  The name lives
+     * on this row only (never the row-0 banner): it survives the
+     * acknowledge press into DEFENSE_RESOLVE so the 30-frame beat keeps
+     * naming the fizzle, and battle_update clears it on the resolve exit. */
+    if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+         battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) &&
+        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
+        battle_draw_text_line(0, combo_row, "FOE IS POISONED!", 20);
+        battle_color_span(0, combo_row, 16, UI_COLOR_POISON);
         return;
     }
     /* Enemy forecast owns the row while a strike is incoming (defend
@@ -1454,12 +1482,22 @@ static const char *battle_banner_text(const volatile Battle *battle)
     }
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
-     * 20 chars, filling the centered row-0 banner in one screen. */
+     * 20 chars, filling the centered row-0 banner in one screen.  The
+     * poisoned foe's failed swing is named on the combo row instead
+     * (never here), so the banner stays the standard enemy-turn text
+     * even when nothing is incoming. */
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         return "FOE ATTACKS! DEFEND!";
     }
-    if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) return "BLOCKED ATTACK!";
+    if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
+        /* A poison-skip resolve (msg 5 survives the acknowledge press)
+         * blocked nothing, so claiming "BLOCKED ATTACK!" would lie --
+         * the beat stays quiet while the combo row below keeps naming
+         * the fizzle. */
+        if (battle->msg_id == BATTLE_MSG_POISONED_FOE) return "";
+        return "BLOCKED ATTACK!";
+    }
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
     return "";
 }

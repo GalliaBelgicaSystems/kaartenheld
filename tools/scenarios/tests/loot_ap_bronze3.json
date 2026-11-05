@@ -1,9 +1,9 @@
 {
  "name": "loot_ap_bronze3",
  "test": true,
- "description": "AP 3 bronze row (docs/loot.md 34.5): seed 20 at AP 3 rolls a BRONZE SWORD (derived id 0x80 = 128). The SAME seed at AP 2 stays wood (id 96) -- the AP 2 and AP 3 rows share the bronze cap but weight wood differently, so this pins the AP 3 cut table, not just the cap.",
+ "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 3 is staged (the old AP-3 bronze profile) but the drop is unaffected -- seed 20 on the R3 kobold rolls an IRON ICE SWORD (derived id 0xB8 = 184, rank 3).",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
@@ -17,6 +17,7 @@
    }
   },
   "variables": {
+   "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 3
   },
   "start_battle": true
@@ -183,17 +184,23 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 128
+   "value": 184
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 3
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "B SW"
+   "contains": "I I SW"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "BRONZE SWORD"
+   "contains": "IRON ICE SWORD"
   }
  ]
 }

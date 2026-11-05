@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_trio_step",
  "test": true,
- "description": "Counter kills the attacker in a trio (start_battle engages the 15-HP kobolds): opener SW1 plus set_enemy_hp leave enemy0 at 8, the DA3-pair counter (8) kills exactly it -- no BATTLE_WON, target steps to enemy1 (hp 15, TARGET_CHANGED), and the next round telegraphs from the live enemy (ENEMY_CARD_PLAYED x2), proving the enemy-turn loop skips the corpse.",
+ "description": "Counter kills the attacker in a trio (start_battle engages the 15-HP kobolds): opener SW1 plus set_enemy_hp leave enemy0 at 8, the DA3-pair counter (8) kills exactly it first -- its swing never lands (hero stays 10), no BATTLE_WON, target steps to enemy1, and the next round telegraphs from the live enemy (ENEMY_CARD_PLAYED x2) and chips it to 14, proving the enemy-turn loop skips the corpse.",
  "actions": [
   {
    "type": "wait",
@@ -156,7 +156,7 @@
   },
   {
    "type": "battle_player_hp",
-   "expected": 8
+   "expected": 10
   },
   {
    "type": "battle_enemy_hp",

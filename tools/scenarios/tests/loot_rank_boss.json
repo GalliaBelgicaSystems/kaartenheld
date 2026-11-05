@@ -1,0 +1,64 @@
+{
+ "name": "loot_rank_boss",
+ "test": true,
+ "description": "R6 boss row (docs/enemies_ranking.md \u00a74.2): the Lord of Slimes is rank 6 and his battle boots on the R6 row (the roll happens at battle start like every encounter). The demo lord is unkillable by design (despair hold at <=20 HP), so no victory loot is grantable here -- the R6 material shape is pinned by enemy_audit's cut-table check plus the shared walk code the R1-R5 victories exercise. This scenario proves the R6 battle runs: staged to 1 HP, the lord clamps, flashes and holds the FOCUSING telegraph instead of dying.",
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 7004,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3,
+   "ENERGY_POOL": 5
+  },
+  "party": {
+   "HERO": {
+    "hp": 99,
+    "max_hp": 99
+   }
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "wait",
+   "frames": 300
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "FOCUSING"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "music_track",
+   "expected": "BOSS"
+  }
+ ]
+}

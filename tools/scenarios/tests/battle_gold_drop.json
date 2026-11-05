@@ -1,94 +1,8 @@
 {
  "name": "battle_gold_drop",
  "test": true,
- "description": "Defeating Carl's solo spar grants his gold reward: 25 gold via CURRENCY_ADDED on victory",
+ "description": "Defeating the kobold grants its gold reward: 28 gold via CURRENCY_ADDED on victory (20 staged + 8 kobold purse). Rank-0 lesson fights (Carl's spar) pay nothing -- see loot_rank_carl_no_drop.",
  "actions": [
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 13
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "set_hand",
-   "cards": [
-    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
-   ]
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
   {
    "type": "set_enemy_hp",
    "index": 0,
@@ -110,7 +24,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -118,7 +32,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -126,7 +40,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -134,7 +48,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -142,7 +56,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -150,7 +64,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -158,7 +72,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -166,7 +80,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -174,7 +88,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -182,7 +96,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -190,7 +104,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -198,7 +112,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -206,7 +120,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -214,7 +128,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -222,7 +136,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -230,23 +144,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -254,279 +152,7 @@
   },
   {
    "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
+   "frames": 60
   }
  ],
  "assertions": [
@@ -540,7 +166,7 @@
   },
   {
    "type": "currency",
-   "expected": 25,
+   "expected": 28,
    "currency": "GOLD"
   },
   {
@@ -549,21 +175,19 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
    "facing": "DOWN"
   },
   "seed": 5002,
-  "flags": {
-   "FIELD_CHEST": true
-  },
   "party": {
    "HERO": {
     "hp": 60,
     "max_hp": 60
    }
-  }
+  },
+  "start_battle": true
  }
 }

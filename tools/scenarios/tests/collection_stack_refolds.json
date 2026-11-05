@@ -1,0 +1,64 @@
+{
+  "name": "collection_stack_refolds",
+  "test": true,
+  "description": "Stacking onto a remainder row re-runs the identity fold (docs/loot.md §34, AGENTS.md §52.19): a capped fold leaves curated STEEL_SHIELD (cap 2) 2 + loot twin id 193 x2; removing one curated copy and adding another twin stacks the loot row to 3, and deck_collection_add must re-merge the pair back to curated 2 + remainder 2 instead of leaving curated 1 + loot 3 unmerged. Pre-fix the existing-row path returned before deck_collection_merge_duplicates ran.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8413
+  },
+  "actions": [
+    {
+      "type": "collection_add",
+      "card_id": 72,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "collection_add",
+      "card_id": 193,
+      "quantity": 3
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "remove_item",
+      "item": "STEEL_SHIELD",
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    },
+    {
+      "type": "collection_add",
+      "card_id": 193,
+      "quantity": 1
+    },
+    {
+      "type": "wait",
+      "frames": 10
+    }
+  ],
+  "assertions": [
+    {
+      "type": "inventory",
+      "item": "STEEL_SHIELD",
+      "expected": 2
+    },
+    {
+      "type": "collection_count",
+      "card_id": 193,
+      "expected": 2
+    }
+  ]
+}

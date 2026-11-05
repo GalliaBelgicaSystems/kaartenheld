@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_mayor_accepted",
  "test": true,
- "description": "No quest marker while MONSTER_HUNT is ACTIVE and under 5 kills: accepting the quest hides the mayor's ?. Entry 30 stays cleared (tile 0).",
+ "description": "No quest marker while MONSTER_HUNT is ACTIVE and under 3 kills: accepting the quest hides the mayor's ?. Entry 30 stays cleared (tile 0).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -12,7 +12,7 @@
   "seed": 8504,
   "variables": {
    "QUEST_MONSTER_HUNT": 1,
-   "MONSTERS_DEFEATED": 3,
+   "MONSTERS_DEFEATED": 2,
    "MERCHANT_QUEST": 2
   }
  },

@@ -577,11 +577,13 @@ in the host maps (docs/loot.md §34).
   `add_item`, `remove_item`, `add_currency`, `add_progress`, `buy_item`,
   `use_item_direct`, `deck_add`, `deck_remove` (via the ROM
   `g_debug_action` channel).  The button-driven `use_item` action still
-  tests the item menu UI.  `deck_add`/`deck_remove` call the real
-  `deck_add_card`/`deck_remove_card`, so every validation (ownership,
-  per-card caps, `DECK_MIN_CARDS`) applies; they emit
-  `CARD_ADDED_TO_DECK` / `CARD_REMOVED_FROM_DECK` on success only, so
-  scenarios assert rejection via event counts.
+  tests the item menu UI.  `deck_add` calls the real gated
+  `deck_equip_card` (ownership, per-card caps, `DECK_MIN_CARDS`, plus the
+  loot AP lock), `deck_remove` calls `deck_remove_card`; they emit
+  `CARD_ADDED_TO_DECK` / `CARD_EQUIP_LOCKED` / `CARD_REMOVED_FROM_DECK`
+  on their respective outcomes only, so scenarios assert rejection via
+  event counts.  A locked `deck_add` emits `CARD_EQUIP_LOCKED`
+  (`d0` = card id, `d1` = required AP) and no `CARD_ADDED_TO_DECK`.
 * Save/load: the `save` and `load` scenario actions (via the `g_debug_action`
   channel, codes 8 and 9) call `save_game`/`load_game`
   (`src/rpg/save.{h,c}`) — SRAM battery persistence of `GameState`.  After a
@@ -605,9 +607,10 @@ Quest state and objectives are generic variables owned by the event table in
   Slimes): when set, a battle victory goes to `SCREEN_ENDING` instead of
   the overworld.  The boss is unwinnable in normal play (at its HP
   threshold the desperation telegraph opens and the scripted reprisal
-  routes the wake-grove outro to THANKS), so this flag no longer sets in
-  normal play; only the `ending_boot` scenario reaches the ending screen.
-  A on the ending restarts the game.
+  whites out, teleports to the wake grove, plays the "Where am I?"
+  dialogue and routes to the ENDING screen), so this flag no longer sets
+  in normal play; only the `ending_boot` scenario reaches the ending
+  screen through it.  A on the ending restarts the game.
 
 The event engine supports generic conditions (flag is/not set, variable
 `>=`/`==`) and actions (dialogue, set/clear flag, set/add variable, give
@@ -615,7 +618,7 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 
 * `QUEST_START` (interact MAYOR, quest NOT_STARTED) → MAYOR_INTRO dialogue,
   set MET_MAYOR, quest=ACTIVE.
-* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 5) → reward dialogue +
+* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 3) → reward dialogue +
   +1 AP (ENERGY_POOL) + quest=COMPLETE (given exactly once).
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
@@ -1454,9 +1457,12 @@ STATUS_APPLIED
   data[2] = duration in turns
 
 STATUS_TICKED
-  data[0] = flat tick damage (POISON 1, BURN 2, FREEZE 0 per round
-            regardless of stacks; extra applications refresh duration
-            and deepen stacks for telemetry only)
+  data[0] = tick damage for the round (POISON 0 -- control-only, so a
+            poison TICKED fires only on the expiry round; BURN scales
+            per instance at 10% of the inflicting hit, min 1; FREEZE 0.
+            Extra applications refresh duration and deepen stacks for
+            telemetry only, except a stronger re-applied burn keeps its
+            higher tick)
   data[1] = actor slot (0 = player; otherwise enemy index)
   data[2] = instances expired by this tick
   data[3] = first expired status id (valid when data[2] != 0)
@@ -1492,11 +1498,12 @@ CARDS_UNGREYED
   data[2] = second previously-greyed pool position
 ```
 
-The enemy grey gate tests the OR of every enemy slot's mask against the
-shared deck's current draw position (every encounter engages as a trio,
-so the deck rotates through all three attackers; a greyed position never
-plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
-`data[1] = STATUS_POISON` and leaves the draw position unadvanced.
+The enemy grey gate tests only the ACTIVE attacker's own slot mask
+against the shared deck's current draw position (per-attacker lock:
+poisoning one foe never blocks the other attackers, though they all
+rotate through the one shared draw position).  The skip emits
+`TURN_SKIPPED` with `data[1] = STATUS_POISON` and still consumes the
+spent card (the draw position advances with wrap) so the deck cycles.
 
 ---
 
@@ -1528,12 +1535,22 @@ LOOT_CARD_ADDED
             material = (id-0x60)>>5, effect = (id>>3)&3, weapon = id&7;
             material 0=wood 1=bronze 2=iron 3=steel 4=mythril)
   data[1] = collection count after the add
+  data[2] = enemy rank R0-R6 (docs/enemies_ranking.md §4.3: the rank row
+            the drop rolled; rank 0 never emits this event -- lesson
+            fights grant no card)
 
 CARD_SOLD (docs/loot.md §34.6)
   data[0] = CardId sold
   data[1] = gold received (the def's price -- the centralized sell
             value for loot ids)
   data[2] = collection count after the sale
+
+CARD_EQUIP_LOCKED (docs/enemies_ranking.md §4.8)
+  data[0] = CardId refused (loot-derived, cost above the live pool)
+  data[1] = required AP (the card's cost; the quick screen shows
+            NEED AP <d1>)
+  data[2] = 0
+  No CARD_ADDED_TO_DECK fires with it.
 ```
 
 ---

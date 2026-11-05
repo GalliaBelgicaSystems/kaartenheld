@@ -39,6 +39,8 @@
 #define MSG_DECK_FULL  1
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
+#define MSG_NEED_AP    4
+#define MSG_DECK_CAPPED 5
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -392,7 +394,10 @@ static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
 static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
 
-static const CardDefinition *ic_loot_synth(CardId id)
+/* Shared with the bank-2 shop map (screen_content.c, same bank: plain
+ * call, no trampoline): identity checks for one-copy rows resolve loot
+ * twins through here.  External linkage for that single user. */
+const CardDefinition *ic_loot_synth(CardId id)
 {
     uint8_t material = loot_id_material(id);
     uint8_t effect = loot_id_effect(id);
@@ -603,11 +608,23 @@ static const char *ic_sort_name(uint8_t s)
     }
 }
 
+/* Live energy pool for the equip gate (docs/enemies_ranking.md §4.8):
+ * an unset variable means the default pool (same normalization as the
+ * battle HUD loader), never AP 0. */
+static uint8_t ic_pool(const Game *g)
+{
+    int16_t p = g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+    if (p < 1) return 1;
+    if (p > 255) return 255;
+    return (uint8_t)p;
+}
+
 /* One card per row (new layout):
  *   col 0: cursor caret
  *   col 1: element cell (blank BG tile; rider OAM overlays it) + element color
  *   col 2: weapon BG tile (wood palette)
- *   col 3-4: AP cost (2-wide, right-aligned)
+ *   col 3-4: AP cost (2-wide, right-aligned; locked rows show `!` + digit
+ *            so the gate is visible before the keypress)
  *   col 5-18: full "<MAT> <WPN>" name, element-colored
  *   col 19: decked-copy count (as before) */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
@@ -639,6 +656,12 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     }
 
     IC_DRAW_NUM2(3, y, s_ic_def->cost);
+    /* Equip-gate lock (docs/enemies_ranking.md §4.8): a loot card above
+     * the pool shows `!` + digit in the AP column, so the player sees
+     * the lock before pressing A. */
+    if (loot_is_loot_id(s_ic_id) && s_ic_def->cost > ic_pool(g)) {
+        IC_DRAW_TEXT(3, y, "!", 1);
+    }
     ic_draw_full_name(5, y, s_ic_def);
 
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
@@ -692,9 +715,25 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "DECK FULL", 9);
     else if (g->item_menu_message == MSG_DECK_MIN)
         IC_DRAW_TEXT(0, 16, "DECK MIN 5", 10);
+    else if (g->item_menu_message == MSG_DECK_CAPPED)
+        IC_DRAW_TEXT(0, 16, "AT CAP", 6);
     else if (g->item_menu_message == MSG_QUEST_ITEM)
         IC_DRAW_TEXT(0, 16, "QUEST ITEM", 10);
-    else
+    else if (g->item_menu_message == MSG_NEED_AP) {
+        /* The digit reads the selected card's cost at draw time -- no
+         * new Game field, no WRAM growth (AGENTS.md §52.24). */
+        uint8_t need = 0;
+        if (g->item_menu_index >= FIRST_CARD &&
+            (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
+            const CardDefinition *nd =
+                ic_card_get_def(ic_view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD)));
+            if (nd) need = nd->cost;
+        }
+        IC_DRAW_TEXT(0, 16, "NEED AP", 7);
+        s_ic_code[0] = (char)('0' + need);
+        s_ic_code[1] = '\0';
+        IC_DRAW_TEXT(8, 16, s_ic_code, 1);
+    } else
         IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
 }
 
@@ -798,9 +837,12 @@ static void ic_draw_card_detail_page(Game *g)
     ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
     IC_DRAW_TEXT(9, 10, "DECK", 4);
     ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
-    /* Row 11: merchant sell value (price 0 = not buyable). */
+    /* Row 11: merchant sell value.  Shown only when the card can actually
+     * be sold (a loot id at a buying shop): curated rows carry catalog
+     * prices but the merchant never buys those, so showing a price would
+     * promise a SELL the detail page withholds. */
     IC_DRAW_TEXT(0, 11, "SELL", 4);
-    if (s_ic_def->price) {
+    if (s_ic_def->price && loot_is_loot_id(s_ic_id) && ic_merchant_buys(g)) {
         ic_draw_rjust(11, 17, s_ic_def->price);
         IC_DRAW_TEXT(18, 11, "G", 1);
     } else {

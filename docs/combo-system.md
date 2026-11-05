@@ -15,19 +15,22 @@ That separation is important because eventually a strong hand should be able to 
 **Phase A (cards → deck → selection → combo evaluator → attack/defend → HUD),
 Phase B (generic effect layer), and the core of Phase C (status system) are
 implemented.**  Status foundation (§12-§19 minus per-effect scaling):
-`src/rpg/status.{h,c}` + bank-2 bodies (`status_content.c`) provide
+`src/rpg/status.{h,c}` + bank-10 bodies (`status_content.c`) provide
 StatusDefinition / StatusInstance / application with STACK+refresh rules
-(POISON: tick 1/stack, max 5 stacks, duration 3); battle-scoped slots live
+(POISON: tick 0 -- control-only, max 5 stacks, duration 2); battle-scoped slots live
 in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
-(1/255 units, §17/§18) and poison ticks once per round at the
-player-select boundary, with deaths resolving like combat deaths.
+(1/255 units, §17/§18).  Poison is control-only (tick 0, no damage):
+it lasts 2 rounds greying the victim's cards, then expires, with deaths
+resolving like combat deaths only for damaging statuses.
 Telemetry: `STATUS_APPLIED` / `STATUS_TICKED` (payloads in
-DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply + 3
-ticks + expiry, payload-locked) and `status_poison_resist` (roll fails).
+DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
+duration + expiry with no damage, payload-locked) and
+`status_poison_resist` (roll fails).
 
-**Phase D (implemented)**: BURN (tick 2/round, max 3 stacks, duration 2)
+**Phase D (implemented)**: BURN (10% of the inflicting hit's damage per
+round, min 1 -- scaled per application, max 3 stacks, duration 3)
 and FREEZE (no tick, no stacking, duration 1 -- a frozen combatant skips
 its next attack; battle consumes the frozen bitmask that apply + the
 tick body maintain, emitting `TURN_SKIPPED`; player-side freeze skips
@@ -40,13 +43,16 @@ rider roll fails (§19 fully implemented).  Scenarios: `status_burn_apply`,
 Poison's on-hit rider carries the **grey-out** rider (§16): applying
 poison greys 2 random positions of the afflicted combatant's pool for
 `POISON_GREY_TURNS` rounds (telemetry `CARDS_GREYED`, cleared by
-`CARDS_UNGREYED`).  The gate lives in the battle telegraph: any pool
-position covered by the victim's grey mask never plays -- for enemies the
-mask ORs across ALL enemy slots against the party's single shared battle
-deck, because every hostile encounter engages as a trio (three attackers
-rotate through one draw position), so a greyed position must never be
-drawn no matter which enemy is up.  A greyed draw emits `TURN_SKIPPED`
-(cause `STATUS_POISON`) without advancing the draw position.  Scenarios:
+`CARDS_UNGREYED`).  The gate lives in the battle telegraph: a pool position covered by the
+ACTIVE attacker's own grey mask never plays (per-attacker lock -- the
+party's single shared battle deck still rotates through one draw
+position, but poisoning one foe never locks unpoisoned foes out).
+A greyed draw still selects its card (`ENEMY_CARD_PLAYED` with the lead
+card's identity) but the swing fails: `TURN_SKIPPED` (cause
+`STATUS_POISON`) while the spent card is still consumed (draw advances
+with wrap), the attacker judders like a hit victim, and the defend beat
+names the failed swing (`FOE IS POISONED!` on the banner + combo row)
+until the player acknowledges with A (or the timer path converges).  Scenarios:
 `status_poison_apply` (apply + ticks + expiry + grey gate), `status_poison_reshuffle`
 (5-stack cap, greyed cards recycled out of reshuffles, skips).  Still open
 from Phase C/D: HEAL ALL; per-effect scaling refinements.
@@ -100,7 +106,7 @@ result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
 damage, base poison chance 50% scaled by the hand multiplier.  Poison
-ticks a flat 1 HP per round after the afflicted actor's turn resolves;
+deals no damage -- it greys out the victim's cards while it lasts;
 re-applications refresh duration (stacks deepen for telemetry only).
 
 Deviations from the plan's sketches, all

@@ -8,6 +8,7 @@
 #include "banked.h"
 #include "battle/card.h"
 #include "rpg/cards.h"
+#include "rpg/loot.h"
 #include "rpg/status.h"
 #include "rider_tiles_generated.h"
 #include "shops.h"
@@ -34,6 +35,12 @@ extern uint8_t g_is_cgb;
 
 extern const CardDefinition g_cards[];
 extern const ShopDefinition g_shops[];
+/* Loot identity synthesis (item_content_banked.c, same ROM bank 2:
+ * plain call, no trampoline).  Needed here so the one-copy shop map
+ * counts ownership by card identity, not row id (docs/loot.md §34.6):
+ * a loot twin already owned hides the curated one-copy row even though
+ * no curated row exists to merge it under yet. */
+extern const CardDefinition *ic_loot_synth(CardId id);
 extern const uint8_t g_shop_count;
 
 /* Shop message states (mirror shop_screen.c). */
@@ -176,6 +183,32 @@ static const CardDefinition *sc_card_get_def(CardId id)
     return NULL;
 }
 
+/* Same-card test for the one-copy map: identical type/power/cost/uses/
+ * effect/battle type/rider (the 8 identity bytes; id, max_copies, price
+ * and name are NOT identity -- a curated row and its loot twin differ
+ * exactly there).  The stock def is a g_cards ROM pointer (stable across
+ * the synth call below, which reuses its scratch); loot rows resolve
+ * through the shared bank-2 synth above. */
+static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
+{
+    const CardDefinition *d;
+    if (!s) return 0;
+    if (loot_is_loot_id(row_id)) {
+        d = ic_loot_synth(row_id);
+    } else {
+        d = sc_card_get_def(row_id);
+    }
+    if (!d) return 0;
+    return (uint8_t)(d->type == s->type &&
+                     d->power == s->power &&
+                     d->cost == s->cost &&
+                     d->uses_per_battle == s->uses_per_battle &&
+                     d->effect == s->effect &&
+                     d->battle_type == s->battle_type &&
+                     d->status_id == s->status_id &&
+                     d->status_chance == s->status_chance);
+}
+
 static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
 
 static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
@@ -313,9 +346,17 @@ static void sc_shop_remap(void)
     g_shop_vis_count = 0;
     if (!s_sc_game || !s_sc_shop_def) return;
     for (i = 0; i < s_sc_shop_def->count; i++) {
+        const CardDefinition *sdef = sc_card_get_def(s_sc_shop_def->items[i]);
         owned = 0;
         for (e = 0; e < s_sc_game->state.cards.collection.count; e++) {
             if (s_sc_game->state.cards.collection.entries[e].id == s_sc_shop_def->items[i]) {
+                owned = s_sc_game->state.cards.collection.entries[e].count;
+                break;
+            }
+            /* Identity, not row id: a loot twin already owned hides the
+             * one-copy row even though no curated row exists yet to
+             * merge it under (docs/loot.md §34.6). */
+            if (sc_row_matches_stock(sdef, s_sc_game->state.cards.collection.entries[e].id)) {
                 owned = s_sc_game->state.cards.collection.entries[e].count;
                 break;
             }

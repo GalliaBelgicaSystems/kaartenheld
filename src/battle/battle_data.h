@@ -68,6 +68,9 @@ typedef struct EnemyTypeDef {
     uint8_t ow_palette;  // CGB OAM palette index
     uint8_t ow_idle_tile;  // standing-pose base tile (blob offset + ENEMY_OW_BASE), 0 = none
                         // (shown only for never-moving AI_NONE actors; movers always take walk frames).
+    uint8_t rank;        // enemy rank R0-R6 (docs/enemies_ranking.md §4.1):
+                         // loot quality is centered on this rank's material row
+                         // (last field: existing generated offsets stay readable).
 } EnemyTypeDef;
 
 /* WRAM cache for the active battle screen's HUD layout.

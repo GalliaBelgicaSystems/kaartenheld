@@ -1,115 +1,40 @@
 {
  "name": "loot_drop_victory",
  "test": true,
- "description": "Victory loot drop hook (docs/loot.md 34.5): defeating Carl's solo spar always rolls one combat card from the isolated loot RNG. At AP 1 the roll is wood-only and wood carries no rider, so seed 5002 yields a WOOD PLAIN DAGGER (derived id 0x63 = 99); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name (W DA). Two-line pages: 5-line victory closes in 2 presses.",
+ "description": "First-victory loot grant (docs/loot.md 34.5): the very first fight's drop is always a BRONZE SHIELD (balancing: the opening loot teaches blocking), regardless of the isolated loot RNG stream. Felling the wall slime (R1) with zero kills so far yields the bronze plain shield (derived id 0x81 = 129); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name. Rank-0 lesson fights (Carl's spar) grant nothing and cannot consume this.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
-   "x": 13,
-   "y": 8,
+   "x": 12,
+   "y": 10,
    "facing": "DOWN"
   },
   "seed": 5002,
-  "flags": {
-   "FIELD_CHEST": true
-  },
   "party": {
    "HERO": {
     "hp": 60,
     "max_hp": 60
    }
-  }
+  },
+  "flags": {
+   "FIELD_CHEST": true
+  },
+  "start_battle": true
  },
  "actions": [
   {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 13
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "set_hand",
-   "cards": [
-    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
-    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
-   ]
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "wait",
-   "frames": 5
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
   },
   {
    "type": "set_enemy_hp",
-   "index": 0,
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
    "hp": 1
   },
   {
@@ -118,47 +43,11 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
    "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "wait",
-   "frames": 200
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "LEFT"
   },
   {
    "type": "wait",
@@ -166,15 +55,119 @@
   },
   {
    "type": "press",
-   "button": "START"
+   "button": "SELECT"
   },
   {
    "type": "wait",
-   "frames": 60
+   "frames": 30
   },
   {
    "type": "press",
-   "button": "START"
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",
@@ -202,7 +195,7 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 99
+   "value": 129
   },
   {
    "type": "event_arg",
@@ -217,7 +210,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "WOOD DAGGER"
+   "contains": "BRONZE SHIELD"
   }
  ]
 }

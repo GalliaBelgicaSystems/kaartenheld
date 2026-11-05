@@ -1,9 +1,9 @@
 {
  "name": "loot_ap_iron_cap",
  "test": true,
- "description": "AP cap below the Steel unlock (docs/loot.md 34.5): seed 76 is a clean per-AP ladder. At AP 4 the SAME seed rolls an IRON SWORD (derived id 0xA0 = 160, material 2); Steel/Mythril must not appear below AP 5. The AP 5 counterpart (same seed) is loot_ap_steel.",
+ "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3/\u00a78.1): pool 4 is staged (the old AP-4 iron cap) but the drop is unaffected -- seed 76 on the R3 kobold rolls the identical STEEL SWORD (id 192) as pool 5 (loot_ap_steel). Rank decides quality; AP only unlocks equipping.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 13,
    "y": 8,
@@ -17,6 +17,7 @@
    }
   },
   "variables": {
+   "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 4
   },
   "start_battle": true
@@ -183,17 +184,23 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 160
+   "value": 192
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 3
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "I SW"
+   "contains": "S SW"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "IRON SWORD"
+   "contains": "STEEL SWORD"
   }
  ]
 }

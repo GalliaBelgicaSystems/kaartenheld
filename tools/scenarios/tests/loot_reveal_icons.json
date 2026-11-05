@@ -1,105 +1,28 @@
 {
  "name": "loot_reveal_icons",
  "test": true,
- "description": "Loot reveal regression with a rider card (docs/loot.md 34.5): at AP 2 seed 29 deterministically yields a BRONZE POISON DAGGER (derived id 0x8B = 139). Driving the First Encounter to victory must hold the 3-row reveal on the battle result screen: YOU FOUND: on row 10, icon-prefixed identity name B P DA on row 11, full English description BRONZE POISON DAGGER on row 12, and the poison rider OAM icon. The riderless wood case is pinned by loot_drop_victory instead.",
+ "description": "Loot reveal regression with a rider card (docs/loot.md 34.5, docs/enemies_ranking.md \u00a74.3): pool 2 is staged but rank decides -- seed 29 on the R1 wall slime yields an IRON POISON DAGGER (derived id 0xAB = 171, rank 1). Driving a victory (one prior kill staged, so the natural roll applies instead of the first-victory bronze shield) must hold the 3-row reveal on the battle result screen.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
-   "x": 13,
-   "y": 8,
+   "x": 12,
+   "y": 10,
    "facing": "DOWN"
   },
   "seed": 29,
-  "flags": {
-   "FIELD_CHEST": true
-  },
-  "variables": {
-   "ENERGY_POOL": 2
-  },
   "party": {
    "HERO": {
     "hp": 60,
     "max_hp": 60
    }
-  }
+  },
+  "variables": {
+   "MONSTERS_DEFEATED": 1,
+   "ENERGY_POOL": 2
+  },
+  "start_battle": true
  },
  "actions": [
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 13
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
   {
    "type": "set_enemy_hp",
    "index": 0,
@@ -121,7 +44,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -129,7 +52,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -137,7 +60,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -145,7 +68,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -153,7 +76,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -161,7 +84,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -169,7 +92,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -177,7 +100,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -185,7 +108,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -193,7 +116,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -201,7 +124,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -209,7 +132,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -217,7 +140,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -225,7 +148,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
+   "frames": 30
   },
   {
    "type": "press",
@@ -233,7 +156,7 @@
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 30
   },
   {
    "type": "press",
@@ -241,27 +164,7 @@
   },
   {
    "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 55
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 130
-  },
-  {
-   "type": "wait",
-   "frames": 20
+   "frames": 30
   }
  ],
  "assertions": [
@@ -281,12 +184,12 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "B P DA"
+   "contains": "I P DA"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "BRONZE POISON DAGGER"
+   "contains": "IRON POISON DAGGER"
   },
   {
    "type": "oam_tile",

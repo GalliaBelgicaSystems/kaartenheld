@@ -14,6 +14,11 @@
 #include "audio.h"
 #include "banked.h"
 
+/* BattleId -> enemy rank R0-R6 (src/game/loot_rank_content.c, bank 9).
+ * Fixed-bank readers dispatch game_loot_rank_banked -- never a direct
+ * read (the table's bank is not mapped in fixed context). */
+void game_loot_rank_banked(void);
+
 /* TileType headroom (see the note on the enum in world.h): ids live in
  * uint8_t map arrays with 0xFF as the empty-cell sentinel.  A size-0
  * array is a hard compile error (same pattern as g_input_bit_layout_ok
@@ -323,16 +328,45 @@ void world_on_battle_end(Game *g, bool victory)
         }
         event_resolve_actor_defeated(g, actor_id, act->id);
 
-        /* Loot grant (docs/loot.md §8/§17/§34.5): the drop was ROLLED at
-         * battle start (game_loot_drop, isolated RNG) and its derived id
-         * waits in g_loot_id -- victory grants it to the collection.
-         * CARD_NONE = collection previously full (no room to grant). */
+        /* Loot grant (docs/loot.md §8/§17/§34.5, docs/enemies_ranking.md
+         * §4.3): the drop was ROLLED at battle start (game_loot_drop,
+         * isolated RNG) and its derived id waits in g_loot_id -- victory
+         * grants it to the collection.  CARD_NONE = rank-0 lesson fight
+         * (no drop) or a full collection (no room to grant). */
         if (g_loot_id != CARD_NONE) {
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
 #ifdef DEBUG_BUILD
-                telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
-                               deck_collection_count(&g->state.cards,
-                                                     g_loot_id), 0, 0);
+                {
+                    uint8_t loot_rank;
+                    uint8_t loot_total;
+                    g_bk_call_bank = 9;
+                    g_bk_call_target = (uint16_t)&game_loot_rank_banked;
+                    g_bk_byte_a = g->battle.enemy_battle_id;
+                    banked_call_run();
+                    /* Hoist the rank first: the total lookup below is a
+                     * second banked dispatch and stages over g_bk_byte_b
+                     * (same staging hazard the pre-add count hoist used
+                     * to cover for the merge).  The Battle's own battle
+                     * id feeds the rank lookup: the split event above
+                     * rewrites the runtime actor slot in place (knight
+                     * -> slime trio), so act->battle_type already names
+                     * the SECOND fight here -- the roll happened for the
+                     * first.  enemy_battle_id is never rewritten
+                     * (docs/enemies_ranking.md §1.6). */
+                    loot_rank = g_bk_byte_b;
+                    /* d1 is the identity total AFTER the grant (banked:
+                     * folds move copies onto curated ids, so the loot
+                     * row's own count would go stale -- e.g. always 1 on
+                     * a fold into a non-empty curated row). */
+                    g_bk_call_bank = 11;
+                    g_bk_call_target = (uint16_t)&deck_ident_total_banked;
+                    g_bk_ptr_a = (void *)&g->state.cards;
+                    g_bk_byte_a = g_loot_id;
+                    banked_call_run();
+                    loot_total = g_bk_byte_b;
+                    telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
+                                   loot_total, loot_rank, 0);
+                }
 #endif
             } else {
                 g_loot_id = CARD_NONE;

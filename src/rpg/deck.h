@@ -55,9 +55,33 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
 
 /* Fold collection rows that describe the same card into one (a curated
  * catalog row and its mechanically identical loot twin), retargeting
- * decked copies onto the survivor.  Idempotent; deck_collection_add runs
- * it after opening a new row and save load runs it on the restored
- * state. */
+ * decked copies onto the survivor.  Capped folds keep a remainder row so
+ * nothing is lost or stacked past max_copies.  Idempotent;
+ * deck_collection_add runs it after opening a new row and save load runs
+ * it on the restored state. */
+/* Banked duplicate-fold (src/rpg/deck_merge_banked.c, ROM bank 11):
+ * g_bk_ptr_a = CardState*.  Dispatched by deck_collection_merge_duplicates'
+ * thin wrapper (this file) and never called directly. */
+void deck_merge_banked(void);
+
+/* Banked capped-twin gate (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id; g_bk_byte_c = allow/deny.  Dispatched by
+ * deck_add_card's thin wrapper below. */
+void deck_ident_gate_banked(void);
+
+/* Banked full-collection absorb (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
+ * when the candidate folded into an existing same-identity row
+ * (all-or-nothing), 0 otherwise.  Dispatched by deck_collection_add's
+ * full-collection path. */
+void deck_absorb_banked(void);
+
+/* Banked identity total (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = id; g_bk_byte_b = owned copies across every
+ * same-identity row.  Dispatched by the loot-grant path for truthful
+ * LOOT_CARD_ADDED counts after folds. */
+void deck_ident_total_banked(void);
+
 void deck_collection_merge_duplicates(CardState *cs);
 
 /* ── Deck API ───────────────────────────────────────────────────── */
@@ -65,6 +89,28 @@ void deck_collection_merge_duplicates(CardState *cs);
 /* Add a card to the deck.  The card must be owned in the collection.
  * Returns false if the deck is full or the card is not owned. */
 bool deck_add_card(CardState *cs, CardId id);
+
+/* Banked equip-gate check (src/game/loot_gate_banked.c, ROM bank 9):
+ * g_bk_byte_a = card id, g_bk_byte_b = pool; g_bk_byte_c = 0 proceed,
+ * else required AP.  Dispatched by deck_equip_card's thin wrapper. */
+void deck_equip_gate_banked(void);
+
+/* Gated equip (docs/enemies_ranking.md §4.8): the deck_add_card rules
+ * plus one -- a loot-derived card (loot_is_loot_id) whose synthesized
+ * cost exceeds the live energy pool cannot be decked.  Curated cards
+ * are exempt (the starter deck carries cost-2 fire swords while the pool
+ * starts at 1; shop/quest cards are authored against their pool), and
+ * deck_add_card stays ungated for those authored grant paths.  Only
+ * player-chosen equipping (quick-screen A, harness deck add) is gated. */
+typedef enum {
+    EQUIP_OK = 0,       /* decked */
+    EQUIP_FULL = 1,     /* deck already holds MAX_DECK_CARDS */
+    EQUIP_MIN = 2,      /* reserved: remove-path floor (never from equip) */
+    EQUIP_LOCKED = 3,   /* loot card costs more AP than the pool */
+    EQUIP_REJECTED = 4  /* any other deck_add_card refusal */
+} DeckEquipResult;
+
+uint8_t deck_equip_card(CardState *cs, CardId id, uint8_t pool);
 
 /* Remove a card from the deck.  Returns false if the card is not
  * in the deck or the deck is at DECK_MIN_CARDS. */

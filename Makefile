@@ -105,7 +105,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs
 
 all: $(TARGET)
 
@@ -418,7 +418,7 @@ src/game/entity_ids_generated.h: $(wildcard screens/enemy_types/*.json) $(wildca
 src/game/title_data.c: screens/title.json
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 
-src/game/battle_screens.c src/game/battle_types.c src/game/enemy_ow_count.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
+src/game/battle_screens.c src/game/battle_types.c src/game/enemy_ow_count.c src/game/card_skin.c src/game/battle_glow_content.c src/game/battle_obj_tables.c src/game/loot_rank_content.c: $(wildcard screens/battle/*.json) $(wildcard screens/combat_art/*.json) $(wildcard screens/enemy_types/*.json) screens/cards_skin.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 
 # Extract tile images from source PNGs for the web editor (import_tileset.py)
@@ -1002,10 +1002,18 @@ test-sentinels: debug
 	python3 tools/dev.py scenario patrol_enemy_bumps_player
 	python3 tools/dev.py scenario battle_multi_enemy_cycle_kill
 
+# Enemy rank bands (docs/enemies_ranking.md §5, required): checks every
+# enemy type's hp/gold against its rank band, every BattleId deck's
+# swings/riders, the slime-knight split chain totals, the spawn constants
+# and the solo-knight exception.  Host-side only, no ROM rebuild.
+enemy-ranks:
+	python3 tools/enemy_audit.py
+
 # Full validation gate (AGENTS.md Step 6), in order, in one invocation so
 # agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
 validate: memmap lint
 	$(MAKE) card-costs
+	$(MAKE) enemy-ranks
 	$(MAKE) test-harness JOBS=$(JOBS)
 	$(MAKE) test
 	$(MAKE) verify-oam

@@ -193,8 +193,8 @@ typedef enum {
     EVENT_STATUS_APPLIED,   /* d0=status id d1=stacks d2=duration */
     EVENT_STATUS_TICKED,    /* d0=tick damage d1=actor slot (0=player) */
     EVENT_STATUS_EXPIRED,   /* d0=status id d1=actor slot (0=player) */
-    /* Loot instances (docs/loot.md §34). */
-    EVENT_LOOT_CARD_ADDED,  /* d0=derived id d1=count after */
+    /* Loot instances (docs/loot.md §34, docs/enemies_ranking.md §4.3). */
+    EVENT_LOOT_CARD_ADDED,  /* d0=derived id d1=count after d2=enemy rank R0-R6 */
     EVENT_LOOT_GENERATED,   /* reserved (kept for wire stability) */
     EVENT_CARD_SOLD,        /* d0=CardId d1=gold received d2=count after */
     EVENT_TURN_SKIPPED,     /* d0=enemy slot (1..n) d1=cause StatusId */
@@ -220,6 +220,10 @@ typedef enum {
     /* Dialogue YES/NO answer (dialogue_screen.c): d0 = DialogueId,
      * d1 = choice index (0 = YES, 1 = NO), d2/d3 = 0. */
     EVENT_DIALOGUE_CHOICE,
+    /* Locked equip rejection (docs/enemies_ranking.md §4.8):
+     * d0 = card id, d1 = required AP, d2/d3 = 0.  No
+     * CARD_ADDED_TO_DECK fires with it. */
+    EVENT_CARD_EQUIP_LOCKED,
 } GameEventType;
 
 typedef struct {

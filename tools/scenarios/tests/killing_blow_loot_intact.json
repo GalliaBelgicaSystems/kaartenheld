@@ -1,7 +1,7 @@
 {
  "name": "killing_blow_loot_intact",
  "test": true,
- "description": "Counter-kill victory keeps the loot reveal intact: three 1-HP kobolds die across an attack, an attack, and a dagger-counter defend (the final swing lands on the player the same frame the counter kills, arming the deck judder while deciding the fight). The result gate must freeze it: the YOU FOUND block, fringe cells and hero row are pristine on the DEFEAT-free VICTORY screen. Row 12 asserts real VRAM (vram_row), not the screen buffer -- box stamps never touch the buffer, so only VRAM truth catches a clobber.",
+ "description": "Killing-blow loot is intact (docs/loot.md 34.5, docs/enemies_ranking.md \u00a74.3): seed 5002 on the R3 kobold rolls a BRONZE POISON DAGGER (id 139) and the victory reveal names it on the VRAM row, proving the killing blow neither shifts nor suppresses the start-of-battle roll.",
  "actions": [
   {
    "type": "wait",
@@ -177,6 +177,12 @@
    "event": "DAMAGE_RECEIVED"
   },
   {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 0
+  },
+  {
    "type": "screen_row",
    "row": 10,
    "contains": "YOU FOUND"
@@ -214,7 +220,7 @@
   {
    "type": "vram_row",
    "row": 12,
-   "contains": "WOOD DAGGER"
+   "contains": "BRONZE POISON DAGGER"
   }
  ],
  "initial_state": {
@@ -231,6 +237,9 @@
    }
   },
   "seed": 5002,
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  },
   "start_battle": true
  }
 }

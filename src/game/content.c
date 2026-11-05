@@ -141,12 +141,17 @@ void game_slime_despair_outro(void)
      * &g_game).  Wakes in the demo-end wake scene (vast empty
      * underground -- the finale backdrop, reachable only through this
      * teleport: the wake dialogue opens immediately and closes straight
-     * to THANKS, so the player never walks here).  No LCD change here:
-     * game_render() performs the full LCD-off redraw after the frame's
-     * vsync().  Turning the LCD off in update context hangs vsync() (no
-     * VBlank while the LCD is off), stranding the release ROM on a
-     * white screen with the area track playing -- a hang the harness
-     * never sees (it skips vsync). */
+     * to the ENDING screen, so the player never walks here).  The defeat
+     * whites out first (banked palette fade on the result screen), then
+     * the teleport lands and the wake dialogue's first-enter fades the
+     * area back in -- no LCD change here (the dialogue entry performs
+     * the full LCD-off redraw after the frame's vsync(); turning the LCD
+     * off in update context hangs vsync() -- no VBlank while the LCD is
+     * off -- stranding the release ROM on a white screen with the area
+     * track playing, a hang the harness never sees (it skips vsync)). */
+    g_bk_call_bank = 10;
+    g_bk_call_target = (uint16_t)&game_despair_fade_out_banked;
+    banked_call_run();
 #ifdef TEST_LEVELS
     scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
 #else

@@ -46,6 +46,8 @@ void item_gem_render_banked(void);
 #define MSG_DECK_FULL  1
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
+#define MSG_NEED_AP    4
+#define MSG_DECK_CAPPED 5
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -324,13 +326,17 @@ void item_screen_update(Game *g)
         } else {
             CardState *cs = &g->state.cards;
             CardId id;
+            uint8_t pool;
+            uint8_t equip;
             if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
                 return;
             id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
             /* Count-up-then-clear: A adds one copy; once the card is fully
              * decked (add rejected for per-card reasons, not a full deck),
              * A clears every decked copy of it — but only if the remaining
-             * deck would still hold DECK_MIN_CARDS cards (all-or-nothing). */
+             * deck would still hold DECK_MIN_CARDS cards (all-or-nothing).
+             * Loot above the pool is locked (docs/enemies_ranking.md
+             * §4.8): NEED AP n names the reason instead of a dead slot. */
             if (card_get_def(id)->type == CARD_TYPE_SPECIAL) {
                 g->item_menu_message = MSG_QUEST_ITEM;
                 g->item_menu_msg_ttl = 45;
@@ -339,20 +345,53 @@ void item_screen_update(Game *g)
                 g->render_cache.valid = false;
                 return;
             }
-            if (deck_add_card(cs, id)) {
+            /* Clamp through int16_t first (same normalization as ic_pool
+             * and the battle HUD loader): a pool above 255 would otherwise
+             * wrap the uint8_t cast, and a negative poke would unlock
+             * everything.  Unset/zero means the default pool, never AP 0. */
+            {
+                int16_t pv = g->state.variables.values[
+                    VARIABLE_ID_ENERGY_POOL - 1];
+                if (pv < 1) pv = 1;
+                if (pv > 255) pv = 255;
+                pool = (uint8_t)pv;
+            }
+            equip = deck_equip_card(cs, id, pool);
+            if (equip == EQUIP_OK) {
                 telemetry_emit(EVENT_CARD_ADDED_TO_DECK, id, 0, 0, 0);
                 audio_play_sfx(SFX_SELECT);
-            } else if (cs->deck.count >= MAX_DECK_CARDS) {
+            } else if (equip == EQUIP_LOCKED) {
+                g->item_menu_message = MSG_NEED_AP;
+                g->item_menu_msg_ttl = 45;
+            } else if (equip == EQUIP_FULL ||
+                       cs->deck.count >= MAX_DECK_CARDS) {
                 g->item_menu_message = MSG_DECK_FULL;
                 g->item_menu_msg_ttl = 45;
-            } else if ((uint8_t)(cs->deck.count -
-                                 deck_count_in_deck(&cs->deck, id)) <
-                       DECK_MIN_CARDS) {
-                g->item_menu_message = MSG_DECK_MIN;
-                g->item_menu_msg_ttl = 45;
             } else {
-                while (deck_remove_card(cs, id))
-                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, id, 0, 0, 0);
+                /* Refused for a per-card reason (not a full deck): count
+                 * up only when the ROW still has room -- a capped twin
+                 * (docs/loot.md §34) can leave this row under-decked
+                 * while the identity is saturated, and adding must refuse
+                 * without destroying what is already decked.  A fully
+                 * decked row clears (guarded by the MIN floor); anything
+                 * else names the cap instead of flashing a bogus MIN or
+                 * silently clearing nothing. */
+                uint8_t row_decked = deck_count_in_deck(&cs->deck, id);
+                uint8_t row_owned = deck_collection_count(cs, id);
+                if (row_decked >= row_owned && row_owned > 0) {
+                    if ((uint8_t)(cs->deck.count -
+                                  row_decked) < DECK_MIN_CARDS) {
+                        g->item_menu_message = MSG_DECK_MIN;
+                        g->item_menu_msg_ttl = 45;
+                    } else {
+                        while (deck_remove_card(cs, id))
+                            telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                           id, 0, 0, 0);
+                    }
+                } else {
+                    g->item_menu_message = MSG_DECK_CAPPED;
+                    g->item_menu_msg_ttl = 45;
+                }
             }
         }
         g->render_cache.valid = false;

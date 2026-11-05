@@ -1,0 +1,107 @@
+{
+ "name": "deck_equip_locked_loot",
+ "test": true,
+ "description": "Equip gate refusal (docs/enemies_ranking.md \u00a74.8): a STEEL FIRE SWORD (id 208, cost 4) in the collection cannot be decked while the pool is 2. Pressing A on its DECK row is rejected with NEED AP 4 on row 16, emits CARD_EQUIP_LOCKED (d1 = required AP), and emits no CARD_ADDED_TO_DECK. Curated cards are exempt; only player-chosen equipping of generated loot is gated.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 11,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 208,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_EQUIP_LOCKED"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_EQUIP_LOCKED",
+   "index": 0,
+   "value": 208
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_EQUIP_LOCKED",
+   "index": 1,
+   "value": 4
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_ADDED_TO_DECK"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "NEED AP"
+  }
+ ]
+}

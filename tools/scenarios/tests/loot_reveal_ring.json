@@ -1,12 +1,12 @@
 {
  "name": "loot_reveal_ring",
  "test": true,
- "description": "Loot reveal with a healing card (docs/loot.md 34.1/34.5): at AP 1 seed 2 deterministically drops a WOOD PLAIN RING (derived id 0x64 = 100; rings roll the same AP-gated material as everything else). The victory reveal must show YOU FOUND: on row 10, W RG on row 11, WOOD RING on row 12, and the green health '+' OAM icon (tile 11) on entry 19.",
+ "description": "Loot reveal with a healing card (docs/loot.md 34.1, docs/enemies_ranking.md \u00a74.3): seed 2 on the R1 wall slime rolls a BRONZE PLAIN RING (derived id 0x84 = 132, rank 1; rings roll the same rank-centered material as everything else). The victory reveal must show YOU FOUND: on row 10, B RG on row 11, BRONZE RING on row 12, and the green '+' icon.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
-   "x": 13,
-   "y": 8,
+   "x": 12,
+   "y": 10,
    "facing": "DOWN"
   },
   "seed": 2,
@@ -16,9 +16,47 @@
     "max_hp": 60
    }
   },
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  },
   "start_battle": true
  },
  "actions": [
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "SW",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 3,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
   {
    "type": "set_enemy_hp",
    "index": 0,
@@ -180,17 +218,23 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 100
+   "value": 132
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 1
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "W RG"
+   "contains": "B RG"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "WOOD RING"
+   "contains": "BRONZE RING"
   },
   {
    "type": "oam_tile",

@@ -8,12 +8,12 @@
  * Progress counters render as a single digit ('0' + value in
  * item_quest_banked.c): keep every target ≤ 9.  The #error below fails
  * the build otherwise -- extend it if the registry grows. */
-#define QUEST_MONSTERS_TARGET 5
+#define QUEST_MONSTERS_TARGET 3
 #define QUEST_AMULET_TARGET   0  /* inert: LOST AMULET has no counter */
 
 const QuestDefinition g_quests[] = {
     {
-        1, "MONSTER HUNT", "MAYOR IN TOWN", "KILL 5 MONSTERS",
+        1, "MONSTER HUNT", "MAYOR IN TOWN", "KILL 3 MONSTERS",
         VARIABLE_ID_QUEST_MONSTER_HUNT, 1, 2,
         VARIABLE_ID_MONSTERS_DEFEATED, QUEST_MONSTERS_TARGET, "monsters", "+1 AP", "+1 AP"
     },

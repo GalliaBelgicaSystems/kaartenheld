@@ -27,6 +27,12 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Despair white fade-out (src/game/despair_fade_banked.c, ROM bank 10):
+ * whites the current palettes out.  Dispatched from
+ * game_slime_despair_outro() on the DEFEATED result screen.
+ * Self-contained (palette regs + LY only); the call site runs LCD-on. */
+void game_despair_fade_out_banked(void);
+
 /* Slime-lord desperation outro (unwinnable final battle, game-owned flow):
  * immediate cut to the wake grove with the "Where am I?" dialogue, then
  * THANKS (via the dialogue close).  Called by the shared battle screen's
@@ -51,6 +57,12 @@ bool game_carl_tutorial_update(Game *g);
  * profile + roll body and returns the derived CardId (always drops).
  * Uses the isolated loot RNG only -- never consumes the shared stream. */
 uint8_t game_loot_drop(uint8_t battle_type);
+
+/* Battle -> enemy rank R0-R6 (src/game/loot_gate_banked.c, ROM bank 9
+ * with the rank table): g_bk_byte_a = battle id, result in g_bk_byte_b.
+ * Fixed-bank victory code reports it as LOOT_CARD_ADDED d2 (no WRAM
+ * growth, docs/enemies_ranking.md §4.3). */
+void game_loot_rank_banked(void);
 
 /* Unwinnable-boss desperation check (src/game/despair_banked.c, ROM
  * bank 8): re-derives the engine's g_despair_slot cache from the game

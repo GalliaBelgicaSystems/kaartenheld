@@ -708,6 +708,8 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
+    # The ring merges under its capped curated id (one row, count 1);
+    # the one-copy row hides so the bow slides up.
     s.check_eq("ring in collection", s.reader.collection_count(
         CARD_IRON_RING), 1)
     s.check("bow row slides up", "BO9" in s.bg_text()[5],

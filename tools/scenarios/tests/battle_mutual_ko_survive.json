@@ -1,7 +1,7 @@
 {
  "name": "battle_mutual_ko_survive",
  "test": true,
- "description": "REGRESSION: mutual KO (poisoned 1HP hero + poisoned 1HP last enemy, shared tick kills both, VICTORY shadows the death). The second SELECT is a real staged SH9 defend against the incoming strike (no freeze): the swing is fully blocked, then the round-2 entry tick kills both sides at once. Victory exits clamp the corpse to 1HP instead of stranding a 0-HP hero in the overworld.",
+ "description": "REGRESSION: mutual KO (burned 1HP hero + burned 1HP last enemy, shared tick kills both, VICTORY shadows the death). The second SELECT is a real staged SH9 defend against the incoming strike (no freeze): the swing is fully blocked, then the round-2 entry tick kills both sides at once. Victory exits clamp the corpse to 1HP instead of stranding a 0-HP hero in the overworld.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -44,13 +44,13 @@
   {
    "type": "apply_status",
    "slot": 1,
-   "status": 1,
+   "status": 2,
    "duration": 3
   },
   {
    "type": "apply_status",
    "slot": 0,
-   "status": 1,
+   "status": 2,
    "duration": 3
   },
   {

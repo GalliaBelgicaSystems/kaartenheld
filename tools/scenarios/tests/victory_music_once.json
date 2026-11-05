@@ -14,7 +14,7 @@
     { "type": "set_enemy_hp", "index": 0, "hp": 1 },
     { "type": "set_enemy_hp", "index": 1, "hp": 0 },
     { "type": "set_enemy_hp", "index": 2, "hp": 0 },
-    { "type": "apply_status", "slot": 1, "status": 1, "duration": 3 },
+    { "type": "apply_status", "slot": 1, "status": 2, "duration": 3 },
     { "type": "apply_status", "slot": 0, "status": 1, "duration": 3 },
     { "type": "apply_status", "slot": 1, "status": 3, "duration": 3 },
     { "type": "set_hand", "cards": [

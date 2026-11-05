@@ -288,14 +288,10 @@ void ui_draw_hline(uint8_t y, char ch);
 void ui_update_camera(const World *world);
 
 /* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
- * per-build split (debug 5 / release 4) so release bank 3 keeps room for
- * battle HUD work.  The fixed-bank wrapper stages through this macro, so
- * pragma and dispatch can never disagree. */
-#ifdef DEBUG_BUILD
-#define UI_DIALOGUE_BOX_BANK 5
-#else
-#define UI_DIALOGUE_BOX_BANK 4
-#endif
+ * ROM bank 10 in both builds (~2 KB free in release), alongside the
+ * despair fades.  The fixed-bank wrapper stages through this macro,
+ * so pragma and dispatch can never disagree. */
+#define UI_DIALOGUE_BOX_BANK 10
 
 /* Banked no-arg body dispatched by ui_draw_dialogue() (src/ui/ui_dialogue_box_banked.c):
  * paints the 4 box rows FULL-WIDTH with the dialogue paper palette and
