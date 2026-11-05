@@ -717,9 +717,10 @@ for `POISON_GREY_TURNS` **2** rounds (`status.h`):
 
 * **Player**: 2 cards from your 5-card hand grey out — you cannot select
   them.
-* **Enemy**: 2 positions in its **shared deck** grey out — those swings
-  are skipped (and the draw position does not advance, so the enemy is
-  locked out for the grey duration).
+* **Enemy**: 2 positions in its **shared deck** grey out — that
+  attacker's swings on those positions are skipped (the spent card is
+  still consumed, so the shared deck keeps cycling; unpoisoned
+  attackers are never blocked by another foe's grey).
 
 Re-poisoning refreshes the grey without re-rolling which cards are greyed.
 

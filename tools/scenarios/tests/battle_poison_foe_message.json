@@ -1,7 +1,7 @@
 {
  "name": "battle_poison_foe_message",
  "test": true,
- "description": "Poisoned foe presentation: a poisoned slime whose greyed lead card comes up selects the card (ENEMY_CARD_PLAYED with the lead power) but cannot play it (TURN_SKIPPED cause POISON, no advance, no DAMAGE_RECEIVED). The defend beat names the failed swing on the row-10 combo line (FOE IS POISONED! in the poison-purple slot 4) while row 0 keeps the standard enemy-turn banner.",
+ "description": "Poisoned foe presentation: a poisoned slime whose greyed lead card comes up selects the card (ENEMY_CARD_PLAYED with the lead power) but cannot play it (TURN_SKIPPED cause POISON, spent card consumed, no DAMAGE_RECEIVED). The defend beat names the failed swing on the row-10 combo line (FOE IS POISONED! in the poison-purple slot 4) while row 0 keeps the standard enemy-turn banner.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {

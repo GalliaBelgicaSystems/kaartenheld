@@ -204,7 +204,7 @@ void status_grey_apply_banked(void)
     if (slot >= STATUS_ROUND_SLOTS || pool < POISON_GREY_CARDS) return;
 
     if (s_grey_mask[slot] != 0) {
-        s_grey_dur[slot] = (uint8_t)(POISON_GREY_TURNS + 1);
+        s_grey_dur[slot] = POISON_GREY_TURNS;
         return;
     }
 
@@ -221,10 +221,11 @@ void status_grey_apply_banked(void)
         mask |= (uint8_t)(1u << idx);
     }
     s_grey_mask[slot] = mask;
-    /* The grey drains at the enter-select round boundary; the poison
-     * usually lands mid-round, so POISON_GREY_TURNS+1 boundaries leave
-     * exactly POISON_GREY_TURNS future decision rounds greyed. */
-    s_grey_dur[slot] = (uint8_t)(POISON_GREY_TURNS + 1);
+    /* The grey drains at the enter-select round boundary in lockstep
+     * with the STATUS_POISON instance itself (both tick down once per
+     * round in battle_tick_statuses), so the purple tint and the
+     * grey-out expire together after POISON_GREY_TURNS rounds. */
+    s_grey_dur[slot] = POISON_GREY_TURNS;
 }
 
 /* One round boundary for a greyed combatant: decrement the duration and,

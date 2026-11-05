@@ -43,15 +43,14 @@ rider roll fails (§19 fully implemented).  Scenarios: `status_burn_apply`,
 Poison's on-hit rider carries the **grey-out** rider (§16): applying
 poison greys 2 random positions of the afflicted combatant's pool for
 `POISON_GREY_TURNS` rounds (telemetry `CARDS_GREYED`, cleared by
-`CARDS_UNGREYED`).  The gate lives in the battle telegraph: any pool
-position covered by the victim's grey mask never plays -- for enemies the
-mask ORs across ALL enemy slots against the party's single shared battle
-deck, because every hostile encounter engages as a trio (three attackers
-rotate through one draw position), so a greyed position must never be
-drawn no matter which enemy is up.  A greyed draw still selects its card
-(`ENEMY_CARD_PLAYED` with the lead card's identity) but the swing fails:
-`TURN_SKIPPED` (cause `STATUS_POISON`) without advancing the draw
-position, the attacker judders like a hit victim, and the defend beat
+`CARDS_UNGREYED`).  The gate lives in the battle telegraph: a pool position covered by the
+ACTIVE attacker's own grey mask never plays (per-attacker lock -- the
+party's single shared battle deck still rotates through one draw
+position, but poisoning one foe never locks unpoisoned foes out).
+A greyed draw still selects its card (`ENEMY_CARD_PLAYED` with the lead
+card's identity) but the swing fails: `TURN_SKIPPED` (cause
+`STATUS_POISON`) while the spent card is still consumed (draw advances
+with wrap), the attacker judders like a hit victim, and the defend beat
 names the failed swing (`FOE IS POISONED!` on the banner + combo row)
 until the player acknowledges with A (or the timer path converges).  Scenarios:
 `status_poison_apply` (apply + ticks + expiry + grey gate), `status_poison_reshuffle`

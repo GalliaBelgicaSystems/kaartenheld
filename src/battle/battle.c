@@ -858,10 +858,9 @@ static void battle_tick_statuses(Battle *b)
 
     for (i = 0; i < b->enemy_count; i++) {
         if (b->enemies[i].hp == 0) {
-            /* A poisoned victim's grey-out must drain even after death:
-             * the shared enemy deck reads the union of every slot's mask,
-             * so a frozen corpse mask would jam the draw position and lock
-             * all surviving enemies out of attacking forever. */
+            /* A poisoned victim's grey-out still drains even after death
+             * (per-attacker lock: a corpse mask can no longer jam the
+             * shared draw, but the drain keeps CARDS_UNGREYED firing). */
             status_grey_tick((uint8_t)(i + 1));
             continue;
         }

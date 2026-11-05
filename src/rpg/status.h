@@ -100,10 +100,9 @@ extern StatusInstance g_status_applied;
 #define POISON_GREY_TURNS 2
 
 /* Bit p set = pool position p is greyed for actor slot (0 = player,
- * 1..n = enemy).  Duration drains at each enter-select round boundary;
- * the stored counter is POISON_GREY_TURNS+1 at apply because the poison
- * lands mid-round, leaving exactly POISON_GREY_TURNS future rounds greyed
- * (0 = not greyed). */
+ * 1..n = enemy).  Duration drains at each enter-select round boundary
+ * in lockstep with the STATUS_POISON instance, so tint and grey-out
+ * expire together after POISON_GREY_TURNS rounds (0 = not greyed). */
 extern uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 extern uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 

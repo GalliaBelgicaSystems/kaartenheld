@@ -1498,11 +1498,12 @@ CARDS_UNGREYED
   data[2] = second previously-greyed pool position
 ```
 
-The enemy grey gate tests the OR of every enemy slot's mask against the
-shared deck's current draw position (every encounter engages as a trio,
-so the deck rotates through all three attackers; a greyed position never
-plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
-`data[1] = STATUS_POISON` and leaves the draw position unadvanced.
+The enemy grey gate tests only the ACTIVE attacker's own slot mask
+against the shared deck's current draw position (per-attacker lock:
+poisoning one foe never blocks the other attackers, though they all
+rotate through the one shared draw position).  The skip emits
+`TURN_SKIPPED` with `data[1] = STATUS_POISON` and still consumes the
+spent card (the draw position advances with wrap) so the deck cycles.
 
 ---
 

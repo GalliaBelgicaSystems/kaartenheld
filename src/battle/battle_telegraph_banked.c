@@ -24,16 +24,17 @@
  * RAM-resident __memcpy helper, unreachable while a bank is mapped
  * (see battle_turn_draw_banked.c).
  *
- * Poison grey-out (Phase D): a greyed deck position never plays.  The
- * body still peeks the greyed card into enemy_played_card (the foe
- * "selects" it) and announces it via ENEMY_CARD_PLAYED, then the swing
- * fails: incoming 0, TURN_SKIPPED (cause POISON), the attacker judders
- * like a hit victim (shake mask + 12-frame timer, read by the bank-3
- * BG judder and the bank-5 OAM judder), and msg 5 stages the
- * "FOE IS POISONED!" beat the bank-3 combo painter reads (combo row
- * only, never the banner).  The
- * draw position does NOT advance, so an enemy whose lead card is greyed
- * stays locked out for the grey-out duration (docs/combo-system.md).
+ * Poison grey-out (Phase D): a greyed deck position never plays for the
+ * poisoned attacker only (per-attacker lock: unpoisoned enemies draw and
+ * attack normally).  The body still peeks the greyed card into
+ * enemy_played_card (the foe "selects" it) and announces it via
+ * ENEMY_CARD_PLAYED, then the swing fails: incoming 0, TURN_SKIPPED
+ * (cause POISON), the attacker judders like a hit victim (shake mask +
+ * 12-frame timer, read by the bank-3 BG judder and the bank-5 OAM
+ * judder), and msg 5 stages the "FOE IS POISONED!" beat the bank-3
+ * combo painter reads (combo row only, never the banner).  The spent
+ * card IS consumed (draw_idx advances with wrap) so the shared deck
+ * cycles and unpoisoned attackers draw fresh cards (docs/combo-system.md).
  * Freeze keeps its silent skip (no card, no message). */
 
 #ifdef DEBUG_BUILD
@@ -90,15 +91,11 @@ void battle_telegraph_banked(void)
     }
     atk = b->attacking_enemy_idx;
     /* The enemy deck and its draw position are SHARED by the whole
-     * hostile party (every encounter engages as a trio).  A poisoned
-     * victim's grey-out therefore applies to the shared deck, not to
-     * one attacker's slot: a greyed deck position never plays, no
-     * matter which enemy is up.  OR the per-victim masks (they carry
-     * independent durations, so the union is only the currently
-     * active grey set). */
-    for (gi = 1; gi <= b->enemy_count; gi++) {
-        grey_mask |= s_grey_mask[gi];
-    }
+     * hostile party (every encounter engages as a trio), but poison
+     * grey-out is scoped to the active attacker only: only
+     * s_grey_mask[atk + 1] can fizzle this swing, so poisoning one foe
+     * never locks unpoisoned foes out of their attacks. */
+    grey_mask = s_grey_mask[(uint8_t)(atk + 1)];
     /* STATUS_FREEZE (docs/combo-system.md §12): the frozen-mask
      * bit is TESTED here but never consumed -- status_apply sets
      * it and status_tick_banked clears it each round and re-sets
@@ -117,9 +114,10 @@ void battle_telegraph_banked(void)
                 (uint8_t)(1u << b->enemy_deck.draw_idx)) != 0 &&
                b->enemies[atk].hp != 0) {
         /* Poison-wracked swing: the foe selects its (greyed) card but
-         * cannot play it -- no advance, nothing incoming.  The peek
-         * announces the selection, the shake judders the attacker, and
-         * msg 5 stages the failed-swing beat. */
+         * cannot play it -- the spent card is still consumed (advance
+         * with wrap) so the shared deck cycles, nothing incoming.
+         * The peek announces the selection, the shake judders the
+         * attacker, and msg 5 stages the failed-swing beat. */
         di = b->enemy_deck.draw_idx;
         b->enemy_played_card.type = b->enemy_deck.cards[di].type;
         b->enemy_played_card.value = b->enemy_deck.cards[di].value;
@@ -137,6 +135,10 @@ void battle_telegraph_banked(void)
         b->msg_ttl = 0;
         g_battle_shake_mask |= (uint8_t)(1u << atk);
         g_battle_shake_timer = 12;
+        b->enemy_deck.draw_idx++;
+        if (b->enemy_deck.draw_idx >= b->enemy_deck.count) {
+            b->enemy_deck.draw_idx = 0;
+        }
     } else if (b->enemy_deck.count > 0) {
         di = b->enemy_deck.draw_idx;
         b->enemy_played_card.type = b->enemy_deck.cards[di].type;
