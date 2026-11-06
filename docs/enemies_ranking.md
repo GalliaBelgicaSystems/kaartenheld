@@ -958,6 +958,10 @@ pay for, so it is a dead deck slot instead of a goal.
   state pointer and derives the digit at draw time.  A WRAM layout shift is the
   documented cause of the `battle_boot` ghost-input regression
   (`AGENTS.md` §52.24) — do not add a global for this.
+  Status (Nov 2026): held for the gate itself.  Later bundle growth lives
+  elsewhere and is accounted at its own site: the 50-row collection (+76 B
+  `GameState`, `src/rpg/deck.h`) and the dog-trade staging byte (+1 B
+  `g_bk_byte_e`, `src/core/banked.h`).
 * **No multiply/divide, no function pointers** in the roll (§52.1, §52.18);
   the walk and the compares are compare-only.
 * **No `di`/`ei`** in the banked body (§52.11.3); the drop body is pure WRAM +

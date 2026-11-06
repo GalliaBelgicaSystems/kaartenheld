@@ -227,7 +227,7 @@ from `GameState`.
 Create:
 
 ```c
-#define MAX_CARD_COLLECTION 64
+#define MAX_CARD_COLLECTION 50
 #define MAX_DECK_CARDS 20
 ```
 

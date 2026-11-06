@@ -70,9 +70,11 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
 void deck_merge_banked(void);
 
 /* Banked capped-twin gate (same file): g_bk_ptr_a = CardState*,
- * g_bk_byte_a = candidate id, g_bk_byte_d = live pool (0 = ungated
- * grant path); g_bk_byte_c = 1 proceed, 0 capped, 2 pool-locked (cost in
- * g_bk_byte_b).  Dispatched by deck_add_card's thin wrapper below. */
+ * g_bk_byte_a = candidate id; g_bk_byte_c = 1 proceed, 0 capped.
+ * Takes no pool byte (unlike the verdict below): the gate only caps
+ * identity totals, so a stale g_bk_byte_d from an earlier verdict
+ * call is unread and harmless.  Dispatched by deck_add_card's thin
+ * wrapper below. */
 void deck_ident_gate_banked(void);
 
 /* Banked equip verdict (same file): g_bk_ptr_a = CardState*,
@@ -114,7 +116,8 @@ void deck_equip_gate_banked(void);
  * energy pool can be decked.  Pre-decked grants are unaffected (the
  * starter deck, shop/quest rewards arrive via the ungated
  * deck_add_card); only player-chosen equipping (quick-screen A,
- * harness deck add) is gated. */ typedef enum {
+ * harness deck add) is gated. */
+typedef enum {
      EQUIP_OK = 0,       /* decked */
      EQUIP_FULL = 1,     /* deck already holds MAX_DECK_CARDS */
      EQUIP_MIN = 2,      /* fully-decked row refused by the MIN floor */
