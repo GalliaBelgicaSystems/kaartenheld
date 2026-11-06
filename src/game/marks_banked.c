@@ -280,13 +280,17 @@ static void marks_refresh(void)
     g_bk_byte_c = 0;
     g_bk_byte_d = 0;
     /* Mark glyphs (!/? at 126-127) stream on the first tick of any screen
-     * (free ids everywhere).  Pips + riders stream only on battle/item
-     * ticks: in the overworld those ids hold hero idle/walk + blob-tail
-     * art.  Same-tick guarantee as before (this runs in game_update
-     * before the render), so the first battle/item frame already draws
-     * resident art. */
+     * (free ids everywhere).  Pips + riders stream only on
+     * battle/item/shop ticks: in the overworld those ids hold hero
+     * idle/walk + blob-tail art, so a shop row painted a rider OAM id
+     * without this shows blob art (e.g. a guard sprite for poison).
+     * Same-tick guarantee as before (this runs in game_update
+     * before the render), so the first battle/item/shop frame already
+     * draws resident art.  Shop exit needs no restore: overworld entry
+     * restreams the blob side (ui_restore_ow_oam). */
     marks_load_mark_tiles();
-    if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM) {
+    if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM ||
+        g_game.screen == SCREEN_SHOP) {
         marks_load_battle_tiles();
     }
 
