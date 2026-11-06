@@ -380,6 +380,7 @@ void world_on_battle_fled(Game *g)
     World *w;
     WorldActorRuntime *act;
     uint8_t idx;
+    uint8_t e;
     if (!g) return;
     w = &g->world;
 
@@ -397,7 +398,20 @@ void world_on_battle_fled(Game *g)
      * re-deriving it per field access. */
     act = &w->actors[idx];
     if (act->active) {
-        act->hp = g->battle.enemies[0].hp;
+        /* Write back the toughest SURVIVOR, not slot 0: a trio shares
+         * one actor, so when the slot-0 member died but its clones
+         * lived, copying enemies[0].hp respawned three corpses -- the
+         * re-engage opened on an all-dead battle and a single attack
+         * won it.  The group recovers to its best surviving member.
+         * Own loop counter (not the reused idx): idx is the actor
+         * slot act was derived from, and reusing it here would
+         * silently repoint any later idx use at an enemy ordinal. */
+        act->hp = 0;
+        for (e = 0; e < g->battle.enemy_count; e++) {
+            if (g->battle.enemies[e].hp > act->hp) {
+                act->hp = g->battle.enemies[e].hp;
+            }
+        }
     }
 }
 

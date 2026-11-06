@@ -99,7 +99,7 @@ void loot_synth_banked(void)
     g_card_scratch.power = LOOT_POWER(material, wi);
     /* Centralized sell value (docs/loot.md §16/§34.6): synthesized
      * power + material tier*2 (+2 poison rider).  Stored in the def's
-     * price field so every consumer (shop SELL mode) reads it like any
+     * price field so every consumer (shop SELL tab) reads it like any
      * other card price -- no separate formula anywhere else in the game. */
     g_card_scratch.price = (uint8_t)(g_card_scratch.power +
                                      ((uint8_t)material << 1) +

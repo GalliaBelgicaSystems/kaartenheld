@@ -1,0 +1,105 @@
+{
+ "name": "dog_quest_complete",
+ "test": true,
+ "description": "Trading the bone to the village dog completes the DOG'S KEY quest: YES swaps bone for OLD KEY, sets DOG_QUEST=2, and the QUEST tab shows it complete with the OLD KEY reward",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "VILLAGE_DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "variable",
+   "variable": "DOG_QUEST",
+   "expected": 2
+  },
+  {
+   "type": "flag",
+   "flag": "DOG_KEY",
+   "expected": true
+  },
+  {
+   "type": "inventory",
+   "item": "BONE",
+   "expected": 0
+  },
+  {
+   "type": "inventory",
+   "item": "OLD_KEY",
+   "expected": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_THANKS"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "DOG'S KEY"
+  },
+  {
+   "type": "screen_row",
+   "row": 4,
+   "contains": "OLD KEY"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 4,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true
+  },
+  "variables": {
+   "DOG_QUEST": 1
+  },
+  "inventory": {"BONE": 1}
+ }
+}

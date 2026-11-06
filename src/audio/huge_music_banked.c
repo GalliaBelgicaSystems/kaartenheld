@@ -94,11 +94,14 @@ void music_play_banked(void)
         song = &song_battle;
         bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_OVERWORLD) {
-        song = &song_opening;
+        /* Re-scored opening theme (another opening.uge) for Wake Grove
+         * and Carl's field; still bank 7 through the _b7 driver copy. */
+        song = &song_another_opening;
         bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_CHEST) {
+        /* Bank 6 (home bank): the one-shot jingle moved off bank 7 to
+         * make room for the longer overworld theme. */
         song = &song_chest_opening;
-        bank = HUGE_MUSIC_BANK_B7;
         g_jingle_frames = 0;
     } else if (track == MUSIC_DESOLATE) {
         song = &song_desolate_landscape;

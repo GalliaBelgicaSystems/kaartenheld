@@ -132,7 +132,7 @@ The level dropdown's `Shops` group opens the Shop editor: each
 `screens/shops/<id>.json` is a stock list (up to 50 items; the ROM shows
 10 at a time and scrolls) of card symbols. Prices come from the card
 catalogue, so they are never duplicated. Tick **Card merchant** to enable
-the SELL action on the quick screen's CARDS detail page. Point an NPC at a
+the shop's SELL tab. Point an NPC at a
 shop with the Inspector's **Shop** field; `make shops` compiles the table
 and `make shops-check` guards drift + dangling references.
 

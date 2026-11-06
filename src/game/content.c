@@ -99,6 +99,10 @@ void game_new_game(GameState *state)
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_collection_add(&state->cards, id, 1);
         }
+        /* Ungated grant path: the ident gate skips its pool check on
+         * d == 0, so the pre-decked starter survives a stale pool value
+         * in the shared staging byte. */
+        g_bk_byte_d = 0;
         for (i = 0; i < n; i++) {
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_add_card(&state->cards, id);

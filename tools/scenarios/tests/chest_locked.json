@@ -1,0 +1,59 @@
+{
+ "name": "chest_locked",
+ "test": true,
+ "description": "Bumping the field cache without the Old Key says 'This chest is locked.': no dagger, no AP, the flag stays clear, and the sprite stays closed",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "CHEST"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "CHEST_LOCKED"
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": false
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 0
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 20,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5150
+ }
+}

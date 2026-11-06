@@ -13,8 +13,9 @@
 #include "banked.h"
 #include "game_ids.h"
 
-/* Bank-2 helper (screen_content.c); keeps the fixed bank small
- * (AGENTS.md 52.18). */
+/* Bank-11 helper (menu_cursor_banked.c); keeps the fixed bank small
+ * (AGENTS.md 52.18).  Bank 11, not bank 2 with the renders: bank 2's
+ * switchable area is full and the cursor needs no ROM tables. */
 void item_menu_cursor_banked(void);
 
 /* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
@@ -72,50 +73,6 @@ static CardId view_card_id(Game *g, uint8_t pos)
     return g->state.cards.collection.entries[s_view_indices[pos]].id;
 }
 
-/* ── Sell at the card merchant (docs/loot.md §24/§34.6) ─────────────
- * A loot card's detail page offers SELL while the player has engaged a
- * buying shop (g->shop_id set by the shop actor, cleared on scene
- * change).  Value = the def's price field -- for loot ids that is the
- * centralized sell value synthesized by loot_synth_banked. */
-static bool merchant_buys(const Game *g)
-{
-    const ShopDefinition *shop;
-    shop = game_shop_for_id(g->shop_id);
-    return shop && shop->buys;
-}
-
-static void card_detail_sell(Game *g)
-{
-    CardState *cs = &g->state.cards;
-    CardId id;
-    const CardDefinition *def;
-    uint8_t owned;
-
-    if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
-        return;
-    id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
-    if (!loot_is_loot_id(id) || !merchant_buys(g)) return;
-    def = card_get_def(id);
-
-    /* Selling must never strand a decked card without ownership
-     * backing: require at least one copy outside the battle deck. */
-    owned = deck_collection_count(cs, id);
-    if (def == NULL || owned <= deck_count_in_deck(&cs->deck, id)) {
-        g->item_menu_message = MSG_DECK_FULL;
-        g->item_menu_msg_ttl = 45;
-        g->item_menu_mode = MODE_LIST;
-        return;
-    }
-    if (!deck_collection_remove(cs, id, 1)) return;
-    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)def->price);
-    telemetry_emit(EVENT_CARD_SOLD, id, def->price,
-                   (uint8_t)(owned - 1), 0);
-    /* Back to the list: it rebuilds its view every frame, so a fully
-     * sold-out entry simply disappears and the OWN digit drops -- the
-     * CARD_SOLD event is the authoritative feedback for tests. */
-    g->item_menu_mode = MODE_LIST;
-}
-
 static void cycle_filter(Game *g)
 {
     if (g->item_menu_filter == FILTER_ALL)
@@ -159,17 +116,18 @@ static void switch_tab(Game *g)
     g->render_cache.valid = false;
 }
 
-/* Targeted cursor move (AGENTS.md 36).  The bank-2 body (screen_content.c)
- * computes the caret rows, repaints the two cells via sc_put_char (mirrored
- * into g_ui_screen_buf) and, when the visible window must shift, moves the
- * scroll and flags g->render_cache.valid=false so render takes the rare
- * full-redraw path.  A pure caret move never touches the render cache, so
- * the big item_screen_render stays at its baseline shape (AGENTS.md 52.19).
- * No staging bytes beyond the old/new indices; the body writes game state
- * directly through the staged Game* (WRAM is always mapped). */
+/* Targeted cursor move (AGENTS.md 36).  The bank-11 body
+ * (menu_cursor_banked.c) computes the caret rows, repaints the two cells
+ * (mirrored into g_ui_screen_buf) and, when the visible window must
+ * shift, moves the scroll and flags g->render_cache.valid=false so render
+ * takes the rare full-redraw path.  A pure caret move never touches the
+ * render cache, so the big item_screen_render stays at its baseline shape
+ * (AGENTS.md 52.19).  No staging bytes beyond the old/new indices; the
+ * body writes game state directly through the staged Game* (WRAM is
+ * always mapped). */
 static void item_menu_step(Game *g, uint8_t new_index)
 {
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&item_menu_cursor_banked;
     g_bk_ptr_a = (void *)g;
     g_bk_byte_a = g->item_menu_index;
@@ -267,12 +225,11 @@ void item_screen_update(Game *g)
 
     /* ── DECK tab ─────────────────────────────────────────────── */
     switch (g->item_menu_mode) {
+        /* Selling lives in the shop's SELL tab now (docs/loot.md
+         * §34.6), not here: A backs out to the list like SELECT. */
         case MODE_CARD_DETAIL:
-            if (input_pressed(INPUT_SELECT)) {
+            if (input_pressed(INPUT_SELECT) || input_pressed(INPUT_A)) {
                 g->item_menu_mode = MODE_LIST;
-                g->render_cache.valid = false;
-            } else if (input_pressed(INPUT_A)) {
-                card_detail_sell(g);
                 g->render_cache.valid = false;
             }
             return;
@@ -332,11 +289,16 @@ void item_screen_update(Game *g)
                 return;
             id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
             /* Count-up-then-clear: A adds one copy; once the card is fully
-             * decked (add rejected for per-card reasons, not a full deck),
-             * A clears every decked copy of it — but only if the remaining
-             * deck would still hold DECK_MIN_CARDS cards (all-or-nothing).
-             * Loot above the pool is locked (docs/enemies_ranking.md
-             * §4.8): NEED AP n names the reason instead of a dead slot. */
+             * decked, A clears every decked copy of it — but only if the
+             * remaining deck would still hold DECK_MIN_CARDS cards
+             * (all-or-nothing).  The verdict answers fully-decked rows
+             * (EQUIP_CLEAR / EQUIP_MIN) BEFORE the gate on purpose:
+             * clearing can only shrink the deck, so it can never create
+             * the unplayable state the gate (docs/enemies_ranking.md
+             * §4.8) guards against, and a maxed row keeps its MIN-floor
+             * messaging even when its cost is above the pool.  Only
+             * adding is gated: NEED AP n names the reason instead of a
+             * dead slot. */
             if (card_get_def(id)->type == CARD_TYPE_SPECIAL) {
                 g->item_menu_message = MSG_QUEST_ITEM;
                 g->item_menu_msg_ttl = 45;
@@ -363,35 +325,26 @@ void item_screen_update(Game *g)
             } else if (equip == EQUIP_LOCKED) {
                 g->item_menu_message = MSG_NEED_AP;
                 g->item_menu_msg_ttl = 45;
-            } else if (equip == EQUIP_FULL ||
-                       cs->deck.count >= MAX_DECK_CARDS) {
+            } else if (equip == EQUIP_FULL) {
                 g->item_menu_message = MSG_DECK_FULL;
                 g->item_menu_msg_ttl = 45;
+            } else if (equip == EQUIP_MIN) {
+                g->item_menu_message = MSG_DECK_MIN;
+                g->item_menu_msg_ttl = 45;
+            } else if (equip == EQUIP_CLEAR) {
+                while (deck_remove_card(cs, id))
+                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                   id, 0, 0, 0);
             } else {
-                /* Refused for a per-card reason (not a full deck): count
-                 * up only when the ROW still has room -- a capped twin
+                /* Refused for a per-card reason (not a full deck) on a
+                 * row that still has room -- a capped twin
                  * (docs/loot.md §34) can leave this row under-decked
                  * while the identity is saturated, and adding must refuse
-                 * without destroying what is already decked.  A fully
-                 * decked row clears (guarded by the MIN floor); anything
-                 * else names the cap instead of flashing a bogus MIN or
-                 * silently clearing nothing. */
-                uint8_t row_decked = deck_count_in_deck(&cs->deck, id);
-                uint8_t row_owned = deck_collection_count(cs, id);
-                if (row_decked >= row_owned && row_owned > 0) {
-                    if ((uint8_t)(cs->deck.count -
-                                  row_decked) < DECK_MIN_CARDS) {
-                        g->item_menu_message = MSG_DECK_MIN;
-                        g->item_menu_msg_ttl = 45;
-                    } else {
-                        while (deck_remove_card(cs, id))
-                            telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
-                                           id, 0, 0, 0);
-                    }
-                } else {
-                    g->item_menu_message = MSG_DECK_CAPPED;
-                    g->item_menu_msg_ttl = 45;
-                }
+                 * without destroying what is already decked.  Names the
+                 * cap instead of flashing a bogus MIN or silently
+                 * clearing nothing. */
+                g->item_menu_message = MSG_DECK_CAPPED;
+                g->item_menu_msg_ttl = 45;
             }
         }
         g->render_cache.valid = false;

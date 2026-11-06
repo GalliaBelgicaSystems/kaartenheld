@@ -38,6 +38,18 @@ RIDER_PAIRS = [("burn", "sword"), ("freeze", "sword"), ("poison", "dagger")]
 FAILURES = []
 
 
+def _game_card_count():
+    """GAME_CARD_COUNT from src/game/game_ids.h (single source of truth
+    for the curated catalog size)."""
+    m = re.search(r"#define\s+GAME_CARD_COUNT\s+(\d+)",
+                  (REPO / "src" / "game" / "game_ids.h").read_text(
+                      encoding="utf-8"))
+    if not m:
+        fail("identity: GAME_CARD_COUNT not found in game_ids.h")
+        return 0
+    return int(m.group(1))
+
+
 def fail(msg):
     FAILURES.append(msg)
 
@@ -128,11 +140,12 @@ def parse_doc_tables():
         rider = 0 if rider_txt.strip() in ("—", "-", "") else 1
         catalog[row] = ((int(power), MATERIALS.index(mat_name), rider),
                         int(expected))
-    # AMULET row has no power/material triple ("SPECIAL, not playable")
-    m = re.search(r"\|\s*Amulet\s*\|\s*`AMULET`\s*\|[^|]*\|\s*\*\*(\d+)\*\*",
-                  sec43)
-    if m:
-        catalog["AMULET"] = (None, int(m.group(1)))
+    # SPECIAL rows (quest items: AMULET, BONE, OLD KEY) carry no
+    # power/material triple ("SPECIAL, not playable").
+    for m in re.finditer(
+            r"\|\s*[^|]+\|\s*`([A-Z ]+)`\s*\|\s*SPECIAL, not playable\s*\|\s*\*\*(\d+)\*\*",
+            sec43):
+        catalog[m.group(1).strip()] = (None, int(m.group(2)))
     return cells, catalog
 
 
@@ -266,10 +279,11 @@ def check_identity():
     else:
         got = [tuple(int(x) for x in row.split(","))
                for row in re.findall(r"\{([0-9,\s]+)\}", m.group(1))]
-    if len(want) != 9:
-        fail("identity: parsed %d catalog rows, expected 9" % len(want))
-    if len(got) != 9:
-        fail("identity: parsed %d merge rows, expected 9" % len(got))
+    want_n = _game_card_count()
+    if len(want) != want_n:
+        fail("identity: parsed %d catalog rows, expected %d" % (len(want), want_n))
+    if len(got) != want_n:
+        fail("identity: parsed %d merge rows, expected %d" % (len(got), want_n))
     for k in range(min(len(want), len(got))):
         name, w = want[k]
         g = got[k]
@@ -376,13 +390,16 @@ def main():
     if set(doc_catalog.keys()) != set(cat_calls.keys()):
         fail("catalog keys diverge from §4.3: doc=%s catalog=%s"
              % (sorted(doc_catalog.keys()), sorted(cat_calls.keys())))
-    if len(doc_catalog) != 9:
-        fail("parsed %d §4.3 catalog rows from the doc, expected 9"
-             % len(doc_catalog))
+    if len(doc_catalog) != _game_card_count():
+        fail("parsed %d §4.3 catalog rows from the doc, expected %d"
+             % (len(doc_catalog), _game_card_count()))
     for row, (args, expected) in doc_catalog.items():
-        if row == "AMULET":
+        if args is None:
+            # SPECIAL quest rows (AMULET, BONE, OLD KEY): no CARD_AP
+            # call, cost must stay literal 0 (not playable).
             if cat_calls.get(row, (None, None))[1] != 0 or expected != 0:
-                fail("catalog: AMULET cost must stay literal 0 (not playable)")
+                fail("catalog: %s cost must stay literal 0 (not playable)"
+                     % row)
             continue
         if row not in cat_calls or cat_calls[row][0] is None:
             fail("catalog: row %s has no CARD_AP(...) call" % row)

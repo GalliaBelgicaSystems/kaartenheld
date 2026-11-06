@@ -158,8 +158,9 @@ AP COST             1   <- numbers right-aligned to col 18
 POWER               3
 USES              INF   <- per-battle uses (INF = unlimited)
 OWN     1 DECK        0
-SELL               5G   <- merchant sell value (-- when not buyable)
-SEL:BACK                <- A:SELL SEL:BACK at a buying merchant
+VALUE              5G   <- shop value reminder (-- when unsellable;
+                         selling itself lives in the shop SELL tab)
+SEL:BACK
 ```
 
 QUEST (example: MONSTER HUNT):

@@ -251,7 +251,8 @@ void ow_oam_restore_banked(void)
  *   holding the amulet (delivery ready).  Heal Mage: owns the Iron
  *   Ring and hasn't heard the ring-tactics lesson yet.  Carl: always,
  *   until the
- *   tutorial spar is won (talking early just points at the chest).
+ *   tutorial spar is won.  Village dog: until it hands over the
+ *   Old Key for the skeleton's bone.
  *   Hidden while its quest is in progress and once its reward is
  *   claimed.  The mimic
  *   grants AP but is a hostile, never a quest NPC: no mark by design.
@@ -274,17 +275,22 @@ static void marks_refresh(void)
     uint8_t has_ring;
     uint8_t lesson_shown;
     uint8_t carl_done;
+    uint8_t village_dog_traded;
 
     g_bk_byte_c = 0;
     g_bk_byte_d = 0;
     /* Mark glyphs (!/? at 126-127) stream on the first tick of any screen
-     * (free ids everywhere).  Pips + riders stream only on battle/item
-     * ticks: in the overworld those ids hold hero idle/walk + blob-tail
-     * art.  Same-tick guarantee as before (this runs in game_update
-     * before the render), so the first battle/item frame already draws
-     * resident art. */
+     * (free ids everywhere).  Pips + riders stream only on
+     * battle/item/shop ticks: in the overworld those ids hold hero
+     * idle/walk + blob-tail art, so a shop row painted a rider OAM id
+     * without this shows blob art (e.g. a guard sprite for poison).
+     * Same-tick guarantee as before (this runs in game_update
+     * before the render), so the first battle/item/shop frame already
+     * draws resident art.  Shop exit needs no restore: overworld entry
+     * restreams the blob side (ui_restore_ow_oam). */
     marks_load_mark_tiles();
-    if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM) {
+    if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM ||
+        g_game.screen == SCREEN_SHOP) {
         marks_load_battle_tiles();
     }
 
@@ -397,6 +403,8 @@ static void marks_refresh(void)
         has_ring = marks_has_ring(&g_game.state);
     }
     carl_done = marks_carl_defeated(&g_game.state);
+    village_dog_traded =
+        marks_flag_is_set(&g_game.state, STORY_FLAG_ID_DOG_KEY);
 
     /* Hostiles: pursuer "!" over the chasers that spotted the hero, once
      * the alert sting has fired (ttl at or below the sting edge) until
@@ -424,9 +432,15 @@ static void marks_refresh(void)
                 }
             } else if (d->id == ENTITY_ID_CARL) {
                 /* Tutorial lesson available until the spar is won:
-                 * always shown, even before the field chest is opened
-                 * (talking early just points at the chest). */
+                 * always shown (the key-locked field chest no longer
+                 * gates it). */
                 if (!carl_done) {
+                    m = ACTOR_MARK_QUEST;
+                }
+            } else if (d->id == ENTITY_ID_VILLAGE_DOG) {
+                /* Key trade open until the dog hands over the Old
+                 * Key: the "?" that teaches the bone swap. */
+                if (!village_dog_traded) {
                     m = ACTOR_MARK_QUEST;
                 }
             } else if (d->id == ENTITY_ID_MERCHANT) {

@@ -382,6 +382,17 @@ def main():
     clean_frames = 0
     for _i in range(1, len(samples)):
         if _i not in off and (_i - 1) not in off:
+            # Same torn-read guard as the total above: a small backward
+            # dip (<= 32768, i.e. not a real uint16 wrap) is a host read
+            # that caught the lo byte wrapped with a stale hi byte, not
+            # counter motion -- the % 65536 would otherwise book it as a
+            # +65k phantom.  (Seen deterministically once the snapshot
+            # grew +16 bytes and shifted the ISR/read interleaving: a
+            # -242 dip booked +65294.)  Skipping the pair (not patching
+            # the value) keeps wrong-rate clocks failing: 2x/0.5x errors
+            # are 50-100% deviations, far above the 7% band.
+            if 0 < samples[_i - 1][2] - samples[_i][2] <= 32768:
+                continue
             clean_total += (samples[_i][2] - samples[_i - 1][2]) % 65536
             clean_frames += 1
     clean_expected = clean_frames * (256 / 59.7275)

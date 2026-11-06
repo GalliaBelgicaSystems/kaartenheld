@@ -1,0 +1,91 @@
+{
+ "name": "skeleton_take_bone",
+ "test": true,
+ "description": "After hearing the village dog's hint, bumping the skeleton offers 'Take a bone from the skeleton?': answering YES (default cursor) grants one BONE, sets BONE_TAKEN, and opens the taken follow-up. The DOG'S KEY quest stays ACTIVE (taking the bone is progress, the key trade completes it)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "SKELETON"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 0,
+   "value": "SKELETON_ASK"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 1,
+   "value": 0
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "SKELETON_ASK"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "SKELETON_TAKEN"
+  },
+  {
+   "type": "inventory",
+   "item": "BONE",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "BONE_TAKEN",
+   "expected": true
+  },
+  {
+   "type": "variable",
+   "variable": "DOG_QUEST",
+   "expected": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 12,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true
+  },
+  "variables": {
+   "DOG_QUEST": 1
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "name": "shop_full_names",
+ "test": true,
+ "description": "Shop rows show the whole card name (docs/loot.md 34.1 name format, same as the CARDS list): the merchant's stock paints IRON RING / MYTHRIL BOW / STEEL SHIELD in full instead of 3-letter codes.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "IRON RING"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "MYTHRIL BOW"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "STEEL SHIELD"
+  }
+ ]
+}

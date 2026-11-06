@@ -257,18 +257,27 @@ static void debug_run_action(void)
             /* Real gated mechanic (docs/enemies_ranking.md §4.8): the same
              * deck_equip_card wrapper the quick screen uses, with the live
              * pool -- so scenarios drive the real gate (AGENTS.md §44).
-             * CARD_EQUIP_LOCKED fires inside the wrapper on a locked loot
-             * card; CARD_ADDED_TO_DECK fires here on success only. */
+             * CARD_EQUIP_LOCKED fires inside the wrapper on a card above
+             * the pool; CARD_ADDED_TO_DECK fires here on success only.
+             * EQUIP_CLEAR mirrors the UI's count-up-then-clear (removal
+             * loop + per-copy events); EQUIP_MIN is a silent refusal like
+             * the UI's DECK MIN message. */
 #ifdef DEBUG_BUILD
             {
                 uint8_t deck_pool = 1;
+                uint8_t deck_r;
                 int16_t deck_pv =
                     g_game.state.variables.values[
                         VARIABLE_ID_ENERGY_POOL - 1];
                 if (deck_pv > 1) deck_pool = (uint8_t)(deck_pv > 255 ? 255 : deck_pv);
-                if (deck_equip_card(&g_game.state.cards, (CardId)a0,
-                                    deck_pool) == EQUIP_OK) {
+                deck_r = deck_equip_card(&g_game.state.cards, (CardId)a0,
+                                         deck_pool);
+                if (deck_r == EQUIP_OK) {
                     telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
+                } else if (deck_r == EQUIP_CLEAR) {
+                    while (deck_remove_card(&g_game.state.cards, (CardId)a0))
+                        telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                       a0, 0, 0, 0);
                 }
             }
 #else

@@ -38,6 +38,6 @@ typedef struct {
                                  * "SHOP OPENED") */
 } QuestDefinition;
 
-#define GAME_QUEST_COUNT 2
+#define GAME_QUEST_COUNT 3
 
 #endif /* QUEST_H */

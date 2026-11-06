@@ -1,7 +1,7 @@
 {
  "name": "merchant_sell_loot",
  "test": true,
- "description": "Sell loot at the card merchant (docs/loot.md 24/34.6): engage the Merchant, then the loot card's CARDS-tab detail page offers SELL at its centralized value. Selling one WOOD PLAIN DAGGER (id 99, 0x63) pays its formula value (power 1 + wood tier 0 = 1 gold), emits CARD_SOLD(99,1,0) and removes the copy",
+ "description": "Sell loot at the card merchant (docs/loot.md 34.6): engage the Merchant, flip RIGHT to the SELL tab, and A on the loot row. Selling one WOOD PLAIN DAGGER (id 99, 0x63) pays its formula value (power 1 + wood tier 0 = 1 gold), emits CARD_SOLD(99,1,0) and removes the copy (the SELL list is empty afterwards).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -40,55 +40,7 @@
   },
   {
    "type": "press",
-   "button": "B"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "START"
-  },
-  {
-   "type": "wait",
-   "frames": 10
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
@@ -106,7 +58,12 @@
  "assertions": [
   {
    "type": "screen",
-   "expected": "ITEM"
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "(nothing to sell)"
   },
   {
    "type": "event_occurred",

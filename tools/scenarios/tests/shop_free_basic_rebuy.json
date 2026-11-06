@@ -1,0 +1,161 @@
+{
+ "name": "shop_free_basic_rebuy",
+ "test": true,
+ "description": "Starter basics are always rebuyable for free, capped by max_copies: with 0 gold the third BRONZE fire SWORD (cap 3, starter owns 2) buys at price 0 (CARD_PURCHASED(67,0)), while the saturated WOOD SWORD row (cap 4, owns 4) refuses with Too many! + CARD_PURCHASE_FAILED and gold stays 0.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "BRONZE SWORD"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "FREE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PURCHASED",
+   "index": 0,
+   "value": 67
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PURCHASED",
+   "index": 1,
+   "value": 0
+  },
+  {
+   "type": "inventory",
+   "item": "FIRE_SWORD",
+   "expected": 3
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_SWORD",
+   "expected": 4
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "Too many!"
+  },
+  {
+   "type": "currency",
+   "expected": 0,
+   "currency": "GOLD"
+  }
+ ]
+}

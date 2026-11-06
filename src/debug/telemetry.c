@@ -9,7 +9,7 @@ GameEvent g_telemetry_buffer[MAX_TELEMETRY_EVENTS];
 uint8_t g_telemetry_count;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_telemetry_head;  /* BSS zero (AGENTS.md 52.27) */
 /* Event-arg staging + sequence state for the banked append body
- * (telemetry_emit_banked.c, ROM bank 2): WRAM, always mapped, BSS zero
+ * (telemetry_emit_banked.c, ROM bank 11): WRAM, always mapped, BSS zero
  * (AGENTS.md 52.27).  Names are part of NO host contract (the host reads
  * only the ring + count + head); the GameEvent layout is unchanged. */
 uint8_t g_telemetry_emit_args[5];
@@ -35,7 +35,7 @@ void telemetry_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3
     g_telemetry_emit_args[2] = d1;
     g_telemetry_emit_args[3] = d2;
     g_telemetry_emit_args[4] = d3;
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&telemetry_emit_banked;
     banked_call_run();
 }
@@ -50,9 +50,9 @@ void telemetry_set_frame_ptr(const uint32_t *frame_ptr)
 #ifdef DEBUG_BUILD
 void debug_snapshot(void)
 {
-    /* Body runs banked (src/debug/snapshot_banked.c, ROM bank 2) through
+    /* Body runs banked (src/debug/snapshot_banked.c, ROM bank 11) through
      * the WRAM trampoline; no staging args are needed. */
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&debug_snapshot_banked;
     banked_call_run();
 }
@@ -60,10 +60,10 @@ void debug_snapshot(void)
 void debug_state_snapshot(void)
 {
     /* The ~460-byte builder runs banked (src/debug/telemetry_snap.c, ROM
-     * bank 2) through the WRAM banked-call trampoline so it does not consume
+     * bank 11) through the WRAM banked-call trampoline so it does not consume
      * the fixed-bank _CODE budget.  It reads g_game / g_state_snap_buf
      * directly, so no staging args are needed. */
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&debug_state_snapshot_banked;
     banked_call_run();
 }

@@ -1847,11 +1847,15 @@ The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
 the amulet completes the quest (+15g, amulet removed) and opens the
 shop; finding it is what makes the delivery (and the shop) available:
 
-* BUY: one-copy stock -- the curated IRON RING (**RG4**, 20g), the
+* BUY: the merchant stocks the curated IRON RING (**RG4**, 20g), the
   mythril bow (**BO9**, 30g), and the steel shield (**SH6**, 12g, the
-  merchant-stocked answer to the Lord's flat-6 swing), one of each.  A row
-  shows only while the player owns no copy; buying all three empties the
-  shop into `(out of stock)`.  Ownership counts the card identity, not the
+  merchant-stocked answer to the Lord's flat-6 swing), one of each --
+  plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE fire SWORD)
+  at **FREE** (price 0, always affordable; capped by max_copies at buy
+  time so the starter set can be rebought but never stockpiled).  One-copy
+  rows hide once owned and reappear if the last copy is sold; free basics
+  always list, so the shop never empties into `(out of stock)` while
+  basics exist.  Ownership counts the card identity, not the
   row id: a loot twin already owned merges under the capped curated id,
   so the one-copy row hides and rebuys refuse instead of stacking past
   the cap.  A capped fold keeps a remainder row: the curated row holds the
@@ -1867,11 +1871,18 @@ shop; finding it is what makes the delivery (and the shop) available:
   from loot as derived ids (knights live in iron/steel; the catalog
   `CARD_IRON_SWORD` is test-only and never drops), and daggers come
   from the field cache and loot.
-* TRADE/SELL (implemented): pick an owned loot card in the DECK tab ->
-  its detail page shows `[A]SELL` while the player has engaged a buying
-  shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one
-  copy for its synthesized `price` (§16 formula) and emits CARD_SOLD.
-  A fully decked card cannot be sold (ownership must stay backed).
+* TRADE/SELL (implemented): the shop has BUY and SELL tabs (row 4
+  header, `LEFT`/`RIGHT` flips).  The SELL tab lists every owned card
+  with a sell value at a buying merchant (`ShopDefinition.buys`,
+  cleared on scene change) -- A sells one copy and emits CARD_SOLD.
+  Loot sells at its full formula value (§16: power + material tier*2,
+  +2 poison dagger); curated cards sell BELOW their buy value on a
+  rarity-scaled cut (price x (5-tier)/6, min 1: ring 20 -> 10, bow
+  30 -> 5, shield 12 -> 4), so selling never prints money.  SPECIAL
+  quest items and price-0 basics never list (selling a free card would
+  print money: buy 0, sell 1, rebuy 0, repeat).  A fully decked card
+  cannot be sold (ownership must stay backed).  The DECK-tab detail
+  page shows only a `VALUE` reminder of what the merchant would pay.
 
 Wood gear needs no purchase: the hero starts with a wood sword and wood
 shield plus two bronze fire swords (the starter rider exception).
@@ -1882,7 +1893,7 @@ shield plus two bronze fire swords (the starter rider exception).
   one-ring gate -- battle Cards carry a `ring` flag set at deck init from
   the derived id); net-damage defense; rank-centered generation roll +
   profiles (rank decides, AP only unlocks equipping); wood/bronze starter;
-  merchant buy stock (ring/bow/steel shield); sell via CARDS-tab
-  detail page (§34.6).
+  merchant buy stock (ring/bow/steel shield + free basics); sell via the
+  shop SELL tab with rarity-cut curated pricing (§34.6).
 * FOLLOW-UP increments: affix catalogue growth; fire/ice statuses
   (DONE, see §34.1); HEAL ALL.

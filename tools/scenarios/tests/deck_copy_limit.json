@@ -142,6 +142,9 @@
    "y": 4,
    "facing": "DOWN"
   },
-  "seed": 7003
+  "seed": 7003,
+  "variables": {
+   "ENERGY_POOL": 5
+  }
  }
 }

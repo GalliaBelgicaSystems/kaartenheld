@@ -297,7 +297,7 @@ def main():
         "_debug_action_leaf_banked": "debug-action leaf cases (bank 5)",
         "_scenario_load_apply_banked": "scenario descriptor apply (bank 5)",
         "_terrain_stamp_b6_banked": "overflow terrain stamp (bank 6)",
-        "_terrain_stamp_b7_banked": "overflow terrain stamp (bank 7)",
+        "_terrain_stamp_b11_banked": "overflow terrain stamp (bank 11)",
         "_terrain_stamp_b9_banked": "overflow terrain stamp (bank 9)",
     }
     for sym, desc in optional_banked_targets.items():

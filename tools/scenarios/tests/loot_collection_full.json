@@ -1,7 +1,7 @@
 {
  "name": "loot_collection_full",
  "test": true,
- "description": "Loot drop when collection is full (docs/loot.md 34.5, AGENTS.md 52.16): when the 12-slot card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show 'YOU FOUND:'. The filler set is eight legal, distinct plain combos (iron sword/shield 160/161, wood bow/ring 98/100, bronze sword/shield/bow/dagger 128-131) plus the mythril bow, deliberately excluding seed 5002's id 99 so the drop must ask for a new slot -- and excluding every loot twin of the starter rows (96/97 fold into the starter sword/shield, so iron takes their place) so the fold cannot free a slot. Illegal combos (e.g. wood+rider id 104) are covered separately by loot_rider_strip.",
+ "description": "Loot drop when collection is full (docs/loot.md 34.5): when the 50-row card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show YOU FOUND. The filler builds all 50 rows: every plain loot cell except the starter twins and the drop, the legal rider rows, the reserved-weapon hybrids, quest specials, the curated poison dagger, plus twin rows surviving only as capped-fold remainders (96/97) -- excluding seed 5002 drop id 99 so the drop needs a new slot.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -65,6 +65,201 @@
   {
    "type": "collection_add",
    "card_id": 70,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 162,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 163,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 193,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 194,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 195,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 196,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 224,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 225,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 226,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 227,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 228,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 176,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 208,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 240,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 152,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 184,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 216,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 248,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 172,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 133,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 165,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 197,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 229,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 69,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 73,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 68,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 74,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 171,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 203,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 235,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 106,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 180,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 188,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 96,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 97,
    "quantity": 1
   },
   {

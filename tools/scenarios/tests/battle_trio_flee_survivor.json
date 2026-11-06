@@ -1,0 +1,90 @@
+{
+ "name": "battle_trio_flee_survivor",
+ "test": true,
+ "description": "Killing the slot-0 member of a Mountain Pass slime trio, then fleeing, writes the toughest survivor's HP back to the world actor (10), and re-engaging opens on three live slimes (slot 0 at 10 HP). Before the fix the fled actor kept enemies[0].hp = 0, so the next bump opened on three corpses and one attack won the fight.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 240
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 45
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 0
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 90
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "start_battle"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "enemy_hp",
+   "expected": 10
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 10
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "seed": 5002
+ }
+}

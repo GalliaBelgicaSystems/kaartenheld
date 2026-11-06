@@ -21,7 +21,7 @@ extern const SceneDefinition g_scenes[];
  * emitted by compile.py from OVERFLOW_TERRAIN_BANK). Keep the bank list
  * in sync with that map. */
 extern void terrain_stamp_b6_banked(void);
-extern void terrain_stamp_b7_banked(void);
+extern void terrain_stamp_b11_banked(void);
 extern void terrain_stamp_b9_banked(void);
 #endif
 
@@ -89,8 +89,8 @@ void scene_load_tiles(World *w, MapId map_id)
             if (d->terrain_bank == 6) {
                 g_bk_call_target = (uint16_t)&terrain_stamp_b6_banked;
                 banked_call_run();
-            } else if (d->terrain_bank == 7) {
-                g_bk_call_target = (uint16_t)&terrain_stamp_b7_banked;
+            } else if (d->terrain_bank == 11) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b11_banked;
                 banked_call_run();
             } else if (d->terrain_bank == 9) {
                 g_bk_call_target = (uint16_t)&terrain_stamp_b9_banked;

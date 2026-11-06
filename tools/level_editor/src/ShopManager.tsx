@@ -8,7 +8,7 @@ import {
 /** Shop editor: each `screens/shops/<id>.json` is a stock list referenced
  *  by an NPC's `shop` property.  Items are CARD_* symbols; prices come
  *  from the card catalogue and are never stored here.  `buys=1` marks a
- *  card merchant (the quick screen's CARDS detail then offers SELL).
+ *  card merchant (the shop then offers a SELL tab).
  *
  *  The numeric shop id is the filename stem (append-only, like scene ids);
  *  deleting a shop removes the file and any NPC still pointing at it will
@@ -138,7 +138,7 @@ export const ShopManager: React.FC = () => {
                 checked={draft.buys === 1}
                 onChange={(e) => patch({ buys: e.target.checked ? 1 : 0 })}
               />{' '}
-              Card merchant (enables SELL on the CARDS detail page)
+              Card merchant (enables the shop SELL tab)
             </label>
           </div>
 

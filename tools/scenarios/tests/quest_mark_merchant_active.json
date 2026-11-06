@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_merchant_active",
  "test": true,
- "description": "No quest marker over the merchant while LOST AMULET is ACTIVE but the amulet is not held (mid-quest reminder): entry 30 stays cleared (tile 0).",
+ "description": "No quest marker on the merchant while LOST AMULET is ACTIVE but the amulet is not held (mid-quest reminder). No marker on the merchant while ACTIVE without the amulet; entry 30 is the village dog's ? (DOG_KEY unset), entry 31 stays cleared.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -29,6 +29,11 @@
   {
    "type": "oam_tile",
    "entry": 30,
+   "expected": 127
+  },
+  {
+   "type": "oam_tile",
+   "entry": 31,
    "expected": 0
   }
  ]

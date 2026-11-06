@@ -1,7 +1,7 @@
 {
  "name": "underground_boot",
  "test": true,
- "description": "Boot directly into the overworld on the Underground scene (new tileset wiring proof)",
+ "description": "Boot directly into the overworld on the Underground scene (new tileset wiring proof). Pins the skeleton floor art: the bone tile (value 254) must render VRAM slot 30 (tile id 158), not the slot-0 corner wall the generic '.' fallback painted before the s_ug_slot range covered it.",
  "actions": [],
  "assertions": [
   {
@@ -24,6 +24,12 @@
   {
    "type": "music_track",
    "expected": "UNDERGROUND"
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 12,
+   "row": 10,
+   "expected": 158
   }
  ],
  "initial_state": {

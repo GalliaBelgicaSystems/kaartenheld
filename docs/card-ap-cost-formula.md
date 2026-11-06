@@ -252,6 +252,8 @@ comparison.
 | Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
 | Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
 | Amulet | `AMULET` | SPECIAL, not playable | **0** | 0 |
+| Bone | `BONE` | SPECIAL, not playable | **0** | 0 |
+| Old Key | `OLD KEY` | SPECIAL, not playable | **0** | 0 |
 
 Every curated row happens to be band-built, which is why the formula
 reproduces all of them without a single exception to the band rule.

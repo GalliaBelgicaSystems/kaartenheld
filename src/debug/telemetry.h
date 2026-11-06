@@ -30,62 +30,66 @@
 
 #define SNAPSHOT_TOTAL_SIZE     (SNAPSHOT_BATTLE_DISCARD_OFF + 1)
 
-/* Extended RPG state snapshot (g_state_snap_buf) layout (version 0x06):
- *   byte  0            : version/validity (0x06)
+/* Extended RPG state snapshot (g_state_snap_buf) layout (version 0x08):
+ *   byte  0            : version/validity (0x08)
  *   bytes 1..8         : FlagState.bytes[0..7]
- *   bytes 9..24        : variables as int16 LE
- *   byte  25           : currency count
- *   bytes 26..37       : up to 4 currency x {id, amt_lo, amt_hi}
- *   byte  38           : party count
- *   bytes 39..50       : up to 4 party members x {id, hp, max_hp}
- *   byte  51           : inventory count
- *   bytes 52..83       : up to 16 inventory entries x {item_id, quantity}
- *   byte  84           : world (persistent actor) count
- *   bytes 85..132      : up to 16 world entries x {actor_id_lo, actor_id_hi, state}
- *   byte  133          : progression count
- *   bytes 134..181     : up to 8 progression x {type, id_lo, id_hi, level, prog_lo, prog_hi}
- *   byte  182          : equipment weapon
- *   byte  183          : overworld camera scroll_x (tiles)
- *   byte  184          : overworld camera scroll_y (tiles)
- *   byte  185          : world width (scene tile columns)
- *   byte  186          : world height (scene tile rows)
- *   byte  187          : overworld camera pixel x (camera_px_x)
- *   byte  188          : overworld camera pixel y (camera_px_y)
- *   byte  189          : battle-deck card count
- *   bytes 190..209     : up to 20 deck entries x {card_id}
+ *   bytes 9..40        : variables as int16 LE (all MAX_STATE_VARIABLES;
+ *                        grew 9..24 -> 9..40 for the 9th variable, Nov 2026:
+ *                        the builder always copied 16 vars while the layout
+ *                        only reserved 8, so vars 9+ aliased the currency
+ *                        section and read back currency bytes)
+ *   byte  41           : currency count
+ *   bytes 42..53       : up to 4 currency x {id, amt_lo, amt_hi}
+ *   byte  54           : party count
+ *   bytes 55..66       : up to 4 party members x {id, hp, max_hp}
+ *   byte  67           : inventory count
+ *   bytes 68..167      : up to 50 inventory entries x {item_id, quantity}
+ *   byte  168          : world (persistent actor) count
+ *   bytes 169..216     : up to 16 world entries x {actor_id_lo, actor_id_hi, state}
+ *   byte  217          : progression count
+ *   bytes 218..265     : up to 8 progression x {type, id_lo, id_hi, level, prog_lo, prog_hi}
+ *   byte  266          : equipment weapon
+ *   byte  267          : overworld camera scroll_x (tiles)
+ *   byte  268          : overworld camera scroll_y (tiles)
+ *   byte  269          : world width (scene tile columns)
+ *   byte  270          : world height (scene tile rows)
+ *   byte  271          : overworld camera pixel x (camera_px_x)
+ *   byte  272          : overworld camera pixel y (camera_px_y)
+ *   byte  273          : battle-deck card count
+ *   bytes 274..293     : up to 20 deck entries x {card_id}
  */
-#define STATE_SNAP_VERSION_BYTE    0x06
+#define STATE_SNAP_VERSION_BYTE    0x08
 #define STATE_SNAP_FLAGS_OFFSET    1
 #define STATE_SNAP_FLAGS_SIZE      8
 #define STATE_SNAP_VARIABLES_OFFSET  9
-#define STATE_SNAP_VARIABLES_SIZE    16
-#define STATE_SNAP_CURRENCY_COUNT_OFF 25
-#define STATE_SNAP_CURRENCY_ENTRY_OFF 26
+#define STATE_SNAP_VARIABLES_SIZE    32
+#define STATE_SNAP_CURRENCY_COUNT_OFF 41
+#define STATE_SNAP_CURRENCY_ENTRY_OFF 42
 #define STATE_SNAP_CURRENCY_ENTRY_SIZE 3
-#define STATE_SNAP_PARTY_OFFSET      38
+#define STATE_SNAP_PARTY_OFFSET      54
 #define STATE_SNAP_PARTY_ENTRY_SIZE  3
-#define STATE_SNAP_INVENTORY_OFFSET  51
+#define STATE_SNAP_INVENTORY_OFFSET  67
 #define STATE_SNAP_INVENTORY_ENTRY_SIZE 2
-#define STATE_SNAP_WORLD_OFFSET      84
+#define STATE_SNAP_WORLD_OFFSET      168
 #define STATE_SNAP_WORLD_ENTRY_SIZE  3
-#define STATE_SNAP_PROGRESSION_COUNT_OFF 133
-#define STATE_SNAP_PROGRESSION_ENTRY_OFF 134
+#define STATE_SNAP_PROGRESSION_COUNT_OFF 217
+#define STATE_SNAP_PROGRESSION_ENTRY_OFF 218
 #define STATE_SNAP_PROGRESSION_ENTRY_SIZE 6
-#define STATE_SNAP_EQUIPMENT_OFF 182
-#define STATE_SNAP_SCROLL_X_OFF  183
-#define STATE_SNAP_SCROLL_Y_OFF  184
-#define STATE_SNAP_WORLD_WIDTH_OFF  185
-#define STATE_SNAP_WORLD_HEIGHT_OFF 186
-#define STATE_SNAP_CAMERA_PX_X_OFF  187
-#define STATE_SNAP_CAMERA_PX_Y_OFF  188
-#define STATE_SNAP_DECK_COUNT_OFF   189
-#define STATE_SNAP_TOTAL_SIZE        210
+#define STATE_SNAP_EQUIPMENT_OFF 266
+#define STATE_SNAP_SCROLL_X_OFF  267
+#define STATE_SNAP_SCROLL_Y_OFF  268
+#define STATE_SNAP_WORLD_WIDTH_OFF  269
+#define STATE_SNAP_WORLD_HEIGHT_OFF 270
+#define STATE_SNAP_CAMERA_PX_X_OFF  271
+#define STATE_SNAP_CAMERA_PX_Y_OFF  272
+#define STATE_SNAP_DECK_COUNT_OFF   273
+#define STATE_SNAP_TOTAL_SIZE        294
 
-/* Scenario initial-state descriptor (g_scen_state_buf) layout (version 0x02).
+/* Scenario initial-state descriptor (g_scen_state_buf) layout (version 0x05).
  * Written by the host STATE_LOAD command and applied by scenario_load_state().
  * Fixed offsets; variable-length sections carry a count and only the
  * listed entries are applied (unspecified sections keep their defaults). */
-#define STATE_LOAD_DESC_VERSION           0x04
+#define STATE_LOAD_DESC_VERSION           0x05
 #define STATE_LOAD_DESC_SCREEN_OFF        1
 #define STATE_LOAD_DESC_SCENE_OFF         2
 #define STATE_LOAD_DESC_PLAYER_X_OFF      3
@@ -106,27 +110,27 @@
 #define STATE_LOAD_DESC_INVENTORY_COUNT_OFF 93
 #define STATE_LOAD_DESC_INVENTORY_ENTRY_OFF 94
 #define STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE 2
-#define STATE_LOAD_DESC_WORLD_COUNT_OFF   126
-#define STATE_LOAD_DESC_WORLD_ENTRY_OFF   127
+#define STATE_LOAD_DESC_WORLD_COUNT_OFF   194
+#define STATE_LOAD_DESC_WORLD_ENTRY_OFF   195
 #define STATE_LOAD_DESC_WORLD_ENTRY_SIZE  3
-#define STATE_LOAD_DESC_PROGRESSION_COUNT_OFF 175
-#define STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF 176
+#define STATE_LOAD_DESC_PROGRESSION_COUNT_OFF 243
+#define STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF 244
 #define STATE_LOAD_DESC_PROGRESSION_ENTRY_SIZE 6
-#define STATE_LOAD_DESC_DIALOGUE_ID_OFF   224
-#define STATE_LOAD_DESC_START_BATTLE_OFF  225
-#define STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF 226
-#define STATE_LOAD_DESC_FONT_TEST_OFF     227
-#define STATE_LOAD_DESC_EQUIPMENT_OFF     228
-#define STATE_LOAD_DESC_DECK_PRESENT_OFF  229
-#define STATE_LOAD_DESC_DECK_COUNT_OFF    230
-#define STATE_LOAD_DESC_DECK_ENTRY_OFF    231
+#define STATE_LOAD_DESC_DIALOGUE_ID_OFF   292
+#define STATE_LOAD_DESC_START_BATTLE_OFF  293
+#define STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF 294
+#define STATE_LOAD_DESC_FONT_TEST_OFF     295
+#define STATE_LOAD_DESC_EQUIPMENT_OFF     296
+#define STATE_LOAD_DESC_DECK_PRESENT_OFF  297
+#define STATE_LOAD_DESC_DECK_COUNT_OFF    298
+#define STATE_LOAD_DESC_DECK_ENTRY_OFF    299
 /* Descriptor layout (version 0x04): byte 229 = deck-present flag (1 = the
  * following deck section replaces the starter deck, count may be 0 for an
  * intentionally empty deck); byte 230 = deck card count; bytes 231..250 =
  * up to 20 deck entries x {card_id}.
  * Byte 251 = initial status: frozen bitmask (bit 0 = player, 1..3 = enemies). */
-#define STATE_LOAD_DESC_STATUS_OFF        251
-#define STATE_LOAD_DESC_SIZE              252
+#define STATE_LOAD_DESC_STATUS_OFF        319
+#define STATE_LOAD_DESC_SIZE              320
 
 typedef enum {
     EVENT_PLAYER_MOVED,
@@ -264,15 +268,15 @@ void debug_snapshot(void);
 #define debug_snapshot() ((void)0)
 
 #endif /* DEBUG_BUILD */
-/* Bank-2 append body (src/debug/telemetry_emit_banked.c) dispatched by the
+/* Bank-11 append body (src/debug/telemetry_emit_banked.c) dispatched by the
  * telemetry_emit() wrapper. */
 void telemetry_emit_banked(void);
-/* Bank-2 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
+/* Bank-11 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
 void debug_snapshot_banked(void);
 void debug_state_snapshot(void);
 
 /* Banked no-arg body of debug_state_snapshot() (src/debug/telemetry_snap.c,
- * ROM bank 2), run via the WRAM banked-call trampoline.  Self-contained:
+ * ROM bank 11), run via the WRAM banked-call trampoline.  Self-contained:
  * reads g_game / g_state_snap_buf and its own static snap_copy. */
 void debug_state_snapshot_banked(void);
 

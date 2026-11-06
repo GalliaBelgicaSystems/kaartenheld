@@ -8,12 +8,12 @@
 
 /* ── Shop stock lists (game content, banked ROM) ──────────────────
  * Numeric id = JSON filename stem; an actor's `shop` property points
- * at one.  buys=1 marks a card merchant (SELECT toggles SELL mode,
+ * at one.  buys=1 marks a card merchant (LEFT/RIGHT flips BUY/SELL tabs,
  * §34.6).  Prices come from CardDefinition.price, never stored here,
  * and unused stock slots zero-fill to CARD_NONE. */
 #pragma bank 2
 
 const ShopDefinition g_shops[] = {
-    { 2, 3, 1, { CARD_IRON_RING, CARD_BOW_9, CARD_STEEL_SHIELD } },
+    { 2, 6, 1, { CARD_IRON_RING, CARD_BOW_9, CARD_STEEL_SHIELD, CARD_WOOD_SWORD, CARD_WOODEN_SHIELD, CARD_FIRE_SWORD } },
 };
 const uint8_t g_shop_count = 1;

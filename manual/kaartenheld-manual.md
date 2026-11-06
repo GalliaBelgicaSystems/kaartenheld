@@ -370,9 +370,11 @@ two things worth having:
 ![The shop](../screenshots/05-shop.png)
 
 On the shop screen **A** buys and **B** leaves. Press
-**SELECT** to switch to **SELL** mode, then pick a card
-to turn it into gold. Every monster drops cards, so you
-will always have something to sell.
+**LEFT** or **RIGHT** to switch between the **BUY** and **SELL**
+tabs, then pick a card to turn it into gold. Every monster
+drops cards, so you will always have something to sell.
+Starter cards (wood sword and shield, bronze fire sword) are
+always stocked for free, so you can rebuy the basics.
 
 > Cards are graded by material. Wood is common, bronze
 > and iron are solid, steel is rare and mythril is the
