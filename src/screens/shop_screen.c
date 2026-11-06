@@ -16,19 +16,13 @@
 #define SHOP_MSG_NO_GOLD 2
 #define SHOP_MSG_MAX_COPIES 3
 
-/* The active shop is chosen by the actor that was engaged (g->shop_id).
- * Cursor state lives in g->item_menu_index. */
-static const ShopDefinition *shop_active(const Game *g)
-{
-    return game_shop_for_id(g ? g->shop_id : 2);
-}
-
-/* One-copy stock (docs/loot.md §34.6): a BUY line is visible only while
- * the player owns no copy of its card.  Buying the ring/bow hides its
- * row; selling its last copy back (DECK-tab detail page, same price)
- * re-opens it.  Selling is the DECK-tab detail page's job
- * (card_detail_sell in item_screen.c, any non-SPECIAL card while this
- * merchant stays engaged); the shop list itself is buy-only.
+/* BUY/SELL tabs (docs/loot.md §34.6): the BUY list shows the stock --
+ * one-copy rares hide once owned, price-0 basics (free starter rebuys)
+ * always list, capped by max_copies at buy time.  The SELL list shows
+ * the player's sellable cards (rarity-cut value for curated stock,
+ * full formula value for loot; quest items and free basics never
+ * list).  The active tab rides g->item_menu_tab (0 = BUY, 1 = SELL;
+ * the item screen owns the other values and resets on open).
  * The cursor addresses VISIBLE positions (dense from row 5).  The
  * visible map is rebuilt by the bank-2 render on every full redraw
  * (entry, purchase) into WRAM (g_shop_vis_map, owned by
@@ -38,6 +32,23 @@ static const ShopDefinition *shop_active(const Game *g)
  * addressable. */
 extern uint8_t g_shop_vis_map[];
 extern uint8_t g_shop_vis_count;
+/* Banked row quote (screen_content.c, bank 2: needs the catalog +
+ * loot synth + material tables, and reads the WRAM deck directly):
+ * g_bk_ptr_a = Game*, g_bk_byte_a = visible row; stages price in
+ * g_bk_byte_b (0 = refuse), card id in g_bk_byte_c, owned-after in
+ * g_bk_byte_d (SELL only). */
+void shop_row_quote_banked(void);
+
+/* Shared quote dispatch (both tabs resolve through the active tab's
+ * map bank-side, so the fixed bank pays no catalog/collection scan). */
+static void shop_row_quote(Game *g)
+{
+    g_bk_call_bank = 2;
+    g_bk_call_target = (uint16_t)&shop_row_quote_banked;
+    g_bk_ptr_a = (void *)g;
+    g_bk_byte_a = g->item_menu_index;
+    banked_call_run();
+}
 
 /* Full shop content draw lives in the bank-2 body (screen_content.c) so the
  * fixed _CODE/_HOME area stays under 0x8000 (AGENTS.md 52.11.1). */
@@ -62,24 +73,45 @@ static void shop_menu_step(Game *g, uint8_t down)
     banked_call_run();
 }
 
+/* SELL-tab apply: A sells one copy of the cursor row at its quoted
+ * value (0 refuses with a BACK blip -- fully decked rows and
+ * unlistable rows never reach here through the map, so this is a
+ * guard, not a path).  The banked quote verified ownership, so the
+ * remove always lands.  The last copy of a one-copy card re-opens
+ * its BUY row. */
+static void shop_sell(Game *g)
+{
+    shop_row_quote(g);
+    if (g_bk_byte_b == 0) {
+        audio_play_sfx(SFX_BACK);
+        return;
+    }
+    deck_collection_remove(&g->state.cards, g_bk_byte_c, 1);
+    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)g_bk_byte_b);
+    telemetry_emit(EVENT_CARD_SOLD, g_bk_byte_c, g_bk_byte_b,
+                   g_bk_byte_d, 0);
+    g->render_cache.valid = false;
+}
+
 /* A-handler split out of shop_screen_update (fixed-bank cascade:
  * one 723 B function allocates far worse than three small ones,
- * AGENTS.md §52.18).  Buy/sell dispatch + verdict/apply + messages. */
-static void shop_confirm(Game *g, const ShopDefinition *def)
+ * AGENTS.md §52.18).  Buy verdict/apply + messages; the quote (id +
+ * price) arrives banked, so the fixed bank pays no catalog scan.
+ * Price 0 = free basic: the gold check always passes, max_copies
+ * still caps the rebuy. */
+static void shop_confirm(Game *g)
 {
-    CardId card_id = def->items[g_shop_vis_map[g->item_menu_index]];
-    const CardDefinition *card = card_get_def(card_id);
-    uint8_t price = card ? card->price : 0;
-    if (currency_get(&g->state, CURRENCY_ID_GOLD) < price) {
+    shop_row_quote(g);
+    if (currency_get(&g->state, CURRENCY_ID_GOLD) < g_bk_byte_b) {
         g->shop_message = SHOP_MSG_NO_GOLD;
-        telemetry_emit(EVENT_CARD_PURCHASE_FAILED, (uint8_t)card_id, 1, 0, 0);
+        telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 1, 0, 0);
     } else {
-        if (!deck_collection_add(&g->state.cards, card_id, 1)) {
+        if (!deck_collection_add(&g->state.cards, g_bk_byte_c, 1)) {
             g->shop_message = SHOP_MSG_MAX_COPIES;
-            telemetry_emit(EVENT_CARD_PURCHASE_FAILED, (uint8_t)card_id, 2, 0, 0);
+            telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
         } else {
-            currency_add(&g->state, CURRENCY_ID_GOLD, -(int16_t)price);
-            telemetry_emit(EVENT_CARD_PURCHASED, (uint8_t)card_id, (uint8_t)price, 0, 0);
+            currency_add(&g->state, CURRENCY_ID_GOLD, -(int16_t)g_bk_byte_b);
+            telemetry_emit(EVENT_CARD_PURCHASED, g_bk_byte_c, g_bk_byte_b, 0, 0);
             g->shop_message = SHOP_MSG_BOUGHT;
         }
     }
@@ -121,18 +153,27 @@ static void shop_leave(Game *g)
 
 void shop_screen_update(Game *g)
 {
-    const ShopDefinition *def;
-
     if (!g) return;
-    def = shop_active(g);
+
+    /* LEFT/RIGHT flips the BUY/SELL tab (cursor reset, full redraw). */
+    if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
+        g->item_menu_tab = (uint8_t)(g->item_menu_tab == 0 ? 1 : 0);
+        g->item_menu_index = 0;
+        g->item_menu_scroll = 0;
+        g->render_cache.valid = false;
+        return;
+    }
 
     if (g_shop_vis_count > 0) {
         if (input_pressed(INPUT_UP)) {
             shop_menu_step(g, 0);
         } else if (input_pressed(INPUT_DOWN)) {
             shop_menu_step(g, 1);
-        } else if (input_pressed(INPUT_A) && def && g->item_menu_index < g_shop_vis_count) {
-            shop_confirm(g, def);
+        } else if (input_pressed(INPUT_A) && g->item_menu_index < g_shop_vis_count) {
+            if (g->item_menu_tab == 1)
+                shop_sell(g);
+            else
+                shop_confirm(g);
         }
     }
     if (input_pressed(INPUT_B) || input_pressed(INPUT_START)) {

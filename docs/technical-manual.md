@@ -554,12 +554,11 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 * `SELECT` on a card opens the **detail page**: full name, on-hit rider
   (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
   / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),
-  `OWN`/`DECK` counts, and the `SELL` value (numbers right-aligned).
+  `OWN`/`DECK` counts, and the `VALUE` reminder of what the merchant
+  would pay (numbers right-aligned; selling itself happens in the shop's
+  SELL tab, §9.3).
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
-* `A` on any non-SPECIAL card's **detail page** sells one copy while
-  you have a buying merchant engaged (§9.3): loot at its synthesized
-  value, curated cards at their catalog price (a straight refund).
 
 The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
 rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
@@ -789,16 +788,16 @@ Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
 
 **Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
-the shop actor; only the Lost Merchant buys), you can sell any
-non-SPECIAL card from the DECK tab: open its detail page (`SELECT`)
-and press `A` to sell one copy (the `SELL` row shows the value; the
-`CARD_SOLD` telemetry event is the authoritative feedback).  Sell value
-= the card's price field — the centralized value synthesized as `power
-+ material tier×2 (+2 for a poison dagger)` for loot, the catalog price
-(a straight refund) for curated cards.  Quest items (SPECIAL) never
-sell.  You cannot sell a copy that would strand a decked card without
-ownership backing (rejected with the `DECK FULL` message).  The shop
-screen itself is buy-only; its hint row points at the CARDS detail page.
+the shop actor; only the Lost Merchant buys), flip the shop to its
+**SELL** tab (`LEFT`/`RIGHT`, row 4 header) and press `A` on any listed
+card to sell one copy (the `CARD_SOLD` telemetry event is the
+authoritative feedback).  Loot sells at its full synthesized value
+(`power + material tier×2 (+2 for a poison dagger)`); curated cards sell
+below their buy value on a rarity-scaled cut (`price × (5−tier)/6`, min
+1 — the 20g ring pays 10, the 30g bow 5).  Quest items (SPECIAL) and
+price-0 starter basics never list.  You cannot sell a copy that would
+strand a decked card without ownership backing.  The DECK-tab detail
+page shows only a `VALUE` reminder.
 
 ---
 

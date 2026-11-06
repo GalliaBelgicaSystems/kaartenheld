@@ -146,6 +146,9 @@ void overworld_screen_update(Game *g)
         } else if (engage == ENGAGE_SHOP) {
             g->item_menu_index = 0;
             g->item_menu_scroll = 0;
+            /* Shop tabs ride item_menu_tab (0 = BUY): always enter on
+             * BUY; the item screen resets it on its own open. */
+            g->item_menu_tab = 0;
             screen_change(g, SCREEN_SHOP);
         } else if (engage == ENGAGE_SAVE) {
             g->save_slot_mode = 1;

@@ -1,7 +1,7 @@
 {
  "name": "merchant_sell_curated",
  "test": true,
- "description": "Sell a curated card at the card merchant: the IRON_RING (id 66, price 20) sells from its CARDS-tab detail page while the merchant stays engaged, paying the catalog price (straight refund), emitting CARD_SOLD(66,20,0) and removing the copy. Companion to merchant_sell_loot (loot sell value).",
+ "description": "Sell a curated card at the card merchant (docs/loot.md §34.6): the IRON_RING (id 66, buy 20) sells from the shop's SELL tab at its rarity-cut value -- iron tier 2 keeps price x (5-2)/6 = 10 gold, below the 20 buy price -- emitting CARD_SOLD(66,10,0) and removing the copy. Companion to merchant_sell_loot (loot formula value).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -40,55 +40,7 @@
   },
   {
    "type": "press",
-   "button": "B"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "START"
-  },
-  {
-   "type": "wait",
-   "frames": 10
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
+   "button": "RIGHT"
   },
   {
    "type": "wait",
@@ -106,7 +58,7 @@
  "assertions": [
   {
    "type": "screen",
-   "expected": "ITEM"
+   "expected": "SHOP"
   },
   {
    "type": "event_occurred",
@@ -122,7 +74,7 @@
    "type": "event_arg",
    "event": "CARD_SOLD",
    "index": 1,
-   "value": 20
+   "value": 10
   },
   {
    "type": "event_arg",
@@ -132,7 +84,7 @@
   },
   {
    "type": "currency",
-   "expected": 20,
+   "expected": 10,
    "currency": "GOLD"
   }
  ]

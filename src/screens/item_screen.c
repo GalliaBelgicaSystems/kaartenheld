@@ -73,57 +73,6 @@ static CardId view_card_id(Game *g, uint8_t pos)
     return g->state.cards.collection.entries[s_view_indices[pos]].id;
 }
 
-/* ── Sell at the card merchant (docs/loot.md §24/§34.6) ─────────────
- * Any non-SPECIAL card's detail page offers SELL while the player has
- * engaged a buying shop (g->shop_id set by the shop actor, cleared on
- * scene change).  Value = the def's price field -- for loot ids that
- * is the centralized sell value synthesized by loot_synth_banked, for
- * curated cards their catalog price (a straight refund).  Quest items
- * (SPECIAL) are never sellable. */
-static bool merchant_buys(const Game *g)
-{
-    const ShopDefinition *shop;
-    shop = game_shop_for_id(g->shop_id);
-    return shop && shop->buys;
-}
-
-static void card_detail_sell(Game *g)
-{
-    CardState *cs = &g->state.cards;
-    CardId id;
-    const CardDefinition *def;
-    uint8_t owned;
-
-    if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
-        return;
-    id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
-    if (!merchant_buys(g)) return;
-    /* No SPECIAL guard here: the bank-2 view (ic_build_view) never lists
-     * SPECIAL quest items and the detail page only offers SELL for
-     * non-SPECIAL cards, so this is unreachable for them -- and their
-     * price is 0 anyway.  Keeping this fixed-bank frame minimal: _HOME
-     * sits hard against 0x8000 (AGENTS.md 52.18). */
-    def = card_get_def(id);
-
-    /* Selling must never strand a decked card without ownership
-     * backing: require at least one copy outside the battle deck. */
-    owned = deck_collection_count(cs, id);
-    if (def == NULL || owned <= deck_count_in_deck(&cs->deck, id)) {
-        g->item_menu_message = MSG_DECK_FULL;
-        g->item_menu_msg_ttl = 45;
-        g->item_menu_mode = MODE_LIST;
-        return;
-    }
-    if (!deck_collection_remove(cs, id, 1)) return;
-    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)def->price);
-    telemetry_emit(EVENT_CARD_SOLD, id, def->price,
-                   (uint8_t)(owned - 1), 0);
-    /* Back to the list: it rebuilds its view every frame, so a fully
-     * sold-out entry simply disappears and the OWN digit drops -- the
-     * CARD_SOLD event is the authoritative feedback for tests. */
-    g->item_menu_mode = MODE_LIST;
-}
-
 static void cycle_filter(Game *g)
 {
     if (g->item_menu_filter == FILTER_ALL)
@@ -276,12 +225,11 @@ void item_screen_update(Game *g)
 
     /* ── DECK tab ─────────────────────────────────────────────── */
     switch (g->item_menu_mode) {
+        /* Selling lives in the shop's SELL tab now (docs/loot.md
+         * §34.6), not here: A backs out to the list like SELECT. */
         case MODE_CARD_DETAIL:
-            if (input_pressed(INPUT_SELECT)) {
+            if (input_pressed(INPUT_SELECT) || input_pressed(INPUT_A)) {
                 g->item_menu_mode = MODE_LIST;
-                g->render_cache.valid = false;
-            } else if (input_pressed(INPUT_A)) {
-                card_detail_sell(g);
                 g->render_cache.valid = false;
             }
             return;

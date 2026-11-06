@@ -762,20 +762,6 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
 }
 
-/* Card merchant buy-back (docs/loot.md §24/§34.6): the detail page
- * offers SELL while the player has engaged a buying shop (g->shop_id
- * set by the shop actor).  Bank-local scan of the bank-2 shop table
- * (a banked body must never call the fixed-bank game_shop_for_id). */
-static uint8_t ic_merchant_buys(const Game *g)
-{
-    if (!g || g->shop_id == 0) return 0;
-    for (s_ic_def_i = 0; s_ic_def_i < g_shop_count; s_ic_def_i++) {
-        if (g_shops[s_ic_def_i].id == g->shop_id)
-            return g_shops[s_ic_def_i].buys;
-    }
-    return 0;
-}
-
 static void ic_draw_card_detail_page(Game *g)
 {
     uint8_t detail_uses;
@@ -862,24 +848,19 @@ static void ic_draw_card_detail_page(Game *g)
     ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
     IC_DRAW_TEXT(9, 10, "DECK", 4);
     ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
-    /* Row 11: merchant sell value.  Shown whenever the card can actually
-     * be sold (any non-SPECIAL card at a buying shop): loot ids show
-     * their centralized sell value, curated cards their catalog price
-     * (a straight refund).  SPECIAL quest items never sell, so they
-     * show `--` instead of promising a SELL the detail page withholds. */
-    IC_DRAW_TEXT(0, 11, "SELL", 4);
-    if (s_ic_def->price && s_ic_def->type != CARD_TYPE_SPECIAL &&
-        ic_merchant_buys(g)) {
+    /* Row 11: shop value reminder.  Selling moved to the shop's SELL
+     * tab (docs/loot.md §34.6), so the detail page no longer sells:
+     * loot shows its formula value, curated its catalog price, quest
+     * items `--`.  Display-only (what the merchant WOULD pay). */
+    IC_DRAW_TEXT(0, 11, "VALUE", 5);
+    if (s_ic_def->price && s_ic_def->type != CARD_TYPE_SPECIAL) {
         ic_draw_rjust(11, 17, s_ic_def->price);
         IC_DRAW_TEXT(18, 11, "G", 1);
     } else {
         IC_DRAW_TEXT(17, 11, "--", 2);
     }
-    /* Row 13: hints (SELL for any non-SPECIAL card at a buying merchant). */
-    if (s_ic_def->type != CARD_TYPE_SPECIAL && ic_merchant_buys(g))
-        IC_DRAW_TEXT(0, 13, "A:SELL SEL:BACK", 15);
-    else
-        IC_DRAW_TEXT(0, 13, "SEL:BACK", 8);
+    /* Row 13: hints. */
+    IC_DRAW_TEXT(0, 13, "SEL:BACK", 8);
 }
 
 static char s_ic_big_num[6];

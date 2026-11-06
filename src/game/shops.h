@@ -14,8 +14,8 @@
  * shop_id of the actor that runs the shop.  Prices are read from the
  * CardDefinition.price field — single source of truth.  `buys` marks a
  * CARD MERCHANT (docs/loot.md §34.6): while engaged, any owned
- * non-SPECIAL card can be sold from its DECK-tab detail page (loot at
- * its centralized value, curated at its catalog price). */
+ * non-SPECIAL card with a sell value lists in the shop's SELL tab
+ * (loot at its formula value, curated below buy on a rarity cut). */
 typedef struct {
     uint8_t id;
     uint8_t count;

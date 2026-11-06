@@ -3047,10 +3047,11 @@ open key (overworld and battle player-turn).  Inside, LEFT/RIGHT switches
 tabs, UP/DOWN moves the list, A confirms/toggles, B backs out (two-step on
 the DECK list: first B jumps to the first card row, B again on the top row
 closes), SELECT opens the detail submenu.  Rejections (`DECK FULL`) show a
-transient message cleared by a frame TTL, never a silent no-op.  On a loot
-card's detail page, A sells one copy while the player has engaged a buying
-shop (`ShopDefinition.buys`; `g->shop_id` is set by the shop actor and
-cleared on scene change) — docs/loot.md §24/§34.6, scenario
+transient message cleared by a frame TTL, never a silent no-op.  The shop
+screen has BUY and SELL tabs (LEFT/RIGHT flips); the SELL tab sells one copy
+per A while the player has engaged a buying shop (`ShopDefinition.buys`;
+`g->shop_id` is set by the shop actor and cleared on scene change) —
+docs/loot.md §24/§34.6, scenario
 `merchant_sell_loot`.
 
 ## 54.3 Actor lifecycle

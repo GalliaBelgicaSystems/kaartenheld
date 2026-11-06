@@ -29,7 +29,8 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
-                                      CARD_IRON_RING, CARD_POISON_DAGGER,
+                                      CARD_IRON_RING, CARD_BOW_9,
+                                      CARD_STEEL_SHIELD, CARD_POISON_DAGGER,
                                       CARD_AMULET, CARD_BONE, CARD_OLD_KEY,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
@@ -698,8 +699,13 @@ def walk_a(planner, checks, sram_out=None):
             actual=str(s.reader.gold()))
 
     # Merged shop (village merchant, opened by delivering the amulet):
-    # one-copy ring + bow stock.  The ring
-    # is the first row; buying hides it and the bow slides up.
+    # one-copy ring + bow + shield stock plus the always-listed free
+    # basics.  The top row is bought; usually the ring, but a loot twin
+    # merged under a capped curated id hides its one-copy row
+    # (docs/loot.md §34.6), so the walk reads the row instead of
+    # assuming it: release loot reshuffles whenever boot timing shifts
+    # the DIV prime (src/game/marks_banked.c), and a hardcoded ring buy
+    # breaks the moment a twin drops pre-shop.
     s.check("shop opened",
             bump_actor(s, planner, "village_area", (10, 4), "down", "SHOP"),
             expected="SHOP", actual="none")
@@ -707,17 +713,29 @@ def walk_a(planner, checks, sram_out=None):
     s.check("ring row caret", s.bg_text()[5][:1] == ">",
             expected="> at row 5", actual=s.bg_text()[5])
     gold0 = s.reader.gold()
-    price = s.reader.card_price(CARD_IRON_RING)
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
+    row5 = s.bg_text()[5]
+    if "IRON RING" in row5:
+        want, slid = CARD_IRON_RING, "BO9"
+    elif "MYTHRIL BOW" in row5:
+        want, slid = CARD_BOW_9, "STEEL SHIELD"
+    elif "STEEL SHIELD" in row5:
+        want, slid = CARD_STEEL_SHIELD, "WOOD SWORD"
+    else:
+        want, slid = None, None
+    s.check("shop top row recognized", want is not None,
+            expected="ring/bow/shield row", actual=row5)
+    price = s.reader.card_price(want)
+    before = s.reader.collection_count(want)
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
-    # The ring merges under its capped curated id (one row, count 1);
-    # the one-copy row hides so the bow slides up.
-    s.check_eq("ring in collection", s.reader.collection_count(
-        CARD_IRON_RING), 1)
-    s.check("bow row slides up", "BO9" in s.bg_text()[5],
-            expected="BO9 at row 5", actual=s.bg_text()[5])
+    # The bought card merges under its capped curated id (one row);
+    # the one-copy row hides so the next row slides up.
+    s.check_eq("bought card in collection",
+               s.reader.collection_count(want), before + 1)
+    s.check("next row slides up", slid in s.bg_text()[5],
+            expected="%s at row 5" % slid, actual=s.bg_text()[5])
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("SHOP"), frames=30), label="shop close")
     # Post-purchase the merchant's equip tip opens as a dialogue box on

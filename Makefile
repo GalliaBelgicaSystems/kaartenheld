@@ -42,8 +42,8 @@ CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c
 	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
-# the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 4 in
-# release to free the tight world bank for expanded content.  Excluded from
+# the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
+# release (pristine) to free the tight world/shop banks.  Excluded from
 # the debug link (the debug copy lives in tiles_content.c).
 RELEASE_ONLY_SRCS = $(SRC_DIR)/screens/title_logo_content.c
 
