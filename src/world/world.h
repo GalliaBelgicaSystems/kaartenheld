@@ -421,8 +421,10 @@ typedef enum {
      * on a mismatch): each TILE_UNDERGROUND_<i> must match the live
      * tile's (walkable, glyph) EXACTLY, or movement/palette/screen-buffer
      * behavior corrupts BOTH tilesets sharing the value.
-     * Mapping (vram slot -> value -> donor):
-     *   00..19 walls            -> 228..247 (desolate solid '#')
+   * Mapping (vram slot -> value -> donor):
+   *   30 skeleton bone art    -> 254 (fresh value, own art; the table in
+   *                             ui.c covers 208..254 with 251..253 void)
+   *   00..19 walls            -> 228..247 (desolate solid '#')
      *   20,22,23,24 floors      -> 208..211 (desolate walkable ',')
      *   21 stairs (exit)         -> 227 (desolate exit, walkable '>')
      *   25..28 interior corners  -> 212..214 + 220 (desolate solid '#';
@@ -431,7 +433,8 @@ typedef enum {
      *   29..35 void (one def)    -> 221 (desolate solid '#'; the manifest
      *                             forces glyph '#' over the object default
      *                             so the entry matches)
-     * All values sit in one contiguous run (208..216, 220/221, 227..250),
+     * All values sit in one contiguous run (208..216, 220/221, 227..250)
+   * plus the skeleton's own value 254,
      * so the renderer maps them through a single fixed-bank slot table
      * (s_ug_slot in ui.c; the fixed bank has room again after the
      * semantic-refill move-out).  A banked-table read was tried first,
