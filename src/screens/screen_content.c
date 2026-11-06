@@ -12,6 +12,7 @@
 #include "rpg/status.h"
 #include "rider_tiles_generated.h"
 #include "shops.h"
+#include "economy.h"
 #include "menu.h"
 #include "rpg/save.h"
 #include "game_ids.h"
@@ -81,6 +82,7 @@ static char s_sc_code[8];
 static volatile uint8_t *s_sc_dst;
 static char *s_sc_buf;
 static Game *s_sc_game;
+static uint8_t s_sc_idx;
 
 static const uint16_t s_sc_p10[4] = { 10000, 1000, 100, 10 };
 
@@ -210,6 +212,44 @@ static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
 }
 
 static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
+
+/* Market-scaled quote S (docs/economy.md §4): bank-2-local copy of the
+ * bank-11 quote body (a banked body must never call a fixed-bank fn,
+ * AGENTS.md §52.11.1).  The shop row and the detail SELL row show what
+ * the till charges/pays -- duplicating base-def math here would show one
+ * price and charge another.  Shared with the item screen's SELL row
+ * (same bank: plain call, no trampoline -- the ic_loot_synth precedent).
+ * Same shape as economy_quote_banked: zero guard (price 0 = not for
+ * sale, always quotes 0 however biased -- the gate in
+ * tools/check_economy.py keeps price-0 rows bias-free), 8-bit
+ * saturating base, repeated-add multiply (render-time only), one
+ * rounding.  The index is trusted: every writer clamps (descriptor
+ * apply, debug action, update body, new game), so no clamp here.
+ * Quoted callers: shop rows pass the live index (read once at render
+ * entry into s_sc_idx); the loot SELL row passes neutral (sales ignore
+ * the market, §5), so no market read on the detail path. */
+uint8_t bank2_price(uint8_t price, int8_t bias, uint8_t idx)
+{
+    uint16_t p;
+    uint16_t q;
+    uint8_t i;
+    uint8_t b;
+    if (price == 0) return 0;
+    if (bias >= 0) {
+        b = (uint8_t)(price + bias);
+        if (b < price) b = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - bias);
+        b = (neg >= price) ? 1 : (uint8_t)(price - neg);
+    }
+    p = 0;
+    for (i = idx; i != 0; i--) p = (uint16_t)(p + b);
+    /* Saturate, never truncate: base 255 at high inflation exceeds 255
+     * (255*48+16 >> 5 = 383) and a narrowing cast would wrap the quote
+     * to garbage.  p itself cannot overflow (max 12240 < 65535). */
+    q = (uint16_t)(((uint16_t)(p + 16)) >> 5);
+    return (q > 255) ? 255 : (uint8_t)q;
+}
 
 static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
 {
@@ -421,6 +461,10 @@ void shop_content_render(void)
     s_sc_game = (Game *)g_bk_ptr_a;
 
     if (!s_sc_game) return;
+    /* Live market index, read once: every row's quote shares it
+     * (bank2_price takes it as a param so the per-row path pays no
+     * struct read).  Trusted 24-48 like every other reader. */
+    s_sc_idx = s_sc_game->state.economy.market_index;
     s_sc_shop_def = sc_shop_active(s_sc_game);
     sc_shop_remap();
     s_sc_gold = (uint16_t)s_sc_game->state.currency.amount[0];
@@ -496,7 +540,7 @@ void shop_content_render(void)
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }
-        sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
+        sc_format_uint(s_sc_card_def ? (uint16_t)bank2_price(s_sc_card_def->price, s_sc_card_def->price_bias, s_sc_idx) : 0, s_sc_str);
         sc_draw_text(12, s_sc_y, s_sc_str, 4);
         /* Gold price in plain font capitals (no coin tile): the semantic
          * buffer keeps ASCII 'G' and VRAM shows the font glyph on the

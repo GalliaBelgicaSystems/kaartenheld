@@ -6,6 +6,7 @@
 #include "rpg/deck.h"
 #include "menu.h"
 #include "shops.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "ui.h"
 #include "banked.h"
@@ -71,7 +72,9 @@ void shop_screen_update(Game *g)
         } else if (input_pressed(INPUT_A) && def && g->item_menu_index < vis_count) {
             CardId card_id = def->items[g_shop_vis_map[g->item_menu_index]];
             const CardDefinition *card = card_get_def(card_id);
-            uint8_t price = card ? card->price : 0;
+            /* Market-scaled price (docs/economy.md §4): base (price +
+             * bias) scaled by the 1/32-unit index, one rounding. */
+            uint8_t price = card ? economy_quote(card->price, card->price_bias, 1) : 0;
             if (currency_get(&g->state, CURRENCY_ID_GOLD) < price) {
                 g->shop_message = SHOP_MSG_NO_GOLD;
                 telemetry_emit(EVENT_CARD_PURCHASE_FAILED, (uint8_t)card_id, 1, 0, 0);
@@ -81,6 +84,7 @@ void shop_screen_update(Game *g)
                     telemetry_emit(EVENT_CARD_PURCHASE_FAILED, (uint8_t)card_id, 2, 0, 0);
                 } else {
                     currency_add(&g->state, CURRENCY_ID_GOLD, -(int16_t)price);
+                    economy_note_spent(&g->state, price);
                     telemetry_emit(EVENT_CARD_PURCHASED, (uint8_t)card_id, (uint8_t)price, 0, 0);
                     g->shop_message = SHOP_MSG_BOUGHT;
                 }
@@ -108,6 +112,12 @@ void shop_screen_update(Game *g)
          * encounter here, unlike Carl's lesson). */
         if (g->shop_message == SHOP_MSG_BOUGHT)
             g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
+        /* Shop-boundary market update (docs/economy.md §6): runs on every
+         * exit, but the guards skip zero-counter / zero-battle visits, so
+         * browsing never moves the index.  Staged inline (single site). */
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&economy_update_banked;
+        banked_call_run();
         g->shop_message = SHOP_MSG_NONE;
         g->item_menu_index = 0;
         audio_play_sfx(SFX_BACK);

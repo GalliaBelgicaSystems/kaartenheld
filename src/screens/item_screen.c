@@ -9,6 +9,7 @@
 #include "quest.h"
 #include "ui.h"
 #include "card.h"
+#include "economy.h"
 #include "shops.h"
 #include "banked.h"
 #include "game_ids.h"
@@ -90,6 +91,7 @@ static void card_detail_sell(Game *g)
     CardId id;
     const CardDefinition *def;
     uint8_t owned;
+    uint8_t sell;
 
     if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
         return;
@@ -106,9 +108,13 @@ static void card_detail_sell(Game *g)
         g->item_menu_mode = MODE_LIST;
         return;
     }
+    /* Loot sell value (docs/economy.md §5): base at neutral -- sales
+     * ignore the market.  Sales never touch gold_in (§6.1: conversion,
+     * not income). */
+    sell = economy_quote(def->price, def->price_bias, 0);
     if (!deck_collection_remove(cs, id, 1)) return;
-    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)def->price);
-    telemetry_emit(EVENT_CARD_SOLD, id, def->price,
+    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)sell);
+    telemetry_emit(EVENT_CARD_SOLD, id, sell,
                    (uint8_t)(owned - 1), 0);
     /* Back to the list: it rebuilds its view every frame, so a fully
      * sold-out entry simply disappears and the OWN digit drops -- the

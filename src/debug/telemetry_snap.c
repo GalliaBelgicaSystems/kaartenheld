@@ -80,4 +80,9 @@ void debug_state_snapshot_banked(void)
     for (i = 0; i < st->cards.deck.count && i < MAX_DECK_CARDS; i++) {
         *p++ = st->cards.deck.cards[i];
     }
+
+    /* Economy tail (docs/economy.md §6.3): appended, never inserted.
+     * EconomyState is 6 contiguous bytes (no padding: u8/u16/u16/u8). */
+    snap_copy(b + STATE_SNAP_MARKET_INDEX_OFF, &st->economy,
+              (uint8_t)sizeof(EconomyState));
 }

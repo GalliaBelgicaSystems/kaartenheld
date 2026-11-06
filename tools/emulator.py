@@ -119,7 +119,7 @@ EVENT_TYPE_MAP = {
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
     65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
-    67: "CARD_EQUIP_LOCKED",
+    67: "CARD_EQUIP_LOCKED", 68: "MARKET_UPDATED",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -223,8 +223,14 @@ STATE_LOAD_DESC_DECK_ENTRY_OFF = 231
 MAX_DESC_DECK_CARDS = 20
 # Status effects (v4): byte 251 = frozen bitmask (bit 0 = player, 1..3 = enemies)
 STATE_LOAD_DESC_STATUS_OFF = 251
-STATE_LOAD_DESC_SIZE = STATE_LOAD_DESC_STATUS_OFF + 1
-STATE_LOAD_DESC_VERSION = 0x04
+# Economy tail (v5, docs/economy.md 6.3, appended): index, gold_in LE,
+# gold_out LE, battles. Mirrors STATE_LOAD_DESC_* in telemetry.h.
+STATE_LOAD_DESC_MARKET_INDEX_OFF = 252
+STATE_LOAD_DESC_MARKET_GOLD_IN_OFF = 253
+STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF = 255
+STATE_LOAD_DESC_MARKET_BATTLES_OFF = 257
+STATE_LOAD_DESC_SIZE = STATE_LOAD_DESC_MARKET_BATTLES_OFF + 1
+STATE_LOAD_DESC_VERSION = 0x05
 
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
@@ -414,6 +420,16 @@ def serialize_initial_state(initial_state):
         elif isinstance(status, int):
             frozen_mask = status & 0xFF
         buf[STATE_LOAD_DESC_STATUS_OFF] = frozen_mask
+    # Economy tail (v5, docs/economy.md 6.3): {"index" (1/32 units),
+    # "gold_in", "gold_out", "battles"}. Omitted -> neutral 32 / zeros
+    # (the ROM clamps an out-of-band index to 32 on apply).
+    market = initial_state.get("market") or {}
+    buf[STATE_LOAD_DESC_MARKET_INDEX_OFF] = market.get("index", 32) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF] = market.get("gold_in", 0) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF + 1] = (market.get("gold_in", 0) >> 8) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF] = market.get("gold_out", 0) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF + 1] = (market.get("gold_out", 0) >> 8) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_BATTLES_OFF] = market.get("battles", 0) & 0xFF
     return buf
 
 def decode_story_flags(flags_mask):
@@ -884,10 +900,10 @@ class EmulatorSession:
             return parsed
         return self.current_snapshot
 
-    # Extended RPG state snapshot: parses g_state_snap_buf (210 bytes,
+    # Extended RPG state snapshot: parses g_state_snap_buf (216 bytes,
     # layout in src/debug/telemetry.h STATE_SNAP_*).
-    STATE_SNAP_SIZE = 210
-    STATE_SNAP_VERSION = 6
+    STATE_SNAP_SIZE = 216
+    STATE_SNAP_VERSION = 7
     STATE_SNAP_FLAGS_OFF = 1
     STATE_SNAP_FLAGS_SIZE = 8
     STATE_SNAP_VARIABLES_OFF = 9
@@ -911,6 +927,10 @@ class EmulatorSession:
     STATE_SNAP_CAMERA_PX_X_OFF = 187
     STATE_SNAP_CAMERA_PX_Y_OFF = 188
     STATE_SNAP_DECK_COUNT_OFF = 189
+    STATE_SNAP_MARKET_INDEX_OFF = 210
+    STATE_SNAP_MARKET_GOLD_IN_OFF = 211
+    STATE_SNAP_MARKET_GOLD_OUT_OFF = 213
+    STATE_SNAP_MARKET_BATTLES_OFF = 215
 
     def state_snapshot(self):
         """Read g_state_snap_buf and return the canonical GameState as a dict."""
@@ -1005,6 +1025,16 @@ class EmulatorSession:
                 break
             deck.append(buf[off])
 
+        # Economy tail (v7, docs/economy.md 6.3, appended).
+        market = {
+            "index": buf[self.STATE_SNAP_MARKET_INDEX_OFF],
+            "gold_in": (buf[self.STATE_SNAP_MARKET_GOLD_IN_OFF] |
+                        (buf[self.STATE_SNAP_MARKET_GOLD_IN_OFF + 1] << 8)),
+            "gold_out": (buf[self.STATE_SNAP_MARKET_GOLD_OUT_OFF] |
+                         (buf[self.STATE_SNAP_MARKET_GOLD_OUT_OFF + 1] << 8)),
+            "battles": buf[self.STATE_SNAP_MARKET_BATTLES_OFF],
+        }
+
         return {
             "flags": flags,
             "variables": variables,
@@ -1014,6 +1044,7 @@ class EmulatorSession:
             "world": world,
             "progression": progression,
             "deck": deck,
+            "market": market,
             "scroll_x": buf[self.STATE_SNAP_SCROLL_X_OFF],
             "scroll_y": buf[self.STATE_SNAP_SCROLL_Y_OFF],
             "world_width": buf[self.STATE_SNAP_WORLD_WIDTH_OFF],
@@ -1048,6 +1079,7 @@ class EmulatorSession:
     DBG_ACT_SET_DECK_CARD = 21
     DBG_ACT_SET_DECK_STATE = 22
     DBG_ACT_SET_DECK_RING = 23
+    DBG_ACT_SET_MARKET_INDEX = 24
 
     def debug_action(self, action, a0=0, a1=0, a2=0):
         """Run a debug action through the ROM's real mechanic functions."""

@@ -54,7 +54,7 @@
  *   byte  189          : battle-deck card count
  *   bytes 190..209     : up to 20 deck entries x {card_id}
  */
-#define STATE_SNAP_VERSION_BYTE    0x06
+#define STATE_SNAP_VERSION_BYTE    0x07
 #define STATE_SNAP_FLAGS_OFFSET    1
 #define STATE_SNAP_FLAGS_SIZE      8
 #define STATE_SNAP_VARIABLES_OFFSET  9
@@ -78,14 +78,20 @@
 #define STATE_SNAP_WORLD_HEIGHT_OFF 186
 #define STATE_SNAP_CAMERA_PX_X_OFF  187
 #define STATE_SNAP_CAMERA_PX_Y_OFF  188
+/* Economy tail (docs/economy.md §6.3, appended 2026-11): market index
+ * (1/32 units), gold_in LE, gold_out LE, battles-since-update. */
 #define STATE_SNAP_DECK_COUNT_OFF   189
-#define STATE_SNAP_TOTAL_SIZE        210
+#define STATE_SNAP_MARKET_INDEX_OFF 210
+#define STATE_SNAP_MARKET_GOLD_IN_OFF 211
+#define STATE_SNAP_MARKET_GOLD_OUT_OFF 213
+#define STATE_SNAP_MARKET_BATTLES_OFF 215
+#define STATE_SNAP_TOTAL_SIZE        216
 
 /* Scenario initial-state descriptor (g_scen_state_buf) layout (version 0x02).
  * Written by the host STATE_LOAD command and applied by scenario_load_state().
  * Fixed offsets; variable-length sections carry a count and only the
  * listed entries are applied (unspecified sections keep their defaults). */
-#define STATE_LOAD_DESC_VERSION           0x04
+#define STATE_LOAD_DESC_VERSION           0x05
 #define STATE_LOAD_DESC_SCREEN_OFF        1
 #define STATE_LOAD_DESC_SCENE_OFF         2
 #define STATE_LOAD_DESC_PLAYER_X_OFF      3
@@ -124,9 +130,17 @@
  * following deck section replaces the starter deck, count may be 0 for an
  * intentionally empty deck); byte 230 = deck card count; bytes 231..250 =
  * up to 20 deck entries x {card_id}.
- * Byte 251 = initial status: frozen bitmask (bit 0 = player, 1..3 = enemies). */
+ * Byte 251 = initial status: frozen bitmask (bit 0 = player, 1..3 = enemies).
+ * Economy tail (version 0x05, docs/economy.md §6.3, appended -- never
+ * inserted): byte 252 = market index (1/32 units, out-of-band clamps to
+ * neutral 32 on apply), bytes 253..254 = gold_in LE, 255..256 = gold_out
+ * LE, byte 257 = battles-since-update. */
 #define STATE_LOAD_DESC_STATUS_OFF        251
-#define STATE_LOAD_DESC_SIZE              252
+#define STATE_LOAD_DESC_MARKET_INDEX_OFF  252
+#define STATE_LOAD_DESC_MARKET_GOLD_IN_OFF 253
+#define STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF 255
+#define STATE_LOAD_DESC_MARKET_BATTLES_OFF 257
+#define STATE_LOAD_DESC_SIZE              258
 
 typedef enum {
     EVENT_PLAYER_MOVED,
@@ -224,6 +238,11 @@ typedef enum {
      * d0 = card id, d1 = required AP, d2/d3 = 0.  No
      * CARD_ADDED_TO_DECK fires with it. */
     EVENT_CARD_EQUIP_LOCKED,
+    /* Global market update (docs/economy.md §6.3, append-only wire
+     * contract): d0 = old index (1/32 units), d1 = new index,
+     * d2 = direction (1 = up, 2 = down, 3 = toward-100/stay).
+     * Emitted on every non-skipped shop-boundary update. */
+    EVENT_MARKET_UPDATED,
 } GameEventType;
 
 typedef struct {

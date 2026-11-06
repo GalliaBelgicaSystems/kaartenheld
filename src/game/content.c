@@ -1,4 +1,5 @@
 #include "content.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "story.h"
 #include "event.h"
@@ -82,6 +83,10 @@ void game_new_game(GameState *state)
      * and the debugger never disagree about what a fight will stage. */
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
+    /* Neutral market at boot (game_state_zero leaves 0, which is outside
+     * the valid 24-48 band; readers treat out-of-band as neutral, but a
+     * new game states it explicitly). */
+    state->economy.market_index = ECONOMY_INDEX_NEUTRAL;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated
      * hero table (screens/hero.json via battle_compile.py) so the editor

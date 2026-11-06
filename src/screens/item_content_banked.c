@@ -15,6 +15,7 @@
 #include "card.h"
 #include "game_ids.h"
 #include "banked.h"
+#include "economy.h"
 #include "rpg/loot.h"
 #include "shops.h"
 
@@ -741,6 +742,9 @@ static void ic_draw_cards_list(Game *g)
  * offers SELL while the player has engaged a buying shop (g->shop_id
  * set by the shop actor).  Bank-local scan of the bank-2 shop table
  * (a banked body must never call the fixed-bank game_shop_for_id). */
+/* Shared bank-2 price helper (screen_content.c, same bank: plain call). */
+uint8_t bank2_price(uint8_t price, int8_t bias, uint8_t idx);
+
 static uint8_t ic_merchant_buys(const Game *g)
 {
     if (!g || g->shop_id == 0) return 0;
@@ -840,10 +844,12 @@ static void ic_draw_card_detail_page(Game *g)
     /* Row 11: merchant sell value.  Shown only when the card can actually
      * be sold (a loot id at a buying shop): curated rows carry catalog
      * prices but the merchant never buys those, so showing a price would
-     * promise a SELL the detail page withholds. */
+     * promise a SELL the detail page withholds.  Bank-local market scale
+     * (docs/economy.md §5, mirrors economy_sell_price: buy >> 1) so the
+     * row shows what the till pays. */
     IC_DRAW_TEXT(0, 11, "SELL", 4);
     if (s_ic_def->price && loot_is_loot_id(s_ic_id) && ic_merchant_buys(g)) {
-        ic_draw_rjust(11, 17, s_ic_def->price);
+        ic_draw_rjust(11, 17, (uint16_t)bank2_price(s_ic_def->price, s_ic_def->price_bias, ECONOMY_INDEX_NEUTRAL));
         IC_DRAW_TEXT(18, 11, "G", 1);
     } else {
         IC_DRAW_TEXT(17, 11, "--", 2);

@@ -32,6 +32,41 @@ from card_catalog import card_symbols  # noqa: E402
 
 SHOPS_DIR = REPO_ROOT / "screens" / "shops"
 SHOPS_H = REPO_ROOT / "src" / "game" / "shops.h"
+GAME_IDS_H = REPO_ROOT / "src" / "game" / "game_ids.h"
+CARDS_H = REPO_ROOT / "src" / "rpg" / "cards.h"
+LOOT_H = REPO_ROOT / "src" / "rpg" / "loot.h"
+
+
+def load_loot_base():
+    """Numeric LOOT_ID_BASE from src/rpg/loot.h (never hard-synced)."""
+    text = LOOT_H.read_text(encoding="utf-8")
+    m = re.search(r"#define\s+LOOT_ID_BASE\s+(0x[0-9A-Fa-f]+|\d+)", text)
+    if not m:
+        raise ValueError("loot.h: LOOT_ID_BASE not found (header shape changed?)")
+    return int(m.group(1), 0)
+
+
+def load_card_values():
+    """CARD_* symbol -> numeric id from game_ids.h (never hard-synced).
+    Handles `(CARD_FIRST_GAME + N)` (base from src/rpg/cards.h) and plain
+    literals.  Unresolvable symbols map to None (left to the unknown-card
+    check)."""
+    ids_text = GAME_IDS_H.read_text(encoding="utf-8")
+    base = 0
+    m = re.search(r"#define\s+CARD_FIRST_GAME\s+(0x[0-9A-Fa-f]+|\d+)",
+                  CARDS_H.read_text(encoding="utf-8"))
+    if m:
+        base = int(m.group(1), 0)
+    values = {}
+    for dm in re.finditer(r"#define\s+(CARD_[A-Z0-9_]+)\s+(.+)", ids_text):
+        sym, expr = dm.group(1), dm.group(2).strip()
+        om = re.match(r"\(CARD_FIRST_GAME\s*\+\s*(\d+)\)", expr)
+        if om:
+            values[sym] = base + int(om.group(1))
+            continue
+        lm = re.match(r"(0x[0-9A-Fa-f]+|\d+)\b", expr)
+        values[sym] = int(lm.group(1), 0) if lm else None
+    return values
 
 
 def load_max_items():
@@ -51,7 +86,7 @@ def shop_files():
     return files
 
 
-def load_all(max_items, symbols):
+def load_all(max_items, symbols, card_values=None, loot_base=0x60):
     """Returns (shops, errors); shops is a list of dicts with numeric id."""
     shops, errors = [], []
     for path in shop_files():
@@ -85,6 +120,13 @@ def load_all(max_items, symbols):
                 errors.append(
                     f"{path.name}: unknown card '{it}' (not a CARD_* id in "
                     f"game_ids.h)")
+            elif card_values.get(it) is not None and card_values[it] >= loot_base:
+                # Disjoint markets (docs/economy.md §5): shops stock
+                # curated-only; the buy quote assumes a curated row.
+                errors.append(
+                    f"{path.name}: '{it}' is a loot-range id "
+                    f"({card_values[it]:#x} >= LOOT_ID_BASE {loot_base:#x}) -- "
+                    f"shops never stock loot")
         label = data.get("label", "")
         if not isinstance(label, str):
             errors.append(f"{path.name}: label must be a string")
@@ -139,7 +181,8 @@ def main(argv=None):
     try:
         max_items = load_max_items()
         symbols = card_symbols()
-        shops, errors = load_all(max_items, symbols)
+        shops, errors = load_all(max_items, symbols, load_card_values(),
+                                 load_loot_base())
     except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

@@ -10,7 +10,7 @@
  * migrated; see docs/save-format.md. */
 
 #define SAVE_MAGIC   0x5247   /* "GR" */
-#define SAVE_VERSION 3
+#define SAVE_VERSION 4   /* v4 appends EconomyState (docs/economy.md §6.3) */
 #define SAVE_SLOT_COUNT 3
 
 /* SRAM save geometry shared by save.c and the bank-3 body.  Slots are
