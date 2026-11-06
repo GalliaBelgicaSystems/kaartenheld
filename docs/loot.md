@@ -1867,11 +1867,13 @@ shop; finding it is what makes the delivery (and the shop) available:
   from loot as derived ids (knights live in iron/steel; the catalog
   `CARD_IRON_SWORD` is test-only and never drops), and daggers come
   from the field cache and loot.
-* TRADE/SELL (implemented): pick an owned loot card in the DECK tab ->
-  its detail page shows `[A]SELL` while the player has engaged a buying
-  shop (`ShopDefinition.buys`, cleared on scene change) -> A sells one
-  copy for its synthesized `price` (§16 formula) and emits CARD_SOLD.
-  A fully decked card cannot be sold (ownership must stay backed).
+* TRADE/SELL (implemented): pick any owned non-SPECIAL card in the DECK
+  tab -> its detail page shows `[A]SELL` while the player has engaged a
+  buying shop (`ShopDefinition.buys`, cleared on scene change) -> A sells
+  one copy for its `price` (§16 formula for loot; catalog price, a
+  straight refund, for curated cards) and emits CARD_SOLD.  SPECIAL quest
+  items never sell.  A fully decked card cannot be sold (ownership must
+  stay backed).
 
 Wood gear needs no purchase: the hero starts with a wood sword and wood
 shield plus two bronze fire swords (the starter rider exception).

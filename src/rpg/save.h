@@ -10,7 +10,10 @@
  * migrated; see docs/save-format.md. */
 
 #define SAVE_MAGIC   0x5247   /* "GR" */
-#define SAVE_VERSION 3
+/* v4: 50-row collection (was 12 rows in v3 -- the shorter state fails
+ * the checksum against the grown struct, so pre-v4 saves read as
+ * empty instead of loading truncated). */
+#define SAVE_VERSION 4
 #define SAVE_SLOT_COUNT 3
 
 /* SRAM save geometry shared by save.c and the bank-3 body.  Slots are

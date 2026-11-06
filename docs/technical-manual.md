@@ -557,8 +557,9 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
   `OWN`/`DECK` counts, and the `SELL` value (numbers right-aligned).
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
-* `A` on a loot card's **detail page** sells one copy while you have a
-  buying merchant engaged (§9.3).
+* `A` on any non-SPECIAL card's **detail page** sells one copy while
+  you have a buying merchant engaged (§9.3): loot at its synthesized
+  value, curated cards at their catalog price (a straight refund).
 
 The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
 rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
@@ -788,13 +789,16 @@ Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
 
 **Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
-the shop actor; only the Lost Merchant buys), you can sell **loot** cards
-from the DECK tab: open a loot card's detail page (`SELECT`) and press
-`A` to sell one copy (no `SELL` label is shown — the sale is silent; the
-`CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
-the card's price field, synthesized as `power + material tier×2 (+2 for
-a poison dagger)`.  You cannot sell a copy that would strand a decked
-card without ownership backing (rejected with the `DECK FULL` message).
+the shop actor; only the Lost Merchant buys), you can sell any
+non-SPECIAL card from the DECK tab: open its detail page (`SELECT`)
+and press `A` to sell one copy (the `SELL` row shows the value; the
+`CARD_SOLD` telemetry event is the authoritative feedback).  Sell value
+= the card's price field — the centralized value synthesized as `power
++ material tier×2 (+2 for a poison dagger)` for loot, the catalog price
+(a straight refund) for curated cards.  Quest items (SPECIAL) never
+sell.  You cannot sell a copy that would strand a decked card without
+ownership backing (rejected with the `DECK FULL` message).  The shop
+screen itself is buy-only; its hint row points at the CARDS detail page.
 
 ---
 

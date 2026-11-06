@@ -1,0 +1,139 @@
+{
+ "name": "merchant_sell_curated",
+ "test": true,
+ "description": "Sell a curated card at the card merchant: the IRON_RING (id 66, price 20) sells from its CARDS-tab detail page while the merchant stays engaged, paying the catalog price (straight refund), emitting CARD_SOLD(66,20,0) and removing the copy. Companion to merchant_sell_loot (loot sell value).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_SOLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 0,
+   "value": 66
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 1,
+   "value": 20
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 2,
+   "value": 0
+  },
+  {
+   "type": "currency",
+   "expected": 20,
+   "currency": "GOLD"
+  }
+ ]
+}

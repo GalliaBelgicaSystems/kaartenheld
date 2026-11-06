@@ -643,12 +643,13 @@ Without a gate the decision in §8.1 is half-implemented: a knight could drop a
 it at selection — a dead deck slot with no explanation.  The gate is therefore
 part of the loot feature, not a follow-up.
 
-**Rule.**  A **loot-derived** card (`loot_is_loot_id(id)`, i.e. id ≥
-`LOOT_ID_BASE`) whose synthesized `cost` exceeds the live pool cannot be added
-to the deck.  Curated cards are exempt on purpose: the starter deck itself
-carries two cost-2 fire swords while the pool starts at 1, and shop/quest cards
-are authored against the pool they appear at.  Only *player-chosen equipping of
-generated loot* is gated.
+**Rule.**  Any card whose `cost` exceeds the live pool cannot be added
+to the deck -- curated or loot-derived (`loot_is_loot_id(id)`, i.e. id ≥
+`LOOT_ID_BASE`).  A card you cannot pay for would be a dead deck slot.
+Pre-decked grants are unaffected: the starter deck, shop/quest rewards and
+scenario staging arrive via the ungated `deck_add_card`, so the cost-2
+fire swords in the pool-1 starter deck stay put.  Only *player-chosen
+equipping* (quick-screen A, harness `deck add`) is gated.
 
 **Shape.**
 

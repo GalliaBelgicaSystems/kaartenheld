@@ -1246,7 +1246,7 @@ per-battle availability, deterministic reset) with these deliberate
 divergences, driven by Game Boy memory limits and the engine/game layer split
 (AGENTS.md §55):
 
-- **Sizes**: `MAX_CARD_COLLECTION` is 12 (not 64); the battle deck is 20
+- **Sizes**: `MAX_CARD_COLLECTION` is 50 (not 64); the battle deck is 20
   (`MAX_DECK_SIZE`, `src/battle/deck.h`). Card ids start at
   `CARD_FIRST_GAME = 0x40` (`src/rpg/cards.h`), not 0x80 — the card range
   shares the item-id space convention of the game layer.

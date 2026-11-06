@@ -301,9 +301,23 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
         case CARD_FIRE_SWORD: *mat = 1; *wpn = 0; break;
         case CARD_POISON_DAGGER: *mat = 1; *wpn = 3; break;
         case CARD_BOW_9: *mat = 4; *wpn = 2; break;
+        case CARD_STEEL_SHIELD: *mat = 3; *wpn = 1; break;
         case CARD_AMULET: *is_amulet = 1; *mat = 2; *wpn = 0; break;
         default: *mat = 2; *wpn = 0; break;
     }
+}
+
+/* Shared with the bank-2 shop renderer (screen_content.c, same bank:
+ * plain call, no trampoline): full "<MAT> <WPN>" names on shop rows.
+ * Loot ids resolve from the id axes; curated ids from the catalog table
+ * below (mirrors the shop stock, which is curated-only).  Quest items
+ * report through is_amulet/is_special instead of a name. */
+void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
+                         uint8_t *is_special)
+{
+    uint8_t amulet = 0;
+    ic_card_mat_wpn(id, mat, wpn, &amulet);
+    *is_special = (uint8_t)(amulet || id == CARD_BONE || id == CARD_OLD_KEY);
 }
 
 /* Health-rider display (docs/loot.md §34.1): every healing card (only
@@ -667,10 +681,10 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     }
 
     IC_DRAW_NUM2(3, y, s_ic_def->cost);
-    /* Equip-gate lock (docs/enemies_ranking.md §4.8): a loot card above
+    /* Equip-gate lock (docs/enemies_ranking.md §4.8): a card above
      * the pool shows `!` + digit in the AP column, so the player sees
      * the lock before pressing A. */
-    if (loot_is_loot_id(s_ic_id) && s_ic_def->cost > ic_pool(g)) {
+    if (s_ic_def->cost > ic_pool(g)) {
         IC_DRAW_TEXT(3, y, "!", 1);
     }
     ic_draw_full_name(5, y, s_ic_def);
@@ -848,19 +862,21 @@ static void ic_draw_card_detail_page(Game *g)
     ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
     IC_DRAW_TEXT(9, 10, "DECK", 4);
     ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
-    /* Row 11: merchant sell value.  Shown only when the card can actually
-     * be sold (a loot id at a buying shop): curated rows carry catalog
-     * prices but the merchant never buys those, so showing a price would
-     * promise a SELL the detail page withholds. */
+    /* Row 11: merchant sell value.  Shown whenever the card can actually
+     * be sold (any non-SPECIAL card at a buying shop): loot ids show
+     * their centralized sell value, curated cards their catalog price
+     * (a straight refund).  SPECIAL quest items never sell, so they
+     * show `--` instead of promising a SELL the detail page withholds. */
     IC_DRAW_TEXT(0, 11, "SELL", 4);
-    if (s_ic_def->price && loot_is_loot_id(s_ic_id) && ic_merchant_buys(g)) {
+    if (s_ic_def->price && s_ic_def->type != CARD_TYPE_SPECIAL &&
+        ic_merchant_buys(g)) {
         ic_draw_rjust(11, 17, s_ic_def->price);
         IC_DRAW_TEXT(18, 11, "G", 1);
     } else {
         IC_DRAW_TEXT(17, 11, "--", 2);
     }
-    /* Row 13: hints (SELL only at a buying merchant). */
-    if (loot_is_loot_id(s_ic_id) && ic_merchant_buys(g))
+    /* Row 13: hints (SELL for any non-SPECIAL card at a buying merchant). */
+    if (s_ic_def->type != CARD_TYPE_SPECIAL && ic_merchant_buys(g))
         IC_DRAW_TEXT(0, 13, "A:SELL SEL:BACK", 15);
     else
         IC_DRAW_TEXT(0, 13, "SEL:BACK", 8);

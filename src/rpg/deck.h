@@ -9,7 +9,12 @@
  * MAX_DECK_CARDS = 20 matches the target deck size from deck.md.
  * GameState is ~202 bytes with these limits, well within the 252-byte
  * save slot limit. */
-#define MAX_CARD_COLLECTION 12
+/* 50-row shelf (was 12): loot ids span 160 combinations and every
+ * distinct drop opens a row, so 12 silently merged or refused drops
+ * (docs/loot.md §34).  Costs +76 B WRAM in GameState plus the wider
+ * snapshot/descriptor wire sections (telemetry.h); SRAM slots still
+ * fit (save.h). */
+#define MAX_CARD_COLLECTION 50
 #define MAX_DECK_CARDS      20
 /* Minimum playable deck size: must cover a full opening hand
  * (BATTLE_HAND_SIZE in battle/battle.h).  deck_remove_card refuses to
@@ -65,9 +70,18 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
 void deck_merge_banked(void);
 
 /* Banked capped-twin gate (same file): g_bk_ptr_a = CardState*,
- * g_bk_byte_a = candidate id; g_bk_byte_c = allow/deny.  Dispatched by
- * deck_add_card's thin wrapper below. */
+ * g_bk_byte_a = candidate id, g_bk_byte_d = live pool (0 = ungated
+ * grant path); g_bk_byte_c = 1 proceed, 0 capped, 2 pool-locked (cost in
+ * g_bk_byte_b).  Dispatched by deck_add_card's thin wrapper below. */
 void deck_ident_gate_banked(void);
+
+/* Banked equip verdict (same file): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id, g_bk_byte_d = live pool;
+ * g_bk_byte_c = 1 proceed / 2 pool-locked (cost in g_bk_byte_b) /
+ * 3 deck full / 4 per-card refusal / 5 fully-decked row clears /
+ * 6 fully-decked row refused by the MIN floor.  5/6 answer before the
+ * gate: clearing only shrinks the deck.  Dispatched by deck_equip_card. */
+void deck_equip_verdict_banked(void);
 
 /* Banked full-collection absorb (same file): g_bk_ptr_a = CardState*,
  * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
@@ -96,19 +110,18 @@ bool deck_add_card(CardState *cs, CardId id);
 void deck_equip_gate_banked(void);
 
 /* Gated equip (docs/enemies_ranking.md §4.8): the deck_add_card rules
- * plus one -- a loot-derived card (loot_is_loot_id) whose synthesized
- * cost exceeds the live energy pool cannot be decked.  Curated cards
- * are exempt (the starter deck carries cost-2 fire swords while the pool
- * starts at 1; shop/quest cards are authored against their pool), and
- * deck_add_card stays ungated for those authored grant paths.  Only
- * player-chosen equipping (quick-screen A, harness deck add) is gated. */
-typedef enum {
-    EQUIP_OK = 0,       /* decked */
-    EQUIP_FULL = 1,     /* deck already holds MAX_DECK_CARDS */
-    EQUIP_MIN = 2,      /* reserved: remove-path floor (never from equip) */
-    EQUIP_LOCKED = 3,   /* loot card costs more AP than the pool */
-    EQUIP_REJECTED = 4  /* any other deck_add_card refusal */
-} DeckEquipResult;
+ * plus one -- no card (curated or loot) whose cost exceeds the live
+ * energy pool can be decked.  Pre-decked grants are unaffected (the
+ * starter deck, shop/quest rewards arrive via the ungated
+ * deck_add_card); only player-chosen equipping (quick-screen A,
+ * harness deck add) is gated. */ typedef enum {
+     EQUIP_OK = 0,       /* decked */
+     EQUIP_FULL = 1,     /* deck already holds MAX_DECK_CARDS */
+     EQUIP_MIN = 2,      /* fully-decked row refused by the MIN floor */
+     EQUIP_LOCKED = 3,   /* card costs more AP than the pool */
+     EQUIP_REJECTED = 4, /* any other deck_add_card refusal */
+     EQUIP_CLEAR = 5     /* fully-decked row: caller clears it (MIN holds) */
+ } DeckEquipResult;
 
 uint8_t deck_equip_card(CardState *cs, CardId id, uint8_t pool);
 

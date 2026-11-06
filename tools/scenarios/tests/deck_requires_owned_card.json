@@ -59,6 +59,9 @@
    "y": 4,
    "facing": "DOWN"
   },
-  "seed": 7004
+  "seed": 7004,
+  "variables": {
+   "ENERGY_POOL": 2
+  }
  }
 }

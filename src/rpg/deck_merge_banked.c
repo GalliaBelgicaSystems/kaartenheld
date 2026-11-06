@@ -214,13 +214,100 @@ void deck_ident_gate_banked(void)
     g_bk_byte_c = (uint8_t)(cap == 0 || total < cap);
 }
 
+/* Equip verdict for deck_equip_card (same bank, plain call from the
+ * fixed-bank wrapper): g_bk_ptr_a = CardState*, g_bk_byte_a = candidate
+ * id, g_bk_byte_d = live pool.  Answers g_bk_byte_c = 1 proceed, 2
+ * pool-locked (cost staged in g_bk_byte_b for telemetry), 3 deck full,
+ * 4 any per-card refusal, 5 fully-decked row clears (MIN floor holds),
+ * 6 fully-decked row refused by the MIN floor.  The fully-decked
+ * answers come FIRST, before the gate: clearing only shrinks the deck,
+ * so it can never create the unplayable state the gate guards, and a
+ * maxed row keeps its MIN-floor messaging even when its cost is above
+ * the pool.  The uniform AP gate
+ * (docs/enemies_ranking.md §4.8) lives here: no card above the pool can
+ * be decked, curated or loot.  Costs resolve without card_get_def (a
+ * fixed-bank trampoline a banked body must never call): curated rows
+ * read the table above, loot ids synthesize through the same pure
+ * macros as loot_synth_banked; SPECIAL rows cost 0 and are refused as
+ * quest items before cost ever matters.  Mirrors deck_add_card's fixed
+ * checks exactly (ownership, SPECIAL, max_copies, owned count, deck
+ * floor, identity cap) so the verdict and the apply cannot disagree --
+ * the apply still runs through deck_add_card, so there is one append
+ * site.  Moved out of the fixed bank (AGENTS.md §52.11.1/§52.18): the
+ * scans do not fit under the 0x8000 ceiling. */
+void deck_equip_verdict_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t pool = g_bk_byte_d;
+    uint8_t is_loot = loot_is_loot_id(id);
+    uint8_t cost = 0;
+    uint8_t cap8 = 0;
+    uint8_t owned = 0;
+    uint8_t in_deck = 0;
+    uint8_t cap = 0;
+    uint8_t total = 0;
+    uint8_t i;
+    g_bk_byte_c = 4;
+    if (!cs || id == CARD_NONE) return;
+    if (is_loot) {
+        uint8_t out[9];
+        DECK_LOOT_IDENT(id, out);
+        cost = out[2];
+    } else {
+        uint8_t k = (uint8_t)(id - CARD_FIRST_GAME);
+        if (k >= GAME_CARD_COUNT) return;
+        if (s_ident_catalog[k][0] == (uint8_t)CARD_TYPE_SPECIAL) return;
+        cost = s_ident_catalog[k][2];
+        cap8 = s_ident_catalog[k][8];
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        if (cs->collection.entries[i].id != id) continue;
+        owned = (uint8_t)(owned + cs->collection.entries[i].count);
+        if (owned < cs->collection.entries[i].count) owned = 255;
+    }
+    if (owned == 0) return;
+    for (i = 0; i < cs->deck.count; i++) {
+        if (cs->deck.cards[i] == id) in_deck++;
+    }
+    /* Fully-decked rows clear (MIN-guarded) without consulting the gate
+     * (see header comment).  owned > 0 is guaranteed here. */
+    if (in_deck >= owned) {
+        if ((uint8_t)(cs->deck.count - in_deck) < DECK_MIN_CARDS)
+            g_bk_byte_c = 6;
+        else g_bk_byte_c = 5;
+        return;
+    }
+    /* The gate answers AFTER the fully-decked clear above: adding an
+     * over-pool card locks, but clearing a maxed row never does. */
+    if (cost > pool) {
+        g_bk_byte_b = cost;
+        g_bk_byte_c = 2;
+        return;
+    }
+    if (cs->deck.count >= MAX_DECK_CARDS) {
+        g_bk_byte_c = 3;
+        return;
+    }
+    if (!is_loot && cap8 > 0 && in_deck >= cap8) return;
+    if (!deck_ident_cmp(id, id, &cap)) return;
+    for (i = 0; i < cs->deck.count; i++) {
+        uint8_t c = 0;
+        if (!deck_ident_cmp(id, cs->deck.cards[i], &c)) continue;
+        total++;
+        if (c > 0 && (cap == 0 || c < cap)) cap = c;
+    }
+    if (cap > 0 && total >= cap) return;
+    g_bk_byte_c = 1;
+}
+
 /* Full-collection absorb (same bank): g_bk_ptr_a = CardState*,
  * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
  * when the candidate folded into an existing same-identity row (atomic:
  * all-or-nothing), 0 when no row matches or a capped fold would need a
  * remainder row that does not fit.  Dispatched by deck_collection_add's
  * full-collection path -- a drop that matches an owned identity must
- * never vanish silently just because the 12-row shelf is full. */
+ * never vanish silently just because the 50-row shelf is full. */
 void deck_absorb_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;

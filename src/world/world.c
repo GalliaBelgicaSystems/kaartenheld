@@ -397,7 +397,19 @@ void world_on_battle_fled(Game *g)
      * re-deriving it per field access. */
     act = &w->actors[idx];
     if (act->active) {
-        act->hp = g->battle.enemies[0].hp;
+        /* Write back the toughest SURVIVOR, not slot 0: a trio shares
+         * one actor, so when the slot-0 member died but its clones
+         * lived, copying enemies[0].hp respawned three corpses -- the
+         * re-engage opened on an all-dead battle and a single attack
+         * won it.  The group recovers to its best surviving member.
+         * idx is dead past the act lookup above, so it doubles as the
+         * enemy counter: no new local in this fixed-bank frame. */
+        act->hp = 0;
+        for (idx = 0; idx < g->battle.enemy_count; idx++) {
+            if (g->battle.enemies[idx].hp > act->hp) {
+                act->hp = g->battle.enemies[idx].hp;
+            }
+        }
     }
 }
 

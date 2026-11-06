@@ -41,6 +41,10 @@ extern const ShopDefinition g_shops[];
  * a loot twin already owned hides the curated one-copy row even though
  * no curated row exists to merge it under yet. */
 extern const CardDefinition *ic_loot_synth(CardId id);
+/* Material/weapon resolver (same file): full "<MAT> <WPN>" shop names.
+ * Sets *is_special for quest items (never listed, never sold). */
+extern void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
+                                uint8_t *is_special);
 extern const uint8_t g_shop_count;
 
 /* Shop message states (mirror shop_screen.c). */
@@ -49,9 +53,6 @@ extern const uint8_t g_shop_count;
 #define SC_SHOP_MSG_NO_GOLD 2
 #define SC_SHOP_MSG_MAX_COPIES 3
 
-/* Item menu navigation layout constants (mirror item_screen.c). */
-#define ITEM_FIRST_CARD 1
-#define ITEM_VISIBLE_CARD 11
 
 static uint8_t s_sc_txt_i;
 static uint8_t s_sc_col_i;
@@ -60,17 +61,9 @@ static uint8_t s_sc_shop_scroll;
 static uint8_t s_sc_def_i;
 static uint8_t s_sc_shop_pos;
 static uint8_t s_sc_stock_pos;
-static uint8_t s_sc_save_pos;
 
 static uint8_t s_sc_y;
 static uint8_t s_sc_pos;
-static uint8_t s_sc_mode;
-static uint8_t s_sc_old_index;
-static uint8_t s_sc_new_index;
-static uint8_t s_sc_old_row;
-static uint8_t s_sc_new_row;
-static uint8_t s_sc_need_scroll;
-static uint8_t s_sc_present;
 static uint8_t s_sc_tile_elem;
 static uint8_t s_sc_tile_wpn;
 static uint16_t s_sc_gold;
@@ -209,6 +202,34 @@ static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
                      d->status_chance == s->status_chance);
 }
 
+/* ── Full card names (docs/loot.md §34.1 short code -> "<MAT> <WPN>") ──
+ * The shop used to print the 3-letter battle code ("RG4"); rows now
+ * print what the CARDS list prints ("IRON RING", element-colored),
+ * drawn in two parts so no WRAM name buffer is needed (stack-gap
+ * budget, AGENTS.md §52.24).  Tables mirror item_content_banked.c;
+ * keep in sync (same order, same strings). */
+static const char *sc_mat_str(uint8_t m, uint8_t *len)
+{
+    switch (m) {
+        case 1: *len = 6; return "BRONZE";
+        case 2: *len = 4; return "IRON";
+        case 3: *len = 5; return "STEEL";
+        case 4: *len = 7; return "MYTHRIL";
+        default: *len = 4; return "WOOD";
+    }
+}
+
+static const char *sc_wpn_str(uint8_t w, uint8_t *len)
+{
+    switch (w) {
+        case 1: *len = 6; return "SHIELD";
+        case 2: *len = 3; return "BOW";
+        case 3: *len = 6; return "DAGGER";
+        case 4: *len = 4; return "RING";
+        default: *len = 5; return "SWORD";
+    }
+}
+
 static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
 
 static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
@@ -233,70 +254,53 @@ static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
     }
 }
 
-static uint8_t bm_mode(const Game *g)
+static uint8_t sc_nm_mat;
+static uint8_t sc_nm_wpn;
+static uint8_t sc_nm_special;
+static uint8_t sc_nm_mlen;
+static uint8_t sc_nm_wlen;
+
+/* Draw "<MAT> <WPN>" at (x, y) in a 14-wide field (cols x..x+13),
+ * element-colored like the CARDS list.  Quest items / unknown ids fall
+ * back to the short battle code (those never appear in shop stock or
+ * the loot-only SELL list; the fallback keeps the row readable). */
+static void sc_draw_full_name(uint8_t x, uint8_t y,
+                              const CardDefinition *def)
 {
-    return (g->screen == SCREEN_SHOP) ? 2 : (uint8_t)g->item_menu_tab;
-}
-
-static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
-{
-    if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3
-     * column header, one card per row at rows 4-14. */
-    if (index == 0) return 2;
-    s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
-    return (uint8_t)(4u + (uint8_t)(s_sc_pos - scroll));
-}
-
-void item_menu_cursor_banked(void)
-{
-    s_sc_game = (Game *)g_bk_ptr_a;
-
-    if (!s_sc_game) return;
-    s_sc_mode = bm_mode(s_sc_game);
-    s_sc_old_index = g_bk_byte_a;
-    s_sc_new_index = g_bk_byte_b;
-    s_sc_game->item_menu_index = s_sc_new_index;
-
-    if (s_sc_mode == 0) {
-        s_sc_need_scroll = s_sc_game->item_menu_scroll;
-        if (s_sc_new_index <= ITEM_FIRST_CARD)
-            s_sc_need_scroll = 0;
-        else {
-            s_sc_pos = (uint8_t)(s_sc_new_index - ITEM_FIRST_CARD);
-            if (s_sc_pos < s_sc_need_scroll)
-                s_sc_need_scroll = s_sc_pos;
-            else if (s_sc_pos > (uint8_t)(s_sc_need_scroll + ITEM_VISIBLE_CARD - 1))
-                s_sc_need_scroll = (uint8_t)(s_sc_pos - (ITEM_VISIBLE_CARD - 1));
-        }
-        if (s_sc_need_scroll != s_sc_game->item_menu_scroll) {
-            s_sc_game->item_menu_scroll = s_sc_need_scroll;
-            s_sc_game->render_cache.valid = false;
-            return;
-        }
-    } else if (s_sc_mode == 2) {
-        /* Shop list: index is a direct stock position (0-based).  Keep the
-         * cursor inside the SHOP_VISIBLE window; a window shift needs a
-         * full redraw (the banked body cannot repaint scrolled rows). */
-        s_sc_need_scroll = s_sc_game->item_menu_scroll;
-        if (s_sc_new_index < s_sc_need_scroll)
-            s_sc_need_scroll = s_sc_new_index;
-        else if (s_sc_new_index > (uint8_t)(s_sc_need_scroll + SHOP_VISIBLE - 1))
-            s_sc_need_scroll = (uint8_t)(s_sc_new_index - (SHOP_VISIBLE - 1));
-        if (s_sc_need_scroll != s_sc_game->item_menu_scroll) {
-            s_sc_game->item_menu_scroll = s_sc_need_scroll;
-            s_sc_game->render_cache.valid = false;
-            return;
-        }
+    const char *ms;
+    const char *ws;
+    uint8_t total;
+    ic_card_mat_wpn_pub(def->id, &sc_nm_mat, &sc_nm_wpn, &sc_nm_special);
+    if (!sc_nm_special) {
+        ms = sc_mat_str(sc_nm_mat, &sc_nm_mlen);
+        ws = sc_wpn_str(sc_nm_wpn, &sc_nm_wlen);
+        sc_draw_text(x, y, ms, sc_nm_mlen);
+        sc_draw_text((uint8_t)(x + sc_nm_mlen), y, " ", 1);
+        sc_draw_text((uint8_t)(x + sc_nm_mlen + 1), y, ws, sc_nm_wlen);
+        /* Blank the rest of the 14-wide name field (a shorter name must
+         * not leave a longer previous row's tail). */
+        total = (uint8_t)(sc_nm_mlen + 1 + sc_nm_wlen);
+        if (total < 14)
+            sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(14 - total));
+        if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+            def->effect == CARD_EFFECT_HEAL_HP)
+            sc_color_span(x, y, total, UI_COLOR_FIELD);
+        else if (def->status_id == STATUS_BURN)
+            sc_color_span(x, y, total, UI_COLOR_FIRE);
+        else if (def->status_id == STATUS_POISON)
+            sc_color_span(x, y, total, UI_COLOR_POISON);
+        else if (def->status_id == STATUS_FREEZE)
+            sc_color_span(x, y, total, UI_COLOR_ICE);
+        return;
     }
-
-    s_sc_old_row = bm_cursor_row(s_sc_mode, s_sc_old_index, s_sc_game->item_menu_scroll);
-    s_sc_new_row = bm_cursor_row(s_sc_mode, s_sc_new_index, s_sc_game->item_menu_scroll);
-    if (s_sc_old_row != s_sc_new_row) {
-        sc_put_char(0, s_sc_old_row, ' ');
-        sc_put_char(0, s_sc_new_row, '>');
-    }
+    sc_card_code_str(def->battle_type, def->power, s_sc_code);
+    sc_draw_text(x, y, s_sc_code, 14);
 }
+
+/* Shared cursor repaint moved to bank 11 (src/screens/menu_cursor_banked.c):
+ * bank 2's switchable area is full, and the cursor is pure WRAM math.
+ * The render below keeps its own row geometry (bm_cursor_row comment
+ * moved with it -- keep in sync). */
 
 /* Rider OAM for the shop list (entries 1-10, one per visible stock row):
  * icon over the col-1 elem cell for cards carrying a rider, hidden
@@ -331,13 +335,17 @@ static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
 uint8_t g_shop_vis_map[SHOP_MAX_ITEMS];
 uint8_t g_shop_vis_count;
 
-/* Visible-map rebuild (one-copy stock): runs at every full shop redraw
- * (entry, purchase) -- the only moments ownership can have changed, so
- * the map the cursor reads is never stale.  The scan mirrors
- * collection_find (rpg/deck.c): a line shows only while the player owns
- * no copy (banked bodies cannot call the fixed-bank counter).  Clamps
- * the cursor into the visible list (a purchase can hide the row under
- * it) before anything paints. */
+/* Visible-map rebuild: the one-copy stock shows a line only while the
+ * player owns no copy (the scan mirrors collection_find in rpg/deck.c
+ * since banked bodies cannot call the fixed-bank counter).  Selling is
+ * the DECK-tab detail page's job (card_detail_sell, any non-SPECIAL
+ * card while this merchant stays engaged); the shop list itself is
+ * buy-only, so the map always holds STOCK positions.  Selling the last
+ * copy of a one-copy card re-opens its row (same price both ways, so no
+ * arbitrage).  Remap runs on every full redraw (entry, purchase), the
+ * only moments the list can change, so the cursor never reads a stale
+ * map.  Clamps the cursor into the visible list (a purchase can hide
+ * the row under it) before painting. */
 static void sc_shop_remap(void)
 {
     uint8_t i;
@@ -471,8 +479,10 @@ void shop_content_render(void)
             else
                 s_sc_tile_wpn = UI_TILE_CARD_SWORD;
 
-            sc_card_code_str(s_sc_card_def->battle_type, s_sc_card_def->power, s_sc_code);
-            sc_draw_text(3, s_sc_y, s_sc_code, 4);
+            /* Full "<MAT> <WPN>" name in cols 3..16 (docs/loot.md
+             * §34.1), same as the CARDS list -- the old 3-letter code
+             * is gone. */
+            sc_draw_full_name(3, s_sc_y, s_sc_card_def);
 
             s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
             VBK_REG = 0;
@@ -496,45 +506,44 @@ void shop_content_render(void)
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }
-        sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
-        sc_draw_text(12, s_sc_y, s_sc_str, 4);
-        /* Gold price in plain font capitals (no coin tile): the semantic
+        /* Price right-aligned ending col 18 (shop prices are < 100 by
+         * design: curated stock <= 30, loot sell value <= 19), 'G' at
+         * col 19 in plain font capitals (no coin tile): the semantic
          * buffer keeps ASCII 'G' and VRAM shows the font glyph on the
-         * default paper slot, matching the price digits (the gold CRAM
-         * slot renders black ink, not the text brown). */
-        sc_put_char(16, s_sc_y, 'G');
+         * default paper slot (the gold CRAM slot renders black ink,
+         * not the text brown).  All three cells write every row, so a
+         * shorter price never leaves a longer one's tail. */
+        sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
+        s_sc_pos = 0;
+        while (s_sc_str[s_sc_pos] != 0) s_sc_pos++;
+        if (s_sc_pos >= 2) {
+            sc_draw_text(17, s_sc_y, s_sc_str, 2);
+        } else if (s_sc_pos == 1) {
+            sc_put_char(17, s_sc_y, ' ');
+            sc_put_char(18, s_sc_y, s_sc_str[0]);
+        } else {
+            sc_draw_text(17, s_sc_y, "  ", 2);
+        }
+        sc_put_char(19, s_sc_y, 'G');
     }
 
     /* Hints always show: the post-shop equip tip moved to a normal
      * dialogue box on exit (docs/loot.md §34.6), so buying no longer
      * changes these lines.  Only failures print a message row: a buy
      * leaves it blank (the bought row vanishing + gold dropping is
-     * the confirmation). */
+     * the confirmation).  Row 17 names the sell flow when idle: selling
+     * happens on a card's CARDS detail page (SELECT a row, A sells)
+     * while this merchant stays engaged. */
     sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
     if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
         sc_draw_text(0, 17, "Not enough!", 12);
     } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
         sc_draw_text(0, 17, "Too many!", 12);
+    } else {
+        sc_draw_text(0, 17, "SELL:CARD DETAIL A", 17);
     }
     shop_rider_draw();
 }
 
-void save_load_content_render(void)
-{
-    s_sc_game = (Game *)g_bk_ptr_a;
-
-    if (!s_sc_game) return;
-    s_sc_present = g_bk_byte_a;
-
-    for (s_sc_save_pos = 0; s_sc_save_pos < SAVE_SLOT_COUNT; s_sc_save_pos++) {
-        s_sc_y = (uint8_t)(4 + (s_sc_save_pos << 1));
-        sc_put_char(0, s_sc_y, (s_sc_game->save_slot_index == s_sc_save_pos) ? '>' : ' ');
-        sc_draw_text(1, s_sc_y, (s_sc_save_pos == 0) ? "SLOT 1:" : ((s_sc_save_pos == 1) ? "SLOT 2:" : "SLOT 3:"), 7);
-        sc_draw_text(9, s_sc_y, (s_sc_present & (1 << s_sc_save_pos)) ? "SAVED" : "(EMPTY)", 7);
-    }
-    sc_draw_text(0, 11, (s_sc_game->save_slot_mode == 1) ? "[A] SAVE  " : "[A] LOAD  ", 10);
-    sc_draw_text(10, 11, "[B] BACK", 8);
-    if (s_sc_game->save_slot_message != 0) {
-        sc_draw_text(2, 13, (s_sc_game->save_slot_message == 1) ? "Game Saved!" : "Slot is empty!", 14);
-    }
-}
+/* save_load_content_render now lives in save_load_banked.c (ROM bank 11);
+ * the fixed wrapper in save_load_screen.c dispatches there directly. */
