@@ -61,8 +61,9 @@
  *      open the staged follow-up; a failed grant closes plainly with
  *      nothing set, so the offer can be retried),
  *      10 (YES: swap the staged remove-item for the staged add-item +
- *      open the staged follow-up; a failed add closes plainly with
- *      nothing removed, so the trade can be retried).
+ *      set the staged quest variable to COMPLETE + open the staged
+ *      follow-up; a failed add closes plainly with nothing removed
+ *      or set, so the trade can be retried).
  * The engine dispatches unconditionally while a dialogue is open; non-choice
  * dialogues (or choice dialogues off the last page / already confirmed)
  * report 0/5 through the same edge evaluation, so the fixed side pays no
@@ -201,9 +202,9 @@ void dialogue_choice_nav_banked(void)
         }
         /* Village dog's key trade: YES swaps the bone for the Old Key
          * through the real collection API (fixed wrapper, code 10:
-         * staged remove + staged add + thanks follow-up).  The one-shot
-         * DOG_KEY flag rides the thanks dialogue's completion_flag, so
-         * no fourth staging byte is needed.  NO closes plainly. */
+         * staged remove + staged add + staged quest-COMPLETE +
+         * thanks follow-up).  The one-shot DOG_KEY flag rides the
+         * thanks dialogue's completion_flag.  NO closes plainly. */
         if (g_game.dialogue.id == DIALOGUE_ID_DOG_ASK) {
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_bk_byte_a = 2;
@@ -213,6 +214,7 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_b = (uint8_t)CARD_BONE;
             g_bk_byte_c = (uint8_t)CARD_OLD_KEY;
             g_bk_byte_d = (uint8_t)DIALOGUE_ID_DOG_THANKS;
+            g_bk_byte_e = (uint8_t)VARIABLE_ID_DOG_QUEST;
             return;
         }
         if (g_game.dialogue.id != DIALOGUE_ID_HEAL_MAGE_ASK) {

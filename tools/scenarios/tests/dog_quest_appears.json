@@ -1,0 +1,85 @@
+{
+ "name": "dog_quest_appears",
+ "test": true,
+ "description": "Talking to the village dog the first time starts the DOG'S KEY quest: the hint event sets DOG_QUEST=1, so the QUEST tab lists it as active even before the bone is taken",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "VILLAGE_DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "variable",
+   "variable": "DOG_QUEST",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "MET_DOG",
+   "expected": true
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_HINT"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "DECK QUEST HERO GEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "DOG'S KEY"
+  },
+  {
+   "type": "screen_row",
+   "row": 4,
+   "contains": "active"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 4,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 4242
+ }
+}

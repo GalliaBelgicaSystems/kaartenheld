@@ -158,6 +158,12 @@ extern uint8_t g_bk_byte_a;
 extern uint8_t g_bk_byte_b;
 extern uint8_t g_bk_byte_c;
 extern uint8_t g_bk_byte_d;
+/* Fifth staging byte (choice protocols that outgrow a/b/c/d, e.g. the
+ * dog trade's quest-complete variable id).  Same contract as the rest:
+ * staged by the banked producer, consumed by the fixed wrapper in the
+ * same call.  BSS zero-init (no non-zero WRAM initializer, AGENTS.md
+ * 52.27); the WRAM cost is one byte (stack-budget gate watches it). */
+extern uint8_t g_bk_byte_e;
 /* Generic post-tick request: a non-zero value asks game_update() to open
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */

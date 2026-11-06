@@ -91,11 +91,16 @@ void dialogue_screen_update(Game *g)
         } else if (g_bk_byte_a == 10) {
             /* Item swap resolved by a choice dialogue (dog's key trade):
              * add the key first so a full shelf keeps the bone (the
-             * trade can be retried), then remove it and open the staged
-             * thanks.  The thanks dialogue's completion_flag owns the
-             * one-shot flag, so no fourth staging byte is needed. */
+             * trade can be retried), then remove it, complete the
+             * staged quest variable (the hint event started it) through
+             * the real variable API -- it owns the VARIABLE_SET
+             * telemetry -- and open the staged thanks.  The id arrives
+             * staged like the event engine's action args, never a game
+             * branch (AGENTS.md 55.1); the thanks dialogue's
+             * completion_flag owns the one-shot flag. */
             if (deck_collection_add(&g->state.cards, (CardId)g_bk_byte_c, 1)) {
                 deck_collection_remove(&g->state.cards, (CardId)g_bk_byte_b, 1);
+                game_variable_set(&g->state, (VariableId)g_bk_byte_e, 2);
                 dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
                 return;
             }

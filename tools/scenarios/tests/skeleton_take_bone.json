@@ -1,7 +1,7 @@
 {
  "name": "skeleton_take_bone",
  "test": true,
- "description": "After hearing the village dog's hint, bumping the skeleton offers 'Take a bone from the skeleton?': answering YES (default cursor) grants one BONE, sets BONE_TAKEN, and opens the taken follow-up",
+ "description": "After hearing the village dog's hint, bumping the skeleton offers 'Take a bone from the skeleton?': answering YES (default cursor) grants one BONE, sets BONE_TAKEN, and opens the taken follow-up. The DOG'S KEY quest stays ACTIVE (taking the bone is progress, the key trade completes it)",
  "actions": [
   {
    "type": "interact",
@@ -66,6 +66,11 @@
    "type": "flag",
    "flag": "BONE_TAKEN",
    "expected": true
+  },
+  {
+   "type": "variable",
+   "variable": "DOG_QUEST",
+   "expected": 1
   }
  ],
  "initial_state": {
@@ -78,6 +83,9 @@
   "seed": 4242,
   "flags": {
    "MET_DOG": true
+  },
+  "variables": {
+   "DOG_QUEST": 1
   }
  }
 }

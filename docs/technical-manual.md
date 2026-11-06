@@ -223,8 +223,8 @@ and the Lord of Slimes — stand alone.  See §9.2 for enemy statistics and
 
 ## 4. Quests
 
-Quests surface on the quick screen's `QUEST` tab (§7.2).  Both quests are
-fully data-driven in the event table (`src/game/events_content.c`).
+Quests surface on the quick screen's `QUEST` tab (§7.2).  All three quests
+are fully data-driven in the event table (`src/game/events_content.c`).
 
 ### 4.1 Quest status model
 
@@ -235,6 +235,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 |---|---|---|---|
 | MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
+| DOG'S KEY | `DOG_QUEST` | trade the skeleton's bone for the key | "OLD KEY" |
 
 ### 4.2 Monster Hunt — the main quest
 
@@ -283,6 +284,18 @@ reachable — it is not gated behind this quest.
 
    > You found it! Thank you, hero!
    > My shop is open now.
+
+### 4.4 Dog's Key — the side quest
+
+1. **Start.** Talk to the **dog in the village** for the first time
+   (it is holding a key and won't give it).  Hearing the hint starts
+   the quest, so the QUEST tab tracks it straight away.
+2. **Objective.** Take a **bone** from the tunnel skeleton (its offer
+   only appears once you've heard the hint), then give it to the dog.
+   Taking the bone keeps the quest ACTIVE; the trade completes it.
+3. **Complete.** Answering YES to "Give Bone to dog?" swaps the bone
+   for the **Old Key** (opens the field cache) and marks the
+   quest complete ("complete - OLD KEY").
 
 ---
 

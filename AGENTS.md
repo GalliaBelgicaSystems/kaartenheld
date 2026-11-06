@@ -2937,13 +2937,21 @@ in sync; changing one without the other silently breaks every scenario.
 
 * Core snapshot (`g_snap_buf`, 36 bytes): byte 12 is `state.flags.bytes[0]`,
   byte 19 is `state.scene.scene_id`.  Existing scenarios depend on these.
-* Extended snapshot (`g_state_snap_buf`, 210 bytes, version 0x06): version
-  byte 0, flags 1..8, variables 9..24, currency 25..37, party 38..50,
-  inventory (collection) 51..83, world 84..132, progression 133..181,
-  equipment 182, camera/world geometry 183..188, battle-deck count at 189
-  followed by up to 20 deck card ids at 190..209.
-* State-load descriptor (`g_scen_state_buf`, version 0x04): the optional
-  deck section at 229 (present flag) / 230 (count) / 231..250 (card ids)
+* Extended snapshot (`g_state_snap_buf`, 294 bytes, version 0x08): version
+  byte 0, flags 1..8, variables 9..40 (all MAX_STATE_VARIABLES as int16
+  LE -- grown from 9..24 for the 9th variable in Nov 2026; the builder
+  always copied 16 vars while the layout reserved 8, so vars 9+ used to
+  alias the currency bytes), currency count 41 + entries 42..53, party
+  count 54 + members 55..66, inventory (collection) count 67 + entries
+  68..167, world count 168 + entries 169..216, progression count 217 +
+  entries 218..265, equipment 266, camera/world geometry 267..272,
+  battle-deck count at 273 followed by up to 20 deck card ids at
+  274..293.
+* State-load descriptor (`g_scen_state_buf`, 320 bytes, version 0x05):
+  variables section carries up to 16 entries (vid + int16 LE, 3 bytes
+  each at 19..66), so variables 9+ load through descriptors; the
+  optional deck section at 297 (present flag) / 298 (count) / 299..318
+  (card ids)
   replaces the starter deck when present — an explicit empty deck is how
   scenarios reach `battle_start`'s packed fallback path now that
   `DECK_MIN_CARDS` blocks emptying a deck through gameplay.

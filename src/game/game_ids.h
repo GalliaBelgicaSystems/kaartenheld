@@ -122,7 +122,8 @@ typedef enum {
     VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = ACTIVE (accepted or found), 2 = complete */
     VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
     VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
-    VARIABLE_ID_GEM_EQUIPPED       = 8    /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
+    VARIABLE_ID_GEM_EQUIPPED       = 8,   /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
+    VARIABLE_ID_DOG_QUEST          = 9    /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */

@@ -21,6 +21,11 @@ const QuestDefinition g_quests[] = {
         2, "LOST AMULET", "MERCHANT IN TOWN", "FIND THE AMULET",
         VARIABLE_ID_MERCHANT_QUEST, 1, 2,
         0, QUEST_AMULET_TARGET, "", "MERCHANT", "SHOP OPENED"
+    },
+    {
+        3, "DOG'S KEY", "DOG IN VILLAGE", "TRADE BONE FOR KEY",
+        VARIABLE_ID_DOG_QUEST, 1, 2,
+        0, 0, "", "OLD KEY", "OLD KEY"
     }
 };
 

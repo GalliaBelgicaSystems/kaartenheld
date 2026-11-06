@@ -383,7 +383,10 @@ const EventDefinition g_events[] = {
     /* ── Village dog (bone for the Old Key) ────────────────────────
      * The village dog holds the field cache's Old Key and won't give
      * it (HINT, one-shot via the dialogue's MET_DOG completion flag)
-     * until the hero brings a bone from the tunnel skeleton.  ASK
+     * until the hero brings a bone from the tunnel skeleton.  HINT
+     * also starts the DOG'S KEY quest (DOG_QUEST=1: the quest tab
+     * lists it from the first talk, like the merchant quest starts
+     * on its intro).  ASK
      * offers "Give Bone to dog?" (YES/NO): YES resolves through
      * choice_nav_banked.c code 10 (remove BONE, grant OLD_KEY, set
      * DOG_KEY through the real APIs, then the thanks follow-up) and
@@ -397,8 +400,11 @@ const EventDefinition g_events[] = {
             { EVENT_COND_FLAG, STORY_FLAG_ID_DOG_KEY, 0, false, false },
             { EVENT_COND_ITEM_COUNT, CARD_BONE, 0, false, false }
         },
-        1,
-        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_HINT, 0, 0 }}
+        2,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_HINT, 0, 0 },
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_DOG_QUEST, 1, 0 }
+        }
     },
     {
         EVENT_ID_DOG_ASK, EVENT_TRIGGER_INTERACT, ENTITY_ID_VILLAGE_DOG, EVENT_MAP_ANY,
