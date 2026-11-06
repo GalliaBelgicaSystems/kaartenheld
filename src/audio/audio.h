@@ -6,7 +6,8 @@
 
 typedef enum {
     MUSIC_NONE,
-    MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
+    MUSIC_OVERWORLD, /* overworld theme (assets/music/another opening.uge,
+                        loops, bank 7): Wake Grove + Carl's field */
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* battle-victory fanfare (victory.uge, bank 7),
                         played once: the ROM driver loops whole songs, so
@@ -26,7 +27,7 @@ typedef enum {
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
     MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
     MUSIC_CHEST,     /* chest-loot jingle (chest opening.uge, one-shot,
-                        bank 7); the overworld restores the scene track
+                        bank 6); the overworld restores the scene track
                         when it ends (audio_jingle_frame) */
     MUSIC_GAMEOVER,  /* game-over theme (game over.uge, loops, bank 7):
                         starts the instant the hero falls

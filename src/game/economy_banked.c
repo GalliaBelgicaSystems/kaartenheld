@@ -60,7 +60,7 @@ static uint16_t economy_expected_for_scene(uint8_t scene)
 
 /* Market-scaled quote S.  In: byte_a = price, byte_b = (uint8_t)bias,
  * byte_c = use_market.  Out: byte_b = S.  Same shape as the bank-2
- * display copy (screen_content.c bank2_price): display and charge can
+ * display copy (screen_content.c s_sc_market_quote): display and charge can
  * never disagree, by construction.  use_market = 0 forces neutral 32
  * (sales ignore the market, §5).  Multiply is repeated addition
  * (UI-time paths only, never per-frame) so no mult lib is pulled into
@@ -97,7 +97,7 @@ void economy_quote_banked(void)
     }
     p = 0;
     for (i = idx; i != 0; i--) p = (uint16_t)(p + b);
-    /* Saturate, never truncate (see bank2_price): base 255 at high
+    /* Saturate, never truncate (see s_sc_market_quote): base 255 at high
      * inflation exceeds 255 and must cap, not wrap. */
     q = (uint16_t)(((uint16_t)(p + 16)) >> 5);
     g_bk_byte_b = (q > 255) ? 255 : (uint8_t)q;

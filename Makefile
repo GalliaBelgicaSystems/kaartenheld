@@ -39,11 +39,11 @@ SRCS = $(BANK5_EARLY_SRCS) $(filter-out $(BANK5_EARLY_SRCS),$(ALL_SRCS))
 # see these symbols (same g_scenes/g_actor_tables names).
 TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors_content_test.c
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
-	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b7.c $(SRC_DIR)/game/scenes_terrain_b9.c
+	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
-# the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 4 in
-# release to free the tight world bank for expanded content.  Excluded from
+# the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
+# release (pristine) to free the tight world/shop banks.  Excluded from
 # the debug link (the debug copy lives in tiles_content.c).
 RELEASE_ONLY_SRCS = $(SRC_DIR)/screens/title_logo_content.c
 
@@ -59,7 +59,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_emit_banked.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/another_opening.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -733,18 +733,21 @@ $(GENERATED_MUSIC_DIR)/title.c: assets/music/title\ short.uge tools/compile_musi
 $(GENERATED_MUSIC_DIR)/victory.c: assets/music/victory.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_victory "$@"
 
-# Opening theme (assets/music/opening.uge).  Wired to MUSIC_OVERWORLD:
-# the four scenes on that track had no authored music yet.  Bank 7
-# (the SFX moved to bank 8 to make room): plays through the bank-7
-# driver copy.
-$(GENERATED_MUSIC_DIR)/opening.c: assets/music/opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 7 song_opening "$@"
+# Overworld theme (assets/music/another opening.uge, re-scored).  Wired to
+# MUSIC_OVERWORLD, i.e. Wake Grove and Carl's field.  Bank 7 through the
+# bank-7 driver copy.  It replaces the old assets/music/opening.uge (kept
+# on disk, no longer linked): the new track is ~1.6 KB longer, so the
+# village terrain moved out to bank 11 and the chest jingle to bank 6 to
+# keep bank 7 inside its 16 KB budget.
+$(GENERATED_MUSIC_DIR)/another_opening.c: assets/music/another\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_another_opening "$@"
 
 # Chest-opening jingle (assets/music/chest opening.uge, one-shot).
 # Played once per chest loot (MUSIC_CHEST); the overworld restores the
-# scene track when it ends.  Bank 7 like the opening theme.
+# scene track when it ends.  Bank 6 (home bank, its own driver copy): it
+# moved off bank 7 to make room for the re-scored overworld theme.
 $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 7 song_chest_opening "$@"
+	python3 tools/compile_music.py "$<" 6 song_chest_opening "$@"
 
 # Game-over theme (assets/music/game over.uge, loops).  Played the moment
 # the hero falls (battle_set_result DEFEAT) so the VICTORY!/DEFEATED!
@@ -787,7 +790,7 @@ $(GENERATED_MUSIC_DIR)/underground.c: assets/music/underground\ pass.uge tools/c
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav $(MUSIC_PREVIEW_DIR)/underground.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/another_opening.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav $(MUSIC_PREVIEW_DIR)/underground.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

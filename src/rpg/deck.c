@@ -165,11 +165,11 @@ bool deck_add_card(CardState *cs, CardId id)
     if (def->max_copies > 0 && in_deck >= def->max_copies) return false;
     if (in_deck >= deck_collection_count(cs, id)) return false;
 
-    /* Cross-row cap (docs/loot.md §34): a capped curated row and its loot
-     * twin are one card in two collection rows after a capped fold, so
-     * the per-id checks above cannot see the pair's total.  The banked
-     * gate counts decked copies of the same identity and enforces the
-     * tighter cap -- otherwise the twin decks past it. */
+    /* Cross-row cap (docs/loot.md §34): a capped curated row and its
+     * loot twin are one card in two collection rows after a capped
+     * fold, so the per-id checks above cannot see the pair's total.
+     * The banked gate counts decked copies of the same identity and
+     * enforces the tighter cap -- otherwise the twin decks past it. */
     g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&deck_ident_gate_banked;
     g_bk_ptr_a = (void *)cs;
@@ -185,25 +185,30 @@ bool deck_add_card(CardState *cs, CardId id)
 uint8_t deck_equip_card(CardState *cs, CardId id, uint8_t pool)
 {
     if (!cs || id == CARD_NONE) return EQUIP_REJECTED;
-    /* The lock check runs banked (loot bank has room; fixed does not):
-     * same cost math as the synth, so gate and def never disagree.
-     * g_bk_byte_c carries the required AP out for the telemetry below. */
-    if (loot_is_loot_id(id)) {
-        g_bk_call_bank = 9;
-        g_bk_call_target = (uint16_t)&deck_equip_gate_banked;
-        g_bk_byte_a = id;
-        g_bk_byte_b = pool;
-        banked_call_run();
-        if (g_bk_byte_c) {
-            /* Locked (docs/enemies_ranking.md §4.8): the rejection is
-             * assertable; no CARD_ADDED_TO_DECK fires with it.  In release
-             * telemetry_emit compiles out (telemetry.h). */
-            telemetry_emit(EVENT_CARD_EQUIP_LOCKED, id, g_bk_byte_c, 0, 0);
-            return EQUIP_LOCKED;
-        }
+    /* The whole verdict runs banked (bank 11 hosts the identity
+     * tables; the fixed bank sits against 0x8000 and cannot host the
+     * scans).  g_bk_byte_c answers 1 proceed / 2 pool-locked (cost in
+     * b) / 3 deck full / anything else per-card refusal.  A proceed
+     * verdict still applies through deck_add_card, so there is one
+     * append site; the verdict and the apply re-check the same pure
+     * state, so they cannot disagree. */
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&deck_equip_verdict_banked;
+    g_bk_ptr_a = (void *)cs;
+    g_bk_byte_a = id;
+    g_bk_byte_d = pool;
+    banked_call_run();
+    if (g_bk_byte_c == 2) {
+        /* Locked (docs/enemies_ranking.md §4.8): the rejection is
+         * assertable; no CARD_ADDED_TO_DECK fires with it.  In release
+         * telemetry_emit compiles out (telemetry.h). */
+        telemetry_emit(EVENT_CARD_EQUIP_LOCKED, id, g_bk_byte_b, 0, 0);
+        return EQUIP_LOCKED;
     }
-    if (cs->deck.count >= MAX_DECK_CARDS) return EQUIP_FULL;
-    if (deck_add_card(cs, id)) return EQUIP_OK;
+    if (g_bk_byte_c == 3) return EQUIP_FULL;
+    if (g_bk_byte_c == 6) return EQUIP_MIN;
+    if (g_bk_byte_c == 5) return EQUIP_CLEAR;
+    if (g_bk_byte_c == 1 && deck_add_card(cs, id)) return EQUIP_OK;
     return EQUIP_REJECTED;
 }
 

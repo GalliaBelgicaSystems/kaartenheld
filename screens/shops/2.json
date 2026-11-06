@@ -4,6 +4,9 @@
   "items": [
     "CARD_IRON_RING",
     "CARD_BOW_9",
-    "CARD_STEEL_SHIELD"
+    "CARD_STEEL_SHIELD",
+    "CARD_WOOD_SWORD",
+    "CARD_WOODEN_SHIELD",
+    "CARD_FIRE_SWORD"
   ]
 }

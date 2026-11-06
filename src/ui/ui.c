@@ -528,15 +528,19 @@ static const uint8_t s_castle_ext_slot[16] = {
     26, 8, 17, 18, 19, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 37
 };
 
-/* Underground value->VRAM-slot table (fixed bank, 43 bytes): slot for
- * every aliased value 208..250 (see world.h).  Dead values map to void.
+/* Underground value->VRAM-slot table (fixed bank, 47 bytes): slot for
+ * every aliased value 208..250 plus the skeleton's own value 254 (see
+ * world.h).  Dead values map to void.  254 sits outside the contiguous
+ * run, so without its entry the range check below let it fall to the
+ * generic glyph fallback: glyph '.' painted slot 0 (the top-left corner
+ * wall) over the bone art.
  * A bank-10 copy was tried first, but fixed-bank code itself executes
  * from the switchable window (ROM bank 1: ui.c links above 0x4000), so
  * an inline bank select would unmap the code mid-execution -- only the
  * WRAM trampoline may switch banks, and a per-cell trampoline call is
  * too slow.  The table lives here instead; the fixed bank has room
  * again after the refill move (see below). */
-static const uint8_t s_ug_slot[43] = {
+static const uint8_t s_ug_slot[47] = {
     20, 22, 23, 24,                 /* 208..211 floors */
     25, 26, 27, 28,                 /* 212..215 interior corners */
     29,                             /* 216 (unused; void) */
@@ -547,6 +551,8 @@ static const uint8_t s_ug_slot[43] = {
     21,                             /* 227 stairs exit */
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     29, 29, 29,                     /* 248..250 (unused; void) */
+    29, 29, 29,                     /* 251..253 (castle values; void) */
+    30,                             /* 254 skeleton bone art */
 };
 
 /* Commit one resolved cell to the tilemap ring, the CGB attribute ring,
@@ -658,11 +664,12 @@ static void ui_draw_terrain_cell(const World *world, uint8_t col, uint8_t row)
             uint8_t v_idx = (uint8_t)(t - TILE_VILLAGE_00);
             tile_idx = (uint8_t)(RPG_TILE_BASE_WORLD + v_idx);
         } else if (world->tileset_kind == WORLD_TILESET_UNDERGROUND &&
-                   (uint8_t)(t - TILE_UNDERGROUND_20) <= 42) {
+                   (uint8_t)(t - TILE_UNDERGROUND_20) <= 46) {
             /* Single kind gate + one range check: every UG value lives
-             * in one aliased run (208..250, see world.h), mapped through
-             * the fixed-bank slot table above (slots for floors, corners,
-             * void, stairs, walls; dead values map to void).  Values
+             * in the aliased run 208..250 plus the skeleton's own value
+             * 254 (see world.h), mapped through the fixed-bank slot
+             * table above (slots for floors, corners, void, stairs,
+             * walls, bone art; dead values map to void).  Values
              * outside the run (the TILE_WALL border pre-fill and anything
              * invalid) fall through to the generic lookup below, whose
              * slots 0..3 hold UG wall art while this tileset is loaded

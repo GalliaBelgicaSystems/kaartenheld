@@ -29,18 +29,20 @@ OFF_STATE = 2
 OFF_SCENE = 0            # SceneState: SceneId, x, y, facing (4 B)
 OFF_PARTY = 4            # PartyState: members[1]x(id,hp,max)=3 + count = 4
 OFF_CARDS = 8            # CardState: collection + deck
-OFF_CARDS_COLLECTION = OFF_CARDS         # entries[12]x(id,count)=24 + count
-OFF_CARDS_DECK = OFF_CARDS + 25          # cards[20] + count = 21
-OFF_FLAGS = OFF_CARDS + 46               # bytes[8]
+OFF_CARDS_COLLECTION = OFF_CARDS         # entries[50]x(id,count)=100 + count
+OFF_CARDS_DECK = OFF_CARDS + 101         # cards[20] + count = 21
+OFF_FLAGS = OFF_CARDS + 122              # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
 OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
 OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
 OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
-STATE_SIZE = OFF_PROGRESSION + 13        # == sizeof(GameState); locates World/Battle
+OFF_ECONOMY = OFF_PROGRESSION + 13       # EconomyState: index + gold_in + gold_out + battles = 6
+STATE_SIZE = OFF_ECONOMY + 6             # == sizeof(GameState); locates World/Battle
 
 # CardDefinition (src/rpg/cards.h): id type power cost uses max_copies
-# effect battle_type price status_id status_chance name[12] = 23 B.
-CARD_DEF_SIZE = 23
+# effect battle_type price price_bias status_id status_chance
+# name[12] = 24 B (bias added by the economy, docs/economy.md §4.1).
+CARD_DEF_SIZE = 24
 CARD_DEF_PRICE = 8
 CARD_DEF_ID = 0
 
@@ -169,6 +171,10 @@ SFX_NONE = 0xFF
 # Story flags (src/game/game_ids.h)
 STORY_FLAG_ID_ARRIVED_TOWN = 1
 STORY_FLAG_ID_MET_MAYOR = 2
+STORY_FLAG_ID_FIELD_CHEST = 3
+STORY_FLAG_ID_MET_DOG = 9
+STORY_FLAG_ID_BONE_TAKEN = 10
+STORY_FLAG_ID_DOG_KEY = 11
 
 # Variables (src/game/game_ids.h)
 VARIABLE_ID_QUEST_MONSTER_HUNT = 3
@@ -184,8 +190,12 @@ CARD_IRON_SWORD = CARD_FIRST_GAME + 0
 CARD_WOOD_SWORD = CARD_FIRST_GAME + 7
 CARD_WOODEN_SHIELD = CARD_FIRST_GAME + 1
 CARD_IRON_RING = CARD_FIRST_GAME + 2
+CARD_BOW_9 = CARD_FIRST_GAME + 6
+CARD_STEEL_SHIELD = CARD_FIRST_GAME + 8
 CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
 CARD_AMULET = CARD_FIRST_GAME + 5
+CARD_BONE = CARD_FIRST_GAME + 9
+CARD_OLD_KEY = CARD_FIRST_GAME + 10
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
@@ -313,9 +323,9 @@ class StateReader:
     def collection(self):
         """List of (card_id, count) pairs in the collection."""
         base = self.state + OFF_CARDS_COLLECTION
-        n = self.rd(base + 24, 1)[0]
+        n = self.rd(base + 100, 1)[0]
         out = []
-        for i in range(min(n, 12)):
+        for i in range(min(n, 50)):
             e = self.rd(base + 2 * i, 2)
             out.append((e[0], e[1]))
         return out

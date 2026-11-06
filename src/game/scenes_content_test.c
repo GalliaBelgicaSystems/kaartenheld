@@ -291,6 +291,7 @@ static const SceneTerrainBlock s_test_underground_terrain[] = {
     { 13, 10, 1, 1, TILE_UNDERGROUND_24 },
     { 10, 4, 1, 1, TILE_UNDERGROUND_21 },
     { 8, 8, 1, 1, TILE_UNDERGROUND_17 },
+    { 12, 10, 1, 1, TILE_UNDERGROUND_1E },
     { 0, 0, 0, 0, 0 }
 };
 

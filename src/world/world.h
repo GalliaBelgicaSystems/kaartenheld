@@ -421,8 +421,10 @@ typedef enum {
      * on a mismatch): each TILE_UNDERGROUND_<i> must match the live
      * tile's (walkable, glyph) EXACTLY, or movement/palette/screen-buffer
      * behavior corrupts BOTH tilesets sharing the value.
-     * Mapping (vram slot -> value -> donor):
-     *   00..19 walls            -> 228..247 (desolate solid '#')
+   * Mapping (vram slot -> value -> donor):
+   *   30 skeleton bone art    -> 254 (fresh value, own art; the table in
+   *                             ui.c covers 208..254 with 251..253 void)
+   *   00..19 walls            -> 228..247 (desolate solid '#')
      *   20,22,23,24 floors      -> 208..211 (desolate walkable ',')
      *   21 stairs (exit)         -> 227 (desolate exit, walkable '>')
      *   25..28 interior corners  -> 212..214 + 220 (desolate solid '#';
@@ -431,7 +433,8 @@ typedef enum {
      *   29..35 void (one def)    -> 221 (desolate solid '#'; the manifest
      *                             forces glyph '#' over the object default
      *                             so the entry matches)
-     * All values sit in one contiguous run (208..216, 220/221, 227..250),
+     * All values sit in one contiguous run (208..216, 220/221, 227..250)
+   * plus the skeleton's own value 254,
      * so the renderer maps them through a single fixed-bank slot table
      * (s_ug_slot in ui.c; the fixed bank has room again after the
      * semantic-refill move-out).  A banked-table read was tried first,
@@ -469,13 +472,17 @@ typedef enum {
     TILE_UNDERGROUND_27 = 214,
     TILE_UNDERGROUND_28 = 220,
     TILE_UNDERGROUND_29 = 221,
+    TILE_UNDERGROUND_1E = 254,
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
- * (empty/unset cell), so the enum must never reach it -- only 254 is
- * still clear past the castle extension (251..253), and it stays clear
- * as buffer.  Enforced by g_tiletype_fits_u8 in world.c (kept out of
- * this header so the 2 bytes are emitted once). */
+ * (empty/unset cell), so the enum must never reach it -- 254 was the
+ * last clear value past the castle extension (251..253) and now belongs
+ * to the underground skeleton tile (walkable bone art the tunnel
+ * skeleton NPC stands on).  The u8 TileType space is now fully spent:
+ * any further tile needs an alias or a repurposed value (see
+ * generate_tiles.py landscape_entries).  Enforced by g_tiletype_fits_u8
+ * in world.c (kept out of this header so the 2 bytes are emitted once). */
 
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32

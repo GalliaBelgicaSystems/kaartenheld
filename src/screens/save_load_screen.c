@@ -23,7 +23,7 @@ static void save_load_draw(Game *g)
     for (i = 0; i < SAVE_SLOT_COUNT; i++) {
         if (save_present_slot(i)) present |= (uint8_t)(1 << i);
     }
-    g_bk_call_bank = 2;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&save_load_content_render;
     g_bk_ptr_a = (void *)g;
     g_bk_byte_a = present;

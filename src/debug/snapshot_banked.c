@@ -1,4 +1,4 @@
-#pragma bank 2
+#pragma bank 11
 
 /* Compiled empty in the release ROM (DEBUG_ONLY_SRCS); this declaration
  * keeps the ISO "empty translation unit" lint clean for that pass. */
@@ -14,7 +14,8 @@ typedef int snap_banked_translation_unit_not_empty;
 
 /* ── Banked core snapshot (DEBUG-only) ─────────────────────────────
  * Body of debug_snapshot() (src/debug/telemetry.c), relocated to ROM
- * bank 2 so it does not consume the fixed-bank budget.  Reads g_game
+ * bank 11 (was bank 2; moved for shop render pressure, Nov 2026) so it
+ * does not consume the fixed-bank budget.  Reads g_game
  * (WRAM) and its own bank-local helpers; writes g_snap_buf (WRAM).
  * Calls debug_state_snapshot_banked() DIRECTLY -- same bank, legal;
  * going through the fixed wrapper would re-enter the trampoline, which

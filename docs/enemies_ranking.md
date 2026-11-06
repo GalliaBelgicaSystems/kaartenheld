@@ -643,12 +643,13 @@ Without a gate the decision in §8.1 is half-implemented: a knight could drop a
 it at selection — a dead deck slot with no explanation.  The gate is therefore
 part of the loot feature, not a follow-up.
 
-**Rule.**  A **loot-derived** card (`loot_is_loot_id(id)`, i.e. id ≥
-`LOOT_ID_BASE`) whose synthesized `cost` exceeds the live pool cannot be added
-to the deck.  Curated cards are exempt on purpose: the starter deck itself
-carries two cost-2 fire swords while the pool starts at 1, and shop/quest cards
-are authored against the pool they appear at.  Only *player-chosen equipping of
-generated loot* is gated.
+**Rule.**  Any card whose `cost` exceeds the live pool cannot be added
+to the deck -- curated or loot-derived (`loot_is_loot_id(id)`, i.e. id ≥
+`LOOT_ID_BASE`).  A card you cannot pay for would be a dead deck slot.
+Pre-decked grants are unaffected: the starter deck, shop/quest rewards and
+scenario staging arrive via the ungated `deck_add_card`, so the cost-2
+fire swords in the pool-1 starter deck stay put.  Only *player-chosen
+equipping* (quick-screen A, harness `deck add`) is gated.
 
 **Shape.**
 
@@ -957,6 +958,10 @@ pay for, so it is a dead deck slot instead of a goal.
   state pointer and derives the digit at draw time.  A WRAM layout shift is the
   documented cause of the `battle_boot` ghost-input regression
   (`AGENTS.md` §52.24) — do not add a global for this.
+  Status (Nov 2026): held for the gate itself.  Later bundle growth lives
+  elsewhere and is accounted at its own site: the 50-row collection (+76 B
+  `GameState`, `src/rpg/deck.h`) and the dog-trade staging byte (+1 B
+  `g_bk_byte_e`, `src/core/banked.h`).
 * **No multiply/divide, no function pointers** in the roll (§52.1, §52.18);
   the walk and the compares are compare-only.
 * **No `di`/`ei`** in the banked body (§52.11.3); the drop body is pure WRAM +

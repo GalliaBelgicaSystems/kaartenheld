@@ -23,15 +23,17 @@
  * (8-bit saturating; price 0 quotes 0 = not for sale, however biased --
  * tools/check_economy.py keeps price-0 rows bias-free); S = (base *
  * index + 16) >> 5 with a repeated-add multiply (no lib, §52.18).  ONE
- * meaning: the buy price for curated cards AND the sell value for loot.
- * The two markets are disjoint by construction -- shops stock
- * curated-only (shops_compile.py rejects loot-range ids) and merchants
- * buy loot-only (the sell path guards loot_is_loot_id) -- so no
- * halve/double split exists and buy-then-sell profit is structurally
- * impossible.  use_market selects the live clamped index (buy) or
- * neutral 32 (sell: sales ignore the market).  At neutral S == base, so
- * every pre-economy expectation holds exactly (loot sells its formula
- * value, shop rows charge their catalog price). */
+ * meaning for every till price: BUY rows quote S(price + bias, live
+ * index), SELL rows quote S(sell_base, live index) where the sell base
+ * is the loot formula value (loot has no buy row) or the rarity cut
+ * (curated).  The cut never exceeds the buy base and S is monotonic,
+ * so buy-then-sell never prints gold at any index (§5.1, gated by
+ * tools/check_economy.py).  Shops stock curated-only
+ * (shops_compile.py rejects loot-range ids), so loot can never be
+ * bought.  use_market nonzero selects the live clamped index (every
+ * live till caller); zero pins neutral 32 (debug/test paths needing
+ * exact figures).  At neutral S == base, so every pre-economy
+ * expectation holds exactly. */
 uint8_t economy_quote(uint8_t price, int8_t bias, uint8_t use_market);
 
 /* Victory gold path (bank-11 body, inlined at the single world.c site):

@@ -12,8 +12,8 @@ Fails loudly (exit 1) on any violation:
      price-0 row however biased (not for sale, always free in the
      shop); a nonzero bias there is dead content, i.e. a typo.
 2. Quote-formula gate, exhaustive over the whole byte domain: the
-   Python mirror of bank2_price/economy_quote_banked must satisfy, for
-   every price, every bias, every index 24..48:
+   Python mirror of s_sc_market_quote/economy_quote_banked must satisfy,
+   for every price, every bias, every index 24..48:
    - base == 0  =>  S == 0 (unsellable stays unsellable);
    - base >= 1  =>  1 <= S <= 255 (saturates, never truncates/wraps --
      a wrap once quoted 7g for a 255g card at high inflation);
@@ -22,6 +22,12 @@ Fails loudly (exit 1) on any violation:
    - S non-decreasing in the index (inflation never discounts).
    If someone edits the shift/rounding/saturation in either C copy,
    this gate catches the drift even where no scenario reaches.
+3. No-arbitrage gate (docs/economy.md §5.1): for every buy base 1..255
+   and every material tier 0..4, S(cut(base,tier), idx) <= S(base, idx)
+   at every index -- the rarity cut sits under the buy base and the
+   quote is monotonic, so buy-then-sell can never print gold, at any
+   market position. Loot needs no pair here: shops stock curated only
+   (shops_compile.py rejects loot-range ids), so loot is never bought.
 
 Stdlib only.  Exit 0 = green, 1 = violation (with expected/actual).
 """
@@ -151,6 +157,32 @@ def check_formula(idx_min, idx_max, idx_neutral):
     return None
 
 
+def c_cut(price, material):
+    """Exact mirror of the C rarity cut (screen_content.c
+    sc_sell_price): n = price x (5-material), q = n/6, floored at 1."""
+    n = price * (5 - material)
+    q = n // 6
+    return q if q else 1
+
+
+def check_no_arbitrage(idx_min, idx_max):
+    """No buy-then-sell pump (docs/economy.md §5.1): for every buy base
+    1..255 and every material tier 0..4, S(cut, idx) <= S(base, idx)
+    at every index -- the cut sits under the base and the quote is
+    monotonic, so resale never exceeds purchase whatever the market."""
+    for base in range(1, 256):
+        for mat in range(0, 5):
+            cut = c_cut(base, mat)
+            if cut > base:
+                return ("arbitrage: cut %d exceeds base %d (mat=%d)"
+                        % (cut, base, mat))
+            for idx in range(idx_min, idx_max + 1):
+                if c_quote(cut, idx) > c_quote(base, idx):
+                    return ("arbitrage: S(cut=%d) > S(base=%d) at idx=%d"
+                            " (mat=%d)" % (cut, base, idx, mat))
+    return None
+
+
 def main():
     try:
         rows = load_card_prices()
@@ -180,6 +212,9 @@ def main():
         bad = check_formula(idx_min, idx_max, idx_neutral)
         if bad:
             fail(bad)
+        bad = check_no_arbitrage(idx_min, idx_max)
+        if bad:
+            fail(bad)
 
     if FAILURES:
         for f in FAILURES[:20]:
@@ -188,8 +223,8 @@ def main():
             print("ERROR: ... and %d more" % (len(FAILURES) - 20),
                   file=sys.stderr)
         return 1
-    print("economy-check OK: %d card rows sound, quote formula holds over "
-          "the byte domain" % len(rows))
+    print("economy-check OK: %d card rows sound, quote formula + "
+          "no-arbitrage hold over the byte domain" % len(rows))
     return 0
 
 

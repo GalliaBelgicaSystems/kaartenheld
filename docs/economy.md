@@ -117,47 +117,56 @@ Host-side `make card-costs`-style check (or the shop compiler) should warn on tw
 
 ## 5. Selling cards
 
-The player can sell owned loot cards to a buying merchant (shops with
-`buys=1`, docs/loot.md §34.6). The two markets are disjoint by
-construction: shops stock curated cards only (`shops_compile.py`
-rejects loot-range ids) and merchants buy loot only (the sell path
-is guarded by `loot_is_loot_id`). There is no halve/double split and
-no shared row that could be bought and re-sold — buy-then-sell profit
-is structurally impossible, not ratio-protected.
+Selling lives in the shop's SELL tab (LEFT/RIGHT flips BUY/SELL,
+docs/loot.md §34.6), served by the same banked row-quote body as
+buying (`shop_row_quote_banked`): the row shows what the till pays,
+by construction. Two sell bases, one quote function `S` (§4):
+
+- Loot ids sell at their full synthesized formula value (loot doc
+  §16/§34.6) — loot has no buy row, so the formula IS the appraisal.
+- Curated cards sell on a rarity-scaled cut of their catalog price:
+  `price × (5−tier)/6` (wood 5/6 … mythril 1/6), minimum 1 for any
+  priced card. Commons sell near buy price, mythril for a fraction.
 
 ```text
-sell_value = (loot_base * 32 + 16) >> 5 = loot_base   (neutral index:
-                                                        sales ignore the market)
+sell_price = S(sell_base, market_index)   (every till price scales;
+                                           at neutral this is the bare cut)
 ```
 
-`loot_base` is the centralized sell value synthesized by
-`loot_synth_banked` (loot doc §16/§34.6): the same quote function as
-§4 with `use_market=0`. One code path, one rounding behavior — never
-two independent chains that can drift apart.
+Shops stock curated cards only (`shops_compile.py` still rejects
+loot-range ids), so loot can never be bought — and a bought curated
+card can never be resold above its buy quote (see §5.1).
 
 Rules:
 
-- Selling is only possible at a buying merchant.
+- Selling is only possible on a shop's SELL tab.
 - The card must actually belong to the player's collection.
-- Quest and story cards cannot be sold.
-- Cards in the active deck must first be removed from the deck.
+- Quest/SPECIAL cards and price-0 basics cannot be sold (selling a
+  free card would print money: buy 0, sell 1, rebuy 0, repeat).
+- Fully decked cards refuse: selling must never strand the deck
+  without ownership backing (decked copies are excluded first).
 - Removing the card and crediting gold must be atomic: no gold is awarded if removal fails.
 - Sale proceeds never touch `gold_in` (§6.1): a sale is conversion of
   an existing asset, not income.
 
 ### 5.1 No-arbitrage by construction
 
-Because curated rows can never be sold and loot rows can never be
-bought in a shop, no price ratio — current or future — can open a
-buy-low/sell-high loop. The gates that protect this are:
+For every curated card the sell base never exceeds the buy base
+(`cut = price × (5−tier)/6 ≤ price`, floored at 1), and the quote `S`
+is monotonic non-decreasing in both arguments — so at EVERY market
+index `S(cut, idx) ≤ S(price, idx)`: buy-then-sell always loses (or
+washes at 1g). Loot has no buy row at all (shops stock curated
+only), so no buy-low/sell-high loop exists in either direction. The
+gates that protect this are:
 
 1. `shops_compile.py` fails loudly on any loot-range id in shop stock.
 2. `tools/check_economy.py` verifies the quote formula over the whole
-   byte domain (neutral identity, saturation, monotonicity).
-3. The `economy_no_arbitrage` scenario buys a curated card, moves the
-   index 24 → 48 through the clamped debug action, and asserts the
-   card still cannot be sold (merchant refuses curated) and the gold
-   total never exceeds what was spent.
+   byte domain (neutral identity, saturation, monotonicity) AND the
+   cross rule: for every price 1..255, every bias, every material
+   tier, every index 24..48, `S(cut(price, tier), idx) ≤ S(base, idx)`.
+3. Sell-all-then-rebuy scenarios run at neutral, where every figure is
+   exact: `merchant_sell_loot` (1g formula value) and the shop buy
+   scenarios pin both sides of the till.
 
 ## 6. Dynamic market prices
 
@@ -224,7 +233,7 @@ Integer only: a shift and a compare. The floor keeps early areas (small wallets)
 Market state is persistent economy state and belongs in the save:
 
 - Append `market_index` (uint8, 1/32 units), `gold_in` (u16), `gold_out` (u16), `battles_since_update` (uint8) to `GameState` — a NEW trailing economy struct, never inserted between existing fields.
-- Bump `SAVE_VERSION` (3 → 4); old saves are rejected per the existing policy (docs/save-format.md).
+- Bump `SAVE_VERSION` (→ 5 with the 50-row collection); old saves are rejected per the existing policy (docs/save-format.md).
 - Extend the extended snapshot (`g_state_snap_buf`) and the state-load descriptor (`g_scen_state_buf`) by APPENDING the same fields at the end with a version bump of their own. Never insert bytes in the middle — the host (`tools/emulator.py`) and ROM constants must stay in sync and every existing scenario depends on the current offsets (AGENTS.md §53.4).
 - Emit a `MARKET_UPDATED` telemetry event (old index, new index, net sign) on every non-skipped update so the harness can assert market movement without reading SRAM.
 
@@ -234,7 +243,7 @@ The proposal uses six safeguards:
 
 1. Enemy rewards diminish when the player's wallet becomes unusually large (§3.1 threshold ladder, minimum 25%).
 2. Selling is restricted to shops.
-3. Resale prices are 50% of purchase prices, protected cross-time by the §5.1 compile-time assert.
+3. Resale never exceeds purchase: the rarity cut sits under the buy base and the quote is monotonic, so `S(cut) ≤ S(buy)` at every index (§5.1, checked by `make economy-check`).
 4. Market fluctuations are bounded between 75% and 150% (stored 24–48).
 5. Shops provide an ongoing gold sink through card purchases.
 6. Gold saturates at 9999 (fits the 4-digit HUD; `currency_add` clamps rather than wrapping — a u16 wrap would turn a rich player poor and a poor display into a lie). `gold_in`/`gold_out` saturate independently for the same reason.
@@ -247,15 +256,17 @@ Importantly, prices should not permanently increase with story progression. Area
 
 A Rare card costs 3 AP (table base 64g, bias 0):
 
-At market index 115% (stored 37; `37/32 = 1.15625`):
+At market index 115% (stored 37; `37/32 = 1.15625`), for a 2-material (iron) card:
 
 ```text
 buy_price  = (64 * 37 + 16) >> 5
            = 2384 >> 5
            = 74 gold
 
-sell_price = 74 >> 1
-           = 37 gold
+sell_price = S(64 * 3/6 = 32, 37)
+           = (32 * 37 + 16) >> 5
+           = 1200 >> 5
+           = 37 gold   (cut 32 ≤ base 64, so 37 ≤ 74 at every index)
 ```
 
 If the market subsequently falls to 95% (stored 30):
@@ -265,8 +276,10 @@ buy_price  = (64 * 30 + 16) >> 5
            = 1936 >> 5
            = 60 gold   (integer rounding vs the draft's 61; the shift form is authoritative)
 
-sell_price = 60 >> 1
-           = 30 gold
+sell_price = S(32, 30)
+           = (32 * 30 + 16) >> 5
+           = 976 >> 5
+           = 30 gold   (still ≤ 60: no deflation pump)
 ```
 
 The same card can therefore become more or less expensive depending on market conditions. The worked decimals (`64 * 1.15 = 73.6 → 74`) are commentary only — the ROM computes the shift form.
@@ -295,7 +308,8 @@ SM83 constraints (all normative, not advisory):
   repeated addition (`for (i = idx; i != 0; i--) p += b`), everything
   else is shifts, adds, and threshold compares.
 - `S(base, idx) = (base * idx + 16) >> 5`, saturating (never wrapping):
-  buy quotes use the live clamped index, loot-sale quotes use neutral 32.
+  every till price (buy quotes, loot appraisals, rarity cuts) uses the
+  live clamped index through the same function.
 - Gold saturates at 9999; counters saturate; `net` is int16.
 - New persistent fields go at the end of `GameState` + save version bump; new wire bytes are appended, never inserted.
 
@@ -311,7 +325,7 @@ Create deterministic scenarios to verify:
 - Better materials produce higher prices.
 - The `price_bias` byte raises a card's buy quote without changing its AP.
 - Market index 48 quotes higher than 32; index 24 quotes lower than 32.
-- Loot sales quote the formula value at any index (sales ignore the market).
+- All till prices scale with the index through one function `S` (buy, loot appraisal, rarity cut).
 - Net income increases the market index.
 - Net spending decreases the market index.
 - The index never exceeds its bounds (24–48).
@@ -323,7 +337,7 @@ Create deterministic scenarios to verify:
 - Selling removes exactly one owned card and awards the correct gold.
 - Selling cards in the active deck is rejected.
 - Selling quest cards is rejected.
-- A curated card can never be sold, at any index (disjoint markets, §5.1).
+- Buy-then-sell always loses or washes: `S(cut) ≤ S(buy)` at every index (§5.1, `make economy-check`).
 - Market determinism replay: from a saved snapshot, run the same shop-visit + battle sequence twice with the same seed and assert identical indices and gold (catches counter/RNG leakage between updates).
 - Repeated combat does not produce unlimited full-value gold rewards.
 
@@ -332,7 +346,7 @@ Create deterministic scenarios to verify:
 After implementation, playtesting should determine:
 
 - Is 10 gold per AP appropriate?
-- Is the loot sell value (formula value, market-independent) sufficiently attractive?
+- Is the loot sell value (formula value, market-scaled like everything else) sufficiently attractive?
 - Does diminishing loot become noticeable too early?
 - Is a 75–150 market range appropriate?
 - Is the per-area `max(100, expected >> 2)` threshold (replacing the draft's flat 50 gold) too twitchy or too sticky?

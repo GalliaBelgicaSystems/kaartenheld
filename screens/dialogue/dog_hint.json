@@ -1,0 +1,10 @@
+{
+  "id": "dog_hint",
+  "speaker": "DOG:",
+  "lines": [
+    "The dog is holding",
+    "a key and won't",
+    "give it."
+  ],
+  "completion_flag": "STORY_FLAG_ID_MET_DOG"
+}

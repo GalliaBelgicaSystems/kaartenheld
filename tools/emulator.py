@@ -50,7 +50,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED", 9: "MET_DOG", 10: "BONE_TAKEN", 11: "DOG_KEY"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -139,11 +139,17 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
                 GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
-                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 18: "CHEST_LOCKED",
                 GAME_ID_BASE + 19: "MIMIC_REWARD",
                 GAME_ID_BASE + 20: "QUEST_NUDGE",
                 GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
                 GAME_ID_BASE + 22: "QUEST_EARLY_DONE",
+                GAME_ID_BASE + 23: "VILLAGE_GUARDS",
+                GAME_ID_BASE + 24: "SKELETON_ASK",
+                GAME_ID_BASE + 25: "SKELETON_DESC",
+                GAME_ID_BASE + 26: "DOG_HINT",
+                GAME_ID_BASE + 27: "DOG_ASK",
+                GAME_ID_BASE + 28: "DOG_THANKS",
 }
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
@@ -169,6 +175,8 @@ ACTOR_INFO_MAP = {
     "MIMIC":       {"visual": "T", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "MIMIC"},
     "SPIDER":      {"visual": "S", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SPIDER"},
     "SLIME_KNIGHT": {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME_KNIGHT"},
+    "SKELETON":    {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SKELETON_DESC", "battle": "NONE"},
+    "VILLAGE_DOG": {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "DOG_HINT", "battle": "NONE"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's
@@ -204,49 +212,50 @@ STATE_LOAD_DESC_PARTY_ENTRY_SIZE = 3
 STATE_LOAD_DESC_INVENTORY_COUNT_OFF = 93
 STATE_LOAD_DESC_INVENTORY_ENTRY_OFF = 94
 STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE = 2
-STATE_LOAD_DESC_WORLD_COUNT_OFF = 126
-STATE_LOAD_DESC_WORLD_ENTRY_OFF = 127
+STATE_LOAD_DESC_WORLD_COUNT_OFF = 194
+STATE_LOAD_DESC_WORLD_ENTRY_OFF = 195
 STATE_LOAD_DESC_WORLD_ENTRY_SIZE = 3
-STATE_LOAD_DESC_PROGRESSION_COUNT_OFF = 175
-STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF = 176
+STATE_LOAD_DESC_PROGRESSION_COUNT_OFF = 243
+STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF = 244
 STATE_LOAD_DESC_PROGRESSION_ENTRY_SIZE = 6
-STATE_LOAD_DESC_DIALOGUE_ID_OFF = 224
-STATE_LOAD_DESC_START_BATTLE_OFF = 225
-STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF = 226
-STATE_LOAD_DESC_FONT_TEST_OFF = 227
-STATE_LOAD_DESC_EQUIPMENT_OFF = 228
-# Deck section (v4): only applied by the ROM when present=1; count may be 0
+STATE_LOAD_DESC_DIALOGUE_ID_OFF = 292
+STATE_LOAD_DESC_START_BATTLE_OFF = 293
+STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF = 294
+STATE_LOAD_DESC_FONT_TEST_OFF = 295
+STATE_LOAD_DESC_EQUIPMENT_OFF = 296
+# Deck section (v5): only applied by the ROM when present=1; count may be 0
 # for an intentionally empty deck (battle fallback-deck coverage).
-STATE_LOAD_DESC_DECK_PRESENT_OFF = 229
-STATE_LOAD_DESC_DECK_COUNT_OFF = 230
-STATE_LOAD_DESC_DECK_ENTRY_OFF = 231
+STATE_LOAD_DESC_DECK_PRESENT_OFF = 297
+STATE_LOAD_DESC_DECK_COUNT_OFF = 298
+STATE_LOAD_DESC_DECK_ENTRY_OFF = 299
 MAX_DESC_DECK_CARDS = 20
-# Status effects (v4): byte 251 = frozen bitmask (bit 0 = player, 1..3 = enemies)
-STATE_LOAD_DESC_STATUS_OFF = 251
-# Economy tail (v5, docs/economy.md 6.3, appended): index, gold_in LE,
+# Status effects: byte 319 = frozen bitmask (bit 0 = player, 1..3 = enemies)
+STATE_LOAD_DESC_STATUS_OFF = 319
+# Economy tail (v6, docs/economy.md 6.3, appended): index, gold_in LE,
 # gold_out LE, battles. Mirrors STATE_LOAD_DESC_* in telemetry.h.
-STATE_LOAD_DESC_MARKET_INDEX_OFF = 252
-STATE_LOAD_DESC_MARKET_GOLD_IN_OFF = 253
-STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF = 255
-STATE_LOAD_DESC_MARKET_BATTLES_OFF = 257
+STATE_LOAD_DESC_MARKET_INDEX_OFF = 320
+STATE_LOAD_DESC_MARKET_GOLD_IN_OFF = 321
+STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF = 323
+STATE_LOAD_DESC_MARKET_BATTLES_OFF = 325
 STATE_LOAD_DESC_SIZE = STATE_LOAD_DESC_MARKET_BATTLES_OFF + 1
-STATE_LOAD_DESC_VERSION = 0x05
+STATE_LOAD_DESC_VERSION = 0x06
 
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8, "MET_DOG": 9, "BONE_TAKEN": 10, "DOG_KEY": 11}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
-                   "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
-                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
-                   "GEM_OWNED": 7, "GEM_EQUIPPED": 8}
+                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
+                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
+                    "GEM_OWNED": 7, "GEM_EQUIPPED": 8,
+                    "DOG_QUEST": 9}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "AMULET": 0x45,
                "BOW_9": 0x46, "WOOD_SWORD": 0x47,
-               "STEEL_SHIELD": 0x48}
+               "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
@@ -401,7 +410,7 @@ def serialize_initial_state(initial_state):
     buf[STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF] = initial_state.get("game_over_choice", 0)
     if initial_state.get("font_test"):
         buf[STATE_LOAD_DESC_FONT_TEST_OFF] = 1
-    # Status effects (v4): frozen bitmask (bit 0 = player, 1..3 = enemies)
+    # Status effects: frozen bitmask (bit 0 = player, 1..3 = enemies)
     status = initial_state.get("status")
     if status:
         frozen_mask = 0
@@ -420,7 +429,7 @@ def serialize_initial_state(initial_state):
         elif isinstance(status, int):
             frozen_mask = status & 0xFF
         buf[STATE_LOAD_DESC_STATUS_OFF] = frozen_mask
-    # Economy tail (v5, docs/economy.md 6.3): {"index" (1/32 units),
+    # Economy tail (v6, docs/economy.md 6.3): {"index" (1/32 units),
     # "gold_in", "gold_out", "battles"}. Omitted -> neutral 32 / zeros
     # (the ROM clamps an out-of-band index to 32 on apply).
     market = initial_state.get("market") or {}
@@ -900,37 +909,37 @@ class EmulatorSession:
             return parsed
         return self.current_snapshot
 
-    # Extended RPG state snapshot: parses g_state_snap_buf (216 bytes,
+    # Extended RPG state snapshot: parses g_state_snap_buf (300 bytes,
     # layout in src/debug/telemetry.h STATE_SNAP_*).
-    STATE_SNAP_SIZE = 216
-    STATE_SNAP_VERSION = 7
+    STATE_SNAP_SIZE = 300
+    STATE_SNAP_VERSION = 9
     STATE_SNAP_FLAGS_OFF = 1
     STATE_SNAP_FLAGS_SIZE = 8
     STATE_SNAP_VARIABLES_OFF = 9
-    STATE_SNAP_CURRENCY_COUNT_OFF = 25
-    STATE_SNAP_CURRENCY_ENTRY_OFF = 26
+    STATE_SNAP_CURRENCY_COUNT_OFF = 41
+    STATE_SNAP_CURRENCY_ENTRY_OFF = 42
     STATE_SNAP_CURRENCY_ENTRY_SIZE = 3
-    STATE_SNAP_PARTY_OFF = 38
+    STATE_SNAP_PARTY_OFF = 54
     STATE_SNAP_PARTY_ENTRY_SIZE = 3
-    STATE_SNAP_INVENTORY_OFF = 51
+    STATE_SNAP_INVENTORY_OFF = 67
     STATE_SNAP_INVENTORY_ENTRY_SIZE = 2
-    STATE_SNAP_WORLD_OFF = 84
+    STATE_SNAP_WORLD_OFF = 168
     STATE_SNAP_WORLD_ENTRY_SIZE = 3
-    STATE_SNAP_PROGRESSION_COUNT_OFF = 133
-    STATE_SNAP_PROGRESSION_ENTRY_OFF = 134
+    STATE_SNAP_PROGRESSION_COUNT_OFF = 217
+    STATE_SNAP_PROGRESSION_ENTRY_OFF = 218
     STATE_SNAP_PROGRESSION_ENTRY_SIZE = 6
-    STATE_SNAP_EQUIPMENT_OFF = 182
-    STATE_SNAP_SCROLL_X_OFF = 183
-    STATE_SNAP_SCROLL_Y_OFF = 184
-    STATE_SNAP_WORLD_WIDTH_OFF = 185
-    STATE_SNAP_WORLD_HEIGHT_OFF = 186
-    STATE_SNAP_CAMERA_PX_X_OFF = 187
-    STATE_SNAP_CAMERA_PX_Y_OFF = 188
-    STATE_SNAP_DECK_COUNT_OFF = 189
-    STATE_SNAP_MARKET_INDEX_OFF = 210
-    STATE_SNAP_MARKET_GOLD_IN_OFF = 211
-    STATE_SNAP_MARKET_GOLD_OUT_OFF = 213
-    STATE_SNAP_MARKET_BATTLES_OFF = 215
+    STATE_SNAP_EQUIPMENT_OFF = 266
+    STATE_SNAP_SCROLL_X_OFF = 267
+    STATE_SNAP_SCROLL_Y_OFF = 268
+    STATE_SNAP_WORLD_WIDTH_OFF = 269
+    STATE_SNAP_WORLD_HEIGHT_OFF = 270
+    STATE_SNAP_CAMERA_PX_X_OFF = 271
+    STATE_SNAP_CAMERA_PX_Y_OFF = 272
+    STATE_SNAP_DECK_COUNT_OFF = 273
+    STATE_SNAP_MARKET_INDEX_OFF = 294
+    STATE_SNAP_MARKET_GOLD_IN_OFF = 295
+    STATE_SNAP_MARKET_GOLD_OUT_OFF = 297
+    STATE_SNAP_MARKET_BATTLES_OFF = 299
 
     def state_snapshot(self):
         """Read g_state_snap_buf and return the canonical GameState as a dict."""
@@ -1025,7 +1034,7 @@ class EmulatorSession:
                 break
             deck.append(buf[off])
 
-        # Economy tail (v7, docs/economy.md 6.3, appended).
+        # Economy tail (v9, docs/economy.md 6.3, appended).
         market = {
             "index": buf[self.STATE_SNAP_MARKET_INDEX_OFF],
             "gold_in": (buf[self.STATE_SNAP_MARKET_GOLD_IN_OFF] |

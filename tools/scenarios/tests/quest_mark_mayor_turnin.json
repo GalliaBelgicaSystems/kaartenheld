@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_mayor_turnin",
  "test": true,
- "description": "Quest marker ? returns over the mayor when the hunt is ACTIVE with 3+ monsters slain (turn-in ready): entry 30 shows QUESTION_TILE (127).",
+ "description": "Quest marker ? returns over the mayor when the hunt is ACTIVE with 3+ monsters slain (turn-in ready): entry 30 shows QUESTION_TILE (127). The mayor's ? returns at 3+ kills; entry 30 is the mayor, entry 31 the village dog's ? (DOG_KEY unset).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -30,6 +30,11 @@
   {
    "type": "oam_tile",
    "entry": 30,
+   "expected": 127
+  },
+  {
+   "type": "oam_tile",
+   "entry": 31,
    "expected": 127
   }
  ]

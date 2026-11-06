@@ -1,0 +1,89 @@
+{
+ "name": "dog_trade",
+ "test": true,
+ "description": "Bumping the village dog while holding the bone offers 'Give Bone to dog?': answering YES swaps the bone for the OLD KEY, opens the thanks, and closing it sets DOG_KEY (the ? mark's off switch)",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "VILLAGE_DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 0,
+   "value": "DOG_ASK"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 1,
+   "value": 0
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_ASK"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_THANKS"
+  },
+  {
+   "type": "inventory",
+   "item": "BONE",
+   "expected": 0
+  },
+  {
+   "type": "inventory",
+   "item": "OLD_KEY",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "DOG_KEY",
+   "expected": true
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 4,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true
+  },
+  "inventory": {"BONE": 1}
+ }
+}

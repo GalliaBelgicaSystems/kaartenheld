@@ -153,7 +153,7 @@ def build_output(shops):
     lines.append("")
     lines.append("/* ── Shop stock lists (game content, banked ROM) ──────────────────")
     lines.append(" * Numeric id = JSON filename stem; an actor's `shop` property points")
-    lines.append(" * at one.  buys=1 marks a card merchant (SELECT toggles SELL mode,")
+    lines.append(" * at one.  buys=1 marks a card merchant (LEFT/RIGHT flips BUY/SELL tabs,")
     lines.append(" * §34.6).  Prices come from CardDefinition.price, never stored here,")
     lines.append(" * and unused stock slots zero-fill to CARD_NONE. */")
     lines.append("#pragma bank 2")

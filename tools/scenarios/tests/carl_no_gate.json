@@ -1,0 +1,48 @@
+{
+ "name": "carl_no_gate",
+ "test": true,
+ "description": "Bumping Carl with the field cache still locked opens the spar offer immediately (no chest gate): the key-locked chest no longer withholds the lesson, the pool stays base 1, and no battle starts before the answer",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "TUTORIAL_CARL_INTRO"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "flag",
+   "flag": "FIELD_CHEST",
+   "expected": false
+  },
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 4242
+ }
+}

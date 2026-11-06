@@ -556,11 +556,16 @@
       },
       "properties": {
         "display_name": "",
-        "dialogue": "",
+        "dialogue": "DIALOGUE_ID_DOG_HINT",
         "overworld_sprite": "actors.actors_dog_frame_1",
         "battle_sprite": "",
         "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_DOG"
+        "entity_id": "ENTITY_ID_VILLAGE_DOG",
+        "enemy_type": "dog",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ]
       },
       "animation_frames": [
         "actors.actors_dog_frame_1",

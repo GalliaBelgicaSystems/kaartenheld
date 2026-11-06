@@ -962,6 +962,82 @@ def verify_battle_vram_restore(sess):
           before, vram_tiles())
 
 
+def _gfx_tile_bytes(header_relpath, index):
+    """Tile-index bytes of a generated tile header (make gfx output),
+    parsed from its `/* tile N */` comments.  Returns None when the
+    header cannot be parsed (callers fail loudly, never vacuous)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", header_relpath)
+    try:
+        text = open(path).read()
+    except OSError:
+        return None
+    m = re.search(r"/\* tile %d \*/((?:\s*0x[0-9A-Fa-f]{2}, 0x[0-9A-Fa-f]{2},?.*\n){8})" % index, text)
+    if not m:
+        return None
+    return bytes(int(b, 16) for b in re.findall(r"0x([0-9A-Fa-f]{2})", m.group(1)))
+
+
+def verify_shop_rider_vram(sess):
+    """Shop SELL-tab rider icons stream real rider art (marks_refresh
+    streams battle tiles on shop ticks): with a poison loot card listed,
+    OAM tile 125 must equal the poison rider bytes, not overworld
+    blob-tail art.  Regression: rider OAM ids are correct on every
+    screen but their art is only streamed for battle/item -- the shop
+    showed a guard sprite for poison (ids alone, which the harness
+    oam_tile asserts, cannot see this).  Leaving the shop restreams the
+    blob side (ui_restore_ow_oam), so the exit leg asserts the restore.
+    NOTE: sess.load_scenario applies initial_state only (no scenario
+    actions), so the card grant + shop walk are driven explicitly."""
+    print("== Shop rider VRAM (SELL poison row streams art, exit restores) ==")
+    sess.load_scenario(load_scenario(sess, "shop_sell_rider_ids.json"))
+    sess.debug_action(sess.DBG_ACT_ADD_ITEM, 139, 0, 1)
+    shop_open = False
+    for _ in range(3):
+        sess.press("A")
+        for _ in range(10):
+            sess.step(1)
+            if sess.snapshot().get("screen") == "SHOP":
+                shop_open = True
+                break
+        if shop_open:
+            break
+    check("shop open (merchant interact)", True, shop_open)
+    sess.press("RIGHT")
+    sess.step(5)
+    check("shop SELL tab open", "SHOP",
+          sess.snapshot().get("screen"))
+    check("SELL poison row paints OAM tile 125",
+          125, shadow_oam_slot_tile(sess, 1))
+
+    def oam_tile_125():
+        return bytes(b if b is not None else 0
+                     for i in range(16)
+                     for b in (sess._memread(0x8000 + 125 * 16 + i),))
+
+    rider = _gfx_tile_bytes("src/gfx/rider_tiles.h", 2)
+    check("rider header parses (poison tile)", True, rider is not None)
+    blob = _gfx_tile_bytes("src/gfx/enemy_ow_tiles.h", 25)
+    check("blob header parses (tail tile 25)", True, blob is not None)
+    check("shop VRAM read in VBlank", True, wait_vblank(sess))
+    during = oam_tile_125()
+    check("shop streams poison rider art into OAM tile 125",
+          rider, during)
+    check("shop tile is not blob art (test exercises the bug)",
+          True, during != blob)
+    # Re-sync after the VBlank reads (AGENTS.md 52.26): the B press
+    # below must land on a whole game_render-stepped frame.
+    sess.step(1)
+    sess.press("B")
+    sess.step(10)
+    check("left shop: back to overworld", "OVERWORLD",
+          sess.snapshot().get("game_state"))
+    sess.step(2)
+    check("return VRAM read in VBlank", True, wait_vblank(sess))
+    check("overworld return: blob tail restored over OAM tile 125",
+          blob, oam_tile_125())
+
+
 def main():
     # Each section uses its own session so debugger state (the game_render
     # frame-sync breakpoint, watchpoints) never contaminates another
@@ -979,7 +1055,8 @@ def main():
                        ("battle sprites", verify_battle_oam),
                        ("battle spider", verify_battle_spider_oam),
                        ("boss glow overlay", verify_boss_glow_overlay),
-                       ("exit art", verify_exit_art)):
+                       ("exit art", verify_exit_art),
+                       ("shop rider VRAM", verify_shop_rider_vram)):
         sess = EmulatorSession(rom_path=ROM)
         try:
             sess.connect()

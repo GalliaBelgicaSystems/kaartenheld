@@ -1,0 +1,71 @@
+{
+ "name": "skeleton_decline_bone",
+ "test": true,
+ "description": "Answering NO to the skeleton's bone offer closes plainly with no grant and no one-shot flag, so the skeleton asks again next bump",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "SKELETON"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 0,
+   "value": "SKELETON_ASK"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 1,
+   "value": 1
+  },
+  {
+   "type": "inventory",
+   "item": "BONE",
+   "expected": 0
+  },
+  {
+   "type": "flag",
+   "flag": "BONE_TAKEN",
+   "expected": false
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 12,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true
+  }
+ }
+}

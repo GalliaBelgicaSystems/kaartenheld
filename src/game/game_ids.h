@@ -34,7 +34,9 @@
 #define CARD_STEEL_SHIELD (CARD_FIRST_GAME + 8)   /* steel SH6 (docs/enemies_ranking.md §5.2):
                                                    * the merchant-stocked answer to the
                                                    * Lord's flat-6 swing (blocks alone) */
-#define GAME_CARD_COUNT    9
+#define CARD_BONE         (CARD_FIRST_GAME + 9)   /* quest bone (skeleton -> dog trade) */
+#define CARD_OLD_KEY      (CARD_FIRST_GAME + 10)  /* quest key (the dog's field-cache key) */
+#define GAME_CARD_COUNT    11
 
 /* ── Events (engine range: NONE=0; game range >= 0x80) ── */
 #define EVENT_ID_TOWN_ARRIVAL    (EVENT_ID_FIRST_GAME + 0)
@@ -55,12 +57,20 @@
 #define EVENT_ID_KNIGHT_SPLIT    (EVENT_ID_FIRST_GAME + 15)
 #define EVENT_ID_HEAL_MAGE       (EVENT_ID_FIRST_GAME + 16)
 #define EVENT_ID_HEAL_MAGE_REFUSED (EVENT_ID_FIRST_GAME + 17)
-#define EVENT_ID_CARL_CHEST_FIRST (EVENT_ID_FIRST_GAME + 18)
+/* 18 reused for EVENT_ID_CHEST_LOCKED below: the Carl chest gate was
+ * removed when the key quest landed (talking to Carl no longer needs
+ * the cache), so the slot now names the locked-chest bump. */
+#define EVENT_ID_CHEST_LOCKED   (EVENT_ID_FIRST_GAME + 18) /* field cache bump without the dog's key */
 #define EVENT_ID_MIMIC_REWARD    (EVENT_ID_FIRST_GAME + 19)
 #define EVENT_ID_QUEST_NUDGE     (EVENT_ID_FIRST_GAME + 20)
 #define EVENT_ID_HEAL_MAGE_RING_LESSON (EVENT_ID_FIRST_GAME + 21)
 #define EVENT_ID_QUEST_EARLY_DONE (EVENT_ID_FIRST_GAME + 22)
 #define EVENT_ID_VILLAGE_GUARDS (EVENT_ID_FIRST_GAME + 23)
+#define EVENT_ID_SKELETON_ASK   (EVENT_ID_FIRST_GAME + 24)
+#define EVENT_ID_SKELETON_DESC  (EVENT_ID_FIRST_GAME + 25)
+#define EVENT_ID_DOG_HINT       (EVENT_ID_FIRST_GAME + 26)
+#define EVENT_ID_DOG_ASK        (EVENT_ID_FIRST_GAME + 27)
+#define EVENT_ID_DOG_THANKS     (EVENT_ID_FIRST_GAME + 28)
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -91,7 +101,16 @@ typedef enum {
                                          * granted without the spar
                                          * (one-shot; the offer never
                                          * repeats) */
-    STORY_FLAG_ID_COUNT        = 9
+    STORY_FLAG_ID_MET_DOG      = 9, /* heard the village dog's key hint
+                                       * (gates the skeleton's bone offer:
+                                       * the first bump only describes it) */
+    STORY_FLAG_ID_BONE_TAKEN   = 10, /* took the bone from the tunnel
+                                       * skeleton (one-shot; later bumps
+                                       * only describe it) */
+    STORY_FLAG_ID_DOG_KEY      = 11, /* the village dog traded its Old Key
+                                       * for the bone (? mark gone, later
+                                       * bumps replay the thanks) */
+    STORY_FLAG_ID_COUNT        = 12
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -103,7 +122,8 @@ typedef enum {
     VARIABLE_ID_MERCHANT_QUEST     = 5,   /* 0 = not started, 1 = ACTIVE (accepted or found), 2 = complete */
     VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
     VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
-    VARIABLE_ID_GEM_EQUIPPED       = 8    /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
+    VARIABLE_ID_GEM_EQUIPPED       = 8,   /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
+    VARIABLE_ID_DOG_QUEST          = 9    /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */
@@ -141,7 +161,7 @@ typedef enum {
  * bank: bank 10 hosts it because bank 2 (cards catalog + the DECK view
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
 #define GAME_EVENT_BANK  10
-#define GAME_EVENT_COUNT 24
+#define GAME_EVENT_COUNT 29
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

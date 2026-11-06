@@ -413,9 +413,9 @@ def run_scenario(scenario):
                                      act.get("chance", 255) & 0xFF)
             elif act_type == "deck_add":
                 # Direct deck_equip_card() call (real gated mechanic, all validations:
-                # ownership, SPECIAL exclusion, max_copies, 20-card size, loot AP lock).
-                # Emits CARD_ADDED_TO_DECK on success, CARD_EQUIP_LOCKED on a locked
-                # loot card.  Raw card_id reaches derived loot-range CardIds
+                # ownership, SPECIAL exclusion, max_copies, 20-card size, uniform AP lock).
+                # Emits CARD_ADDED_TO_DECK on success, CARD_EQUIP_LOCKED on a card
+                # above the pool.  Raw card_id reaches derived loot-range CardIds
                 # (docs/loot.md §34) that have no ITEM_ID_MAP name, same as
                 # collection_add.
                 if "card_id" in act:

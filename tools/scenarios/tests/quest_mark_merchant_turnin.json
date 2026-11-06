@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_merchant_turnin",
  "test": true,
- "description": "Quest marker ? returns over the merchant while holding the amulet with the quest ACTIVE (delivery ready): entry 30 shows QUESTION_TILE (127).",
+ "description": "Quest marker ? returns over the merchant while holding the amulet with the quest ACTIVE (delivery ready): entry 30 shows QUESTION_TILE (127). The merchant's ? returns while holding the amulet; entry 30 is the merchant, entry 31 the village dog's ? (DOG_KEY unset).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -32,6 +32,11 @@
   {
    "type": "oam_tile",
    "entry": 30,
+   "expected": 127
+  },
+  {
+   "type": "oam_tile",
+   "entry": 31,
    "expected": 127
   }
  ]

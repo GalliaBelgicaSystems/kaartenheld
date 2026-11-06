@@ -223,8 +223,8 @@ and the Lord of Slimes — stand alone.  See §9.2 for enemy statistics and
 
 ## 4. Quests
 
-Quests surface on the quick screen's `QUEST` tab (§7.2).  Both quests are
-fully data-driven in the event table (`src/game/events_content.c`).
+Quests surface on the quick screen's `QUEST` tab (§7.2).  All three quests
+are fully data-driven in the event table (`src/game/events_content.c`).
 
 ### 4.1 Quest status model
 
@@ -235,6 +235,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 |---|---|---|---|
 | MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "+1 AP" |
 | LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
+| DOG'S KEY | `DOG_QUEST` | trade the skeleton's bone for the key | "OLD KEY" |
 
 ### 4.2 Monster Hunt — the main quest
 
@@ -283,6 +284,18 @@ reachable — it is not gated behind this quest.
 
    > You found it! Thank you, hero!
    > My shop is open now.
+
+### 4.4 Dog's Key — the side quest
+
+1. **Start.** Talk to the **dog in the village** for the first time
+   (it is holding a key and won't give it).  Hearing the hint starts
+   the quest, so the QUEST tab tracks it straight away.
+2. **Objective.** Take a **bone** from the tunnel skeleton (its offer
+   only appears once you've heard the hint), then give it to the dog.
+   Taking the bone keeps the quest ACTIVE; the trade completes it.
+3. **Complete.** Answering YES to "Give Bone to dog?" swaps the bone
+   for the **Old Key** (opens the field cache) and marks the
+   quest complete ("complete - OLD KEY").
 
 ---
 
@@ -554,11 +567,11 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 * `SELECT` on a card opens the **detail page**: full name, on-hit rider
   (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
   / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),
-  `OWN`/`DECK` counts, and the `SELL` value (numbers right-aligned).
+  `OWN`/`DECK` counts, and the `VALUE` reminder of what the merchant
+  would pay (numbers right-aligned; selling itself happens in the shop's
+  SELL tab, §9.3).
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
-* `A` on a loot card's **detail page** sells one copy while you have a
-  buying merchant engaged (§9.3).
 
 The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
 rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
@@ -788,13 +801,16 @@ Loot cards are unlimited-use (no per-battle uses) and have no copy limit
 (0 = unlimited duplicates).
 
 **Selling.** While a **buying** merchant is engaged (`g->shop_id` set by
-the shop actor; only the Lost Merchant buys), you can sell **loot** cards
-from the DECK tab: open a loot card's detail page (`SELECT`) and press
-`A` to sell one copy (no `SELL` label is shown — the sale is silent; the
-`CARD_SOLD` telemetry event is the authoritative feedback).  Sell value =
-the card's price field, synthesized as `power + material tier×2 (+2 for
-a poison dagger)`.  You cannot sell a copy that would strand a decked
-card without ownership backing (rejected with the `DECK FULL` message).
+the shop actor; only the Lost Merchant buys), flip the shop to its
+**SELL** tab (`LEFT`/`RIGHT`, row 4 header) and press `A` on any listed
+card to sell one copy (the `CARD_SOLD` telemetry event is the
+authoritative feedback).  Loot sells at its full synthesized value
+(`power + material tier×2 (+2 for a poison dagger)`); curated cards sell
+below their buy value on a rarity-scaled cut (`price × (5−tier)/6`, min
+1 — the 20g ring pays 10, the 30g bow 5).  Quest items (SPECIAL) and
+price-0 starter basics never list.  You cannot sell a copy that would
+strand a decked card without ownership backing.  The DECK-tab detail
+page shows only a `VALUE` reminder.
 
 ---
 

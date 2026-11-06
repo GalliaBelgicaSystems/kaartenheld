@@ -1,11 +1,12 @@
-#pragma bank 2
+#pragma bank 11
 #pragma disable_warning 110
 
 #include "telemetry.h"
 
 /* ── Banked telemetry-append body (ROM bank 2) ─────────────────────
  * Hosts telemetry_emit()'s ring-buffer append out of the fixed bank
- * (which sits hard against 0x8000, AGENTS.md 52.18).  The fixed wrapper
+ * (which sits hard against 0x8000, AGENTS.md 52.18) and out of ROM
+ * bank 2 (shop full-name/sell-list render pressure, Nov 2026).  The fixed wrapper
  * in telemetry.c stages the 5 event bytes into g_telemetry_emit_args and
  * dispatches here through the WRAM trampoline; this body appends the
  * stamped entry (seq++, frame capture, type + data) and advances the

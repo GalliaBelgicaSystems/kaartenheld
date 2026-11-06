@@ -831,13 +831,13 @@
     "#000000",
     "#916c33",
     "#5a431f",
-    "#5a431f"
+    "#ffffff"
    ],
    "refs": [
     "UNDERGROUND/under_void",
     "UNDERGROUND/under_ground",
     "UNDERGROUND/under_border",
-    "UNDERGROUND/under_border"
+    "UNDERGROUND/under_bones"
    ],
    "slots": [
     "underground:0",

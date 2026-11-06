@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_mayor_accepted",
  "test": true,
- "description": "No quest marker while MONSTER_HUNT is ACTIVE and under 3 kills: accepting the quest hides the mayor's ?. Entry 30 stays cleared (tile 0).",
+ "description": "No quest marker on the mayor while MONSTER_HUNT is ACTIVE under 3 kills. The mayor's ? hides while the hunt is ACTIVE under 3 kills; entry 30 is the village dog's ? (DOG_KEY unset), entry 31 stays cleared.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -30,6 +30,11 @@
   {
    "type": "oam_tile",
    "entry": 30,
+   "expected": 127
+  },
+  {
+   "type": "oam_tile",
+   "entry": 31,
    "expected": 0
   }
  ]
