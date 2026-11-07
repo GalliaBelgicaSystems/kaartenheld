@@ -112,10 +112,15 @@ extern uint16_t g_loot_rng_state;
  *                            (src/game/loot_drop_banked.c, bank 9),
  *                            dispatched by game_loot_drop() in
  *                            src/game/content.c.
+ * game_loot_first_victory_banked -- first-real-victory bronze shield
+ *                            override (src/game/loot_first_banked.c,
+ *                            bank 11: bank 9 is full), second leg of
+ *                            game_loot_drop().
  * loot_synth_banked       -- fills g_card_scratch for a derived id
  *                            (src/rpg/loot_banked.c, bank 3), dispatched
  *                            by card_get_def(). */
 void game_loot_drop_banked(void);
+void game_loot_first_victory_banked(void);
 void loot_synth_banked(void);
 
 #endif /* RPG_LOOT_H */

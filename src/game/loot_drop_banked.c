@@ -3,8 +3,6 @@
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
-#include "core/game.h"
-#include "game_ids.h"
 
 /* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5,
  * docs/enemies_ranking.md §4.3) ─────────────────────────────
@@ -22,8 +20,11 @@
  * same seed yields the same card at every pool -- a slime knight is a
  * slime knight.  The equip gate (deck_equip_card) keeps unpayable cards
  * out of the deck instead of clamping the roll.  Rank 0 (lesson fights)
- * writes CARD_NONE: no card, and the first-victory grant below is
- * skipped so a spar cannot consume it.
+ * writes CARD_NONE: no card.  The first-victory bronze shield is applied
+ * by the second game_loot_drop() leg (bank 11, loot_first_banked.c),
+ * which never overrides CARD_NONE -- so a spar can neither grant nor
+ * consume it.  It lives there and not here because bank 9 is full
+ * (loot/terrain bodies + driver + casino).
  *
  * The profile table is game content and lives here with the body; the
  * fixed-bank cost of drops is one tiny wrapper in src/game/content.c.
@@ -137,17 +138,10 @@ void game_loot_drop_banked(void)
         g_loot_id = (uint8_t)(LOOT_ID_BASE +
                               (((material << 2) + effect) << 3) + weapon);
 
-        /* First-victory grant (balancing): the very first fight's drop is
-         * always a bronze shield, so the opening loot teaches blocking.
-         * Gated on the global kill counter (0 kills = no victory yet), so
-         * every later drop rolls naturally.  Placed AFTER the rolls so the
-         * isolated stream keeps its positions for a given seed.  Rank-0
-         * lesson fights return above and never reach (or consume) this. */
-        if (g_game.state.variables.values[
-                VARIABLE_ID_MONSTERS_DEFEATED - 1] == 0) {
-            g_loot_id = (uint8_t)(LOOT_ID_BASE +
-                                  (((MAT_BRONZE << 2) + EFF_PLAIN) << 3) +
-                                  WPN_SHIELD);
-        }
+        /* NOTE: the first-victory bronze shield is applied by the
+         * second game_loot_drop() leg (bank 11) after this body
+         * returns (see content.c).  Nothing is consumed or overridden
+         * here, so the isolated stream keeps its positions for a
+         * given seed. */
     }
 }

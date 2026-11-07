@@ -185,6 +185,11 @@
       "expected": true
     },
     {
+      "type": "flag",
+      "flag": "TUTORIAL_SPAR_WON",
+      "expected": true
+    },
+    {
       "type": "actor_state",
       "actor": "SLIME_FIELD",
       "expected_state": "DEFEATED"

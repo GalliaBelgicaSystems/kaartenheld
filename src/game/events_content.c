@@ -300,18 +300,24 @@ const EventDefinition g_events[] = {
      * skip, which hands over the same point), so the win row below keeps
      * only the graduation speech and every milestone (tutorial, chest,
      * Monster Hunt, mimic) still adds exactly one to the base-1 pool,
-     * reaching 5 in any completion order. */
+     * reaching 5 in any completion order.  The row also latches
+     * TUTORIAL_SPAR_WON: the win increments the kill counter without
+     * granting loot, and the latch tells the loot roll the counter's
+     * single kill was the spar -- so the next real victory still earns
+     * the first-victory bronze shield. */
     {
         /* Graduation speech only (no grant: the lesson's +1 AP was
          * already handed over at the spar start -- or by the
          * leave-the-field skip -- so a win after the skip still
-         * graduates without a second point). */
+         * graduates without a second point) plus the spar-won latch
+         * for the first-victory loot exception. */
         EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
-        1,
+        2,
         {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_TUTORIAL_SPAR_WON, 0, 0 }
         }
     },
     /* ── Field cache (first poison dagger + AP unlock, key-locked) ───
