@@ -81,4 +81,12 @@ void carl_spar_grant_banked(void)
     g_game.state.flags.bytes[byte] |= mask;
     carl_grant_emit((uint8_t)EVENT_STORY_FLAG_SET,
                     (uint8_t)STORY_FLAG_ID_TUTORIAL_SKIPPED, 0, 0, 0);
+
+    /* Refresh the live fight: this body runs after battle_start staged
+     * the pool from the pre-grant variable, so without this the variable
+     * would read 2 while the current fight still ran at 1 AP.  Cap
+     * mirrors the entry stager (uncapped variable, 255-capped pool). */
+    if (pool > 255) pool = 255;
+    g_battle_pool_max = (uint8_t)pool;
+    g_game.battle.energy = (uint8_t)pool;
 }

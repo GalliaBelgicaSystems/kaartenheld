@@ -47,8 +47,9 @@ void start_battle_from_world(Game *g)
     /* Carl's lesson hands over its +1 AP when the spar STARTS, not on
      * the win: the opening coaching box announces it ("TAKE THIS AP TO
      * DO POKER HANDS!").  The bank-5 body owns the one-shot (shared
-     * with the leave-the-field skip); the fixed bank pays only staging
-     * + one dispatch (AGENTS.md 52.18). */
+     * with the leave-the-field skip) and refreshes the live pool the
+     * entry dispatch just staged; the fixed bank pays only staging +
+     * one dispatch (AGENTS.md 52.18). */
     if (act->battle_type == BATTLE_CARL) {
         g_bk_call_bank = 5;
         g_bk_call_target = (uint16_t)&carl_spar_grant_banked;
