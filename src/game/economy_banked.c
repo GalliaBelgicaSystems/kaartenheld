@@ -5,6 +5,7 @@
 #include "game.h"
 #include "game_ids.h"
 #include "telemetry.h"
+#include "telemetry_ring.h"
 #include "scene_ids_generated.h"
 
 /* ── Banked economy bodies (ROM bank 11) ─────────────────────────────
@@ -13,29 +14,16 @@
  * globals + same-bank table only, no fixed-bank calls, no di/ei, no
  * * / % (a bare 8-bit * pulls __mulsuchar into fixed _CODE, §52.18).
  * Telemetry is written to the ring directly: a banked body cannot
- * re-enter the trampoline to reach the bank-2 emit body, so eco_emit
- * mirrors telemetry_emit_banked exactly (same seq/frame/head/count
- * discipline; keep in sync). */
+ * re-enter the trampoline to reach the bank-2 emit body, so the body
+ * uses telemetry_ring.h (same seq/frame/head/count discipline as
+ * telemetry_emit_banked; keep in sync). */
 
-#ifdef DEBUG_BUILD
-/* Direct ring write (debug only: the release ROM has no telemetry ring
- * and currency_add compiles silent there too). */
-static void eco_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2,
-                     uint8_t d3)
-{
-    GameEvent *ev = &g_telemetry_buffer[g_telemetry_head];
-    ev->seq = g_telemetry_seq++;
-    ev->frame = g_telemetry_frame_ptr ? *g_telemetry_frame_ptr : 0;
-    ev->type = type;
-    ev->data[0] = d0;
-    ev->data[1] = d1;
-    ev->data[2] = d2;
-    ev->data[3] = d3;
-    g_telemetry_head = (uint8_t)((g_telemetry_head + 1) &
-                                 (MAX_TELEMETRY_EVENTS - 1));
-    if (g_telemetry_count < MAX_TELEMETRY_EVENTS) g_telemetry_count++;
-}
-#endif
+/* Six bytes, no padding: the save layout and snapshot offsets assume
+ * it.  Fail the build if the toolchain ever pads the struct. */
+typedef char economy_state_is_6[sizeof(EconomyState) == 6 ? 1 : -1];
+
+/* Ring telemetry runs through telemetry_ring.h (debug/telemetry_ring.h):
+ * one shared inline writer, same seq/frame/head/count discipline. */
 
 /* Expected wallet per area (docs/economy.md §3.2): every entry clears the
  * floor (>= 1.5x the most expensive stocked card; the merchant's best is
@@ -62,7 +50,9 @@ static uint16_t economy_expected_for_scene(uint8_t scene)
  * byte_c = use_market.  Out: byte_b = S.  Same shape as the bank-2
  * display copy (screen_content.c s_sc_market_quote): display and charge can
  * never disagree, by construction.  use_market = 0 forces neutral 32
- * (sales ignore the market, §5).  Multiply is repeated addition
+ * (debug/test paths needing exact figures; every live till price ---
+ * buy quotes, loot appraisals, rarity cuts -- scales with the market,
+ * §5).  Multiply is repeated addition
  * (UI-time paths only, never per-frame) so no mult lib is pulled into
  * fixed _CODE (§52.18).  Price 0 quotes 0 however biased (not for
  * sale); tools/check_economy.py keeps price-0 rows bias-free so the
@@ -162,7 +152,7 @@ void economy_grant_banked(void)
     if (v < g_game.state.economy.gold_in) v = 0xFFFF;
     g_game.state.economy.gold_in = v;
 #ifdef DEBUG_BUILD
-    eco_emit(EVENT_CURRENCY_ADDED, currency, granted, 0, 0);
+    telemetry_ring_emit(EVENT_CURRENCY_ADDED, currency, granted, 0, 0);
 #endif
     g_bk_byte_b = granted;
 }
@@ -222,6 +212,6 @@ void economy_update_banked(void)
     g_game.state.economy.gold_out = 0;
     g_game.state.economy.battles = 0;
 #ifdef DEBUG_BUILD
-    eco_emit(EVENT_MARKET_UPDATED, old, idx, dir, 0);
+    telemetry_ring_emit(EVENT_MARKET_UPDATED, old, idx, dir, 0);
 #endif
 }

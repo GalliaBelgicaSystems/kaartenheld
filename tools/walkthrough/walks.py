@@ -510,7 +510,8 @@ def _carl_topup(s):
     try:
         base = r._resolve_battle_base() + BATTLE_ENEMIES
         mx = r.battle_enemy_max_hp(0)
-    except Exception:
+    except Exception as exc:
+        print("[_carl_topup] battle state unreadable, skipping: %r" % (exc,))
         return
     s.pb.memory[base] = mx
 

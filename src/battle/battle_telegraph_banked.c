@@ -5,6 +5,7 @@
 #include "banked.h"
 #include "rpg/status.h"
 #include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* ── Enemy telegraph card draw (ROM bank 10) ─────────────────────────
  * Hosts battle_update()'s ANIM/SHUFFLE-tail telegraph block out of the
@@ -37,27 +38,9 @@
  * cycles and unpoisoned attackers draw fresh cards (docs/combo-system.md).
  * Freeze keeps its silent skip (no card, no message). */
 
-#ifdef DEBUG_BUILD
-static void telegraph_emit(uint8_t type, uint8_t d0, uint8_t d1,
-                           uint8_t d2, uint8_t d3)
-{
-    GameEvent *ev = &g_telemetry_buffer[g_telemetry_head];
-    ev->seq = g_telemetry_seq++;
-    ev->frame = g_telemetry_frame_ptr ? *g_telemetry_frame_ptr : 0;
-    ev->type = type;
-    ev->data[0] = d0;
-    ev->data[1] = d1;
-    ev->data[2] = d2;
-    ev->data[3] = d3;
-
-    g_telemetry_head = (uint8_t)((g_telemetry_head + 1) & (MAX_TELEMETRY_EVENTS - 1));
-    if (g_telemetry_count < MAX_TELEMETRY_EVENTS) {
-        g_telemetry_count++;
-    }
-}
-#else
-#define telegraph_emit(type, d0, d1, d2, d3) ((void)0)
-#endif
+/* Ring telemetry runs through telemetry_ring.h (one shared inline
+ * writer; the release macro there compiles the calls out).  Keep the
+ * call sites' field order in sync with telemetry_emit_banked.c. */
 
 void battle_telegraph_banked(void)
 {
@@ -109,7 +92,7 @@ void battle_telegraph_banked(void)
          (uint8_t)(1u << (atk + 1))) != 0 &&
         b->enemies[atk].hp != 0) {
         b->enemy_incoming_dmg = 0;
-        telegraph_emit(EVENT_TURN_SKIPPED,
+        telemetry_ring_emit(EVENT_TURN_SKIPPED,
                        (uint8_t)(atk + 1),
                        STATUS_FREEZE, 0, 0);
     } else if (b->enemy_deck.count > 0 &&
@@ -127,11 +110,11 @@ void battle_telegraph_banked(void)
         b->enemy_played_card.status_id = b->enemy_deck.cards[di].status_id;
         b->enemy_played_card.status_chance = b->enemy_deck.cards[di].status_chance;
         b->enemy_incoming_dmg = 0;
-        telegraph_emit(EVENT_ENEMY_CARD_PLAYED,
+        telemetry_ring_emit(EVENT_ENEMY_CARD_PLAYED,
                        di,
                        b->enemy_played_card.type,
                        b->enemy_played_card.value, 0);
-        telegraph_emit(EVENT_TURN_SKIPPED,
+        telemetry_ring_emit(EVENT_TURN_SKIPPED,
                        (uint8_t)(atk + 1),
                        STATUS_POISON, 0, 0);
         b->msg_id = BATTLE_MSG_POISONED_FOE;
@@ -149,7 +132,7 @@ void battle_telegraph_banked(void)
         b->enemy_played_card.status_id = b->enemy_deck.cards[di].status_id;
         b->enemy_played_card.status_chance = b->enemy_deck.cards[di].status_chance;
         b->enemy_incoming_dmg = b->enemy_played_card.value;
-        telegraph_emit(EVENT_ENEMY_CARD_PLAYED,
+        telemetry_ring_emit(EVENT_ENEMY_CARD_PLAYED,
                        di,
                        b->enemy_played_card.type,
                        b->enemy_played_card.value, 0);

@@ -159,7 +159,21 @@ void dialogue_choice_nav_banked(void)
                 g_bk_byte_c = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DECLINE;
                 return;
             }
+            /* Full re-init, so re-accepting replays the lesson.  The
+             * AP line of the attack box is truthful only when THIS
+             * spar's start will grant the AP (one-shot via
+             * TUTORIAL_SKIPPED, owned by the bank-5 grant body): a
+             * clear latch now means the grant fires, so arm the claim
+             * bit; a set latch means a re-spar or post-skip spar, so
+             * the no-grant coaching box opens instead. */
             g_carl_tut_flags = CARL_TUT_FLAG_LESSON;
+            {
+                uint8_t sf = (uint8_t)(STORY_FLAG_ID_TUTORIAL_SKIPPED - 1);
+                if ((g_game.state.flags.bytes[(uint8_t)(sf >> 3)] &
+                     (uint8_t)(1u << (sf & 7))) == 0) {
+                    g_carl_tut_flags |= CARL_TUT_FLAG_AP_GRANTED;
+                }
+            }
             g_carl_tut_hurt = 0;
             g_bk_byte_a = 2;
             return;

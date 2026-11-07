@@ -19,6 +19,17 @@
  * battles by the tick body.  Battles that bypass the offer (debug boot,
  * debug re-arm) run plain. */
 #define CARL_TUT_FLAG_LESSON      0x40
+/* THIS spar's start will grant the AP (armed by the bank-10 INTRO YES
+ * handler when TUTORIAL_SKIPPED is still clear -- exactly the case the
+ * bank-5 grant body does not early-return on): the attack box claims
+ * the AP only then.  A re-spar after a flee, or a spar after the
+ * leave-the-field skip, grants nothing (one-shot via TUTORIAL_SKIPPED)
+ * and opens the no-grant coaching box instead, so the "TAKE THIS AP"
+ * line is never a lie.  Assigned fresh on every YES accept (the grant
+ * runs right after YES), consumed with LESSON when the attack box
+ * opens, cleared on non-Carl battles.  Lives in the choice body and
+ * not the grant body because release bank 5 sits at 0 B headroom. */
+#define CARL_TUT_FLAG_AP_GRANTED  0x80
 
 /* Mile tracker retired with the 10-HP spar (the every-10-HP flee reminder
  * is gone): the storage byte stays so the WRAM layout does not shift

@@ -140,7 +140,7 @@ const uint8_t g_tileset_underground[576] = {
     /* 36 underground tiles (576 bytes) in sheet scan order, VRAM slot ==
      * scan index (see world.h TILE_UNDERGROUND_*): slots 0..19 walls,
      * 20/22..24 floors, 21 stairs exit, 25..28 interior corners,
-     * 29 + 32..35 void (one shared def), 30 skeleton with bone,
+     * 29 floor, 32..35 void (one shared def), 30 skeleton with bone,
      * 31 skeleton without bone (same TileType value 254, own art). */
 #include "gfx/rpg_underground_tiles.inc"
 };

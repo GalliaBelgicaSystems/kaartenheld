@@ -5,12 +5,15 @@
 #include "game.h"
 #include "game_ids.h"
 #include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* ── Carl's spar-start AP grant (ROM bank 5) ─────────────────────────
  * The lesson's +1 AP is handed over when the spar STARTS, not on the
  * win: start_battle_from_world() dispatches this body for BATTLE_CARL
  * encounters, and the opening coaching box announces it ("TAKE THIS AP
- * TO DO POKER HANDS!").  One-shot via STORY_FLAG_ID_TUTORIAL_SKIPPED
+ * TO DO POKER HANDS!" -- first spar only; re-spars open the no-grant
+ * variant, see CARL_TUT_FLAG_AP_GRANTED in carl_tutorial.h).
+ * One-shot via STORY_FLAG_ID_TUTORIAL_SKIPPED
  * (shared with the leave-the-field skip, which hands over the same
  * point): re-spars grant nothing and the victory event keeps only its
  * graduation speech.
@@ -31,27 +34,8 @@
  * No di/ei anywhere (AGENTS.md §52.11.3): the body runs with interrupts
  * enabled under the music-clock trampoline. */
 
-#ifdef DEBUG_BUILD
-static void carl_grant_emit(uint8_t type, uint8_t d0, uint8_t d1,
-                            uint8_t d2, uint8_t d3)
-{
-    GameEvent *ev = &g_telemetry_buffer[g_telemetry_head];
-    ev->seq = g_telemetry_seq++;
-    ev->frame = g_telemetry_frame_ptr ? *g_telemetry_frame_ptr : 0;
-    ev->type = type;
-    ev->data[0] = d0;
-    ev->data[1] = d1;
-    ev->data[2] = d2;
-    ev->data[3] = d3;
-
-    g_telemetry_head = (uint8_t)((g_telemetry_head + 1) & (MAX_TELEMETRY_EVENTS - 1));
-    if (g_telemetry_count < MAX_TELEMETRY_EVENTS) {
-        g_telemetry_count++;
-    }
-}
-#else
-#define carl_grant_emit(type, d0, d1, d2, d3) ((void)0)
-#endif
+/* Ring telemetry runs through telemetry_ring.h (one shared inline
+ * writer); the release macro there compiles the calls out. */
 
 void carl_spar_grant_banked(void)
 {
@@ -71,15 +55,19 @@ void carl_spar_grant_banked(void)
     pool = g_game.state.variables.values[(uint8_t)(VARIABLE_ID_ENERGY_POOL - 1)];
     pool = (int16_t)(pool + 1);
     g_game.state.variables.values[(uint8_t)(VARIABLE_ID_ENERGY_POOL - 1)] = pool;
-    carl_grant_emit((uint8_t)EVENT_VARIABLE_SET,
+    telemetry_ring_emit((uint8_t)EVENT_VARIABLE_SET,
                     (uint8_t)VARIABLE_ID_ENERGY_POOL,
                     (uint8_t)(pool & 0xFF),
                     (uint8_t)((pool >> 8) & 0xFF), 0);
 
     /* Latch the one-shot (replica of game_flag_set: emits only on change;
-     * the early return above guarantees the change). */
+     * the early return above guarantees the change).  Whether THIS spar
+     * granted the AP is recorded by the INTRO YES handler, not here:
+     * bank 5 sits at 0 B headroom in release (AGENTS.md §52.18), so the
+     * bit lives or dies with the one-shot test the choice body already
+     * pays (carl_tutorial.h). */
     g_game.state.flags.bytes[byte] |= mask;
-    carl_grant_emit((uint8_t)EVENT_STORY_FLAG_SET,
+    telemetry_ring_emit((uint8_t)EVENT_STORY_FLAG_SET,
                     (uint8_t)STORY_FLAG_ID_TUTORIAL_SKIPPED, 0, 0, 0);
 
     /* Refresh the live fight: this body runs after battle_start staged

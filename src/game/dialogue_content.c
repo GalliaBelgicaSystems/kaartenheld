@@ -329,6 +329,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT,
+        "CARL:",
+        4,
+        {"PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_TUTORIAL_CARL_DECLINE,
         "CARL:",
         2,

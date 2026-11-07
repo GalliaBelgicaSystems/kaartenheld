@@ -1,0 +1,95 @@
+{
+  "name": "carl_tutorial_attack_nogrant",
+  "test": true,
+  "description": "Re-spar (or post-skip spar) grants no AP: the attack coaching box opens the no-grant variant (same controls coaching, no TAKE THIS AP handover line). TUTORIAL_SKIPPED is pre-staged so the spar-start grant takes its early-return path; closing the box lands on a standard TARGET CARL banner.",
+  "actions": [
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 30
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "TARGET CARL"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 5,
+      "contains": "CARL:"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 9,
+      "contains": "SELECT: CONFIRM"
+    },
+    {
+      "type": "event_arg",
+      "event": "DIALOGUE_STARTED",
+      "index": 0,
+      "value": "TUTORIAL_CARL_ATTACK_NOGRANT"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "VARIABLE_SET"
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_STARTED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 15,
+      "y": 8,
+      "facing": "LEFT"
+    },
+    "seed": 4242,
+    "flags": {
+      "FIELD_CHEST": true,
+      "TUTORIAL_SKIPPED": true
+    }
+  }
+}

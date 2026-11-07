@@ -19,9 +19,16 @@
  * (LCD-on safe, §52.11.3): the grant fires under a dialogue overlay,
  * loads repaint with the LCD on on gate crossings.  Idempotent:
  * pre-bone or a non-underground tileset is a no-op, so the loader
- * wrapper and the bone grant path share it.  Flag bit inline (a banked
- * body must never call the fixed-bank game_flag_is_set): flag N lives
- * in bit (N-1)%8 of flags.bytes[(N-1)/8]; BONE_TAKEN is 10. */
+ * wrapper and the bone grant path share it.  One-way (bone -> no-bone)
+ * is safe by structure: every path that can clear the flag (new game,
+ * save load, scenario load) invalidates the tileset cache, so the
+ * next load repaints slot 30 from ROM first and this hook re-applies
+ * the swap only when the loaded flag is set.  The south-tunnel
+ * skeleton shares slot 30 by design (one slot for both maps) and its
+ * NPC line (SKELETON_DESC) never mentions a bone, so the shared art
+ * stays correct there too.  Flag bit inline (a banked body must never
+ * call the fixed-bank game_flag_is_set): flag N lives in bit (N-1)%8
+ * of flags.bytes[(N-1)/8]; BONE_TAKEN is 10. */
 void skeleton_swap_banked(void)
 {
     volatile uint8_t *dst;

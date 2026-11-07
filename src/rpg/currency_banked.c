@@ -3,6 +3,7 @@
 #include "rpg/currency.h"
 #include "banked.h"
 #include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* ── Banked currency core (ROM bank 11) ──────────────────────────────
  * Hosts currency_add's arithmetic out of the fixed bank (which sits ~100 B
@@ -15,31 +16,18 @@
 
 #define CURRENCY_MAX_DISPLAY 9999
 
-#ifdef DEBUG_BUILD
-/* Direct ring write (debug only: the release ROM has no telemetry ring
- * and currency_add compiles silent there).  Same shape as the economy
- * module's writer; kept local so the engine never includes game headers
+/* Ring telemetry runs through telemetry_ring.h: one shared inline writer.
+ * Kept out of game headers so the engine never includes game content
  * (AGENTS.md §55.1). */
-static void cur_emit(uint8_t type, uint8_t d0, uint8_t d1, uint8_t d2,
-                     uint8_t d3)
-{
-    GameEvent *ev = &g_telemetry_buffer[g_telemetry_head];
-    ev->seq = g_telemetry_seq++;
-    ev->frame = g_telemetry_frame_ptr ? *g_telemetry_frame_ptr : 0;
-    ev->type = type;
-    ev->data[0] = d0;
-    ev->data[1] = d1;
-    ev->data[2] = d2;
-    ev->data[3] = d3;
-    g_telemetry_head = (uint8_t)((g_telemetry_head + 1) &
-                                 (MAX_TELEMETRY_EVENTS - 1));
-    if (g_telemetry_count < MAX_TELEMETRY_EVENTS) g_telemetry_count++;
-}
-#endif
 
 /* In: g_bk_ptr_a = GameState*, g_bk_byte_a = currency,
  * g_bk_byte_b/c = amount lo/hi.  Saturates at 9999 / 0
- * (docs/economy.md §7: fits the 4-digit HUD). */
+ * (docs/economy.md §7: fits the 4-digit HUD).  The amount is
+ * pre-clamped to ±9999 BEFORE the add: the stored value never exceeds
+ * 9999, so the sum stays inside int16 (9999+9999 < 32767) and a large
+ * grant can never wrap negative and clamp a rich player to 0.  No
+ * 32-bit math (SDCC int32 would work but costs code on every bank-11
+ * caller path for a case saturation already handles). */
 void currency_add_banked(void)
 {
     GameState *state = (GameState *)g_bk_ptr_a;
@@ -50,19 +38,22 @@ void currency_add_banked(void)
     if (!state || currency < 1 || currency > MAX_CURRENCIES ||
         amount == 0)
         return;
+    if (amount > CURRENCY_MAX_DISPLAY) amount = CURRENCY_MAX_DISPLAY;
+    if (amount < (int16_t)(0 - CURRENCY_MAX_DISPLAY))
+        amount = (int16_t)(0 - CURRENCY_MAX_DISPLAY);
     new_value = (int16_t)(state->currency.amount[currency - 1] + amount);
     if (new_value > CURRENCY_MAX_DISPLAY) new_value = CURRENCY_MAX_DISPLAY;
     if (new_value < 0) new_value = 0;
     state->currency.amount[currency - 1] = new_value;
 #ifdef DEBUG_BUILD
     if (amount > 0) {
-        cur_emit(EVENT_CURRENCY_ADDED, currency,
-                 (uint8_t)(amount & 0xFF),
-                 (uint8_t)((amount >> 8) & 0xFF), 0);
+        telemetry_ring_emit(EVENT_CURRENCY_ADDED, currency,
+                            (uint8_t)(amount & 0xFF),
+                            (uint8_t)((amount >> 8) & 0xFF), 0);
     } else {
-        cur_emit(EVENT_CURRENCY_SPENT, currency,
-                 (uint8_t)((-amount) & 0xFF),
-                 (uint8_t)((-amount >> 8) & 0xFF), 0);
+        telemetry_ring_emit(EVENT_CURRENCY_SPENT, currency,
+                            (uint8_t)((-amount) & 0xFF),
+                            (uint8_t)((-amount >> 8) & 0xFF), 0);
     }
 #endif
 }

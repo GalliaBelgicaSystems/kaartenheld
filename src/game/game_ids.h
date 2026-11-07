@@ -96,11 +96,14 @@ typedef enum {
     STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
                                        * (shown once, on first talk while
                                        * owning the Iron Ring) */
-    STORY_FLAG_ID_TUTORIAL_SKIPPED = 8, /* Carl's lesson +1 AP was granted
-                                         * (spar start or leave-the-field
-                                         * skip, one-shot; the offer never
-                                         * repeats, the victory grants
-                                         * nothing more) */
+    STORY_FLAG_ID_TUTORIAL_SKIPPED = 8, /* lesson AP granted (spar start
+                                         * or leave-the-field skip),
+                                         * one-shot: read as
+                                         * TUTORIAL_AP_GRANTED (kept name:
+                                         * scenarios, saves and the host
+                                         * flag maps key on it).  The
+                                         * offer never repeats and the
+                                         * victory grants nothing more */
     STORY_FLAG_ID_MET_DOG      = 9, /* heard the village dog's key hint
                                        * (gates the skeleton's bone offer:
                                        * the first bump only describes it) */

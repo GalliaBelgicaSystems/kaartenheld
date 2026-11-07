@@ -71,8 +71,18 @@ void carl_tutorial_banked(void)
         if ((g_carl_tut_flags & CARL_TUT_FLAG_LESSON) == 0) return;
         g_carl_tut_flags |= (uint8_t)(CARL_TUT_FLAG_ATTACK_SHOWN);
         g_carl_tut_flags &= (uint8_t)~CARL_TUT_FLAG_LESSON;
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
-        g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
+        /* The AP handover line plays only when THIS spar's start
+         * granted the AP (armed by INTRO YES on a clear latch):
+         * re-spars and post-skip spars coach the same attack
+         * controls without claiming a grant. */
+        if ((g_carl_tut_flags & CARL_TUT_FLAG_AP_GRANTED) != 0) {
+            g_carl_tut_flags &= (uint8_t)~CARL_TUT_FLAG_AP_GRANTED;
+            g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
+            g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
+        } else {
+            g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT;
+            g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT;
+        }
         g->battle.msg_id = 9;
         return;
     }

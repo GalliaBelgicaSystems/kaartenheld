@@ -9,6 +9,15 @@
  * number of currencies; only the ones actually used occupy slots. */
 
 int16_t currency_get(const GameState *state, CurrencyId currency);
+/* Adds (or, when negative, spends) currency, saturating at 9999 / 0.
+ * Staging hazard: the bank-11 dispatch reuses g_bk_ptr_a / g_bk_byte_*
+ * for its own arguments, so any values the caller staged BEFORE this
+ * call are gone afterwards -- snapshot staged ids/prices into locals
+ * first (cf. shop_sell / shop_confirm in src/screens/shop_screen.c).
+ * Audit note (Nov 2026): every other caller was checked -- event.c
+ * ADD_CURRENCY restages per action, scenarios.c BUY_ITEM and world.c
+ * read no staged values after the call -- only the shop paths needed
+ * the snapshot. */
 void currency_add(GameState *state, CurrencyId currency, int16_t amount);
 
 /* Bank-11 saturating core (src/rpg/currency_banked.c), dispatched by the

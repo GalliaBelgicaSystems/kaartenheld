@@ -52,7 +52,7 @@ else:                           factor = 25%
 gold_reward = max(1, (base_reward * factor + 50) / 100)
 ```
 
-Only the final line needs a division, and it divides by the constant 100 on values that fit in a byte-times-byte product — implement it as the single 16x8 multiply in the unbanked shift-add helper (see §4.1), or as thresholded subtraction. Never call the SDCC division library from banked code.
+The shipped ladder needs no division at all: 75/50/25% are thresholded shifts (`(3*base+2)>>2`, `(base+1)>>1`, `(base+2)>>2` in `economy_grant_banked`). Never call the SDCC division library from banked code.
 
 Deterministic per seed: the factor is a pure function of `(wallet, expected_for_area)`; no RNG is involved.
 
@@ -72,19 +72,19 @@ Pin it with a host-side content check (not a ROM assert): the shop compiler or `
 
 ## 4. Card buy prices
 
-Every card has a reference price derived from its AP cost and material.
+Every card carries an authored reference price; the buy quote scales it by the market.
 
 ```text
-base_price = PRICE_TABLE[AP][material] + price_bias
+base_price = price + price_bias
 buy_price  = (base_price * market_index + 16) >> 5
 ```
 
 Notes:
 
-- `PRICE_TABLE` is precomputed at compile time from the old `PRICE_PER_AP * (AP + 1) * material` ladder (PRICE_PER_AP = 10, Common 1.00 through Legendary 2.75). The ROM never computes the float ladder; it indexes the table.
+- There is no AP/material price table in the ROM: `CardDefinition.price` is the single source of truth for shop rows (loot synth fills it for derived ids), and `price_bias` adjusts it per card (see §4.1). (An earlier draft derived prices from an AP/material ladder; the ladder never shipped.)
 - `market_index` is stored in 1/32 units: neutral = 32 (= 100%), range 24–48 (= 75%–150%). The `+16 >> 5` is rounding divide-by-32 with a shift, not a division instruction.
-- `price_bias` is a per-card signed byte (see §4.1). It is part of `base_price`, so it scales with the market like everything else and cannot break the arbitrage invariant (§5.1).
-- Curated shop rows may carry an authored `price` (as today: `CardDefinition.price` is the single source of truth for shop rows, loot synth fills it for derived ids). An authored price IS the `base_price` for that row; it must still satisfy the §5.1 assert against the market range.
+- `price_bias` is a per-card signed byte (see §4.1). It is part of `base_price`, so it scales with the market like everything else. The SELL cut is computed from the same biased base, which is what keeps the arbitrage invariant (§5.1) whole.
+- Every authored price must still satisfy the §5.1 assert against the market range (`make economy-check`).
 
 Examples at a neutral market index (unchanged from the original ladder):
 
@@ -103,7 +103,7 @@ If the game uses rarity instead of a separate material property, rarity can supp
 
 AP cost plus material underprices two cases: a cheap-but-strong card costs the same as a weak one at the same AP, and 0-AP card-advantage cards are underpriced at ~10g.
 
-Each card row carries one extra signed byte, `price_bias` (gold, added to the table value before market scaling, result clamped to a minimum of 1). Cost: one byte per card definition. `0` means "table price is right". Authors use it to lift underpriced utility cards or to separate two cards that share an AP/material cell but not a power level.
+Each card row carries one extra signed byte, `price_bias` (gold, added to the authored price before market scaling, biased base clamped to a minimum of 1). Cost: one byte per card definition. `0` means the authored price stands as-is. Authors use it to lift underpriced utility cards or to separate two cards that share an AP/material cell but not a power level.
 
 The bias must be inside `base_price` (scaled by the market), never added after scaling — a post-scale add is a different buy/sell ratio per card and defeats the §5.1 invariant.
 
@@ -111,9 +111,9 @@ Host-side `make card-costs`-style check (or the shop compiler) should warn on tw
 
 ### 4.2 SM83 arithmetic rules for prices
 
-- The one 16x8 multiply (`base_price * market_index`, max ~96*48 = 4608, fits in 13 bits) lives in ONE unbanked shift-add helper. Banked callers stage inputs through the `g_bk_*` globals and call it; they never emit `*` or `/` themselves (a bare `*` pulls `__mulsuchar` into fixed `_CODE`, AGENTS.md §52.18).
+- The multiply (`base_price * market_index`, max 255*48 = 12240, fits in 14 bits) is repeated addition (`for (i = idx; i != 0; i--) p += b`), and it lives in TWO bank-local copies: the bank-2 display quote (`s_sc_market_quote`) and the bank-11 charge quote (`economy_quote_banked`) -- a banked body must never call a fixed-bank function (§52.11.1), so they cannot share one helper. `tools/check_economy.py` pins both copies to the mirrored formula (drift pins). Banked callers never emit `*` or `/` themselves (a bare `*` pulls `__mulsuchar` into fixed `_CODE`, AGENTS.md §52.18).
 - No `round()`, no `* 1.15`, no `/ expected_wallet` anywhere in ROM code. Threshold compares (§3.1) and the `>> 5` shift above are the only allowed forms.
-- `base_price` fits in a byte (max table value plus bias stays under ~120g); the product fits in 16 bits; `buy_price`/`sell_price` fit in a byte.
+- `base_price` fits in a byte (8-bit saturating add, price 0 stays 0); the product fits in 16 bits; `buy_price`/`sell_price` fit in a byte (saturating, never wrapping).
 
 ## 5. Selling cards
 
@@ -151,19 +151,26 @@ Rules:
 
 ### 5.1 No-arbitrage by construction
 
-For every curated card the sell base never exceeds the buy base
-(`cut = price × (5−tier)/6 ≤ price`, floored at 1), and the quote `S`
-is monotonic non-decreasing in both arguments — so at EVERY market
-index `S(cut, idx) ≤ S(price, idx)`: buy-then-sell always loses (or
-washes at 1g). Loot has no buy row at all (shops stock curated
+For every curated card the sell base never exceeds the biased buy base
+(`cut = base × (5−tier)/6 ≤ base`, floored at 1, where
+`base = price + price_bias`), and the quote `S` is monotonic
+non-decreasing in both arguments — so at any ONE market index
+`S(cut, idx) ≤ S(base, idx)`: a same-visit buy-then-sell always loses
+(or washes at 1g). Across visits the market moves (±1 per guarded
+update, §6), so buying at a low index and selling at a higher one can
+profit — that is market risk touching every till price equally, not a
+print-gold loop: there is no action the player can repeat at a fixed
+index to mint gold. Loot has no buy row at all (shops stock curated
 only), so no buy-low/sell-high loop exists in either direction. The
 gates that protect this are:
 
 1. `shops_compile.py` fails loudly on any loot-range id in shop stock.
 2. `tools/check_economy.py` verifies the quote formula over the whole
    byte domain (neutral identity, saturation, monotonicity) AND the
-   cross rule: for every price 1..255, every bias, every material
-   tier, every index 24..48, `S(cut(price, tier), idx) ≤ S(base, idx)`.
+   cross rule: for every price 0..255, every bias -128..127 (folded
+   into the base exactly like the C sell path), every material tier,
+   every index 24..48, `S(cut, idx) ≤ S(base, idx)` — plus drift pins
+   tying both C copies to the mirrored formula.
 3. Sell-all-then-rebuy scenarios run at neutral, where every figure is
    exact: `merchant_sell_loot` (1g formula value) and the shop buy
    scenarios pin both sides of the till.
@@ -243,7 +250,7 @@ The proposal uses six safeguards:
 
 1. Enemy rewards diminish when the player's wallet becomes unusually large (§3.1 threshold ladder, minimum 25%).
 2. Selling is restricted to shops.
-3. Resale never exceeds purchase: the rarity cut sits under the buy base and the quote is monotonic, so `S(cut) ≤ S(buy)` at every index (§5.1, checked by `make economy-check`).
+3. Same-visit resale never exceeds purchase: the rarity cut sits under the biased buy base and the quote is monotonic, so `S(cut) ≤ S(buy)` at the same index (§5.1, checked by `make economy-check`).
 4. Market fluctuations are bounded between 75% and 150% (stored 24–48).
 5. Shops provide an ongoing gold sink through card purchases.
 6. Gold saturates at 9999 (fits the 4-digit HUD; `currency_add` clamps rather than wrapping — a u16 wrap would turn a rich player poor and a poor display into a lie). `gold_in`/`gold_out` saturate independently for the same reason.
@@ -254,7 +261,7 @@ Importantly, prices should not permanently increase with story progression. Area
 
 ## 8. Example
 
-A Rare card costs 3 AP (table base 64g, bias 0):
+A Rare card (authored base 64g: price 64, bias 0):
 
 At market index 115% (stored 37; `37/32 = 1.15625`), for a 2-material (iron) card:
 
@@ -266,7 +273,7 @@ buy_price  = (64 * 37 + 16) >> 5
 sell_price = S(64 * 3/6 = 32, 37)
            = (32 * 37 + 16) >> 5
            = 1200 >> 5
-           = 37 gold   (cut 32 ≤ base 64, so 37 ≤ 74 at every index)
+           = 37 gold   (cut 32 ≤ base 64, so 37 ≤ 74 at the same index)
 ```
 
 If the market subsequently falls to 95% (stored 30):
@@ -290,7 +297,7 @@ Keep the initial implementation small:
 
 1. Add base gold rewards to enemy definitions.
 2. Implement the wallet-based diminishing reward threshold ladder (§3.1, integer only).
-3. Implement one shared card-price calculation based on the precomputed `[AP][material]` table plus the `price_bias` byte (§4–§4.2, unbanked shift-add helper only).
+3. Implement the card-price formula (authored price + bias, market-scaled) in the two bank-local quote bodies (§4–§4.2, repeated addition only, pinned by `make economy-check`).
 4. Add shop-only card selling (atomic remove-then-credit, decked/quest guards).
 5. Store a global market index in 1/32 units plus the three counters (§6).
 6. Update the market at a consistent shop boundary with the zero-counter / zero-battle guards (§6).
@@ -350,7 +357,7 @@ After implementation, playtesting should determine:
 - Does diminishing loot become noticeable too early?
 - Is a 75–150 market range appropriate?
 - Is the per-area `max(100, expected >> 2)` threshold (replacing the draft's flat 50 gold) too twitchy or too sticky?
-- Does the `price_bias` byte get used, or does the AP/material table carry prices on its own?
+- Do the authored prices still track card power, or does `price_bias` need wider use?
 
 Tune these constants after the first playtest before introducing additional mechanics. The threshold shape (per-area, proportional) ships now; its constants are tuned by playtest.
 

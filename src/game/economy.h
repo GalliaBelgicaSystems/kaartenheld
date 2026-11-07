@@ -26,14 +26,16 @@
  * meaning for every till price: BUY rows quote S(price + bias, live
  * index), SELL rows quote S(sell_base, live index) where the sell base
  * is the loot formula value (loot has no buy row) or the rarity cut
- * (curated).  The cut never exceeds the buy base and S is monotonic,
- * so buy-then-sell never prints gold at any index (§5.1, gated by
- * tools/check_economy.py).  Shops stock curated-only
+ * of the BIASED base (curated: cut from price + bias, never the raw
+ * price).  The cut never exceeds the biased buy base and S is
+ * monotonic, so a same-visit buy-then-sell never prints gold (§5.1,
+ * gated by tools/check_economy.py; cross-visit market drift is market
+ * risk, not arbitrage).  Shops stock curated-only
  * (shops_compile.py rejects loot-range ids), so loot can never be
  * bought.  use_market nonzero selects the live clamped index (every
- * live till caller); zero pins neutral 32 (debug/test paths needing
- * exact figures).  At neutral S == base, so every pre-economy
- * expectation holds exactly. */
+ * live till caller passes nonzero); zero pins neutral 32 (debug/test
+ * paths needing exact figures).  At neutral S == base, so every
+ * pre-economy expectation holds exactly. */
 uint8_t economy_quote(uint8_t price, int8_t bias, uint8_t use_market);
 
 /* Victory gold path (bank-11 body, inlined at the single world.c site):

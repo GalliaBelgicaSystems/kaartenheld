@@ -15,6 +15,7 @@
 #include "menu.h"
 #include "rpg/save.h"
 #include "game_ids.h"
+#include "economy.h"
 
 /* Bank-2 self-contained shop / save-load render bodies (AGENTS.md 52.11.1):
  * the fixed _CODE/_HOME area is at its size limit (see make memmap), so the
@@ -241,10 +242,12 @@ static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
  * Same shape as economy_quote_banked: zero guard (price 0 = free basic,
  * always quotes 0 however biased -- the gate in tools/check_economy.py
  * keeps price-0 rows bias-free), 8-bit saturating base, repeated-add
- * multiply, one rounding.  The index is trusted: every writer clamps
- * (descriptor apply, debug action, update body, new game), so no clamp
- * here.  Render rows pass the live index (read once at render entry
- * into s_sc_idx); the quote body reads it from the staged game. */
+ * multiply, one rounding, same index clamp (out-of-band reads neutral:
+ * index 0 would otherwise quote (b*0+16)>>5 = 0, i.e. FREE, for every
+ * priced row -- a single clamp here covers all readers even if a path
+ * ever runs game_state_zero without game_new_game).  Render rows pass
+ * the live index (read once at render entry into s_sc_idx); the quote
+ * body reads it from the staged game. */
 static uint8_t s_sc_market_quote(uint8_t price, int8_t bias, uint8_t idx)
 {
     uint16_t p;
@@ -252,6 +255,8 @@ static uint8_t s_sc_market_quote(uint8_t price, int8_t bias, uint8_t idx)
     uint8_t i;
     uint8_t b;
     if (price == 0) return 0;
+    if (idx < ECONOMY_INDEX_MIN || idx > ECONOMY_INDEX_MAX)
+        idx = ECONOMY_INDEX_NEUTRAL;
     if (bias >= 0) {
         b = (uint8_t)(price + bias);
         if (b < price) b = 255;
@@ -385,22 +390,31 @@ uint8_t g_shop_vis_count;
  * - loot ids sell at their full synthesized price (docs/loot.md §34:
  *   power + 2·material, +2 poison dagger) -- loot has no buy value,
  *   so the formula IS the merchant's appraisal;
- * - curated cards sell below their buy value on a rarity-scaled cut:
- *   price × (5−tier)/6 (wood 5/6 … mythril 1/6), min 1 for any priced
- *   card.  Commons sell near buy price, mythril for a small fraction.
+ * - curated cards sell below their buy value on a rarity-scaled cut of
+ *   the BIASED base (matched pair with the BUY quote, which scales
+ *   price + bias: a cut from the raw price would sit above the buy
+ *   quote on negative-bias rows): base × (5−tier)/6 (wood 5/6 …
+ *   mythril 1/6), min 1 for any priced card.  Commons sell near buy
+ *   price, mythril for a small fraction.
  *   The cut is market-scaled like every till price (docs/economy.md
- *   §4-§5): at any index the cut stays under the buy quote (cut ≤ base
- *   and the quote is monotonic), so buy-then-sell never prints gold.
+ *   §4-§5): at the same index the cut stays under the buy quote
+ *   (cut ≤ biased base and the quote is monotonic), so a same-visit
+ *   buy-then-sell never prints gold.  Across visits the market moves,
+ *   so a later sale at a higher index can exceed the earlier buy --
+ *   that is market risk, not arbitrage (see docs/economy.md §5.1).
  * - price-0 basics (free starter rebuys) and SPECIAL quest items never
  *   sell -- selling a free card would print money (buy 0, sell 1,
  *   rebuy 0, repeat), so the SELL tab excludes them entirely.
  * No division library: banked bodies use repeated subtraction
- * (AGENTS.md §52.18); values stay small (price ≤ 30, ×5 ≤ 150). */
+ * (AGENTS.md §52.18); n is uint16_t (base ≤ 255, ×5 ≤ 1275), q fits
+ * a byte. */
 static uint8_t sc_sell_price(CardId id)
 {
     const CardDefinition *d;
     uint8_t mat, wpn, special;
-    uint8_t k, n, q;
+    uint8_t k, q;
+    uint16_t n;
+    uint8_t base;
     if (loot_is_loot_id(id)) {
         d = ic_loot_synth(id);
         /* Loot appraisal scales with the market like every till price;
@@ -413,14 +427,24 @@ static uint8_t sc_sell_price(CardId id)
     if (!d || d->type == CARD_TYPE_SPECIAL || d->price == 0) return 0;
     ic_card_mat_wpn_pub(id, &mat, &wpn, &special);
     if (special || mat > 4) return 0;
-    /* n = price × (5−tier) via repeated addition (k = 5..1). */
+    /* Biased base first (same 8-bit saturating shape as the quote
+     * bodies, floored at 1 so the cut below stays ≥ 1): the cut must
+     * sit under the BUY quote's base, not the raw price. */
+    if (d->price_bias >= 0) {
+        base = (uint8_t)(d->price + d->price_bias);
+        if (base < d->price) base = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - d->price_bias);
+        base = (neg >= d->price) ? 1 : (uint8_t)(d->price - neg);
+    }
+    /* n = base × (5−tier) via repeated addition (k = 5..1). */
     k = (uint8_t)(5 - mat);
     n = 0;
-    while (k--) n = (uint8_t)(n + d->price);
+    while (k--) n = (uint16_t)(n + base);
     /* q = n/6 via repeated subtraction. */
     q = 0;
     while (n >= 6) {
-        n = (uint8_t)(n - 6);
+        n = (uint16_t)(n - 6);
         q++;
     }
     q = q ? q : 1;
