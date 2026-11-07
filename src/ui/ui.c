@@ -553,8 +553,8 @@ static const uint8_t s_ug_slot[47] = {
     29,                             /* 216 (unused; void) */
     29, 29, 29,                     /* 217..219 (unused; void) */
     28,                             /* 220 interior corner */
-    29,                             /* 221 void */
-    29, 29, 29, 29, 29,             /* 222..226 (unused; void) */
+    32,                             /* 221 void (slot-32 black art) */
+    29, 29, 29, 29, 29,             /* 222..225 void + 226 floor (slot-29 art) */
     21,                             /* 227 stairs exit */
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
     29, 29, 29,                     /* 248..250 (unused; void) */

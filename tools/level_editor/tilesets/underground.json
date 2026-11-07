@@ -352,7 +352,7 @@
     },
     {
       "id": "underground_black_emptyness_1",
-      "label": "empty",
+      "label": "black emptyness",
       "gb_constant": "TILE_UNDERGROUND_29",
       "walkable": false,
       "color": "#000000",
@@ -361,6 +361,17 @@
       "category": "object",
       "palette": "underground1",
       "glyph": "#"
+    },
+    {
+      "id": "underground_floor",
+      "label": "floor",
+      "gb_constant": "TILE_UNDERGROUND_FLOOR",
+      "walkable": true,
+      "color": "#916c33",
+      "ascii": ".",
+      "image_url": "/tiles/underground/underground_floor.png",
+      "category": "terrain",
+      "palette": "underground1"
     }
   ],
   "indexed": true,
@@ -547,7 +558,7 @@
         "x": 5,
         "y": 2,
         "index": 29,
-        "tile": "underground_black_emptyness_1"
+        "tile": "underground_floor"
       },
       {
         "x": 6,
