@@ -207,7 +207,16 @@ static void marks_load_battle_tiles(void)
  * No-arg trampoline target for the fixed-bank overworld-entry path. */
 void marks_battle_tiles_invalidate_banked(void)
 {
+    /* Re-arm both streams: AP pips/riders time-share OAM ids with
+     * overworld art (96-99 hero, 122-125 blob tail), and the !/? marks
+     * (126-127) are streamed once per boot.  screen_change() calls this
+     * on every BATTLE/ITEM/SHOP entry so the next tick restreams before
+     * the first render -- even if the flag powered up set (harness
+     * skips CRT0, so BSS is not cleared) or VRAM was clobbered by a
+     * path that did not clear the flag, the pips would otherwise show
+     * hero pixels with correct OAM ids (all id-only asserts green). */
     s_battle_tiles_loaded = 0;
+    s_mark_tiles_loaded = 0;
 }
 
 /* Overworld-entry OAM restore (same bank: direct reads; LCD-safe writes).

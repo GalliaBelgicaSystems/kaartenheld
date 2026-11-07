@@ -4,6 +4,9 @@
 #include "telemetry.h"
 #include "world.h"
 #include "ui.h"
+#include "banked.h"
+
+void marks_battle_tiles_invalidate_banked(void);
 
 /* Sync Game.scene with the world's current map after a runtime map
  * change (walking through a gate).  Emits SCENE_CHANGED when it differs. */
@@ -109,6 +112,20 @@ void screen_change(Game *g, ScreenId screen)
          * blob tail), and a dialogue entered from battle never restreams
          * them. */
         ui_restore_ow_oam();
+    }
+
+    /* BATTLE/ITEM/SHOP entry re-arms the time-shared OAM tile stream
+     * (AP pips over hero 96-99, pip 5 + riders over blob tail 122-125):
+     * the next tick restreams before the first render, so the hand
+     * never shows hero/blob pixels with correct OAM ids.  Covers boot-
+     * random flags (harness skips CRT0) and any clobber path that did
+     * not clear the flag.  Same-frame guarantee: screen_update runs
+     * before the tick, which runs before the render. */
+    if (screen == SCREEN_BATTLE || screen == SCREEN_ITEM ||
+        screen == SCREEN_SHOP) {
+        g_bk_call_bank = 8;
+        g_bk_call_target = (uint16_t)&marks_battle_tiles_invalidate_banked;
+        banked_call_run();
     }
 
     telemetry_emit(EVENT_SCREEN_CHANGED, (uint8_t)old_screen, (uint8_t)screen, 0, 0);
