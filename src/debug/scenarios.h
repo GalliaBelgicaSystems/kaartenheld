@@ -40,7 +40,11 @@ enum {
      * battle start has shuffled it. */
     DBG_ACT_SET_DECK_CARD = 21,
     DBG_ACT_SET_DECK_STATE = 22,
-    DBG_ACT_SET_DECK_RING = 23
+    DBG_ACT_SET_DECK_RING = 23,
+    /* Pin the market index mid-scenario (docs/economy.md §5.1 arbitrage
+     * test): a0 = index in 1/32 units, clamped to 24..48 (else 32).
+     * Pure WRAM write, handled by the bank-5 leaf body. */
+    DBG_ACT_SET_MARKET_INDEX = 24
 };
 
 #endif /* SCENARIOS_H */

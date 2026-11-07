@@ -7,6 +7,7 @@
 #include "rpg/loot.h"
 #include "menu.h"
 #include "shops.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "ui.h"
 #include "banked.h"
@@ -81,15 +82,24 @@ static void shop_menu_step(Game *g, uint8_t down)
  * its BUY row. */
 static void shop_sell(Game *g)
 {
+    uint8_t sold_id;
+    uint8_t sold_price;
+    uint8_t sold_left;
     shop_row_quote(g);
     if (g_bk_byte_b == 0) {
         audio_play_sfx(SFX_BACK);
         return;
     }
-    deck_collection_remove(&g->state.cards, g_bk_byte_c, 1);
-    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)g_bk_byte_b);
-    telemetry_emit(EVENT_CARD_SOLD, g_bk_byte_c, g_bk_byte_b,
-                   g_bk_byte_d, 0);
+    /* Snapshot the quote: currency_add dispatches through the bank-11
+     * body via the g_bk_* staging globals, so it clobbers the staged
+     * id/price/left before the emit below reads them. */
+    sold_id = g_bk_byte_c;
+    sold_price = g_bk_byte_b;
+    sold_left = g_bk_byte_d;
+    deck_collection_remove(&g->state.cards, sold_id, 1);
+    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)sold_price);
+    telemetry_emit(EVENT_CARD_SOLD, sold_id, sold_price,
+                   sold_left, 0);
     g->render_cache.valid = false;
 }
 
@@ -110,8 +120,17 @@ static void shop_confirm(Game *g)
             g->shop_message = SHOP_MSG_MAX_COPIES;
             telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
         } else {
-            currency_add(&g->state, CURRENCY_ID_GOLD, -(int16_t)g_bk_byte_b);
-            telemetry_emit(EVENT_CARD_PURCHASED, g_bk_byte_c, g_bk_byte_b, 0, 0);
+            uint8_t paid_id;
+            uint8_t paid_price;
+            /* Snapshot the quote (same staging-clobber reason as
+             * shop_sell): currency_add reuses g_bk_byte_* for its
+             * own bank-11 dispatch. */
+            paid_id = g_bk_byte_c;
+            paid_price = g_bk_byte_b;
+            currency_add(&g->state, CURRENCY_ID_GOLD, -(int16_t)paid_price);
+            /* Shop spend notes gold_out (docs/economy.md §6.1). */
+            economy_note_spent(&g->state, paid_price);
+            telemetry_emit(EVENT_CARD_PURCHASED, paid_id, paid_price, 0, 0);
             g->shop_message = SHOP_MSG_BOUGHT;
         }
     }
@@ -139,6 +158,12 @@ static void shop_leave(Game *g)
 {
     if (g->shop_message == SHOP_MSG_BOUGHT)
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
+    /* Shop-boundary market update (docs/economy.md §6): runs on every
+     * exit; the guards skip zero-counter / zero-battle visits, so
+     * browsing never moves the index. */
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&economy_update_banked;
+    banked_call_run();
     g->shop_message = SHOP_MSG_NONE;
     g->item_menu_index = 0;
     audio_play_sfx(SFX_BACK);

@@ -15,6 +15,7 @@
 #include "rpg/progression.h"
 #include "rpg/save.h"
 #include "content.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "ui.h"
 #include "battle.h"
@@ -205,11 +206,17 @@ static void debug_run_action(void)
         case DBG_ACT_BUY_ITEM:
             {
                 const CardDefinition *def = card_get_def((CardId)a0);
-                if (def && def->price != 0 &&
-                    currency_get(&g_game.state, CURRENCY_ID_GOLD) >= def->price) {
+                uint8_t buy_price;
+                /* Real mechanic pricing (AGENTS.md §44): the same
+                 * market-scaled price the shop charges. */
+                if (def) buy_price = economy_quote(def->price, def->price_bias, 1);
+                else buy_price = 0;
+                if (def && buy_price != 0 &&
+                    currency_get(&g_game.state, CURRENCY_ID_GOLD) >= buy_price) {
                     if (deck_collection_add(&g_game.state.cards, (CardId)a0, 1)) {
-                        currency_add(&g_game.state, CURRENCY_ID_GOLD, -(int16_t)def->price);
-                        telemetry_emit(EVENT_CARD_PURCHASED, a0, (uint8_t)def->price, 0, 0);
+                        currency_add(&g_game.state, CURRENCY_ID_GOLD, -(int16_t)buy_price);
+                        economy_note_spent(&g_game.state, buy_price);
+                        telemetry_emit(EVENT_CARD_PURCHASED, a0, buy_price, 0, 0);
                     } else {
                         telemetry_emit(EVENT_CARD_PURCHASE_FAILED, a0, 2, 0, 0);
                     }

@@ -20,11 +20,9 @@
  * debug re-arm) run plain. */
 #define CARL_TUT_FLAG_LESSON      0x40
 
-/* Next flee-reminder milestone (HP removed): 10, 20, ... 90.  Reset to
- * 10 at every battle start alongside the flags. */
-#define CARL_TUT_MILE_START 10
-#define CARL_TUT_MILE_MAX   90
-#define CARL_TUT_MILE_STEP  10
+/* Mile tracker retired with the 10-HP spar (the every-10-HP flee reminder
+ * is gone): the storage byte stays so the WRAM layout does not shift
+ * (AGENTS.md 52.24), but nothing reads or writes it anymore. */
 
 #define CARL_TUT_HURT_COUNT 7
 
@@ -35,5 +33,9 @@ extern uint8_t g_carl_tut_mile;
 /* Bank-10 decision body (carl_tutorial_banked.c, dispatched through
  * the WRAM trampoline; self-contained: WRAM + regs only). */
 void carl_tutorial_banked(void);
+
+/* Bank-5 spar-start grant body (carl_grant_banked.c, dispatched from
+ * start_battle_from_world(); self-contained: WRAM + regs only). */
+void carl_spar_grant_banked(void);
 
 #endif /* CARL_TUTORIAL_H */

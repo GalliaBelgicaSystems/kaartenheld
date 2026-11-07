@@ -21,7 +21,7 @@
  * solo battle screen; Carl coaches through normal dialogue boxes once
  * each (attack, defend, poker), then the flee lesson once -- on the
  * first attack landed after the defend lesson -- then one looping jeer
- * per player attack (plus a flee reminder every 10 HP removed).
+ * per player attack.
  *
  * State is three BSS bytes.  Non-Carl battles reset them in the tick
  * body; YES assigns them on accept; the battle-start hook is gone by
@@ -29,7 +29,9 @@
  * scenarios boot fresh RAM per process; gameplay Carl battles always
  * pass through YES; the walkthrough fights one Carl battle). */
 
-/* Per-fight progress (defined here, shared with the bank-10 bodies). */
+/* Per-fight progress (defined here, shared with the bank-10 bodies).
+ * g_carl_tut_mile is retired with the 10-HP spar (nothing reads or
+ * writes it); the byte stays so the WRAM layout does not shift. */
 uint8_t g_carl_tut_flags;
 uint8_t g_carl_tut_hurt;
 uint8_t g_carl_tut_mile;

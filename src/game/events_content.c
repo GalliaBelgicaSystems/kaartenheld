@@ -263,11 +263,10 @@ const EventDefinition g_events[] = {
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────
      * Carl is TWO co-located actors on one tile: a tutor hostile
-     * (actor_id 1, AI_TUTOR, 30 HP, 0-power spar deck) and a dialogue
+     * (actor_id 1, AI_TUTOR, 10 HP, 0-power spar deck) and a dialogue
      * static (actor_id 0, never defeat-gated, carries the YES/NO spar
      * offer).  Both share ENTITY_ID_CARL; only the runtime hostile slot
-     * can be defeated, so TUTORIAL_COMPLETE below fires exactly once on
-     * the spar win (a real -- if long -- fight at 30 HP).  Fleeing a
+     * can be defeated.  Fleeing a
      * finished lesson instead shows a farewell box (staged by the
      * banked tick through the post-tick opener, no event row needed)
      * and grants nothing.  The spar is gated on the field cache: talking or bumping the
@@ -295,22 +294,30 @@ const EventDefinition g_events[] = {
      * every milestone (tutorial win, chest, Monster Hunt, mimic) adds
      * exactly one to the base-1 pool, reaching 5 in any completion
      * order (fleeing the lesson grants nothing).  Carl's defeat is
-     * persistent (one-shot via GameState.world), so the kill reward
-     * fires exactly once.  After the AP skip (Carl's leaving-the-field
-     * offer) the row's TUTORIAL_SKIPPED condition suppresses the grant:
-     * the point was already handed over without the fight. */
+     * persistent (one-shot via GameState.world).  The lesson's +1 AP is
+     * handed over when the spar STARTS (overworld encounter path,
+     * one-shot via TUTORIAL_SKIPPED -- shared with the leave-the-field
+     * skip, which hands over the same point), so the win row below keeps
+     * only the graduation speech and every milestone (tutorial, chest,
+     * Monster Hunt, mimic) still adds exactly one to the base-1 pool,
+     * reaching 5 in any completion order.  The row also latches
+     * TUTORIAL_SPAR_WON: the win increments the kill counter without
+     * granting loot, and the latch tells the loot roll the counter's
+     * single kill was the spar -- so the next real victory still earns
+     * the first-victory bronze shield. */
     {
-        /* No second point after the AP skip: leaving the field without the
-         * lesson (Carl's offer, choice_nav_banked.c) already handed over
-         * the tutorial's +1 AP and set TUTORIAL_SKIPPED, so a later spar
-         * win grants nothing (the result screen still plays). */
+        /* Graduation speech only (no grant: the lesson's +1 AP was
+         * already handed over at the spar start -- or by the
+         * leave-the-field skip -- so a win after the skip still
+         * graduates without a second point) plus the spar-won latch
+         * for the first-victory loot exception. */
         EVENT_ID_TUTORIAL_COMPLETE, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_CARL, EVENT_MAP_ANY,
-        1,
-        {{ EVENT_COND_FLAG, STORY_FLAG_ID_TUTORIAL_SKIPPED, 0, false, false }},
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
         2,
         {
-            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 }
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_TUTORIAL_CARL_VICTORY, 0, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_TUTORIAL_SPAR_WON, 0, 0 }
         }
     },
     /* ── Field cache (first poison dagger + AP unlock, key-locked) ───

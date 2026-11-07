@@ -11,4 +11,8 @@
 int16_t currency_get(const GameState *state, CurrencyId currency);
 void currency_add(GameState *state, CurrencyId currency, int16_t amount);
 
+/* Bank-11 saturating core (src/rpg/currency_banked.c), dispatched by the
+ * fixed wrapper above. */
+void currency_add_banked(void);
+
 #endif /* RPG_CURRENCY_H */

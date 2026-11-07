@@ -105,7 +105,7 @@ OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(M
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs
+.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
 
 all: $(TARGET)
 
@@ -997,6 +997,9 @@ test-harness: debug
 card-costs:
 	python3 tools/card_costs.py
 
+economy-check:
+	python3 tools/check_economy.py
+
 # Fast iteration gate: the three layout-sensitive sentinel scenarios
 # (AGENTS.md 52.19).  Run these after any optimization-flag, volatile, or
 # banked-body change BEFORE trusting the build; run the full suite at the end.
@@ -1016,6 +1019,7 @@ enemy-ranks:
 # agent sessions pay a single `nix develop` entry.  $(MAKE) propagates -j.
 validate: memmap lint
 	$(MAKE) card-costs
+	$(MAKE) economy-check
 	$(MAKE) enemy-ranks
 	$(MAKE) test-harness JOBS=$(JOBS)
 	$(MAKE) test

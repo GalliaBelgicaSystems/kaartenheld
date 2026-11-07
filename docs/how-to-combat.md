@@ -18,8 +18,9 @@ it is dangerous to go alone, and he asks if you want to learn how to
 fight — answer **YES** (the default) and the spar starts by itself, no
 second bump needed. Answer NO and he lets you walk away; bump him any
 time to hear the offer again. He never leaves: come back any time to
-spar again — and if you manage to bring down his 30 HP, the win is
-worth **+1 action point**.
+spar again — and if you manage to bring down his 10 HP, he graduates
+you. The spar hands over **+1 action point** as soon as it starts (his
+opening lesson says so).
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
@@ -32,21 +33,20 @@ it is him speaking.
 
 ![Carl's offer](../screenshots/08-carl-tutor.png)
 
-Walk into him and say YES to spar: a solo fight against his 30 HP. His
+Walk into him and say YES to spar: a solo fight against his 10 HP. His
 practice deck deals **0 damage**, so you cannot lose — learn the round
 below at your own pace (the battle timer still runs, but nothing can hurt
 you). With a single foe the target arrow
 stays parked on him; on your turn the top reads `TARGET CARL`. Carl coaches through
-normal dialogue boxes: how to attack (pick cards with `A`, move the cursor
-with `L/R`, confirm the hand with `SELECT`) when the spar opens, how to
+normal dialogue boxes: how to attack (he hands over **+1 AP** to do
+poker hands, then: pick cards with `A`, move the cursor with `L/R`,
+confirm the hand with `SELECT`) when the spar opens, how to
 defend (pick `SHIELD` cards, `SELECT` confirms the block — and daggers
 counterattack during defense) on his first attack, what the poker hands
 mean (pairs hit harder, trips more, straights, flushes, suited bonus)
 when the round comes back to you, and finally how to flee (`B` with an
-empty hand) — plus a reminder that he is worth beating — once you have
-hurt him again. Every 10 HP you remove earns a flee reminder instead of
-a jeer. Keep fighting instead of fleeing and he skips the lessons,
-jeering you once per attack instead (`UCH!`, `EW!`, ... looping).
+empty hand) once you have hurt him again. From then on he jeers you
+once per attack (`UCH!`, `EW!`, ... looping).
 
 ![Pick cards, then SELECT](../screenshots/09-battle.png)
 
@@ -56,10 +56,10 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
 Flee whenever you are done -- Carl sees you off with a farewell and
-stays for a rematch. Beat his 30 HP and he graduates you instead, with
-**+1 action point**. AP limits how many cards you can play (your pool
-starts at **1 AP** per phase and grows by story rewards, up to **5**
-with Carl's win included).
+stays for a rematch. Beat his 10 HP and he graduates you instead. AP
+limits how many cards you can play (your pool starts at **1 AP** per
+phase and grows by story rewards — the spar, the chest, the Monster
+Hunt and the mimic — up to **5**).
 
 ![Wise to flee](../screenshots/11-farewell-speech.png)
 

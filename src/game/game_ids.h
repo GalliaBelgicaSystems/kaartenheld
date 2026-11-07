@@ -96,11 +96,11 @@ typedef enum {
     STORY_FLAG_ID_RING_LESSON = 7, /* the Heal Mage explained ring tactics
                                        * (shown once, on first talk while
                                        * owning the Iron Ring) */
-    STORY_FLAG_ID_TUTORIAL_SKIPPED = 8, /* Carl's leave-the-field offer was
-                                         * taken: the tutorial's +1 AP was
-                                         * granted without the spar
-                                         * (one-shot; the offer never
-                                         * repeats) */
+    STORY_FLAG_ID_TUTORIAL_SKIPPED = 8, /* Carl's lesson +1 AP was granted
+                                         * (spar start or leave-the-field
+                                         * skip, one-shot; the offer never
+                                         * repeats, the victory grants
+                                         * nothing more) */
     STORY_FLAG_ID_MET_DOG      = 9, /* heard the village dog's key hint
                                        * (gates the skeleton's bone offer:
                                        * the first bump only describes it) */
@@ -110,7 +110,14 @@ typedef enum {
     STORY_FLAG_ID_DOG_KEY      = 11, /* the village dog traded its Old Key
                                        * for the bone (? mark gone, later
                                        * bumps replay the thanks) */
-    STORY_FLAG_ID_COUNT        = 12
+    STORY_FLAG_ID_TUTORIAL_SPAR_WON = 12, /* Carl's spar was won (set by the
+                                       * victory event, never cleared):
+                                       * with exactly one kill on the
+                                       * counter this means the only kill
+                                       * was the spar, so the next real
+                                       * victory still earns the
+                                       * first-victory bronze shield */
+    STORY_FLAG_ID_COUNT        = 13
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
