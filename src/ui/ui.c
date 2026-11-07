@@ -7,6 +7,9 @@
 #include "rpg/status.h"
 #include "banked.h"
 #include "game.h"
+/* Engine-to-game hook (game_after_tileset_load): same inversion as the
+ * game_new_game hook in core/game.c (AGENTS.md §55.1). */
+#include "content.h"
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include <gbdk/console.h>
@@ -452,6 +455,10 @@ void ui_load_tileset(uint8_t tileset)
     g_bk_call_target = (uint16_t)&ui_load_tileset_banked;
     g_bk_byte_a = tileset;
     banked_call_run();
+    /* Game-owned post-load art (skeleton no-bone swap): engine-to-game
+     * hook, same inversion as game_new_game (AGENTS.md §55.1).  Covers
+     * gate crossings, battle VRAM restores, and fresh save loads. */
+    game_after_tileset_load();
 }
 
 /* Drop the VRAM tileset cache so the next overworld redraw reloads tile

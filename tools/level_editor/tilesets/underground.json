@@ -327,13 +327,25 @@
       "palette": "underground1"
     },
     {
-      "id": "underground_skeleton",
-      "label": "skeleton",
+      "id": "underground_skeleton_with_bone",
+      "label": "skeleton with bone",
       "gb_constant": "TILE_UNDERGROUND_1E",
       "walkable": true,
-      "color": "#c9bd9a",
+      "color": "#a38a62",
       "ascii": "S",
-      "image_url": "/tiles/underground/underground_skeleton.png",
+      "image_url": "/tiles/underground/underground_skeleton_with_bone.png",
+      "category": "terrain",
+      "palette": "underground1",
+      "glyph": "S"
+    },
+    {
+      "id": "underground_skeleton_no_bone",
+      "label": "skeleton no bone",
+      "gb_constant": "TILE_UNDERGROUND_1E",
+      "walkable": true,
+      "color": "#9c8056",
+      "ascii": "S",
+      "image_url": "/tiles/underground/underground_skeleton_no_bone.png",
       "category": "terrain",
       "palette": "underground1",
       "glyph": "S"
@@ -541,13 +553,13 @@
         "x": 6,
         "y": 2,
         "index": 30,
-        "tile": "underground_skeleton"
+        "tile": "underground_skeleton_with_bone"
       },
       {
         "x": 7,
         "y": 2,
         "index": 31,
-        "tile": "underground_black_emptyness_1"
+        "tile": "underground_skeleton_no_bone"
       },
       {
         "x": 8,
