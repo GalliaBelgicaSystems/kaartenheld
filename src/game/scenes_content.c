@@ -864,7 +864,7 @@ static const SceneTerrainBlock s_underground_tunnel_south_terrain[] = {
     { 5, 11, 2, 7, TILE_UNDERGROUND_29 },
     { 7, 11, 1, 1, TILE_UNDERGROUND_14 },
     { 9, 11, 1, 1, TILE_UNDERGROUND_23 },
-    { 11, 11, 1, 1, TILE_UNDERGROUND_23 },
+    { 11, 11, 1, 1, TILE_UNDERGROUND_1E },
     { 13, 11, 1, 1, TILE_UNDERGROUND_24 },
     { 14, 11, 1, 1, TILE_UNDERGROUND_22 },
     { 15, 11, 1, 1, TILE_UNDERGROUND_17 },
