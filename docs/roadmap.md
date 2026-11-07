@@ -75,7 +75,7 @@ testable, save/load works, and the memory budget is understood.
     combo scenarios select cost-0 or single cost-1 cards so the hand
     still fits);
     the live pool is the uncapped `ENERGY_POOL` variable
-    (staged at battle entry), raised by story events (+1 tutorial win,
+    (staged at battle entry), raised by story events (+1 tutorial spar,
     +1 chest, +1 Monster Hunt, +1 mimic from the base-1 pool,
     reaching 5);
     rejected selections flash NO ENERGY! / OUT OF USES! on

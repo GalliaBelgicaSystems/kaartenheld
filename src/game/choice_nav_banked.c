@@ -161,7 +161,6 @@ void dialogue_choice_nav_banked(void)
             }
             g_carl_tut_flags = CARL_TUT_FLAG_LESSON;
             g_carl_tut_hurt = 0;
-            g_carl_tut_mile = CARL_TUT_MILE_START;
             g_bk_byte_a = 2;
             return;
         }

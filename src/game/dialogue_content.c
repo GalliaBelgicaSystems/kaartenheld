@@ -323,8 +323,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_TUTORIAL_CARL_ATTACK,
         "CARL:",
-        4,
-        {"PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
+        6,
+        {"TAKE THIS AP TO", "DO POKER HANDS!", "PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
         0,
         0
     },
@@ -357,14 +357,6 @@ const DialogueDefinition g_dialogues[] = {
         "CARL:",
         5,
         {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!", "COME BACK AND", "BEAT ME FOR POWER"},
-        0,
-        0
-    },
-    {
-        DIALOGUE_ID_TUTORIAL_CARL_FLEE_REMINDER,
-        "CARL:",
-        2,
-        {"YOU CAN FLEE: B", "AND STOP"},
         0,
         0
     },
@@ -412,7 +404,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
         5,
-        {"REAL FIGHTS BEGIN!", "AP LIMITS CARDS!", "HAVE 1 MORE AP!", "MORE INCREASE AP", "TO SURVIVE!"},
+        {"REAL FIGHTS BEGIN!", "AP LIMITS CARDS!", "DO QUESTS FOR", "MORE AP TO", "SURVIVE!"},
         0,
         0
     },
