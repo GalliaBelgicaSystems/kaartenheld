@@ -11,10 +11,6 @@
  * executor can take its address for the trampoline. */
 void game_slime_trio_spawn_banked(void);
 
-/* OAM tile cache validity flag (defined in ui_world_sprite_banked.c).
- * Invalidate when story flags change (e.g. chest open). */
-extern uint8_t g_oam_tilecache_valid;
-
 /* ── Event engine ──────────────────────────────────────────────────
  * The engine matches events against a table registered by the game layer
  * (event_init, called from src/game/events.c).  First match wins; for
@@ -89,10 +85,8 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             if (dialogue_started) *dialogue_started = true;
         } else if (t == EVENT_ACTION_SET_FLAG) {
             game_flag_set(&g->state, (FlagId)a0);
-            g_oam_tilecache_valid = 0;
         } else if (t == EVENT_ACTION_CLEAR_FLAG) {
             game_flag_clear(&g->state, (FlagId)a0);
-            g_oam_tilecache_valid = 0;
         } else if (t == EVENT_ACTION_SET_VARIABLE) {
             game_variable_set(&g->state, (VariableId)a0, a1);
         } else if (t == EVENT_ACTION_ADD_VARIABLE) {
