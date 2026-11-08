@@ -40,6 +40,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
+                                      BATTLE_ENEMIES,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
                                       BATTLE_HAND, CARD_SIZE, CARD_TYPE,
@@ -497,6 +498,22 @@ def _select_cards(s, wanted_types, max_cards=None):
                 continue
             s.tick(2)    # reset frame between same-button edges (52.10)
     return picked
+
+
+def _carl_topup(s):
+    """Restore Carl to full HP mid-spar (walk-b only): at 10 HP the
+    walk's three choreographed attack rounds could otherwise kill him
+    before the flee path, ending the walk on VICTORY instead of FLED!.
+    Damage assertions only need strict decrease, which still holds
+    (prev_total is always read after the top-up)."""
+    r = s.reader
+    try:
+        base = r._resolve_battle_base() + BATTLE_ENEMIES
+        mx = r.battle_enemy_max_hp(0)
+    except Exception as exc:
+        print("[_carl_topup] battle state unreadable, skipping: %r" % (exc,))
+        return
+    s.pb.memory[base] = mx
 
 
 def engage_hostile(s, planner, scene_name, hostile_xy):
@@ -1016,6 +1033,7 @@ def walk_b(planner, checks):
     # the first DEFEND, the poker-hands lesson on the way back to
     # SELECT, then the flee lesson on the next attack landed, and from
     # then on one looping jeer per attack (drained per round).
+    _carl_topup(s)
     prev_total = s.reader.battle_enemy_hp(0)
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
@@ -1065,6 +1083,7 @@ def walk_b(planner, checks):
     s.check("select banner back",
             s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
             expected="TARGET CARL", actual="none")
+    _carl_topup(s)
     prev_total = s.reader.battle_enemy_hp(0)
     # The next attack is the first one landed since the defend lesson,
     # so it raises the flee lesson (with its reward tease) -- not a
@@ -1102,7 +1121,8 @@ def walk_b(planner, checks):
             expected="hp %d < %d" % (total, prev_total),
             actual="hp %d" % total)
     # One more attack: now that the lesson is over, it earns a looping
-    # jeer (or the flee reminder, if burn ticks crossed a milestone).
+    # jeer.
+    _carl_topup(s)
     _select_cards(s, ATTACK_TYPES)
     for _ in range(4):
         s.press("select", settle=40)
@@ -1112,9 +1132,9 @@ def walk_b(planner, checks):
             break
     s.check("post-attack box", s.text_has("CARL:"),
             expected="CARL: box", actual="none")
-    s.check("jeer or reminder",
-            s.text_has("UCH!") or s.text_has("YOU CAN FLEE"),
-            expected="UCH! or YOU CAN FLEE", actual="none")
+    s.check("jeer",
+            s.text_has("UCH!"),
+            expected="UCH!", actual="none")
     s.check("post-attack box closed", close_box(s),
             expected="closed", actual="open")
     # Finish the round that attack started (defend through it) so the

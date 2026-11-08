@@ -1,7 +1,7 @@
 {
   "name": "carl_intro_yes",
   "test": true,
-  "description": "Answering YES to Carl's spar offer (default cursor) closes the lesson into the stashed spar: battle starts, and the first frame opens his attack coaching box",
+  "description": "Answering YES to Carl's spar offer (default cursor) closes the lesson into the stashed spar: battle starts, the lesson's +1 AP is already live (base pool 1 grants to 2 at the spar start, so battle_energy reads 2), and the first frame opens his attack coaching box",
   "actions": [
     {
       "type": "press",
@@ -56,6 +56,10 @@
     {
       "type": "event_occurred",
       "event": "BATTLE_STARTED"
+    },
+    {
+      "type": "battle_energy",
+      "expected": 2
     }
   ],
   "initial_state": {

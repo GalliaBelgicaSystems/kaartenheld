@@ -15,6 +15,7 @@
 #include "menu.h"
 #include "rpg/save.h"
 #include "game_ids.h"
+#include "economy.h"
 
 /* Bank-2 self-contained shop / save-load render bodies (AGENTS.md 52.11.1):
  * the fixed _CODE/_HOME area is at its size limit (see make memmap), so the
@@ -74,6 +75,7 @@ static char s_sc_code[8];
 static volatile uint8_t *s_sc_dst;
 static char *s_sc_buf;
 static Game *s_sc_game;
+static uint8_t s_sc_idx;
 
 static const uint16_t s_sc_p10[4] = { 10000, 1000, 100, 10 };
 
@@ -232,6 +234,45 @@ static const char *sc_wpn_str(uint8_t w, uint8_t *len)
 
 static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
 
+/* Market-scaled quote S (docs/economy.md §4): bank-2-local copy of the
+ * bank-11 quote body (a banked body must never call a fixed-bank fn,
+ * AGENTS.md §52.11.1).  The shop BUY row and the BUY quote body share
+ * it (same bank: plain call, no trampoline -- the ic_loot_synth
+ * precedent) so the row shows what the till charges.
+ * Same shape as economy_quote_banked: zero guard (price 0 = free basic,
+ * always quotes 0 however biased -- the gate in tools/check_economy.py
+ * keeps price-0 rows bias-free), 8-bit saturating base, repeated-add
+ * multiply, one rounding, same index clamp (out-of-band reads neutral:
+ * index 0 would otherwise quote (b*0+16)>>5 = 0, i.e. FREE, for every
+ * priced row -- a single clamp here covers all readers even if a path
+ * ever runs game_state_zero without game_new_game).  Render rows pass
+ * the live index (read once at render entry into s_sc_idx); the quote
+ * body reads it from the staged game. */
+static uint8_t s_sc_market_quote(uint8_t price, int8_t bias, uint8_t idx)
+{
+    uint16_t p;
+    uint16_t q;
+    uint8_t i;
+    uint8_t b;
+    if (price == 0) return 0;
+    if (idx < ECONOMY_INDEX_MIN || idx > ECONOMY_INDEX_MAX)
+        idx = ECONOMY_INDEX_NEUTRAL;
+    if (bias >= 0) {
+        b = (uint8_t)(price + bias);
+        if (b < price) b = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - bias);
+        b = (neg >= price) ? 1 : (uint8_t)(price - neg);
+    }
+    p = 0;
+    for (i = idx; i != 0; i--) p = (uint16_t)(p + b);
+    /* Saturate, never truncate: base 255 at high inflation exceeds 255
+     * (255*48+16 >> 5 = 383) and a narrowing cast would wrap the quote
+     * to garbage.  p itself cannot overflow (max 12240 < 65535). */
+    q = (uint16_t)(((uint16_t)(p + 16)) >> 5);
+    return (q > 255) ? 255 : (uint8_t)q;
+}
+
 static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
 {
     const char *bt = (battle_type <= BATTLE_CARD_TYPE_DAGGER) ?
@@ -349,38 +390,68 @@ uint8_t g_shop_vis_count;
  * - loot ids sell at their full synthesized price (docs/loot.md §34:
  *   power + 2·material, +2 poison dagger) -- loot has no buy value,
  *   so the formula IS the merchant's appraisal;
- * - curated cards sell below their buy value on a rarity-scaled cut:
- *   price × (5−tier)/6 (wood 5/6 … mythril 1/6), min 1 for any priced
- *   card.  Commons sell near buy price, mythril for a small fraction;
+ * - curated cards sell below their buy value on a rarity-scaled cut of
+ *   the BIASED base (matched pair with the BUY quote, which scales
+ *   price + bias: a cut from the raw price would sit above the buy
+ *   quote on negative-bias rows): base × (5−tier)/6 (wood 5/6 …
+ *   mythril 1/6), min 1 for any priced card.  Commons sell near buy
+ *   price, mythril for a small fraction.
+ *   The cut is market-scaled like every till price (docs/economy.md
+ *   §4-§5): at the same index the cut stays under the buy quote
+ *   (cut ≤ biased base and the quote is monotonic), so a same-visit
+ *   buy-then-sell never prints gold.  Across visits the market moves,
+ *   so a later sale at a higher index can exceed the earlier buy --
+ *   that is market risk, not arbitrage (see docs/economy.md §5.1).
  * - price-0 basics (free starter rebuys) and SPECIAL quest items never
  *   sell -- selling a free card would print money (buy 0, sell 1,
  *   rebuy 0, repeat), so the SELL tab excludes them entirely.
  * No division library: banked bodies use repeated subtraction
- * (AGENTS.md §52.18); values stay small (price ≤ 30, ×5 ≤ 150). */
+ * (AGENTS.md §52.18); n is uint16_t (base ≤ 255, ×5 ≤ 1275), q fits
+ * a byte. */
 static uint8_t sc_sell_price(CardId id)
 {
     const CardDefinition *d;
     uint8_t mat, wpn, special;
-    uint8_t k, n, q;
+    uint8_t k, q;
+    uint16_t n;
+    uint8_t base;
     if (loot_is_loot_id(id)) {
         d = ic_loot_synth(id);
-        return d ? d->price : 0;
+        /* Loot appraisal scales with the market like every till price;
+         * at neutral this is the bare formula value. */
+        return d ? s_sc_market_quote(d->price, 0,
+                                     s_sc_game->state.economy.market_index)
+                 : 0;
     }
     d = sc_card_get_def(id);
     if (!d || d->type == CARD_TYPE_SPECIAL || d->price == 0) return 0;
     ic_card_mat_wpn_pub(id, &mat, &wpn, &special);
     if (special || mat > 4) return 0;
-    /* n = price × (5−tier) via repeated addition (k = 5..1). */
+    /* Biased base first (same 8-bit saturating shape as the quote
+     * bodies, floored at 1 so the cut below stays ≥ 1): the cut must
+     * sit under the BUY quote's base, not the raw price. */
+    if (d->price_bias >= 0) {
+        base = (uint8_t)(d->price + d->price_bias);
+        if (base < d->price) base = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - d->price_bias);
+        base = (neg >= d->price) ? 1 : (uint8_t)(d->price - neg);
+    }
+    /* n = base × (5−tier) via repeated addition (k = 5..1). */
     k = (uint8_t)(5 - mat);
     n = 0;
-    while (k--) n = (uint8_t)(n + d->price);
+    while (k--) n = (uint16_t)(n + base);
     /* q = n/6 via repeated subtraction. */
     q = 0;
     while (n >= 6) {
-        n = (uint8_t)(n - 6);
+        n = (uint16_t)(n - 6);
         q++;
     }
-    return q ? q : 1;
+    q = q ? q : 1;
+    /* Market scale (docs/economy.md §4): the SELL tab and its quote
+     * body share this, so the row shows what the till pays. */
+    return s_sc_market_quote(q, 0,
+                             s_sc_game->state.economy.market_index);
 }
 
 /* Banked row quote for the fixed-side BUY/SELL apply (shop_screen.c):
@@ -388,8 +459,8 @@ static uint8_t sc_sell_price(CardId id)
  * through the active tab's map and stages the verdict:
  * g_bk_byte_b = price (0 = refuse), g_bk_byte_c = card id,
  * g_bk_byte_d = owned-after (SELL only, for CARD_SOLD telemetry).
- * BUY rows quote the catalog price (0 = free basic, always
- * affordable); SELL rows the sc_sell_price value after the
+ * BUY rows quote the market-scaled catalog price (0 = free basic,
+ * always affordable); SELL rows the sc_sell_price value after the
  * decked-backing guard (a fully decked card refuses: selling it would
  * strand the deck).  WRAM-direct scans only (banked bodies must never
  * call fixed-bank functions); the fixed side applies blindly. */
@@ -428,7 +499,11 @@ void shop_row_quote_banked(void)
         id = s_sc_shop_def->items[s];
         d = sc_card_get_def(id);
         if (!d) return;
-        g_bk_byte_b = d->price;
+        /* Market-scaled BUY price (docs/economy.md §4): the till charges
+         * what the row shows (SELL rows scale the same way inside
+         * sc_sell_price). */
+        g_bk_byte_b = s_sc_market_quote(d->price, d->price_bias,
+                                        s_sc_game->state.economy.market_index);
         g_bk_byte_c = id;
     }
 }
@@ -567,6 +642,10 @@ void shop_content_render(void)
     s_sc_game = (Game *)g_bk_ptr_a;
 
     if (!s_sc_game) return;
+    /* Live market index, read once: every row's quote shares it
+     * (s_sc_market_quote takes it as a param so the per-row path pays
+     * no struct read).  Trusted 24-48 like every other reader. */
+    s_sc_idx = s_sc_game->state.economy.market_index;
     s_sc_shop_def = sc_shop_active(s_sc_game);
     if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
         sc_shop_remap_sell();
@@ -675,14 +754,15 @@ void shop_content_render(void)
             sc_draw_text(1, s_sc_y, "???", 3);
         }
         /* Price right-aligned ending col 18 ('G' at col 19): BUY rows
-         * show the stock price (free basics read FREE instead of 0G),
+         * show the market-scaled stock price (free basics read FREE
+         * instead of 0G),
          * SELL rows the rarity-cut value from sc_sell_price.  All cells
          * write every row, so a shorter price never leaves a longer
          * one's tail. */
         if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
             s_sc_pos = sc_sell_price(s_sc_card_def ? s_sc_card_def->id : CARD_NONE);
         else
-            s_sc_pos = s_sc_card_def ? s_sc_card_def->price : 0;
+            s_sc_pos = s_sc_card_def ? s_sc_market_quote(s_sc_card_def->price, s_sc_card_def->price_bias, s_sc_idx) : 0;
         if (s_sc_pos == 0 &&
             s_sc_game->item_menu_tab == SHOP_TAB_BUY) {
             sc_draw_text(16, s_sc_y, "FREE", 4);

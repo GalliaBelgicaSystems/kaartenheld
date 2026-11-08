@@ -408,11 +408,11 @@ typedef enum {
     TILE_DESOLATE_LANDSCAPE_61 = 248,
     TILE_DESOLATE_LANDSCAPE_62 = 249,
     TILE_DESOLATE_LANDSCAPE_63 = 250,
-    /* Underground tiles: 30 defs in sheet scan order (vram slots 0..35;
-     * slots 30..35 share the slot-29 void def, like castle 37..44).
-     * The u8 TileType space is exhausted (only 254 is free), so these
-     * ALIAS live values from kind-gated ranges instead of taking new
-     * ones.  Aliasing is safe because every renderer branch except the
+    /* Underground tiles: 31 defs in sheet scan order (vram slots 0..35;
+     * slots 32..35 share one void def (slot-32 art), like castle 37..44).
+     * The u8 TileType space is fully spent, so every tile ALIASES a live
+     * value from a kind-gated range instead of taking a new one.
+     * Aliasing is safe because every renderer branch except the
      * gateless castle runs (141..156, 184..186, 251..253 -- all avoided
      * here) is gated on tileset kind: a value shared with a forest /
      * village / desolate tile can never render as that tile while kind
@@ -422,18 +422,28 @@ typedef enum {
      * tile's (walkable, glyph) EXACTLY, or movement/palette/screen-buffer
      * behavior corrupts BOTH tilesets sharing the value.
    * Mapping (vram slot -> value -> donor):
-   *   30 skeleton bone art    -> 254 (fresh value, own art; the table in
-   *                             ui.c covers 208..254 with 251..253 void)
+   *   30 skeleton bone art    -> 254 (own art; the table in ui.c covers
+   *                             208..254 with 251..253 void)
+   *   31 skeleton no-bone art -> 254 shared (exact-match alias: same
+   *                             walkable glyph as slot 30, so the
+   *                             generate_tiles alias rule passes; the
+   *                             bone-taken swap is a fixed-bank VRAM
+   *                             content swap by game_after_tileset_load,
+   *                             never a map-value change)
    *   00..19 walls            -> 228..247 (desolate solid '#')
      *   20,22,23,24 floors      -> 208..211 (desolate walkable ',')
      *   21 stairs (exit)         -> 227 (desolate exit, walkable '>')
      *   25..28 interior corners  -> 212..214 + 220 (desolate solid '#';
      *                             215/216 are treetrunk 't' art and are
      *                             never aliased)
-     *   29..35 void (one def)    -> 221 (desolate solid '#'; the manifest
+     *   29 solid floor           -> 226 (desolate plain floor, walkable '.';
+     *                             exact-match alias: the new floor derives
+     *                             '.', same as the donor)
+     *   32..35 void (one def)    -> 221 (desolate solid '#'; the manifest
      *                             forces glyph '#' over the object default
      *                             so the entry matches)
-     * All values sit in one contiguous run (208..216, 220/221, 227..250)
+     * All values sit in one contiguous run (208..216, 220/221, 226/227,
+     * 228..250)
    * plus the skeleton's own value 254,
      * so the renderer maps them through a single fixed-bank slot table
      * (s_ug_slot in ui.c; the fixed bank has room again after the
@@ -472,14 +482,16 @@ typedef enum {
     TILE_UNDERGROUND_27 = 214,
     TILE_UNDERGROUND_28 = 220,
     TILE_UNDERGROUND_29 = 221,
+    TILE_UNDERGROUND_FLOOR = 226,
     TILE_UNDERGROUND_1E = 254,
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
  * (empty/unset cell), so the enum must never reach it -- 254 was the
  * last clear value past the castle extension (251..253) and now belongs
- * to the underground skeleton tile (walkable bone art the tunnel
- * skeleton NPC stands on).  The u8 TileType space is now fully spent:
+ * to the underground skeleton tiles (walkable bone art the tunnel
+ * skeleton NPC stands on; with-bone and no-bone share 254 under the
+ * exact-match alias rule).  The u8 TileType space is now fully spent:
  * any further tile needs an alias or a repurposed value (see
  * generate_tiles.py landscape_entries).  Enforced by g_tiletype_fits_u8
  * in world.c (kept out of this header so the 2 bytes are emitted once). */

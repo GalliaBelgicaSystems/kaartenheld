@@ -33,7 +33,7 @@ VALID_ASSERTION_TYPES = {
     "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
     "flag", "variable", "inventory", "collection_count", "deck_contains",
     "party_hp", "party_level", "actor_state",
-    "currency", "progression_level", "progression_progress",
+    "currency", "market_index", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
     "oam_tile", "oam_attr", "oam_bytes",
@@ -204,6 +204,10 @@ def validate_scenario(data, filepath):
         for cname, cval in (init.get("currency") or {}).items():
             if cname not in VALID_CURRENCY_NAMES:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown currency '{cname}' in initial_state. Valid currencies: {sorted(list(VALID_CURRENCY_NAMES))}")
+        _mkt = init.get("market") or {}
+        for _mkey in _mkt:
+            if _mkey not in ("index", "gold_in", "gold_out", "battles"):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown market key '{_mkey}' in initial_state. Valid keys: index, gold_in, gold_out, battles")
         for iname, iqty in (init.get("inventory") or {}).items():
             if iname not in VALID_ITEM_NAMES:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown item '{iname}' in initial_state. Valid items: {sorted(list(VALID_ITEM_NAMES))}")
@@ -300,8 +304,17 @@ def run_scenario(scenario):
                 session.debug_action(session.DBG_ACT_ADD_PROGRESS,
                                      ttype, tid, act.get("amount", 0))
             elif act_type == "buy_item":
+                # Curated cards by name; loot derived ids by number.
+                _buy = act.get("item")
+                if isinstance(_buy, int):
+                    _buy_id = _buy
+                else:
+                    _buy_id = ITEM_ID_MAP[_buy]
                 session.debug_action(session.DBG_ACT_BUY_ITEM,
-                                     ITEM_ID_MAP[act.get("item")], 0, 0)
+                                     _buy_id, 0, 0)
+            elif act_type == "set_market_index":
+                session.debug_action(session.DBG_ACT_SET_MARKET_INDEX,
+                                     act.get("index", 32), 0, 0)
             elif act_type == "save":
                 slot = act.get("slot", 1) - 1 if "slot" in act else 0
                 session.debug_action(session.DBG_ACT_SAVE, slot, 0, 0)
@@ -981,6 +994,11 @@ def run_scenario(scenario):
             actual = (state_snap or {}).get("currency", {}).get(exp_cur)
             passed = (actual == int(a.get("expected")))
 
+        elif a_type == "market_index":
+            expected = f"market index == {expected}"
+            actual = (state_snap or {}).get("market", {}).get("index")
+            passed = (actual == int(a.get("expected")))
+
         elif a_type == "progression_level":
             exp_target = a.get("target")
             expected = f"progression {exp_target} level == {expected}"
@@ -1055,6 +1073,12 @@ def format_state(snap, state_snap):
     cur_str = " ".join(f"{k}={v}" for k, v in sorted(currency.items()))
     lines.append("CURRENCY: " + (cur_str if cur_str else "(none)"))
 
+    market = (state_snap or {}).get("market") or {}
+    if market:
+        lines.append("MARKET: index={} gold_in={} gold_out={} battles={}".format(
+            market.get("index"), market.get("gold_in"),
+            market.get("gold_out"), market.get("battles")))
+
     party = (state_snap or {}).get("party", [])
     for i, m in enumerate(party):
         name = CHARACTER_ID_TO_NAME.get(m.get("id"), f"ID{m.get('id')}")
@@ -1121,6 +1145,15 @@ def build_initial_state_from_snapshot(snap, state_snap):
     currency = {k: v for k, v in state_snap.get("currency", {}).items()}
     if currency:
         initial["currency"] = currency
+
+    market = state_snap.get("market") or {}
+    if market:
+        initial["market"] = {
+            "index": market.get("index", 32),
+            "gold_in": market.get("gold_in", 0),
+            "gold_out": market.get("gold_out", 0),
+            "battles": market.get("battles", 0),
+        }
 
     party = {}
     for m in state_snap.get("party", []):
@@ -1190,6 +1223,7 @@ def normalize_semantic_state(snap, state_snap):
         "flags": sorted((state_snap or {}).get("flags", [])),
         "variables": (state_snap or {}).get("variables", {}),
         "currency": (state_snap or {}).get("currency", {}),
+        "market": (state_snap or {}).get("market", {}),
         "party": sorted((m.get("id"), m.get("hp"), m.get("max_hp"))
                         for m in (state_snap or {}).get("party", [])),
         "inventory": sorted((it.get("item_id"), it.get("quantity"))

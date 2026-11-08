@@ -29,7 +29,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | BFS inputs | `derive_collision()` + `load_tilesets()` importable from `tools/level_compiler/` (walkable flags in `tools/level_editor/tilesets/*.json`); `levels/*.json` carries terrain grid, exits (portals with target_scene/target_x/y), objects with AI types (AI_PATROL_VERT = ±3 tiles from spawn, AI_PATROL_CIRCLE/CROSS = around spawn) |
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
 | Shop | merchant (shop_id=2, opened by delivering the amulet) sells one-copy ring/bow/shield (+ always-listed free starter basics); A buys the top visible row (a pre-shop loot twin can hide the ring row -- the walk reads the row, never assumes it); SELL tab (LEFT/RIGHT) sells loot/curated at formula/rarity-cut values; `g_game.shop_message` readable; gold/collection WRAM-readable |
-| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP -- the +1 needs a real win, still reachable at 30 HP; the pool comes from the field chest: `ENERGY_POOL` 2) |
+| Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP for fleeing -- the lesson's +1 was already handed over at the spar start; Walk B's pool is 3 from the skip + the field chest) |
 | Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
@@ -87,11 +87,11 @@ tools/walkthrough/
 1. **Shop purchase** (Walk A): buy IRON_RING → assert
    gold==20−cost, `shop_message==BOUGHT`, collection gained the card.
 2. **Mayor flag**: interact mayor → assert STORY_FLAG MET_MAYOR set.
-3. **Battle lesson** (Walk B): fight Carl's 30 HP spar through the
+3. **Battle lesson** (Walk B): fight Carl's 10 HP spar through the
    full coaching flow (attack/defend/poker boxes, then the flee lesson
-   with its reward tease on the next attack, then one jeer) until the
+   on the next attack, then one jeer) until the
    first flee → assert `result==FLED`, the
-   farewell box shows, the pool stays 2 and gold stays 20 (no reward
+   farewell box shows, the pool stays 3 and gold stays 20 (no reward
    for fleeing).  Replaces the old kill-to-victory loop (same
    overworld-redraw + VRAM-restore coverage); `11-battle-fled` +
    `11-farewell-speech` replace `11-battle-victory` +
@@ -154,8 +154,9 @@ tools/walkthrough/
 
 * Every hostile engages as a TRIO (struck actor + 2 clones) unless solo
   (`src/screens/overworld_screen.c`) — the field fight is Carl's SOLO
-  1x30 HP practice spar (0-damage deck, tough but beatable); fleeing shows his
-  farewell box deferred on the FLED! result (no AP, no gold).
+  1x10 HP practice spar (0-damage deck); fleeing shows his
+  farewell box deferred on the FLED! result (no AP for fleeing -- the
+  lesson's +1 was handed over at the spar start, no gold).
 * `A` toggles the card at the cursor; the cursor does not reliably
   auto-advance, and some A presses are eaten by edge timing — selection
   must be verified against `combo_count` and retried (§52.10).

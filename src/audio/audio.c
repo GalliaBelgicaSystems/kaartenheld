@@ -131,7 +131,7 @@ volatile uint16_t g_audio_ticks;  /* BSS zero (AGENTS.md 52.27) */
 /* All music is tracked (hUGEDriver) now: the old hardcoded chiptune
  * note-table engine (note freqs, per-track note arrays, play_note) was
  * removed per docs/uge.md Phase 6.  MUSIC_OVERWORLD plays the overworld
- * theme (assets/music/another opening.uge, bank 7); MUSIC_TITLE plays song_title
+ * theme (assets/music/opening more.uge, bank 7); MUSIC_TITLE plays song_title
  * (assets/music/title short.uge). */
 
 void audio_init(void)

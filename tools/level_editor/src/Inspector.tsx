@@ -73,7 +73,7 @@ const MUSIC_PREVIEW_FILES: Record<string, string> = {
   MUSIC_BOSS: '/audio/boss_fight.wav',
   MUSIC_TOWN: '/audio/village.wav',
   MUSIC_DUNGEON: '/audio/castle.wav',
-  MUSIC_OVERWORLD: '/audio/another_opening.wav',
+  MUSIC_OVERWORLD: '/audio/opening_more.wav',
   MUSIC_UNDERGROUND: '/audio/underground.wav',
 };
 

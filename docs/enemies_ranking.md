@@ -412,7 +412,7 @@ Lord is the boss.*
 | Slime Knight | `BATTLE_SLIME_KNIGHT` | 15 | 3, 3, 4, heal 2 | – | 12 | **R4** |
 | Mimic | `BATTLE_MIMIC` | 50 (solo) | 4, 4, 5, 3, heal 3 | – | 0 (AP) → 20 (§8.3) | **R5** |
 | Lord of Slimes | `BATTLE_NONE` (solo) | 70 (solo) | flat 4 → 6 (no deck, §8.4) | – | 50 | **R6** |
-| Carl's spar | `BATTLE_CARL` | 30 | 0 | – | 5 → 0 (§8.2) | **R0** |
+| Carl's spar | `BATTLE_CARL` | 10 | 0 | – | 5 → 0 (§8.2) | **R0** |
 
 Note the duplicate HP sources: the battle uses the **actor row** from
 `src/game/actors_content.c` (Lord 70), while `screens/enemy_types/*.json`
@@ -689,7 +689,7 @@ rank only constrains it.
 
 | Rank | HP (trio member) | HP (solo build) | Swing power | Rider cards in deck | Gold |
 |---|---|---|---|---|---|
-| 0 | scripted (Carl 30) | – | 0 | – | 0 |
+| 0 | scripted (Carl 10) | – | 0 | – | 0 |
 | 1 | 6–10 | 18–24 | 2–3 | 0 | 3–6 |
 | 2 | 8–12 | 24–32 | 2–4 | ≤ 1 | 6–10 |
 | 3 | 14–18 | 36–48 | 3–4 | ≤ 1 | 8–12 |

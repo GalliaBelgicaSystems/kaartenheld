@@ -196,8 +196,8 @@ def parse_catalog_calls():
             r"\{\s*CARD_[A-Z0-9_]+\s*,.*?,\s*\"([A-Z ]+)\"\s*\}", text, re.S):
         name = m.group(1)
         fields = split_top_level(m.group(0).strip()[1:-1])
-        if len(fields) < 12:
-            fail("catalog: row %s has %d fields, expected 12" % (name, len(fields)))
+        if len(fields) < 13:
+            fail("catalog: row %s has %d fields, expected 13" % (name, len(fields)))
             continue
         try:
             struct_power = int(fields[2])
@@ -205,7 +205,7 @@ def parse_catalog_calls():
             fail("catalog: row %s has a non-literal .power (%r)"
                  % (name, fields[2]))
             continue
-        struct_rider = 0 if "STATUS_NONE" in fields[9] else 1
+        struct_rider = 0 if "STATUS_NONE" in fields[10] else 1
         cm = re.search(
             r"CARD_AP\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)", fields[3])
         if cm:
@@ -215,7 +215,7 @@ def parse_catalog_calls():
                      % (name, p, struct_power))
             if r != struct_rider:
                 fail("catalog: row %s CARD_AP rider %d but .status_id is %s"
-                     % (name, r, fields[9]))
+                     % (name, r, fields[10]))
             rows[name] = ((p, mat_name, r), None)
         else:
             cost_txt = fields[3].strip()
@@ -250,8 +250,8 @@ def check_identity():
             r"\{\s*CARD_[A-Z0-9_]+\s*,.*?,\s*\"([A-Z ]+)\"\s*\}", text, re.S):
         name = m.group(1)
         fields = split_top_level(m.group(0).strip()[1:-1])
-        if len(fields) < 12:
-            fail("identity: row %s has %d fields, expected 12" % (name, len(fields)))
+        if len(fields) < 13:
+            fail("identity: row %s has %d fields, expected 13" % (name, len(fields)))
             continue
         cm = re.search(r"CARD_AP\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)",
                        fields[3])
@@ -266,8 +266,8 @@ def check_identity():
                                 int(fields[2]), cost, int(fields[4]),
                                 _FX_MAP[fields[6].strip()],
                                 _BT_MAP[fields[7].strip()],
-                                _ST_MAP[fields[9].strip()],
-                                int(fields[10]), int(fields[5]))))
+                                _ST_MAP[fields[10].strip()],
+                                int(fields[11]), int(fields[5]))))
         except (KeyError, ValueError) as e:
             fail("identity: row %s has an unmapped field (%s)" % (name, e))
     mtext = MERGE_C.read_text(encoding="utf-8")

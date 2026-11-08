@@ -7,6 +7,8 @@
 #include "audio.h"
 #include "content.h"
 #include "game_ids.h"
+#include "banked.h"
+#include "carl_tutorial.h"
 
 void start_battle_from_world(Game *g)
 {
@@ -40,6 +42,19 @@ void start_battle_from_world(Game *g)
         battle_add_enemy(&g->battle,
                          act->display_name ? act->display_name : "ENEMY",
                          act->hp, act->max_hp);
+    }
+
+    /* Carl's lesson hands over its +1 AP when the spar STARTS, not on
+     * the win: on the first spar the opening coaching box announces it
+     * ("TAKE THIS AP TO DO POKER HANDS!"); re-spars open the no-grant
+     * coaching variant.  The bank-5 body owns the one-shot (shared
+     * with the leave-the-field skip) and refreshes the live pool the
+     * entry dispatch just staged; the fixed bank pays only staging +
+     * one dispatch (AGENTS.md 52.18). */
+    if (act->battle_type == BATTLE_CARL) {
+        g_bk_call_bank = 5;
+        g_bk_call_target = (uint16_t)&carl_spar_grant_banked;
+        banked_call_run();
     }
 
     /* Boss actors carry no enemy deck (BATTLE_NONE) and stand alone;

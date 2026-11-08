@@ -156,6 +156,14 @@ void debug_action_leaf_banked(void)
             g_game.item_menu_sort = a0;
             g_game.render_cache.valid = false;
             break;
+        case DBG_ACT_SET_MARKET_INDEX:
+            /* Pin the market index (docs/economy.md §5.1): out-of-band
+             * resets to neutral 32 (unlike the live update, which steps
+             * within the band -- a debug pin has no previous index to
+             * clamp from). */
+            if (a0 < 24 || a0 > 48) a0 = 32;
+            g_game.state.economy.market_index = a0;
+            break;
         default:
             g_bk_byte_a = 0;
             return;

@@ -18,7 +18,7 @@ static const WorldActorDefinition g_field_actors[] = {
     {
         1, ENTITY_ID_CARL, 15, 12, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 30, 30, 0, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 10, 10, 0, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 9, 1
     },
@@ -493,6 +493,16 @@ static const WorldActorDefinition g_underground_tunnel_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_underground_tunnel_south_actors[] = {
+    {
+        0, ENTITY_ID_SKELETON, 11, 11, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SKELETON", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SKELETON_DESC, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -524,8 +534,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
     { MAP_UNDERGROUND_TUNNEL, g_underground_tunnel_actors,
         (uint8_t)(sizeof(g_underground_tunnel_actors) / sizeof(g_underground_tunnel_actors[0])) },
-    { MAP_UNDERGROUND_TUNNEL_SOUTH, 0,
-        0 },
+    { MAP_UNDERGROUND_TUNNEL_SOUTH, g_underground_tunnel_south_actors,
+        (uint8_t)(sizeof(g_underground_tunnel_south_actors) / sizeof(g_underground_tunnel_south_actors[0])) },
     { MAP_DEMO_END_WAKE_SCENE, 0,
         0 },
 };

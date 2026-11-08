@@ -97,6 +97,18 @@ typedef struct {
     uint16_t progress;
 } ProgressionState;
 
+/* Persistent economy state (docs/economy.md §6): one global market index
+ * shared by all shops plus the transaction counters for the next update.
+ * Appended last: keep initializers in sync.  market_index is in 1/32
+ * units (32 = neutral 100%, range 24-48 = 75%-150%); gold_in counts
+ * enemy-loot gold only (sales excluded, §6.1); counters saturate. */
+typedef struct {
+    uint8_t market_index;
+    uint16_t gold_in;
+    uint16_t gold_out;
+    uint8_t battles;
+} EconomyState;
+
 typedef struct {
     ProgressionTarget target;
     ProgressionState state;
@@ -130,6 +142,7 @@ typedef struct {
     CurrencyState currency;
     WorldState world;
     ProgressionStore progression;
+    EconomyState economy;
 } GameState;
 
 void game_state_zero(GameState *state);

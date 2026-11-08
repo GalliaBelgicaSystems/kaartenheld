@@ -1,7 +1,7 @@
 {
  "name": "skeleton_take_bone",
  "test": true,
- "description": "After hearing the village dog's hint, bumping the skeleton offers 'Take a bone from the skeleton?': answering YES (default cursor) grants one BONE, sets BONE_TAKEN, and opens the taken follow-up. The DOG'S KEY quest stays ACTIVE (taking the bone is progress, the key trade completes it)",
+ "description": "After hearing the village dog's hint, bumping the skeleton offers 'Take a bone from the skeleton?': answering YES (default cursor) grants one BONE, sets BONE_TAKEN, and opens the taken follow-up. The DOG'S KEY quest stays ACTIVE (taking the bone is progress, the key trade completes it). The skeleton cell keeps tile 158 (slot 30): the no-bone swap is VRAM art, never a map-value change.",
  "actions": [
   {
    "type": "interact",
@@ -71,6 +71,12 @@
    "type": "variable",
    "variable": "DOG_QUEST",
    "expected": 1
+  },
+  {
+   "type": "tilemap_cell",
+   "col": 12,
+   "row": 10,
+   "expected": 158
   }
  ],
  "initial_state": {

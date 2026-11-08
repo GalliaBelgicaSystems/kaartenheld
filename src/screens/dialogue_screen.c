@@ -85,6 +85,10 @@ void dialogue_screen_update(Game *g)
              * debug _HOME sits 27 B past 0x8000 with them). */
             if (deck_collection_add(&g->state.cards, (CardId)g_bk_byte_b, 1)) {
                 game_flag_set(&g->state, (FlagId)g_bk_byte_c);
+                /* Bone art follows the flag mid-scene (the dialogue
+                 * overlay path never redraws the world): repaint VRAM
+                 * slot 30 now; every tileset (re)load re-applies it. */
+                game_after_tileset_load();
                 dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
                 return;
             }

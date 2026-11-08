@@ -1,4 +1,5 @@
 #include "content.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "story.h"
 #include "event.h"
@@ -26,6 +27,12 @@ uint8_t game_loot_drop(uint8_t battle_type)
     g_bk_call_bank = 9;
     g_bk_call_target = (uint16_t)&game_loot_drop_banked;
     g_bk_byte_a = battle_type;
+    banked_call_run();
+    /* First-victory bronze shield runs as a second leg in bank 11
+     * (game_loot_first_banked.c: bank 9 is full, fixed is tight) -- it
+     * never overrides rank-0 CARD_NONE, so the spar grants nothing. */
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&game_loot_first_victory_banked;
     banked_call_run();
     return g_loot_id;
 }
@@ -82,6 +89,10 @@ void game_new_game(GameState *state)
      * and the debugger never disagree about what a fight will stage. */
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
+    /* Neutral market at boot (game_state_zero leaves 0, which is outside
+     * the valid 24-48 band; readers treat out-of-band as neutral, but a
+     * new game states it explicitly). */
+    state->economy.market_index = ECONOMY_INDEX_NEUTRAL;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated
      * hero table (screens/hero.json via battle_compile.py) so the editor

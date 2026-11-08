@@ -36,11 +36,13 @@ OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
 OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
 OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
 OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
-STATE_SIZE = OFF_PROGRESSION + 13        # == sizeof(GameState); locates World/Battle
+OFF_ECONOMY = OFF_PROGRESSION + 13       # EconomyState: index + gold_in + gold_out + battles = 6
+STATE_SIZE = OFF_ECONOMY + 6             # == sizeof(GameState); locates World/Battle
 
 # CardDefinition (src/rpg/cards.h): id type power cost uses max_copies
-# effect battle_type price status_id status_chance name[12] = 23 B.
-CARD_DEF_SIZE = 23
+# effect battle_type price price_bias status_id status_chance
+# name[12] = 24 B (bias added by the economy, docs/economy.md §4.1).
+CARD_DEF_SIZE = 24
 CARD_DEF_PRICE = 8
 CARD_DEF_ID = 0
 

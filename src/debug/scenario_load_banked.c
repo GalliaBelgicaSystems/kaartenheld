@@ -3,6 +3,7 @@
 #include "scenarios.h"
 #include "telemetry.h"
 #include "banked.h"
+#include "economy.h"
 
 /* ── Banked scenario-descriptor apply, bank-5 body ──────────────────
  * Moved out of scenario_load_state() (src/debug/scenarios.c) so the
@@ -170,6 +171,26 @@ void scenario_load_apply_banked(void)
             g_game.state.world.count = (uint8_t)(i + 1);
             w++;
         }
+    }
+
+    /* Economy tail (version 0x06, docs/economy.md §6.3): direct WRAM
+     * writes (setup semantics, AGENTS.md §53.3 -- no telemetry).  An
+     * out-of-band index (including 0 from hosts that omit the market
+     * section) clamps to neutral 32, so existing scenarios keep a
+     * neutral market without staging it. */
+    {
+        uint8_t midx = b[STATE_LOAD_DESC_MARKET_INDEX_OFF];
+        uint8_t *eco;
+        if (midx < ECONOMY_INDEX_MIN || midx > ECONOMY_INDEX_MAX)
+            midx = ECONOMY_INDEX_NEUTRAL;
+        g_game.state.economy.market_index = midx;
+        eco = (uint8_t *)&g_game.state.economy.gold_in;
+        eco[0] = b[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF];
+        eco[1] = b[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF + 1];
+        eco = (uint8_t *)&g_game.state.economy.gold_out;
+        eco[0] = b[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF];
+        eco[1] = b[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF + 1];
+        g_game.state.economy.battles = b[STATE_LOAD_DESC_MARKET_BATTLES_OFF];
     }
 
     /* Progression: inline prog_get_or_add (pointer increments only). */

@@ -135,7 +135,7 @@
         "y": 10,
         "width": 1,
         "height": 1,
-        "tile": "underground.underground_skeleton"
+        "tile": "underground.underground_skeleton_with_bone"
       }
     ]
   },

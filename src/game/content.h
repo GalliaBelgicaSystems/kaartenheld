@@ -27,6 +27,22 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
  * battle screen. */
 ScreenId game_screen_after_victory(const Game *g);
 
+/* Post-tileset-load art fixup (fixed-bank dispatch in
+ * src/game/skeleton_art.c, VRAM body in src/game/skeleton_swap_banked.c
+ * ROM bank 11).  Called by the engine's ui_load_tileset() wrapper after
+ * every VRAM tileset load, and by the bone-grant path mid-scene: with
+ * BONE_TAKEN set on an underground tileset, VRAM slot 30 is repainted
+ * with the slot-31 no-bone art (both tiles share TileType 254 -- the
+ * u8 space is spent, so no map-value change is possible).  No-op
+ * otherwise.  Engine-to-game hook: the engine never branches on game
+ * ids itself. */
+void game_after_tileset_load(void);
+
+/* Bank-11 VRAM body behind game_after_tileset_load(): slot-31 to
+ * slot-30 copy when BONE_TAKEN is set on an underground tileset.
+ * Dispatched through the WRAM trampoline; never called directly. */
+void skeleton_swap_banked(void);
+
 /* Despair white fade-out (src/game/despair_fade_banked.c, ROM bank 10):
  * whites the current palettes out.  Dispatched from
  * game_slime_despair_outro() on the DEFEATED result screen.

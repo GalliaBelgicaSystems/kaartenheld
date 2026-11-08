@@ -82,6 +82,16 @@
    "type": "oam_attr",
    "entry": 25,
    "expected": 1
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34720,
+   "tile": "ap_5"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34304,
+   "tile": "ap_1"
   }
  ]
 }

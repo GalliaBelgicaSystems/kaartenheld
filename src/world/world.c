@@ -10,6 +10,7 @@
 #include "rpg/deck.h"
 #include "rng.h"
 #include "content.h"
+#include "economy.h"
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
@@ -320,9 +321,18 @@ void world_on_battle_end(Game *g, bool victory)
         act->hp = 0;
         act->flags = ACTOR_STATE_NONE;
         telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)act->id, 0, 0, 0);
-        if (act->reward_currency != 0 && act->gold_reward != 0) {
-            currency_add(&g->state, (CurrencyId)act->reward_currency, act->gold_reward);
-        }
+        /* Economy (docs/economy.md §3/§6): the bank-11 grant body owns the
+         * wallet-dampened credit, the loot-only gold_in note, and the
+         * battles tick.  Staged inline (single site -- a wrapper would
+         * only re-pay the staging).  Silent no-grant for reward-less          * fights (Carl's zero-gold spar ticks nothing); sales and event
+         * gold never touch gold_in (§6.1); defeat pays nothing
+         * (victory branch only). */
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&economy_grant_banked;
+        g_bk_byte_a = act->gold_reward;
+        g_bk_byte_b = 1;
+        g_bk_byte_c = (uint8_t)act->reward_currency;
+        banked_call_run();
         if (actor_id != 0) {
             game_world_set_actor_state(&g->state, actor_id, ACTOR_STATE_DEFEATED);
         }

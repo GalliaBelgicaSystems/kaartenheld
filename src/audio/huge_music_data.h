@@ -13,7 +13,7 @@ extern const hUGESong_t song_village;
 extern const hUGESong_t song_castle;
 extern const hUGESong_t song_title;
 extern const hUGESong_t song_victory;
-extern const hUGESong_t song_another_opening; /* bank 7 (HUGE_MUSIC_BANK_B7) */
+extern const hUGESong_t song_opening_more; /* bank 7 (HUGE_MUSIC_BANK_B7) */
 extern const hUGESong_t song_chest_opening;   /* bank 6: chest-loot jingle (one-shot) */
 extern const hUGESong_t song_game_over;     /* bank 7: game-over theme (loops) */
 extern const hUGESong_t song_demo_complete; /* bank 7: end-credits theme (loops) */
