@@ -306,7 +306,7 @@ def capture_overworld():
 
         # Wander east a few tiles and stop facing the trees (short and
         # far from the kobold's chase range so no battle interrupts the
-        # recording; the amulet chest this used to visit moved to the
+        # recording; the shop-keys chest this used to visit moved to the
         # mountain pass).
         path = planner.path("forest", goal, (16, 10), avoid_exits=True)
         if path:

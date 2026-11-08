@@ -36,7 +36,7 @@ screen.
 {
   "name": "merchant_deliver",
   "initial_state": { "scene": "TOWN", "player": {"x": 10, "y": 3, "facing": "RIGHT"},
-                     "inventory": {"AMULET": 1}, "currency": {"GOLD": 50},
+                     "inventory": {"SHOPKEYS": 1}, "currency": {"GOLD": 50},
                      "variables": {"MERCHANT_QUEST": 1} },
   "actions": [ {"type": "interact", "actor": "MERCHANT"} ],
   "assertions": [

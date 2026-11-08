@@ -106,7 +106,7 @@ void audio_update(void);
  * restore, driven by game_update() every non-battle frame through the
  * game-layer bank-8 body (src/game/jingle_full_banked.c, which reads
  * the loot mask from game story state).  Mask bit 0 = field cache
- * open, bit 1 = amulet found. */
+ * open, bit 1 = shop keys found. */
 
 /* Current track (WRAM): readable directly from bank-2 code, which cannot
  * call this fixed-bank getter. */

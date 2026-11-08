@@ -32,7 +32,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       VARIABLE_ID_ENERGY_POOL,
                                       CARD_IRON_RING, CARD_BOW_9,
                                       CARD_STEEL_SHIELD, CARD_POISON_DAGGER,
-                                      CARD_AMULET, CARD_BONE, CARD_OLD_KEY,
+                                      CARD_SHOPKEYS, CARD_BONE, CARD_OLD_KEY,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON, MUSIC_TOWN,
@@ -203,7 +203,7 @@ def transit_fight(s):
 
 def _dialogue_open(s):
     """True while any modal dialogue box is up (SCREEN_DIALOGUE == 1,
-    src/screens/screen.h).  Text markers (KNIGHT:, FOUND AMULET, ...)
+    src/screens/screen.h).  Text markers (KNIGHT:, FOUND SHOP KEYS, ...)
     only cover known boxes; the screen byte covers aftermath dialogues
     the walk has never seen (quest-complete notices, future briefings)."""
     r = s.reader
@@ -664,7 +664,7 @@ def walk_a(planner, checks, sram_out=None):
             expected="MUSIC_TOWN", actual="restore")
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
-    # then the amulet is fetched from the mountain pass.  Delivering it
+    # then the shop keys are fetched from the mountain pass.  Delivering them
     # completes the quest for +15g and opens the merchant's merged shop
     # (ring included).  The merchant
     # lives in the village area (east of town); the INTRO is one page,
@@ -675,40 +675,40 @@ def walk_a(planner, checks, sram_out=None):
             bump_actor(s, planner, "village_area", (10, 4), "down", "MERCHANT:"),
             expected="MERCHANT:", actual="none")
     close_dialogue(s, "MERCHANT:")
-    s.check_eq("amulet quest active",
+    s.check_eq("shop keys quest active",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 1)
 
-    # Mountain detour for the amulet (position from the level JSON; the
+    # Mountain detour for the shop keys (position from the level JSON; the
     # planner routes around patrol boxes and blocking actors, goal
-    # exempt).  The amulet chest is blocking and guarded by the kobold
+    # exempt).  The shop-keys chest is blocking and guarded by the kobold
     # standing east of it: step onto the kobold's cell (transit fight),
     # then bump west into the chest.
     mountain = _level("mountain_pass")
-    amulet = next(o for o in mountain["objects"]
+    keys = next(o for o in mountain["objects"]
                   if (o.get("properties") or {}).get("entity_id")
-                  == "ENTITY_ID_AMULET")
-    ax, ay = amulet["position"]["x"], amulet["position"]["y"]
+                  == "ENTITY_ID_SHOPKEYS")
+    ax, ay = keys["position"]["x"], keys["position"]["y"]
     follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax + 1, ay))
     s.settle_scene(expected_scene=SCENE_MOUNTAIN_PASS)
-    s.check("amulet found",
+    s.check("shop keys found",
             bump_actor(s, planner, "mountain_pass", (ax + 1, ay), "left",
-                       "FOUND AMULET"),
-            expected="FOUND AMULET", actual="none")
-    close_dialogue(s, "FOUND AMULET")
-    s.check_eq("amulet in collection",
-               s.reader.collection_count(CARD_AMULET), 1)
+                       "FOUND SHOP KEYS"),
+            expected="FOUND SHOP KEYS", actual="none")
+    close_dialogue(s, "FOUND SHOP KEYS")
+    s.check_eq("shop keys in collection",
+               s.reader.collection_count(CARD_SHOPKEYS), 1)
 
-    # Back to the village: the talk holding the amulet delivers it
-    # (thanks + 15g, amulet removed, quest COMPLETE), which opens the
+    # Back to the village: the talk holding the shop keys delivers them
+    # (thanks + 15g, shop keys removed, quest COMPLETE), which opens the
     # shop on the talk after.
     follow(s, planner, "mountain_pass", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
     s.check("deliver dialogue opened",
             bump_actor(s, planner, "village_area", (10, 4), "down",
-                       "You found it!"),
-            expected="You found it!", actual="none")
-    close_dialogue(s, "You found it!")
-    s.check_eq("amulet quest complete",
+                       "You found them!"),
+            expected="You found them!", actual="none")
+    close_dialogue(s, "You found them!")
+    s.check_eq("shop keys quest complete",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 2)
     # Transit fights (god-mode) add loot gold, so assert at least the
     # delivery reward on top of the starter pool, never an exact total.
@@ -716,7 +716,7 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15),
             actual=str(s.reader.gold()))
 
-    # Merged shop (village merchant, opened by delivering the amulet):
+    # Merged shop (village merchant, opened by delivering the shop keys):
     # one-copy ring + bow + shield stock plus the always-listed free
     # basics.  The top row is bought; usually the ring, but a loot twin
     # merged under a capped curated id hides its one-copy row

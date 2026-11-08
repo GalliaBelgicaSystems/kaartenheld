@@ -623,20 +623,20 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
 
-The Lost Amulet side quest follows the same shape (`MERCHANT_QUEST` =
-0/1/2), with loot state split out: `STORY_FLAG_ID_AMULET_CHEST` records
-the chest opening (set atomically with the AMULET grant), so the chest
+The Lost Shop Keys side quest follows the same shape (`MERCHANT_QUEST` =
+0/1/2), with loot state split out: `STORY_FLAG_ID_SHOPKEYS_CHEST` records
+the chest opening (set atomically with the SHOPKEYS grant), so the chest
 sprite and chest jingle key off loot, never quest state:
 
 * `MERCHANT_INTRO` (interact MERCHANT, NOT_STARTED) → briefing dialogue,
   quest=ACTIVE (tracked immediately).
-* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the amulet) →
+* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the shop keys) →
   briefing again (shop stays locked until delivery).
-* `AMULET_PICKUP` (interact AMULET, chest unopened) → FOUND dialogue +
+* `SHOPKEYS_PICKUP` (interact SHOPKEYS, chest unopened) → FOUND dialogue +
   item + quest=ACTIVE + chest flag.  Finding it before talking counts;
   after delivery the flag stays set so it never refires.
-* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the amulet) →
-  thanks + 15g, amulet removed, quest=COMPLETE; the shop opens.
+* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the shop keys) →
+  thanks + 15g, shop keys removed, quest=COMPLETE; the shop opens.
 
 Scenario actions: `equip_item` (mechanic) and the quick-screen UI (START →
 SELECT tab-focus → arrows → A) are both testable.

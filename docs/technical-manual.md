@@ -176,15 +176,15 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 |---|---|---|
 | Mayor | (10,5) | Gives the Monster Hunt quest (§4.2). |
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
-| Lost Merchant | (11,3) | Runs the Lost Amulet quest, then the shop (§4.3, §9). |
+| Lost Merchant | (11,3) | Runs the Lost Shop Keys quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
 | Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.
 
-**FOREST** — trees, stumps, slimes, a bat (8 HP) and a kobold, plus the Lost Amulet chest at
-(16,10).  An east gate opens onto the forest branch.
+**FOREST** — trees, stumps, slimes, a bat (8 HP) and a kobold.  An east gate opens onto the forest branch.
+
 
 **FOREST BRANCH** — MOSSY GLADE (slime, bat, kobold; a
 hermit's advice), DEEP WOODS (kobold, spider, slime, bat; a
@@ -197,7 +197,7 @@ holds a slime, a bat and a kobold; the ridge east of it is thick with a
 kobold, a bat, a slime and a spider, plus a scout's advice.
 
 **MOUNTAIN PASS** — a narrow walled corridor with slimes and a bat
-(8 HP).
+(8 HP), plus the Lost Shop Keys chest at (10,2) guarded by kobolds.
 
 **CASTLE CHAIN** — CASTLE ENTRY (bat, spider, kobold, slime), the
 GREAT HALL (kobold, spider, bat, slime; a knight's advice), CASTLE
@@ -234,7 +234,7 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 | Quest | Status var | Objective | Reward note |
 |---|---|---|---|
 | MONSTER HUNT | `QUEST_MONSTER_HUNT` | defeat 3 monsters | "+1 AP" |
-| LOST AMULET | `MERCHANT_QUEST` | find & return the amulet | "MERCHANT" |
+| SHOP KEYS | `MERCHANT_QUEST` | find & return the shop keys | "MERCHANT" |
 | DOG'S KEY | `DOG_QUEST` | trade the skeleton's bone for the key | "OLD KEY" |
 
 ### 4.2 Monster Hunt — the main quest
@@ -261,28 +261,26 @@ Each quest has a status **variable**: `0` = not started, `1` = active,
 The **Lord of Slimes** (70 HP) in the Castle is always present and
 reachable — it is not gated behind this quest.
 
-### 4.3 Lost Amulet — the side quest
+### 4.3 Lost Shop Keys — the side quest
 
 1. **Start.** Talk to the **Lost Merchant** in Town (the first visit).
-   Accepting sets the quest **ACTIVE**, so it is tracked on the QUEST
-   tab straight away:
-
-   > A thief stole my
-   > family heirloom!
-   > Find it in the Forest!
-
-2. **Reminder.** Talking to him again before you found it re-briefs
+   He went out drinking, got mugged by Kobolds up north, and lost his
+   shop keys — without them he can't open his shop, and he can't face
+   the Kobolds himself.  Accepting sets the quest **ACTIVE**, so it is
+   tracked on the QUEST tab straight away.
+2. **Reminder.** Talking to him again before you found them re-briefs
    (same lines); his shop stays locked until the delivery.
-3. **Objective.** Find the **Lost Amulet** in the Forest (16,10).
-   Interact with it ("You found the Lost Amulet!").  It is added to your
-   card collection (as a non-deckable `SPECIAL` card).  Finding it
-   before talking to him works too: the pickup counts either way.
-   Returning to the spot afterwards says "Nothing here now."
-4. **Complete.** Return to the Merchant once you have the amulet.  He
-   thanks you, removes the amulet from your collection, pays you
-   **15 gold**, and opens his shop (Iron Ring and Mythril Bow, §9.3):
+3. **Objective.** Find the **Lost Shop Keys** in the Mountain Pass
+   (10,2), past the kobolds.  Interact with the chest
+   ("FOUND SHOP KEYS!!").  The keys are added to your card collection
+   (as a non-deckable `SPECIAL` card).  Finding them before talking to
+   him works too: the pickup counts either way.  Returning to the spot
+   afterwards says "Nothing here now."
+4. **Complete.** Return to the Merchant once you have the keys.  He
+   thanks you, takes the keys back, pays you **15 gold**, and opens
+   his shop (Iron Ring and Mythril Bow, §9.3):
 
-   > You found it! Thank you, hero!
+   > You found them! Thank you, hero!
    > My shop is open now.
 
 ### 4.4 Dog's Key — the side quest
@@ -345,7 +343,7 @@ All catalogue cards (`src/game/cards_content.c`):
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 2 | 3/battle | 1 | — | 20g |
 | Fire Sword | `F SW` | `SW3` | ATK | 3 | 2 | – | 3 | BURN 128 | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 128 | — |
-| Amulet | `AMULET` | — | SPL | 0 | 0 | – | 1 | — | — |
+| Shop Keys | `SHOPKEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
 
 The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
@@ -744,7 +742,7 @@ Re-poisoning refreshes the grey without re-rolling which cards are greyed.
 ### 9.1 Gold
 
 Your only currency is **gold** (start: 20g, `HERO_START_GOLD` in
-`content.c`).  Sources: battle rewards (below), the Amulet quest (+15g),
+`content.c`).  Sources: battle rewards (below), the Shop Keys quest (+15g),
 selling loot.  Uses: shop purchases.
 
 ### 9.2 Battle rewards
@@ -769,7 +767,7 @@ One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 * **Lost Merchant** (Town, (11,3)) — sells the **Iron Ring** (`I RG`,
   `RG4`) for **20g** (a heal card; the game's only reliable healing
   outside loot rings) and the **Mythril Bow** (`M BO`, `BO9`) for
-  **30g**, one copy of each.  Reachable only after the Lost Amulet
+  **30g**, one copy of each.  Reachable only after the Lost Shop Keys
   quest (§4.3): before the delivery he re-briefs instead of selling.
 
 Shopping: `A` buys the hovered item if you have enough gold and room in

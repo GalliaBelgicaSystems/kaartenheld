@@ -28,7 +28,7 @@
 #define CARD_IRON_RING      (CARD_FIRST_GAME + 2)   /* curated shop ring (docs/loot.md §34.6) */
 #define CARD_FIRE_SWORD    (CARD_FIRST_GAME + 3)
 #define CARD_POISON_DAGGER (CARD_FIRST_GAME + 4)
-#define CARD_AMULET        (CARD_FIRST_GAME + 5)
+#define CARD_SHOPKEYS        (CARD_FIRST_GAME + 5)
 #define CARD_BOW_9        (CARD_FIRST_GAME + 6)
 #define CARD_WOOD_SWORD   (CARD_FIRST_GAME + 7)
 #define CARD_STEEL_SHIELD (CARD_FIRST_GAME + 8)   /* steel SH6 (docs/enemies_ranking.md §5.2):
@@ -50,7 +50,7 @@
 #define EVENT_ID_BOSS_DEFEATED   (EVENT_ID_FIRST_GAME + 8)
 #define EVENT_ID_MERCHANT_INTRO  (EVENT_ID_FIRST_GAME + 9)
 #define EVENT_ID_MERCHANT_DELIVER (EVENT_ID_FIRST_GAME + 10)
-#define EVENT_ID_AMULET_PICKUP   (EVENT_ID_FIRST_GAME + 11)
+#define EVENT_ID_SHOPKEYS_PICKUP   (EVENT_ID_FIRST_GAME + 11)
 #define EVENT_ID_TUTORIAL_COMPLETE (EVENT_ID_FIRST_GAME + 12)
 #define EVENT_ID_FIELD_CHEST     (EVENT_ID_FIRST_GAME + 13)
 #define EVENT_ID_MERCHANT_REMINDER (EVENT_ID_FIRST_GAME + 14)
@@ -85,9 +85,9 @@ typedef enum {
     STORY_FLAG_ID_ARRIVED_TOWN = 1,
     STORY_FLAG_ID_MET_MAYOR    = 2,
     STORY_FLAG_ID_FIELD_CHEST  = 3,
-    STORY_FLAG_ID_AMULET_CHEST = 4,   /* mountain amulet chest opened (loot
+    STORY_FLAG_ID_SHOPKEYS_CHEST = 4,   /* mountain shop-keys chest opened (loot
                                        * state, like FIELD_CHEST -- set
-                                       * atomically with the AMULET grant) */
+                                       * atomically with the SHOP-KEYS grant) */
     STORY_FLAG_ID_HEAL_MAGE_USED = 5, /* the village Heal Mage already gave
                                        * its one free heal (later talks get
                                        * the refusal, no heal, no jingle) */

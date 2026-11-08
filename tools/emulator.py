@@ -50,7 +50,7 @@ MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED", 9: "MET_DOG", 10: "BONE_TAKEN", 11: "DOG_KEY", 12: "TUTORIAL_SPAR_WON"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "SHOPKEYS_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED", 9: "MET_DOG", 10: "BONE_TAKEN", 11: "DOG_KEY", 12: "TUTORIAL_SPAR_WON"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -132,7 +132,7 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 8: "BOSS_DEFEATED",
                 GAME_ID_BASE + 9: "MERCHANT_INTRO",
                 GAME_ID_BASE + 10: "MERCHANT_DELIVER",
-                GAME_ID_BASE + 11: "AMULET_PICKUP",
+                GAME_ID_BASE + 11: "SHOPKEYS_PICKUP",
                 GAME_ID_BASE + 12: "TUTORIAL_COMPLETE",
                 GAME_ID_BASE + 13: "FIELD_CHEST",
                 GAME_ID_BASE + 14: "MERCHANT_REMINDER",
@@ -164,7 +164,7 @@ ACTOR_INFO_MAP = {
     "BAT":         {"visual": "V", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "BAT"},
     "SLIME_LORD":  {"visual": "L", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "NONE"},
     "MERCHANT":    {"visual": "C", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},
-    "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
+    "SHOPKEYS":     {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SHOPKEYS_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
     "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE_ASK", "battle": "NONE"},
@@ -243,7 +243,7 @@ STATE_LOAD_DESC_VERSION = 0x06
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8, "MET_DOG": 9, "BONE_TAKEN": 10, "DOG_KEY": 11, "TUTORIAL_SPAR_WON": 12}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "SHOPKEYS_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8, "MET_DOG": 9, "BONE_TAKEN": 10, "DOG_KEY": 11, "TUTORIAL_SPAR_WON": 12}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
                     "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
                     "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
@@ -253,7 +253,7 @@ CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
                "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
-               "POISON_DAGGER": 0x44, "AMULET": 0x45,
+               "POISON_DAGGER": 0x44, "SHOPKEYS": 0x45,
                "BOW_9": 0x46, "WOOD_SWORD": 0x47,
                "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,

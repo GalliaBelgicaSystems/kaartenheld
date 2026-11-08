@@ -9,7 +9,7 @@
  * item_quest_banked.c): keep every target ≤ 9.  The #error below fails
  * the build otherwise -- extend it if the registry grows. */
 #define QUEST_MONSTERS_TARGET 3
-#define QUEST_AMULET_TARGET   0  /* inert: LOST AMULET has no counter */
+#define QUEST_SHOPKEYS_TARGET   0  /* inert: SHOP KEYS has no counter */
 
 const QuestDefinition g_quests[] = {
     {
@@ -18,9 +18,9 @@ const QuestDefinition g_quests[] = {
         VARIABLE_ID_MONSTERS_DEFEATED, QUEST_MONSTERS_TARGET, "monsters", "+1 AP", "+1 AP"
     },
     {
-        2, "LOST AMULET", "MERCHANT IN TOWN", "FIND THE AMULET",
+        2, "SHOP KEYS", "MERCHANT IN TOWN", "FIND THE SHOP KEYS",
         VARIABLE_ID_MERCHANT_QUEST, 1, 2,
-        0, QUEST_AMULET_TARGET, "", "MERCHANT", "SHOP OPENED"
+        0, QUEST_SHOPKEYS_TARGET, "", "MERCHANT", "SHOP OPENED"
     },
     {
         3, "DOG'S KEY", "DOG IN VILLAGE", "TRADE BONE FOR KEY",
@@ -39,6 +39,6 @@ typedef char quest_table_count_ok[
  * fire under this SDCC (it silently accepts char[-1]), so the bound
  * uses #error, which the preprocessor enforces.  Extend the #if if the
  * registry grows. */
-#if QUEST_MONSTERS_TARGET > 9 || QUEST_AMULET_TARGET > 9
+#if QUEST_MONSTERS_TARGET > 9 || QUEST_SHOPKEYS_TARGET > 9
 #error "quest progress_target exceeds the single-digit renderer"
 #endif

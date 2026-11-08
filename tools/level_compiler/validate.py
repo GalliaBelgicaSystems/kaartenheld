@@ -278,7 +278,7 @@ def entity_sprite_kind(entity_id):
     """sprite_kind for an ENTITY_ID_* from screens/entity_types/*.json.
 
     Mirrors the data-driven fallback in compile.py resolve_sprite_kind:
-    friendly NPCs authored in the editor (amulet, chest, ...) resolve
+    friendly NPCs authored in the editor (shopkeys, chest, ...) resolve
     their overworld sprite here without a hardcoded id list."""
     global _ENTITY_SPRITE_KINDS
     if _ENTITY_SPRITE_KINDS is None:

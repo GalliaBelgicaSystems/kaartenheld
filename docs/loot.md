@@ -1843,8 +1843,8 @@ same as the battle-hand cards and the CARDS-tab list.  Regression:
 
 ## 34.6 Economy (Merchant = Card Merchant)
 
-The Lost Amulet merchant opens shop 2 as the CARD MERCHANT. Delivering
-the amulet completes the quest (+15g, amulet removed) and opens the
+The Lost Shop Keys merchant opens shop 2 as the CARD MERCHANT. Delivering
+the shop keys completes the quest (+15g, shop keys removed) and opens the
 shop; finding it is what makes the delivery (and the shop) available:
 
 * BUY: the merchant stocks the curated IRON RING (**RG4**, 20g), the

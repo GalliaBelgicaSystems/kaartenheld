@@ -234,7 +234,7 @@ void ow_oam_restore_banked(void)
  * - Quest "?": an NPC whose talk advances or turns in a quest.
  *   Mayor: quest NOT_STARTED, or ACTIVE with 5+ monsters slain
  *   (turn-in ready).  Merchant: quest NOT_STARTED, or ACTIVE while
- *   holding the amulet (delivery ready).  Heal Mage: owns the Iron
+ *   holding the shop keys (delivery ready).  Heal Mage: owns the Iron
  *   Ring and hasn't heard the ring-tactics lesson yet.  Carl: always,
  *   until the
  *   tutorial spar is won.  Village dog: until it hands over the
@@ -403,7 +403,7 @@ static void marks_refresh(void)
                 }
             } else if (id == ENTITY_ID_MERCHANT) {
                 int16_t mq = g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1];
-                if (mq == 0 || (mq == 1 && marks_has_card(CARD_AMULET))) {
+                if (mq == 0 || (mq == 1 && marks_has_card(CARD_SHOPKEYS))) {
                     m = ACTOR_MARK_QUEST;
                 }
             } else if (id == ENTITY_ID_HEAL_MAGE) {

@@ -1,7 +1,7 @@
 {
  "name": "quest_list_merchant",
  "test": true,
- "description": "The QUEST tab tracks only accepted quests: LOST AMULET (ACTIVE) is listed while MONSTER HUNT (NOT_STARTED) stays hidden",
+ "description": "The QUEST tab tracks only accepted quests: SHOP KEYS (ACTIVE) is listed while MONSTER HUNT (NOT_STARTED) stays hidden",
  "actions": [
   {
    "type": "press",
@@ -28,7 +28,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "LOST AMULET"
+   "contains": "SHOP KEYS"
   },
   {
    "type": "screen_row",

@@ -119,7 +119,7 @@ const EventDefinition g_events[] = {
      * so this fires exactly once like the knight split) grants +1
      * battle AP (ENERGY_POOL), the same uniform ADD 1 as the
      * tutorial/chest/Monster Hunt milestones, and narrates the next step
-     * (speakerless box, like FOUND AMULET: the dead mimic gives no
+     * (speakerless box, like FOUND SHOP KEYS: the dead mimic gives no
      * speech).  The grant is observable through VARIABLE_SET plus
      * the snapshot. */
     {
@@ -199,31 +199,32 @@ const EventDefinition g_events[] = {
     },
     /* ── Lost Merchant quest (data-driven fetch/deliver) ─────────────
      * Quest state is the MERCHANT_QUEST variable: 0 = not started,
-     * 1 = ACTIVE (accepted from the merchant, or amulet found first),
-     * 2 = complete.  Loot state is STORY_FLAG_ID_AMULET_CHEST (set
-     * atomically with the AMULET grant, like FIELD_CHEST): the chest
-     * sprite and the chest jingle key off the flag, never the quest
-     * variable, so accepting early neither opens the chest art nor
-     * plays the jingle.  DELIVER must precede INTRO (more specific
-     * first): the first talk holding the amulet delivers it (thanks,
-     * +15 gold, amulet removed, quest complete) before any shop
-     * opens.  After delivery no merchant event matches, so the
-     * interaction falls back to the merchant's SHOP interaction; the
-     * same fallback is blocked mid-quest by REMINDER below.  Finding
-     * the amulet is what unlocks the shop: pickup sets QUEST=1, so no
-     * briefing detour stands between the find and the delivery. */
+     * 1 = ACTIVE (accepted from the merchant, or shop keys found
+     * first), 2 = complete.  Loot state is STORY_FLAG_ID_SHOPKEYS_CHEST
+     * (set atomically with the SHOP-KEYS grant, like FIELD_CHEST):
+     * the chest sprite and the chest jingle key off the flag, never
+     * the quest variable, so accepting early neither opens the chest
+     * art nor plays the jingle.  DELIVER must precede INTRO (more
+     * specific first): the first talk holding the shop keys delivers
+     * them (thanks, +15 gold, keys removed, quest complete) before
+     * any shop opens.  After delivery no merchant event matches, so
+     * the interaction falls back to the merchant's SHOP interaction;
+     * the same fallback is blocked mid-quest by REMINDER below.
+     * Finding the shop keys is what unlocks the shop: pickup sets
+     * QUEST=1, so no briefing detour stands between the find and
+     * the delivery. */
     {
         EVENT_ID_MERCHANT_DELIVER, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         2,
         {
-            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 1, false, true },
+            { EVENT_COND_ITEM_COUNT, CARD_SHOPKEYS, 1, false, true },
             { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false }
         },
         4,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_THANKS, 0, 0 },
             { EVENT_ACTION_ADD_CURRENCY, CURRENCY_ID_GOLD, 15, 0 },
-            { EVENT_ACTION_REMOVE_ITEM, CARD_AMULET, 1, 0 },
+            { EVENT_ACTION_REMOVE_ITEM, CARD_SHOPKEYS, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 2, 0 }
         }
     },
@@ -244,21 +245,21 @@ const EventDefinition g_events[] = {
         2,
         {
             { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false },
-            { EVENT_COND_ITEM_COUNT, CARD_AMULET, 0, false, false }
+            { EVENT_COND_ITEM_COUNT, CARD_SHOPKEYS, 0, false, false }
         },
         1,
         {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_INTRO, 0, 0 }}
     },
     {
-        EVENT_ID_AMULET_PICKUP, EVENT_TRIGGER_INTERACT, ENTITY_ID_AMULET, EVENT_MAP_ANY,
+        EVENT_ID_SHOPKEYS_PICKUP, EVENT_TRIGGER_INTERACT, ENTITY_ID_SHOPKEYS, EVENT_MAP_ANY,
         1,
-        {{ EVENT_COND_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, false, false }},
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_SHOPKEYS_CHEST, 0, false, false }},
         4,
         {
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_AMULET_FOUND, 0, 0 },
-            { EVENT_ACTION_ADD_ITEM, CARD_AMULET, 1, 0 },
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_SHOPKEYS_FOUND, 0, 0 },
+            { EVENT_ACTION_ADD_ITEM, CARD_SHOPKEYS, 1, 0 },
             { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, 0 },
-            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_AMULET_CHEST, 0, 0 }
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_SHOPKEYS_CHEST, 0, 0 }
         }
     },
     /* ── Field tutorial spar (Carl, the friendly slime) ────────────

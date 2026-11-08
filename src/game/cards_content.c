@@ -25,7 +25,7 @@ const CardDefinition g_cards[] = {
     /* Poison Dagger (bronze DA2): base 50% poison chance scaled by the
      * played hand's multiplier (docs/combo-system.md §13). */
     { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  2, CARD_AP(2, MAT_BRONZE, 1),  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, 0, STATUS_POISON,   128,  "P DA" },
-    { CARD_AMULET,        CARD_TYPE_SPECIAL, 0, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "AMULET"  },
+    { CARD_SHOPKEYS,        CARD_TYPE_SPECIAL, 0, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "SHOP KEYS"  },
     /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2). */
     { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  CARD_AP(9, MAT_MYTHRIL, 0),  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, 0, STATUS_NONE,       0,   "M BO"  },
     /* Wood sword: the tier-1 starter blade (hero.json).  Plain; wood can
@@ -37,12 +37,12 @@ const CardDefinition g_cards[] = {
      * through.  Curated steel following the same band as loot steel. */
     { CARD_STEEL_SHIELD,  CARD_TYPE_DEFENSE, 6, CARD_AP(6, MAT_STEEL, 0), 0, 2, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,   12, 0, STATUS_NONE,       0,   "S SH" },
     /* Quest bone (tunnel skeleton -> village dog trade): SPECIAL like
-     * the amulet -- listed in the DECK tab, never deckable, never
+     * the shop keys -- listed in the DECK tab, never deckable, never
      * sold (sell is loot-only).  Sword battle type reuses the
-     * amulet's icon path (no new art).  Power 1/2 (vs the amulet's 0)
+     * shop-keys' icon path (no new art).  Power 1/2 (vs the keys' 0)
      * keeps the three SPECIAL identities distinct: the collection
      * merge folds identical rows, so equal bytes would collapse the
-     * bone, the key, and the amulet into one row.  Power is inert
+     * bone, the key, and the shop keys into one row.  Power is inert
      * here (SPECIAL cards never enter a deck or a battle). */
     { CARD_BONE,          CARD_TYPE_SPECIAL, 1, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "BONE"  },
     /* Quest key (the dog's field-cache key): same SPECIAL treatment.

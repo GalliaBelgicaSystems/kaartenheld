@@ -1,7 +1,7 @@
 {
  "name": "quest_mark_merchant_done",
  "test": true,
- "description": "No quest marker on the merchant once LOST AMULET is complete (shop open). No marker on the merchant once complete; entry 30 is the village dog's ? (DOG_KEY unset), entry 31 stays cleared.",
+ "description": "No quest marker on the merchant once SHOP KEYS is complete (shop open). No marker on the merchant once complete; entry 30 is the village dog's ? (DOG_KEY unset), entry 31 stays cleared.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {

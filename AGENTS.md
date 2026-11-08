@@ -3238,7 +3238,7 @@ executes both regressions (battle VRAM restore, dialogue palette restore).
 
 ## 55.7 Chests are OAM sprites, floor stays floor
 
-Chests (and similar openable pickups like the forest amulet) render as
+Chests (and similar openable pickups like the forest shop-keys chest) render as
 OAM sprites, never background tiles: the level paints plain ground on
 the cell and the actor is a `SPRITE_KIND_CHEST` interactable on it
 (solid via the actor's `BLOCKING` flag, not via tile walkability).

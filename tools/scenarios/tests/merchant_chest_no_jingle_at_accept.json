@@ -1,7 +1,7 @@
 {
  "name": "merchant_chest_no_jingle_at_accept",
  "test": true,
- "description": "Accepting the quest plays no chest jingle: the loot edge keys off the AMULET_CHEST flag (chest opened), not the quest variable, so the town music keeps playing after the briefing",
+ "description": "Accepting the quest plays no chest jingle: the loot edge keys off the SHOPKEYS_CHEST flag (chest opened), not the quest variable, so the town music keeps playing after the briefing",
  "actions": [
   {
    "type": "interact",
@@ -32,7 +32,7 @@
   },
   {
    "type": "flag",
-   "flag": "AMULET_CHEST",
+   "flag": "SHOPKEYS_CHEST",
    "expected": false
   },
   {

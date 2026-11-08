@@ -1,7 +1,7 @@
 {
  "name": "merchant_repeat",
  "test": true,
- "description": "Once the amulet is delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",
+ "description": "Once the shop keys are delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",
  "actions": [
   {
    "type": "interact",
@@ -25,7 +25,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 0
   },
   {
