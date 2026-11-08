@@ -896,7 +896,7 @@ void ui_draw_world_transition(const World *world)
      * are already standing on it (the reveal paints background tiles
      * only, so it never touches OAM).  The tail re-runs all three
      * idempotently. */
-    ui_update_camera(world);
+    ui_commit_camera(world);
     ui_sprite_move((uint8_t)(world_player_px(world) - world->camera_px_x),
                    (uint8_t)(world_player_py(world) - world->camera_px_y));
     ui_draw_actors_sprites(world);
@@ -909,12 +909,14 @@ void ui_draw_world_transition(const World *world)
     ui_world_tail(world);
 }
 
-void ui_update_camera(const World *world)
+void ui_commit_camera(const World *world)
 {
-    /* No null guard: both callers (overworld render, world transition)
-     * always pass a live world. */
     SCX_REG = world->camera_px_x;
     SCY_REG = world->camera_px_y;
+}
+
+void ui_update_camera(const World *world)
+{
 #ifdef DEBUG_BUILD
     /* Semantic refill (~43k T-states over the full 20x18 view): only the
      * harness reads g_ui_screen_buf on overworld frames, and only it
@@ -924,6 +926,8 @@ void ui_update_camera(const World *world)
     if (g_harness_mode) {
         ui_refill_semantic(world);
     }
+#else
+    (void)world;
 #endif
 }
 

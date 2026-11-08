@@ -193,6 +193,8 @@ static uint8_t s_oc_tile[MAX_WORLD_ACTORS];
 static uint8_t s_oc_prop[MAX_WORLD_ACTORS];
 static uint8_t s_oc_gw[MAX_WORLD_ACTORS];
 static uint8_t s_oc_gh[MAX_WORLD_ACTORS];
+static uint8_t s_oc_static_tile[MAX_STATIC_ACTORS];
+static uint8_t s_oc_static_prop[MAX_STATIC_ACTORS];
 static uint8_t s_oc_anim;
 static uint8_t s_oc_bc;
 /* Cleared by spawn/mutation sites in other banks (loader, trio morph);
@@ -364,32 +366,41 @@ void ui_actors_sprites_banked(void)
             volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
                                                        ((uint16_t)(oam_slot + i) << 2));
             uint8_t tile;
-            uint8_t prop = 0;
+            uint8_t prop;
             uint8_t px, py;
             if (i >= g_static_actor_count) {
                 e[0] = 0;
                 continue;
             }
-            d = &g_static_actors[i];
-            if (d->sprite_kind == SPRITE_KIND_ASCII ||
-                d->sprite_kind == SPRITE_KIND_BOSS ||
-                d->sprite_kind == SPRITE_KIND_TILE) {
-                e[0] = 0;  /* glyph / boss / background-art actors own these */
-                continue;
-            }
-            tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                                   anim, d->ow_type, &prop, 0);
-            if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
-                g_bk_byte_b = d->x;
-                g_bk_byte_c = d->y;
-                if (chest_is_open_banked()) {
-                    tile = (uint8_t)(tile + 1);
+            if (fresh) {
+                d = &g_static_actors[i];
+                if (d->sprite_kind == SPRITE_KIND_ASCII ||
+                    d->sprite_kind == SPRITE_KIND_BOSS ||
+                    d->sprite_kind == SPRITE_KIND_TILE) {
+                    s_oc_static_tile[i] = 0;
+                    s_oc_static_prop[i] = 0;
+                } else {
+                    prop = 0;
+                    tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
+                                           anim, d->ow_type, &prop, 0);
+                    if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
+                        g_bk_byte_b = d->x;
+                        g_bk_byte_c = d->y;
+                        if (chest_is_open_banked()) {
+                            tile = (uint8_t)(tile + 1);
+                        }
+                    }
+                    s_oc_static_tile[i] = tile;
+                    s_oc_static_prop[i] = prop;
                 }
             }
+            tile = s_oc_static_tile[i];
             if (!tile) {
                 e[0] = 0;
                 continue;
             }
+            prop = s_oc_static_prop[i];
+            d = &g_static_actors[i];
             px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
             py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
             if (px < 160 && py < 144) {
