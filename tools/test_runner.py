@@ -33,7 +33,7 @@ VALID_ASSERTION_TYPES = {
     "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
     "flag", "variable", "inventory", "collection_count", "deck_contains",
     "party_hp", "party_level", "actor_state",
-    "currency", "progression_level", "progression_progress",
+    "currency", "market_index", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
     "oam_tile", "oam_attr", "oam_bytes",

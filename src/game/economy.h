@@ -41,9 +41,10 @@ uint8_t economy_quote(uint8_t price, int8_t bias, uint8_t use_market);
 /* Victory gold path (bank-11 body, inlined at the single world.c site):
  * dampens the base reward against wallet vs expected (100%/75%/50%/25%
  * ladder), credits it saturating at 9999, notes gold_in (loot only,
- * §6.1), ticks battles, emits CURRENCY_ADDED (debug).  Silent no-grant
- * (still ticks battles) when victory is 0, base is 0, or the currency is
- * invalid.  Reads/writes g_game.state directly.
+ * §6.1), ticks battles on a real grant only (rewardless spars tick
+ * nothing), emits CURRENCY_ADDED (debug).  Silent no-grant (no tick)
+ * when victory is 0, base is 0, or the currency is invalid.
+ * Reads/writes g_game.state directly.
  * Shop-boundary market update (bank-11 body, inlined at the single shop
  * exit site): §6 guards (zero counters / zero battles skip silently);
  * emits MARKET_UPDATED (old, new, dir: 1 = up, 2 = down, 3 =

@@ -36,9 +36,12 @@ static void telemetry_ring_emit(uint8_t type, uint8_t d0, uint8_t d1,
 #define telemetry_ring_emit(type, d0, d1, d2, d3) ((void)0)
 #endif
 
+#ifdef DEBUG_BUILD
 /* The (head + 1) & (MAX - 1) step is only a ring when MAX is a power of
- * two; fail the build if anyone changes the capacity carelessly. */
+ * two; fail the build if anyone changes the capacity carelessly.
+ * Debug-only (the release macro above never touches the ring). */
 typedef char telemetry_ring_pow2[
     ((MAX_TELEMETRY_EVENTS & (MAX_TELEMETRY_EVENTS - 1)) == 0) ? 1 : -1];
+#endif
 
 #endif /* DEBUG_TELEMETRY_RING_H */

@@ -39,6 +39,7 @@ Stdlib only.  Exit 0 = green, 1 = violation (with expected/actual).
 """
 import re
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -126,9 +127,12 @@ def c_base(price, bias):
     return b
 
 
+@lru_cache(maxsize=None)
 def c_quote(base, idx):
     """Exact mirror of the C quote (repeated-add multiply, one rounding,
-    saturating return)."""
+    saturating return).  Memoized: only 255 distinct bases x 25 indices
+    exist, so the 8M-iteration arbitrage gate reuses ~6k entries instead
+    of re-running the 24-48-step add loop every time."""
     p = 0
     for _ in range(idx):
         p += base
@@ -199,6 +203,43 @@ def check_no_arbitrage(idx_min, idx_max):
     return None
 
 
+def check_wallet_floor(rows):
+    """Expected-wallet floor (docs/economy.md §3.2): every
+    economy_expected_for_scene value must cover 1.5x the most expensive
+    card stocked in any shop (integer form: expected * 2 >= price * 3).
+    Parses the return values out of economy_banked.c, the stock list out
+    of shops_content.c, and prices out of g_cards[] -- no hardcoded
+    copies to drift."""
+    try:
+        eco_banked = (REPO / "src" / "game" / "economy_banked.c").read_text(
+            encoding="utf-8")
+        shops_c = (REPO / "src" / "game" / "shops_content.c").read_text(
+            encoding="utf-8")
+    except OSError as exc:
+        return "floor: cannot read C sources: %s" % exc
+    expected = [int(v) for v in re.findall(r"return (\d+);", eco_banked)]
+    if not expected:
+        return "floor: no expected-wallet returns parsed (shape changed?)"
+    shop_init = shops_c.split("g_shops[]", 1)
+    stocked = [s for s in re.findall(r"CARD_[A-Z0-9_]+",
+               shop_init[1] if len(shop_init) > 1 else shops_c)
+               if s != "CARD_NONE"]
+    if not stocked:
+        return "floor: no stocked cards parsed (shape changed?)"
+    price_of = {sym: price for sym, price, _ in rows}
+    missing = [s for s in set(stocked) if s not in price_of]
+    if missing:
+        return ("floor: stocked %s have no g_cards[] row (catalog "
+                "changed?)" % sorted(missing))
+    price_max = max(price_of[s] for s in set(stocked))
+    required = (price_max * 3 + 1) // 2
+    for e in expected:
+        if e * 2 < price_max * 3:
+            return ("floor: expected wallet %d below 1.5x best stock "
+                    "(%dg -> need %d)" % (e, price_max, required))
+    return None
+
+
 def check_c_drift():
     """Pin the C copies to the mirrored formula: both quote bodies
     must carry the rounding shift, and the bank-2 display copy must
@@ -260,6 +301,9 @@ def main():
         bad = check_no_arbitrage(idx_min, idx_max)
         if bad:
             fail(bad)
+    bad = check_wallet_floor(rows)
+    if bad:
+        fail(bad)
     bad = check_c_drift()
     if bad:
         fail(bad)

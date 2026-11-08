@@ -1,0 +1,61 @@
+{
+ "name": "economy_market_skip",
+ "test": true,
+ "description": "Shop-hopping guard (docs/economy.md §6): entering and leaving the merchant shop with zero counters (no gold in, no spend, no battles) skips the market update -- no MARKET_UPDATED fires and a staged in-band index 35 is untouched (an unconditional update would drift it toward 32).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  },
+  "market": {
+   "index": 35,
+   "gold_in": 0,
+   "gold_out": 0,
+   "battles": 0
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "MARKET_UPDATED"
+  },
+  {
+   "type": "market_index",
+   "expected": 35
+  }
+ ]
+}

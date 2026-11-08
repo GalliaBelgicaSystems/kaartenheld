@@ -1,0 +1,79 @@
+{
+ "name": "economy_market_up",
+ "test": true,
+ "description": "Net-income market update (docs/economy.md §6): with 500g loot income, no spend, and 5 battles staged, leaving the merchant shop steps the index 32 -> 33 (threshold for the test scene's expected 200 is max(100, 200>>2) = 100; net 500 > 100) and emits MARKET_UPDATED(old 32, new 33, dir up).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  },
+  "market": {
+   "index": 32,
+   "gold_in": 500,
+   "gold_out": 0,
+   "battles": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "MARKET_UPDATED"
+  },
+  {
+   "type": "event_arg",
+   "event": "MARKET_UPDATED",
+   "index": 0,
+   "value": 32
+  },
+  {
+   "type": "event_arg",
+   "event": "MARKET_UPDATED",
+   "index": 1,
+   "value": 33
+  },
+  {
+   "type": "event_arg",
+   "event": "MARKET_UPDATED",
+   "index": 2,
+   "value": 1
+  },
+  {
+   "type": "market_index",
+   "expected": 33
+  }
+ ]
+}

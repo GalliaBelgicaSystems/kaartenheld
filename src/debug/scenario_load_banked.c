@@ -173,7 +173,7 @@ void scenario_load_apply_banked(void)
         }
     }
 
-    /* Economy tail (version 0x05+, docs/economy.md §6.3): direct WRAM
+    /* Economy tail (version 0x06, docs/economy.md §6.3): direct WRAM
      * writes (setup semantics, AGENTS.md §53.3 -- no telemetry).  An
      * out-of-band index (including 0 from hosts that omit the market
      * section) clamps to neutral 32, so existing scenarios keep a

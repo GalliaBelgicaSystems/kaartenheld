@@ -20,10 +20,16 @@
  * loads repaint with the LCD on on gate crossings.  Idempotent:
  * pre-bone or a non-underground tileset is a no-op, so the loader
  * wrapper and the bone grant path share it.  One-way (bone -> no-bone)
- * is safe by structure: every path that can clear the flag (new game,
- * save load, scenario load) invalidates the tileset cache, so the
- * next load repaints slot 30 from ROM first and this hook re-applies
- * the swap only when the loaded flag is set.  The south-tunnel
+ * by structure: every tileset load repaints slot 30 from ROM first
+ * (game_after_tileset_load runs on each load), and this hook
+ * re-applies the swap only when the loaded flag is set -- so clearing
+ * the flag (new game, save load, scenario load) shows bone again
+ * through the normal load path with no flag-specific invalidation.
+ * No harness VRAM-data assert pins the copy (tilemap_cell reads map
+ * ids, not VRAM bytes; slot 30 keeps id 158 either way by design) --
+ * skeleton_take_bone's tilemap assert pins the no-floor-stamp half,
+ * and the loader-then-hook order above is the repaint half.
+ * The south-tunnel
  * skeleton shares slot 30 by design (one slot for both maps) and its
  * NPC line (SKELETON_DESC) never mentions a bone, so the shared art
  * stays correct there too.  Flag bit inline (a banked body must never

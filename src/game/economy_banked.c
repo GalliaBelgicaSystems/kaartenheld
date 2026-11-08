@@ -95,9 +95,12 @@ void economy_quote_banked(void)
 
 /* Victory gold path (docs/economy.md §3/§6).  In: byte_a = base reward,
  * byte_b = victory flag, byte_c = currency.  Out: byte_b = granted.
- * Ticks battles on every call (victory only -- defeat/flee never reach
- * this body); silent no-grant when victory is 0, base is 0, or the
- * currency is invalid. */
+ * Ticks battles only on a real grant (victory with a nonzero base and a
+ * valid currency): rewardless fights -- Carl's zero-gold spar, debug
+ * no-op calls -- grant nothing AND tick nothing, so a spar plus shop
+ * spend cannot move the market on gold_out alone (§6 guards).  Silent
+ * no-grant (no tick) when victory is 0, base is 0, or the currency is
+ * invalid. */
 void economy_grant_banked(void)
 {
     uint8_t base = g_bk_byte_a;
@@ -114,13 +117,13 @@ void economy_grant_banked(void)
     int16_t cur;
     int16_t nv;
     uint16_t v;
-    if (g_game.state.economy.battles < 255)
-        g_game.state.economy.battles++;
     if (!victory || base == 0 || currency < 1 ||
         currency > MAX_CURRENCIES) {
         g_bk_byte_b = 0;
         return;
     }
+    if (g_game.state.economy.battles < 255)
+        g_game.state.economy.battles++;
     /* Wallet dampener (docs/economy.md §3.1): 1.5x / 2x / 3x ladder. */
     wraw = g_game.state.currency.amount[currency - 1];
     wallet = (wraw < 0) ? 0 : (uint16_t)wraw;

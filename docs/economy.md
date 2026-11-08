@@ -68,7 +68,7 @@ expected_wallet(area) >= 1.5 * (most expensive stocked card in area)
 
 Integer form (no float): `expected * 2 >= price_max * 3`.
 
-Pin it with a host-side content check (not a ROM assert): the shop compiler or `make manifest` fails if any area's expected wallet is below the floor for the shops reachable from it. Add a scenario that saves toward the most expensive card in each stocked shop and asserts full (100%) rewards all the way up to `price_max` (see §10).
+Pin it with a host-side content check (not a ROM assert): `tools/check_economy.py` (`make economy-check`) parses the expected-wallet returns out of `economy_banked.c`, the stock list out of `shops_content.c`, and prices out of `g_cards[]`, and fails if any expected wallet sits below the floor (no hardcoded copies to drift). The dampener scenarios below (§10) pin the ladder itself: full (100%) rewards hold all the way up to `price_max` (300 > 45 in every test area).
 
 ## 4. Card buy prices
 

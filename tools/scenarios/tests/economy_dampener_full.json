@@ -1,0 +1,198 @@
+{
+ "name": "economy_dampener_full",
+ "test": true,
+ "description": "Wallet dampener full band (docs/economy.md §3.1): with an empty wallet (0 < 1.5x expected 200 = 300) the kobold's 8g purse grants in full. Same proven victory choreography as battle_gold_drop; asserts the CURRENCY_ADDED grant payload alongside the final wallet.",
+ "actions": [
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 8
+  },
+  {
+   "type": "event_arg",
+   "event": "CURRENCY_ADDED",
+   "index": 1,
+   "value": 8
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "start_battle": true
+ }
+}

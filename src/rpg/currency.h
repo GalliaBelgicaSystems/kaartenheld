@@ -13,11 +13,11 @@ int16_t currency_get(const GameState *state, CurrencyId currency);
  * Staging hazard: the bank-11 dispatch reuses g_bk_ptr_a / g_bk_byte_*
  * for its own arguments, so any values the caller staged BEFORE this
  * call are gone afterwards -- snapshot staged ids/prices into locals
- * first (cf. shop_sell / shop_confirm in src/screens/shop_screen.c).
- * Audit note (Nov 2026): every other caller was checked -- event.c
- * ADD_CURRENCY restages per action, scenarios.c BUY_ITEM and world.c
- * read no staged values after the call -- only the shop paths needed
- * the snapshot. */
+ * first.  The shop paths do (shop_sell / shop_confirm snapshot the
+ * quote before spending); every other current caller (event.c
+ * ADD_CURRENCY, scenarios.c BUY_ITEM, world.c victory grant) stages
+ * fresh per call and reads no staged values after it, so they need no
+ * snapshot -- re-check this if a new caller is added. */
 void currency_add(GameState *state, CurrencyId currency, int16_t amount);
 
 /* Bank-11 saturating core (src/rpg/currency_banked.c), dispatched by the

@@ -324,8 +324,7 @@ void world_on_battle_end(Game *g, bool victory)
         /* Economy (docs/economy.md §3/§6): the bank-11 grant body owns the
          * wallet-dampened credit, the loot-only gold_in note, and the
          * battles tick.  Staged inline (single site -- a wrapper would
-         * only re-pay the staging).  Silent no-grant for reward-less
-         * fights (Carl's spar still ticks battles); sales and event
+         * only re-pay the staging).  Silent no-grant for reward-less          * fights (Carl's zero-gold spar ticks nothing); sales and event
          * gold never touch gold_in (§6.1); defeat pays nothing
          * (victory branch only). */
         g_bk_call_bank = 11;

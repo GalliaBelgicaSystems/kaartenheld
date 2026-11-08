@@ -4,7 +4,11 @@
 #include <stdint.h>
 
 /* Bit contract for g_carl_tut_flags (shared by the fixed wrappers in
- * carl_tutorial.c and the bank-10 bodies in carl_tutorial_banked.c). */
+ * carl_tutorial.c and the bank-10 bodies in carl_tutorial_banked.c).
+ * All six bits are single-bit tested (mask &) and set/cleared (|= / &= ~)
+ * only; no site compares the whole byte (==), so 0x80 never collides
+ * with a multi-bit state -- verified by grep over carl_tutorial_banked.c
+ * and choice_nav_banked.c (Nov 2026). */
 #define CARL_TUT_FLAG_ATTACK_SHOWN 0x01
 #define CARL_TUT_FLAG_DEFEND_SHOWN 0x02
 #define CARL_TUT_FLAG_POKER_SHOWN  0x04
