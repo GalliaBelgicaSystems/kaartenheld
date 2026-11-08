@@ -95,14 +95,13 @@ darkness stirs at the castle.
 
 ![Your quests](manual_images/quests.png)
 
-### The Lost Amulet
+### The Lost Shop Keys
 
-The **Lost Merchant** in town has lost his family treasure. It is hiding
-somewhere in the **Forest**.
+The **Lost Merchant** in town lost his shop keys on a night out drinking. Kobolds up north mugged him and took them. They are hiding in the **mountains up north**.
 
 ![The forest](manual_images/map-forest.png)
 
-Find it, bring it back, and he will thank you with **15 gold** — and open
+Find them, bring them back, and he will thank you with **15 gold** — and open
 his shop for you.
 
 ---
@@ -250,7 +249,7 @@ more you heal).
 Win battles to earn **gold**. You start with **20 gold**.
 
 Talk to the **Lost Merchant** in town to spend it — once you return
-his stolen amulet from the Forest, his shop opens for business:
+his stolen shop keys from the mountains, his shop opens for business:
 
 ![The shop](manual_images/shop.png)
 

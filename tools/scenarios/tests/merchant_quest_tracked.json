@@ -1,11 +1,19 @@
 {
  "name": "merchant_quest_tracked",
  "test": true,
- "description": "Accepting the Lost Amulet quest tracks it: after the merchant's briefing closes, the QUEST tab lists LOST AMULET as active (regression: accepting left MERCHANT_QUEST at 0, invisible)",
+ "description": "Accepting the Lost Shop Keys quest tracks it: after the merchant's briefing closes, the QUEST tab lists SHOP KEYS as active (regression: accepting left MERCHANT_QUEST at 0, invisible)",
  "actions": [
   {
    "type": "interact",
    "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",
@@ -57,7 +65,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "LOST AMULET"
+   "contains": "SHOP KEYS"
   },
   {
    "type": "screen_row",

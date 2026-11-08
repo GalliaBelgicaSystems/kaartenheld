@@ -25,22 +25,6 @@
 
 const DialogueDefinition g_dialogues[] = {
     {
-        DIALOGUE_ID_AMULET_FOUND,
-        "",
-        3,
-        {"FOUND AMULET!!", "Return to the", "merchant!"},
-        0,
-        0
-    },
-    {
-        DIALOGUE_ID_AMULET_NOTHING,
-        "",
-        1,
-        {"Nothing here now."},
-        0,
-        0
-    },
-    {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
         3,
@@ -235,8 +219,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MERCHANT_INTRO,
         "MERCHANT:",
-        5,
-        {"A thief stole my", "family heirloom!", "Bandits settle", "north, in the", "mountains!"},
+        8,
+        {"Went out drinking", "last night and got", "mugged by Kobolds!", "They took my shop", "keys! Without them", "I can't open shop!", "They hide up north", "I can't face them!"},
         0,
         0
     },
@@ -244,7 +228,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MERCHANT_THANKS,
         "MERCHANT:",
         3,
-        {"You found it!", "Thank you, hero!", "My shop is open now."},
+        {"You found them!", "Thank you, hero!", "My shop is open now."},
         0,
         0
     },
@@ -285,6 +269,22 @@ const DialogueDefinition g_dialogues[] = {
         "MAYOR:",
         2,
         {"Use your power.", "Go forth, hero!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SHOPKEYS_FOUND,
+        "",
+        3,
+        {"FOUND SHOP KEYS!!", "Return to the", "merchant!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SHOPKEYS_NOTHING,
+        "",
+        1,
+        {"Nothing here now."},
         0,
         0
     },

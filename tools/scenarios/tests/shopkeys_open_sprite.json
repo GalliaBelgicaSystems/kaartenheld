@@ -1,16 +1,32 @@
 {
- "name": "amulet_chest_closed_at_accept",
+ "name": "shopkeys_open_sprite",
  "test": true,
- "description": "Accepting the quest does not open the chest: at MERCHANT_QUEST=1 without the amulet the forest cell stays plain floor with the closed-chest OAM sprite (loot state is the AMULET_CHEST flag, not the quest variable)",
+ "description": "Picking up the forest shop keys leaves its floor cell plain (VRAM 190) while the chest OAM sprite flips to the open frame: the event sets MERCHANT_QUEST and the opened chest stays open",
  "actions": [
+  {
+   "type": "interact",
+   "actor": "SHOPKEYS"
+  },
   {
    "type": "wait",
    "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
   }
  ],
  "assertions": [
   {
    "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "screen",
    "expected": "OVERWORLD"
   },
   {
@@ -25,20 +41,20 @@
    "expected": 1
   },
   {
-   "type": "flag",
-   "flag": "AMULET_CHEST",
-   "expected": false
+   "type": "inventory",
+   "item": "SHOPKEYS",
+   "expected": 1
   },
   {
    "type": "actor_at",
-   "entity": "AMULET",
+   "entity": "SHOPKEYS",
    "x": 16,
    "y": 10
   },
   {
    "type": "oam_tile",
    "entry": 8,
-   "expected": 122
+   "expected": 123
   }
  ],
  "initial_state": {
@@ -50,7 +66,7 @@
   },
   "seed": 8503,
   "variables": {
-   "MERCHANT_QUEST": 1
+   "MERCHANT_QUEST": 0
   }
  }
 }

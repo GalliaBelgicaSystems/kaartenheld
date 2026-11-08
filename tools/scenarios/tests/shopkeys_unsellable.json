@@ -1,7 +1,7 @@
 {
- "name": "amulet_unsellable",
+ "name": "shopkeys_unsellable",
  "test": true,
- "description": "The Lost Amulet cannot be sold: it is a SPECIAL quest card, not loot, so the shop's SELL tab never lists it (neither do the price-0 starter basics). A on the empty SELL list is a silent no-op -- still owned, no gold, no CARD_SOLD.",
+ "description": "The Lost Shop Keys cannot be sold: they are a SPECIAL quest card, not loot, so the shop's SELL tab never lists them (neither do the price-0 starter basics). A on the empty SELL list is a silent no-op -- still owned, no gold, no CARD_SOLD.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -20,7 +20,7 @@
    "MERCHANT_QUEST": 2
   },
   "inventory": {
-   "AMULET": 1
+   "SHOPKEYS": 1
   }
  },
  "actions": [
@@ -61,7 +61,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 1
   },
   {

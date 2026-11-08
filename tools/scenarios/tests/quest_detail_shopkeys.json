@@ -1,7 +1,7 @@
 {
- "name": "quest_detail_amulet",
+ "name": "quest_detail_shopkeys",
  "test": true,
- "description": "SELECT on the LOST AMULET quest row opens its detail page: the giver (Merchant in Town), the objective (find the amulet) and ACTIVE (a counter-less quest shows no progress line)",
+ "description": "SELECT on the SHOP KEYS quest row opens its detail page: the giver (Merchant in Town), the objective (find the shop keys) and ACTIVE (a counter-less quest shows no progress line)",
  "actions": [
   {
    "type": "press",
@@ -36,7 +36,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "LOST AMULET"
+   "contains": "SHOP KEYS"
   },
   {
    "type": "screen_row",
@@ -46,7 +46,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "FIND THE AMULET"
+   "contains": "FIND THE SHOP KEYS"
   },
   {
    "type": "screen_row",

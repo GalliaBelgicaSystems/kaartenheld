@@ -346,7 +346,7 @@ def infer_type_and_props(row, warnings, ctx):
     elif inter == "INTERACTION_DIALOGUE":
         if ent == "ENTITY_ID_SIGNPOST":
             otype = "signpost"
-        elif ent == "ENTITY_ID_AMULET":
+        elif ent == "ENTITY_ID_SHOPKEYS":
             otype = "item"
         else:
             otype = "npc"

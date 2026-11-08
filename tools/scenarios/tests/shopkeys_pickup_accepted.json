@@ -1,11 +1,11 @@
 {
- "name": "amulet_pickup_accepted",
+ "name": "shopkeys_pickup_accepted",
  "test": true,
- "description": "Finding the amulet after accepting the quest still grants it: interact at MERCHANT_QUEST=1 fires the single flag-gated AMULET_PICKUP row (AMULET_FOUND, the item, quest stays ACTIVE)",
+ "description": "Finding the shop keys after accepting the quest still grants it: interact at MERCHANT_QUEST=1 fires the single flag-gated SHOPKEYS_PICKUP row (SHOPKEYS_FOUND, the item, quest stays ACTIVE)",
  "actions": [
   {
    "type": "interact",
-   "actor": "AMULET"
+   "actor": "SHOPKEYS"
   }
  ],
  "assertions": [
@@ -15,7 +15,7 @@
   },
   {
    "type": "dialogue_id",
-   "expected": "AMULET_FOUND"
+   "expected": "SHOPKEYS_FOUND"
   },
   {
    "type": "variable",
@@ -24,12 +24,12 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 1
   },
   {
    "type": "flag",
-   "flag": "AMULET_CHEST",
+   "flag": "SHOPKEYS_CHEST",
    "expected": true
   },
   {

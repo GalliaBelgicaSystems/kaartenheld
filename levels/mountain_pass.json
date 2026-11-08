@@ -788,16 +788,16 @@
       ]
     },
     {
-      "id": "mountain_amulet",
+      "id": "mountain_shopkeys",
       "type": "item",
       "position": {
         "x": 10,
         "y": 2
       },
       "properties": {
-        "entity_id": "ENTITY_ID_AMULET",
-        "display_name": "AMULET",
-        "dialogue": "DIALOGUE_ID_AMULET_NOTHING",
+        "entity_id": "ENTITY_ID_SHOPKEYS",
+        "display_name": "SHOP KEYS",
+        "dialogue": "DIALOGUE_ID_SHOPKEYS_NOTHING",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [
@@ -809,7 +809,7 @@
         "max_hp": 0,
         "gold_reward": 0,
         "ai": "AI_NONE",
-        "open_flag": "STORY_FLAG_ID_AMULET_CHEST"
+        "open_flag": "STORY_FLAG_ID_SHOPKEYS_CHEST"
       }
     },
     {

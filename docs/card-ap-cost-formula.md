@@ -251,7 +251,7 @@ comparison.
 | Iron Ring | `I RG` | 4 / iron / — | **2** | 1 |
 | Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
 | Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
-| Amulet | `AMULET` | SPECIAL, not playable | **0** | 0 |
+| Shop Keys | `SHOPKEYS` | SPECIAL, not playable | **0** | 0 |
 | Bone | `BONE` | SPECIAL, not playable | **0** | 0 |
 | Old Key | `OLD KEY` | SPECIAL, not playable | **0** | 0 |
 
@@ -300,7 +300,7 @@ of truth for the cost, not a saved lookup.
 
 ### 5.3 SPECIAL cards
 
-`CARD_TYPE_SPECIAL` (quest items such as the Amulet) are not battle cards,
+`CARD_TYPE_SPECIAL` (quest items such as the Shop Keys) are not battle cards,
 are not deckable, and keep cost 0 as an explicit carve-out: the formula
 requires `power >= 1`.  Cost 0 should stay reserved for "not playable", never
 for "free card" — the budget check and the combo economy both assume a
@@ -626,7 +626,7 @@ means the AP side cannot be the cause.
 | New scenario `card_ap_loot_gate` | Seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3) on the rank row (R3 kobold -- the pool is staged, not read): victory grants it, the reveal names it (`S SW` / `STEEL SWORD`), and the DECK tab row shows AP digit 3, which the pool affords.  Rank-decided cost on a real drop, not on a hand-picked card. |
 | New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll on the R5 mimic: the drop is id 240 (`M F SW`, cost 6) and the reveal names the rider -- no hold-back exists anymore.  The card cannot be decked until the pool reaches 6 (`deck_equip_locked_loot` pins the `NEED AP 6` refusal); the locked card is the motivation to raise AP. |
 | `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), assert pairwise no-inversion (for every pair where B dominates A on all three inputs with at least one strict, `cost(B) >= cost(A)` — the §6.3/§7.5 fusion ordering) and strict riders (every rider pair costs exactly one AP more than the same card plain), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
-| Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Amulet are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
+| Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Shop Keys are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
 
 The negative test for §6.1 is cheap and worth writing, but it has to target a

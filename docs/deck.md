@@ -856,7 +856,7 @@ ITEM_POTION
 ITEM_BOMB
 ITEM_ETHER
 ITEM_SWORD
-ITEM_AMULET
+ITEM_SHOPKEYS
 ITEM_NUT
 ```
 
@@ -898,7 +898,7 @@ There should be no:
 ```text
 weapon
 armor
-amulet
+shop keys
 equipment slot
 ```
 
@@ -1280,7 +1280,7 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
 - **Deck-size ceiling**: the 20-card deck limit is reachable by stacking
   repeated loot drops (loot cards have no copy limit).  The fixed catalog
   alone provides 16 guaranteed copies (WOOD_SWORD ×4 + WOODEN_SHIELD ×4 +
-  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; AMULET is
+  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; SHOPKEYS is
   SPECIAL and not deckable).  The catalog `CARD_IRON_SWORD` is excluded
   from that count: it is a test/legacy entry that never appears in normal
   play (in-play iron swords are derived loot ids, e.g. `0xA0`).

@@ -88,7 +88,7 @@ DECK QUEST HERO GEM        <- row 0 (tabs)
   (`0` = none, `1`..`n` = copies in the deck), so partial stacks (starter
   4x WOOD SWORD / 4x WOOD SHIELD / 2x BRONZE SWORD, one shop ring) are visible
   at a glance.
-- SPECIAL cards (e.g. AMULET) are not deckable and are hidden from the list.
+- SPECIAL cards (e.g. SHOPKEYS) are not deckable and are hidden from the list.
 - up to 11 cards visible (rows 4-14) under the row-3 column header;
   scrolling shifts the window (the FILTER/SORT row scrolls
   off once the caret leaves the first window).
@@ -172,7 +172,7 @@ KILL 3 MONSTERS         <- the condition
 3/3 monsters            <- where you stand (DONE when complete,
                          ACTIVE for counter-less quests)
 GOT +1 AP               <- what the reward was (completed quests only;
-                         e.g. GOT SHOP OPENED for LOST AMULET)
+                         e.g. GOT SHOP OPENED for SHOP KEYS)
 SEL:BACK
 ```
 

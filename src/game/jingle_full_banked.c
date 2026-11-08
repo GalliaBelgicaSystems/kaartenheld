@@ -11,7 +11,7 @@ extern volatile uint8_t g_harness_mode;
 
 /* ── Chest-jingle full body (MUSIC_CHEST, one-shot) ────────────────────
  * Game-layer banked body: reads the loot mask from game story state
- * directly (field-cache and amulet-chest loot flags), so the fixed-bank engine never branches on game ids (§55.1) -- it only owns
+ * directly (field-cache and shop-keys-chest loot flags), so the fixed-bank engine never branches on game ids (§55.1) -- it only owns
  * the trampoline dispatch in game_update().  Ticks every non-battle
  * frame (menus, dialogue, shops included) so they can't freeze the
  * restore timer while the driver loops the one-shot song.  Returns
@@ -25,7 +25,7 @@ extern volatile uint8_t g_harness_mode;
  * round-trip per frame instead of two nested dispatches, which the
  * fixed-bank budget could no longer afford.
  *
- * Edge: loot mask bit 0 = field cache open, bit 1 = amulet found.
+ * Edge: loot mask bit 0 = field cache open, bit 1 = shop keys found.
  * The first frame a chest reads open starts the jingle once; the very
  * first call seeds the edge from the live mask (bit 7 flag), so a save
  * loaded with chests already open stays silent (re-armed by
@@ -138,8 +138,8 @@ void jingle_full_banked(void)
         (uint8_t)(1u << ((STORY_FLAG_ID_FIELD_CHEST - 1) & 7))) {
         mask |= 1u;
     }
-    if (g_game.state.flags.bytes[(STORY_FLAG_ID_AMULET_CHEST - 1) >> 3] &
-        (uint8_t)(1u << ((STORY_FLAG_ID_AMULET_CHEST - 1) & 7))) {
+    if (g_game.state.flags.bytes[(STORY_FLAG_ID_SHOPKEYS_CHEST - 1) >> 3] &
+        (uint8_t)(1u << ((STORY_FLAG_ID_SHOPKEYS_CHEST - 1) & 7))) {
         mask |= 2u;
     }
     if (!(g_jingle_done & 0x80)) {

@@ -41,7 +41,7 @@ static const uint8_t s_ident_catalog[GAME_CARD_COUNT][9] = {
     /* CARD_IRON_RING     */ { 2, 4, 2, 3, 3, 3, 0, 0, 1 },
     /* CARD_FIRE_SWORD    */ { 0, 3, 2, 0, 1, 0, 2, 128, 3 },
     /* CARD_POISON_DAGGER */ { 0, 2, 2, 0, 1, 4, 1, 128, 3 },
-    /* CARD_AMULET        */ { 5, 0, 0, 0, 0, 0, 0, 0, 1 },
+    /* CARD_SHOPKEYS        */ { 5, 0, 0, 0, 0, 0, 0, 0, 1 },
     /* CARD_BOW_9         */ { 0, 9, 5, 2, 1, 2, 0, 0, 1 },
     /* CARD_WOOD_SWORD    */ { 0, 1, 1, 0, 1, 0, 0, 0, 4 },
     /* CARD_STEEL_SHIELD  */ { 1, 6, 3, 0, 2, 1, 0, 0, 2 },

@@ -92,7 +92,7 @@ def parse_doc_tables():
     Returns (cells, catalog) where cells is a list of
     (mat, weapon, rider, ap, power) — a list, not a dict, because F SW
     and I SW share (mat, weapon, rider) — and catalog maps ROW name to
-    ((power, mat, rider), expected_ap), with AMULET mapping to (None, 0).
+    ((power, mat, rider), expected_ap), with SHOPKEYS mapping to (None, 0).
     """
     text = FORMULA_DOC.read_text(encoding="utf-8")
     cells = []
@@ -140,7 +140,7 @@ def parse_doc_tables():
         rider = 0 if rider_txt.strip() in ("—", "-", "") else 1
         catalog[row] = ((int(power), MATERIALS.index(mat_name), rider),
                         int(expected))
-    # SPECIAL rows (quest items: AMULET, BONE, OLD KEY) carry no
+    # SPECIAL rows (quest items: SHOPKEYS, BONE, OLD KEY) carry no
     # power/material triple ("SPECIAL, not playable").
     for m in re.finditer(
             r"\|\s*[^|]+\|\s*`([A-Z ]+)`\s*\|\s*SPECIAL, not playable\s*\|\s*\*\*(\d+)\*\*",
@@ -395,7 +395,7 @@ def main():
              % (len(doc_catalog), _game_card_count()))
     for row, (args, expected) in doc_catalog.items():
         if args is None:
-            # SPECIAL quest rows (AMULET, BONE, OLD KEY): no CARD_AP
+            # SPECIAL quest rows (SHOPKEYS, BONE, OLD KEY): no CARD_AP
             # call, cost must stay literal 0 (not playable).
             if cat_calls.get(row, (None, None))[1] != 0 or expected != 0:
                 fail("catalog: %s cost must stay literal 0 (not playable)"

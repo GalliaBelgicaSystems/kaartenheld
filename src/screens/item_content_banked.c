@@ -276,13 +276,13 @@ static const char *ic_wpn_str(uint8_t w, uint8_t *len)
     }
 }
 
-/* Resolve a card to material/weapon indices (loot.h axes).  Amulets
- * (SPECIAL, never listed) report through is_amulet instead. */
+/* Resolve a card to material/weapon indices (loot.h axes).  Shop keys
+ * (SPECIAL, never listed) report through is_shopkeys instead. */
 static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
-                            uint8_t *is_amulet)
+                            uint8_t *is_shopkeys)
 {
     uint8_t w;
-    *is_amulet = 0;
+    *is_shopkeys = 0;
     if (loot_is_loot_id(id)) {
         *mat = loot_id_material(id);
         w = loot_id_weapon(id);
@@ -301,7 +301,7 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
         case CARD_POISON_DAGGER: *mat = 1; *wpn = 3; break;
         case CARD_BOW_9: *mat = 4; *wpn = 2; break;
         case CARD_STEEL_SHIELD: *mat = 3; *wpn = 1; break;
-        case CARD_AMULET: *is_amulet = 1; *mat = 2; *wpn = 0; break;
+        case CARD_SHOPKEYS: *is_shopkeys = 1; *mat = 2; *wpn = 0; break;
         default: *mat = 2; *wpn = 0; break;
     }
 }
@@ -310,13 +310,13 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
  * plain call, no trampoline): full "<MAT> <WPN>" names on shop rows.
  * Loot ids resolve from the id axes; curated ids from the catalog table
  * below (mirrors the shop stock, which is curated-only).  Quest items
- * report through is_amulet/is_special instead of a name. */
+ * report through is_shopkeys/is_special instead of a name. */
 void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
                          uint8_t *is_special)
 {
-    uint8_t amulet = 0;
-    ic_card_mat_wpn(id, mat, wpn, &amulet);
-    *is_special = (uint8_t)(amulet || id == CARD_BONE || id == CARD_OLD_KEY);
+    uint8_t shopkeys = 0;
+    ic_card_mat_wpn(id, mat, wpn, &shopkeys);
+    *is_special = (uint8_t)(shopkeys || id == CARD_BONE || id == CARD_OLD_KEY);
 }
 
 /* Health-rider display (docs/loot.md §34.1): every healing card (only
@@ -362,24 +362,24 @@ static void ic_name_color(uint8_t x, uint8_t y, uint8_t len,
 
 static uint8_t s_ic_mat;
 static uint8_t s_ic_wpn;
-static uint8_t s_ic_amulet;
+static uint8_t s_ic_shopkeys;
 static uint8_t s_ic_mlen;
 static uint8_t s_ic_wlen;
 static const char *s_ic_mstr;
 static const char *s_ic_wstr;
 
 /* Draw "<MAT> <WPN>" at (x, y), element-colored.  Returns the drawn
- * length (for spans); amulet draws "AMULET". */
+ * length (for spans); shop keys draw "SHOP KEYS". */
 static uint8_t ic_draw_full_name(uint8_t x, uint8_t y,
                                  const CardDefinition *def)
 {
     uint8_t total;
-    ic_card_mat_wpn(def->id, &s_ic_mat, &s_ic_wpn, &s_ic_amulet);
-    if (s_ic_amulet) {
-        IC_DRAW_TEXT(x, y, "AMULET", 6);
-        return 6;
+    ic_card_mat_wpn(def->id, &s_ic_mat, &s_ic_wpn, &s_ic_shopkeys);
+    if (s_ic_shopkeys) {
+        IC_DRAW_TEXT(x, y, "SHOP KEYS", 9);
+        return 9;
     }
-    /* Quest items share the amulet's sword-icon path (no new art);
+    /* Quest items share the shop-keys' sword-icon path (no new art);
      * only the name differs.  Shown in the DECK list and detail
      * page exactly as the event dialogues name them. */
     if (def->id == CARD_BONE) {
@@ -538,7 +538,7 @@ static uint8_t ic_collection_count(const CardState *cs, CardId id)
  * which shifted every selection at/after a loot card onto the wrong
  * card.  The fixed bank (at 0x8000) simply cannot host this code. */
 
-/* SPECIAL cards (quest items like the Lost Amulet) are LISTED but never
+/* SPECIAL cards (quest items like the Lost Shop Keys) are LISTED but never
  * deckable -- pressing A shows a transient QUEST ITEM message instead. */
 static uint8_t ic_card_deckable(const CardDefinition *def)
 {

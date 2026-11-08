@@ -349,35 +349,35 @@ def verify_hostile_sprites(sess):
     check("forest treetrunk (3, 4) has field4 trunk palette (6)",
           6, mirror_at(sess, attr_mirror, 3, 4))
 
-    print("== Chest OAM sprite (forest amulet closed, then open after loot) ==")
-    forest_amulet = load_scenario(sess, "forest_boot.json")
-    sess.load_scenario(forest_amulet)
+    print("== Chest OAM sprite (forest shop-keys chest closed, then open after loot) ==")
+    forest_chest = load_scenario(sess, "forest_boot.json")
+    sess.load_scenario(forest_chest)
     sess.step(2)
-    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (8).
+    # Shop-keys chest is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (8).
     # Closed-chest frame (shared-blob tile 122: base 100 + offset 22, after
     # the slime-knight walk row); the floor cell stays plain floor (VRAM
     # tile 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 122)",
+    check("forest shop-keys chest owns closed-chest OAM sprite (tile 122)",
           122, shadow_oam_slot_tile(sess, 8))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
-    check("amulet cell paints plain floor (190), not chest art",
+    check("shop-keys cell paints plain floor (190), not chest art",
           190, mirror_at(sess, mirror, 16, 10))
-    # Loot it through the real interact path (amulet_open_sprite spawns
-    # the player beside the amulet facing it): A opens the pickup
+    # Loot it through the real interact path (shopkeys_open_sprite spawns
+    # the player beside the shop-keys chest facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
     # (123) and stay there across redraws.
-    loot = load_scenario(sess, "amulet_open_sprite.json")
+    loot = load_scenario(sess, "shopkeys_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
     sess.press("A")
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 123)",
+    check("looted shop-keys chest shows open-chest OAM sprite (tile 123)",
           123, shadow_oam_slot_tile(sess, 8))
-    check("looted amulet cell still plain floor (190)",
+    check("looted shop-keys cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")

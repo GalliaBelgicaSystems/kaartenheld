@@ -1,11 +1,11 @@
 {
- "name": "amulet_pickup",
+ "name": "shopkeys_pickup",
  "test": true,
-  "description": "Interacting with the forest amulet (floor debris visual) grants the AMULET item and starts the merchant quest",
+  "description": "Interacting with the forest shop keys (floor debris visual) grants the SHOP KEYS item and starts the merchant quest",
  "actions": [
   {
    "type": "interact",
-   "actor": "AMULET"
+   "actor": "SHOPKEYS"
   }
  ],
  "assertions": [
@@ -15,7 +15,7 @@
   },
   {
    "type": "dialogue_id",
-   "expected": "AMULET_FOUND"
+   "expected": "SHOPKEYS_FOUND"
   },
   {
    "type": "variable",
@@ -24,7 +24,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 1
   },
   {

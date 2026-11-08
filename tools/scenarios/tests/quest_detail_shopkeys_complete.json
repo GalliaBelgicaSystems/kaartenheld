@@ -1,7 +1,7 @@
 {
- "name": "quest_detail_amulet_complete",
+ "name": "quest_detail_shopkeys_complete",
  "test": true,
- "description": "SELECT on a completed LOST AMULET row shows DONE plus what the reward was: GOT SHOP OPENED (the merchant shop opens)",
+ "description": "SELECT on a completed SHOP KEYS row shows DONE plus what the reward was: GOT SHOP OPENED (the merchant shop opens)",
  "actions": [
   {
    "type": "press",
@@ -36,7 +36,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "LOST AMULET"
+   "contains": "SHOP KEYS"
   },
   {
    "type": "screen_row",

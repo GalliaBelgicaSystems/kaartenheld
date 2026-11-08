@@ -1,7 +1,7 @@
 {
  "name": "merchant_shop_open",
  "test": true,
- "description": "Finding the amulet unlocks the shop via delivery: first talk holding it fires THANKS (+15 gold, amulet removed, quest COMPLETE); closing and talking again opens the shop with the one-copy ring+bow stock",
+ "description": "Finding the shop keys unlocks the shop via delivery: first talk holding it fires THANKS (+15 gold, shop keys removed, quest COMPLETE); closing and talking again opens the shop with the one-copy ring+bow stock",
  "actions": [
   {
    "type": "interact",
@@ -71,7 +71,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 0
   }
  ],
@@ -87,7 +87,7 @@
    "ARRIVED_TOWN": true
   },
   "inventory": {
-   "AMULET": 1
+   "SHOPKEYS": 1
   },
   "currency": {
    "GOLD": 50
