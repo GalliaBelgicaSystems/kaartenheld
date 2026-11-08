@@ -1,5 +1,4 @@
 #pragma bank 5
-#pragma disable_warning 110
 
 #include "banked.h"
 #include "game.h"

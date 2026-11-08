@@ -71,6 +71,17 @@ static uint8_t rider_legal(uint8_t effect, uint8_t weapon)
     if (effect == EFF_FIRE || effect == EFF_ICE) return weapon == WPN_SWORD;
     return 0;
 }
+
+/* Compile-time assertions for the zero-fill defaults (CARD_TYPE_ATTACK == 0,
+ * BATTLE_CARD_TYPE_SWORD == 0) and the 1:1 EFF_* -> StatusId identity mapping
+ * used by g_card_scratch.status_id = effect. */
+typedef char loot_assert_card_type_attack[(CARD_TYPE_ATTACK == 0) ? 1 : -1];
+typedef char loot_assert_battle_type_sword[(BATTLE_CARD_TYPE_SWORD == 0) ? 1 : -1];
+typedef char loot_assert_eff_plain[(EFF_PLAIN == STATUS_NONE) ? 1 : -1];
+typedef char loot_assert_eff_poison[(EFF_POISON == STATUS_POISON) ? 1 : -1];
+typedef char loot_assert_eff_fire[(EFF_FIRE == STATUS_BURN) ? 1 : -1];
+typedef char loot_assert_eff_ice[(EFF_ICE == STATUS_FREEZE) ? 1 : -1];
+
 void loot_synth_banked(void)
 {
     CardId id = g_bk_byte_a;

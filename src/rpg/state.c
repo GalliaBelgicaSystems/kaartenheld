@@ -2,11 +2,6 @@
 #include "telemetry.h"
 #include <stddef.h>
 
-/* OAM tile cache validity flag (defined in ui_world_sprite_banked.c).
- * Invalidate whenever any story flag or variable changes (e.g. chest open
- * via open_flag or open_variable, or debug SET_FLAG/CLEAR_FLAG). */
-extern uint8_t g_oam_tilecache_valid;
-
 static bool flag_id_valid(FlagId flag)
 {
     return (flag >= 1 && flag <= MAX_STATE_FLAGS);
@@ -47,7 +42,6 @@ void game_flag_set(GameState *state, FlagId flag)
     byte = flag_byte_bit(flag, &mask);
     if (!(state->flags.bytes[byte] & mask)) {
         state->flags.bytes[byte] |= mask;
-        g_oam_tilecache_valid = 0;
         telemetry_emit(EVENT_STORY_FLAG_SET, (uint8_t)flag, 0, 0, 0);
     }
 }
@@ -59,7 +53,6 @@ void game_flag_clear(GameState *state, FlagId flag)
     byte = flag_byte_bit(flag, &mask);
     if (state->flags.bytes[byte] & mask) {
         state->flags.bytes[byte] &= (uint8_t)~mask;
-        g_oam_tilecache_valid = 0;
         telemetry_emit(EVENT_STORY_FLAG_CLEARED, (uint8_t)flag, 0, 0, 0);
     }
 }
@@ -74,7 +67,6 @@ void game_variable_set(GameState *state, VariableId variable, int16_t value)
 {
     if (!state || !variable_id_valid(variable)) return;
     state->variables.values[variable - 1] = value;
-    g_oam_tilecache_valid = 0;
     telemetry_emit(EVENT_VARIABLE_SET, (uint8_t)variable,
                    (uint8_t)(value & 0xFF), (uint8_t)((value >> 8) & 0xFF), 0);
 }

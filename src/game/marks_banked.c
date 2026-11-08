@@ -1,5 +1,4 @@
 #pragma bank 8
-#pragma disable_warning 110
 
 #include <stdint.h>
 #include <gb/gb.h>
@@ -99,12 +98,10 @@ uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
 
-/* Music-pause flag (WRAM BSS, appended: BSS-tail only, no layout shift):
- * LEGACY, always zero now.  The alert used to pause the scene track
- * mid-song at wake-up and continue it later; the sting now plays on top
- * of the running track via the normal SFX mute path, so nothing ever
- * sets this.  Kept defined (1 byte) so later BSS globals keep their
- * addresses (AGENTS.md 52.19); music_play_banked still clears it. */
+/* Retired music-pause flag (WRAM BSS): kept as a 1-byte placeholder so
+ * later BSS globals keep their addresses (AGENTS.md 52.19).  The pursuit
+ * alert sting plays over the running track via the normal SFX mute path,
+ * so nothing ever reads or writes this byte. */
 uint8_t g_music_paused;
 
 /* Jingle edge bits (jingle_full_banked.c, same bank): bit 7 is the

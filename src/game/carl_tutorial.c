@@ -39,7 +39,9 @@ uint8_t g_carl_tut_mile;
 bool game_carl_tutorial_update(Game *g)
 {
     (void)g;
-    if (g_game.battle.enemy_battle_id != BATTLE_CARL && g_carl_tut_flags == 0) {
+    if (g_game.battle.enemy_battle_id != BATTLE_CARL) {
+        g_carl_tut_flags = 0;
+        g_carl_tut_hurt = 0;
         return false;
     }
     g_bk_call_bank = 10;

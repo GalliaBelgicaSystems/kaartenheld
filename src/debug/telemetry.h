@@ -298,9 +298,8 @@ void telemetry_emit_banked(void);
 /* Bank-11 body (src/debug/snapshot_banked.c) dispatched by the wrapper. */
 void debug_snapshot_banked(void);
 
-/* Banked no-arg body of debug_state_snapshot() (src/debug/telemetry_snap.c,
- * ROM bank 11), run via the WRAM banked-call trampoline.  Self-contained:
- * reads g_game / g_state_snap_buf and its own static snap_copy. */
+/* Bank-11 extended state snapshot helper (src/debug/telemetry_snap.c),
+ * called directly by debug_snapshot_banked() in the same bank. */
 void debug_state_snapshot_banked(void);
 
 #endif /* TELEMETRY_H */

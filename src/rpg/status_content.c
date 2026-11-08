@@ -190,6 +190,7 @@ void status_tick_banked(void)
  * the deterministic stream without calling the fixed-bank function; the
  * modulo is a subtraction loop instead of % (which would lower to the
  * fixed-bank div library, unreachable while bank 10 is mapped). */
+#ifdef DEBUG_BUILD
 static void decode_grey_mask(uint8_t mask)
 {
     uint8_t a = 0xFF, b = 0xFF, i;
@@ -202,6 +203,7 @@ static void decode_grey_mask(uint8_t mask)
     g_bk_byte_b = a;
     g_bk_byte_c = b;
 }
+#endif
 
 void status_grey_apply_banked(void)
 {
@@ -218,7 +220,9 @@ void status_grey_apply_banked(void)
 
     if (s_grey_mask[slot] != 0) {
         s_grey_dur[slot] = POISON_GREY_TURNS;
+#ifdef DEBUG_BUILD
         decode_grey_mask(s_grey_mask[slot]);
+#endif
         return;
     }
 
@@ -240,7 +244,9 @@ void status_grey_apply_banked(void)
      * round in battle_tick_statuses), so the purple tint and the
      * grey-out expire together after POISON_GREY_TURNS rounds. */
     s_grey_dur[slot] = POISON_GREY_TURNS;
+#ifdef DEBUG_BUILD
     decode_grey_mask(mask);
+#endif
 }
 
 /* One round boundary for a greyed combatant: decrement the duration and,
@@ -259,7 +265,9 @@ void status_grey_tick_banked(void)
         return;
     }
     /* Expired: decode indices and clear mask. */
+#ifdef DEBUG_BUILD
     decode_grey_mask(s_grey_mask[slot]);
+#endif
     s_grey_mask[slot] = 0;
     g_bk_byte_a = 1;
 }

@@ -18,14 +18,6 @@ extern uint16_t g_title_frames;
  * inheriting a stale count. */
 extern volatile uint8_t g_jingle_frames;
 
-/* Pursuit-alert pause flag (src/game/marks_banked.c, same bank-8 BSS):
- * LEGACY, always zero: the alert used to pause the scene track at
- * wake-up.  The sting now plays on top via the normal SFX mute path,
- * so nothing ever sets it -- but every track dispatch still clears it.
- * Kept so the ttl resume edge (since removed) could never unpause a
- * newer song. */
-extern uint8_t g_music_paused;
-
 /* ── Track mapping body (bank-8) ────────────────────────────────────
  * Dispatched by audio_play_music() through the WRAM trampoline (the
  * fixed bank is full, §52.18).  PURE mapping: stop-inline (sound regs

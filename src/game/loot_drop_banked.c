@@ -1,5 +1,4 @@
 #pragma bank 9
-#pragma disable_warning 110
 
 #include "rpg/loot.h"
 #include "banked.h"
@@ -55,6 +54,10 @@ static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
 /* BattleId -> rank R0-R6 (compiled by battle_compile.py from the
  * enemy_type JSON ranks; same bank, direct read). */
 extern const uint8_t g_enemy_rank_by_battle[9];
+
+/* First-victory shield shorthand (MAT_BRONZE << 5) + WPN_SHIELD omits the
+ * effect term, which requires EFF_PLAIN == 0. */
+typedef char loot_drop_assert_eff_plain[(EFF_PLAIN == 0) ? 1 : -1];
 
 void game_loot_drop_banked(void)
 {

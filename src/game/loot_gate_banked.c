@@ -1,6 +1,6 @@
 #pragma bank 9
 
-#include "rpg/loot.h"
+#include <stdint.h>
 #include "banked.h"
 
 /* ── Rank/equip gate helpers (ROM bank 9) ─────────────────────────

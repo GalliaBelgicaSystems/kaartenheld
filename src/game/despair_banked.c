@@ -16,11 +16,14 @@
  * mechanism -- a cached unkillable slot, the DESPAIR hold phase, the
  * blink, the two-line message layout, WRAM-staged text -- and never
  * names a battle id, a threshold, or an English string (AGENTS.md
- * §55.1).  Everything game-specific lives in this table.
+ * §55.1).  Everything game-specific lives here.  Because the demo has a
+ * single unwinnable boss (BATTLE_NONE, slot 0, threshold 20 HP), the
+ * parameters are inlined directly to save bank-8 ROM; reintroduce a
+ * per-boss table here if additional despair bosses are added in the future.
  *
  * Self-contained body (AGENTS.md §52.11.1): reads the live battle
- * straight from g_game (WRAM, always mapped), the table below (same
- * bank), and writes only WRAM + g_bk_byte_c.  No fixed-bank calls.
+ * straight from g_game (WRAM, always mapped) and writes only WRAM +
+ * g_bk_byte_c.  No fixed-bank calls.
  * Runs every frame from battle_update (plus the attack tail), so it
  * re-derives the slot each call: no battle-start handshake needed, and
  * non-boss battles simply report 0. */

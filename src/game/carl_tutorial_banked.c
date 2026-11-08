@@ -31,6 +31,8 @@ void carl_tutorial_banked(void)
 {
     uint8_t phase;
 
+    g_bk_dlg_id = (uint8_t)DIALOGUE_ID_NONE;
+
     /* Fleeing a finished lesson shows Carl's farewell box (a win would
      * show the graduation speech instead, but the spar takes real
      * effort at 10 HP; the farewell carries no AP).  Gated on the full
@@ -39,7 +41,6 @@ void carl_tutorial_banked(void)
      * screen re-arms nothing, so closing it lands on FLED! instead of
      * reopening (re-accepting re-inits everything through YES). */
     if (g_game.battle.battle_over &&
-        g_game.battle.enemy_battle_id == BATTLE_CARL &&
         g_game.battle.result == BATTLE_RESULT_FLED &&
         (g_carl_tut_flags & CARL_TUT_FLAG_FLEE_SHOWN) != 0) {
         g_carl_tut_flags &= (uint8_t)~(CARL_TUT_FLAG_FLEE_SHOWN | CARL_TUT_FLAG_HURT_ARMED);
@@ -48,14 +49,6 @@ void carl_tutorial_banked(void)
         return;
     }
     if (g_game.battle.battle_over) return;
-    /* Non-Carl battles reset the per-fight progress (the battle-start
-     * hook is gone; YES re-inits fully on accept, so same-session
-     * staleness cannot meet a real fight). */
-    if (g_game.battle.enemy_battle_id != BATTLE_CARL) {
-        g_carl_tut_flags = 0;
-        g_carl_tut_hurt = 0;
-        return;
-    }
     if (g_game.battle.result != BATTLE_RESULT_NONE) return;
 
     phase = g_game.battle.phase;

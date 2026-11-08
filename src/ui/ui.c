@@ -742,12 +742,11 @@ void ui_draw_actors_sprites(const World *world)
      * The banked body writes directly into shadow OAM (WRAM, always
      * mapped) and hides inactive/BOSS actors. */
     castle = (world->tileset_kind == WORLD_TILESET_CASTLE);
-    /* Background animation first: its LCD-on tilemap writes must land
-     * inside VBlank, while the OAM pass below is WRAM-only (timing-safe
-     * anywhere).  Staging (world/anim_step) is shared by both passes;
-     * only the swap DISPATCH is gated here on the body's own throttle
-     * (every 4th frame) plus a nonzero recorded-cell count, so 75-100%
-     * of frames skip that bank switch entirely. */
+    /* Background animation first: its LCD-on tilemap writes are STAT-gated,
+     * while the OAM pass below is WRAM-only (timing-safe anywhere).  Staging
+     * (world/anim_step) is shared by both passes; the swap DISPATCH is gated
+     * here on a 4-frame cadence plus a nonzero recorded-cell count, so
+     * 75-100% of frames skip that bank switch entirely. */
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
     /* Blink reveal bit for asymmetric reveal rows (mimic): set during the
@@ -915,9 +914,9 @@ void ui_commit_camera(const World *world)
     SCY_REG = world->camera_px_y;
 }
 
+#ifdef DEBUG_BUILD
 void ui_update_camera(const World *world)
 {
-#ifdef DEBUG_BUILD
     /* Semantic refill (~43k T-states over the full 20x18 view): only the
      * harness reads g_ui_screen_buf on overworld frames, and only it
      * needs it exact every frame.  On hardware (even debug builds
@@ -926,10 +925,8 @@ void ui_update_camera(const World *world)
     if (g_harness_mode) {
         ui_refill_semantic(world);
     }
-#else
-    (void)world;
-#endif
 }
+#endif
 
 void ui_draw_hline(uint8_t y, char ch)
 {

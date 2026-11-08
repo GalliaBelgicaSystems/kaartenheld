@@ -187,8 +187,12 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
  * grep: no other writer of visual/sprite_kind/ow_type/ai_type on
  * WorldActorRuntime exists.  Kills only flip active (live-checked every
  * frame; stale entries are never read while inactive) and every
- * reactivation flows through one of the two clearing sites.  ~31 B BSS;
- * no fixed-bank cost (AGENTS.md 52.18). */
+ * reactivation flows through one of the two clearing sites.  Story state
+ * is deliberately NOT a cache input: the chest open/closed +1 is applied
+ * live after the cache read (chest_is_open_banked, same bank), so every
+ * flag/variable writer -- direct byte writes, save/scenario loads,
+ * SET_FLAG -- is covered without the RPG layer knowing about this cache.
+ * ~31 B BSS; no fixed-bank cost (AGENTS.md 52.18). */
 static uint8_t s_oc_tile[MAX_WORLD_ACTORS];
 static uint8_t s_oc_prop[MAX_WORLD_ACTORS];
 static uint8_t s_oc_gw[MAX_WORLD_ACTORS];
@@ -383,13 +387,6 @@ void ui_actors_sprites_banked(void)
                     prop = 0;
                     tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
                                            anim, d->ow_type, &prop, 0);
-                    if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
-                        g_bk_byte_b = d->x;
-                        g_bk_byte_c = d->y;
-                        if (chest_is_open_banked()) {
-                            tile = (uint8_t)(tile + 1);
-                        }
-                    }
                     s_oc_static_tile[i] = tile;
                     s_oc_static_prop[i] = prop;
                 }
@@ -401,6 +398,13 @@ void ui_actors_sprites_banked(void)
             }
             prop = s_oc_static_prop[i];
             d = &g_static_actors[i];
+            if (d->sprite_kind == SPRITE_KIND_CHEST) {
+                g_bk_byte_b = d->x;
+                g_bk_byte_c = d->y;
+                if (chest_is_open_banked()) {
+                    tile = (uint8_t)(tile + 1);
+                }
+            }
             px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
             py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
             if (px < 160 && py < 144) {
