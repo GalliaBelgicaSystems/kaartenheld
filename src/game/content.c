@@ -28,12 +28,6 @@ uint8_t game_loot_drop(uint8_t battle_type)
     g_bk_call_target = (uint16_t)&game_loot_drop_banked;
     g_bk_byte_a = battle_type;
     banked_call_run();
-    /* First-victory bronze shield runs as a second leg in bank 11
-     * (game_loot_first_banked.c: bank 9 is full, fixed is tight) -- it
-     * never overrides rank-0 CARD_NONE, so the spar grants nothing. */
-    g_bk_call_bank = 11;
-    g_bk_call_target = (uint16_t)&game_loot_first_victory_banked;
-    banked_call_run();
     return g_loot_id;
 }
 

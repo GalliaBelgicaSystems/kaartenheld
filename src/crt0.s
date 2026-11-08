@@ -113,11 +113,11 @@ _vsync:
 .vsync:
         ldh     a, (0xFF44)
         cp      #0x90
-        jr      z, .vsync                    ; if already at LY 144, wait until it passes
+        jr      nc, .vsync                   ; if already in VBlank (LY >= 144), wait until active display
 vsync_wait:
         ldh     a, (0xFF44)
         cp      #0x90
-        jr      nz, vsync_wait
+        jr      c, vsync_wait                ; wait until VBlank (LY >= 144; survives timer ISR across LY 144)
         ret
 
         .globl  .call_hl

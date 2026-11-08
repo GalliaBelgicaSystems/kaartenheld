@@ -112,7 +112,6 @@ uint8_t g_jingle_done;  /* BSS zero (AGENTS.md 52.27) */
 void jingle_full_banked(void)
 {
     uint8_t mask;
-    uint8_t b;
     g_bk_byte_b = 0;
     /* Victory fanfare play-once (see VICTORY_JINGLE_TICKS).  Runs BEFORE
      * the battle guard below: the result screen is exactly where the
@@ -151,17 +150,12 @@ void jingle_full_banked(void)
          * done bits, so no extra WRAM is spent. */
         g_jingle_done = (uint8_t)(0x80 | (mask & 0x03));
     }
-    for (b = 0; b < 2; b++) {
-        if (mask & (uint8_t)(1u << b)) {
-            if (!(g_jingle_done & (uint8_t)(1u << b)) &&
-                g_audio_current_track != MUSIC_CHEST) {
-                g_jingle_done |= (uint8_t)(1u << b);
-                g_bk_byte_b = 1;
-                return;
-            }
-        } else {
-            g_jingle_done &= (uint8_t)~(1u << b);
-        }
+    g_jingle_done &= (uint8_t)(0x80 | mask);
+    if ((mask & (uint8_t)~g_jingle_done) &&
+        g_audio_current_track != MUSIC_CHEST) {
+        g_jingle_done |= mask;
+        g_bk_byte_b = 1;
+        return;
     }
     /* Title-theme play-once (see TITLE_SONG_FRAMES): runs after the
      * chest logic so a loot edge on the same frame still wins the

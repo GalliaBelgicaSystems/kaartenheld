@@ -114,7 +114,7 @@
         "underground.underground_floor_with_debris_2",
         "underground.underground_floor_with_debris_3",
         "underground.underground_floor_with_debris_1",
-        "underground.underground_skeleton_with_bone",
+        "underground.underground_floor_with_debris_1",
         "underground.underground_floor_with_debris_3",
         "underground.underground_floor_with_debris_2",
         "underground.underground_floor_with_debris_3",
@@ -448,32 +448,7 @@
     "east": "",
     "west": ""
   },
-  "objects": [
-    {
-      "id": "tunnel_skeleton",
-      "type": "npc",
-      "position": {
-        "x": 14,
-        "y": 4
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SKELETON",
-        "display_name": "SKELETON",
-        "dialogue": "DIALOGUE_ID_SKELETON_DESC",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "S",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    }
-  ],
+  "objects": [],
   "regions": [
     {
       "id": "dark_tunnel",

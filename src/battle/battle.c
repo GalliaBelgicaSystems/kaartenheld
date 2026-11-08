@@ -7,7 +7,6 @@
 #include "rpg/effects.h"
 #include "rpg/loot.h"
 #include "rpg/status.h"
-#include "rpg/loot.h"
 #include "rng.h"
 #include "game/game_ids.h"
 #include "content.h"
@@ -87,25 +86,25 @@ static void battle_init_from_deck_state(Battle *b, const DeckState *ds)
  * bar cells and whole seconds: every '=' drains one cell per
  * BATTLE_TIMER_SECONDS frames with no fractional remainder (which would make
  * tiles drain over uneven frame counts).  Same array-size trap as input.c. */
-static const int g_battle_timer_cadence_ok[
+typedef char g_battle_timer_cadence_ok[
     (BATTLE_TIMER_MAX_FRAMES % BATTLE_TIMER_BAR_LENGTH == 0) &&
-    (BATTLE_TIMER_BAR_DIVISOR == BATTLE_TIMER_MAX_FRAMES / BATTLE_TIMER_BAR_LENGTH) ? 1 : 0
+    (BATTLE_TIMER_BAR_DIVISOR == BATTLE_TIMER_MAX_FRAMES / BATTLE_TIMER_BAR_LENGTH) ? 1 : -1
 ];
 
 /* Compile-time guarantee that the deck-removal floor equals the dealt hand
  * size: every battle must open with DECK_MIN_CARDS real cards, so a battle
  * hand-size change that forgets rpg/deck.h would silently reintroduce the
  * phantom-card fallback path.  Same array-size trap as above. */
-static const int g_deck_min_matches_hand_size[
-    (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : 0
+typedef char g_deck_min_matches_hand_size[
+    (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : -1
 ];
 
 /* Pack-range guards (see COMBO_PACK in combo.h): battle_play_hand encodes
  * the phase in bit 0 and the effect id in bits 1..7 of the staging byte.
  * Tested against the COUNT sentinel so a future effect outgrows the byte
  * loudly (decode-side twins live in combo_content.c). */
-static const int g_combo_pack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
-static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
+typedef char g_combo_pack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : -1];
+typedef char g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : -1];
 
 /* Victim name snapshot for the ANIM banner ("ATTACK <name>"): resolution
  * may kill the target and auto-advance target_idx before the banner

@@ -1,6 +1,6 @@
 #pragma bank 9
 
-#include "rpg/loot.h"
+#include <stdint.h>
 #include "banked.h"
 
 /* ── Rank/equip gate helpers (ROM bank 9) ─────────────────────────
@@ -28,44 +28,4 @@ void game_loot_rank_banked(void)
         if (rank > 6) rank = 1;
     }
     g_bk_byte_b = rank;
-}
-
-/* Loot equip-gate check (docs/enemies_ranking.md §4.8).
- * g_bk_byte_a = card id, g_bk_byte_b = live pool; result in g_bk_byte_c:
- * 0 = proceed (curated ids are exempt; reserved weapons cost 0), else
- * the required AP (the card's synthesized cost, which exceeds the pool).
- * The cost math mirrors loot_synth_banked exactly (same macros, same
- * rider legality, same reserved-weapon rule) so the gate and the def
- * can never disagree. */
-void deck_equip_gate_banked(void)
-{
-    uint8_t id = g_bk_byte_a;
-    uint8_t pool = g_bk_byte_b;
-    uint8_t material;
-    uint8_t effect;
-    uint8_t weapon;
-    uint8_t wi;
-    uint8_t power;
-    uint8_t has_rider;
-    uint8_t cost;
-
-    if (!loot_is_loot_id(id)) {
-        g_bk_byte_c = 0;
-        return;
-    }
-    material = loot_id_material(id);
-    effect = loot_id_effect(id);
-    weapon = loot_id_weapon(id);
-    if (weapon > WPN_RING) {
-        g_bk_byte_c = 0;
-        return;
-    }
-    wi = weapon;
-    power = LOOT_POWER(material, wi);
-    has_rider = (material >= MAT_BRONZE && effect != EFF_PLAIN &&
-                 ((effect == EFF_POISON) ? (weapon == WPN_DAGGER) :
-                  ((effect == EFF_FIRE || effect == EFF_ICE) ?
-                      (weapon == WPN_SWORD) : 0)));
-    cost = CARD_AP(power, material, has_rider);
-    g_bk_byte_c = (cost > pool) ? cost : 0;
 }

@@ -3,6 +3,8 @@
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
+#include "game.h"
+#include "game_ids.h"
 
 /* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5,
  * docs/enemies_ranking.md §4.3) ─────────────────────────────
@@ -52,6 +54,10 @@ static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
 /* BattleId -> rank R0-R6 (compiled by battle_compile.py from the
  * enemy_type JSON ranks; same bank, direct read). */
 extern const uint8_t g_enemy_rank_by_battle[9];
+
+/* First-victory shield shorthand (MAT_BRONZE << 5) + WPN_SHIELD omits the
+ * effect term, which requires EFF_PLAIN == 0. */
+typedef char loot_drop_assert_eff_plain[(EFF_PLAIN == 0) ? 1 : -1];
 
 void game_loot_drop_banked(void)
 {
@@ -112,6 +118,23 @@ void game_loot_drop_banked(void)
             g_loot_id = CARD_NONE;
             return;
         }
+        /* First-real-victory bronze shield (docs/loot.md §34.5):
+         * guaranteed once per game after rank-0 lesson fights are excluded,
+         * and after the two RNG steps above so the isolated stream keeps its
+         * positions for a given seed.  Gated on the global kill counter
+         * (0 kills = no victory yet) plus the Carl spar exception (kills == 1
+         * with STORY_FLAG_ID_TUTORIAL_SPAR_WON set means the only kill was
+         * the rank-0 spar). */
+        {
+            int16_t kills = g_game.state.variables.values[
+                VARIABLE_ID_MONSTERS_DEFEATED - 1];
+            if (kills == 0 || (kills == 1 &&
+                    (g_game.state.flags.bytes[(STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1) >> 3] &
+                     (uint8_t)(1u << ((STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1) & 7))))) {
+                g_loot_id = (uint8_t)(LOOT_ID_BASE + (MAT_BRONZE << 5) + WPN_SHIELD);
+                return;
+            }
+        }
 
         while (material < MAT_MYTHRIL &&
                mat_roll > s_rank_cut[rank][material]) {
@@ -137,11 +160,5 @@ void game_loot_drop_banked(void)
         /* Derived id: BASE + mat*32 + eff*8 + wpn (shifts only). */
         g_loot_id = (uint8_t)(LOOT_ID_BASE +
                               (((material << 2) + effect) << 3) + weapon);
-
-        /* NOTE: the first-victory bronze shield is applied by the
-         * second game_loot_drop() leg (bank 11) after this body
-         * returns (see content.c).  Nothing is consumed or overridden
-         * here, so the isolated stream keeps its positions for a
-         * given seed. */
     }
 }

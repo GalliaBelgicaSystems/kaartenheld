@@ -79,23 +79,21 @@ int main(void)
         if (g_boot_phase == 3) {
             g_boot_phase = 4;
         }
+        /* Render updates WRAM buffers (shadow OAM, battle/menu state) during
+         * active display.  Full redraws (screen/map changes) explicitly disable
+         * the LCD in game_render because they exceed the VBlank budget. */
+        game_render(&g_game);
         if (!g_harness_mode) {
-            /* Wait for VBlank AFTER gameplay logic, immediately BEFORE
-             * game_render.  Incremental tilemap writes then land in VBlank;
-             * full redraws explicitly disable the LCD in game_render because
-             * they are larger than the remaining VBlank budget.  GBDK's
-             * vsync() busy-waits for LY == 144 (the first VBlank scanline).
-             * The PPU silently ignores VRAM writes during LCD modes 2/3. */
+            /* Synchronize to the start of VBlank (LY == 144) so hardware
+             * scroll registers and OAM DMA execute strictly within Mode 1. */
             vsync();
         }
-        game_render(&g_game);
-        /* DMA shadow OAM to real OAM right after the render: SCX_REG and
-         * hardware OAM always belong to the same frame (no 1-px scroll
-         * lag).  Steady frames fit in VBlank (the only VBlank-buster,
-         * ui_refill_semantic's 43k-T-state scan, runs harness-only now);
-         * full redraws run LCD-off, where DMA timing is irrelevant, and
-         * transition hides land immediately via
-         * ui_sprite_begin_transition(). */
+        if (g_game.screen == SCREEN_OVERWORLD) {
+            ui_commit_camera(&g_game.world);
+        }
+        /* DMA shadow OAM (0xC000) to real OAM (0xFE00) strictly during VBlank.
+         * Running OAM DMA while the PPU scans active display locks the OAM bus,
+         * causing sprite flicker/dropouts on real hardware. */
         ui_sprite_commit();
     }
 }

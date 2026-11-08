@@ -56,15 +56,4 @@ void debug_snapshot(void)
     g_bk_call_target = (uint16_t)&debug_snapshot_banked;
     banked_call_run();
 }
-
-void debug_state_snapshot(void)
-{
-    /* The ~460-byte builder runs banked (src/debug/telemetry_snap.c, ROM
-     * bank 11) through the WRAM banked-call trampoline so it does not consume
-     * the fixed-bank _CODE budget.  It reads g_game / g_state_snap_buf
-     * directly, so no staging args are needed. */
-    g_bk_call_bank = 11;
-    g_bk_call_target = (uint16_t)&debug_state_snapshot_banked;
-    banked_call_run();
-}
 #endif

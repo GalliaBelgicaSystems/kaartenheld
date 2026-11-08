@@ -14,7 +14,6 @@
 #define SCENE_CONTENT_BANK 5
 #endif
 
-extern const SceneExit g_all_exits[];
 extern const SceneDefinition g_scenes[];
 #ifndef TEST_LEVELS
 /* Overflow terrain stamp bodies (one per bank; see scenes_terrain_b*.c,
@@ -52,7 +51,7 @@ const SceneDefinition *scene_definition_for_map(MapId map_id)
  * hit/miss in g_bk_byte_c.  A NULL def never hits. */
 uint8_t scene_exit_check(World *w, const SceneDefinition *def, uint8_t x, uint8_t y)
 {
-    if (!w || !def) return 0;
+    if (!w || !def || def->exit_count == 0) return 0;
     g_bk_call_bank = SCENE_CONTENT_BANK;
     g_bk_call_target = (uint16_t)&scene_exit_check_banked;
     g_bk_ptr_a = (void *)w;

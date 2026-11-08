@@ -184,9 +184,6 @@ void overworld_screen_render(Game *g)
     rc = &g->render_cache;
     w = &g->world;
 
-    px = (uint8_t)(world_player_px(w) - w->camera_px_x);
-    py = (uint8_t)(world_player_py(w) - w->camera_px_y);
-
     if (!rc->valid || rc->prev_screen != SCREEN_OVERWORLD ||
         w->map_id != rc->prev_map_id) {
         if (rc->prev_screen == SCREEN_DIALOGUE && w->map_id == rc->prev_map_id) {
@@ -216,6 +213,8 @@ void overworld_screen_render(Game *g)
      * re-syncs mid-way while the screen is black). */
     ui_update_camera(w);
 
+    px = (uint8_t)(world_player_px(w) - w->camera_px_x);
+    py = (uint8_t)(world_player_py(w) - w->camera_px_y);
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);
     rc->prev_player_x = px;

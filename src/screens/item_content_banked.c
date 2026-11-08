@@ -15,7 +15,6 @@
 #include "card.h"
 #include "game_ids.h"
 #include "banked.h"
-#include "rpg/loot.h"
 #include "shops.h"
 
 #define TAB_DECK 0

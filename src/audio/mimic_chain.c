@@ -32,9 +32,9 @@
  * quick victory/flee preempts a mid-intro battle cleanly with no
  * fixed-bank cancel logic.  The debug harness skips the timer ISR, so
  * scenarios only ever observe MUSIC_MIMIC. */
-#define MIMIC_INTRO_ISR_TICKS 224
+#define MIMIC_INTRO_ISR_TICKS 224u
 
-uint16_t g_mimic_intro_left;  /* BSS zero (AGENTS.md 52.27) */
+uint8_t g_mimic_intro_left;  /* BSS zero (AGENTS.md 52.27) */
 
 void mimic_chain_tick(void)
 {

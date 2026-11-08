@@ -23,19 +23,6 @@ static void tutorial_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
     BANKED_VRAM_WRITE(dst, tile);
 }
 
-static void tutorial_put_char(uint8_t x, uint8_t y, char ch)
-{
-    if (y < 18 && x < 20) {
-        if (g_ui_screen_buf[y][x] != ch) {
-            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-            VBK_REG = 0;
-            tutorial_vram_sync_write(dst, tile);
-            g_ui_screen_buf[y][x] = ch;
-        }
-    }
-}
-
 static void tutorial_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;

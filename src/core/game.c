@@ -62,11 +62,8 @@ void game_restart(Game *g)
 void game_init(Game *g)
 {
     if (!g) return;
-    /* Install the WRAM banked-copy trampoline before any banked content
-     * (event/dialogue tables) can be read.  Runs here rather than in CRT0
-     * init because the harness jumps straight to main(). */
-    banked_copy_init();
-    banked_call_init();
+    /* WRAM banked-copy/call trampolines are already installed at the top of
+     * main() before ui_init() and game_init(). */
     telemetry_init();
     telemetry_set_frame_ptr(&g->frame);
     /* Boot into the studio splash, which auto-advances (or is skipped)
@@ -139,9 +136,11 @@ void game_update(Game *g)
          * a banked body can never nest another trampoline call
          * (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
          * below with the other post-tick requests. */
-        g_bk_call_bank = 10;
-        g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
-        banked_call_run();
+        if (g->screen == SCREEN_OVERWORLD) {
+            g_bk_call_bank = 10;
+            g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
+            banked_call_run();
+        }
         /* Battle hit feedback (bank 9 body, no staging: it reads the
          * live battle straight from g_game).  Own dispatch like the
          * tick above -- HP deltas arm the shake/flash timers and the

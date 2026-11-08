@@ -77,7 +77,6 @@ extern volatile uint8_t g_harness_mode;
  * to swap (same throttle the body applies internally). */
 extern uint8_t g_anim_count;
 
-static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
 static void ui_world_tail(const World *world);
 
@@ -119,8 +118,6 @@ void ui_init(void)
      * CRT0) needs this too, and mGBA's debugger does not advance VBlank
      * during single-stepping.  Clear bit 4 for signed 0x9000 tile addressing. */
     LCDC_REG &= ~0x90;
-
-    oam_dma_init();
 
     /* Load font tiles from Bank 10 (96 tiles = 1536 bytes) using g_ui_screen_buf as temporary buffer */
     for (p = 0; p < 96; p += 8) {
@@ -716,7 +713,7 @@ static void ui_stamp_static_actors(const World *world, uint8_t c0, uint8_t c1,
     }
 }
 
-static uint8_t s_anim_counter = 0;
+static uint8_t s_anim_counter;
 
 void ui_draw_actors_sprites(const World *world)
 {
@@ -745,12 +742,11 @@ void ui_draw_actors_sprites(const World *world)
      * The banked body writes directly into shadow OAM (WRAM, always
      * mapped) and hides inactive/BOSS actors. */
     castle = (world->tileset_kind == WORLD_TILESET_CASTLE);
-    /* Background animation first: its LCD-on tilemap writes must land
-     * inside VBlank, while the OAM pass below is WRAM-only (timing-safe
-     * anywhere).  Staging (world/anim_step) is shared by both passes;
-     * only the swap DISPATCH is gated here on the body's own throttle
-     * (every 4th frame) plus a nonzero recorded-cell count, so 75-100%
-     * of frames skip that bank switch entirely. */
+    /* Background animation first: its LCD-on tilemap writes are STAT-gated,
+     * while the OAM pass below is WRAM-only (timing-safe anywhere).  Staging
+     * (world/anim_step) is shared by both passes; the swap DISPATCH is gated
+     * here on a 4-frame cadence plus a nonzero recorded-cell count, so
+     * 75-100% of frames skip that bank switch entirely. */
     g_bk_ptr_a = (void *)world;
     g_bk_byte_b = anim_step;
     /* Blink reveal bit for asymmetric reveal rows (mimic): set during the
@@ -899,7 +895,7 @@ void ui_draw_world_transition(const World *world)
      * are already standing on it (the reveal paints background tiles
      * only, so it never touches OAM).  The tail re-runs all three
      * idempotently. */
-    ui_update_camera(world);
+    ui_commit_camera(world);
     ui_sprite_move((uint8_t)(world_player_px(world) - world->camera_px_x),
                    (uint8_t)(world_player_py(world) - world->camera_px_y));
     ui_draw_actors_sprites(world);
@@ -912,13 +908,15 @@ void ui_draw_world_transition(const World *world)
     ui_world_tail(world);
 }
 
-void ui_update_camera(const World *world)
+void ui_commit_camera(const World *world)
 {
-    /* No null guard: both callers (overworld render, world transition)
-     * always pass a live world. */
     SCX_REG = world->camera_px_x;
     SCY_REG = world->camera_px_y;
+}
+
 #ifdef DEBUG_BUILD
+void ui_update_camera(const World *world)
+{
     /* Semantic refill (~43k T-states over the full 20x18 view): only the
      * harness reads g_ui_screen_buf on overworld frames, and only it
      * needs it exact every frame.  On hardware (even debug builds
@@ -927,21 +925,8 @@ void ui_update_camera(const World *world)
     if (g_harness_mode) {
         ui_refill_semantic(world);
     }
+}
 #endif
-}
-
-static void ui_put_char(uint8_t x, uint8_t y, char ch)
-{
-    if (y < 18 && x < 20) {
-        if (g_ui_screen_buf[y][x] != ch) {
-            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-            VBK_REG = 0;
-            ui_vram_sync_write(dst, tile);
-            g_ui_screen_buf[y][x] = ch;
-        }
-    }
-}
 
 void ui_draw_hline(uint8_t y, char ch)
 {
@@ -956,7 +941,7 @@ void ui_draw_hline(uint8_t y, char ch)
     VBK_REG = 0;
     for (x = 0; x < 20; x++) {
         if (g_ui_screen_buf[y][x] != ch) {
-            vram[x] = tile;
+            ui_vram_sync_write(&vram[x], tile);
             g_ui_screen_buf[y][x] = ch;
         }
     }

@@ -13,61 +13,51 @@
  * Consumes/writes only WRAM and its own bank-local tables.
  * Extensible: append rows to grow materials/effects/weapons. */
 
-#define STATUS_NONE    0
-#define STATUS_POISON  1
-
-static const struct {
-    char code[4];          /* 1-letter material initial (§34.1) */
-} s_materials[LOOT_NMATERIALS] = {
-    { "W" }, { "B" }, { "I" }, { "S" }, { "M" }
+static const char s_materials[LOOT_NMATERIALS] = {
+    'W', 'B', 'I', 'S', 'M'
 };
 
 /* Effect rows: on-hit status rider applied by battle (docs/combo-system.md
- * §13 pipeline; legality per weapon in docs/loot.md §34.2).  chance is in
- * 1/255 units, tuned like the catalog's DA1 (128 ~= 50%). */
-static const struct {
-    uint8_t status_id;
-    uint8_t chance;        /* on-hit threshold, 1/255 units */
-    char code[4];          /* 1-letter effect initial (§34.1) */
-} s_effects[LOOT_NEFFECTS] = {
-    { STATUS_NONE,     0,   ""  },   /* plain   */
-    { STATUS_POISON,   128, "P" },   /* daggers */
-    { STATUS_BURN,     128, "F" },   /* swords  */
-    { STATUS_FREEZE,   96,  "I" }    /* swords  */
+ * §13 pipeline; legality per weapon in docs/loot.md §34.2).  Effect index
+ * (0..3) equals StatusId (STATUS_NONE, STATUS_POISON, STATUS_BURN,
+ * STATUS_FREEZE); chance is in 1/255 units. */
+static const uint8_t s_effect_chance[LOOT_NEFFECTS] = {
+    0, 128, 128, 96
 };
 
-static const struct {
-    char symbol[3];        /* 2-letter weapon code (§34.1) */
-} s_weapons[LOOT_NWEAPONS] = {
-    { "SW" },   /* sword */
-    { "SH" },   /* shield */
-    { "BO" },   /* bow */
-    { "DA" },   /* dagger */
-    { "RG" },   /* ring (heal amount = power) */
-    { "??" },   /* reserved */
-    { "??" },   /* reserved */
-    { "??" }    /* reserved */
+static const char s_effect_code[LOOT_NEFFECTS] = {
+    0, 'P', 'F', 'I'
+};
+
+static const char s_weapons[LOOT_NWEAPONS][2] = {
+    { 'S', 'W' },   /* sword */
+    { 'S', 'H' },   /* shield */
+    { 'B', 'O' },   /* bow */
+    { 'D', 'A' },   /* dagger */
+    { 'R', 'G' },   /* ring (heal amount = power) */
+    { '?', '?' },   /* reserved */
+    { '?', '?' },   /* reserved */
+    { '?', '?' }    /* reserved */
 };
 
 /* Build the compact identity name "[material][ effect] weapon" into the
- * scratch def (§34.1): e.g. "W SW", "M P DA", "W F SW".  Max 7 chars +
+ * scratch def (§34.1): e.g. "W SW", "M P DA", "W F SW".  Max 6 chars +
  * NUL -- fits CardDefinition.name[12].  `has_rider` false suppresses
  * the effect infix (illegal pairs carry no rider to name). */
 static void synth_name(uint8_t material, uint8_t effect, uint8_t weapon,
                        uint8_t has_rider)
 {
     char *n = g_card_scratch.name;
-    const char *m = s_materials[material].code;
-    const char *w = s_weapons[weapon].symbol;
+    const char *w = s_weapons[weapon];
 
-    while (*m) *n++ = *m++;
+    *n++ = s_materials[material];
     *n++ = ' ';
     if (has_rider) {
-        const char *e = s_effects[effect].code;
-        while (*e) *n++ = *e++;
+        *n++ = s_effect_code[effect];
         *n++ = ' ';
     }
-    while (*w) *n++ = *w++;
+    *n++ = w[0];
+    *n++ = w[1];
     *n = '\0';
 }
 
@@ -81,6 +71,17 @@ static uint8_t rider_legal(uint8_t effect, uint8_t weapon)
     if (effect == EFF_FIRE || effect == EFF_ICE) return weapon == WPN_SWORD;
     return 0;
 }
+
+/* Compile-time assertions for the zero-fill defaults (CARD_TYPE_ATTACK == 0,
+ * BATTLE_CARD_TYPE_SWORD == 0) and the 1:1 EFF_* -> StatusId identity mapping
+ * used by g_card_scratch.status_id = effect. */
+typedef char loot_assert_card_type_attack[(CARD_TYPE_ATTACK == 0) ? 1 : -1];
+typedef char loot_assert_battle_type_sword[(BATTLE_CARD_TYPE_SWORD == 0) ? 1 : -1];
+typedef char loot_assert_eff_plain[(EFF_PLAIN == STATUS_NONE) ? 1 : -1];
+typedef char loot_assert_eff_poison[(EFF_POISON == STATUS_POISON) ? 1 : -1];
+typedef char loot_assert_eff_fire[(EFF_FIRE == STATUS_BURN) ? 1 : -1];
+typedef char loot_assert_eff_ice[(EFF_ICE == STATUS_FREEZE) ? 1 : -1];
+
 void loot_synth_banked(void)
 {
     CardId id = g_bk_byte_a;
@@ -92,10 +93,9 @@ void loot_synth_banked(void)
     uint8_t wi = (weapon <= WPN_RING) ? weapon : WPN_SWORD;
     uint8_t has_rider;
 
-    while (n--) *dst++ = 0;   /* zero-fill, then set fields */
+    while (n--) *dst++ = 0;   /* zero-fill, then set non-zero fields */
 
     g_card_scratch.id = id;
-    g_card_scratch.type = CARD_TYPE_ATTACK;
     g_card_scratch.power = LOOT_POWER(material, wi);
     /* Centralized sell value (docs/loot.md §16/§34.6): synthesized
      * power + material tier*2 (+2 poison rider).  Stored in the def's
@@ -105,12 +105,9 @@ void loot_synth_banked(void)
                                      ((uint8_t)material << 1) +
                                      ((effect == EFF_POISON &&
                                        weapon == WPN_DAGGER) ? 2 : 0));
-    g_card_scratch.uses_per_battle = 0;          /* unlimited */
-    g_card_scratch.max_copies = 0;               /* unlimited duplicates */
 
     switch (weapon) {
         case WPN_SWORD:
-            g_card_scratch.battle_type = BATTLE_CARD_TYPE_SWORD;
             g_card_scratch.effect = CARD_EFFECT_DAMAGE_TARGET;
             break;
         case WPN_SHIELD:
@@ -146,11 +143,11 @@ void loot_synth_banked(void)
      * generator never rolls one there, and synth strips hand-encoded
      * wood+rider ids too. */
     has_rider = (material >= MAT_BRONZE &&
-                 s_effects[effect].status_id != STATUS_NONE &&
+                 effect != EFF_PLAIN &&
                  rider_legal(effect, weapon));
     if (has_rider) {
-        g_card_scratch.status_id = s_effects[effect].status_id;
-        g_card_scratch.status_chance = s_effects[effect].chance;
+        g_card_scratch.status_id = effect;
+        g_card_scratch.status_chance = s_effect_chance[effect];
     }
     /* Derived AP cost (docs/card-ap-cost-formula.md): the mythril premium
      * rides along inside the macro via `material`, and reserved weapons

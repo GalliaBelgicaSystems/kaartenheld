@@ -98,12 +98,10 @@ uint8_t g_alert_ttl;
 uint8_t g_actor_marks[MAX_WORLD_ACTORS];
 uint8_t g_static_marks[10];
 
-/* Music-pause flag (WRAM BSS, appended: BSS-tail only, no layout shift):
- * LEGACY, always zero now.  The alert used to pause the scene track
- * mid-song at wake-up and continue it later; the sting now plays on top
- * of the running track via the normal SFX mute path, so nothing ever
- * sets this.  Kept defined (1 byte) so later BSS globals keep their
- * addresses (AGENTS.md 52.19); music_play_banked still clears it. */
+/* Retired music-pause flag (WRAM BSS): kept as a 1-byte placeholder so
+ * later BSS globals keep their addresses (AGENTS.md 52.19).  The pursuit
+ * alert sting plays over the running track via the normal SFX mute path,
+ * so nothing ever reads or writes this byte. */
 uint8_t g_music_paused;
 
 /* Jingle edge bits (jingle_full_banked.c, same bank): bit 7 is the
@@ -111,48 +109,27 @@ uint8_t g_music_paused;
  * the re-arm check above reads the pre-seed value (marks runs first). */
 extern uint8_t g_jingle_done;
 
-static uint8_t marks_has_amulet(const GameState *st)
+#define MARKS_FLAG_SET(id) \
+    ((g_game.state.flags.bytes[((id) - 1) >> 3] & (uint8_t)(1u << (((id) - 1) & 7))) != 0)
+
+static uint8_t marks_has_card(uint8_t id)
 {
     uint8_t i;
-    for (i = 0; i < st->cards.collection.count; i++) {
-        if (st->cards.collection.entries[i].id == CARD_AMULET &&
-            st->cards.collection.entries[i].count != 0) {
+    for (i = 0; i < g_game.state.cards.collection.count; i++) {
+        if (g_game.state.cards.collection.entries[i].id == id &&
+            g_game.state.cards.collection.entries[i].count != 0) {
             return 1;
         }
     }
     return 0;
 }
 
-/* Bank-local flag read (a banked body must never call fixed-bank
- * game_flag_is_set -- AGENTS.md 52.11.1; same bit math as rpg/state.c:
- * flag N lives in bit (N-1)%8 of flags.bytes[(N-1)/8]). */
-static uint8_t marks_flag_is_set(const GameState *st, uint8_t flag)
-{
-    uint8_t f;
-    if (!st || flag < 1) return 0;
-    f = (uint8_t)(flag - 1);
-    return (st->flags.bytes[(uint8_t)(f >> 3)] &
-            (uint8_t)(1u << (f & 7))) != 0;
-}
-
-static uint8_t marks_has_ring(const GameState *st)
+static uint8_t marks_carl_defeated(void)
 {
     uint8_t i;
-    for (i = 0; i < st->cards.collection.count; i++) {
-        if (st->cards.collection.entries[i].id == CARD_IRON_RING &&
-            st->cards.collection.entries[i].count != 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static uint8_t marks_carl_defeated(const GameState *st)
-{
-    uint8_t i;
-    for (i = 0; i < st->world.count; i++) {
-        if (st->world.actors[i].actor_id == ACTOR_ID_CARL_TUTOR &&
-            st->world.actors[i].state == (uint8_t)ACTOR_STATE_DEFEATED) {
+    for (i = 0; i < g_game.state.world.count; i++) {
+        if (g_game.state.world.actors[i].actor_id == ACTOR_ID_CARL_TUTOR &&
+            g_game.state.world.actors[i].state == (uint8_t)ACTOR_STATE_DEFEATED) {
             return 1;
         }
     }
@@ -277,14 +254,6 @@ void ow_oam_restore_banked(void)
 static void marks_refresh(void)
 {
     uint8_t i;
-    int16_t quest_monster_hunt;
-    int16_t monsters_defeated;
-    int16_t merchant_quest;
-    uint8_t has_amulet;
-    uint8_t has_ring;
-    uint8_t lesson_shown;
-    uint8_t carl_done;
-    uint8_t village_dog_traded;
 
     g_bk_byte_c = 0;
     g_bk_byte_d = 0;
@@ -390,30 +359,13 @@ static void marks_refresh(void)
         }
     }
 
-    quest_monster_hunt =
-        g_game.state.variables.values[VARIABLE_ID_QUEST_MONSTER_HUNT - 1];
-    monsters_defeated =
-        g_game.state.variables.values[VARIABLE_ID_MONSTERS_DEFEATED - 1];
-    merchant_quest =
-        g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1];
-    has_amulet = 0;
-    /* The collection scan is the most expensive part of this refresh
-     * (up to MAX_CARD_COLLECTION entries); skip it unless the merchant
-     * quest is actually waiting on the amulet -- otherwise the result
-     * is unused by every branch below. */
-    if (merchant_quest == 1) {
-        has_amulet = marks_has_amulet(&g_game.state);
+    /* Overworld HUD markers (g_actor_marks / g_static_marks) are only
+     * consumed on Overworld and Dialogue-over-Overworld; skip the loops
+     * and collection/actor scans on Battle, Menu, Shop, and Title frames. */
+    if (g_game.screen != SCREEN_OVERWORLD &&
+        g_game.screen != SCREEN_DIALOGUE) {
+        return;
     }
-    lesson_shown =
-        marks_flag_is_set(&g_game.state, STORY_FLAG_ID_RING_LESSON);
-    has_ring = 0;
-    /* Same gate for the ring scan: pointless once the lesson played. */
-    if (!lesson_shown) {
-        has_ring = marks_has_ring(&g_game.state);
-    }
-    carl_done = marks_carl_defeated(&g_game.state);
-    village_dog_traded =
-        marks_flag_is_set(&g_game.state, STORY_FLAG_ID_DOG_KEY);
 
     /* Hostiles: pursuer "!" over the chasers that spotted the hero, once
      * the alert sting has fired (ttl at or below the sting edge) until
@@ -429,38 +381,34 @@ static void marks_refresh(void)
         g_actor_marks[i] = m;
     }
 
-    /* Statics: quest "?" from quest state. */
+    /* Statics: quest "?" from quest state, evaluated lazily only when
+     * the relevant NPC is actually present on the current map. */
     for (i = 0; i < MAX_STATIC_ACTORS; i++) {
         uint8_t m = ACTOR_MARK_NONE;
         if (i < g_static_actor_count) {
-            const StaticActorDefinition *d = &g_static_actors[i];
-            if (d->id == ENTITY_ID_MAYOR) {
-                if (quest_monster_hunt == 0 ||
-                    (quest_monster_hunt == 1 && monsters_defeated >= 3)) {
+            uint8_t id = g_static_actors[i].id;
+            if (id == ENTITY_ID_MAYOR) {
+                int16_t q = g_game.state.variables.values[VARIABLE_ID_QUEST_MONSTER_HUNT - 1];
+                if (q == 0 ||
+                    (q == 1 && g_game.state.variables.values[VARIABLE_ID_MONSTERS_DEFEATED - 1] >= 3)) {
                     m = ACTOR_MARK_QUEST;
                 }
-            } else if (d->id == ENTITY_ID_CARL) {
-                /* Tutorial lesson available until the spar is won:
-                 * always shown (the key-locked field chest no longer
-                 * gates it). */
-                if (!carl_done) {
+            } else if (id == ENTITY_ID_CARL) {
+                if (!marks_carl_defeated()) {
                     m = ACTOR_MARK_QUEST;
                 }
-            } else if (d->id == ENTITY_ID_VILLAGE_DOG) {
-                /* Key trade open until the dog hands over the Old
-                 * Key: the "?" that teaches the bone swap. */
-                if (!village_dog_traded) {
+            } else if (id == ENTITY_ID_VILLAGE_DOG) {
+                if (!MARKS_FLAG_SET(STORY_FLAG_ID_DOG_KEY)) {
                     m = ACTOR_MARK_QUEST;
                 }
-            } else if (d->id == ENTITY_ID_MERCHANT) {
-                if (merchant_quest == 0 ||
-                    (merchant_quest == 1 && has_amulet)) {
+            } else if (id == ENTITY_ID_MERCHANT) {
+                int16_t mq = g_game.state.variables.values[VARIABLE_ID_MERCHANT_QUEST - 1];
+                if (mq == 0 || (mq == 1 && marks_has_card(CARD_AMULET))) {
                     m = ACTOR_MARK_QUEST;
                 }
-            } else if (d->id == ENTITY_ID_HEAL_MAGE) {
-                /* Ring tactics lesson available once the player owns
-                 * the Iron Ring and hasn't heard it yet. */
-                if (has_ring && !lesson_shown) {
+            } else if (id == ENTITY_ID_HEAL_MAGE) {
+                if (!MARKS_FLAG_SET(STORY_FLAG_ID_RING_LESSON) &&
+                    marks_has_card(CARD_IRON_RING)) {
                     m = ACTOR_MARK_QUEST;
                 }
             }

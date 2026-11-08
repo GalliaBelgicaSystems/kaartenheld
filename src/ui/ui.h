@@ -283,9 +283,15 @@ void ui_draw_actors_sprites(const World *world);
 void ui_draw_text_line(uint8_t x, uint8_t y, const char *text, uint8_t max_chars);
 void ui_draw_hline(uint8_t y, char ch);
 
-/* Set SCX/SCY from the overworld camera pixel position.  Called every
- * overworld frame so the background glides smoothly. */
+/* Overworld camera: ui_update_camera updates semantic view state (debug
+ * harness only; no-op macro in release), while ui_commit_camera writes
+ * SCX/SCY hardware registers during VBlank. */
+#ifdef DEBUG_BUILD
 void ui_update_camera(const World *world);
+#else
+#define ui_update_camera(world) ((void)0)
+#endif
+void ui_commit_camera(const World *world);
 
 /* Bank for ui_dialogue_box_banked (src/ui/ui_dialogue_box_banked.c):
  * ROM bank 10 in both builds (~2 KB free in release), alongside the

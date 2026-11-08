@@ -27,7 +27,4 @@ typedef struct {
 extern const ShopDefinition g_shops[];
 extern const uint8_t g_shop_count;
 
-/* Look up a shop's stock by its id, or NULL if unknown. */
-const ShopDefinition *game_shop_for_id(uint8_t id);
-
 #endif /* GAME_SHOPS_H */

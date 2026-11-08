@@ -106,11 +106,6 @@ void deck_collection_merge_duplicates(CardState *cs);
  * Returns false if the deck is full or the card is not owned. */
 bool deck_add_card(CardState *cs, CardId id);
 
-/* Banked equip-gate check (src/game/loot_gate_banked.c, ROM bank 9):
- * g_bk_byte_a = card id, g_bk_byte_b = pool; g_bk_byte_c = 0 proceed,
- * else required AP.  Dispatched by deck_equip_card's thin wrapper. */
-void deck_equip_gate_banked(void);
-
 /* Gated equip (docs/enemies_ranking.md §4.8): the deck_add_card rules
  * plus one -- no card (curated or loot) whose cost exceeds the live
  * energy pool can be decked.  Pre-decked grants are unaffected (the

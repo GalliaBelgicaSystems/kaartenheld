@@ -135,8 +135,6 @@ void scenario_load_apply_banked(void)
         }
         if (!found) {
             if (col->count < MAX_CARD_COLLECTION) {
-                e = &col->entries[0];
-                for (k = 0; k < col->count; k++) e++;
                 e->id = id;
                 e->count = qty;
                 col->count = (uint8_t)(col->count + 1);
@@ -221,12 +219,9 @@ void scenario_load_apply_banked(void)
         }
         if (slot == 0) {
             if (store->count >= MAX_PROGRESSION_TARGETS) continue;
-            slot = &store->entries[0];
-            for (k = 0; k < store->count; k++) slot++;
+            slot = cur;
             slot->target.type = t_type;
             slot->target.id = t_id;
-            slot->state.level = 1;
-            slot->state.progress = 0;
             store->count = (uint8_t)(store->count + 1);
         }
         slot->state.level = lvl;

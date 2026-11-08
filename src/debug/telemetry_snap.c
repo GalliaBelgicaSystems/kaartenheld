@@ -3,12 +3,11 @@
 #include "telemetry.h"
 #include "game.h"
 
-/* Banked body of debug_state_snapshot() (see telemetry.c).  Lives in ROM
- * bank 11 (was bank 2; moved for shop render pressure, Nov 2026) and runs
- * through the WRAM banked-call trampoline so the ~460-byte
- * extended-snapshot builder does not consume the fixed-bank _CODE budget.
- * It must stay self-contained (no calls into fixed-bank code): it reads only
- * the WRAM globals g_game / g_state_snap_buf and its own static snap_copy. */
+/* Extended state snapshot builder (ROM bank 11, called directly by
+ * debug_snapshot_banked() in src/debug/snapshot_banked.c).  Keeping this
+ * ~460-byte builder in bank 11 avoids consuming the fixed-bank _CODE budget.
+ * Self-contained (no calls into fixed-bank code): reads only the WRAM globals
+ * g_game / g_state_snap_buf and its own static snap_copy. */
 
 static void snap_copy(uint8_t *dst, const void *src, uint8_t n)
 {

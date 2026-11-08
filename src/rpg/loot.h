@@ -120,7 +120,6 @@ extern uint16_t g_loot_rng_state;
  *                            (src/rpg/loot_banked.c, bank 3), dispatched
  *                            by card_get_def(). */
 void game_loot_drop_banked(void);
-void game_loot_first_victory_banked(void);
 void loot_synth_banked(void);
 
 #endif /* RPG_LOOT_H */

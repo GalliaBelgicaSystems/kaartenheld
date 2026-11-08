@@ -1,7 +1,7 @@
 {
  "name": "state_midgame_setup",
  "test": true,
- "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section",
+ "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section. The loader appends onto the non-empty starter collection (4 WOOD_SWORD, 4 WOODEN_SHIELD, 2 FIRE_SWORD) and starter progression (HERO_1): pre-existing entries must survive untouched, a staged id already present merges (FIRE_SWORD 2+3=5), new ids append at the one-past-end slot (POISON_DAGGER, IRON_RING), and a second progression target (IRON_SWORD) appends after the overwritten HERO_1 entry.",
  "actions": [
   {
    "type": "press",
@@ -48,8 +48,28 @@
   },
   {
    "type": "inventory",
+   "item": "WOOD_SWORD",
+   "expected": 4
+  },
+  {
+   "type": "inventory",
+   "item": "WOODEN_SHIELD",
+   "expected": 4
+  },
+  {
+   "type": "inventory",
    "item": "POISON_DAGGER",
    "expected": 2
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 1
+  },
+  {
+   "type": "inventory",
+   "item": "FIRE_SWORD",
+   "expected": 5
   },
   {
    "type": "party_hp",
@@ -60,6 +80,26 @@
    "type": "party_level",
    "member": 0,
    "expected": 3
+  },
+  {
+   "type": "progression_level",
+   "target": "HERO_1",
+   "expected": 3
+  },
+  {
+   "type": "progression_progress",
+   "target": "HERO_1",
+   "expected": 25
+  },
+  {
+   "type": "progression_level",
+   "target": "IRON_SWORD",
+   "expected": 2
+  },
+  {
+   "type": "progression_progress",
+   "target": "IRON_SWORD",
+   "expected": 45
   },
   {
    "type": "actor_state",
@@ -95,7 +135,9 @@
    }
   },
   "inventory": {
-   "POISON_DAGGER": 2
+   "POISON_DAGGER": 2,
+   "IRON_RING": 1,
+   "FIRE_SWORD": 3
   },
   "world": {
    "SLIME_FOREST": "DEFEATED",
@@ -106,7 +148,12 @@
   },
   "progression": {
    "HERO_1": {
-    "level": 3
+    "level": 3,
+    "progress": 25
+   },
+   "IRON_SWORD": {
+    "level": 2,
+    "progress": 45
    }
   }
  }

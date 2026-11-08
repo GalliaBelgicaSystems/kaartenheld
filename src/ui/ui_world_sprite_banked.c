@@ -64,6 +64,14 @@ static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
 extern uint8_t g_tilemap_mirror[32 * 32];
 #endif
 
+static void boss_vram_cell(uint16_t idx, uint8_t tile)
+{
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[idx] = tile;
+#endif
+}
+
 /* Shadow OAM WRAM base (GBDK's global `shadow_OAM` at 0xC000).  Each entry
  * is 4 bytes: y, x, tile, attr.  Written directly (WRAM is always mapped)
  * so the fixed-bank caller need not loop over actors. */
@@ -179,12 +187,18 @@ static uint8_t sprite_tile_for(uint8_t kind, uint8_t visual,
  * grep: no other writer of visual/sprite_kind/ow_type/ai_type on
  * WorldActorRuntime exists.  Kills only flip active (live-checked every
  * frame; stale entries are never read while inactive) and every
- * reactivation flows through one of the two clearing sites.  ~31 B BSS;
- * no fixed-bank cost (AGENTS.md 52.18). */
+ * reactivation flows through one of the two clearing sites.  Story state
+ * is deliberately NOT a cache input: the chest open/closed +1 is applied
+ * live after the cache read (chest_is_open_banked, same bank), so every
+ * flag/variable writer -- direct byte writes, save/scenario loads,
+ * SET_FLAG -- is covered without the RPG layer knowing about this cache.
+ * ~31 B BSS; no fixed-bank cost (AGENTS.md 52.18). */
 static uint8_t s_oc_tile[MAX_WORLD_ACTORS];
 static uint8_t s_oc_prop[MAX_WORLD_ACTORS];
 static uint8_t s_oc_gw[MAX_WORLD_ACTORS];
 static uint8_t s_oc_gh[MAX_WORLD_ACTORS];
+static uint8_t s_oc_static_tile[MAX_STATIC_ACTORS];
+static uint8_t s_oc_static_prop[MAX_STATIC_ACTORS];
 static uint8_t s_oc_anim;
 static uint8_t s_oc_bc;
 /* Cleared by spawn/mutation sites in other banks (loader, trio morph);
@@ -356,31 +370,40 @@ void ui_actors_sprites_banked(void)
             volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
                                                        ((uint16_t)(oam_slot + i) << 2));
             uint8_t tile;
-            uint8_t prop = 0;
+            uint8_t prop;
             uint8_t px, py;
             if (i >= g_static_actor_count) {
                 e[0] = 0;
                 continue;
             }
-            d = &g_static_actors[i];
-            if (d->sprite_kind == SPRITE_KIND_ASCII ||
-                d->sprite_kind == SPRITE_KIND_BOSS ||
-                d->sprite_kind == SPRITE_KIND_TILE) {
-                e[0] = 0;  /* glyph / boss / background-art actors own these */
+            if (fresh) {
+                d = &g_static_actors[i];
+                if (d->sprite_kind == SPRITE_KIND_ASCII ||
+                    d->sprite_kind == SPRITE_KIND_BOSS ||
+                    d->sprite_kind == SPRITE_KIND_TILE) {
+                    s_oc_static_tile[i] = 0;
+                    s_oc_static_prop[i] = 0;
+                } else {
+                    prop = 0;
+                    tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
+                                           anim, d->ow_type, &prop, 0);
+                    s_oc_static_tile[i] = tile;
+                    s_oc_static_prop[i] = prop;
+                }
+            }
+            tile = s_oc_static_tile[i];
+            if (!tile) {
+                e[0] = 0;
                 continue;
             }
-            tile = sprite_tile_for((uint8_t)d->sprite_kind, d->visual,
-                                   anim, d->ow_type, &prop, 0);
-            if (d->sprite_kind == SPRITE_KIND_CHEST && tile) {
+            prop = s_oc_static_prop[i];
+            d = &g_static_actors[i];
+            if (d->sprite_kind == SPRITE_KIND_CHEST) {
                 g_bk_byte_b = d->x;
                 g_bk_byte_c = d->y;
                 if (chest_is_open_banked()) {
                     tile = (uint8_t)(tile + 1);
                 }
-            }
-            if (!tile) {
-                e[0] = 0;
-                continue;
             }
             px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
             py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
@@ -411,28 +434,29 @@ void ui_actors_sprites_banked(void)
         for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
             const WorldActorRuntime *a = &w->actors[slot];
             uint8_t ox, oy;
-            volatile uint8_t *tilemap = (volatile uint8_t *)0x9800;
             if (!a->active) continue;
             if ((int)a->sprite_kind != SPRITE_KIND_BOSS) continue;
             ox = a->x;
             oy = a->y;
             {
-                uint8_t sx = (uint8_t)(ox - w->scroll_x);
-                uint8_t sy = (uint8_t)(oy - w->scroll_y);
-                tilemap[(oy & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 7);
-                tilemap[(oy & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 8);
-                tilemap[((oy + 1) & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
-                tilemap[((oy + 1) & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 17);
+                uint16_t r0 = (uint16_t)(oy & 31) << 5;
+                uint16_t r1 = (uint16_t)((oy + 1) & 31) << 5;
+                uint8_t c0 = (uint8_t)(ox & 31);
+                uint8_t c1 = (uint8_t)((ox + 1) & 31);
+                boss_vram_cell((uint16_t)(r0 + c0), (uint8_t)(RPG_TILE_BASE_WORLD + 7));
+                boss_vram_cell((uint16_t)(r0 + c1), (uint8_t)(RPG_TILE_BASE_WORLD + 8));
+                boss_vram_cell((uint16_t)(r1 + c0), (uint8_t)(RPG_TILE_BASE_WORLD + 16));
+                boss_vram_cell((uint16_t)(r1 + c1), (uint8_t)(RPG_TILE_BASE_WORLD + 17));
 #ifdef DEBUG_BUILD
-                g_tilemap_mirror[(oy & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 7);
-                g_tilemap_mirror[(oy & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 8);
-                g_tilemap_mirror[((oy + 1) & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
-                g_tilemap_mirror[((oy + 1) & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 17);
-                if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
-                    g_ui_screen_buf[sy][sx] = (char)a->visual;
-                    g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
-                    g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
-                    g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                {
+                    uint8_t sx = (uint8_t)(ox - w->scroll_x);
+                    uint8_t sy = (uint8_t)(oy - w->scroll_y);
+                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
+                        g_ui_screen_buf[sy][sx] = (char)a->visual;
+                        g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
+                        g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
+                        g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                    }
                 }
 #endif
             }

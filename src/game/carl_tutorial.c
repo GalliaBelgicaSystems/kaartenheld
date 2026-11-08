@@ -38,14 +38,14 @@ uint8_t g_carl_tut_mile;
 
 bool game_carl_tutorial_update(Game *g)
 {
-    /* No null check (fixed-bank budget): battle_screen_update already
-     * returned on null before calling.  The banked body stages any box
-     * for game_update's post-tick opener; truthy means yield this
-     * frame (the box opens later in the same game_update, so input and
-     * battle_update must not run into it). */
+    (void)g;
+    if (g_game.battle.enemy_battle_id != BATTLE_CARL) {
+        g_carl_tut_flags = 0;
+        g_carl_tut_hurt = 0;
+        return false;
+    }
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&carl_tutorial_banked;
-    g_bk_ptr_a = (void *)g;
     banked_call_run();
-    return g_bk_byte_a != (uint8_t)DIALOGUE_ID_NONE;
+    return g_bk_dlg_id != (uint8_t)DIALOGUE_ID_NONE;
 }

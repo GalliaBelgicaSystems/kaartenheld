@@ -1,5 +1,4 @@
 #pragma bank 5
-#pragma disable_warning 110
 
 #include "banked.h"
 #include "game.h"
@@ -39,16 +38,11 @@
 
 void carl_spar_grant_banked(void)
 {
-    uint8_t f;
-    uint8_t byte;
-    uint8_t mask;
     int16_t pool;
 
     /* One-shot: already granted (spar start or leave-the-field skip). */
-    f = (uint8_t)(STORY_FLAG_ID_TUTORIAL_SKIPPED - 1);
-    byte = (uint8_t)(f >> 3);
-    mask = (uint8_t)(1u << (f & 7));
-    if ((g_game.state.flags.bytes[byte] & mask) != 0) return;
+    if ((g_game.state.flags.bytes[(STORY_FLAG_ID_TUTORIAL_SKIPPED - 1) >> 3] &
+         (uint8_t)(1u << ((STORY_FLAG_ID_TUTORIAL_SKIPPED - 1) & 7))) != 0) return;
 
     /* Uniform ADD 1 (replica of game_variable_add: uncapped, always
      * emits VARIABLE_SET with the new value LE). */
@@ -66,7 +60,8 @@ void carl_spar_grant_banked(void)
      * bank 5 sits at 0 B headroom in release (AGENTS.md §52.18), so the
      * bit lives or dies with the one-shot test the choice body already
      * pays (carl_tutorial.h). */
-    g_game.state.flags.bytes[byte] |= mask;
+    g_game.state.flags.bytes[(STORY_FLAG_ID_TUTORIAL_SKIPPED - 1) >> 3] |=
+        (uint8_t)(1u << ((STORY_FLAG_ID_TUTORIAL_SKIPPED - 1) & 7));
     telemetry_ring_emit((uint8_t)EVENT_STORY_FLAG_SET,
                     (uint8_t)STORY_FLAG_ID_TUTORIAL_SKIPPED, 0, 0, 0);
 
