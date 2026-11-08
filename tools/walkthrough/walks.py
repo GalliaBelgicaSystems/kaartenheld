@@ -20,6 +20,7 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_SOUTH_FIELD, SCENE_FIELD,
                                       SCENE_VILLAGE_AREA, SCENE_DESOLATE_FIELD,
                                       SCENE_UNDERGROUND_TUNNEL,
+                                      SCENE_UNDERGROUND_TUNNEL_SOUTH,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
                                       STORY_FLAG_ID_FIELD_CHEST,
@@ -889,14 +890,15 @@ def walk_b(planner, checks):
     s.check("met dog flag",
             s.reader.flag(STORY_FLAG_ID_MET_DOG),
             expected="set", actual="clear")
-    # Tunnel skeleton: with MET_DOG set, the bump offers "Take a bone
-    # from the skeleton?" -- YES (default cursor) grants the bone.
-    follow(s, planner, "town", s.pos(), "underground_tunnel", (13, 4))
-    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
+    # Tunnel skeleton (south tunnel): with MET_DOG set, the bump offers
+    # "Take a bone from the skeleton?" -- YES (default cursor) grants
+    # the bone.
+    follow(s, planner, "town", s.pos(), "underground_tunnel_south", (10, 11))
+    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL_SOUTH)
     s.check_eq("underground music",
                s.reader.music_track(), MUSIC_UNDERGROUND)
     s.check("skeleton ask bump",
-            bump_actor(s, planner, "underground_tunnel", (13, 4), "right",
+            bump_actor(s, planner, "underground_tunnel_south", (10, 11), "right",
                        "SKELETON:"),
             expected="SKELETON:", actual="none")
     s.shoot("08-skeleton-ask", need="Take a bone")
@@ -918,7 +920,7 @@ def walk_b(planner, checks):
             expected="set", actual="clear")
     # Back to town: trade the bone for the Old Key (YES, then the thanks
     # sets DOG_KEY on close and the ? mark goes away).
-    follow(s, planner, "underground_tunnel", s.pos(), "town", (8, 13))
+    follow(s, planner, "underground_tunnel_south", s.pos(), "town", (8, 13))
     s.settle_scene(expected_scene=SCENE_TOWN)
     s.check("dog trade bump",
             bump_actor(s, planner, "town", (8, 13), "down", "DOG:"),

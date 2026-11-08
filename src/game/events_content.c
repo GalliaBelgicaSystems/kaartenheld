@@ -358,7 +358,8 @@ const EventDefinition g_events[] = {
         }
     },
     /* ── Tunnel skeleton (bone for the village dog) ────────────────
-     * An old skeleton rests in the field-forest tunnel.  The first
+     * An old skeleton rests in the south tunnel (Desolate Field to
+     * South Ridge).  The first
      * bump only describes it; talking to the village dog first (its
      * hint sets MET_DOG) teaches the hero the bone's worth, and the
      * next bump offers "Take a bone from the skeleton?" (YES/NO).
