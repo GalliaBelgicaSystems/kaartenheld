@@ -6,7 +6,7 @@
 
 typedef enum {
     MUSIC_NONE,
-    MUSIC_OVERWORLD, /* overworld theme (assets/music/another opening.uge,
+    MUSIC_OVERWORLD, /* overworld theme (assets/music/opening more.uge,
                         loops, bank 7): Wake Grove + Carl's field */
     MUSIC_BATTLE,
     MUSIC_VICTORY,   /* battle-victory fanfare (victory.uge, bank 7),
