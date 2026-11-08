@@ -64,6 +64,14 @@ static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
 extern uint8_t g_tilemap_mirror[32 * 32];
 #endif
 
+static void boss_vram_cell(uint16_t idx, uint8_t tile)
+{
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[idx] = tile;
+#endif
+}
+
 /* Shadow OAM WRAM base (GBDK's global `shadow_OAM` at 0xC000).  Each entry
  * is 4 bytes: y, x, tile, attr.  Written directly (WRAM is always mapped)
  * so the fixed-bank caller need not loop over actors. */
@@ -411,28 +419,29 @@ void ui_actors_sprites_banked(void)
         for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
             const WorldActorRuntime *a = &w->actors[slot];
             uint8_t ox, oy;
-            volatile uint8_t *tilemap = (volatile uint8_t *)0x9800;
             if (!a->active) continue;
             if ((int)a->sprite_kind != SPRITE_KIND_BOSS) continue;
             ox = a->x;
             oy = a->y;
             {
-                uint8_t sx = (uint8_t)(ox - w->scroll_x);
-                uint8_t sy = (uint8_t)(oy - w->scroll_y);
-                tilemap[(oy & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 7);
-                tilemap[(oy & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 8);
-                tilemap[((oy + 1) & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
-                tilemap[((oy + 1) & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 17);
+                uint16_t r0 = (uint16_t)(oy & 31) << 5;
+                uint16_t r1 = (uint16_t)((oy + 1) & 31) << 5;
+                uint8_t c0 = (uint8_t)(ox & 31);
+                uint8_t c1 = (uint8_t)((ox + 1) & 31);
+                boss_vram_cell((uint16_t)(r0 + c0), (uint8_t)(RPG_TILE_BASE_WORLD + 7));
+                boss_vram_cell((uint16_t)(r0 + c1), (uint8_t)(RPG_TILE_BASE_WORLD + 8));
+                boss_vram_cell((uint16_t)(r1 + c0), (uint8_t)(RPG_TILE_BASE_WORLD + 16));
+                boss_vram_cell((uint16_t)(r1 + c1), (uint8_t)(RPG_TILE_BASE_WORLD + 17));
 #ifdef DEBUG_BUILD
-                g_tilemap_mirror[(oy & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 7);
-                g_tilemap_mirror[(oy & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 8);
-                g_tilemap_mirror[((oy + 1) & 31) * 32 + (ox & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 16);
-                g_tilemap_mirror[((oy + 1) & 31) * 32 + ((ox + 1) & 31)] = (uint8_t)(RPG_TILE_BASE_WORLD + 17);
-                if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
-                    g_ui_screen_buf[sy][sx] = (char)a->visual;
-                    g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
-                    g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
-                    g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                {
+                    uint8_t sx = (uint8_t)(ox - w->scroll_x);
+                    uint8_t sy = (uint8_t)(oy - w->scroll_y);
+                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
+                        g_ui_screen_buf[sy][sx] = (char)a->visual;
+                        g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
+                        g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
+                        g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                    }
                 }
 #endif
             }

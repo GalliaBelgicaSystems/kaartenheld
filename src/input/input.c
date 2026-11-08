@@ -9,7 +9,7 @@ extern volatile uint8_t g_harness_mode;
  * game's controls diverge from what the harness tests (g_inp_mask uses
  * 1 << InputButton while release input uses joypad()'s layout).  A mismatch
  * makes this array size 0, which is a hard compile error. */
-static const int g_input_bit_layout_ok[
+typedef char g_input_bit_layout_ok[
     (1 << INPUT_RIGHT) == J_RIGHT &&
     (1 << INPUT_LEFT)  == J_LEFT  &&
     (1 << INPUT_UP)    == J_UP    &&
@@ -17,7 +17,7 @@ static const int g_input_bit_layout_ok[
     (1 << INPUT_A)     == J_A     &&
     (1 << INPUT_B)     == J_B     &&
     (1 << INPUT_SELECT)== J_SELECT &&
-    (1 << INPUT_START) == J_START ? 1 : 0
+    (1 << INPUT_START) == J_START ? 1 : -1
 ];
 
 volatile uint8_t g_inp_mask;  /* BSS zero (AGENTS.md 52.27) */
@@ -28,7 +28,6 @@ volatile uint8_t g_inp_mask;  /* BSS zero (AGENTS.md 52.27) */
  * input_update(). */
 uint8_t g_inp_pad;  /* BSS zero (AGENTS.md 52.27) */
 uint8_t g_inp_prev;  /* BSS zero (AGENTS.md 52.27) */
-static uint8_t injected_pad_state = 0;
 
 #ifdef DEBUG_BUILD
 /* Cross-emulator joypad probe (diagnostic, harness/host reads it via the
@@ -56,7 +55,6 @@ void input_init(void)
 {
     g_inp_pad = joypad();
     g_inp_prev = g_inp_pad;
-    injected_pad_state = 0;
     g_inp_mask = 0;
 }
 
@@ -65,7 +63,6 @@ void input_reset(void)
 {
     g_inp_pad = 0;
     g_inp_prev = 0;
-    injected_pad_state = 0;
     g_inp_mask = 0;
 }
 #endif
@@ -83,12 +80,8 @@ void input_update(void)
      * harness skips CRT0 and controls frames through the debugger, so do not
      * call the hardware joypad path there. */
     physical_pad_state = g_harness_mode ? 0 : joypad();
-    if (g_inp_mask != 0) {
-        injected_pad_state = g_inp_mask;
-        g_inp_mask = 0;
-    }
-    g_inp_pad = physical_pad_state | injected_pad_state;
-    injected_pad_state = 0;
+    g_inp_pad = physical_pad_state | g_inp_mask;
+    g_inp_mask = 0;
     g_input_probe[0] = physical_pad_state;
     g_input_probe[1] = P1_REG;
     g_input_probe[2] = g_inp_pad;
@@ -101,12 +94,8 @@ void input_update(void)
      * this, g_inp_mask writes are silently discarded (the mask is cleared
      * below but never sampled), breaking any tooling that drives the
      * release ROM through the debugger. */
-    if (g_inp_mask != 0) {
-        injected_pad_state = g_inp_mask;
-        g_inp_mask = 0;
-    }
-    g_inp_pad = joypad() | injected_pad_state;
-    injected_pad_state = 0;
+    g_inp_pad = joypad() | g_inp_mask;
+    g_inp_mask = 0;
 #endif
 }
 

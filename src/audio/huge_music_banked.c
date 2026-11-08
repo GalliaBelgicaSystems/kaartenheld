@@ -42,24 +42,6 @@ extern uint8_t g_music_paused;
  * pure (WRAM + regs + same-bank calls only).  The jingle body obeys
  * the same rule (no selects, no cross-bank calls). */
 
-/* Shared voice-silence helper (same bank: plain direct call, never a
- * trampoline target).  The sole register-write contract for stopping
- * AND pausing: identical writes, no __critical (banked bodies must not
- * emit di/ei -- lint gate -- and none is needed).  Split out of
- * huge_stop_inline so the pursuit-alert pause (marks_banked.c, same
- * bank) silences without duplicating 7 volatile writes in a full bank
- * (bank 8 sits hard against 16 KB). */
-void huge_silence_banked(void)
-{
-    NR12_REG = 0x00;
-    NR14_REG = 0x80;
-    NR22_REG = 0x00;
-    NR24_REG = 0x80;
-    NR32_REG = 0x00;
-    NR42_REG = 0x00;
-    NR44_REG = 0x80;
-}
-
 static void huge_stop_inline(void)
 {
     /* Sole stop implementation (the fixed-bank twin was removed to fund
@@ -70,7 +52,13 @@ static void huge_stop_inline(void)
      * silences here is the whole contract. */
     g_huge_playing = 0;
     g_huge_current_song = 0;
-    huge_silence_banked();
+    NR12_REG = 0x00;
+    NR14_REG = 0x80;
+    NR22_REG = 0x00;
+    NR24_REG = 0x80;
+    NR32_REG = 0x00;
+    NR42_REG = 0x00;
+    NR44_REG = 0x80;
 }
 
 /* Track -> (song, bank) + stop + set, one round-trip.  Reads the track
@@ -85,7 +73,6 @@ void music_play_banked(void)
     uint8_t bank = HUGE_MUSIC_BANK;
     uint8_t track = g_bk_byte_a;
     huge_stop_inline();
-    g_music_paused = 0;
     if (track == MUSIC_TITLE) g_title_frames = 0;
     if (track == MUSIC_BATTLE) {
         /* Bank 7: the re-scored Battle BGM overflowed bank 6 (driver +

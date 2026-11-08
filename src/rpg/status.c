@@ -105,31 +105,8 @@ uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
     return g_status_tick.damage;
 }
 
-/* Decode the two set-bit positions of a grey mask into out-a/out-b
- * (0xFF when absent).  Pools are <= 5 positions, so only bits 0-4 are
- * ever set.  Debug-only: the sole caller (status_grey_apply's telemetry
- * tail) compiles out of the release ROM. */
-#ifdef DEBUG_BUILD
-void status_grey_mask_indices(uint8_t mask, uint8_t *a, uint8_t *b)
-{
-    uint8_t i, n = 0;
-    *a = 0xFF;
-    *b = 0xFF;
-    for (i = 0; i < 8; i++) {
-        if ((mask & (uint8_t)(1u << i)) != 0) {
-            if (n == 0) *a = i;
-            else { *b = i; break; }
-            n++;
-        }
-    }
-}
-#endif
-
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
 {
-#ifdef DEBUG_BUILD
-    uint8_t a, b;
-#endif
     if (actor_slot >= STATUS_ROUND_SLOTS) return;
 
     g_bk_call_bank = 10;
@@ -142,8 +119,7 @@ void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
     /* An empty pool or a bad slot leaves the mask untouched (no event). */
     if (s_grey_mask[actor_slot] == 0) return;
 
-    status_grey_mask_indices(s_grey_mask[actor_slot], &a, &b);
-    telemetry_emit(EVENT_CARDS_GREYED, actor_slot, a, b,
+    telemetry_emit(EVENT_CARDS_GREYED, actor_slot, g_bk_byte_b, g_bk_byte_c,
                    POISON_GREY_TURNS);
 #endif
 }

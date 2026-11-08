@@ -29,11 +29,8 @@
 
 void carl_tutorial_banked(void)
 {
-    Game *g = (Game *)g_bk_ptr_a;
     uint8_t phase;
 
-    g_bk_byte_a = (uint8_t)DIALOGUE_ID_NONE;
-    if (!g) return;
     /* Fleeing a finished lesson shows Carl's farewell box (a win would
      * show the graduation speech instead, but the spar takes real
      * effort at 10 HP; the farewell carries no AP).  Gated on the full
@@ -41,28 +38,27 @@ void carl_tutorial_banked(void)
      * exit.  Consuming FLEE_SHOWN makes the speech one-shot: the RESULT
      * screen re-arms nothing, so closing it lands on FLED! instead of
      * reopening (re-accepting re-inits everything through YES). */
-    if (g->battle.battle_over &&
-        g->battle.enemy_battle_id == BATTLE_CARL &&
-        g->battle.result == BATTLE_RESULT_FLED &&
+    if (g_game.battle.battle_over &&
+        g_game.battle.enemy_battle_id == BATTLE_CARL &&
+        g_game.battle.result == BATTLE_RESULT_FLED &&
         (g_carl_tut_flags & CARL_TUT_FLAG_FLEE_SHOWN) != 0) {
         g_carl_tut_flags &= (uint8_t)~(CARL_TUT_FLAG_FLEE_SHOWN | CARL_TUT_FLAG_HURT_ARMED);
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FAREWELL;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FAREWELL;
-        g->battle.msg_id = 9;
+        g_game.battle.msg_id = 9;
         return;
     }
-    if (g->battle.battle_over) return;
+    if (g_game.battle.battle_over) return;
     /* Non-Carl battles reset the per-fight progress (the battle-start
      * hook is gone; YES re-inits fully on accept, so same-session
      * staleness cannot meet a real fight). */
-    if (g->battle.enemy_battle_id != BATTLE_CARL) {
+    if (g_game.battle.enemy_battle_id != BATTLE_CARL) {
         g_carl_tut_flags = 0;
         g_carl_tut_hurt = 0;
         return;
     }
-    if (g->battle.result != BATTLE_RESULT_NONE) return;
+    if (g_game.battle.result != BATTLE_RESULT_NONE) return;
 
-    phase = g->battle.phase;
+    phase = g_game.battle.phase;
     /* No offer accepted: plain fight, no coaching.  Battles that reach
      * Carl through the INTRO YES path carry LESSON (assigned by the
      * choice body); consuming it here keeps the downstream once-each
@@ -77,30 +73,26 @@ void carl_tutorial_banked(void)
          * controls without claiming a grant. */
         if ((g_carl_tut_flags & CARL_TUT_FLAG_AP_GRANTED) != 0) {
             g_carl_tut_flags &= (uint8_t)~CARL_TUT_FLAG_AP_GRANTED;
-            g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
             g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK;
         } else {
-            g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT;
             g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT;
         }
-        g->battle.msg_id = 9;
+        g_game.battle.msg_id = 9;
         return;
     }
     if (phase == BATTLE_PHASE_PLAYER_DEFEND &&
         (g_carl_tut_flags & CARL_TUT_FLAG_DEFEND_SHOWN) == 0) {
         g_carl_tut_flags |= (uint8_t)(CARL_TUT_FLAG_DEFEND_SHOWN);
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DEFEND;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DEFEND;
-        g->battle.msg_id = 9;
+        g_game.battle.msg_id = 9;
         return;
     }
     if (phase == BATTLE_PHASE_PLAYER_SELECT &&
         (g_carl_tut_flags & CARL_TUT_FLAG_DEFEND_SHOWN) != 0 &&
         (g_carl_tut_flags & CARL_TUT_FLAG_POKER_SHOWN) == 0) {
         g_carl_tut_flags |= (uint8_t)(CARL_TUT_FLAG_POKER_SHOWN);
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_POKER;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_POKER;
-        g->battle.msg_id = 9;
+        g_game.battle.msg_id = 9;
         return;
     }
     /* Post-lesson jeers: re-arm on every SELECT phase so each confirmed
@@ -120,8 +112,7 @@ void carl_tutorial_banked(void)
          * Takes precedence over jeers and reminders for this attack. */
         g_carl_tut_flags |= (uint8_t)CARL_TUT_FLAG_FLEE_SHOWN;
         g_carl_tut_flags &= (uint8_t)~CARL_TUT_FLAG_HURT_ARMED;
-        g->battle.msg_id = 9;
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FLEE;
+        g_game.battle.msg_id = 9;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_FLEE;
         return;
     }
@@ -130,8 +121,7 @@ void carl_tutorial_banked(void)
         /* Post-lesson attacks each earn one looping jeer (the old
          * every-10-HP flee reminder is gone with the 10-HP spar). */
         g_carl_tut_flags &= (uint8_t)~CARL_TUT_FLAG_HURT_ARMED;
-        g->battle.msg_id = 9;
-        g_bk_byte_a = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_HURT;
+        g_game.battle.msg_id = 9;
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_HURT;
         g_bk_dlg_line = g_carl_tut_hurt;
         g_bk_dlg_count = (uint8_t)(g_carl_tut_hurt + 1);

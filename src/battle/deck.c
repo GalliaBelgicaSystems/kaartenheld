@@ -33,6 +33,7 @@ void deck_draw(Deck *d, Card *out_card)
         out_card->effect = CARD_EFFECT_DAMAGE_TARGET;
         out_card->status_id = STATUS_NONE;
         out_card->status_chance = 0;
+        out_card->ring = 0;
         return;
     }
 

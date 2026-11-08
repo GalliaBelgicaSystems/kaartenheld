@@ -102,15 +102,18 @@ void world_anim_rebuild_banked(void)
     uint8_t found;
     uint8_t base;
     uint16_t idx;
-    /* Distinct pair-endpoint slots across all kinds (fire 37/38, water
-     * 60/61 -- shared by every kind, so the rebuild is kind-agnostic;
-     * castle maps can never hold these VRAM ids anyway). */
+    /* Distinct pair-endpoint slots for the current tileset (fire 37/38,
+     * water 60/61 on forest/desolate; 0 slots on village/castle/underground
+     * so non-animated maps skip the VRAM scan and set g_anim_count = 0). */
     nslots = 0;
     slots[0] = 0;
     slots[1] = 0;
     slots[2] = 0;
     slots[3] = 0;
     for (p = 0; p < (uint8_t)(ANIM_PAIR_COUNT * 3); p = (uint8_t)(p + 3)) {
+        if (kAnimPairs[p] != (uint8_t)g_game.world.tileset_kind) {
+            continue;
+        }
         sa = kAnimPairs[(uint8_t)(p + 1)];
         sb = kAnimPairs[(uint8_t)(p + 2)];
         for (i = 0; i < 2; i++) {
@@ -127,6 +130,10 @@ void world_anim_rebuild_banked(void)
                 nslots = (uint8_t)(nslots + 1);
             }
         }
+    }
+    if (nslots == 0) {
+        g_anim_count = 0;
+        return;
     }
     /* Ring lives in VRAM bank 0.  Gate crossings repaint with the LCD
      * on, so reads go through the bounded helper (mode-3 returns 0xFF,
@@ -235,17 +242,11 @@ void world_anim_swap_banked(void)
     uint8_t n;
     uint8_t v;
     uint16_t cell;
-    if (!w) return;
-    /* Throttle: every 4th game frame is plenty -- steps last 16 frames
-     * and the walk is tiny now.  g_game.frame advances once per
-     * game_update on both builds. */
-    if (((uint8_t)g_game.frame & 3) != 0) {
-        return;
-    }
     /* Collect this tileset's (other -> want) frame mapping for the
      * current step.  Pairs are (tileset-kind, VRAM-slot-A, VRAM-slot-B);
      * both VRAM bases are 128 (WORLD and DESOLATE), so slot + base never
-     * leaves uint8. */
+     * leaves uint8.  The fixed-bank caller already gates on
+     * ((g_game.frame & 3) == 0 && g_anim_count != 0). */
     npairs = 0;
     o0 = 0;
     w0 = 0;
@@ -279,7 +280,7 @@ void world_anim_swap_banked(void)
     }
     /* Walk the recorded list through PPU-gated cell access (above):
      * phase-independent on every target, idle or moving. */
-    n = (g_anim_count <= ANIM_CELL_CAP) ? g_anim_count : ANIM_CELL_CAP;
+    n = g_anim_count;
     for (i = 0; i < n; i++) {
         cell = g_anim_cells[i];
         v = anim_read_cell(cell);

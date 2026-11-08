@@ -1,8 +1,11 @@
 #pragma bank 9
+#pragma disable_warning 110
 
 #include "rpg/loot.h"
 #include "banked.h"
 #include "actor.h"
+#include "game.h"
+#include "game_ids.h"
 
 /* ── Victory loot drop, bank-9 body (docs/loot.md §8/§17/§34.5,
  * docs/enemies_ranking.md §4.3) ─────────────────────────────
@@ -112,6 +115,23 @@ void game_loot_drop_banked(void)
             g_loot_id = CARD_NONE;
             return;
         }
+        /* First-real-victory bronze shield (docs/loot.md §34.5):
+         * guaranteed once per game after rank-0 lesson fights are excluded,
+         * and after the two RNG steps above so the isolated stream keeps its
+         * positions for a given seed.  Gated on the global kill counter
+         * (0 kills = no victory yet) plus the Carl spar exception (kills == 1
+         * with STORY_FLAG_ID_TUTORIAL_SPAR_WON set means the only kill was
+         * the rank-0 spar). */
+        {
+            int16_t kills = g_game.state.variables.values[
+                VARIABLE_ID_MONSTERS_DEFEATED - 1];
+            if (kills == 0 || (kills == 1 &&
+                    (g_game.state.flags.bytes[(STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1) >> 3] &
+                     (uint8_t)(1u << ((STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1) & 7))))) {
+                g_loot_id = (uint8_t)(LOOT_ID_BASE + (MAT_BRONZE << 5) + WPN_SHIELD);
+                return;
+            }
+        }
 
         while (material < MAT_MYTHRIL &&
                mat_roll > s_rank_cut[rank][material]) {
@@ -137,11 +157,5 @@ void game_loot_drop_banked(void)
         /* Derived id: BASE + mat*32 + eff*8 + wpn (shifts only). */
         g_loot_id = (uint8_t)(LOOT_ID_BASE +
                               (((material << 2) + effect) << 3) + weapon);
-
-        /* NOTE: the first-victory bronze shield is applied by the
-         * second game_loot_drop() leg (bank 11) after this body
-         * returns (see content.c).  Nothing is consumed or overridden
-         * here, so the isolated stream keeps its positions for a
-         * given seed. */
     }
 }

@@ -77,7 +77,6 @@ extern volatile uint8_t g_harness_mode;
  * to swap (same throttle the body applies internally). */
 extern uint8_t g_anim_count;
 
-static void ui_put_char(uint8_t x, uint8_t y, char ch);
 static void ui_vram_sync_write(volatile uint8_t *dst, uint8_t tile);
 static void ui_world_tail(const World *world);
 
@@ -119,8 +118,6 @@ void ui_init(void)
      * CRT0) needs this too, and mGBA's debugger does not advance VBlank
      * during single-stepping.  Clear bit 4 for signed 0x9000 tile addressing. */
     LCDC_REG &= ~0x90;
-
-    oam_dma_init();
 
     /* Load font tiles from Bank 10 (96 tiles = 1536 bytes) using g_ui_screen_buf as temporary buffer */
     for (p = 0; p < 96; p += 8) {
@@ -716,7 +713,7 @@ static void ui_stamp_static_actors(const World *world, uint8_t c0, uint8_t c1,
     }
 }
 
-static uint8_t s_anim_counter = 0;
+static uint8_t s_anim_counter;
 
 void ui_draw_actors_sprites(const World *world)
 {
@@ -930,19 +927,6 @@ void ui_update_camera(const World *world)
 #endif
 }
 
-static void ui_put_char(uint8_t x, uint8_t y, char ch)
-{
-    if (y < 18 && x < 20) {
-        if (g_ui_screen_buf[y][x] != ch) {
-            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-            VBK_REG = 0;
-            ui_vram_sync_write(dst, tile);
-            g_ui_screen_buf[y][x] = ch;
-        }
-    }
-}
-
 void ui_draw_hline(uint8_t y, char ch)
 {
     uint8_t x;
@@ -956,7 +940,7 @@ void ui_draw_hline(uint8_t y, char ch)
     VBK_REG = 0;
     for (x = 0; x < 20; x++) {
         if (g_ui_screen_buf[y][x] != ch) {
-            vram[x] = tile;
+            ui_vram_sync_write(&vram[x], tile);
             g_ui_screen_buf[y][x] = ch;
         }
     }

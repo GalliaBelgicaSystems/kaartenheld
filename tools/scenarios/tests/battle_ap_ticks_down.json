@@ -85,6 +85,9 @@
    }
   },
   "seed": 7001,
-  "start_battle": true
+  "start_battle": true,
+  "flags": {
+   "TUTORIAL_SKIPPED": true
+  }
  }
 }

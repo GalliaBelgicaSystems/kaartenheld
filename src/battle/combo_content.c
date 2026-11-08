@@ -164,8 +164,8 @@ uint8_t combo_classify_loot(const volatile Card *cards, const uint8_t *idx,
 
 /* Decode-range guards (mirror of combo.c's pack guards): fail the build
  * if the packed fields ever outgrow the staging byte. */
-static const int g_combo_unpack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
-static const int g_combo_unpack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
+typedef char g_combo_unpack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : -1];
+typedef char g_combo_unpack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : -1];
 
 /* All effective cards share one symbol (bank-local, shared by resolve
  * and the HUD preview so the suited rule lives in one place). */

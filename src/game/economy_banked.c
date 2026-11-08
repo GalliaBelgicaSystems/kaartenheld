@@ -114,8 +114,7 @@ void economy_grant_banked(void)
     uint16_t e3;
     uint16_t t;
     uint8_t granted;
-    int16_t cur;
-    int16_t nv;
+    uint16_t nv;
     uint16_t v;
     if (!victory || base == 0 || currency < 1 ||
         currency > MAX_CURRENCIES) {
@@ -143,13 +142,11 @@ void economy_grant_banked(void)
     }
     if (granted == 0) granted = 1;
     /* Saturating credit at 9999 (mirrors the currency_add clamp; the body
-     * must not call the fixed-bank fn, §52.11.1).  cur <= 9999 and
-     * granted <= 255, so no int16 overflow. */
-    cur = g_game.state.currency.amount[currency - 1];
-    if (cur < 0) cur = 0;
-    nv = (int16_t)(cur + (int16_t)granted);
+     * must not call the fixed-bank fn, §52.11.1).  wallet <= 9999 and
+     * granted <= 255, so no overflow. */
+    nv = (uint16_t)(wallet + granted);
     if (nv > 9999) nv = 9999;
-    g_game.state.currency.amount[currency - 1] = nv;
+    g_game.state.currency.amount[currency - 1] = (int16_t)nv;
     /* Loot-only gold_in note (sales and event gold never touch it, §6.1). */
     v = (uint16_t)(g_game.state.economy.gold_in + granted);
     if (v < g_game.state.economy.gold_in) v = 0xFFFF;
@@ -170,11 +167,8 @@ void economy_update_banked(void)
     uint8_t dir = 0;
     uint16_t expected;
     uint16_t thresh;
-    int16_t th;
-    int16_t net;
     uint16_t gi;
     uint16_t go;
-    uint16_t d;
     /* Shop-hopping guard: no counters, no update. */
     if (g_game.state.economy.gold_in == 0 &&
         g_game.state.economy.gold_out == 0)
@@ -189,20 +183,12 @@ void economy_update_banked(void)
     expected = economy_expected_for_scene(g_game.state.scene.scene_id);
     thresh = (uint16_t)(expected >> 2);
     if (thresh < 100) thresh = 100;
-    th = (int16_t)thresh;
     gi = g_game.state.economy.gold_in;
     go = g_game.state.economy.gold_out;
-    if (gi >= go) {
-        d = (uint16_t)(gi - go);
-        net = (d > 9000) ? 9000 : (int16_t)d;
-    } else {
-        d = (uint16_t)(go - gi);
-        net = (d > 9000) ? -9000 : (int16_t)(0 - (int16_t)d);
-    }
-    if (net > th) {
+    if (gi >= go && (uint16_t)(gi - go) > thresh) {
         if (idx < ECONOMY_INDEX_MAX) idx++;
         dir = 1;
-    } else if (net < (int16_t)(0 - th)) {
+    } else if (go > gi && (uint16_t)(go - gi) > thresh) {
         if (idx > ECONOMY_INDEX_MIN) idx--;
         dir = 2;
     } else {

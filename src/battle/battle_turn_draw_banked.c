@@ -62,6 +62,7 @@ void battle_turn_draw_banked(void)
                 b->hand[i].effect = CARD_EFFECT_DAMAGE_TARGET;
                 b->hand[i].status_id = STATUS_NONE;
                 b->hand[i].status_chance = 0;
+                b->hand[i].ring = 0;
             } else {
                 /* Hoisted out of the macro call: CARD_COPY_FIELDS
                  * names its `src` argument once per field, so passing

@@ -243,8 +243,6 @@ static void debug_run_action(void)
              * (e.g. freezing the PLAYER).  Poison also triggers its grey-out. */
             if (a0 < STATUS_ROUND_SLOTS && a1 != STATUS_NONE) {
                 bool ok = status_apply(status_slots(a0), a0, a1, 1, a2);
-                telemetry_emit(EVENT_STATUS_RESISTED, 0xEE, a0, ok ? 1 : 0,
-                               g_status_frozen_mask); /* PROBE */
                 if (ok && a1 == STATUS_POISON) {
                     uint8_t pool = (a0 == 0) ? BATTLE_HAND_SIZE
                                              : g_game.battle.enemy_deck.count;

@@ -154,16 +154,18 @@ bool deck_add_card(CardState *cs, CardId id)
 {
     const CardDefinition *def;
     uint8_t in_deck;
+    uint8_t owned;
     if (!cs || id == CARD_NONE) return false;
     if (cs->deck.count >= MAX_DECK_CARDS) return false;
-    if (deck_collection_count(cs, id) == 0) return false;
+    owned = deck_collection_count(cs, id);
+    if (owned == 0) return false;
 
     def = card_get_def(id);
     if (!def) return false;
     if (def->type == CARD_TYPE_SPECIAL) return false;
     in_deck = deck_count_in_deck(&cs->deck, id);
     if (def->max_copies > 0 && in_deck >= def->max_copies) return false;
-    if (in_deck >= deck_collection_count(cs, id)) return false;
+    if (in_deck >= owned) return false;
 
     /* Cross-row cap (docs/loot.md §34): a capped curated row and its
      * loot twin are one card in two collection rows after a capped

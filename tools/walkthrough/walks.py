@@ -734,7 +734,7 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     row5 = s.bg_text()[5]
     if "IRON RING" in row5:
-        want, slid = CARD_IRON_RING, "BO9"
+        want, slid = CARD_IRON_RING, "MYTHRIL BOW"
     elif "MYTHRIL BOW" in row5:
         want, slid = CARD_BOW_9, "STEEL SHIELD"
     elif "STEEL SHIELD" in row5:

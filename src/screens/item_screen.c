@@ -36,7 +36,6 @@ void item_gem_render_banked(void);
  * start at 1. */
 #define ROW_TOP     0
 #define FIRST_CARD  1
-#define VISIBLE_CARDS 5
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
