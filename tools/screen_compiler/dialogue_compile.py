@@ -29,7 +29,7 @@ from dialogue_ids import (
 )
 
 MAX_LINES = 8
-STAGE_SPEAKER = 11   # g_dlg_speaker[12] incl NUL
+STAGE_SPEAKER = 15   # g_dlg_speaker[16] incl NUL
 STAGE_LINE = 20      # g_dlg_lines[][21] incl NUL
 RENDER_WIDTH = 18    # dialogue box text width
 

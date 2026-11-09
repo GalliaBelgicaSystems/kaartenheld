@@ -49,6 +49,24 @@ static uint8_t grp_member(Game *g, uint8_t primary, uint8_t ord)
  * g_bk_byte_a = id -> g_bk_byte_c removed count. */
 void deck_clear_all_banked(void);
 
+/* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
+ * item_menu_cycle_banked): pure WRAM state machines that outgrew the
+ * fixed bank when the card-group + boss-dialogue trees merged (Bank 1
+ * overflow, AGENTS.md 52.18).  Mode 0 = filter cycle, 1 = sort cycle,
+ * 2 = tab switch; dir is the tab direction (0 back, 1 forward), read
+ * here -- a banked body must never call input_pressed (AGENTS.md
+ * §52.11.1).  Modes 0/1 ignore dir. */
+void item_menu_cycle_banked(void);
+static void menu_cycle(Game *g, uint8_t mode, uint8_t dir)
+{
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&item_menu_cycle_banked;
+    g_bk_ptr_a = (void *)g;
+    g_bk_byte_a = mode;
+    g_bk_byte_b = dir;
+    banked_call_run();
+}
+
 /* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
  * through here; non-GEM tabs forward to the quest bodies in the same
  * bank (direct call, no trampoline), so the fixed dispatch below needs
@@ -104,51 +122,6 @@ static uint8_t s_grp_ord;
 static uint8_t s_grp_rm;
 static uint8_t s_grp_id;
 static uint8_t s_grp_n;
-static uint8_t s_grp_before;
-static uint8_t s_grp_after;
-
-static void cycle_filter(Game *g)
-{
-    if (g->item_menu_filter == FILTER_ALL)
-        g->item_menu_filter = CARD_TYPE_ATTACK;
-    else if (g->item_menu_filter == CARD_TYPE_ATTACK)
-        g->item_menu_filter = CARD_TYPE_DEFENSE;
-    else if (g->item_menu_filter == CARD_TYPE_DEFENSE)
-        g->item_menu_filter = CARD_TYPE_HEAL;
-    else if (g->item_menu_filter == CARD_TYPE_HEAL)
-        g->item_menu_filter = CARD_TYPE_STATUS;
-    else if (g->item_menu_filter == CARD_TYPE_STATUS)
-        g->item_menu_filter = CARD_TYPE_UTILITY;
-    else
-        g->item_menu_filter = FILTER_ALL;
-}
-
-static void cycle_sort(Game *g)
-{
-    /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
-     * int-mod library would land in the tight fixed bank. */
-    g->item_menu_sort = (g->item_menu_sort >= SORT_COST_DESC) ?
-        SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
-}
-
-/* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <-> GEM).
- * Directional: with four tabs a forward-only cycle would strand
- * LEFT presses on the wrong tab. The direction is read here so the
- * two call sites keep their original single-call shape (fixed-bank
- * _HOME headroom, AGENTS.md 52.18). */
-static void switch_tab(Game *g)
-{
-    if (input_pressed(INPUT_RIGHT)) {
-        if (g->item_menu_tab == TAB_GEM) g->item_menu_tab = TAB_DECK;
-        else g->item_menu_tab++;
-    } else {
-        if (g->item_menu_tab == TAB_DECK) g->item_menu_tab = TAB_GEM;
-        else g->item_menu_tab--;
-    }
-    g->item_menu_index = ROW_TOP;
-    g->item_menu_scroll = 0;
-    g->render_cache.valid = false;
-}
 
 /* Targeted cursor move (AGENTS.md 36).  The bank-11 body
  * (menu_cursor_banked.c) computes the caret rows, repaints the two cells
@@ -246,7 +219,7 @@ void item_screen_update(Game *g)
     if (g->item_menu_tab != TAB_DECK) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-            switch_tab(g);
+            menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
             return;
         }
         if (g->item_menu_tab == TAB_HERO) return;
@@ -273,8 +246,8 @@ void item_screen_update(Game *g)
                     (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
                 g->render_cache.valid = false;
             } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-                if (g->item_menu_pick_row == 0) cycle_filter(g);
-                else cycle_sort(g);
+                if (g->item_menu_pick_row == 0) menu_cycle(g, 0, 0);
+                else menu_cycle(g, 1, 0);
                 g->render_cache.valid = false;
             } else if (input_pressed(INPUT_A)) {
                 g->item_menu_mode = MODE_LIST;
@@ -287,7 +260,7 @@ void item_screen_update(Game *g)
 
     /* Tab switch (LIST mode only — submenus consume LR first). */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-        switch_tab(g);
+        menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         return;
     }
 
@@ -359,18 +332,18 @@ void item_screen_update(Game *g)
                         if (s_grp_rm == 0xFF) break;
                         s_grp_id = cs->collection.entries[s_grp_rm].id;
                         /* Single-shot clear through the bank-11 body
-                         * (self-contained, no fixed-bank calls).  Event
-                         * honesty: the emit trip count is the deck's own
-                         * before/after delta, never a staged return --
-                         * exactly one event per copy actually removed. */
-                        s_grp_before = cs->deck.count;
+                         * (self-contained, no fixed-bank calls).  The
+                         * return is read IMMEDIATELY: the emit wrapper
+                         * below reuses the staging bytes, so nothing may
+                         * sit between the call and this read (a stale
+                         * re-read once produced a 5th CARD_REMOVED for 4
+                         * copies -- see card_group_clear_counts). */
                         g_bk_call_bank = 11;
                         g_bk_call_target = (uint16_t)&deck_clear_all_banked;
                         g_bk_ptr_a = (void *)cs;
                         g_bk_byte_a = s_grp_id;
                         banked_call_run();
-                        s_grp_after = cs->deck.count;
-                        s_grp_n = (uint8_t)(s_grp_before - s_grp_after);
+                        s_grp_n = g_bk_byte_c;
                         while (s_grp_n) {
                             telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
                                            (CardId)s_grp_id, 0, 0, 0);

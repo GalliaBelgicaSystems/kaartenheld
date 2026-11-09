@@ -17,7 +17,7 @@ uint8_t g_dialogue_table_count;  /* BSS zero (AGENTS.md 52.27) */
  * lookup would silently corrupt the outer one.  Safe today because only one
  * dialogue is ever active and scene_load() does not re-enter dialogue
  * resolution; keep that invariant. */
-char g_dlg_speaker[12];
+char g_dlg_speaker[16];
 char g_dlg_lines[MAX_DIALOGUE_LINES][21];
 
 void dialogue_register(const DialogueDefinition *table, uint8_t count, uint8_t bank)

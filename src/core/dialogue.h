@@ -64,6 +64,6 @@ DialogueId dialogue_end(DialogueState *d);
  * bank-2 start body (src/core/dialogue_banked.c). */
 extern const DialogueDefinition *g_dialogue_table;
 extern uint8_t g_dialogue_table_count;
-extern char g_dlg_speaker[12];
+extern char g_dlg_speaker[16];
 extern char g_dlg_lines[MAX_DIALOGUE_LINES][21];
 void dialogue_start_def_banked(void);

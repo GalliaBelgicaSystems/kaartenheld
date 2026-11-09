@@ -33,6 +33,16 @@ extern uint8_t ui_font_tile_base;
 #define CUR_FIRST_CARD 1
 #define CUR_VISIBLE_CARD 12
 
+/* Nav-mutation constants (mirror item_screen.c TAB_DECK/TAB_GEM/ROW_TOP,
+ * FILTER_ALL, SORT_NONE/SORT_COST_DESC) for item_menu_cycle_banked
+ * below -- keep in sync. */
+#define CYC_TAB_DECK  0
+#define CYC_TAB_GEM   3
+#define CYC_ROW_TOP   0
+#define CYC_FILTER_ALL 0xFF
+#define CYC_SORT_NONE  0
+#define CYC_SORT_COST_DESC 5
+
 static Game *s_cu_game;
 static uint8_t s_cu_pos;
 static uint8_t s_cu_mode;
@@ -458,4 +468,59 @@ void deck_clear_all_banked(void)
         n--;
     }
     g_bk_byte_c = removed;
+}
+
+/* DECK nav mutations: filter cycle / sort cycle / tab switch (bank 11).
+ * Moved out of the fixed bank (AGENTS.md §52.18): the card-group +
+ * boss-dialogue merge overflowed Bank 1, and these three are pure WRAM
+ * state machines -- no ROM tables, no fixed calls -- so they run
+ * verbatim here.  Staging: g_bk_ptr_a = Game*, g_bk_byte_a = mode
+ * (0 filter, 1 sort, 2 tab), g_bk_byte_b = tab direction (0 back,
+ * 1 forward; ignored by modes 0/1, which take no direction input).  The
+ * direction is staged by the fixed caller: a banked body must never
+ * call input_pressed (AGENTS.md §52.11.1).  Mirror constants live in
+ * item_screen.c (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL,
+ * SORT_NONE/SORT_COST_DESC) -- keep in sync. */
+#define CYC_FILTER 0
+#define CYC_SORT   1
+#define CYC_TAB    2
+void item_menu_cycle_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t mode;
+    if (!g) return;
+    mode = g_bk_byte_a;
+    if (mode == CYC_FILTER) {
+        if (g->item_menu_filter == CYC_FILTER_ALL)
+            g->item_menu_filter = CARD_TYPE_ATTACK;
+        else if (g->item_menu_filter == CARD_TYPE_ATTACK)
+            g->item_menu_filter = CARD_TYPE_DEFENSE;
+        else if (g->item_menu_filter == CARD_TYPE_DEFENSE)
+            g->item_menu_filter = CARD_TYPE_HEAL;
+        else if (g->item_menu_filter == CARD_TYPE_HEAL)
+            g->item_menu_filter = CARD_TYPE_STATUS;
+        else if (g->item_menu_filter == CARD_TYPE_STATUS)
+            g->item_menu_filter = CARD_TYPE_UTILITY;
+        else
+            g->item_menu_filter = CYC_FILTER_ALL;
+    } else if (mode == CYC_SORT) {
+        /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
+         * int-mod library would land in the tight fixed bank. */
+        g->item_menu_sort = (g->item_menu_sort >= CYC_SORT_COST_DESC) ?
+            CYC_SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
+    } else {
+        /* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <->
+         * GEM).  Directional: with four tabs a forward-only cycle would
+         * strand LEFT presses on the wrong tab. */
+        if (g_bk_byte_b) {
+            if (g->item_menu_tab == CYC_TAB_GEM) g->item_menu_tab = CYC_TAB_DECK;
+            else g->item_menu_tab++;
+        } else {
+            if (g->item_menu_tab == CYC_TAB_DECK) g->item_menu_tab = CYC_TAB_GEM;
+            else g->item_menu_tab--;
+        }
+        g->item_menu_index = CYC_ROW_TOP;
+        g->item_menu_scroll = 0;
+        g->render_cache.valid = false;
+    }
 }
