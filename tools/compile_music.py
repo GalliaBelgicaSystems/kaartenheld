@@ -69,6 +69,23 @@ src = re.sub(r"static const hUGEWaveInstr_t wave_instruments\[\] = \{\s*\};",
 src = re.sub(r"static const unsigned char waves\[\] = \{\s*\};",
               "static const unsigned char waves[1] = {0};", src)
 
+# Pan-convention translation (8xy effects): the tracker/GBStudio
+# composition tools author the pan byte mirrored relative to the
+# hardware NR51 layout (verified Nov 2026: the opening theme's first
+# ping is authored to go LEFT, but the .uge bytes decode to
+# CH1+CH2 RIGHT under NR51 -- while GBStudio itself plays it left).
+# Nibble-swap every 8xy effect param so the ROM reproduces the authored
+# stereo image: the author's left nibble lands on NR51's left bits.
+# Runs before dedup so the merge key and the playback-equivalence
+# guard below both see the final shipped bytes.  Songs without pan
+# events are untouched.
+def _swap_pan_byte(m):
+    return "0x8" + m.group(2) + m.group(1)
+src, n_pan = re.subn(r"0x8([0-9A-Fa-f])([0-9A-Fa-f])\b", _swap_pan_byte, src)
+if n_pan:
+    print(f"compile_music.py: translated {n_pan} pan bytes (tracker convention -> NR51)",
+          file=sys.stderr)
+
 # Deduplicate byte-identical pattern arrays.  uge2source emits one C array
 # per tracker pattern slot, so a repeated section lands in ROM twice.
 # Merging identical arrays is playback-identical: the driver reads the
