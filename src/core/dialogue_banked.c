@@ -44,7 +44,7 @@ void dialogue_start_def_banked(void)
     s_dlg_d->choice_made = 0;
 
     if (s_dlg_def->speaker) {
-        for (s_dlg_i = 0; s_dlg_i < 11 && s_dlg_def->speaker[s_dlg_i]; s_dlg_i++) {
+        for (s_dlg_i = 0; s_dlg_i < 15 && s_dlg_def->speaker[s_dlg_i]; s_dlg_i++) {
             g_dlg_speaker[s_dlg_i] = s_dlg_def->speaker[s_dlg_i];
         }
         g_dlg_speaker[s_dlg_i] = 0;

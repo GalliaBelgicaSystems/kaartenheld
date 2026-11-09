@@ -52,6 +52,9 @@ and the game reaches its ending.
 The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
 **Throne Room** is where the **Lord of Slimes** (70 HP) waits.  He is
 always present and reachable, so the final fight is open from the start.
+When entering the Throne Room and advancing five rows towards the boss,
+the Lord of Slimes addresses the hero in a standard dialogue box:
+*"Card wielder, you dare challenge me! You cannot stop what is coming. Slimes will rule this planet soon!"*
 
 ---
 
@@ -834,8 +837,13 @@ Defeat in battle → `GAME OVER … CONTINUE? YES / NO`:
 
 ### 10.3 The ending
 
-Defeating the **Lord of Slimes** sets the ending flag; after the battle
-you go to the **ENDING** screen instead of back to the overworld:
+In the final battle, when reduced to critical health (<=20 HP), the **Lord of Slimes**
+performs his desperation move accompanied by an explosion SFX.  After this attack,
+the Lord of Slimes mocks the hero in a dialogue box:
+*"Card wielder, you put up a good fight, but you are no match for me!"*
+
+Upon closing this dialogue, the screen fades to white, and the hero awakens in the
+final wake scene before advancing to the **ENDING** screen:
 
 ```
       THE END

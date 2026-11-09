@@ -50,17 +50,13 @@ void skeleton_swap_banked(void);
 void game_despair_fade_out_banked(void);
 
 /* Slime-lord desperation outro (unwinnable final battle, game-owned flow):
- * immediate cut to the wake grove with the "Where am I?" dialogue, then
- * THANKS (via the dialogue close).  Called by the shared battle screen's
- * defeat exit when g_slime_despair is set; the flag stays set for the
- * dialogue close and battle_start clears it for the next fight.  Reads
- * the single global Game directly (no parameter) so the caller's frame
- * stays lean (fixed _CODE budget + stack budget, AGENTS.md 52.18/52.24).
- * Lives here (not inline in battle_screen_update) so that function keeps
- * its frame.  scene_load clears the encounter via world_load_map and
- * replays the scene track, so no world_on_battle_end / music call is
- * needed. */
+ * called by the shared battle screen's defeat exit when g_slime_despair is set.
+ * Opens the Lord of Slimes defeat dialogue in the Throne Room. */
 void game_slime_despair_outro(void);
+
+/* Transitions from the Lord of Slimes defeat dialogue to the white fade-out,
+ * loads the wake scene, and opens strange_wake. */
+void game_slime_despair_wake(void);
 
 /* Per-frame tutorial tick for Carl's spar: stages each coaching dialogue
  * box once (attack, defend, poker, flee, then one looping jeer per

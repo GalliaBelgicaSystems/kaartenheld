@@ -342,6 +342,12 @@ static void marks_refresh(void)
     if (g_game.screen == SCREEN_OVERWORLD) {
         uint8_t px = g_game.world.player.position.x;
         uint8_t py = g_game.world.player.position.y;
+        if (g_game.world.map_id == MAP_THRONE_ROOM && py <= 11 &&
+            !MARKS_FLAG_SET(STORY_FLAG_ID_SLIME_LORD_INTRO)) {
+            g_game.state.flags.bytes[(STORY_FLAG_ID_SLIME_LORD_INTRO - 1) >> 3] |=
+                (uint8_t)(1u << ((STORY_FLAG_ID_SLIME_LORD_INTRO - 1) & 7));
+            g_bk_dlg_id = (uint8_t)DIALOGUE_ID_SLIME_LORD_INTRO;
+        }
         for (i = 0; i < MAX_WORLD_ACTORS; i++) {
             WorldActorRuntime *a = &g_game.world.actors[i];
             uint8_t dx;

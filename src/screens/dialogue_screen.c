@@ -6,6 +6,7 @@
 #include "ui.h"
 #include "banked.h"
 #include "content.h"
+#include "game_ids.h"
 #include "rpg/deck.h"
 
 /* Bank-10 choice nav body (src/game/choice_nav_banked.c): evaluates pad
@@ -125,6 +126,10 @@ void dialogue_screen_update(Game *g)
 
     if (!dialogue_next(&g->dialogue)) {
         interaction_on_dialogue_end(&g->dialogue, &g->state);
+        if (g->dialogue.id == DIALOGUE_ID_SLIME_LORD_DEFEAT) {
+            game_slime_despair_wake();
+            return;
+        }
         /* Mid-battle Carl box (msg 9 parked by the banked tick when it
          * staged the box, and by nothing else): return to the fight --
          * never restart it through the stashed-slot path below.  This
