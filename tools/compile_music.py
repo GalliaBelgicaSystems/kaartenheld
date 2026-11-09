@@ -70,11 +70,11 @@ src = re.sub(r"static const unsigned char waves\[\] = \{\s*\};",
               "static const unsigned char waves[1] = {0};", src)
 
 # Deduplicate byte-identical pattern arrays.  uge2source emits one C array
-# per tracker pattern slot, so a repeated section (e.g. Forest.uge P2/P6)
-# lands in ROM twice.  Merging identical arrays is playback-identical: the
-# driver reads the same byte stream through the rewritten order references.
-# Bank 6 (driver + songs) is full, so every byte counts.  Runs on every
-# song; songs without duplicates come out byte-identical.  If a future
+# per tracker pattern slot, so a repeated section lands in ROM twice.
+# Merging identical arrays is playback-identical: the driver reads the
+# same byte stream through the rewritten order references.  Bank 6
+# (driver + songs) is full, so every byte counts.  Runs on every song;
+# songs without duplicates come out byte-identical.  If a future
 # uge2source changes the P-name scheme the pass finds nothing and no-ops
 # (a resulting bank overflow then fails loudly in make memmap).
 #
