@@ -249,7 +249,7 @@ static void battle_ap_draw(const volatile Battle *battle)
             re[1] = (uint8_t)(((uint8_t)(i << 2) << 3) + 8);
             /* Deck shake (player hit): pips ride their card's top-left
              * corner with the same whole-hand offset as the BG box. */
-            if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE &&
+            if (g_battle_deck_timer != 0 && battle->result != BATTLE_RESULT_VICTORY &&
                 (g_battle_deck_timer & 2) != 0) {
                 re[1] = (uint8_t)(re[1] + 8);
             }

@@ -96,11 +96,13 @@ void battle_feedback_tick_banked(void)
         return;
     }
     if (b->player.hp < g_battle_fx_php) {
-        /* Player hit: the whole hand judders, unless the fight is
-         * already decided (a killing counter lands damage and victory
-         * on the same frame -- shaking then would clobber the loot
-         * reveal rows the hand painter wipes). */
-        if (b->result == BATTLE_RESULT_NONE) {
+        /* Player hit: the whole hand judders, unless the fight ended
+         * in victory on the same frame (a killing counter lands
+         * damage and victory together -- shaking then would clobber
+         * the loot reveal rows the hand painter wipes).  Defeat --
+         * including the scripted desperation reprisal -- keeps the
+         * shake: nothing overwrites the hand zone there. */
+        if (b->result != BATTLE_RESULT_VICTORY) {
             g_battle_deck_timer = 5;
         }
     } else if (b->player.hp > g_battle_fx_php) {
@@ -158,10 +160,10 @@ void battle_feedback_tick_banked(void)
         }
         b->dirty |= BATTLE_DIRTY_HERO;
     }
-    /* The deck timer only runs while undecided (see the arming gate):
-     * freezing it on a result screen leaves nothing to strand, and
-     * the epoch re-arm clears it for the next fight. */
-    if (g_battle_deck_timer != 0 && b->result == BATTLE_RESULT_NONE) {
+    /* The deck timer only runs outside a victory result (see the arming
+     * gate): freezing it on the loot reveal leaves nothing to strand,
+     * and the epoch re-arm clears it for the next fight. */
+    if (g_battle_deck_timer != 0 && b->result != BATTLE_RESULT_VICTORY) {
         g_battle_deck_timer--;
         b->dirty |= BATTLE_DIRTY_HAND;
         if (g_battle_deck_timer == 0) {

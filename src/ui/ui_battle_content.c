@@ -1191,11 +1191,11 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
     /* Deck shake (player hit): wipe the zone first (see helper), then
      * every card draws at its shaken column below.  The wipe runs only
      * while shaking or on the one-shot wipe frame after, and never on
-     * result screens (the loot reveal owns rows 10-12) -- steady cursor
+     * a victory result (the loot reveal owns rows 10-12) -- steady cursor
      * moves keep the cheap incremental path (a wipe on every DIRTY_HAND
      * flickers the whole hand). */
     if ((g_battle_deck_timer != 0 || g_battle_deck_wipe != 0) &&
-        battle->result == BATTLE_RESULT_NONE) {
+        battle->result != BATTLE_RESULT_VICTORY) {
         battle_clear_hand_zone(top, bh, mark_row);
         g_battle_deck_wipe = 0;
     }
@@ -1206,10 +1206,10 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
 
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
         col = (uint8_t)(i << 2);
-        /* Shaken column while the deck timer runs (never on result
-         * screens: the loot reveal owns the zone). */
+        /* Shaken column while the deck timer runs (never on a victory
+         * result: the loot reveal owns the zone). */
         ccol = col;
-        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE) {
+        if (g_battle_deck_timer != 0 && battle->result != BATTLE_RESULT_VICTORY) {
             /* Whole-hand offset (same sign every card, a single
              * out-and-back nudge over the 5-frame timer): uniform motion
              * never overlaps neighboring 3-wide boxes, and card 0 never

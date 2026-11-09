@@ -108,7 +108,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "land of slimes"
+   "contains": "beating the battle"
   },
   {
    "type": "battle_player_hp",
