@@ -261,9 +261,30 @@ def check_identity():
             cost = (p + mat * 4 + r * 8 + (12 if mat == 4 else 0) + 7) // 8
         else:
             cost = int(fields[3].strip()) if fields[3].strip().isdigit() else 0
+        # Uses column: a plain literal, or LOOT_BOW_USES(p, MAT_m, r)
+        # (AP-derived bow arrows, docs/loot.md §34.6).  The macro args
+        # must agree with the row's own power/CARD_AP args -- same
+        # cross-check philosophy as the cost column above.
+        um = re.search(
+            r"LOOT_BOW_USES\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)",
+            fields[4])
+        if um:
+            up, umat_name, ur = int(um.group(1)), um.group(2), int(um.group(3))
+            umat = _MAT_IDX[umat_name]
+            if cm and (up, umat, ur) != (p, mat, r):
+                fail("identity: row %s LOOT_BOW_USES(%d, MAT_%s, %d) "
+                     "disagrees with its CARD_AP(%d, MAT_%s, %d)"
+                     % (name, up, umat_name, ur, p, mat_name, r))
+            if up != int(fields[2]):
+                fail("identity: row %s LOOT_BOW_USES power %d but .power "
+                     "is %s" % (name, up, fields[2]))
+            uses = 7 - ((up + umat * 4 + ur * 8 +
+                         (12 if umat == 4 else 0) + 7) // 8)
+        else:
+            uses = int(fields[4])
         try:
             want.append((name, (_TYPE_MAP[fields[1].strip()],
-                                int(fields[2]), cost, int(fields[4]),
+                                int(fields[2]), cost, uses,
                                 _FX_MAP[fields[6].strip()],
                                 _BT_MAP[fields[7].strip()],
                                 _ST_MAP[fields[10].strip()],
@@ -368,6 +389,16 @@ def main():
             if rider != plain + 1:
                 fail("strict rider: %s %s plain %d rider %d (want +1)"
                      % (MATERIALS[mat], weapon, plain, rider))
+
+    # Bow arrows ladder (docs/loot.md §34.6): LOOT_BOW_USES = 7 - CARD_AP,
+    # so wood..mythril bows hold 6/6/5/4/2 -- inverse to power, with the
+    # curated mythril bow pinned at 2.  Bows never carry riders.
+    for mat, want_uses in enumerate((6, 6, 5, 4, 2)):
+        got_uses = 7 - costs[(mat, "bow", 0)]
+        if got_uses != want_uses:
+            fail("bow uses: %s bow holds %d, want %d (7 - %d AP)"
+                 % (MATERIALS[mat], got_uses, want_uses,
+                    costs[(mat, "bow", 0)]))
 
     # Table parity with the doc
     doc_cells, doc_catalog = parse_doc_tables()

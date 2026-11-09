@@ -1,0 +1,126 @@
+{
+ "name": "loot_bow_uses_mythril",
+ "test": true,
+ "description": "Loot bow arrows are AP-derived (docs/loot.md 34.6, LOOT_BOW_USES = 7 - CARD_AP): derived id 226 (0xE2: material 4 MYTHRIL, plain, bow) is A MYTHRIL BOW and shows USES 2 on its CARDS detail page -- the same 2 the curated shop bow holds. Pre-fix this bow was unlimited (uses 0).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8411
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 226,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "ATTACK"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "2"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "MYTHRIL BOW"
+  }
+ ]
+}

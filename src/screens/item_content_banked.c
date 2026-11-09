@@ -478,6 +478,12 @@ const CardDefinition *ic_loot_synth(CardId id)
      * cost 0 (not playable, §5.3). */
     g_card_scratch.cost = (weapon <= WPN_RING)
         ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
+    /* Bow arrows per battle (docs/loot.md §34.6): AP-derived, inverse
+     * to power (wood 6 .. mythril 2).  Staged after the rider above so
+     * the uses track CARD_AP with no second ladder. */
+    if (weapon == WPN_BOW)
+        g_card_scratch.uses_per_battle =
+            LOOT_BOW_USES(g_card_scratch.power, material, has_rider);
     n = g_card_scratch.name;
     *n++ = s_ic_loot_mat[material];
     *n++ = ' ';

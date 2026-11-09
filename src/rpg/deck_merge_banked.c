@@ -21,7 +21,7 @@
  * Curated identities live in the table below (hand-written next to the
  * catalog it mirrors in src/game/cards_content.c, kept honest by
  * tools/card_costs.py --check-identity); loot ids are synthesized with
- * pure macros (LOOT_POWER / CARD_AP / LOOT_RING_USES, same formulas as
+ * pure macros (LOOT_POWER / CARD_AP / LOOT_RING_USES / LOOT_BOW_USES, same formulas as
  * loot_synth_banked -- slugs and prices stay out, they are not identity).
  *
  * One row per card identity: a curated catalog row and its mechanically
@@ -69,7 +69,8 @@ static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
 /* Loot identity synthesis as a macro (not a call): deck_ident_cmp sits
  * on the loot-grant stack chain, and a separate frame there costs
  * worst-case depth (AGENTS.md §52.24).  Same pure macros as
- * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES). */
+ * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES /
+ * LOOT_BOW_USES). */
 #define DECK_LOOT_IDENT(lid, out)                                          \
     do {                                                                   \
         uint8_t _m = loot_id_material(lid);                                \
@@ -81,7 +82,8 @@ static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
                        DECK_RIDER_OK((_e), (_w)));                          \
         (out)[0] = s_ident_type[_wr];                                      \
         (out)[1] = LOOT_POWER((_m), (_wi));                                 \
-        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) : 0;                   \
+        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) :                      \
+                   (((_wr) == 2) ? LOOT_BOW_USES((out)[1], (_m), (_hr)) : 0); \
         (out)[4] = s_ident_fx[_wr];                                        \
         (out)[5] = s_ident_battle[_wr];                                    \
         if (_hr) {                                                         \

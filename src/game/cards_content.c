@@ -26,8 +26,10 @@ const CardDefinition g_cards[] = {
      * played hand's multiplier (docs/combo-system.md §13). */
     { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  2, CARD_AP(2, MAT_BRONZE, 1),  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, 0, STATUS_POISON,   128,  "P DA" },
     { CARD_SHOPKEYS,        CARD_TYPE_SPECIAL, 0, 0,  0, 1, CARD_EFFECT_NONE,          BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "SHOP KEYS"  },
-    /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2). */
-    { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  CARD_AP(9, MAT_MYTHRIL, 0),  2, 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, 0, STATUS_NONE,       0,   "M BO"  },
+    /* Mythril bow (no element): heavy hitter sold by the Merchant (shop 2).
+     * Arrows AP-derived like every loot bow (LOOT_BOW_USES: 7 - 5 AP = 2),
+     * written as the macro so a future AP retune moves the shop bow too. */
+    { CARD_BOW_9,         CARD_TYPE_ATTACK, 9,  CARD_AP(9, MAT_MYTHRIL, 0),  LOOT_BOW_USES(9, MAT_MYTHRIL, 0), 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, 0, STATUS_NONE,       0,   "M BO"  },
     /* Wood sword: the tier-1 starter blade (hero.json).  Plain; wood can
      * never carry a rider. */
     { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "W SW" },

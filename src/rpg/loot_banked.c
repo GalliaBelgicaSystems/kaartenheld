@@ -154,6 +154,12 @@ void loot_synth_banked(void)
      * keep cost 0 (not playable, §5.3). */
     g_card_scratch.cost = (weapon <= WPN_RING)
         ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
+    /* Bow arrows per battle (docs/loot.md §34.6): AP-derived, inverse to
+     * power (wood 6 .. mythril 2).  Staged after the rider above so the
+     * uses track CARD_AP with no second ladder; has_rider is always 0
+     * for bows (rider_legal forbids every bow rider). */
+    if (weapon == WPN_BOW)
+        g_card_scratch.uses_per_battle = LOOT_BOW_USES(g_card_scratch.power, material, has_rider);
 
     synth_name(material, effect, weapon, has_rider);
 }

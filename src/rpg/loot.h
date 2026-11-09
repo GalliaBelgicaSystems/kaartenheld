@@ -86,6 +86,15 @@ enum {
 #define CARD_AP(power, material, rider)                          \
     ((uint8_t)((CARD_AP_VALUE(power, material, rider) + 7) >> 3))
 
+/* Bow uses per battle (docs/loot.md §34.6): AP-derived, inverse to power.
+ * 7 - CARD_AP so the ladder is 6/6/5/4/2 across wood->mythril, pinning
+ * the curated mythril bow (2 uses) with no extra weights: bows never
+ * carry riders, so the rider term is always 0 today but stays explicit
+ * so a future bow rider prices like every other AP cost.  Pure macro,
+ * safe in every banked copy (same constraints as CARD_AP). */
+#define LOOT_BOW_USES(power, material, rider) \
+    ((uint8_t)(7 - CARD_AP(power, material, rider)))
+
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)
 #define loot_id_material(id)         ((uint8_t)(((id) - LOOT_ID_BASE) >> 5))
