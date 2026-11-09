@@ -58,16 +58,18 @@ static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max
 void ending_content_render(void)
 {
     uint8_t i;
-    static const char * const s_lines[7] = {
+    static const char * const s_lines[9] = {
         "      THE END",
         "--------------------",
-        "The Hero cleared",
-        "the land of slimes!",
-        "Peace has returned!",
-        "Thanks for playing!",
+        "Congratulations for",
+        "beating the battle",
+        "demo of Kaartenheld!",
+        "Follow",
+        "@GBelgicaSystems",
+        "on X for updates!",
         "[A] RESTART"
     };
-    static const uint8_t s_rows[7] = { 1, 2, 4, 5, 7, 9, 14 };
+    static const uint8_t s_rows[9] = { 1, 2, 4, 5, 7, 9, 11, 12, 14 };
     /* Ending page: pure white background, black text.  Program every BG
      * slot to the document ramp (both light shades read white, both dark
      * read black) so the whole screen is one sheet whatever attribute a
@@ -91,7 +93,7 @@ void ending_content_render(void)
         }
     }
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < 9; i++) {
         simple_draw_text(0, s_rows[i], s_lines[i], 20);
     }
 }
