@@ -112,8 +112,8 @@ void battle_rider_draw(const volatile Battle *battle)
         col = (uint8_t)(i << 2);
         /* Deck shake (player hit): ride the card's top-right corner
          * with the same whole-hand offset as the BG box (never on
-         * result screens). */
-        if (g_battle_deck_timer != 0 && battle->result == BATTLE_RESULT_NONE &&
+         * a victory result: the loot reveal owns the zone). */
+        if (g_battle_deck_timer != 0 && battle->result != BATTLE_RESULT_VICTORY &&
             (g_battle_deck_timer & 2) != 0) {
             col = (uint8_t)(col + 1);
         }
