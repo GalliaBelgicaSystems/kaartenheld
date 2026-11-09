@@ -51,6 +51,14 @@ static void huge_stop_inline(void)
     NR32_REG = 0x00;
     NR42_REG = 0x00;
     NR44_REG = 0x80;
+    /* Reset stereo panning: songs using the 8xy pan effect (the overworld
+     * theme's ping-pong) leave NR51 lateralized, and nothing else in the
+     * stop path, the driver init, or any track switch touches it -- without
+     * this, the residue leaks into the next track and e.g. a battle
+     * entered mid-ping-pong plays with pulse channels stuck left or right.
+     * Every song is authored centered and re-pans itself per row if needed,
+     * so restoring the audio_init() default here is always correct. */
+    NR51_REG = 0xFF;
 }
 
 /* Track -> (song, bank) + stop + set, one round-trip.  Reads the track
