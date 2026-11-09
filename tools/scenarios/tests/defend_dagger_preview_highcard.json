@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview_highcard",
  "test": true,
- "description": "Counter forecast high card: two distinct staged daggers DA2+DA5 (not confirmed) preview CNT 5 -- high card scores the max with no suited bonus (6 would mean a bogus +25%). Pairs the HCARD-3 resolve in defend_dagger_kill.",
+ "description": "Counter forecast high card: two distinct staged daggers DA2+DA5 (not confirmed) preview CNT 2 (halved from 5) -- high card scores the max with no suited bonus (6 would mean a bogus +25%, and so would any unhalved 5). Pairs the high-card resolve path in defend_dagger_kill (both halved).",
  "actions": [
   {
    "type": "wait",
@@ -109,7 +109,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "CNT 5"
+   "contains": "CNT 2"
   },
   {
    "type": "screen_row_not_contains",
@@ -119,7 +119,7 @@
   {
    "type": "vram_row",
    "row": 10,
-   "contains": "CNT 5"
+   "contains": "CNT 2"
   }
  ],
  "initial_state": {

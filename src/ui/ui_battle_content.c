@@ -881,10 +881,13 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
  * participating base -- over an index map of the staged dagger hand
  * slots (rings excluded, exactly like the prep's compaction), then
  * scales with the same shift-add product and subtract-loop quotient
- * the bank-3 scaler uses (docs/combo-system.md §5/§7).  If scoring ever
- * changes, change BOTH here and combo_resolve_banked: the CNT preview
- * scenario (pair+suited 8, trips+suited 12) and the counter scenarios
- * pin their agreement. */
+ * the bank-3 scaler uses (docs/combo-system.md §5/§7).  The counter
+ * itself deals HALF the evaluated amount (docs/loot.md §34.6), so the
+ * preview halves too (floor 1, mirroring the resolve) -- CNT shows what
+ * the counter will actually deal.  If scoring ever changes, change BOTH
+ * here and combo_resolve_banked: the CNT preview scenario (pair+suited
+ * 4, trips+suited 6, halved from 8/12) and the counter scenarios pin
+ * their agreement. */
 static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
 {
     const Battle *nb = (const Battle *)battle;
@@ -942,6 +945,14 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     while (prod >= 100) {
         prod -= 100;
         q++;
+    }
+    /* Halved counter (docs/loot.md §34.6): the resolve deals half the
+     * evaluated amount, so the preview shows half too.  Floor 1 like
+     * the resolve; 0 means no counter (returned early above), never a
+     * weak hand. */
+    if (q != 0) {
+        q >>= 1;
+        if (q == 0) q = 1;
     }
     return q;
 }

@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview_lethal",
  "test": true,
- "description": "Counter forecast on a lethal swing: hero at 2 HP stages a DA3 pair (not confirmed) vs the telegraphed 2 -- the counter lands FIRST for 8, so the forecast honestly shows CNT 8 beside DMG 2 (a killing counter would skip the swing entirely).",
+ "description": "Counter forecast on a lethal swing: hero at 2 HP stages a DA3 pair (not confirmed) vs the telegraphed 2 -- the counter lands FIRST for 4 (halved from 8), so the forecast honestly shows CNT 4 beside DMG 2 (a killing counter would skip the swing entirely).",
  "actions": [
   {
    "type": "wait",
@@ -105,12 +105,12 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "CNT 8"
+   "contains": "CNT 4"
   },
   {
    "type": "vram_row",
    "row": 10,
-   "contains": "CNT 8"
+   "contains": "CNT 4"
   }
  ],
  "initial_state": {

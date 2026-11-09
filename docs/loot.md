@@ -1744,6 +1744,14 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   glyph on the floor counter (VRAM 103, same overwrite trick as 4_arrows
   on 97) while the semantic row still reads the digit (HE5).
   IMPLEMENTED.
+* Bow arrows per battle are AP-derived (`LOOT_BOW_USES` = 7 - CARD_AP,
+  docs/card-ap-cost-formula.md): inverse to power, so wood 6, bronze 6,
+  iron 5, steel 4, mythril 2.  No new weights -- a future AP retune
+  moves the arrows with it, and the curated mythril shop bow (2 uses)
+  is the same macro, not a coincident literal.  Bows never carry riders,
+  so the rider term is always 0.  Unlimited bows showed `USES INF` on
+  the detail page; every loot bow now shows a finite count.
+  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
 ## 34.4 Combat resolution rules
@@ -1763,7 +1771,10 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   IMPLEMENTED.
 * Defense with daggers: a daggers-only selection (rings allowed)
   counterattacks with an attack-phase poker evaluation over the dagger
-  subset, and the counter lands FIRST -- when it kills the telegraphed
+  subset, HALVED (rounded down, minimum 1) -- the counter is a free
+  extra attack every defend phase, so full evaluation made daggers
+  strictly better than the same-AP sword despite their -1 face damage.
+  The halved counter still lands FIRST -- when it kills the telegraphed
   attacker the incoming swing never lands (no damage, block cue, no
   organic rider).  Otherwise the hero takes the resolved net on top of
   the counter.  IMPLEMENTED.
