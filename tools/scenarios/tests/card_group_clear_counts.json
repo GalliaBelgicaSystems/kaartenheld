@@ -1,0 +1,56 @@
+{
+ "name": "card_group_clear_counts",
+ "test": true,
+ "description": "Group-clear event honesty (regression: the per-round member query reused stale trampoline staging left by the emit wrapper, so round 2 re-ran the emit body and produced a 5th CARD_REMOVED_FROM_DECK for a 4-copy row). One A press on the fully-decked first row clears exactly its owned copies: 4 removal events and the row reads DECK 0/4.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_REMOVED_FROM_DECK",
+   "count": 4
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "DECK 0/4"
+  }
+ ]
+}

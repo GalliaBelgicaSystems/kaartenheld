@@ -18,6 +18,37 @@
  * switchable area is full and the cursor needs no ROM tables. */
 void item_menu_cursor_banked(void);
 
+/* DECK group member/sums query (menu_cursor_banked.c, bank 11):
+ * g_bk_byte_a = primary collection index, g_bk_byte_d = mode
+ * (0 = NTH member by ordinal in g_bk_byte_b -> g_bk_byte_c collection
+ * index or 0xFF; 1 = SUMS -> g_bk_byte_c owned, g_bk_byte_b decked). */
+void item_group_query_banked(void);
+/* Grouped DECK view build (same bank): g_bk_ptr_a = Game*, fills
+ * s_view_indices/s_view_count (one row per MATERIAL+WEAPON). */
+void item_view_build_banked(void);
+
+/* Member lookup for the grouped A-loops below: thin fixed wrapper over
+ * the bank-11 member query.  Stages bank/target/ptr FRESH on every
+ * call -- the clear body and the emit wrapper reuse the same staging
+ * between rounds, so a lookup that skips staging re-runs the previous
+ * body (round 2 once re-appended a CARD_REMOVED: 5 events for 4
+ * copies).  Returns the collection index, or 0xFF when the ordinal
+ * is past the group's last member. */
+static uint8_t grp_member(Game *g, uint8_t primary, uint8_t ord)
+{
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&item_group_query_banked;
+    g_bk_ptr_a = (void *)g;
+    g_bk_byte_a = primary;
+    g_bk_byte_b = ord;
+    g_bk_byte_d = 0;
+    banked_call_run();
+    return g_bk_byte_c;
+}
+/* Group-clear removal core (same bank): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = id -> g_bk_byte_c removed count. */
+void deck_clear_all_banked(void);
+
 /* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
  * through here; non-GEM tabs forward to the quest bodies in the same
  * bank (direct call, no trampoline), so the fixed dispatch below needs
@@ -67,10 +98,14 @@ void item_gem_render_banked(void);
 uint8_t s_view_indices[MAX_CARD_COLLECTION];
 uint8_t s_view_count;
 
-static CardId view_card_id(Game *g, uint8_t pos)
-{
-    return g->state.cards.collection.entries[s_view_indices[pos]].id;
-}
+/* Loop state for the grouped A handler (see the note at its use site):
+ * WRAM, so a banked telemetry emit cannot corrupt a loop counter. */
+static uint8_t s_grp_ord;
+static uint8_t s_grp_rm;
+static uint8_t s_grp_id;
+static uint8_t s_grp_n;
+static uint8_t s_grp_before;
+static uint8_t s_grp_after;
 
 static void cycle_filter(Game *g)
 {
@@ -256,15 +291,9 @@ void item_screen_update(Game *g)
         return;
     }
 
-    /* NOTE: no per-frame view build here.  The bank-2 render body rebuilds
-     * the filtered/sorted view at the start of every full redraw, and each
-     * action below that can change the view (picker filter/sort, tab
-     * switch, sell, deck add/remove) invalidates the render cache -- so the
-     * rebuild always lands before the next action reads it.  That covers
-     * every consumer: at most one menu action runs per frame and the
-     * SELECT/A/detail guards reject out-of-range indices.  Keeping the
-     * build out of the fixed bank is what funds the collection merge (see
-     * deck_collection_merge_duplicates; _HOME must stay below 0x8000). */
+    /* No per-frame view build here: every action that can change the view
+     * invalidates the render cache, and the render path rebuilds it
+     * (item_view_build_banked) right before drawing. */
     if (input_pressed(INPUT_SELECT)) {
         if (g->item_menu_index >= FIRST_CARD &&
             (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
@@ -280,71 +309,99 @@ void item_screen_update(Game *g)
             g->item_menu_prev_filter = g->item_menu_filter;
             g->item_menu_prev_sort = g->item_menu_sort;
         } else {
+            /* Grouped count-up-then-clear: one row covers every same-name
+             * (MATERIAL+WEAPON) member.  A adds one copy (first member with
+             * room, collection order); once every owned copy is decked, A
+             * clears the group's decked copies (MIN-guarded, all-or-nothing).
+             * Members go through deck_equip_card/deck_remove_card so gates,
+             * caps and identity rules are unchanged; a saturated identity
+             * reports AT CAP instead of clearing what is already decked. */
             CardState *cs = &g->state.cards;
-            CardId id;
+            uint8_t primary;
+            uint8_t owned;
+            uint8_t decked;
             uint8_t pool;
-            uint8_t equip;
+            uint8_t msg = MSG_NONE;
+            int16_t pv;
             if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
                 return;
-            id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
-            /* Count-up-then-clear: A adds one copy; once the card is fully
-             * decked, A clears every decked copy of it — but only if the
-             * remaining deck would still hold DECK_MIN_CARDS cards
-             * (all-or-nothing).  The verdict answers fully-decked rows
-             * (EQUIP_CLEAR / EQUIP_MIN) BEFORE the gate on purpose:
-             * clearing can only shrink the deck, so it can never create
-             * the unplayable state the gate (docs/enemies_ranking.md
-             * §4.8) guards against, and a maxed row keeps its MIN-floor
-             * messaging even when its cost is above the pool.  Only
-             * adding is gated: NEED AP n names the reason instead of a
-             * dead slot. */
-            if (card_get_def(id)->type == CARD_TYPE_SPECIAL) {
-                g->item_menu_message = MSG_QUEST_ITEM;
-                g->item_menu_msg_ttl = 45;
-                /* Without the invalidate the transient message never
-                 * appears until the next unrelated redraw. */
-                g->render_cache.valid = false;
-                return;
-            }
-            /* Clamp through int16_t first (same normalization as ic_pool
-             * and the battle HUD loader): a pool above 255 would otherwise
-             * wrap the uint8_t cast, and a negative poke would unlock
-             * everything.  Unset/zero means the default pool, never AP 0. */
-            {
-                int16_t pv = g->state.variables.values[
-                    VARIABLE_ID_ENERGY_POOL - 1];
-                if (pv < 1) pv = 1;
-                if (pv > 255) pv = 255;
-                pool = (uint8_t)pv;
-            }
-            equip = deck_equip_card(cs, id, pool);
-            if (equip == EQUIP_OK) {
-                telemetry_emit(EVENT_CARD_ADDED_TO_DECK, id, 0, 0, 0);
-                audio_play_sfx(SFX_SELECT);
-            } else if (equip == EQUIP_LOCKED) {
-                g->item_menu_message = MSG_NEED_AP;
-                g->item_menu_msg_ttl = 45;
-            } else if (equip == EQUIP_FULL) {
-                g->item_menu_message = MSG_DECK_FULL;
-                g->item_menu_msg_ttl = 45;
-            } else if (equip == EQUIP_MIN) {
-                g->item_menu_message = MSG_DECK_MIN;
-                g->item_menu_msg_ttl = 45;
-            } else if (equip == EQUIP_CLEAR) {
-                while (deck_remove_card(cs, id))
-                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
-                                   id, 0, 0, 0);
+            primary = s_view_indices[
+                (uint8_t)(g->item_menu_index - FIRST_CARD)];
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&item_group_query_banked;
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = primary;
+            g_bk_byte_d = 1;
+            banked_call_run();
+            owned = g_bk_byte_c;
+            decked = g_bk_byte_b;
+            /* Pool clamped through int16_t (ic_pool normalization): unset
+             * or negative means the default pool, never AP 0. */
+            pv = g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+            if (pv < 1) pv = 1;
+            if (pv > 255) pv = 255;
+            pool = (uint8_t)pv;
+            /* Loop state lives in WRAM (s_grp_*), never in a register:
+             * SDCC caches register copies across the banked trampoline
+             * calls (AGENTS.md 52.19 family).  Every dispatch in these
+             * loops stages bank/target/ptr FRESH: the member query
+             * shares its staging with the clear body and the emit
+             * wrapper, so a round that reuses a previous round's
+             * staging re-runs the previous body -- round 2 once
+             * re-appended a CARD_REMOVED (5 events for 4 copies). */
+            if (decked >= owned) {
+                if ((uint8_t)(cs->deck.count - decked) < DECK_MIN_CARDS) {
+                    msg = MSG_DECK_MIN;
+                } else {
+                    s_grp_ord = 0;
+                    while (s_grp_ord < 50) {
+                        s_grp_rm = grp_member(g, primary, s_grp_ord);
+                        if (s_grp_rm == 0xFF) break;
+                        s_grp_id = cs->collection.entries[s_grp_rm].id;
+                        /* Single-shot clear through the bank-11 body
+                         * (self-contained, no fixed-bank calls).  Event
+                         * honesty: the emit trip count is the deck's own
+                         * before/after delta, never a staged return --
+                         * exactly one event per copy actually removed. */
+                        s_grp_before = cs->deck.count;
+                        g_bk_call_bank = 11;
+                        g_bk_call_target = (uint16_t)&deck_clear_all_banked;
+                        g_bk_ptr_a = (void *)cs;
+                        g_bk_byte_a = s_grp_id;
+                        banked_call_run();
+                        s_grp_after = cs->deck.count;
+                        s_grp_n = (uint8_t)(s_grp_before - s_grp_after);
+                        while (s_grp_n) {
+                            telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                           (CardId)s_grp_id, 0, 0, 0);
+                            s_grp_n--;
+                        }
+                        s_grp_ord++;
+                    }
+                }
             } else {
-                /* Refused for a per-card reason (not a full deck) on a
-                 * row that still has room -- a capped twin
-                 * (docs/loot.md §34) can leave this row under-decked
-                 * while the identity is saturated, and adding must refuse
-                 * without destroying what is already decked.  Names the
-                 * cap instead of flashing a bogus MIN or silently
-                 * clearing nothing. */
-                g->item_menu_message = MSG_DECK_CAPPED;
-                g->item_menu_msg_ttl = 45;
+                s_grp_ord = 0;
+                while (s_grp_ord < 50) {
+                    s_grp_rm = grp_member(g, primary, s_grp_ord);
+                    if (s_grp_rm == 0xFF) break;
+                    s_grp_id = cs->collection.entries[s_grp_rm].id;
+                    s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id, pool);
+                    if (s_grp_rm == EQUIP_OK) {
+                        telemetry_emit(EVENT_CARD_ADDED_TO_DECK,
+                                       (CardId)s_grp_id, 0, 0, 0);
+                        audio_play_sfx(SFX_SELECT);
+                        msg = MSG_NONE;
+                        break;
+                    }
+                    msg = (s_grp_rm == EQUIP_FULL) ? MSG_DECK_FULL :
+                          (s_grp_rm == EQUIP_LOCKED) ? MSG_NEED_AP :
+                          MSG_DECK_CAPPED;
+                    if (s_grp_rm == EQUIP_FULL) break;
+                    s_grp_ord++;
+                }
             }
+            g->item_menu_message = msg;
+            if (msg != MSG_NONE) g->item_menu_msg_ttl = 45;
         }
         g->render_cache.valid = false;
         return;
@@ -383,11 +440,16 @@ void item_screen_render(Game *g)
          * (already base). */
         ui_set_cram_palette(0);
 
-        /* The banked body builds the filtered/sorted view first (it owns
-         * the card catalog; fixed-bank budget) and then consumes it: the
-         * open frame can run before any update (same-frame screen_change),
-         * so the build cannot wait for an update.  Detail-page sells also
-         * mutate and redraw in the same frame. */
+        /* Rebuild the grouped view first, then dispatch the render (two
+         * sequential banked calls, same frame): the open frame can run
+         * before any update (same-frame screen_change), so the view can
+         * never wait for one.  Only the DECK tab has this view. */
+        if (g->item_menu_tab == TAB_DECK) {
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&item_view_build_banked;
+            g_bk_ptr_a = (void *)g;
+            banked_call_run();
+        }
 
         /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
          * both render in bank 8 with their registries (AGENTS.md

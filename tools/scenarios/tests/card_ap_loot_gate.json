@@ -210,17 +210,17 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 6,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 7,
-   "contains": "STEEL SWORD"
+   "row": 6,
+   "contains": "STEEL"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 6,
    "contains": "3"
   }
  ]

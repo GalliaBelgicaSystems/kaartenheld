@@ -45,8 +45,8 @@
   },
   {
    "type": "screen_row",
-   "row": 4,
-   "contains": "BRONZE RING"
+   "row": 3,
+   "contains": "BRONZE"
   },
   {
    "type": "oam_tile",

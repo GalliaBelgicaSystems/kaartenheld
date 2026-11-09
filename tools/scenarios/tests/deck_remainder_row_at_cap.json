@@ -1,7 +1,7 @@
 {
   "name": "deck_remainder_row_at_cap",
   "test": true,
-  "description": "Capped-fold remainder row A-button honesty (docs/loot.md §34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) survives as a remainder row, so the DECK list legitimately shows the same card twice. Pressing A on the remainder row must not clear anything or flash a bogus DECK MIN 5: the row has room to add but the identity is saturated, so it reports AT CAP and leaves the deck unchanged. Pre-fix the row-count branch called deck_equip_card (rejected) and then cleared zero copies silently.",
+  "description": "Capped-fold remainder row + same-name grouping (docs/loot.md 34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) is owned, so the DECK list shows ONE Iron Ring row (owned 2 / decked 1). Pressing A on it must not clear anything or flash a bogus DECK MIN 5: the row has room to add but the identity is saturated, so it reports AT CAP and leaves the deck unchanged. Pre-grouping this card took two rows; pre-fix the A handler cleared zero copies silently.",
   "initial_state": {
     "scene": "TEST_FIELD",
     "player": {
@@ -80,10 +80,6 @@
     {
       "type": "wait",
       "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
     },
     {
       "type": "wait",

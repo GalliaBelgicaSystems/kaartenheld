@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab lists one row per owned card (full name + deck count): sword, shield, fire sword, ring and dagger render on rows 3-7 with the granted ring and dagger",
+ "description": "CARDS tab lists one row per owned card (material + weapon icon + AP + DECK d/o) from row 3: sword, shield, fire sword, ring and dagger render on rows 3-7",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -32,28 +32,28 @@
   },
   {
    "type": "screen_row",
+   "row": 3,
+   "contains": "WOOD"
+  },
+  {
+   "type": "screen_row",
    "row": 4,
-   "contains": "WOOD SWORD"
+   "contains": "WOOD"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD SHIELD"
+   "contains": "BRONZE"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "BRONZE SWORD"
+   "contains": "IRON"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "IRON RING"
-  },
-  {
-   "type": "screen_row",
-   "row": 8,
-   "contains": "BRONZE DAGGER"
+   "contains": "BRONZE"
   }
  ]
 }

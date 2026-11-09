@@ -113,12 +113,12 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
-   "contains": "IRON RING"
+   "row": 6,
+   "contains": "IRON"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 6,
    "contains": "1"
   }
  ],

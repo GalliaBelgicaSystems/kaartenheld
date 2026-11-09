@@ -128,18 +128,18 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 7,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "BRONZE DAGGER"
+   "row": 7,
+   "contains": "BRONZE"
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "MYTHRIL BOW"
+   "row": 8,
+   "contains": "MYTHRIL"
   }
  ]
 }
