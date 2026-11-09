@@ -757,6 +757,14 @@ void battle_execute_combo(Battle *b)
              * re-armed below), rows 9+10 announce the focus, and the
              * phase waits for A (never auto-advances).  The 99-damage
              * reprisal lands on the A press, not here. */
+            /* Concentration hush: stop the boss track the moment the
+             * focus starts, so the later explosion cue plays over
+             * silence (one-shot: the banked body reports the edge only
+             * on the staging frame).  No restore needed on this path:
+             * the hold can only exit through the A-press defeat, which
+             * skips the game-over music by design, and any other scene
+             * change restores its own track. */
+            audio_play_music(MUSIC_NONE);
             b->phase = BATTLE_PHASE_SLIME_DESPAIR;
             b->msg_id = 10;
             b->msg_ttl = 0;
@@ -919,6 +927,11 @@ void battle_update(Battle *b)
     g_bk_call_target = (uint16_t)&game_despair_check_banked;
     banked_call_run();
     if (g_bk_byte_c != 0) {
+        /* Same concentration hush as the attack-tail staging site above:
+         * the check body reports the staging edge once, whichever path
+         * drops the boss to its threshold (attack vs counters/ticks/
+         * debug setup), so both consumers must stop the track. */
+        audio_play_music(MUSIC_NONE);
         vb->phase = BATTLE_PHASE_SLIME_DESPAIR;
         vb->msg_id = 10;
         vb->msg_ttl = 0;

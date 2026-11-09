@@ -1,7 +1,7 @@
 {
  "name": "boss_despair_reprisal",
  "test": true,
- "description": "A press during the concentrating telegraph fires the scripted reprisal: fixed 99 damage (a 120-HP hero stands at 21, battle_player_hp == 21), the explosion SFX cue fires (sfx_last == 11), the DEFEATED! result screen names the spell on rows 9+10 (L. OF SLIMES CASTS / POWERFUL SPELL!) and row 9 keeps no concentrating tail. No game-over music starts on this path (the boss track keeps playing underneath): the DEFEATED screen carries the boss theme plus the explosion tail, then the exit fades white into the wake outro (boss_battle_ending covers the exit).",
+ "description": "A press during the concentrating telegraph fires the scripted reprisal: fixed 99 damage (a 120-HP hero stands at 21, battle_player_hp == 21), the explosion SFX cue fires (sfx_last == 11), the DEFEATED! result screen names the spell on rows 9+10 (L. OF SLIMES CASTS / POWERFUL SPELL!) and row 9 keeps no concentrating tail. No game-over music starts on this path (the boss track was already stopped at the telegraph, so the cue lands clean): the DEFEATED screen is silent except for the explosion tail, then the exit fades white into the wake outro (boss_battle_ending covers the exit).",
  "actions": [
   {
    "type": "wait",
@@ -96,7 +96,7 @@
   },
   {
    "type": "music_track",
-   "expected": "BOSS"
+   "expected": "NONE"
   }
  ],
  "initial_state": {
