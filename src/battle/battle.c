@@ -46,23 +46,6 @@ uint8_t g_battle_confuse_hold;
  * the attacker when alone -- self-harm).  Uninitialized WRAM (bss);
  * rewritten by every defend resolve, so no battle-start init needed. */
 uint8_t g_battle_confuse_victim;
-
-/* True when the telegraphed attacker carries the given status (used
- * for the poison-confusion redirect below).  Fixed-bank: reads the
- * WRAM status slots directly (~20 bytes); banked callers read
- * s_battle_status themselves. */
-static uint8_t battle_attacker_status(Battle *b, uint8_t id)
-{
-    StatusSlots *slots;
-    uint8_t i;
-    if (!b || b->attacking_enemy_idx >= b->enemy_count) return 0;
-    slots = status_slots((uint8_t)(b->attacking_enemy_idx + 1));
-    if (!slots) return 0;
-    for (i = 0; i < slots->count; i++) {
-        if (slots->slot[i].id == id) return 1;
-    }
-    return 0;
-}
 /* Nonzero when anything in the battle animates on the 16-frame clock:
  * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
  * set (ORed by the bank-5 alt loader).  Uninitialized WRAM (bss);
@@ -843,37 +826,14 @@ void battle_execute_combo(Battle *b)
             b->dirty = BATTLE_DIRTY_ALL;
             return;
         }
-        /* Confused attacker (poison): its swing turns on its allies
-         * instead of the hero.  The banked resolve below runs the
-         * friendly-fire branch (victim pick, damage, rider staging) and
-         * reports the victim through g_battle_confuse_victim; the hero
-         * keeps every staged card (combo cleared, nothing discarded,
-         * no energy spent -- like the ice fizzle above).  Victory when
-         * the friendly fire clears the board. */
-        if (battle_attacker_status(b, STATUS_POISON)) {
-            b->combo_count = 0;
-            g_battle_confuse_victim = 0xFF;
-            battle_defend_resolve(b);
-            b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-            b->delay_timer = 30;
-            b->dirty = BATTLE_DIRTY_ALL;
-            if (battle_all_enemies_dead(b)) {
-                battle_set_result(b, BATTLE_RESULT_VICTORY);
-            }
-#ifdef DEBUG_BUILD
-            /* Friendly-fire kill (non-target victim): nothing else
-             * reports it -- the normal and counter paths only emit for
-             * the targeted attacker.  The despair floor holds at 1 HP,
-             * so a floored victim never trips this. */
-            else if (g_battle_confuse_victim != 0xFF &&
-                     g_battle_confuse_victim < b->enemy_count &&
-                     b->enemies[g_battle_confuse_victim].hp == 0) {
-                telemetry_emit(EVENT_ENTITY_DEFEATED,
-                               (uint8_t)(g_battle_confuse_victim + 1), 0, 0, 0);
-            }
-#endif
-            return;
-        }
+        /* Confusion is decided in exactly one place: the banked resolve
+         * below reads the telegraph attacker's live status and either
+         * redirects (poisoned: friendly-fire branch, victim reported
+         * through g_battle_confuse_victim) or resolves normally.  A
+         * counter that poisons this same phase therefore redirects the
+         * swing too -- one rule, no ordering special-cases.  The hero
+         * always pays for the staged hand (play + discard below run
+         * either way); only the incoming damage changes address. */
         battle_play_hand(b, false, &res);
         /* Net-damage defense (docs/loot.md §34.4): computed and applied in
          * the banked body (battle_defend_content.c) to keep the fixed bank
@@ -891,9 +851,9 @@ void battle_execute_combo(Battle *b)
         {
             uint8_t counter_hit = battle_defend_counter(b);
             battle_defend_resolve(b);
-            /* Runs before the discard so the played daggers still pay
-             * their energy cost and leave play like any other staged
-             * cards. */
+            /* Runs before the discard so the played cards pay their
+             * energy cost and leave play like any other staged hand --
+             * confusion redirects the swing, it never refunds it. */
             battle_resolve_hand_discard(b);
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;
@@ -901,8 +861,27 @@ void battle_execute_combo(Battle *b)
             if (b->player.hp == 0) {
                 telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
                 battle_set_result(b, BATTLE_RESULT_DEFEAT);
-            } else if (counter_hit && battle_all_enemies_dead(b)) {
-                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            } else {
+#ifdef DEBUG_BUILD
+                /* Friendly-fire kill (non-target victim): the normal and
+                 * counter paths only emit for the targeted attacker, so
+                 * the redirected kill needs its own report -- including
+                 * on a battle-ending blow (unlike the old else-if, which
+                 * swallowed it under the victory).  The despair floor
+                 * holds at 1 HP, so a floored victim never trips this. */
+                if (g_battle_confuse_victim != 0xFF &&
+                    g_battle_confuse_victim < b->enemy_count &&
+                    g_battle_confuse_victim != g_despair_slot &&
+                    b->enemies[g_battle_confuse_victim].hp == 0) {
+                    telemetry_emit(EVENT_ENTITY_DEFEATED,
+                                   (uint8_t)(g_battle_confuse_victim + 1),
+                                   0, 0, 0);
+                }
+#endif
+                if ((counter_hit || g_battle_confuse_victim != 0xFF) &&
+                    battle_all_enemies_dead(b)) {
+                    battle_set_result(b, BATTLE_RESULT_VICTORY);
+                }
             }
         }
     }

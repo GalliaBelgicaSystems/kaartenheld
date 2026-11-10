@@ -32,8 +32,6 @@ CARDS_C = REPO / "src" / "game" / "cards_content.c"
 MATERIALS = ["wood", "bronze", "iron", "steel", "mythril"]
 WEAPONS_41 = ["sword", "shield", "bow", "dagger", "ring"]  # §4.1 columns
 WEAPONS_42 = [("F", "bow"), ("I", "bow"), ("P", "dagger")]  # §4.2 columns
-# (effect label, weapon) for the only legal rider pairs (docs/loot.md §34.2)
-RIDER_PAIRS = [("burn", "sword"), ("freeze", "sword"), ("poison", "dagger")]
 
 FAILURES = []
 
@@ -92,7 +90,7 @@ def parse_doc_tables():
     Returns (cells, catalog) where cells is a list of
     (mat, weapon, rider, ap, power) — a list, not a dict, because F BO
     and I BO share (mat, weapon, rider) — and catalog maps ROW name to
-    ((power, mat, rider), expected_ap), with SHOPKEYS mapping to (None, 0).
+    ((power, mat, rider), expected_ap), with "SHOP KEYS" mapping to (None, 0).
     """
     text = FORMULA_DOC.read_text(encoding="utf-8")
     cells = []
@@ -140,7 +138,7 @@ def parse_doc_tables():
         rider = 0 if rider_txt.strip() in ("—", "-", "") else 1
         catalog[row] = ((int(power), MATERIALS.index(mat_name), rider),
                         int(expected))
-    # SPECIAL rows (quest items: SHOPKEYS, BONE, OLD KEY) carry no
+    # SPECIAL rows (quest items: "SHOP KEYS", BONE, OLD KEY) carry no
     # power/material triple ("SPECIAL, not playable").
     for m in re.finditer(
             r"\|\s*[^|]+\|\s*`([A-Z ]+)`\s*\|\s*SPECIAL, not playable\s*\|\s*\*\*(\d+)\*\*",
@@ -278,8 +276,12 @@ def check_identity():
             if up != int(fields[2]):
                 fail("identity: row %s LOOT_BOW_USES power %d but .power "
                      "is %s" % (name, up, fields[2]))
+            # Same floor as LOOT_BOW_USES_FROM_AP (mythril riders would
+            # otherwise read 1 where the ROM stores 2).
             uses = 7 - ((up + umat * 4 + ur * 8 +
                          (12 if umat == 4 else 0) + 7) // 8)
+            if uses < 2:
+                uses = 2
         else:
             uses = int(fields[4])
         try:
@@ -439,7 +441,7 @@ def main():
              % (len(doc_catalog), _game_card_count()))
     for row, (args, expected) in doc_catalog.items():
         if args is None:
-            # SPECIAL quest rows (SHOPKEYS, BONE, OLD KEY): no CARD_AP
+            # SPECIAL quest rows ("SHOP KEYS", BONE, OLD KEY): no CARD_AP
             # call, cost must stay literal 0 (not playable).
             if cat_calls.get(row, (None, None))[1] != 0 or expected != 0:
                 fail("catalog: %s cost must stay literal 0 (not playable)"

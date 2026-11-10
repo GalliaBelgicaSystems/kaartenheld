@@ -1679,9 +1679,10 @@ wood is always plain.
   no on-hit roll, no mechanic change.  Real status riders
   (fire/ice/poison) keep precedence wherever both could apply.
 * Fire/ice rows are LIVE (Phase D): fire bows carry a BURN rider
-  (2 dmg/round, 2 rounds) and ice bows a FREEZE rider (the target
-  skips its next attack); chances tuned like DA1 in 1/255 units.
-  Adding future effects later = filling in their table rows.
+  (10% of the inflicting hit per round, min 1, 3-round duration) and
+  ice bows a FREEZE rider (the target's cards grey out for 2 rounds);
+  chances tuned like DA1 in 1/255 units.  Adding future effects later
+  = filling in their table rows.
 * Every combination maps to a **derived CardId** in the loot id range
   (`LOOT_ID_BASE` = `0x60` .. `0xFF`; 5 materials x 4 effects x 8
   weapons = 160 ids): `id = BASE + (material*Neff + effect)*Nwpn + wpn`.

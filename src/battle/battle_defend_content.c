@@ -116,14 +116,17 @@ void battle_defend_resolve_banked(void)
         }
     }
 
-    /* Confused attacker (poison): the swing turns on the attacker's own
-     * side instead of the hero -- the hero takes nothing (bytes a/b stay
-     * 0, so the wrapper emits RECEIVED 0) and the victim takes the full
-     * telegraphed swing.  Lone confused attackers harm themselves.  The
-     * despair floor holds exactly like the counter path above.  The
-     * organic rider stages for the fixed wrapper like any other swing
-     * (victim-slot routing via g_battle_confuse_victim); telemetry here
-     * is DAMAGE only, victim slot in d1. */
+    /* Confused attacker (poison): the single place confusion is decided.
+     * The swing turns on the attacker's own side instead of the hero --
+     * the hero takes nothing (bytes a/b stay 0, so the wrapper emits
+     * RECEIVED 0) and the victim takes the full telegraphed swing.  Lone
+     * confused attackers harm themselves.  The despair floor holds
+     * exactly like the counter path above.  The organic rider stages
+     * for the fixed wrapper like any other swing (victim-slot routing
+     * via g_battle_confuse_victim); telemetry here is DAMAGE only,
+     * victim slot in d1.  A counter applied this same phase already ran
+     * above and may have poisoned the attacker -- that poison counts:
+     * one rule, no ordering special-cases. */
     if (confuse_attacker_poisoned(b, atk)) {
         uint8_t vic = confuse_pick_victim(b, atk);
         uint8_t dmg = b->enemy_incoming_dmg;

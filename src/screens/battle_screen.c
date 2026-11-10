@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "rpg/cards.h"
 #include "rpg/loot.h"
+#include "rpg/status.h"
 
 void battle_screen_update(Game *g)
 {
@@ -108,46 +109,54 @@ void battle_screen_update(Game *g)
     if (vg->battle.phase == BATTLE_PHASE_PLAYER_SELECT ||
         vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND) {
         /* Confused hero (poison): a random hand gets played -- no input
-         * this turn.  The banked body stages the random hand when the
-         * hero is poisoned: a fresh stage holds its beat (the player
-         * reads the Confused! message), an already-pending stage counts
-         * the hold down and executes at zero. */
-        uint8_t confuse_stage = battle_confuse_auto((Battle *)&vg->battle);
-        if (confuse_stage == 2) {
-            g_battle_confuse_hold = 30;
-        } else if (confuse_stage == 1) {
-            if (g_battle_confuse_hold != 0) {
-                g_battle_confuse_hold--;
-            } else {
-                battle_execute_combo((Battle *)&vg->battle);
-            }
-        } else if (input_pressed(INPUT_START)) {
+         * this turn, except START (the item screen stays reachable; the
+         * staged hand waits out the visit).  The banked body stages the
+         * random hand when the hero is poisoned: a fresh stage holds its
+         * beat (the player reads the Confused! message), an already
+         * pending stage counts the hold down and executes at zero.  The
+         * WRAM slot check up front keeps unpoisoned decision frames out
+         * of the banked call entirely. */
+        uint8_t confuse_stage = 0;
+        if (input_pressed(INPUT_START)) {
             item_screen_reset(g);
             screen_change(g, SCREEN_ITEM);
-        } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
-        } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
-        } else if (input_pressed(INPUT_A) &&
-                   vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                   vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
-            /* Ice-locked foe: acknowledge the failed swing -- no
-             * defense to stage, nothing incoming.  A skips straight to
-             * the resolve beat (the message stays up through it and the
-             * next telegraph consumes it); the timer/SELECT path
-             * converges in battle_execute_combo's matching gate. */
-            vg->battle.combo_count = 0;
-            vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-            vg->battle.delay_timer = 30;
-            vg->battle.dirty = BATTLE_DIRTY_ALL;
-        } else if (input_pressed(INPUT_A)) {
-            battle_card_select((Battle *)&vg->battle);
-        } else if (input_pressed(INPUT_B)) {
-            battle_card_undo((Battle *)&vg->battle);
-        } else if (input_pressed(INPUT_SELECT)) {
-            battle_execute_combo((Battle *)&vg->battle);
+        } else {
+            if (s_battle_status[0].count != 0) {
+                confuse_stage = battle_confuse_auto((Battle *)&vg->battle);
+            }
+            if (confuse_stage == 2) {
+                g_battle_confuse_hold = 30;
+            } else if (confuse_stage == 1) {
+                if (g_battle_confuse_hold != 0) {
+                    g_battle_confuse_hold--;
+                } else {
+                    battle_execute_combo((Battle *)&vg->battle);
+                }
+            } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
+                audio_play_sfx(SFX_CURSOR);
+                battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
+            } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
+                audio_play_sfx(SFX_CURSOR);
+                battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
+            } else if (input_pressed(INPUT_A) &&
+                       vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
+                       vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
+                /* Ice-locked foe: acknowledge the failed swing -- no
+                 * defense to stage, nothing incoming.  A skips straight to
+                 * the resolve beat (the message stays up through it and the
+                 * next telegraph consumes it); the timer/SELECT path
+                 * converges in battle_execute_combo's matching gate. */
+                vg->battle.combo_count = 0;
+                vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
+                vg->battle.delay_timer = 30;
+                vg->battle.dirty = BATTLE_DIRTY_ALL;
+            } else if (input_pressed(INPUT_A)) {
+                battle_card_select((Battle *)&vg->battle);
+            } else if (input_pressed(INPUT_B)) {
+                battle_card_undo((Battle *)&vg->battle);
+            } else if (input_pressed(INPUT_SELECT)) {
+                battle_execute_combo((Battle *)&vg->battle);
+            }
         }
     } else if (vg->battle.phase == BATTLE_PHASE_SLIME_DESPAIR) {
         /* The telegraph waits for A: the fixed 99-damage reprisal lands

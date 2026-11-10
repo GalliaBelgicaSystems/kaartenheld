@@ -26,7 +26,9 @@ static const EnemyCard s_bat_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     /* Organic poison rider (Phase D): this swing carries a poison rider at
-     * ~60/255 chance; when it lands on the player it also greys her hand. */
+     * ~60/255 chance; when it lands on the player she is confused (her
+     * next swings turn on her allies) -- control-only, no damage, never
+     * grey-out. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 60 },
 };
 static const EnemyCard s_slime_trio_deck[] = {

@@ -216,7 +216,12 @@ static void nav_confuse_auto(Battle *b)
     }
     b->dirty |= (uint8_t)(BATTLE_DIRTY_HAND | BATTLE_DIRTY_DESC |
                           BATTLE_DIRTY_COMBO | BATTLE_DIRTY_MSG);
-    g_bk_byte_c = 2;
+    /* Staged something: hold the beat so the message reads.  Nothing
+     * playable (full grey-out, depleted bows, unaffordable hand):
+     * report "execute now" so the no-play path runs instead of idling
+     * on this frame forever -- re-entering next frame would stage
+     * nothing again, an infinite hold. */
+    g_bk_byte_c = (b->combo_count == 0) ? 1 : 2;
 }
 
 void battle_nav_banked(void)

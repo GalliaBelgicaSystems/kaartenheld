@@ -1031,6 +1031,21 @@ static uint8_t battle_hero_confused_paint(const volatile Battle *battle)
     return 0;
 }
 
+/* Same question for the telegraphed attacker (slot = live index + 1):
+ * a poisoned foe redirects its swing this turn, so the forecast row
+ * names the confusion instead of the incoming damage. */
+static uint8_t battle_foe_confused_paint(const volatile Battle *battle)
+{
+    const StatusSlots *slots;
+    uint8_t i;
+    if (battle->attacking_enemy_idx >= battle->enemy_count) return 0;
+    slots = &s_battle_status[(uint8_t)(battle->attacking_enemy_idx + 1)];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return 1;
+    }
+    return 0;
+}
+
 static void battle_draw_battle_combo(const volatile Battle *battle)
 {
     /* Real-time preview: the row tracks the PENDING selection as cards
@@ -1101,6 +1116,18 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle->msg_id == BATTLE_MSG_ICED_FOE) {
         battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
         battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
+        return;
+    }
+    /* Confused attacker (poison): the row names the redirected swing
+     * instead of the normal forecast -- the attacker hits its own side
+     * this turn.  No acknowledge gate (unlike the ice fizzle above):
+     * the defend proceeds normally, the damage just lands elsewhere.
+     * Same truth-in-VRAM discipline as every other branch here. */
+    if (battle_foe_confused_paint(battle) &&
+        (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH)) {
+        battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
+        battle_color_span(0, combo_row, 15, UI_COLOR_POISON);
         return;
     }
     /* Confused hero (poison): the row names the lost turn instead of any

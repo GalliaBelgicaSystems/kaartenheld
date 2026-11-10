@@ -1,0 +1,58 @@
+{
+ "name": "hero_confuse_no_play",
+ "test": true,
+ "description": "Confused hero with no playable hand: all cards cost more than the pool, so the auto-stage stages nothing and the fixed hook runs the no-play path at once instead of idling on the hold forever (the hold-beat bug: an unconditional hold-beat would re-stage nothing every frame and never execute). No CARD_PLAYED fires, the battle continues, and the poison still ticks down (STATUS_EXPIRED proves rounds advance).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 30,
+    "max_hp": 30
+   }
+  },
+  "seed": 8408,
+  "deck": {
+   "BOW_9": 5
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 1,
+   "duration": 2
+  },
+  {
+   "type": "wait",
+   "frames": 200
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_EXPIRED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PLAYED"
+  }
+ ]
+}
