@@ -617,15 +617,30 @@ static void ic_draw_count5(uint8_t y, uint8_t x, uint8_t decked,
     ic_draw_pair2((uint8_t)(x + 3), y, owned);
 }
 
+/* Row chrome tiles: AP icon, blank, deck icon, blank (cols wx+2..wx+5:
+ * 12-15 on the normal branch, 11-14 on compact).  Boot-loaded ids, so
+ * no streaming (see ui.h). */
+static const uint8_t s_ic_chrome_tiles[4] = {
+    UI_TILE_AP_ICON, UI_TILE_MENU_BLANK,
+    UI_TILE_DECK_ICON, UI_TILE_MENU_BLANK
+};
+
 /* Icon cells: rider cell rx (blank BG + element color; the OAM rider
  * is shown by the list loop) and weapon cell wx (icon tile in VRAM,
- * weapon letter in the text buffer for harness asserts). */
+ * weapon letter in the text buffer for harness asserts).  The chrome
+ * loop stamps the AP/deck icons VRAM-only (buffer keeps the DECK
+ * letters for harness asserts); one write expansion in a loop -- bank
+ * 2 has no room for four unrolled (AGENTS.md 52.18). */
 static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx)
 {
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
     BANKED_VRAM_WRITE(s_ic_dst + (uint16_t)(wx - rx), s_ic_tile_wpn);
+    s_ic_dst += (uint16_t)(wx - rx + 2);
+    for (s_ic_col_i = 0; s_ic_col_i < 4; s_ic_col_i++)
+        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i],
+                          s_ic_chrome_tiles[s_ic_col_i]);
     s_ic_buf = &g_ui_screen_buf[y][wx];
     *s_ic_buf = s_ic_wpn_letters[s_ic_wpn];
     /* Rider cell takes the same role color as the name (fire/ice/poison
@@ -634,17 +649,21 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx)
     IC_COLOR_SPAN(wx, y, 1, UI_COLOR_WOOD);
 }
 
+
 /* One GROUP per row (one row per MATERIAL+WEAPON name):
  *   col 0: cursor caret
  *   cols 1-7: MATERIAL padded to 7 (MYTHRIL fills it, WOOD pads)
  *   col 8: space
  *   col 9: rider cell (blank BG tile; rider/health OAM overlays it)
  *   col 10: weapon icon tile (BG); buffer holds S/H/B/D/R (see above)
- *   col 11: AP digit, gold; '!' when above the pool (gate preview)
- *   col 12: space
- *   cols 13-16: "DECK"
- *   cols 17-19: "d/o" decked/owned (single digits; 10+ takes the
- *     compact branch: no spaces, "DECK" at 11-14, "dd/oo" at 15-19).
+ *   col 11: AP pip, gold; '!' when above the pool (gate preview)
+ *   col 12: AP icon tile (BG); col 13: blank
+ *   col 14: deck icon tile (BG); col 15: blank
+ *   cols 16-19: " d/o" decked/owned (single digits, col 16 blank;
+ *     10+ takes the compact branch: rider 8, weapon 9, pip 10,
+ *     AP icon 11, blank 12, deck icon 13, blank 14, "dd/oo" 15-19).
+ * VRAM shows the icon tiles; the text buffer keeps the DECK letters,
+ * so harness screen_row asserts read the same rows as before.
  * Display cost/rider/color read the primary (first) member; A tries
  * members in collection order, so display and behavior agree. */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
@@ -701,7 +720,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         IC_DRAW_TEXT(11, y, "DECK", 4);
         ic_draw_count5(y, 15, s_ic_in_deck, s_ic_shopkeys);
         ic_stamp_icons(y, 8, 9);
-        IC_COLOR_SPAN(10, y, 1, UI_COLOR_GOLD);
+        IC_COLOR_SPAN(10, y, 2, UI_COLOR_GOLD);
     } else {
         IC_DRAW_TEXT(8, y, " ", 1);
         ic_draw_ap_at(g, y, 11);
@@ -712,7 +731,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         s_ic_code[2] = (char)('0' + s_ic_shopkeys);
         IC_DRAW_TEXT(17, y, s_ic_code, 3);
         ic_stamp_icons(y, 9, 10);
-        IC_COLOR_SPAN(11, y, 1, UI_COLOR_GOLD);
+        IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
     }
     ic_name_color(1, y, 7, s_ic_def);
 }

@@ -93,6 +93,15 @@ void dice_tiles_load_banked(void);
  * restore needed).  Tile id = UI_TILE_AP_PIP_BASE + (cost - 1). */
 #define UI_TILE_AP_PIP_BASE      236u
 #define UI_TILE_AP_PIP_COUNT     5u
+/* Menu DECK-row chrome (all boot-loaded by ui_card_tiles_load_banked,
+ * same loader as the weapon icons, so no streaming needed): the AP unit
+ * icon (combat_ap_icon, HUD gold) stamped after the cost pip, the true
+ * blank sheet cell for the spacer cells, and the deck icon
+ * (combat_deck_icon, HUD iron) replacing the DECK text.  The text buffer
+ * keeps the DECK letters, so harness screen_row asserts are unchanged. */
+#define UI_TILE_MENU_BLANK       112u
+#define UI_TILE_AP_ICON          114u
+#define UI_TILE_DECK_ICON        116u
 
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
