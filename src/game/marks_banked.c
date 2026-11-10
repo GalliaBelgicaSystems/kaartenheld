@@ -24,6 +24,10 @@
 #include "rider_tiles_generated.h"
 #include "gfx/rider_tiles.h"
 
+/* Menu AP pip BG bytes (ap_pips_bg.png, cost order 1-5).  Same-bank data
+ * for the ITEM-tick stream below (bank 8 overflow bank, room). */
+#include "gfx/ap_pip_tiles.h"
+
 /* Hero overworld bytes (png2gb whole-sheet, walk frames 1 & 2 then idle
  * frames 1 & 2).  Bank-8 home for both the boot stream (ui_sprite_init
  * reads through banked_copy) and the overworld-entry restore below, so
@@ -59,6 +63,7 @@ static const uint8_t s_ap_vram_ids[7] = { AP_TILE_1, AP_TILE_2, AP_TILE_3, AP_TI
 static const uint8_t s_rider_vram_ids[3] = { RIDER_TILE_BURN, RIDER_TILE_FREEZE, RIDER_TILE_POISON };
 static uint8_t s_mark_tiles_loaded;
 static uint8_t s_battle_tiles_loaded;
+static uint8_t s_ap_pip_loaded;
 
 /* Stream one OAM tile (16 bytes) LCD-safely.  Single copy shared by the
  * mark/battle loaders and the overworld-entry restore below (bank 8 stays
@@ -194,6 +199,7 @@ void marks_battle_tiles_invalidate_banked(void)
      * hero pixels with correct OAM ids (all id-only asserts green). */
     s_battle_tiles_loaded = 0;
     s_mark_tiles_loaded = 0;
+    s_ap_pip_loaded = 0;
 }
 
 /* Overworld-entry OAM restore (same bank: direct reads; LCD-safe writes).
@@ -227,6 +233,7 @@ void ow_oam_restore_banked(void)
                            enemy_ow_tiles + (((uint16_t)(RIDER_TILE_BURN - ENEMY_OW_BASE + i)) << 4));
     }
     s_battle_tiles_loaded = 0;
+    s_ap_pip_loaded = 0;
 }
 
 /* Recompute every overworld HUD marker from game state (see ACTOR_MARK_*
@@ -270,6 +277,27 @@ static void marks_refresh(void)
     if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM ||
         g_game.screen == SCREEN_SHOP) {
         marks_load_battle_tiles();
+    }
+    /* Menu AP pip BG tiles (236-240) stream on ITEM ticks while the DECK
+     * tab is active (item_menu_tab 0; tabs share the screen id).  Same
+     * LCD-safe pattern as the OAM loader above (BANKED_VRAM_WRITE per
+     * byte) and same-tick guarantee: the tick runs before the render,
+     * so the first DECK frame already stamps resident art.  One-shot
+     * per menu stay (s_ap_pip_loaded); overworld entry wipes the window
+     * via the world tileset reload and re-arms through
+     * ow_oam_restore_banked, ITEM entry through the invalidate above. */
+    if (g_game.screen == SCREEN_ITEM && g_game.item_menu_tab == 0 &&
+        !s_ap_pip_loaded) {
+        uint8_t d, j;
+        volatile uint8_t *dst;
+        s_ap_pip_loaded = 1;
+        for (d = 0; d < 5; d++) {
+            dst = (volatile uint8_t *)(0x8000u + (((uint16_t)UI_TILE_AP_PIP_BASE + d) << 4));
+            for (j = 0; j < 16; j++) {
+                BANKED_VRAM_WRITE(dst, ap_pip_tiles[((uint16_t)d << 4) + j]);
+                dst++;
+            }
+        }
     }
 
     /* Fresh-load re-arm: load_game_slot clears g_jingle_done's seeded

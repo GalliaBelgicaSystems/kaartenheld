@@ -268,6 +268,14 @@ gfx: manifest
 	# battle chrome, not gamble-only.
 	@python3 tools/png2gb.py assets/dice.png --name dice_tiles \
 		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
+	# ── Menu AP pip BG tiles (assets/ap_pips_bg.png, 5x1, cost order 1-5) ──
+	# The sheet is composed by the manifest prerequisite (compose_ap_pips.py);
+	# palette_compiler.py writes the shade map (fight3: white + browns, same
+	# as the AP dot/icon cells). Only the encode belongs here. Encoded with
+	# the field ramp (white paper); streamed on demand by the bank-8 menu
+	# body to UI_TILE_AP_PIP_BASE (236-240).
+	@python3 tools/png2gb.py assets/ap_pips_bg.png --name ap_pip_tiles \
+		--shade-map generated/tiles/shades/ap_pips.json -o $(GFX_OUT_DIR)/ap_pip_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
 	# Regenerated every build from the live battle sources (never
 	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
@@ -488,6 +496,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_hero_sprites.py
 	@python3 tools/compose_card_frames.py
 	@python3 tools/compose_dice.py
+	@python3 tools/compose_ap_pips.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 

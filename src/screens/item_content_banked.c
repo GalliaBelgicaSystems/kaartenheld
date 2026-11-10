@@ -568,12 +568,24 @@ static uint8_t ic_pool(const Game *g)
  * screen_row asserts). */
 static const char s_ic_wpn_letters[5] = { 'S', 'H', 'B', 'D', 'R' };
 
-/* AP digit at column x (gold-styled energy cost; '!' when the pool
- * gate locks the primary -- the NEED AP message names the cost). */
+/* AP pip at column x (gold-styled energy cost pip 1-5; '!' when the pool
+ * gate locks the primary -- the NEED AP message names the cost).  The BG
+ * cell shows the pip tile (236-240, streamed on full redraw) while the
+ * text buffer keeps the digit for harness screen_row asserts (same split
+ * as the weapon icon/letter cells).  VRAM always writes: the buffer holds
+ * a digit the PPU never shows, so the text skip-guard would stale-hide
+ * the pip (AGENTS.md 52.25).  Cost 0 / above 5 falls back to font. */
 static void ic_draw_ap_at(Game *g, uint8_t y, uint8_t x)
 {
     if (s_ic_def->cost > ic_pool(g)) {
         IC_DRAW_TEXT(x, y, "!", 1);
+    } else if (s_ic_def->cost >= 1 && s_ic_def->cost <= 5) {
+        s_ic_buf = &g_ui_screen_buf[y][x];
+        *s_ic_buf = (char)('0' + s_ic_def->cost);
+        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        VBK_REG = 0;
+        BANKED_VRAM_WRITE(s_ic_dst,
+            (uint8_t)(UI_TILE_AP_PIP_BASE + s_ic_def->cost - 1));
     } else {
         s_ic_code[0] = (char)('0' + s_ic_def->cost);
         s_ic_code[1] = '\0';
@@ -949,6 +961,7 @@ void item_screen_render_banked(void)
     Game *g = (Game *)g_bk_ptr_a;
     uint8_t e;
     if (!g) return;
+
 
     /* The grouped DECK view was just rebuilt by the fixed-bank caller
      * (item_view_build_banked, bank 11) immediately before this body ran,

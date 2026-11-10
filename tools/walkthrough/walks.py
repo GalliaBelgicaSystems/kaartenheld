@@ -12,6 +12,7 @@ additive.
 import io
 import json
 import os
+import re
 import sys
 
 from walkthrough.session import Session, LEVELS_DIR, REPO
@@ -765,21 +766,36 @@ def walk_a(planner, checks, sram_out=None):
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
             actual=s.bg_text()[0].strip())
 
-    # Quick screen: DECK tab, toggle the first card's deck membership,
-    # open the filter picker from the top row, then the QUEST tab.
-    # NOTE: the starter deck holds every owned copy, so A on a fully
-    # decked card CLEARS it (docs/deck-management.md) — the assert is
-    # "membership toggled", never "+1".
+    # Quick screen: DECK tab, toggle a card's deck membership, open
+    # the filter picker from the top row, then the QUEST tab.
+    # NOTE: transit-fight loot can add owned copies (release loot
+    # reshuffles whenever boot timing shifts the DIV prime) and the deck
+    # may sit at cap, so a blind A on the first row can no-op (DECK FULL
+    # on a partial row).  Read the rows and toggle a fully-decked one
+    # instead: A there always clears (docs/deck-management.md), so the
+    # count must drop by exactly the row's decked copies (MIN-guarded).
     s.press_until("start", lambda: s.text_has("DECK QUEST"),
                   label="quick screen")
     s.shoot("06-cards-menu", need="DECK QUEST")
     deck0 = s.reader.deck_count()
-    s.press("down", settle=20)      # FILTER/SORT row -> first card row
-    s.press("a", settle=30)         # toggle deck membership
+    rows = s.bg_text()
+    downs, clear = None, 0
+    for r in range(3, 15):
+        m = re.search(r"DECK\s*(\d+)/(\d+)", rows[r])
+        if m and int(m.group(1)) == int(m.group(2)) and int(m.group(1)) > 0 \
+                and deck0 - int(m.group(1)) >= 5:
+            downs, clear = r - 2, int(m.group(1))
+            break
+    s.check("fully-decked row found", downs is not None,
+            expected="x/x row", actual="none")
+    for _ in range(downs or 1):
+        s.press("down", settle=20)  # FILTER/SORT row -> target card row
+    s.press("a", settle=30)         # clear the group's decked copies
     deck1 = s.reader.deck_count()
-    s.check("deck membership toggled", deck1 != deck0,
-            expected="deck != %d" % deck0, actual=str(deck1))
-    s.press("up", settle=20)        # back to the FILTER/SORT row
+    s.check("deck membership toggled", deck1 == deck0 - clear,
+            expected="deck == %d" % (deck0 - clear), actual=str(deck1))
+    for _ in range(downs or 1):
+        s.press("up", settle=20)    # back to the FILTER/SORT row
     s.press_until("a", lambda: s.text_has("LR CYCLE"),
                   label="filter picker")
     s.shoot("07-filter-picker", need="LR CYCLE")
