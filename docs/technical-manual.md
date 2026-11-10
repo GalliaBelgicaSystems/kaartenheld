@@ -343,7 +343,7 @@ All catalogue cards (`src/game/cards_content.c`):
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 2 | 3/battle | 1 | — | 20g |
 | Bronze Sword | `B SW` | `SW3` | ATK | 3 | 1 | – | 3 | — | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 128 | — |
-| Shop Keys | `SHOPKEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
+| Shop Keys | `SHOP KEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
 
 The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy

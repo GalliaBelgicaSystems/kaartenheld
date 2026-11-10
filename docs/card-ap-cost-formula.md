@@ -251,7 +251,7 @@ comparison.
 | Iron Ring | `I RG` | 4 / iron / — | **2** | 1 |
 | Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
 | Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
-| Shop Keys | `SHOPKEYS` | SPECIAL, not playable | **0** | 0 |
+| Shop Keys | `SHOP KEYS` | SPECIAL, not playable | **0** | 0 |
 | Bone | `BONE` | SPECIAL, not playable | **0** | 0 |
 | Old Key | `OLD KEY` | SPECIAL, not playable | **0** | 0 |
 
