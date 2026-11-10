@@ -905,7 +905,7 @@ static void battle_tick_statuses(Battle *b)
             continue;
         }
         dmg = status_tick(status_slots((uint8_t)(i + 1)), (uint8_t)(i + 1));
-        /* Poison grey-out duration drains each round (Phase D). */
+        /* Ice grey-out duration drains each round (Phase D). */
         status_grey_tick((uint8_t)(i + 1));
         if (dmg == 0) continue;
         combatant_take_damage(&b->enemies[i], dmg);

@@ -961,11 +961,11 @@ F BO   (battle code BO4)
 Description:
 
 ```text
-Sword: physical (with a chance to burn the target)
+Bow: physical (with a chance to burn the target)
 ```
 
-Elemental weaknesses can be added later; the fire effect walks a sword until
-then.
+Elemental weaknesses can be added later; the fire effect walks with the bow
+until then.
 
 ---
 

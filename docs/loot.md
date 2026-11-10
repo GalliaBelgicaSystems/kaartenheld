@@ -1873,7 +1873,7 @@ shop; finding it is what makes the delivery (and the shop) available:
 * BUY: the merchant stocks the curated IRON RING (**RG4**, 20g), the
   mythril bow (**BO9**, 30g), and the steel shield (**SH6**, 12g, the
   merchant-stocked answer to the Lord's flat-6 swing), one of each --
-  plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE fire SWORD)
+  plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE SWORD)
   at **FREE** (price 0, always affordable; capped by max_copies at buy
   time so the starter set can be rebought but never stockpiled).  One-copy
   rows hide once owned and reappear if the last copy is sold; free basics

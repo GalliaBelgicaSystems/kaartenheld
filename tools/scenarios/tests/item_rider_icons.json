@@ -38,8 +38,8 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "BRONZE BOW"
+   "row": 9,
+   "contains": "BRONZE"
   },
   {
    "type": "oam_tile",

@@ -1335,7 +1335,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         /* No card tints: boxes stay paper (UI_COLOR_NONE), type reads
          * from the stamped weapon icon, element from the per-card OAM
-         * rider HUD. Poison grey-out
+         * rider HUD. Ice grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
          * of the arrow-counter type -- and rings, which share its floor
          * counter -- grey out too once their uses are spent (matches

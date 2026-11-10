@@ -174,9 +174,9 @@ still block 0).
 
 **Daggers are the exception:** played alone (daggers plus optionally
 rings, but no shields/swords/bows), they **counterattack first** — the
-attacker takes dagger damage (attack-phase poker scaling, poison
-included) before the swing, and when the counter kills the attacker the
-swing never lands (no damage to you).  Otherwise you still take the full
+attacker takes HALF the dagger damage (attack-phase poker scaling halved,
+rounded down, minimum 1; poison included) before the swing, and when the
+counter kills the attacker the swing never lands (no damage to you).  Otherwise you still take the full
 incoming swing.  Mixed with
 shields, swords or bows the daggers are simply lost.  A dagger + ring
 deck can therefore always attack and heal, never blocking.

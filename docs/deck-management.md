@@ -20,7 +20,7 @@ in the level editor's Hero view.  The default set is:
 ```text
 WOOD_SWORD    ×4   → SW1   (max_copies 4)
 WOODEN_SHIELD ×4   → SH1   (max_copies 4)
-FIRE_SWORD    ×2   → SW3   (unlimited uses; BURN rider, bronze tier)
+BRONZE_SWORD  ×2   → SW3   (unlimited uses; plain, bronze tier)
 ```
 
 No daggers: the first POISON_DAGGER (DA2, max_copies 3) comes from the
