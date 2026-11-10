@@ -85,7 +85,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "AP"
+   "contains": "/OWN"
   },
   {
    "type": "screen_row_not_contains",
@@ -94,12 +94,12 @@
   },
   {
    "type": "screen_row",
-   "row": 9,
+   "row": 10,
    "contains": ">"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 10,
+   "row": 11,
    "contains": ">"
   },
   {

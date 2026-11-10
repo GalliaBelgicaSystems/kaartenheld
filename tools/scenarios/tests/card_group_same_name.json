@@ -1,0 +1,87 @@
+{
+ "name": "card_group_same_name",
+ "test": true,
+ "description": "One DECK row per card name: a plain bronze sword (loot id 128) and the curated FIRE_SWORD are both BRONZE SWORD to the player, so they share a single row (owned 3: starter 2 + loot 1, both starter copies already decked) instead of listing the same name twice. The primary (FIRE_SWORD) still supplies the row's rider icon (entry 3) and AP digit, and the DECK column reads the whole name group (2/3). Pre-grouping the DECK list showed two BRONZE SWORD rows.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "ENERGY_POOL": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 128,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "WOOD"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "S1DE"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "WOOD"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "H1DE"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "BRONZE"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "S2DE"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "2/ 3"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 8,
+   "contains": "BRONZE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 3,
+   "expected": 123
+  }
+ ]
+}

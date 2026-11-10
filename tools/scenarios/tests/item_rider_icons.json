@@ -1,7 +1,7 @@
 {
  "name": "item_rider_icons",
  "test": true,
- "description": "Item CARDS list shows rider OAM sprites over each rider card's elem cell (bronze FIRE BOW loot burn row -> entry for tile 123, POISON DAGGER row -> poison tile 125); riderless rows stay hidden. Swords never ride, so burn coverage moved to a loot bow (id 146).",
+ "description": "Item CARDS list shows rider OAM sprites over each rider card's element cell (bronze FIRE BOW loot burn row -> entry 5 tile 123, POISON DAGGER row -> entry 4 tile 125); riderless rows stay hidden. Swords never ride, so burn coverage moved to a loot bow (id 146).",
  "actions": [
   {
    "type": "collection_add",
@@ -28,13 +28,13 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "BRONZE SWORD"
+   "row": 7,
+   "contains": "BRONZE"
   },
   {
    "type": "screen_row",
-   "row": 7,
-   "contains": "BRONZE DAGGER"
+   "row": 8,
+   "contains": "BRONZE"
   },
   {
    "type": "screen_row",

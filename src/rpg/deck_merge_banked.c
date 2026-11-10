@@ -327,6 +327,11 @@ void deck_absorb_banked(void)
             continue;
         total = (uint8_t)(cs->collection.entries[i].count + qty);
         if (total < cs->collection.entries[i].count) total = 255;
+        /* Same 99 ownership guard as deck_collection_add (see deck.c):
+         * the capped check below already refused capped overflow, so
+         * this only ever trims uncapped stacks; the refused excess
+         * vanishes like any over-cap grant. */
+        if (total > 99) total = 99;
         /* Capped overflow needs a remainder row: with no free row the
          * whole grant is refused (the caller keeps collection unchanged
          * and reports failure) rather than stacking past the cap. */
@@ -461,5 +466,15 @@ void deck_merge_banked(void)
                     cs->collection.entries[cs->collection.count].count;
             }
         }
+    }
+    /* Ownership guard: no row ever holds more than 99 copies, so the
+     * 2-wide menu counts stay in range; excess copies vanish instead
+     * of wrapping the uint8.  Every collection add funnels through
+     * this merge (uncapped twins fold into one row), and save load
+     * runs it too, so this bounds the grouped menu totals in every
+     * reachable state. */
+    for (i = 0; i < cs->collection.count; i++) {
+        if (cs->collection.entries[i].count > 99)
+            cs->collection.entries[i].count = 99;
     }
 }

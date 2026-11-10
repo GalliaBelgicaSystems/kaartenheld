@@ -25,9 +25,12 @@
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
-/* Header at row 3, one card per row at rows 4-14. */
+/* Row 3 is the CARD + deck-icon /OWN column header, row 4 a blank paper
+ * separator; grouped card rows run 5-15 (VISIBLE_CARDS rows). */
 #define ROW_FILTER  2
-#define ROW_CARDS_TOP 4
+#define ROW_COL_HEAD 3
+#define ROW_SEP 4
+#define ROW_CARDS_TOP 5
 #define VISIBLE_CARDS 11
 
 #define MODE_LIST         0
@@ -66,8 +69,6 @@ extern uint8_t g_is_cgb;
 uint8_t s_ic_txt_i;
 uint8_t s_ic_col_i;
 static uint8_t s_ic_def_i;
-static uint8_t s_ic_deck_i;
-static uint8_t s_ic_coll_i;
 static uint8_t s_ic_lst_pos;
 
 uint8_t s_ic_y;
@@ -362,6 +363,9 @@ static void ic_name_color(uint8_t x, uint8_t y, uint8_t len,
 
 static uint8_t s_ic_mat;
 static uint8_t s_ic_wpn;
+/* Dual-use scratch: the shop-keys flag out of ic_card_mat_wpn, then the
+ * group owned total for the row being drawn.  Never live across the two
+ * uses (the row drawer re-reads it right after the mat/wpn call). */
 static uint8_t s_ic_shopkeys;
 static uint8_t s_ic_mlen;
 static uint8_t s_ic_wlen;
@@ -513,109 +517,30 @@ static CardId ic_view_card_id(Game *g, uint8_t pos)
     return g->state.cards.collection.entries[s_view_indices[pos]].id;
 }
 
-static uint8_t ic_deck_count(const DeckState *d, CardId id)
-{
-    uint8_t n = 0;
-    if (!d) return 0;
-    for (s_ic_deck_i = 0; s_ic_deck_i < d->count; s_ic_deck_i++) {
-        if (d->cards[s_ic_deck_i] == id) n++;
-    }
-    return n;
-}
+/* ── Grouped view ───────────────────────
+ * One DECK row per MATERIAL+WEAPON name ("all Steel Shields are one
+ * row"), whichever rider/power/cost variants or capped remainder rows
+ * the collection holds.  The build lives in BANK 11 with the cursor
+ * geometry (item_view_build_banked, menu_cursor_banked.c): the fixed
+ * bank cannot host it (0x8000) and bank 2 is at its ceiling -- the
+ * grouping pass cost nearly 1 KB here.  The fixed-bank caller runs the
+ * build and then the render as two sequential banked calls in the same
+ * frame, so the view is always fresh before anything reads it. */
 
-static uint8_t ic_collection_count(const CardState *cs, CardId id)
-{
-    if (!cs) return 0;
-    for (s_ic_coll_i = 0; s_ic_coll_i < cs->collection.count; s_ic_coll_i++) {
-        if (cs->collection.entries[s_ic_coll_i].id == id)
-            return cs->collection.entries[s_ic_coll_i].count;
-    }
-    return 0;
-}
-
-/* ── Filtered/sorted collection view (single source of truth) ──────
- * Built HERE (bank 2: same bank as the card catalog and the loot synth)
- * at the start of every full redraw; item_screen.c's fixed-bank actions
- * consume s_view_indices/s_view_count read-only and every mutation path
- * there invalidates the render cache, so a rebuild always lands before
- * the next consumer.  Living in one place is what keeps the DECK list
- * and the actions that index it from disagreeing -- a former fixed-bank
- * duplicate resolved loot ids to NULL while this side synthesizes them,
- * which shifted every selection at/after a loot card onto the wrong
- * card.  The fixed bank (at 0x8000) simply cannot host this code. */
-
-/* SPECIAL cards (quest items like the Lost Shop Keys) are LISTED but never
- * deckable -- pressing A shows a transient QUEST ITEM message instead. */
+/* SPECIAL cards (quest items like the Lost Shop Keys) are listed by the
+ * collection but never deckable, so they are not DECK rows. */
 static uint8_t ic_card_deckable(const CardDefinition *def)
 {
     return (uint8_t)(def != NULL && def->type != CARD_TYPE_SPECIAL);
 }
 
-static uint8_t ic_filter_matches(Game *g, CardId id)
-{
-    const CardDefinition *def;
-    if (g->item_menu_filter == FILTER_ALL) return 1;
-    def = ic_card_get_def(id);
-    return (uint8_t)(def != NULL && def->type == g->item_menu_filter);
-}
-
-static uint8_t ic_sort_value(const CardDefinition *def, uint8_t sort)
-{
-    switch (sort) {
-        case SORT_TYPE:  return def->type;
-        case SORT_POWER:
-        case SORT_POWER_DESC: return def->power;
-        case SORT_COST:
-        case SORT_COST_DESC:  return def->cost;
-        default: return 0;
-    }
-}
-
-static void ic_sort_view(Game *g)
-{
-    uint8_t i, j, tmp, va, vb;
-    uint8_t desc = (uint8_t)(g->item_menu_sort == SORT_POWER_DESC ||
-                             g->item_menu_sort == SORT_COST_DESC);
-
-    for (i = 1; i < s_view_count; i++) {
-        tmp = s_view_indices[i];
-        va = ic_sort_value(
-                ic_card_get_def(g->state.cards.collection.entries[tmp].id),
-                g->item_menu_sort);
-        j = i;
-        while (j > 0) {
-            vb = ic_sort_value(
-                    ic_card_get_def(
-                        g->state.cards.collection.entries[
-                            s_view_indices[j - 1]].id),
-                    g->item_menu_sort);
-            if (desc ? (vb < va) : (vb > va)) {
-                s_view_indices[j] = s_view_indices[j - 1];
-                j--;
-            } else {
-                break;
-            }
-        }
-        s_view_indices[j] = tmp;
-    }
-}
-
-static void ic_build_view(Game *g)
-{
-    uint8_t i;
-    CardId id;
-
-    s_view_count = 0;
-    for (i = 0; i < g->state.cards.collection.count; i++) {
-        id = g->state.cards.collection.entries[i].id;
-        if (!ic_card_deckable(ic_card_get_def(id))) continue;
-        if (!ic_filter_matches(g, id)) continue;
-        s_view_indices[s_view_count] = i;
-        s_view_count = (uint8_t)(s_view_count + 1);
-    }
-    if (g->item_menu_sort != SORT_NONE && s_view_count > 1)
-        ic_sort_view(g);
-}
+/* Row sums come from the grouped view build (item_view_build_banked,
+ * bank 11): s_row_owned/s_row_decked hold one entry per view row for
+ * the visible window, and slot 0 for the selected row in detail mode.
+ * Keeping the scan out of this bank is what paid for the row redesign
+ * (bank 2 sits at its ceiling, AGENTS.md 52.18). */
+extern uint8_t s_row_owned[12];
+extern uint8_t s_row_decked[12];
 
 static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
     "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
@@ -649,19 +574,133 @@ static uint8_t ic_pool(const Game *g)
     return (uint8_t)p;
 }
 
-/* One card per row (new layout):
+/* Weapon letter for the harness text buffer (the BG cell itself shows
+ * the weapon icon tile; the letter keeps the weapon readable to
+ * screen_row asserts). */
+static const char s_ic_wpn_letters[5] = { 'S', 'H', 'B', 'D', 'R' };
+
+/* AP pip at column x (gold-styled energy cost pip 1-5; '!' when the pool
+ * gate locks the primary -- the NEED AP message names the cost).  The BG
+ * cell shows the pip tile (236-240, streamed on full redraw) while the
+ * text buffer keeps the digit for harness screen_row asserts (same split
+ * as the weapon icon/letter cells).  VRAM always writes: the buffer holds
+ * a digit the PPU never shows, so the text skip-guard would stale-hide
+ * the pip (AGENTS.md 52.25).  Cost 0 / above 5 falls back to font. */
+static void ic_draw_ap_at(Game *g, uint8_t y, uint8_t x)
+{
+    if (s_ic_def->cost > ic_pool(g)) {
+        IC_DRAW_TEXT(x, y, "!", 1);
+    } else if (s_ic_def->cost >= 1 && s_ic_def->cost <= 5) {
+        s_ic_buf = &g_ui_screen_buf[y][x];
+        *s_ic_buf = (char)('0' + s_ic_def->cost);
+        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        VBK_REG = 0;
+        BANKED_VRAM_WRITE(s_ic_dst,
+            (uint8_t)(UI_TILE_AP_PIP_BASE + s_ic_def->cost - 1));
+    } else {
+        s_ic_code[0] = (char)('0' + s_ic_def->cost);
+        s_ic_code[1] = '\0';
+        IC_DRAW_TEXT(x, y, s_ic_code, 1);
+    }
+}
+
+/* Wide "dd/oo" counts at column x (5 chars, each side 2-wide
+ * right-aligned: " 4/ 4", "10/20").  No division (AGENTS.md 52.18:
+ * / and % pull the SDCC div/mod library into the fixed bank). */
+static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
+{
+    uint8_t tens = 0;
+    while (v >= 10) {
+        v -= 10;
+        tens++;
+    }
+    s_ic_code[0] = tens ? (char)('0' + tens) : ' ';
+    s_ic_code[1] = (char)('0' + v);
+    s_ic_code[2] = '\0';
+    IC_DRAW_TEXT(x, y, s_ic_code, 2);
+}
+
+/* 6-wide "dd/oo " counts: each side 2-wide right-aligned plus a
+ * trailing blank pad cell (the W in nn/NNW), so the slash sits at
+ * x + 2 on every row.  Disjoint from the chrome stamps below, so the
+ * text skip-guard never fights them (AGENTS.md 52.25). */
+static void ic_draw_count5(uint8_t y, uint8_t x, uint8_t decked,
+                           uint8_t owned)
+{
+    ic_draw_pair2(x, y, decked);
+    IC_DRAW_TEXT((uint8_t)(x + 2), y, "/", 1);
+    ic_draw_pair2((uint8_t)(x + 3), y, owned);
+    IC_DRAW_TEXT((uint8_t)(x + 5), y, " ", 1);
+}
+
+/* Row chrome tiles: AP icon first, then blanks (the counts drawer owns
+ * cols 14-18, so the loop must stop before them -- an unconditional
+ * stamp past the count cells would blank the decked digits in VRAM
+ * while the buffer stayed truthful (AGENTS.md 52.25).  Boot-loaded
+ * ids, so no streaming (see ui.h). */
+static const uint8_t s_ic_chrome_tiles[2] = {
+    UI_TILE_AP_ICON, UI_TILE_MENU_BLANK
+};
+
+/* Icon cells: rider cell rx (blank BG + element color; the OAM rider
+ * is shown by the list loop) and weapon cell wx (icon tile in VRAM,
+ * weapon letter in the text buffer for harness asserts).  The chrome
+ * loop stamps n cells VRAM-only starting at wx + 2 (AP icon, then
+ * blanks); one write expansion in a loop -- bank 2 has no room for
+ * unrolled (AGENTS.md 52.18).  Rows stamp 2 (cols 12-13); the 6-wide
+ * counts own cols 14-19.  The "DECK" text call below writes the
+ * buffer letters while the count cells overwrite cols 14-18 in both
+ * VRAM and buffer, so the buffer reads "DE" + counts (harness
+ * asserts match on the counts/mats, never the full word). */
+static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
+{
+    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
+    BANKED_VRAM_WRITE(s_ic_dst + (uint16_t)(wx - rx), s_ic_tile_wpn);
+    s_ic_dst += (uint16_t)(wx - rx + 2);
+    for (s_ic_col_i = 0; s_ic_col_i < n; s_ic_col_i++)
+        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i],
+                          s_ic_chrome_tiles[s_ic_col_i]);
+    s_ic_buf = &g_ui_screen_buf[y][wx];
+    *s_ic_buf = s_ic_wpn_letters[s_ic_wpn];
+    /* Rider cell takes the same role color as the name (fire/ice/poison
+     * rider, field green for heal); the weapon cell is always wood. */
+    ic_name_color(rx, y, 1, s_ic_def);
+    IC_COLOR_SPAN(wx, y, 1, UI_COLOR_WOOD);
+}
+
+
+/* One GROUP per row (one row per MATERIAL+WEAPON name):
  *   col 0: cursor caret
- *   col 1: element cell (blank BG tile; rider OAM overlays it) + element color
- *   col 2: weapon BG tile (wood palette)
- *   col 3-4: AP cost (2-wide, right-aligned; locked rows show `!` + digit
- *            so the gate is visible before the keypress)
- *   col 5-18: full "<MAT> <WPN>" name, element-colored
- *   col 19: decked-copy count (as before) */
+ *   cols 1-7: MATERIAL padded to 7 (MYTHRIL fills it, WOOD pads)
+ *   col 8: space
+ *   col 9: rider cell (blank BG tile; rider/health OAM overlays it)
+ *   col 10: weapon icon tile (BG); buffer holds S/H/B/D/R (see above)
+ *   col 11: AP pip, gold; '!' when above the pool (gate preview)
+ *   col 12: AP icon tile (BG); col 13 blank
+ *   cols 14-18: "dd/oo" decked/owned, each side 2-wide right-aligned
+ *     (" 4/ 5"), so the slash sits at col 16 on every row;
+ *     col 19 is the blank pad.
+ * Row 3 is the fixed column header: "CARD" plus deck icon + "/OWN"
+ * right-justified over the counts (cols 15-19: icon, slash, O, W, N
+ * -- the header slash sits at col 16 exactly like every count row
+ * below).  Row 4 is a blank paper separator; cards run rows
+ * 5-15 (VISIBLE_CARDS rows).
+ * VRAM shows the icon tiles; the buffer keeps the weapon letter plus
+ * "DE" and the counts (the count cells overwrite the "CK"), so
+ * harness asserts match on material/counts, never the full word.
+ * Display cost/rider/color read the primary (first) member; A tries
+ * members in collection order, so display and behavior agree.  Note:
+ * same-name variants (e.g. rider vs plain) share one row by design;
+ * see docs/deck-management.md. */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 {
+    /* Grouped row: the view holds the primary collection index. */
     s_ic_id = ic_view_card_id(g, pos);
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
+    ic_card_mat_wpn(s_ic_id, &s_ic_mat, &s_ic_wpn, &s_ic_shopkeys);
 
     if ((uint8_t)(pos + FIRST_CARD) == g->item_menu_index)
         IC_DRAW_TEXT(0, y, ">", 1);
@@ -669,7 +708,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         IC_DRAW_TEXT(0, y, " ", 1);
 
     /* Element rider OAM is painted per row by the list loop below (over
-     * the col-1 elem cell): the cell itself stays blank and the element
+     * the col-9 rider cell): the cell itself stays blank and the element
      * also reads from the color span below (FIRE/POISON/ICE slots). */
     s_ic_tile_elem = 0;
 
@@ -685,41 +724,48 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         s_ic_tile_wpn = UI_TILE_CARD_SWORD;
     }
 
-    IC_DRAW_NUM2(3, y, s_ic_def->cost);
-    /* Equip-gate lock (docs/enemies_ranking.md §4.8): a card above
-     * the pool shows `!` + digit in the AP column, so the player sees
-     * the lock before pressing A. */
-    if (s_ic_def->cost > ic_pool(g)) {
-        IC_DRAW_TEXT(3, y, "!", 1);
+    /* Material field (cols 1-7) + icon cells.  The weapon letter lives
+     * in the text buffer only (harness readability); VRAM shows the
+     * icon tile (same split as the rider cell: buffer blank, OAM art). */
+    s_ic_mstr = ic_mat_str(s_ic_mat, &s_ic_mlen);
+    IC_DRAW_TEXT(1, y, s_ic_mstr, s_ic_mlen);
+    for (s_ic_col_i = s_ic_mlen; s_ic_col_i < 7; s_ic_col_i++)
+        IC_DRAW_TEXT((uint8_t)(1 + s_ic_col_i), y, " ", 1);
+    {
+        uint8_t row = (uint8_t)(pos - g->item_menu_scroll);
+        if (row < 12) {
+            s_ic_shopkeys = s_row_owned[row];
+            s_ic_in_deck = s_row_decked[row];
+        } else {
+            s_ic_shopkeys = 0;
+            s_ic_in_deck = 0;
+        }
     }
-    ic_draw_full_name(5, y, s_ic_def);
-
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
-    BANKED_VRAM_WRITE(s_ic_dst + 1, s_ic_tile_wpn);
-
-    IC_COLOR_SPAN(2, y, 1, UI_COLOR_WOOD);
-    if (s_ic_def->status_id == STATUS_BURN)
-        IC_COLOR_SPAN(1, y, 1, UI_COLOR_FIRE);
-    else if (s_ic_def->status_id == STATUS_POISON)
-        IC_COLOR_SPAN(1, y, 1, UI_COLOR_POISON);
-    else if (s_ic_def->status_id == STATUS_FREEZE)
-        IC_COLOR_SPAN(1, y, 1, UI_COLOR_ICE);
-
-    s_ic_in_deck = ic_deck_count(&g->state.cards.deck, s_ic_id);
-    s_ic_code[0] = (char)('0' + s_ic_in_deck);
-    s_ic_code[1] = '\0';
-    IC_DRAW_TEXT(19, y, s_ic_code, 1);
+    /* One layout for every group size: the 2-wide count cells already
+     * fit 99, so 10+ farmed rows need no compressed branch (the old
+     * compact rider-8 shape died with the 3-wide counts). */
+    IC_DRAW_TEXT(8, y, " ", 1);
+    ic_draw_ap_at(g, y, 11);
+    IC_DRAW_TEXT(12, y, "DECK", 4);
+    ic_draw_count5(y, 14, s_ic_in_deck, s_ic_shopkeys);
+    ic_stamp_icons(y, 9, 10, 2);
+    IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
+    ic_name_color(1, y, 7, s_ic_def);
 }
 
 static void ic_draw_cards_list(Game *g)
 {
-    /* View is fixed-bank-built (see note above); the render only walks it.
-     * Row 3 is the column header (always drawn in list mode). */
-    IC_DRAW_TEXT(3, 3, "AP", 2);
-    IC_DRAW_TEXT(6, 3, "MATERIAL", 8);
-    IC_DRAW_TEXT(15, 3, "TYPE", 4);
+    /* Fixed column header: CARD over the name/icon block, deck icon +
+     * /OWN right-justified over the counts (cols 15-19: icon, slash,
+     * O, W, N).  The header slash sits at col 16 exactly like every
+     * count row below, and the owned-units digit lands under the W.
+     * The icon cell is a VRAM-only stamp (buffer keeps the space,
+     * like the row chrome).  Row 4 is a blank paper separator line. */
+    IC_DRAW_TEXT(1, ROW_COL_HEAD, "CARD           /OWN", 19);
+    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ROW_COL_HEAD << 5) + 15);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_DECK_ICON);
+    IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)
@@ -729,15 +775,18 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
         s_ic_y = ROW_CARDS_TOP;
     }
-    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 14; s_ic_lst_pos++) {
+    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 15; s_ic_lst_pos++) {
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
+        uint8_t rx;
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
-        ic_rider_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y,
+        /* Col 9 is the rider cell on every row (no compact branch). */
+        rx = 9;
+        ic_rider_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y,
                       s_ic_def ? s_ic_def->status_id : 0);
         if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
             ic_is_health_rider())
-            ic_health_show((uint8_t)(1 + s_ic_lst_pos), 1, s_ic_y);
+            ic_health_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
 
@@ -848,11 +897,12 @@ static void ic_draw_card_detail_page(Game *g)
     } else {
         IC_DRAW_TEXT(16, 9, "INF", 3);
     }
-    /* Row 10: collection vs deck counts (both right-aligned). */
+    /* Row 10: group collection vs deck counts (the whole same-name
+     * row, not just the primary id -- matches the list's DECK d/o). */
     IC_DRAW_TEXT(0, 10, "OWN", 3);
-    ic_draw_rjust(10, 7, ic_collection_count(&g->state.cards, s_ic_id));
+    ic_draw_rjust(10, 7, s_row_owned[0]);
     IC_DRAW_TEXT(9, 10, "DECK", 4);
-    ic_draw_rjust(10, 18, ic_deck_count(&g->state.cards.deck, s_ic_id));
+    ic_draw_rjust(10, 18, s_row_decked[0]);
     /* Row 11: shop value reminder.  Selling moved to the shop's SELL
      * tab (docs/loot.md §34.6), so the detail page no longer sells:
      * loot shows its formula value, curated its catalog price, quest
@@ -952,10 +1002,10 @@ void item_screen_render_banked(void)
     uint8_t e;
     if (!g) return;
 
-    /* The shared DECK view is rebuilt here, before anything indexes it
-     * (see ic_build_view): oracle for both this render and the fixed-bank
-     * actions. */
-    ic_build_view(g);
+
+    /* The grouped DECK view was just rebuilt by the fixed-bank caller
+     * (item_view_build_banked, bank 11) immediately before this body ran,
+     * so s_view_indices/s_view_count are fresh for everything below. */
 
     /* Sweep rider entries first: picker/emptied rows leave nothing
      * behind, and list/detail set exactly what they show below.  (The

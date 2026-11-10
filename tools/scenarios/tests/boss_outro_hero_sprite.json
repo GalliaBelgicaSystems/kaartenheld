@@ -1,7 +1,7 @@
 {
  "name": "boss_outro_hero_sprite",
  "test": true,
- "description": "After the reprisal DEFEAT, exiting the battle runs the despair outro (wake dialogue over the overworld): the hero overworld sprite must be real hero pixels, not the battle AP-cost pips that time-share VRAM ids 96-97. Guards the battle->dialogue OAM tile-data restore.",
+ "description": "After the reprisal DEFEAT, exiting the battle opens the defeat taunt dialogue over the throne-room overworld: the hero overworld sprite must be real hero pixels, not the battle AP-cost pips that time-share VRAM ids 96-97. Guards the battle->dialogue OAM tile-data restore.",
  "actions": [
   {
    "type": "wait",
@@ -64,7 +64,7 @@
   },
   {
    "type": "scene",
-   "expected": "TEST_FOREST"
+   "expected": "TEST_CASTLE"
   },
   {
    "type": "oam_bytes",
