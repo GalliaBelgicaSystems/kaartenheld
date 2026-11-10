@@ -28,6 +28,8 @@ static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0
 
 /* Bank-3 movement bodies (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
+/* Bank-11 combined diagonal gate check (src/world/diagonal_banked.c). */
+void diagonal_gate_check_banked(void);
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -149,16 +151,20 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
      * The STEPPED gate tile stays the move target (a normal one-tile
      * walk); the far destination is staged separately. */
     if (!scene_exit_check(w, def, target_x, target_y)) {
-        /* Walkability + whole-edge decide run banked (bank 2 body writes
+        /* Walkability + whole-edge decide run banked (body writes
          * outcome/param/dir/target straight through the staged World
-         * pointer).  A missing def stages NULL, which the body treats as
-         * no links after resetting the outcome to NONE.  Unwalkable
-         * ground blocks HERE, before actors resolve, so a hostile or
-         * static actor on solid art stays inert -- the legacy
-         * walkability-first gate (AGENTS item: actor checks must not
-         * precede walkability). */
-        g_bk_call_bank = 2;
-        g_bk_call_target = (uint16_t)&world_gate_check_banked;
+         * pointer). Diagonal moves use the bank-11 combined body (wall
+         * orthogonals + actor orthogonals: bank 2 is full, bank 5 is
+         * full in release, fixed is over budget); cardinals keep bank-2. A missing def
+         * stages NULL (no links). Unwalkable ground blocks HERE, so a
+         * hostile/static on solid art stays inert. */
+        if (dx != 0 && dy != 0) {
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&diagonal_gate_check_banked;
+        } else {
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&world_gate_check_banked;
+        }
         g_bk_ptr_a = (void *)w;
         g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
         g_bk_byte_a = target_x;
