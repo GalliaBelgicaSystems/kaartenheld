@@ -147,17 +147,19 @@ void game_slime_despair_outro(void)
 {
     /* The battle screen guarantees a live game; the single global Game
      * instance is always the battle owner (main.c drives everything from
-     * &g_game).  Wakes in the demo-end wake scene (vast empty
-     * underground -- the finale backdrop, reachable only through this
-     * teleport: the wake dialogue opens immediately and closes straight
-     * to the ENDING screen, so the player never walks here).  The defeat
-     * whites out first (banked palette fade on the result screen), then
-     * the teleport lands and the wake dialogue's first-enter fades the
-     * area back in -- no LCD change here (the dialogue entry performs
-     * the full LCD-off redraw after the frame's vsync(); turning the LCD
-     * off in update context hangs vsync() -- no VBlank while the LCD is
-     * off -- stranding the release ROM on a white screen with the area
-     * track playing, a hang the harness never sees (it skips vsync)). */
+     * &g_game).  After the desperation move and explosion sound, open the
+     * Lord of Slimes defeat dialogue in the Throne Room. */
+    g_slime_despair = 0;
+    world_on_battle_end(&g_game, false);
+    dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_SLIME_LORD_DEFEAT);
+    screen_change(&g_game, SCREEN_DIALOGUE);
+}
+
+void game_slime_despair_wake(void)
+{
+    /* Fade to white, then wake the hero in the finale backdrop
+     * (SCENE_DEMO_END_WAKE_SCENE) and play the strange wake dialogue. */
+    g_slime_despair = 1;
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&game_despair_fade_out_banked;
     banked_call_run();
@@ -169,6 +171,8 @@ void game_slime_despair_outro(void)
     /* scene_load leaves facing untouched, so route it explicitly to the
      * authored spawn facing (UP) instead of the engage direction. */
     g_game.world.player.facing = DIRECTION_UP;
+    g_game.prev_screen = SCREEN_BATTLE;
+    g_game.render_cache.valid = false;
     dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
     screen_change(&g_game, SCREEN_DIALOGUE);
 }

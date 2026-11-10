@@ -85,6 +85,29 @@ extern uint8_t g_is_cgb;
  * trampoline). */
 void dice_tiles_load_banked(void);
 
+/* Menu AP pip BG tiles (assets/ap_pips_bg.png, cost order 1-5; NOT
+ * boot-loaded -- those ids sit in the high block-1 window).  The bank-8
+ * menu body streams them on demand to the window below dice (236-240),
+ * clear of the 128+ enemy-art growth (max ~36 tiles) and of the world
+ * tileset (128-255, reloaded on overworld entry which wipes them -- no
+ * restore needed).  Tile id = UI_TILE_AP_PIP_BASE + (cost - 1). */
+#define UI_TILE_AP_PIP_BASE      236u
+#define UI_TILE_AP_PIP_COUNT     5u
+/* Menu DECK-row chrome (all boot-loaded by ui_card_tiles_load_banked,
+ * same loader as the weapon icons, so no streaming needed): the AP unit
+ * icon (combat_ap_icon, HUD gold) stamped after the cost pip, the true
+ * blank sheet cell for the spacer cells, and the deck icon
+ * (combat_deck_icon, HUD iron) replacing the DECK text.  The text buffer
+ * keeps the DECK letters, so harness screen_row asserts are unchanged. */
+#define UI_TILE_MENU_BLANK       112u
+#define UI_TILE_AP_ICON          114u
+#define UI_TILE_DECK_ICON        116u
+
+/* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
+ * render body on DECK-tab full redraws (same-bank data, LCD-off window).
+ * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
+ * extra trampoline dispatch lives in item_screen.c. */
+
 /* Overworld actor OAM sprite tile bases (VRAM Block 0, 0x8000).  Collision
  * rules: must not overlap the font-duplicate block 0..95 used for ASCII
  * actor glyphs, PLAYER (102) or HERO (98). */

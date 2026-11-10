@@ -313,6 +313,22 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_SLIME_LORD_DEFEAT,
+        "Lord of Slimes:",
+        4,
+        {"Card wielder, you", "put up a good", "fight, but you are", "no match for me!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SLIME_LORD_INTRO,
+        "Lord of Slimes:",
+        6,
+        {"Card wielder, you", "dare challenge me!", "You cannot stop", "what is coming.", "Slimes will rule", "this planet soon!"},
+        STORY_FLAG_ID_SLIME_LORD_INTRO,
+        0
+    },
+    {
         DIALOGUE_ID_STRANGE_WAKE,
         "",
         2,

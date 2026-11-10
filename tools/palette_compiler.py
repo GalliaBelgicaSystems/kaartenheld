@@ -56,6 +56,7 @@ SHEETS = {
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
     "dice": ("dice.png", "base"),
+    "ap_pips": ("ap_pips_bg.png", "base"),
     "title": ("title-red.png", "title"),
 }
 
@@ -659,6 +660,12 @@ def main():
     # cell encodes with the wood ramp (brown on tan, like the arrow
     # counters).  Base slot 5 is wood (fight2) per palette_slots.json.
     compile_sheet("dice", { (x, 0): "fight2" for x in range(10) },
+                  require_slot=False)
+    # Menu AP pips (ap_pips_bg.png, 5x1 cells, cost order 1-5): every
+    # cell encodes with the fightspider ramp (menu text black-on-white,
+    # base slot 6 = UI_COLOR_GOLD, the AP column color). Ink is exact
+    # black so there are zero mismatches.
+    compile_sheet("ap_pips", { (x, 0): "fightspider" for x in range(5) },
                   require_slot=False)
     compile_sheet("title", "title")
 

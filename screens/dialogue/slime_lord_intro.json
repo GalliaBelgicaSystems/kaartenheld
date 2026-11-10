@@ -1,0 +1,13 @@
+{
+  "id": "slime_lord_intro",
+  "speaker": "Lord of Slimes:",
+  "lines": [
+    "Card wielder, you",
+    "dare challenge me!",
+    "You cannot stop",
+    "what is coming.",
+    "Slimes will rule",
+    "this planet soon!"
+  ],
+  "completion_flag": "STORY_FLAG_ID_SLIME_LORD_INTRO"
+}

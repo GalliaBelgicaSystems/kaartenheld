@@ -120,7 +120,9 @@ typedef enum {
                                        * was the spar, so the next real
                                        * victory still earns the
                                        * first-victory bronze shield */
-    STORY_FLAG_ID_COUNT        = 13
+    STORY_FLAG_ID_SLIME_LORD_INTRO = 13, /* Lord of Slimes throne-room intro
+                                          * dialogue played (advancing 5 rows) */
+    STORY_FLAG_ID_COUNT        = 14
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
