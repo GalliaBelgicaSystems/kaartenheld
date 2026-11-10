@@ -113,12 +113,12 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": "IRON"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": "1"
   }
  ],

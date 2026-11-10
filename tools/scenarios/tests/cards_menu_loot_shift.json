@@ -128,17 +128,17 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 9,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 9,
    "contains": "BRONZE"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 10,
    "contains": "MYTHRIL"
   }
  ]

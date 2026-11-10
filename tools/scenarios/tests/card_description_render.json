@@ -32,27 +32,27 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "WOOD"
-  },
-  {
-   "type": "screen_row",
-   "row": 4,
-   "contains": "WOOD"
-  },
-  {
-   "type": "screen_row",
    "row": 5,
-   "contains": "BRONZE"
+   "contains": "WOOD"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "IRON"
+   "contains": "WOOD"
   },
   {
    "type": "screen_row",
    "row": 7,
+   "contains": "BRONZE"
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "IRON"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
    "contains": "BRONZE"
   }
  ]

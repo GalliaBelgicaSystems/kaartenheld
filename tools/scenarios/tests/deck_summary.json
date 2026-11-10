@@ -32,33 +32,33 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 5,
    "contains": "WOOD"
-  },
-  {
-   "type": "screen_row",
-   "row": 3,
-   "contains": "DECK 4/4"
-  },
-  {
-   "type": "screen_row",
-   "row": 4,
-   "contains": "WOOD"
-  },
-  {
-   "type": "screen_row",
-   "row": 4,
-   "contains": "DECK 4/4"
   },
   {
    "type": "screen_row",
    "row": 5,
+   "contains": "4/ 4"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "WOOD"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "4/ 4"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
    "contains": "BRONZE"
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "DECK 2/2"
+   "row": 7,
+   "contains": "2/ 2"
   }
  ],
  "initial_state": {

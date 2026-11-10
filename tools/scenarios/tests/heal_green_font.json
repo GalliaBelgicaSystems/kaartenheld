@@ -32,23 +32,23 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": "IRON"
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 9,
    "contains": "BRONZE"
   },
   {
    "type": "tilemap_attr",
-   "row": 6,
+   "row": 8,
    "col": 5,
    "expected": 3
   },
   {
    "type": "tilemap_attr",
-   "row": 7,
+   "row": 9,
    "col": 5,
    "expected": 4
   }

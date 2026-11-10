@@ -79,12 +79,12 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 5,
    "contains": "WOOD"
   },
   {
    "type": "screen_row",
-   "row": 3,
+   "row": 5,
    "contains": "2"
   }
  ]

@@ -85,7 +85,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "DECK"
+   "contains": "/OWN"
   },
   {
    "type": "screen_row_not_contains",
@@ -94,12 +94,12 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 10,
    "contains": ">"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 9,
+   "row": 11,
    "contains": ">"
   },
   {

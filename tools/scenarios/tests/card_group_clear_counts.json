@@ -49,8 +49,8 @@
   },
   {
    "type": "screen_row",
-   "row": 3,
-   "contains": "DECK 0/4"
+   "row": 5,
+   "contains": "0/ 4"
   }
  ]
 }

@@ -31,7 +31,7 @@ extern uint8_t ui_font_tile_base;
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define CUR_FIRST_CARD 1
-#define CUR_VISIBLE_CARD 12
+#define CUR_VISIBLE_CARD 11
 
 /* Nav-mutation constants (mirror item_screen.c TAB_DECK/TAB_GEM/ROW_TOP,
  * FILTER_ALL, SORT_NONE/SORT_COST_DESC) for item_menu_cycle_banked
@@ -72,10 +72,13 @@ static uint8_t cu_mode(const Game *g)
 static uint8_t cu_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
 {
     if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, no header,
-     * one grouped card row per row at rows 3-14. */
+    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3 column
+     * header, row 4 separator, one grouped card row per row at rows
+     * 5-15.  QUEST/GEM keep rows 3+ (their own render bodies draw no
+     * header). */
     if (index == 0) return 2;
     s_cu_pos = (uint8_t)(index - CUR_FIRST_CARD);
+    if (mode == 0) return (uint8_t)(5u + (uint8_t)(s_cu_pos - scroll));
     return (uint8_t)(3u + (uint8_t)(s_cu_pos - scroll));
 }
 

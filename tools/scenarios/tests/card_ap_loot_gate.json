@@ -210,17 +210,17 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": "STEEL"
   },
   {
    "type": "screen_row",
-   "row": 6,
+   "row": 8,
    "contains": "3"
   }
  ]

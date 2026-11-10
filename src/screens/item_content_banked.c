@@ -28,8 +28,10 @@
 /* No column header: one grouped card row per row at rows 3-14 (the old
  * row-3 "AP MATERIAL TYPE" header is gone; cards start one row higher). */
 #define ROW_FILTER  2
-#define ROW_CARDS_TOP 3
-#define VISIBLE_CARDS 12
+#define ROW_COL_HEAD 3
+#define ROW_SEP 4
+#define ROW_CARDS_TOP 5
+#define VISIBLE_CARDS 11
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -609,36 +611,45 @@ static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
     IC_DRAW_TEXT(x, y, s_ic_code, 2);
 }
 
+/* 6-wide "dd/oo " counts: each side 2-wide right-aligned plus a
+ * trailing blank pad cell (the W in nn/NNW), so the slash sits at
+ * x + 2 on every row.  Disjoint from the chrome stamps below, so the
+ * text skip-guard never fights them (AGENTS.md 52.25). */
 static void ic_draw_count5(uint8_t y, uint8_t x, uint8_t decked,
                            uint8_t owned)
 {
     ic_draw_pair2(x, y, decked);
     IC_DRAW_TEXT((uint8_t)(x + 2), y, "/", 1);
     ic_draw_pair2((uint8_t)(x + 3), y, owned);
+    IC_DRAW_TEXT((uint8_t)(x + 5), y, " ", 1);
 }
 
-/* Row chrome tiles: AP icon, blank, deck icon, blank (cols wx+2..wx+5:
- * 12-15 on the normal branch, 11-14 on compact).  Boot-loaded ids, so
- * no streaming (see ui.h). */
+/* Row chrome tiles: AP icon first, then blanks (the counts drawer owns
+ * cols 14-18, so the loop must stop before them -- an unconditional
+ * stamp past the count cells would blank the decked digits in VRAM
+ * while the buffer stayed truthful (AGENTS.md 52.25).  Boot-loaded
+ * ids, so no streaming (see ui.h). */
 static const uint8_t s_ic_chrome_tiles[4] = {
     UI_TILE_AP_ICON, UI_TILE_MENU_BLANK,
-    UI_TILE_DECK_ICON, UI_TILE_MENU_BLANK
+    UI_TILE_MENU_BLANK, UI_TILE_MENU_BLANK
 };
 
 /* Icon cells: rider cell rx (blank BG + element color; the OAM rider
  * is shown by the list loop) and weapon cell wx (icon tile in VRAM,
  * weapon letter in the text buffer for harness asserts).  The chrome
- * loop stamps the AP/deck icons VRAM-only (buffer keeps the DECK
- * letters for harness asserts); one write expansion in a loop -- bank
- * 2 has no room for four unrolled (AGENTS.md 52.18). */
-static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx)
+ * loop stamps n cells VRAM-only starting at wx + 2 (AP icon, then
+ * blanks; buffer keeps the DECK letters for harness asserts); one
+ * write expansion in a loop -- bank 2 has no room for unrolled
+ * (AGENTS.md 52.18).  Normal rows stamp 2 (cols 12-13), compact 3
+ * (cols 11-13); the 6-wide counts own cols 14-19 on both. */
+static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 {
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
     BANKED_VRAM_WRITE(s_ic_dst + (uint16_t)(wx - rx), s_ic_tile_wpn);
     s_ic_dst += (uint16_t)(wx - rx + 2);
-    for (s_ic_col_i = 0; s_ic_col_i < 4; s_ic_col_i++)
+    for (s_ic_col_i = 0; s_ic_col_i < n; s_ic_col_i++)
         BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i],
                           s_ic_chrome_tiles[s_ic_col_i]);
     s_ic_buf = &g_ui_screen_buf[y][wx];
@@ -657,11 +668,16 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx)
  *   col 9: rider cell (blank BG tile; rider/health OAM overlays it)
  *   col 10: weapon icon tile (BG); buffer holds S/H/B/D/R (see above)
  *   col 11: AP pip, gold; '!' when above the pool (gate preview)
- *   col 12: AP icon tile (BG); col 13: blank
- *   col 14: deck icon tile (BG); col 15: blank
- *   cols 16-19: " d/o" decked/owned (single digits, col 16 blank;
- *     10+ takes the compact branch: rider 8, weapon 9, pip 10,
- *     AP icon 11, blank 12, deck icon 13, blank 14, "dd/oo" 15-19).
+ *   col 12: AP icon tile (BG); col 13 blank
+ *   cols 14-18: "dd/oo" decked/owned, each side 2-wide right-aligned
+ *     (" 4/ 5"), so the slash sits at col 16 on every row including
+ *     the compact branch (rider 8, weapon 9, pip 10, AP icon 11,
+ *     blanks 12-13, same "dd/oo" 14-18); col 19 is the blank pad.
+ * Row 3 is the fixed column header: "CARD" plus deck icon + "/OWN"
+ * right-justified over the counts (cols 15-19: icon, slash, O, W, N
+ * -- the header slash sits at col 16 exactly like every count row
+ * below).  Row 4 is a blank paper separator; cards run rows
+ * 5-15 (VISIBLE_CARDS rows).
  * VRAM shows the icon tiles; the text buffer keeps the DECK letters,
  * so harness screen_row asserts read the same rows as before.
  * Display cost/rider/color read the primary (first) member; A tries
@@ -713,33 +729,31 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
             s_ic_in_deck = 0;
         }
     }
-    if (s_ic_in_deck > 9 || s_ic_shopkeys > 9) {
-        /* Compact branch (10+ copies of one name: farmed past every
-         * cap): no spaces; "DECK" at 11-14, "dd/oo" at 15-19. */
-        ic_draw_ap_at(g, y, 10);
-        IC_DRAW_TEXT(11, y, "DECK", 4);
-        ic_draw_count5(y, 15, s_ic_in_deck, s_ic_shopkeys);
-        ic_stamp_icons(y, 8, 9);
-        IC_COLOR_SPAN(10, y, 2, UI_COLOR_GOLD);
-    } else {
-        IC_DRAW_TEXT(8, y, " ", 1);
-        ic_draw_ap_at(g, y, 11);
-        IC_DRAW_TEXT(12, y, "DECK", 4);
-        IC_DRAW_TEXT(16, y, " ", 1);
-        s_ic_code[0] = (char)('0' + s_ic_in_deck);
-        s_ic_code[1] = '/';
-        s_ic_code[2] = (char)('0' + s_ic_shopkeys);
-        IC_DRAW_TEXT(17, y, s_ic_code, 3);
-        ic_stamp_icons(y, 9, 10);
-        IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
-    }
+    /* One layout for every group size: the 2-wide count cells already
+     * fit 99, so 10+ farmed rows need no compressed branch (the old
+     * compact rider-8 shape died with the 3-wide counts). */
+    IC_DRAW_TEXT(8, y, " ", 1);
+    ic_draw_ap_at(g, y, 11);
+    IC_DRAW_TEXT(12, y, "DECK", 4);
+    ic_draw_count5(y, 14, s_ic_in_deck, s_ic_shopkeys);
+    ic_stamp_icons(y, 9, 10, 2);
+    IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
     ic_name_color(1, y, 7, s_ic_def);
 }
 
 static void ic_draw_cards_list(Game *g)
 {
-    /* No column header (removed): the rows are self-describing
-     * (MATERIAL + icons + AP + DECK d/o), so cards start at row 3. */
+    /* Fixed column header: CARD over the name/icon block, deck icon +
+     * /OWN right-justified over the counts (cols 15-19: icon, slash,
+     * O, W, N).  The header slash sits at col 16 exactly like every
+     * count row below, and the owned-units digit lands under the W.
+     * The icon cell is a VRAM-only stamp (buffer keeps the space,
+     * like the row chrome).  Row 4 is a blank paper separator line. */
+    IC_DRAW_TEXT(1, ROW_COL_HEAD, "CARD           /OWN", 19);
+    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ROW_COL_HEAD << 5) + 15);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_DECK_ICON);
+    IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)
@@ -749,15 +763,15 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
         s_ic_y = ROW_CARDS_TOP;
     }
-    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 14; s_ic_lst_pos++) {
+    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 15; s_ic_lst_pos++) {
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
         uint8_t rx;
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
-        /* Rider OAM tracks the row's rider cell (col 9, or 8 on the
-         * compact 10+ branch): s_ic_in_deck/s_ic_shopkeys still hold
-         * this row's group sums (see the drawer above). */
-        rx = (uint8_t)((s_ic_in_deck > 9 || s_ic_shopkeys > 9) ? 8 : 9);
+        /* Rider OAM tracks the row's rider cell (col 9):
+         * s_ic_in_deck/s_ic_shopkeys still hold this row's group sums
+         * (see the drawer above). */
+        rx = 9;
         ic_rider_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y,
                       s_ic_def ? s_ic_def->status_id : 0);
         if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&

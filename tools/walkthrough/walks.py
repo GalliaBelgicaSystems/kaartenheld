@@ -780,11 +780,11 @@ def walk_a(planner, checks, sram_out=None):
     deck0 = s.reader.deck_count()
     rows = s.bg_text()
     downs, clear = None, 0
-    for r in range(3, 15):
-        m = re.search(r"(\d+)/(\d+)\s*$", rows[r])
+    for r in range(5, 16):
+        m = re.search(r"(\d+)\s*/\s*(\d+)\s*$", rows[r])
         if m and int(m.group(1)) == int(m.group(2)) and int(m.group(1)) > 0 \
                 and deck0 - int(m.group(1)) >= 5:
-            downs, clear = r - 2, int(m.group(1))
+            downs, clear = r - 4, int(m.group(1))
             break
     s.check("fully-decked row found", downs is not None,
             expected="x/x row", actual="none")
