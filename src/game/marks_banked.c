@@ -291,6 +291,7 @@ static void marks_refresh(void)
         uint8_t d, j;
         volatile uint8_t *dst;
         s_ap_pip_loaded = 1;
+        VBK_REG = 0;
         for (d = 0; d < 5; d++) {
             dst = (volatile uint8_t *)(0x8000u + (((uint16_t)UI_TILE_AP_PIP_BASE + d) << 4));
             for (j = 0; j < 16; j++) {

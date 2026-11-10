@@ -25,8 +25,8 @@
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
-/* No column header: one grouped card row per row at rows 3-14 (the old
- * row-3 "AP MATERIAL TYPE" header is gone; cards start one row higher). */
+/* Row 3 is the CARD + deck-icon /OWN column header, row 4 a blank paper
+ * separator; grouped card rows run 5-15 (VISIBLE_CARDS rows). */
 #define ROW_FILTER  2
 #define ROW_COL_HEAD 3
 #define ROW_SEP 4
@@ -363,6 +363,9 @@ static void ic_name_color(uint8_t x, uint8_t y, uint8_t len,
 
 static uint8_t s_ic_mat;
 static uint8_t s_ic_wpn;
+/* Dual-use scratch: the shop-keys flag out of ic_card_mat_wpn, then the
+ * group owned total for the row being drawn.  Never live across the two
+ * uses (the row drawer re-reads it right after the mat/wpn call). */
 static uint8_t s_ic_shopkeys;
 static uint8_t s_ic_mlen;
 static uint8_t s_ic_wlen;
@@ -629,19 +632,20 @@ static void ic_draw_count5(uint8_t y, uint8_t x, uint8_t decked,
  * stamp past the count cells would blank the decked digits in VRAM
  * while the buffer stayed truthful (AGENTS.md 52.25).  Boot-loaded
  * ids, so no streaming (see ui.h). */
-static const uint8_t s_ic_chrome_tiles[4] = {
-    UI_TILE_AP_ICON, UI_TILE_MENU_BLANK,
-    UI_TILE_MENU_BLANK, UI_TILE_MENU_BLANK
+static const uint8_t s_ic_chrome_tiles[2] = {
+    UI_TILE_AP_ICON, UI_TILE_MENU_BLANK
 };
 
 /* Icon cells: rider cell rx (blank BG + element color; the OAM rider
  * is shown by the list loop) and weapon cell wx (icon tile in VRAM,
  * weapon letter in the text buffer for harness asserts).  The chrome
  * loop stamps n cells VRAM-only starting at wx + 2 (AP icon, then
- * blanks; buffer keeps the DECK letters for harness asserts); one
- * write expansion in a loop -- bank 2 has no room for unrolled
- * (AGENTS.md 52.18).  Normal rows stamp 2 (cols 12-13), compact 3
- * (cols 11-13); the 6-wide counts own cols 14-19 on both. */
+ * blanks); one write expansion in a loop -- bank 2 has no room for
+ * unrolled (AGENTS.md 52.18).  Rows stamp 2 (cols 12-13); the 6-wide
+ * counts own cols 14-19.  The "DECK" text call below writes the
+ * buffer letters while the count cells overwrite cols 14-18 in both
+ * VRAM and buffer, so the buffer reads "DE" + counts (harness
+ * asserts match on the counts/mats, never the full word). */
 static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 {
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
@@ -670,18 +674,20 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
  *   col 11: AP pip, gold; '!' when above the pool (gate preview)
  *   col 12: AP icon tile (BG); col 13 blank
  *   cols 14-18: "dd/oo" decked/owned, each side 2-wide right-aligned
- *     (" 4/ 5"), so the slash sits at col 16 on every row including
- *     the compact branch (rider 8, weapon 9, pip 10, AP icon 11,
- *     blanks 12-13, same "dd/oo" 14-18); col 19 is the blank pad.
+ *     (" 4/ 5"), so the slash sits at col 16 on every row;
+ *     col 19 is the blank pad.
  * Row 3 is the fixed column header: "CARD" plus deck icon + "/OWN"
  * right-justified over the counts (cols 15-19: icon, slash, O, W, N
  * -- the header slash sits at col 16 exactly like every count row
  * below).  Row 4 is a blank paper separator; cards run rows
  * 5-15 (VISIBLE_CARDS rows).
- * VRAM shows the icon tiles; the text buffer keeps the DECK letters,
- * so harness screen_row asserts read the same rows as before.
+ * VRAM shows the icon tiles; the buffer keeps the weapon letter plus
+ * "DE" and the counts (the count cells overwrite the "CK"), so
+ * harness asserts match on material/counts, never the full word.
  * Display cost/rider/color read the primary (first) member; A tries
- * members in collection order, so display and behavior agree. */
+ * members in collection order, so display and behavior agree.  Note:
+ * same-name variants (e.g. rider vs plain) share one row by design;
+ * see docs/deck-management.md. */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 {
     /* Grouped row: the view holds the primary collection index. */
@@ -768,9 +774,7 @@ static void ic_draw_cards_list(Game *g)
         uint8_t rx;
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
-        /* Rider OAM tracks the row's rider cell (col 9):
-         * s_ic_in_deck/s_ic_shopkeys still hold this row's group sums
-         * (see the drawer above). */
+        /* Col 9 is the rider cell on every row (no compact branch). */
         rx = 9;
         ic_rider_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y,
                       s_ic_def ? s_ic_def->status_id : 0);
@@ -809,12 +813,9 @@ static void ic_draw_cards_list(Game *g)
 static void ic_draw_card_detail_page(Game *g)
 {
     uint8_t detail_uses;
-    uint8_t detail_primary;
     if (g->item_menu_index < FIRST_CARD ||
         (uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
         return;
-    detail_primary =
-        s_view_indices[(uint8_t)(g->item_menu_index - FIRST_CARD)];
     s_ic_id = ic_view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;

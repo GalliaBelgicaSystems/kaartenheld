@@ -270,9 +270,10 @@ gfx: manifest
 		--shade-map generated/tiles/shades/dice.json -o $(GFX_OUT_DIR)/dice_tiles.h
 	# ── Menu AP pip BG tiles (assets/ap_pips_bg.png, 5x1, cost order 1-5) ──
 	# The sheet is composed by the manifest prerequisite (compose_ap_pips.py);
-	# palette_compiler.py writes the shade map (fight3: white + browns, same
-	# as the AP dot/icon cells). Only the encode belongs here. Encoded with
-	# the field ramp (white paper); streamed on demand by the bank-8 menu
+	# palette_compiler.py writes the shade map (fightspider: menu black-on-
+	# white, base slot 6 = UI_COLOR_GOLD, the AP column color). Only the
+	# encode belongs here. Encoded with
+	# the fightspider ramp (white paper); streamed on demand by the bank-8 menu
 	# body to UI_TILE_AP_PIP_BASE (236-240).
 	@python3 tools/png2gb.py assets/ap_pips_bg.png --name ap_pip_tiles \
 		--shade-map generated/tiles/shades/ap_pips.json -o $(GFX_OUT_DIR)/ap_pip_tiles.h

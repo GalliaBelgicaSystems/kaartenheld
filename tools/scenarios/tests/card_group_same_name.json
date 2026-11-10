@@ -45,13 +45,28 @@
   },
   {
    "type": "screen_row",
+   "row": 5,
+   "contains": "S1DE"
+  },
+  {
+   "type": "screen_row",
    "row": 6,
    "contains": "WOOD"
   },
   {
    "type": "screen_row",
+   "row": 6,
+   "contains": "H1DE"
+  },
+  {
+   "type": "screen_row",
    "row": 7,
    "contains": "BRONZE"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "S2DE"
   },
   {
    "type": "screen_row",

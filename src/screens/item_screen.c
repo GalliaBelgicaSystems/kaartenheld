@@ -27,27 +27,11 @@ void item_group_query_banked(void);
  * s_view_indices/s_view_count (one row per MATERIAL+WEAPON). */
 void item_view_build_banked(void);
 
-/* Member lookup for the grouped A-loops below: thin fixed wrapper over
- * the bank-11 member query.  Stages bank/target/ptr FRESH on every
- * call -- the clear body and the emit wrapper reuse the same staging
- * between rounds, so a lookup that skips staging re-runs the previous
- * body (round 2 once re-appended a CARD_REMOVED: 5 events for 4
- * copies).  Returns the collection index, or 0xFF when the ordinal
- * is past the group's last member. */
-static uint8_t grp_member(Game *g, uint8_t primary, uint8_t ord)
-{
-    g_bk_call_bank = 11;
-    g_bk_call_target = (uint16_t)&item_group_query_banked;
-    g_bk_ptr_a = (void *)g;
-    g_bk_byte_a = primary;
-    g_bk_byte_b = ord;
-    g_bk_byte_d = 0;
-    banked_call_run();
-    return g_bk_byte_c;
-}
-/* Group-clear removal core (same bank): g_bk_ptr_a = CardState*,
- * g_bk_byte_a = id -> g_bk_byte_c removed count. */
-void deck_clear_all_banked(void);
+/* Grouped A-action bodies (menu_cursor_banked.c, bank 11): scan finds
+ * the first addable member (or the priority refusal reason), clear-one
+ * clears a single member per call.  Staging per body comment. */
+void item_group_scan_banked(void);
+void item_group_clear_one_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -314,62 +298,79 @@ void item_screen_update(Game *g)
             if (pv < 1) pv = 1;
             if (pv > 255) pv = 255;
             pool = (uint8_t)pv;
-            /* Loop state lives in WRAM (s_grp_*), never in a register:
-             * SDCC caches register copies across the banked trampoline
-             * calls (AGENTS.md 52.19 family).  Every dispatch in these
-             * loops stages bank/target/ptr FRESH: the member query
-             * shares its staging with the clear body and the emit
-             * wrapper, so a round that reuses a previous round's
-             * staging re-runs the previous body -- round 2 once
-             * re-appended a CARD_REMOVED (5 events for 4 copies). */
+            /* Grouped A: scan (bank 11) finds the first addable member;
+             * the single apply + all telemetry/SFX stay fixed.  A fully
+             * capped group (scan reason 0) falls through to the clear
+             * path instead of pinning the row.  Loop state lives in
+             * WRAM (AGENTS.md 52.19: SDCC caches registers across the
+             * trampoline); every dispatch stages bank/target/ptr FRESH
+             * and the clear return is read IMMEDIATELY (a stale re-read
+             * once re-appended a 5th CARD_REMOVED for 4 copies). */
             if (decked >= owned) {
-                if ((uint8_t)(cs->deck.count - decked) < DECK_MIN_CARDS) {
-                    msg = MSG_DECK_MIN;
-                } else {
-                    s_grp_ord = 0;
-                    while (s_grp_ord < 50) {
-                        s_grp_rm = grp_member(g, primary, s_grp_ord);
-                        if (s_grp_rm == 0xFF) break;
-                        s_grp_id = cs->collection.entries[s_grp_rm].id;
-                        /* Single-shot clear through the bank-11 body
-                         * (self-contained, no fixed-bank calls).  The
-                         * return is read IMMEDIATELY: the emit wrapper
-                         * below reuses the staging bytes, so nothing may
-                         * sit between the call and this read (a stale
-                         * re-read once produced a 5th CARD_REMOVED for 4
-                         * copies -- see card_group_clear_counts). */
-                        g_bk_call_bank = 11;
-                        g_bk_call_target = (uint16_t)&deck_clear_all_banked;
-                        g_bk_ptr_a = (void *)cs;
-                        g_bk_byte_a = s_grp_id;
-                        banked_call_run();
-                        s_grp_n = g_bk_byte_c;
-                        while (s_grp_n) {
-                            telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
-                                           (CardId)s_grp_id, 0, 0, 0);
-                            s_grp_n--;
-                        }
-                        s_grp_ord++;
-                    }
-                }
+                s_grp_rm = 1;
             } else {
-                s_grp_ord = 0;
-                while (s_grp_ord < 50) {
-                    s_grp_rm = grp_member(g, primary, s_grp_ord);
-                    if (s_grp_rm == 0xFF) break;
-                    s_grp_id = cs->collection.entries[s_grp_rm].id;
-                    s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id, pool);
+                g_bk_call_bank = 11;
+                g_bk_call_target = (uint16_t)&item_group_scan_banked;
+                g_bk_ptr_a = (void *)g;
+                g_bk_byte_a = primary;
+                g_bk_byte_d = pool;
+                banked_call_run();
+                s_grp_id = g_bk_byte_b;
+                if (s_grp_id == 0xFF) {
+                    s_grp_rm = 1;
+                } else {
+                    /* Single gated apply for the scan's pick: OK
+                     * adds (with telemetry+SFX); FULL/LOCKED report
+                     * with priority (LOCKED fires CARD_EQUIP_LOCKED
+                     * inside the apply); a capped verdict falls
+                     * through to the clear path below. */
+                    s_grp_id = cs->collection.entries[s_grp_id].id;
+                    s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id,
+                                               pool);
                     if (s_grp_rm == EQUIP_OK) {
                         telemetry_emit(EVENT_CARD_ADDED_TO_DECK,
                                        (CardId)s_grp_id, 0, 0, 0);
                         audio_play_sfx(SFX_SELECT);
-                        msg = MSG_NONE;
-                        break;
+                        s_grp_rm = 2;
+                    } else if (s_grp_rm == EQUIP_FULL) {
+                        msg = MSG_DECK_FULL;
+                        s_grp_rm = 3;
+                    } else if (s_grp_rm == EQUIP_LOCKED) {
+                        msg = MSG_NEED_AP;
+                        s_grp_rm = 3;
+                    } else {
+                        s_grp_rm = 1;
                     }
-                    msg = (s_grp_rm == EQUIP_FULL) ? MSG_DECK_FULL :
-                          (s_grp_rm == EQUIP_LOCKED) ? MSG_NEED_AP :
-                          MSG_DECK_CAPPED;
-                    if (s_grp_rm == EQUIP_FULL) break;
+                }
+            }
+            if (s_grp_rm == 2) {
+                /* Added above; msg already NONE. */
+            } else if (s_grp_rm == 3) {
+                /* Priority verdict (FULL / NEED_AP / failed apply)
+                 * stands. */
+            } else if ((uint8_t)(cs->deck.count - decked) <
+                       DECK_MIN_CARDS) {
+                msg = MSG_DECK_MIN;
+            } else {
+                /* Fully decked, or no addable member without
+                 * FULL/LOCKED (saturated identity): clear the group. */
+                s_grp_ord = 0;
+                while (s_grp_ord < 50) {
+                    g_bk_call_bank = 11;
+                    g_bk_call_target =
+                        (uint16_t)&item_group_clear_one_banked;
+                    g_bk_ptr_a = (void *)g;
+                    g_bk_byte_a = primary;
+                    g_bk_byte_b = s_grp_ord;
+                    banked_call_run();
+                    if (g_bk_byte_c == 0xFF) break;
+                    s_grp_id = cs->collection.entries[g_bk_byte_c].id;
+                    s_grp_n = g_bk_byte_d;
+                    while (s_grp_n) {
+                        telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                       (CardId)s_grp_id, 0, 0, 0);
+                        s_grp_n--;
+                    }
                     s_grp_ord++;
                 }
             }

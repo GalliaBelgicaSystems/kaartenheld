@@ -225,7 +225,7 @@ static uint8_t cu_sort_value(CardId id, uint8_t sort)
     uint8_t power = 0;
     uint8_t cost = 0;
     uint8_t type = cu_grp_type(id, &power, &cost);
-    if (sort == 9) return type;      /* SORT_TYPE */
+    if (sort == 1) return type;      /* SORT_TYPE */
     if (sort == 2 || sort == 4) return power;  /* SORT_POWER(+/-) */
     return cost;                     /* SORT_COST(+/-) */
 }
@@ -269,7 +269,7 @@ static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
         if (m2 != mat || w2 != wpn) continue;
         n = g->state.cards.collection.entries[i].count;
         *owned = (uint8_t)(*owned + n);
-        if (*owned < n) *owned = 255;
+        if (*owned < n || *owned > 99) *owned = 99;
         for (j = 0; j < g->state.cards.deck.count; j++) {
             if (g->state.cards.deck.cards[j] == id) {
                 *decked = (uint8_t)(*decked + 1);
@@ -380,7 +380,7 @@ void item_group_query_banked(void)
             if (m2 != mat || w2 != wpn) continue;
             n = g->state.cards.collection.entries[i].count;
             owned = (uint8_t)(owned + n);
-            if (owned < n) owned = 255;
+            if (owned < n || owned > 99) owned = 99;
             for (j = 0; j < g->state.cards.deck.count; j++) {
                 if (g->state.cards.deck.cards[j] == id) {
                     decked++;
@@ -403,6 +403,129 @@ void item_group_query_banked(void)
         seen++;
     }
     g_bk_byte_c = 0xFF;
+}
+
+/* Grouped A-action scan (bank 11): finds the first group member that
+ * can take another copy, verdict priority FULL > LOCKED > capped.
+ * Same-bank verdict calls (deck_equip_verdict_banked lives in
+ * deck_merge_banked.c, also bank 11); the fixed caller applies the
+ * single add through deck_equip_card (re-verdicts deterministically)
+ * and owns all telemetry/SFX.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = primary collection index, g_bk_byte_d = pool.
+ * Returns g_bk_byte_c = 0 + g_bk_byte_b = member collection index
+ * when addable; otherwise c = 1 (FULL) / 2 (LOCKED) / 3 (capped) with
+ * b = the first member index hit by that verdict (0xFF when no member
+ * was tried).  The caller routes FULL/LOCKED through deck_equip_card
+ * once so its telemetry (CARD_EQUIP_LOCKED) still fires; a fully-
+ * capped group (3) falls through to the clear path instead of
+ * pinning the row. */
+void deck_equip_verdict_banked(void);
+void deck_clear_all_banked(void);
+void item_group_scan_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    uint8_t pool = g_bk_byte_d;
+    CardState *cs;
+    uint8_t mat, wpn, m2, w2;
+    uint8_t i;
+    uint8_t r;
+    uint8_t full_idx = 0xFF;
+    uint8_t locked_idx = 0xFF;
+    uint8_t saw_any = 0;
+    CardId id;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = 0xFF;
+        return;
+    }
+    cs = &g->state.cards;
+    id = cs->collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn)) {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = 0xFF;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2)) continue;
+        if (m2 != mat || w2 != wpn) continue;
+        g_bk_ptr_a = (void *)cs;
+        g_bk_byte_a = (uint8_t)id;
+        g_bk_byte_d = pool;
+        deck_equip_verdict_banked();
+        r = g_bk_byte_c;
+        if (r == 1) {
+            g_bk_byte_c = 0;
+            g_bk_byte_b = i;
+            g_bk_ptr_a = (void *)g;
+            return;
+        }
+        saw_any = 1;
+        if (r == 3) {
+            full_idx = i;
+            break;
+        }
+        if (r == 2 && locked_idx == 0xFF) locked_idx = i;
+    }
+    g_bk_ptr_a = (void *)g;
+    if (full_idx != 0xFF) {
+        g_bk_byte_c = 1;
+        g_bk_byte_b = full_idx;
+    } else if (locked_idx != 0xFF) {
+        g_bk_byte_c = 2;
+        g_bk_byte_b = locked_idx;
+    } else {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = saw_any ? primary : 0xFF;
+    }
+}
+
+/* Grouped clear, one member per call (bank 11): clears every decked
+ * copy of the ordinal-th group member.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = primary collection index, g_bk_byte_b = ordinal.
+ * Returns g_bk_byte_c = member collection index (0xFF past the end),
+ * g_bk_byte_d = removed count.  The fixed caller loops ordinals and
+ * emits one CARD_REMOVED_FROM_DECK per copy (telemetry lives fixed). */
+void item_group_clear_one_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    uint8_t ordinal = g_bk_byte_b;
+    uint8_t mat, wpn, m2, w2;
+    uint8_t i;
+    uint8_t seen = 0;
+    CardId id;
+    CardState *cs;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 0xFF;
+        g_bk_byte_d = 0;
+        return;
+    }
+    cs = &g->state.cards;
+    id = cs->collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn)) {
+        g_bk_byte_c = 0xFF;
+        g_bk_byte_d = 0;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2)) continue;
+        if (m2 != mat || w2 != wpn) continue;
+        if (seen == ordinal) {
+            g_bk_ptr_a = (void *)cs;
+            g_bk_byte_a = (uint8_t)id;
+            deck_clear_all_banked();
+            g_bk_byte_d = g_bk_byte_c;
+            g_bk_byte_c = i;
+            g_bk_ptr_a = (void *)g;
+            return;
+        }
+        seen++;
+    }
+    g_bk_byte_c = 0xFF;
+    g_bk_byte_d = 0;
 }
 
 /* Direction step for the shop list (g_bk_byte_b 0 = up, 1 = down,

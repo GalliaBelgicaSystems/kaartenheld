@@ -1,7 +1,7 @@
 {
  "name": "deck_summary",
  "test": true,
- "description": "The DECK tab lists one row per card NAME (material + weapon icon + AP + DECK d/o): the 10-card starter shows WOOD SWORD x4, WOOD SHIELD x4, BRONZE SWORD x2 as three rows from row 3 (the old AP/MATERIAL/TYPE column header row is gone).",
+ "description": "The DECK tab lists one row per card NAME (material + weapon icon + AP + DECK d/o): the 10-card starter shows WOOD SWORD x4, WOOD SHIELD x4, BRONZE SWORD x2 as three rows from row 5 (row 3 is the CARD + deck-icon /OWN header, row 4 a paper separator).",
  "actions": [
   {
    "type": "press",
