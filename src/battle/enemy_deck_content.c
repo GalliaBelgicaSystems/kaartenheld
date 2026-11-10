@@ -60,8 +60,8 @@ static const EnemyCard s_spider_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
-    /* Webbing strike: poison rider at ~70/255; landing it also greys the
-     * player's hand (Phase D), the spider's signature threat. */
+    /* Webbing strike: poison rider at ~70/255; landing it confuses
+     * the player (Phase D), the spider's signature threat. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 70 },
 };
 /* Carl's practice deck: a single 0-power swing, drawn every round.  The

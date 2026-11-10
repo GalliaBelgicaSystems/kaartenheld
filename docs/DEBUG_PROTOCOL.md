@@ -1478,11 +1478,10 @@ STATUS_RESISTED
 TURN_SKIPPED (docs/combo-system.md §12, Phase D)
   data[0] = combatant slot whose turn was skipped (0 = player,
             1..n = enemy index)
-  data[1] = cause StatusId (STATUS_FREEZE for a frozen attacker/player,
-            STATUS_POISON for a greyed-draw skip)
+  data[1] = cause StatusId (STATUS_FREEZE for a greyed-draw skip)
 ```
 
-Poison grey-out events (Phase D, docs/combo-system.md §12/§16):
+Ice grey-out events (Phase D, docs/combo-system.md §12/§16):
 
 ```text
 CARDS_GREYED
@@ -1490,7 +1489,7 @@ CARDS_GREYED
             grey applies to the party's SHARED battle deck
   data[1] = first greyed pool position (deck position / hand index)
   data[2] = second greyed pool position
-  data[3] = grey duration in rounds (POISON_GREY_TURNS)
+  data[3] = grey duration in rounds (ICE_GREY_TURNS)
 
 CARDS_UNGREYED
   data[0] = actor slot

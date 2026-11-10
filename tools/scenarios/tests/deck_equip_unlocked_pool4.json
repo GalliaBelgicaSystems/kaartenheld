@@ -1,7 +1,7 @@
 {
  "name": "deck_equip_unlocked_pool4",
  "test": true,
- "description": "Equip gate release (docs/enemies_ranking.md \u00a74.8): the same STEEL FIRE SWORD (id 208, cost 4) decks normally once the pool reaches 4 -- pressing A on its DECK row emits CARD_ADDED_TO_DECK and no CARD_EQUIP_LOCKED. Companion file: deck_equip_locked_loot (pool 2 refuses).",
+ "description": "Equip gate release (docs/enemies_ranking.md \u00a74.8): the same STEEL FIRE BOW (id 210, cost 4) decks normally once the pool reaches 4 -- pressing A on its DECK row emits CARD_ADDED_TO_DECK and no CARD_EQUIP_LOCKED. Companion file: deck_equip_locked_loot (pool 2 refuses).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -17,7 +17,7 @@
  "actions": [
   {
    "type": "collection_add",
-   "card_id": 208,
+   "card_id": 210,
    "quantity": 1
   },
   {
@@ -86,7 +86,7 @@
    "type": "event_arg",
    "event": "CARD_ADDED_TO_DECK",
    "index": 0,
-   "value": 208
+   "value": 210
   },
   {
    "type": "event_not_occurred",

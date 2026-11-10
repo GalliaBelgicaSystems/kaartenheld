@@ -3,6 +3,7 @@
 #include "battle.h"
 #include "rpg/status.h"
 #include "banked.h"
+#include "rng.h"
 
 /* ── Banked battle navigation / selection cluster (ROM bank 4) ──────
  * Hosts the hand-cursor / combo-selection / target-selection / enemy
@@ -27,6 +28,7 @@
 #define NAV_OP_CARD_SELECT      4
 #define NAV_OP_IS_CARD_SELECTED 5
 #define NAV_OP_HAND_PLAYABLE    6
+#define NAV_OP_CONFUSE_AUTO     7
 
 /* Total energy cost reserved by the cards currently selected into the combo.
  * Selection validates against the un-reserved remainder, so this never
@@ -41,7 +43,7 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
 }
 
 /* A hand card can be added to the current combo only while it has uses left,
- * is not greyed out by poison, AND its cost fits in the phase energy not yet
+ * is not greyed out by ice, AND its cost fits in the phase energy not yet
  * reserved by the pending combo (deck.md Phase 10).  Greyed hand cards (bit
  * set in s_grey_mask[0]) are unplayable for the grey-out duration -- the
  * cursor skips them, selection rejects them, and the auto-play fallback in
@@ -161,6 +163,62 @@ static void nav_card_select(Battle *b)
     }
 }
 
+/* Confused-hero auto-stage (poison, docs/loot.md §34.6): the hero plays
+ * a random hand -- no input.  Stages a random subset of the currently
+ * playable hand that fits the phase energy (nav_hand_playable already
+ * accounts reserved cost, uses, grey-out; at most one ring, like manual
+ * staging) and reports through g_bk_byte_c: 0 = hero not confused,
+ * 2 = staged this frame (the fixed hook starts the hold beat), 1 =
+ * already staged (the fixed hook counts the hold down and executes at
+ * zero).  The split keeps a readable beat between staging and
+ * resolution.  Rotation start + per-card coin come from inline
+ * xorshift steps (same stream as rng_next, deterministic per seed);
+ * the first playable card always joins so a non-empty affordable hand
+ * never passes. */
+static void nav_confuse_auto(Battle *b)
+{
+    StatusSlots *slots;
+    uint8_t i, k, idx, start;
+    uint8_t staged_ring = 0;
+    g_bk_byte_c = 0;
+    slots = &s_battle_status[0];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) break;
+    }
+    if (i >= slots->count) return;
+    if (b->combo_count != 0) {
+        g_bk_byte_c = 1;
+        return;
+    }
+    g_rng_state ^= (uint16_t)(g_rng_state << 7);
+    g_rng_state ^= (uint16_t)(g_rng_state >> 9);
+    g_rng_state ^= (uint16_t)(g_rng_state << 8);
+    start = (uint8_t)g_rng_state;
+    while (start >= BATTLE_HAND_SIZE) start = (uint8_t)(start - BATTLE_HAND_SIZE);
+    for (k = 0; k < BATTLE_HAND_SIZE; k++) {
+        idx = (uint8_t)(start + k);
+        if (idx >= BATTLE_HAND_SIZE) idx = (uint8_t)(idx - BATTLE_HAND_SIZE);
+        /* combo_count is 0 on entry here (non-zero returns above), so no
+         * selected-slot can collide -- no nav_is_card_selected call. */
+        if (!nav_hand_playable(b, idx)) continue;
+        if (b->hand[idx].ring) {
+            if (staged_ring) continue;
+        }
+        if (b->combo_count > 0) {
+            g_rng_state ^= (uint16_t)(g_rng_state << 7);
+            g_rng_state ^= (uint16_t)(g_rng_state >> 9);
+            g_rng_state ^= (uint16_t)(g_rng_state << 8);
+            if (((uint8_t)g_rng_state & 1u) == 0) continue;
+        }
+        if (b->hand[idx].ring) staged_ring = 1;
+        b->selected_indices[b->combo_count++] = idx;
+        if (b->combo_count == 1) b->cursor_pos = idx;
+    }
+    b->dirty |= (uint8_t)(BATTLE_DIRTY_HAND | BATTLE_DIRTY_DESC |
+                          BATTLE_DIRTY_COMBO | BATTLE_DIRTY_MSG);
+    g_bk_byte_c = 2;
+}
+
 void battle_nav_banked(void)
 {
     Battle *b = (Battle *)g_bk_ptr_a;
@@ -219,6 +277,9 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_HAND_PLAYABLE:
         g_bk_byte_c = nav_hand_playable(b, g_bk_byte_b) ? 1 : 0;
+        break;
+    case NAV_OP_CONFUSE_AUTO:
+        nav_confuse_auto(b);
         break;
     default:
         break;

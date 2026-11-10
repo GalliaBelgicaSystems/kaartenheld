@@ -1,7 +1,7 @@
 {
- "name": "battle_poison_foe_message",
+ "name": "battle_ice_foe_ack",
  "test": true,
- "description": "Poisoned foe presentation: a poisoned slime whose greyed lead card comes up selects the card (ENEMY_CARD_PLAYED with the lead power) but cannot play it (TURN_SKIPPED cause POISON, spent card consumed, no DAMAGE_RECEIVED). The defend beat names the failed swing on the row-10 combo line (FOE IS POISONED! in the poison-purple slot 4) while row 0 keeps the standard enemy-turn banner.",
+ "description": "Iced foe acknowledge: pressing A on the FOE IS ICED! defend beat skips the failed swing with no defense to stage (no card burned, no DAMAGE_RECEIVED) and the battle continues into the next player turn with the hero unharmed and the message cleared.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -26,7 +26,7 @@
   {
    "type": "apply_status",
    "slot": 1,
-   "status": 1,
+   "status": 3,
    "duration": 5
   },
   {
@@ -56,6 +56,14 @@
   {
    "type": "wait",
    "frames": 70
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 60
   }
  ],
  "assertions": [
@@ -72,46 +80,23 @@
    "event": "ENEMY_CARD_PLAYED"
   },
   {
-   "type": "event_arg",
-   "event": "ENEMY_CARD_PLAYED",
-   "index": 2,
-   "value": 2
-  },
-  {
    "type": "event_occurred",
    "event": "TURN_SKIPPED"
   },
   {
    "type": "event_arg",
    "event": "TURN_SKIPPED",
-   "index": 0,
-   "value": 1
-  },
-  {
-   "type": "event_arg",
-   "event": "TURN_SKIPPED",
    "index": 1,
-   "value": 1
+   "value": 3
   },
   {
    "type": "event_not_occurred",
    "event": "DAMAGE_RECEIVED"
   },
   {
-   "type": "screen_row",
-   "row": 0,
-   "contains": "FOE ATTACKS! DEFEND!"
-  },
-  {
-   "type": "screen_row",
+   "type": "screen_row_not_contains",
    "row": 10,
-   "contains": "FOE IS POISONED!"
-  },
-  {
-   "type": "tilemap_attr",
-   "row": 10,
-   "col": 0,
-   "expected": 4
+   "contains": "FOE IS ICED!"
   }
  ]
 }

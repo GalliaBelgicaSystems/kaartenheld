@@ -1,7 +1,7 @@
 {
- "name": "status_poison_reshuffle",
+ "name": "status_ice_reshuffle",
  "test": true,
- "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card dagger deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing past 1 (poison itself deals no damage; its grey-out is the effect).",
+ "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card wood-sword deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed ice rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing to the 5 max (ice itself deals no damage; its grey-out fizzles swings).",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -12,7 +12,7 @@
   "seed": 8408,
   "start_battle": true,
   "deck": {
-   "POISON_DAGGER": 5
+   "WOOD_SWORD": 5
   }
  },
  "actions": [
@@ -35,7 +35,7 @@
   {
    "type": "set_hand_card_status",
    "index": 0,
-   "status": 1,
+   "status": 3,
    "chance": 255
   },
   {
@@ -53,7 +53,7 @@
   {
    "type": "set_hand_card_status",
    "index": 1,
-   "status": 1,
+   "status": 3,
    "chance": 255
   },
   {
@@ -71,7 +71,7 @@
   {
    "type": "set_hand_card_status",
    "index": 2,
-   "status": 1,
+   "status": 3,
    "chance": 255
   },
   {
@@ -89,7 +89,7 @@
   {
    "type": "set_hand_card_status",
    "index": 3,
-   "status": 1,
+   "status": 3,
    "chance": 255
   },
   {
@@ -107,7 +107,7 @@
   {
    "type": "set_hand_card_status",
    "index": 4,
-   "status": 1,
+   "status": 3,
    "chance": 255
   },
   {
@@ -324,7 +324,7 @@
    "type": "event_arg",
    "event": "STATUS_APPLIED",
    "index": 0,
-   "value": 1
+   "value": 3
   },
   {
    "type": "event_arg",

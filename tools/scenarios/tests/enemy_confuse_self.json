@@ -1,7 +1,7 @@
 {
- "name": "battle_poison_foe_ack",
+ "name": "enemy_confuse_self",
  "test": true,
- "description": "Poisoned foe acknowledge: pressing A on the FOE IS POISONED! defend beat skips the failed swing with no defense to stage (no card burned, no DAMAGE_RECEIVED) and the battle continues into the next player turn with the hero unharmed and the message cleared.",
+ "description": "Lone confused enemy harms itself: with its allies already down, a poisoned slime turns its telegraphed swing on itself -- it takes the full incoming damage (slime at 8, SW1 hero hit for 1, self-hit for 2, stands at 5) while the hero takes nothing (DAMAGE_RECEIVED 0, hero stays at 60).",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -15,7 +15,7 @@
     "max_hp": 60
    }
   },
-  "seed": 777,
+  "seed": 5002,
   "start_battle": true
  },
  "actions": [
@@ -24,16 +24,38 @@
    "frames": 5
   },
   {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 0
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 0
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
    "type": "apply_status",
    "slot": 1,
    "status": 1,
-   "duration": 5
+   "duration": 3
+  },
+  {
+   "type": "wait",
+   "frames": 5
   },
   {
    "type": "set_hand_card",
    "index": 0,
    "card_type": "SW",
-   "value": 3
+   "value": 1
   },
   {
    "type": "set_hand_card_meta",
@@ -59,11 +81,11 @@
   },
   {
    "type": "press",
-   "button": "A"
+   "button": "SELECT"
   },
   {
    "type": "wait",
-   "frames": 60
+   "frames": 120
   }
  ],
  "assertions": [
@@ -76,27 +98,26 @@
    "expected": 60
   },
   {
-   "type": "event_occurred",
-   "event": "ENEMY_CARD_PLAYED"
+   "type": "battle_enemy_hp",
+   "expected": 5
   },
   {
    "type": "event_occurred",
-   "event": "TURN_SKIPPED"
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
   },
   {
    "type": "event_arg",
-   "event": "TURN_SKIPPED",
-   "index": 1,
-   "value": 1
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 0
   },
   {
    "type": "event_not_occurred",
-   "event": "DAMAGE_RECEIVED"
-  },
-  {
-   "type": "screen_row_not_contains",
-   "row": 10,
-   "contains": "FOE IS POISONED!"
+   "event": "ENTITY_DEFEATED"
   }
  ]
 }

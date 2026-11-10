@@ -107,7 +107,21 @@ void battle_screen_update(Game *g)
 
     if (vg->battle.phase == BATTLE_PHASE_PLAYER_SELECT ||
         vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND) {
-        if (input_pressed(INPUT_START)) {
+        /* Confused hero (poison): a random hand gets played -- no input
+         * this turn.  The banked body stages the random hand when the
+         * hero is poisoned: a fresh stage holds its beat (the player
+         * reads the Confused! message), an already-pending stage counts
+         * the hold down and executes at zero. */
+        uint8_t confuse_stage = battle_confuse_auto((Battle *)&vg->battle);
+        if (confuse_stage == 2) {
+            g_battle_confuse_hold = 30;
+        } else if (confuse_stage == 1) {
+            if (g_battle_confuse_hold != 0) {
+                g_battle_confuse_hold--;
+            } else {
+                battle_execute_combo((Battle *)&vg->battle);
+            }
+        } else if (input_pressed(INPUT_START)) {
             item_screen_reset(g);
             screen_change(g, SCREEN_ITEM);
         } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
@@ -118,8 +132,8 @@ void battle_screen_update(Game *g)
             battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
         } else if (input_pressed(INPUT_A) &&
                    vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                   vg->battle.msg_id == BATTLE_MSG_POISONED_FOE) {
-            /* Poison-wracked foe: acknowledge the failed swing -- no
+                   vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
+            /* Ice-locked foe: acknowledge the failed swing -- no
              * defense to stage, nothing incoming.  A skips straight to
              * the resolve beat (the message stays up through it and the
              * next telegraph consumes it); the timer/SELECT path

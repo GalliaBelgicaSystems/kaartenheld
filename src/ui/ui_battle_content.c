@@ -1016,6 +1016,21 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
 }
 
+/* Poison check for the confusion painters below: the hero (slot 0)
+ * carries STATUS_POISON.  Reads WRAM directly (bank-3 code runs with
+ * WRAM always live); the fixed screen update stages the random hand
+ * through the banked nav body, this only names it. */
+static uint8_t battle_hero_confused_paint(const volatile Battle *battle)
+{
+    const StatusSlots *slots = &s_battle_status[0];
+    uint8_t i;
+    (void)battle;
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return 1;
+    }
+    return 0;
+}
+
 static void battle_draw_battle_combo(const volatile Battle *battle)
 {
     /* Real-time preview: the row tracks the PENDING selection as cards
@@ -1074,7 +1089,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(19, combo_row, NULL, 1);
         return;
     }
-    /* Poison-wracked foe (msg 5, staged by the telegraph body): the
+    /* Ice-locked foe (msg 5, staged by the telegraph body): the
      * strike never lands, so the row names the failed swing instead of
      * a bare "DMG 0" forecast or a stale pending preview.  The name lives
      * on this row only (never the row-0 banner): it survives the
@@ -1083,9 +1098,22 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
          battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) &&
-        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
-        battle_draw_text_line(0, combo_row, "FOE IS POISONED!", 20);
-        battle_color_span(0, combo_row, 16, UI_COLOR_POISON);
+        battle->msg_id == BATTLE_MSG_ICED_FOE) {
+        battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
+        battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
+        return;
+    }
+    /* Confused hero (poison): the row names the lost turn instead of any
+     * forecast -- the pending hand was staged by chance, not the player.
+     * Same rows the Lord's focus text uses (9 + this one): the message is
+     * the turn's whole story.  Text path throughout (buffer, mirror and
+     * VRAM stay truthful for asserts). */
+    if (battle_hero_confused_paint(battle) &&
+        (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
+         battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
+        battle_draw_text_line(0, combo_row, "You play randomly!", 18);
+        battle_color_span(0, combo_row, 18, UI_COLOR_FIELD);
+        battle_draw_text_line(18, combo_row, NULL, 2);
         return;
     }
     /* Enemy forecast owns the row while a strike is incoming (defend
@@ -1494,7 +1522,7 @@ static const char *battle_banner_text(const volatile Battle *battle)
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
      * 20 chars, filling the centered row-0 banner in one screen.  The
-     * poisoned foe's failed swing is named on the combo row instead
+     * iced foe's failed swing is named on the combo row instead
      * (never here), so the banner stays the standard enemy-turn text
      * even when nothing is incoming. */
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
@@ -1502,11 +1530,11 @@ static const char *battle_banner_text(const volatile Battle *battle)
         return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
-        /* A poison-skip resolve (msg 5 survives the acknowledge press)
+        /* An ice-locked resolve (msg 5 survives the acknowledge press)
          * blocked nothing, so claiming "BLOCKED ATTACK!" would lie --
          * the beat stays quiet while the combo row below keeps naming
          * the fizzle. */
-        if (battle->msg_id == BATTLE_MSG_POISONED_FOE) return "";
+        if (battle->msg_id == BATTLE_MSG_ICED_FOE) return "";
         return "BLOCKED ATTACK!";
     }
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
@@ -1642,6 +1670,18 @@ void ui_update_battle_banked(void)
                   battle->result == BATTLE_RESULT_DEFEAT))) {
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
+            } else if (battle_hero_confused_paint(battle) &&
+                       (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
+                        battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
+                /* Confused hero (poison): the message row names the lost
+                 * turn ("Confused!") while the combo row below names what
+                 * happens ("You play randomly!") -- the same two rows the
+                 * Lord's focus text uses.  No msg_id: the live poison
+                 * instance is the state, so the lines vanish the round it
+                 * expires with no clearing protocol. */
+                battle_draw_text_line(0, 9, "Confused!", 9);
+                battle_draw_text_line(9, 9, NULL, 11);
+                battle_color_span(0, 9, 9, UI_COLOR_FIELD);
             } else {
                 /* Full-width clear (20, not 12): the despair line is 18
                  * columns and a short clear would strand its tail on the

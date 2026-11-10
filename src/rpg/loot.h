@@ -86,14 +86,16 @@ enum {
 #define CARD_AP(power, material, rider)                          \
     ((uint8_t)((CARD_AP_VALUE(power, material, rider) + 7) >> 3))
 
-/* Bow uses per battle (docs/loot.md §34.6): AP-derived, inverse to power.
- * 7 - CARD_AP so the ladder is 6/6/5/4/2 across wood->mythril, pinning
- * the curated mythril bow (2 uses) with no extra weights: bows never
- * carry riders, so the rider term is always 0 today but stays explicit
- * so a future bow rider prices like every other AP cost.  Pure macro,
- * safe in every banked copy (same constraints as CARD_AP). */
+/* Bow uses per battle (docs/loot.md §34.6): AP-derived, inverse to power
+ * (wood 6 .. mythril 2, floored at 2).  The _FROM_AP form reads the
+ * already-computed AP cost byte instead of re-expanding CARD_AP --
+ * bank-2 call sites stage cost first and the bank-2 budget is tight
+ * (overflow corrupts bank 3, AGENTS.md §52.18).  Both forms agree by
+ * construction; card_costs.py asserts the ladder either way. */
+#define LOOT_BOW_USES_FROM_AP(ap) \
+    ((uint8_t)(((ap) >= 6) ? 2 : (uint8_t)(7 - (ap))))
 #define LOOT_BOW_USES(power, material, rider) \
-    ((uint8_t)(7 - CARD_AP(power, material, rider)))
+    (LOOT_BOW_USES_FROM_AP(CARD_AP(power, material, rider)))
 
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)

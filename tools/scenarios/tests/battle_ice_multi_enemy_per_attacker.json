@@ -1,7 +1,7 @@
 {
-  "name": "battle_poison_multi_enemy_per_attacker",
+  "name": "battle_ice_multi_enemy_per_attacker",
   "test": true,
-  "description": "Per-attacker poison lock (Option B): in a slime trio, poisoning the middle enemy (slot 2, grey {0,1}) leaves the other attackers alone. Round 1 enemy0 draws shared-deck position 0 -- greyed for slot 1's victim but not for it -- and lands 2 damage. Round 2 the poisoned enemy1 draws position 1, selects it (ENEMY_CARD_PLAYED) but fizzles (TURN_SKIPPED slot 2 cause POISON), and the spent card is consumed so the deck keeps cycling. Grey-out and the POISON instance expire together at the round-3 boundary (CARDS_UNGREYED + STATUS_EXPIRED, same tick).",
+  "description": "Per-attacker ice lock: in a slime trio, icing the middle enemy (slot 2, grey {0,1}) leaves the other attackers alone. Round 1 enemy0 draws shared-deck position 0 -- greyed for slot 1's victim but not for it -- and lands 2 damage. Round 2 the iced enemy1 draws position 1, selects it (ENEMY_CARD_PLAYED) but fizzles (TURN_SKIPPED slot 2 cause ICE), and the spent card is consumed so the deck keeps cycling. Grey-out and the ICE instance expire together at the round-3 boundary (CARDS_UNGREYED + STATUS_EXPIRED, same tick).",
   "initial_state": {
     "scene": "TEST_MOUNTAIN_PASS",
     "player": { "x": 13, "y": 7, "facing": "RIGHT" },
@@ -11,7 +11,7 @@
   },
   "actions": [
     { "type": "wait", "frames": 5 },
-    { "type": "apply_status", "slot": 2, "status": 1, "duration": 2 },
+    { "type": "apply_status", "slot": 2, "status": 3, "duration": 2 },
     { "type": "set_hand_card", "index": 0, "card_type": "SW", "value": 1 },
     { "type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 255 },
     { "type": "set_hand_card", "index": 1, "card_type": "SH", "value": 1 },
@@ -42,7 +42,7 @@
     { "type": "game_state", "expected": "BATTLE" },
     { "type": "event_occurred", "event": "TURN_SKIPPED" },
     { "type": "event_arg", "event": "TURN_SKIPPED", "index": 0, "value": 2 },
-    { "type": "event_arg", "event": "TURN_SKIPPED", "index": 1, "value": 1 },
+    { "type": "event_arg", "event": "TURN_SKIPPED", "index": 1, "value": 3 },
     { "type": "event_count", "event": "TURN_SKIPPED", "count": 1 },
     { "type": "event_arg", "event": "ENEMY_CARD_PLAYED", "index": 0, "value": 0 },
     { "type": "event_arg", "event": "ENEMY_CARD_PLAYED", "index": 0, "value": 1 },

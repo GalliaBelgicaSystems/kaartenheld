@@ -252,7 +252,7 @@ VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
+               "IRON_RING": 0x42, "BRONZE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "SHOPKEYS": 0x45,
                "BOW_9": 0x46, "WOOD_SWORD": 0x47,
                "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}

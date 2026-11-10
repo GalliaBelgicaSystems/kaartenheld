@@ -1,8 +1,17 @@
 {
- "name": "status_freeze_skip",
+ "name": "status_ice_apply",
  "test": true,
- "description": "On-hit status rider Phase D: a SW1 hand card carrying FREEZE (chance 255=guaranteed) applies FREEZE to the slime; the frozen slime skips its next attack entirely (TURN_SKIPPED, no ENEMY_CARD_PLAYED, no incoming damage)",
+ "description": "On-hit status rider (ice): a SW1 hand card carrying ICE (chance 255=guaranteed) applies ICE to the slime and greys 2 of its deck positions; ice deals no damage (control-only: grey-out), lasts 2 rounds, then expires -- STATUS_APPLIED plus CARDS_GREYED plus STATUS_EXPIRED. (The old freeze skip is gone: iced combatants act, just with a locked deck.)",
  "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 30
+  },
   {
    "type": "wait",
    "frames": 5
@@ -91,19 +100,51 @@
   },
   {
    "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
    "button": "SELECT"
   },
   {
    "type": "wait",
-   "frames": 55
+   "frames": 100
   },
   {
-   "type": "wait",
-   "frames": 70
+   "type": "press",
+   "button": "SELECT"
   },
   {
    "type": "wait",
    "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 40
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 40
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 40
   }
  ],
  "assertions": [
@@ -119,33 +160,31 @@
   },
   {
    "type": "event_occurred",
-   "event": "TURN_SKIPPED"
+   "event": "CARDS_GREYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_EXPIRED"
   },
   {
    "type": "event_arg",
-   "event": "TURN_SKIPPED",
+   "event": "STATUS_EXPIRED",
    "index": 0,
-   "value": 1
-  },
-  {
-   "type": "event_arg",
-   "event": "TURN_SKIPPED",
-   "index": 1,
    "value": 3
   },
   {
-   "type": "event_not_occurred",
+   "type": "event_occurred",
    "event": "ENEMY_CARD_PLAYED"
   }
  ],
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
    "x": 13,
-   "y": 8,
-   "facing": "DOWN"
+   "y": 7,
+   "facing": "RIGHT"
   },
-  "seed": 8408,
+  "seed": 5002,
   "start_battle": true
  }
 }

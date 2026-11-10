@@ -75,7 +75,9 @@ void game_loot_drop_banked(void)
     g_loot_rng_state ^= g_loot_rng_state << 8;
 
     /* Archetype weapon from the enemy family's profile bias (§17).
-     * Bats lean ranged; everything else drops the melee set. */
+     * Bats lean ranged; everything else drops the melee set.  Rider bows
+     * are bat-only in the demo (bats are rank 2, so rider bows top out
+     * around iron); higher-rank bow enemies will extend the roll later. */
     if (battle_type == BATTLE_BAT) {
         weapon = WPN_BOW;
     } else {
@@ -92,10 +94,10 @@ void game_loot_drop_banked(void)
     }
 
     /* Roll material + legal effect for the weapon (rank-centered
-     * weights; legal non-plain effects per §34.2: daggers poison, swords
-     * burn or chill, everything else stays plain).  Rings follow the same
-     * material roll -- healing uses the same material bands as attack
-     * and defense. */
+     * weights; legal non-plain effects per §34.2: daggers poison, bows
+     * burn or chill, swords stay plain; everything else stays plain).
+     * Rings follow the same material roll -- healing uses the same
+     * material bands as attack and defense. */
     g_loot_rng_state ^= g_loot_rng_state << 7;
     g_loot_rng_state ^= g_loot_rng_state >> 9;
     g_loot_rng_state ^= g_loot_rng_state << 8;
@@ -151,7 +153,7 @@ void game_loot_drop_banked(void)
         if (material >= MAT_BRONZE && eff_roll < s_rank_gate[rank]) {
             if (weapon == WPN_DAGGER) {
                 effect = EFF_POISON;
-            } else if (weapon == WPN_SWORD) {
+            } else if (weapon == WPN_BOW) {
                 effect = (eff_roll < (uint8_t)(s_rank_gate[rank] >> 1)) ?
                     EFF_FIRE : EFF_ICE;
             }

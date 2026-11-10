@@ -25,18 +25,19 @@
  * RAM-resident __memcpy helper, unreachable while a bank is mapped
  * (see battle_turn_draw_banked.c).
  *
- * Poison grey-out (Phase D): a greyed deck position never plays for the
- * poisoned attacker only (per-attacker lock: unpoisoned enemies draw and
+ * Ice grey-out (Phase D): a greyed deck position never plays for the
+ * iced attacker only (per-attacker lock: un-iced enemies draw and
  * attack normally).  The body still peeks the greyed card into
  * enemy_played_card (the foe "selects" it) and announces it via
  * ENEMY_CARD_PLAYED, then the swing fails: incoming 0, TURN_SKIPPED
- * (cause POISON), the attacker judders like a hit victim (shake mask +
+ * (cause ICE), the attacker judders like a hit victim (shake mask +
  * 12-frame timer, read by the bank-3 BG judder and the bank-5 OAM
- * judder), and msg 5 stages the "FOE IS POISONED!" beat the bank-3
+ * judder), and msg 5 stages the "FOE IS ICED!" beat the bank-3
  * combo painter reads (combo row only, never the banner).  The spent
  * card IS consumed (draw_idx advances with wrap) so the shared deck
- * cycles and unpoisoned attackers draw fresh cards (docs/combo-system.md).
- * Freeze keeps its silent skip (no card, no message). */
+ * cycles and un-iced attackers draw fresh cards (docs/combo-system.md).
+ * Poison no longer greys: a poisoned attacker swings normally, and the
+ * defend resolve retargets its swing at its allies (see battle.c). */
 
 /* Ring telemetry runs through telemetry_ring.h (one shared inline
  * writer; the release macro there compiles the calls out).  Keep the
@@ -54,7 +55,7 @@ void battle_telegraph_banked(void)
     uint8_t di;
 
     if (!b) return;
-    /* A poison-skip message (msg 5) survives its acknowledge press through
+    /* An ice-lock message (msg 5) survives its acknowledge press through
      * the DEFENSE_RESOLVE beat so the fizzle stays named; consume it here
      * at the next telegraph instead (re-staged below if this swing fizzles
      * too).  Reads are phase-gated and SELECT never matches, so the stale
@@ -77,29 +78,19 @@ void battle_telegraph_banked(void)
     }
     atk = b->attacking_enemy_idx;
     /* The enemy deck and its draw position are SHARED by the whole
-     * hostile party (every encounter engages as a trio), but poison
+     * hostile party (every encounter engages as a trio), but ice
      * grey-out is scoped to the active attacker only: only
-     * s_grey_mask[atk + 1] can fizzle this swing, so poisoning one foe
-     * never locks unpoisoned foes out of their attacks. */
+     * s_grey_mask[atk + 1] can fizzle this swing, so icing one foe
+     * never locks un-iced foes out of their attacks. */
     grey_mask = s_grey_mask[(uint8_t)(atk + 1)];
-    /* STATUS_FREEZE (docs/combo-system.md §12): the frozen-mask
-     * bit is TESTED here but never consumed -- status_apply sets
-     * it and status_tick_banked clears it each round and re-sets
-     * it while a freeze instance remains.  Mask bits follow status
-     * SLOTS (player = 0, enemies = 1..n).  A frozen attacker skips
-     * its swing: no enemy card, nothing incoming this cycle. */
-    if ((g_status_frozen_mask &
-         (uint8_t)(1u << (atk + 1))) != 0 &&
-        b->enemies[atk].hp != 0) {
-        b->enemy_incoming_dmg = 0;
-        telemetry_ring_emit(EVENT_TURN_SKIPPED,
-                       (uint8_t)(atk + 1),
-                       STATUS_FREEZE, 0, 0);
-    } else if (b->enemy_deck.count > 0 &&
+    /* Grey-locked attackers fizzle (ice): no enemy card, nothing
+     * incoming this cycle.  (The old freeze-skip branch lived above;
+     * freeze is retired -- ice greys instead, poison confuses.) */
+    if (b->enemy_deck.count > 0 &&
                (grey_mask &
                 (uint8_t)(1u << b->enemy_deck.draw_idx)) != 0 &&
                b->enemies[atk].hp != 0) {
-        /* Poison-wracked swing: the foe selects its (greyed) card but
+        /* Ice-locked swing: the foe selects its (greyed) card but
          * cannot play it -- the spent card is still consumed (advance
          * with wrap) so the shared deck cycles, nothing incoming.
          * The peek announces the selection, the shake judders the
@@ -116,8 +107,8 @@ void battle_telegraph_banked(void)
                        b->enemy_played_card.value, 0);
         telemetry_ring_emit(EVENT_TURN_SKIPPED,
                        (uint8_t)(atk + 1),
-                       STATUS_POISON, 0, 0);
-        b->msg_id = BATTLE_MSG_POISONED_FOE;
+                       STATUS_FREEZE, 0, 0);
+        b->msg_id = BATTLE_MSG_ICED_FOE;
         b->msg_ttl = 0;
         g_battle_shake_mask |= (uint8_t)(1u << atk);
         g_battle_shake_timer = 12;

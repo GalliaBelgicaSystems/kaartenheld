@@ -62,13 +62,14 @@ static void synth_name(uint8_t material, uint8_t effect, uint8_t weapon,
 }
 
 /* §34.2 effect legality per weapon: poison is dagger-only, fire/ice
- * are sword-only.  The generator only rolls legal pairs, but synth is
- * the last line of defense -- direct encoders (debug tooling) can
- * construct illegal ids, and an illegal pair must carry NO rider. */
+ * are bow-only (swords are the plain all-rounder, never riders).  The
+ * generator only rolls legal pairs, but synth is the last line of
+ * defense -- direct encoders (debug tooling) can construct illegal
+ * ids, and an illegal pair must carry NO rider. */
 static uint8_t rider_legal(uint8_t effect, uint8_t weapon)
 {
     if (effect == EFF_POISON) return weapon == WPN_DAGGER;
-    if (effect == EFF_FIRE || effect == EFF_ICE) return weapon == WPN_SWORD;
+    if (effect == EFF_FIRE || effect == EFF_ICE) return weapon == WPN_BOW;
     return 0;
 }
 
@@ -154,12 +155,12 @@ void loot_synth_banked(void)
      * keep cost 0 (not playable, §5.3). */
     g_card_scratch.cost = (weapon <= WPN_RING)
         ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
-    /* Bow arrows per battle (docs/loot.md §34.6): AP-derived, inverse to
-     * power (wood 6 .. mythril 2).  Staged after the rider above so the
-     * uses track CARD_AP with no second ladder; has_rider is always 0
-     * for bows (rider_legal forbids every bow rider). */
+    /* Bow arrows per battle (docs/loot.md §34.6): AP-derived, inverse
+     * to power (wood 6 .. mythril 2, floored at 2).  Staged after the
+     * rider above so the uses track CARD_AP with no second ladder. */
     if (weapon == WPN_BOW)
-        g_card_scratch.uses_per_battle = LOOT_BOW_USES(g_card_scratch.power, material, has_rider);
+        g_card_scratch.uses_per_battle =
+            LOOT_BOW_USES_FROM_AP(g_card_scratch.cost);
 
     synth_name(material, effect, weapon, has_rider);
 }

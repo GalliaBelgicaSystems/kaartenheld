@@ -297,7 +297,7 @@ static void ic_card_mat_wpn(CardId id, uint8_t *mat, uint8_t *wpn,
         case CARD_WOODEN_SHIELD: *mat = 0; *wpn = 1; break;
         case CARD_IRON_SWORD: *mat = 2; *wpn = 0; break;
         case CARD_IRON_RING: *mat = 2; *wpn = 4; break;
-        case CARD_FIRE_SWORD: *mat = 1; *wpn = 0; break;
+        case CARD_BRONZE_SWORD: *mat = 1; *wpn = 0; break;
         case CARD_POISON_DAGGER: *mat = 1; *wpn = 3; break;
         case CARD_BOW_9: *mat = 4; *wpn = 2; break;
         case CARD_STEEL_SHIELD: *mat = 3; *wpn = 1; break;
@@ -468,7 +468,7 @@ const CardDefinition *ic_loot_synth(CardId id)
         s_ic_loot_status[effect] != STATUS_NONE &&
         ((effect == EFF_POISON) ? (weapon == WPN_DAGGER) :
          ((effect == EFF_FIRE || effect == EFF_ICE) ?
-             (weapon == WPN_SWORD) : 0)));
+             (weapon == WPN_BOW) : 0)));
     if (has_rider) {
         g_card_scratch.status_id = s_ic_loot_status[effect];
         g_card_scratch.status_chance = s_ic_loot_chance[effect];
@@ -479,11 +479,11 @@ const CardDefinition *ic_loot_synth(CardId id)
     g_card_scratch.cost = (weapon <= WPN_RING)
         ? CARD_AP(g_card_scratch.power, material, has_rider) : 0;
     /* Bow arrows per battle (docs/loot.md §34.6): AP-derived, inverse
-     * to power (wood 6 .. mythril 2).  Staged after the rider above so
-     * the uses track CARD_AP with no second ladder. */
+     * to power (wood 6 .. mythril 2, floored at 2).  Staged after the
+     * rider above so the uses track CARD_AP with no second ladder. */
     if (weapon == WPN_BOW)
         g_card_scratch.uses_per_battle =
-            LOOT_BOW_USES(g_card_scratch.power, material, has_rider);
+            LOOT_BOW_USES_FROM_AP(g_card_scratch.cost);
     n = g_card_scratch.name;
     *n++ = s_ic_loot_mat[material];
     *n++ = ' ';

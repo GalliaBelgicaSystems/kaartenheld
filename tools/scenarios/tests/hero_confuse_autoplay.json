@@ -1,0 +1,58 @@
+{
+ "name": "hero_confuse_autoplay",
+ "test": true,
+ "description": "Confused hero auto-executes: DBG_APPLY_STATUS poisons the player, so decision phases stage and resolve random hands with no input anywhere in the actions -- CARD_PLAYED and DAMAGE_DEALT fire on their own (the message beat itself is pinned by hero_confuse_message).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 30,
+    "max_hp": 30
+   }
+  },
+  "seed": 8408,
+  "deck": {
+   "WOOD_SWORD": 5
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 1,
+   "duration": 2
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PLAYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ]
+}

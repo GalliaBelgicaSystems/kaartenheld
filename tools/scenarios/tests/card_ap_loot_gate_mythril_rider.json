@@ -1,15 +1,15 @@
 {
  "name": "card_ap_loot_gate_mythril_rider",
  "test": true,
- "description": "Mythril rider gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.3/\u00a74.8): no mythril hold-back exists anymore -- seed 210 on the R5 mimic rolls a MYTHRIL FIRE SWORD (id 0xF0 = 240, formula cost 6) and the reveal names the rider. The card cannot be decked until the pool reaches 6 (deck_equip_locked_loot covers the refusal); the locked card is the motivation to raise AP. (The R3 kobold rolls the same id for seed 210, but the seed-210 shuffle leaves a trio standing -- the solo mimic is the deterministic stage.)",
+ "description": "Mythril rider gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.3/\u00a74.8): no mythril hold-back exists anymore -- seed 609 on the TEST_CASTLE bat rolls a MYTHRIL FIRE BOW (id 0xF2 = 242, formula cost 6) and the reveal names the rider. The card cannot be decked until the pool reaches 6 (deck_equip_locked_loot covers the refusal); the locked card is the motivation to raise AP. (The old stage was the R5 mimic with a fire sword; swords never ride now, and rider bows are bat-only in the demo.)",
  "initial_state": {
   "scene": "TEST_CASTLE",
   "player": {
    "x": 11,
-   "y": 10,
+   "y": 7,
    "facing": "RIGHT"
   },
-  "seed": 210,
+  "seed": 609,
   "variables": {
    "MONSTERS_DEFEATED": 1,
    "ENERGY_POOL": 5
@@ -175,23 +175,23 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 240
+   "value": 242
   },
   {
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 2,
-   "value": 5
+   "value": 2
   },
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "M F SW"
+   "contains": "M F BO"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "MYTHRIL FIRE SWORD"
+   "contains": "MYTHRIL FIRE BOW"
   },
   {
    "type": "screen_row",

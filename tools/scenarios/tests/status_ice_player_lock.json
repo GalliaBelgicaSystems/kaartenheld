@@ -1,0 +1,127 @@
+{
+ "name": "status_ice_player_lock",
+ "test": true,
+ "description": "Player-side ice (no skip, grey instead): DBG_APPLY_STATUS ices the PLAYER (slot 0, duration 1) up front, then two full rounds play out -- every attack still lands (DAMAGE_DEALT fires, no TURN_SKIPPED anywhere) but two hand cards grey out (CARDS_GREYED slot 0) and the instance expires on schedule (STATUS_EXPIRED id 3, CARDS_UNGREYED).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 3,
+   "duration": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 3
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARDS_GREYED"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARDS_GREYED",
+   "index": 0,
+   "value": 0
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_EXPIRED"
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_EXPIRED",
+   "index": 0,
+   "value": 3
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARDS_UNGREYED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "TURN_SKIPPED"
+  }
+ ]
+}

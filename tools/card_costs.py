@@ -31,7 +31,7 @@ CARDS_C = REPO / "src" / "game" / "cards_content.c"
 
 MATERIALS = ["wood", "bronze", "iron", "steel", "mythril"]
 WEAPONS_41 = ["sword", "shield", "bow", "dagger", "ring"]  # §4.1 columns
-WEAPONS_42 = [("F", "sword"), ("I", "sword"), ("P", "dagger")]  # §4.2 columns
+WEAPONS_42 = [("F", "bow"), ("I", "bow"), ("P", "dagger")]  # §4.2 columns
 # (effect label, weapon) for the only legal rider pairs (docs/loot.md §34.2)
 RIDER_PAIRS = [("burn", "sword"), ("freeze", "sword"), ("poison", "dagger")]
 
@@ -90,8 +90,8 @@ def parse_doc_tables():
     """Parse §4.1/§4.2/§4.3 markdown tables.
 
     Returns (cells, catalog) where cells is a list of
-    (mat, weapon, rider, ap, power) — a list, not a dict, because F SW
-    and I SW share (mat, weapon, rider) — and catalog maps ROW name to
+    (mat, weapon, rider, ap, power) — a list, not a dict, because F BO
+    and I BO share (mat, weapon, rider) — and catalog maps ROW name to
     ((power, mat, rider), expected_ap), with SHOPKEYS mapping to (None, 0).
     """
     text = FORMULA_DOC.read_text(encoding="utf-8")
@@ -390,15 +390,28 @@ def main():
                 fail("strict rider: %s %s plain %d rider %d (want +1)"
                      % (MATERIALS[mat], weapon, plain, rider))
 
-    # Bow arrows ladder (docs/loot.md §34.6): LOOT_BOW_USES = 7 - CARD_AP,
-    # so wood..mythril bows hold 6/6/5/4/2 -- inverse to power, with the
-    # curated mythril bow pinned at 2.  Bows never carry riders.
+    # Bow arrows ladder (docs/loot.md §34.6): LOOT_BOW_USES = 7 - CARD_AP
+    # floored at 2, so wood..mythril plain bows hold 6/6/5/4/2 -- inverse
+    # to power, with the curated mythril bow pinned at 2.  Rider bows
+    # cost one more AP and hold one fewer arrow, except mythril riders
+    # (6 AP), which the floor keeps at 2 instead of 1.  Bows never rode
+    # anything before fire/ice moved onto them; swords never do.
     for mat, want_uses in enumerate((6, 6, 5, 4, 2)):
         got_uses = 7 - costs[(mat, "bow", 0)]
+        if got_uses < 2:
+            got_uses = 2
         if got_uses != want_uses:
             fail("bow uses: %s bow holds %d, want %d (7 - %d AP)"
                  % (MATERIALS[mat], got_uses, want_uses,
                     costs[(mat, "bow", 0)]))
+    for mat, want_uses in ((1, 5), (2, 4), (3, 3), (4, 2)):
+        rider_uses = 7 - costs[(mat, "bow", 1)]
+        if rider_uses < 2:
+            rider_uses = 2
+        if rider_uses != want_uses:
+            fail("bow uses: %s rider bow holds %d, want %d (7 - %d AP, floor 2)"
+                 % (MATERIALS[mat], rider_uses, want_uses,
+                    costs[(mat, "bow", 1)]))
 
     # Table parity with the doc
     doc_cells, doc_catalog = parse_doc_tables()

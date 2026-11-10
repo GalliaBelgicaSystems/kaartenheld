@@ -17,13 +17,14 @@ Phase B (generic effect layer), and the core of Phase C (status system) are
 implemented.**  Status foundation (§12-§19 minus per-effect scaling):
 `src/rpg/status.{h,c}` + bank-10 bodies (`status_content.c`) provide
 StatusDefinition / StatusInstance / application with STACK+refresh rules
-(POISON: tick 0 -- control-only, max 5 stacks, duration 2); battle-scoped slots live
+(POISON/ICE: tick 0 -- control-only, max 5 stacks, duration 2); battle-scoped slots live
 in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
 (1/255 units, §17/§18).  Poison is control-only (tick 0, no damage):
-it lasts 2 rounds greying the victim's cards, then expires, with deaths
-resolving like combat deaths only for damaging statuses.
+it lasts 2 rounds confusing the victim (enemies attack their allies, the
+hero plays random hands), then expires, with deaths resolving like
+combat deaths only for damaging statuses.
 Telemetry: `STATUS_APPLIED` / `STATUS_TICKED` (payloads in
 DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
 duration + expiry with no damage, payload-locked) and
@@ -31,30 +32,34 @@ duration + expiry with no damage, payload-locked) and
 
 **Phase D (implemented)**: BURN (10% of the inflicting hit's damage per
 round, min 1 -- scaled per application, max 3 stacks, duration 3)
-and FREEZE (no tick, no stacking, duration 1 -- a frozen combatant skips
-its next attack; battle consumes the frozen bitmask that apply + the
-tick body maintain, emitting `TURN_SKIPPED`; player-side freeze skips
-the whole offense).  Loot wiring: fire swords roll BURN riders and ice
-swords FREEZE riders (docs/loot.md §34.1/§34.2).  Telemetry completed:
+and ICE (no tick, max 5 stacks, duration 2 -- an iced combatant's cards
+grey out instead of playing; the telegraph names the fizzle
+`FOE IS ICED!`).  Loot wiring: fire bows roll BURN riders and ice
+bows FREEZE riders (docs/loot.md §34.1/§34.2).  Telemetry completed:
 `STATUS_EXPIRED` fires per expiring tick and `STATUS_RESISTED` when a
 rider roll fails (§19 fully implemented).  Scenarios: `status_burn_apply`,
-`status_freeze_skip`, `status_freeze_player`.  Debug action
+`status_ice_no_skip`, `status_ice_player_lock`.  Debug action
 `DBG_ACT_APPLY_STATUS` applies any status to any combatant slot.
-Poison's on-hit rider carries the **grey-out** rider (§16): applying
-poison greys 2 random positions of the afflicted combatant's pool for
-`POISON_GREY_TURNS` rounds (telemetry `CARDS_GREYED`, cleared by
+Ice's on-hit rider carries the **grey-out** rider (§16): applying
+ice greys 2 random positions of the afflicted combatant's pool for
+`ICE_GREY_TURNS` rounds (telemetry `CARDS_GREYED`, cleared by
 `CARDS_UNGREYED`).  The gate lives in the battle telegraph: a pool position covered by the
 ACTIVE attacker's own grey mask never plays (per-attacker lock -- the
 party's single shared battle deck still rotates through one draw
-position, but poisoning one foe never locks unpoisoned foes out).
+position, but icing one foe never locks un-iced foes out).
 A greyed draw still selects its card (`ENEMY_CARD_PLAYED` with the lead
 card's identity) but the swing fails: `TURN_SKIPPED` (cause
-`STATUS_POISON`) while the spent card is still consumed (draw advances
+`STATUS_FREEZE`) while the spent card is still consumed (draw advances
 with wrap), the attacker judders like a hit victim, and the defend beat
-names the failed swing (`FOE IS POISONED!` on the banner + combo row)
+names the failed swing (`FOE IS ICED!` on the combo row)
 until the player acknowledges with A (or the timer path converges).  Scenarios:
-`status_poison_apply` (apply + ticks + expiry + grey gate), `status_poison_reshuffle`
-(5-stack cap, greyed cards recycled out of reshuffles, skips).  Still open
+`status_ice_apply` (apply + ticks + expiry + grey gate), `status_ice_reshuffle`
+(5-stack cap, greyed cards recycled out of reshuffles, skips).  Poison's
+on-hit rider carries **confusion** instead: a poisoned enemy attacks its
+allies (or itself when alone), and a poisoned hero plays a random hand
+(`Confused! / You play randomly!`, no input).  Scenarios:
+`enemy_confuse_ally_kill`, `enemy_confuse_self`, `hero_confuse_message`,
+`hero_confuse_autoplay`.  Still open
 from Phase C/D: HEAL ALL; per-effect scaling refinements.
 
 # 0.1 Hand table (implemented)

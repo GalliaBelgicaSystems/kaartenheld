@@ -157,7 +157,7 @@ void ui_wipe_black_banked(void);
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
  * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
  * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
- * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (poison grey-out
+ * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (ice grey-out
  * and desolate wasteland ground). */
 #define UI_COLOR_NONE   0
 #define UI_COLOR_FIRE   1

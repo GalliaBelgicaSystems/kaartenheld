@@ -1,7 +1,7 @@
 {
  "name": "loot_ap_bronze3",
  "test": true,
- "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 3 is staged (the old AP-3 bronze profile) but the drop is unaffected -- seed 20 on the R3 kobold rolls an IRON ICE SWORD (derived id 0xB8 = 184, rank 3).",
+ "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 3 is staged (the old AP-3 bronze profile) but the drop is unaffected -- seed 20 on the R3 kobold rolls a plain IRON SWORD (derived id 0xA0 = 160, rank 3).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -184,7 +184,7 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 184
+   "value": 160
   },
   {
    "type": "event_arg",
@@ -195,12 +195,12 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "I I SW"
+   "contains": "I SW"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "IRON ICE SWORD"
+   "contains": "IRON SWORD"
   }
  ]
 }

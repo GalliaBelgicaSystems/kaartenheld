@@ -39,10 +39,10 @@ static const char s_tut_4[4][20] = {
 };
 
 static const char s_tut_5[4][20] = {
-    "BURN POISON FREEZE",
+    "BURN POISON ICE",
     "Burn wounds you.",
-    "Poison locks cards",
-    "Ice skips a turn."
+    "Poison confuses.",
+    "Ice locks cards."
 };
 
 static const char s_tut_6[4][20] = {

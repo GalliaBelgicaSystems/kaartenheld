@@ -17,11 +17,11 @@ const CardDefinition g_cards[] = {
     { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  5, CARD_AP(5, MAT_IRON, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, 0, STATUS_NONE,       0,   "I SW" },
     { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, 0, STATUS_NONE,       0,   "W SH" },
     { CARD_IRON_RING,      CARD_TYPE_HEAL,    4, CARD_AP(4, MAT_IRON, 0),  3, 1, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, 0, STATUS_NONE,       0,   "I RG" },
-    /* Fire Sword (bronze SW3 + fire rider): the fire element lives on a
-     * sword, never a separate "tome" type (docs/loot.md §34).  Carries
-     * the BURN on-hit rider exactly like a loot fire sword.  Riders are
-     * bronze and above; wood is always plain. */
-    { CARD_FIRE_SWORD,    CARD_TYPE_ATTACK,  3, CARD_AP(3, MAT_BRONZE, 1),  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    0, 0, STATUS_BURN,     128,  "F SW" },
+    /* Bronze sword (plain, no rider -- swords never ride): the honest
+     * mid-tier blade filling the wood->iron gap.  Plain bronze is 1 AP,
+     * so the two starter copies are live at pool 1 (the old pool-2 fire
+     * beat is gone with the riders). */
+    { CARD_BRONZE_SWORD,   CARD_TYPE_ATTACK,  3, CARD_AP(3, MAT_BRONZE, 0),  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    0, 0, STATUS_NONE,       0,   "B SW" },
     /* Poison Dagger (bronze DA2): base 50% poison chance scaled by the
      * played hand's multiplier (docs/combo-system.md §13). */
     { CARD_POISON_DAGGER, CARD_TYPE_ATTACK,  2, CARD_AP(2, MAT_BRONZE, 1),  0, 3, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_DAGGER,    8, 0, STATUS_POISON,   128,  "P DA" },

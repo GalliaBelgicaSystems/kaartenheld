@@ -1,0 +1,117 @@
+{
+ "name": "battle_ice_foe_message",
+ "test": true,
+ "description": "Iced foe presentation: an iced slime whose greyed lead card comes up selects the card (ENEMY_CARD_PLAYED with the lead power) but cannot play it (TURN_SKIPPED cause ICE, spent card consumed, no DAMAGE_RECEIVED). The defend beat names the failed swing on the row-10 combo line (FOE IS ICED! in the ICE-blue slot 2) while row 0 keeps the standard enemy-turn banner.",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "seed": 777,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 3,
+   "duration": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 70
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 60
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENEMY_CARD_PLAYED"
+  },
+  {
+   "type": "event_arg",
+   "event": "ENEMY_CARD_PLAYED",
+   "index": 2,
+   "value": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "TURN_SKIPPED"
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 1,
+   "value": 3
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "FOE ATTACKS! DEFEND!"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "FOE IS ICED!"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 0,
+   "expected": 2
+  }
+ ]
+}

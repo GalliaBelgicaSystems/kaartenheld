@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab lists one row per owned card (full name + deck count): sword, shield, fire sword, ring and dagger render on rows 3-7 with the granted ring and dagger",
+ "description": "CARDS tab lists one row per owned card (full name + deck count): sword, shield, bronze sword, ring and dagger render on rows 3-7 with the granted ring and dagger",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

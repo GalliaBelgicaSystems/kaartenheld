@@ -1649,7 +1649,7 @@ def walk_d(checks):
             ("18-tutorial-slide2", "STRIKE FIRST"),
             ("19-tutorial-slide3", "POKER PAYS"),
             ("20-tutorial-slide4", "DEFEND YOURSELF"),
-            ("21-tutorial-slide5", "BURN POISON FREEZE"),
+            ("21-tutorial-slide5", "BURN POISON ICE"),
             ("22-tutorial-slide6", "SPARE SHIELDS")):
         s.check(label, s.press_until(
             "right", lambda m=marker: s.text_has(m), label=label),

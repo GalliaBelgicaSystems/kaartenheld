@@ -240,10 +240,10 @@ static void debug_run_action(void)
              * STATUS_APPLIED telemetry included): a0 = combatant slot
              * (0 = player, 1..n = enemy), a1 = StatusId, a2 = duration
              * (stacks 1).  Reaches targets no card rider can hit today
-             * (e.g. freezing the PLAYER).  Poison also triggers its grey-out. */
+             * (e.g. icing the PLAYER).  Ice also triggers its grey-out. */
             if (a0 < STATUS_ROUND_SLOTS && a1 != STATUS_NONE) {
                 bool ok = status_apply(status_slots(a0), a0, a1, 1, a2);
-                if (ok && a1 == STATUS_POISON) {
+                if (ok && a1 == STATUS_FREEZE) {
                     uint8_t pool = (a0 == 0) ? BATTLE_HAND_SIZE
                                              : g_game.battle.enemy_deck.count;
                     status_grey_apply(a0, pool);
