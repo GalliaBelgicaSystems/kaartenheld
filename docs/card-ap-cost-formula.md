@@ -113,11 +113,14 @@ a property of the card, not a decision by the author.**
 | Role | `power` means | Band values |
 |---|---|---|
 | Sword / bow | damage dealt | 1, 3, 5, 7, 9 |
-| Dagger / shield / ring | poison damage / block / heal | 1, 2, 4, 6, 8 |
+| Shield / ring | block / heal | 1, 2, 4, 6, 8 |
+| Dagger | poison damage | 1, 2, 3, 5, 7 |
 
-Swords and bows sit one point above their band, daggers/shields/rings at the
-band floor — but under `ceil(/8)` that point never crosses a step boundary,
-so role never changes the cost on its own (§7.3).
+Swords and bows sit one point above their band; shields/rings at the
+band floor; daggers run one band step softer *and* one point under
+swords (bronze holds 2 so it always beats wood) — but under `ceil(/8)`
+those points never cross a step boundary, so role never changes the
+cost on its own (§7.3).
 
 Reasoning for weight 1: damage is the unit the player is already budgeting
 in, and every other term can be expressed as "how many damage points is this
@@ -210,9 +213,9 @@ parentheses so the reader can check any cell by hand:
 |---|---|---|---|---|---|
 | **wood** (gate AP 1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) |
 | **bronze** (gate AP 2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p2) |
-| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p4) |
-| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p7) | 3 AP (p6) | 3 AP (p6) |
-| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p9) | 5 AP (p8) | 5 AP (p8) |
+| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p5) | 2 AP (p3) | 2 AP (p4) |
+| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p7) | 3 AP (p5) | 3 AP (p6) |
+| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p9) | 5 AP (p7) | 5 AP (p8) |
 
 "gate AP" is the AP below which that material cannot drop
 (`LOOT_AP_BRONZE` / `LOOT_AP_IRON` / `LOOT_AP_STEEL`, `src/rpg/loot.h`;
@@ -227,9 +230,9 @@ need pool 6 and are gated separately (§6.1).
 |---|---|---|---|
 | **wood** (gate AP 1) | n/a | n/a | n/a |
 | **bronze** (gate AP 2) | 2 AP (p3) | 2 AP (p3) | 2 AP (p2) |
-| **iron** (gate AP 4) | 3 AP (p5) | 3 AP (p5) | 3 AP (p4) |
-| **steel** (gate AP 5) | 4 AP (p7) | 4 AP (p7) | 4 AP (p6) |
-| **mythril** (gate AP 5, riders 6) | 6 AP (p9) | 6 AP (p9) | 6 AP (p8) |
+| **iron** (gate AP 4) | 3 AP (p5) | 3 AP (p5) | 3 AP (p3) |
+| **steel** (gate AP 5) | 4 AP (p7) | 4 AP (p7) | 4 AP (p5) |
+| **mythril** (gate AP 5, riders 6) | 6 AP (p9) | 6 AP (p9) | 6 AP (p7) |
 
 Wood has no row by design (wood is always plain, §34.1) — and that is lucky:
 a wood+rider card would be the only combination in the whole table that

@@ -787,8 +787,9 @@ name `[material] [effect] weapon` (`loot_banked.c`, `loot.md §34`) — e.g.
 sword).
 
 * Material bands: **W**ood 1, **B**ronze 2–3, **I**ron 4–5, **S**teel
-  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/dagger/ring
-  the low end.  The same bands power attack, shield block and ring heal.
+  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/ring the
+  low end; daggers run their own softer band (1/2/3/5/7).  The same
+  bands power attack, shield block and ring heal.
 * **Wood never carries a rider**; the generator forces plain at wood and
   synthesis strips wood+rider ids.  Rider cards are bronze and above.
 * Effects are legal per weapon: daggers may carry **P**oison, bows may

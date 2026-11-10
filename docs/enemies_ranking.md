@@ -165,7 +165,8 @@ Derived from the same material band (`LOOT_POWER` in `src/rpg/loot.h`):
 
 ```text
 wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9
-sword and bow take the high end of the band, shield/dagger/ring the low end
+sword and bow take the high end of the band, shield/ring the low end;
+daggers run a softer band (wood 1, bronze 2, iron 3, steel 5, mythril 7)
 ```
 
 Synthesized **sell price** = `power + 2·material`, `+2` for a poison dagger
@@ -258,7 +259,11 @@ these.
 
 Material is the only purely vertical axis: for a given weapon, each tier
 step adds 2 power (wood 1; bronze 2–3; iron 4–5; steel 6–7; mythril 8–9),
-with sword/bow at the top of each band and shield/dagger/ring at the bottom.
+with sword/bow at the top of each band and shield/ring at the bottom.
+Daggers are the exception: a softer band (wood 1, bronze 2, iron 3,
+steel 5, mythril 7) so the free counterattack doesn't outclass the
+sword -- every dagger still beats the tier below it, and bronze (2)
+always beats wood (1).
 
 ### 2.2 The tempo ladder is the AP cost
 
@@ -282,7 +287,7 @@ beats a bronze plain sword (1 AP) but not an iron plain sword (2 AP).
 | Weapon | Role | Band position | Riders | Note |
 |---|---|---|---|---|
 | Sword | damage | high end | none | the plain all-rounder attack card |
-| Dagger | damage | low end | poison | defense-phase counterattack line |
+| Dagger | damage | own soft band (1/2/3/5/7) | poison | defense-phase counterattack line |
 | Bow | damage | high end | fire, ice | drop source today: **bats only** (plus merchant) |
 | Shield | block | low end | none | plain shields never heal (over-block clamps to 0) |
 | Ring | heal | low end | none | the *only* healing vector; uses = tier + 1 |

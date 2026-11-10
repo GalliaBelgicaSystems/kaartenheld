@@ -1661,9 +1661,11 @@ dagger), `B F BO` (bronze fire bow).  Wood+rider names cannot occur:
 wood is always plain.
 
 * **Material bands, not base+bonus:** sword/bow take the high end of a
-  band, shield/dagger/ring the low end.  Wood is 1 for every weapon;
-  bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same bands power
-  attack, defense (shield block) and healing (ring heal).
+  band, shield/ring the low end; daggers run one band step softer *and*
+  one point under swords (wood 1, bronze 2, iron 3, steel 5,
+  mythril 7 -- bronze holds 2 so it always beats wood).  Wood is 1 for
+  every weapon; bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same
+  bands power attack, defense (shield block) and healing (ring heal).
 * **Wood never carries a rider.**  The generator forces `plain` at wood,
   and synthesis strips hand-encoded wood+rider ids.  Rider cards
   (poison/fire/ice) are therefore bronze and above.
@@ -1775,14 +1777,15 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   (`EVENT_HEALED` cause d1=1); a lone ring heals its face value.
   IMPLEMENTED.
 * Defense with daggers: a daggers-only selection (rings allowed)
-  counterattacks with an attack-phase poker evaluation over the dagger
-  subset, HALVED (rounded down, minimum 1) -- the counter is a free
-  extra attack every defend phase, so full evaluation made daggers
-  strictly better than the same-AP sword despite their -1 face damage.
-  The halved counter still lands FIRST -- when it kills the telegraphed
-  attacker the incoming swing never lands (no damage, block cue, no
-  organic rider).  Otherwise the hero takes the resolved net on top of
-  the counter.  IMPLEMENTED.
+  counterattacks with a FULL attack-phase poker evaluation over the
+  dagger subset -- the counter deals exactly what the cards show, no
+  scaling.  Daggers are already the weakest face damage per tier
+  (bronze 2v3, iron 3v5, steel 5v7, mythril 7v9), so the free extra
+  attack needs no further nerf; the stat gap is the balance against
+  the sword.  The counter still lands FIRST -- when it kills the
+  telegraphed attacker the incoming swing never lands (no damage,
+  block cue, no organic rider).  Otherwise the hero takes the
+  resolved net on top of the counter.  IMPLEMENTED.
 * Poison rider: poison-effect daggers carry the on-hit status rider
   (existing status system); chance tuned like DA1.  Poison itself deals
   no damage -- it confuses the victim instead: a confused enemy turns

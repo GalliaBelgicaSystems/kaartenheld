@@ -50,13 +50,17 @@ enum {
 
 /* Material power bands (docs/loot.md §34.1).  One shared definition so
  * the synth, battle-init and display paths cannot drift: sword/bow take
- * the high end of a band, shield/dagger/ring the low end.
+ * the high end of a band, shield/ring the low end.
  * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9.
- * Closed form (no compare chains: `mat` is a runtime value, so nested
- * ternaries compile to branch ladders in every banked copy): base is
- * `mat ? mat<<1 : 1`, sword/bow take one more on non-wood. */
+ * Daggers run one band step softer AND one point under swords (they
+ * counter for free, so the face value carries the whole nerf):
+ * wood 1, bronze 2, iron 3, steel 5, mythril 7.  Bronze holds 2 so it
+ * always beats wood (a flat sword-2 would tie them at 1).
+ * Closed form (one compare, like the sword/bow test beside it):
+ * base is `mat ? mat<<1 : 1`, sword/bow take one more on non-wood,
+ * daggers give one back above bronze. */
 #define LOOT_POWER(mat, wpn) ((uint8_t)(((mat) == 0) ? 1 : \
-    (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0))))
+    (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0) - ((((wpn) == WPN_DAGGER) && ((mat) > 1)) ? 1 : 0))))
 
 /* Ring uses per battle (docs/loot.md §34.6): wood 1, bronze 2, iron 3,
  * steel 4, mythril 5 -- material tier + 1.  A wood ring stays

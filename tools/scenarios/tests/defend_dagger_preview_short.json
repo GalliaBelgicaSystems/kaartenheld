@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview_short",
  "test": true,
- "description": "Counter forecast short straight (STRAIGHT gem equipped): staged DA2+DA3+DA4 run previews CNT 6 ((2+3+4)x155%, halved from 13), proving the preview walks the shared short-best path.",
+ "description": "Counter forecast short straight (STRAIGHT gem equipped): staged DA2+DA3+DA4 run previews CNT 13 ((2+3+4)x155%), proving the preview walks the shared short-best path.",
  "actions": [
   {
    "type": "wait",
@@ -137,7 +137,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "CNT 6"
+   "contains": "CNT 13"
   },
   {
    "type": "screen_row_not_contains",
@@ -147,7 +147,7 @@
   {
    "type": "vram_row",
    "row": 10,
-   "contains": "CNT 6"
+   "contains": "CNT 13"
   }
  ],
  "initial_state": {

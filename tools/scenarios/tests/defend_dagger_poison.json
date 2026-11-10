@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_poison",
  "test": true,
- "description": "Counter poison rider: the leading dagger carries a guaranteed poison rider (chance 255), so the counter applies POISON to the attacker (STATUS_APPLIED) -- and never greys (no CARDS_GREYED). Poison confuses instead: the telegraphed swing turns on the attacker's ally (DAMAGE_DEALT d1 = victim slot 2), so the hero takes nothing and stays at 10. Opener SW1 leaves the kobold at 14; the suited DA2 pair counters for 5, halved to 2, leaving it at 12.",
+ "description": "Counter poison rider: the leading dagger carries a guaranteed poison rider (chance 255), so the counter applies POISON to the attacker (STATUS_APPLIED) -- and never greys (no CARDS_GREYED). Poison confuses instead: the telegraphed swing turns on the attacker's ally (DAMAGE_DEALT d1 = victim slot 2), so the hero takes nothing and stays at 10. Opener SW1 leaves the kobold at 14; the suited DA2 pair counters for the full 5, leaving it at 9.",
  "actions": [
   {
    "type": "wait",
@@ -117,13 +117,13 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 12
+   "expected": 9
   },
   {
    "type": "event_arg",
    "event": "DAMAGE_DEALT",
    "index": 0,
-   "value": 2
+   "value": 5
   },
   {
    "type": "event_arg",

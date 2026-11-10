@@ -64,7 +64,10 @@ def band_power(mat, weapon):
     """Mirror of LOOT_POWER (docs/loot.md §34.1)."""
     if mat == 0:
         return 1
-    return 2 * mat + (1 if weapon in ("sword", "bow") else 0)
+    p = 2 * mat + (1 if weapon in ("sword", "bow") else 0)
+    if weapon == "dagger" and mat > 1:
+        p -= 1
+    return p
 
 
 def card_ap(power, mat, rider, pts):

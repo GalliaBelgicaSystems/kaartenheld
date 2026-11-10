@@ -56,10 +56,11 @@ bit, the tab through `screen_row`.
   the trial that maximizes the healed amount (extending runs instead of
   sitting idle at v=10), and combo_short_best lets a richer ringed pair
   beat a low short straight.
-* **Suited bonus**: N/A in practice. Single-weapon values skip by two
-  (swords/bows 1,3,5,7,9; daggers/shields/rings 1,2,4,6,8), so no
-  three same-suit cards can ever be sequential. The existing +25% rule
-  would apply automatically if a future band ever allows it -- no
+* **Suited bonus**: N/A in practice, except low daggers.  Single-weapon
+  values skip by two (swords/bows 1,3,5,7,9; shields/rings 1,2,4,6,8),
+  so no three same-suit cards can ever be sequential -- except daggers
+  (1,2,3,5,7): DA1+DA2+DA3 is a suited run and takes the +25 where the
+  tier awards it.  The existing rule applies automatically, no
   special-casing needed.
 * **Rings (joker)**: free synergy. The existing best-tier trial loop
   (v = 1..10, keep best) completes runs automatically, e.g. SW4 + SW6
@@ -133,11 +134,9 @@ player-only -- same as every other tier.
 ## Worked examples (multiplier 130)
 
 * Starter + cache: SW1 + DA2 + SW3 → base 6 → DMG 7.
-* Mid game: SW4 + DA6? no -- 4,5,6 needs SW4 + IRON_SWORD? no: 4,5,6 =
-  e.g. bronze dagger DA4? (dagger bands 1,2,4,6,8: DA4 exists) + SW5 +
-  SW6? no SW6 (swords odd). E.g. DA4 + RG5? rings heal... attack example:
-  SH4? shields don't attack. Say SW5 + DA4 + BRONZE? Keep it simple:
-  3,4,5 = SW3 + DA4 + SW5 → base 12 → DMG 15.
+* Mid game: 1,2,3 suited = DA1 + DA2 + DA3 (the only same-weapon run in
+  the game: daggers run 1,2,3,5,7) → base 6 → DMG 9.  A mixed 1,2,3
+  (e.g. SW1 + DA2 + SW3) scores the same base unsuited.
 * High end: 7,8,9 = steel sword + mythril dagger + mythril bow → base 24 → DMG 31.
 
 ## Implementation (done 2026-10-23, best-subset 2026-10-24)

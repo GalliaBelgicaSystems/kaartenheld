@@ -522,16 +522,17 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
 /* Dagger counterattack (defend phase): daggers are the only weapon that
  * can be played on defense.  A daggers-only selection (at least one
  * dagger; no shields, swords or bows; rings allowed and unchanged) hits
- * the telegraphed attacker back with an attack-phase poker evaluation
- * over the dagger subset, HALVED (rounded down, minimum 1): a dagger
- * already deals one less face damage than the same-tier sword, and the
- * counter is a free extra attack every defend phase -- full evaluation
- * made the dagger package strictly better than the sword.  The halved
- * counter lands FIRST: when it kills the attacker, the incoming swing
- * never lands (the caller skips the net resolution).  Otherwise the
- * hero still takes the resolved swing on top of the counter.  Mixed
- * selections lose the daggers: the block evaluation ignores them, and
- * the prep body reports 0 without touching the staged combo.
+ * the telegraphed attacker back with a full attack-phase poker
+ * evaluation over the dagger subset: the counter deals exactly what the
+ * cards show, no scaling.  Daggers are already the weakest face damage
+ * per tier (docs/loot.md §34.1: bronze 2v3, iron 3v5, steel 5v7,
+ * mythril 7v9), so the free extra attack needs no further nerf -- the
+ * stat gap IS the balance against the sword.  The counter lands FIRST:
+ * when it kills the attacker, the incoming swing never lands (the
+ * caller skips the net resolution).  Otherwise the hero still takes the
+ * resolved swing on top of the counter.  Mixed selections lose the
+ * daggers: the block evaluation ignores them, and the prep body reports
+ * 0 without touching the staged combo.
  * Returns 0 when no counter fired, 1 when counter damage was dealt
  * (the caller gates its victory check on this so defend flows without
  * a counter emit no new telemetry).  A killing counter needs no special
@@ -579,11 +580,10 @@ static uint8_t battle_defend_counter(Battle *b)
     /* Counter telemetry is DAMAGE only (no COMBO/EFFECT event): the
      * poker-scaled amount (a pair out-damages its flat face sum, suited
      * bonus included) already proves the evaluation ran, and the rider
-     * below reports through the shared STATUS channels.  Halved
-     * (docs/loot.md §34.6): the counter is a free extra attack, so it
-     * deals half the evaluated amount, minimum 1 -- a 1-damage counter
-     * still lands (the return contract below), it just barely scratches. */
-    counter_dmg = g_effect_last.amount >> 1;
+     * below reports through the shared STATUS channels.  Full amount
+     * (docs/loot.md §34.6): daggers are already the weakest face per
+     * tier, so the counter deals exactly what the cards show. */
+    counter_dmg = g_effect_last.amount;
     if (counter_dmg == 0) counter_dmg = 1;
     /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
      * >= 100% multiplier), so there is no empty-hand early-out.  The
