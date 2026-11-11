@@ -97,6 +97,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_GUARD_DAGGER_LESSON,
+        "GUARD:",
+        8,
+        {"Daggers counter.", "One played alone", "hits back FIRST,", "full damage.", "Weaker than swords,", "but poison can", "confuse. Find one", "east of Carl."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_GUARD_GREETING,
         "GUARD:",
         2,

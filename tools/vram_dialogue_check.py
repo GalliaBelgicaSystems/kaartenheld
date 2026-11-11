@@ -20,8 +20,8 @@ the actual BACKGROUND tilemap:
   2. dialogue-clean: the box contains only dialogue text -- no map tiles
      mixed in.
   3. dialogue-window-hidden: the HUD window is disabled during dialogue.
-  4. dialogue-second-line: both lines are visible at once (two-line
-     pages); one A press closes the 2-line greeting.
+  4. dialogue-second-line: page 1 shows the first three lesson lines;
+     three A presses page through (p2, p3, close) and the box is gone.
 
 The walk is POSITION-based, not press-count based.  PyBoy's fixed button
 delays are lossy (an 8-tick hold drops ~30% of presses), and hold-to-move
@@ -312,16 +312,15 @@ def main():
 
     # ── 1. Dialogue box present in the BACKGROUND at the expected shape ──
     # Top bar with the speaker name, three full-width text rows, no
-    # bottom border.  The guard greeting shows both lines at once plus a
-    # blank third row (two-line pages, no "[A] CONTINUE"): first line on
-    # row 15, second on row 16, blank on row 17.  The last page shows no
-    # continue chevron (tile 109, decoded as "#" below).
+    # bottom border.  The guard's dagger lesson shows its first three
+    # lines at once on page 1 (first line on row 15); the last page
+    # shows no continue chevron (tile 109, decoded as "#" below).
     top_ok = box[0].startswith("+") and box[0].endswith("+") and "GUARD:" in box[0]
-    first_ok = "Halt! Keep peace." in box[1]
-    second_ok = "Watch for slimes." in box[2]
-    third_blank = box[3].strip() == ""
-    check("dialogue-bg-box", top_ok and first_ok and second_ok and third_blank,
-          "expected the box (GUARD: top, two lines, blank third row) in background rows "
+    first_ok = "Daggers counter." in box[1]
+    second_ok = "One played alone" in box[2]
+    third_ok = "hits back FIRST," in box[3]
+    check("dialogue-bg-box", top_ok and first_ok and second_ok and third_ok,
+          "expected the box (GUARD: top, three lesson lines) in background rows "
           f"14-17 at the scrolled ring offset (scroll_y={scroll_y}), got: "
           + " / ".join(box))
 
@@ -337,14 +336,17 @@ def main():
     check("dialogue-window-hidden", not win_enabled,
           f"expected the HUD window disabled during dialogue, got LCDC=0x{lcdc:02X}")
 
-    # Both lines are visible at once (two-line pages): no advance needed.
-    # Press A once to close the 2-line greeting and verify the box is gone.
-    press("a", settle=30)
-    for _ in range(10):
-        pb.tick()
+    # Three text pages (8 lines): page down twice to the last page,
+    # then one more A press closes the box and the check verifies it is
+    # gone.  (Exact A count matters: a spare press facing the guard
+    # would re-engage the dialogue.)
+    for _ in range(3):
+        press("a", settle=30)
+        for _ in range(10):
+            pb.tick()
     closed_top = background_row(pb, 14, scroll_y)
     check("dialogue-second-line", not (closed_top.startswith("+") and "GUARD:" in closed_top),
-          "expected the dialogue box to close after one A press, still: " + closed_top)
+          "expected the dialogue box to close after paging through, still: " + closed_top)
 
     print()
     if failures:
