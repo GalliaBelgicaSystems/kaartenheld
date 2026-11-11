@@ -1,0 +1,10 @@
+{
+  "id": "heal_mage_rings_ask",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "Do you know how",
+    "rings work?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}
