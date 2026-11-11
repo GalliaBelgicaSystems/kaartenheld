@@ -1519,7 +1519,10 @@ static const char *battle_banner_text(const volatile Battle *battle)
     }
     if (battle->phase == BATTLE_PHASE_PLAYER_ANIM) {
         /* Victim snapshot (battle_execute_combo): resolution may kill
-         * the target and auto-advance target_idx before this draws. */
+         * the target and auto-advance target_idx before this draws.
+         * An empty snapshot means the attack never happened (empty
+         * SELECT/timer whiff): the banner names the miss instead of
+         * a phantom attack. */
         if (g_battle_anim_target_name[0]) {
             s_banner_text[0] = 'A'; s_banner_text[1] = 'T';
             s_banner_text[2] = 'T'; s_banner_text[3] = 'A';
@@ -1531,7 +1534,7 @@ static const char *battle_banner_text(const volatile Battle *battle)
             s_banner_text[j] = '\0';
             return s_banner_text;
         }
-        return "PLAYER ATTACK!";
+        return "MISSED!";
     }
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
@@ -1700,6 +1703,10 @@ void ui_update_battle_banked(void)
                 /* Full-width clear (20, not 12): the despair line is 18
                  * columns and a short clear would strand its tail on the
                  * result screen. */
+                /* Row 9 keeps the rejection lines only: a whiffed
+                 * attack (empty SELECT/timer expiry) is named by the
+                 * MISSED! ANIM banner above (bank-3 budget; a phase +
+                 * snapshot key here overflowed bank 3, see memmap). */
                 battle_draw_text_line(0, 9,
                     (battle->msg_id == 1) ? "NO ENERGY!" :
                     (battle->msg_id == 2) ? "OUT OF USES!" :

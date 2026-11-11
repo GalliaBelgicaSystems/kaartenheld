@@ -81,7 +81,11 @@ typedef enum {
  * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
  * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
  * consumes it; the combo row + banner read it, never row 9), 9 = Carl
- * tutorial speech, 10 = slime-lord despair telegraph. */
+ * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
+ * (timer expiry with nothing staged) carries no msg_id: the ANIM banner
+ * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
+ * see battle_update).  An explicit empty SELECT keeps the historic
+ * auto-play of the highlighted card (see battle_execute_combo). */
 #define BATTLE_MSG_ICED_FOE 5
 
 typedef struct {

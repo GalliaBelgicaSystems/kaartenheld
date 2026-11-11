@@ -263,12 +263,10 @@ bool battle_is_card_selected(const Battle *b, uint8_t hand_idx)
     return g_bk_byte_c != 0;
 }
 
-/* A hand card can be added to the current combo only while it has uses left,
- * is not greyed out by poison, AND its cost fits in the phase energy not yet
- * reserved by the pending combo (deck.md Phase 10, docs/combo-system.md
- * Phase D).  The grey/unplayable decision lives in the banked body; this
- * fixed-clone wrapper keeps battle_execute_combo's auto-play fallback in
- * the fixed bank. */
+/* A hand card can join an empty combo while it has uses left, is not
+ * greyed out by poison, AND its cost fits the phase energy pool
+ * (deck.md Phase 10).  The grey/unplayable decision lives in the banked
+ * body; this fixed clone serves the explicit-SELECT auto-play below. */
 static bool hand_card_playable(const Battle *b, uint8_t hand_idx)
 {
     if (!b) return false;
@@ -694,12 +692,18 @@ void battle_execute_combo(Battle *b)
     if (!b || b->battle_over) return;
 
     if (b->phase == BATTLE_PHASE_PLAYER_SELECT) {
+        /* Empty explicit SELECT still auto-plays the highlighted card
+         * (quick-attack convenience; status_ice_reshuffle and the burn
+         * kill in victory_music_once ride it).  An empty TIMER expiry
+         * never reaches here -- battle_update turns it into a MISSED!
+         * whiff instead (Florent: unvalidated highlight must not
+         * attack).  combo_count == 0 also proves nothing is selected,
+         * so the first-playable search needs no is_selected guard. */
         if (b->combo_count == 0) {
             if (!hand_card_playable(b, b->cursor_pos)) {
                 uint8_t s;
                 for (s = 0; s < BATTLE_HAND_SIZE; s++) {
-                    if (hand_card_playable(b, s) &&
-                        !battle_is_card_selected(b, s)) {
+                    if (hand_card_playable(b, s)) {
                         b->cursor_pos = s;
                         break;
                     }
@@ -832,7 +836,10 @@ void battle_execute_combo(Battle *b)
          * counter that poisons this same phase therefore redirects the
          * swing too -- one rule, no ordering special-cases.  The hero
          * always pays for the staged hand (play + discard below run
-         * either way); only the incoming damage changes address. */
+         * either way); only the incoming damage changes address.
+         * Empty defend still resolves below (empty block = full hit).
+         * MISSED! is an attack-side message (see the SELECT gate
+         * above); defend keeps its BLOCKED ATTACK! banner. */
         battle_play_hand(b, false, &res);
         /* Net-damage defense (docs/loot.md §34.4): computed and applied in
          * the banked body (battle_defend_content.c) to keep the fixed bank
@@ -991,7 +998,20 @@ void battle_update(Battle *b)
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {
-            battle_execute_combo(b);
+            /* Empty timer expiry is a miss, not an auto-play: without
+             * a staged combo the hero whiffs the attack turn (the
+             * ANIM banner keys MISSED! off the empty victim snapshot,
+             * so no msg_id store is needed here).  A staged combo
+             * still resolves normally through the shared call below. */
+            if (vb->combo_count == 0 &&
+                vb->phase == BATTLE_PHASE_PLAYER_SELECT) {
+                vb->phase = BATTLE_PHASE_PLAYER_ANIM;
+                vb->delay_timer = 30;
+                vb->dirty = BATTLE_DIRTY_ALL;
+                g_battle_anim_target_name[0] = '\0';
+            } else {
+                battle_execute_combo(b);
+            }
         }
     } else if (vb->phase == BATTLE_PHASE_SLIME_DESPAIR) {
         /* Telegraph hold: the battle clock keeps running as the flash
