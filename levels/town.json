@@ -593,6 +593,30 @@
         "actors.actors_dog_frame_2"
       ],
       "overworld_sprite": "actors.actors_dog_frame_1"
+    },
+    {
+      "id": "town_house_door",
+      "type": "signpost",
+      "position": {
+        "x": 15,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "HOUSE",
+        "dialogue": "DIALOGUE_ID_HOUSE_DOOR",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "#",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
     }
   ],
   "regions": [

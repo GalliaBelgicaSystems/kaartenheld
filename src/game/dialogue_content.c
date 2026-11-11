@@ -169,6 +169,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_HOUSE_DOOR,
+        "",
+        3,
+        {"Where do you think", "you are? The full", "game?"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_KNIGHT_SPLIT,
         "KNIGHT:",
         3,
