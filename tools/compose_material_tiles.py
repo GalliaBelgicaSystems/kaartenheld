@@ -21,7 +21,12 @@ Deterministic: rerunning reproduces the sheet byte-identically.
 from PIL import Image
 
 PUB = 'tools/level_editor/public/tiles/combat'
+# OAM id order (consecutive from 117): steel, bronze, iron, mythril,
+# wood.  The first four cells share the material-icon art; the tint
+# comes from the per-cell encode ramp (inventory5/1/2/3).  Steel takes
+# OAM 117 so the bronze/iron/mythril/wood ids (118-121) never move.
 CELLS = [
+    'combat_material_icon',
     'combat_material_icon',
     'combat_material_icon',
     'combat_material_icon',

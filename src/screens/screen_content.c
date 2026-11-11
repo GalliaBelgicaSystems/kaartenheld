@@ -42,6 +42,13 @@ extern const ShopDefinition g_shops[];
  * a loot twin already owned hides the curated one-copy row even though
  * no curated row exists to merge it under yet. */
 extern const CardDefinition *ic_loot_synth(CardId id);
+
+/* Card-menu material icons (item_content_banked.c, same bank 2): tile +
+ * OBJ stream plus per-row OAM show/hide.  Shop rows stamp the same
+ * tinted ingots over their col-3 cell (entries 13-22). */
+extern void ic_mat_stream(void);
+extern void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat);
+extern void ic_mat_hide(uint8_t entry);
 /* Material/weapon resolver (same file): full "<MAT> <WPN>" shop names.
  * Sets *is_special for quest items (never listed, never sold). */
 extern void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
@@ -206,21 +213,11 @@ static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
 
 /* ── Full card names (docs/loot.md §34.1 short code -> "<MAT> <WPN>") ──
  * The shop used to print the 3-letter battle code ("RG4"); rows now
- * print what the CARDS list prints ("IRON RING", element-colored),
+ * print the weapon with the OAM material ingot ("IRON RING" reads as
+ * ingot + "RING", element-colored),
  * drawn in two parts so no WRAM name buffer is needed (stack-gap
  * budget, AGENTS.md §52.24).  Tables mirror item_content_banked.c;
  * keep in sync (same order, same strings). */
-static const char *sc_mat_str(uint8_t m, uint8_t *len)
-{
-    switch (m) {
-        case 1: *len = 6; return "BRONZE";
-        case 2: *len = 4; return "IRON";
-        case 3: *len = 5; return "STEEL";
-        case 4: *len = 7; return "MYTHRIL";
-        default: *len = 4; return "WOOD";
-    }
-}
-
 static const char *sc_wpn_str(uint8_t w, uint8_t *len)
 {
     switch (w) {
@@ -298,40 +295,40 @@ static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
 static uint8_t sc_nm_mat;
 static uint8_t sc_nm_wpn;
 static uint8_t sc_nm_special;
-static uint8_t sc_nm_mlen;
 static uint8_t sc_nm_wlen;
 
-/* Draw "<MAT> <WPN>" at (x, y) in a 14-wide field (cols x..x+13),
- * element-colored like the CARDS list.  Quest items / unknown ids fall
- * back to the short battle code (those never appear in shop stock or
- * the loot-only SELL list; the fallback keeps the row readable). */
+/* Draw the weapon name at (x, y) in a 14-wide field (cols x..x+13),
+ * element-colored like the CARDS list.  The material shows as the OAM
+ * ingot over the col-x cell (entries 13-22, tinted per material via
+ * the inventory ramps; steel shares iron's) instead of a word, so the
+ * buffer keeps a space there.  Quest items / unknown ids fall back to
+ * the short battle code with no icon (those never appear in shop stock
+ * or the loot-only SELL list; the fallback keeps the row readable). */
 static void sc_draw_full_name(uint8_t x, uint8_t y,
                               const CardDefinition *def)
 {
-    const char *ms;
     const char *ws;
     uint8_t total;
     ic_card_mat_wpn_pub(def->id, &sc_nm_mat, &sc_nm_wpn, &sc_nm_special);
     if (!sc_nm_special) {
-        ms = sc_mat_str(sc_nm_mat, &sc_nm_mlen);
+        ic_mat_show((uint8_t)(13 + (y - 5)), x, y, sc_nm_mat);
+        sc_draw_text(x, y, " ", 1);
         ws = sc_wpn_str(sc_nm_wpn, &sc_nm_wlen);
-        sc_draw_text(x, y, ms, sc_nm_mlen);
-        sc_draw_text((uint8_t)(x + sc_nm_mlen), y, " ", 1);
-        sc_draw_text((uint8_t)(x + sc_nm_mlen + 1), y, ws, sc_nm_wlen);
+        sc_draw_text((uint8_t)(x + 2), y, ws, sc_nm_wlen);
         /* Blank the rest of the 14-wide name field (a shorter name must
          * not leave a longer previous row's tail). */
-        total = (uint8_t)(sc_nm_mlen + 1 + sc_nm_wlen);
+        total = (uint8_t)(2 + sc_nm_wlen);
         if (total < 14)
             sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(14 - total));
         if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
             def->effect == CARD_EFFECT_HEAL_HP)
-            sc_color_span(x, y, total, UI_COLOR_FIELD);
+            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_FIELD);
         else if (def->status_id == STATUS_BURN)
-            sc_color_span(x, y, total, UI_COLOR_FIRE);
+            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_FIRE);
         else if (def->status_id == STATUS_POISON)
-            sc_color_span(x, y, total, UI_COLOR_POISON);
+            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_POISON);
         else if (def->status_id == STATUS_FREEZE)
-            sc_color_span(x, y, total, UI_COLOR_ICE);
+            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_ICE);
         return;
     }
     sc_card_code_str(def->battle_type, def->power, s_sc_code);
@@ -639,9 +636,19 @@ static void shop_rider_draw(void)
 
 void shop_content_render(void)
 {
+    uint8_t e;
     s_sc_game = (Game *)g_bk_ptr_a;
 
     if (!s_sc_game) return;
+
+    /* Material tiles + alias OBJ ramps for the row ingots below (same
+     * time-share as the DECK list; idempotent per redraw).  Sweep the
+     * row entries first: tab flips and emptied rows must not keep a
+     * stale ingot (rider entries 1-12 are swept by shop_rider_draw). */
+    ic_mat_stream();
+    for (e = 13; e <= 22; e++) {
+        ic_mat_hide(e);
+    }
     /* Live market index, read once: every row's quote shares it
      * (s_sc_market_quote takes it as a param so the per-row path pays
      * no struct read).  Trusted 24-48 like every other reader. */

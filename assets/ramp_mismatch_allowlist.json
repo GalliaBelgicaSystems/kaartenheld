@@ -774,6 +774,19 @@
         0,
         0
       ],
+      "declared": "inventory5",
+      "used_ramp": "inventory5",
+      "off_colors": [
+        "#967139",
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "materials",
+      "tile": [
+        1,
+        0
+      ],
       "declared": "inventory1",
       "used_ramp": "inventory1",
       "off_colors": [
@@ -783,7 +796,7 @@
     {
       "sheet": "materials",
       "tile": [
-        1,
+        2,
         0
       ],
       "declared": "inventory2",
@@ -796,7 +809,7 @@
     {
       "sheet": "materials",
       "tile": [
-        2,
+        3,
         0
       ],
       "declared": "inventory3",

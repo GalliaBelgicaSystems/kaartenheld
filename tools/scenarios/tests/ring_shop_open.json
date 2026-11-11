@@ -20,7 +20,17 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "IRON RING"
+   "contains": "RING"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 13,
+   "expected": 119
+  },
+  {
+   "type": "oam_attr",
+   "entry": 13,
+   "expected": 1
   },
   {
    "type": "screen_row",
@@ -30,7 +40,17 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "MYTHRIL BOW"
+   "contains": "BOW"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 14,
+   "expected": 120
+  },
+  {
+   "type": "oam_attr",
+   "entry": 14,
+   "expected": 6
   },
   {
    "type": "screen_row",

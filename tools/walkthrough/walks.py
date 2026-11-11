@@ -735,16 +735,24 @@ def walk_a(planner, checks, sram_out=None):
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     row5 = s.bg_text()[5]
-    if "IRON RING" in row5:
-        want, slid = CARD_IRON_RING, "MYTHRIL BOW"
-    elif "MYTHRIL BOW" in row5:
-        want, slid = CARD_BOW_9, "STEEL SHIELD"
-    elif "STEEL SHIELD" in row5:
-        want, slid = CARD_STEEL_SHIELD, "WOOD SWORD"
+    # Shop rows show the weapon word plus the OAM material ingot (the
+    # material word is gone): match the weapon, then pin the ingot's
+    # real-OAM tile + slot (entry 13 = first shop row) per material.
+    if "RING" in row5:
+        want, slid, mtile, mslot = CARD_IRON_RING, "BOW", 119, 1
+    elif "BOW" in row5:
+        want, slid, mtile, mslot = CARD_BOW_9, "SHIELD", 120, 6
+    elif "SHIELD" in row5:
+        want, slid, mtile, mslot = CARD_STEEL_SHIELD, "SWORD", 117, 7
     else:
-        want, slid = None, None
+        want, slid, mtile, mslot = None, None, None, None
     s.check("shop top row recognized", want is not None,
             expected="ring/bow/shield row", actual=row5)
+    if want is not None:
+        s.check_eq("shop material ingot tile",
+                   s.pb.memory[0xFE00 + 13 * 4 + 2], mtile)
+        s.check_eq("shop material ingot slot",
+                   s.pb.memory[0xFE00 + 13 * 4 + 3] & 7, mslot)
     price = s.reader.card_price(want)
     before = s.reader.collection_count(want)
     s.press("a", settle=30)

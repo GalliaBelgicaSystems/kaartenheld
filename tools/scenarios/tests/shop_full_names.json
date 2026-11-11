@@ -1,7 +1,7 @@
 {
  "name": "shop_full_names",
  "test": true,
- "description": "Shop rows show the whole card name (docs/loot.md 34.1 name format, same as the CARDS list): the merchant's stock paints IRON RING / MYTHRIL BOW / STEEL SHIELD in full instead of 3-letter codes.",
+ "description": "Shop rows show the weapon with the OAM material ingot (docs/loot.md 34.1: the CARDS list shows the same cards with text materials; the shop shows ingot + weapon): the merchant's stock paints RING / BOW / SHIELD next to bronze / iron / mythril / steel ingots instead of 3-letter codes.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -38,17 +38,47 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "IRON RING"
+   "contains": "RING"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 13,
+   "expected": 119
+  },
+  {
+   "type": "oam_attr",
+   "entry": 13,
+   "expected": 1
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "MYTHRIL BOW"
+   "contains": "BOW"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 14,
+   "expected": 120
+  },
+  {
+   "type": "oam_attr",
+   "entry": 14,
+   "expected": 6
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "STEEL SHIELD"
+   "contains": "SHIELD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 15,
+   "expected": 117
+  },
+  {
+   "type": "oam_attr",
+   "entry": 15,
+   "expected": 7
   }
  ]
 }

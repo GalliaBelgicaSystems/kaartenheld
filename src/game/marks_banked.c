@@ -205,7 +205,7 @@ static void marks_load_battle_tiles(void)
 /* Re-arm the battle tile stream after overworld entry restores the
  * time-shared OAM ids (AP pips 1-4 over hero idle/walk at 96-99, pip 5
  * plus riders over the blob tail at 122-125, material icons over blob
- * offsets 18-21 at 118-121).
+ * offsets 17-21 at 117-121).
  * No-arg trampoline target for the fixed-bank overworld-entry path. */
 void marks_battle_tiles_invalidate_banked(void)
 {
@@ -255,22 +255,22 @@ void ow_oam_restore_banked(void)
         ow_oam_stream_cell((uint8_t)(RIDER_TILE_BURN + i),
                            enemy_ow_tiles + (((uint16_t)(RIDER_TILE_BURN - ENEMY_OW_BASE + i)) << 4));
     }
-    /* Card-menu material icons time-share blob offsets 18-21 (OAM
-     * 118-121): restore them from the blob the same way.  Overworld
+    /* Card-menu material icons time-share blob offsets 17-21 (OAM
+     * 117-121): restore them from the blob the same way.  Overworld
      * actors using those cells were hidden while the menu was open
      * (screen_change hides all OAM off-overworld), so the restore is
      * invisible. */
-    for (i = 0; i < 4; i++) {
-        ow_oam_stream_cell((uint8_t)(MAT_TILE_BRONZE + i),
-                           enemy_ow_tiles + ((uint16_t)(18 + i) << 4));
+    for (i = 0; i < 5; i++) {
+        ow_oam_stream_cell((uint8_t)(MAT_TILE_STEEL + i),
+                           enemy_ow_tiles + ((uint16_t)(17 + i) << 4));
     }
-    /* The menu also borrows OBJ slots 0/1/5/6 for the inventory ramps:
-     * restore the canonical overworld ramps so heroes, mimics, wizards
-     * and merchants read their own colors again.  Battle entry
+    /* The menu also borrows OBJ slots 0/1/5/6/7 for the inventory ramps:
+     * restore the canonical overworld ramps so heroes, mimics, wizards,
+     * merchants and mayors read their own colors again.  Battle entry
      * reprograms its own scratch slots itself, and riders (slots 2-4)
      * are never touched by the menu. */
     if (g_is_cgb) {
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 5; i++) {
             ow_obj_program(mat_obj_restore_slots[i],
                            mat_obj_restore_bytes + ((uint16_t)i << 3));
         }

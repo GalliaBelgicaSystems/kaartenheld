@@ -104,13 +104,15 @@ ice_icon: #7ae3f3
 poison_icon: #7136c1
 bronze_dark: #967139
 bronze_light: #bb9863
-iron_dark: #828282
-iron_light: #bbbbbb
+steel_dark: #828282
+steel_light: #bbbbbb
 mithril_dark: #becaec
 mithril_light: #d8deec
 wood_dark: #604217
 wood_mid: #93621a
 wood_light: #e5aa54
+iron_dark: #a85a10
+iron_light: #c8792e
 
 
 TITLE
@@ -179,3 +181,4 @@ inventory1: COMBAT/background, COMBAT/bronze_light, COMBAT/bronze_dark, UNUSED
 inventory2: COMBAT/background, COMBAT/iron_light, COMBAT/iron_dark, UNUSED
 inventory3: COMBAT/background, COMBAT/mithril_light, COMBAT/mithril_dark, UNUSED
 inventory4: COMBAT/background, COMBAT/wood_light, COMBAT/wood_mid, COMBAT/wood_dark
+inventory5: COMBAT/background, COMBAT/steel_light, COMBAT/steel_dark, UNUSED

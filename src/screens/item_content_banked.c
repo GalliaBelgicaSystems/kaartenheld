@@ -143,7 +143,7 @@ static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
  * Same WRAM shadow-OAM pattern as the riders; the quest/gem renderers
  * sweep these entries on tab switches. */
 #define IC_MAT_ENTRY_BASE 12
-static void ic_mat_hide(uint8_t entry)
+void ic_mat_hide(uint8_t entry)
 {
     volatile uint8_t *re;
     re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
@@ -185,6 +185,9 @@ static void ic_mat_tile(uint8_t mat, uint8_t *tile, uint8_t *slot)
     } else if (mat == 1) {
         *tile = MAT_TILE_BRONZE;
         *slot = MAT_OBJ_BRONZE;
+    } else if (mat == 3) {
+        *tile = MAT_TILE_STEEL;
+        *slot = MAT_OBJ_STEEL;
     } else if (mat == 4) {
         *tile = MAT_TILE_MYTHRIL;
         *slot = MAT_OBJ_MYTHRIL;
@@ -194,7 +197,7 @@ static void ic_mat_tile(uint8_t mat, uint8_t *tile, uint8_t *slot)
     }
 }
 
-static void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat)
+void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat)
 {
     uint8_t tile, slot;
     volatile uint8_t *re;
@@ -204,6 +207,28 @@ static void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat)
     re[1] = (uint8_t)((x << 3) + 8);
     re[2] = tile;
     re[3] = slot;
+}
+
+/* Tile + OBJ stream for the menu material icons, shared with the shop
+ * renderer (same bank 2, plain call): fixed OAM ids 117-121 (time-share
+ * blob offsets 17-21) + alias OBJ slots with the inventory ramps.  The
+ * caller sweeps and stamps its own OAM entries; entry programming runs
+ * here so overworld/battle never see half-set state. */
+void ic_mat_stream(void)
+{
+    uint8_t e;
+    for (e = 0; e < 5; e++) {
+        ic_stream_oam_cell((uint8_t)(MAT_TILE_STEEL + e),
+                           material_tiles + ((uint16_t)e << 4));
+    }
+    VBK_REG = 0;
+    if (g_is_cgb) {
+        ic_obj_program(MAT_OBJ_STEEL, mat_ramp_steel);
+        ic_obj_program(MAT_OBJ_BRONZE, mat_ramp_bronze);
+        ic_obj_program(MAT_OBJ_IRON, mat_ramp_iron);
+        ic_obj_program(MAT_OBJ_MYTHRIL, mat_ramp_mythril);
+        ic_obj_program(MAT_OBJ_WOOD, mat_ramp_wood);
+    }
 }
 
 uint8_t s_ic_arg_x;
@@ -1129,26 +1154,14 @@ void item_screen_render_banked(void)
     }
 
     /* Card-menu material icons (assets/material_tiles.png, cells in
-     * bronze/iron/mythril/wood order): stream to fixed OAM ids 118-121
-     * (time-share blob offsets 18-21, restored on overworld entry) and
-     * program the alias OBJ slots with the inventory ramps (bronze 0,
-     * iron 1, mythril 6, wood 5).  Every DECK render (redraw-gated, so
-     * bounded): renders always precede their stamps, so the first frame
-     * already shows resident art.  Battle/overworld never display these
-     * ids, actor OAM stays hidden while a menu is open, and overworld
-     * entry restores tiles + canonical OBJ (marks_banked.c). */
+     * bronze/iron/mythril/wood order): stream here; the per-row stamps
+     * below only write OAM entries.  Every DECK render (redraw-gated,
+     * so bounded): renders always precede their stamps, so the first
+     * frame already shows resident art.  Battle/overworld never display
+     * these ids, actor OAM stays hidden while a menu is open, and
+     * overworld entry restores tiles + canonical OBJ (marks_banked.c). */
     if (g->item_menu_tab == TAB_DECK) {
-        for (e = 0; e < 4; e++) {
-            ic_stream_oam_cell((uint8_t)(MAT_TILE_BRONZE + e),
-                               material_tiles + ((uint16_t)e << 4));
-        }
-        VBK_REG = 0;
-        if (g_is_cgb) {
-            ic_obj_program(MAT_OBJ_BRONZE, mat_ramp_bronze);
-            ic_obj_program(MAT_OBJ_IRON, mat_ramp_iron);
-            ic_obj_program(MAT_OBJ_MYTHRIL, mat_ramp_mythril);
-            ic_obj_program(MAT_OBJ_WOOD, mat_ramp_wood);
-        }
+        ic_mat_stream();
     }
 
     ic_draw_header(g);

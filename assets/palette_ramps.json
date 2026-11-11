@@ -524,9 +524,9 @@
   "inventory2": {
    "colors": [
     "#ffffff",
-    "#bbbbbb",
-    "#828282",
-    "#828282"
+    "#c8792e",
+    "#a85a10",
+    "#a85a10"
    ],
    "refs": [
     "COMBAT/background",
@@ -570,6 +570,23 @@
    ],
    "slots": [
     "obj:5"
+   ]
+  },
+  "inventory5": {
+   "colors": [
+    "#ffffff",
+    "#bbbbbb",
+    "#828282",
+    "#828282"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/steel_light",
+    "COMBAT/steel_dark",
+    "COMBAT/steel_dark"
+   ],
+   "slots": [
+    "obj:7"
    ]
   },
   "sprites": {
