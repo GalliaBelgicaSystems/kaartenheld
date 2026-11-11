@@ -28,12 +28,12 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD"
+   "contains": "S1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "BRONZE"
+   "contains": "S1"
   },
   {
    "type": "screen_row_not_contains",

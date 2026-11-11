@@ -66,6 +66,12 @@ typedef struct Game {
     uint8_t intro_slide;       /* current ASCII intro slide (0-2) */
     uint8_t tutorial_slide;    /* current tutorial slide (0-5) */
     RenderCache render_cache;
+    uint8_t item_menu_side;      /* DECK two-column cursor side: 0 = owned
+                                    pool (left), 1 = deck (right). TAIL FIELD:
+                                    appended after render_cache so every
+                                    earlier offset is unchanged (walkthrough
+                                    mirrors + BSS layout, AGENTS.md 52.19).
+                                    Reset on menu open/tab switch. */
 } Game;
 
 extern Game g_game;

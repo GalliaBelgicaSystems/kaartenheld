@@ -26,12 +26,13 @@
 #define ROW_TOP     0
 #define FIRST_CARD  1
 /* Row 3 is the CARD + deck-icon /OWN column header, row 4 a blank paper
- * separator; grouped card rows run 5-15 (VISIBLE_CARDS rows). */
+ * separator; grouped card rows run 5-12 (VISIBLE_CARDS rows: 8 rows
+ * x 4 OAM sprites = 32 entries, inside the 40-entry OAM budget). */
 #define ROW_FILTER  2
 #define ROW_COL_HEAD 3
 #define ROW_SEP 4
 #define ROW_CARDS_TOP 5
-#define VISIBLE_CARDS 11
+#define VISIBLE_CARDS 8
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -136,12 +137,12 @@ static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
     }
 }
 
-/* Material icon OAM for the DECK list/detail (entries 12-22, one per
- * visible row): the card's material ingot over the col-8 spacer (list)
- * or the col-3 gap (detail), tinted per material (inventory1-4 OBJ
- * ramps programmed by the render body below; steel shares iron's).
- * Same WRAM shadow-OAM pattern as the riders; the quest/gem renderers
- * sweep these entries on tab switches. */
+/* Material icon OAM for the DECK list (entries 17-24 owned, 25-32
+ * deck) and the detail page (entry 12): the card's material ingot over
+ * the col-1/col-10 cells (list) or the col-3 gap (detail), tinted per
+ * material (inventory1-5 OBJ ramps programmed by the render/stream
+ * bodies).  Same WRAM shadow-OAM pattern as the riders; the quest/gem
+ * renderers sweep entries 1-32 on tab switches. */
 #define IC_MAT_ENTRY_BASE 12
 void ic_mat_hide(uint8_t entry)
 {
@@ -706,9 +707,9 @@ static void ic_draw_ap_at(Game *g, uint8_t y, uint8_t x)
     }
 }
 
-/* Wide "dd/oo" counts at column x (5 chars, each side 2-wide
- * right-aligned: " 4/ 4", "10/20").  No division (AGENTS.md 52.18:
- * / and % pull the SDCC div/mod library into the fixed bank). */
+/* 2-wide right-aligned count cell (" 4", "10").  No division
+ * (AGENTS.md 52.18: / and % pull the SDCC div/mod library into the
+ * fixed bank). */
 static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
 {
     uint8_t tens = 0;
@@ -722,38 +723,23 @@ static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
     IC_DRAW_TEXT(x, y, s_ic_code, 2);
 }
 
-/* 6-wide "dd/oo " counts: each side 2-wide right-aligned plus a
- * trailing blank pad cell (the W in nn/NNW), so the slash sits at
- * x + 2 on every row.  Disjoint from the chrome stamps below, so the
- * text skip-guard never fights them (AGENTS.md 52.25). */
-static void ic_draw_count5(uint8_t y, uint8_t x, uint8_t decked,
-                           uint8_t owned)
-{
-    ic_draw_pair2(x, y, decked);
-    IC_DRAW_TEXT((uint8_t)(x + 2), y, "/", 1);
-    ic_draw_pair2((uint8_t)(x + 3), y, owned);
-    IC_DRAW_TEXT((uint8_t)(x + 5), y, " ", 1);
-}
 
-/* Row chrome tiles: AP icon first, then blanks (the counts drawer owns
- * cols 14-18, so the loop must stop before them -- an unconditional
- * stamp past the count cells would blank the decked digits in VRAM
- * while the buffer stayed truthful (AGENTS.md 52.25).  Boot-loaded
- * ids, so no streaming (see ui.h). */
+/* Row chrome tiles: AP icon first, then a blank (per-side chrome is
+ * stamped by ic_stamp_icons at wx + 2; the digit cells own their pips
+ * via ic_draw_ap_at, so an unconditional stamp past them would blank
+ * decked digits in VRAM while the buffer stayed truthful (AGENTS.md
+ * 52.25).  Boot-loaded ids, so no streaming (see ui.h). */
 static const uint8_t s_ic_chrome_tiles[2] = {
     UI_TILE_AP_ICON, UI_TILE_MENU_BLANK
 };
 
-/* Icon cells: rider cell rx (blank BG + element color; the OAM rider
- * is shown by the list loop) and weapon cell wx (icon tile in VRAM,
- * weapon letter in the text buffer for harness asserts).  The chrome
- * loop stamps n cells VRAM-only starting at wx + 2 (AP icon, then
- * blanks); one write expansion in a loop -- bank 2 has no room for
- * unrolled (AGENTS.md 52.18).  Rows stamp 2 (cols 12-13); the 6-wide
- * counts own cols 14-19.  The "DECK" text call below writes the
- * buffer letters while the count cells overwrite cols 14-18 in both
- * VRAM and buffer, so the buffer reads "DE" + counts (harness
- * asserts match on the counts/mats, never the full word). */
+/* Icon cells: rider cell rx (blank BG + element color; the row painter
+ * shows the OAM rider) and weapon cell wx (icon tile in VRAM, weapon
+ * letter in the text buffer for harness asserts).  The chrome loop
+ * stamps n cells VRAM-only starting at wx + 2 (AP icon, then blanks);
+ * one write expansion in a loop -- bank 2 has no room for unrolled
+ * (AGENTS.md 52.18).  Rows stamp 1 (the AP icon); digit cells keep
+ * their pip tiles from ic_draw_ap_at. */
 static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 {
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
@@ -774,45 +760,63 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 }
 
 
-/* One GROUP per row (one row per MATERIAL+WEAPON name):
- *   col 0: cursor caret
- *   cols 1-7: MATERIAL padded to 7 (MYTHRIL fills it, WOOD pads)
- *   col 8: space
- *   col 9: rider cell (blank BG tile; rider/health OAM overlays it)
- *   col 10: weapon icon tile (BG); buffer holds S/H/B/D/R (see above)
- *   col 11: AP pip, gold; '!' when above the pool (gate preview)
- *   col 12: AP icon tile (BG); col 13 blank
- *   cols 14-18: "dd/oo" decked/owned, each side 2-wide right-aligned
- *     (" 4/ 5"), so the slash sits at col 16 on every row;
- *     col 19 is the blank pad.
- * Row 3 is the fixed column header: "CARD" plus deck icon + "/OWN"
- * right-justified over the counts (cols 15-19: icon, slash, O, W, N
- * -- the header slash sits at col 16 exactly like every count row
- * below).  Row 4 is a blank paper separator; cards run rows
- * 5-15 (VISIBLE_CARDS rows).
- * VRAM shows the icon tiles; the buffer keeps the weapon letter plus
- * "DE" and the counts (the count cells overwrite the "CK"), so
- * harness asserts match on material/counts, never the full word.
- * Display cost/rider/color read the primary (first) member; A tries
- * members in collection order, so display and behavior agree.  Note:
- * same-name variants (e.g. rider vs plain) share one row by design;
- * see docs/deck-management.md. */
+/* One GROUP per row, drawn twice: owned pool (left, cols 0-8) and
+ * deck (right, cols 9-17); cols 18-19 pad.
+ *   col 0/9: cursor caret (active side only)
+ *   col 1/10: material ingot (blank BG; OAM tinted per inventory ramp)
+ *   col 2/11: rider cell (blank BG; rider/health OAM overlays it)
+ *   col 3/12: weapon icon tile (BG); buffer holds S/H/B/D/R
+ *   col 4/13: AP pip digit ('!' when above the pool); pip tile behind
+ *   col 5/14: AP icon tile (BG); buffer blank
+ *   col 6-7/15-16: side count, 2-wide (" 4"): left = owned - decked,
+ *     right = decked
+ *   col 8: '|' separator (static text)
+ * Row 3 is the fixed column header (OWNED / DECK labels).  Row 4 is a
+ * blank paper separator; cards run rows 5-12 (VISIBLE_CARDS rows).
+ * VRAM shows the icon tiles; the buffer keeps weapon letters, digits
+ * and counts for harness asserts (material/rider cells stay blank,
+ * OAM art).  Display cost/rider/color read the primary (first)
+ * member; A tries members in collection order, so display and behavior
+ * agree.  Note: same-name variants (e.g. rider vs plain) share one row
+ * by design; see docs/deck-management.md. */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
 {
+    uint8_t row;
+    uint8_t avail;
     /* Grouped row: the view holds the primary collection index. */
     s_ic_id = ic_view_card_id(g, pos);
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
     ic_card_mat_wpn(s_ic_id, &s_ic_mat, &s_ic_wpn, &s_ic_shopkeys);
 
-    if ((uint8_t)(pos + FIRST_CARD) == g->item_menu_index)
-        IC_DRAW_TEXT(0, y, ">", 1);
-    else
-        IC_DRAW_TEXT(0, y, " ", 1);
+    row = (uint8_t)(pos - g->item_menu_scroll);
+    if (row < 12) {
+        s_ic_shopkeys = s_row_owned[row];
+        s_ic_in_deck = s_row_decked[row];
+    } else {
+        s_ic_shopkeys = 0;
+        s_ic_in_deck = 0;
+    }
+    avail = (s_ic_shopkeys > s_ic_in_deck) ?
+        (uint8_t)(s_ic_shopkeys - s_ic_in_deck) : 0;
 
-    /* Element rider OAM is painted per row by the list loop below (over
-     * the col-9 rider cell): the cell itself stays blank and the element
-     * also reads from the color span below (FIRE/POISON/ICE slots). */
+    /* Cursor on the active side only; clear the other cell. */
+    if ((uint8_t)(pos + FIRST_CARD) == g->item_menu_index) {
+        if (g->item_menu_side == 0) {
+            IC_DRAW_TEXT(0, y, ">", 1);
+            IC_DRAW_TEXT(9, y, " ", 1);
+        } else {
+            IC_DRAW_TEXT(0, y, " ", 1);
+            IC_DRAW_TEXT(9, y, ">", 1);
+        }
+    } else {
+        IC_DRAW_TEXT(0, y, " ", 1);
+        IC_DRAW_TEXT(9, y, " ", 1);
+    }
+
+    /* Element rider OAM is shown per side below (over the col-2/col-11
+     * rider cells): the cells stay blank and the element reads from the
+     * color spans (FIRE/POISON/ICE slots). */
     s_ic_tile_elem = 0;
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
@@ -827,60 +831,55 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
         s_ic_tile_wpn = UI_TILE_CARD_SWORD;
     }
 
-    /* Material field (cols 1-7) + icon cells.  The weapon letter lives
-     * in the text buffer only (harness readability); VRAM shows the
-     * icon tile (same split as the rider cell: buffer blank, OAM art). */
-    s_ic_mstr = ic_mat_str(s_ic_mat, &s_ic_mlen);
-    IC_DRAW_TEXT(1, y, s_ic_mstr, s_ic_mlen);
-    for (s_ic_col_i = s_ic_mlen; s_ic_col_i < 7; s_ic_col_i++)
-        IC_DRAW_TEXT((uint8_t)(1 + s_ic_col_i), y, " ", 1);
-    {
-        uint8_t row = (uint8_t)(pos - g->item_menu_scroll);
-        if (row < 12) {
-            s_ic_shopkeys = s_row_owned[row];
-            s_ic_in_deck = s_row_decked[row];
-        } else {
-            s_ic_shopkeys = 0;
-            s_ic_in_deck = 0;
-        }
+    /* Blanks under the four OAM cells (material + rider, both sides):
+     * VRAM space tiles, buffer spaces (OAM art on top).  Separator and
+     * weapon/icon/Data cells below. */
+    IC_DRAW_TEXT(1, y, " ", 1);
+    IC_DRAW_TEXT(2, y, " ", 1);
+    IC_DRAW_TEXT(8, y, "|", 1);
+    IC_DRAW_TEXT(10, y, " ", 1);
+    IC_DRAW_TEXT(11, y, " ", 1);
+    ic_stamp_icons(y, 2, 3, 1);
+    ic_stamp_icons(y, 11, 12, 1);
+    ic_draw_ap_at(g, y, 4);
+    ic_draw_ap_at(g, y, 13);
+    IC_DRAW_TEXT(5, y, " ", 1);
+    IC_DRAW_TEXT(14, y, " ", 1);
+    IC_COLOR_SPAN(4, y, 2, UI_COLOR_GOLD);
+    IC_COLOR_SPAN(13, y, 2, UI_COLOR_GOLD);
+    ic_draw_pair2(6, y, avail);
+    ic_draw_pair2(15, y, s_ic_in_deck);
+    IC_DRAW_TEXT(17, y, "   ", 3);
+
+    /* Material ingots over the col-1 (owned) and col-10 (deck) cells
+     * (entries per visible row): wood shows the log icon, every other
+     * material the ingot tinted by its inventory ramp.  Rider icons
+     * over col-2/col-11 (shared with the health '+' when no status
+     * rider is staged).  Quest items have no material.  Buffer keeps
+     * spaces (harness asserts match letters, digits and counts, never
+     * the icons). */
+    if (s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY) {
+        ic_mat_hide((uint8_t)(17 + row));
+        ic_mat_hide((uint8_t)(25 + row));
+    } else {
+        ic_mat_show((uint8_t)(17 + row), 1, y, s_ic_mat);
+        ic_mat_show((uint8_t)(25 + row), 10, y, s_ic_mat);
     }
-    /* One layout for every group size: the 2-wide count cells already
-     * fit 99, so 10+ farmed rows need no compressed branch (the old
-     * compact rider-8 shape died with the 3-wide counts). */
-    IC_DRAW_TEXT(8, y, " ", 1);
-    ic_draw_ap_at(g, y, 11);
-    IC_DRAW_TEXT(12, y, "DECK", 4);
-    ic_draw_count5(y, 14, s_ic_in_deck, s_ic_shopkeys);
-    ic_stamp_icons(y, 9, 10, 2);
-    /* Material ingot over the col-8 spacer (entry per visible row):
-     * wood shows the log icon, every other material the ingot tinted
-     * by its inventory ramp (steel shares iron's).  Quest items have
-     * no material.  NOTE: s_ic_shopkeys is dual-use scratch -- the row
-     * owned total above already clobbered the shop-keys flag, so only
-     * the BONE/OLD_KEY ids gate here (shop keys never list anyway).
-     * Buffer keeps the space (harness asserts match the material text,
-     * never the icon). */
-    if (s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY)
-        ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + (pos - g->item_menu_scroll)));
-    else
-        ic_mat_show((uint8_t)(IC_MAT_ENTRY_BASE + (pos - g->item_menu_scroll)),
-                    8, y, s_ic_mat);
-    IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
-    ic_name_color(1, y, 7, s_ic_def);
+    ic_rider_show((uint8_t)(1 + row), 2, y, s_ic_def->status_id);
+    ic_rider_show((uint8_t)(9 + row), 11, y, s_ic_def->status_id);
+    if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
+        ic_is_health_rider()) {
+        ic_health_show((uint8_t)(1 + row), 2, y);
+        ic_health_show((uint8_t)(9 + row), 11, y);
+    }
 }
 
 static void ic_draw_cards_list(Game *g)
 {
-    /* Fixed column header: CARD over the name/icon block, deck icon +
-     * /OWN right-justified over the counts (cols 15-19: icon, slash,
-     * O, W, N).  The header slash sits at col 16 exactly like every
-     * count row below, and the owned-units digit lands under the W.
-     * The icon cell is a VRAM-only stamp (buffer keeps the space,
-     * like the row chrome).  Row 4 is a blank paper separator line. */
-    IC_DRAW_TEXT(1, ROW_COL_HEAD, "CARD           /OWN", 19);
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ROW_COL_HEAD << 5) + 15);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_DECK_ICON);
+    /* Fixed column header: OWNED over the left (pool) block, DECK over
+     * the right block, '|' separator between (cols 0-19):
+     * " PILE     |  DECK      ".  Row 4 is a blank paper separator. */
+    IC_DRAW_TEXT(0, ROW_COL_HEAD, " PILE   |  DECK     ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
@@ -891,24 +890,23 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
         s_ic_y = ROW_CARDS_TOP;
     }
-    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS && s_ic_y <= 15; s_ic_lst_pos++) {
+    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS &&
+         s_ic_y < (uint8_t)(ROW_CARDS_TOP + VISIBLE_CARDS); s_ic_lst_pos++) {
         uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
-        uint8_t rx;
         if (vpos >= s_view_count) break;
         ic_draw_card_pair(g, s_ic_y, vpos);
-        /* Col 9 is the rider cell on every row (no compact branch). */
-        rx = 9;
-        ic_rider_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y,
-                      s_ic_def ? s_ic_def->status_id : 0);
-        if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
-            ic_is_health_rider())
-            ic_health_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
-    /* Sweep material entries past the last drawn row (short lists and
-     * scroll bottoms must not keep a stale ingot). */
-    for (s_ic_lst_pos = (uint8_t)(s_ic_y - ROW_CARDS_TOP); s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++)
-        ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + s_ic_lst_pos));
+    /* Sweep sprite entries past the last drawn row (short lists and
+     * scroll bottoms must not keep a stale icon): riders 1-8/9-16 and
+     * ingots 17-24/25-32 per visible row. */
+    for (s_ic_lst_pos = (uint8_t)(s_ic_y - ROW_CARDS_TOP);
+         s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
+        ic_rider_hide((uint8_t)(1 + s_ic_lst_pos));
+        ic_rider_hide((uint8_t)(9 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(17 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
+    }
 
     if (g->item_menu_message == MSG_DECK_FULL)
         IC_DRAW_TEXT(0, 16, "DECK FULL", 9);
@@ -932,8 +930,12 @@ static void ic_draw_cards_list(Game *g)
         s_ic_code[0] = (char)('0' + need);
         s_ic_code[1] = '\0';
         IC_DRAW_TEXT(8, 16, s_ic_code, 1);
-    } else
-        IC_DRAW_TEXT(0, 16, "A:ADD SEL:INFO", 14);
+    } else if (g->item_menu_side == 0) {
+        IC_DRAW_TEXT(0, 16, "A:TO DECK SEL:INFO", 17);
+    } else {
+        IC_DRAW_TEXT(0, 16, "A:TO PILE SEL:INFO", 17);
+    }
+    IC_DRAW_TEXT(0, 17, "L/R:SIDE B:BACK", 15);
 }
 
 static void ic_draw_card_detail_page(Game *g)
@@ -984,9 +986,11 @@ static void ic_draw_card_detail_page(Game *g)
         ic_mat_hide(IC_MAT_ENTRY_BASE);
     else
         ic_mat_show(IC_MAT_ENTRY_BASE, 3, 3, s_ic_mat);
+    /* Hide material entries past the detail ingot (list rows use
+     * 17-32 now; shop uses 13-22 on its own screen). */
     {
         uint8_t hide_i;
-        for (hide_i = 1; hide_i <= 10; hide_i++)
+        for (hide_i = 1; hide_i <= 20; hide_i++)
             ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + hide_i));
     }
 
@@ -1142,24 +1146,23 @@ void item_screen_render_banked(void)
      * (item_view_build_banked, bank 11) immediately before this body ran,
      * so s_view_indices/s_view_count are fresh for everything below. */
 
-    /* Sweep rider entries first: picker/emptied rows leave nothing
-     * behind, and list/detail set exactly what they show below.  (The
-     * QUEST tab dispatches to the bank-8 quest body, which sweeps for
-     * itself on entry.)  Material entries 12-22 go too (same rows). */
-    for (e = 1; e <= VISIBLE_CARDS; e++) {
+    /* Sweep rider + material entries first: picker/emptied rows leave
+     * nothing behind, and list/detail set exactly what they show below.
+     * (The QUEST tab dispatches to the bank-8 quest body, which sweeps
+     * for itself on entry.)  Entries 1-8 left riders, 9-16 right riders,
+     * 17-24 left ingots, 25-32 right ingots. */
+    for (e = 1; e <= 32; e++) {
         ic_rider_hide(e);
-    }
-    for (e = IC_MAT_ENTRY_BASE; e < IC_MAT_ENTRY_BASE + VISIBLE_CARDS; e++) {
-        ic_mat_hide(e);
     }
 
     /* Card-menu material icons (assets/material_tiles.png, cells in
-     * bronze/iron/mythril/wood order): stream here; the per-row stamps
-     * below only write OAM entries.  Every DECK render (redraw-gated,
-     * so bounded): renders always precede their stamps, so the first
-     * frame already shows resident art.  Battle/overworld never display
-     * these ids, actor OAM stays hidden while a menu is open, and
-     * overworld entry restores tiles + canonical OBJ (marks_banked.c). */
+     * steel/bronze/iron/mythril/wood order): stream here; the per-row
+     * stamps below only write OAM entries.  Every DECK render
+     * (redraw-gated, so bounded): renders always precede their stamps,
+     * so the first frame already shows resident art.  Battle/overworld
+     * never display these ids, actor OAM stays hidden while a menu is
+     * open, and overworld entry restores tiles + canonical OBJ
+     * (marks_banked.c). */
     if (g->item_menu_tab == TAB_DECK) {
         ic_mat_stream();
     }

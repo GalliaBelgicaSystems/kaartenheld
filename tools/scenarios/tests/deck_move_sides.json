@@ -1,7 +1,7 @@
 {
- "name": "cards_menu_toggle",
+ "name": "deck_move_sides",
  "test": true,
- "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter wood sword (DECK 4/4 -> 0/4), then single adds walk the count back up (1/4, 2/4). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 wood sword / 3 shield / 3 bronze + 3 rings = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5. Material OAM ingots: rows 1-2 wood (tile 121/slot 5), row 3 bronze (118/0), row 4 iron (119/1).",
+ "description": "Two-column deck move on a fully-decked starter row: A on the owned side with nothing available is a silent no-op; RIGHT flips to the deck side (footer reads A:TO PILE) and A sends one copy back to the pile (CARD_REMOVED_FROM_DECK, deck 13->12); LEFT flips back and A re-adds it (CARD_ADDED_TO_DECK, deck 12->13). Material OAM ingots (wood tile 121/slot 5) on both sides.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -47,11 +47,27 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
   },
   {
    "type": "press",
@@ -70,62 +86,57 @@
   {
    "type": "event_count",
    "event": "CARD_REMOVED_FROM_DECK",
-   "count": 4
+   "count": 1
   },
   {
    "type": "event_count",
    "event": "CARD_ADDED_TO_DECK",
-   "count": 2
+   "count": 1
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "WOOD"
+   "row": 3,
+   "contains": "PILE"
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "2"
+   "row": 3,
+   "contains": "DECK"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "A:TO DECK"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "L/R:SIDE"
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 71,
+   "expected": 4
   },
   {
    "type": "oam_tile",
-   "entry": 12,
+   "entry": 17,
    "expected": 121
   },
   {
    "type": "oam_attr",
-   "entry": 12,
+   "entry": 17,
    "expected": 5
   },
   {
    "type": "oam_tile",
-   "entry": 13,
+   "entry": 25,
    "expected": 121
   },
   {
    "type": "oam_attr",
-   "entry": 13,
+   "entry": 25,
    "expected": 5
-  },
-  {
-   "type": "oam_tile",
-   "entry": 14,
-   "expected": 118
-  },
-  {
-   "type": "oam_attr",
-   "entry": 14,
-   "expected": 0
-  },
-  {
-   "type": "oam_tile",
-   "entry": 15,
-   "expected": 119
-  },
-  {
-   "type": "oam_attr",
-   "entry": 15,
-   "expected": 1
   }
  ]
 }

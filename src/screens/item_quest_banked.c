@@ -375,8 +375,8 @@ void item_quest_render_banked(void)
 
     /* Sweep the card rider entries: the DECK list paints element icons
      * per row (entries 1-12), and the quest tab must leave none behind.
-     * Material entries 12-22 go too (same rows, col-8 ingots). */
-    for (e = 1; e <= 22; e++) {
+     * Material entries 12-32 go too (same rows, both-column ingots). */
+    for (e = 1; e <= 32; e++) {
         iq_rider_hide(e);
     }
 

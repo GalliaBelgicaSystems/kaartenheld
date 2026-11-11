@@ -309,7 +309,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 
 | Field | Meaning |
 |---|---|
-| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The short code shown in the shop; the CARDS menu instead shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
+| **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The shop and deck list show the weapon with its icons (material ingot + weapon tile); the CARDS detail page shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
 | **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW5`,
 `SH1`, `RG4`; the **battle hand** uses its own code set — `SW5`, `SH1`,
 `BO9`, **`HE4`** for a heal ring, `DA2`. |
@@ -551,21 +551,23 @@ collection is full (12 distinct types), no card is granted.
 
 ### 7.2 The quick screen (DECK / QUEST / HERO / GEM)
 
-Four tabs, switched with `LEFT`/`RIGHT` (`RIGHT` advances, `LEFT` goes back).
+Four tabs, switched with `LEFT`/`RIGHT` from the FILTER/SORT row
+(`RIGHT` advances, `LEFT` goes back); on card rows `LEFT`/`RIGHT`
+flips the owned/deck side instead.
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the `AP MATERIAL TYPE` column header, cards follow one per row:
+**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the ` PILE     |  DECK` column header, cards follow one per row (8 visible):
 
-* The `* FILTER/SORT *` row opens a picker with `A`.
-* Each card is one row: weapon icon, AP-cost digit, full `<MATERIAL> <WEAPON>`
-  name (`IRON SWORD`, `WOOD SHIELD`, `MYTHRIL BOW`), element-colored (red for
-  fire, blue for ice, purple for poison), and at the far right the
-  **decked-copy count** (0..n).
-* `A` on a card adds **one copy** to your battle deck; pressing `A` again
-  once the card is fully decked **clears all its copies** from the deck
-  (all-or-nothing — it refuses if that would drop you below the 5-card
-  minimum).  Rejections show a transient message: `DECK FULL`, `DECK MIN
-  5`, or `QUEST ITEM` (for special quest items).
+* Each card is one row drawn twice: owned pool (left) and deck (right),
+  each with material ingot (OAM, tinted per material), element rider,
+  weapon icon, AP cost, and a 2-wide count. The left count is
+  owned-but-not-decked ("the pile"); the right count is decked.
+* `A` on the left moves **one copy** to the deck (gated: pool,
+  max-copies, identity caps); `A` on the right moves one copy back to
+  the pile (MIN-guarded, one at a time). `LEFT`/`RIGHT` flips sides on
+  card rows (tabs still switch from the FILTER/SORT row).
+* Rejections show a transient message: `DECK FULL`, `DECK MIN 5`,
+  `NEED AP`, or `QUEST ITEM` (for special quest items).
 * `SELECT` on a card opens the **detail page**: full name, on-hit rider
   (`FIRE RIDER` / `NO RIDER`...), combat role (`TYPE ATTACK` / `TYPE DEFEND`
   / `TYPE HEAL`), `AP COST`, `POWER`, `USES` (`INF` = unlimited),

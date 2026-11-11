@@ -134,12 +134,12 @@
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "BRONZE"
+   "contains": "D2"
   },
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "MYTHRIL"
+   "contains": "B5"
   }
  ]
 }

@@ -23,15 +23,17 @@ void item_menu_cursor_banked(void);
  * (0 = NTH member by ordinal in g_bk_byte_b -> g_bk_byte_c collection
  * index or 0xFF; 1 = SUMS -> g_bk_byte_c owned, g_bk_byte_b decked). */
 void item_group_query_banked(void);
+void item_group_remove_one_banked(void);
 /* Grouped DECK view build (same bank): g_bk_ptr_a = Game*, fills
  * s_view_indices/s_view_count (one row per MATERIAL+WEAPON). */
 void item_view_build_banked(void);
 
 /* Grouped A-action bodies (menu_cursor_banked.c, bank 11): scan finds
- * the first addable member (or the priority refusal reason), clear-one
- * clears a single member per call.  Staging per body comment. */
+ * the first addable member (or the priority refusal reason),
+ * remove-one sends the first decked member back to the pile.
+ * Staging per body comment. */
 void item_group_scan_banked(void);
-void item_group_clear_one_banked(void);
+void item_group_remove_one_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -100,12 +102,10 @@ void item_gem_render_banked(void);
 uint8_t s_view_indices[MAX_CARD_COLLECTION];
 uint8_t s_view_count;
 
-/* Loop state for the grouped A handler (see the note at its use site):
- * WRAM, so a banked telemetry emit cannot corrupt a loop counter. */
-static uint8_t s_grp_ord;
+/* Scratch for the grouped A handler (see the note at its use site):
+ * WRAM, so a banked telemetry emit cannot corrupt it. */
 static uint8_t s_grp_rm;
 static uint8_t s_grp_id;
-static uint8_t s_grp_n;
 
 /* Targeted cursor move (AGENTS.md 36).  The bank-11 body
  * (menu_cursor_banked.c) computes the caret rows, repaints the two cells
@@ -132,6 +132,7 @@ void item_screen_reset(Game *g)
     g->item_menu_index = ROW_TOP;
     g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
+    g->item_menu_side = 0;
     g->item_menu_filter = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
     g->item_menu_mode = MODE_LIST;
@@ -244,7 +245,14 @@ void item_screen_update(Game *g)
 
     /* Tab switch (LIST mode only — submenus consume LR first). */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-        menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
+        if (g->item_menu_index > ROW_TOP) {
+            /* Card rows: flip the owned/deck side (same row is valid
+             * on both sides: rows list the union identity). */
+            g->item_menu_side ^= 1;
+            g->render_cache.valid = false;
+        } else {
+            menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
+        }
         return;
     }
 
@@ -298,80 +306,65 @@ void item_screen_update(Game *g)
             if (pv < 1) pv = 1;
             if (pv > 255) pv = 255;
             pool = (uint8_t)pv;
-            /* Grouped A: scan (bank 11) finds the first addable member;
-             * the single apply + all telemetry/SFX stay fixed.  A fully
-             * capped group (scan reason 0) falls through to the clear
-             * path instead of pinning the row.  Loop state lives in
-             * WRAM (AGENTS.md 52.19: SDCC caches registers across the
+            /* Two-column move: LEFT adds one available copy to the
+             * deck, RIGHT sends one decked copy back to the pool.  No
+             * toggle, no clear-all.  Loop state lives in WRAM
+             * (AGENTS.md 52.19: SDCC caches registers across the
              * trampoline); every dispatch stages bank/target/ptr FRESH
-             * and the clear return is read IMMEDIATELY (a stale re-read
-             * once re-appended a 5th CARD_REMOVED for 4 copies). */
-            if (decked >= owned) {
-                s_grp_rm = 1;
-            } else {
-                g_bk_call_bank = 11;
-                g_bk_call_target = (uint16_t)&item_group_scan_banked;
-                g_bk_ptr_a = (void *)g;
-                g_bk_byte_a = primary;
-                g_bk_byte_d = pool;
-                banked_call_run();
-                s_grp_id = g_bk_byte_b;
-                if (s_grp_id == 0xFF) {
-                    s_grp_rm = 1;
+             * and the remove return is read IMMEDIATELY. */
+            if (g->item_menu_side == 0) {
+                if (decked >= owned) {
+                    /* Nothing available: silent no-op. */
                 } else {
-                    /* Single gated apply for the scan's pick: OK
-                     * adds (with telemetry+SFX); FULL/LOCKED report
-                     * with priority (LOCKED fires CARD_EQUIP_LOCKED
-                     * inside the apply); a capped verdict falls
-                     * through to the clear path below. */
-                    s_grp_id = cs->collection.entries[s_grp_id].id;
-                    s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id,
-                                               pool);
-                    if (s_grp_rm == EQUIP_OK) {
-                        telemetry_emit(EVENT_CARD_ADDED_TO_DECK,
-                                       (CardId)s_grp_id, 0, 0, 0);
-                        audio_play_sfx(SFX_SELECT);
-                        s_grp_rm = 2;
-                    } else if (s_grp_rm == EQUIP_FULL) {
-                        msg = MSG_DECK_FULL;
-                        s_grp_rm = 3;
-                    } else if (s_grp_rm == EQUIP_LOCKED) {
-                        msg = MSG_NEED_AP;
-                        s_grp_rm = 3;
-                    } else {
-                        s_grp_rm = 1;
-                    }
-                }
-            }
-            if (s_grp_rm == 2) {
-                /* Added above; msg already NONE. */
-            } else if (s_grp_rm == 3) {
-                /* Priority verdict (FULL / NEED_AP / failed apply)
-                 * stands. */
-            } else if ((uint8_t)(cs->deck.count - decked) <
-                       DECK_MIN_CARDS) {
-                msg = MSG_DECK_MIN;
-            } else {
-                /* Fully decked, or no addable member without
-                 * FULL/LOCKED (saturated identity): clear the group. */
-                s_grp_ord = 0;
-                while (s_grp_ord < 50) {
                     g_bk_call_bank = 11;
-                    g_bk_call_target =
-                        (uint16_t)&item_group_clear_one_banked;
+                    g_bk_call_target = (uint16_t)&item_group_scan_banked;
                     g_bk_ptr_a = (void *)g;
                     g_bk_byte_a = primary;
-                    g_bk_byte_b = s_grp_ord;
+                    g_bk_byte_d = pool;
                     banked_call_run();
-                    if (g_bk_byte_c == 0xFF) break;
-                    s_grp_id = cs->collection.entries[g_bk_byte_c].id;
-                    s_grp_n = g_bk_byte_d;
-                    while (s_grp_n) {
-                        telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
-                                       (CardId)s_grp_id, 0, 0, 0);
-                        s_grp_n--;
+                    s_grp_id = g_bk_byte_b;
+                    if (s_grp_id != 0xFF) {
+                        /* Single gated apply for the scan's pick: OK
+                         * adds (with telemetry+SFX); FULL/LOCKED report
+                         * with priority (LOCKED fires CARD_EQUIP_LOCKED
+                         * inside the apply); any other refusal is a
+                         * silent no-op (the row stays for the other
+                         * side's removal path). */
+                        s_grp_id = cs->collection.entries[s_grp_id].id;
+                        s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id,
+                                                   pool);
+                        if (s_grp_rm == EQUIP_OK) {
+                            telemetry_emit(EVENT_CARD_ADDED_TO_DECK,
+                                           (CardId)s_grp_id, 0, 0, 0);
+                            audio_play_sfx(SFX_SELECT);
+                        } else if (s_grp_rm == EQUIP_FULL) {
+                            msg = MSG_DECK_FULL;
+                        } else if (s_grp_rm == EQUIP_LOCKED) {
+                            msg = MSG_NEED_AP;
+                        }
+                        /* Any other refusal is a silent no-op. */
                     }
-                    s_grp_ord++;
+                }
+            } else if (decked == 0) {
+                /* Nothing decked: silent no-op. */
+            } else if ((uint8_t)(cs->deck.count - 1) < DECK_MIN_CARDS) {
+                msg = MSG_DECK_MIN;
+            } else {
+                /* Send the first decked member (collection order)
+                 * back to the pool. */
+                g_bk_call_bank = 11;
+                g_bk_call_target =
+                    (uint16_t)&item_group_remove_one_banked;
+                g_bk_ptr_a = (void *)g;
+                g_bk_byte_a = primary;
+                banked_call_run();
+                if (g_bk_byte_c == 0xFF) {
+                    /* Race: nothing decked under us; silent no-op. */
+                } else {
+                    s_grp_id = g_bk_byte_b;
+                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                   (CardId)s_grp_id, 0, 0, 0);
+                    audio_play_sfx(SFX_SELECT);
                 }
             }
             g->item_menu_message = msg;

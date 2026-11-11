@@ -31,7 +31,9 @@ extern uint8_t ui_font_tile_base;
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define CUR_FIRST_CARD 1
-#define CUR_VISIBLE_CARD 11
+/* Visible DECK rows (5-12): 8 rows x 4 OAM sprites (rider+ingot, both
+ * sides) = 32 entries, inside the 40-entry OAM budget. */
+#define CUR_VISIBLE_CARD 8
 
 /* Nav-mutation constants (mirror item_screen.c TAB_DECK/TAB_GEM/ROW_TOP,
  * FILTER_ALL, SORT_NONE/SORT_COST_DESC) for item_menu_cycle_banked
@@ -50,6 +52,8 @@ static uint8_t s_cu_old_index;
 static uint8_t s_cu_new_index;
 static uint8_t s_cu_old_row;
 static uint8_t s_cu_new_row;
+static uint8_t s_cu_old_col;
+static uint8_t s_cu_new_col;
 static uint8_t s_cu_need_scroll;
 
 static void cu_put_char(uint8_t x, uint8_t y, char ch)
@@ -74,7 +78,7 @@ static uint8_t cu_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
     if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
     /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3 column
      * header, row 4 separator, one grouped card row per row at rows
-     * 5-15.  QUEST/GEM keep rows 3+ (their own render bodies draw no
+     * 5-12.  QUEST/GEM keep rows 3+ (their own render bodies draw no
      * header). */
     if (index == 0) return 2;
     s_cu_pos = (uint8_t)(index - CUR_FIRST_CARD);
@@ -122,9 +126,17 @@ static void cu_apply(void)
 
     s_cu_old_row = cu_cursor_row(s_cu_mode, s_cu_old_index, s_cu_game->item_menu_scroll);
     s_cu_new_row = cu_cursor_row(s_cu_mode, s_cu_new_index, s_cu_game->item_menu_scroll);
-    if (s_cu_old_row != s_cu_new_row) {
-        cu_put_char(0, s_cu_old_row, ' ');
-        cu_put_char(0, s_cu_new_row, '>');
+    /* DECK card rows carry the caret on the active side (col 0 owned,
+     * col 9 deck); every other row keeps col 0.  Side flips take the
+     * full-redraw path in the fixed caller, so the incremental repaint
+     * here only ever moves within one side. */
+    s_cu_old_col = (uint8_t)((s_cu_mode == 0 && s_cu_old_index >= CUR_FIRST_CARD &&
+                              s_cu_game->item_menu_side == 1) ? 9 : 0);
+    s_cu_new_col = (uint8_t)((s_cu_mode == 0 && s_cu_new_index >= CUR_FIRST_CARD &&
+                              s_cu_game->item_menu_side == 1) ? 9 : 0);
+    if (s_cu_old_row != s_cu_new_row || s_cu_old_col != s_cu_new_col) {
+        cu_put_char(s_cu_old_col, s_cu_old_row, ' ');
+        cu_put_char(s_cu_new_col, s_cu_new_row, '>');
     }
 }
 
@@ -415,12 +427,11 @@ void item_group_query_banked(void)
  * Returns g_bk_byte_c = 0 + g_bk_byte_b = member collection index
  * when addable; otherwise c = 1 (FULL) / 2 (LOCKED) / 3 (capped) with
  * b = the first member index hit by that verdict (0xFF when no member
- * was tried).  The caller routes FULL/LOCKED through deck_equip_card
- * once so its telemetry (CARD_EQUIP_LOCKED) still fires; a fully-
- * capped group (3) falls through to the clear path instead of
- * pinning the row. */
+ * was tried).  The fixed caller routes FULL/LOCKED through
+ * deck_equip_card once so its telemetry (CARD_EQUIP_LOCKED) still
+ * fires; a fully-capped group (3) is a silent no-op on the LEFT side
+ * (removal happens from the deck side instead of a clear-all). */
 void deck_equip_verdict_banked(void);
-void deck_clear_all_banked(void);
 void item_group_scan_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -480,54 +491,6 @@ void item_group_scan_banked(void)
         g_bk_byte_b = saw_any ? primary : 0xFF;
     }
 }
-
-/* Grouped clear, one member per call (bank 11): clears every decked
- * copy of the ordinal-th group member.  Staging: g_bk_ptr_a = Game*,
- * g_bk_byte_a = primary collection index, g_bk_byte_b = ordinal.
- * Returns g_bk_byte_c = member collection index (0xFF past the end),
- * g_bk_byte_d = removed count.  The fixed caller loops ordinals and
- * emits one CARD_REMOVED_FROM_DECK per copy (telemetry lives fixed). */
-void item_group_clear_one_banked(void)
-{
-    Game *g = (Game *)g_bk_ptr_a;
-    uint8_t primary = g_bk_byte_a;
-    uint8_t ordinal = g_bk_byte_b;
-    uint8_t mat, wpn, m2, w2;
-    uint8_t i;
-    uint8_t seen = 0;
-    CardId id;
-    CardState *cs;
-    if (!g || primary >= g->state.cards.collection.count) {
-        g_bk_byte_c = 0xFF;
-        g_bk_byte_d = 0;
-        return;
-    }
-    cs = &g->state.cards;
-    id = cs->collection.entries[primary].id;
-    if (!cu_grp_key(id, &mat, &wpn)) {
-        g_bk_byte_c = 0xFF;
-        g_bk_byte_d = 0;
-        return;
-    }
-    for (i = 0; i < cs->collection.count; i++) {
-        id = cs->collection.entries[i].id;
-        if (!cu_grp_key(id, &m2, &w2)) continue;
-        if (m2 != mat || w2 != wpn) continue;
-        if (seen == ordinal) {
-            g_bk_ptr_a = (void *)cs;
-            g_bk_byte_a = (uint8_t)id;
-            deck_clear_all_banked();
-            g_bk_byte_d = g_bk_byte_c;
-            g_bk_byte_c = i;
-            g_bk_ptr_a = (void *)g;
-            return;
-        }
-        seen++;
-    }
-    g_bk_byte_c = 0xFF;
-    g_bk_byte_d = 0;
-}
-
 /* Direction step for the shop list (g_bk_byte_b 0 = up, 1 = down,
  * g_bk_byte_c = visible count): clamp the new index banked so the
  * fixed update pays no bounds branch.  Shop mode geometry (mode 2)
@@ -548,54 +511,51 @@ void item_menu_step_banked(void)
     cu_apply();
 }
 
-/* Group-clear removal core (bank 11): removes every decked copy of one
- * card id.  Self-contained (AGENTS.md §52.11.1): no fixed-bank calls --
- * the scan/swap mirrors deck_remove_card inline (swap-with-last,
- * DECK_MIN_CARDS floor), so the bank switch cannot strand it.  Staging:
- * g_bk_ptr_a = CardState*, g_bk_byte_a = id; returns the removed count
- * in g_bk_byte_c.  Pre-count bounded: never more iterations than the
- * copies present on entry.  The caller emits one CARD_REMOVED_FROM_DECK
- * per returned copy through its own pure counter loop. */
-void deck_clear_all_banked(void)
+/* Single-copy removal for the DECK right column (bank 11): sends the
+ * first decked member of the group (collection order) back to the
+ * owned pool.  Self-contained (AGENTS.md §52.11.1): no fixed-bank calls
+ * -- the scan/swap mirrors deck_remove_card inline (swap-with-last +
+ * DECK_MIN_CARDS floor), so the bank switch cannot strand it.
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = primary collection index;
+ * returns the member collection index in g_bk_byte_c (0xFF = none
+ * decked) and the removed CardId in g_bk_byte_b.  The fixed caller
+ * emits CARD_REMOVED_FROM_DECK itself. */
+void item_group_remove_one_banked(void)
 {
-    CardState *cs = (CardState *)g_bk_ptr_a;
-    CardId id = (CardId)g_bk_byte_a;
-    uint8_t n;
-    uint8_t i;
-    uint8_t found;
-    uint8_t removed;
-    if (!cs || id == CARD_NONE) {
-        g_bk_byte_c = 0;
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    CardState *cs;
+    uint8_t mat, wpn, m2, w2;
+    uint8_t i, j;
+    CardId id;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 0xFF;
         return;
     }
-    n = 0;
-    for (i = 0; i < cs->deck.count; i++) {
-        if (cs->deck.cards[i] == id) {
-            n++;
-            if (n == 0) {
-                n = 255;
-                break;
+    cs = &g->state.cards;
+    id = cs->collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn)) {
+        g_bk_byte_c = 0xFF;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2)) continue;
+        if (m2 != mat || w2 != wpn) continue;
+        for (j = 0; j < cs->deck.count; j++) {
+            if (cs->deck.cards[j] != id) continue;
+            if (cs->deck.count <= DECK_MIN_CARDS) {
+                g_bk_byte_c = 0xFF;
+                return;
             }
+            cs->deck.cards[j] = cs->deck.cards[--cs->deck.count];
+            g_bk_byte_c = i;
+            g_bk_byte_b = (uint8_t)id;
+            return;
         }
     }
-    removed = 0;
-    while (n > 0) {
-        found = 0;
-        if (cs->deck.count <= DECK_MIN_CARDS) break;
-        for (i = 0; i < cs->deck.count; i++) {
-            if (cs->deck.cards[i] == id) {
-                cs->deck.cards[i] = cs->deck.cards[--cs->deck.count];
-                found = 1;
-                break;
-            }
-        }
-        if (!found) break;
-        removed++;
-        n--;
-    }
-    g_bk_byte_c = removed;
+    g_bk_byte_c = 0xFF;
 }
-
 /* DECK nav mutations: filter cycle / sort cycle / tab switch (bank 11).
  * Moved out of the fixed bank (AGENTS.md §52.18): the card-group +
  * boss-dialogue merge overflowed Bank 1, and these three are pure WRAM
@@ -647,6 +607,7 @@ void item_menu_cycle_banked(void)
         }
         g->item_menu_index = CYC_ROW_TOP;
         g->item_menu_scroll = 0;
+        g->item_menu_side = 0;
         g->render_cache.valid = false;
     }
 }

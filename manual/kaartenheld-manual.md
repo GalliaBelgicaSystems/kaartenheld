@@ -191,11 +191,15 @@ different cards. The cards you **bring to battle** are
 your **deck**, up to 20 cards.
 
 Open the card screen with **START**. The **DECK** tab
-lists everything you own; press **A** on a card to put
-one copy into your deck. Once every copy is decked, the
-next **A** takes them all out again. **SELECT** opens the
-card's details, and the **FILTER/SORT** row at the top
-of the list lets you find a card quickly.
+shows two columns: your owned cards on the left (the
+pile) and your battle deck on the right, one row per
+card with its material ingot, element rider, weapon
+icon and per-side counts. Press **A** on the left to
+put one copy into your deck, **A** on the right to
+take one copy back out (`LEFT`/`RIGHT` flips sides).
+**SELECT** opens the card's details, and the
+**FILTER/SORT** row at the top of the list lets you
+find a card quickly.
 
 > **Your deck cannot go below 5 cards.** You need a full
 > hand to fight.

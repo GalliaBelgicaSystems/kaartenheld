@@ -33,27 +33,27 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD"
+   "contains": "S1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "WOOD"
+   "contains": "H1"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "BRONZE"
+   "contains": "S1"
   },
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "IRON"
+   "contains": "R!"
   },
   {
    "type": "screen_row",
    "row": 9,
-   "contains": "BRONZE"
+   "contains": "D!"
   }
  ]
 }
