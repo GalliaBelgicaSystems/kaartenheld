@@ -34,6 +34,10 @@ void item_view_build_banked(void);
  * Staging per body comment. */
 void item_group_scan_banked(void);
 void item_group_remove_one_banked(void);
+/* DECK two-column navigation (menu_cursor_banked.c, bank 11): UP/DOWN
+ * skip zero-count rows, LEFT/RIGHT flips side.  Staging: g_bk_ptr_a =
+ * Game*, g_bk_byte_a = 0 up / 1 down / 2 flip. */
+void item_deck_nav_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -243,13 +247,16 @@ void item_screen_update(Game *g)
             break;
     }
 
-    /* Tab switch (LIST mode only — submenus consume LR first). */
+    /* LEFT/RIGHT on card rows flips the owned/deck side (banked: the
+     * nav snaps onto a visible row of the target side, or stays put);
+     * the filter row (index 0) keeps tab switching. */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         if (g->item_menu_index > ROW_TOP) {
-            /* Card rows: flip the owned/deck side (same row is valid
-             * on both sides: rows list the union identity). */
-            g->item_menu_side ^= 1;
-            g->render_cache.valid = false;
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&item_deck_nav_banked;
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = 2;
+            banked_call_run();
         } else {
             menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         }
@@ -377,12 +384,16 @@ void item_screen_update(Game *g)
     total = (uint8_t)(s_view_count + 1); /* + the FILTER/SORT row */
     if (total <= 1) return;
 
-    if (input_pressed(INPUT_UP)) {
-        item_menu_step(g, (g->item_menu_index > 0) ?
-            (uint8_t)(g->item_menu_index - 1) : (uint8_t)(total - 1));
-    } else if (input_pressed(INPUT_DOWN)) {
-        item_menu_step(g, (g->item_menu_index < (uint8_t)(total - 1)) ?
-            (uint8_t)(g->item_menu_index + 1) : ROW_TOP);
+    /* UP/DOWN move over visible rows only; LEFT/RIGHT on card rows
+     * flips the owned/deck side (banked: hidden rows are skipped,
+     * wrapping at the ends; the filter row keeps tab switching). */
+    if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&item_deck_nav_banked;
+        g_bk_ptr_a = (void *)g;
+        g_bk_byte_a = input_pressed(INPUT_UP) ? 0 : 1;
+        banked_call_run();
+        return;
     }
 }
 

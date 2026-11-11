@@ -55,6 +55,9 @@
 
 extern uint8_t s_view_indices[MAX_CARD_COLLECTION];
 extern uint8_t s_view_count;
+/* Compacted draw map (menu_cursor_banked.c, same bank-2-readable WRAM):
+ * view position per drawn row, 0xFF past the end. */
+extern uint8_t s_ic_draw_pos[8];
 
 extern const CardDefinition g_cards[];
 extern const ShopDefinition g_shops[];
@@ -779,9 +782,8 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
  * member; A tries members in collection order, so display and behavior
  * agree.  Note: same-name variants (e.g. rider vs plain) share one row
  * by design; see docs/deck-management.md. */
-static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
+static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos, uint8_t lst)
 {
-    uint8_t row;
     uint8_t avail;
     /* Grouped row: the view holds the primary collection index. */
     s_ic_id = ic_view_card_id(g, pos);
@@ -789,14 +791,8 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     if (!s_ic_def) return;
     ic_card_mat_wpn(s_ic_id, &s_ic_mat, &s_ic_wpn, &s_ic_shopkeys);
 
-    row = (uint8_t)(pos - g->item_menu_scroll);
-    if (row < 12) {
-        s_ic_shopkeys = s_row_owned[row];
-        s_ic_in_deck = s_row_decked[row];
-    } else {
-        s_ic_shopkeys = 0;
-        s_ic_in_deck = 0;
-    }
+    s_ic_shopkeys = s_row_owned[lst];
+    s_ic_in_deck = s_row_decked[lst];
     avail = (s_ic_shopkeys > s_ic_in_deck) ?
         (uint8_t)(s_ic_shopkeys - s_ic_in_deck) : 0;
 
@@ -859,18 +855,18 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
      * spaces (harness asserts match letters, digits and counts, never
      * the icons). */
     if (s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY) {
-        ic_mat_hide((uint8_t)(17 + row));
-        ic_mat_hide((uint8_t)(25 + row));
+        ic_mat_hide((uint8_t)(17 + lst));
+        ic_mat_hide((uint8_t)(25 + lst));
     } else {
-        ic_mat_show((uint8_t)(17 + row), 1, y, s_ic_mat);
-        ic_mat_show((uint8_t)(25 + row), 10, y, s_ic_mat);
+        ic_mat_show((uint8_t)(17 + lst), 1, y, s_ic_mat);
+        ic_mat_show((uint8_t)(25 + lst), 10, y, s_ic_mat);
     }
-    ic_rider_show((uint8_t)(1 + row), 2, y, s_ic_def->status_id);
-    ic_rider_show((uint8_t)(9 + row), 11, y, s_ic_def->status_id);
+    ic_rider_show((uint8_t)(1 + lst), 2, y, s_ic_def->status_id);
+    ic_rider_show((uint8_t)(9 + lst), 11, y, s_ic_def->status_id);
     if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
         ic_is_health_rider()) {
-        ic_health_show((uint8_t)(1 + row), 2, y);
-        ic_health_show((uint8_t)(9 + row), 11, y);
+        ic_health_show((uint8_t)(1 + lst), 2, y);
+        ic_health_show((uint8_t)(9 + lst), 11, y);
     }
 }
 
@@ -878,7 +874,7 @@ static void ic_draw_cards_list(Game *g)
 {
     /* Fixed column header: OWNED over the left (pool) block, DECK over
      * the right block, '|' separator between (cols 0-19):
-     * " PILE     |  DECK      ".  Row 4 is a blank paper separator. */
+     * " PILE   |  DECK     ".  Row 4 is a blank paper separator. */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, " PILE   |  DECK     ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     s_ic_y = ROW_CARDS_TOP;
@@ -890,11 +886,10 @@ static void ic_draw_cards_list(Game *g)
         IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
         s_ic_y = ROW_CARDS_TOP;
     }
-    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS &&
-         s_ic_y < (uint8_t)(ROW_CARDS_TOP + VISIBLE_CARDS); s_ic_lst_pos++) {
-        uint8_t vpos = (uint8_t)(g->item_menu_scroll + s_ic_lst_pos);
-        if (vpos >= s_view_count) break;
-        ic_draw_card_pair(g, s_ic_y, vpos);
+    for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
+        uint8_t vpos = s_ic_draw_pos[s_ic_lst_pos];
+        if (vpos == 0xFF) break;
+        ic_draw_card_pair(g, s_ic_y, vpos, s_ic_lst_pos);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
     /* Sweep sprite entries past the last drawn row (short lists and

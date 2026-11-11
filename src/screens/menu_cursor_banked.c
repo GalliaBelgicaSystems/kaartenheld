@@ -254,12 +254,20 @@ extern uint8_t s_view_count;
 
 /* Per-row sums for the render (bank 2 cannot re-resolve group keys: its
  * switchable area is full and the scan it needs duplicates ~300 B of
- * key logic).  Window-sized: the render draws at most ROW_SUMS rows
- * starting at item_menu_scroll; detail mode uses slot 0 for the
- * selected row. */
+ * key logic).  Drawn-indexed: slot k holds the k-th visible row's sums
+ * (see the drawn map below); detail mode uses slot 0 for the selected
+ * row. */
 #define ROW_SUMS 12
 uint8_t s_row_owned[ROW_SUMS];
 uint8_t s_row_decked[ROW_SUMS];
+
+/* Compacted two-column draw map: for the active side, the first 8
+ * visible view positions at/after item_menu_scroll (0xFF past the end).
+ * Rows with a zero count on the active side are hidden on both sides'
+ * OAM and text (owned shows owned - decked > 0, deck shows
+ * decked > 0).  Built here (same bank as the group tables) on every
+ * DECK render; read by the bank-2 row painter. */
+uint8_t s_ic_draw_pos[8];
 
 /* Owned/decked copies across every deckable collection entry sharing
  * the primary's (MATERIAL, WEAPON) name. */
@@ -352,14 +360,30 @@ void item_view_build_banked(void)
                         &s_row_owned[0], &s_row_decked[0]);
         return;
     }
-    for (i = 0; i < ROW_SUMS; i++) {
-        n = (uint8_t)(g->item_menu_scroll + i);
-        if (n >= s_view_count) {
-            s_row_owned[i] = 0;
-            s_row_decked[i] = 0;
-            continue;
+    /* Compacted draw map for the active side: first 8 visible groups
+     * at/after the scroll position, with per-group sums for the row
+     * counters (s_row_* are drawn-indexed to match).  Zero-count rows
+     * are hidden on both OAM and text. */
+    {
+        uint8_t side = g->item_menu_side;
+        uint8_t k = 0;
+        uint8_t owned;
+        uint8_t decked;
+        uint8_t start = g->item_menu_scroll;
+        if (start >= s_view_count && s_view_count > 0) start = 0;
+        for (n = start; n < s_view_count && k < 8; n++) {
+            cu_row_sums(g, s_view_indices[n], &owned, &decked);
+            if (side == 0 ? owned <= decked : decked == 0) continue;
+            s_ic_draw_pos[k] = n;
+            s_row_owned[k] = owned;
+            s_row_decked[k] = decked;
+            k++;
         }
-        cu_row_sums(g, s_view_indices[n], &s_row_owned[i], &s_row_decked[i]);
+        for (; k < 8; k++) {
+            s_ic_draw_pos[k] = 0xFF;
+            s_row_owned[k] = 0;
+            s_row_decked[k] = 0;
+        }
     }
 }
 
@@ -508,6 +532,75 @@ void item_menu_step_banked(void)
     } else if ((uint8_t)(s_cu_old_index + 1) < g_bk_byte_c) {
         s_cu_new_index = (uint8_t)(s_cu_old_index + 1);
     }
+    cu_apply();
+}
+
+/* Row visibility for the two-column DECK list: a group row shows on a
+ * side only when its count there is nonzero (owned side: owned >
+ * decked; deck side: decked > 0).  Shared by the nav skip below. */
+static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
+{
+    uint8_t owned = 0;
+    uint8_t decked = 0;
+    if (!g || pos >= s_view_count) return 0;
+    cu_row_sums(g, s_view_indices[pos], &owned, &decked);
+    if (side == 0) return (uint8_t)(owned > decked);
+    return (uint8_t)(decked > 0);
+}
+
+/* DECK two-column navigation (bank 11): UP/DOWN move over visible rows
+ * only (zero-count rows on the active side are skipped, wrapping at the
+ * ends); the FILTER/SORT row (index 0) always counts as visible.
+ * LEFT/RIGHT (mode 2) flips side when the target side shows at least
+ * one row, staying on the same row when it shows there, else landing
+ * on the target side's first visible row (scrolled into view).
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down / 2 flip.
+ * Scroll + caret go through the shared cu_apply (side-aware). */
+void item_deck_nav_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t mode = g_bk_byte_a;
+    uint8_t total;
+    uint8_t idx;
+    uint8_t guard;
+    uint8_t i;
+    if (!g) return;
+    if (mode == 2) {
+        uint8_t newside = (uint8_t)(g->item_menu_side ? 0 : 1);
+        for (i = 0; i < s_view_count; i++) {
+            if (item_row_visible(g, i, newside)) break;
+        }
+        if (i >= s_view_count) return;
+        g->item_menu_side = newside;
+        /* Stay on the same row when it shows on the new side (it is
+         * always drawn: row - scroll <= 7, so it lands in the first 8
+         * visible rows); otherwise snap to the target side's first
+         * visible row and scroll it into view. */
+        idx = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
+        if (g->item_menu_index == 0 ||
+            !item_row_visible(g, idx, newside)) {
+            g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
+            g->item_menu_scroll = i;
+        }
+        g->render_cache.valid = false;
+        return;
+    }
+    total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
+    if (total <= 1) return;
+    idx = g->item_menu_index;
+    guard = (uint8_t)(total + 1);
+    do {
+        if (mode == 0)
+            idx = idx > 0 ? (uint8_t)(idx - 1) : (uint8_t)(total - 1);
+        else
+            idx = idx < (uint8_t)(total - 1) ? (uint8_t)(idx + 1) : 0;
+        if (idx == 0) break;
+        if (item_row_visible(g, (uint8_t)(idx - CUR_FIRST_CARD),
+                             g->item_menu_side))
+            break;
+    } while (--guard);
+    s_cu_old_index = g->item_menu_index;
+    s_cu_new_index = idx;
     cu_apply();
 }
 
