@@ -21,8 +21,9 @@
  * Curated identities live in the table below (hand-written next to the
  * catalog it mirrors in src/game/cards_content.c, kept honest by
  * tools/card_costs.py --check-identity); loot ids are synthesized with
- * pure macros (LOOT_POWER / CARD_AP / LOOT_RING_USES, same formulas as
- * loot_synth_banked -- slugs and prices stay out, they are not identity).
+ * pure macros (LOOT_POWER / CARD_AP / LOOT_RING_USES / LOOT_BOW_USES_FROM_AP,
+ * same formulas as loot_synth_banked -- slugs and prices stay out, they
+ * are not identity).
  *
  * One row per card identity: a curated catalog row and its mechanically
  * identical loot twin are the same physical card.  Capped folds keep a
@@ -39,7 +40,7 @@ static const uint8_t s_ident_catalog[GAME_CARD_COUNT][9] = {
     /* CARD_IRON_SWORD    */ { 0, 5, 2, 0, 1, 0, 0, 0, 4 },
     /* CARD_WOODEN_SHIELD */ { 1, 1, 1, 0, 2, 1, 0, 0, 4 },
     /* CARD_IRON_RING     */ { 2, 4, 2, 3, 3, 3, 0, 0, 1 },
-    /* CARD_FIRE_SWORD    */ { 0, 3, 2, 0, 1, 0, 2, 128, 3 },
+    /* CARD_BRONZE_SWORD  */ { 0, 3, 1, 0, 1, 0, 0, 0, 3 },
     /* CARD_POISON_DAGGER */ { 0, 2, 2, 0, 1, 4, 1, 128, 3 },
     /* CARD_SHOPKEYS        */ { 5, 0, 0, 0, 0, 0, 0, 0, 1 },
     /* CARD_BOW_9         */ { 0, 9, 5, 2, 1, 2, 0, 0, 1 },
@@ -61,15 +62,17 @@ static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
 
 /* Rider legality as a macro (not a call): deck_ident_cmp sits on the
  * loot-grant stack chain, and a separate frame there costs worst-case
- * depth (AGENTS.md §52.24).  Effect id doubles as the status id. */
+ * depth (AGENTS.md §52.24).  Effect id doubles as the status id.
+ * Poison is dagger-only, fire/ice bow-only (swords never ride). */
 #define DECK_RIDER_OK(fx, wpn) \
     ((uint8_t)(((fx) == EFF_POISON) ? ((wpn) == WPN_DAGGER) : \
-               (((fx) == EFF_FIRE || (fx) == EFF_ICE) ? ((wpn) == WPN_SWORD) : 0)))
+               (((fx) == EFF_FIRE || (fx) == EFF_ICE) ? ((wpn) == WPN_BOW) : 0)))
 
 /* Loot identity synthesis as a macro (not a call): deck_ident_cmp sits
  * on the loot-grant stack chain, and a separate frame there costs
  * worst-case depth (AGENTS.md §52.24).  Same pure macros as
- * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES). */
+ * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES /
+ * LOOT_BOW_USES_FROM_AP). */
 #define DECK_LOOT_IDENT(lid, out)                                          \
     do {                                                                   \
         uint8_t _m = loot_id_material(lid);                                \
@@ -81,7 +84,10 @@ static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
                        DECK_RIDER_OK((_e), (_w)));                          \
         (out)[0] = s_ident_type[_wr];                                      \
         (out)[1] = LOOT_POWER((_m), (_wi));                                 \
-        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) : 0;                   \
+        (out)[2] = ((_w) <= WPN_RING) ?                                     \
+            CARD_AP((out)[1], (_m), (_hr)) : 0;                             \
+        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) :                      \
+                   (((_wr) == 2) ? LOOT_BOW_USES_FROM_AP((out)[2]) : 0);     \
         (out)[4] = s_ident_fx[_wr];                                        \
         (out)[5] = s_ident_battle[_wr];                                    \
         if (_hr) {                                                         \
@@ -91,8 +97,6 @@ static const uint8_t s_ident_chance[4] = { 0, 128, 128, 96 };
             (out)[6] = STATUS_NONE;                                        \
             (out)[7] = 0;                                                  \
         }                                                                  \
-        (out)[2] = ((_w) <= WPN_RING) ?                                     \
-            CARD_AP((out)[1], (_m), (_hr)) : 0;                             \
     } while (0)
 
 /* Resolve-and-compare identity check.  Returns 1 when a and b are

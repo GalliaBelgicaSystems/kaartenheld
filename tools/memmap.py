@@ -11,6 +11,96 @@ _DATA area.  Exits non-zero if any documented invariant is violated.
 import os
 import re
 import sys
+import glob
+
+
+# Dispatch-bank agreement (review: hand-written g_bk_call_bank literals
+# must match where the linker actually put the target, or the trampoline
+# jumps into garbage silently).  Collected per symbol from the ROM
+# sources: {sym: {"both": set(), "debug": set(), "release": set()}}.
+# Buckets follow #ifdef DEBUG_BUILD / #ifdef TEST_LEVELS (TEST_LEVELS
+# only ever builds with -DDEBUG_BUILD, so it counts as debug).
+DISPATCH_MACRO_BANKS = {
+    # Fixed literals (game_ids.h, ui.h).
+    "GAME_TEST_ACTOR_BANK": {"debug": 9, "release": 9},
+    "GAME_ACTOR_BANK": {"debug": 4, "release": 4},
+    "UI_DIALOGUE_BOX_BANK": {"debug": 10, "release": 10},
+    # Build-variant constant (scene.c: TEST_LEVELS fixtures live in
+    # bank 4, real content in bank 5).
+    "SCENE_CONTENT_BANK": {"debug": 4, "release": 5},
+}
+
+
+def collect_dispatch_banks(repo_root):
+    """Scan src/**/*.c for trampoline dispatches.
+
+    Attributes each `g_bk_call_target = ...&SYM` to the nearest preceding
+    `g_bk_call_bank = N` (same dispatch, staging lines in between), with
+    the #ifdef bucket active at the bank line.  Only literal and
+    known-macro banks are recorded; variable banks (intro slides) and
+    runtime values (d->terrain_bank) are skipped -- those symbols keep
+    the window-only check, noted at report time.
+    """
+    sites = {}
+    bank_re = re.compile(r"g_bk_call_bank\s*=\s*(\d+|[A-Z_][A-Z0-9_]*)\s*;")
+    target_re = re.compile(r"g_bk_call_target\s*=\s*\(uint16_t\)&(\w+)\s*;")
+    cond_re = re.compile(r"^\s*#\s*(ifdef|ifndef|if|else|elif|endif)\b\s*(\w+)?")
+    for path in sorted(glob.glob(os.path.join(repo_root, "src", "**", "*.c"),
+                                 recursive=True)):
+        # None = applies to both builds; True/False = debug/release only.
+        stack = []
+        # (bank_token, line_no, bucket): every bank assignment since the
+        # last attributed target.  A list, not a slot: an #ifdef/#else
+        # pair stages two banks for one shared target, each keeping the
+        # bucket active at its own line.  Entries older than 10 lines
+        # never attribute (stale staging, not a dispatch).
+        pending = []
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for lineno, line in enumerate(f, 1):
+                m = cond_re.match(line)
+                if m:
+                    kind, name = m.group(1), m.group(2)
+                    if kind in ("ifdef", "ifndef"):
+                        if name in ("DEBUG_BUILD", "TEST_LEVELS"):
+                            stack.append(kind == "ifdef")
+                        else:
+                            # Unrelated ifdef: inherit ambient state.
+                            stack.append(None)
+                    elif kind == "if":
+                        # Bare #if (constant expressions only): inherit.
+                        stack.append(None)
+                    elif kind == "else":
+                        if stack and stack[-1] is not None:
+                            stack[-1] = not stack[-1]
+                    elif kind == "elif":
+                        # No elif in src today; fail loud if one appears
+                        # rather than mis-bucketing.
+                        raise ValueError(
+                            "%s:%d: #elif not supported by dispatch scan"
+                            % (path, lineno))
+                    else:  # endif
+                        if stack:
+                            stack.pop()
+                    continue
+                bucket = "both"
+                for frame in reversed(stack):
+                    if frame is not None:
+                        bucket = "debug" if frame else "release"
+                        break
+                bm = bank_re.search(line)
+                if bm:
+                    pending.append((bm.group(1), lineno, bucket))
+                tm = target_re.search(line)
+                if tm:
+                    for bank_tok, bank_line, bank_bucket in pending:
+                        if lineno - bank_line > 10:
+                            continue
+                        sym = tm.group(1)
+                        entry = sites.setdefault(
+                            sym, {"both": set(), "debug": set(), "release": set()})
+                        entry[bank_bucket].add(bank_tok)
+                    pending = []
+    return sites
 
 
 def main():
@@ -211,7 +301,7 @@ def main():
         "_jingle_full_banked": "chest-jingle edge + restore clock (bank 8)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
-        "_battle_card_undo_banked": "battle card undo (bank 3)",
+        "_battle_card_undo_banked": "battle card undo (bank 11)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",
@@ -240,6 +330,27 @@ def main():
     print()
     print("Banked target address validation")
     print("--------------------------------")
+    # Dispatch-bank agreement: every banked target below must live in a
+    # bank its call sites actually select, or the trampoline jumps into
+    # garbage with no diagnostic.  Banks come from the ROM sources
+    # (g_bk_call_bank literals at each dispatch site); the .sym says
+    # where the linker put the target (resolved through the _CODE_N
+    # area ranges, not address arithmetic).  Build for this map:
+    # filenames containing "debug" are the TEST_LEVELS debug build.
+    build = "debug" if "debug" in os.path.basename(sys.argv[1]) else "release"
+    dispatch = collect_dispatch_banks(
+        os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[1]))))
+    bank_areas = []
+    for area_name, (area_start, area_size, _area_n) in areas.items():
+        marea = re.fullmatch(r"_CODE_([0-9]+)", area_name)
+        if marea:
+            bank_areas.append((area_start, area_start + area_size,
+                               int(marea.group(1))))
+    def sym_bank_of(addr):
+        for start, end, bank in bank_areas:
+            if start <= addr < end:
+                return bank
+        return None
     for sym, desc in banked_targets.items():
         if sym in symbols:
             addr = symbols[sym]
@@ -250,6 +361,32 @@ def main():
             status = "OK" if in_window else "VIOLATION (not in switchable ROM 0x4000-0x7FFF)"
             if not in_window:
                 ok = False
+            sym_bank = sym_bank_of(addr)
+            # C dispatch sites spell the symbol without the linker's
+            # leading underscore.
+            entry = dispatch.get(sym, dispatch.get(
+                sym.lstrip("_"),
+                {"both": set(), "debug": set(), "release": set()}))
+            want = set(entry["both"]) | set(entry[build])
+            want_banks = set()
+            for tok in want:
+                if tok.isdigit():
+                    want_banks.add(int(tok))
+                elif tok in DISPATCH_MACRO_BANKS:
+                    want_banks.add(DISPATCH_MACRO_BANKS[tok][build])
+                # else: variable/runtime bank (intro slides, terrain
+                # field) -- not statically checkable, window check only.
+            if want_banks and sym_bank is not None:
+                if sym_bank not in want_banks:
+                    status = ("VIOLATION (sym in bank %d, dispatch selects %s)"
+                              % (sym_bank, sorted(want_banks)))
+                    ok = False
+                else:
+                    status += " dispatch:%s" % sorted(want_banks)
+            elif want_banks:
+                status += " dispatch:%s?" % sorted(want_banks)
+            else:
+                status += " dispatch:?"
             print(f"{sym:<28}: 0x{addr:05X} (window 0x{low16:04X})  ({desc})  [{status}]")
         else:
             print(f"{sym:<28}: not found in .noi")

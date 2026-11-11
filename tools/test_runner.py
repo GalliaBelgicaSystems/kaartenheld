@@ -125,7 +125,7 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 # scenarios that never ran NEW_GAME would under-report inventory by these
 # starter amounts.  If that use ever broadens, gate the delta on the
 # snapshot's actual origin instead.
-NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "FIRE_SWORD": 2}
+NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "BRONZE_SWORD": 2}
 
 def validate_scenario(data, filepath):
     for act in data.get("actions", []):
@@ -278,10 +278,18 @@ def run_scenario(scenario):
             act_type = act.get("type")
             if act_type == "press":
                 session.press(act.get("button", "A"))
+            elif act_type == "press_buttons":
+                # Simultaneous D-pad mask (diagonal steps): one frame
+                # with every listed button held, like press() but ORed.
+                session.press_buttons(act.get("buttons", []))
             elif act_type == "wait":
                 session.wait(act.get("frames", 1))
             elif act_type == "hold":
                 session.hold(act.get("button", "A"), act.get("frames", 8))
+            elif act_type == "hold_buttons":
+                # Diagonal hold-to-move: the combined mask is rewritten
+                # before every stepped frame, like hold().
+                session.hold_buttons(act.get("buttons", []), act.get("frames", 8))
             elif act_type == "interact":
                 # Semantic interaction: the player must already be adjacent
                 # and facing the target (set via initial_state); press A.
@@ -1173,7 +1181,7 @@ def build_initial_state_from_snapshot(snap, state_snap):
             continue
         # Emit only the delta over the new-game starter grants
         # (game_new_game in src/game/content.c adds WOOD_SWORD x4,
-        # WOODEN_SHIELD x4, FIRE_SWORD x2 to the collection): the loader
+        # WOODEN_SHIELD x4, BRONZE_SWORD x2 to the collection): the loader
         # applies inventory additively, so re-emitting the full observed
         # collection would double-add the starters on reload.
         qty = it.get("quantity", 0) - NEW_GAME_COLLECTION.get(iname, 0)

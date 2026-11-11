@@ -948,24 +948,24 @@ Its distinction can be expanded later.
 
 ---
 
-## Fire — sword element
+## Fire — bow element
 
 There is no Fire *card type*. Fire (and later Ice) is an **element carried on
-a weapon**: the Fire Sword renders as `SW4` and has the BURN on-hit rider
+a weapon**: the Fire Bow renders as `BO4` and has the BURN on-hit rider
 (`STATUS_BURN`, see `docs/loot.md §34`). Example:
 
 ```text
-F SW   (battle code SW4)
+F BO   (battle code BO4)
 ```
 
 Description:
 
 ```text
-Sword: physical (with a chance to burn the target)
+Bow: physical (with a chance to burn the target)
 ```
 
-Elemental weaknesses can be added later; the fire effect walks a sword until
-then.
+Elemental weaknesses can be added later; the fire effect walks with the bow
+until then.
 
 ---
 

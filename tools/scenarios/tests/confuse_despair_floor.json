@@ -1,0 +1,131 @@
+{
+ "name": "confuse_despair_floor",
+ "test": true,
+ "description": "Friendly fire cannot kill the Lord of Slimes and does not end the fight: a poisoned Lord turns its telegraphed swing on itself, the despair floor clamps it to 1 HP with no ENTITY_DEFEATED telemetry and no BATTLE_WON, and the hold opens on the next frame (FOCUSING banner, waits for A). Covers the defend-phase damage source against the unkillable boss.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 60
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 5
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 150
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "FOCUSING"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENTITY_DEFEATED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "BATTLE_WON"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 9,
+   "y": 5,
+   "facing": "RIGHT"
+  },
+  "seed": 8503,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "variables": {
+   "QUEST_MONSTER_HUNT": 0,
+   "MONSTERS_DEFEATED": 3
+  },
+  "party": {
+   "HERO": {
+    "hp": 120,
+    "max_hp": 120
+   }
+  },
+  "start_battle": true
+ }
+}

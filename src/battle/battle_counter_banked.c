@@ -16,7 +16,7 @@
  *   g_bk_byte_a = dagger count (0 = no counter),
  *   g_bk_byte_b = attacker index (clamped),
  *   g_bk_byte_c = leading dagger's on-hit status id (0 = none),
- *   g_bk_byte_d = shared enemy-deck count (poison grey-out width).
+ *   g_bk_byte_d = shared enemy-deck count (ice grey-out width).
  * Otherwise stages 0 in byte_a and leaves everything else untouched.
  * Contract: byte_a MUST still hold the count when the fixed caller runs
  * the bank-3 eval dispatch next -- the eval consumes it as its input

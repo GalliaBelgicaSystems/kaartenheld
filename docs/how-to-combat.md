@@ -174,9 +174,9 @@ still block 0).
 
 **Daggers are the exception:** played alone (daggers plus optionally
 rings, but no shields/swords/bows), they **counterattack first** — the
-attacker takes dagger damage (attack-phase poker scaling, poison
-included) before the swing, and when the counter kills the attacker the
-swing never lands (no damage to you).  Otherwise you still take the full
+attacker takes the FULL dagger damage (attack-phase poker scaling,
+poison included) before the swing, and when the counter kills the
+attacker the swing never lands (no damage to you).  Otherwise you still take the full
 incoming swing.  Mixed with
 shields, swords or bows the daggers are simply lost.  A dagger + ring
 deck can therefore always attack and heal, never blocking.
@@ -216,11 +216,11 @@ iron ring once his shop opens, and loot can contain more:
 
 | Status | Does | From |
 |---|---|---|
-| POISON | **greys out 2 of your hand cards** for 2 rounds (no damage) | poison daggers, bat/spider swings |
-| BURN | 10% of the hit that lit it (min 1 HP/round) | fire swords |
-| FREEZE | you skip your whole action (attack *and* the incoming block); enemies skip their swing | ice swords |
+| POISON | **confuses** the victim for 2 rounds (no damage): enemies attack their allies (or themselves), you play a random hand | poison daggers, bat/spider swings |
+| BURN | 10% of the hit that lit it (min 1 HP/round) | fire bows |
+| ICE | **greys out 2 cards** for 2 rounds (unplayable while grey) | ice bows |
 
-Greyed cards can't be selected (cursor skips them). Re-poisoning
+Greyed cards can't be selected (cursor skips them). Re-icing
 refreshes the duration, not which cards are grey. Failed applications
 show as resisted.
 

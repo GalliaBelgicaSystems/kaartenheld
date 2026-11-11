@@ -1,0 +1,126 @@
+{
+ "name": "loot_bow_uses_iron",
+ "test": true,
+ "description": "Loot bow arrows are inverse to power (LOOT_BOW_USES = 7 - CARD_AP): derived id 162 (0xA2: material 2 IRON, plain, bow, power 5, 2 AP) is AN IRON BOW and shows USES 5 on its CARDS detail page -- three more arrows than the mythril bow. Pre-fix this bow was unlimited (uses 0).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8412
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 162,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_filter",
+   "filter": "ATTACK"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "USES"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "5"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "IRON BOW"
+  }
+ ]
+}

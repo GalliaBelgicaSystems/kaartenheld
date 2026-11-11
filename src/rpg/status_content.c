@@ -17,12 +17,12 @@
  * table; the status bodies touch disjoint WRAM and never read the
  * table.
  *
- * Stacking rule (plan §16): POISON/BURN STACK up to max_stacks and
- * refresh duration; FREEZE does not stack (control status -- a frozen
- * combatant can neither attack nor defend for the whole duration,
- * battle-side).  Balance values are deliberately provisional (§26).
- * POISON is control-only (tick 0): it never deals damage, it only greys
- * out the victim's cards for POISON_GREY_TURNS rounds.  BURN is the
+ * Stacking rule (plan §16): POISON/BURN/ICE STACK up to max_stacks and
+ * refresh duration.  Balance values are deliberately provisional (§26).
+ * POISON is control-only (tick 0): it never deals damage, it confuses
+ * the victim (enemies attack their allies, the hero plays random hands
+ * -- see battle.c).  ICE carries the grey-out (ICE_GREY_CARDS cards for
+ * ICE_GREY_TURNS rounds).  BURN is the
  * damage-over-time status (10% of the inflicting hit per round, min 1,
  * scaled per instance at apply). */
 
@@ -33,7 +33,7 @@ static const StatusDefinition s_status_defs[STATUS_DEF_COUNT] = {
     /* BURN tick is per-instance scaled at apply (10% of the inflicting
      * hit, min 1); the table slot stays 0 so no flat fallback exists. */
     { STATUS_BURN,     0,   3,   3 },
-    { STATUS_FREEZE,   0,   1,   3 }
+    { STATUS_FREEZE,   0,   5,   2 }
 };
 
 static const StatusDefinition *status_def(uint8_t id)
@@ -132,9 +132,9 @@ void status_tick_banked(void)
 
     g_status_tick.damage = 0;
     g_status_tick.expired_count = 0;
-    /* Consume last round's frozen flag for this actor; re-set below if
-     * the status is still active (battle tests the bit once per attack).
-     * Slots beyond STATUS_ROUND_SLOTS can't occur (wrapper guards). */
+    /* Clear last round's frozen flag for this actor (retained for
+     * layout stability -- nothing reads the mask since the freeze-skip
+     * removal). */
     g_status_frozen_mask &= (uint8_t)~(1 << actor_slot);
 
     for (i = 0; i < slots->count; ) {
@@ -143,7 +143,7 @@ void status_tick_banked(void)
         if (def != (const StatusDefinition *)0) {
             /* Per-instance tick: burn carries its scaled round damage
              * (10% of the inflicting hit, min 1 -- staged at apply);
-             * poison/freeze instances hold 0.  Extra applications only
+             * poison/ice instances hold 0.  Extra applications only
              * refresh duration and deepen stacks for telemetry. */
             damage += inst->tick;
         }
@@ -154,22 +154,13 @@ void status_tick_banked(void)
             }
             /* Remove by shifting the tail down, field-wise: struct
              * assignment lowers to __memcpy, which lives in the fixed
-             * bank and is unreachable while bank 10 is mapped.  An
-             * expiring FREEZE must NOT re-arm the frozen-mask bit: it
-             * armed at the top of the round, and the expiry consumes the
-             * status, so the combatant resumes acting next round. */
+             * bank and is unreachable while bank 10 is mapped. */
             slots->slot[i].id = slots->slot[slots->count - 1].id;
             slots->slot[i].stacks = slots->slot[slots->count - 1].stacks;
             slots->slot[i].duration = slots->slot[slots->count - 1].duration;
             slots->slot[i].tick = slots->slot[slots->count - 1].tick;
             slots->count--;
         } else {
-            if (def != (const StatusDefinition *)0 && inst->id == STATUS_FREEZE) {
-                /* Still frozen after this round: the combatant skips its
-                 * attack again; the mask bit is tested (never consumed)
-                 * by the battle gates. */
-                g_status_frozen_mask |= (uint8_t)(1 << actor_slot);
-            }
             i++;
         }
     }
@@ -178,12 +169,12 @@ void status_tick_banked(void)
     g_status_tick.expired_count = expired;
 }
 
-/* Poison grey-out pick body (status.h): selects POISON_GREY_CARDS distinct
+/* Ice grey-out pick body (status.h): selects ICE_GREY_CARDS distinct
  * pool positions at random and arms the battle-scoped mask/duration.
  * Reads the actor slot (g_bk_byte_a) and the victim's card-pool size
  * (g_bk_byte_b) from the staged globals; writes s_grey_mask/s_grey_dur
  * (WRAM) directly.  A victim already greyed is only refreshed (same cards,
- * same duration) -- the STACK rule for grey, matching poison itself.
+ * same duration) -- the STACK rule for grey, matching ice itself.
  *
  * Banked self-containment: randomness uses the SAME inlined xorshift step
  * on g_rng_state as rng_next() (src/debug/rng.c), so banked code draws from
@@ -211,22 +202,22 @@ void status_grey_apply_banked(void)
     uint8_t pool = g_bk_byte_b;
     uint8_t i, idx, mask = 0;
 
-    /* Defensive: a pool smaller than POISON_GREY_CARDS cannot host that
+    /* Defensive: a pool smaller than ICE_GREY_CARDS cannot host that
      * many distinct greyed positions -- the second draw's linear probe
      * would loop forever.  Unreachable today (player hand = BATTLE_HAND_SIZE,
      * enemy decks are 4/5 cards), but a future smaller deck must not hang
      * bank 10. */
-    if (slot >= STATUS_ROUND_SLOTS || pool < POISON_GREY_CARDS) return;
+    if (slot >= STATUS_ROUND_SLOTS || pool < ICE_GREY_CARDS) return;
 
     if (s_grey_mask[slot] != 0) {
-        s_grey_dur[slot] = POISON_GREY_TURNS;
+        s_grey_dur[slot] = ICE_GREY_TURNS;
 #ifdef DEBUG_BUILD
         decode_grey_mask(s_grey_mask[slot]);
 #endif
         return;
     }
 
-    for (i = 0; i < POISON_GREY_CARDS; i++) {
+    for (i = 0; i < ICE_GREY_CARDS; i++) {
         g_rng_state ^= (uint16_t)(g_rng_state << 7);
         g_rng_state ^= (uint16_t)(g_rng_state >> 9);
         g_rng_state ^= (uint16_t)(g_rng_state << 8);
@@ -240,10 +231,10 @@ void status_grey_apply_banked(void)
     }
     s_grey_mask[slot] = mask;
     /* The grey drains at the enter-select round boundary in lockstep
-     * with the STATUS_POISON instance itself (both tick down once per
-     * round in battle_tick_statuses), so the purple tint and the
-     * grey-out expire together after POISON_GREY_TURNS rounds. */
-    s_grey_dur[slot] = POISON_GREY_TURNS;
+     * with the STATUS_FREEZE instance itself (both tick down once per
+     * round in battle_tick_statuses), so the tint and the
+     * grey-out expire together after ICE_GREY_TURNS rounds. */
+    s_grey_dur[slot] = ICE_GREY_TURNS;
 #ifdef DEBUG_BUILD
     decode_grey_mask(mask);
 #endif

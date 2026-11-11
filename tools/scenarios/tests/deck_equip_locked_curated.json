@@ -1,7 +1,7 @@
 {
  "name": "deck_equip_locked_curated",
  "test": true,
- "description": "AP equip gate on a curated card (docs/enemies_ranking.md §4.8): a cost-2 FIRE SWORD (id 67) added to the collection cannot be decked while the pool is 1. Pressing A on its DECK row is rejected with NEED AP 2 on row 16, emits CARD_EQUIP_LOCKED (d1 = required AP), and emits no CARD_ADDED_TO_DECK. Fully-decked rows still clear under the MIN floor (deck_min_ui_message); only adding is gated.",
+ "description": "AP equip gate on a curated card (docs/enemies_ranking.md §4.8): a cost-2 POISON DAGGER (id 68) added to the collection cannot be decked while the pool is 1. Pressing A on its DECK row is rejected with NEED AP 2 on row 16, emits CARD_EQUIP_LOCKED (d1 = required AP), and emits no CARD_ADDED_TO_DECK. Fully-decked rows still clear under the MIN floor (deck_min_ui_message); only adding is gated. (The old cost-2 anchor was the fire sword; swords never ride now.)",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -14,7 +14,7 @@
  "actions": [
   {
    "type": "collection_add",
-   "card_id": 67,
+   "card_id": 68,
    "quantity": 1
   },
   {
@@ -24,6 +24,14 @@
   {
    "type": "press",
    "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
   },
   {
    "type": "wait",
@@ -75,7 +83,7 @@
    "type": "event_arg",
    "event": "CARD_EQUIP_LOCKED",
    "index": 0,
-   "value": 67
+   "value": 68
   },
   {
    "type": "event_arg",

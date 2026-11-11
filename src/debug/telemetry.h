@@ -228,11 +228,11 @@ typedef enum {
     EVENT_SOUND_TOGGLED,    /* d0 = g_sound_enabled (1 = ON, 0 = OFF) */
     EVENT_TARGET_CHANGED,   /* d0 = old enemy slot (0..n-1) d1 = new enemy slot
                                (battle target caret moved or auto-advanced) */
-    /* Poison grey-out (status.h): poison makes 2 random pool cards
+    /* Ice grey-out (status.h): ice makes 2 random pool cards
      * unplayable for 2 rounds.  d0 = actor slot (0 = player, 1..n = enemy),
      * d1 = first greyed pool position, d2 = second = position, d3 = rounds. */
     EVENT_CARDS_GREYED,
-    /* Cleared after POISON_GREY_TURNS: d0 = actor slot, d1/d2 = the
+    /* Cleared after ICE_GREY_TURNS: d0 = actor slot, d1/d2 = the
      * previously-greyed pool positions. */
     EVENT_CARDS_UNGREYED,
     /* Patrol step commit (world.c): d0 = EntityId, d1 = x, d2 = y,

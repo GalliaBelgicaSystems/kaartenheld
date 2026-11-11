@@ -1,0 +1,32 @@
+{
+ "name": "heal_mage_rings_decline_used",
+ "test": true,
+ "description": "Declining the rings lesson after the free heal is used closes plainly: USED is already set so there is no heal flow to fall through to -- NO sets nothing (lesson still unheard, ask repeats next talk) and the overworld resumes with exactly one DIALOGUE_CHOICE. Pins the one-shot: no second heal is reachable through the ask.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {"x": 12, "y": 9, "facing": "DOWN"},
+  "seed": 1007,
+  "flags": {"ARRIVED_TOWN": true, "HEAL_MAGE_USED": true},
+  "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
+  "world": {"CARL_FIELD": "DEFEATED"},
+  "inventory": {"IRON_RING": 1},
+  "party": {"HERO": {"hp": 10, "max_hp": 10}}
+ },
+ "actions": [
+  {"type": "press", "button": "A"},
+  {"type": "wait", "frames": 10},
+  {"type": "press", "button": "RIGHT"},
+  {"type": "wait", "frames": 6},
+  {"type": "press", "button": "A"},
+  {"type": "wait", "frames": 10}
+ ],
+ "assertions": [
+  {"type": "game_state", "expected": "OVERWORLD"},
+  {"type": "screen", "expected": "OVERWORLD"},
+  {"type": "dialogue_active", "expected": false},
+  {"type": "flag", "flag": "HEAL_MAGE_USED", "expected": true},
+  {"type": "flag", "flag": "RING_LESSON", "expected": false},
+  {"type": "event_count", "event": "DIALOGUE_CHOICE", "count": 1},
+  {"type": "event_not_occurred", "event": "HEALED"}
+ ]
+}

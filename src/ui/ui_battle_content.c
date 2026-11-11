@@ -881,10 +881,12 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
  * participating base -- over an index map of the staged dagger hand
  * slots (rings excluded, exactly like the prep's compaction), then
  * scales with the same shift-add product and subtract-loop quotient
- * the bank-3 scaler uses (docs/combo-system.md §5/§7).  If scoring ever
- * changes, change BOTH here and combo_resolve_banked: the CNT preview
- * scenario (pair+suited 8, trips+suited 12) and the counter scenarios
- * pin their agreement. */
+ * the bank-3 scaler uses (docs/combo-system.md §5/§7).  The counter
+ * deals the FULL evaluated amount (docs/loot.md §34.6), so the preview
+ * shows it whole -- CNT shows what the counter will actually deal.
+ * If scoring ever changes, change BOTH here and combo_resolve_banked:
+ * the CNT preview scenario (pair+suited 8, trips+suited 12) and the
+ * counter scenarios pin their agreement. */
 static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
 {
     const Battle *nb = (const Battle *)battle;
@@ -943,6 +945,9 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
         prod -= 100;
         q++;
     }
+    /* Full counter (docs/loot.md §34.6): the resolve deals the whole
+     * evaluated amount, so the preview shows it whole.  0 means no
+     * counter (returned early above), never a weak hand. */
     return q;
 }
 
@@ -1005,6 +1010,29 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
 }
 
+/* Poison check for the confusion painters below: the hero (slot 0)
+ * carries STATUS_POISON.  Reads WRAM directly (bank-3 code runs with
+ * WRAM always live); the fixed screen update stages the random hand
+ * through the banked nav body, this only names it.  foe = 0 asks the
+ * hero (slot 0, auto-play loss); foe != 0 asks the telegraphed attacker
+ * (slot = live index + 1, redirected swing): one loop serves both, so
+ * the forecast and the message row cannot disagree on what counts as
+ * confused. */
+static uint8_t battle_confused_paint(const volatile Battle *battle, uint8_t foe)
+{
+    const StatusSlots *slots;
+    uint8_t i;
+    if (foe) {
+        if (battle->attacking_enemy_idx >= battle->enemy_count) return 0;
+        slots = &s_battle_status[(uint8_t)(battle->attacking_enemy_idx + 1)];
+    } else {
+        slots = &s_battle_status[0];
+    }
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return 1;
+    }
+    return 0;
+}
 static void battle_draw_battle_combo(const volatile Battle *battle)
 {
     /* Real-time preview: the row tracks the PENDING selection as cards
@@ -1063,7 +1091,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(19, combo_row, NULL, 1);
         return;
     }
-    /* Poison-wracked foe (msg 5, staged by the telegraph body): the
+    /* Ice-locked foe (msg 5, staged by the telegraph body): the
      * strike never lands, so the row names the failed swing instead of
      * a bare "DMG 0" forecast or a stale pending preview.  The name lives
      * on this row only (never the row-0 banner): it survives the
@@ -1072,9 +1100,34 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
          battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) &&
-        battle->msg_id == BATTLE_MSG_POISONED_FOE) {
-        battle_draw_text_line(0, combo_row, "FOE IS POISONED!", 20);
-        battle_color_span(0, combo_row, 16, UI_COLOR_POISON);
+        battle->msg_id == BATTLE_MSG_ICED_FOE) {
+        battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
+        battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
+        return;
+    }
+    /* Confused attacker (poison): the row names the redirected swing
+     * instead of the normal forecast -- the attacker hits its own side
+     * this turn.  No acknowledge gate (unlike the ice fizzle above):
+     * the defend proceeds normally, the damage just lands elsewhere.
+     * Same truth-in-VRAM discipline as every other branch here. */
+    if (battle_confused_paint(battle, 1) &&
+        (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH)) {
+        battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
+        battle_color_span(0, combo_row, 15, UI_COLOR_POISON);
+        return;
+    }
+    /* Confused hero (poison): the row names the lost turn instead of any
+     * forecast -- the pending hand was staged by chance, not the player.
+     * Same rows the Lord's focus text uses (9 + this one): the message is
+     * the turn's whole story.  Text path throughout (buffer, mirror and
+     * VRAM stay truthful for asserts). */
+    if (battle_confused_paint(battle, 0) &&
+        (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
+         battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
+        battle_draw_text_line(0, combo_row, "You play randomly!", 18);
+        battle_color_span(0, combo_row, 18, UI_COLOR_FIELD);
+        battle_draw_text_line(18, combo_row, NULL, 2);
         return;
     }
     /* Enemy forecast owns the row while a strike is incoming (defend
@@ -1269,7 +1322,7 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         /* No card tints: boxes stay paper (UI_COLOR_NONE), type reads
          * from the stamped weapon icon, element from the per-card OAM
-         * rider HUD. Poison grey-out
+         * rider HUD. Ice grey-out
          * (status.h): greyed player cards render dim. Finite-use cards
          * of the arrow-counter type -- and rings, which share its floor
          * counter -- grey out too once their uses are spent (matches
@@ -1483,7 +1536,7 @@ static const char *battle_banner_text(const volatile Battle *battle)
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
      * 20 chars, filling the centered row-0 banner in one screen.  The
-     * poisoned foe's failed swing is named on the combo row instead
+     * iced foe's failed swing is named on the combo row instead
      * (never here), so the banner stays the standard enemy-turn text
      * even when nothing is incoming. */
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
@@ -1491,11 +1544,11 @@ static const char *battle_banner_text(const volatile Battle *battle)
         return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
-        /* A poison-skip resolve (msg 5 survives the acknowledge press)
+        /* An ice-locked resolve (msg 5 survives the acknowledge press)
          * blocked nothing, so claiming "BLOCKED ATTACK!" would lie --
          * the beat stays quiet while the combo row below keeps naming
          * the fizzle. */
-        if (battle->msg_id == BATTLE_MSG_POISONED_FOE) return "";
+        if (battle->msg_id == BATTLE_MSG_ICED_FOE) return "";
         return "BLOCKED ATTACK!";
     }
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
@@ -1631,6 +1684,18 @@ void ui_update_battle_banked(void)
                   battle->result == BATTLE_RESULT_DEFEAT))) {
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
+            } else if (battle_confused_paint(battle, 0) &&
+                       (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
+                        battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
+                /* Confused hero (poison): the message row names the lost
+                 * turn ("Confused!") while the combo row below names what
+                 * happens ("You play randomly!") -- the same two rows the
+                 * Lord's focus text uses.  No msg_id: the live poison
+                 * instance is the state, so the lines vanish the round it
+                 * expires with no clearing protocol. */
+                battle_draw_text_line(0, 9, "Confused!", 9);
+                battle_draw_text_line(9, 9, NULL, 11);
+                battle_color_span(0, 9, 9, UI_COLOR_FIELD);
             } else {
                 /* Full-width clear (20, not 12): the despair line is 18
                  * columns and a short clear would strand its tail on the

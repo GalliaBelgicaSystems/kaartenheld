@@ -97,6 +97,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_GUARD_DAGGER_LESSON,
+        "GUARD:",
+        8,
+        {"Daggers counter.", "One played alone", "hits back FIRST,", "full damage.", "Weaker than swords,", "but poison can", "confuse. Find one", "east of Carl."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_GUARD_GREETING,
         "GUARD:",
         2,
@@ -145,10 +153,18 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_HEAL_MAGE_RINGS_ASK,
+        "HEAL MAGE:",
+        3,
+        {"Want to learn how", "rings work?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_THANKS,
         "HEAL MAGE:",
-        5,
-        {"All healed!", "Rings can heal", "you as well.", "The merchant", "sells one!"},
+        6,
+        {"All healed!", "Rings can heal,", "once you have one", "come talk to me.", "The merchant", "sells one!"},
         0,
         0
     },

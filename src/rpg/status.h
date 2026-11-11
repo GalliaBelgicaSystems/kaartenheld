@@ -20,6 +20,9 @@ typedef enum {
     STATUS_NONE = 0,
     STATUS_POISON = 1,
     STATUS_BURN = 2,
+    /* Named FREEZE for historic id stability (wire/telemetry/save
+     * compatible); it means ICE -- greys out cards, never skips turns
+     * (docs/loot.md §34.6).  Do not add skip semantics here. */
     STATUS_FREEZE = 3
 } StatusId;
 
@@ -68,12 +71,11 @@ typedef struct {
 
 extern StatusTickResult g_status_tick;
 
-/* Frozen-combatant bitmask, maintained by the bank-10 tick body: bit N
- * set = slots[N] holds STATUS_FREEZE (bit 0 = player, 1..n = enemies).
- * Written at each end-of-round tick; battle consumes (tests and clears)
- * the bit when a frozen enemy's attack comes up -- one skipped swing per
- * application (docs/combo-system.md §12).  Kept as a flat WRAM byte so
- * the fixed-bank test costs one load/and -- no helper code. */
+/* Frozen-combatant bitmask (UNUSED since the freeze-skip removal --
+ * ice now greys out instead of skipping turns, and poison confuses
+ * instead of greying; see the grey mask below).  Kept as a flat WRAM
+ * byte (and its descriptor byte) so the WRAM layout and the host
+ * transport never shift -- do not remove, do not read. */
 extern uint8_t g_status_frozen_mask;
 
 /* What the last apply landed on the actor (STATUS_NONE when nothing did);
@@ -88,21 +90,21 @@ extern StatusInstance g_status_applied;
  * battle_start via status_reset_battle(). */
 #define STATUS_ROUND_SLOTS 4
 
-/* ── Poison grey-out (battle-scoped) ─────────────────────────────
- * When a combatant is poisoned, POISON_GREY_CARDS random cards in its
- * pool become unplayable for POISON_GREY_TURNS future player-decision
- * rounds.  For the player (slot 0) the pool is the 5-card battle hand
+/* ── Ice grey-out (battle-scoped) ────────────────────────────────
+ * When a combatant is iced, ICE_GREY_CARDS random cards in its pool
+ * become unplayable for ICE_GREY_TURNS future player-decision rounds.
+ * For the player (slot 0) the pool is the 5-card battle hand
  * (position bit = hand idx); for an enemy (slot 1..n) it is that enemy's
  * deck position (bit = the shared battle deck's draw position).
  * Battle-scoped runtime state like the statuses themselves -- never
  * GameState/save; cleared at battle start via status_reset_battle(). */
-#define POISON_GREY_CARDS 2
-#define POISON_GREY_TURNS 2
+#define ICE_GREY_CARDS 2
+#define ICE_GREY_TURNS 2
 
 /* Bit p set = pool position p is greyed for actor slot (0 = player,
  * 1..n = enemy).  Duration drains at each enter-select round boundary
- * in lockstep with the STATUS_POISON instance, so tint and grey-out
- * expire together after POISON_GREY_TURNS rounds (0 = not greyed).
+ * in lockstep with the STATUS_FREEZE instance, so tint and grey-out
+ * expire together after ICE_GREY_TURNS rounds (0 = not greyed).
  * Effective coverage for a mid-round application: the victim's current
  * round is still ahead for an enemy (same-round swing fizzles) and its
  * defend select is still ahead for the hero, so both sides feel two
@@ -112,9 +114,9 @@ extern StatusInstance g_status_applied;
 extern uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 extern uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 
-/* Re-apply a poisoned victim's grey-out.  pool_size is the victim's card
+/* Re-apply an iced victim's grey-out.  pool_size is the victim's card
  * pool (BATTLE_HAND_SIZE for the player, the enemy battle deck's count for
- * an enemy).  On a fresh grey the bank-10 body picks POISON_GREY_CARDS
+ * an enemy).  On a fresh grey the bank-10 body picks ICE_GREY_CARDS
  * distinct indices from the deterministic RNG; an already-active grey is
  * only refreshed (same cards, same duration).  Emits EVENT_CARDS_GREYED.
  * Fixed-bank wrapper around the ROM-bank-10 body; see banked.h. */

@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview",
  "test": true,
- "description": "Counter forecast: with a DA3 pair staged (not yet confirmed) in defend vs the kobold's telegraphed 2, row 10 shows DMG 2 on the left and CNT 8 on the right instead of DEF -- the same suited-pair math the resolve will deal. Real-VRAM read (vram_row) so a buffer/VRAM divergence fails loudly (AGENTS.md 52.25 family).",
+ "description": "Counter forecast: with a DA3 pair staged (not yet confirmed) in defend vs the kobold's telegraphed 2, row 10 shows DMG 2 on the left and CNT 8 on the right instead of DEF -- the same suited-pair math the resolve will deal, in full. Real-VRAM read (vram_row) so a buffer/VRAM divergence fails loudly (AGENTS.md 52.25 family).",
  "actions": [
   {
    "type": "wait",

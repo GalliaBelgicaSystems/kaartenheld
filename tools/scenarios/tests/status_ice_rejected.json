@@ -1,7 +1,7 @@
 {
- "name": "status_freeze_rejected_no_skip",
+ "name": "status_ice_rejected",
  "test": true,
- "description": "Rejected FREEZE must not freeze (review fix): a combatant with both status slots full (BURN + POISON) rejects a FREEZE application -- no third STATUS_APPLIED, and the enemy's attack is NOT skipped (no TURN_SKIPPED)",
+ "description": "Rejected ICE stays rejected (review fix): a combatant with both status slots full (BURN + POISON) rejects an ICE application -- exactly two STATUS_APPLIED (burn, poison), no third, and the enemy keeps attacking (no TURN_SKIPPED; nothing skips turns anymore).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

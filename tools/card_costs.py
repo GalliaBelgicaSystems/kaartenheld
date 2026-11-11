@@ -31,9 +31,7 @@ CARDS_C = REPO / "src" / "game" / "cards_content.c"
 
 MATERIALS = ["wood", "bronze", "iron", "steel", "mythril"]
 WEAPONS_41 = ["sword", "shield", "bow", "dagger", "ring"]  # §4.1 columns
-WEAPONS_42 = [("F", "sword"), ("I", "sword"), ("P", "dagger")]  # §4.2 columns
-# (effect label, weapon) for the only legal rider pairs (docs/loot.md §34.2)
-RIDER_PAIRS = [("burn", "sword"), ("freeze", "sword"), ("poison", "dagger")]
+WEAPONS_42 = [("F", "bow"), ("I", "bow"), ("P", "dagger")]  # §4.2 columns
 
 FAILURES = []
 
@@ -66,7 +64,10 @@ def band_power(mat, weapon):
     """Mirror of LOOT_POWER (docs/loot.md §34.1)."""
     if mat == 0:
         return 1
-    return 2 * mat + (1 if weapon in ("sword", "bow") else 0)
+    p = 2 * mat + (1 if weapon in ("sword", "bow") else 0)
+    if weapon == "dagger" and mat > 1:
+        p -= 1
+    return p
 
 
 def card_ap(power, mat, rider, pts):
@@ -90,9 +91,9 @@ def parse_doc_tables():
     """Parse §4.1/§4.2/§4.3 markdown tables.
 
     Returns (cells, catalog) where cells is a list of
-    (mat, weapon, rider, ap, power) — a list, not a dict, because F SW
-    and I SW share (mat, weapon, rider) — and catalog maps ROW name to
-    ((power, mat, rider), expected_ap), with SHOPKEYS mapping to (None, 0).
+    (mat, weapon, rider, ap, power) — a list, not a dict, because F BO
+    and I BO share (mat, weapon, rider) — and catalog maps ROW name to
+    ((power, mat, rider), expected_ap), with "SHOP KEYS" mapping to (None, 0).
     """
     text = FORMULA_DOC.read_text(encoding="utf-8")
     cells = []
@@ -140,7 +141,7 @@ def parse_doc_tables():
         rider = 0 if rider_txt.strip() in ("—", "-", "") else 1
         catalog[row] = ((int(power), MATERIALS.index(mat_name), rider),
                         int(expected))
-    # SPECIAL rows (quest items: SHOPKEYS, BONE, OLD KEY) carry no
+    # SPECIAL rows (quest items: "SHOP KEYS", BONE, OLD KEY) carry no
     # power/material triple ("SPECIAL, not playable").
     for m in re.finditer(
             r"\|\s*[^|]+\|\s*`([A-Z ]+)`\s*\|\s*SPECIAL, not playable\s*\|\s*\*\*(\d+)\*\*",
@@ -261,9 +262,34 @@ def check_identity():
             cost = (p + mat * 4 + r * 8 + (12 if mat == 4 else 0) + 7) // 8
         else:
             cost = int(fields[3].strip()) if fields[3].strip().isdigit() else 0
+        # Uses column: a plain literal, or LOOT_BOW_USES(p, MAT_m, r)
+        # (AP-derived bow arrows, docs/loot.md §34.6).  The macro args
+        # must agree with the row's own power/CARD_AP args -- same
+        # cross-check philosophy as the cost column above.
+        um = re.search(
+            r"LOOT_BOW_USES\(\s*(\d+)\s*,\s*MAT_(\w+)\s*,\s*(\d+)\s*\)",
+            fields[4])
+        if um:
+            up, umat_name, ur = int(um.group(1)), um.group(2), int(um.group(3))
+            umat = _MAT_IDX[umat_name]
+            if cm and (up, umat, ur) != (p, mat, r):
+                fail("identity: row %s LOOT_BOW_USES(%d, MAT_%s, %d) "
+                     "disagrees with its CARD_AP(%d, MAT_%s, %d)"
+                     % (name, up, umat_name, ur, p, mat_name, r))
+            if up != int(fields[2]):
+                fail("identity: row %s LOOT_BOW_USES power %d but .power "
+                     "is %s" % (name, up, fields[2]))
+            # Same floor as LOOT_BOW_USES_FROM_AP (mythril riders would
+            # otherwise read 1 where the ROM stores 2).
+            uses = 7 - ((up + umat * 4 + ur * 8 +
+                         (12 if umat == 4 else 0) + 7) // 8)
+            if uses < 2:
+                uses = 2
+        else:
+            uses = int(fields[4])
         try:
             want.append((name, (_TYPE_MAP[fields[1].strip()],
-                                int(fields[2]), cost, int(fields[4]),
+                                int(fields[2]), cost, uses,
                                 _FX_MAP[fields[6].strip()],
                                 _BT_MAP[fields[7].strip()],
                                 _ST_MAP[fields[10].strip()],
@@ -369,6 +395,29 @@ def main():
                 fail("strict rider: %s %s plain %d rider %d (want +1)"
                      % (MATERIALS[mat], weapon, plain, rider))
 
+    # Bow arrows ladder (docs/loot.md §34.6): LOOT_BOW_USES = 7 - CARD_AP
+    # floored at 2, so wood..mythril plain bows hold 6/6/5/4/2 -- inverse
+    # to power, with the curated mythril bow pinned at 2.  Rider bows
+    # cost one more AP and hold one fewer arrow, except mythril riders
+    # (6 AP), which the floor keeps at 2 instead of 1.  Bows never rode
+    # anything before fire/ice moved onto them; swords never do.
+    for mat, want_uses in enumerate((6, 6, 5, 4, 2)):
+        got_uses = 7 - costs[(mat, "bow", 0)]
+        if got_uses < 2:
+            got_uses = 2
+        if got_uses != want_uses:
+            fail("bow uses: %s bow holds %d, want %d (7 - %d AP)"
+                 % (MATERIALS[mat], got_uses, want_uses,
+                    costs[(mat, "bow", 0)]))
+    for mat, want_uses in ((1, 5), (2, 4), (3, 3), (4, 2)):
+        rider_uses = 7 - costs[(mat, "bow", 1)]
+        if rider_uses < 2:
+            rider_uses = 2
+        if rider_uses != want_uses:
+            fail("bow uses: %s rider bow holds %d, want %d (7 - %d AP, floor 2)"
+                 % (MATERIALS[mat], rider_uses, want_uses,
+                    costs[(mat, "bow", 1)]))
+
     # Table parity with the doc
     doc_cells, doc_catalog = parse_doc_tables()
     if len(doc_cells) != 37:
@@ -395,7 +444,7 @@ def main():
              % (len(doc_catalog), _game_card_count()))
     for row, (args, expected) in doc_catalog.items():
         if args is None:
-            # SPECIAL quest rows (SHOPKEYS, BONE, OLD KEY): no CARD_AP
+            # SPECIAL quest rows ("SHOP KEYS", BONE, OLD KEY): no CARD_AP
             # call, cost must stay literal 0 (not playable).
             if cat_calls.get(row, (None, None))[1] != 0 or expected != 0:
                 fail("catalog: %s cost must stay literal 0 (not playable)"

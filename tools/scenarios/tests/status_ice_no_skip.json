@@ -1,7 +1,7 @@
 {
- "name": "freeze_enemy_blue_skip",
+ "name": "status_ice_no_skip",
  "test": true,
- "description": "Enemy-side freeze (ice): freezing the slime (slot 1) makes it skip its swing (TURN_SKIPPED slot 1, no ENEMY_CARD_PLAYED) and its HP row reads the ICE-blue slot (attr 2, like burn reads red).",
+ "description": "Enemy-side ice (no skip): icing the slime (slot 1) no longer skips anything -- it swings normally (ENEMY_CARD_PLAYED, DAMAGE_RECEIVED lands) -- and its HP row reads the ICE-blue slot (attr 2, like burn reads red). Ice locks decks (grey-out), never turns.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -62,12 +62,20 @@
    "frames": 70
   },
   {
-   "type": "wait",
-   "frames": 55
+   "type": "press",
+   "button": "SELECT"
   },
   {
    "type": "wait",
-   "frames": 70
+   "frames": 40
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 40
   }
  ],
  "assertions": [
@@ -81,23 +89,15 @@
   },
   {
    "type": "event_occurred",
-   "event": "TURN_SKIPPED"
+   "event": "ENEMY_CARD_PLAYED"
   },
   {
-   "type": "event_arg",
-   "event": "TURN_SKIPPED",
-   "index": 0,
-   "value": 1
-  },
-  {
-   "type": "event_arg",
-   "event": "TURN_SKIPPED",
-   "index": 1,
-   "value": 3
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
   },
   {
    "type": "event_not_occurred",
-   "event": "ENEMY_CARD_PLAYED"
+   "event": "TURN_SKIPPED"
   },
   {
    "type": "tilemap_attr",

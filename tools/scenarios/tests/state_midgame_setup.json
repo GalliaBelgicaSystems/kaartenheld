@@ -1,7 +1,7 @@
 {
  "name": "state_midgame_setup",
  "test": true,
- "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section. The loader appends onto the non-empty starter collection (4 WOOD_SWORD, 4 WOODEN_SHIELD, 2 FIRE_SWORD) and starter progression (HERO_1): pre-existing entries must survive untouched, a staged id already present merges (FIRE_SWORD 2+3=5), new ids append at the one-past-end slot (POISON_DAGGER, IRON_RING), and a second progression target (IRON_SWORD) appends after the overwritten HERO_1 entry.",
+ "description": "An LLM constructs a rich mid-game starting situation purely from initial_state (flags, variables, party, inventory, persistent defeats) and the game honours every section. The loader appends onto the non-empty starter collection (4 WOOD_SWORD, 4 WOODEN_SHIELD, 2 BRONZE_SWORD) and starter progression (HERO_1): pre-existing entries must survive untouched, a staged id already present merges (BRONZE_SWORD 2+3=5), new ids append at the one-past-end slot (POISON_DAGGER, IRON_RING), and a second progression target (IRON_SWORD) appends after the overwritten HERO_1 entry.",
  "actions": [
   {
    "type": "press",
@@ -68,7 +68,7 @@
   },
   {
    "type": "inventory",
-   "item": "FIRE_SWORD",
+   "item": "BRONZE_SWORD",
    "expected": 5
   },
   {
@@ -137,7 +137,7 @@
   "inventory": {
    "POISON_DAGGER": 2,
    "IRON_RING": 1,
-   "FIRE_SWORD": 3
+   "BRONZE_SWORD": 3
   },
   "world": {
    "SLIME_FOREST": "DEFEATED",

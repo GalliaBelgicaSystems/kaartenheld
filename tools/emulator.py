@@ -252,7 +252,7 @@ VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
+               "IRON_RING": 0x42, "BRONZE_SWORD": 0x43,
                "POISON_DAGGER": 0x44, "SHOPKEYS": 0x45,
                "BOW_9": 0x46, "WOOD_SWORD": 0x47,
                "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}
@@ -824,6 +824,36 @@ class EmulatorSession:
         if btn_upper not in self.button_masks:
             raise ValueError(f"Unknown button '{button}'")
         mask = self.button_masks[btn_upper]
+        addr = self.get_symbol("g_inp_mask")
+        for i in range(frames):
+            self._memwrite(addr, mask)
+            time.sleep(0.005)
+            self.step(1)
+
+    def _mask_for_buttons(self, buttons):
+        """OR the injection masks for a list of button names (diagonal
+        movement needs UP+RIGHT etc. held on the same frames)."""
+        mask = 0
+        for b in buttons:
+            bu = b.upper()
+            if bu not in self.button_masks:
+                raise ValueError(f"Unknown button '{b}'")
+            mask |= self.button_masks[bu]
+        return mask
+
+    def press_buttons(self, buttons):
+        """Press several buttons on the same frame (e.g. ["UP", "RIGHT"]
+        for a diagonal step)."""
+        mask = self._mask_for_buttons(buttons)
+        addr = self.get_symbol("g_inp_mask")
+        self._memwrite(addr, mask)
+        time.sleep(0.005)
+        self.step(1)
+
+    def hold_buttons(self, buttons, frames):
+        """Hold several buttons down for N frames (diagonal hold-to-move).
+        Rewrites the combined mask before every stepped frame like hold()."""
+        mask = self._mask_for_buttons(buttons)
         addr = self.get_symbol("g_inp_mask")
         for i in range(frames):
             self._memwrite(addr, mask)

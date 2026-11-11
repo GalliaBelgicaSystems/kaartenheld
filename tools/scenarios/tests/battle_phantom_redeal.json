@@ -95,7 +95,7 @@
   "start_battle": true,
   "deck": {
    "IRON_SWORD": 4,
-   "FIRE_SWORD": 2
+   "BRONZE_SWORD": 2
   },
   "variables": {
    "ENERGY_POOL": 4

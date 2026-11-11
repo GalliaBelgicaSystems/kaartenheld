@@ -41,7 +41,7 @@ Anchors:
 ```text
 W SW   power 1, wood    -> 1 AP        (the brief's "very simple wood sword")
 M BO   power 9, mythril -> 5 AP        (plain mythril is always 5, §3.4)
-M F SW power 9, mythril + fire -> 6 AP (a mythril rider costs more than
+M F BO power 9, mythril + fire -> 6 AP (a mythril rider costs more than
                                        the same card plain)
 ```
 
@@ -113,11 +113,14 @@ a property of the card, not a decision by the author.**
 | Role | `power` means | Band values |
 |---|---|---|
 | Sword / bow | damage dealt | 1, 3, 5, 7, 9 |
-| Dagger / shield / ring | poison damage / block / heal | 1, 2, 4, 6, 8 |
+| Shield / ring | block / heal | 1, 2, 4, 6, 8 |
+| Dagger | poison damage | 1, 2, 3, 5, 7 |
 
-Swords and bows sit one point above their band, daggers/shields/rings at the
-band floor — but under `ceil(/8)` that point never crosses a step boundary,
-so role never changes the cost on its own (§7.3).
+Swords and bows sit one point above their band; shields/rings at the
+band floor; daggers run one band step softer *and* one point under
+swords (bronze holds 2 so it always beats wood) — but under `ceil(/8)`
+those points never cross a step boundary, so role never changes the
+cost on its own (§7.3).
 
 Reasoning for weight 1: damage is the unit the player is already budgeting
 in, and every other term can be expressed as "how many damage points is this
@@ -142,12 +145,12 @@ cost, or late cards become unplayable (see §7.1).
 
 Any status effect on the card — debuff or buff — costs **one whole AP**,
 regardless of tier.  Today that means the on-hit statuses (poison, burn,
-freeze); tomorrow it means buffs too (`docs/combo-system.md` §14/§19 plans
-buffs in the same status system).  Flat, not scaled, because the statuses
-are flat: `STATUS_POISON` and `STATUS_BURN` tick 1 damage for 3 rounds and
-`STATUS_FREEZE` denies one enemy attack (`src/rpg/status_content.c`) — the
-effect's *absolute* value is constant whether it rides a p2 dagger or a p9
-sword, so its *relative* price must fall as power rises.
+ice); tomorrow it means buffs too (`docs/combo-system.md` §14/§19 plans
+buffs in the same status system).  Flat, not scaled: burn ticks a flat
+10%-of-hit (min 1) and ice always greys exactly 2 cards, while poison
+confuses for a flat 2 rounds -- the effect's *absolute* value is
+constant whether it rides a p2 dagger or a p9 bow, so its *relative*
+price must fall as power rises.
 A percentage-of-card price would charge the most for the effect on the
 biggest card, which is backwards.
 
@@ -210,9 +213,9 @@ parentheses so the reader can check any cell by hand:
 |---|---|---|---|---|---|
 | **wood** (gate AP 1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) |
 | **bronze** (gate AP 2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p2) |
-| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p4) |
-| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p7) | 3 AP (p6) | 3 AP (p6) |
-| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p9) | 5 AP (p8) | 5 AP (p8) |
+| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p5) | 2 AP (p3) | 2 AP (p4) |
+| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p7) | 3 AP (p5) | 3 AP (p6) |
+| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p9) | 5 AP (p7) | 5 AP (p8) |
 
 "gate AP" is the AP below which that material cannot drop
 (`LOOT_AP_BRONZE` / `LOOT_AP_IRON` / `LOOT_AP_STEEL`, `src/rpg/loot.h`;
@@ -223,13 +226,13 @@ need pool 6 and are gated separately (§6.1).
 
 ### 4.2 Rider cards — the only legal (effect, weapon) pairs
 
-| material | F SW (burn) | I SW (freeze) | P DA (poison) |
+| material | F BO (burn) | I BO (freeze) | P DA (poison) |
 |---|---|---|---|
 | **wood** (gate AP 1) | n/a | n/a | n/a |
 | **bronze** (gate AP 2) | 2 AP (p3) | 2 AP (p3) | 2 AP (p2) |
-| **iron** (gate AP 4) | 3 AP (p5) | 3 AP (p5) | 3 AP (p4) |
-| **steel** (gate AP 5) | 4 AP (p7) | 4 AP (p7) | 4 AP (p6) |
-| **mythril** (gate AP 5, riders 6) | 6 AP (p9) | 6 AP (p9) | 6 AP (p8) |
+| **iron** (gate AP 4) | 3 AP (p5) | 3 AP (p5) | 3 AP (p3) |
+| **steel** (gate AP 5) | 4 AP (p7) | 4 AP (p7) | 4 AP (p5) |
+| **mythril** (gate AP 5, riders 6) | 6 AP (p9) | 6 AP (p9) | 6 AP (p7) |
 
 Wood has no row by design (wood is always plain, §34.1) — and that is lucky:
 a wood+rider card would be the only combination in the whole table that
@@ -245,13 +248,13 @@ comparison.
 |---|---|---|---|---|
 | Wood Sword | `W SW` | 1 / wood / — | **1** | 1 |
 | Wooden Shield | `W SH` | 1 / wood / — | **1** | 1 |
-| Fire Sword | `F SW` | 3 / bronze / burn | **2** | 1 |
+| Bronze Sword | `B SW` | 3 / bronze / — | **1** | — (new plain row; the slot was a 2-AP fire rider) |
 | Poison Dagger | `P DA` | 2 / bronze / poison | **2** | 1 |
 | Iron Sword | `I SW` | 5 / iron / — | **2** | 1 |
 | Iron Ring | `I RG` | 4 / iron / — | **2** | 1 |
 | Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
 | Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
-| Shop Keys | `SHOPKEYS` | SPECIAL, not playable | **0** | 0 |
+| Shop Keys | `SHOP KEYS` | SPECIAL, not playable | **0** | 0 |
 | Bone | `BONE` | SPECIAL, not playable | **0** | 0 |
 | Old Key | `OLD KEY` | SPECIAL, not playable | **0** | 0 |
 
@@ -412,13 +415,15 @@ game.
 ### 7.2 The floor is 1, the classic start
 
 The starter deck (`screens/hero.json`) is four wood swords, four wood
-shields and **two bronze fire swords**.  Under this formula the fire swords
-cost 2, so at the hero's pool of 1 (`src/game/content.c`) only the wood
-cards are live on turn one — the manual promises "You get **1 Energy**
-each round" (`docs/manual.md:167`).  The two fire swords come online with
-the first +1 grant (the field-cache dagger chest, pool 2), which is the
-intended progression beat: start 1, dagger 2, tutorial 3, Monster Hunt 4,
-mimic 5.
+shields and **two plain bronze swords**.  Under this formula every
+starter card costs 1, so at the hero's pool of 1 (`src/game/content.c`)
+the whole deck is live on turn one — the manual promises "You get
+**1 Energy** each round" (`docs/manual.md:167`).  (Before the rider
+move the two bronze slots were fire swords at 2 AP, which came online
+with the first +1 grant (the field-cache dagger chest, pool 2): start
+1, dagger 2, tutorial 3, Monster Hunt 4, mimic 5.  The plain bronze
+sword collapses that beat — the first grant now buys combo width
+instead of unlocking the swords.)
 
 ### 7.3 Block and heal match damage, point for point
 
@@ -622,9 +627,9 @@ means the AP side cannot be the cause.
 
 | Check | What it proves |
 |---|---|
-| New scenarios `card_ap_formula_wood` / `_rider` / `_mythril` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  The descriptor deck section deals five identical catalog cards (`WOOD_SWORD` → pip 96, `FIRE_SWORD` → pip 97, `BOW_9` → pip 122) and asserts the OAM pip tile on all five hand slots (`oam_tile`).  The cost travels catalog def → battle deck → render with no injection anywhere in the path.  `M F SW` (6) cannot be staged this way until a pool-6 battle exists — assert it via `make card-costs`, not via a battle. |
+| New scenarios `card_ap_formula_wood` / `_rider` / `_mythril` | Stage the anchors through a **real deck**, not hand injection: `SET_HAND_CARD` bypasses `CardDefinition` lookup entirely (and never sets `cost` — only `SET_HAND_CARD_META` pins it, which would assert a hand-written value, not the formula).  The descriptor deck section deals five identical catalog cards (`WOOD_SWORD` → pip 96, `POISON_DAGGER` → pip 97, `BOW_9` → pip 122) and asserts the OAM pip tile on all five hand slots (`oam_tile`).  The cost travels catalog def → battle deck → render with no injection anywhere in the path.  `M F BO` (6) cannot be staged this way until a pool-6 battle exists — assert it via `make card-costs`, not via a battle. |
 | New scenario `card_ap_loot_gate` | Seed 76 at pool 5 rolls a plain STEEL SWORD (derived id 192, formula cost 3) on the rank row (R3 kobold -- the pool is staged, not read): victory grants it, the reveal names it (`S SW` / `STEEL SWORD`), and the DECK tab row shows AP digit 3, which the pool affords.  Rank-decided cost on a real drop, not on a hand-picked card. |
-| New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll on the R5 mimic: the drop is id 240 (`M F SW`, cost 6) and the reveal names the rider -- no hold-back exists anymore.  The card cannot be decked until the pool reaches 6 (`deck_equip_locked_loot` pins the `NEED AP 6` refusal); the locked card is the motivation to raise AP. |
+| New scenario `card_ap_loot_gate_mythril_rider` | Seed 210 at pool 5 rolls mythril + a rider-eligible fire roll on the R5 mimic: the drop is id 242 (`M F BO`, cost 6) and the reveal names the rider -- no hold-back exists anymore.  The card cannot be decked until the pool reaches 6 (`deck_equip_locked_loot` pins the `NEED AP 6` refusal); the locked card is the motivation to raise AP. |
 | `make card-costs` (required, host-side) | Recompute the formula over the 37 legal (material, weapon, effect) combos, fail on any `cost > gate_ap` where `gate_ap` is 6 for mythril riders and the material gate otherwise (§6.1), assert pairwise no-inversion (for every pair where B dominates A on all three inputs with at least one strict, `cost(B) >= cost(A)` — the §6.3/§7.5 fusion ordering) and strict riders (every rider pair costs exactly one AP more than the same card plain), and diff the result against §4.1/§4.2 of this document so these tables cannot rot.  Catches loot-table edits that no scenario happens to roll. |
 | Existing suite | Every scenario that asserts a hand, a detail page or a shop row: the AP display changes for 5 of the 8 catalog cards (Fire Sword, Poison Dagger, Iron Sword, Iron Ring, Mythril Bow; Wood Sword, Wooden Shield and the Shop Keys are unchanged). Expect to update `card_cost_energy` and the DECK-tab assertions. |
 | `make memmap`, `make test-sentinels` | Bank budget and SDCC-layout safety, even though the plan is layout-neutral. |
@@ -648,7 +653,7 @@ cannot fail is not a check (AGENTS.md §52.16).
 | Alternative | Why not |
 |---|---|
 | **Hand-maintained 100-cell cost table** (one number per material × effect × weapon) | Exactly the status quo with more cells: the same six locations to keep in sync, no guarantee of monotonicity, and a new material means 20 new numbers plus 8 new gate expectations. |
-| **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire sword (p3) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire sword (p9) costs the same 5 as a plain one.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
+| **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire bow (p3) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire bow (p9) costs the same 5 as a plain one.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
 | **Price-proportional** (`AP = ceil(price / 10)`, rounding up) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the Merchant's mythril bow (30 g, authored) would cost 3 AP by coincidence, not by design — while a loot roll of the same combo (17 g) would cost 2.  The division rule is itself arbitrary: with C integer division those same two prices give 3 and 1 instead, so the mapping has to be specified *and* justified, which the value ladder does not. |
 | **Percent-of-card rider** (`power × 1.2` for a rider) | Backwards: it charges the most for the rider on the card where the rider matters least (a flat 3-damage status). |
 | **Exponential tiers** (`2^material`) | Blows past any foreseeable pool: wood 1, bronze 2, iron 4, then steel 8 and mythril 16, so the top half of the ladder is unplayable and every rider there is free by default. |
@@ -658,12 +663,10 @@ cannot fail is not a check (AGENTS.md §52.16).
 
 ## 11. Open questions
 
-1. **Freeze at weight 16?**  Freeze denies a whole enemy attack, worth more
-   than 3 burn damage, and it is the only status whose value is not flat in
-   practice.  A second step breaks §6.1 for the bronze row (3 AP at gate 2).
-   Recommendation: keep it at 8 for now and revisit with playtest data —
-   moving the bronze gate to 3 to pay for it would stop bronze dropping at
-   AP 2, a bigger change than the one it fixes.
+1. **Ice at weight 16?**  (Asked when ice still skipped whole enemy
+   attacks, worth more than burn damage and the only non-flat status.)
+   Ice is a grey-out now, flat like the rest (2 cards for 2 rounds), so
+   the question is closed: keep rider weight 8.
 2. **Does the bow deserve a reach premium?**  A bow already takes the
    high-power band, so it matches a same-material sword.  A +1 role step is
    dead weight under `ceil(/8)` — it changes no cell in §4.1 (wood bow goes

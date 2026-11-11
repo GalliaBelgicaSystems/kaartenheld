@@ -1,10 +1,12 @@
-#pragma bank 3
+#pragma bank 11
 
 #include "battle.h"
 #include "banked.h"
 
-/* Banked body of battle_card_undo (src/battle/battle.c, ROM bank 3).
- * Self-contained: reads/writes only Battle struct fields (WRAM)
+/* Banked body of battle_card_undo (src/battle/battle.c, ROM bank 11:
+ * bank 3 overflowed in release once the patrol chase grew it, and this
+ * body is the clean mover -- self-contained, single trampoline
+ * caller).  Reads/writes only Battle struct fields (WRAM)
  * and calls no fixed-bank functions.  For the flee path, it sets
  * the result fields directly; the fixed-bank wrapper emits telemetry
  * after the call returns. */

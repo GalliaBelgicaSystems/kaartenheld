@@ -61,7 +61,8 @@ void battle_init_deck_banked(void)
 
             b->deck.cards[i].value = LOOT_POWER(mat, wi);
             /* Rings deplete per the material band (LOOT_RING_USES);
-             * every other loot card is unlimited-use. */
+             * every other loot card is unlimited-use (bows restaged
+             * below, after the rider is final). */
             b->deck.cards[i].uses_remaining =
                 (wpn == WPN_RING) ? LOOT_RING_USES(mat) : 0xFF;
             b->deck.cards[i].status_id = STATUS_NONE;
@@ -93,15 +94,15 @@ void battle_init_deck_banked(void)
 
             /* Status rider: wood carries none; otherwise only legal
              * (effect, weapon) pairs.  Poison = dagger only; fire/ice =
-             * sword only. */
+             * bow only (swords never ride). */
             if (mat >= MAT_BRONZE) {
                 if (eff == EFF_POISON && wpn == WPN_DAGGER) {
                     b->deck.cards[i].status_id = STATUS_POISON;
                     b->deck.cards[i].status_chance = 128;
-                } else if (eff == EFF_FIRE && wpn == WPN_SWORD) {
+                } else if (eff == EFF_FIRE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_BURN;
                     b->deck.cards[i].status_chance = 128;
-                } else if (eff == EFF_ICE && wpn == WPN_SWORD) {
+                } else if (eff == EFF_ICE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_FREEZE;
                     b->deck.cards[i].status_chance = 96;
                 }
@@ -114,6 +115,13 @@ void battle_init_deck_banked(void)
             b->deck.cards[i].cost = (wpn <= WPN_RING)
                 ? CARD_AP(b->deck.cards[i].value, mat,
                           b->deck.cards[i].status_id != STATUS_NONE) : 0;
+            /* Bow arrows per battle (docs/loot.md §34.6): AP-derived,
+             * inverse to power (wood 6 .. mythril 2, floored at 2).
+             * Staged after the rider above so the uses track CARD_AP
+             * with no second ladder. */
+            if (wpn == WPN_BOW)
+                b->deck.cards[i].uses_remaining =
+                    LOOT_BOW_USES_FROM_AP(b->deck.cards[i].cost);
         } else {
             /* Unknown id: safety-net sword, mirroring the phantom draw. */
             b->deck.cards[i].type = BATTLE_CARD_TYPE_SWORD;

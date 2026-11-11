@@ -1,7 +1,7 @@
 {
-  "name": "battle_poison_grey_deck_lock",
+  "name": "battle_ice_grey_deck_lock",
   "test": true,
-  "description": "REGRESSION: poison enemy0 (shared 5-card deck: draw 0 greyed), chip to 2HP so the hero finishes it in round 2. Round 1 the poisoned enemy0 selects its greyed lead (ENEMY_CARD_PLAYED draw 0) and fizzles (TURN_SKIPPED slot 1 cause POISON); the spent card is consumed. Round 2 the hero kills it (ENTITY_DEFEATED) and the surviving enemy1 draws past the corpse grey (ENEMY_CARD_PLAYED draw 1) and lands 2 damage -- a dead victim's mask never jams the shared draw. The corpse grey still drains on schedule (CARDS_UNGREYED at the round-3 boundary).",
+  "description": "REGRESSION: ice enemy0 (shared 5-card deck: draw 0 greyed), chip to 2HP so the hero finishes it in round 2. Round 1 the iced enemy0 selects its greyed lead (ENEMY_CARD_PLAYED draw 0) and fizzles (TURN_SKIPPED slot 1 cause ICE); the spent card is consumed. Round 2 the hero kills it (ENTITY_DEFEATED) and the surviving enemy1 draws past the corpse grey (ENEMY_CARD_PLAYED draw 1) and lands 2 damage -- a dead victim's mask never jams the shared draw. The corpse grey still drains on schedule (CARDS_UNGREYED at the round-3 boundary).",
   "initial_state": {
     "scene": "TEST_MOUNTAIN_PASS",
     "player": { "x": 13, "y": 7, "facing": "RIGHT" },
@@ -12,7 +12,7 @@
   "actions": [
     { "type": "wait", "frames": 5 },
     { "type": "set_enemy_hp", "index": 0, "hp": 2 },
-    { "type": "apply_status", "slot": 1, "status": 1, "duration": 3 },
+    { "type": "apply_status", "slot": 1, "status": 3, "duration": 3 },
     { "type": "set_hand_card", "index": 0, "card_type": "SW", "value": 1 },
     { "type": "set_hand_card_meta", "index": 0, "cost": 1, "uses": 255 },
     { "type": "set_hand_card", "index": 1, "card_type": "SH", "value": 1 },
@@ -46,7 +46,7 @@
     { "type": "event_arg", "event": "ENEMY_CARD_PLAYED", "index": 0, "value": 1 },
     { "type": "event_occurred", "event": "TURN_SKIPPED" },
     { "type": "event_arg", "event": "TURN_SKIPPED", "index": 0, "value": 1 },
-    { "type": "event_arg", "event": "TURN_SKIPPED", "index": 1, "value": 1 },
+    { "type": "event_arg", "event": "TURN_SKIPPED", "index": 1, "value": 3 },
     { "type": "event_count", "event": "TURN_SKIPPED", "count": 1 },
     { "type": "event_occurred", "event": "ENTITY_DEFEATED" },
     { "type": "event_arg", "event": "DAMAGE_RECEIVED", "index": 0, "value": 2 },

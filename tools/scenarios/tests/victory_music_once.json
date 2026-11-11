@@ -1,11 +1,11 @@
 {
   "name": "victory_music_once",
   "test": true,
-  "description": "The battle-victory fanfare plays ONCE: hUGEDriver wraps a song's order list unconditionally, so before this the VICTORY! result screen replayed victory.uge every 4 s for as long as it stayed up. The bank-8 stop clock ends the track in the song's silent tail (frame backstop under the harness) and the VICTORY! screen stays in silence until the player leaves it.",
+  "description": "The battle-victory fanfare plays ONCE: hUGEDriver wraps a song's order list unconditionally, so before this the VICTORY! result screen replayed victory.uge every 4 s for as long as it stayed up. The bank-8 stop clock ends the track in the song's silent tail (frame backstop under the harness) and the VICTORY! screen stays in silence until the player leaves it. (Status effects live elsewhere now: a burned foe still dies on schedule, and the hero defends manually -- poison would confuse the hero into random play and ice no longer skips, so neither is staged here.)",
   "initial_state": {
     "scene": "TEST_MOUNTAIN_PASS",
     "player": { "x": 13, "y": 7, "facing": "RIGHT" },
-    "party": { "HERO": { "hp": 1, "max_hp": 60 } },
+    "party": { "HERO": { "hp": 60, "max_hp": 60 } },
     "seed": 5002
   },
   "actions": [
@@ -15,8 +15,6 @@
     { "type": "set_enemy_hp", "index": 1, "hp": 0 },
     { "type": "set_enemy_hp", "index": 2, "hp": 0 },
     { "type": "apply_status", "slot": 1, "status": 2, "duration": 3 },
-    { "type": "apply_status", "slot": 0, "status": 1, "duration": 3 },
-    { "type": "apply_status", "slot": 1, "status": 3, "duration": 3 },
     { "type": "set_hand", "cards": [
       {"type": "SH", "value": 1, "cost": 1, "uses": 255},
       {"type": "SH", "value": 1, "cost": 1, "uses": 255},

@@ -1,7 +1,7 @@
 {
   "name": "collection_absorb_full_shelf",
   "test": true,
-  "description": "Loot folding at a full 12-row collection (docs/loot.md §34.5, AGENTS.md §52.19): the starter FIRE_SWORD row (2 of cap 3) plus nine distinct plain filler ids fill every shelf slot; a bronze fire sword (derived id 0x90) matching the owned curated identity must fold into that row (2 -> 3) instead of vanishing as a false 'collection full' failure. Pre-fix deck_collection_add rejected the grant before the merge could fold it.",
+  "description": "Loot folding at a full 12-row collection (docs/loot.md §34.5, AGENTS.md §52.19): the starter BRONZE_SWORD row (2 of cap 3) plus nine distinct plain filler ids fill every shelf slot (the wood-dagger filler is id 99: a plain bronze sword filler would already fold into the curated row and spoil the 2->3 setup); a bronze fire-sword id (derived id 0x90, stripped to plain since swords never ride) matching the owned curated identity must fold into that row (2 -> 3) instead of vanishing as a false 'collection full' failure. Pre-fix deck_collection_add rejected the grant before the merge could fold it.",
   "initial_state": {
     "scene": "TEST_FIELD",
     "player": {
@@ -34,7 +34,7 @@
     },
     {
       "type": "collection_add",
-      "card_id": 128,
+      "card_id": 99,
       "quantity": 1
     },
     {
@@ -74,7 +74,7 @@
   "assertions": [
     {
       "type": "inventory",
-      "item": "FIRE_SWORD",
+      "item": "BRONZE_SWORD",
       "expected": 3
     },
     {

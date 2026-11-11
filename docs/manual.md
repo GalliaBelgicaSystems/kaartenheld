@@ -131,7 +131,7 @@ you own:
 | **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
 | **Dagger** (`DA`) | A small hit that can poison. Played alone on defence, it strikes first -- a killing blow takes no damage. |
 
-Some cards are extra special: a **Fire Sword** burns, a **Poison Dagger**
+Some cards are extra special: a **Fire Bow** burns, a **Poison Dagger**
 poisons, and the **Mythril Bow** hits very, very hard.
 
 ### Collection and deck
@@ -236,9 +236,10 @@ more you heal).
 - **Burn** hurts every turn for a tenth of the hit that lit it
   (at least 1 HP). Watch the little marks
   beside a fighter.
-- **Poison** never hurts -- instead, a couple of your cards turn grey
-  and cannot be used until the poison wears off.
-- **Freeze** is nasty: a frozen fighter **misses a whole turn!**
+- **Poison** never hurts -- instead, a poisoned enemy turns on its
+  allies (or itself, alone), and a poisoned hero plays a random hand.
+- **Ice** locks cards: a couple of your cards turn grey
+  and cannot be used until the ice wears off.
 - Badly hurt between fights? Find the red-robed **Heal Mage** in town —
   talking to him restores all your HP for free, with a happy little jingle.
 

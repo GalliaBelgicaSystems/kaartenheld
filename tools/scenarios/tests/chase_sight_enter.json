@@ -1,7 +1,7 @@
 {
  "name": "chase_sight_enter",
  "test": true,
- "description": "Walking into a chaser's line of sight wakes it: the hero starts at (17,7) -- 13 tiles from the TEST_FOREST kobold at (4,10), outside AI_CHASE_SIGHT = 10 -- waits 20 frames while it sleeps, then steps LEFT three times to (14,7), which is exactly 10 tiles away with 10 on the y axis. The kobold wakes on that commit (alert sting sfx_last == 7, pursuer ! bubble at entry 30 == EXCLAIM_TILE 126) and starts chasing instead of holding its spawn tile.",
+ "description": "Walking into a chaser's line of sight wakes it: the hero starts at (17,7) -- 13 tiles from the TEST_FOREST kobold at (4,10), outside AI_CHASE_SIGHT = 10 -- waits 20 frames while it sleeps, then steps LEFT three times to (14,7), which is exactly 10 tiles away with 10 on the y axis. The kobold wakes on that commit (alert sting sfx_last == 7, pursuer ! bubble at entry 30 == EXCLAIM_TILE 126) and starts chasing instead of holding its spawn tile -- with diagonal chase it cuts the corner to (5,9) instead of stepping cardinally.",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -67,8 +67,8 @@
   {
    "type": "actor_at",
    "entity": "KOBOLD",
-   "x": 6,
-   "y": 10
+   "x": 5,
+   "y": 9
   }
  ]
 }

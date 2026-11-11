@@ -9,7 +9,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "FIRE_SWORD"
+   "card": "BRONZE_SWORD"
   },
   {
    "type": "wait",
@@ -74,7 +74,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "FIRE_SWORD"
+   "card": "BRONZE_SWORD"
   },
   {
    "type": "wait",
@@ -106,7 +106,7 @@
   },
   {
    "type": "deck_remove",
-   "card": "FIRE_SWORD"
+   "card": "BRONZE_SWORD"
   },
   {
    "type": "wait",

@@ -24,7 +24,7 @@ uint8_t g_status_frozen_mask;
  * Non-static so the bank-3 battle HUD can color names by active status. */
 StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
 
-/* Poison grey-out (status.h): mask/duration per actor slot.  Battle-scoped
+/* Ice grey-out (status.h): mask/duration per actor slot.  Battle-scoped
  * runtime state, cleared at battle start; written by status_grey_apply
  * (wrapper + bank-10 pick body), read by battle gating and the bank-3 HUD. */
 uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
@@ -50,6 +50,9 @@ StatusSlots *status_slots(uint8_t actor_slot)
 bool status_apply(StatusSlots *slots, uint8_t actor_slot, uint8_t id,
                   uint8_t stacks, uint8_t duration)
 {
+    /* Slot routing lives with the callers (status_slots); the banked
+     * body never needs the index. */
+    (void)actor_slot;
     g_status_applied.id = STATUS_NONE;
 
     g_bk_call_bank = 10;
@@ -60,17 +63,8 @@ bool status_apply(StatusSlots *slots, uint8_t actor_slot, uint8_t id,
     banked_call_run();
 
     if (g_status_applied.id == STATUS_NONE) {
-        /* Rejected (e.g. slots full): nothing landed, so the frozen
-         * mask must stay untouched -- a rejected FREEZE must not skip
-         * anyone's turn. */
+        /* Rejected (e.g. slots full): nothing landed. */
         return false;
-    }
-
-    /* FREEZE takes effect immediately: the next attack by this
-     * combatant is skipped; the tick body re-arms the bit while an
-     * instance remains alive. */
-    if (id == STATUS_FREEZE && actor_slot < STATUS_ROUND_SLOTS) {
-        g_status_frozen_mask |= (uint8_t)(1 << actor_slot);
     }
 
     telemetry_emit(EVENT_STATUS_APPLIED, g_status_applied.id,
@@ -120,7 +114,7 @@ void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
     if (s_grey_mask[actor_slot] == 0) return;
 
     telemetry_emit(EVENT_CARDS_GREYED, actor_slot, g_bk_byte_b, g_bk_byte_c,
-                   POISON_GREY_TURNS);
+                   ICE_GREY_TURNS);
 #endif
 }
 

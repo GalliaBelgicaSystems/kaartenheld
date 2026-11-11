@@ -573,7 +573,7 @@ The save system should not need to know about:
 ```text
 Mayor
 Slime
-Fire Sword
+Fire Bow
 Town
 ```
 
@@ -828,7 +828,7 @@ FOUNDATION
     Progression
 
 GAME
-    Fire Sword
+    Fire Bow
     Deck
     Card Combo
     Slime

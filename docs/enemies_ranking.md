@@ -97,7 +97,7 @@ material 0..4 = wood, bronze, iron, steel, mythril
 ```
 
 `card_get_def()` synthesizes the definition from the id (`src/rpg/loot_banked.c`):
-name (`W SW`, `I F SW`, `M P DA`), power, AP cost, rider/status, ring uses,
+name (`W SW`, `I F BO`, `M P DA`), power, AP cost, rider/status, ring uses,
 price.  The collection, deck, shops, save data and battle all treat loot
 cards as ordinary cards; there is no instance layer.
 
@@ -136,10 +136,10 @@ AP 5+ = mythril.  So AP is both a *profile* and a *ceiling*.
 
 **Effect — one flat rider gate, weapon legality decides which rider.**
 A rider is rolled only when the material is bronze or better and
-`eff_roll < 64` (**25%**); within that, swords get fire for
+`eff_roll < 64` (**25%**); within that, bows get fire for
 `eff_roll < 32` and ice otherwise (12.5% each), and daggers get poison
-(25%).  Wood is always plain, shields/bows/rings can never carry a rider,
-and a *mythril* rider is withheld until the pool reaches
+(25%).  Wood is always plain, shields/swords/rings can never carry a
+rider, and a *mythril* rider is withheld until the pool reaches
 `LOOT_AP_MYTHRIL_RIDER` (6), because a mythril rider card costs 6 AP
 (`docs/card-ap-cost-formula.md` §6.1).  At AP 5 mythril is therefore always
 plain.  (Both the ceiling and this rider hold-back are what §4.3 removes: the
@@ -165,7 +165,8 @@ Derived from the same material band (`LOOT_POWER` in `src/rpg/loot.h`):
 
 ```text
 wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9
-sword and bow take the high end of the band, shield/dagger/ring the low end
+sword and bow take the high end of the band, shield/ring the low end;
+daggers run a softer band (wood 1, bronze 2, iron 3, steel 5, mythril 7)
 ```
 
 Synthesized **sell price** = `power + 2·material`, `+2` for a poison dagger
@@ -258,31 +259,36 @@ these.
 
 Material is the only purely vertical axis: for a given weapon, each tier
 step adds 2 power (wood 1; bronze 2–3; iron 4–5; steel 6–7; mythril 8–9),
-with sword/bow at the top of each band and shield/dagger/ring at the bottom.
+with sword/bow at the top of each band and shield/ring at the bottom.
+Daggers are the exception: a softer band (wood 1, bronze 2, iron 3,
+steel 5, mythril 7) so the free counterattack doesn't outclass the
+sword -- every dagger still beats the tier below it, and bronze (2)
+always beats wood (1).
 
 ### 2.2 The tempo ladder is the AP cost
 
 Material is *also* the dominant term in the AP cost (4 points per tier, and
 mythril carries a 12-point premium).  This is why the material ladder and
 the tempo ladder mostly agree but deliberately not always — a mythril bow
-costs 5 AP and sells for 17 g, a mythril fire sword costs 6 AP and sells
+costs 5 AP and sells for 17 g, a mythril fire bow costs 6 AP and sells
 for the same 17 g.
 
 ### 2.3 The rider ladder
 
 A rider is worth a whole AP step (8 points) and is only legal on some
-weapons (§34.2): fire/ice on swords, poison on daggers, nothing on bows,
-shields or rings.  Riders are therefore a quality signal that is *not*
-monotone in material: a bronze fire sword (2 AP) beats a bronze plain sword
-(1 AP) but not an iron plain sword (2 AP).
+weapons (§34.2): fire/ice on bows, poison on daggers, nothing on swords,
+shields or rings.  Swords are the plain all-rounder: they hit hard and
+cost what the band says, no riders ever.  Riders are therefore a quality
+signal that is *not* monotone in material: a bronze fire bow (2 AP)
+beats a bronze plain sword (1 AP) but not an iron plain sword (2 AP).
 
 ### 2.4 The archetype ladder
 
 | Weapon | Role | Band position | Riders | Note |
 |---|---|---|---|---|
-| Sword | damage | high end | fire, ice | the main attack card |
-| Dagger | damage | low end | poison | defense-phase counterattack line |
-| Bow | damage | high end | none | drop source today: **bats only** (plus merchant) |
+| Sword | damage | high end | none | the plain all-rounder attack card |
+| Dagger | damage | own soft band (1/2/3/5/7) | poison | defense-phase counterattack line |
+| Bow | damage | high end | fire, ice | drop source today: **bats only** (plus merchant) |
 | Shield | block | low end | none | plain shields never heal (over-block clamps to 0) |
 | Ring | heal | low end | none | the *only* healing vector; uses = tier + 1 |
 
@@ -297,10 +303,10 @@ Power / AP / sell price for representative cards (all formulas from §1.5):
 | `I SW` | 5 | 2 | 9 g | – |
 | `S SW` | 7 | 3 | 13 g | – |
 | `M SW` | 9 | 5 | 17 g | – |
-| `B F SW` | 3 | 2 | 5 g | – |
-| `I F SW` | 5 | 3 | 9 g | – |
-| `S F SW` | 7 | 4 | 13 g | – |
-| `M F SW` | 9 | 6 | 17 g | – |
+| `B F BO` | 3 | 2 | 5 g | – |
+| `I F BO` | 5 | 3 | 9 g | – |
+| `S F BO` | 7 | 4 | 13 g | – |
+| `M F BO` | 9 | 6 | 17 g | – |
 | `B P DA` | 2 | 2 | 6 g | – |
 | `I RG` | 4 | 2 | 8 g | 3/battle |
 | `M BO` | 9 | 5 | 17 g | – |
@@ -324,40 +330,36 @@ All numbers are per **encounter** (one roll), for a non-bat enemy; a bat
 multiplies each material figure by 100% instead of 25% for the weapon, and
 always gets the bow.
 
-### 3.1 `I F SW` (the iron fire sword) — the worked example
+### 3.1 `I F BO` (the bat iron fire bow) — the worked example
 
-The probability chain for one specific card:
+Rider bows drop from bats (the only bow source in the demo), so the
+worked example is a bat roll at R2.  The probability chain for one
+specific card:
 
 ```text
-P(I F SW) = P(sword) × P(iron) × P(rider rolled) × P(fire | rider rolled)
-          = 0.25     × P(iron) × 0.25            × 0.5
-          = 0.03125  × P(iron)
+P(I F BO) = P(bow | bat) × P(iron | R2) × P(rider | R2) × P(fire | rider)
+          = 1.0          × 22.3%        × 31.25%       × 0.5
+          = 3.48%  (≈ 1 in 29 bat encounters)
 ```
 
-| AP | P(iron) | P(`I F SW`) | ≈ 1 in |
-|---|---|---|---|
-| 1 | – | 0% | – |
-| 2 | – | 0% | – |
-| 3 | – | 0% | – |
-| 4 | 19.9% | **0.62%** | 161 encounters |
-| 5+ | 25.0% | **0.78%** | 128 encounters |
+P(iron | R2) is the R2 cut row (57/256); the rider gate at R2 is 80/256;
+fire/ice split the rider roll half each.  Non-bat encounters never roll
+bows, and swords never roll riders, so this is the only fire card in
+the demo drop pool.
 
 ### 3.2 Related cards, same AP rows
 
-| AP | `B SW` | `I SW` | `I F SW` | `S F SW` | `M F SW` |
-|---|---|---|---|---|---|
-| 2 | 3.74% | – | – | – | – |
-| 3 | 6.52% | – | – | – | – |
-| 4 | 5.57% | 3.74% | 0.62% | – | – |
-| 5+ | 5.64% | 4.69% | 0.78% | 0.24% | 0.06% |
+| AP | `B SW` | `I SW` |
+|---|---|---|
+| 2 | 3.74% | – |
+| 3 | 6.52% | – |
+| 4 | 5.57% | 3.74% |
+| 5+ | 5.64% | 4.69% |
 
-Two things to notice:
-
-* `S F SW` and `M F SW` are *far* rarer than `S SW` (1.46% at AP 5) and
-  `M SW` (0.37%) because riders are only 25% of rolls.  A steel plain sword
-  is 1.46%, a steel fire sword 0.24%: **6×**.
-* Because the material roll is uniform-ish over 256 values, "rare tier"
-  currently means "a few percent", not "a chase item".
+Sword riders are gone (swords are plain), so the old `I F SW` / `S F SW` /
+`M F SW` columns have no entries anymore.  The remaining rider on
+non-bat encounters is dagger poison (25% of dagger rolls at the §4.5
+gate); fire/ice live on bats — see the §3.1 chain.
 
 ### 3.3 A convenient summary metric
 
@@ -481,7 +483,7 @@ on mythril.
 **Rider gate by rank.**  Rank also raises the chance of a rider (a quality
 signal that does not shift material), one step per rank:
 
-| Rank | `eff_roll` gate | P(rider) | fire (sword) | ice (sword) | poison (dagger) |
+| Rank | `eff_roll` gate | P(rider) | fire (bow) | ice (bow) | poison (dagger) |
 |---|---|---|---|---|---|
 | 0–1 | 64 | 25% | 12.5% | 12.5% | 25% |
 | 2 | 80 | 31.25% | 15.6% | 15.6% | 31.25% |
@@ -489,11 +491,13 @@ signal that does not shift material), one step per rank:
 | 4 | 112 | 43.75% | 21.9% | 21.9% | 43.75% |
 | 5–6 | 128 | 50% | 25.0% | 25.0% | 50% |
 
-The fire/ice figures are conditional on a sword and material ≥ bronze (the
+The fire/ice figures are conditional on a bow and material ≥ bronze (the
 only legal pairing); the poison figure is conditional on a dagger.
-Unconditional per-drop chances are those numbers × 25% (the sword's or
-dagger's share of the weapon roll).  Wood is still always plain; bows, shields
-and rings never carry a rider.
+Bows only roll on bat encounters (100% bow there), so the unconditional
+per-bat-encounter fire/ice chances are those numbers × the bronze+
+share of the rank's material roll.  On non-bat encounters the only
+rider is poison at 25% of dagger rolls.  Wood is still always plain;
+swords, shields and rings never carry a rider.
 
 **Rank 0 means no drop** (decided, §8.2): the body writes `CARD_NONE`, which
 both `world_on_battle_end` and the victory reveal in `battle_screen.c` already
@@ -562,25 +566,25 @@ Every rank now has one fixed distribution, so the comparison is against today's
 * **Nothing else about the ladder changes**: same weapon mix, same rider
   legality, same material band → power / sell / uses mapping.
 
-### 4.5 `I F SW` under ranks
+### 4.5 Rider bows under ranks (demo: bats only)
 
-`P(I F SW) = 0.25 × P(iron | rank) × gate/256 × 0.5` — one number per rank, no
-AP column, because AP no longer enters the roll:
+Fire/ice bows roll only on bat encounters (R2, 100% bow), so there is
+one rank row instead of a per-rank table.  At the R2 gate (80/256)
+with a half-half fire/ice split:
 
-| Rank | P(`I F SW`) | ≈ 1 in | P(`S F SW`) | P(`M F SW`) |
-|---|---|---|---|---|
-| R1 (slime) | 0.38% | 263 encounters | 0.07% | 0.02% |
-| R2 (spider) | 0.87% | 115 | 0.17% | 0.03% |
-| R3 (kobold) | 1.41% | 71 | 0.57% | 0.15% |
-| R4 (slime knight) | **2.20%** | 45 | 1.37% | 0.28% |
-| R5 (mimic) | 1.56% | 64 | **3.12%** | 0.95% |
-| R6 (Lord) | 1.27% | 79 | 2.81% | **1.88%** |
+| Bow | P(drop \| bat) | ≈ 1 in |
+|---|---|---|
+| `B F BO` / `B I BO` | 5.92% each | 17 bat encounters |
+| `I F BO` / `I I BO` | 3.48% each | 29 |
+| `S F BO` / `S I BO` | 0.67% each | 149 |
+| `M F BO` / `M I BO` | 0.12% each | ~800 |
 
-The iron fire sword peaks at **R4** and then *falls* at R5/R6 — the "centered on
-a material" requirement in table form: above R4 the mass has moved to
-steel/mythril, so the chase card changes (`S F SW` 3.12% from a mimic,
-`M F SW` 1.88% from the Lord).  A player specifically hunting `I F SW` is best
-served by knights, which is exactly what the rank vocabulary claims.
+(Material shares from the R2 cut row: bronze 37.9%, iron 22.3%, steel
+4.3%, mythril 0.8%; rider gate 31.25%, fire/ice half each.)  The old
+per-rank chase (iron fire sword peaking at R4, steel at R5, mythril at
+R6) is gone with sword riders; it comes back when higher-rank bow
+enemies extend the roll (§34.5 note).  On non-bat encounters the only
+rider is dagger poison at the §4.3 gate rates.
 
 Plain swords on the same rows, for scale (`I SW` / `S SW` / `M SW`): R4
 10.06% / 6.25% / 1.27%, R5 6.25% / 12.50% / 3.81%, R6 5.08% / 11.23% / 7.52%.
@@ -599,9 +603,11 @@ of its drops that pool can actually wear (§4.3):
 | mimic | R5 | 11.26 g | 90.2% | 65.2% | 5 | 96% |
 | Lord | R6 | 12.50 g | 95.3% | 75.0% | 5 | 92% |
 
-Bats substitute the bow for every weapon roll (no riders, same 25% share), so
-a bat's card is always a plain bow of its rolled material: `B BO` 37.9%,
-`I BO` 22.3%, `S BO` 4.3%, `M BO` 0.8% at R2.
+Bats substitute the bow for every weapon roll, so a bat's card is always a
+bow of its rolled material: bronze 37.9%, iron 22.3%, steel 4.3%,
+mythril 0.8% at R2 — of each material's share, 31.25% of bronze+ rolls
+carry a rider at the R2 gate, split half fire / half ice (see the §3.1
+chain for the worked fire-bow probability).
 
 E[sell] follows §3.3 (sell = power + 2·material, plus the poison dagger's +2
 weighted by its rider chance).  It is the merchant's price, not the card's
@@ -647,8 +653,8 @@ part of the loot feature, not a follow-up.
 to the deck -- curated or loot-derived (`loot_is_loot_id(id)`, i.e. id ≥
 `LOOT_ID_BASE`).  A card you cannot pay for would be a dead deck slot.
 Pre-decked grants are unaffected: the starter deck, shop/quest rewards and
-scenario staging arrive via the ungated `deck_add_card`, so the cost-2
-fire swords in the pool-1 starter deck stay put.  Only *player-chosen
+scenario staging arrive via the ungated `deck_add_card`, so the plain
+bronze swords in the pool-1 starter deck stay put.  Only *player-chosen
 equipping* (quick-screen A, harness `deck add`) is gated.
 
 **Shape.**
@@ -894,8 +900,8 @@ pay for, so it is a dead deck slot instead of a goal.
    `deck_add_card` rules plus one new one: **a loot-derived id
    (`loot_is_loot_id(id)`) whose `card_get_def(id)->cost` exceeds `pool` cannot
    be decked.**  `deck_add_card` itself stays ungated, because authored grant
-   paths — `game_new_game`'s starter deck (which carries cost-2 fire swords
-   while the pool starts at 1), shop grants and scenario setup — are written
+   paths — `game_new_game`'s starter deck (plain bronze swords, live at
+   pool 1), shop grants and scenario setup — are written
    against the pool they appear at.  Only player-chosen equipping is gated.
 2. `src/screens/item_screen.c`: the A action calls `deck_equip_card(...)` with
    the live pool (already in `g->state.variables`), maps `EQUIP_LOCKED` to a new
@@ -1063,8 +1069,8 @@ Sanity checks a reader (or a future test) can redo by hand:
   makes "rank = quality" a comparison rather than a label;
 * a row with `255` in a slot can never advance past that tier (the walk compares
   `mat_roll > cut`, and `mat_roll ≤ 255`);
-* `P(I F SW) = P(sword) · P(iron | row) · (gate/256) · 0.5
-  = 0.125 · P(iron | row) · gate/256`;
+* `P(I F BO) = P(bow | bat) · P(iron | row) · (gate/256) · 0.5
+  = 1.0 · P(iron | R2) · gate/256` (bats are R2-only, so the row is R2);
 * card AP = `1 + {wood 0, bronze 0, iron 1, steel 2, mythril 4} + (rider ? 1 :
   0)`, the same for every weapon (the sword/bow +1 power is absorbed by the
   `/8` ceiling step);

@@ -1,13 +1,10 @@
-/* Bank split (memory budget): the release ROM's bank 4 has room while
- * its bank 3 is render-full (rider OAM pass); the debug ROM's bank 4 is
- * test-content-full, so the defend body lives in bank 5 there (same
- * pattern as patrol_banked.c / scene_load.c).  Keep in sync with the
- * dispatch bank in battle_defend_resolve() below (battle.c). */
-#ifdef DEBUG_BUILD
-#pragma bank 5
-#else
-#pragma bank 4
-#endif
+/* Bank split (memory budget): the defend body lives in bank 10 (event/
+ * status bank) in both builds -- release bank 4 filled up (rider OAM
+ * pass + nav cluster + confuse branch) and debug bank 4 is
+ * test-content-full.  Bank 10 already hosts battle-flow bodies (the
+ * telegraph) and has room.  Keep in sync with the dispatch bank in
+ * battle_defend_resolve() below (battle.c). */
+#pragma bank 10
 
 #include "battle.h"
 #include "rpg/effects.h"
@@ -15,11 +12,44 @@
 #include "rng.h"
 #include "audio.h"
 #include "banked.h"
+#include "telemetry.h"
+#include "telemetry_ring.h"
+
+/* Confused-attacker helpers (poison, docs/loot.md §34.6): the fixed
+ * caller (battle_execute_combo) already confirmed the attacker is
+ * poisoned, but this body re-derives everything it needs from the
+ * staged Battle* + WRAM (no fixed calls while banked).  Status slots
+ * are plain WRAM (s_battle_status), readable directly. */
+static uint8_t confuse_attacker_poisoned(Battle *b, uint8_t atk)
+{
+    StatusSlots *slots;
+    uint8_t i;
+    if (atk >= b->enemy_count) return 0;
+    slots = &s_battle_status[(uint8_t)(atk + 1)];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return 1;
+    }
+    return 0;
+}
+
+/* Friendly-fire victim: the first live enemy that is not the attacker,
+ * or the attacker itself when alone (self-harm).  Deterministic slot
+ * order (no RNG step): the confusion is in WHO the blow lands on, not
+ * which ally -- and a fixed victim keeps the harness deterministic. */
+static uint8_t confuse_pick_victim(Battle *b, uint8_t atk)
+{
+    uint8_t i;
+    for (i = 0; i < b->enemy_count; i++) {
+        if (i != atk && b->enemies[i].hp != 0) return i;
+    }
+    return atk;
+}
 
 /* Banked body of battle_defend_resolve (src/battle/battle.c).  Computes
- * and applies the DEFENSE net resolution entirely in bank 4 so the
+ * and applies the DEFENSE net resolution entirely in bank 10 (was bank
+ * 4 release / bank 5 debug; both filled up -- see header note) so the
  * fixed bank (which is completely full, see make memmap) only runs a thin
- * staging wrapper + telemetry.  Lives in bank 4 (not bank 3) to leave
+ * staging wrapper + telemetry.  Lives in bank 10 (not bank 3) to leave
  * room for the rider OAM pass in the release layout.
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
@@ -86,6 +116,46 @@ void battle_defend_resolve_banked(void)
         }
     }
 
+    /* Confused attacker (poison): the single place confusion is decided.
+     * The swing turns on the attacker's own side instead of the hero --
+     * the hero takes nothing (bytes a/b stay 0, so the wrapper emits
+     * RECEIVED 0) and the victim takes the full telegraphed swing.  Lone
+     * confused attackers harm themselves.  The despair floor holds
+     * exactly like the counter path above.  The organic rider stages
+     * for the fixed wrapper like any other swing (victim-slot routing
+     * via g_battle_confuse_victim); telemetry here is DAMAGE only,
+     * victim slot in d1.  A counter applied this same phase already ran
+     * above and may have poisoned the attacker -- that poison counts:
+     * one rule, no ordering special-cases. */
+    if (confuse_attacker_poisoned(b, atk)) {
+        uint8_t vic = confuse_pick_victim(b, atk);
+        uint8_t dmg = b->enemy_incoming_dmg;
+        g_battle_confuse_victim = vic;
+        if (dmg != 0 && b->enemies[vic].hp != 0) {
+            if (vic == g_despair_slot) {
+                b->enemies[vic].hp = 1;
+            } else if (dmg >= b->enemies[vic].hp) {
+                b->enemies[vic].hp = 0;
+            } else {
+                b->enemies[vic].hp = (uint8_t)(b->enemies[vic].hp - dmg);
+            }
+            g_bk_byte_d = SFX_HURT;
+            telemetry_ring_emit(EVENT_DAMAGE_DEALT, dmg, (uint8_t)(vic + 1), 0, 0);
+            if (b->enemy_played_card.status_id != STATUS_NONE &&
+                b->enemy_played_card.status_chance != 0) {
+                g_rng_state ^= (uint16_t)(g_rng_state << 7);
+                g_rng_state ^= (uint16_t)(g_rng_state >> 9);
+                g_rng_state ^= (uint16_t)(g_rng_state << 8);
+                if ((uint8_t)g_rng_state < b->enemy_played_card.status_chance) {
+                    g_bk_byte_c = b->enemy_played_card.status_id;
+                }
+            }
+        } else {
+            g_bk_byte_d = SFX_BLOCK;
+        }
+        return;
+    }
+
     for (di = 0; di < b->combo_count; di++) {
         if (b->last_combo.cards[di].ring) combo_has_ring = 1;
     }
@@ -135,7 +205,7 @@ void battle_defend_resolve_banked(void)
      * (0 = none).  The roll inlines the xorshift step of rng_next() -- a
      * banked body must not call fixed-bank functions (AGENTS.md §52.11.1);
      * the wrapper applies via the real status_apply + status_grey_apply,
-     * so poison also greys the player's hand. */
+     * so ice also greys the victim's pool. */
     if (net > 0 && b->enemy_played_card.status_id != STATUS_NONE &&
         b->enemy_played_card.status_chance != 0) {
         g_rng_state ^= (uint16_t)(g_rng_state << 7);

@@ -118,8 +118,8 @@ Battle and menus have their own controls, covered in §6 and §7.
 4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
 5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
    daggers hit back.
-6. **BURN POISON FREEZE** — burn wounds, poison locks cards; ice skips
-   your turn.
+6. **BURN POISON ICE** — burn wounds, poison confuses; ice locks
+   your cards.
 7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
 ---
@@ -325,9 +325,9 @@ Every tool in battle is a **card**.  Cards have several attributes
 
 | Symbol | Name | Battle role | Description |
 |---|---|---|---|
-| `SW` | Sword | Attack | Physical damage. `F SW` = fire rider (BURN). |
+| `SW` | Sword | Attack | Physical damage, always plain. |
 | `SH` | Shield | Defense | Blocks damage in the defend phase; **0 damage** in attack but still counts toward combos. |
-| `BO` | Bow | Attack | Ranged damage. |
+| `BO` | Bow | Attack | Ranged damage. `F BO` = fire rider (BURN). |
 | `RG` / `HE` | Ring | Heal | Heals its power; in attack a ring deals 0 but acts as a **joker** (§8.2); in defense it wildcards the hand but adds 0 block (§6.5).  Shop label `RG4`, battle hand label `HE4`. |
 | `DA` | Dagger | Attack | 2 damage plus a poison rider. |
 
@@ -344,9 +344,9 @@ All catalogue cards (`src/game/cards_content.c`):
 | Iron Sword | `I SW` | `SW5` | ATK | 5 | 2 | – | 4 | — | — (test) |
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 2 | 3/battle | 1 | — | 20g |
-| Fire Sword | `F SW` | `SW3` | ATK | 3 | 2 | – | 3 | BURN 128 | — |
+| Bronze Sword | `B SW` | `SW3` | ATK | 3 | 1 | – | 3 | — | — |
 | Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 128 | — |
-| Shop Keys | `SHOPKEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
+| Shop Keys | `SHOP KEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
 | Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
 
 The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
@@ -376,7 +376,7 @@ Deck rules (`src/rpg/deck.h`):
 ### 5.5 Starter deck
 
 A new game grants this 10-card deck (`content.c`, from `screens/hero.json`):
-**4× Wood Sword (`SW1`), 4× Wooden Shield (`SH1`), 2× Fire Sword
+**4× Wood Sword (`SW1`), 4× Wooden Shield (`SH1`), 2× Bronze Sword
 (`SW3`)**.  Battle start shuffles the draw pile (`deck_shuffle_pile`, a
 seeded Fisher-Yates through the game RNG), so a fight opens with a random
 five of the ten cards: the DECK-menu order is not the deal order.  Enemy
@@ -504,9 +504,10 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
     carries a poison rider (70/255).
   * **Team slimes** (the trio encounter) hit for 2–3 each round.
 * When the enemy deck is exhausted it **reshuffles** and keeps going.
-* Freeze / grey-out can make the enemy skip (see §8.5/§8.7).
-* The boss (no deck) simply telegraphs a flat 4-damage swing: two
-  shields block it exactly.
+* Ice / grey-out can make the enemy fizzle (see §8.5/§8.7).
+* The boss (no deck) simply telegraphs a flat 6-damage swing (raised
+  from 4, docs/enemies_ranking.md §8.4): three bronze shields block
+  it exactly.
 
 ### 6.7 Deck exhaustion — the reshuffle turn
 
@@ -696,9 +697,9 @@ Statuses (`src/rpg/status_content.c`):
 
 | Status | Tick (dmg/round) | Max stacks | Duration | Effect |
 |---|---|---|---|---|
-| POISON | 0 | 5 | 2 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
+| POISON | 0 | 5 | 2 rounds | Control-only: no damage. **Confuses** the victim: enemies attack their allies (or themselves when alone); the hero plays a random hand (§8.7). |
 | BURN | 10% of the inflicting hit (min 1) | 3 | 3 rounds | Scales with the hit that lands it; re-applied burns keep the stronger tick. |
-| FREEZE | 0 | 1 | 3 rounds | Victim **skips its whole action** (no attack for the player, no swing for the enemy) each round it lasts. |
+| FREEZE | 0 | 5 | 2 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
 
 The tick is **flat per status** regardless of stack count; extra
 applications refresh the duration and deepen the stack counter (visible in
@@ -709,25 +710,26 @@ deaths from poison/burn resolve like combat deaths.
 
 * Player→enemy: the status rider on your **leading card**, with a base
   chance scaled by your combined multiplier (`chance × mult / 100`,
-  capped ~100%), rolled vs the deterministic RNG.  `F SW` → BURN 128,
-  `P DA` → POISON 128, loot fire swords → BURN 128, loot ice swords →
+  capped ~100%), rolled vs the deterministic RNG.  `F BO` → BURN 128,
+  `P DA` → POISON 128, loot fire bows → BURN 128, loot ice bows →
   FREEZE 96, loot poison daggers → POISON 128.
 * Enemy→player: the bat's poisoned swing carries a ~60/255 poison chance
-  that also greys your hand.
+  that confuses your next decision (random hand, no input).
 
 If the roll fails the target **resists** (telemetry `STATUS_RESISTED`).
 
-### 8.6 Freeze
+### 8.6 Confusion
 
-A frozen player can neither attack (whole offense skipped) nor defend
-(the incoming swing lands unblocked).  A frozen enemy skips its swing.
-Freeze never stacks and lasts 3 rounds.
+A poisoned enemy turns its swing on its allies (or harms itself when
+alone); a poisoned hero's decision phases auto-play a random affordable
+hand with no input (`Confused! / You play randomly!` on rows 9+10).
+Poison never stacks meaningfully past its 2-round duration.
 
-### 8.7 Poison grey-out
+### 8.7 Ice grey-out
 
-Poison's special penalty: while a combatant is poisoned,
-`POISON_GREY_CARDS` **2** random cards in its pool become **unplayable**
-for `POISON_GREY_TURNS` **2** rounds (`status.h`):
+Ice's special penalty: while a combatant is iced,
+`ICE_GREY_CARDS` **2** random cards in its pool become **unplayable**
+for `ICE_GREY_TURNS` **2** rounds (`status.h`):
 
 * **Player**: 2 cards from your 5-card hand grey out — you cannot select
   them.
@@ -736,7 +738,7 @@ for `POISON_GREY_TURNS` **2** rounds (`status.h`):
   still consumed, so the shared deck keeps cycling; unpoisoned
   attackers are never blocked by another foe's grey).
 
-Re-poisoning refreshes the grey without re-rolling which cards are greyed.
+Re-icing refreshes the grey without re-rolling which cards are greyed.
 
 ---
 
@@ -786,12 +788,13 @@ name `[material] [effect] weapon` (`loot_banked.c`, `loot.md §34`) — e.g.
 sword).
 
 * Material bands: **W**ood 1, **B**ronze 2–3, **I**ron 4–5, **S**teel
-  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/dagger/ring
-  the low end.  The same bands power attack, shield block and ring heal.
+  6–7, **M**ythril 8–9.  Sword/bow take the high end, shield/ring the
+  low end; daggers run their own softer band (1/2/3/5/7).  The same
+  bands power attack, shield block and ring heal.
 * **Wood never carries a rider**; the generator forces plain at wood and
   synthesis strips wood+rider ids.  Rider cards are bronze and above.
-* Effects are legal per weapon: daggers may carry **P**oison, swords may
-  carry **F**ire (BURN) or **I**ce (FREEZE); bows/shields/rings stay
+* Effects are legal per weapon: daggers may carry **P**oison, bows may
+  carry **F**ire (BURN) or **I**ce (FREEZE); swords/shields/rings stay
   plain.  Illegal pairs carry no rider.
 * Loot material is **rank-centered** (docs/loot.md §34.5,
   docs/enemies_ranking.md §4.3): each enemy's rank owns a material row
@@ -914,8 +917,8 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 * Battle: hand 5, energy 1/round (tutorial/chest/Monster Hunt/mimic each grant +1, up to 5), timer 20s per decision.
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
-* Statuses: POISON tick 0 (control-only, 2 rounds) / BURN 10%-of-hit
-  (min 1) × 3 rounds (5/3 max stacks), FREEZE 3 rounds skip; poison
+* Statuses: POISON tick 0 (control-only confusion, 2 rounds) / BURN 10%-of-hit
+  (min 1) × 3 rounds (5/3 max stacks), FREEZE tick 0 (control-only grey-out, 2 rounds); ice
   greys 2 cards for 2 rounds.
 * Combos: 10 poker tiers, 100–400%, +25% if suited.
 

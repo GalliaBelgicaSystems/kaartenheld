@@ -1,0 +1,108 @@
+{
+ "name": "confuse_iced_precedence",
+ "test": true,
+ "description": "Grey lock beats confusion: a foe that is both poisoned and ice-greyed fizzles its swing at the telegraph (TURN_SKIPPED cause ICE, FOE IS ICED! on the combo line) instead of redirecting it -- the grey gate runs before any defend-phase logic, so no friendly-fire DAMAGE ever occurs and the hero takes nothing. Mirrors battle_ice_foe_ack's deterministic first-draw fizzle (same scene, seed and timing) plus a poison rider.",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 13,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "seed": 777,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 1,
+   "duration": 5
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 3,
+   "duration": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 150
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 60
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENEMY_CARD_PLAYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "TURN_SKIPPED"
+  },
+  {
+   "type": "event_arg",
+   "event": "TURN_SKIPPED",
+   "index": 1,
+   "value": 3
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "FOE IS ICED!"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_RECEIVED"
+  }
+ ]
+}

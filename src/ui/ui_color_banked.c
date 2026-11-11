@@ -1,13 +1,14 @@
-#pragma bank 3
+#pragma bank 11
 
 #include <gb/gb.h>
 #include <gb/cgb.h>
 #include "ui.h"
 #include "banked.h"
 
-/* ── CGB attribute clear, bank-3 body ───────────────────────────────
+/* ── CGB attribute clear, bank-11 body ──────────────────────────────
  * The VRAM bank-1 attribute clear lives here so the fixed bank stays
- * under 0x8000 (AGENTS.md §55.5).  Runs LCD-off from ui_lcd_off(), so the
+ * under 0x8000 (AGENTS.md §55.5) and bank 3 keeps headroom for the
+ * battle render.  Runs LCD-off from ui_lcd_off(), so the
  * 1024-byte wipe is plain writes (no PPU waits needed).
  */
 

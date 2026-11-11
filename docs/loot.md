@@ -1657,13 +1657,15 @@ mythril M  8-9                                           ring   RG (battle code 
 ```
 
 Names look like `W SW` (plain wood sword), `M P DA` (mythril poison
-dagger), `B F SW` (bronze fire sword).  Wood+rider names cannot occur:
+dagger), `B F BO` (bronze fire bow).  Wood+rider names cannot occur:
 wood is always plain.
 
 * **Material bands, not base+bonus:** sword/bow take the high end of a
-  band, shield/dagger/ring the low end.  Wood is 1 for every weapon;
-  bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same bands power
-  attack, defense (shield block) and healing (ring heal).
+  band, shield/ring the low end; daggers run one band step softer *and*
+  one point under swords (wood 1, bronze 2, iron 3, steel 5,
+  mythril 7 -- bronze holds 2 so it always beats wood).  Wood is 1 for
+  every weapon; bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same
+  bands power attack, defense (shield block) and healing (ring heal).
 * **Wood never carries a rider.**  The generator forces `plain` at wood,
   and synthesis strips hand-encoded wood+rider ids.  Rider cards
   (poison/fire/ice) are therefore bronze and above.
@@ -1678,10 +1680,11 @@ wood is always plain.
   Display-only by design: it keys off the heal role, never a status --
   no on-hit roll, no mechanic change.  Real status riders
   (fire/ice/poison) keep precedence wherever both could apply.
-* Fire/ice rows are LIVE (Phase D): fire swords carry a BURN rider
-  (2 dmg/round, 2 rounds) and ice swords a FREEZE rider (the target
-  skips its next attack); chances tuned like DA1 in 1/255 units.
-  Adding future effects later = filling in their table rows.
+* Fire/ice rows are LIVE (Phase D): fire bows carry a BURN rider
+  (10% of the inflicting hit per round, min 1, 3-round duration) and
+  ice bows a FREEZE rider (the target's cards grey out for 2 rounds);
+  chances tuned like DA1 in 1/255 units.  Adding future effects later
+  = filling in their table rows.
 * Every combination maps to a **derived CardId** in the loot id range
   (`LOOT_ID_BASE` = `0x60` .. `0xFF`; 5 materials x 4 effects x 8
   weapons = 160 ids): `id = BASE + (material*Neff + effect)*Nwpn + wpn`.
@@ -1702,9 +1705,9 @@ ROLE (rings) whose combat resolution heals.
 
 | Weapon | plain | poison | fire/ice | healing role |
 |---|---|---|---|---|
-| Sword  | Y | N | Y | N |
+| Sword  | Y | N | N | N |
 | Dagger | Y | Y | N | N |
-| Bow    | Y | N | N | N |
+| Bow    | Y | N | Y | N |
 | Shield | Y | N | N | N |
 | Ring   | N | N | N | Y |
 
@@ -1744,6 +1747,18 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   glyph on the floor counter (VRAM 103, same overwrite trick as 4_arrows
   on 97) while the semantic row still reads the digit (HE5).
   IMPLEMENTED.
+* Bow arrows per battle are AP-derived (`LOOT_BOW_USES` = 7 - CARD_AP,
+  docs/card-ap-cost-formula.md): inverse to power, so wood 6, bronze 6,
+  iron 5, steel 4, mythril 2, floored at 2 (a mythril rider bow would
+  otherwise hold a single arrow).  No new weights -- a future AP retune
+  moves the arrows with it, and the curated mythril shop bow (2 uses)
+  is the same macro, not a coincident literal.  Runtime sites read the
+  staged AP cost (`LOOT_BOW_USES_FROM_AP`) instead of re-expanding the
+  formula, keeping bank 2 small.  Fire/ice now ride bows
+  (swords never do), so the rider term is live.  Unlimited bows showed
+  `USES INF` on the detail page; every loot bow now shows a finite
+  count.
+  IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 
 ## 34.4 Combat resolution rules
@@ -1762,16 +1777,27 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   (`EVENT_HEALED` cause d1=1); a lone ring heals its face value.
   IMPLEMENTED.
 * Defense with daggers: a daggers-only selection (rings allowed)
-  counterattacks with an attack-phase poker evaluation over the dagger
-  subset, and the counter lands FIRST -- when it kills the telegraphed
-  attacker the incoming swing never lands (no damage, block cue, no
-  organic rider).  Otherwise the hero takes the resolved net on top of
-  the counter.  IMPLEMENTED.
+  counterattacks with a FULL attack-phase poker evaluation over the
+  dagger subset -- the counter deals exactly what the cards show, no
+  scaling.  Daggers are already the weakest face damage per tier
+  (bronze 2v3, iron 3v5, steel 5v7, mythril 7v9), so the free extra
+  attack needs no further nerf; the stat gap is the balance against
+  the sword.  The counter still lands FIRST -- when it kills the
+  telegraphed attacker the incoming swing never lands (no damage,
+  block cue, no organic rider).  Otherwise the hero takes the
+  resolved net on top of the counter.  IMPLEMENTED.
 * Poison rider: poison-effect daggers carry the on-hit status rider
   (existing status system); chance tuned like DA1.  Poison itself deals
-  no damage -- it only greys out the victim's cards for
-  POISON_GREY_TURNS rounds.  Burn rider: fire swords burn for 10% of the
-  hit per round (min 1), scaled per application.  IMPLEMENTED.
+  no damage -- it confuses the victim instead: a confused enemy turns
+  its swing on its allies (or harms itself when alone), and a confused
+  hero plays a random hand (`Confused! / You play randomly!` on rows
+  9+10, no input that turn).  Confusion lasts 2 rounds.  Burn rider:
+  fire bows burn for 10% of the hit per round (min 1), scaled per
+  application.  IMPLEMENTED.
+* Ice rider: ice-effect bows carry the on-hit status rider; ice greys
+  out ICE_GREY_CARDS of the victim's cards for ICE_GREY_TURNS rounds
+  (the old freeze-skip is gone -- iced combatants act normally except
+  for their locked cards).  IMPLEMENTED.
 
 ## 34.5 Generation (Phase 2, implemented)
 
@@ -1850,7 +1876,7 @@ shop; finding it is what makes the delivery (and the shop) available:
 * BUY: the merchant stocks the curated IRON RING (**RG4**, 20g), the
   mythril bow (**BO9**, 30g), and the steel shield (**SH6**, 12g, the
   merchant-stocked answer to the Lord's flat-6 swing), one of each --
-  plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE fire SWORD)
+  plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE SWORD)
   at **FREE** (price 0, always affordable; capped by max_copies at buy
   time so the starter set can be rebought but never stockpiled).  One-copy
   rows hide once owned and reappear if the last copy is sold; free basics
@@ -1885,7 +1911,7 @@ shop; finding it is what makes the delivery (and the shop) available:
   page shows only a `VALUE` reminder of what the merchant would pay.
 
 Wood gear needs no purchase: the hero starts with a wood sword and wood
-shield plus two bronze fire swords (the starter rider exception).
+shield plus two plain bronze swords.
 
 ## 34.7 Implementation status
 

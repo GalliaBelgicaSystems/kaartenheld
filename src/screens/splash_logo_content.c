@@ -1,4 +1,4 @@
-#pragma bank 2
+#pragma bank 11
 
 #include <stdint.h>
 #include <gb/gb.h>
@@ -7,9 +7,10 @@
 
 /* Studio splash logo (assets/gallia_belgica_systems.png, 13x5 cells,
  * make gfx -> src/gfx/splash_logo_tiles.h: a deduped tile blob + a raster
- * tile map).  Lives in bank 2 with its renderer (the world-tiles bank 5 and
- * the sfx/atlas bank 7 are both over budget in the release build); a banked
- * body may only read its own bank's data. */
+ * tile map).  Lives in bank 11 with its renderer (banks 2 and 5 are both
+ * over budget after the card-screen rework met the weapon overhaul; bank
+ * 11 has room in both builds); a banked body may only read its own
+ * bank's data. */
 #include "gfx/splash_logo_tiles.h"
 
 /* Bitmap footprint on the 20x18 BG grid (centered: cols 3-15, rows 6-10). */
@@ -21,7 +22,7 @@
 
 extern uint8_t g_is_cgb;
 
-/* Bank-2 studio splash body for the fixed-bank splash wrapper.  Writes the
+/* Bank-11 studio splash body for the fixed-bank splash wrapper.  Writes the
  * deduped tiles to VRAM at the world BG block (ids 128+, signed 0x8800
  * fetch: AGENTS.md 52.22), stamps the 13x5 map with CGB BG palette 1, and
  * programs that palette to the logo's fixed ramp

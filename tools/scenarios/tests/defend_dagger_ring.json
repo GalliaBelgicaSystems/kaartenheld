@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_ring",
  "test": true,
- "description": "Daggers plus a ring (DA2 x3 + HE, no shields/swords/bows): the counter evaluates the dagger trips alone ((2+2+2)x205%=12, flat sum would be 6) while the ring adds 0 block (hero takes the full 2, 10->8) and converts nothing (no HEALED). All four staged cards are eaten (CARD_PLAYED x5 with the opener). The ring sits mid-selection, exercising compaction over a non-dagger slot.",
+ "description": "Daggers plus a ring (DA2 x3 + HE, no shields/swords/bows): the counter evaluates the dagger trips alone ((2+2+2)x205%=12, full; flat sum would be 6) while the ring adds 0 block (hero takes the full 3, 10->7) and converts nothing (no HEALED). All four staged cards are eaten (CARD_PLAYED x5 with the opener). The ring sits mid-selection, exercising compaction over a non-dagger slot.",
  "actions": [
   {
    "type": "wait",

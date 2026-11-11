@@ -496,7 +496,7 @@
       "properties": {
         "entity_id": "ENTITY_ID_GUARD",
         "display_name": "GUARD",
-        "dialogue": "DIALOGUE_ID_VILLAGE_GUARDS",
+        "dialogue": "DIALOGUE_ID_GUARD_KOBOLD_WARNING",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [

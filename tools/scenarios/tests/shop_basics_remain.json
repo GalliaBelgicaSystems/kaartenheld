@@ -1,7 +1,7 @@
 {
  "name": "shop_basics_remain",
  "test": true,
- "description": "One-copy stock: buying the ring, bow and steel shield hides their rows (bow slides up to the cursor, shield follows), leaving the always-listed free starter basics (WOOD SWORD / BRONZE fire SWORD read FREE). Gold spent exactly (20 + 30 + 12 = 62 of 70 staged); the shop never empties while basics exist.",
+ "description": "One-copy stock: buying the ring, bow and steel shield hides their rows (bow slides up to the cursor, shield follows), leaving the always-listed free starter basics (WOOD SWORD / BRONZE SWORD read FREE). Gold spent exactly (20 + 30 + 12 = 62 of 70 staged); the shop never empties while basics exist.",
  "actions": [
   {
    "type": "interact",

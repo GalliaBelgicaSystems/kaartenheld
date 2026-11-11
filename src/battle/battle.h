@@ -82,7 +82,7 @@ typedef enum {
  * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
  * consumes it; the combo row + banner read it, never row 9), 9 = Carl
  * tutorial speech, 10 = slime-lord despair telegraph. */
-#define BATTLE_MSG_POISONED_FOE 5
+#define BATTLE_MSG_ICED_FOE 5
 
 typedef struct {
     Combatant player;
@@ -134,6 +134,15 @@ extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
  * above).  Never persisted (Battle is temporary runtime state,
  * AGENTS.md 53.1). */
 extern uint8_t g_battle_pool_max;
+/* Confusion routing (poison): 0xFF = normal hero defense this resolve;
+ * otherwise the friendly-fire victim's combatant slot (see battle.c).
+ * Written by the banked defend-resolve body, read by the fixed wrapper
+ * (rider target) and battle_execute_combo (victory check skips the
+ * counter path). */
+extern uint8_t g_battle_confuse_victim;
+/* Confusion hold: frames remaining before a staged confused hand
+ * executes (see battle.c). */
+extern uint8_t g_battle_confuse_hold;
 /* Nonzero when anything in the battle animates on the 16-frame clock:
  * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
  * set (ORed by the bank-5 alt loader -- the overlay blinks even on
@@ -209,7 +218,7 @@ extern const uint8_t g_battle_art_alt_mask[];
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
- * (freeze/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
+ * (ice-locked fizzle/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
 extern char g_battle_anim_target_name[13];
 
 /* Banked battle-art loader (src/battle/battle_art_banked.c, ROM bank 4):
@@ -285,6 +294,7 @@ bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);
 void battle_card_undo_banked(void);
+uint8_t battle_confuse_auto(Battle *b);
 /* Banked combo-staging body (src/battle/battle_stage_combo_banked.c,
  * ROM bank 4): g_bk_ptr_a = Battle*, stages hand -> last_combo. */
 void battle_stage_combo_banked(void);
@@ -325,6 +335,7 @@ void battle_init_deck_banked(void);
 #define NAV_OP_CARD_SELECT      4
 #define NAV_OP_IS_CARD_SELECTED 5
 #define NAV_OP_HAND_PLAYABLE    6
+#define NAV_OP_CONFUSE_AUTO     7
 void battle_nav_banked(void);
 
 #endif /* BATTLE_H */

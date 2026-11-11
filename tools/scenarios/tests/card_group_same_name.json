@@ -1,7 +1,7 @@
 {
  "name": "card_group_same_name",
  "test": true,
- "description": "One DECK row per card name: a plain bronze sword (loot id 128) and the curated FIRE_SWORD are both BRONZE SWORD to the player, so they share a single row (owned 3: starter 2 + loot 1, both starter copies already decked) instead of listing the same name twice. The primary (FIRE_SWORD) still supplies the row's rider icon (entry 3) and AP digit, and the DECK column reads the whole name group (2/3). Pre-grouping the DECK list showed two BRONZE SWORD rows.",
+ "description": "One DECK row per card name: a plain bronze sword (loot id 128) and the curated BRONZE_SWORD are both BRONZE SWORD to the player, so they share a single row (owned 3: starter 2 + loot 1, both starter copies already decked) instead of listing the same name twice. Neither carries a rider, so the row shows no rider icon (entry 3 stays 0) and the AP digit is the shared plain-sword S1; the DECK column reads the whole name group (2/3). Pre-grouping the DECK list showed two BRONZE SWORD rows.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -66,7 +66,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "S2DE"
+   "contains": "S1DE"
   },
   {
    "type": "screen_row",
@@ -81,7 +81,7 @@
   {
    "type": "oam_tile",
    "entry": 3,
-   "expected": 123
+   "expected": 0
   }
  ]
 }

@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_counter",
  "test": true,
- "description": "Dagger counterattack: a daggers-only defend selection (DA3+DA3, no shields/swords/bows) hits the telegraphed kobold back for a suited PAIR (3+3)x145%=8 (flat sum would be 6) while the hero still takes the full incoming 3 (10->7, kobold 14->6 after the opening SW1; start_battle engages the last hostile, the 15-HP kobold).",
+ "description": "Dagger counterattack: a daggers-only defend selection (DA3+DA3, no shields/swords/bows) hits the telegraphed kobold back for a suited PAIR (3+3)x145%=8, in full (flat sum would be 6) while the hero still takes the full incoming 3 (10->7, kobold 14->6 after the opening SW1; start_battle engages the last hostile, the 15-HP kobold).",
  "actions": [
   {
    "type": "wait",

@@ -26,7 +26,9 @@ static const EnemyCard s_bat_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     /* Organic poison rider (Phase D): this swing carries a poison rider at
-     * ~60/255 chance; when it lands on the player it also greys her hand. */
+     * ~60/255 chance; when it lands on the player she is confused (she
+     * plays a random hand) -- control-only, no damage, never
+     * grey-out. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 60 },
 };
 static const EnemyCard s_slime_trio_deck[] = {
@@ -60,8 +62,8 @@ static const EnemyCard s_spider_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
-    /* Webbing strike: poison rider at ~70/255; landing it also greys the
-     * player's hand (Phase D), the spider's signature threat. */
+    /* Webbing strike: poison rider at ~70/255; landing it confuses
+     * the player (Phase D), the spider's signature threat. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 70 },
 };
 /* Carl's practice deck: a single 0-power swing, drawn every round.  The

@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_kill_no_damage",
  "test": true,
- "description": "Counter-first kill takes no damage: the kobold sits at 1 HP after the SW1 opener and telegraphs 2 incoming, but the lone DA2 defend counters first for 2 and kills it -- the swing never lands, so the hero stays at 10 (not 8) with DAMAGE_RECEIVED 0 and ENTITY_DEFEATED(01). The probe then reads the next living kobold (15). Pins the counter-first order.",
+ "description": "Counter-first kill takes no damage: the kobold sits at 1 HP after the SW1 opener and telegraphs 2 incoming, but the lone DA2 defend counters first for the full 2 and still kills it -- the swing never lands, so the hero stays at 10 (not 8) with DAMAGE_RECEIVED 0 and ENTITY_DEFEATED(01). The probe then reads the next living kobold (15). Pins the counter-first order.",
  "actions": [
   {
    "type": "wait",
