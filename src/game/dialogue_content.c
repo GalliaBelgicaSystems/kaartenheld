@@ -155,8 +155,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_HEAL_MAGE_THANKS,
         "HEAL MAGE:",
-        5,
-        {"All healed!", "Rings can heal", "you as well.", "The merchant", "sells one!"},
+        6,
+        {"All healed!", "Rings can heal,", "once you have one", "come talk to me.", "The merchant", "sells one!"},
         0,
         0
     },
