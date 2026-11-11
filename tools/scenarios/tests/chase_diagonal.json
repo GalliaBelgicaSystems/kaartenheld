@@ -1,0 +1,44 @@
+{
+ "name": "chase_diagonal",
+ "test": true,
+ "description": "Kobold chaser at (4,10) with the hero off-axis at (6,11) takes the diagonal step to (5,11) (same corner rule as the hero), then closes onto the hero for an encounter",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 150
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 0,
+   "value": 140
+  },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 1,
+   "value": 5
+  },
+  {
+   "type": "event_arg",
+   "event": "ACTOR_MOVED",
+   "index": 2,
+   "value": 11
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 6,
+   "y": 11,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
+}

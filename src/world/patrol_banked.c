@@ -24,6 +24,39 @@ static const uint8_t s_patrol_line[8]   = { 0x01, 0x15, 0x19, 0x05, 0x24, 0x35, 
 
 #define ACTOR_OFFSET(field) ((uint8_t)&(((WorldActorRuntime *)0)->field))
 
+/* Orthogonal stepping-stone check for diagonal chase steps: the tile
+ * must be walkable (same predicate as the shared target check below)
+ * and hold no hostile (incl. in-flight patrol target) or static. The
+ * hero's own tile is never an orthogonal here (a diagonal chase implies
+ * both axes differ), so no hero carve-out is needed. */
+static uint8_t patrol_ortho_free(uint8_t x, uint8_t y)
+{
+    uint8_t i;
+    uint8_t tile;
+    if (x >= g_patrol_world->width || y >= g_patrol_world->height) return 0;
+    tile = g_patrol_world->map[y][x];
+    if (tile == TILE_FLOOR || tile == TILE_EXIT) {
+    } else if (tile >= TILE_DESOLATE_FLOOR_00 && tile <= TILE_DESOLATE_FLOOR_03) {
+    } else if (tile == TILE_DESOLATE_FLOOR_PLAIN) {
+    } else if (tile_landscape_walkable(tile)) {
+    } else {
+        return 0;
+    }
+    for (i = 0; i < MAX_WORLD_ACTORS; i++) {
+        if (!g_patrol_world->actors[i].active) continue;
+        if (g_patrol_world->actors[i].x == x &&
+            g_patrol_world->actors[i].y == y) return 0;
+        if (g_patrol_world->actors[i].move_state &&
+            g_patrol_world->actors[i].move_target_x == x &&
+            g_patrol_world->actors[i].move_target_y == y) return 0;
+    }
+    for (i = 0; i < g_static_actor_count && i < MAX_STATIC_ACTORS; i++) {
+        if (g_static_actors[i].x == x &&
+            g_static_actors[i].y == y) return 0;
+    }
+    return 1;
+}
+
 void world_patrol_slot_banked(void)
 {
     uint8_t *bp;
@@ -112,6 +145,7 @@ void world_patrol_slot_banked(void)
         uint8_t py;
         uint8_t dx;
         uint8_t dy;
+        uint8_t diag_ok;
         px = g_patrol_world->player.position.x;
         py = g_patrol_world->player.position.y;
         dx = (px >= x_v) ? (uint8_t)(px - x_v) : (uint8_t)(x_v - px);
@@ -121,7 +155,38 @@ void world_patrol_slot_banked(void)
                 (PATROL_STEP_INTERVAL >> 1) : PATROL_STEP_INTERVAL;
             return;
         }
-        if (dx > dy) {
+        /* Diagonal chase: when the hero is off-axis, step diagonally
+         * toward them if both orthogonal stepping stones are free --
+         * the same corner rule as the hero (no slipping through wall
+         * corners or between actors). Otherwise fall through to the
+         * legacy single-axis greedy step. Facing keeps the dominant-
+         * axis priority (ties go vertical, as below). */
+        /* Default to staying put; every path below overwrites the
+         * target (and SDCC's flow analysis needs the definite init). */
+        target_x = x_v;
+        target_y = y_v;
+        diag_ok = 0;
+        if (dx != 0 && dy != 0) {
+            uint8_t ctx = (px >= x_v) ? (uint8_t)(x_v + 1) : (uint8_t)(x_v - 1);
+            uint8_t cty = (py >= y_v) ? (uint8_t)(y_v + 1) : (uint8_t)(y_v - 1);
+            diag_ok = 1;
+            if (ctx >= g_patrol_world->width || cty >= g_patrol_world->height) {
+                diag_ok = 0;
+            } else if (!patrol_ortho_free(ctx, y_v) ||
+                       !patrol_ortho_free(x_v, cty)) {
+                diag_ok = 0;
+            }
+            if (diag_ok) {
+                target_x = ctx;
+                target_y = cty;
+                if (dx > dy) {
+                    facing_v = (px >= x_v) ? DIRECTION_RIGHT : DIRECTION_LEFT;
+                } else {
+                    facing_v = (py >= y_v) ? DIRECTION_DOWN : DIRECTION_UP;
+                }
+            }
+        }
+        if (!diag_ok && dx > dy) {
             target_y = y_v;
             if (px >= x_v) {
                 target_x = (uint8_t)(x_v + 1);
@@ -130,7 +195,7 @@ void world_patrol_slot_banked(void)
                 target_x = (uint8_t)(x_v - 1);
                 facing_v = DIRECTION_LEFT;
             }
-        } else {
+        } else if (!diag_ok) {
             target_x = x_v;
             if (py >= y_v) {
                 target_y = (uint8_t)(y_v + 1);

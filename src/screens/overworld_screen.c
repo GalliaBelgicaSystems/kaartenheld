@@ -1,3 +1,4 @@
+#include <gb/gb.h>
 #include "game.h"
 #include "screen.h"
 #include "scene.h"
@@ -138,10 +139,16 @@ void overworld_screen_update(Game *g)
         return;
     }
 
-    if (input_held(INPUT_UP)) dy = -1;
-    else if (input_held(INPUT_DOWN)) dy = 1;
-    else if (input_held(INPUT_LEFT)) dx = -1;
-    else if (input_held(INPUT_RIGHT)) dx = 1;
+    /* Diagonal movement: one vertical plus one horizontal axis combine
+     * (UP+LEFT etc). Direct pad reads keep the fixed bank under budget
+     * (AGENTS.md 52.18); J_ bits equal the input_held bits by the
+     * input.c layout check. N/S wins over the opposite vertical, W/E
+     * over the opposite horizontal; facing keeps N/S priority in
+     * world_try_begin_move. */
+    if (g_inp_pad & J_UP) dy = -1;
+    else if (g_inp_pad & J_DOWN) dy = 1;
+    if (g_inp_pad & J_LEFT) dx = -1;
+    else if (g_inp_pad & J_RIGHT) dx = 1;
 
     if (dx != 0 || dy != 0) {
         move_res = world_try_begin_move(&g->world, dx, dy, &g->state);

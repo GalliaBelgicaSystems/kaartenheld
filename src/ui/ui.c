@@ -307,7 +307,7 @@ void ui_lcd_off(void)
      * wait is skipped and the 1024-byte clear is a plain write.  The banked
      * dispatch is inlined (not a wrapper function) to keep the packed debug
      * fixed bank within a few bytes of 0x8000. */
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&ui_clear_atts_banked;
     banked_call_run();
 }
@@ -1156,9 +1156,9 @@ void ui_draw_dialogue(const DialogueState *dialogue, const World *world)
 #ifdef DEBUG_BUILD
 void ui_draw_font_test(void)
 {
-    /* Body lives in bank 3 to keep the debug fixed bank under 0x8000
+    /* Body lives in bank 11 to keep the debug fixed bank under 0x8000
      * (AGENTS.md §52.18).  Self-contained there; this is a thin wrapper. */
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&ui_draw_font_test_banked;
     banked_call_run();
 }

@@ -30,7 +30,7 @@
  * bank, same gating as the BG stamper, so riders and boxes can never
  * desync.  This placement also keeps the fixed bank under 0x8000: a
  * third trampoline dispatch out of ui_update_battle() overflows the
- * debug fixed bank (AGENTS.md 52.18).  The undo body moved to bank 2 to
+ * debug fixed bank (AGENTS.md 52.18).  The undo body moved to bank 11 to
  * make room here (its dispatch retargeted, same size). */
 void battle_rider_draw(const volatile Battle *battle)
 {

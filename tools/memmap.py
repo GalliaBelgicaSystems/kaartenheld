@@ -211,7 +211,7 @@ def main():
         "_jingle_full_banked": "chest-jingle edge + restore clock (bank 8)",
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
-        "_battle_card_undo_banked": "battle card undo (bank 3)",
+        "_battle_card_undo_banked": "battle card undo (bank 11)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",

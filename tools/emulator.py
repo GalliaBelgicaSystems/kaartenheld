@@ -830,6 +830,36 @@ class EmulatorSession:
             time.sleep(0.005)
             self.step(1)
 
+    def _mask_for_buttons(self, buttons):
+        """OR the injection masks for a list of button names (diagonal
+        movement needs UP+RIGHT etc. held on the same frames)."""
+        mask = 0
+        for b in buttons:
+            bu = b.upper()
+            if bu not in self.button_masks:
+                raise ValueError(f"Unknown button '{b}'")
+            mask |= self.button_masks[bu]
+        return mask
+
+    def press_buttons(self, buttons):
+        """Press several buttons on the same frame (e.g. ["UP", "RIGHT"]
+        for a diagonal step)."""
+        mask = self._mask_for_buttons(buttons)
+        addr = self.get_symbol("g_inp_mask")
+        self._memwrite(addr, mask)
+        time.sleep(0.005)
+        self.step(1)
+
+    def hold_buttons(self, buttons, frames):
+        """Hold several buttons down for N frames (diagonal hold-to-move).
+        Rewrites the combined mask before every stepped frame like hold()."""
+        mask = self._mask_for_buttons(buttons)
+        addr = self.get_symbol("g_inp_mask")
+        for i in range(frames):
+            self._memwrite(addr, mask)
+            time.sleep(0.005)
+            self.step(1)
+
     # ── Scenario loading ────────────────────────────────────────────
 
     def load_scenario(self, scenario):

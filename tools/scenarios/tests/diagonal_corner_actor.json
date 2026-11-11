@@ -1,0 +1,42 @@
+{
+ "name": "diagonal_corner_actor",
+ "test": true,
+ "description": "Diagonal corner rule (actor): from (13,8) UP+RIGHT targets floor (14,7) but Carl on the (14,8) orthogonal blocks it, so the player stays",
+ "actions": [
+  {
+   "type": "press_buttons",
+   "buttons": [
+    "UP",
+    "RIGHT"
+   ]
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 13,
+   "expected_y": 8
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
+}
