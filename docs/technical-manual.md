@@ -683,12 +683,12 @@ The resolved effect magnitude is
 amount = base_power × multiplier / 100
 ```
 
-where multiplier is the tier percent, plus a **+25% suited bonus** when all
+where multiplier is the tier percent, plus a **+30% suited bonus** when all
 cards that enter the hand evaluation share one symbol — in **attack** that
 means every selected card (a shield or ring you slot in can break a suited
 bonus); in **defend** it means every shield/ring you play.  Examples: a
-`SW2 + SW2` pair = 4 × 120% = 4 (truncated); a `SW2,SW2,SH1,SH1,SH1` full
-house (power 4) = 4 × 260% = 10.
+suited `SW2 + SW2` pair = 4 × 150% = 6; a mixed-suit
+`SW2,SW2,SH1,SH1,SH1` full house (power 4) = 4 × 260% = 10 (truncated).
 
 The **suited bonus** is the reason mixing too many card types dilutes your
 damage — a homogeneous hand punches well above its weight.
@@ -922,7 +922,7 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 * Statuses: POISON tick 0 (control-only confusion, 2 rounds) / BURN 10%-of-hit
   (min 1) × 3 rounds (5/3 max stacks), FREEZE tick 0 (control-only grey-out, 2 rounds); ice
   greys 2 cards for 2 rounds.
-* Combos: 10 poker tiers, 100–400%, +25% if suited.
+* Combos: 10 poker tiers, 100–400%, +30% if suited.
 
 > Source of truth for every number above: the code tree (`src/`).  Where
 > a doc in `docs/` disagrees (e.g. older BURN "tick 2" notes in

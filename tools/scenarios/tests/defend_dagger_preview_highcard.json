@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview_highcard",
  "test": true,
- "description": "Counter forecast high card: two distinct staged daggers DA2+DA5 (not confirmed) preview CNT 5 -- high card scores the max with no suited bonus (6 would mean a bogus +25%). Pairs the high-card resolve path in defend_dagger_kill (both full).",
+ "description": "Counter forecast high card: two distinct staged daggers DA2+DA5 (not confirmed) preview CNT 5 -- high card scores the max with no suited bonus (6 would mean a bogus +30%). Pairs the high-card resolve path in defend_dagger_kill (both full).",
  "actions": [
   {
    "type": "wait",

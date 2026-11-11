@@ -79,7 +79,7 @@ effective cards (attack phase: every selected card; defend: SHIELDs
 only -- other selected cards are inert for classification AND block);
 the SHORT STRAIGHT needs a 3+ run at any staged count >= 3
 (gem-gated, docs/short-straight.md).
-Values classify order-independently.  Suited bonus: +25
+Values classify order-independently.  Suited bonus: +30
 percent when every effective card shares one symbol and a tier was
 made.  Effective multiplier scales base_power into the effect amount,
 and scales on-hit status rider chances (capped ~100%):

@@ -1,12 +1,12 @@
 {
  "name": "combo_5card",
  "test": true,
- "description": "Straight flush (SW1..SW5): tier STRAIGHT FLUSH, multiplier 350+25=375, damage 15*375/100=56.  Kills Carl (staged HP; unkillable at 99 in real play).  Verifies the top realistic hand multiplier.",
+ "description": "Straight flush (SW1..SW5): tier STRAIGHT FLUSH, multiplier 350+30=380, damage 15*380/100=57.  Kills Carl (staged HP; unkillable at 99 in real play).  Verifies the top realistic hand multiplier.",
  "actions": [
   {
    "type": "set_enemy_hp",
    "index": 0,
-   "hp": 56
+   "hp": 57
   },
   {
    "type": "set_hand_card",
@@ -17,7 +17,7 @@
   {
    "type": "set_enemy_hp",
    "index": 0,
-   "hp": 56
+   "hp": 57
   },
   {
    "type": "set_hand_card_meta",

@@ -428,7 +428,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_POKER,
         "CARL:",
         8,
-        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +25%!"},
+        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +30%!"},
         0,
         0
     },
