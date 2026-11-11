@@ -885,7 +885,7 @@ static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
  * deals the FULL evaluated amount (docs/loot.md §34.6), so the preview
  * shows it whole -- CNT shows what the counter will actually deal.
  * If scoring ever changes, change BOTH here and combo_resolve_banked:
- * the CNT preview scenario (pair+suited 8, trips+suited 12) and the
+ * the CNT preview scenario (pair+suited 9, trips+suited 12) and the
  * counter scenarios pin their agreement. */
 static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
 {
@@ -933,7 +933,7 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
                          &tier, &base, &suited);
     }
     mult = g_combo_tier_mult[tier];
-    if (suited) mult += 25;
+    if (suited) mult += 30;
     prod = 0;
     while (mult != 0) {
         if (mult & 1u) prod += base;

@@ -23,7 +23,7 @@
  * Hand model: strict poker.  Pairs/kinds any count >= 2; STRAIGHT, FLUSH,
  * STRAIGHT_FLUSH and FIVE_KIND need all five effective cards.  Values are
  * classified order-independently (histogram + min/max), fixing the old
- * selection-order quirk.  Suited bonus: +25 percent when every effective
+ * selection-order quirk.  Suited bonus: +30 percent when every effective
  * card shares one symbol and a tier was made.
  *
  * No multiplies/divides here or in effect_resolve_into(): SDCC lowers
@@ -228,10 +228,10 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
 
     /* Full-set amount via shared shift-add below (mult in s_ss_m,
      * base in s_ss_a, result in s_ss_best).  Mults read
-     * g_combo_tier_mult (+25 when suited, like the resolver) so a
+     * g_combo_tier_mult (+30 when suited, like the resolver) so a
      * balance tweak can never desync this comparison. */
     s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_SHORT_STRAIGHT] +
-                        ((*suited_io) ? 25 : 0));
+                        ((*suited_io) ? 30 : 0));
     s_ss_a = *base_io;
     s_ss_best = 0;
     while (s_ss_m != 0) {
@@ -284,15 +284,15 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     }
 
     /* Pair subset vs the full set (only when a pair exists): TWO_PAIR
-     * or PAIR from g_combo_tier_mult (+25 when suited).  Shared
+     * or PAIR from g_combo_tier_mult (+30 when suited).  Shared
      * shift-add loop: no 8-bit * or /. */
     if (s_ss_n != 0) {
         if (s_ss_n >= 2)
             s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_TWO_PAIR] +
-                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 25));
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 30));
         else
             s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_PAIR] +
-                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 25));
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 30));
         s_ss_a = s_ss_pair;
         s_ss_sub = 0;
         while (s_ss_m != 0) {
@@ -586,7 +586,7 @@ void combo_resolve_banked(void)
          * subset above can downgrade SHORT to a pair tier or HIGH CARD. */
         out_result->multiplier =
             g_combo_tier_mult[out_result->tier];
-        if (out_result->suited) out_result->multiplier += 25;
+        if (out_result->suited) out_result->multiplier += 30;
         out_result->eff_count = w;
 
         /* Attack + ring converts the whole hand to healing: force the

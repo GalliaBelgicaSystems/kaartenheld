@@ -60,7 +60,7 @@ Full rules: `docs/short-straight.md`.
   (attack: shields contribute 0; defend: only shields count, so the
   tier is attack-only in practice with current shield bands
   1,2,4,6,8).
-* **Suited:** same +25 rule applies automatically. Practically N/A:
+* **Suited:** same +30 rule applies automatically. Practically N/A:
   single-weapon values skip by two (swords/bows 1,3,5,7,9;
   shields/rings 1,2,4,6,8), so no three same-suit cards can be
   sequential — except daggers (1,2,3,5,7): DA1+DA2+DA3 is a suited run.
@@ -88,7 +88,7 @@ Concrete damage at 130% (truncated, unsuited):
 7,8,9 → base 24 → 31
 ```
 
-Reference: pair of 5s (base 10) is 12 unsuited / 14 suited;
+Reference: pair of 5s (base 10) is 12 unsuited / 15 suited;
 three-kind of 5s is 27.
 
 ## 3. How much damage (or block/heal)
@@ -119,12 +119,13 @@ Only poker-hand cards count:
 ### Multiplier (tier + suited bonus)
 
 ```text
-multiplier = g_combo_tier_mult[tier] + (suited ? 25 : 0)
+multiplier = g_combo_tier_mult[tier] + (suited ? 30 : 0)
 ```
 
 Suited = all effective cards share one symbol **and** a tier was made.
-Examples: PAIR suited = 145%, SHORT STRAIGHT suited = 155%,
-FIVE KIND suited = 425%.
+Examples: PAIR suited = 150% (so suited pair of 1s: base 2 → 3,
+while unsuited stays 2), SHORT STRAIGHT suited = 160%,
+FIVE KIND suited = 430%.
 
 ### Amount
 
@@ -144,7 +145,7 @@ SW1 + SH2 + SW3         base 2   (shield 0)       → tier decides
 SW2 + BO3               base 3   HIGH CARD 100%   → 3
 SW1 + RING              base 2   PAIR 120%        → HEAL 2 (ring converts)
 SW1 + DA2 + SW3         base 6   SHORT 130%       → 7
-DA1 + DA2 + DA3 suited  base 6   SHORT 130% + 25  → 9
+DA1 + DA2 + DA3 suited  base 6   SHORT 130% + 30  → 9
 ```
 
 Shields alone in attack (base 0) resolve to 0 — the card is still
@@ -157,9 +158,10 @@ folded into the single `multiplier` field (`ComboResult.multiplier`):
 
 1. **Tier percent** (`g_combo_tier_mult` table above). This is the main
    bonus: e.g. THREE KIND turns base 15 into 27 (×180%).
-2. **Suited bonus: +25** when every effective card shares one symbol
+2. **Suited bonus: +30** when every effective card shares one symbol
    and a tier was made. E.g. pair of 5s: base 10 → 12 unsuited
-   (×120%), 14 suited (×145%).
+   (×120%), 15 suited (×150%). Suited pair of 1s: base 2 → 2
+   unsuited, 3 suited.
 
 There is no other damage bonus. Status-rider chances scale with the
 same multiplier (see §5); nothing else (buffs, debuffs, crits) feeds
@@ -181,7 +183,7 @@ scaled_chance = min(base_chance * multiplier / 100, 255)   (1/255 units)
 
 Computed in `effect_scale_status_chance`, staged into `g_bk_byte_c`
 for the fixed-bank caller. Example: 50% base × SHORT 130% → 65%;
-the same card × STRAIGHT FLUSH suited (375%) would cap toward 100%.
+the same card × STRAIGHT FLUSH suited (380%) would cap toward 100%.
 Rider resolution itself (roll vs deterministic RNG, STACK/refresh,
 telemetry `STATUS_APPLIED/RESISTED/EXPIRED`) lives in the status
 system, never in the combo evaluator.

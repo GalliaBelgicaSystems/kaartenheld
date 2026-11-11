@@ -55,8 +55,7 @@ typedef struct {
                            * through a separate attack-phase dispatch) */
     uint8_t tier;        /* HandTier */
     uint8_t suited;      /* all selected share one symbol (telemetry) */
-    uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:
-                          * tier % + 25 when suited -- the exact scalar
+    uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:                           * tier % + 30 when suited -- the exact scalar
                           * effect resolution applies to base_power */
     uint16_t base_power;
 } ComboResult;
