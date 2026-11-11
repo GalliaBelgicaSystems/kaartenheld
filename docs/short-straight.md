@@ -109,7 +109,7 @@ Why 130 over 120 or 100:
   the same no-bonus feel as the old pair-of-1s (base 2 × 145% → 2;
   now 150% → 3 since the suited bonus went to +30).
 - 120 and 130 both give 7 for 1,2,3; they separate on mid runs
-  (4,5,6: 18 vs 19; 7,8,9: 29 vs 31).
+  (4,5,6: 18 vs 19; 7,8,9: 28 vs 31).
 - The extra card + energy cost and the permanently-unsuited status
   justify a small premium over PAIR's 120.
 - 140+ is too strong (+21-29% EV here; it starts outscoring dedicated

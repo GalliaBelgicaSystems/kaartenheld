@@ -31,8 +31,11 @@ Notes:
 * Values classify order-independently (histogram over values 1–10).
 * Pairs/kinds work at any staged count ≥ 2. STRAIGHT / FLUSH /
   STRAIGHT_FLUSH / FIVE KIND require all five effective cards.
-* SHORT STRAIGHT slots below THREE KIND, above TWO PAIR in the ladder,
-  but resolution is best-subset (see §3).
+* SHORT STRAIGHT's ladder rank sits below THREE KIND and above TWO PAIR
+  (classification precedence only), even though its 130% multiplier pays
+  below TWO PAIR's 150%: resolution is best-subset and always plays the
+  highest-scoring subset of the staged cards (see §3), so rank and payout
+  can disagree by design.
 * Enemy side: enemies play single cards, never combos, so every tier
   above HIGH CARD is player-only.
 * Rings (jokers): count as wildcards for the tier via the best-tier
@@ -140,8 +143,8 @@ planned Phase C extension, not yet implemented).
 Worked examples (attack, unsuited unless noted):
 
 ```text
-SW2 + SW2               base 4   PAIR 120%        → 4
-SW1 + SH2 + SW3         base 2   (shield 0)       → tier decides
+SW2 + SW2 (suited)      base 4   PAIR 150%        → 6
+SW1 + SH2 + SW3         base 4   (shield adds 0)  → SHORT 130% → 5 (gem); HIGH CARD → 3 (no gem)
 SW2 + BO3               base 3   HIGH CARD 100%   → 3
 SW1 + RING              base 2   PAIR 120%        → HEAL 2 (ring converts)
 SW1 + DA2 + SW3         base 6   SHORT 130%       → 7

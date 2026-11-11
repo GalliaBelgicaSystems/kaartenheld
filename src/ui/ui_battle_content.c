@@ -933,7 +933,7 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
                          &tier, &base, &suited);
     }
     mult = g_combo_tier_mult[tier];
-    if (suited) mult += 30;
+    if (suited) mult += COMBO_SUITED_BONUS;
     prod = 0;
     while (mult != 0) {
         if (mult & 1u) prod += base;

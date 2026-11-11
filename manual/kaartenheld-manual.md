@@ -283,7 +283,7 @@ The **first card you pick** decides what the play does:
 | Straight flush | a straight, one type | 350% |
 | Five of a kind | five of a value | 400% |
 
-Five cards of the **same type** get an extra **+25%** on
+Five cards of the **same type** get an extra **+30%** on
 top, so five swords in a row hit harder than five mixed
 cards.
 
@@ -295,9 +295,10 @@ the damage as you pick, before you commit. Trust it.
 
 ![Poker hands are the whole trick](../screenshots/19-tutorial-slide3.png)
 
-**Example:** `SW2 + SW2` is a pair. Base 4, times 120%,
-hits for **4**. Add a third `SW2` and it is three of a
-kind: base 6, times 180%, hits for **10**.
+**Example:** `SW2 + SW2` is a suited pair. Base 4,
+times 150%, hits for **6**. Add a third `SW2` and it is
+three of a kind: base 6, times 210% suited, hits for
+**12**.
 
 ## Defending
 
@@ -306,8 +307,8 @@ damage heading your way. **Only shields block.**
 
 Damage you take is the incoming value minus the block
 from the shields in your poker hand. Shields outside
-the hand block nothing: `SH2 + SH2 + SH5` is a pair of
-twos and blocks 4; the `SH5` is wasted.
+the hand block nothing: `SH2 + SH2 + SH5` is a suited
+pair of twos and blocks 6; the `SH5` is wasted.
 
 If your block beats the incoming damage, you take
 nothing — and if a **ring** is in the hand, the

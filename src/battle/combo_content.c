@@ -231,7 +231,7 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
      * g_combo_tier_mult (+30 when suited, like the resolver) so a
      * balance tweak can never desync this comparison. */
     s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_SHORT_STRAIGHT] +
-                        ((*suited_io) ? 30 : 0));
+                        ((*suited_io) ? COMBO_SUITED_BONUS : 0));
     s_ss_a = *base_io;
     s_ss_best = 0;
     while (s_ss_m != 0) {
@@ -289,10 +289,10 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     if (s_ss_n != 0) {
         if (s_ss_n >= 2)
             s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_TWO_PAIR] +
-                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 30));
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : COMBO_SUITED_BONUS));
         else
             s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_PAIR] +
-                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : 30));
+                                ((s_ss_st == 0xFE || s_ss_st == 0xFF) ? 0 : COMBO_SUITED_BONUS));
         s_ss_a = s_ss_pair;
         s_ss_sub = 0;
         while (s_ss_m != 0) {
@@ -586,7 +586,7 @@ void combo_resolve_banked(void)
          * subset above can downgrade SHORT to a pair tier or HIGH CARD. */
         out_result->multiplier =
             g_combo_tier_mult[out_result->tier];
-        if (out_result->suited) out_result->multiplier += 30;
+        if (out_result->suited) out_result->multiplier += COMBO_SUITED_BONUS;
         out_result->eff_count = w;
 
         /* Attack + ring converts the whole hand to healing: force the
