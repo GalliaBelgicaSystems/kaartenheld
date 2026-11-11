@@ -1,7 +1,7 @@
 {
  "name": "heal_mage_rings_decline",
  "test": true,
- "description": "Declining the rings question: talking to the Heal Mage while owning the Iron Ring (lesson not yet heard) opens the rings ask; toggling to NO and confirming closes plainly with nothing set -- no lesson, no RING_LESSON flag (the ask repeats next talk), overworld resumes. DIALOGUE_CHOICE still fires for the answer.",
+ "description": "Declining the rings lesson falls through to the heal: talking to the Heal Mage while owning the Iron Ring (lesson not yet heard) opens the ask; toggling to NO and confirming opens the normal heal ASK instead of closing, and confirming YES heals the hurt hero to full (HEAL_MAGE_USED set, lesson still unheard so the ask will repeat). DIALOGUE_CHOICE fires for both answers.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {"x": 12, "y": 9, "facing": "DOWN"},
@@ -10,7 +10,7 @@
   "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
   "world": {"CARL_FIELD": "DEFEATED"},
   "inventory": {"IRON_RING": 1},
-  "party": {"HERO": {"hp": 10, "max_hp": 10}}
+  "party": {"HERO": {"hp": 3, "max_hp": 10}}
  },
  "actions": [
   {"type": "press", "button": "A"},
@@ -18,13 +18,22 @@
   {"type": "press", "button": "RIGHT"},
   {"type": "wait", "frames": 6},
   {"type": "press", "button": "A"},
+  {"type": "wait", "frames": 10},
+  {"type": "press", "button": "A"},
+  {"type": "wait", "frames": 60},
+  {"type": "press", "button": "A"},
+  {"type": "wait", "frames": 10},
+  {"type": "press", "button": "A"},
   {"type": "wait", "frames": 10}
  ],
  "assertions": [
   {"type": "game_state", "expected": "OVERWORLD"},
   {"type": "screen", "expected": "OVERWORLD"},
   {"type": "dialogue_active", "expected": false},
-  {"type": "event_occurred", "event": "DIALOGUE_CHOICE"},
-  {"type": "flag", "flag": "RING_LESSON", "expected": false}
+  {"type": "flag", "flag": "HEAL_MAGE_USED", "expected": true},
+  {"type": "flag", "flag": "RING_LESSON", "expected": false},
+  {"type": "party_hp", "expected": 10},
+  {"type": "event_count", "event": "DIALOGUE_CHOICE", "count": 2},
+  {"type": "event_occurred", "event": "HEALED"}
  ]
 }

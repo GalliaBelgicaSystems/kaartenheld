@@ -473,12 +473,12 @@ const EventDefinition g_events[] = {
      * chest loot. */
     /* -- Heal Mage ring lesson (one-shot tutorial) ------------------
      * First talk while owning the Iron Ring: the mage asks whether the
-     * hero knows how rings work (YES/NO choice).  YES opens the tactics
-     * lesson below (attack joker + defense overblock heal) and the
-     * dialogue's completion flag retires the row, so later talks fall
-     * through to the ASK/REFUSED flow; NO closes plainly with nothing
-     * set, so the ask repeats next talk (same nag pattern as the heal
-     * ask).  Placed before both (first-match). */
+     * hero wants to learn how rings work (YES/NO choice).  YES opens
+     * the tactics lesson below (attack joker + defense overblock heal)
+     * and its completion flag retires the row, so later talks fall
+     * through to the ASK/REFUSED flow; NO falls through to the heal
+     * ASK while the free heal is still available (USED unset), else
+     * closes plainly.  Placed before both (first-match). */
     {
         EVENT_ID_HEAL_MAGE_RING_LESSON, EVENT_TRIGGER_INTERACT, ENTITY_ID_HEAL_MAGE, EVENT_MAP_ANY,
         2,

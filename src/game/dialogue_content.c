@@ -156,7 +156,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_HEAL_MAGE_RINGS_ASK,
         "HEAL MAGE:",
         3,
-        {"Do you know how", "rings work?", "> YES   NO"},
+        {"Want to learn how", "rings work?", "> YES   NO"},
         0,
         1
     },

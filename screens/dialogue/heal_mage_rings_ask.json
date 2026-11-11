@@ -2,7 +2,7 @@
   "id": "heal_mage_rings_ask",
   "speaker": "HEAL MAGE:",
   "lines": [
-    "Do you know how",
+    "Want to learn how",
     "rings work?",
     "> YES   NO"
   ],

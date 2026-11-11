@@ -230,15 +230,25 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_e = (uint8_t)VARIABLE_ID_DOG_QUEST;
             return;
         }
-        /* Rings lesson ask ("Do you know how rings work?"): YES opens
+        /* Rings lesson ask ("Want to learn how rings work?"): YES opens
          * the tactics lesson below; completing it sets RING_LESSON
          * through its completion_flag, retiring the ask row so later
-         * talks fall through to the heal flow.  NO closes plainly with
-         * nothing set, so the ask repeats next talk (same nag pattern
-         * as the heal ask's NO).  Code 3 opens the staged follow-up
+         * talks fall through to the heal flow.  NO falls through to the
+         * normal heal flow while the free heal is still available
+         * (USED unset -- the heal ask owns the one-shot there, so no
+         * second heal is possible); with USED already set there is
+         * nothing to fall through to, so NO closes plainly and the ask
+         * repeats next talk.  Code 3 opens the staged follow-up
          * regardless of which answer selected it. */
         if (g_game.dialogue.id == DIALOGUE_ID_HEAL_MAGE_RINGS_ASK) {
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                uint8_t sf = (uint8_t)(STORY_FLAG_ID_HEAL_MAGE_USED - 1);
+                if ((g_game.state.flags.bytes[(uint8_t)(sf >> 3)] &
+                     (uint8_t)(1u << (sf & 7))) == 0) {
+                    g_bk_byte_a = 3;
+                    g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_ASK;
+                    return;
+                }
                 g_bk_byte_a = 2;
                 return;
             }
