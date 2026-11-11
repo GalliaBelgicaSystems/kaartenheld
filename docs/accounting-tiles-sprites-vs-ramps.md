@@ -156,5 +156,8 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | enemy_ow | [0, 10] | sprites7 | #000000 |
 | enemy_ow | [1, 10] | sprites7 | #000000 |
 | enemy_ow | [3, 5] | sprites7 | #b6b6b6 |
+| materials | [0, 0] | inventory1 | #b09266 |
+| materials | [1, 0] | inventory2 | #967139, #b09266 |
+| materials | [2, 0] | inventory3 | #967139, #b09266 |
 
 Unslotted ramps (parsed, no hardware slot, info only): fight7, fightbat, fightboss2, fightboss3, fightgoblin, fightmimic, fightslime, fightslime_knight, sprites6.

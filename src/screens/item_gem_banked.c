@@ -301,8 +301,9 @@ void item_gem_render_banked(void)
         return;
     }
 
-    /* Sweep the card rider entries (same as the quest tab). */
-    for (e = 1; e <= 12; e++) {
+    /* Sweep the card rider entries (same as the quest tab, plus the
+     * DECK material ingots on entries 12-22). */
+    for (e = 1; e <= 22; e++) {
         gem_rider_hide(e);
     }
 

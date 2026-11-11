@@ -158,7 +158,7 @@
       "label": "arrow pointing up dark",
       "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_DARK",
       "walkable": false,
-      "color": "#c9beae",
+      "color": "#c8bdad",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_arrow_pointing_up_dark.png",
       "category": "terrain"
@@ -891,6 +891,26 @@
       "color": "#bc9c6e",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_eight_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_material_icon",
+      "label": "material icon",
+      "gb_constant": "TILE_COMBAT_MATERIAL_ICON",
+      "walkable": false,
+      "color": "#c8b598",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_material_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_wood_material_icon",
+      "label": "wood material icon",
+      "gb_constant": "TILE_COMBAT_WOOD_MATERIAL_ICON",
+      "walkable": false,
+      "color": "#b59d7b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_wood_material_icon.png",
       "category": "terrain"
     }
   ]

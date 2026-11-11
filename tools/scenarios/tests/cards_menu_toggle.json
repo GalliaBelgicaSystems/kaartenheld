@@ -1,7 +1,7 @@
 {
  "name": "cards_menu_toggle",
  "test": true,
- "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter wood sword (DECK 4/4 -> 0/4), then single adds walk the count back up (1/4, 2/4). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 wood sword / 3 shield / 3 bronze + 3 rings = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5",
+ "description": "CARDS tab A semantics on a fully-decked multi-copy card: A clears every decked copy of the maxed starter wood sword (DECK 4/4 -> 0/4), then single adds walk the count back up (1/4, 2/4). Membership glyph shows the decked-copy count. initial_state replaces the persistent deck with every owned copy decked (4 wood sword / 3 shield / 3 bronze + 3 rings = 13) so the sword starts maxed; DECK_MIN_CARDS=5 still allows the clear because 13 - 4 >= 5. Material OAM ingots: rows 1-2 wood (tile 121/slot 5), row 3 bronze (118/0), row 4 iron (119/1).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -86,6 +86,46 @@
    "type": "screen_row",
    "row": 5,
    "contains": "2"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 12,
+   "expected": 121
+  },
+  {
+   "type": "oam_attr",
+   "entry": 12,
+   "expected": 5
+  },
+  {
+   "type": "oam_tile",
+   "entry": 13,
+   "expected": 121
+  },
+  {
+   "type": "oam_attr",
+   "entry": 13,
+   "expected": 5
+  },
+  {
+   "type": "oam_tile",
+   "entry": 14,
+   "expected": 118
+  },
+  {
+   "type": "oam_attr",
+   "entry": 14,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 15,
+   "expected": 119
+  },
+  {
+   "type": "oam_attr",
+   "entry": 15,
+   "expected": 1
   }
  ]
 }

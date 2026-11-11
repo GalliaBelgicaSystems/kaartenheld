@@ -62,6 +62,18 @@ def main():
             if name is None:
                 continue
             im = Image.open('%s/%s.png' % (PUB, name)).convert('RGB')
+            # Sheet-background keys to paper white: the combat sheet's
+            # transparent background reads as #fffeff/#fcfcfc (palette
+            # indices 0/24), but card-frame cells must pixel-fit their
+            # display ramp exactly (verify_palette_manifest check 6) --
+            # fight3's paper is pure #ffffff, so normalize the keys.
+            # Anything else keeps its pixels (nearest-shade mismatches
+            # stay visible in ramp_mismatches.json, never silenced here).
+            px = im.load()
+            for j in range(8):
+                for i in range(8):
+                    if px[i, j] in ((255, 254, 255), (252, 252, 252)):
+                        px[i, j] = (255, 255, 255)
             sheet.paste(im.resize((8, 8), Image.NEAREST), (x * 8, y * 8))
     sheet.save('assets/card_frames.png')
     print('wrote assets/card_frames.png')

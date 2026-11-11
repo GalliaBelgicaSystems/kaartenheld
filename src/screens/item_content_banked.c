@@ -61,6 +61,12 @@ extern const uint8_t g_shop_count;
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 extern uint8_t g_is_cgb;
+/* Card-menu material icons: tile bytes + ids/slots/ramp CRAM bytes
+ * (same-bank data: this body streams and programs them on DECK renders,
+ * so bank 8 never carries menu art). */
+#define MAT_NEED_RAMP_BYTES
+#include "material_tiles_generated.h"
+#include "gfx/material_tiles.h"
 
 /* Shared draw scratch, also used by the bank-8 quest body
  * (item_quest_banked.c): the trampoline is non-reentrant and only one
@@ -82,12 +88,13 @@ char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
 
-/* Rider OAM for the item screen (entries 1-5): icon over a card's elem
+/* Rider OAM for the item screen (entries 1-11): icon over a card's elem
  * cell for cards carrying a rider, hidden otherwise.  Transition-hide
  * covers screen changes; the render dispatch below sweeps entries
  * first so quest/picker/emptied rows never go stale.  Same bank (2),
- * WRAM shadow OAM only; rider tiles/palettes are boot-resident and
- * item screens never reprogram OBJ slots. */
+ * WRAM shadow OAM only; rider tiles/palettes are boot-resident, and
+ * the menu OBJ slots the riders use (2-4) are never reprogrammed --
+ * only the material slots (0/1/5/6, programmed on DECK renders) are. */
 static void ic_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
 {
     *tile = 0;
@@ -127,6 +134,76 @@ static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
         re[0] = 0;
         re[2] = 0;
     }
+}
+
+/* Material icon OAM for the DECK list/detail (entries 12-22, one per
+ * visible row): the card's material ingot over the col-8 spacer (list)
+ * or the col-3 gap (detail), tinted per material (inventory1-4 OBJ
+ * ramps programmed by the render body below; steel shares iron's).
+ * Same WRAM shadow-OAM pattern as the riders; the quest/gem renderers
+ * sweep these entries on tab switches. */
+#define IC_MAT_ENTRY_BASE 12
+static void ic_mat_hide(uint8_t entry)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = 0;
+    re[2] = 0;
+}
+
+/* Stream one OAM tile (16 bytes) + program one OBJ slot, LCD-safely
+ * (bounded Mode wait per access: DECK renders repaint with the LCD on,
+ * so the timer ISR could otherwise eclipse the wait->store window).
+ * Same pattern as the bank-8 OAM loaders (marks_banked.c). */
+static void ic_stream_oam_cell(uint8_t oam_id, const uint8_t *src)
+{
+    uint8_t j;
+    volatile uint8_t *dst;
+    dst = (volatile uint8_t *)(0x8000u + ((uint16_t)oam_id << 4));
+    for (j = 0; j < 16; j++) {
+        BANKED_VRAM_WRITE(dst, src[j]);
+        dst++;
+    }
+}
+
+static void ic_obj_program(uint8_t slot, const uint8_t *src)
+{
+    uint8_t c;
+    OCPS_REG = (uint8_t)(0x80 | (slot << 3));
+    for (c = 0; c < 8; c++) {
+        BANKED_VRAM_WRITE(&OCPD_REG, src[c]);
+    }
+}
+
+/* Material index (ic_mat_str order: 0 wood, 1 bronze, 2 iron, 3 steel,
+ * 4 mythril) to the staged OAM tile id + OBJ slot. */
+static void ic_mat_tile(uint8_t mat, uint8_t *tile, uint8_t *slot)
+{
+    if (mat == 0) {
+        *tile = MAT_TILE_WOOD;
+        *slot = MAT_OBJ_WOOD;
+    } else if (mat == 1) {
+        *tile = MAT_TILE_BRONZE;
+        *slot = MAT_OBJ_BRONZE;
+    } else if (mat == 4) {
+        *tile = MAT_TILE_MYTHRIL;
+        *slot = MAT_OBJ_MYTHRIL;
+    } else {
+        *tile = MAT_TILE_IRON;
+        *slot = MAT_OBJ_IRON;
+    }
+}
+
+static void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat)
+{
+    uint8_t tile, slot;
+    volatile uint8_t *re;
+    ic_mat_tile(mat, &tile, &slot);
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
+    re[0] = (uint8_t)((y << 3) + 16);
+    re[1] = (uint8_t)((x << 3) + 8);
+    re[2] = tile;
+    re[3] = slot;
 }
 
 uint8_t s_ic_arg_x;
@@ -665,9 +742,10 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
     s_ic_buf = &g_ui_screen_buf[y][wx];
     *s_ic_buf = s_ic_wpn_letters[s_ic_wpn];
     /* Rider cell takes the same role color as the name (fire/ice/poison
-     * rider, field green for heal); the weapon cell is always wood. */
+     * rider, field green for heal); the weapon cell takes the field
+     * slot (fight3 white background, menu only -- battle keeps wood). */
     ic_name_color(rx, y, 1, s_ic_def);
-    IC_COLOR_SPAN(wx, y, 1, UI_COLOR_WOOD);
+    IC_COLOR_SPAN(wx, y, 1, UI_COLOR_FIELD);
 }
 
 
@@ -749,6 +827,19 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos)
     IC_DRAW_TEXT(12, y, "DECK", 4);
     ic_draw_count5(y, 14, s_ic_in_deck, s_ic_shopkeys);
     ic_stamp_icons(y, 9, 10, 2);
+    /* Material ingot over the col-8 spacer (entry per visible row):
+     * wood shows the log icon, every other material the ingot tinted
+     * by its inventory ramp (steel shares iron's).  Quest items have
+     * no material.  NOTE: s_ic_shopkeys is dual-use scratch -- the row
+     * owned total above already clobbered the shop-keys flag, so only
+     * the BONE/OLD_KEY ids gate here (shop keys never list anyway).
+     * Buffer keeps the space (harness asserts match the material text,
+     * never the icon). */
+    if (s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY)
+        ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + (pos - g->item_menu_scroll)));
+    else
+        ic_mat_show((uint8_t)(IC_MAT_ENTRY_BASE + (pos - g->item_menu_scroll)),
+                    8, y, s_ic_mat);
     IC_COLOR_SPAN(11, y, 2, UI_COLOR_GOLD);
     ic_name_color(1, y, 7, s_ic_def);
 }
@@ -789,6 +880,10 @@ static void ic_draw_cards_list(Game *g)
             ic_health_show((uint8_t)(1 + s_ic_lst_pos), rx, s_ic_y);
         s_ic_y = (uint8_t)(s_ic_y + 1);
     }
+    /* Sweep material entries past the last drawn row (short lists and
+     * scroll bottoms must not keep a stale ingot). */
+    for (s_ic_lst_pos = (uint8_t)(s_ic_y - ROW_CARDS_TOP); s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++)
+        ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + s_ic_lst_pos));
 
     if (g->item_menu_message == MSG_DECK_FULL)
         IC_DRAW_TEXT(0, 16, "DECK FULL", 9);
@@ -855,7 +950,22 @@ static void ic_draw_card_detail_page(Game *g)
     BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
     BANKED_VRAM_WRITE(s_ic_dst + 1, s_ic_tile_wpn);
 
-    IC_COLOR_SPAN(2, 3, 1, UI_COLOR_WOOD);
+    /* Material ingot over the col-3 gap (entry 12; quest items and shop
+     * keys have no material, so they hide it).  Buffer keeps the space;
+     * the weapon cell takes the field slot (fight3 white background,
+     * menu only -- battle keeps wood). */
+    IC_DRAW_TEXT(3, 3, " ", 1);
+    if (s_ic_shopkeys || s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY)
+        ic_mat_hide(IC_MAT_ENTRY_BASE);
+    else
+        ic_mat_show(IC_MAT_ENTRY_BASE, 3, 3, s_ic_mat);
+    {
+        uint8_t hide_i;
+        for (hide_i = 1; hide_i <= 10; hide_i++)
+            ic_mat_hide((uint8_t)(IC_MAT_ENTRY_BASE + hide_i));
+    }
+
+    IC_COLOR_SPAN(2, 3, 1, UI_COLOR_FIELD);
     if (s_ic_def->status_id == STATUS_BURN)
         IC_COLOR_SPAN(1, 3, 1, UI_COLOR_FIRE);
     else if (s_ic_def->status_id == STATUS_POISON)
@@ -1010,9 +1120,35 @@ void item_screen_render_banked(void)
     /* Sweep rider entries first: picker/emptied rows leave nothing
      * behind, and list/detail set exactly what they show below.  (The
      * QUEST tab dispatches to the bank-8 quest body, which sweeps for
-     * itself on entry.) */
+     * itself on entry.)  Material entries 12-22 go too (same rows). */
     for (e = 1; e <= VISIBLE_CARDS; e++) {
         ic_rider_hide(e);
+    }
+    for (e = IC_MAT_ENTRY_BASE; e < IC_MAT_ENTRY_BASE + VISIBLE_CARDS; e++) {
+        ic_mat_hide(e);
+    }
+
+    /* Card-menu material icons (assets/material_tiles.png, cells in
+     * bronze/iron/mythril/wood order): stream to fixed OAM ids 118-121
+     * (time-share blob offsets 18-21, restored on overworld entry) and
+     * program the alias OBJ slots with the inventory ramps (bronze 0,
+     * iron 1, mythril 6, wood 5).  Every DECK render (redraw-gated, so
+     * bounded): renders always precede their stamps, so the first frame
+     * already shows resident art.  Battle/overworld never display these
+     * ids, actor OAM stays hidden while a menu is open, and overworld
+     * entry restores tiles + canonical OBJ (marks_banked.c). */
+    if (g->item_menu_tab == TAB_DECK) {
+        for (e = 0; e < 4; e++) {
+            ic_stream_oam_cell((uint8_t)(MAT_TILE_BRONZE + e),
+                               material_tiles + ((uint16_t)e << 4));
+        }
+        VBK_REG = 0;
+        if (g_is_cgb) {
+            ic_obj_program(MAT_OBJ_BRONZE, mat_ramp_bronze);
+            ic_obj_program(MAT_OBJ_IRON, mat_ramp_iron);
+            ic_obj_program(MAT_OBJ_MYTHRIL, mat_ramp_mythril);
+            ic_obj_program(MAT_OBJ_WOOD, mat_ramp_wood);
+        }
     }
 
     ic_draw_header(g);

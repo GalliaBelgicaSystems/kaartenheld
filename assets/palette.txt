@@ -102,6 +102,16 @@ bat_combat_inner_wings: #3d3044
 eyes_glow: #f57137
 ice_icon: #7ae3f3
 poison_icon: #7136c1
+bronze_dark: #967139
+bronze_light: #bb9863
+iron_dark: #828282
+iron_light: #bbbbbb
+mithril_dark: #becaec
+mithril_light: #d8deec
+wood_dark: #604217
+wood_mid: #93621a
+wood_light: #e5aa54
+
 
 TITLE
 title_bg: #ffffff
@@ -165,3 +175,7 @@ fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+inventory1: COMBAT/background, COMBAT/bronze_light, COMBAT/bronze_dark, UNUSED
+inventory2: COMBAT/background, COMBAT/iron_light, COMBAT/iron_dark, UNUSED
+inventory3: COMBAT/background, COMBAT/mithril_light, COMBAT/mithril_dark, UNUSED
+inventory4: COMBAT/background, COMBAT/wood_light, COMBAT/wood_mid, COMBAT/wood_dark

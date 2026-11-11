@@ -277,6 +277,14 @@ gfx: manifest
 	# body to UI_TILE_AP_PIP_BASE (236-240).
 	@python3 tools/png2gb.py assets/ap_pips_bg.png --name ap_pip_tiles \
 		--shade-map generated/tiles/shades/ap_pips.json -o $(GFX_OUT_DIR)/ap_pip_tiles.h
+	# ── Card-menu material OAM icons (assets/material_tiles.png, 4x1) ──
+	# Bronze / iron (+steel) / mythril / wood icon art; each cell encodes
+	# with its inventory ramp (obj aliases, no base slot).  Only the encode
+	# belongs here.  Streamed on demand by the bank-8 menu body to fixed
+	# OAM ids 118-121 (time-share blob offsets 18-21, restored on
+	# overworld entry); OBJ slots come from the generated header.
+	@python3 tools/png2gb.py assets/material_tiles.png --name material_tiles \
+		--shade-map generated/tiles/shades/materials.json -o $(GFX_OUT_DIR)/material_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
 	# Regenerated every build from the live battle sources (never
 	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
@@ -498,6 +506,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_card_frames.py
 	@python3 tools/compose_dice.py
 	@python3 tools/compose_ap_pips.py
+	@python3 tools/compose_material_tiles.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 

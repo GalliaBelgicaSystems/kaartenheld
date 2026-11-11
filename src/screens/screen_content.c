@@ -739,17 +739,19 @@ void shop_content_render(void)
             /* Icon palettes mirror the battle-hand display slots
              * (generated card_display_slots.json: weapons all WOOD/5,
              * fire 1, ice 2, poison 4): the element cell takes its
-             * element slot, the weapon cell WOOD.  Code/price text
-             * stays on the default paper slot.  Bank-2 bodies cannot
-             * read the bank-4 skin const, so the skin mapping is
-             * mirrored here -- keep in sync with cards_skin.json. */
+             * element slot; the weapon cell takes the FIELD slot
+             * (fight3 white background, menu only -- battle keeps the
+             * wood slot).  Code/price text stays on the default paper
+             * slot.  Bank-2 bodies cannot read the bank-4 skin const,
+             * so the skin mapping is mirrored here -- keep in sync
+             * with cards_skin.json. */
             if (s_sc_card_def->status_id == STATUS_BURN)
                 sc_color_span(1, s_sc_y, 1, UI_COLOR_FIRE);
             else if (s_sc_card_def->status_id == STATUS_POISON)
                 sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
             else if (s_sc_card_def->status_id == STATUS_FREEZE)
                 sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
-            sc_color_span(2, s_sc_y, 1, UI_COLOR_WOOD);
+            sc_color_span(2, s_sc_y, 1, UI_COLOR_FIELD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }
