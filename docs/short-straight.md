@@ -59,7 +59,8 @@ bit, the tab through `screen_row`.
 * **Suited bonus**: N/A in practice, except low daggers.  Single-weapon
   values skip by two (swords/bows 1,3,5,7,9; shields/rings 1,2,4,6,8),
   so no three same-suit cards can ever be sequential -- except daggers
-  (1,2,3,5,7): DA1+DA2+DA3 is a suited run and takes the +30 where the
+  (1,2,3,5,7): DA1+DA2+DA3 is a suited run and takes the suited bonus
+  (COMBO_SUITED_BONUS) where the
   tier awards it.  The existing rule applies automatically, no
   special-casing needed.
 * **Rings (joker)**: free synergy. The existing best-tier trial loop
@@ -107,7 +108,7 @@ TWO_PAIR (150).
 Why 130 over 120 or 100:
 - 100/110 are invisible on small runs: 1+2+3=6 × 110% truncates to 6,
   the same no-bonus feel as the old pair-of-1s (base 2 × 145% → 2;
-  now 150% → 3 since the suited bonus went to +30).
+  now 150% → 3 since the suited bonus went to COMBO_SUITED_BONUS).
 - 120 and 130 both give 7 for 1,2,3; they separate on mid runs
   (4,5,6: 18 vs 19; 7,8,9: 28 vs 31).
 - The extra card + energy cost and the permanently-unsuited status

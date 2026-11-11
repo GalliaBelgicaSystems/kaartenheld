@@ -23,8 +23,9 @@
  * Hand model: strict poker.  Pairs/kinds any count >= 2; STRAIGHT, FLUSH,
  * STRAIGHT_FLUSH and FIVE_KIND need all five effective cards.  Values are
  * classified order-independently (histogram + min/max), fixing the old
- * selection-order quirk.  Suited bonus: +30 percent when every effective
- * card shares one symbol and a tier was made.
+ * selection-order quirk.  Suited bonus: COMBO_SUITED_BONUS percent
+ * points when every effective card shares one symbol and a tier was
+ * made.
  *
  * No multiplies/divides here or in effect_resolve_into(): SDCC lowers
  * them to __mulint/__divuint, which link into the FIXED bank -- an
@@ -228,7 +229,8 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
 
     /* Full-set amount via shared shift-add below (mult in s_ss_m,
      * base in s_ss_a, result in s_ss_best).  Mults read
-     * g_combo_tier_mult (+30 when suited, like the resolver) so a
+     * g_combo_tier_mult (+ COMBO_SUITED_BONUS when suited, like the
+     * resolver) so a
      * balance tweak can never desync this comparison. */
     s_ss_m = (uint16_t)(g_combo_tier_mult[HAND_SHORT_STRAIGHT] +
                         ((*suited_io) ? COMBO_SUITED_BONUS : 0));
@@ -284,7 +286,8 @@ void combo_short_best(const volatile Card *cards, const uint8_t *idx,
     }
 
     /* Pair subset vs the full set (only when a pair exists): TWO_PAIR
-     * or PAIR from g_combo_tier_mult (+30 when suited).  Shared
+     * or PAIR from g_combo_tier_mult (+ COMBO_SUITED_BONUS when
+     * suited).  Shared
      * shift-add loop: no 8-bit * or /. */
     if (s_ss_n != 0) {
         if (s_ss_n >= 2)
