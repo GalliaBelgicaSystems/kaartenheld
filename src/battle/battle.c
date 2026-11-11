@@ -584,7 +584,6 @@ static uint8_t battle_defend_counter(Battle *b)
      * (docs/loot.md §34.6): daggers are already the weakest face per
      * tier, so the counter deals exactly what the cards show. */
     counter_dmg = g_effect_last.amount;
-    if (counter_dmg == 0) counter_dmg = 1;
     /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
      * >= 100% multiplier), so there is no empty-hand early-out.  The
      * victim pointer is hoisted: SDCC recomputes the 16-bit indexed

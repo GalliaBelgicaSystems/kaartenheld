@@ -20,6 +20,9 @@ typedef enum {
     STATUS_NONE = 0,
     STATUS_POISON = 1,
     STATUS_BURN = 2,
+    /* Named FREEZE for historic id stability (wire/telemetry/save
+     * compatible); it means ICE -- greys out cards, never skips turns
+     * (docs/loot.md §34.6).  Do not add skip semantics here. */
     STATUS_FREEZE = 3
 } StatusId;
 

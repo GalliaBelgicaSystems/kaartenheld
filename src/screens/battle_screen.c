@@ -108,14 +108,15 @@ void battle_screen_update(Game *g)
 
     if (vg->battle.phase == BATTLE_PHASE_PLAYER_SELECT ||
         vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND) {
-        /* Confused hero (poison): a random hand gets played -- no input
-         * this turn, except START (the item screen stays reachable; the
-         * staged hand waits out the visit).  The banked body stages the
-         * random hand when the hero is poisoned: a fresh stage holds its
-         * beat (the player reads the Confused! message), an already
-         * pending stage counts the hold down and executes at zero.  The
-         * WRAM slot check up front keeps unpoisoned decision frames out
-         * of the banked call entirely. */
+        /* Confused hero: a random hand gets played -- no input this turn
+         * (except START, which stays reachable while the staged hand
+         * waits out the visit).  The banked body stages the random hand
+         * when the hero is poisoned: a fresh stage holds its beat (the
+         * player reads the Confused! message), an already-pending stage
+         * counts the hold down and executes at zero.  The WRAM slot
+         * check up front keeps decision frames with no live status out
+         * of the banked call entirely (any hero status opens the gate;
+         * the body itself stages only for poison). */
         uint8_t confuse_stage = 0;
         if (input_pressed(INPUT_START)) {
             item_screen_reset(g);

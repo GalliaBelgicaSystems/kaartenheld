@@ -243,6 +243,9 @@ void dialogue_choice_nav_banked(void)
         if (g_game.dialogue.id == DIALOGUE_ID_HEAL_MAGE_RINGS_ASK) {
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 uint8_t sf = (uint8_t)(STORY_FLAG_ID_HEAL_MAGE_USED - 1);
+                /* Same bit layout as flag_byte_bit() in rpg/state.c
+                 * (byte (id-1)/8, mask 1 << ((id-1)%8)); a banked body
+                 * cannot call that fixed-bank helper. */
                 if ((g_game.state.flags.bytes[(uint8_t)(sf >> 3)] &
                      (uint8_t)(1u << (sf & 7))) == 0) {
                     g_bk_byte_a = 3;

@@ -9,12 +9,12 @@ Battery-backed SRAM persistence of the canonical `GameState`
 * MBC5 cart with RAM + battery (header cart type `0x1B`, RAM size 8 KB).
 * SRAM base `0xA000`.
 
-## Layout (version 5)
+## Layout (version 6)
 
 | Offset | Size | Field |
 |---|---|---|
 | 0xA000 | 2 | magic `0x5247` (`"GR"`) |
-| 0xA002 | 1 | format version (`SAVE_VERSION = 5`) |
+| 0xA002 | 1 | format version (`SAVE_VERSION = 6`) |
 | 0xA003 | 1 | checksum |
 | 0xA004 | `sizeof(GameState)` | the serialized `GameState` |
 
@@ -29,10 +29,13 @@ Battery-backed SRAM persistence of the canonical `GameState`
   `GameState` layout or field semantics change in a way that breaks old
   saves.
 * A loader must reject a version it does not understand (it already does).
-  Version 4 and older saves are rejected outright (v3 and below held
-  the 12-row collection, so the grown struct fails their checksum;
-  v4 predates the appended EconomyState); the demo ships no
+  Version 5 and older saves are rejected outright (v5 predates the
+  `CARD_FIRE_SWORD` -> plain `CARD_BRONZE_SWORD` rename on id 0x43, so a
+  v5 fire sword would silently load as plain; v4 predates the appended
+  EconomyState; v3 and below held the 12-row collection, so the grown
+  struct fails their checksum); the demo ships no
   migration while the loot CardId space is still changing.
+* v6 is the rename bump (same id, new meaning -- rejection, not migration).
 * v5 appends `EconomyState` (docs/economy.md §6: market index, gold
   in/out counters, battle counter) last in `GameState`.
 * Future migrations should read the old version and upgrade in place before
@@ -53,7 +56,7 @@ poke (raw SRAM byte write with the MBC5 RAM gate opened first):
 `save_version_accept` saves GOLD 50, gains 25 and loads -- GOLD reads 50
 again (control: the save path works); `save_version_reject` does the same
 but backdates slot 1's version byte (`0xA002`) to 2 before loading, then
-pokes it forward to 6 (a future version) -- GOLD stays 75 both times,
+pokes it forward to 7 (a future version) -- GOLD stays 75 both times,
 proving the load is refused and state untouched.
 
 Power-cycle persistence (writing SRAM to a `.sav` file on hardware/mGBA) is

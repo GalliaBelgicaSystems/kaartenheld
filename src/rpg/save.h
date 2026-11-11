@@ -10,11 +10,14 @@
  * migrated; see docs/save-format.md. */
 
 #define SAVE_MAGIC   0x5247   /* "GR" */
-/* v5: 50-row collection (was 12 rows in v3 -- the shorter state fails
+/* v6: CARD_FIRE_SWORD renamed to plain CARD_BRONZE_SWORD on the same id
+ * (0x43) -- a v5 save's fire sword would silently load as plain, so v5
+ * saves are rejected outright (no migration can distinguish the two).
+ * v5: 50-row collection (was 12 rows in v3 -- the shorter state fails
  * the checksum against the grown struct, so pre-v4 saves read as
  * empty instead of loading truncated) + appended EconomyState
  * (docs/economy.md §6.3, the v4->v5 bump). */
-#define SAVE_VERSION 5
+#define SAVE_VERSION 6
 #define SAVE_SLOT_COUNT 3
 
 /* SRAM save geometry shared by save.c and the bank-3 body.  Slots are

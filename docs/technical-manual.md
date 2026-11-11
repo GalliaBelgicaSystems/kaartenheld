@@ -505,8 +505,9 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
   * **Team slimes** (the trio encounter) hit for 2–3 each round.
 * When the enemy deck is exhausted it **reshuffles** and keeps going.
 * Ice / grey-out can make the enemy fizzle (see §8.5/§8.7).
-* The boss (no deck) simply telegraphs a flat 4-damage swing: two
-  shields block it exactly.
+* The boss (no deck) simply telegraphs a flat 6-damage swing (raised
+  from 4, docs/enemies_ranking.md §8.4): three bronze shields block
+  it exactly.
 
 ### 6.7 Deck exhaustion — the reshuffle turn
 
