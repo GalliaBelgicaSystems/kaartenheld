@@ -92,13 +92,14 @@ char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
 
-/* Rider OAM for the item screen (entries 1-11): icon over a card's elem
- * cell for cards carrying a rider, hidden otherwise.  Transition-hide
- * covers screen changes; the render dispatch below sweeps entries
- * first so quest/picker/emptied rows never go stale.  Same bank (2),
- * WRAM shadow OAM only; rider tiles/palettes are boot-resident, and
- * the menu OBJ slots the riders use (2-4) are never reprogrammed --
- * only the material slots (0/1/5/6, programmed on DECK renders) are. */
+/* Rider OAM for the item screen (entries 1-8 left, 9-16 right): icon
+ * over a card's elem cell for cards carrying a rider, hidden
+ * otherwise.  Transition-hide covers screen changes; the render
+ * dispatch below sweeps entries first so quest/picker/emptied rows
+ * never go stale.  Same bank (2), WRAM shadow OAM only; rider tiles /
+ * palettes are boot-resident, and the menu OBJ slots the riders use
+ * (2-4) are never reprogrammed -- only the material slots
+ * (0/1/5/6/7, programmed on DECK renders) are. */
 static void ic_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
 {
     *tile = 0;

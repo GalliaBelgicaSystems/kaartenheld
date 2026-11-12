@@ -111,24 +111,10 @@ uint8_t s_view_count;
 static uint8_t s_grp_rm;
 static uint8_t s_grp_id;
 
-/* Targeted cursor move (AGENTS.md 36).  The bank-11 body
- * (menu_cursor_banked.c) computes the caret rows, repaints the two cells
- * (mirrored into g_ui_screen_buf) and, when the visible window must
- * shift, moves the scroll and flags g->render_cache.valid=false so render
- * takes the rare full-redraw path.  A pure caret move never touches the
- * render cache, so the big item_screen_render stays at its baseline shape
- * (AGENTS.md 52.19).  No staging bytes beyond the old/new indices; the
- * body writes game state directly through the staged Game* (WRAM is
- * always mapped). */
-static void item_menu_step(Game *g, uint8_t new_index)
-{
-    g_bk_call_bank = 11;
-    g_bk_call_target = (uint16_t)&item_menu_cursor_banked;
-    g_bk_ptr_a = (void *)g;
-    g_bk_byte_a = g->item_menu_index;
-    g_bk_byte_b = new_index;
-    banked_call_run();
-}
+/* DECK navigation goes through the bank-11 two-column body
+ * (item_deck_nav_banked): it moves over visible rows only, flips sides,
+ * and reuses cu_apply's scroll/caret repaint (AGENTS.md 52.11.1 keeps
+ * fixed-bank callers thin). */
 
 
 void item_screen_reset(Game *g)
@@ -248,8 +234,9 @@ void item_screen_update(Game *g)
     }
 
     /* LEFT/RIGHT on card rows flips the owned/deck side (banked: the
-     * nav snaps onto a visible row of the target side, or stays put);
-     * the filter row (index 0) keeps tab switching. */
+     * nav lands on the target side's first visible row, or stays put
+     * when the target side is empty); the filter row (index 0) keeps
+     * tab switching. */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         if (g->item_menu_index > ROW_TOP) {
             g_bk_call_bank = 11;
@@ -281,13 +268,13 @@ void item_screen_update(Game *g)
             g->item_menu_prev_filter = g->item_menu_filter;
             g->item_menu_prev_sort = g->item_menu_sort;
         } else {
-            /* Grouped count-up-then-clear: one row covers every same-name
-             * (MATERIAL+WEAPON) member.  A adds one copy (first member with
-             * room, collection order); once every owned copy is decked, A
-             * clears the group's decked copies (MIN-guarded, all-or-nothing).
-             * Members go through deck_equip_card/deck_remove_card so gates,
-             * caps and identity rules are unchanged; a saturated identity
-             * reports AT CAP instead of clearing what is already decked. */
+            /* Two-column move: one row covers every same-name
+             * (MATERIAL+WEAPON) member.  LEFT adds one available copy
+             * (first addable member, collection order); RIGHT sends
+             * one decked copy back to the pool.  No toggle, no
+             * clear-all.  Members go through deck_equip_card (same
+             * gates, caps and identity rules as ever); a saturated
+             * identity reports AT CAP. */
             CardState *cs = &g->state.cards;
             uint8_t primary;
             uint8_t owned;
@@ -313,12 +300,10 @@ void item_screen_update(Game *g)
             if (pv < 1) pv = 1;
             if (pv > 255) pv = 255;
             pool = (uint8_t)pv;
-            /* Two-column move: LEFT adds one available copy to the
-             * deck, RIGHT sends one decked copy back to the pool.  No
-             * toggle, no clear-all.  Loop state lives in WRAM
-             * (AGENTS.md 52.19: SDCC caches registers across the
-             * trampoline); every dispatch stages bank/target/ptr FRESH
-             * and the remove return is read IMMEDIATELY. */
+            /* Loop state lives in WRAM (AGENTS.md 52.19: SDCC caches
+             * registers across the trampoline); every dispatch stages
+             * bank/target/ptr FRESH and the remove return is read
+             * IMMEDIATELY. */
             if (g->item_menu_side == 0) {
                 if (decked >= owned) {
                     /* Nothing available: silent no-op. */

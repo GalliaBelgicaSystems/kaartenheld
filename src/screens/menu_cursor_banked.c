@@ -360,10 +360,37 @@ void item_view_build_banked(void)
                         &s_row_owned[0], &s_row_decked[0]);
         return;
     }
-    /* Compacted draw map for the active side: first 8 visible groups
-     * at/after the scroll position, with per-group sums for the row
-     * counters (s_row_* are drawn-indexed to match).  Zero-count rows
-     * are hidden on both OAM and text. */
+    /* Auto-flip: the active side must show something. If it is empty
+     * but the other side has rows, flip there and park the cursor on
+     * its first visible row (an empty active side would trap the
+     * cursor on the FILTER row, where LEFT/RIGHT switches tabs
+     * instead of flipping). */
+    {
+        uint8_t side = g->item_menu_side;
+        uint8_t i;
+        uint8_t owned;
+        uint8_t decked;
+        uint8_t found = 0;
+        for (i = 0; i < s_view_count; i++) {
+            cu_row_sums(g, s_view_indices[i], &owned, &decked);
+            if (side == 0 ? owned > decked : decked > 0) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found && s_view_count > 0) {
+            uint8_t other = (uint8_t)(side ? 0 : 1);
+            for (i = 0; i < s_view_count; i++) {
+                cu_row_sums(g, s_view_indices[i], &owned, &decked);
+                if (other == 0 ? owned > decked : decked > 0) break;
+            }
+            if (i < s_view_count) {
+                g->item_menu_side = other;
+                g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
+                g->item_menu_scroll = i;
+            }
+        }
+    }
     {
         uint8_t side = g->item_menu_side;
         uint8_t k = 0;
