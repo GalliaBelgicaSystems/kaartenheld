@@ -873,6 +873,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos, uint8_t lst)
     }
 }
 
+static void ic_draw_row16(Game *g);
 static void ic_draw_cards_list(Game *g)
 {
     /* Fixed column header: PILE over the left (owned) block, DECK over
@@ -906,15 +907,33 @@ static void ic_draw_cards_list(Game *g)
         ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
     }
 
-    if (g->item_menu_message == MSG_DECK_FULL)
+    /* Row 16 (message or side footer) goes through the shared helper
+     * so the incremental post-A refresh paints exactly what the full
+     * render paints (the helper blanks stale tails itself). */
+    ic_draw_row16(g);
+    IC_DRAW_TEXT(0, 17, "L/R:SIDE B:BACK", 15);
+}
+
+/* Row-16 message/side-footer draw, shared by the full list render and
+ * the incremental post-A refresh: short messages blank their tail so
+ * no stale glyphs survive without a full clear. */
+static void ic_draw_row16(Game *g)
+{
+    uint8_t len = 0;
+    uint8_t i;
+    if (g->item_menu_message == MSG_DECK_FULL) {
         IC_DRAW_TEXT(0, 16, "DECK FULL", 9);
-    else if (g->item_menu_message == MSG_DECK_MIN)
+        len = 9;
+    } else if (g->item_menu_message == MSG_DECK_MIN) {
         IC_DRAW_TEXT(0, 16, "DECK MIN 5", 10);
-    else if (g->item_menu_message == MSG_DECK_CAPPED)
+        len = 10;
+    } else if (g->item_menu_message == MSG_DECK_CAPPED) {
         IC_DRAW_TEXT(0, 16, "AT CAP", 6);
-    else if (g->item_menu_message == MSG_QUEST_ITEM)
+        len = 6;
+    } else if (g->item_menu_message == MSG_QUEST_ITEM) {
         IC_DRAW_TEXT(0, 16, "QUEST ITEM", 10);
-    else if (g->item_menu_message == MSG_NEED_AP) {
+        len = 10;
+    } else if (g->item_menu_message == MSG_NEED_AP) {
         /* The digit reads the selected card's cost at draw time -- no
          * new Game field, no WRAM growth (AGENTS.md §52.24). */
         uint8_t need = 0;
@@ -924,16 +943,49 @@ static void ic_draw_cards_list(Game *g)
                 ic_card_get_def(ic_view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD)));
             if (nd) need = nd->cost;
         }
-        IC_DRAW_TEXT(0, 16, "NEED AP", 7);
+        IC_DRAW_TEXT(0, 16, "NEED AP ", 8);
         s_ic_code[0] = (char)('0' + need);
         s_ic_code[1] = '\0';
         IC_DRAW_TEXT(8, 16, s_ic_code, 1);
+        len = 9;
     } else if (g->item_menu_side == 0) {
         IC_DRAW_TEXT(0, 16, "A:TO DECK SEL:INFO", 17);
+        len = 17;
     } else {
         IC_DRAW_TEXT(0, 16, "A:TO PILE SEL:INFO", 17);
+        len = 17;
     }
-    IC_DRAW_TEXT(0, 17, "L/R:SIDE B:BACK", 15);
+    for (i = len; i < 20; i++)
+        IC_DRAW_TEXT(i, 16, " ", 1);
+}
+
+/* Incremental post-A refresh (AGENTS.md 36): repaints the acted row's
+ * two count cells and row 16 (message or side footer) without touching
+ * the render cache -- moving cards never blinks.  A neither creates
+ * nor removes groups, so the view, draw map, scroll, OAM and icons
+ * all stay exactly as drawn; only counts and row 16 can change.
+ * Staging: g_bk_ptr_a = Game* (row derived from item_menu_index). */
+void item_card_refresh_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t vpos;
+    uint8_t k;
+    uint8_t y;
+    uint8_t avail;
+    if (!g) return;
+    if (g->item_menu_index >= FIRST_CARD) {
+        vpos = (uint8_t)(g->item_menu_index - FIRST_CARD);
+        for (k = 0; k < 8; k++) {
+            if (s_ic_draw_pos[k] != vpos) continue;
+            y = (uint8_t)(ROW_CARDS_TOP + k);
+            avail = s_row_owned[k] > s_row_decked[k] ?
+                (uint8_t)(s_row_owned[k] - s_row_decked[k]) : 0;
+            ic_draw_pair2(7, y, avail);
+            ic_draw_pair2(17, y, s_row_decked[k]);
+            break;
+        }
+    }
+    ic_draw_row16(g);
 }
 
 static void ic_draw_card_detail_page(Game *g)

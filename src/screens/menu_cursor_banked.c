@@ -510,6 +510,24 @@ void item_group_scan_banked(void)
         g_bk_byte_b = saw_any ? primary : 0xFF;
     }
 }
+/* Recompute one grouped row's pile/deck sums after a deck move
+ * (bank 11): the A-block stages the acted view position; fresh sums
+ * land in s_row_owned/s_row_decked at the row's drawn slot, ready for
+ * the bank-2 incremental repaint.  No-op when the position is stale. */
+void item_row_resum_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t vpos = g_bk_byte_a;
+    uint8_t k;
+    if (!g || vpos >= s_view_count) return;
+    for (k = 0; k < 8; k++) {
+        if (s_ic_draw_pos[k] != vpos) continue;
+        cu_row_sums(g, s_view_indices[vpos], &s_row_owned[k],
+                    &s_row_decked[k]);
+        return;
+    }
+}
+
 /* Direction step for the shop list (g_bk_byte_b 0 = up, 1 = down,
  * g_bk_byte_c = visible count): clamp the new index banked so the
  * fixed update pays no bounds branch.  Shop mode geometry (mode 2)

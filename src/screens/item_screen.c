@@ -35,9 +35,16 @@ void item_view_build_banked(void);
 void item_group_scan_banked(void);
 void item_group_remove_one_banked(void);
 /* DECK two-column navigation (menu_cursor_banked.c, bank 11): UP/DOWN
- * skip zero-count rows, LEFT/RIGHT flips side.  Staging: g_bk_ptr_a =
- * Game*, g_bk_byte_a = 0 up / 1 down / 2 flip. */
+ * walk every row, LEFT/RIGHT steps the cursor between the two cells
+ * of one row with targeted repaints only.  Staging: g_bk_ptr_a =
+ * Game*, g_bk_byte_a = 0 up / 1 down / 2 side step. */
 void item_deck_nav_banked(void);
+/* Post-A row refresh pair: item_row_resum_banked (bank 11) recounts
+ * the acted row's sums; item_card_refresh_banked (bank 2) repaints
+ * its counts and row 16.  Staging: g_bk_ptr_a = Game* (+ byte_a =
+ * view position for the resum). */
+void item_row_resum_banked(void);
+void item_card_refresh_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -141,12 +148,16 @@ void item_screen_update(Game *g)
 {
     uint8_t total;
 
-    /* Transient rejection messages expire on their own (~0.75s). */
+    /* Transient rejection messages expire on their own (~0.75s):
+     * repaint the footer row in place instead of a full redraw. */
     if (g->item_menu_msg_ttl > 0) {
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            g->render_cache.valid = false;
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&item_card_refresh_banked;
+            g_bk_ptr_a = (void *)g;
+            banked_call_run();
         }
     }
 
@@ -269,6 +280,10 @@ void item_screen_update(Game *g)
             g->item_menu_pick_row = 0;
             g->item_menu_prev_filter = g->item_menu_filter;
             g->item_menu_prev_sort = g->item_menu_sort;
+            /* Picker replaces the list content: full redraw (a mode
+             * change with no redraw leaves the list on screen while
+             * input already follows the picker). */
+            g->render_cache.valid = false;
         } else {
             /* One screen, two cells per row: A on the pile (left) cell
              * adds one available copy to the deck, A on the deck
@@ -365,7 +380,18 @@ void item_screen_update(Game *g)
             g->item_menu_message = msg;
             if (msg != MSG_NONE) g->item_menu_msg_ttl = 45;
         }
-        g->render_cache.valid = false;
+        /* Incremental refresh (no blink): recount the acted row, then
+         * repaint its counts and row 16.  Groups never appear or
+         * vanish on A, so the view, map, scroll and icons stand. */
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&item_row_resum_banked;
+        g_bk_ptr_a = (void *)g;
+        g_bk_byte_a = (uint8_t)(g->item_menu_index - FIRST_CARD);
+        banked_call_run();
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&item_card_refresh_banked;
+        g_bk_ptr_a = (void *)g;
+        banked_call_run();
         return;
     }
 
