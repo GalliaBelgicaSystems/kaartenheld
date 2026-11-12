@@ -34,6 +34,9 @@ extern uint8_t ui_font_tile_base;
 /* Visible DECK rows (5-12): 8 rows x 4 OAM sprites (rider+ingot, both
  * sides) = 32 entries, inside the 40-entry OAM budget. */
 #define CUR_VISIBLE_CARD 8
+/* First card row (mirror item_content_banked.c ROW_CARDS_TOP -- keep in
+ * sync): the diff-clear below addresses rows by slot. */
+#define CUR_CARDS_TOP 5
 
 /* Nav-mutation constants (mirror item_screen.c TAB_DECK/TAB_GEM/ROW_TOP,
  * FILTER_ALL, SORT_NONE/SORT_COST_DESC) for item_menu_cycle_banked
@@ -292,6 +295,49 @@ uint8_t s_row_decked[ROW_SUMS];
 uint8_t s_ic_draw_pos[8];
 uint8_t s_ic_draw_pos_r[8];
 
+/* Previous packed maps (snapshot at build entry): the diff-clear at the
+ * end of the build erases VRAM/OAM/buffer cells for slots/sides that
+ * just lost their row, so the lean bank-2 repaint only ever draws live
+ * content.  Lives in bank 11 with the maps (not bank 2 with the renders
+ * that call it): bank 2's switchable area is full, and every op here is
+ * bank-independent (WRAM maps/buffer, direct VRAM/OAM writes), needing
+ * no bank-2 ROM tables (AGENTS.md 52.11.1). */
+static uint8_t s_cu_prev_pos[8];
+static uint8_t s_cu_prev_pos_r[8];
+
+/* Unconditional VRAM+buffer span clear (no same-char skip): icon stamps
+ * write VRAM tiles the buffer never sees (rider/weapon/chrome cells,
+ * AP pips), so a skip-based blank would leave their tiles haunting
+ * emptied rows (AGENTS.md 52.25 family). */
+static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
+{
+    uint8_t i;
+    volatile uint8_t *dst;
+    char *buf;
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    buf = &g_ui_screen_buf[y][x];
+    VBK_REG = 0;
+    for (i = 0; i < n; i++) {
+        BANKED_VRAM_WRITE(dst, ui_font_tile_base);
+        *buf = ' ';
+        dst++;
+        buf++;
+    }
+}
+
+/* Hide one side's OAM pair for a slot (rider + material entries live in
+ * WRAM shadow OAM: side 0 = entries 1/17 + k, side 1 = 9/25 + k). */
+static void cu_hide_side(uint8_t k, uint8_t side)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 9 : 1) + k) << 2));
+    re[0] = 0;
+    re[2] = 0;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 25 : 17) + k) << 2));
+    re[0] = 0;
+    re[2] = 0;
+}
+
 /* Owned/decked copies across every deckable collection entry sharing
  * the primary's (MATERIAL, WEAPON) name. */
 static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
@@ -332,6 +378,13 @@ void item_view_build_banked(void)
     uint8_t n;
     CardId id;
     if (!g) return;
+    /* Snapshot the maps before rebuilding: the diff-clear at the end
+     * erases slots/sides that lose their row (BSS zeros read as vpos 0
+     * on the very first build -- harmless, a full draw follows). */
+    for (i = 0; i < 8; i++) {
+        s_cu_prev_pos[i] = s_ic_draw_pos[i];
+        s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
+    }
     s_view_count = 0;
     for (i = 0; i < g->state.cards.collection.count; i++) {
         id = g->state.cards.collection.entries[i].id;
@@ -420,6 +473,36 @@ void item_view_build_banked(void)
             s_ic_draw_pos_r[kr] = 0xFF;
             s_row_owned[8 + kr] = 0;
             s_row_decked[8 + kr] = 0;
+        }
+    }
+    /* Erase what the rebuild just emptied: a slot/side that held a row
+     * before and holds none now is blanked unconditionally (VRAM +
+     * buffer + OAM) so the lean repaint never inherits stale icon
+     * tiles.  Live slots are redrawn by the caller and still-dead
+     * slots were already blank.  Every op here is bank-independent. */
+    {
+        uint8_t y;
+        uint8_t oL;
+        uint8_t oR;
+        for (k = 0; k < 8; k++) {
+            oL = s_cu_prev_pos[k];
+            oR = s_cu_prev_pos_r[k];
+            y = (uint8_t)(CUR_CARDS_TOP + k);
+            if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF &&
+                oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
+                cu_blank_span(y, 0, 20);
+                cu_hide_side(k, 0);
+                cu_hide_side(k, 1);
+            } else {
+                if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF) {
+                    cu_blank_span(y, 0, 9);
+                    cu_hide_side(k, 0);
+                }
+                if (oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
+                    cu_blank_span(y, 10, 9);
+                    cu_hide_side(k, 1);
+                }
+            }
         }
     }
 }
