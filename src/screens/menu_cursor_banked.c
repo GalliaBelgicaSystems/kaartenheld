@@ -563,37 +563,20 @@ void item_group_scan_banked(void)
 void item_row_resum_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
-    uint8_t vpos = g_bk_byte_a;
-    uint8_t pre_owned = g_bk_byte_b;
-    uint8_t pre_decked = g_bk_byte_d;
     uint8_t owned = 0;
     uint8_t decked = 0;
-    uint8_t k;
-    if (!g || vpos >= s_view_count) return;
-    cu_row_sums(g, s_view_indices[vpos], &owned, &decked);
-    for (k = 0; k < 8; k++) {
-        if (s_ic_draw_pos[k] == vpos) {
-            s_row_owned[k] = owned;
-            s_row_decked[k] = decked;
-        }
-        if (s_ic_draw_pos_r[k] == vpos) {
-            s_row_owned[8 + k] = owned;
-            s_row_decked[8 + k] = decked;
-        }
-    }
-    if (((pre_owned > pre_decked) != (owned > decked)) ||
-        ((pre_decked > 0) != (decked > 0)))
-        g->render_cache.valid = false;
-    /* Vanished acted row: park the cursor on the next visible row of
+    if (!g) return;
+    /* Rebuild sums + draw maps (the view itself never changes on A:
+     * only deck counts move, so no filter/sort work is redone). */
+    item_view_build_banked();
+    /* A vanished acted row parks the cursor on the next visible row of
      * the same side so bulk moves keep flowing down the list (never a
      * side flip on A); FILTER if the side emptied (the nav lazy-flip
      * takes over from there).  Scroll is kept on the parked row. */
-    {
-        uint8_t cpos;
+    if (g->item_menu_index >= CUR_FIRST_CARD) {
+        uint8_t cpos = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
         uint8_t ni;
         uint8_t guard;
-        if (g->item_menu_index < CUR_FIRST_CARD) return;
-        cpos = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
         if (cpos >= s_view_count) return;
         cu_row_sums(g, s_view_indices[cpos], &owned, &decked);
         if (g->item_menu_side == 0 ? owned > decked : decked > 0)
@@ -693,22 +676,17 @@ void item_deck_nav_banked(void)
     uint8_t total;
     uint8_t idx;
     uint8_t guard;
+    uint8_t npos;
     if (!g) return;
-    s_cu_game = g;
     if (mode == 2) {
-        /* Cell step with targeted repaints only (AGENTS.md 36) -- no
-         * full redraw, so stepping between pile and deck never blinks.
-         * The caret cells repaint in place; the side footer word
-         * (row 16, cols 5-8: DECK vs PILE) is patched the same way.
-         * Same group when it shows on the target side, else the target
-         * side's first visible row (scrolled into view, full redraw);
-         * an empty target side, or a stale cursor, holds position. */
-        uint8_t row;
-        uint8_t oldside = g->item_menu_side;
-        uint8_t newside = (uint8_t)(oldside ? 0 : 1);
+        /* Cell step: toggle the cursor side, staying on the same group
+         * when it shows on the target side, else snapping to the
+         * target side's first visible row (scrolled into view).  An
+         * empty target side, or a stale cursor, holds position.  No
+         * drawing here: the fixed caller repaints incrementally, so
+         * stepping never blinks. */
+        uint8_t newside = (uint8_t)(g->item_menu_side ? 0 : 1);
         uint8_t i;
-        static const char s_cu_deck_w[4] = { 'D', 'E', 'C', 'K' };
-        static const char s_cu_pile_w[4] = { 'P', 'I', 'L', 'E' };
         if (g->item_menu_index < CUR_FIRST_CARD ||
             (uint8_t)(g->item_menu_index - CUR_FIRST_CARD) >= s_view_count)
             return;
@@ -721,22 +699,9 @@ void item_deck_nav_banked(void)
             g->item_menu_side = newside;
             g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
             g->item_menu_scroll = i;
-            g->render_cache.valid = false;
             return;
         }
         g->item_menu_side = newside;
-        row = cu_cursor_row(0, g->item_menu_index, g->item_menu_scroll);
-        cu_put_char((uint8_t)(oldside ? 10 : 0), row, ' ');
-        cu_put_char((uint8_t)(newside ? 10 : 0), row, '>');
-        for (i = 0; i < 4; i++) {
-            char ch = newside == 0 ? s_cu_deck_w[i] : s_cu_pile_w[i];
-            if (g_ui_screen_buf[16][5 + i] != ch) {
-                g_ui_screen_buf[16][5 + i] = ch;
-                BANKED_VRAM_WRITE(
-                    (volatile uint8_t *)(0x9800u + (16u << 5) + 5 + i),
-                    (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
-            }
-        }
         return;
     }
     total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
@@ -777,9 +742,23 @@ void item_deck_nav_banked(void)
                              g->item_menu_side))
             break;
     } while (--guard);
-    s_cu_old_index = g->item_menu_index;
-    s_cu_new_index = idx;
-    cu_apply();
+    /* No caret paint or cache touch here (AGENTS.md 36): the fixed
+     * caller repaints the whole menu incrementally, so scrolling and
+     * stepping never blink.  Just land the index; keep it drawable. */
+    g->item_menu_index = idx;
+    if (idx == 0) {
+        g->item_menu_scroll = 0;
+        return;
+    }
+    npos = (uint8_t)(idx - CUR_FIRST_CARD);
+    if (npos < g->item_menu_scroll) {
+        g->item_menu_scroll = npos;
+        return;
+    }
+    while (cu_rank(g, g->item_menu_side, npos,
+                   g->item_menu_scroll) == 0xFF &&
+           g->item_menu_scroll < s_view_count)
+        g->item_menu_scroll++;
 }
 
 /* Single-copy removal for the DECK right column (bank 11): sends the

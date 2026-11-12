@@ -45,6 +45,7 @@ void item_deck_nav_banked(void);
  * view position for the resum). */
 void item_row_resum_banked(void);
 void item_card_refresh_banked(void);
+void item_view_build_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -61,6 +62,22 @@ static void menu_cycle(Game *g, uint8_t mode, uint8_t dir)
     g_bk_ptr_a = (void *)g;
     g_bk_byte_a = mode;
     g_bk_byte_b = dir;
+    banked_call_run();
+}
+
+/* Incremental list repaint (AGENTS.md 36): rebuilds the view maps from
+ * the current scroll, then redraws rows, caret and footer in place
+ * after nav/A/message-expiry so nothing in the DECK list ever blinks.
+ * Never touches the render cache. */
+static void item_menu_repaint(Game *g)
+{
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&item_view_build_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
+    g_bk_call_bank = 2;
+    g_bk_call_target = (uint16_t)&item_card_refresh_banked;
+    g_bk_ptr_a = (void *)g;
     banked_call_run();
 }
 
@@ -149,15 +166,15 @@ void item_screen_update(Game *g)
     uint8_t total;
 
     /* Transient rejection messages expire on their own (~0.75s):
-     * repaint the footer row in place instead of a full redraw. */
+     * repaint in place instead of a full redraw -- but only while the
+     * list is showing (a picker/detail open over a pending message
+     * owns row 16 itself). */
     if (g->item_menu_msg_ttl > 0) {
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            g_bk_call_bank = 2;
-            g_bk_call_target = (uint16_t)&item_card_refresh_banked;
-            g_bk_ptr_a = (void *)g;
-            banked_call_run();
+            if (g->item_menu_mode == MODE_LIST)
+                item_menu_repaint(g);
         }
     }
 
@@ -247,9 +264,9 @@ void item_screen_update(Game *g)
     }
 
     /* LEFT/RIGHT on card rows steps the cursor between the pile and
-     * deck cells of the same row (banked: targeted caret + footer
-     * repaints only, no full redraw, so stepping never blinks); the
-     * filter row (index 0) keeps tab switching. */
+     * deck cells of the same row (banked: state only, no drawing);
+     * then repaint in place (no full redraw, so stepping never
+     * blinks); the filter row (index 0) keeps tab switching. */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         if (g->item_menu_index > ROW_TOP) {
             g_bk_call_bank = 11;
@@ -257,6 +274,7 @@ void item_screen_update(Game *g)
             g_bk_ptr_a = (void *)g;
             g_bk_byte_a = 2;
             banked_call_run();
+            item_menu_repaint(g);
         } else {
             menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         }
@@ -381,22 +399,15 @@ void item_screen_update(Game *g)
             g->item_menu_message = msg;
             if (msg != MSG_NONE) g->item_menu_msg_ttl = 45;
         }
-        /* Reconcile + repaint.  The resum recomputes the acted row's
-         * sums, follows a vanished row to its surviving side (with
-         * scroll), and invalidates the render cache itself when
-         * packing shifts (full redraw).  The repaint then covers the
-         * new counts and row 16 with no blink. */
+        /* Reconcile + repaint with no blink.  The resum rebuilds the
+         * view (sums + draw maps) and parks a vanished row's cursor on
+         * the next visible row of the same side (scroll kept); the
+         * repaint then redraws the whole list in place. */
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_row_resum_banked;
         g_bk_ptr_a = (void *)g;
-        g_bk_byte_a = (uint8_t)(g->item_menu_index - FIRST_CARD);
-        g_bk_byte_b = owned;
-        g_bk_byte_d = decked;
         banked_call_run();
-        g_bk_call_bank = 2;
-        g_bk_call_target = (uint16_t)&item_card_refresh_banked;
-        g_bk_ptr_a = (void *)g;
-        banked_call_run();
+        item_menu_repaint(g);
         return;
     }
 
@@ -404,14 +415,16 @@ void item_screen_update(Game *g)
     if (total <= 1) return;
 
     /* UP/DOWN walk the active side's packed list (hidden zero-count
-     * rows are skipped); LEFT/RIGHT steps between the two cells,
-     * the filter row keeps tab switching. */
+     * rows are skipped), then repaint in place (no blink); LEFT/RIGHT
+     * steps between the two cells, the filter row keeps tab
+     * switching. */
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_deck_nav_banked;
         g_bk_ptr_a = (void *)g;
         g_bk_byte_a = input_pressed(INPUT_UP) ? 0 : 1;
         banked_call_run();
+        item_menu_repaint(g);
         return;
     }
 }

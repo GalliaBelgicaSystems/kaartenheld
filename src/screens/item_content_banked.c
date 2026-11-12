@@ -1010,36 +1010,51 @@ static void ic_draw_row16(Game *g)
 void item_card_refresh_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
-    uint8_t vpos;
     uint8_t k;
+    uint8_t vL;
+    uint8_t vR;
     uint8_t y;
-    uint8_t avail = 0;
-    uint8_t decked = 0;
+    uint8_t nl;
+    uint8_t nr;
     if (!g) return;
-    if (g->item_menu_index >= FIRST_CARD) {
-        vpos = (uint8_t)(g->item_menu_index - FIRST_CARD);
-        /* Left pile cell, when the group shows there: avail count. */
-        for (k = 0; k < 8; k++) {
-            if (s_ic_draw_pos[k] != vpos) continue;
-            avail = s_row_owned[k] > s_row_decked[k] ?
-                (uint8_t)(s_row_owned[k] - s_row_decked[k]) : 0;
-            y = (uint8_t)(ROW_CARDS_TOP + k);
-            ic_draw_pair2(7, y, avail);
-            break;
-        }
-        /* Right deck cell, when the group shows there: decked count.
-         * Both cells always repaint -- a move changes each side (the
-         * other side would otherwise freeze on its old number). */
-        for (k = 0; k < 8; k++) {
-            if (s_ic_draw_pos_r[k] != vpos) continue;
-            decked = s_row_decked[8 + k];
-            y = (uint8_t)(ROW_CARDS_TOP + k);
-            ic_draw_pair2(17, y, decked);
-            break;
-        }
+    /* FILTER row caret (only the list uses it; picker/detail draw
+     * their own rows). */
+    if (g->item_menu_index == ROW_TOP)
+        IC_DRAW_TEXT(0, ROW_FILTER, ">", 1);
+    else
+        IC_DRAW_TEXT(0, ROW_FILTER, " ", 1);
+    /* Blank the whole card area first so rows that just emptied leave
+     * no stale glyphs (no full clear here: the LCD stays on). */
+    for (y = ROW_CARDS_TOP; y <= 15; y++)
+        IC_DRAW_TEXT(0, y, "                    ", 20);
+    /* Redraw every packed row on both sides from the rebuilt maps. */
+    nl = 0;
+    nr = 0;
+    for (k = 0; k < 8; k++) {
+        vL = s_ic_draw_pos[k];
+        vR = s_ic_draw_pos_r[k];
+        if (vL == 0xFF && vR == 0xFF) break;
+        y = (uint8_t)(ROW_CARDS_TOP + k);
+        ic_draw_card_pair(g, y, vL, vR, k);
+        if (vL != 0xFF) nl = (uint8_t)(k + 1);
+        if (vR != 0xFF) nr = (uint8_t)(k + 1);
+        s_ic_y = (uint8_t)(y + 1);
     }
+    /* Sweep OAM entries past each side's last drawn row. */
+    for (k = nl; k < 8; k++) {
+        ic_rider_hide((uint8_t)(1 + k));
+        ic_mat_hide((uint8_t)(17 + k));
+    }
+    for (k = nr; k < 8; k++) {
+        ic_rider_hide((uint8_t)(9 + k));
+        ic_mat_hide((uint8_t)(25 + k));
+    }
+    /* The middle rule runs the whole list height, header to footer. */
+    for (y = ROW_CARDS_TOP; y <= 15; y++)
+        IC_DRAW_TEXT(9, y, "|", 1);
     ic_draw_row16(g);
 }
+
 
 static void ic_draw_card_detail_page(Game *g)
 {
