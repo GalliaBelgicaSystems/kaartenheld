@@ -42,30 +42,6 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
    "button": "A"
   },
   {

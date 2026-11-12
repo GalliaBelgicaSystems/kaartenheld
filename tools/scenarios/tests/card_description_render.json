@@ -47,13 +47,13 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "R!"
+   "row": 5,
+   "contains": "R2"
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "D!"
+   "row": 6,
+   "contains": "D2"
   }
  ]
 }

@@ -1,142 +1,150 @@
 {
- "name": "deck_move_sides",
- "test": true,
- "description": "Two-column deck move on a fully-decked starter row: A on the owned side with nothing available is a silent no-op; RIGHT flips to the deck side (footer reads A:TO PILE) and A sends one copy back to the pile (CARD_REMOVED_FROM_DECK, deck 13->12); LEFT flips back and A re-adds it (CARD_ADDED_TO_DECK, deck 12->13). Material OAM ingots (wood tile 121/slot 5) on both sides.",
- "initial_state": {
-  "scene": "TEST_FIELD",
-  "player": {
-   "x": 4,
-   "y": 4,
-   "facing": "DOWN"
+  "name": "deck_move_sides",
+  "test": true,
+  "description": "Per-side deck move: DOWN lands on the only pile row (SHIELD, avail 1) and A adds it (CARD_ADDED_TO_DECK, its pile cell vanishes so the cursor advances back to FILTER); DOWN flips to the deck side (lazy flip, pile is empty) onto WOOD_SWORD; RIGHT stays (empty pile); A removes one copy (CARD_REMOVED_FROM_DECK, the sword reappears on the pile); LEFT steps back to the pile cell; A adds the last pile copy (CARD_ADDED_TO_DECK, pile empties again, cursor advances to FILTER). Material OAM ingots (wood tile 121/slot 5) on the deck row; the emptied pile row stays blank.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 4,
+      "y": 4,
+      "facing": "DOWN"
+    },
+    "seed": 8410,
+    "inventory": {
+      "IRON_RING": 3
+    },
+    "deck": {
+      "WOOD_SWORD": 4,
+      "WOODEN_SHIELD": 3,
+      "BRONZE_SWORD": 3,
+      "IRON_RING": 3
+    }
   },
-  "seed": 8410,
-  "inventory": {
-   "IRON_RING": 3
-  },
-  "deck": {
-   "WOOD_SWORD": 4,
-   "WOODEN_SHIELD": 3,
-   "BRONZE_SWORD": 3,
-   "IRON_RING": 3
-  }
- },
- "actions": [
-  {
-   "type": "press",
-   "button": "START"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "LEFT"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 5
-  }
- ],
- "assertions": [
-  {
-   "type": "screen",
-   "expected": "ITEM"
-  },
-  {
-   "type": "event_count",
-   "event": "CARD_REMOVED_FROM_DECK",
-   "count": 1
-  },
-  {
-   "type": "event_count",
-   "event": "CARD_ADDED_TO_DECK",
-   "count": 1
-  },
-  {
-   "type": "screen_row",
-   "row": 3,
-   "contains": "PILE"
-  },
-  {
-   "type": "screen_row",
-   "row": 3,
-   "contains": "DECK"
-  },
-  {
-   "type": "screen_row",
-   "row": 16,
-   "contains": "A:TO DECK"
-  },
-  {
-   "type": "screen_row",
-   "row": 17,
-   "contains": "L/R:SIDE"
-  },
-  {
-   "type": "deck_contains",
-   "card_id": 71,
-   "expected": 4
-  },
-  {
-   "type": "oam_tile",
-   "entry": 17,
-   "expected": 121
-  },
-  {
-   "type": "oam_attr",
-   "entry": 17,
-   "expected": 5
-  },
-  {
-   "type": "oam_tile",
-   "entry": 25,
-   "expected": 121
-  },
-  {
-   "type": "oam_attr",
-   "entry": 25,
-   "expected": 5
-  }
- ]
+  "actions": [
+    {
+      "type": "press",
+      "button": "START"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "DOWN"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "LEFT"
+    },
+    {
+      "type": "wait",
+      "frames": 3
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "ITEM"
+    },
+    {
+      "type": "event_count",
+      "event": "CARD_REMOVED_FROM_DECK",
+      "count": 1
+    },
+    {
+      "type": "event_count",
+      "event": "CARD_ADDED_TO_DECK",
+      "count": 2
+    },
+    {
+      "type": "screen_row",
+      "row": 2,
+      "contains": ">"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "PILE"
+    },
+    {
+      "type": "screen_row",
+      "row": 3,
+      "contains": "DECK"
+    },
+    {
+      "type": "screen_row",
+      "row": 16,
+      "contains": "A:TO DECK"
+    },
+    {
+      "type": "screen_row",
+      "row": 17,
+      "contains": "L/R:SIDE"
+    },
+    {
+      "type": "deck_contains",
+      "card_id": 71,
+      "expected": 4
+    },
+    {
+      "type": "oam_tile",
+      "entry": 17,
+      "expected": 0
+    },
+    {
+      "type": "oam_tile",
+      "entry": 25,
+      "expected": 121
+    },
+    {
+      "type": "oam_attr",
+      "entry": 25,
+      "expected": 5
+    }
+  ]
 }

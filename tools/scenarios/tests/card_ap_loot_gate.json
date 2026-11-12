@@ -210,17 +210,17 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": ">"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": "S3"
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 5,
    "contains": "3"
   }
  ]

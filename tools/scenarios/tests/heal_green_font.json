@@ -32,23 +32,23 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "R!"
+   "row": 5,
+   "contains": "R2"
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "D!"
+   "row": 6,
+   "contains": "D2"
   },
   {
    "type": "tilemap_attr",
-   "row": 8,
+   "row": 5,
    "col": 3,
    "expected": 3
   },
   {
    "type": "tilemap_attr",
-   "row": 9,
+   "row": 6,
    "col": 3,
    "expected": 4
   }

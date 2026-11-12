@@ -275,6 +275,8 @@ void item_screen_update(Game *g)
         return;
     }
     if (input_pressed(INPUT_A)) {
+        uint8_t owned = 0;
+        uint8_t decked = 0;
         if (g->item_menu_index == ROW_TOP) {
             g->item_menu_mode = MODE_PICKER;
             g->item_menu_pick_row = 0;
@@ -285,18 +287,17 @@ void item_screen_update(Game *g)
              * input already follows the picker). */
             g->render_cache.valid = false;
         } else {
-            /* One screen, two cells per row: A on the pile (left) cell
+            /* One screen, two packed lists: A on the pile (left) cell
              * adds one available copy to the deck, A on the deck
              * (right) cell sends one decked copy back to the pool.
-             * Empty cells are silent no-ops (nothing to move); a full
-             * deck reports DECK FULL, a locked card NEED AP, and the
-             * DECK floor reports DECK MIN.  Members go through
-             * deck_equip_card (same gates, caps and identity rules as
-             * ever); a saturated identity reports AT CAP. */
+             * Zero-count sides hide (the cursor follows a vanished row
+             * to its surviving side); a full deck reports DECK FULL, a
+             * locked card NOT ENOUGH AP, and the DECK floor reports
+             * DECK MIN.  Members go through deck_equip_card (same
+             * gates, caps and identity rules as ever); a saturated
+             * identity reports AT CAP. */
             CardState *cs = &g->state.cards;
             uint8_t primary;
-            uint8_t owned;
-            uint8_t decked;
             uint8_t pool;
             uint8_t msg = MSG_NONE;
             int16_t pv;
@@ -380,13 +381,17 @@ void item_screen_update(Game *g)
             g->item_menu_message = msg;
             if (msg != MSG_NONE) g->item_menu_msg_ttl = 45;
         }
-        /* Incremental refresh (no blink): recount the acted row, then
-         * repaint its counts and row 16.  Groups never appear or
-         * vanish on A, so the view, map, scroll and icons stand. */
+        /* Reconcile + repaint.  The resum recomputes the acted row's
+         * sums, follows a vanished row to its surviving side (with
+         * scroll), and invalidates the render cache itself when
+         * packing shifts (full redraw).  The repaint then covers the
+         * new counts and row 16 with no blink. */
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_row_resum_banked;
         g_bk_ptr_a = (void *)g;
         g_bk_byte_a = (uint8_t)(g->item_menu_index - FIRST_CARD);
+        g_bk_byte_b = owned;
+        g_bk_byte_d = decked;
         banked_call_run();
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&item_card_refresh_banked;
@@ -398,10 +403,9 @@ void item_screen_update(Game *g)
     total = (uint8_t)(s_view_count + 1); /* + the FILTER/SORT row */
     if (total <= 1) return;
 
-    /* UP/DOWN move over every row (the FILTER row plus all grouped
-     * card rows, including empty ones); LEFT/RIGHT on card rows steps
-     * between the pile and deck cells, the filter row keeps tab
-     * switching. */
+    /* UP/DOWN walk the active side's packed list (hidden zero-count
+     * rows are skipped); LEFT/RIGHT steps between the two cells,
+     * the filter row keeps tab switching. */
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_deck_nav_banked;
