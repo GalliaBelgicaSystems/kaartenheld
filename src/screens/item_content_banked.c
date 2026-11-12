@@ -881,6 +881,10 @@ static void ic_draw_cards_list(Game *g)
      * "  PILE    |   DECK    ".  Row 4 is a blank paper separator. */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE   |   DECK   ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
+    /* The middle rule runs the whole list height, header to footer:
+     * stamp it on the separator row too so short lists don't leave a
+     * gap above their first card row. */
+    IC_DRAW_TEXT(9, ROW_SEP, "|", 1);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {
         if (g->item_menu_index == ROW_TOP)
@@ -895,6 +899,15 @@ static void ic_draw_cards_list(Game *g)
         if (vpos == 0xFF) break;
         ic_draw_card_pair(g, s_ic_y, vpos, s_ic_lst_pos);
         s_ic_y = (uint8_t)(s_ic_y + 1);
+    }
+    /* The middle rule runs to the footer even when the pile holds few
+     * cards: stamp it on every undrawn list row (rows 13-15 are never
+     * card rows, so the rule always reaches row 15).  Uses a local
+     * cursor -- s_ic_y still drives the OAM sweep below. */
+    {
+        uint8_t bar_y;
+        for (bar_y = s_ic_y; bar_y <= 15; bar_y++)
+            IC_DRAW_TEXT(9, bar_y, "|", 1);
     }
     /* Sweep sprite entries past the last drawn row (short lists and
      * scroll bottoms must not keep a stale icon): riders 1-8/9-16 and
@@ -957,6 +970,10 @@ static void ic_draw_row16(Game *g)
     }
     for (i = len; i < 20; i++)
         IC_DRAW_TEXT(i, 16, " ", 1);
+    /* The middle rule reaches the footer row -- except on the two
+     * 10-wide messages (DECK MIN 5, QUEST ITEM), which own col 9. */
+    if (len <= 9)
+        IC_DRAW_TEXT(9, 16, "|", 1);
 }
 
 /* Incremental post-A refresh (AGENTS.md 36): repaints the acted row's
