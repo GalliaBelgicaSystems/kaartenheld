@@ -771,31 +771,33 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 }
 
 
-/* One GROUP per row, drawn twice: owned pool (left, cols 0-8) and
- * deck (right, cols 9-17); cols 18-19 pad.
- *   col 0/9: cursor caret (active side only)
- *   col 1/10: material ingot (blank BG; OAM tinted per inventory ramp)
- *   col 2/11: rider cell (blank BG; rider/health OAM overlays it)
- *   col 3/12: weapon icon tile (BG); buffer holds S/H/B/D/R
- *   col 4/13: AP pip digit ('!' when above the pool); pip tile behind
- *   col 5/14: AP icon tile (BG); buffer blank
- *   col 6-7/15-16: side count, 2-wide (" 4"): left = owned - decked,
+/* Two per-side packed lists share each screen row: the pile (left,
+ * cols 0-8) lists groups with copies to add (owned - decked > 0), the
+ * deck (right, cols 10-18) groups with decked copies; col 9 is the
+ * full-height '|' rule, col 19 pads.  Per cell (pile/deck):
+ *   col 0/10: cursor caret (selected cell only)
+ *   col 1/11: blank (caret breathing room)
+ *   col 2/12: material ingot (blank BG; OAM tinted per inventory ramp)
+ *   col 3/13: rider cell (blank BG; rider/health OAM overlays it)
+ *   col 4/14: weapon icon tile (BG); buffer holds S/H/B/D/R
+ *   col 5/15: AP pip tile (BG); buffer holds the cost digit; the cell
+ *     takes the FIRE slot when the pool locks the card
+ *   col 6/16: AP icon tile (BG); buffer blank
+ *   col 7-8/17-18: side count, 2-wide (" 4"): left = owned - decked,
  *     right = decked
- *   col 8: '|' separator (static text)
- * Row 3 is the fixed column header (OWNED / DECK labels).  Row 4 is a
+ * Row 3 is the fixed column header (PILE / DECK labels).  Row 4 is a
  * blank paper separator; cards run rows 5-12 (VISIBLE_CARDS rows).
  * VRAM shows the icon tiles; the buffer keeps weapon letters, digits
  * and counts for harness asserts (material/rider cells stay blank,
  * OAM art).  Display cost/rider/color read the primary (first)
  * member; A tries members in collection order, so display and behavior
  * agree.  Note: same-name variants (e.g. rider vs plain) share one row
- * by design; see docs/deck-management.md. */
-/* One pile/deck cell of a grouped row (side 0 = pile block cols
- * 0-8, side 1 = deck block cols 10-18): caret when selected on its
- * side, material + rider OAM cells (blanks underneath), weapon icon,
- * AP pip (red when the pool locks it), and the side's count.  Blank
- * cells are never stamped (the full redraw clears both planes first);
- * their OAM entries are swept by the caller. */
+ * by design; see docs/deck-management.md.
+ *
+ * ic_draw_card_cell paints one cell.  Cells that lose their group are
+ * never blanked here: the full redraw clears both planes first, and
+ * the incremental repaint relies on the bank-11 view build erasing
+ * emptied slots (VRAM + buffer + OAM) before it runs. */
 static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, uint8_t slot)
 {
     uint8_t curx = side ? 10 : 0;
@@ -891,11 +893,22 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t vL, uint8_t vR, uint8_
 }
 
 static void ic_draw_row16(Game *g);
+
+/* FILTER/SORT row (row 2) with its caret: shared by the full list
+ * render and the incremental repaint.  Skip-based text writes, so the
+ * repaint pays only for a changed caret. */
+static void ic_draw_filter_row(Game *g)
+{
+    IC_DRAW_TEXT(0, ROW_FILTER,
+                 g->item_menu_index == ROW_TOP ? ">" : " ", 1);
+    IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
+}
+
 static void ic_draw_cards_list(Game *g)
 {
     /* Fixed column header: PILE over the left (owned) block, DECK over
      * the right block, '|' separator between (cols 0-19):
-     * "  PILE    |   DECK    ".  Row 4 is a blank paper separator. */
+     * "  PILE   |   DECK   ".  Row 4 is a blank paper separator. */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE   |   DECK   ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     /* The middle rule runs the whole list height, header to footer:
@@ -905,14 +918,10 @@ static void ic_draw_cards_list(Game *g)
     s_ic_y = ROW_CARDS_TOP;
     s_ic_end_l = 0;
     s_ic_end_r = 0;
-    if (g->item_menu_scroll == 0) {
-        if (g->item_menu_index == ROW_TOP)
-            IC_DRAW_TEXT(0, ROW_FILTER, ">", 1);
-        else
-            IC_DRAW_TEXT(0, ROW_FILTER, " ", 1);
-        IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
-        s_ic_y = ROW_CARDS_TOP;
-    }
+    /* FILTER/SORT row: fixed chrome at row 2 (cards start at row 5 at
+     * every scroll), drawn unconditionally so the full render and the
+     * incremental repaint (item_card_refresh_banked) always agree. */
+    ic_draw_filter_row(g);
     for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
         uint8_t vL = s_ic_draw_pos[s_ic_lst_pos];
         uint8_t vR = s_ic_draw_pos_r[s_ic_lst_pos];
@@ -987,26 +996,26 @@ static void ic_draw_row16(Game *g)
         IC_DRAW_TEXT(14, 16, s_ic_code, 1);
         len = 15;
     } else if (g->item_menu_side == 0) {
-        IC_DRAW_TEXT(0, 16, "A:TO DECK SEL:INFO", 17);
-        len = 17;
+        IC_DRAW_TEXT(0, 16, "A:TO DECK SEL:INFO", 18);
+        len = 18;
     } else {
-        IC_DRAW_TEXT(0, 16, "A:TO PILE SEL:INFO", 17);
-        len = 17;
+        IC_DRAW_TEXT(0, 16, "A:TO PILE SEL:INFO", 18);
+        len = 18;
     }
     for (i = len; i < 20; i++)
         IC_DRAW_TEXT(i, 16, " ", 1);
-    /* The middle rule reaches the footer row -- except on the two
-     * 10-wide messages (DECK MIN 5, QUEST ITEM), which own col 9. */
+    /* The middle rule reaches the footer row under the short messages
+     * (DECK FULL, AT CAP); every longer text owns col 9. */
     if (len <= 9)
         IC_DRAW_TEXT(9, 16, "|", 1);
 }
 
-/* Incremental post-A refresh (AGENTS.md 36): repaints the acted row's
- * two count cells and row 16 (message or side footer) without touching
- * the render cache -- moving cards never blinks.  A neither creates
- * nor removes groups, so the view, draw map, scroll, OAM and icons
- * all stay exactly as drawn; only counts and row 16 can change.
- * Staging: g_bk_ptr_a = Game* (row derived from item_menu_index). */
+/* Incremental DECK list repaint (AGENTS.md 36), run after nav, A and
+ * message expiry: FILTER row, every live list slot, the middle rule
+ * and row 16, without touching the render cache -- nothing blinks.
+ * Precondition: item_view_build_banked (bank 11) ran for the current
+ * state/scroll (rebuilt maps + emptied slots erased).
+ * Staging: g_bk_ptr_a = Game*. */
 void item_card_refresh_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1015,12 +1024,9 @@ void item_card_refresh_banked(void)
     uint8_t vR;
     uint8_t y;
     if (!g) return;
-    /* FILTER row caret (only the list uses it; picker/detail draw
+    /* FILTER row + caret (only the list uses it; picker/detail draw
      * their own rows). */
-    if (g->item_menu_index == ROW_TOP)
-        IC_DRAW_TEXT(0, ROW_FILTER, ">", 1);
-    else
-        IC_DRAW_TEXT(0, ROW_FILTER, " ", 1);
+    ic_draw_filter_row(g);
     /* Lean in-place repaint (AGENTS.md 36): the build (bank 11) already
      * erased slots/sides that lost their row -- unconditionally, so no
      * icon tile survives -- and this loop only draws live slots, one
@@ -1034,11 +1040,10 @@ void item_card_refresh_banked(void)
         vL = s_ic_draw_pos[k];
         vR = s_ic_draw_pos_r[k];
         y = (uint8_t)(ROW_CARDS_TOP + k);
-        if (vL != 0xFF || vR != 0xFF) {
+        if (vL != 0xFF || vR != 0xFF)
             ic_draw_card_pair(g, y, vL, vR, k);
-            s_ic_y = (uint8_t)(y + 1);
-        }
-        IC_DRAW_TEXT(9, y, "|", 1);
+        else
+            IC_DRAW_TEXT(9, y, "|", 1);
     }
     ic_draw_row16(g);
 }

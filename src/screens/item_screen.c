@@ -13,19 +13,14 @@
 #include "banked.h"
 #include "game_ids.h"
 
-/* Bank-11 helper (menu_cursor_banked.c); keeps the fixed bank small
- * (AGENTS.md 52.18).  Bank 11, not bank 2 with the renders: bank 2's
- * switchable area is full and the cursor needs no ROM tables. */
-void item_menu_cursor_banked(void);
-
 /* DECK group member/sums query (menu_cursor_banked.c, bank 11):
  * g_bk_byte_a = primary collection index, g_bk_byte_d = mode
  * (0 = NTH member by ordinal in g_bk_byte_b -> g_bk_byte_c collection
  * index or 0xFF; 1 = SUMS -> g_bk_byte_c owned, g_bk_byte_b decked). */
 void item_group_query_banked(void);
-void item_group_remove_one_banked(void);
 /* Grouped DECK view build (same bank): g_bk_ptr_a = Game*, fills
- * s_view_indices/s_view_count (one row per MATERIAL+WEAPON). */
+ * s_view_indices/s_view_count (one row per MATERIAL+WEAPON) and the
+ * per-side packed draw maps. */
 void item_view_build_banked(void);
 
 /* Grouped A-action bodies (menu_cursor_banked.c, bank 11): scan finds
@@ -34,18 +29,18 @@ void item_view_build_banked(void);
  * Staging per body comment. */
 void item_group_scan_banked(void);
 void item_group_remove_one_banked(void);
-/* DECK two-column navigation (menu_cursor_banked.c, bank 11): UP/DOWN
- * walk every row, LEFT/RIGHT steps the cursor between the two cells
- * of one row with targeted repaints only.  Staging: g_bk_ptr_a =
- * Game*, g_bk_byte_a = 0 up / 1 down / 2 side step. */
+/* DECK per-side navigation (menu_cursor_banked.c, bank 11): UP/DOWN
+ * walk the active side's packed list, LEFT/RIGHT steps the cursor
+ * between the pile and deck cells.  State only (index/side/scroll);
+ * the caller repaints.  Staging: g_bk_ptr_a = Game*, g_bk_byte_a =
+ * 0 up / 1 down / 2 side step. */
 void item_deck_nav_banked(void);
-/* Post-A row refresh pair: item_row_resum_banked (bank 11) recounts
- * the acted row's sums; item_card_refresh_banked (bank 2) repaints
- * its counts and row 16.  Staging: g_bk_ptr_a = Game* (+ byte_a =
- * view position for the resum). */
+/* Post-A reconcile + repaint: item_row_resum_banked (bank 11) rebuilds
+ * the view maps and parks a vanished row's cursor; item_card_refresh_
+ * banked (bank 2) repaints the list in place.  Staging: g_bk_ptr_a =
+ * Game* for both. */
 void item_row_resum_banked(void);
 void item_card_refresh_banked(void);
-void item_view_build_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked): pure WRAM state machines that outgrew the
@@ -135,12 +130,10 @@ uint8_t s_view_count;
 static uint8_t s_grp_rm;
 static uint8_t s_grp_id;
 
-/* DECK navigation goes through the bank-11 two-column body
- * (item_deck_nav_banked): UP/DOWN walk every row, LEFT/RIGHT steps the
- * cursor between the two cells of one row with targeted repaints only
- * (no full redraw, so nothing blinks), and reuses cu_apply's
- * scroll/caret repaint (AGENTS.md 52.11.1 keeps fixed-bank callers
- * thin). */
+/* DECK navigation goes through the bank-11 per-side body
+ * (item_deck_nav_banked): state only (index/side/scroll); the caller
+ * then repaints the list in place (item_menu_repaint), so nothing
+ * blinks (AGENTS.md 52.11.1 keeps fixed-bank callers thin). */
 
 
 void item_screen_reset(Game *g)
@@ -153,6 +146,7 @@ void item_screen_reset(Game *g)
     g->item_menu_sort = SORT_NONE;
     g->item_menu_mode = MODE_LIST;
     g->item_menu_message = MSG_NONE;
+    g->item_menu_msg_ttl = 0;
 }
 
 static void close_menu(Game *g)
@@ -165,16 +159,22 @@ void item_screen_update(Game *g)
 {
     uint8_t total;
 
-    /* Transient rejection messages expire on their own (~0.75s):
-     * repaint in place instead of a full redraw -- but only while the
-     * list is showing (a picker/detail open over a pending message
-     * owns row 16 itself). */
+    /* Transient rejection messages expire on their own (~0.75s).  The
+     * DECK list repaints in place (no blink); every other surface takes
+     * the full redraw: the GEM tab shares this TTL for MAX 3 GEMS (its
+     * LIST mode is also 0), and a DECK message can still be pending
+     * after a tab switch -- the DECK repaint must never draw over
+     * another tab.  Picker/detail own row 16 themselves. */
     if (g->item_menu_msg_ttl > 0) {
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            if (g->item_menu_mode == MODE_LIST)
-                item_menu_repaint(g);
+            if (g->item_menu_tab == TAB_DECK) {
+                if (g->item_menu_mode == MODE_LIST)
+                    item_menu_repaint(g);
+            } else {
+                g->render_cache.valid = false;
+            }
         }
     }
 
@@ -302,8 +302,10 @@ void item_screen_update(Game *g)
             g->item_menu_prev_sort = g->item_menu_sort;
             /* Picker replaces the list content: full redraw (a mode
              * change with no redraw leaves the list on screen while
-             * input already follows the picker). */
+             * input already follows the picker).  No list repaint:
+             * it would only paint cells the full redraw clears. */
             g->render_cache.valid = false;
+            return;
         } else {
             /* One screen, two packed lists: A on the pile (left) cell
              * adds one available copy to the deck, A on the deck

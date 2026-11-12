@@ -12,19 +12,18 @@
 #include "rpg/deck.h"
 #include "game_ids.h"
 
-/* Shared ITEM/SHOP cursor repaint (AGENTS.md 36): a cursor-only UP/DOWN
+/* Shared SHOP cursor repaint (AGENTS.md 36): a cursor-only UP/DOWN
  * repaints just the `>` glyph instead of invalidating the render cache.
+ * (The DECK tab's per-side navigation lives further down, see
+ * item_deck_nav_banked.)
  *
  * Lives in bank 11 (not bank 2 with the renders that call it): bank 2's
  * switchable area is full, and this body is pure WRAM math -- mode/row
  * computation plus two VRAM cell writes -- needing no bank-2 ROM tables
- * (AGENTS.md §52.11.1).  Staging: g_bk_ptr_a = Game*,
- * g_bk_byte_a = old index, g_bk_byte_b = new index; the body owns the
- * mutation (scroll + caret rows), callers keep their single-call shape
- * so the fixed bank stays under 0x8000 (AGENTS.md §52.18).
- *
- * Moved verbatim from src/screens/screen_content.c; keep the row
- * geometry in sync with the bank-2 renders (bm_cursor_row comment). */
+ * (AGENTS.md §52.11.1).  Staging per item_menu_step_banked; the body
+ * owns the mutation (scroll + caret rows), callers keep their
+ * single-call shape so the fixed bank stays under 0x8000 (AGENTS.md
+ * §52.18). */
 
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
@@ -49,21 +48,10 @@ extern uint8_t ui_font_tile_base;
 #define CYC_SORT_COST_DESC 5
 
 static Game *s_cu_game;
-static uint8_t s_cu_pos;
-/* Forward: packed rank of a view position on one side's list (defined
- * below, used by the cursor row + scroll window above it). */
-static uint8_t cu_rank(Game *g, uint8_t side, uint8_t pos,
-                       uint8_t scroll);
-/* View count lives in item_screen.c (defined below with the view
- * builder); the scroll window above needs it early. */
-extern uint8_t s_view_count;
-static uint8_t s_cu_mode;
 static uint8_t s_cu_old_index;
 static uint8_t s_cu_new_index;
 static uint8_t s_cu_old_row;
 static uint8_t s_cu_new_row;
-static uint8_t s_cu_old_col;
-static uint8_t s_cu_new_col;
 static uint8_t s_cu_need_scroll;
 
 static void cu_put_char(uint8_t x, uint8_t y, char ch)
@@ -78,100 +66,35 @@ static void cu_put_char(uint8_t x, uint8_t y, char ch)
     g_ui_screen_buf[y][x] = ch;
 }
 
-static uint8_t cu_mode(const Game *g)
-{
-    return (g->screen == SCREEN_SHOP) ? 2 : (uint8_t)g->item_menu_tab;
-}
-
-static uint8_t cu_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
-{
-    uint8_t rank;
-    if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3 column
-     * header, row 4 separator, one grouped card row per row at rows
-     * 5-12.  QUEST/GEM keep rows 3+ (their own render bodies draw no
-     * header). */
-    if (index == 0) return 2;
-    if (mode == 0) {
-        /* Packed rank on the active side's list (hidden zero-count rows
-         * take no screen row).  The nav guarantees a drawn cursor row;
-         * fall back to the top card row against a stale scroll. */
-        rank = cu_rank(s_cu_game, s_cu_game->item_menu_side,
-                       (uint8_t)(index - CUR_FIRST_CARD), scroll);
-        if (rank == 0xFF) rank = 0;
-        return (uint8_t)(5u + rank);
-    }
-    s_cu_pos = (uint8_t)(index - CUR_FIRST_CARD);
-    return (uint8_t)(3u + (uint8_t)(s_cu_pos - scroll));
-}
-
-/* Shared tail: scroll-window + caret repaint for staged old/new. */
+/* Shop scroll-window + caret repaint for staged old/new.  The shop is
+ * the only remaining caller: the DECK tab navigates through
+ * item_deck_nav_banked (state only; the fixed caller repaints the
+ * whole list in place) and QUEST/GEM through their own bank-8
+ * bodies. */
 static void cu_apply(void)
 {
-    s_cu_mode = cu_mode(s_cu_game);
     s_cu_game->item_menu_index = s_cu_new_index;
 
-    if (s_cu_mode == 0) {
-        s_cu_need_scroll = s_cu_game->item_menu_scroll;
-        if (s_cu_new_index <= CUR_FIRST_CARD) {
-            s_cu_need_scroll = 0;
-        } else {
-            uint8_t npos = (uint8_t)(s_cu_new_index - CUR_FIRST_CARD);
-            if (npos < s_cu_need_scroll) {
-                s_cu_need_scroll = npos;
-            } else {
-                /* Packed window: advance the scroll until the cursor's
-                 * group lands in the first 8 visible rows of its
-                 * side (it always does once scroll reaches it). */
-                while (cu_rank(s_cu_game, s_cu_game->item_menu_side,
-                               npos, s_cu_need_scroll) == 0xFF &&
-                       s_cu_need_scroll < s_view_count)
-                    s_cu_need_scroll++;
-            }
-        }
-        if (s_cu_need_scroll != s_cu_game->item_menu_scroll) {
-            s_cu_game->item_menu_scroll = s_cu_need_scroll;
-            s_cu_game->render_cache.valid = false;
-            return;
-        }
-    } else if (s_cu_mode == 2) {
-        /* Shop list: index is a direct stock position (0-based).  Keep the
-         * cursor inside the SHOP_VISIBLE window; a window shift needs a
-         * full redraw (the banked body cannot repaint scrolled rows). */
-        s_cu_need_scroll = s_cu_game->item_menu_scroll;
-        if (s_cu_new_index < s_cu_need_scroll)
-            s_cu_need_scroll = s_cu_new_index;
-        else if (s_cu_new_index > (uint8_t)(s_cu_need_scroll + SHOP_VISIBLE - 1))
-            s_cu_need_scroll = (uint8_t)(s_cu_new_index - (SHOP_VISIBLE - 1));
-        if (s_cu_need_scroll != s_cu_game->item_menu_scroll) {
-            s_cu_game->item_menu_scroll = s_cu_need_scroll;
-            s_cu_game->render_cache.valid = false;
-            return;
-        }
+    /* Shop list: index is a direct stock position (0-based).  Keep the
+     * cursor inside the SHOP_VISIBLE window; a window shift needs a
+     * full redraw (the banked body cannot repaint scrolled rows). */
+    s_cu_need_scroll = s_cu_game->item_menu_scroll;
+    if (s_cu_new_index < s_cu_need_scroll)
+        s_cu_need_scroll = s_cu_new_index;
+    else if (s_cu_new_index > (uint8_t)(s_cu_need_scroll + SHOP_VISIBLE - 1))
+        s_cu_need_scroll = (uint8_t)(s_cu_new_index - (SHOP_VISIBLE - 1));
+    if (s_cu_need_scroll != s_cu_game->item_menu_scroll) {
+        s_cu_game->item_menu_scroll = s_cu_need_scroll;
+        s_cu_game->render_cache.valid = false;
+        return;
     }
 
-    s_cu_old_row = cu_cursor_row(s_cu_mode, s_cu_old_index, s_cu_game->item_menu_scroll);
-    s_cu_new_row = cu_cursor_row(s_cu_mode, s_cu_new_index, s_cu_game->item_menu_scroll);
-    /* DECK card rows carry the caret on the active cell (col 0 pile,
-     * col 10 deck); every other row keeps col 0. */
-    s_cu_old_col = (uint8_t)((s_cu_mode == 0 && s_cu_old_index >= CUR_FIRST_CARD &&
-                              s_cu_game->item_menu_side == 1) ? 10 : 0);
-    s_cu_new_col = (uint8_t)((s_cu_mode == 0 && s_cu_new_index >= CUR_FIRST_CARD &&
-                              s_cu_game->item_menu_side == 1) ? 10 : 0);
-    if (s_cu_old_row != s_cu_new_row || s_cu_old_col != s_cu_new_col) {
-        cu_put_char(s_cu_old_col, s_cu_old_row, ' ');
-        cu_put_char(s_cu_new_col, s_cu_new_row, '>');
+    s_cu_old_row = (uint8_t)(5u + (uint8_t)(s_cu_old_index - s_cu_game->item_menu_scroll));
+    s_cu_new_row = (uint8_t)(5u + (uint8_t)(s_cu_new_index - s_cu_game->item_menu_scroll));
+    if (s_cu_old_row != s_cu_new_row) {
+        cu_put_char(0, s_cu_old_row, ' ');
+        cu_put_char(0, s_cu_new_row, '>');
     }
-}
-
-void item_menu_cursor_banked(void)
-{
-    s_cu_game = (Game *)g_bk_ptr_a;
-
-    if (!s_cu_game) return;
-    s_cu_old_index = g_bk_byte_a;
-    s_cu_new_index = g_bk_byte_b;
-    cu_apply();
 }
 
 /* ── DECK group member/sums helper ───────────────────────────────
@@ -635,62 +558,87 @@ void item_group_scan_banked(void)
         g_bk_byte_b = saw_any ? primary : 0xFF;
     }
 }
-/* Recompute one grouped row's pile/deck sums after a deck move
- * (bank 11): fresh sums land in every drawn slot that maps to the
- * staged view position (byte_a; byte_b/byte_d carry the pre-move
- * owned/decked totals), and the cursor advances past a vanished row
- * to the next visible one on the same side (FILTER if the side
- * emptied).  When either side's visibility flips the render cache is
- * invalidated here for a full redraw; otherwise the fixed caller
- * repaints incrementally with no blink. */
+/* Row visibility for the two per-side pile/deck lists: a group row
+ * shows on a side only when its count there is nonzero (pile side:
+ * owned > decked; deck side: decked > 0).  Shared by the nav, the
+ * post-A cursor park and the scroll window below. */
+static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
+{
+    uint8_t owned = 0;
+    uint8_t decked = 0;
+    if (!g || pos >= s_view_count) return 0;
+    cu_row_sums(g, s_view_indices[pos], &owned, &decked);
+    if (side == 0) return (uint8_t)(owned > decked);
+    return (uint8_t)(decked > 0);
+}
+
+/* Scroll window for the active side's packed list: the smallest scroll
+ * >= the current one that puts view position npos among the first 8
+ * rows drawn on its side (a position above the window scrolls up onto
+ * it).  One backward walk over [scroll, npos): stops at the 8th
+ * visible row above npos, so it costs O(npos - scroll) visibility
+ * checks -- not the O(n * 8) of re-ranking at every scroll step.
+ * npos itself is assumed visible on the active side (callers land the
+ * cursor on visible rows only). */
+static void cu_scroll_into_view(Game *g, uint8_t npos)
+{
+    uint8_t side = g->item_menu_side;
+    uint8_t lo = g->item_menu_scroll;
+    uint8_t s = npos;
+    uint8_t c = 0;
+    if (lo >= npos) {
+        g->item_menu_scroll = npos;
+        return;
+    }
+    while (s > lo) {
+        if (item_row_visible(g, (uint8_t)(s - 1), side)) {
+            if (c == (uint8_t)(CUR_VISIBLE_CARD - 1)) break;
+            c++;
+        }
+        s--;
+    }
+    g->item_menu_scroll = s;
+}
+
+/* Post-A reconcile (bank 11, staging: g_bk_ptr_a = Game*): rebuilds the
+ * sums + per-side draw maps (the view itself never changes on A: only
+ * deck counts move, so no filter/sort work is redone), then parks a
+ * vanished acted row's cursor on the next visible row of the same side
+ * (or FILTER when no visible row follows -- the bottom row or an
+ * emptied side; never a side flip on A).
+ * The fixed caller then repaints the list in place (no blink). */
 void item_row_resum_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
-    uint8_t owned = 0;
-    uint8_t decked = 0;
+    uint8_t side;
+    uint8_t cpos;
+    uint8_t ni;
+    uint8_t n;
     if (!g) return;
-    /* Rebuild sums + draw maps (the view itself never changes on A:
-     * only deck counts move, so no filter/sort work is redone). */
     item_view_build_banked();
-    /* A vanished acted row parks the cursor on the next visible row of
-     * the same side so bulk moves keep flowing down the list (never a
-     * side flip on A); FILTER if the side emptied (the nav lazy-flip
-     * takes over from there).  Scroll is kept on the parked row. */
-    if (g->item_menu_index >= CUR_FIRST_CARD) {
-        uint8_t cpos = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
-        uint8_t ni;
-        uint8_t guard;
-        if (cpos >= s_view_count) return;
-        cu_row_sums(g, s_view_indices[cpos], &owned, &decked);
-        if (g->item_menu_side == 0 ? owned > decked : decked > 0)
-            return;
-        ni = (uint8_t)(cpos + CUR_FIRST_CARD);
-        guard = (uint8_t)(s_view_count + 1);
-        do {
-            ni = ni < s_view_count ? (uint8_t)(ni + 1) : 0;
-            if (ni == 0) break;
-            cu_row_sums(g, s_view_indices[(uint8_t)(ni - CUR_FIRST_CARD)],
-                        &owned, &decked);
-            if (g->item_menu_side == 0 ? owned > decked : decked > 0)
-                break;
-        } while (--guard);
-        g->item_menu_index = ni;
-        if (ni == 0) {
-            g->item_menu_scroll = 0;
-        } else {
-            while (cu_rank(g, g->item_menu_side,
-                           (uint8_t)(ni - CUR_FIRST_CARD),
-                           g->item_menu_scroll) == 0xFF &&
-                   g->item_menu_scroll < s_view_count)
-                g->item_menu_scroll++;
+    if (g->item_menu_index < CUR_FIRST_CARD) return;
+    cpos = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
+    if (cpos >= s_view_count) return;
+    side = g->item_menu_side;
+    if (item_row_visible(g, cpos, side)) return;
+    ni = 0;
+    for (n = (uint8_t)(cpos + 1); n < s_view_count; n++) {
+        if (item_row_visible(g, n, side)) {
+            ni = (uint8_t)(n + CUR_FIRST_CARD);
+            break;
         }
     }
+    g->item_menu_index = ni;
+    if (ni == 0)
+        g->item_menu_scroll = 0;
+    else
+        cu_scroll_into_view(g, (uint8_t)(ni - CUR_FIRST_CARD));
 }
 
 /* Direction step for the shop list (g_bk_byte_b 0 = up, 1 = down,
  * g_bk_byte_c = visible count): clamp the new index banked so the
- * fixed update pays no bounds branch.  Shop mode geometry (mode 2)
- * is shared with the cursor body above. */
+ * fixed update pays no bounds branch.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = old index. */
 void item_menu_step_banked(void)
 {
     s_cu_game = (Game *)g_bk_ptr_a;
@@ -707,51 +655,16 @@ void item_menu_step_banked(void)
     cu_apply();
 }
 
-/* Row visibility for the two per-side pile/deck lists: a group row
- * shows on a side only when its count there is nonzero (pile side:
- * owned > decked; deck side: decked > 0).  Shared by the nav skip. */
-static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
-{
-    uint8_t owned = 0;
-    uint8_t decked = 0;
-    if (!g || pos >= s_view_count) return 0;
-    cu_row_sums(g, s_view_indices[pos], &owned, &decked);
-    if (side == 0) return (uint8_t)(owned > decked);
-    return (uint8_t)(decked > 0);
-}
-
-/* Packed rank of a view position on one side's list: how many visible
- * rows precede it at/after the scroll position (0-7 drawn, 0xFF when
- * the position is hidden or falls past the 8-row window). */
-static uint8_t cu_rank(Game *g, uint8_t side, uint8_t pos,
-                       uint8_t scroll)
-{
-    uint8_t k = 0;
-    uint8_t n;
-    if (!g || pos >= s_view_count) return 0xFF;
-    if (scroll >= s_view_count && s_view_count > 0) scroll = 0;
-    for (n = scroll; n < s_view_count && n <= pos; n++) {
-        uint8_t owned = 0;
-        uint8_t decked = 0;
-        cu_row_sums(g, s_view_indices[n], &owned, &decked);
-        if (side == 0 ? owned > decked : decked > 0) {
-            if (n == pos) return k;
-            k++;
-            if (k >= 8) return 0xFF;
-        }
-    }
-    return 0xFF;
-}
-
-/* DECK two-column navigation (bank 11): UP/DOWN move over the active
+/* DECK per-side navigation (bank 11): UP/DOWN move over the active
  * side's packed list (a zero count on that side hides the row,
  * wrapping at the ends); the FILTER/SORT row (index 0) always counts.
- * LEFT/RIGHT (mode 2) steps between the two cells (incremental caret
- * + footer repaints, no full redraw): same group when it shows on the
- * target side, else the target side's first visible row (scrolled into
- * view); an empty target side holds position.
- * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down / 2 step.
- * Scroll + caret go through the shared cu_apply (side-aware). */
+ * LEFT/RIGHT (mode 2) steps between the two cells: same group when it
+ * shows on the target side (scrolled into that side's window -- its
+ * packed rank there can differ), else the target side's top drawn row,
+ * else its first visible row anywhere; an empty target side holds
+ * position.  State only (index/side/scroll): the fixed caller repaints
+ * the list in place, so nothing blinks.
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down / 2 step. */
 void item_deck_nav_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -759,32 +672,31 @@ void item_deck_nav_banked(void)
     uint8_t total;
     uint8_t idx;
     uint8_t guard;
-    uint8_t npos;
     if (!g) return;
     if (mode == 2) {
-        /* Cell step: toggle the cursor side, staying on the same group
-         * when it shows on the target side, else snapping to the
-         * target side's first visible row (scrolled into view).  An
-         * empty target side, or a stale cursor, holds position.  No
-         * drawing here: the fixed caller repaints incrementally, so
-         * stepping never blinks. */
         uint8_t newside = (uint8_t)(g->item_menu_side ? 0 : 1);
         uint8_t i;
         if (g->item_menu_index < CUR_FIRST_CARD ||
             (uint8_t)(g->item_menu_index - CUR_FIRST_CARD) >= s_view_count)
             return;
         idx = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
-        if (!item_row_visible(g, idx, newside)) {
+        if (item_row_visible(g, idx, newside)) {
+            g->item_menu_side = newside;
+            cu_scroll_into_view(g, idx);
+            return;
+        }
+        /* Top drawn row of the target side (maps are current: every
+         * DECK list render/repaint rebuilds them) keeps the window. */
+        i = newside ? s_ic_draw_pos_r[0] : s_ic_draw_pos[0];
+        if (i == 0xFF || i >= s_view_count) {
             for (i = 0; i < s_view_count; i++) {
                 if (item_row_visible(g, i, newside)) break;
             }
             if (i >= s_view_count) return;
-            g->item_menu_side = newside;
-            g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
             g->item_menu_scroll = i;
-            return;
         }
         g->item_menu_side = newside;
+        g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
         return;
     }
     total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
@@ -829,19 +741,10 @@ void item_deck_nav_banked(void)
      * caller repaints the whole menu incrementally, so scrolling and
      * stepping never blink.  Just land the index; keep it drawable. */
     g->item_menu_index = idx;
-    if (idx == 0) {
+    if (idx == 0)
         g->item_menu_scroll = 0;
-        return;
-    }
-    npos = (uint8_t)(idx - CUR_FIRST_CARD);
-    if (npos < g->item_menu_scroll) {
-        g->item_menu_scroll = npos;
-        return;
-    }
-    while (cu_rank(g, g->item_menu_side, npos,
-                   g->item_menu_scroll) == 0xFF &&
-           g->item_menu_scroll < s_view_count)
-        g->item_menu_scroll++;
+    else
+        cu_scroll_into_view(g, (uint8_t)(idx - CUR_FIRST_CARD));
 }
 
 /* Single-copy removal for the DECK right column (bank 11): sends the
