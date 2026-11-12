@@ -43,13 +43,13 @@
   {
    "type": "tilemap_attr",
    "row": 8,
-   "col": 2,
+   "col": 3,
    "expected": 3
   },
   {
    "type": "tilemap_attr",
    "row": 9,
-   "col": 2,
+   "col": 3,
    "expected": 4
   }
  ]

@@ -233,17 +233,14 @@ void item_screen_update(Game *g)
             break;
     }
 
-    /* LEFT/RIGHT on card rows flips the owned/deck side (banked: the
-     * nav lands on the target side's first visible row, or stays put
-     * when the target side is empty); the filter row (index 0) keeps
-     * tab switching. */
+    /* LEFT/RIGHT on card rows steps the cursor between the pile and
+     * deck cells of the same row (both cells always draw, so this is a
+     * plain side toggle plus a full redraw -- the side footer changes
+     * too); the filter row (index 0) keeps tab switching. */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         if (g->item_menu_index > ROW_TOP) {
-            g_bk_call_bank = 11;
-            g_bk_call_target = (uint16_t)&item_deck_nav_banked;
-            g_bk_ptr_a = (void *)g;
-            g_bk_byte_a = 2;
-            banked_call_run();
+            g->item_menu_side = (uint8_t)(g->item_menu_side ? 0 : 1);
+            g->render_cache.valid = false;
         } else {
             menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         }
@@ -268,13 +265,14 @@ void item_screen_update(Game *g)
             g->item_menu_prev_filter = g->item_menu_filter;
             g->item_menu_prev_sort = g->item_menu_sort;
         } else {
-            /* Two-column move: one row covers every same-name
-             * (MATERIAL+WEAPON) member.  LEFT adds one available copy
-             * (first addable member, collection order); RIGHT sends
-             * one decked copy back to the pool.  No toggle, no
-             * clear-all.  Members go through deck_equip_card (same
-             * gates, caps and identity rules as ever); a saturated
-             * identity reports AT CAP. */
+            /* One screen, two cells per row: A on the pile (left) cell
+             * adds one available copy to the deck, A on the deck
+             * (right) cell sends one decked copy back to the pool.
+             * Empty cells are silent no-ops (nothing to move); a full
+             * deck reports DECK FULL, a locked card NEED AP, and the
+             * DECK floor reports DECK MIN.  Members go through
+             * deck_equip_card (same gates, caps and identity rules as
+             * ever); a saturated identity reports AT CAP. */
             CardState *cs = &g->state.cards;
             uint8_t primary;
             uint8_t owned;
@@ -369,9 +367,10 @@ void item_screen_update(Game *g)
     total = (uint8_t)(s_view_count + 1); /* + the FILTER/SORT row */
     if (total <= 1) return;
 
-    /* UP/DOWN move over visible rows only; LEFT/RIGHT on card rows
-     * flips the owned/deck side (banked: hidden rows are skipped,
-     * wrapping at the ends; the filter row keeps tab switching). */
+    /* UP/DOWN move over every row (the FILTER row plus all grouped
+     * card rows, including empty ones); LEFT/RIGHT on card rows steps
+     * between the pile and deck cells, the filter row keeps tab
+     * switching. */
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_deck_nav_banked;

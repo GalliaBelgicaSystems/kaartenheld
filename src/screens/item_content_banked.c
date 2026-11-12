@@ -797,18 +797,19 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos, uint8_t lst)
     avail = (s_ic_shopkeys > s_ic_in_deck) ?
         (uint8_t)(s_ic_shopkeys - s_ic_in_deck) : 0;
 
-    /* Cursor on the active side only; clear the other cell. */
+    /* Cursor on the active cell only (col 0 pile, col 10 deck);
+     * col 1 stays blank so the caret breathes; clear the other cell. */
     if ((uint8_t)(pos + FIRST_CARD) == g->item_menu_index) {
         if (g->item_menu_side == 0) {
             IC_DRAW_TEXT(0, y, ">", 1);
-            IC_DRAW_TEXT(9, y, " ", 1);
+            IC_DRAW_TEXT(10, y, " ", 1);
         } else {
             IC_DRAW_TEXT(0, y, " ", 1);
-            IC_DRAW_TEXT(9, y, ">", 1);
+            IC_DRAW_TEXT(10, y, ">", 1);
         }
     } else {
         IC_DRAW_TEXT(0, y, " ", 1);
-        IC_DRAW_TEXT(9, y, " ", 1);
+        IC_DRAW_TEXT(10, y, " ", 1);
     }
 
     /* Element rider OAM is shown per side below (over the col-2/col-11
@@ -828,25 +829,26 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos, uint8_t lst)
         s_ic_tile_wpn = UI_TILE_CARD_SWORD;
     }
 
-    /* Blanks under the four OAM cells (material + rider, both sides):
-     * VRAM space tiles, buffer spaces (OAM art on top).  Separator and
-     * weapon/icon/Data cells below. */
-    IC_DRAW_TEXT(1, y, " ", 1);
+    /* Blanks under the four OAM cells (material + rider, both
+     * sides): VRAM space tiles, buffer spaces (OAM art on top).  The
+     * pile block runs cols 2-8 (cursor breathing room at col 1),
+     * separator at col 9, deck block at cols 12-18. */
     IC_DRAW_TEXT(2, y, " ", 1);
-    IC_DRAW_TEXT(8, y, "|", 1);
-    IC_DRAW_TEXT(10, y, " ", 1);
-    IC_DRAW_TEXT(11, y, " ", 1);
-    ic_stamp_icons(y, 2, 3, 1);
-    ic_stamp_icons(y, 11, 12, 1);
-    ic_draw_ap_at(g, y, 4);
-    ic_draw_ap_at(g, y, 13);
-    IC_DRAW_TEXT(5, y, " ", 1);
-    IC_DRAW_TEXT(14, y, " ", 1);
-    IC_COLOR_SPAN(4, y, 2, UI_COLOR_GOLD);
-    IC_COLOR_SPAN(13, y, 2, UI_COLOR_GOLD);
-    ic_draw_pair2(6, y, avail);
-    ic_draw_pair2(15, y, s_ic_in_deck);
-    IC_DRAW_TEXT(17, y, "   ", 3);
+    IC_DRAW_TEXT(3, y, " ", 1);
+    IC_DRAW_TEXT(9, y, "|", 1);
+    IC_DRAW_TEXT(12, y, " ", 1);
+    IC_DRAW_TEXT(13, y, " ", 1);
+    ic_stamp_icons(y, 3, 4, 1);
+    ic_stamp_icons(y, 13, 14, 1);
+    ic_draw_ap_at(g, y, 5);
+    ic_draw_ap_at(g, y, 15);
+    IC_DRAW_TEXT(6, y, " ", 1);
+    IC_DRAW_TEXT(16, y, " ", 1);
+    IC_COLOR_SPAN(5, y, 2, UI_COLOR_GOLD);
+    IC_COLOR_SPAN(15, y, 2, UI_COLOR_GOLD);
+    ic_draw_pair2(7, y, avail);
+    ic_draw_pair2(17, y, s_ic_in_deck);
+    IC_DRAW_TEXT(19, y, " ", 1);
 
     /* Material ingots over the col-1 (owned) and col-10 (deck) cells
      * (entries per visible row): wood shows the log icon, every other
@@ -859,24 +861,24 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t pos, uint8_t lst)
         ic_mat_hide((uint8_t)(17 + lst));
         ic_mat_hide((uint8_t)(25 + lst));
     } else {
-        ic_mat_show((uint8_t)(17 + lst), 1, y, s_ic_mat);
-        ic_mat_show((uint8_t)(25 + lst), 10, y, s_ic_mat);
+        ic_mat_show((uint8_t)(17 + lst), 2, y, s_ic_mat);
+        ic_mat_show((uint8_t)(25 + lst), 12, y, s_ic_mat);
     }
-    ic_rider_show((uint8_t)(1 + lst), 2, y, s_ic_def->status_id);
-    ic_rider_show((uint8_t)(9 + lst), 11, y, s_ic_def->status_id);
+    ic_rider_show((uint8_t)(1 + lst), 3, y, s_ic_def->status_id);
+    ic_rider_show((uint8_t)(9 + lst), 13, y, s_ic_def->status_id);
     if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
         ic_is_health_rider()) {
-        ic_health_show((uint8_t)(1 + lst), 2, y);
-        ic_health_show((uint8_t)(9 + lst), 11, y);
+        ic_health_show((uint8_t)(1 + lst), 3, y);
+        ic_health_show((uint8_t)(9 + lst), 13, y);
     }
 }
 
 static void ic_draw_cards_list(Game *g)
 {
-    /* Fixed column header: OWNED over the left (pool) block, DECK over
+    /* Fixed column header: PILE over the left (owned) block, DECK over
      * the right block, '|' separator between (cols 0-19):
-     * " PILE   |  DECK     ".  Row 4 is a blank paper separator. */
-    IC_DRAW_TEXT(0, ROW_COL_HEAD, " PILE   |  DECK     ", 20);
+     * "  PILE    |   DECK    ".  Row 4 is a blank paper separator. */
+    IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE   |   DECK   ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
     s_ic_y = ROW_CARDS_TOP;
     if (g->item_menu_scroll == 0) {

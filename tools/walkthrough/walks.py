@@ -786,46 +786,25 @@ def walk_a(planner, checks, sram_out=None):
     deck0 = s.reader.deck_count()
     s.check("deck above the MIN floor", deck0 - 1 >= 5,
             expected="deck0 - 1 >= 5", actual=str(deck0))
-    # Navigate by content (zero-count rows hide, so fixed DOWN counts
-    # overshoot): flip to the deck side first -- fully-decked rows
-    # (owned 0) only DRAW there -- then step DOWN until the caret sits
-    # on one.
-    s.press("right", settle=20)  # owned pile -> deck side
+    # Unified grid: DOWN lands the first group (fully decked -- every
+    # row draws now, zero counts included), RIGHT steps to its deck
+    # cell, A sends one copy back to the pile.  No side flips.
+    s.press("down", settle=20)
     rows = s.bg_text()
-    s.check("deck side caret", any(len(rows[r]) > 9 and rows[r][9] == ">"
-                                  for r in range(5, 13)),
-            expected="> at col 9", actual=" | ".join(rows[5:13]))
-    target = None
-    for _ in range(9):
-        rows = s.bg_text()
-        crow = None
-        for r in range(5, 13):
-            if len(rows[r]) > 0 and rows[r][0] == ">":
-                crow = r
-                break
-        if crow is None:
-            s.press("down", settle=20)
-            continue
-        left = rows[crow][6:8].strip()
-        right = rows[crow][15:17].strip()
-        if left == "0" and right.isdigit() and int(right) > 0:
-            target = crow
-            break
-        s.press("down", settle=20)
-    s.check("fully-decked row found", target is not None,
-            expected="0/N row", actual="none")
-    if target is not None:
-        rows = s.bg_text()
-        s.check("deck row caret", rows[target][9] == ">",
-                expected="> at col 9", actual=rows[target])
-        s.press("a", settle=30)  # send one copy back to the pile
-        deck1 = s.reader.deck_count()
-        s.check("deck membership removed", deck1 == deck0 - 1,
-                expected="deck == %d" % (deck0 - 1), actual=str(deck1))
-        s.press("left", settle=20)  # back to the owned side
-        rows = s.bg_text()
-        s.check("owned side caret", rows[target][0] == ">",
-                expected="> at col 0", actual=rows[target])
+    s.check("first row caret", rows[5][0] == ">",
+            expected="> at col 0", actual=rows[5])
+    s.press("right", settle=20)  # pile cell -> deck cell, same row
+    rows = s.bg_text()
+    s.check("deck cell caret", len(rows[5]) > 10 and rows[5][10] == ">",
+            expected="> at col 10", actual=rows[5])
+    s.press("a", settle=30)  # send one copy back to the pile
+    deck1 = s.reader.deck_count()
+    s.check("deck membership removed", deck1 == deck0 - 1,
+            expected="deck == %d" % (deck0 - 1), actual=str(deck1))
+    s.press("left", settle=20)  # deck cell -> pile cell, same row
+    rows = s.bg_text()
+    s.check("owned side caret", rows[5][0] == ">",
+            expected="> at col 0", actual=rows[5])
     s.press("b", settle=20)  # single B jumps back to the FILTER row
     s.check("filter row caret", s.bg_text()[2][0] == ">",
             expected="> at filter row", actual=s.bg_text()[2])

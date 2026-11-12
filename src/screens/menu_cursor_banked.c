@@ -126,14 +126,12 @@ static void cu_apply(void)
 
     s_cu_old_row = cu_cursor_row(s_cu_mode, s_cu_old_index, s_cu_game->item_menu_scroll);
     s_cu_new_row = cu_cursor_row(s_cu_mode, s_cu_new_index, s_cu_game->item_menu_scroll);
-    /* DECK card rows carry the caret on the active side (col 0 owned,
-     * col 9 deck); every other row keeps col 0.  Side flips take the
-     * full-redraw path in the fixed caller, so the incremental repaint
-     * here only ever moves within one side. */
+    /* DECK card rows carry the caret on the active cell (col 0 pile,
+     * col 10 deck); every other row keeps col 0. */
     s_cu_old_col = (uint8_t)((s_cu_mode == 0 && s_cu_old_index >= CUR_FIRST_CARD &&
-                              s_cu_game->item_menu_side == 1) ? 9 : 0);
+                              s_cu_game->item_menu_side == 1) ? 10 : 0);
     s_cu_new_col = (uint8_t)((s_cu_mode == 0 && s_cu_new_index >= CUR_FIRST_CARD &&
-                              s_cu_game->item_menu_side == 1) ? 9 : 0);
+                              s_cu_game->item_menu_side == 1) ? 10 : 0);
     if (s_cu_old_row != s_cu_new_row || s_cu_old_col != s_cu_new_col) {
         cu_put_char(s_cu_old_col, s_cu_old_row, ' ');
         cu_put_char(s_cu_new_col, s_cu_new_row, '>');
@@ -360,50 +358,20 @@ void item_view_build_banked(void)
                         &s_row_owned[0], &s_row_decked[0]);
         return;
     }
-    /* Auto-flip: the active side must show something. If it is empty
-     * but the other side has rows, flip there and park the cursor on
-     * its first visible row (an empty active side would trap the
-     * cursor on the FILTER row, where LEFT/RIGHT switches tabs
-     * instead of flipping). */
+    /* Unified two-column grid: every group draws on both sides, even
+     * with a zero count on one side (an empty pile/deck cell is
+     * informative, and the cursor reaches every row with UP/DOWN while
+     * LEFT/RIGHT steps between the two cells of the same row -- no
+     * side flips, everything happens on this one screen).  First 8
+     * groups at/after the scroll position. */
     {
-        uint8_t side = g->item_menu_side;
-        uint8_t i;
-        uint8_t owned;
-        uint8_t decked;
-        uint8_t found = 0;
-        for (i = 0; i < s_view_count; i++) {
-            cu_row_sums(g, s_view_indices[i], &owned, &decked);
-            if (side == 0 ? owned > decked : decked > 0) {
-                found = 1;
-                break;
-            }
-        }
-        if (!found && s_view_count > 0) {
-            uint8_t other = (uint8_t)(side ? 0 : 1);
-            for (i = 0; i < s_view_count; i++) {
-                cu_row_sums(g, s_view_indices[i], &owned, &decked);
-                if (other == 0 ? owned > decked : decked > 0) break;
-            }
-            if (i < s_view_count) {
-                g->item_menu_side = other;
-                g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
-                g->item_menu_scroll = i;
-            }
-        }
-    }
-    {
-        uint8_t side = g->item_menu_side;
         uint8_t k = 0;
-        uint8_t owned;
-        uint8_t decked;
         uint8_t start = g->item_menu_scroll;
         if (start >= s_view_count && s_view_count > 0) start = 0;
         for (n = start; n < s_view_count && k < 8; n++) {
-            cu_row_sums(g, s_view_indices[n], &owned, &decked);
-            if (side == 0 ? owned <= decked : decked == 0) continue;
+            cu_row_sums(g, s_view_indices[n], &s_row_owned[k],
+                        &s_row_decked[k]);
             s_ic_draw_pos[k] = n;
-            s_row_owned[k] = owned;
-            s_row_decked[k] = decked;
             k++;
         }
         for (; k < 8; k++) {
@@ -562,70 +530,31 @@ void item_menu_step_banked(void)
     cu_apply();
 }
 
-/* Row visibility for the two-column DECK list: a group row shows on a
- * side only when its count there is nonzero (owned side: owned >
- * decked; deck side: decked > 0).  Shared by the nav skip below. */
-static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
-{
-    uint8_t owned = 0;
-    uint8_t decked = 0;
-    if (!g || pos >= s_view_count) return 0;
-    cu_row_sums(g, s_view_indices[pos], &owned, &decked);
-    if (side == 0) return (uint8_t)(owned > decked);
-    return (uint8_t)(decked > 0);
-}
-
-/* DECK two-column navigation (bank 11): UP/DOWN move over visible rows
- * only (zero-count rows on the active side are skipped, wrapping at the
- * ends); the FILTER/SORT row (index 0) always counts as visible.
- * LEFT/RIGHT (mode 2) flips side when the target side shows at least
- * one row, staying on the same row when it shows there, else landing
- * on the target side's first visible row (scrolled into view).
- * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down / 2 flip.
- * Scroll + caret go through the shared cu_apply (side-aware). */
+/* DECK two-column navigation (bank 11): UP/DOWN move over every row
+ * (the FILTER/SORT row plus all grouped card rows -- zero-count rows
+ * draw empty on both sides, so nothing is ever skipped); LEFT/RIGHT
+ * on card rows just steps the cursor between the pile and deck cells
+ * of the same row (the fixed caller toggles item_menu_side directly
+ * and takes the full redraw, since the side footer changes too); the
+ * FILTER/SORT row (index 0) keeps tab switching.
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down.  Scroll +
+ * caret go through the shared cu_apply (side-aware). */
 void item_deck_nav_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
     uint8_t mode = g_bk_byte_a;
     uint8_t total;
     uint8_t idx;
-    uint8_t guard;
-    uint8_t i;
     if (!g) return;
-    if (mode == 2) {
-        uint8_t newside = (uint8_t)(g->item_menu_side ? 0 : 1);
-        for (i = 0; i < s_view_count; i++) {
-            if (item_row_visible(g, i, newside)) break;
-        }
-        if (i >= s_view_count) return;
-        g->item_menu_side = newside;
-        /* Stay on the same row when it shows on the new side (it is
-         * always drawn: row - scroll <= 7, so it lands in the first 8
-         * visible rows); otherwise snap to the target side's first
-         * visible row and scroll it into view. */
-        idx = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
-        if (g->item_menu_index == 0 ||
-            !item_row_visible(g, idx, newside)) {
-            g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
-            g->item_menu_scroll = i;
-        }
-        g->render_cache.valid = false;
-        return;
-    }
+    s_cu_game = g;
+    if (mode == 2) return; /* side toggle lives in the fixed caller now */
     total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
     if (total <= 1) return;
     idx = g->item_menu_index;
-    guard = (uint8_t)(total + 1);
-    do {
-        if (mode == 0)
-            idx = idx > 0 ? (uint8_t)(idx - 1) : (uint8_t)(total - 1);
-        else
-            idx = idx < (uint8_t)(total - 1) ? (uint8_t)(idx + 1) : 0;
-        if (idx == 0) break;
-        if (item_row_visible(g, (uint8_t)(idx - CUR_FIRST_CARD),
-                             g->item_menu_side))
-            break;
-    } while (--guard);
+    if (mode == 0)
+        idx = idx > 0 ? (uint8_t)(idx - 1) : (uint8_t)(total - 1);
+    else
+        idx = idx < (uint8_t)(total - 1) ? (uint8_t)(idx + 1) : 0;
     s_cu_old_index = g->item_menu_index;
     s_cu_new_index = idx;
     cu_apply();
