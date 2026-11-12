@@ -1,7 +1,7 @@
 {
  "name": "status_burn_scaled",
  "test": true,
- "description": "Scaled burn (10% of the inflicting hit, min 1): three burn-injected BO5 bows (burn rider, chance 255 on the lead; injection bypasses the new legality the same way a loot fire bow would roll it) attack as trips for 30, so the burn ticks 3 per round for 3 rounds (not the old flat 1). Follow-up SH1 attacks carry no rider, so the burn expires on schedule.",
+ "description": "Scaled burn (10% of the inflicting hit, min 1): three burn-injected BO5 bows (burn rider, chance 255 on the lead; injection bypasses the new legality the same way a loot fire bow would roll it) attack as trips for 31, so the burn ticks 3 per round for 3 rounds (not the old flat 1). Follow-up SH1 attacks carry no rider, so the burn expires on schedule.",
  "actions": [
   {
    "type": "wait",
@@ -222,7 +222,7 @@
    "type": "event_arg",
    "event": "DAMAGE_DEALT",
    "index": 0,
-   "value": 30
+   "value": 31
   },
   {
    "type": "event_count",
