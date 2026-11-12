@@ -1013,22 +1013,28 @@ void item_card_refresh_banked(void)
     uint8_t vpos;
     uint8_t k;
     uint8_t y;
-    uint8_t avail;
-    uint8_t base;
+    uint8_t avail = 0;
+    uint8_t decked = 0;
     if (!g) return;
     if (g->item_menu_index >= FIRST_CARD) {
         vpos = (uint8_t)(g->item_menu_index - FIRST_CARD);
-        base = (uint8_t)(g->item_menu_side ? 8 : 0);
+        /* Left pile cell, when the group shows there: avail count. */
         for (k = 0; k < 8; k++) {
-            uint8_t vk = g->item_menu_side ?
-                s_ic_draw_pos_r[k] : s_ic_draw_pos[k];
-            if (vk != vpos) continue;
+            if (s_ic_draw_pos[k] != vpos) continue;
+            avail = s_row_owned[k] > s_row_decked[k] ?
+                (uint8_t)(s_row_owned[k] - s_row_decked[k]) : 0;
             y = (uint8_t)(ROW_CARDS_TOP + k);
-            avail = s_row_owned[base + k] > s_row_decked[base + k] ?
-                (uint8_t)(s_row_owned[base + k] - s_row_decked[base + k]) : 0;
-            ic_draw_pair2((uint8_t)(g->item_menu_side ? 17 : 7), y,
-                          (uint8_t)(g->item_menu_side ?
-                                    s_row_decked[base + k] : avail));
+            ic_draw_pair2(7, y, avail);
+            break;
+        }
+        /* Right deck cell, when the group shows there: decked count.
+         * Both cells always repaint -- a move changes each side (the
+         * other side would otherwise freeze on its old number). */
+        for (k = 0; k < 8; k++) {
+            if (s_ic_draw_pos_r[k] != vpos) continue;
+            decked = s_row_decked[8 + k];
+            y = (uint8_t)(ROW_CARDS_TOP + k);
+            ic_draw_pair2(17, y, decked);
             break;
         }
     }
