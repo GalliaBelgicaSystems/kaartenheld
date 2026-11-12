@@ -112,9 +112,11 @@ static uint8_t s_grp_rm;
 static uint8_t s_grp_id;
 
 /* DECK navigation goes through the bank-11 two-column body
- * (item_deck_nav_banked): it moves over visible rows only, flips sides,
- * and reuses cu_apply's scroll/caret repaint (AGENTS.md 52.11.1 keeps
- * fixed-bank callers thin). */
+ * (item_deck_nav_banked): UP/DOWN walk every row, LEFT/RIGHT steps the
+ * cursor between the two cells of one row with targeted repaints only
+ * (no full redraw, so nothing blinks), and reuses cu_apply's
+ * scroll/caret repaint (AGENTS.md 52.11.1 keeps fixed-bank callers
+ * thin). */
 
 
 void item_screen_reset(Game *g)
@@ -234,13 +236,16 @@ void item_screen_update(Game *g)
     }
 
     /* LEFT/RIGHT on card rows steps the cursor between the pile and
-     * deck cells of the same row (both cells always draw, so this is a
-     * plain side toggle plus a full redraw -- the side footer changes
-     * too); the filter row (index 0) keeps tab switching. */
+     * deck cells of the same row (banked: targeted caret + footer
+     * repaints only, no full redraw, so stepping never blinks); the
+     * filter row (index 0) keeps tab switching. */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         if (g->item_menu_index > ROW_TOP) {
-            g->item_menu_side = (uint8_t)(g->item_menu_side ? 0 : 1);
-            g->render_cache.valid = false;
+            g_bk_call_bank = 11;
+            g_bk_call_target = (uint16_t)&item_deck_nav_banked;
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = 2;
+            banked_call_run();
         } else {
             menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         }

@@ -547,7 +547,38 @@ void item_deck_nav_banked(void)
     uint8_t idx;
     if (!g) return;
     s_cu_game = g;
-    if (mode == 2) return; /* side toggle lives in the fixed caller now */
+    if (mode == 2) {
+        /* Cell step: toggle the cursor side on the same row with
+         * targeted repaints only (AGENTS.md 36) -- no full redraw, so
+         * stepping between pile and deck never blinks.  The caret
+         * cells repaint in place; the side footer word (row 16, cols
+         * 5-8: DECK vs PILE) is patched the same way.  A stale cursor
+         * (row beyond the rebuilt view, e.g. right after a filter
+         * change) waits for UP/DOWN instead of painting off-list. */
+        uint8_t row;
+        uint8_t oldside = g->item_menu_side;
+        uint8_t newside = (uint8_t)(oldside ? 0 : 1);
+        uint8_t i;
+        static const char s_cu_deck_w[4] = { 'D', 'E', 'C', 'K' };
+        static const char s_cu_pile_w[4] = { 'P', 'I', 'L', 'E' };
+        if (g->item_menu_index < CUR_FIRST_CARD ||
+            (uint8_t)(g->item_menu_index - CUR_FIRST_CARD) >= s_view_count)
+            return;
+        g->item_menu_side = newside;
+        row = cu_cursor_row(0, g->item_menu_index, g->item_menu_scroll);
+        cu_put_char((uint8_t)(oldside ? 10 : 0), row, ' ');
+        cu_put_char((uint8_t)(newside ? 10 : 0), row, '>');
+        for (i = 0; i < 4; i++) {
+            char ch = newside == 0 ? s_cu_deck_w[i] : s_cu_pile_w[i];
+            if (g_ui_screen_buf[16][5 + i] != ch) {
+                g_ui_screen_buf[16][5 + i] = ch;
+                BANKED_VRAM_WRITE(
+                    (volatile uint8_t *)(0x9800u + (16u << 5) + 5 + i),
+                    (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
+            }
+        }
+        return;
+    }
     total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
     if (total <= 1) return;
     idx = g->item_menu_index;
