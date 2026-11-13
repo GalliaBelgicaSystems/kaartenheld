@@ -1,9 +1,9 @@
 /* Bank split (memory budget): the defend body lives in bank 10 (event/
- * status bank) in both builds -- release bank 4 filled up (rider OAM
- * pass + nav cluster + confuse branch) and debug bank 4 is
- * test-content-full.  Bank 10 has room for this helper alongside the
- * event/status tables (the telegraph body lives in bank 12).  Keep in
- * sync with the dispatch bank in battle_defend_resolve() below
+ * status bank) in both builds -- release bank 4 filled up (nav cluster
+ * + confuse branch; battle OAM lives in bank 5, the telegraph body in
+ * bank 12) and debug bank 4 is test-content-full.  Bank 10 has room
+ * for this helper alongside the event/status tables.  Keep in sync
+ * with the dispatch bank in battle_defend_resolve() below
  * (battle.c). */
 #pragma bank 10
 
@@ -52,8 +52,9 @@ static uint8_t confuse_pick_victim(Battle *b, uint8_t atk)
  * and applies the DEFENSE net resolution entirely in bank 10 (was bank
  * 4 release / bank 5 debug; both filled up -- see header note) so the
  * fixed bank (which is completely full, see make memmap) only runs a thin
- * staging wrapper + telemetry.  Lives in bank 10 (not bank 3) to leave
- * room for the rider OAM pass in the release layout.
+ * staging wrapper + telemetry.  Bank 10 (event/status bank) has room
+ * for this helper; bank 3 (UI/battle-HUD bank) is full in both layouts
+ * and bank 4 holds the nav cluster plus the debug test content.
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
  * (the staged Battle* and the stashed block sum) and its own bank-local
@@ -104,6 +105,20 @@ void battle_defend_resolve_banked(void)
      * block cue, no rider -- and crucially no over-block heal even with
      * a ring staged, which a plain incoming-zero would have granted). */
     atk = (b->attacking_enemy_idx < b->enemy_count) ? b->attacking_enemy_idx : 0;
+    /* Confused-beat promotion, before every exit: the A/A flow already
+     * promoted msg 6 ("FOE IS CONFUSED!") to 7 (the revealed outcome)
+     * on the first acknowledgement, but the SELECT shortcut and the
+     * timer expiry reach this body straight from beat 1.  Promoting
+     * here keeps the RESOLVE beat consistent on all three paths, and
+     * the render's phase gate (bank 3) keeps a carried msg invisible
+     * outside the enemy-attack phases either way.  Coinciding with the
+     * counter-kill exit below is unreachable under the acknowledge-only
+     * gate (combo_count stays empty while msg 6/7 is staged, so no
+     * counter ever runs on a confused beat) -- the ordering is
+     * defensive, not behavioral. */
+    if (b->msg_id == BATTLE_MSG_CONFUSED_FOE) {
+        b->msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
+    }
     if (b->enemies[atk].hp == 0) {
         /* Unkillable desperation boss: the counter floored it to 0, but
          * the floor gives 1 HP back and its swing still lands -- falling
@@ -133,9 +148,6 @@ void battle_defend_resolve_banked(void)
     if (confuse_attacker_poisoned(b, atk)) {
         uint8_t vic = confuse_pick_victim(b, atk);
         uint8_t dmg = b->enemy_incoming_dmg;
-        if (b->msg_id == BATTLE_MSG_CONFUSED_FOE) {
-            b->msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
-        }
         g_battle_confuse_victim = vic;
         if (dmg != 0 && b->enemies[vic].hp != 0) {
             if (vic == g_despair_slot) {
