@@ -170,12 +170,13 @@ const EventDefinition g_events[] = {
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_HUNT_NOTIFIED, 0, 0 }
         }
     },
-    /* ── Village-area gate guards ────────────────────────────────────
+    /* ── Village-area gate guard ─────────────────────────────────────
      * Map-scoped override (first-match: placed before the generic
-     * GUARD_AFTER_MAYOR / GUARD_GREETING fallbacks below): the two
-     * guards flanking the north exit always give the castle warning,
-     * regardless of MET_MAYOR.  Town / ridge guards keep the generic
-     * lines. */
+     * GUARD_AFTER_MAYOR / GUARD_GREETING fallbacks below): the east
+     * guard (ENTITY_ID_GUARD) always gives the castle warning,
+     * regardless of MET_MAYOR.  The west guard is ENTITY_ID_TOWN_GUARD
+     * (no event rows match it), so its actor dialogue -- the kobold
+     * warning -- plays.  Town / ridge guards keep the generic lines. */
     {
         EVENT_ID_VILLAGE_GUARDS, EVENT_TRIGGER_INTERACT, ENTITY_ID_GUARD, MAP_VILLAGE_AREA,
         0,

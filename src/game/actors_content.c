@@ -427,7 +427,7 @@ static const WorldActorDefinition g_village_area_actors[] = {
          SPRITE_KIND_ENEMY, 2, 0
     },
     {
-        0, ENTITY_ID_GUARD, 11, 1, DIRECTION_DOWN,
+        0, ENTITY_ID_TOWN_GUARD, 11, 1, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'G', "GUARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_GUARD_KOBOLD_WARNING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
