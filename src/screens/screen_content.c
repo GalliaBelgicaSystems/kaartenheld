@@ -10,7 +10,6 @@
 #include "rpg/cards.h"
 #include "rpg/loot.h"
 #include "rpg/status.h"
-#include "rider_tiles_generated.h"
 #include "shops.h"
 #include "menu.h"
 #include "rpg/save.h"
@@ -42,6 +41,9 @@ extern const ShopDefinition g_shops[];
  * a loot twin already owned hides the curated one-copy row even though
  * no curated row exists to merge it under yet. */
 extern const CardDefinition *ic_loot_synth(CardId id);
+/* Card-menu element rider icon tile (item_content_banked.c, same ROM
+ * bank 2: the dedicated menu art, 0 = no rider). */
+extern uint8_t ic_rider_menu_tile(const CardDefinition *def);
 
 /* Card-menu material icons (item_content_banked.c, same bank 2): tile +
  * OBJ stream plus per-row OAM show/hide.  Shop rows stamp the same
@@ -49,6 +51,8 @@ extern const CardDefinition *ic_loot_synth(CardId id);
 extern void ic_mat_stream(void);
 extern void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat);
 extern void ic_mat_hide(uint8_t entry);
+/* Card-menu slot-7 heal-rider green (item_content_banked.c, same bank 2). */
+extern void ic_menu_cram(void);
 /* Material/weapon resolver (same file): full "<MAT> <WPN>" shop names.
  * Sets *is_special for quest items (never listed, never sold). */
 extern void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
@@ -155,6 +159,14 @@ static void sc_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_cha
     }
 }
 
+/* WRAM attribute mirror (ui.c): the harness asserts CGB palette bytes
+ * via tilemap_attr.  Kept in sync here (DEBUG only, like the item and
+ * battle spans) -- without it the shop's tilemap_attr reads go stale
+ * (the mirror keeps whatever the previous screen wrote). */
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
 static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
 {
     if (!g_is_cgb) return;
@@ -165,6 +177,10 @@ static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
     VBK_REG = 1;
     for (s_sc_col_i = 0; s_sc_col_i < len; s_sc_col_i++) {
         sc_vram_sync_write(&s_sc_dst[s_sc_col_i], (uint8_t)(palette & 0x07));
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[(uint16_t)y * 32 + s_sc_col_i + x] =
+            (uint8_t)(palette & 0x07);
+#endif
     }
     VBK_REG = 0;
 }
@@ -339,29 +355,6 @@ static void sc_draw_full_name(uint8_t x, uint8_t y,
  * bank 2's switchable area is full, and the cursor is pure WRAM math.
  * The render below keeps its own row geometry (bm_cursor_row comment
  * moved with it -- keep in sync). */
-
-/* Rider OAM for the shop list (entries 1-10, one per visible stock row):
- * icon over the col-1 elem cell for cards carrying a rider, hidden
- * otherwise.  Transition-hide covers screen changes; the full render
- * repaints rows on every state change, and out-of-range rows hide, so
- * scrolled-away/emptied rows never go stale.  Same bank (2), WRAM
- * shadow OAM only; rider tiles/palettes are boot-resident (ui_init) and
- * shop screens never reprogram OBJ slots. */
-static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
-{
-    *tile = 0;
-    *slot = 0;
-    if (status == STATUS_BURN) {
-        *tile = RIDER_TILE_BURN;
-        *slot = RIDER_OBJ_BURN;
-    } else if (status == STATUS_FREEZE) {
-        *tile = RIDER_TILE_FREEZE;
-        *slot = RIDER_OBJ_FREEZE;
-    } else if (status == STATUS_POISON) {
-        *tile = RIDER_TILE_POISON;
-        *slot = RIDER_OBJ_POISON;
-    }
-}
 
 /* One-copy stock visible map (docs/loot.md §34.6): rebuilt by the
  * bank-2 render on every full redraw (entry, purchase) into WRAM; the
@@ -587,53 +580,6 @@ static void sc_shop_remap_sell(void)
     }
 }
 
-static void shop_rider_draw(void)
-{
-    uint8_t k;
-    uint8_t tile, slot;
-    volatile uint8_t *re;
-
-    /* Entries 1-12: shop rows 1-10 plus the DECK-only 11-12 (stale
-     * card riders must not survive entering the shop, so out-of-range
-     * entries hide). */
-    for (k = 0; k < 12; k++) {
-        re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
-        tile = 0;
-        slot = 0;
-        if (s_sc_shop_def != 0 &&
-            (uint8_t)(s_sc_shop_scroll + k) < g_shop_vis_count) {
-            if (s_sc_game &&
-                s_sc_game->item_menu_tab == SHOP_TAB_SELL) {
-                CardId sell_id = s_sc_game->state.cards.collection.entries[
-                    g_shop_vis_map[(uint8_t)(s_sc_shop_scroll + k)]].id;
-                s_sc_card_def = loot_is_loot_id(sell_id) ?
-                    ic_loot_synth(sell_id) : sc_card_get_def(sell_id);
-            } else {
-                s_sc_card_def = sc_card_get_def(
-                    s_sc_shop_def->items[g_shop_vis_map[(uint8_t)(s_sc_shop_scroll + k)]]);
-            }
-            if (s_sc_card_def != 0) {
-                shop_rider_tile(s_sc_card_def->status_id, &tile, &slot);
-                if (tile == 0 &&
-                    (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
-                     s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)) {
-                    tile = RIDER_TILE_HEALTH;
-                    slot = RIDER_OBJ_HEALTH;
-                }
-            }
-        }
-        if (tile) {
-            re[0] = (uint8_t)(((5 + k) << 3) + 16);
-            re[1] = (uint8_t)((1 << 3) + 8);
-            re[2] = tile;
-            re[3] = slot;
-        } else {
-            re[0] = 0;
-            re[2] = 0;
-        }
-    }
-}
-
 void shop_content_render(void)
 {
     uint8_t e;
@@ -641,12 +587,18 @@ void shop_content_render(void)
 
     if (!s_sc_game) return;
 
-    /* Material tiles + alias OBJ ramps for the row ingots below (same
+    /* Heal-rider green in BG slot 7 (the wrapper's ui_set_cram_palette(0)
+     * just restored the base set), then the material tiles + alias OBJ
+     * ramps for the row ingots below (same
      * time-share as the DECK list; idempotent per redraw).  Sweep the
-     * row entries first: tab flips and emptied rows must not keep a
-     * stale ingot (rider entries 1-12 are swept by shop_rider_draw). */
+     * OAM entries the shop can inherit first: entries 1-12 held the
+     * rider sprites (now BG art, so they simply stay hidden) and 13-22
+     * the row ingots -- tab flips and emptied rows must not keep a
+     * stale icon. */
+    ic_menu_cram();
+    ic_menu_riders_load();
     ic_mat_stream();
-    for (e = 13; e <= 22; e++) {
+    for (e = 1; e <= 22; e++) {
         ic_mat_hide(e);
     }
     /* Live market index, read once: every row's quote shares it
@@ -680,7 +632,6 @@ void shop_content_render(void)
     if (!s_sc_shop_def) {
         sc_draw_text(0, 5, "(nothing)", 9);
         sc_draw_text(0, 7, "[B] Leave", 9);
-        shop_rider_draw();
         return;
     }
 
@@ -690,7 +641,6 @@ void shop_content_render(void)
         else
             sc_draw_text(0, 5, "(out of stock)", 14);
         sc_draw_text(0, 7, "[B] Leave", 9);
-        shop_rider_draw();
         return;
     }
 
@@ -716,11 +666,10 @@ void shop_content_render(void)
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         if (s_sc_card_def) {
             /* Icon tiles mirror the battle hand (screens/cards_skin.json):
-             * weapon icon only.  Element rider OAM is painted per row by
-             * shop_rider_draw below (over the col-1 elem cell): the cell
-             * itself stays blank and the element also reads from the
-             * color span below (FIRE/POISON/ICE slots). */
-            s_sc_tile_elem = 0;
+             * weapon icon plus the card-menu element rider icon (BG art,
+             * stamped over the col-1 elem cell).  The element also reads
+             * from the color span below (FIRE/POISON/ICE/HEALTH slots). */
+            s_sc_tile_elem = ic_rider_menu_tile(s_sc_card_def);
 
             if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
                 s_sc_tile_wpn = UI_TILE_CARD_RING;
@@ -758,6 +707,9 @@ void shop_content_render(void)
                 sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
             else if (s_sc_card_def->status_id == STATUS_FREEZE)
                 sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
+            else if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+                     s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
+                sc_color_span(1, s_sc_y, 1, UI_COLOR_HEALTH);
             sc_color_span(2, s_sc_y, 1, UI_COLOR_FIELD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
@@ -807,7 +759,6 @@ void shop_content_render(void)
     } else {
         sc_draw_text(0, 17, NULL, 12);
     }
-    shop_rider_draw();
 }
 
 /* save_load_content_render now lives in save_load_banked.c (ROM bank 11);

@@ -161,6 +161,19 @@ KNIGHT_OW_MAP = [
     (4, 3, "slime_knight_idle"),
 ]
 
+# (col, row, combat tile id). Card-menu rider icons + the menu cursor
+# (row 6, 0-based row 5): dedicated 8x8 menu art replacing the recycled
+# sprite cells for the BG rider cells (centered by construction) and the
+# finger cursor that replaces the '>' / '^' glyphs.  Composed into
+# assets/menu_icons.png by tools/compose_menu_icons.py.
+MENU_MAP = [
+    (11, 5, "combat_fire_icon_menu"),
+    (12, 5, "combat_ice_icon_menu"),
+    (13, 5, "combat_poison_icon_menu"),
+    (14, 5, "combat_health_icon_menu"),
+    (15, 5, "combat_finger_pointing_right_cursor_menu"),
+]
+
 # Curated tile id -> (tileset json path, png dir).
 TILESET_OF = {}
 for _tid in [t for _, _, t in COMBAT_MAP]:
@@ -188,6 +201,9 @@ for _tid in [t for _, _, t in KNIGHT_COMBAT_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in MATERIAL_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in MENU_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in KNIGHT_OW_MAP]:
@@ -292,6 +308,11 @@ def main():
         assert "combat_" + slugify(label) == tid, \
             "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
         jobs.append((combat_img, col, row, tid))
+    for col, row, tid in MENU_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
 
     # Load each touched manifest once.
     manifests = {}
@@ -341,7 +362,7 @@ def main():
             for d in drift:
                 print("  %s" % d)
             return 1
-        print("reload-boss-tiles --check: clean (26 PNGs + swatches in sync).")
+        print("reload-boss-tiles --check: clean (%d PNGs + swatches in sync)." % len(jobs))
         return 0
 
     for js, manifest in manifests.items():

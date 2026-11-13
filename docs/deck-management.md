@@ -73,7 +73,7 @@ DECK QUEST HERO GEM        <- row 0 (tabs)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
  PILE     |  DECK           <- row 3 (column header)
 >  S1   2 |    S1   2       <- rows 5-12: caret, material ingot (OAM),
-   S1   4 |    S1   0          rider (OAM), weapon icon + letter, AP cost,
+   S1   4 |    S1   0          rider (BG tile), weapon icon + letter, AP cost,
    S2   0 |    S2   3          AP icon, per-side count; '|' separates the
    R2   0 |    R2   3          owned pool (left) from the deck (right)
 ```
@@ -83,8 +83,9 @@ DECK QUEST HERO GEM        <- row 0 (tabs)
   the weapon shows its icon tile plus the buffer letter (`S/H/B/D/R`).
 - **Two columns**: left N = owned-but-not-decked ("pile"), right N =
   decked. Same identities, same order on both sides, so rows stay 1:1.
-- **Icons**: weapon tile on FIELD (white) with the element rider OAM
-  over the rider cell; **AP cost** digit with the pip tile behind it,
+- **Icons**: weapon tile on FIELD (white) with the element rider BG
+  tile (dedicated centered menu art, UI_TILE_MENU_RIDER_*) over the
+  rider cell; **AP cost** digit with the pip tile behind it,
   gold; `!` when the cost is above the energy pool (gate preview).
 - SPECIAL cards (e.g. SHOPKEYS) are not deckable and are hidden from
   the list.

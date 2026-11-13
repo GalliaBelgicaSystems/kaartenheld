@@ -1,7 +1,7 @@
 {
  "name": "shop_sell_rider_ids",
  "test": true,
- "description": "SELL-tab rider + material OAM ids: a staged BRONZE POISON DAGGER loot card (id 139 = 0x60 + bronze<<5 + poison<<3 + dagger) lists as the single SELL row with the poison rider tile (125) on OAM entry 1 and the bronze ingot (118/slot 0) on OAM entry 13. Pins the status->tile mapping for the SELL path (the BUY path is pinned by shop_rider_sweep); the tile ART residency behind these ids is gated by verify-oam's real-VRAM shop check, which ids alone cannot see.",
+ "description": "SELL-tab rider + material icons: a staged BRONZE POISON DAGGER loot card (id 139 = 0x60 + bronze<<5 + poison<<3 + dagger) lists as the single SELL row with the poison rider BG tile (230) over the elem cell and no rider OAM (entry 1 hidden), plus the bronze ingot (118/slot 0) on OAM entry 13. Pins the status->tile mapping for the SELL path (the BUY path is pinned by shop_rider_sweep); the tile ART residency behind these ids is gated by verify-oam's real-VRAM shop check, which ids alone cannot see.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -70,11 +70,17 @@
   {
    "type": "oam_tile",
    "entry": 1,
-   "expected": 125
+   "expected": 0
   },
   {
    "type": "event_not_occurred",
    "event": "CARD_SOLD"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 5,
+   "col": 1,
+   "expected": 4
   }
  ]
 }
