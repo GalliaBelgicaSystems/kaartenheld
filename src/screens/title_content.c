@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "game.h"
 #include "gfx/rpg_tile_lookup.h"
+#include "gfx/menu_cursor_tiles.h"
 #include <gb/gb.h>
 #include <gb/cgb.h>
 
@@ -190,10 +191,44 @@ static void title_draw_menu(uint8_t index)
     title_draw_text(3, 17, index == 4 ? "> CREDITS" : "  CREDITS", 10);
 }
 
+/* Menu cursor glyphs (assets/menu_cursor.png via make gfx: cell 0 = the
+ * finger pointing right, cell 1 = the same art rotated 90 degrees left,
+ * pointing up).  Pasted over the font's '>' (tile 30) and '^' (tile 62)
+ * BG glyph bitmaps below, on the first screen of every boot: every menu
+ * draws its cursor through the normal text writer, so this one patch
+ * restyles the title menu, save/load, shop, quick screen, chuck-a-luck
+ * and the overworld choice prompts.  BG copies only, never the 0x8000
+ * sprite duplicate -- overworld '>' sprites (exit markers, the staircase
+ * actor) keep the classic glyph.  The semantic screen buffer keeps the
+ * plain '>' / '^' characters the harness asserts on, and the tilemap
+ * keeps the same ids, so no text or vram_row assertion can see the
+ * change: only the pixels differ.  Lives in bank 9 (242 B free in the
+ * release layout) because bank 5 is full to the brim (14 B free,
+ * AGENTS.md 52.18). */
+static void title_load_cursor_glyphs(void)
+{
+    uint8_t i, j;
+    volatile uint8_t *dst;
+    const uint8_t *src;
+
+    for (i = 0; i < 2; i++) {
+        uint8_t tile = (uint8_t)(i == 0 ? ('>' - ' ') : ('^' - ' '));
+        src = menu_cursor_tiles + ((uint16_t)i << 4);
+        dst = (volatile uint8_t *)(0x9000u + ((uint16_t)tile << 4));
+        VBK_REG = 0;
+        for (j = 0; j < 16; j++) {
+            BANKED_VRAM_WRITE(dst, src[j]);
+            dst++;
+        }
+    }
+}
+
 void title_content_render(void)
 {
     uint8_t showing = g_bk_byte_a;
     uint8_t index = g_bk_byte_b;
+
+    title_load_cursor_glyphs();
 
     if (g_title_logo_image_enabled) {
         title_program_logo_palette();

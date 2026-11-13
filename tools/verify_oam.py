@@ -979,17 +979,17 @@ def _gfx_tile_bytes(header_relpath, index):
 
 
 def verify_shop_rider_vram(sess):
-    """Shop SELL-tab rider icons stream real rider art (marks_refresh
-    streams battle tiles on shop ticks): with a poison loot card listed,
-    OAM tile 125 must equal the poison rider bytes, not overworld
-    blob-tail art.  Regression: rider OAM ids are correct on every
-    screen but their art is only streamed for battle/item -- the shop
-    showed a guard sprite for poison (ids alone, which the harness
-    oam_tile asserts, cannot see this).  Leaving the shop restreams the
-    blob side (ui_restore_ow_oam), so the exit leg asserts the restore.
-    NOTE: sess.load_scenario applies initial_state only (no scenario
-    actions), so the card grant + shop walk are driven explicitly."""
-    print("== Shop rider VRAM (SELL poison row streams art, exit restores) ==")
+    """Shop SELL-tab rider icons are dedicated menu BG tiles (the menu
+    used to recycle enemy-sprite OAM art, whose 8x8 crop was off-center):
+    with a poison loot card listed, tilemap cell (1, 5) must be tile 230
+    (UI_TILE_MENU_RIDER_POISON) and the VRAM tile data behind it must
+    equal the menu_riders sheet's poison cell, not blank art.  The rider
+    OAM entries stay hidden (BG art needs no sprites).  Regression ids
+    alone (the harness oam_tile asserts) cannot see tile data, so this
+    check reads real VRAM.  NOTE: sess.load_scenario applies
+    initial_state only (no scenario actions), so the card grant + shop
+    walk are driven explicitly."""
+    print("== Shop rider VRAM (SELL poison row stamps menu BG tile) ==")
     sess.load_scenario(load_scenario(sess, "shop_sell_rider_ids.json"))
     sess.debug_action(sess.DBG_ACT_ADD_ITEM, 139, 0, 1)
     shop_open = False
@@ -1007,24 +1007,27 @@ def verify_shop_rider_vram(sess):
     sess.step(5)
     check("shop SELL tab open", "SHOP",
           sess.snapshot().get("screen"))
-    check("SELL poison row paints OAM tile 125",
-          125, shadow_oam_slot_tile(sess, 1))
+    check("SELL poison row hides rider OAM entry 1",
+          0, shadow_oam_slot_tile(sess, 1))
 
-    def oam_tile_125():
+    rider = _gfx_tile_bytes("src/gfx/menu_rider_tiles.h", 2)
+    check("rider header parses (poison tile)", True, rider is not None)
+    check("shop VRAM read in VBlank", True, wait_vblank(sess))
+    sess._memwrite(0xFF4F, 0)
+    cell = sess._memread(0x9800 + 5 * 32 + 1)
+    check("SELL poison row elem cell is menu rider tile 230",
+          230, cell)
+
+    def bg_tile_230():
         return bytes(b if b is not None else 0
                      for i in range(16)
-                     for b in (sess._memread(0x8000 + 125 * 16 + i),))
+                     for b in (sess._memread(0x8000 + 230 * 16 + i),))
 
-    rider = _gfx_tile_bytes("src/gfx/rider_tiles.h", 2)
-    check("rider header parses (poison tile)", True, rider is not None)
-    blob = _gfx_tile_bytes("src/gfx/enemy_ow_tiles.h", 25)
-    check("blob header parses (tail tile 25)", True, blob is not None)
-    check("shop VRAM read in VBlank", True, wait_vblank(sess))
-    during = oam_tile_125()
-    check("shop streams poison rider art into OAM tile 125",
+    during = bg_tile_230()
+    check("shop streams poison menu art into BG tile 230",
           rider, during)
-    check("shop tile is not blob art (test exercises the bug)",
-          True, during != blob)
+    check("shop tile is not blank (test exercises the bug)",
+          True, any(during))
     # Re-sync after the VBlank reads (AGENTS.md 52.26): the B press
     # below must land on a whole game_render-stepped frame.
     sess.step(1)
@@ -1032,10 +1035,6 @@ def verify_shop_rider_vram(sess):
     sess.step(10)
     check("left shop: back to overworld", "OVERWORLD",
           sess.snapshot().get("game_state"))
-    sess.step(2)
-    check("return VRAM read in VBlank", True, wait_vblank(sess))
-    check("overworld return: blob tail restored over OAM tile 125",
-          blob, oam_tile_125())
 
 
 def main():

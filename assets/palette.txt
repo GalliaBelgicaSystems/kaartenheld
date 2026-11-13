@@ -166,6 +166,7 @@ fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/poison_icon, COMBAT/heart_fir
 fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
 fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
+fighthealth: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, SPRITES/slime_light
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightslime_knight: COMBAT/background, COMBAT/slime_outline_combat_dark, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body

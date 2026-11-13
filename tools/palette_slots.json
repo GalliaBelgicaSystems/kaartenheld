@@ -67,6 +67,17 @@
    "7": "fightboss",
    "_why": "0 frames/timer-bar=fight1; 1 fire=fight4 (HP heart red, burn text red); 2 ice=fight6 (freeze text blue); 3 field=fight3 (AP, deck icons: white+outline+brown cells); 4 poison=fight5 (poison text purple); 5 wood=fight2 (weapon icons incl. green-gem ring, arrow counters, digits: brown on tan); 6 text=fightspider (menu/coin text black-on-white; knife-grey echoes old text ramp); 7 dim=fightboss (grey-out). Unslotted: fightgoblin/fightspider/fightmimic/fightslime (battle sheet encoding via combat_art obj_palettes), fightbat, fightboss2/3."
   },
+  "menu": {
+   "0": "fight1",
+   "1": "fight4",
+   "2": "fight6",
+   "3": "fight3",
+   "4": "fight5",
+   "5": "fight2",
+   "6": "fightspider",
+   "7": "fighthealth",
+   "_why": "Card-menu CRAM kind (UI_CRAM_MENU, src/ui/ui.h): identical to the base set except slot 7, which no menu screen paints as DIM (the grey-out is battle-only), so the menu carries the health green there (fighthealth: white paper + COMBAT/slime_light) for the heal-rider icon. Battle/full redraws program the base set, so the dim grey-out is untouched."
+  },
   "obj": {
    "0": "sprites",
    "1": "sprites5",

@@ -218,7 +218,9 @@ void shop_screen_render(Game *g)
          * encoded with the battle display ramps (card_display_slots.json).
          * Without this they would inherit the world tileset's CRAM and
          * show village/forest colors.  The overworld/battle full redraws
-         * restore their own CRAM on exit, so no restore is needed here. */
+         * restore their own CRAM on exit, so no restore is needed here.
+         * The bank-2 render body then programs slot 7 with the heal-rider
+         * green (UI_COLOR_HEALTH). */
         ui_set_cram_palette(0);
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&shop_content_render;

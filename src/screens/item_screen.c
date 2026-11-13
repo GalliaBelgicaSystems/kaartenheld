@@ -449,7 +449,8 @@ void item_screen_render(Game *g)
          * display ramps (card_display_slots.json); the world tileset's
          * CRAM would show wrong colors.  Overworld/battle full redraws
          * restore their own CRAM on exit.  No-op when opened from battle
-         * (already base). */
+         * (already base).  The bank-2 render body then programs slot 7
+         * with the heal-rider green (UI_COLOR_HEALTH). */
         ui_set_cram_palette(0);
 
         /* Rebuild the grouped view first, then dispatch the render (two

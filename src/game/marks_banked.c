@@ -223,6 +223,11 @@ void marks_battle_tiles_invalidate_banked(void)
     s_battle_tiles_loaded = 0;
     s_mark_tiles_loaded = 0;
     s_ap_pip_loaded = 0;
+    /* Card-menu rider icons (bank-2 streamer, plain WRAM flag): restream on
+     * every ITEM/SHOP entry for the same reason as the pips -- the flag
+     * may be boot garbage under the harness, and the menu must never stamp
+     * an icon id whose VRAM holds something else. */
+    g_menu_riders_loaded = 0;
 }
 
 /* Overworld-entry OAM restore (same bank: direct reads; LCD-safe writes).

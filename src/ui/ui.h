@@ -93,6 +93,33 @@ void dice_tiles_load_banked(void);
  * restore needed).  Tile id = UI_TILE_AP_PIP_BASE + (cost - 1). */
 #define UI_TILE_AP_PIP_BASE      236u
 #define UI_TILE_AP_PIP_COUNT     5u
+
+/* Card-menu element rider icons as BG tiles (assets/menu_riders.png, cells
+ * 0-3: fire, ice, poison, health).  Streamed on demand by the bank-2
+ * menu bodies into the free high block-1 window below the AP pips (the
+ * world tileset writes 128..127+count, max 207; 208-235 belongs to no
+ * set), and stamped over the card's element cell -- the menu used to
+ * recycle enemy-sprite OAM art for these, whose 8x8 crop was off-center.
+ * The cell keeps its element palette slot (fire/ice/poison, health ->
+ * UI_COLOR_HEALTH), so one encoding per icon shows the right color.
+ * The finger cursor (assets/menu_cursor.png, cells 0/1: right / up) is a
+ * separate sheet: the boot card-tile loader pastes it over the font's
+ * '>' and '^' glyph bitmaps (see ui_card_tiles_banked.c). */
+#define UI_TILE_MENU_RIDER_BASE  228u
+#define UI_TILE_MENU_RIDER_COUNT 4u
+#define UI_TILE_MENU_RIDER_FIRE  228u
+#define UI_TILE_MENU_RIDER_ICE   229u
+#define UI_TILE_MENU_RIDER_POISON 230u
+#define UI_TILE_MENU_RIDER_HEALTH 231u
+
+/* Card-menu rider icon streamer (src/screens/menu_riders_banked.c, bank 2
+ * with the menu render bodies that call it).  One-shot per menu stay; the
+ * flag is re-armed on every ITEM/SHOP entry by the bank-8 time-share
+ * invalidate body (same contract as the AP pip stream). */
+extern uint8_t g_menu_riders_loaded;
+void ic_menu_riders_load(void);
+
+
 /* Menu DECK-row chrome (all boot-loaded by ui_card_tiles_load_banked,
  * same loader as the weapon icons, so no streaming needed): the AP unit
  * icon (combat_ap_icon, HUD gold) stamped after the cost pip, the true
@@ -197,6 +224,13 @@ void ui_wipe_black_banked(void);
 #define UI_COLOR_WOOD   5
 #define UI_COLOR_GOLD   6
 #define UI_COLOR_DIM    7
+/* Health-rider green: BG slot 7 (DIM) carries it while the card menu is
+ * up.  No menu screen paints DIM (the battle grey-out is its only user),
+ * and the bank-2 menu bodies program slot 7 with the fighthealth ramp
+ * (white paper + COMBAT/slime_light, generated menu_palette_generated.h)
+ * right after the UI CRAM load.  Battle and overworld full redraws
+ * program their own set again, so the grey-out is untouched. */
+#define UI_COLOR_HEALTH 7
 
 /* Select-arrow cell (enemy target caret + card cursor marker).  The arrow
  * tile is brown on white, which only the field ramp fits.  Single source

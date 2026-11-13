@@ -7,7 +7,6 @@
 #include "screen.h"
 #include "rpg/cards.h"
 #include "rpg/status.h"
-#include "rider_tiles_generated.h"
 #include "rpg/loot.h"
 #include "rpg/deck.h"
 #include "ui.h"
@@ -16,6 +15,7 @@
 #include "game_ids.h"
 #include "banked.h"
 #include "shops.h"
+#include "menu_palette_generated.h"
 
 #define TAB_DECK 0
 #define TAB_QUEST 1
@@ -98,53 +98,24 @@ char *s_ic_buf;
 static char s_ic_code[3];
 static char s_ic_num_buf[4];
 
-/* Rider OAM for the item screen (entries 1-8 left, 9-16 right): icon
- * over a card's elem cell for cards carrying a rider, hidden
- * otherwise.  Transition-hide covers screen changes; the render
- * dispatch below sweeps entries first so quest/picker/emptied rows
- * never go stale.  Same bank (2), WRAM shadow OAM only; rider tiles /
- * palettes are boot-resident, and the menu OBJ slots the riders use
- * (2-4) are never reprogrammed -- only the material slots
- * (0/1/5/6/7, programmed on DECK renders) are. */
-static void ic_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
+/* Card-menu element rider icon (BG tile over the card's elem cell).  The
+ * menu carries dedicated 8x8 menu art now (assets/menu_riders.png,
+ * UI_TILE_MENU_RIDER_*, boot-loaded): the recycled enemy-sprite OAM art
+ * this screen used before was cropped off-center.  Shared with the shop
+ * body (screen_content.c, same ROM bank 2: plain call, no trampoline).
+ * Real status riders (fire/ice/poison) win; a riderless heal card shows
+ * the green health icon (display-only, keyed off the heal role -- never
+ * a status, no on-hit roll). */
+uint8_t ic_rider_menu_tile(const CardDefinition *def)
 {
-    *tile = 0;
-    *slot = 0;
-    if (status == STATUS_BURN) {
-        *tile = RIDER_TILE_BURN;
-        *slot = RIDER_OBJ_BURN;
-    } else if (status == STATUS_FREEZE) {
-        *tile = RIDER_TILE_FREEZE;
-        *slot = RIDER_OBJ_FREEZE;
-    } else if (status == STATUS_POISON) {
-        *tile = RIDER_TILE_POISON;
-        *slot = RIDER_OBJ_POISON;
-    }
-}
-
-static void ic_rider_hide(uint8_t entry)
-{
-    volatile uint8_t *re;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
-    re[0] = 0;
-    re[2] = 0;
-}
-
-static void ic_rider_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t status)
-{
-    uint8_t tile, slot;
-    volatile uint8_t *re;
-    ic_rider_tile(status, &tile, &slot);
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
-    if (tile) {
-        re[0] = (uint8_t)((y << 3) + 16);
-        re[1] = (uint8_t)((x << 3) + 8);
-        re[2] = tile;
-        re[3] = slot;
-    } else {
-        re[0] = 0;
-        re[2] = 0;
-    }
+    if (!def) return 0;
+    if (def->status_id == STATUS_BURN) return UI_TILE_MENU_RIDER_FIRE;
+    if (def->status_id == STATUS_FREEZE) return UI_TILE_MENU_RIDER_ICE;
+    if (def->status_id == STATUS_POISON) return UI_TILE_MENU_RIDER_POISON;
+    if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+        def->effect == CARD_EFFECT_HEAL_HP)
+        return UI_TILE_MENU_RIDER_HEALTH;
+    return 0;
 }
 
 /* Material icon OAM for the DECK list (entries 17-24 owned, 25-32
@@ -447,14 +418,40 @@ static uint8_t ic_is_health_rider(void)
                      s_ic_def->effect == CARD_EFFECT_HEAL_HP);
 }
 
-static void ic_health_show(uint8_t entry, uint8_t x, uint8_t y)
+/* Card-menu heal-rider green: program BG slot UI_COLOR_HEALTH with the
+ * generated fighthealth ramp (menu_palette_generated.h).  Called at the
+ * top of every full menu render, i.e. right after the fixed wrapper's
+ * ui_set_cram_palette(0) restored the base set -- slot 7 (DIM) is never
+ * painted by a menu, and battle/overworld full redraws program their own
+ * set again, so the grey-out is untouched.  Shared with the shop body
+ * (screen_content.c, same ROM bank 2).  Counts as deck-management chrome:
+ * one 8-byte CRAM ramp, no new WRAM. */
+void ic_menu_cram(void)
 {
-    volatile uint8_t *re;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)entry << 2));
-    re[0] = (uint8_t)((y << 3) + 16);
-    re[1] = (uint8_t)((x << 3) + 8);
-    re[2] = RIDER_TILE_HEALTH;
-    re[3] = RIDER_OBJ_HEALTH;
+    uint8_t c;
+
+    if (!g_is_cgb) return;
+    BCPS_REG = (uint8_t)(0x80 | (UI_COLOR_HEALTH << 3));
+    for (c = 0; c < 8; c++) {
+        BANKED_VRAM_WRITE(&BCPD_REG, menu_slot_health_ramp[c]);
+    }
+}
+
+/* Rider-cell color: the palette slot the menu rider icon renders on.
+ * Elements take their element slot; a heal card's icon takes
+ * UI_COLOR_HEALTH (the menu CRAM kind's green slot 7) while its NAME
+ * keeps the field slot, so only the icon reads green. */
+static void ic_rider_color(uint8_t x, uint8_t y, const CardDefinition *def)
+{
+    if (def->status_id == STATUS_BURN)
+        IC_COLOR_SPAN(x, y, 1, UI_COLOR_FIRE);
+    else if (def->status_id == STATUS_FREEZE)
+        IC_COLOR_SPAN(x, y, 1, UI_COLOR_ICE);
+    else if (def->status_id == STATUS_POISON)
+        IC_COLOR_SPAN(x, y, 1, UI_COLOR_POISON);
+    else if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+             def->effect == CARD_EFFECT_HEAL_HP)
+        IC_COLOR_SPAN(x, y, 1, UI_COLOR_HEALTH);
 }
 
 /* Name color by role: healing cards read field green; on-hit
@@ -737,9 +734,9 @@ static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
 
 /* Icon cells for a DECK card row: weapon cell `wx` (icon tile in VRAM,
  * weapon letter in the text buffer for harness asserts), rider cell
- * `rx` (blank BG + element color; the row painter shows the OAM rider),
- * and AP unit icon `ap_icon_x` (UI_TILE_AP_ICON in VRAM, buffer blank
- * so item_card_refresh_banked stays idempotent and screen_row sees
+ * `rx` (menu rider BG tile + element color), and AP unit icon
+ * `ap_icon_x` (UI_TILE_AP_ICON in VRAM, buffer blank so
+ * item_card_refresh_banked stays idempotent and screen_row sees
  * spaces).  Writes directly via non-negative column offsets off row
  * base `0x9800 + (y << 5)` (never `wx - rx`, which wrapped under unsigned
  * 16-bit arithmetic when weapon moved ahead of rider). */
@@ -755,10 +752,10 @@ static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
     *s_ic_buf = s_ic_wpn_letters[s_ic_wpn];
     s_ic_buf = &g_ui_screen_buf[y][ap_icon_x];
     *s_ic_buf = ' ';
-    /* Rider cell takes the same role color as the name (fire/ice/poison
-     * rider, field green for heal); the weapon cell takes the field
-     * slot (fight3 white background, menu only -- battle keeps wood). */
-    ic_name_color(rx, y, 1, s_ic_def);
+    /* Rider cell takes its element slot (fire/ice/poison, green for the
+     * heal icon); the weapon cell takes the field slot (fight3 white
+     * background, menu only -- battle keeps wood). */
+    ic_rider_color(rx, y, s_ic_def);
     IC_COLOR_SPAN(wx, y, 1, UI_COLOR_FIELD);
 }
 
@@ -799,7 +796,6 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
     uint8_t apx = side ? 15 : 5;
     uint8_t cntx = side ? 17 : 7;
     uint8_t csum = (uint8_t)((side ? 8 : 0) + slot);
-    uint8_t rent = (uint8_t)((side ? 9 : 1) + slot);
     uint8_t ment = (uint8_t)((side ? 25 : 17) + slot);
     uint8_t avail;
     /* Grouped row: the view holds the primary collection index. */
@@ -822,10 +818,10 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
         IC_DRAW_TEXT(curx, y, " ", 1);
     }
 
-    /* Element rider OAM is shown over the rider cell: the cell stays
-     * blank and the element reads from the color spans
-     * (FIRE/POISON/ICE slots). */
-    s_ic_tile_elem = 0;
+    /* Element rider icon tile for the elem cell (0 = no rider).  Stamped
+     * as BG art by ic_stamp_icons; the element still reads from the cell
+     * color spans (FIRE/POISON/ICE/HEALTH slots). */
+    s_ic_tile_elem = ic_rider_menu_tile(s_ic_def);
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;
@@ -856,20 +852,16 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
     }
     ic_draw_pair2(cntx, y, (uint8_t)(side ? s_ic_in_deck : avail));
 
-    /* Material ingot over the material cell and rider icon over the
-     * rider cell (entries per visible row): wood shows the log icon,
-     * every other material the ingot tinted by its inventory ramp.
-     * Quest items have no material.  Buffer keeps spaces (harness
-     * asserts match letters, digits and counts, never the icons). */
+    /* Material ingot over the material cell (entries per visible row):
+     * wood shows the log icon, every other material the ingot tinted by
+     * its inventory ramp.  Quest items have no material.  Buffer keeps
+     * spaces (harness asserts match letters, digits and counts, never
+     * the icons).  The rider is BG art (above), so its old OAM entries
+     * stay hidden -- the sweep in the render body keeps them that way. */
     if (s_ic_id == CARD_BONE || s_ic_id == CARD_OLD_KEY) {
         ic_mat_hide(ment);
     } else {
         ic_mat_show(ment, oamx, y, s_ic_mat);
-    }
-    ic_rider_show(rent, ridx, y, s_ic_def->status_id);
-    if ((!s_ic_def || s_ic_def->status_id == STATUS_NONE) &&
-        ic_is_health_rider()) {
-        ic_health_show(rent, ridx, y);
     }
 }
 
@@ -918,16 +910,17 @@ static void ic_draw_cards_list(Game *g)
         if (vR != 0xFF) s_ic_end_r = (uint8_t)(s_ic_lst_pos + 1);
     }
     /* Sweep sprite entries past each side's last drawn row (short
-     * lists and scroll bottoms must not keep a stale icon): riders
-     * 1-8/9-16 and ingots 17-24/25-32 per visible row. */
+     * lists and scroll bottoms must not keep a stale icon): the old
+     * rider entries 1-8/9-16 (BG art now, so they stay hidden) and
+     * ingots 17-24/25-32 per visible row. */
     for (s_ic_lst_pos = s_ic_end_l;
          s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
-        ic_rider_hide((uint8_t)(1 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(1 + s_ic_lst_pos));
         ic_mat_hide((uint8_t)(17 + s_ic_lst_pos));
     }
     for (s_ic_lst_pos = s_ic_end_r;
          s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
-        ic_rider_hide((uint8_t)(9 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(9 + s_ic_lst_pos));
         ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
     }
 
@@ -1030,14 +1023,9 @@ static void ic_draw_card_detail_page(Game *g)
     if (!s_ic_def) return;
 
     /* Row 3: icons + element-colored full name (same cells as a list
-     * row; the detail rider shows over the col-1 elem cell, entry 1 --
-     * the list is not drawn in detail mode, and the dispatch sweep hid
-     * the rest). */
-    ic_rider_show(1, 1, 3, s_ic_def->status_id);
-    if (s_ic_def->status_id == STATUS_NONE && ic_is_health_rider())
-        ic_health_show(1, 1, 3);
-
-    s_ic_tile_elem = 0;
+     * row; the detail rider icon is BG art stamped at the col-1 elem
+     * cell below). */
+    s_ic_tile_elem = ic_rider_menu_tile(s_ic_def);
 
     if (s_ic_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_ic_def->effect == CARD_EFFECT_HEAL_HP) {
         s_ic_tile_wpn = UI_TILE_CARD_RING;
@@ -1076,12 +1064,7 @@ static void ic_draw_card_detail_page(Game *g)
     }
 
     IC_COLOR_SPAN(2, 3, 1, UI_COLOR_FIELD);
-    if (s_ic_def->status_id == STATUS_BURN)
-        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_FIRE);
-    else if (s_ic_def->status_id == STATUS_POISON)
-        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_POISON);
-    else if (s_ic_def->status_id == STATUS_FREEZE)
-        IC_COLOR_SPAN(1, 3, 1, UI_COLOR_ICE);
+    ic_rider_color(1, 3, s_ic_def);
 
     /* Row 5: on-hit element rider, else the health-rider display for
      * heal cards of any material (display-only, no on-hit roll). */
@@ -1223,17 +1206,25 @@ void item_screen_render_banked(void)
     if (!g) return;
 
 
+    /* Heal-rider green in BG slot 7 (see ic_menu_cram): the wrapper's
+     * ui_set_cram_palette(0) just restored the base set, so the menu
+     * re-programs the one slot it overrides.  Then the element rider icon
+     * tiles (one-shot per menu stay, same-bank streamer). */
+    ic_menu_cram();
+    ic_menu_riders_load();
+
     /* The grouped DECK view was just rebuilt by the fixed-bank caller
      * (item_view_build_banked, bank 11) immediately before this body ran,
      * so s_view_indices/s_view_count are fresh for everything below. */
 
-    /* Sweep rider + material entries first: picker/emptied rows leave
-     * nothing behind, and list/detail set exactly what they show below.
-     * (The QUEST tab dispatches to the bank-8 quest body, which sweeps
-     * for itself on entry.)  Entries 1-8 left riders, 9-16 right riders,
-     * 17-24 left ingots, 25-32 right ingots. */
+    /* Sweep the OAM entries the menu can inherit (rider leftovers from
+     * the old sprite icons at 1-16, material ingots 17-32): picker and
+     * emptied rows leave nothing behind, and list/detail set exactly
+     * what they show below.  Riders are BG tiles now, so their entries
+     * simply stay hidden.  (The QUEST tab dispatches to the bank-8 quest
+     * body, which sweeps for itself on entry.) */
     for (e = 1; e <= 32; e++) {
-        ic_rider_hide(e);
+        ic_mat_hide(e);
     }
 
     /* Card-menu material icons (assets/material_tiles.png, cells in

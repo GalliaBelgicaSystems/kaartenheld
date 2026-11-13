@@ -277,6 +277,24 @@ gfx: manifest
 	# body to UI_TILE_AP_PIP_BASE (236-240).
 	@python3 tools/png2gb.py assets/ap_pips_bg.png --name ap_pip_tiles \
 		--shade-map generated/tiles/shades/ap_pips.json -o $(GFX_OUT_DIR)/ap_pip_tiles.h
+	# ── Card-menu rider icons (assets/menu_riders.png, 4x1) ──
+	# Fire/ice/poison/health menu rider icons: BG tiles stamped over the
+	# card's element cell, replacing the recycled sprite OAM art.  The
+	# sheet is composed by the manifest prerequisite
+	# (compose_menu_icons.py); palette_compiler writes the shade map
+	# (per-cell element ramps).  Streamed by the bank-2 menu bodies to
+	# UI_TILE_MENU_RIDER_BASE (228-231).
+	@python3 tools/png2gb.py assets/menu_riders.png --name menu_rider_tiles \
+		--shade-map generated/tiles/shades/menu_riders.json -o $(GFX_OUT_DIR)/menu_rider_tiles.h
+	# ── Menu finger cursor (assets/menu_cursor.png, 2x1) ──
+	# Cell 0 points right, cell 1 is the same art rotated 90 degrees left
+	# (pointing up, the old '^' tab caret).  The title body (bank 9,
+	# room to spare) patches the font's '>' and '^' BG glyph bitmaps
+	# with them on the first screen of every boot, so every menu
+	# cursor draws the finger (bank 5 is full to the brim in release,
+	# AGENTS.md 52.18).
+	@python3 tools/png2gb.py assets/menu_cursor.png --name menu_cursor_tiles \
+		--shade-map generated/tiles/shades/menu_cursor.json -o $(GFX_OUT_DIR)/menu_cursor_tiles.h
 	# ── Card-menu material OAM icons (assets/material_tiles.png, 4x1) ──
 	# Bronze / iron (+steel) / mythril / wood icon art; each cell encodes
 	# with its inventory ramp (obj aliases, no base slot).  Only the encode
@@ -506,6 +524,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_card_frames.py
 	@python3 tools/compose_dice.py
 	@python3 tools/compose_ap_pips.py
+	@python3 tools/compose_menu_icons.py
 	@python3 tools/compose_material_tiles.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py

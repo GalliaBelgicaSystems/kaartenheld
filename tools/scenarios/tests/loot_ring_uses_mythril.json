@@ -1,7 +1,7 @@
 {
  "name": "loot_ring_uses_mythril",
  "test": true,
- "description": "Loot ring uses: material tier + 1 (docs/loot.md 34.1). Derived id 228 (0xE4: material 4 MYTHRIL, plain, ring) is A MYTHRIL RING and shows USES 5 plus HEALTH RIDER and the green '+' icon on its CARDS detail page.",
+ "description": "Loot ring uses: material tier + 1 (docs/loot.md 34.1). Derived id 228 (0xE4: material 4 MYTHRIL, plain, ring) is A MYTHRIL RING and shows USES 5 plus HEALTH RIDER and the green '+' menu BG icon (tile 231) on its CARDS detail page.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -82,12 +82,7 @@
   {
    "type": "oam_tile",
    "entry": 1,
-   "expected": 11
-  },
-  {
-   "type": "oam_attr",
-   "entry": 1,
-   "expected": 3
+   "expected": 0
   }
  ]
 }

@@ -262,7 +262,8 @@
     "COMBAT/card_outline"
    ],
    "slots": [
-    "base:0"
+    "base:0",
+    "menu:0"
    ]
   },
   "fight2": {
@@ -279,7 +280,8 @@
     "COMBAT/numbers_icons"
    ],
    "slots": [
-    "base:5"
+    "base:5",
+    "menu:5"
    ]
   },
   "fight3": {
@@ -296,7 +298,8 @@
     "COMBAT/numbers_icons"
    ],
    "slots": [
-    "base:3"
+    "base:3",
+    "menu:3"
    ]
   },
   "fight4": {
@@ -313,7 +316,8 @@
     "COMBAT/heart_fire_enemy_eyes"
    ],
    "slots": [
-    "base:1"
+    "base:1",
+    "menu:1"
    ]
   },
   "fight5": {
@@ -330,7 +334,8 @@
     "COMBAT/poison_icon"
    ],
    "slots": [
-    "base:4"
+    "base:4",
+    "menu:4"
    ]
   },
   "fight6": {
@@ -347,7 +352,8 @@
     "COMBAT/ice_icon"
    ],
    "slots": [
-    "base:2"
+    "base:2",
+    "menu:2"
    ]
   },
   "fight7": {
@@ -442,6 +448,23 @@
    ],
    "slots": []
   },
+  "fighthealth": {
+   "colors": [
+    "#ffffff",
+    "#89cc5e",
+    "#5c903a",
+    "#77e331"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_combat",
+    "COMBAT/slime_outline_combat",
+    "SPRITES/slime_light"
+   ],
+   "slots": [
+    "menu:7"
+   ]
+  },
   "fightmimic": {
    "colors": [
     "#ffffff",
@@ -501,7 +524,8 @@
     "COMBAT/boss_spider_bat_combat_body"
    ],
    "slots": [
-    "base:6"
+    "base:6",
+    "menu:6"
    ]
   },
   "inventory1": {
@@ -1009,6 +1033,16 @@
    "5": "field3",
    "6": "field4",
    "7": "field5"
+  },
+  "menu": {
+   "0": "fight1",
+   "1": "fight4",
+   "2": "fight6",
+   "3": "fight3",
+   "4": "fight5",
+   "5": "fight2",
+   "6": "fightspider",
+   "7": "fighthealth"
   },
   "obj": {
    "0": "sprites",
