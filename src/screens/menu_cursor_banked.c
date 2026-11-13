@@ -211,10 +211,9 @@ uint8_t s_row_decked[ROW_SUMS];
 /* Per-side packed draw maps: the first 8 view positions visible on
  * that side (left: owned - decked > 0; right: decked > 0) at/after
  * item_menu_scroll, 0xFF past the end.  A zero count hides that side's
- * cell -- an emptied side shows blank rows under the full-height
- * rule -- and the cursor never parks on a hidden cell.  Built here
- * (same bank as the group tables) on every DECK render; read by the
- * bank-2 row painter. */
+ * cell -- an emptied side shows blank rows -- and the cursor never
+ * parks on a hidden cell.  Built here (same bank as the group tables)
+ * on every DECK render; read by the bank-2 row painter. */
 uint8_t s_ic_draw_pos[8];
 uint8_t s_ic_draw_pos_r[8];
 
@@ -362,9 +361,8 @@ void item_view_build_banked(void)
     /* Per-side packed lists: the left block packs groups with a pile
      * remainder (owned - decked > 0), the right block groups with decked
      * copies -- first 8 of each at/after the scroll position.  A zero
-     * count hides that side's cell (an emptied side shows blank rows
-     * under the full-height rule) and the cursor never parks on a
-     * hidden cell. */
+     * count hides that side's cell (an emptied side shows blank rows)
+     * and the cursor never parks on a hidden cell. */
     {
         uint8_t k = 0;
         uint8_t kr = 0;

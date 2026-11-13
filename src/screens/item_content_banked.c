@@ -735,34 +735,26 @@ static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
 }
 
 
-/* Row chrome tiles: AP icon first, then a blank (per-side chrome is
- * stamped by ic_stamp_icons at wx + 2; the digit cells own their pips
- * via ic_draw_ap_at, so an unconditional stamp past them would blank
- * decked digits in VRAM while the buffer stayed truthful (AGENTS.md
- * 52.25).  Boot-loaded ids, so no streaming (see ui.h). */
-static const uint8_t s_ic_chrome_tiles[2] = {
-    UI_TILE_AP_ICON, UI_TILE_MENU_BLANK
-};
-
-/* Icon cells: rider cell rx (blank BG + element color; the row painter
- * shows the OAM rider) and weapon cell wx (icon tile in VRAM, weapon
- * letter in the text buffer for harness asserts).  The chrome loop
- * stamps n cells VRAM-only starting at wx + 2 (AP icon, then blanks);
- * one write expansion in a loop -- bank 2 has no room for unrolled
- * (AGENTS.md 52.18).  Rows stamp 1 (the AP icon); digit cells keep
- * their pip tiles from ic_draw_ap_at. */
-static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
+/* Icon cells for a DECK card row: weapon cell `wx` (icon tile in VRAM,
+ * weapon letter in the text buffer for harness asserts), rider cell
+ * `rx` (blank BG + element color; the row painter shows the OAM rider),
+ * and AP unit icon `ap_icon_x` (UI_TILE_AP_ICON in VRAM, buffer blank
+ * so item_card_refresh_banked stays idempotent and screen_row sees
+ * spaces).  Writes directly via non-negative column offsets off row
+ * base `0x9800 + (y << 5)` (never `wx - rx`, which wrapped under unsigned
+ * 16-bit arithmetic when weapon moved ahead of rider). */
+static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
+                           uint8_t ap_icon_x)
 {
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + rx);
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
     VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, s_ic_tile_elem);
-    BANKED_VRAM_WRITE(s_ic_dst + (uint16_t)(wx - rx), s_ic_tile_wpn);
-    s_ic_dst += (uint16_t)(wx - rx + 2);
-    for (s_ic_col_i = 0; s_ic_col_i < n; s_ic_col_i++)
-        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i],
-                          s_ic_chrome_tiles[s_ic_col_i]);
+    BANKED_VRAM_WRITE(s_ic_dst + wx, s_ic_tile_wpn);
+    BANKED_VRAM_WRITE(s_ic_dst + rx, s_ic_tile_elem);
+    BANKED_VRAM_WRITE(s_ic_dst + ap_icon_x, UI_TILE_AP_ICON);
     s_ic_buf = &g_ui_screen_buf[y][wx];
     *s_ic_buf = s_ic_wpn_letters[s_ic_wpn];
+    s_ic_buf = &g_ui_screen_buf[y][ap_icon_x];
+    *s_ic_buf = ' ';
     /* Rider cell takes the same role color as the name (fire/ice/poison
      * rider, field green for heal); the weapon cell takes the field
      * slot (fight3 white background, menu only -- battle keeps wood). */
@@ -848,20 +840,12 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
     }
 
     /* Blanks under the two OAM cells (material + rider): VRAM space
-     * tiles, buffer spaces (OAM art on top). */
+     * tiles, buffer spaces (OAM art on top).  Then stamp the weapon,
+     * rider blank, and AP icon tiles directly without touching oamx. */
     IC_DRAW_TEXT(oamx, y, " ", 1);
     IC_DRAW_TEXT(ridx, y, " ", 1);
-    ic_stamp_icons(y, ridx, wxx, 1);
-    /* The chrome run lands on wx+2 (the material cell now that the
-     * weapon leads): clear it back to paper unconditionally -- the
-     * buffer already holds a space there, so a skip-based blank would
-     * leave the AP tile behind (AGENTS.md 52.25 family). */
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(
-        (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + oamx),
-        ui_font_tile_base);
+    ic_stamp_icons(y, wxx, ridx, (uint8_t)(apx + 1));
     ic_draw_ap_at(g, y, apx);
-    IC_DRAW_TEXT((uint8_t)(apx + 1), y, " ", 1);
     /* An unaffordable cost keeps its pip but renders the cell in the
      * fire slot: the value stays readable, the red flags the gate
      * (the equip attempt still reports NOT ENOUGH AP on row 16). */

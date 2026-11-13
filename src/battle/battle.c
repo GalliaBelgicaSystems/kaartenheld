@@ -532,11 +532,15 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
  * daggers: the block evaluation ignores them, and the prep body reports
  * 0 without touching the staged combo.
  * Returns 0 when no counter fired, 1 when counter damage was dealt
- * (the caller gates its victory check on this so defend flows without
- * a counter emit no new telemetry).  A killing counter needs no special
- * return: the following net resolution observes the dead attacker and
- * degrades to a no-op block on its own (see the resolve body).  Victory
- * is NOT set here: the caller checks it after the phase advance.
+ * (without a deferred poison rider), or 2 when counter damage was
+ * dealt AND a non-killing poison rider is staged in g_bk_byte_e for
+ * post-swing dispatch (truthy for the caller's victory check either
+ * way; 0-HP victims -- including a floored despair boss -- never return
+ * 2, matching the attack path and avoiding stale g_bk_byte_e).  A
+ * killing counter needs no special return: the following net resolution
+ * observes the dead attacker and degrades to a no-op block on its own
+ * (see the resolve body).  Victory is NOT set here: the caller checks
+ * it after the phase advance.
  *
  * The poison on-hit rider does NOT run here: the eval-scaled chance
  * is stashed in g_bk_byte_e for the caller's post-swing dispatch
@@ -619,11 +623,11 @@ static uint8_t battle_defend_counter(Battle *b)
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
         }
 #endif
-    } else {
+    } else if (rid == STATUS_POISON) {
         g_bk_byte_e = g_bk_byte_c;
-        if (rid != STATUS_POISON) {
-            battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
-        }
+        return 2;
+    } else {
+        battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
     }
     return 1;
 }
@@ -883,16 +887,6 @@ void battle_execute_combo(Battle *b)
              * energy cost and leave play like any other staged hand --
              * confusion redirects the swing, it never refunds it. */
             battle_resolve_hand_discard(b);
-            /* Counter rider lands AFTER the swing resolves (bank-11 body,
-             * battle_rider_banked.c): a poison applied by this counter
-             * must not confuse the swing it rode in on (the attacker
-             * still hits the hero this turn); from the next defend on
-             * the poison counts and the swing turns on its allies. */
-            if (counter_hit) {
-                g_bk_call_bank = 11;
-                g_bk_call_target = (uint16_t)&battle_counter_rider_banked;
-                banked_call_run();
-            }
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;
             b->dirty = BATTLE_DIRTY_ALL;
@@ -900,6 +894,16 @@ void battle_execute_combo(Battle *b)
                 telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
                 battle_set_result(b, BATTLE_RESULT_DEFEAT);
             } else {
+                /* Deferred poison counter rider (bank-11 body,
+                 * battle_rider_banked.c): lands AFTER the swing
+                 * resolves (so fresh poison never confuses its own
+                 * swing) and only while the hero survives (never emits
+                 * post-mortem status telemetry on a fatal swing). */
+                if (counter_hit == 2) {
+                    g_bk_call_bank = 11;
+                    g_bk_call_target = (uint16_t)&battle_counter_rider_banked;
+                    banked_call_run();
+                }
 #ifdef DEBUG_BUILD
                 /* Friendly-fire kill (non-target victim): the normal and
                  * counter paths only emit for the targeted attacker, so

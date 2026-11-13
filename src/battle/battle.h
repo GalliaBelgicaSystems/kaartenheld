@@ -324,16 +324,17 @@ void battle_defend_resolve_banked(void);
  * width in bytes b/c/d.  Dispatched from battle_defend_counter()
  * (battle.c) between the block resolution and the discard. */
 void battle_counter_prep_banked(void);
-/* Banked post-swing counter-rider body (src/battle/battle_rider_banked.c,
- * ROM bank 11): g_bk_ptr_a = Battle*.  Applies the leading dagger's
- * on-hit rider AFTER the swing resolves (the counter stashes its
- * eval-scaled chance in g_bk_byte_e): a poison applied by the counter
- * must not confuse the swing it rode in on.  Guarded like the attack
- * path: a killing counter must not poison (or grey the deck for) a
- * corpse (the shared helper itself skips a NONE rider).  Fixed-bank
- * callers cannot stage this -- the fixed bank is full (AGENTS.md
- * 52.18) -- so the tiny dispatch lives in the caller and the logic
- * lives here. */
+/* Banked post-swing counter poison-rider body
+ * (src/battle/battle_rider_banked.c, ROM bank 11): reads &g_game.battle
+ * and the eval-scaled poison chance staged in g_bk_byte_e.  Applies
+ * the leading dagger's poison on-hit rider AFTER the swing resolves (and
+ * only if both hero and attacker still stand), so a poison applied by
+ * the counter never confuses the swing it rode in on.  Dispatched when
+ * battle_defend_counter() returns 2 (0 = no counter, 1 = counter hit
+ * without deferred poison, 2 = counter hit with deferred poison).
+ * Fixed-bank callers cannot stage the full rider logic -- the fixed
+ * bank is full (AGENTS.md 52.18) -- so the tiny dispatch lives in
+ * battle_execute_combo and the logic lives here. */
 void battle_counter_rider_banked(void);
 
 /* Banked no-arg deck-bridge body (src/battle/battle_init_content.c, ROM

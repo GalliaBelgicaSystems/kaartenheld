@@ -120,6 +120,11 @@
    "expected": 8
   },
   {
+   "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 2
+  },
+  {
    "type": "event_arg",
    "event": "DAMAGE_DEALT",
    "index": 0,
