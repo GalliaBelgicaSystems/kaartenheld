@@ -773,13 +773,13 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 
 /* Two per-side packed lists share each screen row: the pile (left,
  * cols 0-8) lists groups with copies to add (owned - decked > 0), the
- * deck (right, cols 10-18) groups with decked copies; col 9 is the
- * full-height '|' rule, col 19 pads.  Per cell (pile/deck):
+ * deck (right, cols 10-18) groups with decked copies; col 9 is a blank
+ * gap between the lists, col 19 pads.  Per cell (pile/deck):
  *   col 0/10: cursor caret (selected cell only)
  *   col 1/11: blank (caret breathing room)
- *   col 2/12: material ingot (blank BG; OAM tinted per inventory ramp)
+ *   col 2/12: weapon icon tile (BG); buffer holds S/H/B/D/R
  *   col 3/13: rider cell (blank BG; rider/health OAM overlays it)
- *   col 4/14: weapon icon tile (BG); buffer holds S/H/B/D/R
+ *   col 4/14: material ingot (blank BG; OAM tinted per inventory ramp)
  *   col 5/15: AP pip tile (BG); buffer holds the cost digit; the cell
  *     takes the FIRE slot when the pool locks the card
  *   col 6/16: AP icon tile (BG); buffer blank
@@ -801,9 +801,9 @@ static void ic_stamp_icons(uint8_t y, uint8_t rx, uint8_t wx, uint8_t n)
 static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, uint8_t slot)
 {
     uint8_t curx = side ? 10 : 0;
-    uint8_t oamx = side ? 12 : 2;
+    uint8_t oamx = side ? 14 : 4;
     uint8_t ridx = side ? 13 : 3;
-    uint8_t wxx = side ? 14 : 4;
+    uint8_t wxx = side ? 12 : 2;
     uint8_t apx = side ? 15 : 5;
     uint8_t cntx = side ? 17 : 7;
     uint8_t csum = (uint8_t)((side ? 8 : 0) + slot);
@@ -852,6 +852,14 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
     IC_DRAW_TEXT(oamx, y, " ", 1);
     IC_DRAW_TEXT(ridx, y, " ", 1);
     ic_stamp_icons(y, ridx, wxx, 1);
+    /* The chrome run lands on wx+2 (the material cell now that the
+     * weapon leads): clear it back to paper unconditionally -- the
+     * buffer already holds a space there, so a skip-based blank would
+     * leave the AP tile behind (AGENTS.md 52.25 family). */
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(
+        (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + oamx),
+        ui_font_tile_base);
     ic_draw_ap_at(g, y, apx);
     IC_DRAW_TEXT((uint8_t)(apx + 1), y, " ", 1);
     /* An unaffordable cost keeps its pip but renders the cell in the
@@ -882,14 +890,12 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
 }
 
 /* One grouped row across both pile/deck lists: each side draws its own
- * cell when the group shows there (blank paper otherwise), then the
- * shared middle rule.  lst is the drawn slot (OAM entries + per-side
- * sums are slot-indexed). */
+ * cell when the group shows there (blank paper otherwise).  lst is
+ * the drawn slot (OAM entries + per-side sums are slot-indexed). */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t vL, uint8_t vR, uint8_t lst)
 {
     if (vL != 0xFF) ic_draw_card_cell(g, y, vL, 0, lst);
     if (vR != 0xFF) ic_draw_card_cell(g, y, vR, 1, lst);
-    IC_DRAW_TEXT(9, y, "|", 1);
 }
 
 static void ic_draw_row16(Game *g);
@@ -907,14 +913,10 @@ static void ic_draw_filter_row(Game *g)
 static void ic_draw_cards_list(Game *g)
 {
     /* Fixed column header: PILE over the left (owned) block, DECK over
-     * the right block, '|' separator between (cols 0-19):
-     * "  PILE   |   DECK   ".  Row 4 is a blank paper separator. */
-    IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE   |   DECK   ", 20);
+     * the right block (cols 0-19): "  PILE       DECK   ".  Row 4 is
+     * a blank paper separator. */
+    IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE       DECK   ", 20);
     IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
-    /* The middle rule runs the whole list height, header to footer:
-     * stamp it on the separator row too so short lists don't leave a
-     * gap above their first card row. */
-    IC_DRAW_TEXT(9, ROW_SEP, "|", 1);
     s_ic_y = ROW_CARDS_TOP;
     s_ic_end_l = 0;
     s_ic_end_r = 0;
@@ -930,15 +932,6 @@ static void ic_draw_cards_list(Game *g)
         s_ic_y = (uint8_t)(s_ic_y + 1);
         if (vL != 0xFF) s_ic_end_l = (uint8_t)(s_ic_lst_pos + 1);
         if (vR != 0xFF) s_ic_end_r = (uint8_t)(s_ic_lst_pos + 1);
-    }
-    /* The middle rule runs to the footer even when the pile holds few
-     * cards: stamp it on every undrawn list row (rows 13-15 are never
-     * card rows, so the rule always reaches row 15).  Uses a local
-     * cursor -- s_ic_y still drives the OAM sweep below. */
-    {
-        uint8_t bar_y;
-        for (bar_y = s_ic_y; bar_y <= 15; bar_y++)
-            IC_DRAW_TEXT(9, bar_y, "|", 1);
     }
     /* Sweep sprite entries past each side's last drawn row (short
      * lists and scroll bottoms must not keep a stale icon): riders
@@ -1004,15 +997,11 @@ static void ic_draw_row16(Game *g)
     }
     for (i = len; i < 20; i++)
         IC_DRAW_TEXT(i, 16, " ", 1);
-    /* The middle rule reaches the footer row under the short messages
-     * (DECK FULL, AT CAP); every longer text owns col 9. */
-    if (len <= 9)
-        IC_DRAW_TEXT(9, 16, "|", 1);
 }
 
 /* Incremental DECK list repaint (AGENTS.md 36), run after nav, A and
- * message expiry: FILTER row, every live list slot, the middle rule
- * and row 16, without touching the render cache -- nothing blinks.
+ * message expiry: FILTER row, every live list slot and row 16,
+ * without touching the render cache -- nothing blinks.
  * Precondition: item_view_build_banked (bank 11) ran for the current
  * state/scroll (rebuilt maps + emptied slots erased).
  * Staging: g_bk_ptr_a = Game*. */
@@ -1034,16 +1023,13 @@ void item_card_refresh_banked(void)
      * Skip-based text writes are exact here: cleared cells match the
      * buffer, and redrawn cells re-stamp their constant icon tiles
      * (rider cell tile 0, chrome AP icon) over identical VRAM.
-     * Still-dead slots stay blank; the rule is stamped per row so the
-     * full-height middle rule survives emptied slots. */
+     * Still-dead slots stay blank. */
     for (k = 0; k < 8; k++) {
         vL = s_ic_draw_pos[k];
         vR = s_ic_draw_pos_r[k];
         y = (uint8_t)(ROW_CARDS_TOP + k);
         if (vL != 0xFF || vR != 0xFF)
             ic_draw_card_pair(g, y, vL, vR, k);
-        else
-            IC_DRAW_TEXT(9, y, "|", 1);
     }
     ic_draw_row16(g);
 }

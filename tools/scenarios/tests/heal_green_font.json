@@ -33,12 +33,12 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "R2"
+   "contains": "R  2"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "D2"
+   "contains": "D  2"
   },
   {
    "type": "tilemap_attr",

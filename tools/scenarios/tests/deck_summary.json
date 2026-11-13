@@ -33,7 +33,7 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "S1"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
@@ -43,7 +43,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "H1"
+   "contains": "H  1"
   },
   {
    "type": "screen_row",
@@ -53,7 +53,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "S1"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",

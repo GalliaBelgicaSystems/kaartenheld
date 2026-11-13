@@ -41,37 +41,37 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "S1"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "S1  4"
+   "contains": "S  1  4"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "H1"
+   "contains": "H  1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "H1  4"
+   "contains": "H  1  4"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "S1"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "S1  1"
+   "contains": "S  1  1"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "S1  2"
+   "contains": "S  1  2"
   },
   {
    "type": "screen_row_not_contains",

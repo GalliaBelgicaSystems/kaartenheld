@@ -29,17 +29,17 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "S1"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "D2"
+   "contains": "D  2"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "B2"
+   "contains": "B  2"
   },
   {
    "type": "oam_tile",
