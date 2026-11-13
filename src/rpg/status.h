@@ -34,7 +34,7 @@ typedef enum {
  * table in status_content.c and the bank-11 post-swing counter rider
  * in battle_rider_banked.c so the two banks cannot drift). */
 #define STATUS_POISON_MAX_STACKS   5
-#define STATUS_POISON_DURATION     2
+#define STATUS_POISON_DURATION     3
 
 /* One active affliction/blessing on one combatant. */
 typedef struct {
