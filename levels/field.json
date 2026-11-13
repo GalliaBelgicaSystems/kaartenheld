@@ -225,7 +225,7 @@
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
-        "forest.forest_postsign",
+        "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
         "forest.forest_plain_floor_2",
@@ -615,7 +615,7 @@
       "type": "signpost",
       "position": {
         "x": 5,
-        "y": 8
+        "y": 9
       },
       "properties": {
         "entity_id": "ENTITY_ID_SIGNPOST",
