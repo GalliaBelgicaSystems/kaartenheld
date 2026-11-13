@@ -81,8 +81,23 @@ typedef enum {
  * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
  * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
  * consumes it; the combo row + banner read it, never row 9), 9 = Carl
- * tutorial speech, 10 = slime-lord despair telegraph. */
+ * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
+ * (timer expiry with nothing staged) carries no msg_id: the ANIM banner
+ * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
+ * see battle_update).  An explicit empty SELECT keeps the historic
+ * auto-play of the highlighted card (see battle_execute_combo). */
 #define BATTLE_MSG_ICED_FOE 5
+/* Confused attacker (poison), two-beat acknowledgement (bank 12
+ * telegraph stages the first): msg 6 is the "FOE IS CONFUSED!" beat
+ * that waits for A, msg 7 is the staged outcome the A press reveals
+ * before the redirected swing resolves.  Which outcome (an ally takes
+ * it vs the attacker hurting itself) rides in g_battle_confuse_self,
+ * decided at telegraph time by the same rule the resolve uses, so the
+ * render needs no status scan (bank 3 is full in release, AGENTS.md
+ * 52.18). */
+#define BATTLE_MSG_CONFUSED_FOE 6
+#define BATTLE_MSG_CONFUSED_OUTCOME 7
+extern uint8_t g_battle_confuse_self;
 
 typedef struct {
     Combatant player;
@@ -302,7 +317,7 @@ void battle_stage_combo_banked(void);
  * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
 /* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
- * ROM bank 10): g_bk_ptr_a = Battle*.  Draws the next enemy card
+ * ROM bank 12): g_bk_ptr_a = Battle*.  Draws the next enemy card
  * (freeze/poison/normal/deckless branches), stages msg + shake state,
  * and emits its telemetry inline (debug builds).  The SFX tail stays
  * in the fixed wrapper (battle_update). */
@@ -320,6 +335,21 @@ void battle_defend_resolve_banked(void);
  * width in bytes b/c/d.  Dispatched from battle_defend_counter()
  * (battle.c) between the block resolution and the discard. */
 void battle_counter_prep_banked(void);
+/* Banked post-swing counter poison-rider body
+ * (src/battle/battle_rider_banked.c, ROM bank 11): reads &g_game.battle
+ * and the eval-scaled poison chance staged in g_bk_byte_e.  Applies
+ * the leading dagger's poison on-hit rider AFTER the swing resolves (and
+ * only if both hero and attacker still stand), so a poison applied by
+ * the counter never confuses the swing it rode in on.  Dispatched when
+ * battle_defend_counter() returns 2 (0 = no counter, 1 = counter hit
+ * without deferred poison, 2 = counter hit with deferred poison).
+ * Fixed-bank callers cannot stage the full rider logic -- the fixed
+ * bank is full (AGENTS.md 52.18) -- so the tiny dispatch lives in
+ * battle_execute_combo and the logic lives here. */
+void battle_counter_rider_banked(void);
+/* DEBUG-only friendly-fire defeat report (src/battle/battle_ff_defeat_banked.c,
+ * ROM bank 12): no args; reads g_battle_confuse_victim + live enemy HP. */
+void battle_ff_defeat_banked(void);
 
 /* Banked no-arg deck-bridge body (src/battle/battle_init_content.c, ROM
  * bank 2), dispatched by battle_start via the WRAM trampoline. */

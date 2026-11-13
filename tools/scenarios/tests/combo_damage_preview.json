@@ -1,7 +1,7 @@
 {
  "name": "combo_damage_preview",
  "test": true,
- "description": "Pending combo previews damage: pair of SW2 (base 4, suited PAIR 120+25=145%) resolves 4x145/100 = 5, shown as PAIR DMG5 on the hand line",
+ "description": "Pending combo previews damage: pair of SW2 (base 4, suited PAIR 120+30=150%) resolves 4x150/100 = 6, shown as PAIR DMG6 on the hand line",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -77,7 +77,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "PAIR DMG5"
+   "contains": "PAIR DMG6"
   }
  ]
 }

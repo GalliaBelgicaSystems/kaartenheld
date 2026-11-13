@@ -169,6 +169,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_HOUSE_DOOR,
+        "",
+        3,
+        {"Where do you think", "you are? The full", "game?"},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_KNIGHT_SPLIT,
         "KNIGHT:",
         3,
@@ -420,7 +428,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_POKER,
         "CARL:",
         8,
-        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +25%!"},
+        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +30%!"},
         0,
         0
     },

@@ -86,7 +86,12 @@
  },
  "aliases": {
   "obj": {
-   "sprites10": 6
+   "sprites10": 6,
+   "inventory1": 0,
+   "inventory2": 1,
+   "inventory3": 6,
+   "inventory4": 5,
+   "inventory5": 7
   }
  }
 }

@@ -90,7 +90,15 @@
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",
@@ -115,6 +123,16 @@
   {
    "type": "event_occurred",
    "event": "BATTLE_WON"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 10,
+   "contains": "FOE HURTS ITSELF!"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 10,
+   "contains": "FOE IS CONFUSED!"
   }
  ]
 }

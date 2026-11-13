@@ -56,7 +56,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 # telemetry arg with a gameplay side effect (loot-count read) is #ifdef'd at
 # its call site in world.c.
 # telemetry_snap.c is the banked extended-snapshot builder (debug-only).
-DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_emit_banked.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c
+DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_emit_banked.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c $(SRC_DIR)/battle/battle_ff_defeat_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
 MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening_more.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
@@ -277,6 +277,14 @@ gfx: manifest
 	# body to UI_TILE_AP_PIP_BASE (236-240).
 	@python3 tools/png2gb.py assets/ap_pips_bg.png --name ap_pip_tiles \
 		--shade-map generated/tiles/shades/ap_pips.json -o $(GFX_OUT_DIR)/ap_pip_tiles.h
+	# ── Card-menu material OAM icons (assets/material_tiles.png, 4x1) ──
+	# Bronze / iron (+steel) / mythril / wood icon art; each cell encodes
+	# with its inventory ramp (obj aliases, no base slot).  Only the encode
+	# belongs here.  Streamed on demand by the bank-8 menu body to fixed
+	# OAM ids 118-121 (time-share blob offsets 18-21, restored on
+	# overworld entry); OBJ slots come from the generated header.
+	@python3 tools/png2gb.py assets/material_tiles.png --name material_tiles \
+		--shade-map generated/tiles/shades/materials.json -o $(GFX_OUT_DIR)/material_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
 	# Regenerated every build from the live battle sources (never
 	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
@@ -498,6 +506,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_card_frames.py
 	@python3 tools/compose_dice.py
 	@python3 tools/compose_ap_pips.py
+	@python3 tools/compose_material_tiles.py
 	@python3 tools/palette_compiler.py
 	@python3 tools/verify_palette_manifest.py
 

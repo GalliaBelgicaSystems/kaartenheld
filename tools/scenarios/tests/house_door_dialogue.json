@@ -1,0 +1,56 @@
+{
+ "name": "house_door_dialogue",
+ "test": true,
+ "description": "Bumping into an open house door shows the full-game joke dialogue",
+ "actions": [
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "HOUSE_DOOR"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ACTOR_INTERACTION"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Where do you think"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "you are? The full"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "game?"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 3,
+   "y": 4,
+   "facing": "UP"
+  },
+  "seed": 1005,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ }
+}

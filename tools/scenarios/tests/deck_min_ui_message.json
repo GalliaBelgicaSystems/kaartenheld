@@ -1,7 +1,16 @@
 {
  "name": "deck_min_ui_message",
  "test": true,
- "description": "CARDS tab reaching the DECK_MIN_CARDS floor through real gameplay on the 10-card starter (SW4 SH3 SW3, no daggers): A clears the maxed Iron Sword (10 -> 6), then A on Wooden Shield would drop 6 -> 3 and is rejected all-or-nothing with a transient DECK MIN 5 message and no further deck telemetry.",
+ "description": "CARDS tab reaching the DECK_MIN_CARDS floor through real gameplay on the 10-card starter (all fully decked, so the pile starts empty): DOWN flips to the deck side (lazy flip) onto the first deck row; A removes that row one copy at a time (10 -> 6), the last removal follows the cursor back to the pile; DOWN steps to the next deck row; A removes once more (6 -> 5); one more A would drop 5 -> 4 and is rejected with a transient DECK MIN 5 message and no further deck telemetry.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8411
+ },
  "actions": [
   {
    "type": "press",
@@ -21,11 +30,43 @@
   },
   {
    "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {
    "type": "wait",
-   "frames": 8
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   },
   {
    "type": "press",
@@ -41,15 +82,7 @@
   },
   {
    "type": "wait",
-   "frames": 10
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
+   "frames": 5
   },
   {
    "type": "press",
@@ -73,21 +106,12 @@
   {
    "type": "event_count",
    "event": "CARD_REMOVED_FROM_DECK",
-   "count": 4
+   "count": 5
   },
   {
    "type": "event_count",
    "event": "CARD_ADDED_TO_DECK",
    "count": 0
   }
- ],
- "initial_state": {
-  "scene": "TEST_FIELD",
-  "player": {
-   "x": 4,
-   "y": 4,
-   "facing": "DOWN"
-  },
-  "seed": 8411
- }
+ ]
 }

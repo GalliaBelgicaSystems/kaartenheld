@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab lists one row per owned card (material + weapon icon + AP + DECK d/o) from row 5: sword, shield, bronze sword, ring and dagger render on rows 5-9",
+ "description": "CARDS tab lists one row per owned card name (weapon icon + rider + material + AP + DECK d/o) from row 5, with the AP unit icon stamped at col 6/16 next to every AP pip (vram_row pins the two adjacent icon/pip tiles).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -33,27 +33,32 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "WOOD"
+   "contains": "H  1"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "BRONZE"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "IRON"
+   "row": 5,
+   "contains": "R  2"
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "BRONZE"
+   "row": 6,
+   "contains": "D  2"
+  },
+  {
+   "type": "vram_row",
+   "row": 5,
+   "contains": ".  .. 1   .  .. 4"
   }
  ]
 }

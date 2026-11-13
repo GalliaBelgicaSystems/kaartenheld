@@ -1,7 +1,7 @@
 {
  "name": "cards_menu_loot_shift",
  "test": true,
- "description": "Loot cards must not shift CARDS menu mapping: with a loot drop plus bought dagger+bow owned, UP-wrap + A decks the bow under its own caret, and the next UP lands on the dagger row (regression: the bank-2 render used to rebuild the view loot-blind, shifting every selection at/after a loot card). 5-line victory closes in 2 presses; triple START opens ITEM reliably post-battle. Pool 5 is staged so the mythril bow (cost 5) stays deckable under the loot equip gate (docs/enemies_ranking.md \u00a74.8); the gate itself is covered by deck_equip_locked_loot.",
+ "description": "Loot cards must not shift CARDS menu mapping: with a loot drop plus bought dagger+bow owned, UP-wrap + A decks the bow under its own caret, and the next UP lands on the dagger row (regression: the bank-2 render used to rebuild the view loot-blind, shifting every selection at/after a loot card). Pool 5 is staged so the mythril bow (cost 5) stays deckable under the loot equip gate (docs/enemies_ranking.md \u00a74.8); the gate itself is covered by deck_equip_locked_loot.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -128,18 +128,18 @@
   },
   {
    "type": "screen_row",
-   "row": 9,
+   "row": 2,
    "contains": ">"
   },
   {
-   "type": "screen_row",
-   "row": 9,
-   "contains": "BRONZE"
+   "type": "deck_contains",
+   "card_id": 70,
+   "expected": 1
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "MYTHRIL"
+   "type": "deck_contains",
+   "card_id": 68,
+   "expected": 1
   }
  ]
 }

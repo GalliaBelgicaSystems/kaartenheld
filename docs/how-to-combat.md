@@ -133,7 +133,7 @@ whole play:
 | STR FLUSH | 5 sequential, same symbol | 350% |
 | FIVE KIND | all 5 same value | 400% |
 
-Same-symbol hands get **+25%** on top. Final effect, always rounded
+Same-symbol hands get **+30%** on top. Final effect, always rounded
 down: `base × multiplier / 100`, where **base counts only the cards
 forming the poker hand** — extras deal/block 0. A lone high card scores
 just itself (`SW2 + BO3` with no pair hits for 3, not 5); a

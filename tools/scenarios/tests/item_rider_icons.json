@@ -1,7 +1,7 @@
 {
  "name": "item_rider_icons",
  "test": true,
- "description": "Item CARDS list shows rider OAM sprites over each rider card's element cell (bronze FIRE BOW loot burn row -> entry 5 tile 123, POISON DAGGER row -> entry 4 tile 125); riderless rows stay hidden. Swords never ride, so burn coverage moved to a loot bow (id 146).",
+ "description": "Item CARDS list shows rider OAM sprites over each rider card element cell on its pile side (POISON DAGGER row -> entry 1 tile 125, bronze FIRE BOW loot row -> entry 2 tile 123); riderless rows stay hidden and the deck side shows no riders (entries 9-16 hidden). Material ingots ride alongside (entries 17/18 tile 118 wood/iron shared art, 25/26 wood). Swords never ride, so burn coverage moved to a loot bow (id 146).",
  "actions": [
   {
    "type": "collection_add",
@@ -29,27 +29,27 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "BRONZE"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "BRONZE"
+   "row": 5,
+   "contains": "D  2"
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "BRONZE"
+   "row": 6,
+   "contains": "B  2"
   },
   {
    "type": "oam_tile",
    "entry": 1,
-   "expected": 0
+   "expected": 125
   },
   {
    "type": "oam_tile",
    "entry": 2,
-   "expected": 0
+   "expected": 123
   },
   {
    "type": "oam_tile",
@@ -59,12 +59,37 @@
   {
    "type": "oam_tile",
    "entry": 4,
-   "expected": 125
+   "expected": 0
   },
   {
    "type": "oam_tile",
    "entry": 5,
-   "expected": 123
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 9,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 10,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 17,
+   "expected": 118
+  },
+  {
+   "type": "oam_tile",
+   "entry": 18,
+   "expected": 118
+  },
+  {
+   "type": "oam_tile",
+   "entry": 25,
+   "expected": 121
   }
  ],
  "initial_state": {

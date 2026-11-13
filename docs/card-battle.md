@@ -102,7 +102,7 @@ markers throughout the doc point to the exact source. A quick summary:
 * Defend resolution — shields block incoming enemy damage with straight/flush bonuses; non-shields are inert (0 block, 0 combo).
 * Card consumption — played cards are always discarded and replaced from the deck.
 * Reset deck (Fisher-Yates shuffle), draw/discard/draw-to-replace.
-* 20-second decision timer that auto-executes on expiry.
+* 20-second decision timer that auto-executes on expiry (a staged combo resolves; expiry with nothing staged is a MISSED! whiff, never an auto-play of the highlight -- an explicit empty SELECT keeps the historic quick-attack auto-play).
 * Explicit battle state machine plus a tutorial-slime battle.
 * Telemetry for every important transition; regression scenarios under `make test-harness`.
 

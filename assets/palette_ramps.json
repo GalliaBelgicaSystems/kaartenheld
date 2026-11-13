@@ -504,6 +504,91 @@
     "base:6"
    ]
   },
+  "inventory1": {
+   "colors": [
+    "#ffffff",
+    "#bb9863",
+    "#967139",
+    "#967139"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/bronze_light",
+    "COMBAT/bronze_dark",
+    "COMBAT/bronze_dark"
+   ],
+   "slots": [
+    "obj:0"
+   ]
+  },
+  "inventory2": {
+   "colors": [
+    "#ffffff",
+    "#c8792e",
+    "#a85a10",
+    "#a85a10"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/iron_light",
+    "COMBAT/iron_dark",
+    "COMBAT/iron_dark"
+   ],
+   "slots": [
+    "obj:1"
+   ]
+  },
+  "inventory3": {
+   "colors": [
+    "#ffffff",
+    "#d8deec",
+    "#becaec",
+    "#becaec"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/mithril_light",
+    "COMBAT/mithril_dark",
+    "COMBAT/mithril_dark"
+   ],
+   "slots": [
+    "obj:6"
+   ]
+  },
+  "inventory4": {
+   "colors": [
+    "#ffffff",
+    "#e5aa54",
+    "#93621a",
+    "#604217"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/wood_light",
+    "COMBAT/wood_mid",
+    "COMBAT/wood_dark"
+   ],
+   "slots": [
+    "obj:5"
+   ]
+  },
+  "inventory5": {
+   "colors": [
+    "#ffffff",
+    "#bbbbbb",
+    "#828282",
+    "#828282"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/steel_light",
+    "COMBAT/steel_dark",
+    "COMBAT/steel_dark"
+   ],
+   "slots": [
+    "obj:7"
+   ]
+  },
   "sprites": {
    "colors": [
     "#f1eb03",

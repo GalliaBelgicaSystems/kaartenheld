@@ -1,7 +1,7 @@
 {
  "name": "deck_equip_locked_loot",
  "test": true,
- "description": "Equip gate refusal (docs/enemies_ranking.md \u00a74.8): a STEEL FIRE BOW (id 210, cost 4) in the collection cannot be decked while the pool is 2. Pressing A on its DECK row is rejected with NEED AP 4 on row 16, emits CARD_EQUIP_LOCKED (d1 = required AP), and emits no CARD_ADDED_TO_DECK. The gate is uniform (curated cards lock the same way); only player-chosen equipping is gated, never grants.",
+ "description": "Equip gate refusal (docs/enemies_ranking.md \u00a74.8): a STEEL FIRE BOW (id 210, cost 4) in the collection cannot be decked while the pool is 2. Pressing A on its DECK row is rejected with NOT ENOUGH AP 4 on row 16, emits CARD_EQUIP_LOCKED (d1 = required AP), and emits no CARD_ADDED_TO_DECK. The gate is uniform (curated cards lock the same way); only player-chosen equipping is gated, never grants.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -27,30 +27,6 @@
   {
    "type": "press",
    "button": "START"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 30
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
   },
   {
    "type": "wait",
@@ -101,7 +77,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "NEED AP"
+   "contains": "NOT ENOUGH AP"
   }
  ]
 }

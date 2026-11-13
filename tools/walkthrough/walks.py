@@ -12,7 +12,6 @@ additive.
 import io
 import json
 import os
-import re
 import sys
 
 from walkthrough.session import Session, LEVELS_DIR, REPO
@@ -735,16 +734,24 @@ def walk_a(planner, checks, sram_out=None):
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
     row5 = s.bg_text()[5]
-    if "IRON RING" in row5:
-        want, slid = CARD_IRON_RING, "MYTHRIL BOW"
-    elif "MYTHRIL BOW" in row5:
-        want, slid = CARD_BOW_9, "STEEL SHIELD"
-    elif "STEEL SHIELD" in row5:
-        want, slid = CARD_STEEL_SHIELD, "WOOD SWORD"
+    # Shop rows show the weapon word plus the OAM material ingot (the
+    # material word is gone): match the weapon, then pin the ingot's
+    # real-OAM tile + slot (entry 13 = first shop row) per material.
+    if "RING" in row5:
+        want, slid, mtile, mslot = CARD_IRON_RING, "BOW", 119, 1
+    elif "BOW" in row5:
+        want, slid, mtile, mslot = CARD_BOW_9, "SHIELD", 120, 6
+    elif "SHIELD" in row5:
+        want, slid, mtile, mslot = CARD_STEEL_SHIELD, "SWORD", 117, 7
     else:
-        want, slid = None, None
+        want, slid, mtile, mslot = None, None, None, None
     s.check("shop top row recognized", want is not None,
             expected="ring/bow/shield row", actual=row5)
+    if want is not None:
+        s.check_eq("shop material ingot tile",
+                   s.pb.memory[0xFE00 + 13 * 4 + 2], mtile)
+        s.check_eq("shop material ingot slot",
+                   s.pb.memory[0xFE00 + 13 * 4 + 3] & 7, mslot)
     price = s.reader.card_price(want)
     before = s.reader.collection_count(want)
     s.press("a", settle=30)
@@ -766,36 +773,41 @@ def walk_a(planner, checks, sram_out=None):
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
             actual=s.bg_text()[0].strip())
 
-    # Quick screen: DECK tab, toggle a card's deck membership, open
-    # the filter picker from the top row, then the QUEST tab.
+    # Quick screen: DECK tab, move one card deck -> pile, open the
+    # filter picker from the top row, then the QUEST tab.
     # NOTE: transit-fight loot can add owned copies (release loot
-    # reshuffles whenever boot timing shifts the DIV prime) and the deck
-    # may sit at cap, so a blind A on the first row can no-op (DECK FULL
-    # on a partial row).  Read the rows and toggle a fully-decked one
-    # instead: A there always clears (docs/deck-management.md), so the
-    # count must drop by exactly the row's decked copies (MIN-guarded).
+    # reshuffles whenever boot timing shifts the DIV prime). Find a
+    # fully-decked row (left N == 0, right N > 0): RIGHT flips to the
+    # deck side and A sends one copy back to the pile, so the deck
+    # count must drop by exactly one (MIN-guarded).
     s.press_until("start", lambda: s.text_has("DECK QUEST"),
                   label="quick screen")
     s.shoot("06-cards-menu", need="DECK QUEST")
     deck0 = s.reader.deck_count()
+    s.check("deck above the MIN floor", deck0 - 1 >= 5,
+            expected="deck0 - 1 >= 5", actual=str(deck0))
+    # Unified grid: DOWN lands the first group (fully decked -- every
+    # row draws now, zero counts included), RIGHT steps to its deck
+    # cell, A sends one copy back to the pile.  No side flips.
+    s.press("down", settle=20)
     rows = s.bg_text()
-    downs, clear = None, 0
-    for r in range(5, 16):
-        m = re.search(r"(\d+)\s*/\s*(\d+)\s*$", rows[r])
-        if m and int(m.group(1)) == int(m.group(2)) and int(m.group(1)) > 0 \
-                and deck0 - int(m.group(1)) >= 5:
-            downs, clear = r - 4, int(m.group(1))
-            break
-    s.check("fully-decked row found", downs is not None,
-            expected="x/x row", actual="none")
-    for _ in range(downs or 1):
-        s.press("down", settle=20)  # FILTER/SORT row -> target card row
-    s.press("a", settle=30)         # clear the group's decked copies
+    s.check("first row caret", rows[5][0] == ">",
+            expected="> at col 0", actual=rows[5])
+    s.press("right", settle=20)  # pile cell -> deck cell, same row
+    rows = s.bg_text()
+    s.check("deck cell caret", len(rows[5]) > 10 and rows[5][10] == ">",
+            expected="> at col 10", actual=rows[5])
+    s.press("a", settle=30)  # send one copy back to the pile
     deck1 = s.reader.deck_count()
-    s.check("deck membership toggled", deck1 == deck0 - clear,
-            expected="deck == %d" % (deck0 - clear), actual=str(deck1))
-    for _ in range(downs or 1):
-        s.press("up", settle=20)    # back to the FILTER/SORT row
+    s.check("deck membership removed", deck1 == deck0 - 1,
+            expected="deck == %d" % (deck0 - 1), actual=str(deck1))
+    s.press("left", settle=20)  # deck cell -> pile cell, same row
+    rows = s.bg_text()
+    s.check("owned side caret", rows[5][0] == ">",
+            expected="> at col 0", actual=rows[5])
+    s.press("b", settle=20)  # single B jumps back to the FILTER row
+    s.check("filter row caret", s.bg_text()[2][0] == ">",
+            expected="> at filter row", actual=s.bg_text()[2])
     s.press_until("a", lambda: s.text_has("LR CYCLE"),
                   label="filter picker")
     s.shoot("07-filter-picker", need="LR CYCLE")

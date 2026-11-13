@@ -1,7 +1,7 @@
 {
  "name": "deck_summary",
  "test": true,
- "description": "The DECK tab lists one row per card NAME (material + weapon icon + AP + DECK d/o): the 10-card starter shows WOOD SWORD x4, WOOD SHIELD x4, BRONZE SWORD x2 as three rows from row 5 (row 3 is the CARD + deck-icon /OWN header, row 4 a paper separator).",
+ "description": "The DECK tab lists one row per card NAME (weapon icon + rider + material + AP + DECK d/o): the 10-card starter shows WOOD SWORD x4, WOOD SHIELD x4, BRONZE SWORD x2 as three rows from row 5 (row 3 is the PILE/DECK header, row 4 a paper separator).",
  "actions": [
   {
    "type": "press",
@@ -33,32 +33,32 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "4/ 4"
+   "contains": "  4"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "WOOD"
+   "contains": "H  1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "4/ 4"
+   "contains": "  4"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "BRONZE"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "2/ 2"
+   "contains": "  2"
   }
  ],
  "initial_state": {

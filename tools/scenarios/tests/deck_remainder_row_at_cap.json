@@ -1,105 +1,86 @@
 {
-  "name": "deck_remainder_row_at_cap",
-  "test": true,
-  "description": "Capped-fold remainder row + same-name grouping (docs/loot.md 34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) is owned, so the DECK list shows ONE Iron Ring row (owned 2 / decked 1). The identity is saturated so no member can take another copy; pressing A therefore falls through to the clear path and removes the 1 decked copy (MIN-guarded) instead of pinning the row on AT CAP. Pre-grouping this card took two rows.",
-  "initial_state": {
-    "scene": "TEST_FIELD",
-    "player": {
-      "x": 4,
-      "y": 4,
-      "facing": "DOWN"
-    },
-    "seed": 8412,
-    "variables": {
-      "ENERGY_POOL": 5
-    }
+ "name": "deck_remainder_row_at_cap",
+ "test": true,
+ "description": "Capped-fold remainder row + same-name grouping (docs/loot.md 34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) is owned, so the DECK list shows ONE Iron Ring row (owned 2 / decked 1). The identity is saturated so LEFT A adds nothing (silent no-op); RIGHT flips to the deck side and A sends the 1 decked copy back (MIN-guarded) instead of pinning the row on AT CAP. Pre-grouping this card took two rows.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
   },
-  "actions": [
-    {
-      "type": "collection_add",
-      "card_id": 66,
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "collection_add",
-      "card_id": 164,
-      "quantity": 1
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "deck_add",
-      "card": "IRON_RING"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "START"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "DOWN"
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "wait",
-      "frames": 3
-    },
-    {
-      "type": "press",
-      "button": "A"
-    },
-    {
-      "type": "wait",
-      "frames": 10
-    }
-  ],
-  "assertions": [
-    {
-      "type": "screen",
-      "expected": "ITEM"
-    },
-    {   "type": "screen_row_not_contains",
+  "seed": 8412,
+  "variables": {
+   "ENERGY_POOL": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "deck_add",
+   "card": "IRON_RING"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row_not_contains",
    "row": 16,
    "contains": "AT CAP"
   },
@@ -118,10 +99,10 @@
    "card_id": 66,
    "expected": 0
   },
-    {
-      "type": "deck_contains",
-      "card_id": 164,
-      "expected": 0
-    }
-  ]
+  {
+   "type": "deck_contains",
+   "card_id": 164,
+   "expected": 0
+  }
+ ]
 }

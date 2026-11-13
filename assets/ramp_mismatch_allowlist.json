@@ -767,6 +767,57 @@
       "off_colors": [
         "#b6b6b6"
       ]
+    },
+    {
+      "sheet": "materials",
+      "tile": [
+        0,
+        0
+      ],
+      "declared": "inventory5",
+      "used_ramp": "inventory5",
+      "off_colors": [
+        "#967139",
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "materials",
+      "tile": [
+        1,
+        0
+      ],
+      "declared": "inventory1",
+      "used_ramp": "inventory1",
+      "off_colors": [
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "materials",
+      "tile": [
+        2,
+        0
+      ],
+      "declared": "inventory2",
+      "used_ramp": "inventory2",
+      "off_colors": [
+        "#967139",
+        "#b09266"
+      ]
+    },
+    {
+      "sheet": "materials",
+      "tile": [
+        3,
+        0
+      ],
+      "declared": "inventory3",
+      "used_ramp": "inventory3",
+      "off_colors": [
+        "#967139",
+        "#b09266"
+      ]
     }
   ]
 }

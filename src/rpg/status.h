@@ -30,6 +30,12 @@ typedef enum {
  * Combatant embeds a StatusSlots (player + up to MAX_BATTLE_ENEMIES). */
 #define MAX_STATUSES_PER_COMBATANT 2
 
+/* Shared poison definition constants (used by both the bank-10 status
+ * table in status_content.c and the bank-11 post-swing counter rider
+ * in battle_rider_banked.c so the two banks cannot drift). */
+#define STATUS_POISON_MAX_STACKS   5
+#define STATUS_POISON_DURATION     3
+
 /* One active affliction/blessing on one combatant. */
 typedef struct {
     uint8_t id;        /* StatusId */

@@ -302,12 +302,14 @@ def main():
         "_scene_load_tiles_banked": "scene tile loader (bank 5)",
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
         "_battle_card_undo_banked": "battle card undo (bank 11)",
+        "_battle_counter_rider_banked": "post-swing counter poison rider (bank 11)",
+        "_battle_telegraph_banked": "enemy telegraph body (bank 12)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",
         "_loot_synth_banked": "loot def synthesis (bank 8)",
         "_game_loot_drop_banked": "victory drop roll (bank 9)",
-        "_world_patrol_slot_banked": "world actor patrol step (bank 3 release / bank 5 debug)",
+        "_world_patrol_slot_banked": "world actor patrol step (bank 12 release / bank 5 debug)",
         "_battle_nav_banked": "battle hand/target nav cluster (bank 4)",
         "_battle_turn_draw_banked": "battle hand-refill decision (bank 4)",
         "_battle_stage_combo_banked": "battle combo stager (bank 4)",
@@ -428,6 +430,7 @@ def main():
     # gate runs against both build/kaartenheld_debug.map and
     # build/kaartenheld.map.
     optional_banked_targets = {
+        "_battle_ff_defeat_banked": "confused friendly-fire defeat telemetry (bank 12, debug only)",
         "_telemetry_emit_banked": "telemetry ring emit (bank 2, debug only)",
         "_debug_snapshot_banked": "core snapshot builder (bank 2)",
         "_debug_state_snapshot_banked": "debug state snapshot (bank 2)",

@@ -1,0 +1,36 @@
+{
+ "name": "battle_timer_miss_no_select",
+ "test": true,
+ "description": "Timeout with nothing staged is a miss, not an auto-play: after 1210 frames with no input the banner reads MISSED! and no DAMAGE_DEALT occurred (Florent: unvalidated highlight must not attack). 1210 lands mid-MISS-ANIM (timer 1200 + 30-frame beat); 1250 would already be the enemy turn.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 1210
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "MISSED!"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "start_battle": true
+ }
+}

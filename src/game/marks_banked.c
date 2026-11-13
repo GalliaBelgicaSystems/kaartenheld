@@ -12,6 +12,13 @@
 #include "game/gamble.h"
 #include "ap_tiles_generated.h"
 
+/* Card-menu material OAM icon ids/slots + canonical OBJ restore bytes
+ * (palette shade maps per inventory ramp, OBJ slots from the obj
+ * aliases).  Ramp bytes + tile art live with the bank-2 menu body
+ * that streams them (same-bank rule); this side only restores. */
+#define MAT_NEED_RESTORE_BYTES
+#include "material_tiles_generated.h"
+
 /* OAM map (hero idle base, blob base) for the overworld-entry restore.
  * Header-only (macros + declarations, no code), safe in this bank. */
 #include "ui/ui.h"
@@ -64,6 +71,18 @@ static const uint8_t s_rider_vram_ids[3] = { RIDER_TILE_BURN, RIDER_TILE_FREEZE,
 static uint8_t s_mark_tiles_loaded;
 static uint8_t s_battle_tiles_loaded;
 static uint8_t s_ap_pip_loaded;
+
+/* Program one OBJ palette slot from 8 CRAM bytes, LCD-safely (same
+ * bounded Mode-wait pattern as the tile streamer above; the timer ISR
+ * can eclipse a bare wait->store window while the LCD is on). */
+static void ow_obj_program(uint8_t slot, const uint8_t *src)
+{
+    uint8_t c;
+    OCPS_REG = (uint8_t)(0x80 | (slot << 3));
+    for (c = 0; c < 8; c++) {
+        BANKED_VRAM_WRITE(&OCPD_REG, src[c]);
+    }
+}
 
 /* Stream one OAM tile (16 bytes) LCD-safely.  Single copy shared by the
  * mark/battle loaders and the overworld-entry restore below (bank 8 stays
@@ -185,18 +204,22 @@ static void marks_load_battle_tiles(void)
 
 /* Re-arm the battle tile stream after overworld entry restores the
  * time-shared OAM ids (AP pips 1-4 over hero idle/walk at 96-99, pip 5
- * plus riders over the blob tail at 122-125).
+ * plus riders over the blob tail at 122-125, material icons over blob
+ * offsets 17-21 at 117-121).
  * No-arg trampoline target for the fixed-bank overworld-entry path. */
 void marks_battle_tiles_invalidate_banked(void)
 {
     /* Re-arm both streams: AP pips/riders time-share OAM ids with
      * overworld art (96-99 hero, 122-125 blob tail), and the !/? marks
-     * (126-127) are streamed once per boot.  screen_change() calls this
-     * on every BATTLE/ITEM/SHOP entry so the next tick restreams before
-     * the first render -- even if the flag powered up set (harness
-     * skips CRT0, so BSS is not cleared) or VRAM was clobbered by a
-     * path that did not clear the flag, the pips would otherwise show
-     * hero pixels with correct OAM ids (all id-only asserts green). */
+     * (126-127) are streamed once per boot.  The material icons (streamed
+     * by the bank-2 menu render, restored with the rider tail below)
+     * need no flag: renders always precede their stamps.  screen_change()
+     * calls this on every BATTLE/ITEM/SHOP entry so the next tick
+     * restreams before the first render -- even if the flag powered up
+     * set (harness skips CRT0, so BSS is not cleared) or VRAM was
+     * clobbered by a path that did not clear the flag, the pips would
+     * otherwise show hero pixels with correct OAM ids (all id-only
+     * asserts green). */
     s_battle_tiles_loaded = 0;
     s_mark_tiles_loaded = 0;
     s_ap_pip_loaded = 0;
@@ -231,6 +254,26 @@ void ow_oam_restore_banked(void)
     for (i = 0; i < 3; i++) {
         ow_oam_stream_cell((uint8_t)(RIDER_TILE_BURN + i),
                            enemy_ow_tiles + (((uint16_t)(RIDER_TILE_BURN - ENEMY_OW_BASE + i)) << 4));
+    }
+    /* Card-menu material icons time-share blob offsets 17-21 (OAM
+     * 117-121): restore them from the blob the same way.  Overworld
+     * actors using those cells were hidden while the menu was open
+     * (screen_change hides all OAM off-overworld), so the restore is
+     * invisible. */
+    for (i = 0; i < 5; i++) {
+        ow_oam_stream_cell((uint8_t)(MAT_TILE_STEEL + i),
+                           enemy_ow_tiles + ((uint16_t)(17 + i) << 4));
+    }
+    /* The menu also borrows OBJ slots 0/1/5/6/7 for the inventory ramps:
+     * restore the canonical overworld ramps so heroes, mimics, wizards,
+     * merchants and mayors read their own colors again.  Battle entry
+     * reprograms its own scratch slots itself, and riders (slots 2-4)
+     * are never touched by the menu. */
+    if (g_is_cgb) {
+        for (i = 0; i < 5; i++) {
+            ow_obj_program(mat_obj_restore_slots[i],
+                           mat_obj_restore_bytes + ((uint16_t)i << 3));
+        }
     }
     s_battle_tiles_loaded = 0;
     s_ap_pip_loaded = 0;

@@ -65,6 +65,15 @@ COMBAT_MAP = [
     (5, 4, "combat_middle_right_boss_2"),
 ]
 
+# (col, row, combat tile id). Card-menu material icons (row 6, 0-based
+# row 5): the generic material ingot plus the wood-material log.  Both
+# render as menu OAM (never BG), tinted per card material at runtime
+# via the inventory1-4 OBJ alias ramps (tools/palette_slots.json).
+MATERIAL_MAP = [
+    (9, 5, "combat_material_icon"),
+    (10, 5, "combat_wood_material_icon"),
+]
+
 # (col, row, actors tile id, enemies tile id or None). Non-2 set feeds both
 # tilesets (slime-lord OW); the _2 set exists only in actors/.
 OW_MAP = [
@@ -178,6 +187,9 @@ for _tid in [t for _, _, t in DOG_MAP]:
 for _tid in [t for _, _, t in KNIGHT_COMBAT_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in MATERIAL_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in KNIGHT_OW_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/enemies.json",
                         "tools/level_editor/public/tiles/enemies")
@@ -275,6 +287,11 @@ def main():
         assert "combat_" + slugify(label) == tid, \
             "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
         jobs.append((combat_img, col, row, tid))
+    for col, row, tid in MATERIAL_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
 
     # Load each touched manifest once.
     manifests = {}
@@ -324,7 +341,7 @@ def main():
             for d in drift:
                 print("  %s" % d)
             return 1
-        print("reload-boss-tiles --check: clean (24 PNGs + swatches in sync).")
+        print("reload-boss-tiles --check: clean (26 PNGs + swatches in sync).")
         return 0
 
     for js, manifest in manifests.items():

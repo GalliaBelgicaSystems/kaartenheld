@@ -56,7 +56,6 @@ static void shop_row_quote(Game *g)
 void shop_content_render(void);
 /* Shared caret repaint (bank 11: bank 2 is full, and the cursor is pure
  * WRAM math needing no ROM tables). */
-void item_menu_cursor_banked(void);
 void item_menu_step_banked(void);
 
 /* Direction nav (AGENTS.md 36): stage old index + direction + visible

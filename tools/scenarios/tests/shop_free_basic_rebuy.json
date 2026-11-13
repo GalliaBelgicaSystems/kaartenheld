@@ -110,7 +110,17 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "BRONZE SWORD"
+   "contains": "SWORD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 18,
+   "expected": 118
+  },
+  {
+   "type": "oam_attr",
+   "entry": 18,
+   "expected": 0
   },
   {
    "type": "screen_row",

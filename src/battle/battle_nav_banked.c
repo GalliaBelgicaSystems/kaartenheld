@@ -181,6 +181,11 @@ static void nav_confuse_auto(Battle *b)
     uint8_t i, k, idx, start;
     uint8_t staged_ring = 0;
     g_bk_byte_c = 0;
+    if (b->phase == BATTLE_PHASE_PLAYER_DEFEND &&
+        b->msg_id >= BATTLE_MSG_ICED_FOE &&
+        b->msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
+        return;
+    }
     slots = &s_battle_status[0];
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_POISON) break;

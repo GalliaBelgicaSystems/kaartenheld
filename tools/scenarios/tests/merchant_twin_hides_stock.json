@@ -47,7 +47,17 @@
     {
       "type": "screen_row",
       "row": 5,
-      "contains": "MYTHRIL BOW"
+      "contains": "BOW"
+    },
+    {
+      "type": "oam_tile",
+      "entry": 13,
+      "expected": 120
+    },
+    {
+      "type": "oam_attr",
+      "entry": 13,
+      "expected": 6
     },
     {
       "type": "screen_row_not_contains",
@@ -57,7 +67,17 @@
     {
       "type": "screen_row",
       "row": 6,
-      "contains": "STEEL SHIELD"
+      "contains": "SHIELD"
+    },
+    {
+      "type": "oam_tile",
+      "entry": 14,
+      "expected": 117
+    },
+    {
+      "type": "oam_attr",
+      "entry": 14,
+      "expected": 7
     },
     {
       "type": "collection_count",

@@ -1,0 +1,104 @@
+{
+  "name": "enemy_confuse_message",
+  "test": true,
+  "description": "Confused foe beat 1 presentation: when the poisoned attacker telegraphs, row 10 shows 'FOE IS CONFUSED!' in UI_COLOR_POISON (attr 4) while row 0 keeps 'FOE ATTACKS! DEFEND!', before any A press.",
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 10,
+        "max_hp": 10
+      }
+    },
+    "seed": 5002,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 1
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 1,
+      "duration": 3
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 1
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 70
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "FOE ATTACKS! DEFEND!"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "FOE IS CONFUSED!"
+    },
+    {
+      "type": "tilemap_attr",
+      "row": 10,
+      "col": 0,
+      "expected": 4
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "DAMAGE_RECEIVED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "ENTITY_DEFEATED"
+    }
+  ]
+}

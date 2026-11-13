@@ -141,16 +141,32 @@ void battle_screen_update(Game *g)
                 battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
             } else if (input_pressed(INPUT_A) &&
                        vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                       vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
-                /* Ice-locked foe: acknowledge the failed swing -- no
-                 * defense to stage, nothing incoming.  A skips straight to
-                 * the resolve beat (the message stays up through it and the
-                 * next telegraph consumes it); the timer/SELECT path
-                 * converges in battle_execute_combo's matching gate. */
-                vg->battle.combo_count = 0;
-                vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-                vg->battle.delay_timer = 30;
-                vg->battle.dirty = BATTLE_DIRTY_ALL;
+                       vg->battle.msg_id >= BATTLE_MSG_ICED_FOE &&
+                       vg->battle.msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
+                /* Acknowledgement beats (msg ids 5-7 are contiguous).
+                 * Iced (5): nothing staged, nothing incoming -- resolve
+                 * the no-op through the shared combo path.  Confused:
+                 * the FIRST A reveals who takes the redirected swing
+                 * (6 -> 7), the SECOND resolves it.  SELECT and the
+                 * timer resolve through the same shared combo call
+                 * (the banked resolve promotes a beat-1 msg itself),
+                 * so no path strands on stale text.  The hero stages
+                 * nothing either way: every A press is consumed here,
+                 * so no card selection is reachable during the beat.
+                 * Cursor/target drift stays reachable but is
+                 * cosmetic-only -- it cannot stage (A is consumed), it
+                 * cannot retarget the swing (the victim is fixed slot
+                 * order in the banked resolve), and both positions
+                 * persist across turns by design.  Gating it too would
+                 * cost fixed-bank bytes the budget does not have
+                 * (AGENTS.md 52.18: the fixed bank links hard against
+                 * 0x8000), for no gameplay effect. */
+                if (vg->battle.msg_id == BATTLE_MSG_CONFUSED_FOE) {
+                    vg->battle.msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
+                    vg->battle.dirty = BATTLE_DIRTY_ALL;
+                } else {
+                    battle_execute_combo((Battle *)&vg->battle);
+                }
             } else if (input_pressed(INPUT_A)) {
                 battle_card_select((Battle *)&vg->battle);
             } else if (input_pressed(INPUT_B)) {

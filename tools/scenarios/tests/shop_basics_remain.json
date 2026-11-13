@@ -44,7 +44,17 @@
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "WOOD SWORD"
+   "contains": "SWORD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 13,
+   "expected": 121
+  },
+  {
+   "type": "oam_attr",
+   "entry": 13,
+   "expected": 5
   },
   {
    "type": "screen_row",
@@ -54,12 +64,32 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "WOOD SHIELD"
+   "contains": "SHIELD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 14,
+   "expected": 121
+  },
+  {
+   "type": "oam_attr",
+   "entry": 14,
+   "expected": 5
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "BRONZE SWORD"
+   "contains": "SWORD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 15,
+   "expected": 118
+  },
+  {
+   "type": "oam_attr",
+   "entry": 15,
+   "expected": 0
   },
   {
    "type": "inventory",

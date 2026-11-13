@@ -65,31 +65,30 @@ its deck membership.
 
 Row 0 holds the tab labels (`DECK QUEST HERO GEM`); row 1 the `^` caret
 under the active tab. The DECK list starts at row 2 with a column
-header (`AP MATERIAL TYPE`) at row 3:
+header (` PILE     |  DECK`) at row 3:
 
 ```text
 DECK QUEST HERO GEM        <- row 0 (tabs)
 ^                          <- row 1 (caret under DECK)
   * FILTER/SORT *           <- row 2 (A opens the picker, see §4)
-   AP MATERIAL TYPE     <- row 3 (column header)
->   1 WOOD SWORD         4  <- rows 4+: caret, weapon icon, AP cost,
-    1 WOOD SHIELD        4     element-colored full name, decked count
-    1 BRONZE SWORD       2
+ PILE     |  DECK           <- row 3 (column header)
+>  S1   2 |    S1   2       <- rows 5-12: caret, material ingot (OAM),
+   S1   4 |    S1   0          rider (OAM), weapon icon + letter, AP cost,
+   S2   0 |    S2   3          AP icon, per-side count; '|' separates the
+   R2   0 |    R2   3          owned pool (left) from the deck (right)
 ```
 
-- **Full name**: `<MATERIAL> <WEAPON>` (e.g. `IRON SWORD`, `WOOD SHIELD`,
-  `MYTHRIL BOW`), element-colored: red for fire-rider cards, blue for ice,
-  purple for poison; plain cards stay default ink. The combat hand keeps the
-  short `<battle_type><power>` code (`SW1`, `HE1`, ...) since that is where
-  the abbreviation fits the HUD.
-- **Icons**: weapon tile at col 2 (wood palette), element rider OAM over the
-  col-1 elem cell plus its element color span; **AP cost** digit at cols 3-4.
-- **Membership column** (rightmost): the decked-copy count as a digit
-  (`0` = none, `1`..`n` = copies in the deck), so partial stacks (starter
-  4x WOOD SWORD / 4x WOOD SHIELD / 2x BRONZE SWORD, one shop ring) are visible
-  at a glance.
-- SPECIAL cards (e.g. SHOPKEYS) are not deckable and are hidden from the list.
-- up to 11 cards visible (rows 4-14) under the row-3 column header;
+- **No material words**: the material shows as the tinted OAM ingot
+  (bronze/iron/steel/mythril/wood via the inventory1-4 OBJ ramps);
+  the weapon shows its icon tile plus the buffer letter (`S/H/B/D/R`).
+- **Two columns**: left N = owned-but-not-decked ("pile"), right N =
+  decked. Same identities, same order on both sides, so rows stay 1:1.
+- **Icons**: weapon tile on FIELD (white) with the element rider OAM
+  over the rider cell; **AP cost** digit with the pip tile behind it,
+  gold; `!` when the cost is above the energy pool (gate preview).
+- SPECIAL cards (e.g. SHOPKEYS) are not deckable and are hidden from
+  the list.
+- Up to 8 cards visible (rows 5-12) under the row-3 column header;
   scrolling shifts the window (the FILTER/SORT row scrolls
   off once the caret leaves the first window).
 
@@ -99,9 +98,11 @@ DECK QUEST HERO GEM        <- row 0 (tabs)
 |---|---|---|
 | START | overworld / menu | open / close the menu |
 | LEFT / RIGHT | menu | switch tab (RIGHT advances, LEFT goes back) |
+| LEFT / RIGHT | card rows | flip owned-pile / deck side (same row) |
 | UP / DOWN | card rows | move cursor by entry (UP from first card reaches the FILTER/SORT row) |
 | UP / DOWN | quest rows | move cursor by entry (wraps around) |
-| A | card row | add one copy; clear all copies when fully decked (§3) |
+| A | left (pile) row | move one copy to the deck (gated: pool, caps, identity) |
+| A | right (deck) row | move one copy back to the pile (MIN-guarded, one at a time) |
 | SELECT | DECK row | detail submenu (§5) |
 | SELECT | QUEST row | quest detail: giver, objective, progress (§5) |
 | B | main list, not on top row | jump to the top row (**step 1**) |
@@ -228,11 +229,11 @@ semantic assertion names.
 
 | Scenario | Proves |
 |---|---|
-| `cards_menu_toggle` | A on a maxed card clears every decked copy, adds rebuild the count, events emitted (13-card replaced deck) |
+| `deck_move_sides` | LEFT A on a maxed row is a silent no-op; RIGHT flips side (footer reads A:TO PILE), A sends one copy back (REMOVED x1); LEFT flips back, A re-adds it (ADDED x1); per-side OAM ingots both sides |
 | `fallback_deck_starter` | emptying the persistent deck routes battles onto the packed starter-deck fallback (the pile unpacks to all ten cards and deals only real card type codes) |
 | `battle_start_shuffle` | battle start shuffles the draw pile: the opening hand is not the persistent DECK-menu order |
 | `deck_min_floor` | removals walk 10 → 8 → grow to 11 → exactly 5; a further removal at the floor is rejected |
-| `deck_min_ui_message` | real gameplay reaches the floor boundary: sword clear allowed, shield clear rejected with the transient DECK MIN 5 message |
+| `deck_min_ui_message` | real gameplay reaches the floor boundary: single-copy removes walk 10 -> 5, then one more remove is rejected with the transient DECK MIN 5 message |
 | `reshuffle_turn` | one play per phase drains the pile in ~6 phases; the dry-pile reshuffle turn fires once and consumes the action |
 | `reshuffle_preserves_limits` | HE1 (ring) depletes after 3 plays and stays dead across reshuffle; SW keeps cycling |
 | `herb_purchase_flow` | buy herb → add to deck → battle heal 5 |

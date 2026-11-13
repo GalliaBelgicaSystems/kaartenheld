@@ -27,13 +27,13 @@
  * scaled per instance at apply). */
 
 static const StatusDefinition s_status_defs[STATUS_DEF_COUNT] = {
-    /* id            tick  max  dur */
-    { STATUS_NONE,     0,   0,   0 },
-    { STATUS_POISON,   0,   5,   2 },
+    /* id            tick  max                        dur */
+    { STATUS_NONE,     0,   0,                         0 },
+    { STATUS_POISON,   0,   STATUS_POISON_MAX_STACKS,  STATUS_POISON_DURATION },
     /* BURN tick is per-instance scaled at apply (10% of the inflicting
      * hit, min 1); the table slot stays 0 so no flat fallback exists. */
-    { STATUS_BURN,     0,   3,   3 },
-    { STATUS_FREEZE,   0,   5,   2 }
+    { STATUS_BURN,     0,   3,                         3 },
+    { STATUS_FREEZE,   0,   5,                         2 }
 };
 
 static const StatusDefinition *status_def(uint8_t id)
