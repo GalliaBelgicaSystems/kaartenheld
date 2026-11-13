@@ -472,7 +472,7 @@ WorldMoveResult world_update_actors(World *w)
 #ifdef DEBUG_BUILD
         g_bk_call_bank = 5;
 #else
-        g_bk_call_bank = 3;
+        g_bk_call_bank = 12;
 #endif
         g_bk_call_target = (uint16_t)&world_patrol_slot_banked;
         banked_call_run();

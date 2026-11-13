@@ -303,6 +303,7 @@ def main():
         "_enemy_deck_setup_banked": "enemy deck setup (bank 2)",
         "_battle_card_undo_banked": "battle card undo (bank 11)",
         "_battle_counter_rider_banked": "post-swing counter poison rider (bank 11)",
+        "_battle_telegraph_banked": "enemy telegraph body (bank 12)",
         "_ui_update_battle_banked": "battle render (bank 3)",
         "_actor_load_scene_banked": "scene actor loader (bank 2)",
         "_chest_is_open_banked": "chest-sprite open resolver (actor tables bank)",

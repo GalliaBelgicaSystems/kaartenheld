@@ -19,7 +19,9 @@
  * caller (battle_execute_combo) already confirmed the attacker is
  * poisoned, but this body re-derives everything it needs from the
  * staged Battle* + WRAM (no fixed calls while banked).  Status slots
- * are plain WRAM (s_battle_status), readable directly. */
+ * are plain WRAM (s_battle_status), readable directly.  The telegraph
+ * body (bank 12) carries the same predicate locally, for the same
+ * no-cross-bank-call reason; both read the same WRAM. */
 static uint8_t confuse_attacker_poisoned(Battle *b, uint8_t atk)
 {
     StatusSlots *slots;

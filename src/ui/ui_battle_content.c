@@ -1010,24 +1010,17 @@ static void battle_combo_warn_text(const volatile Battle *battle)
     battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
 }
 
-/* Poison check for the confusion painters below: the hero (slot 0)
+/* Poison check for the confused-hero painters below: slot 0 (the hero)
  * carries STATUS_POISON.  Reads WRAM directly (bank-3 code runs with
  * WRAM always live); the fixed screen update stages the random hand
- * through the banked nav body, this only names it.  foe = 0 asks the
- * hero (slot 0, auto-play loss); foe != 0 asks the telegraphed attacker
- * (slot = live index + 1, redirected swing): one loop serves both, so
- * the forecast and the message row cannot disagree on what counts as
- * confused. */
-static uint8_t battle_confused_paint(const volatile Battle *battle, uint8_t foe)
+ * through the banked nav body, this only names it.  The telegraphed
+ * attacker's side of this question lives in the telegraph body (bank
+ * 12), which stages the msg ids the foe row keys off. */
+static uint8_t battle_confused_paint(const volatile Battle *battle)
 {
-    const StatusSlots *slots;
+    const StatusSlots *slots = &s_battle_status[0];
     uint8_t i;
-    if (foe) {
-        if (battle->attacking_enemy_idx >= battle->enemy_count) return 0;
-        slots = &s_battle_status[(uint8_t)(battle->attacking_enemy_idx + 1)];
-    } else {
-        slots = &s_battle_status[0];
-    }
+    if (!battle) return 0;
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == STATUS_POISON) return 1;
     }
@@ -1105,16 +1098,21 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
         return;
     }
-    /* Confused attacker (poison): the row names the redirected swing
-     * instead of the normal forecast -- the attacker hits its own side
-     * this turn.  No acknowledge gate (unlike the ice fizzle above):
-     * the defend proceeds normally, the damage just lands elsewhere.
-     * Same truth-in-VRAM discipline as every other branch here. */
-    if (battle_confused_paint(battle, 1) &&
-        (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
-         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH)) {
-        battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
-        battle_color_span(0, combo_row, 15, UI_COLOR_POISON);
+    /* Confused attacker (poison): msg 6 waits for the A acknowledgement
+     * ("FOE IS CONFUSED!"), msg 7 is the revealed outcome the A press
+     * stages before the redirected swing resolves.  The ally-vs-self
+     * verdict rides g_battle_confuse_self (set by the telegraph with the
+     * same rule the resolve uses), so this is a plain flag read. */
+    if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE ||
+        battle->msg_id == BATTLE_MSG_CONFUSED_OUTCOME) {
+        if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE) {
+            battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
+        } else if (g_battle_confuse_self) {
+            battle_draw_text_line(0, combo_row, "FOE HURTS ITSELF!", 20);
+        } else {
+            battle_draw_text_line(0, combo_row, "FOE ATTACKS ALLIES!", 20);
+        }
+        battle_color_span(0, combo_row, 19, UI_COLOR_POISON);
         return;
     }
     /* Confused hero (poison): the row names the lost turn instead of any
@@ -1122,7 +1120,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * Same rows the Lord's focus text uses (9 + this one): the message is
      * the turn's whole story.  Text path throughout (buffer, mirror and
      * VRAM stay truthful for asserts). */
-    if (battle_confused_paint(battle, 0) &&
+    if (battle_confused_paint(battle) &&
         (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
          battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
         battle_draw_text_line(0, combo_row, "You play randomly!", 18);
@@ -1547,11 +1545,12 @@ static const char *battle_banner_text(const volatile Battle *battle)
         return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
-        /* An ice-locked resolve (msg 5 survives the acknowledge press)
-         * blocked nothing, so claiming "BLOCKED ATTACK!" would lie --
-         * the beat stays quiet while the combo row below keeps naming
-         * the fizzle. */
-        if (battle->msg_id == BATTLE_MSG_ICED_FOE) return "";
+        /* Iced (5) / confused (6,7) resolves blocked nothing: the swing
+         * either never landed or landed on the foe's own side, so
+         * claiming "BLOCKED ATTACK!" would lie -- the beat stays quiet
+         * while the combo row below names what actually happened. */
+        if (battle->msg_id >= BATTLE_MSG_ICED_FOE &&
+            battle->msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) return "";
         return "BLOCKED ATTACK!";
     }
     if (battle->phase == BATTLE_PHASE_SHUFFLE) return "RESHUFFLE!";
@@ -1687,7 +1686,7 @@ void ui_update_battle_banked(void)
                   battle->result == BATTLE_RESULT_DEFEAT))) {
                 battle_draw_text_line(0, 9, (const char *)g_despair_row9, 18);
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
-            } else if (battle_confused_paint(battle, 0) &&
+            } else if (battle_confused_paint(battle) &&
                        (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
                         battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
                 /* Confused hero (poison): the message row names the lost

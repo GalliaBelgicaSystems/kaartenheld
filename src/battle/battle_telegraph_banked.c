@@ -1,4 +1,4 @@
-#pragma bank 10
+#pragma bank 12
 #pragma disable_warning 110
 
 #include "battle.h"
@@ -6,6 +6,24 @@
 #include "rpg/status.h"
 #include "telemetry.h"
 #include "telemetry_ring.h"
+#include "game.h"
+
+/* Same predicate as battle_defend_content.c's confuse_attacker_poisoned
+ * (bank 10), duplicated here because this body now lives in its own bank
+ * (12) and a banked body must never call across banks (AGENTS.md
+ * 52.11.1).  Both read the same WRAM status slots, so they cannot
+ * disagree about what "confused" means. */
+static uint8_t teleg_attacker_confused(const Battle *b, uint8_t atk)
+{
+    const StatusSlots *slots;
+    uint8_t i;
+    if (atk >= b->enemy_count) return 0;
+    slots = &s_battle_status[(uint8_t)(atk + 1)];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return 1;
+    }
+    return 0;
+}
 
 /* ── Enemy telegraph card draw (ROM bank 10) ─────────────────────────
  * Hosts battle_update()'s ANIM/SHUFFLE-tail telegraph block out of the
@@ -138,5 +156,24 @@ void battle_telegraph_banked(void)
          * Lord of Slimes) reach this: three SH2 shields (3 x 2 = 6)
          * or one steel shield (power 6, stocked by the merchant)
          * blocks it exactly (docs/enemies_ranking.md §5.2). */
+    }
+    /* Confused attacker (poison): the swing will turn on its own side.
+     * Stage the first acknowledgement beat (msg 6, "FOE IS CONFUSED!",
+     * waits for A) plus the outcome flag the A press reveals.  The
+     * ally-vs-self verdict uses the same rule as confuse_pick_victim
+     * (first live enemy that is not the attacker, else self), decided
+     * here so the render needs only a flag read (bank 3 is full in
+     * release).  Only for a normal swing: an iced fizzle already owns
+     * msg 5, and a killing/fizzled beat never redirects. */
+    if (b->msg_id == 0 && teleg_attacker_confused(b, atk)) {
+        b->msg_id = BATTLE_MSG_CONFUSED_FOE;
+        b->msg_ttl = 0;
+        g_battle_confuse_self = 1;
+        for (gi = 0; gi < b->enemy_count; gi++) {
+            if (gi != atk && b->enemies[gi].hp != 0) {
+                g_battle_confuse_self = 0;
+                break;
+            }
+        }
     }
 }

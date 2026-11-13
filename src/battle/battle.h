@@ -87,6 +87,17 @@ typedef enum {
  * see battle_update).  An explicit empty SELECT keeps the historic
  * auto-play of the highlighted card (see battle_execute_combo). */
 #define BATTLE_MSG_ICED_FOE 5
+/* Confused attacker (poison), two-beat acknowledgement (bank 12
+ * telegraph stages the first): msg 6 is the "FOE IS CONFUSED!" beat
+ * that waits for A, msg 7 is the staged outcome the A press reveals
+ * before the redirected swing resolves.  Which outcome (an ally takes
+ * it vs the attacker hurting itself) rides in g_battle_confuse_self,
+ * decided at telegraph time by the same rule the resolve uses, so the
+ * render needs no status scan (bank 3 is full in release, AGENTS.md
+ * 52.18). */
+#define BATTLE_MSG_CONFUSED_FOE 6
+#define BATTLE_MSG_CONFUSED_OUTCOME 7
+extern uint8_t g_battle_confuse_self;
 
 typedef struct {
     Combatant player;
@@ -306,7 +317,7 @@ void battle_stage_combo_banked(void);
  * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
 /* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
- * ROM bank 10): g_bk_ptr_a = Battle*.  Draws the next enemy card
+ * ROM bank 12): g_bk_ptr_a = Battle*.  Draws the next enemy card
  * (freeze/poison/normal/deckless branches), stages msg + shake state,
  * and emits its telemetry inline (debug builds).  The SFX tail stays
  * in the fixed wrapper (battle_update). */
@@ -336,6 +347,9 @@ void battle_counter_prep_banked(void);
  * bank is full (AGENTS.md 52.18) -- so the tiny dispatch lives in
  * battle_execute_combo and the logic lives here. */
 void battle_counter_rider_banked(void);
+/* DEBUG-only friendly-fire defeat report (src/battle/battle_ff_defeat_banked.c,
+ * ROM bank 12): no args; reads g_battle_confuse_victim + live enemy HP. */
+void battle_ff_defeat_banked(void);
 
 /* Banked no-arg deck-bridge body (src/battle/battle_init_content.c, ROM
  * bank 2), dispatched by battle_start via the WRAM trampoline. */

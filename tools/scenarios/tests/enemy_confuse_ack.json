@@ -1,0 +1,114 @@
+{
+  "name": "enemy_confuse_ack",
+  "test": true,
+  "description": "Confused foe acknowledgement, two beats: the telegraph stages 'FOE IS CONFUSED!' on the combo row (row 10); the first A reveals who takes the redirected blow ('FOE ATTACKS ALLIES!' when an ally stands, 'FOE HURTS ITSELF!' when alone) and the second A resolves the swing. Hero takes nothing either way (DAMAGE_RECEIVED 0).",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 1
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 1,
+      "duration": 3
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 1
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 70
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 10
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_RECEIVED",
+      "index": 0,
+      "value": 0
+    },
+    {
+      "type": "event_occurred",
+      "event": "ENTITY_DEFEATED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BATTLE_WON"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 10,
+        "max_hp": 10
+      }
+    },
+    "seed": 5002,
+    "start_battle": true
+  }
+}

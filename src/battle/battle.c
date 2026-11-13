@@ -46,6 +46,11 @@ uint8_t g_battle_confuse_hold;
  * the attacker when alone -- self-harm).  Uninitialized WRAM (bss);
  * rewritten by every defend resolve, so no battle-start init needed. */
 uint8_t g_battle_confuse_victim;
+/* Confused-attacker message outcome: 1 = no live ally, so the swing will
+ * hurt the attacker itself (0 = it has an ally to hit).  Staged by the
+ * telegraph body (bank 12) with the same rule the resolve uses, read by
+ * the bank-3 combo-row render when it names the acknowledgement. */
+uint8_t g_battle_confuse_self;
 /* Nonzero when anything in the battle animates on the 16-frame clock:
  * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
  * set (ORed by the bank-5 alt loader).  Uninitialized WRAM (bss);
@@ -909,16 +914,11 @@ void battle_execute_combo(Battle *b)
                  * counter paths only emit for the targeted attacker, so
                  * the redirected kill needs its own report -- including
                  * on a battle-ending blow (unlike the old else-if, which
-                 * swallowed it under the victory).  The despair floor
-                 * holds at 1 HP, so a floored victim never trips this. */
-                if (g_battle_confuse_victim != 0xFF &&
-                    g_battle_confuse_victim < b->enemy_count &&
-                    g_battle_confuse_victim != g_despair_slot &&
-                    b->enemies[g_battle_confuse_victim].hp == 0) {
-                    telemetry_emit(EVENT_ENTITY_DEFEATED,
-                                   (uint8_t)(g_battle_confuse_victim + 1),
-                                   0, 0, 0);
-                }
+                 * swallowed it under the victory).  The guard + emit live
+                 * in bank 12 (fixed bank is full, AGENTS.md 52.18). */
+                g_bk_call_bank = 12;
+                g_bk_call_target = (uint16_t)&battle_ff_defeat_banked;
+                banked_call_run();
 #endif
                 if ((counter_hit || g_battle_confuse_victim != 0xFF) &&
                     battle_all_enemies_dead(b)) {
@@ -1074,7 +1074,7 @@ void battle_update(Battle *b)
              * The SFX tail and the delay stay fixed (shared tail: every
              * telegraph path above marks an inbound strike or an
              * ice-locked fizzle, and the SFX id needs no staging). */
-            g_bk_call_bank = 10;
+            g_bk_call_bank = 12;
             g_bk_call_target = (uint16_t)&battle_telegraph_banked;
             g_bk_ptr_a = (void *)b;
             banked_call_run();

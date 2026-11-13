@@ -141,16 +141,22 @@ void battle_screen_update(Game *g)
                 battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
             } else if (input_pressed(INPUT_A) &&
                        vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                       vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
-                /* Ice-locked foe: acknowledge the failed swing -- no
-                 * defense to stage, nothing incoming.  A skips straight to
-                 * the resolve beat (the message stays up through it and the
-                 * next telegraph consumes it); the timer/SELECT path
-                 * converges in battle_execute_combo's matching gate. */
-                vg->battle.combo_count = 0;
-                vg->battle.phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-                vg->battle.delay_timer = 30;
-                vg->battle.dirty = BATTLE_DIRTY_ALL;
+                       (vg->battle.msg_id == BATTLE_MSG_ICED_FOE ||
+                        vg->battle.msg_id == BATTLE_MSG_CONFUSED_FOE)) {
+                if (vg->battle.msg_id == BATTLE_MSG_ICED_FOE) {
+                    /* Ice-locked foe: nothing to stage and nothing
+                     * incoming, so A acknowledges and the shared combo
+                     * path applies its no-op resolve. */
+                    battle_execute_combo((Battle *)&vg->battle);
+                } else {
+                    /* Confused foe: the first A reveals WHERE the
+                     * redirected swing lands (msg 7).  Later A presses
+                     * fall through to card selection, so staging a
+                     * defense (or a dagger counter) still works;
+                     * SELECT/timer resolves as usual. */
+                    vg->battle.msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
+                    vg->battle.dirty = BATTLE_DIRTY_ALL;
+                }
             } else if (input_pressed(INPUT_A)) {
                 battle_card_select((Battle *)&vg->battle);
             } else if (input_pressed(INPUT_B)) {
