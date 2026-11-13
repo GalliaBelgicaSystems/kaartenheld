@@ -1,0 +1,179 @@
+{
+  "name": "defend_dagger_poison_prior",
+  "test": true,
+  "description": "Pre-existing poison still redirects: enemy0 poisoned before the defend (debug apply_status, as if from an earlier round) turns its swing on enemy1 even though the counter daggers carry no rider -- the same-phase rule only suppresses the counter's own rider. Opener SW1 (1) plus suited DA2 counter (6) leave enemy0 at 8; the 3-damage swing hits the ally (DAMAGE_DEALT d1 = victim slot 2) and the hero takes nothing (DAMAGE_RECEIVED 0, hero stays at 10).",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 1,
+      "duration": 3
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 1
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 0,
+      "uses": 255
+    },
+    {
+      "type": "set_hand_card",
+      "index": 1,
+      "card_type": "DA",
+      "value": 2
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 1,
+      "cost": 0,
+      "uses": 255
+    },
+    {
+      "type": "set_hand_card",
+      "index": 2,
+      "card_type": "DA",
+      "value": 2
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 2,
+      "cost": 0,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 120
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 10
+    },
+    {
+      "type": "battle_enemy_hp",
+      "expected": 8
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_DEALT",
+      "index": 0,
+      "value": 6
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_DEALT",
+      "index": 1,
+      "value": 2
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_DEALT",
+      "index": 0,
+      "value": 3
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_RECEIVED",
+      "index": 0,
+      "value": 0
+    },
+    {
+      "type": "event_occurred",
+      "event": "STATUS_APPLIED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARDS_GREYED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BATTLE_WON"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 10,
+        "max_hp": 10
+      }
+    },
+    "seed": 5002,
+    "start_battle": true
+  }
+}

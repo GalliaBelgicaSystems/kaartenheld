@@ -538,6 +538,15 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
  * degrades to a no-op block on its own (see the resolve body).  Victory
  * is NOT set here: the caller checks it after the phase advance.
  *
+ * The poison on-hit rider does NOT run here: the eval-scaled chance
+ * is stashed in g_bk_byte_e for the caller's post-swing dispatch
+ * (bank 11, battle_rider_banked.c).  A poison applied by this counter
+ * must not confuse the swing it rode in on -- the attacker still hits
+ * the hero this turn; the poison counts from the next defend on.  Only
+ * pre-existing poison redirects (see the resolve body).  Non-poison
+ * riders keep the legacy immediate path below (loot legality keeps
+ * organic counters poison-only).
+ *
  * Fixed-bank budget (AGENTS.md 52.18): the prep body stages everything
  * the resolve needs (count, attacker, rider, deck width) because every
  * b->field access costs ~10 fixed-bank bytes under SDCC's 16-bit struct
@@ -589,22 +598,33 @@ static uint8_t battle_defend_counter(Battle *b)
     victim = &b->enemies[atk];
     combatant_take_damage(victim, counter_dmg);
     telemetry_emit(EVENT_DAMAGE_DEALT, counter_dmg, 0, 0, 0);
-    /* On-hit poison rider from the leading dagger (shared helper; rid is
-     * the prep-staged status id, g_bk_byte_c the eval-scaled chance).
-     * Guarded like the attack path: a killing counter must not poison
-     * (or grey the deck for) a corpse. */
-    if (victim->hp != 0) {
-        battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
-    }
+    /* Stash the eval-scaled rider chance for the caller's post-swing
+     * dispatch (g_bk_byte_e staging scratch: untouched by the resolve/
+     * discard/telemetry path; read now, before the resolve below
+     * clobbers g_bk_byte_c with SFX ids).  Non-poison riders apply
+     * immediately, exactly as before: only a poison counter-rider
+     * confuses, so only poison defers to the post-swing bank-11 body
+     * (loot legality: poison is dagger-only, fire/ice are bow-only --
+     * a counter can never roll burn/freeze organically, and curated
+     * burn/freeze daggers keep the legacy immediate path).  Guarded
+     * like the attack path: a killing counter must not poison (or grey
+     * the deck for) a corpse. */
+    if (victim->hp == 0) {
 #ifdef DEBUG_BUILD
-    /* No defeat telemetry for the unkillable desperation boss (its slot
-     * is cached in WRAM, 0xFF when no such battle): the floor keeps it
-     * at 1 HP and the hold opens instead.  Reporting a defeat that never
-     * happened breaks AGENTS.md §8/§22. */
-    else if (atk != g_despair_slot) {
-        telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
-    }
+        /* No defeat telemetry for the unkillable desperation boss (its slot
+         * is cached in WRAM, 0xFF when no such battle): the floor keeps it
+         * at 1 HP and the hold opens instead.  Reporting a defeat that never
+         * happened breaks AGENTS.md §8/§22. */
+        if (atk != g_despair_slot) {
+            telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
+        }
 #endif
+    } else {
+        g_bk_byte_e = g_bk_byte_c;
+        if (rid != STATUS_POISON) {
+            battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
+        }
+    }
     return 1;
 }
 
@@ -833,8 +853,9 @@ void battle_execute_combo(Battle *b)
          * below reads the telegraph attacker's live status and either
          * redirects (poisoned: friendly-fire branch, victim reported
          * through g_battle_confuse_victim) or resolves normally.  A
-         * counter that poisons this same phase therefore redirects the
-         * swing too -- one rule, no ordering special-cases.  The hero
+         * poison applied by this phase's counter lands only after the
+         * swing (see below), so the attacker still hits the hero this
+         * turn; from the next defend on the poison counts.  The hero
          * always pays for the staged hand (play + discard below run
          * either way); only the incoming damage changes address.
          * Empty defend still resolves below (empty block = full hit).
@@ -855,12 +876,23 @@ void battle_execute_combo(Battle *b)
          * (daggers/rings block nothing, so net can never go negative and
          * no heal path exists). */
         {
-            uint8_t counter_hit = battle_defend_counter(b);
+            uint8_t counter_hit;
+            counter_hit = battle_defend_counter(b);
             battle_defend_resolve(b);
             /* Runs before the discard so the played cards pay their
              * energy cost and leave play like any other staged hand --
              * confusion redirects the swing, it never refunds it. */
             battle_resolve_hand_discard(b);
+            /* Counter rider lands AFTER the swing resolves (bank-11 body,
+             * battle_rider_banked.c): a poison applied by this counter
+             * must not confuse the swing it rode in on (the attacker
+             * still hits the hero this turn); from the next defend on
+             * the poison counts and the swing turns on its allies. */
+            if (counter_hit) {
+                g_bk_call_bank = 11;
+                g_bk_call_target = (uint16_t)&battle_counter_rider_banked;
+                banked_call_run();
+            }
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;
             b->dirty = BATTLE_DIRTY_ALL;

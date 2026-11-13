@@ -124,9 +124,9 @@ void battle_defend_resolve_banked(void)
      * exactly like the counter path above.  The organic rider stages
      * for the fixed wrapper like any other swing (victim-slot routing
      * via g_battle_confuse_victim); telemetry here is DAMAGE only,
-     * victim slot in d1.  A counter applied this same phase already ran
-     * above and may have poisoned the attacker -- that poison counts:
-     * one rule, no ordering special-cases. */
+     * victim slot in d1.  Only poison already present when the defend
+     * began counts here: a counter rider lands after the swing (see
+     * the caller), so the swing it rode in on is never redirected. */
     if (confuse_attacker_poisoned(b, atk)) {
         uint8_t vic = confuse_pick_victim(b, atk);
         uint8_t dmg = b->enemy_incoming_dmg;
