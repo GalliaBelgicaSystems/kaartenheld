@@ -71,7 +71,15 @@
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
   },
   {
    "type": "wait",

@@ -83,6 +83,12 @@
       "contains": "FOE HURTS ITSELF!"
     },
     {
+      "type": "tilemap_attr",
+      "row": 10,
+      "col": 0,
+      "expected": 4
+    },
+    {
       "type": "event_not_occurred",
       "event": "DAMAGE_RECEIVED"
     }

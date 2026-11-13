@@ -1,0 +1,105 @@
+{
+  "name": "enemy_hero_both_confuse",
+  "test": true,
+  "description": "Hero poisoned during confused foe beat: when both attacker and hero carry poison into PLAYER_DEFEND, the foe's msg_id=6 beat owns the turn -- nav_confuse_auto must not auto-stage hero cards or skip the A prompt, row 10 keeps 'FOE IS CONFUSED!' in UI_COLOR_POISON, and row 9 omits the hero's 'Confused!' line.",
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 10,
+        "max_hp": 10
+      }
+    },
+    "seed": 5002,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 1,
+      "duration": 3
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 1
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 0,
+      "status": 1,
+      "duration": 3
+    },
+    {
+      "type": "wait",
+      "frames": 70
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 10
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "FOE IS CONFUSED!"
+    },
+    {
+      "type": "tilemap_attr",
+      "row": 10,
+      "col": 0,
+      "expected": 4
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 9,
+      "contains": "Confused!"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "DAMAGE_RECEIVED"
+    }
+  ]
+}

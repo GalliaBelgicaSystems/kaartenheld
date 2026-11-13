@@ -1084,36 +1084,33 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(19, combo_row, NULL, 1);
         return;
     }
-    /* Ice-locked foe (msg 5, staged by the telegraph body): the
-     * strike never lands, so the row names the failed swing instead of
-     * a bare "DMG 0" forecast or a stale pending preview.  The name lives
-     * on this row only (never the row-0 banner): it survives the
-     * acknowledge press into DEFENSE_RESOLVE so the 30-frame beat keeps
-     * naming the fizzle, and battle_update clears it on the resolve exit. */
-    if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
-         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
-         battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) &&
-        battle->msg_id == BATTLE_MSG_ICED_FOE) {
-        battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
-        battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
-        return;
-    }
-    /* Confused attacker (poison): msg 6 waits for the A acknowledgement
-     * ("FOE IS CONFUSED!"), msg 7 is the revealed outcome the A press
-     * stages before the redirected swing resolves.  The ally-vs-self
-     * verdict rides g_battle_confuse_self (set by the telegraph with the
-     * same rule the resolve uses), so this is a plain flag read. */
-    if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE ||
-        battle->msg_id == BATTLE_MSG_CONFUSED_OUTCOME) {
-        if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE) {
-            battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
-        } else if (g_battle_confuse_self) {
-            battle_draw_text_line(0, combo_row, "FOE HURTS ITSELF!", 20);
-        } else {
-            battle_draw_text_line(0, combo_row, "FOE ATTACKS ALLIES!", 20);
+    /* Ice-locked / confused foe (msgs 5..7, staged by the telegraph body):
+     * gated to the enemy-attack phases so a carried msg_id never shadows
+     * next turn's PLAYER_SELECT combo preview or the RESULT banner.
+     *  - msg 5: ice-locked fizzle (UI_COLOR_ICE), survives into resolve.
+     *  - msg 6: confused foe beat 1 ("FOE IS CONFUSED!"), awaits A.
+     *  - msg 7: confused foe outcome (g_battle_confuse_self picks
+     *    self vs allies), revealed on first A and held across resolve. */
+    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
+        battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
+        battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
+        if (battle->msg_id == BATTLE_MSG_ICED_FOE) {
+            battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
+            battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
+            return;
         }
-        battle_color_span(0, combo_row, 19, UI_COLOR_POISON);
-        return;
+        if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE ||
+            battle->msg_id == BATTLE_MSG_CONFUSED_OUTCOME) {
+            if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE) {
+                battle_draw_text_line(0, combo_row, "FOE IS CONFUSED!", 20);
+            } else if (g_battle_confuse_self) {
+                battle_draw_text_line(0, combo_row, "FOE HURTS ITSELF!", 20);
+            } else {
+                battle_draw_text_line(0, combo_row, "FOE ATTACKS ALLIES!", 20);
+            }
+            battle_color_span(0, combo_row, 19, UI_COLOR_POISON);
+            return;
+        }
     }
     /* Confused hero (poison): the row names the lost turn instead of any
      * forecast -- the pending hand was staged by chance, not the player.
@@ -1688,7 +1685,9 @@ void ui_update_battle_banked(void)
                 battle_color_span(0, 9, 18, UI_COLOR_FIELD);
             } else if (battle_confused_paint(battle) &&
                        (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
-                        battle->phase == BATTLE_PHASE_PLAYER_DEFEND)) {
+                        (battle->phase == BATTLE_PHASE_PLAYER_DEFEND &&
+                         (battle->msg_id < BATTLE_MSG_ICED_FOE ||
+                          battle->msg_id > BATTLE_MSG_CONFUSED_OUTCOME)))) {
                 /* Confused hero (poison): the message row names the lost
                  * turn ("Confused!") while the combo row below names what
                  * happens ("You play randomly!") -- the same two rows the

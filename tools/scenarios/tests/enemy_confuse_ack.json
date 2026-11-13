@@ -64,11 +64,31 @@
     },
     {
       "type": "press",
-      "button": "SELECT"
+      "button": "A"
     },
     {
       "type": "wait",
       "frames": 120
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 2
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
     }
   ],
   "assertions": [
@@ -79,6 +99,21 @@
     {
       "type": "battle_player_hp",
       "expected": 10
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 10,
+      "contains": "FOE ATTACKS ALLIES!"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 10,
+      "contains": "FOE IS CONFUSED!"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "DMG2"
     },
     {
       "type": "event_arg",

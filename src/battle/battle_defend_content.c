@@ -1,9 +1,10 @@
 /* Bank split (memory budget): the defend body lives in bank 10 (event/
  * status bank) in both builds -- release bank 4 filled up (rider OAM
  * pass + nav cluster + confuse branch) and debug bank 4 is
- * test-content-full.  Bank 10 already hosts battle-flow bodies (the
- * telegraph) and has room.  Keep in sync with the dispatch bank in
- * battle_defend_resolve() below (battle.c). */
+ * test-content-full.  Bank 10 has room for this helper alongside the
+ * event/status tables (the telegraph body lives in bank 12).  Keep in
+ * sync with the dispatch bank in battle_defend_resolve() below
+ * (battle.c). */
 #pragma bank 10
 
 #include "battle.h"
@@ -132,6 +133,9 @@ void battle_defend_resolve_banked(void)
     if (confuse_attacker_poisoned(b, atk)) {
         uint8_t vic = confuse_pick_victim(b, atk);
         uint8_t dmg = b->enemy_incoming_dmg;
+        if (b->msg_id == BATTLE_MSG_CONFUSED_FOE) {
+            b->msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
+        }
         g_battle_confuse_victim = vic;
         if (dmg != 0 && b->enemies[vic].hp != 0) {
             if (vic == g_despair_slot) {

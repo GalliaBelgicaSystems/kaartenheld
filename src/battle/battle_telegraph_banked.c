@@ -6,7 +6,6 @@
 #include "rpg/status.h"
 #include "telemetry.h"
 #include "telemetry_ring.h"
-#include "game.h"
 
 /* Same predicate as battle_defend_content.c's confuse_attacker_poisoned
  * (bank 10), duplicated here because this body now lives in its own bank
@@ -25,7 +24,7 @@ static uint8_t teleg_attacker_confused(const Battle *b, uint8_t atk)
     return 0;
 }
 
-/* ── Enemy telegraph card draw (ROM bank 10) ─────────────────────────
+/* ── Enemy telegraph card draw (ROM bank 12) ─────────────────────────
  * Hosts battle_update()'s ANIM/SHUFFLE-tail telegraph block out of the
  * fixed bank (which sits hard against 0x8000, AGENTS.md §52.18).  The
  * fixed wrapper in battle.c stages the Battle* through the WRAM

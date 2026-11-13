@@ -1069,7 +1069,7 @@ void battle_update(Battle *b)
     } else {
         if (vb->phase == BATTLE_PHASE_PLAYER_ANIM ||
             vb->phase == BATTLE_PHASE_SHUFFLE) {
-            /* Enemy telegraph card draw (bank-10 body: grey-locked /
+            /* Enemy telegraph card draw (bank-12 body: grey-locked /
              * normal / deckless branches, msg + shake staging, telemetry).
              * The SFX tail and the delay stay fixed (shared tail: every
              * telegraph path above marks an inbound strike or an
