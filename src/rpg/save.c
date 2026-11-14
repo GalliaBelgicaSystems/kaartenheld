@@ -25,9 +25,11 @@ static bool save_dispatch(uint8_t op, uint8_t slot, const GameState *state)
     return g_save_ok != 0;
 }
 
-bool save_present_slot(uint8_t slot)
+void save_claim_active(void)
 {
-    return save_dispatch(0, slot, (const GameState *)0);
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&save_commit_active_banked;
+    banked_call_run();
 }
 
 bool save_game_slot(uint8_t slot, const GameState *state)

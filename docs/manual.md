@@ -54,7 +54,7 @@ Press **START**, then choose from the menu:
 | **A** | Talk, open, confirm, or use what is in front of you. |
 | **B** | Go back or cancel. In battle, it also *flees*. |
 | **START** | Open your **Cards & Quests** screen. |
-| **SELECT** | Open the **Load Game** screen. |
+| **SELECT** | In battle, play your staged hand. |
 
 Inside menus, **LEFT** and **RIGHT** switch pages, **UP** and **DOWN** move
 the pointer, **A** chooses, and **B** backs out.
@@ -280,16 +280,20 @@ It is like a treasure hunt that never ends!
 
 ## 12. Saving Your Game
 
-Find the **Wizard** in town. He can save your adventure to one of **three
-slots**.
+Your adventure **saves itself**. Every time something important happens
+-- you earn an Ability Point, finish a quest, or walk into town or the
+castle -- the game writes your progress to the slot you picked when you
+started. A little spinning bar appears in the bottom-right corner while
+it saves.
 
-![Saving your game](manual_images/save.png)
+The **Wizard** in town can tell you all about it.
 
-Choose a slot and press **A**. Your Game Boy remembers even after you turn
-it off, so you can always come back later.
+To stop playing, open the quick screen with **START**, flip to the
+**QUEST** tab and choose **SAVE & QUIT**. Your Game Boy remembers even
+after you turn it off, so you can always come back later.
 
-To load a game, press **SELECT** while walking around, or choose
-**CONTINUE** on the title screen.
+To keep playing, choose **CONTINUE** on the title screen and pick your
+slot again.
 
 ---
 
@@ -299,8 +303,8 @@ To load a game, press **SELECT** while walking around, or choose
   what card you discovered!
 - **Lose a battle** if your health reaches zero. You will see the **GAME
   OVER** screen:
-  - **YES** — go back and load a saved game.
-  - **NO** — say goodbye and stop playing.
+  - **YES** -- go back to your last autosave.
+  - **NO** -- say goodbye and stop playing.
 
 Beat the **Lord of Slimes** in the Throne Room and you will see the happy
 ending. The land is saved, thanks to you!

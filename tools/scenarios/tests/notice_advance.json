@@ -1,0 +1,27 @@
+{
+ "name": "notice_advance",
+ "test": true,
+ "description": "The autosave notice auto-advances to the title screen after its hold with no input.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7012,
+  "screen": "SPLASH"
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 300
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  }
+ ]
+}

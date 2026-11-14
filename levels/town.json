@@ -508,7 +508,7 @@
       "properties": {
         "entity_id": "ENTITY_ID_WIZARD",
         "display_name": "WIZARD",
-        "save": 0,
+        "dialogue": "DIALOGUE_ID_WIZARD_AUTOSAVE",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [

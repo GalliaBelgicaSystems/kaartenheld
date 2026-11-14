@@ -830,36 +830,37 @@ def walk_a(planner, checks, sram_out=None):
     s.check("quick screen closed", not s.text_has("DECK QUEST"),
             expected="closed", actual="open")
 
-    # Wizard save (slot 1).  Capture only on a stable menu/message —
-    # removes the known-unstable 12-wizard-save frame (§56.2).
-    # The shop/quick screen ran in the village; return to town for the
-    # wizard (he never moved). Drop god-mode first so SRAM keeps base
-    # 10/10 HP (town/village legs are ambush-free).
+    # Save & quit (QUEST tab): A opens the quit confirm, YES writes
+    # the active slot and lands on the title screen.  Drop god-mode
+    # first so SRAM keeps base HP (town/village legs are ambush-free).
+    # Snapshot SRAM for walk-l wherever we stand (no town trip needed:
+    # quitting works from any overworld).
     ungod_mode(s)
-    # Wizard stands at (6,10) with the house walling his south side, so
-    # talk to him from the north ((6,9), facing DOWN).  The old (6,11)
-    # spot is inside the house since the town layout moved it there.
-    follow(s, planner, "village_area", s.pos(), "town", (6, 9))
-    s.settle_scene(expected_scene=SCENE_TOWN)
-    _walk_path(s, planner.path("town", s.pos(), (6, 9)) or [])
-    s.check("wizard save menu", s.press_until(
-        "down", lambda: s.text_has("SAVE GAME"), label="save menu"),
-        expected="SAVE GAME", actual="none")
-    s.tick(20)
-    s.shoot("12-wizard-save", need="SAVE GAME")
+    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+                  label="quick screen")
+    tabbed = False
+    for _ in range(8):
+        if s.bg_text()[1][5] == "^":
+            tabbed = True
+            break
+        s.press("right", settle=30)
+    s.check("quest tab caret", tabbed, expected="^ at col 5",
+            actual=s.bg_text()[1])
     s.press("a", settle=30)
-    s.check("SAVED message", s.wait_for(lambda: s.text_has("SAVED"),
-                                        ticks=120),
-            expected="SAVED", actual="none")
-    # Let the transient TTL clear so the capture is byte-stable.
-    s.press_until("a", lambda: s.stable(
-        lambda: not s.text_has("SAVED"), frames=45), tries=2,
-        settle=20, timeout=90, label="message ttl")
-    s.shoot("13-wizard-saved")
+    s.check("quit confirm", s.wait_for(lambda: s.text_has("SAVE AND QUIT"),
+                                       ticks=120),
+            expected="SAVE AND QUIT", actual="none")
+    s.shoot("12-quit-confirm", need="SAVE AND QUIT")
+    s.press("a", settle=30)
+    s.check("title after quit", s.wait_for(lambda: s.text_has("PRESS START"),
+                                           ticks=120),
+            expected="PRESS START", actual="none")
+    s.shoot("13-quit-title", need="PRESS START")
 
     if sram_out is not None:
+        st = s.reader.scene_state()
         sram_out.append((s.stop_save_ram(), dict(
-            scene=SCENE_TOWN, pos=(6, 9),
+            scene=st["scene_id"], pos=(st["player_x"], st["player_y"]),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
             ring=s.reader.collection_count(CARD_IRON_RING))))
     else:

@@ -1,0 +1,58 @@
+{
+ "name": "autosave_carl_spar",
+ "test": true,
+ "description": "Starting Carl's spar hands over +1 AP and checkpoints the active slot: YES on the offer starts the fight with pool 2 and GAME_SAVED fired.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "variable",
+   "variable": "ENERGY_POOL",
+   "expected": 2
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_STARTED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_SAVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 15,
+   "y": 8,
+   "facing": "LEFT"
+  },
+  "seed": 4242,
+  "flags": {
+   "FIELD_CHEST": true
+  }
+ }
+}

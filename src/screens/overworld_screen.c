@@ -11,6 +11,10 @@
 #include "banked.h"
 #include "carl_tutorial.h"
 
+/* Bank-12 town/castle entry autosave probe (src/game/autosave_banked.c):
+ * stages nothing, sets g_autosave_pending on town/castle gates. */
+void game_map_autosave_banked(void);
+
 void start_battle_from_world(Game *g)
 {
     WorldActorRuntime *act;
@@ -105,6 +109,11 @@ void overworld_screen_update(Game *g)
         g->world.map_changed = false;
         scene_update_from_map(g);
         event_resolve_map_enter(g, g->world.map_id);
+        /* Town/castle entries checkpoint the active slot (the bank-12
+         * probe owns the map list; the game_update flush writes). */
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&game_map_autosave_banked;
+        banked_call_run();
         return;
     }
     if (move_res == MOVE_RESULT_ENCOUNTER) {
@@ -122,13 +131,6 @@ void overworld_screen_update(Game *g)
     if (input_pressed(INPUT_START)) {
         item_screen_reset(g);
         screen_change(g, SCREEN_ITEM);
-        return;
-    }
-    if (input_pressed(INPUT_SELECT)) {
-        g->save_slot_mode = 0;
-        g->save_slot_index = 0;
-        g->save_slot_message = 0;
-        screen_change(g, SCREEN_SAVE_LOAD);
         return;
     }
 
@@ -172,11 +174,6 @@ void overworld_screen_update(Game *g)
              * BUY; the item screen resets it on its own open. */
             g->item_menu_tab = 0;
             screen_change(g, SCREEN_SHOP);
-        } else if (engage == ENGAGE_SAVE) {
-            g->save_slot_mode = 1;
-            g->save_slot_index = 0;
-            g->save_slot_message = 0;
-            screen_change(g, SCREEN_SAVE_LOAD);
         }
     }
 }

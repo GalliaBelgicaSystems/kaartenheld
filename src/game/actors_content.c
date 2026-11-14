@@ -70,7 +70,7 @@ static const WorldActorDefinition g_town_actors[] = {
     {
         0, ENTITY_ID_WIZARD, 6, 10, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'W', "WIZARD", INTERACTION_SAVE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        'W', "WIZARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WIZARD_AUTOSAVE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },

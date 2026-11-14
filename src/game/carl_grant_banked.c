@@ -53,6 +53,8 @@ void carl_spar_grant_banked(void)
                     (uint8_t)VARIABLE_ID_ENERGY_POOL,
                     (uint8_t)(pool & 0xFF),
                     (uint8_t)((pool >> 8) & 0xFF), 0);
+    /* AP milestone: the game_update flush saves the active slot. */
+    g_autosave_pending = 1;
 
     /* Latch the one-shot (replica of game_flag_set: emits only on change;
      * the early return above guarantees the change).  Whether THIS spar

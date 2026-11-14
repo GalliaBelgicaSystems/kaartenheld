@@ -9,7 +9,12 @@
 #include "scene.h"
 #include "rpg/progression.h"
 #include "rpg/party.h"
+#include "rpg/save.h"
 #include "banked.h"
+
+/* Autosave request staging (see game.h): set by AP/quest/map triggers,
+ * flushed once per frame below. */
+uint8_t g_autosave_pending;
 
 /* Reset the render cache so the next render takes the full-redraw path.
  * Inline (not banked): pure WRAM writes, and the fixed bank has room
@@ -38,6 +43,7 @@ static void game_prepare_new_game(Game *g)
     g->frame = 0;
     g->game_over_choice = 0;
     g->shop_id = 0;
+    g->notice_frame = 0;
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);
@@ -196,6 +202,13 @@ void game_update(Game *g)
      * overworld HUD and the core snapshot reflect healing immediately. */
     g->world.player.hp = g->state.party.members[0].hp;
     g->world.player.max_hp = g->state.party.members[0].max_hp;
+
+    /* Autosave + save-spin upkeep (bank 12): a staged request flushes
+     * here, on canonical state (scene synced above).  One dispatch
+     * covers the flush and the future spinner upkeep. */
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&save_upkeep_banked;
+    banked_call_run();
 
 #ifdef DEBUG_BUILD
     debug_snapshot();

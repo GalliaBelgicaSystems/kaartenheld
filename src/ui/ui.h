@@ -158,6 +158,19 @@ void ic_menu_riders_load(void);
 #define ENEMY_OW_BASE            100u
 #define ENEMY_OW_LIMIT           128u
 
+/* Save-spin indicator: OAM entry 39 (actor slots use 0-37, markers
+ * 30-37, so 39 is always free) with tile 241.  Tile 241 is free in
+ * both fetch blocks (BG ids 241-245 sit between the AP-pip stream
+ * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
+ * no BG writer touches).  The per-phase glyph is re-streamed from the
+ * font each phase change, so no boot-time load and no clobber state.
+ * prop 0 = OBJ palette slot 0, the hero's ramp (always programmed). */
+#define SPIN_OAM_ENTRY           39u
+#define SPIN_TILE                241u
+#define SPIN_TTL                 120u
+#define SPIN_PX                  152u
+#define SPIN_PY                  136u
+
 /* Max shadow-OAM entries the actor pipeline can touch: player (entry 0),
  * hostile actors up to MAX_WORLD_ACTORS each a w*h sprite (max 2x2 = 4),
  * then static actors.  Used by the transition-hide sweep. */

@@ -1,0 +1,72 @@
+{
+ "name": "autosave_map_enter",
+ "test": true,
+ "description": "Walking through the field gate into town checkpoints the active slot: RIGHT enters TEST_TOWN (autosave fires), LEFT leaves for the field (no save), then a debug load of slot 1 restores the town-entry state.",
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "load",
+   "slot": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_TOWN"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 2,
+   "expected_y": 7
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_SAVED"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 39,
+   "expected": 241
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 30,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 1001,
+  "flags": {
+   "ARRIVED_TOWN": true,
+   "TUTORIAL_SKIPPED": true
+  }
+ }
+}

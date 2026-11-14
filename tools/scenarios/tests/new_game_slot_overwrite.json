@@ -1,0 +1,64 @@
+{
+ "name": "new_game_slot_overwrite",
+ "test": true,
+ "description": "Confirming the NEW GAME overwrite starts the intro: with slot 1 saved, START, A on NEW GAME, A on slot 1 (confirm), second A starts the intro at slide 0.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7001,
+  "screen": "TITLE"
+ },
+ "actions": [
+  {
+   "type": "save",
+   "slot": 1
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "INTRO"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "Mankind has"
+  }
+ ]
+}

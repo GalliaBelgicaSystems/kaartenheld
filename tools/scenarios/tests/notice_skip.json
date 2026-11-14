@@ -1,0 +1,35 @@
+{
+ "name": "notice_skip",
+ "test": true,
+ "description": "A on the boot notice skips straight to the title PRESS START.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7012,
+  "screen": "SPLASH"
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 160
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  }
+ ]
+}

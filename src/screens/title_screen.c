@@ -92,8 +92,14 @@ void title_screen_update(Game *g)
         case 0: /* NEW GAME */
             audio_play_sfx(SFX_CONFIRM);
             telemetry_emit(EVENT_NEW_GAME_STARTED, 0, 0, 0, 0);
-            g->intro_slide = 0;
-            screen_change(g, SCREEN_INTRO);
+            /* Slot pick first (the pick becomes the active autosave
+             * slot): the intro starts from the picker, and the fresh
+             * state saves to the slot when the last slide ends.
+             * save_slot_index resets to slot 1; the message is always
+             * clear here (every mode-2 exit clears it). */
+            g->save_slot_mode = 2; /* NEW-GAME slot pick */
+            g->save_slot_index = 0;
+            screen_change(g, SCREEN_SAVE_LOAD);
             break;
         case 1: /* CONTINUE */
             audio_play_sfx(SFX_CONFIRM);
