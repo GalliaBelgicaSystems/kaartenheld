@@ -1,0 +1,58 @@
+{
+ "name": "quest_tab_blip",
+ "test": true,
+ "description": "QUEST tab cursor moves play the battle-cursor blip: flipping DECK to QUEST (RIGHT, via the banked cycle body) then stepping the quest list (DOWN, via the banked quest nav) stages two requests played by game_update the same frame.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4247,
+  "variables": {
+   "QUEST_MONSTER_HUNT": 1,
+   "MERCHANT_QUEST": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
+  }
+ ]
+}

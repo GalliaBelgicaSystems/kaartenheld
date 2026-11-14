@@ -1,7 +1,7 @@
 {
  "name": "game_over_cursor_toggle",
  "test": true,
- "description": "Game-over cursor moves cleanly: DOWN flips the choice to NO, the YES row loses its '>' in both the semantic buffer and real VRAM (no duplicated cursor, AGENTS.md 52.25 family), and the move plays the battle-cursor blip.",
+ "description": "Game-over cursor moves cleanly both ways: DOWN flips NO (row 12 gains '>') and UP flips back to YES (row 11 regains '>', row 12 loses it) in buffer and real VRAM -- no duplicated cursor either direction (AGENTS.md 52.25 family). Each move plays the battle-cursor blip.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -20,6 +20,14 @@
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
  ],
  "assertions": [
@@ -29,22 +37,26 @@
   },
   {
    "type": "game_over_choice",
-   "expected": 1
+   "expected": 0
   },
   {
    "type": "screen_row",
-   "row": 12,
-   "contains": "> NO"
+   "row": 11,
+   "contains": "> YES"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 11,
+   "row": 12,
    "contains": ">"
   },
   {
    "type": "vram_row_not_contains",
-   "row": 11,
+   "row": 12,
    "contains": ">"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
   },
   {
    "type": "sfx_last",
