@@ -79,8 +79,7 @@ void notice_content_render(void)
     if (!g_is_cgb) {
         BGP_REG = 0x00;
     }
-    notice_draw_text(3, 8, "THIS GAME HAS", 13);
-    notice_draw_text(1, 9, "AN AUTOSAVE FEATURE", 19);
+    notice_draw_text(0, 8, " Progress autosaves ", 20);
 }
 
 void notice_fade_banked(void)
