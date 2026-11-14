@@ -11,8 +11,8 @@
  * thin input/transition wrapper around title_content_render().
  *
  * Flow: PRESS START -> NEW GAME / CONTINUE / SOUND.  SOUND toggles
- * g_sound_enabled (ON/OFF).  NEW GAME -> intro.  CONTINUE -> SAVE_LOAD
- * (load mode). */
+ * g_sound_enabled (ON/OFF).  NEW GAME -> slot picker -> intro.
+ * CONTINUE -> SAVE_LOAD (load mode). */
 
 void title_screen_render(Game *g)
 {
@@ -21,6 +21,12 @@ void title_screen_render(Game *g)
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_TITLE) {
         ui_clear_screen();
+        /* Own the full palette on entry (AGENTS.md §55.6): the boot
+         * notice leaves slot 0 white and DMG BGP white, and this body
+         * only programs the logo slot below.  Restore the base set
+         * (what ui_init left at boot) before the logo load. */
+        ui_set_cram_palette(0);
+        BGP_REG = 0xE4;
         /* Stream the bitmap logo into the world BG block before the bank-4
          * content body stamps its tilemap.  The loader's bank differs by
          * build: bank 5 in the harness build (layout-pinned), bank 11 in
