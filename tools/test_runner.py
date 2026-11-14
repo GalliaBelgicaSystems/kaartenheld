@@ -479,7 +479,7 @@ def run_scenario(scenario):
         # get_screen_dump) would step game time after the snapshot was
         # taken and skew the two.  The guard is a no-op when the halt
         # already landed in HBlank/VBlank.
-        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        has_vram_assert = any(a.get("type") in {"vram_row", "vram_row_not_contains"} for a in scenario.get("assertions", []))
         oam_needs_vblank = any(a.get("type") == "oam_bytes"
                                for a in scenario.get("assertions", []))
         if has_vram_assert or oam_needs_vblank:

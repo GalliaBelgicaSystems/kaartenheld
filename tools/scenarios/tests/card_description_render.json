@@ -1,7 +1,7 @@
 {
  "name": "card_description_render",
  "test": true,
- "description": "CARDS tab lists one row per owned card name (weapon icon + rider + material + AP + DECK d/o) from row 5, with the AP unit icon stamped at col 6/16 next to every AP pip (vram_row pins the two adjacent icon/pip tiles).",
+ "description": "CARDS tab lists one row per owned card name (weapon icon + rider + material + AP + DECK d/o) from row 5, with the AP unit icon stamped at col 6/16 next to every AP pip and the health rider icon stamped at the ring row's elem cell (vram_row pins the rider cell plus the two adjacent icon/pip tiles).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -58,7 +58,7 @@
   {
    "type": "vram_row",
    "row": 5,
-   "contains": ".  .. 1   .  .. 4"
+   "contains": ".. .. 1   .  .. 4"
   }
  ]
 }

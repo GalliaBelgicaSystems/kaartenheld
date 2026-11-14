@@ -199,12 +199,14 @@ void save_menu_update_banked(void)
             g->save_slot_index--;
             g->save_slot_message = 0;
             g->render_cache.valid = false;
+            g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
         }
     } else if (edges & (uint8_t)(1u << INPUT_DOWN)) {
         if ((uint8_t)(idx + 1) < SAVE_SLOT_COUNT) {
             g->save_slot_index++;
             g->save_slot_message = 0;
             g->render_cache.valid = false;
+            g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
         }
     } else if (edges & (uint8_t)((1u << INPUT_A) | (1u << INPUT_START))) {
         /* A/START confirms (START doubles as confirm so a start-only

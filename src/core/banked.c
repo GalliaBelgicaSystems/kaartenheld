@@ -46,6 +46,8 @@ uint8_t g_banked_call_tramp[64];
 uint8_t g_bk_byte_c;
 uint8_t g_bk_byte_d;
 uint8_t g_bk_byte_e;
+/* SFX request mailbox (BSS zero = none).  See banked.h. */
+uint8_t g_bk_sfx_req;
 
 extern void banked_copy_run(void);
 

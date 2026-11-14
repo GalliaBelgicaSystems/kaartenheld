@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "telemetry.h"
 #include "ui.h"
+#include "audio.h"
 #include "banked.h"
 
 /* The simple screens' render bodies (strings + text drawing) live in the
@@ -84,6 +85,7 @@ void game_over_screen_update(Game *g)
 
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
         g->game_over_choice = !g->game_over_choice;
+        audio_play_sfx(SFX_CURSOR);
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (g->game_over_choice == 0) {
@@ -109,7 +111,18 @@ void game_over_screen_render(Game *g)
 
     if (!rc->valid || rc->prev_screen != SCREEN_GAME_OVER ||
         g->game_over_choice != rc->prev_game_over_choice) {
-        ui_clear_screen();
+        /* Entry clears (LCD-off through game_render); a toggle repaints
+         * in place (AGENTS.md §36).  The old unconditional clear wrote
+         * VRAM directly with no PPU sync, so an LCD-on clear could drop
+         * cells into Mode 3 while the buffer claimed ' ' -- and the
+         * banked body's buffer-checked skip then never rewrote them,
+         * leaving the cursor on both rows.  Without the clear the
+         * buffer still holds the old choice, so the changed cells
+         * differ and the body rewrites exactly those cells through its
+         * per-store Mode-gated writes (BANKED_VRAM_WRITE): a dropped
+         * write cannot happen, and a skipped write means VRAM already
+         * shows the right tile. */
+        if (!rc->valid || rc->prev_screen != SCREEN_GAME_OVER) ui_clear_screen();
         g_bk_call_bank = 4;
         g_bk_call_target = (uint16_t)&game_over_content_render;
         g_bk_byte_a = g->game_over_choice;

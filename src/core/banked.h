@@ -164,6 +164,15 @@ extern uint8_t g_bk_byte_d;
  * same call.  BSS zero-init (no non-zero WRAM initializer, AGENTS.md
  * 52.27); the WRAM cost is one byte (stack-budget gate watches it). */
 extern uint8_t g_bk_byte_e;
+/* Same-frame SFX request for fully-banked menu nav (shop item steps,
+ * DECK nav/cycles, item QUEST/GEM row walks, save-picker slots): those
+ * bodies cannot call audio_play_sfx (fixed-bank call + MBC5 switches
+ * would strand their own bank), so a real cursor move stages
+ * (SFX id + 1) here and game_update() plays + clears it the same
+ * frame.  0 = none.  BSS zero-init (AGENTS.md 52.27).  Direct-input
+ * screens (game-over toggle, shop tab flips, picker row, dialogue
+ * advance/confirms) call audio_play_sfx fixed-side instead. */
+extern uint8_t g_bk_sfx_req;
 /* Generic post-tick request: a non-zero value asks game_update() to open
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */

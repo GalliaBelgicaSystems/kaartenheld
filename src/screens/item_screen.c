@@ -258,6 +258,7 @@ void item_screen_update(Game *g)
                 g->item_menu_pick_row =
                     (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
                 g->render_cache.valid = false;
+                audio_play_sfx(SFX_CURSOR);
             } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
                 if (g->item_menu_pick_row == 0) menu_cycle(g, 0, 0);
                 else menu_cycle(g, 1, 0);

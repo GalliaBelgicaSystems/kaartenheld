@@ -185,6 +185,7 @@ void shop_screen_update(Game *g)
         g->item_menu_index = 0;
         g->item_menu_scroll = 0;
         g->render_cache.valid = false;
+        audio_play_sfx(SFX_CURSOR);
         return;
     }
 

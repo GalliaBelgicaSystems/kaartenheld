@@ -1,0 +1,63 @@
+{
+ "name": "save_picker_noop",
+ "test": true,
+ "description": "A no-op cursor press stays silent: from game-over Continue into the save picker, DOWN past the last slot clamps without moving, so the third DOWN stages nothing -- exactly the two real moves blip.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 5003,
+  "screen": "GAME_OVER"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SAVE_LOAD"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
+  }
+ ]
+}

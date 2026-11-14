@@ -651,6 +651,11 @@ void item_menu_step_banked(void)
         s_cu_new_index = (uint8_t)(s_cu_old_index + 1);
     }
     cu_apply();
+    /* Blip only on a real move: at either end the clamp above leaves
+     * the index unchanged, and a no-op press must stay silent. */
+    if (s_cu_new_index != s_cu_old_index) {
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+    }
 }
 
 /* DECK per-side navigation (bank 11): UP/DOWN move over the active
@@ -681,6 +686,7 @@ void item_deck_nav_banked(void)
         if (item_row_visible(g, idx, newside)) {
             g->item_menu_side = newside;
             cu_scroll_into_view(g, idx);
+            g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
             return;
         }
         /* Top drawn row of the target side (maps are current: every
@@ -695,6 +701,7 @@ void item_deck_nav_banked(void)
         }
         g->item_menu_side = newside;
         g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
         return;
     }
     total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
@@ -738,7 +745,10 @@ void item_deck_nav_banked(void)
     /* No caret paint or cache touch here (AGENTS.md 36): the fixed
      * caller repaints the whole menu incrementally, so scrolling and
      * stepping never blink.  Just land the index; keep it drawable. */
-    g->item_menu_index = idx;
+    if (idx != g->item_menu_index) {
+        g->item_menu_index = idx;
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+    }
     if (idx == 0)
         g->item_menu_scroll = 0;
     else
@@ -844,4 +854,7 @@ void item_menu_cycle_banked(void)
         g->item_menu_side = 0;
         g->render_cache.valid = false;
     }
+    /* Unconditional: every cycle mutates (filter/sort advance one step,
+     * tabs always flip), so a dispatched cycle is always a real move. */
+    g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
 }

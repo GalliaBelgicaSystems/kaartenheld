@@ -818,6 +818,18 @@
         "#967139",
         "#b09266"
       ]
+    },
+    {
+      "sheet": "menu_riders",
+      "tile": [
+        1,
+        0
+      ],
+      "declared": "fight6",
+      "used_ramp": "fight6",
+      "off_colors": [
+        "#b6b6b6"
+      ]
     }
   ]
 }
