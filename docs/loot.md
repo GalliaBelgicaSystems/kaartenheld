@@ -1757,7 +1757,9 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   moves the arrows with it, and the curated mythril shop bow (2 uses)
   is the same macro, not a coincident literal.  Runtime sites read the
   staged AP cost (`LOOT_BOW_USES_FROM_AP`) instead of re-expanding the
-  formula, keeping bank 2 small.  Fire/ice now ride bows
+  formula, keeping bank 2 small.  The 6-count shows the 6_arrows_left
+  glyph (VRAM 112, former menu blank); cheaper bows no longer fall back
+  to the font damage digit.  Fire/ice now ride bows
   (swords never do), so the rider term is live.  Unlimited bows showed
   `USES INF` on the detail page; every loot bow now shows a finite
   count.
