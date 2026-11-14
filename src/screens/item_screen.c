@@ -58,7 +58,6 @@ static void menu_cycle(Game *g, uint8_t mode, uint8_t dir)
     g_bk_byte_a = mode;
     g_bk_byte_b = dir;
     banked_call_run();
-    audio_play_sfx(SFX_CURSOR);
 }
 
 /* Incremental list repaint (AGENTS.md 36): rebuilds the view maps from
@@ -285,7 +284,6 @@ void item_screen_update(Game *g)
             g_bk_byte_a = 2;
             banked_call_run();
             item_menu_repaint(g);
-            audio_play_sfx(SFX_CURSOR);
         } else {
             menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
         }
@@ -438,7 +436,6 @@ void item_screen_update(Game *g)
         g_bk_byte_a = input_pressed(INPUT_UP) ? 0 : 1;
         banked_call_run();
         item_menu_repaint(g);
-        audio_play_sfx(SFX_CURSOR);
         return;
     }
 }

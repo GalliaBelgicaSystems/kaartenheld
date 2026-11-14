@@ -277,6 +277,7 @@ void item_gem_nav_banked(void)
         return;
     }
     g->item_menu_index = new_index;
+    g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
     old_row = (uint8_t)(3 + (old_index << 1));
     new_row = (uint8_t)(3 + (new_index << 1));
     if (old_row != new_row) {

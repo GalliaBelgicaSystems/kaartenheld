@@ -71,7 +71,6 @@ static void shop_menu_step(Game *g, uint8_t down)
     g_bk_byte_b = down;
     g_bk_byte_c = g_shop_vis_count;
     banked_call_run();
-    audio_play_sfx(SFX_CURSOR);
 }
 
 /* SELL-tab apply: A sells one copy of the cursor row at its quoted

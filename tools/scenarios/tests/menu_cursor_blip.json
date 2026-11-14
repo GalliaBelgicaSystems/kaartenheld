@@ -1,0 +1,57 @@
+{
+ "name": "menu_cursor_blip",
+ "test": true,
+ "description": "Menu cursor moves play the battle-cursor blip: opening the item menu (START), stepping the DECK list down (DOWN) and back up (UP) leaves two CURSOR blips staged and played. Covers the staged-request path (banked nav bodies stage g_bk_sfx_req, game_update plays it the same frame).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7009,
+  "inventory": {
+   "POISON_DAGGER": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 2
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
+  }
+ ]
+}

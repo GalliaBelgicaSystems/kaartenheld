@@ -50,6 +50,20 @@ static void game_prepare_new_game(Game *g)
     game_render_reset(g);
 }
 
+/* Staged menu blip (banked nav bodies cannot call audio_play_sfx):
+ * a cursor move stages (SFX id + 1) in g_bk_sfx_req; this runs right
+ * after screen_update() and plays + clears it the same frame.  Own
+ * tiny frame (not inlined into game_update): the big update frame
+ * spills registers around any added call (AGENTS.md §52.19 family),
+ * costing ~2x the body itself. */
+static void game_consume_sfx(void)
+{
+    if (g_bk_sfx_req != 0) {
+        audio_play_sfx((uint8_t)(g_bk_sfx_req - 1));
+        g_bk_sfx_req = 0;
+    }
+}
+
 /* Start a fresh playthrough at the overworld (ENDING restart, GAME_OVER
  * YES, and the last intro slide's drop into the world). */
 void game_restart(Game *g)
@@ -106,6 +120,7 @@ void game_update(Game *g)
     g->frame++;
 
     screen_update(g);
+    game_consume_sfx();
     /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
      * overworld HUD marker refresh (quest "?" / pursuer "!") and Carl's
      * leave-the-field offer: two banked round-trips per frame through the
