@@ -56,10 +56,11 @@ bit, the tab through `screen_row`.
   the trial that maximizes the healed amount (extending runs instead of
   sitting idle at v=10), and combo_short_best lets a richer ringed pair
   beat a low short straight.
-* **Suited bonus**: N/A in practice, except low daggers.  Single-weapon
-  values skip by two (swords/bows 1,3,5,7,9; shields/rings 1,2,4,6,8),
-  so no three same-suit cards can ever be sequential -- except daggers
-  (1,2,3,5,7): DA1+DA2+DA3 is a suited run and takes the suited bonus
+* **Suited bonus**: N/A in practice, except low daggers and bows.
+  Single-weapon values skip by two (swords 1,3,5,7,9; shields/rings
+  1,2,4,6,8), so no three same-suit cards can ever be sequential --
+  except daggers and bows (both run 1,2,3,5,7): DA1+DA2+DA3 or
+  BO1+BO2+BO3 is a suited run and takes the suited bonus
   (COMBO_SUITED_BONUS) where the
   tier awards it.  The existing rule applies automatically, no
   special-casing needed.
@@ -139,7 +140,7 @@ player-only -- same as every other tier.
 * Mid game: 1,2,3 suited = DA1 + DA2 + DA3 (the only same-weapon run in
   the game: daggers run 1,2,3,5,7) → base 6 → DMG 9.  A mixed 1,2,3
   (e.g. SW1 + DA2 + SW3) scores the same base unsuited.
-* High end: 7,8,9 = steel sword + mythril dagger + mythril bow → base 24 → DMG 31.
+* High end: 7,8,9 = steel sword + mythril shield + mythril sword → base 24 → DMG 31.
 
 ## Implementation (done 2026-10-23, best-subset 2026-10-24)
 
@@ -173,8 +174,9 @@ player-only -- same as every other tier.
   cost of the whole feature is a widened tab condition + target swap
   (~6 B; the GEM nav/render bodies forward to the quest bodies in-bank
   so the fixed dispatch needs no new branches).  Bank-3 pressure funded
-  two evictions to the overflow bank: `save_op_banked` and
-  `loot_synth_banked` (both self-contained, single fixed dispatch each).
+  two evictions out of the fixed/overflow banks: `save_op_banked` (now
+  bank 12 with room to spare) and `loot_synth_banked` (bank 8; both
+  self-contained, single fixed dispatch each).
   `make memmap` + `make stack-budget` gates stay green.
 * Tests: `gem_combo_short` (3-run + 130-vs-120 pin: 4,5,6 gives 19),
   `gem_combo_4run` (top-three: 1,2,3,4 gives 11),

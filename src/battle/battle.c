@@ -461,9 +461,12 @@ void battle_defend_resolve(Battle *b)
                               b->enemies[g_battle_confuse_victim].hp != 0);
         }
         if (alive) {
-            status_apply(status_slots(rslot), rslot, g_bk_byte_c, 1, 0);
-            if (g_status_applied.id == STATUS_FREEZE) {
-                status_grey_apply(rslot, rwidth);
+            if (status_apply(status_slots(rslot), rslot, g_bk_byte_c, 1, 0)) {
+                if (g_status_applied.id == STATUS_FREEZE) {
+                    status_grey_apply(rslot, rwidth);
+                } else if (g_status_applied.id == STATUS_POISON) {
+                    g_poison_grace_mask |= (uint8_t)(1u << rslot);
+                }
             }
         }
     }

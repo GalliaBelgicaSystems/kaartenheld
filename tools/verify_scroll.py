@@ -107,15 +107,30 @@ def main():
     # auto-advances to title; START/A then walks title -> NEW GAME ->
     # intro slides -> overworld (same state-verified pattern as
     # verify_music.py; game frames and PyBoy ticks are not 1:1).
+    def _advance_to_new_game():
+        if (pb.memory[game_addr] == 9
+                and (pb.tilemap_background.tile_identifier(3, 9) & 0xFF) == 30
+                and (pb.tilemap_background.tile_identifier(5, 9) & 0xFF) == 35):
+            pb.button_press("down")
+            for _ in range(4):
+                pb.tick()
+            pb.button_release("down")
+            for _ in range(16):
+                pb.tick()
+
     for _ in range(30):
         if pb.memory[game_addr] == 0:
             break
+        _advance_to_new_game()
         pb.button_press("start")
         for _ in range(4):
             pb.tick()
         pb.button_release("start")
         for _ in range(16):
             pb.tick()
+        if pb.memory[game_addr] == 0:
+            break
+        _advance_to_new_game()
         pb.button_press("a")
         for _ in range(4):
             pb.tick()

@@ -1,7 +1,7 @@
 {
  "name": "intro_slide_2",
  "test": true,
- "description": "NEW GAME intro slide 2: advancing twice from slide 0 shows But from the.../with ancient.",
+ "description": "NEW GAME intro slide 2: slot picker A, then advancing twice from slide 0 shows But from the.../with ancient.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -20,6 +20,22 @@
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
   },
   {
    "type": "press",

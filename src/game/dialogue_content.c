@@ -49,6 +49,14 @@ const DialogueDefinition g_dialogues[] = {
         1
     },
     {
+        DIALOGUE_ID_DOG_BUSY,
+        "DOG:",
+        2,
+        {"The dog is busy", "gnawing the bone."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_DOG_GREETING,
         "WILD DOG:",
         4,
@@ -297,6 +305,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_QUIT_CONFIRM,
+        "",
+        2,
+        {"SAVE AND QUIT?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_SHOPKEYS_FOUND,
         "",
         3,
@@ -477,6 +493,14 @@ const DialogueDefinition g_dialogues[] = {
         "",
         2,
         {"I'm not going", "back down there."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_WIZARD_AUTOSAVE,
+        "WIZARD:",
+        6,
+        {"No need for my", "old saving spell.", "Your journey is", "written down as", "you go. Rest", "easy, hero."},
         0,
         0
     },

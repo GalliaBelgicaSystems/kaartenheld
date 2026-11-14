@@ -1,0 +1,49 @@
+{
+ "name": "notice_skip_spinner",
+ "test": true,
+ "description": "Skipping SPLASH into NOTICE when (frame & 7) != 0 primes the autosave spinner tile in OAM entry 39 on the very first rendered NOTICE frame.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 7032,
+  "screen": "SPLASH"
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 1
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "NOTICE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "AUTOSAVE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 39,
+   "expected": 241
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
+  }
+ ]
+}

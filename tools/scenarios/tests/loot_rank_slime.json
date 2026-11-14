@@ -1,7 +1,7 @@
 {
  "name": "loot_rank_slime",
  "test": true,
- "description": "R1 fodder roll (docs/enemies_ranking.md \u00a74.2/\u00a74.3): seed 7002 on the wall slime (R1) rolls an IRON DAGGER (id 0xA3 = 163, rank 1) -- fodder can reach iron (12.1%) now that no AP cap clamps it, and the reveal names it. The R1 tail (wood 54.7%) is pinned by the audit.",
+ "description": "R1 fodder roll (docs/enemies_ranking.md §4.2/§4.3): seed 7002 on the wall slime (R1) rolls an IRON POISON DAGGER (id 0xAB = 171, rank 1) -- fodder can reach iron (12.1%) now that no AP cap clamps it, and the high R1 rider gate (75%) puts poison on it; the reveal names it. The R1 tail (wood 54.7%) is pinned by the audit.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -168,7 +168,7 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 163
+   "value": 171
   },
   {
    "type": "event_arg",
@@ -179,12 +179,12 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "I DA"
+   "contains": "I P DA"
   },
   {
    "type": "screen_row",
    "row": 12,
-   "contains": "IRON DAGGER"
+   "contains": "IRON POISON DAGGER"
   }
  ]
 }

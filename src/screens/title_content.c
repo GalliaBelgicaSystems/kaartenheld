@@ -18,7 +18,7 @@
  *
  * Staged inputs (set by the fixed wrapper in title_screen.c):
  *   g_bk_byte_a = title_menu_showing (0 = PRESS START, 1 = menu)
- *   g_bk_byte_b = title_menu_index  (0 = NEW GAME, 1 = CONTINUE, 2 = SOUND)
+ *   g_bk_byte_b = title_menu_index  (0 = CONTINUE, 1 = NEW GAME, 2 = SOUND)
  */
 
 extern char g_ui_screen_buf[18][21];
@@ -180,8 +180,8 @@ static void title_draw_graphic(void)
 
 static void title_draw_menu(uint8_t index)
 {
-    title_draw_text(3, 9, index == 0 ? "> NEW GAME" : "  NEW GAME", 11);
-    title_draw_text(3, 11, index == 1 ? "> CONTINUE" : "  CONTINUE", 11);
+    title_draw_text(3, 9, index == 0 ? "> CONTINUE" : "  CONTINUE", 11);
+    title_draw_text(3, 11, index == 1 ? "> NEW GAME" : "  NEW GAME", 11);
     if (g_sound_enabled) {
         title_draw_text(3, 13, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
     } else {

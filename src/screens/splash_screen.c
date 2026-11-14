@@ -20,6 +20,6 @@ void splash_screen_update(Game *g)
     if (!g) return;
     if (g->frame >= SPLASH_FRAMES ||
         input_pressed(INPUT_START) || input_pressed(INPUT_A)) {
-        screen_change(g, SCREEN_TITLE);
+        screen_change(g, SCREEN_NOTICE);
     }
 }

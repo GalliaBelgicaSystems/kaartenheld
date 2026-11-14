@@ -111,6 +111,19 @@ void dialogue_screen_update(Game *g)
                 dialogue_start_def(&g->dialogue, (DialogueId)g_bk_byte_d);
                 return;
             }
+        } else if (g_bk_byte_a == 11) {
+            /* Save & quit confirmed (YES on the QUEST-tab offer): end
+             * the dialogue, flush the active slot, and land on the
+             * title PRESS START -- CONTINUE resumes it.  Code 11 carries
+             * no game ids (generic quit-to-title); the upkeep flush
+             * writes the slot later this same frame. */
+            dialogue_end(&g->dialogue);
+            g_autosave_pending = 1;
+            audio_play_music(MUSIC_TITLE);
+            g->title_menu_showing = 0;
+            g->title_menu_index = 0;
+            screen_change(g, SCREEN_TITLE);
+            return;
         } else if (g_bk_byte_a == 6) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);

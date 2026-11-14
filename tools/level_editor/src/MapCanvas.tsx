@@ -415,7 +415,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     // (assets/title-red.png, drawn at its tile position), and all text
     // using the intrepid font tiles at the exact ROM rows/columns.  The
     // "Objects" toggle picks the ROM's two title states: menu (caret on
-    // NEW GAME, post-START) when on, PRESS START prompt when off.
+    // CONTINUE, post-START) when on, PRESS START prompt when off.
     if (level.isScreen && (level.mapId === 'SCREEN_TITLE' || level.id === 'title')) {
       const titleLayout = level.titleLayout || {};
       const logo = titleLayout.logo || { x: 0, y: 1, lines: [] };
@@ -489,7 +489,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       //    toggle switches the preview between the ROM's two title states.
       if (showObjects && menu.options && menu.options.length > 0) {
         menu.options.forEach((opt: string, idx: number) => {
-          const selected = idx === 0; // ROM boot cursor sits on NEW GAME
+          const selected = idx === 0; // ROM boot cursor sits on CONTINUE
           const text = (selected ? '>' : ' ') + opt.slice(1);
           drawTitleText(ctx, titleFontImgs, menu.x, menu.first_row + idx * menu.row_step, text, tileSize);
         });

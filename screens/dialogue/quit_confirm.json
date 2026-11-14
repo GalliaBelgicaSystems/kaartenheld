@@ -1,0 +1,9 @@
+{
+  "id": "quit_confirm",
+  "speaker": "",
+  "lines": [
+    "SAVE AND QUIT?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

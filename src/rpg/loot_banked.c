@@ -22,7 +22,7 @@ static const char s_materials[LOOT_NMATERIALS] = {
  * (0..3) equals StatusId (STATUS_NONE, STATUS_POISON, STATUS_BURN,
  * STATUS_FREEZE); chance is in 1/255 units. */
 static const uint8_t s_effect_chance[LOOT_NEFFECTS] = {
-    0, 128, 128, 96
+    0, 208, 208, 176
 };
 
 static const char s_effect_code[LOOT_NEFFECTS] = {

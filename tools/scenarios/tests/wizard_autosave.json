@@ -1,7 +1,7 @@
 {
- "name": "wizard_save_town",
+ "name": "wizard_autosave",
  "test": true,
- "description": "Talking to the Wizard in Town opens the save menu and pressing A saves the game",
+ "description": "Talking to the Wizard in Town explains autosaving instead of offering a save: A opens the WIZARD_AUTOSAVE dialogue, no SAVE_LOAD screen appears, and no GAME_SAVED is emitted.",
  "actions": [
   {
    "type": "press",
@@ -9,24 +9,24 @@
   },
   {
    "type": "wait",
-   "frames": 2
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 2
+   "frames": 10
   }
  ],
  "assertions": [
   {
    "type": "screen",
-   "expected": "SAVE_LOAD"
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "WIZARD_AUTOSAVE"
   },
   {
    "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "event_not_occurred",
    "event": "GAME_SAVED"
   }
  ],

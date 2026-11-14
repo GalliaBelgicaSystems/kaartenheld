@@ -64,9 +64,10 @@ Full rules: `docs/short-straight.md`.
   tier is attack-only in practice with current shield bands
   1,2,4,6,8).
 * **Suited:** same +30 rule applies automatically. Practically N/A:
-  single-weapon values skip by two (swords/bows 1,3,5,7,9;
+  single-weapon values skip by two (swords 1,3,5,7,9;
   shields/rings 1,2,4,6,8), so no three same-suit cards can be
-  sequential — except daggers (1,2,3,5,7): DA1+DA2+DA3 is a suited run.
+  sequential — except daggers and bows (both run 1,2,3,5,7):
+  DA1+DA2+DA3 or BO1+BO2+BO3 is a suited run.
 * **Energy cost:** staging 3 cards costs 3 energy vs a pair's 2, and
   starter decks (only 1s and 3s) can never make one — it comes online
   with loot (e.g. SW1 + DA2 + SW3).
@@ -145,7 +146,7 @@ Worked examples (attack, unsuited unless noted):
 ```text
 SW2 + SW2 (suited)      base 4   PAIR 150%        → 6
 SW1 + SH2 + SW3         base 4   (shield adds 0)  → SHORT 130% → 5 (gem); HIGH CARD → 3 (no gem)
-SW2 + BO3               base 3   HIGH CARD 100%   → 3
+SW1 + BO2               base 3   HIGH CARD 100%   → 3
 SW1 + RING              base 2   PAIR 120%        → HEAL 2 (ring converts)
 SW1 + DA2 + SW3         base 6   SHORT 130%       → 7
 DA1 + DA2 + DA3 suited  base 6   SHORT 130% + 30  → 9

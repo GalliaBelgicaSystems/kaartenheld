@@ -99,7 +99,7 @@ class Session:
         # of the Game struct): the splash renders a bitmap logo whose BG
         # tiles read as non-text, so the text markers alone cannot detect it.
         screen = self.pb.memory[self.reader.g_game]
-        if screen in (9, 10, 11, 12, 13):  # TITLE, INTRO, TUTORIAL, SPLASH, CREDITS
+        if screen in (9, 10, 11, 12, 13, 15):  # TITLE, INTRO, TUTORIAL, SPLASH, CREDITS, NOTICE
             return True
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
@@ -131,6 +131,8 @@ class Session:
             self.wait_for(lambda: self.screen_alnum(), ticks=360)
             if self._stable_overworld():
                 return True
+            if self.text_has("> CONTINUE"):
+                self.press("down", settle=15)
             self.press("start", settle=40)
             if self.wait_for(self._stable_overworld, ticks=120):
                 return True

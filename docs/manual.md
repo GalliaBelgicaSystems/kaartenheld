@@ -37,8 +37,8 @@ Press **START**, then choose from the menu:
 
 | Menu | What it does |
 |---|---|
-| **NEW GAME** | Start a brand-new adventure. |
 | **CONTINUE** | Load a game you saved earlier. |
+| **NEW GAME** | Start a brand-new adventure. |
 | **SOUND: ON/OFF** | Turn the music on or off. |
 | **TUTORIAL** | A short, friendly how-to-play lesson. |
 
@@ -54,7 +54,7 @@ Press **START**, then choose from the menu:
 | **A** | Talk, open, confirm, or use what is in front of you. |
 | **B** | Go back or cancel. In battle, it also *flees*. |
 | **START** | Open your **Cards & Quests** screen. |
-| **SELECT** | Open the **Load Game** screen. |
+| **SELECT** | In battle, play your staged hand. |
 
 Inside menus, **LEFT** and **RIGHT** switch pages, **UP** and **DOWN** move
 the pointer, **A** chooses, and **B** backs out.
@@ -127,12 +127,13 @@ you own:
 |---|---|
 | **Sword** (`SW`) | Hurts the monster. |
 | **Shield** (`SH`) | Blocks damage when the monster attacks. |
-| **Bow** (`BO`) | Hurts from far away. The mighty Mythril Bow costs extra Energy. |
+| **Bow** (`BO`) | Hurts from far away. Bows hit softer than swords but their fire and ice arrows carry dangerous riders. |
 | **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
 | **Dagger** (`DA`) | A small hit that can poison. Played alone on defence, it strikes first -- a killing blow takes no damage. |
 
 Some cards are extra special: a **Fire Bow** burns, a **Poison Dagger**
-poisons, and the **Mythril Bow** hits very, very hard.
+poisons, and the **Mythril Bow** shoots often (its arrows are cheap to
+play, so it fires turn after turn).
 
 ### Collection and deck
 
@@ -258,7 +259,7 @@ his stolen shop keys from the mountains, his shop opens for business:
 
 Press **A** to buy and **B** to leave. Press **LEFT** or **RIGHT** to
 switch between the **BUY** and **SELL** tabs and sell cards you do not
-need. The Merchant sells a powerful **Mythril Bow** and an **Iron Ring**
+need. The Merchant sells a handy **Mythril Bow** and an **Iron Ring**
 — your best friend when you are hurt — plus your starter cards, always
 free.
 
@@ -280,16 +281,20 @@ It is like a treasure hunt that never ends!
 
 ## 12. Saving Your Game
 
-Find the **Wizard** in town. He can save your adventure to one of **three
-slots**.
+Your adventure **saves itself**. Every time something important happens
+-- you earn an Ability Point, finish a quest, or walk into town or the
+castle -- the game writes your progress to the slot you picked when you
+started. A little spinning bar appears in the bottom-right corner while
+it saves.
 
-![Saving your game](manual_images/save.png)
+The **Wizard** in town can tell you all about it.
 
-Choose a slot and press **A**. Your Game Boy remembers even after you turn
-it off, so you can always come back later.
+To stop playing, open the quick screen with **START**, flip to the
+**QUEST** tab and choose **SAVE & QUIT**. Your Game Boy remembers even
+after you turn it off, so you can always come back later.
 
-To load a game, press **SELECT** while walking around, or choose
-**CONTINUE** on the title screen.
+To keep playing, choose **CONTINUE** on the title screen and pick your
+slot again.
 
 ---
 
@@ -299,8 +304,8 @@ To load a game, press **SELECT** while walking around, or choose
   what card you discovered!
 - **Lose a battle** if your health reaches zero. You will see the **GAME
   OVER** screen:
-  - **YES** — go back and load a saved game.
-  - **NO** — say goodbye and stop playing.
+  - **YES** -- go back to your last autosave.
+  - **NO** -- say goodbye and stop playing.
 
 Beat the **Lord of Slimes** in the Throne Room and you will see the happy
 ending. The land is saved, thanks to you!

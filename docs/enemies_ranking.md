@@ -270,8 +270,8 @@ always beats wood (1).
 Material is *also* the dominant term in the AP cost (4 points per tier, and
 mythril carries a 12-point premium).  This is why the material ladder and
 the tempo ladder mostly agree but deliberately not always — a mythril bow
-costs 5 AP and sells for 17 g, a mythril fire bow costs 6 AP and sells
-for the same 17 g.
+costs 5 AP and sells for 15 g, a mythril fire bow costs 6 AP and sells
+for the same 15 g.
 
 ### 2.3 The rider ladder
 
@@ -309,7 +309,7 @@ Power / AP / sell price for representative cards (all formulas from §1.5):
 | `M F BO` | 9 | 6 | 17 g | – |
 | `B P DA` | 2 | 2 | 6 g | – |
 | `I RG` | 4 | 2 | 8 g | 3/battle |
-| `M BO` | 9 | 5 | 17 g | – |
+| `M BO` | 7 | 5 | 15 g | – |
 
 ### 2.6 What is missing
 
@@ -481,22 +481,25 @@ each row sums to 100% (±0.4 for quantization).  Rows are also the reason the
 on mythril.
 
 **Rider gate by rank.**  Rank also raises the chance of a rider (a quality
-signal that does not shift material), one step per rank:
+signal that does not shift material), one step per rank.  The gates are
+deliberately very high: the rider is the bow's whole edge over the sword
+(bows ride the dagger ladder, a full band below), so a plain bow is the
+rare outcome:
 
 | Rank | `eff_roll` gate | P(rider) | fire (bow) | ice (bow) | poison (dagger) |
 |---|---|---|---|---|---|
-| 0–1 | 64 | 25% | 12.5% | 12.5% | 25% |
-| 2 | 80 | 31.25% | 15.6% | 15.6% | 31.25% |
-| 3 | 96 | 37.5% | 18.75% | 18.75% | 37.5% |
-| 4 | 112 | 43.75% | 21.9% | 21.9% | 43.75% |
-| 5–6 | 128 | 50% | 25.0% | 25.0% | 50% |
+| 0–1 | 192 | 75% | 37.5% | 37.5% | 75% |
+| 2 | 200 | 78.125% | 39.1% | 39.1% | 78.125% |
+| 3 | 208 | 81.25% | 40.6% | 40.6% | 81.25% |
+| 4 | 216 | 84.375% | 42.2% | 42.2% | 84.375% |
+| 5–6 | 224 | 87.5% | 43.75% | 43.75% | 87.5% |
 
 The fire/ice figures are conditional on a bow and material ≥ bronze (the
 only legal pairing); the poison figure is conditional on a dagger.
 Bows only roll on bat encounters (100% bow there), so the unconditional
 per-bat-encounter fire/ice chances are those numbers × the bronze+
 share of the rank's material roll.  On non-bat encounters the only
-rider is poison at 25% of dagger rolls.  Wood is still always plain;
+rider is poison at 75%+ of dagger rolls.  Wood is still always plain;
 swords, shields and rings never carry a rider.
 
 **Rank 0 means no drop** (decided, §8.2): the body writes `CARD_NONE`, which
@@ -574,13 +577,13 @@ with a half-half fire/ice split:
 
 | Bow | P(drop \| bat) | ≈ 1 in |
 |---|---|---|
-| `B F BO` / `B I BO` | 5.92% each | 17 bat encounters |
-| `I F BO` / `I I BO` | 3.48% each | 29 |
-| `S F BO` / `S I BO` | 0.67% each | 149 |
-| `M F BO` / `M I BO` | 0.12% each | ~800 |
+| `B F BO` / `B I BO` | 14.8% each | 7 bat encounters |
+| `I F BO` / `I I BO` | 8.7% each | 12 |
+| `S F BO` / `S I BO` | 1.7% each | 60 |
+| `M F BO` / `M I BO` | 0.31% each | ~320 |
 
 (Material shares from the R2 cut row: bronze 37.9%, iron 22.3%, steel
-4.3%, mythril 0.8%; rider gate 31.25%, fire/ice half each.)  The old
+4.3%, mythril 0.8%; rider gate 78.125%, fire/ice half each.)  The old
 per-rank chase (iron fire sword peaking at R4, steel at R5, mythril at
 R6) is gone with sword riders; it comes back when higher-rank bow
 enemies extend the roll (§34.5 note).  On non-bat encounters the only
@@ -1055,7 +1058,7 @@ static const uint8_t s_rank_cut[7][5] = {
     {   0,  11,  63, 178, 255 }    /* R6 BOSS     */
 };
 
-static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
+static const uint8_t s_rank_gate[7] = { 192, 192, 200, 208, 216, 224, 224 };
 ```
 
 `s_ap_cut` and `s_ap_cap` disappear from the body (the AP row is no longer

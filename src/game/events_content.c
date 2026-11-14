@@ -60,12 +60,13 @@ const EventDefinition g_events[] = {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 0, false, false },
             { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, true }
         },
-        4,
+        5,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MAYOR_EARLY, 0, 0 },
             { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_MET_MAYOR, 0, 0 },
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 2, 0 }
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 2, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
         }
     },
     {
@@ -86,11 +87,12 @@ const EventDefinition g_events[] = {
             { EVENT_COND_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 1, false, false },
             { EVENT_COND_VARIABLE, VARIABLE_ID_MONSTERS_DEFEATED, 3, false, true }
         },
-        3,
+        4,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_QUEST_COMPLETE, 0, 0 },
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 2, 0 }
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_QUEST_MONSTER_HUNT, 2, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
         }
     },
     {
@@ -126,10 +128,11 @@ const EventDefinition g_events[] = {
         EVENT_ID_MIMIC_REWARD, EVENT_TRIGGER_ACTOR_DEFEATED, ENTITY_ID_MIMIC, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
-        2,
+        3,
         {
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MIMIC_REWARD, 0, 0 }
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MIMIC_REWARD, 0, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
         }
     },
     {
@@ -221,12 +224,13 @@ const EventDefinition g_events[] = {
             { EVENT_COND_ITEM_COUNT, CARD_SHOPKEYS, 1, false, true },
             { EVENT_COND_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 1, false, false }
         },
-        4,
+        5,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_MERCHANT_THANKS, 0, 0 },
             { EVENT_ACTION_ADD_CURRENCY, CURRENCY_ID_GOLD, 15, 0 },
             { EVENT_ACTION_REMOVE_ITEM, CARD_SHOPKEYS, 1, 0 },
-            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 2, 0 }
+            { EVENT_ACTION_SET_VARIABLE, VARIABLE_ID_MERCHANT_QUEST, 2, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
         }
     },
     {
@@ -351,12 +355,13 @@ const EventDefinition g_events[] = {
             { EVENT_COND_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, false, false },
             { EVENT_COND_ITEM_COUNT, CARD_OLD_KEY, 1, false, true }
         },
-        4,
+        5,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_FIELD_CHEST_AP, 0, 0 },
             { EVENT_ACTION_ADD_ITEM, CARD_POISON_DAGGER, 1, 0 },
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 }
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_FIELD_CHEST, 0, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
         }
     },
     /* ── Tunnel skeleton (bone for the village dog) ────────────────
@@ -399,9 +404,11 @@ const EventDefinition g_events[] = {
      * on its intro).  ASK
      * offers "Give Bone to dog?" (YES/NO): YES resolves through
      * choice_nav_banked.c code 10 (remove BONE, grant OLD_KEY, set
-     * DOG_KEY through the real APIs, then the thanks follow-up) and
-     * clears the dog's ? mark; NO closes plainly.  THANKS replays on
-     * later bumps.  Scoped to the quest entity (VILLAGE_DOG): the
+     * DOG_KEY through the real APIs, then the DOG_THANKS follow-up)
+     * and clears the dog's ? mark; NO closes plainly.  BUSY replays
+     * on later bumps once the key is traded ("The dog is busy
+     * gnawing the bone."): the thanks line belongs to the handover
+     * moment only.  Scoped to the quest entity (VILLAGE_DOG): the
      * wild dog and the decor dog keep their greeting/silence. */
     {
         EVENT_ID_DOG_HINT, EVENT_TRIGGER_INTERACT, ENTITY_ID_VILLAGE_DOG, EVENT_MAP_ANY,
@@ -431,7 +438,7 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_COND_FLAG, STORY_FLAG_ID_DOG_KEY, 0, true, false }},
         1,
-        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_THANKS, 0, 0 }}
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_BUSY, 0, 0 }}
     },
     /* ── Slime-knight armor split ──────────────────────────────────
      * Felling the armor (ACTOR_DEFEATED, all-match: MONSTER_DEFEATED

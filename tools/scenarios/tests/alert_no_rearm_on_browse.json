@@ -1,7 +1,7 @@
 {
  "name": "alert_no_rearm_on_browse",
  "test": true,
- "description": "Browsing the save menu without loading does NOT re-arm the alert: after the forest entry alert expires, opening the save menu (SELECT) and closing it (B) with no load leaves the entry scan cold -- no second sting (sfx_count stays 1).",
+ "description": "Browsing a menu without loading does NOT re-arm the alert: after the forest entry alert expires, opening the ITEM menu (START) and closing it (B) with no load leaves the entry scan cold -- no second sting (sfx_count stays 1).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -18,7 +18,7 @@
   },
   {
    "type": "press",
-   "button": "SELECT"
+   "button": "START"
   },
   {
    "type": "wait",

@@ -4,6 +4,7 @@
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
+#include "rpg/save.h"
 
 /* ASCII intro sequence shown when starting a NEW GAME from the title
  * screen.  Four scripted slides (mankind fallen, the Slime Lord, a
@@ -50,6 +51,13 @@ void intro_screen_update(Game *g)
         if (g->intro_slide + 1 >= INTRO_SLIDE_COUNT) {
             g->intro_slide = 0;
             game_restart(g);
+            /* NEW-GAME slot claim: the fresh state saves to the active
+             * slot at once (GAME_SAVED emits inline in the banked body,
+             * debug builds), so the slot is never empty once a new game
+             * has started.  game_restart reseeds the world straight from
+             * the fresh state and no frame runs before the write, so no
+             * scene_sync is needed. */
+            save_claim_active();
         } else {
             g->intro_slide++;
             /* Force a redraw of the new slide. */

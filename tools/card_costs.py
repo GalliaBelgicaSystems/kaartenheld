@@ -61,11 +61,12 @@ def parse_define_int(text, name):
 
 
 def band_power(mat, weapon):
-    """Mirror of LOOT_POWER (docs/loot.md §34.1)."""
+    """Mirror of LOOT_POWER (docs/loot.md §34.1): bows ride the dagger
+    ladder, well under swords."""
     if mat == 0:
         return 1
-    p = 2 * mat + (1 if weapon in ("sword", "bow") else 0)
-    if weapon == "dagger" and mat > 1:
+    p = 2 * mat + (1 if weapon == "sword" else 0)
+    if weapon in ("dagger", "bow") and mat > 1:
         p -= 1
     return p
 

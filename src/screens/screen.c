@@ -147,6 +147,7 @@ void screen_update(Game *g)
     case SCREEN_SAVE_LOAD: save_load_screen_update(g); break;
     case SCREEN_TITLE: title_screen_update(g); break;
     case SCREEN_SPLASH: splash_screen_update(g); break;
+    case SCREEN_NOTICE: notice_screen_update(g); break;
     case SCREEN_INTRO: intro_screen_update(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_update(g); break;
     case SCREEN_CREDITS: tutorial_screen_update(g); break; /* shared: see credits_screen.c */
@@ -172,6 +173,7 @@ void screen_render(Game *g)
     case SCREEN_SAVE_LOAD: save_load_screen_render(g); break;
     case SCREEN_TITLE: title_screen_render(g); break;
     case SCREEN_SPLASH: splash_screen_render(g); break;
+    case SCREEN_NOTICE: notice_screen_render(g); break;
     case SCREEN_INTRO: intro_screen_render(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_render(g); break;
     case SCREEN_CREDITS: credits_screen_render(g); break;

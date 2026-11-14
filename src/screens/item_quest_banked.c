@@ -272,7 +272,14 @@ static void iq_draw_quest(Game *g)
     if (vis == 0) {
         IQ_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
     }
-    IQ_DRAW_TEXT(0, 16, "SEL:INFO", 8);
+    /* Quit hint: A anywhere on this tab opens the save & quit
+     * confirm (overworld only, where quitting cannot strand a
+     * battle). */
+    if (g->prev_screen == SCREEN_OVERWORLD) {
+        IQ_DRAW_TEXT(0, 16, "SEL:INFO A:SAVE+QUIT", 20);
+    } else {
+        IQ_DRAW_TEXT(0, 16, "SEL:INFO", 8);
+    }
 }
 
 /* ── Quest detail (SELECT on a quest row) ─────────────────────────

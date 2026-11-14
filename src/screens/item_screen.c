@@ -232,6 +232,14 @@ void item_screen_update(Game *g)
         g_bk_call_target = (uint16_t)&item_gem_nav_banked;
         g_bk_ptr_a = (void *)g;
         banked_call_run();
+        /* QUEST-tab save & quit: A opens the quit confirm dialogue
+         * (overworld only; A is otherwise a no-op on this tab).  YES
+         * flushes the active slot and lands on the title PRESS START. */
+        if (input_pressed(INPUT_A) && g->item_menu_tab == TAB_QUEST &&
+            g->prev_screen == SCREEN_OVERWORLD) {
+            dialogue_start_def(&g->dialogue, (DialogueId)DIALOGUE_ID_QUIT_CONFIRM);
+            screen_change(g, SCREEN_DIALOGUE);
+        }
         return;
     }
 

@@ -1,7 +1,7 @@
 {
  "name": "battle_bow_uses_display",
  "test": true,
- "description": "The 2-shot bow draws its power as the nine icon on the card's middle row (tile 102) and the remaining-uses arrow counter on the floor row (2 arrows fresh, tile 100); the semantic row reads BO2.",
+ "description": "A 2-shot bronze bow draws its real power digit on the card's middle row (font tile 19 = '3') and the remaining-uses arrow counter on the floor row (2 arrows fresh, tile 100); the semantic row reads BO2.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,7 +21,7 @@
    "type": "set_hand_card",
    "index": 0,
    "card_type": "BO",
-   "value": 10
+   "value": 3
   },
   {
    "type": "set_hand_card_meta",
@@ -52,7 +52,7 @@
    "type": "tilemap_cell",
    "row": 13,
    "col": 1,
-   "expected": 102
+   "expected": 19
   },
   {
    "type": "tilemap_cell",

@@ -66,6 +66,7 @@ void battle_counter_rider_banked(void)
             }
             slots->slot[i].stacks = (uint8_t)total;
             slots->slot[i].duration = STATUS_POISON_DURATION;
+            g_poison_grace_mask |= (uint8_t)(1u << (atk + 1));
             telemetry_ring_emit(EVENT_STATUS_APPLIED, STATUS_POISON,
                                 slots->slot[i].stacks,
                                 STATUS_POISON_DURATION, 0);
@@ -78,6 +79,7 @@ void battle_counter_rider_banked(void)
     slots->slot[slots->count].duration = STATUS_POISON_DURATION;
     slots->slot[slots->count].tick = 0;
     slots->count++;
+    g_poison_grace_mask |= (uint8_t)(1u << (atk + 1));
     telemetry_ring_emit(EVENT_STATUS_APPLIED, STATUS_POISON, 1,
                         STATUS_POISON_DURATION, 0);
 }

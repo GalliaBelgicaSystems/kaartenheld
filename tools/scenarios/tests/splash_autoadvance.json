@@ -1,7 +1,7 @@
 {
  "name": "splash_autoadvance",
  "test": true,
- "description": "The boot studio splash auto-advances to the title screen after its ~150-frame hold without any input.",
+ "description": "The boot studio splash auto-advances to the autosave notice after its ~150-frame hold without any input (the notice then advances to the title screen on its own).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,11 +21,25 @@
  "assertions": [
   {
    "type": "screen",
-   "expected": "TITLE"
+   "expected": "NOTICE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "AUTOSAVE"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 39,
+   "expected": 241
   },
   {
    "type": "event_occurred",
    "event": "SCREEN_CHANGED"
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
   }
  ]
 }

@@ -143,6 +143,9 @@ void dialogue_choice_nav_banked(void)
                 g_bk_byte_b = VARIABLE_ID_ENERGY_POOL;
                 g_bk_byte_c = STORY_FLAG_ID_TUTORIAL_SKIPPED;
                 g_bk_byte_d = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_SKIP_GRANTED;
+                /* AP milestone: the fixed side applies the staged grant
+                 * below in this same update; the flush saves it. */
+                g_autosave_pending = 1;
                 return;
             }
             g_bk_byte_a = 2;
@@ -198,6 +201,17 @@ void dialogue_choice_nav_banked(void)
             }
             return;
         }
+        /* Save & quit offer (QUEST-tab A): YES reports the quit code
+         * (the fixed side flushes the active slot and lands on the
+         * title); NO closes plainly through the ordinary confirm. */
+        if (g_game.dialogue.id == DIALOGUE_ID_QUIT_CONFIRM) {
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_bk_byte_a = 2;
+                return;
+            }
+            g_bk_byte_a = 11;
+            return;
+        }
         /* Tunnel skeleton's bone offer: YES grants the bone through
          * the real collection API (fixed wrapper, code 9: staged item
          * + one-shot flag + taken follow-up); NO closes plainly and
@@ -228,6 +242,9 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_c = (uint8_t)CARD_OLD_KEY;
             g_bk_byte_d = (uint8_t)DIALOGUE_ID_DOG_THANKS;
             g_bk_byte_e = (uint8_t)VARIABLE_ID_DOG_QUEST;
+            /* Quest solve: the fixed side applies the staged trade below
+             * in this same update; the game_update flush saves it. */
+            g_autosave_pending = 1;
             return;
         }
         /* Rings lesson ask ("Want to learn how rings work?"): YES opens

@@ -58,11 +58,14 @@ typedef struct Game {
     uint8_t shop_message;      /* 0 = none, 1 = bought, 2 = not enough gold,
                                   3 = max copies */
     uint8_t shop_id;           /* active shop (set when a shop actor is engaged) */
-    uint8_t save_slot_index;   /* 0 = Slot 1, 1 = Slot 2, 2 = Slot 3 */
-    uint8_t save_slot_mode;    /* 0 = LOAD, 1 = SAVE */
-    uint8_t save_slot_message; /* 0 = none, 1 = saved, 2 = empty */
+    uint8_t save_slot_index;   /* active slot (0 = Slot 1, 1 = Slot 2, 2 = Slot 3):
+                                    autosaves and save&quit write here */
+    uint8_t save_slot_mode;    /* 0 = LOAD, 1 = SAVE, 2 = NEW-GAME slot pick */
+    uint8_t save_slot_message; /* 0 = none, 1 = saved, 2 = empty,
+                                    3 = overwrite confirm (mode 2),
+                                    4 = game-over auto-continue */
     uint8_t title_menu_showing; /* 0 = PRESS START state, 1 = main menu */
-    uint8_t title_menu_index;  /* 0 = NEW GAME, 1 = CONTINUE, 2 = SOUND, 3 = TUTORIAL */
+    uint8_t title_menu_index;  /* 0 = CONTINUE, 1 = NEW GAME, 2 = SOUND, 3 = TUTORIAL */
     uint8_t intro_slide;       /* current ASCII intro slide (0-2) */
     uint8_t tutorial_slide;    /* current tutorial slide (0-5) */
     RenderCache render_cache;
@@ -72,9 +75,18 @@ typedef struct Game {
                                     earlier offset is unchanged (walkthrough
                                     mirrors + BSS layout, AGENTS.md 52.19).
                                     Reset on menu open/tab switch. */
+    uint8_t notice_frame;      /* boot-notice timeline (splash -> title):
+                                   fade in, hold, fade out, advance. TAIL
+                                   FIELD (same no-shift rule as above);
+                                   zeroed by game_prepare_new_game. */
 } Game;
 
 extern Game g_game;
+
+/* Autosave request staging (BSS zero): AP/quest event rows, banked
+ * AP/quest grants, and town/castle entry stage it; game_update()
+ * flushes it once per frame (active slot, canonical state). */
+extern uint8_t g_autosave_pending;
 
 void game_init(Game *g);
 void game_restart(Game *g);

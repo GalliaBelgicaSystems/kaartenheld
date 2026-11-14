@@ -48,12 +48,49 @@ static void sl_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_cha
     }
 }
 
+/* The fixed wrapper stages only the Game*; this body probes all
+ * three slots itself (full-checksum SRAM read, same op-0 path as
+ * save_op_banked in bank 8 -- KEEP IN SYNC if the slot geometry or
+ * checksum ever changes) so the fixed draw pays a single dispatch.
+ * A banked body can neither nest another trampoline dispatch nor call
+ * across banks (AGENTS.md §52.11.1). */
+
+static uint8_t sl_checksum(const GameState *state)
+{
+    uint8_t sum = 0;
+    uint16_t n = (uint16_t)sizeof(GameState);
+    const uint8_t *b = (const uint8_t *)state;
+    while (n--) sum += *b++;
+    return sum;
+}
+
+static uint8_t sl_present(uint8_t idx)
+{
+    uint8_t *sram;
+    uint8_t present;
+    if (g_save_state_capacity <
+        (uint16_t)sizeof(GameState)) {
+        return 0;
+    }
+    sram = (uint8_t *)(SAVE_SRAM_BASE + ((uint16_t)idx << 10));
+    ENABLE_RAM;
+    present = (sram[0] == (uint8_t)(SAVE_MAGIC & 0xFF) &&
+               sram[1] == (uint8_t)(SAVE_MAGIC >> 8) &&
+               sram[2] == SAVE_VERSION &&
+               sram[3] == sl_checksum((const GameState *)(sram + 4))) ? 1 : 0;
+    DISABLE_RAM;
+    return present;
+}
+
 void save_load_content_render(void)
 {
     s_sl_game = (Game *)g_bk_ptr_a;
 
     if (!s_sl_game) return;
-    s_sl_present = g_bk_byte_a;
+    s_sl_present = 0;
+    if (sl_present(0)) s_sl_present |= 1;
+    if (sl_present(1)) s_sl_present |= 2;
+    if (sl_present(2)) s_sl_present |= 4;
 
     for (s_sl_pos = 0; s_sl_pos < SAVE_SLOT_COUNT; s_sl_pos++) {
         s_sl_y = (uint8_t)(4 + (s_sl_pos << 1));
@@ -61,9 +98,12 @@ void save_load_content_render(void)
         sl_draw_text(1, s_sl_y, (s_sl_pos == 0) ? "SLOT 1:" : ((s_sl_pos == 1) ? "SLOT 2:" : "SLOT 3:"), 7);
         sl_draw_text(9, s_sl_y, (s_sl_present & (1 << s_sl_pos)) ? "SAVED" : "(EMPTY)", 7);
     }
-    sl_draw_text(0, 11, (s_sl_game->save_slot_mode == 1) ? "[A] SAVE  " : "[A] LOAD  ", 10);
+    sl_draw_text(0, 11, (s_sl_game->save_slot_mode == 2) ? "[A] START " : "[A] LOAD  ", 10);
     sl_draw_text(10, 11, "[B] BACK", 8);
-    if (s_sl_game->save_slot_message != 0) {
-        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : "Slot is empty!", 14);
+    if (s_sl_game->save_slot_message >= 1 && s_sl_game->save_slot_message <= 3) {
+        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite? A:YES" : "Slot is empty!"), 16);
+        if (s_sl_game->save_slot_message == 3) {
+            sl_draw_text(2, 14, "B:NO", 4);
+        }
     }
 }

@@ -253,11 +253,22 @@ def main():
 
     # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
     # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
-    # (17,7) from levels/field.json player.spawn.
+    # (17,7) from levels/field.json player.spawn.  Step down from CONTINUE
+    # (index 0) onto NEW GAME (index 1) whenever the title menu is open.
+    def _advance_to_new_game():
+        if (pb.memory[game_addr] == 9
+                and (pb.tilemap_background.tile_identifier(3, 9) & 0xFF) == 30
+                and (pb.tilemap_background.tile_identifier(5, 9) & 0xFF) == 35):
+            press("down", settle=16)
+
     for _ in range(20):
         if pb.memory[game_addr] == 0:
             break
+        _advance_to_new_game()
         press("start", settle=16)
+        if pb.memory[game_addr] == 0:
+            break
+        _advance_to_new_game()
         press("a", settle=16)
 
     # Locate player entity in WRAM once overworld is reached

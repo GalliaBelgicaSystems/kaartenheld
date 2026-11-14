@@ -30,7 +30,7 @@ saves stay non-gating (AGENTS.md §56.4 updated accordingly).
 | Save/load roundtrip | Cart = MBC5+RAM+BATTERY (header 0x1B, 8KB RAM); PyBoy 2.7.0 supports `PyBoy(rom, ram_file=f)` and `pb.stop(save=True, ram_file=f)` — cross-session SRAM transfer works |
 | Shop | merchant (shop_id=2, opened by delivering the shop keys) sells one-copy ring/bow/shield (+ always-listed free starter basics); A buys the top visible row (a pre-shop loot twin can hide the ring row -- the walk reads the row, never assumes it); SELL tab (LEFT/RIGHT) sells loot/curated at formula/rarity-cut values; `g_game.shop_message` readable; gold/collection WRAM-readable |
 | Battle | `g_battle.player.hp`, `enemies[i].hp`, result/phase bytes readable; fleeing Carl's spar opens his farewell box deferred on the FLED! result (no AP for fleeing -- the lesson's +1 was already handed over at the spar start; Walk B's pool is 3 from the skip + the field chest) |
-| Title CONTINUE | menu index 1 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
+| Title CONTINUE | menu index 0 → SCREEN_SAVE_LOAD (mode=LOAD) → A on slot 1 restores scene/pos |
 | Title splash | boot → SCREEN_SPLASH (screen id 12, "A GAME BY / GALLIA BELGICA / SYSTEMS") auto-advances to SCREEN_TITLE after 150 frames or is skipped with A/START |
 | CI | `.github/workflows/ci.yml` test job: clean+lint+test+memmap+test-harness(JOBS=4)+verify-oam → append `make verify-walkthrough` |
 
@@ -98,7 +98,7 @@ tools/walkthrough/
    `11-victory-speech`.
 4. **Save/load roundtrip** (new session pair S→L): save at wizard →
    `pb.stop(ram_file=)` → new `PyBoy(rom, ram_file=)` → title START →
-   DOWN → CONTINUE → A → LOAD slot 1 → assert restored scene/pos/gold
+   CONTINUE → A → LOAD slot 1 → assert restored scene/pos/gold
    (post-purchase gold proves the loaded state is the saved one).
 5. **Scene asserts** on Forest/Pass/Castle arrivals (`reader.scene_id`);
    Walk E now routes through the expanded castle chain (entry → hall →

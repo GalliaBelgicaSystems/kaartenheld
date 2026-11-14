@@ -49,8 +49,8 @@ uint8_t const g_title_credits_y = 17;
 uint8_t const g_title_credits_enabled = 0;
 
 const char g_title_menu_options[5][20+1] = {
-"> NEW GAME          ",
 "> CONTINUE          ",
+"> NEW GAME          ",
 "> SOUND             ",
 "> TUTORIAL          ",
 "> CREDITS           "

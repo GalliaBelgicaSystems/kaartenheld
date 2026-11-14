@@ -135,6 +135,10 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             g_bk_call_bank = 10;
             g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
             banked_call_run();
+        } else if (t == EVENT_ACTION_AUTOSAVE) {
+            /* Stage an autosave (game_update flushes once, on canonical
+             * state).  Generic mechanism; the game rows decide when. */
+            g_autosave_pending = 1;
         }
     }
 }

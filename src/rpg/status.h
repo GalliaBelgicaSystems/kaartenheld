@@ -32,9 +32,12 @@ typedef enum {
 
 /* Shared poison definition constants (used by both the bank-10 status
  * table in status_content.c and the bank-11 post-swing counter rider
- * in battle_rider_banked.c so the two banks cannot drift). */
+ * in battle_rider_banked.c so the two banks cannot drift).  Poison
+ * always lasts 2 effective rounds (both for the player and for enemies);
+ * g_poison_grace_mask skips the end-of-round tick when poison lands
+ * mid-defend (enemy rider on player, or dagger counter on enemy). */
 #define STATUS_POISON_MAX_STACKS   5
-#define STATUS_POISON_DURATION     3
+#define STATUS_POISON_DURATION     2
 
 /* One active affliction/blessing on one combatant. */
 typedef struct {
@@ -155,6 +158,13 @@ StatusSlots *status_slots(uint8_t actor_slot);
  * name by its active status without calling the fixed-bank status_slots()
  * helper.  slot 0 = player, 1..n = enemy. */
 extern StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
+
+/* Defend-phase poison grace bitmask: bit (1 << actor_slot) skips the
+ * very next status_tick() decrement for STATUS_POISON so a poison that
+ * lands during PLAYER_DEFEND still grants 2 full rounds (not 1 on the
+ * player or 2-at-cost-of-duration=3) while STATUS_POISON_DURATION == 2.
+ * Cleared in status_reset_battle() and consumed in status_tick_banked(). */
+extern uint8_t g_poison_grace_mask;
 
 /* Apply a status to an actor's slots (STACK rule: cap at max_stacks,
  * refresh duration).  stacks==0 means 1; duration==0 means the

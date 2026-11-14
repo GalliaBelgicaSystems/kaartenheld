@@ -40,8 +40,8 @@ Anchors:
 
 ```text
 W SW   power 1, wood    -> 1 AP        (the brief's "very simple wood sword")
-M BO   power 9, mythril -> 5 AP        (plain mythril is always 5, §3.4)
-M F BO power 9, mythril + fire -> 6 AP (a mythril rider costs more than
+M BO   power 7, mythril -> 5 AP        (plain mythril is always 5, §3.4)
+M F BO power 7, mythril + fire -> 6 AP (a mythril rider costs more than
                                        the same card plain)
 ```
 
@@ -112,14 +112,14 @@ a property of the card, not a decision by the author.**
 
 | Role | `power` means | Band values |
 |---|---|---|
-| Sword / bow | damage dealt | 1, 3, 5, 7, 9 |
+| Sword | damage dealt | 1, 3, 5, 7, 9 |
+| Bow / dagger | damage dealt | 1, 2, 3, 5, 7 |
 | Shield / ring | block / heal | 1, 2, 4, 6, 8 |
-| Dagger | poison damage | 1, 2, 3, 5, 7 |
 
-Swords and bows sit one point above their band; shields/rings at the
-band floor; daggers run one band step softer *and* one point under
-swords (bronze holds 2 so it always beats wood) — but under `ceil(/8)`
-those points never cross a step boundary, so role never changes the
+Swords sit one point above their band; shields/rings sit at the
+band floor; bows ride the dagger ladder instead (§34.1: bronze holds
+2 so it always beats wood) — but under `ceil(/8)` those points never
+cross a step boundary, so role never changes the
 cost on its own (§7.3).
 
 Reasoning for weight 1: damage is the unit the player is already budgeting
@@ -149,7 +149,7 @@ ice); tomorrow it means buffs too (`docs/combo-system.md` §14/§19 plans
 buffs in the same status system).  Flat, not scaled: burn ticks a flat
 10%-of-hit (min 1) and ice always greys exactly 2 cards, while poison
 confuses for a flat 2 rounds -- the effect's *absolute* value is
-constant whether it rides a p2 dagger or a p9 bow, so its *relative*
+constant whether it rides a p2 dagger or a p7 bow, so its *relative*
 price must fall as power rises.
 A percentage-of-card price would charge the most for the effect on the
 biggest card, which is backwards.
@@ -170,11 +170,13 @@ Any mythril card pays a flat **12-point premium** (one AP step plus one
 material tier) on top of its power + material + rider terms.  The premium
 exists for one reason: **a mythril card must cost 5 AP minimum, always**.
 Without it a mythril shield or ring (p8) would cost 3 — the same as a steel
-sword — and a mythril sword or bow (p9) would cost 4, sitting *inside* the
-steel band.  The top tier of the ladder must never price level with the
-tier below it.  With the premium every plain mythril card lands on exactly
-5 (`9 + 16 + 12 = 37 -> 5`; `8 + 16 + 12 = 36 -> 5`), and every mythril
-rider lands on exactly 6 (`45 -> 6`, `44 -> 6`), so a mythril card with a
+sword — and a mythril sword (p9) would cost 4 while a mythril bow (p7)
+would cost 3, sitting at or below the steel band.  The top tier of the
+ladder must never price level with the tier below it.  With the premium
+every plain mythril card lands on exactly 5 (`9 + 16 + 12 = 37 -> 5` for
+swords; `8 + 16 + 12 = 36 -> 5` for shields/rings; `7 + 16 + 12 = 35 ->
+5` for bows), and every mythril rider lands on exactly 6 (`45 -> 6`
+sword, `44 -> 6` shield/ring, `43 -> 6` bow), so a mythril card with a
 status always costs more than the same card plain — riders are never free
 at the top of the ladder either.
 
@@ -212,10 +214,10 @@ parentheses so the reader can check any cell by hand:
 | material | sword | shield | bow | dagger | ring |
 |---|---|---|---|---|---|
 | **wood** (gate AP 1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) | 1 AP (p1) |
-| **bronze** (gate AP 2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p2) |
-| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p5) | 2 AP (p3) | 2 AP (p4) |
-| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p7) | 3 AP (p5) | 3 AP (p6) |
-| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p9) | 5 AP (p7) | 5 AP (p8) |
+| **bronze** (gate AP 2) | 1 AP (p3) | 1 AP (p2) | 1 AP (p2) | 1 AP (p2) | 1 AP (p2) |
+| **iron** (gate AP 4) | 2 AP (p5) | 2 AP (p4) | 2 AP (p3) | 2 AP (p3) | 2 AP (p4) |
+| **steel** (gate AP 5) | 3 AP (p7) | 3 AP (p6) | 3 AP (p5) | 3 AP (p5) | 3 AP (p6) |
+| **mythril** (gate AP 5) | 5 AP (p9) | 5 AP (p8) | 5 AP (p7) | 5 AP (p7) | 5 AP (p8) |
 
 "gate AP" is the AP below which that material cannot drop
 (`LOOT_AP_BRONZE` / `LOOT_AP_IRON` / `LOOT_AP_STEEL`, `src/rpg/loot.h`;
@@ -229,10 +231,10 @@ need pool 6 and are gated separately (§6.1).
 | material | F BO (burn) | I BO (freeze) | P DA (poison) |
 |---|---|---|---|
 | **wood** (gate AP 1) | n/a | n/a | n/a |
-| **bronze** (gate AP 2) | 2 AP (p3) | 2 AP (p3) | 2 AP (p2) |
-| **iron** (gate AP 4) | 3 AP (p5) | 3 AP (p5) | 3 AP (p3) |
-| **steel** (gate AP 5) | 4 AP (p7) | 4 AP (p7) | 4 AP (p5) |
-| **mythril** (gate AP 5, riders 6) | 6 AP (p9) | 6 AP (p9) | 6 AP (p7) |
+| **bronze** (gate AP 2) | 2 AP (p2) | 2 AP (p2) | 2 AP (p2) |
+| **iron** (gate AP 4) | 3 AP (p3) | 3 AP (p3) | 3 AP (p3) |
+| **steel** (gate AP 5) | 4 AP (p5) | 4 AP (p5) | 4 AP (p5) |
+| **mythril** (gate AP 5, riders 6) | 6 AP (p7) | 6 AP (p7) | 6 AP (p7) |
 
 Wood has no row by design (wood is always plain, §34.1) — and that is lucky:
 a wood+rider card would be the only combination in the whole table that
@@ -252,7 +254,7 @@ comparison.
 | Poison Dagger | `P DA` | 2 / bronze / poison | **2** | 1 |
 | Iron Sword | `I SW` | 5 / iron / — | **2** | 1 |
 | Iron Ring | `I RG` | 4 / iron / — | **2** | 1 |
-| Mythril Bow | `M BO` | 9 / mythril / — | **5** | 2 |
+| Mythril Bow | `M BO` | 7 / mythril / — | **5** | 2 |
 | Steel Shield | `S SH` | 6 / steel / — | **3** | — (new, docs/enemies_ranking.md §5.2: the merchant-stocked answer to the Lord's flat-6 swing) |
 | Shop Keys | `SHOP KEYS` | SPECIAL, not playable | **0** | 0 |
 | Bone | `BONE` | SPECIAL, not playable | **0** | 0 |
@@ -653,7 +655,7 @@ cannot fail is not a check (AGENTS.md §52.16).
 | Alternative | Why not |
 |---|---|
 | **Hand-maintained 100-cell cost table** (one number per material × effect × weapon) | Exactly the status quo with more cells: the same six locations to keep in sync, no guarantee of monotonicity, and a new material means 20 new numbers plus 8 new gate expectations. |
-| **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire bow (p3) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire bow (p9) costs the same 5 as a plain one.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
+| **Power only** (`AP = ceil(power / 2)`) | The rider is free at every tier: a bronze fire bow (p2) costs the same 2 AP as a plain bronze sword, and at the top a mythril fire bow (p7) costs the same 5 as a plain one.  Pricing the side effect at nothing is the whole thing this formula exists to avoid. |
 | **Price-proportional** (`AP = ceil(price / 10)`, rounding up) | Couples tempo to the gold economy: a sell-price tweak would silently change what is playable, and the Merchant's mythril bow (30 g, authored) would cost 3 AP by coincidence, not by design — while a loot roll of the same combo (17 g) would cost 2.  The division rule is itself arbitrary: with C integer division those same two prices give 3 and 1 instead, so the mapping has to be specified *and* justified, which the value ladder does not. |
 | **Percent-of-card rider** (`power × 1.2` for a rider) | Backwards: it charges the most for the rider on the card where the rider matters least (a flat 3-damage status). |
 | **Exponential tiers** (`2^material`) | Blows past any foreseeable pool: wood 1, bronze 2, iron 4, then steel 8 and mythril 16, so the top half of the ladder is unplayable and every rider there is free by default. |
@@ -702,13 +704,13 @@ For every card the content tables can build:
 
 ```text
 power    = 1                    if material == wood
-         = 2·material + 1       sword, bow
-         = 2·material           dagger, shield, ring
-
-material = power >> 1           (both cases)
+         = 2·material + 1       sword
+         = 2·material           shield, ring, and bronze bow/dagger
+         = 2·material - 1       iron+ bow/dagger
 ```
 
-which is why §4.1/§4.2 can be read straight off the power ladder:
+which is why §4.1/§4.2 can be read straight off the power ladder for
+swords/shields/rings (bows read their dagger-ladder column instead):
 
 ```text
 p1 -> wood      plain 1 AP   rider 2 AP
@@ -724,6 +726,11 @@ p9 -> mythril   plain 5 AP   rider 6 AP
 
 (The p1 rider cell is arithmetic only: wood cannot carry an effect (§4.2),
 so no legal wood card ever reaches 2 AP.)
+
+Bows read one material up from the same power: a p3 bow is iron, not
+bronze, so p3 bow = plain 2 AP / rider 3 AP, p5 bow = steel (plain 3 /
+rider 4), p7 bow = mythril (plain 5 / rider 6).  The §4.1/§4.2 tables
+stay authoritative per weapon; the ladder above is the sword mapping.
 
 Any card that breaks this ladder (a curated off-band card, a future weapon
 with a different band) is still priced correctly, because the formula reads

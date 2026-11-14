@@ -87,9 +87,13 @@ void game_over_screen_update(Game *g)
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (g->game_over_choice == 0) {
-            screen_change(g, SCREEN_SAVE_LOAD);
+            /* Continue from the active slot (the last autosave): no
+             * picker.  The picker update consumes the auto flag
+             * (message 4) on entry and loads the slot at once; a
+             * missing/invalid save falls back to the manual picker. */
             g->save_slot_mode = 0; /* LOAD */
-            g->save_slot_index = 0;
+            g->save_slot_message = 4; /* auto-continue */
+            screen_change(g, SCREEN_SAVE_LOAD);
         } else {
             s_thanks_frames = 0;
             screen_change(g, SCREEN_THANKS);
