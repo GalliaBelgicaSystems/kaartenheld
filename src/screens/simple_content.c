@@ -61,7 +61,7 @@ void ending_content_render(void)
     static const char * const s_lines[9] = {
         "      THE END",
         "--------------------",
-        "Congratulations for",
+        "Congratulations on",
         "beating the battle",
         "demo of Kaartenheld!",
         "Follow",
