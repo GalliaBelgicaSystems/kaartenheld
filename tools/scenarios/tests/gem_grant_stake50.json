@@ -1,7 +1,7 @@
 {
-  "name": "gem_grant_net20",
+  "name": "gem_grant_stake50",
   "test": true,
-  "description": "Chuck-a-luck prize: leaving +20 net up in one sitting (20 -> 50 on a 3:1 BET=10 win, seed 579 dice 1/1/1) wins the STRAIGHT gem once -- Nis's prize dialogue opens with the owned bit set.",
+  "description": "Chuck-a-luck prize: staking 50 in one sitting (5 x BET=10 rolls from 100 gold) wins the STRAIGHT gem once -- Nis's prize dialogue opens with the owned bit set.",
   "actions": [
     {
       "type": "press",
@@ -61,6 +61,70 @@
     },
     {
       "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
       "button": "B"
     },
     {
@@ -93,11 +157,6 @@
       "expected": 1
     },
     {
-      "type": "currency",
-      "expected": 50,
-      "currency": "GOLD"
-    },
-    {
       "type": "event_arg",
       "event": "DIALOGUE_STARTED",
       "index": 0,
@@ -111,6 +170,9 @@
       "y": 7,
       "facing": "RIGHT"
     },
-    "seed": 579
+    "seed": 579,
+    "currency": {
+      "GOLD": 100
+    }
   }
 }

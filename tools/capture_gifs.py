@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """README GIF captures (host-side, never CI-gated).
 
-Produces four headless PyBoy recordings of the RELEASE ROM, assembled to GIF
+Produces five headless PyBoy recordings of the RELEASE ROM, assembled to GIF
 with Pillow:
 
   screenshots/boot.gif       Gallia Belgica splash -> Kaartenheld title
-  screenshots/battle.gif     kobold trio: combo selection + attack
+  screenshots/battle.gif     forest kobold: combo selection + attack
                              (the hand is whatever battle start deals from
                              the shuffled pile, not a fixed opening hand)
-  screenshots/overworld.gif  Field -> forest gate -> wander to the chest
+  screenshots/heal.gif       kobold hit, then a staged HE5 card + HP pulse
+  screenshots/overworld.gif  Field spawn -> north gate -> wander in Forest
   screenshots/boss.gif       Lord of Slimes: glowing eyes blink in battle
 
 Regenerate with `make gifs`.  The frames are a visual aid only; the semantic
@@ -122,7 +123,7 @@ def stage_energy_pool(s, amount=5):
 
 
 def capture_battle():
-    """Kobold trio: select the combo the dealt hand offers, then attack."""
+    """Kobold: select the combo the dealt hand offers, then attack."""
     checks = []
     planner = Planner()
     s = Session(checks, "gif-battle")
@@ -340,16 +341,26 @@ def capture_boss():
         # into the throne room early).
         castle_arrival = planner.arrival_pos("castle") or spawn
         W.follow(s, planner, "field", field_entry, "castle", castle_arrival)
-        # Cross into the throne room and stop one tile south of the boss
-        # (position from the level JSON, so it follows content moves).
+        # Cross into the throne room and stop short of the intro line:
+        # the throne-room intro dialogue fires at y<=11 and swallows
+        # movement presses, stalling the router mid-leg (its drains only
+        # cover victory/knight aftermath, never objective dialogue).  So
+        # walk to (9,12), step into the trigger deliberately, close the
+        # intro box, then walk the rest and bump the Lord.
         throne = W._level("throne_room")
         lord = next(o for o in throne["objects"]
                     if (o.get("properties") or {}).get("entity_id")
                     == "ENTITY_ID_SLIME_LORD")
         lxy = (lord["position"]["x"], lord["position"]["y"])
-        W.follow(s, planner, "castle", s.pos(), "throne_room",
-                 (lxy[0], lxy[1] + 1))
+        W.follow(s, planner, "castle", s.pos(), "throne_room", (9, 12))
         throne_id = planner.scenes["throne_room"].scene_id
+        s.settle_scene(expected_scene=throne_id)
+        s.press("up", settle=24)
+        W.close_box(s)
+        path = planner.path("throne_room", tuple(s.pos()),
+                            (lxy[0], lxy[1] + 1))
+        if path:
+            W._walk_path(s, path)
         s.settle_scene(expected_scene=throne_id)
         if not s.text_has("DECK:"):
             s.check("boss engaged",

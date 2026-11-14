@@ -124,6 +124,15 @@ static void gamble_do_roll(void)
     gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
     if (gold < (int16_t)bet || gold <= 0) return;
 
+    /* Cumulative stake for the gem prize (docs/chuck-a-luck.md): every
+     * covered bet counts, win or lose.  Saturates: the bar is 50, so
+     * anything past 255 is the same won prize. */
+    if (g_gamble.staked > (uint8_t)(255 - bet)) {
+        g_gamble.staked = 255;
+    } else {
+        g_gamble.staked = (uint8_t)(g_gamble.staked + bet);
+    }
+
     for (k = 0; k < 3; k++) {
         /* Uniform 0..5: reject 252..255 (256 = 42*6 + 4), then fold by
          * repeated subtraction (no 8-bit * or %: those pull the SDCC
@@ -430,7 +439,7 @@ static void gamble_draw_gold_rows(void)
     gamble_color_span(0, 9, 20, UI_COLOR_FIELD);
 }
 
-/* Row 10: match detail during RESULT, blank during CHOOSE. */
+/* Row 10: match detail during RESULT; stake progress during CHOOSE. */
 static void gamble_draw_mid_row(void)
 {
     char buf[17];
@@ -439,6 +448,7 @@ static void gamble_draw_mid_row(void)
     uint8_t profit;
     uint8_t tens;
     uint8_t ones;
+    uint8_t n;
 
     gamble_draw_text_line(0, 10, 0, 20);
     if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
@@ -500,7 +510,12 @@ static void gamble_draw_mid_row(void)
         gamble_draw_text_line(0, 10, buf, 17);
         gamble_color_span(0, 10, 17, UI_COLOR_FIELD);
     } else {
-        gamble_color_span(0, 10, 20, UI_COLOR_NONE);
+        /* CHOOSE: live stake progress toward the gem bar, so the player
+         * sees every bet counting ("STAKED:n/50"). */
+        gamble_draw_text_line(0, 10, "STAKED:", 7);
+        n = gamble_draw_num(7, 10, (int16_t)g_gamble.staked);
+        gamble_draw_text_line((uint8_t)(7 + n), 10, "/50", 3);
+        gamble_color_span(0, 10, 20, UI_COLOR_FIELD);
     }
 }
 
@@ -732,17 +747,15 @@ static void gamble_entry(void)
  * the normal dialogue path. */
 static void gamble_exit(void)
 {
-    int16_t gold;
     int16_t owned;
-    /* Gem prize (docs/chuck-a-luck.md): leaving +20 net (or more) up in
-     * one sitting wins the STRAIGHT gem -- once.  Direct variable write
+    /* Gem prize (docs/chuck-a-luck.md): staking 50 or more in one
+     * sitting wins the STRAIGHT gem -- once.  Direct variable write
      * (same v1 gap as the table's own gold moves: no VARIABLE_SET event
      * fires); the observable grant signal is the distinct prize dialogue
      * staged below (DIALOGUE_STARTED KOBOLD_PRIZE), and the owned bit is
      * snapshot-assertable. */
-    gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
     owned = g_game.state.variables.values[VARIABLE_ID_GEM_OWNED - 1];
-    if ((int16_t)(gold - g_gamble.entry_gold) >= 20 &&
+    if (g_gamble.staked >= 50 &&
         (owned & (int16_t)(1 << GEM_STRAIGHT)) == 0) {
         g_game.state.variables.values[VARIABLE_ID_GEM_OWNED - 1] =
             (int16_t)(owned | (int16_t)(1 << GEM_STRAIGHT));
@@ -889,7 +902,7 @@ void gamble_frame_banked(void)
         g_gamble_sfx = 0;         /* no queued blip on entry */
         g_gamble_bye = 0;
         g_gamble.entered = 1;
-        g_gamble.entry_gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
+        g_gamble.staked = 0;      /* one sitting starts at zero staked */
         gamble_entry();
         return;
     }

@@ -185,8 +185,8 @@ HERO is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
 
 The fourth tab lists owned gems, one row per gem (`STRAIGHT GEM` + `ON` /
 `OFF` equip state, skill line below).  Empty pocket: `NO GEMS YET` /
-`WIN +20 AT NIS`.  Gems start at zero owned; gem 0 is won at the
-chuck-a-luck table by leaving +20 net up in one sitting
+`STAKE 50 AT NIS`.  Gems start at zero owned; gem 0 is won at the
+chuck-a-luck table by staking 50 in one sitting
 (docs/chuck-a-luck.md).  Owning alone does nothing -- A toggles the
 equipped bit manually (never auto-equipped), at most MAX_EQUIPPED_GEMS=3
 equipped at once (`MAX 3 GEMS` refusal otherwise).  Equipped state lives
@@ -195,7 +195,7 @@ snapshot, descriptor, saves and the roundtrip cover gems with no
 transport churn; the grant itself is observable through the prize
 dialogue (`DIALOGUE_STARTED KOBOLD_PRIZE`) and the skill through
 `COMBO_RESOLVED` (tier 10).  Scenarios: `gem_empty`, `gem_equip`,
-`gem_unequip`, `gem_grant_net20`, `gem_grant_norepeat`, `gem_no_grant`.
+`gem_unequip`, `gem_grant_stake50`, `gem_grant_norepeat`, `gem_no_grant`.
 
 ## 6. Reshuffle semantics (combat)
 
