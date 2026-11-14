@@ -10,7 +10,7 @@ classifies while the STRAIGHT gem is equipped -- see §Gem gate), and
 
 The tier lives behind the GEM tab: it only classifies while
 `VARIABLE_ID_GEM_EQUIPPED` has the `GEM_STRAIGHT` bit (the STRAIGHT gem,
-won at the chuck-a-luck table by leaving +20 net up in one sitting,
+won at the chuck-a-luck table by staking 50 in one sitting,
 docs/chuck-a-luck.md; equipped manually on the GEM tab).  Unequipped,
 the ladder is exactly the old one -- bare pairs and high cards are
 unchanged (scenario `gem_combo_locked`).

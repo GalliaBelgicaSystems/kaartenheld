@@ -601,9 +601,9 @@ counter-less quests).
 
 **GEM tab** — owned gems, one row per gem with `ON`/`OFF` equip state and
 the skill line below (`STRAIGHT GEM` → `SHORT STRAIGHT`).  Starts empty
-(`NO GEMS YET` / `WIN +20 AT NIS`).  `A` toggles equip manually (at most
+(`NO GEMS YET` / `STAKE 50 AT NIS`).  `A` toggles equip manually (at most
 3 equipped at once); owning alone does nothing.  Gem 0 is won at Nis's
-chuck-a-luck table by leaving +20 net up in one sitting
+chuck-a-luck table by staking 50 in one sitting
 (docs/chuck-a-luck.md); while
 equipped, 3-card runs score as SHORT STRAIGHT (§8.2).  Resolution is
 best-subset: the game automatically plays the highest-scoring subset of
