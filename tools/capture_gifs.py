@@ -341,16 +341,26 @@ def capture_boss():
         # into the throne room early).
         castle_arrival = planner.arrival_pos("castle") or spawn
         W.follow(s, planner, "field", field_entry, "castle", castle_arrival)
-        # Cross into the throne room and stop one tile south of the boss
-        # (position from the level JSON, so it follows content moves).
+        # Cross into the throne room and stop short of the intro line:
+        # the throne-room intro dialogue fires at y<=11 and swallows
+        # movement presses, stalling the router mid-leg (its drains only
+        # cover victory/knight aftermath, never objective dialogue).  So
+        # walk to (9,12), step into the trigger deliberately, close the
+        # intro box, then walk the rest and bump the Lord.
         throne = W._level("throne_room")
         lord = next(o for o in throne["objects"]
                     if (o.get("properties") or {}).get("entity_id")
                     == "ENTITY_ID_SLIME_LORD")
         lxy = (lord["position"]["x"], lord["position"]["y"])
-        W.follow(s, planner, "castle", s.pos(), "throne_room",
-                 (lxy[0], lxy[1] + 1))
+        W.follow(s, planner, "castle", s.pos(), "throne_room", (9, 12))
         throne_id = planner.scenes["throne_room"].scene_id
+        s.settle_scene(expected_scene=throne_id)
+        s.press("up", settle=24)
+        W.close_box(s)
+        path = planner.path("throne_room", tuple(s.pos()),
+                            (lxy[0], lxy[1] + 1))
+        if path:
+            W._walk_path(s, path)
         s.settle_scene(expected_scene=throne_id)
         if not s.text_has("DECK:"):
             s.check("boss engaged",
