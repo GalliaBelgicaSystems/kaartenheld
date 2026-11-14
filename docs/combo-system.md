@@ -110,7 +110,7 @@ winning play (`gem_combo_preview`, reads `SHORT STR`), so preview and
 result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
-damage, base poison chance 50% scaled by the hand multiplier.  Poison
+damage, base poison chance 82% scaled by the hand multiplier.  Poison
 deals no damage -- it greys out the victim's cards while it lasts;
 re-applications refresh duration (stacks deepen for telemetry only).
 

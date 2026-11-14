@@ -127,12 +127,13 @@ you own:
 |---|---|
 | **Sword** (`SW`) | Hurts the monster. |
 | **Shield** (`SH`) | Blocks damage when the monster attacks. |
-| **Bow** (`BO`) | Hurts from far away. The mighty Mythril Bow costs extra Energy. |
+| **Bow** (`BO`) | Hurts from far away. Bows hit softer than swords but their fire and ice arrows carry dangerous riders. |
 | **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
 | **Dagger** (`DA`) | A small hit that can poison. Played alone on defence, it strikes first -- a killing blow takes no damage. |
 
 Some cards are extra special: a **Fire Bow** burns, a **Poison Dagger**
-poisons, and the **Mythril Bow** hits very, very hard.
+poisons, and the **Mythril Bow** shoots often (its arrows are cheap to
+play, so it fires turn after turn).
 
 ### Collection and deck
 
@@ -258,7 +259,7 @@ his stolen shop keys from the mountains, his shop opens for business:
 
 Press **A** to buy and **B** to leave. Press **LEFT** or **RIGHT** to
 switch between the **BUY** and **SELL** tabs and sell cards you do not
-need. The Merchant sells a powerful **Mythril Bow** and an **Iron Ring**
+need. The Merchant sells a handy **Mythril Bow** and an **Iron Ring**
 — your best friend when you are hurt — plus your starter cards, always
 free.
 

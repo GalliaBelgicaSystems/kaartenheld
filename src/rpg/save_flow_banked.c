@@ -23,8 +23,8 @@ extern uint8_t ui_font_tile_base;
  * Self-contained (AGENTS.md §52.11.1): WRAM staging + GameState +
  * SRAM + ROM consts only, never a fixed-bank call, no trampoline
  * nesting, no di/ei (§52.11.3), no * / % (§52.18).  The SRAM probe and
- * write duplicate the op-0/op-1 paths of save_op_banked (bank 8):
- * KEEP IN SYNC with save_banked.c if the slot geometry or checksum
+ * write duplicate the op-0/op-1 paths of save_op_banked (bank 12):
+ * KEEP IN SYNC with save_sram_banked.c if the slot geometry or checksum
  * ever changes. */
 
 static uint8_t pick_checksum(const GameState *state)

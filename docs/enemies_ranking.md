@@ -270,8 +270,8 @@ always beats wood (1).
 Material is *also* the dominant term in the AP cost (4 points per tier, and
 mythril carries a 12-point premium).  This is why the material ladder and
 the tempo ladder mostly agree but deliberately not always — a mythril bow
-costs 5 AP and sells for 17 g, a mythril fire bow costs 6 AP and sells
-for the same 17 g.
+costs 5 AP and sells for 15 g, a mythril fire bow costs 6 AP and sells
+for the same 15 g.
 
 ### 2.3 The rider ladder
 
@@ -309,7 +309,7 @@ Power / AP / sell price for representative cards (all formulas from §1.5):
 | `M F BO` | 9 | 6 | 17 g | – |
 | `B P DA` | 2 | 2 | 6 g | – |
 | `I RG` | 4 | 2 | 8 g | 3/battle |
-| `M BO` | 9 | 5 | 17 g | – |
+| `M BO` | 7 | 5 | 15 g | – |
 
 ### 2.6 What is missing
 

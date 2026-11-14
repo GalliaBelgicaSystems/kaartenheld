@@ -34,7 +34,10 @@ bool load_game_slot(uint8_t slot, GameState *state);
 
 /* Lives in ROM (const, other TU) precisely so SDCC cannot fold it. */
 extern const uint16_t g_save_state_capacity;
-/* Bank-8 SRAM bodies (src/rpg/save_banked.c). */
+/* Bank-12 SRAM bodies (src/rpg/save_sram_banked.c).  The fixed-bank
+ * dispatchers below target them by symbol (bank-agnostic trampoline);
+ * the bodies touch only SRAM/WRAM/staging plus one ROM const, so they
+ * live in any bank with room. */
 void save_op_banked(void);
 
 /* Bank-12 save-flow bodies (src/rpg/save_flow_banked.c).

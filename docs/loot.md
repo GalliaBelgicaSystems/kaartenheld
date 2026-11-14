@@ -1660,12 +1660,14 @@ Names look like `W SW` (plain wood sword), `M P DA` (mythril poison
 dagger), `B F BO` (bronze fire bow).  Wood+rider names cannot occur:
 wood is always plain.
 
-* **Material bands, not base+bonus:** sword/bow take the high end of a
-  band, shield/ring the low end; daggers run one band step softer *and*
-  one point under swords (wood 1, bronze 2, iron 3, steel 5,
-  mythril 7 -- bronze holds 2 so it always beats wood).  Wood is 1 for
-  every weapon; bronze 2/3; iron 4/5; steel 6/7; mythril 8/9.  The same
-  bands power attack, defense (shield block) and healing (ring heal).
+* **Material bands, not base+bonus:** swords take the high end of a
+  band, shields/rings the low end; bows and daggers run one band step
+  softer *and* one point under swords, on par with each other (wood 1,
+  bronze 2, iron 3, steel 5, mythril 7 -- bronze holds 2 so it always
+  beats wood).  Wood is 1 for every weapon; bronze swords 3 (bow/dagger
+  2); iron swords 5 (bow/dagger 3); steel swords 7 (bow/dagger 5);
+  mythril swords 9 (bow/dagger 7).  The same bands power attack,
+  defense (shield block) and healing (ring heal).
 * **Wood never carries a rider.**  The generator forces `plain` at wood,
   and synthesis strips hand-encoded wood+rider ids.  Rider cards
   (poison/fire/ice) are therefore bronze and above.
@@ -1683,8 +1685,9 @@ wood is always plain.
 * Fire/ice rows are LIVE (Phase D): fire bows carry a BURN rider
   (10% of the inflicting hit per round, min 1, 3-round duration) and
   ice bows a FREEZE rider (the target's cards grey out for 2 rounds);
-  chances tuned like DA1 in 1/255 units.  Adding future effects later
-  = filling in their table rows.
+  chances ride the per-effect table in 1/255 units (poison/fire 208,
+  ice 176 -- riders are meant to land, not to lottery).  Adding future
+  effects later = filling in their table rows.
 * Every combination maps to a **derived CardId** in the loot id range
   (`LOOT_ID_BASE` = `0x60` .. `0xFF`; 5 materials x 4 effects x 8
   weapons = 160 ids): `id = BASE + (material*Neff + effect)*Nwpn + wpn`.
@@ -1874,7 +1877,7 @@ the shop keys completes the quest (+15g, shop keys removed) and opens the
 shop; finding it is what makes the delivery (and the shop) available:
 
 * BUY: the merchant stocks the curated IRON RING (**RG4**, 20g), the
-  mythril bow (**BO9**, 30g), and the steel shield (**SH6**, 12g, the
+  mythril bow (**BO7**, 30g), and the steel shield (**SH6**, 12g, the
   merchant-stocked answer to the Lord's flat-6 swing), one of each --
   plus the starter basics (WOOD SWORD, WOODEN SHIELD, BRONZE SWORD)
   at **FREE** (price 0, always affordable; capped by max_copies at buy

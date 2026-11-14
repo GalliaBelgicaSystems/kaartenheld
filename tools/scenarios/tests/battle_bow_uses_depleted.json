@@ -1,7 +1,7 @@
 {
  "name": "battle_bow_uses_depleted",
  "test": true,
- "description": "A bow with its uses spent renders the 0-arrows glyph on the floor row (tile 98) while the middle row keeps the nine power icon; the semantic row reads BO0.",
+ "description": "A bow with its uses spent renders the 0-arrows glyph on the floor row (tile 98) while the middle row keeps the real power digit (font tile 19 = '3'); the semantic row reads BO0.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,7 +21,7 @@
    "type": "set_hand_card",
    "index": 0,
    "card_type": "BO",
-   "value": 10
+   "value": 3
   },
   {
    "type": "set_hand_card_meta",
@@ -52,7 +52,7 @@
    "type": "tilemap_cell",
    "row": 13,
    "col": 1,
-   "expected": 102
+   "expected": 19
   },
   {
    "type": "tilemap_cell",

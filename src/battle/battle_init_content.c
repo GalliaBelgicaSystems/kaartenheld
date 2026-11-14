@@ -94,17 +94,18 @@ void battle_init_deck_banked(void)
 
             /* Status rider: wood carries none; otherwise only legal
              * (effect, weapon) pairs.  Poison = dagger only; fire/ice =
-             * bow only (swords never ride). */
+             * bow only (swords never ride).  Chances match the synth
+             * tables (loot_banked.c / deck_merge_banked.c). */
             if (mat >= MAT_BRONZE) {
                 if (eff == EFF_POISON && wpn == WPN_DAGGER) {
                     b->deck.cards[i].status_id = STATUS_POISON;
-                    b->deck.cards[i].status_chance = 128;
+                    b->deck.cards[i].status_chance = 208;
                 } else if (eff == EFF_FIRE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_BURN;
-                    b->deck.cards[i].status_chance = 128;
+                    b->deck.cards[i].status_chance = 208;
                 } else if (eff == EFF_ICE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_FREEZE;
-                    b->deck.cards[i].status_chance = 96;
+                    b->deck.cards[i].status_chance = 176;
                 }
             }
 

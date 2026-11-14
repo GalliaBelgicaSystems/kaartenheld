@@ -1,16 +1,18 @@
-#pragma bank 8
+#pragma bank 12
 
 #include "save.h"
 #include <gb/gb.h>
 #include "banked.h"
 
 /* ── Banked SRAM save/load bodies (src/rpg/save.c dispatchers) ──────
- * Runs from ROM bank 8 via the WRAM banked-call trampoline so the
+ * Runs from ROM bank 12 via the WRAM banked-call trampoline so the
  * checksum/copy loops do not consume the fixed-bank budget (or the
- * tight bank-3 battle budget).  Pure
- * WRAM/SRAM byte access: ENABLE_RAM/DISABLE_RAM expand to plain rRAMG
- * register stores (no calls), so this is self-contained per the banked
- * ABI (AGENTS.md 52.11.1).
+ * tight bank-3 battle budget).  Moved out of the overflow bank 8,
+ * which sits near 16 KB in both builds; bank 12 has room to spare.
+ * Pure WRAM/SRAM byte access: ENABLE_RAM/DISABLE_RAM expand to plain
+ * rRAMG register stores (no calls), so this is self-contained per the
+ * banked ABI (AGENTS.md 52.11.1) -- no same-bank data reads, which is
+ * what makes the move safe.
  *
  * Staging: ptr_a = GameState* (NULL for save_present_slot), byte_a =
  * slot index.  Result reports through the shared WRAM byte below;
