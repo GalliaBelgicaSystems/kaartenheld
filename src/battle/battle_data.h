@@ -136,7 +136,9 @@ typedef struct CardSkinDef {
     uint8_t uses_type;         /* BATTLE_CARD_TYPE whose finite-use cards draw
                                   the arrow counter on the floor row; 0xFF = none */
     uint8_t uses_tile[6];      /* remaining uses 0..5 -> arrow icon tile */
-    uint8_t uses_power_tile;   /* power-row glyph for the uses_type (nine icon) */
+    uint8_t uses_power_tile;   /* legacy power-row glyph for the uses_type
+                                 (nine icon; unused since hand cards show
+                                 their real power digit) */
 } CardSkinDef;
 
 extern const CardSkinDef g_card_skin;   /* generated (bank 4) */

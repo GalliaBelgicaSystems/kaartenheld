@@ -312,7 +312,7 @@ Every tool in battle is a **card**.  Cards have several attributes
 | **Name / identity** | e.g. `I SW`, `W SH`, `M P DA`.  The shop and deck list show the weapon with its icons (material ingot + weapon tile); the CARDS detail page shows the full `<MATERIAL> <WEAPON>` name (`IRON SWORD`, element-colored by rider). |
 | **Battle code** | Weapon symbol + power.  The **shop** labels a card `SW5`,
 `SH1`, `RG4`; the **battle hand** uses its own code set — `SW5`, `SH1`,
-`BO9`, **`HE4`** for a heal ring, `DA2`. |
+`BO7`, **`HE4`** for a heal ring, `DA2`. |
 | **Type** | Broad category: ATK / DEF / HEL / STS / UTL / SPL (see below). |
 | **Power** | Base magnitude of the effect. |
 | **Cost** | Energy price to play in battle (wood/bronze 1, iron 2, steel 3–4, mythril 5, riders 6). |
@@ -345,9 +345,9 @@ All catalogue cards (`src/game/cards_content.c`):
 | Wooden Shield | `W SH` | `SH1` | DEF | 1 | 1 | – | 4 | — | — |
 | Ring (shop) | `I RG` | `RG4` | HEL | 4 | 2 | 3/battle | 1 | — | 20g |
 | Bronze Sword | `B SW` | `SW3` | ATK | 3 | 1 | – | 3 | — | — |
-| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 128 | — |
+| Poison Dagger | `P DA` | `DA2` | ATK | 2 | 2 | – | 3 | POISON 208 | — |
 | Shop Keys | `SHOP KEYS` | — | SPL | 0 | 0 | – | 1 | — | — |
-| Mythril Bow | `M BO` | `BO9` | ATK | 9 | 5 | 2/battle | 1 | — | 30g |
+| Mythril Bow | `M BO` | `BO7` | ATK | 7 | 5 | 2/battle | 1 | — | 30g |
 
 The catalog Iron Sword (`CARD_IRON_SWORD`, id `0x40`) is a test/legacy
 entry: it has no shop row, is not in the starter deck, and never drops.
@@ -355,8 +355,8 @@ Scenarios use it as a convenient power-5 sword.  In normal play iron
 swords come from loot as derived ids (e.g. `0xA0` for a plain iron
 sword), which start dropping at AP 4 (loot.md §34.5).
 
-Chances are in 1/255 units: `128` ≈ 50%.  They scale with your combo
-multiplier (§8.4).
+Chances are in 1/255 units: `208` ≈ 82% (poison/fire), `176` ≈ 69%
+(ice).  They scale with your combo multiplier (§8.4).
 
 ### 5.4 The collection and the battle deck
 
@@ -712,9 +712,9 @@ deaths from poison/burn resolve like combat deaths.
 
 * Player→enemy: the status rider on your **leading card**, with a base
   chance scaled by your combined multiplier (`chance × mult / 100`,
-  capped ~100%), rolled vs the deterministic RNG.  `F BO` → BURN 128,
-  `P DA` → POISON 128, loot fire bows → BURN 128, loot ice bows →
-  FREEZE 96, loot poison daggers → POISON 128.
+  capped ~100%), rolled vs the deterministic RNG.  `F BO` → BURN 208,
+  `P DA` → POISON 208, loot fire bows → BURN 208, loot ice bows →
+  FREEZE 176, loot poison daggers → POISON 208.
 * Enemy→player: the bat's poisoned swing carries a ~60/255 poison chance
   that confuses your next decision (random hand, no input).
 
@@ -773,7 +773,7 @@ One shop exists (`screens/shops/2.json`, actors at `levels/town.json`):
 
 * **Lost Merchant** (Town, (11,3)) — sells the **Iron Ring** (`I RG`,
   `RG4`) for **20g** (a heal card; the game's only reliable healing
-  outside loot rings) and the **Mythril Bow** (`M BO`, `BO9`) for
+  outside loot rings) and the **Mythril Bow** (`M BO`, `BO7`) for
   **30g**, one copy of each.  Reachable only after the Lost Shop Keys
   quest (§4.3): before the delivery he re-briefs instead of selling.
 

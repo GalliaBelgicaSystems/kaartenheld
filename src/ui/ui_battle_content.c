@@ -263,12 +263,13 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     uint8_t top, r;
     uint8_t frame = UI_TILE_CARD_FRAME_BASE;
     uint8_t digit_tile;
-    /* Arrow-counter type (the bow): finite-use cards draw the power icon
-     * on the middle row and the remaining-uses glyph on the floor row.
-     * HEAL rings share the floor counter (same glyphs) but show X on
-     * the middle row: rings are jokers with no fixed value, so the
-     * power digit is meaningless; the uses (material band) are what
-     * matter and stay on the floor. */
+    /* Arrow-counter type (the bow): finite-use cards draw the power
+     * digit on the middle row (their real damage) and the
+     * remaining-uses glyph on the floor row.  HEAL rings share the
+     * floor counter (same glyphs) but show X on the middle row:
+     * rings are jokers with no fixed value, so the power digit is
+     * meaningless; the uses (material band) are what matter and stay
+     * on the floor. */
     uint8_t limited;
     char *buf;
 
@@ -347,8 +348,8 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
         } else {
             /* Middle band: side rails + interior content.  The first
              * interior row carries the weapon icon; the second carries
-             * the power digit — or, for the arrow-counter type, the
-             * power icon from the skin (the nine). */
+             * the power digit (bows included: the digit is the card's
+             * real damage). */
             battle_vram_sync_write(&dst[0], (uint8_t)(frame + 3));
             if (r == 1) {
                 battle_vram_sync_write(&dst[1], tile_wpn);
@@ -356,14 +357,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                 g_tilemap_mirror[(top + r) * 32 + x + 1] = tile_wpn;
 #endif
             } else if (r == (uint8_t)(bh - 2)) {
-                if (limited && type == g_card_skin_wram.uses_type) {
-                    battle_vram_sync_write(&dst[1],
-                        g_card_skin_wram.uses_power_tile);
-#ifdef DEBUG_BUILD
-                    g_tilemap_mirror[(top + r) * 32 + x + 1] =
-                        g_card_skin_wram.uses_power_tile;
-#endif
-                } else if (type == BATTLE_CARD_TYPE_HEAL) {
+                if (type == BATTLE_CARD_TYPE_HEAL) {
                     /* Rings are jokers (no fixed value): the middle row
                      * shows the X glyph (VRAM 115, retired coin slot)
                      * while the floor row keeps the remaining-uses
@@ -373,8 +367,8 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
                     g_tilemap_mirror[(top + r) * 32 + x + 1] = UI_TILE_RING_X;
 #endif
                 } else {
-                    /* Plain cards show their power digit here (the skin
-                     * power icon branch above is the bow's nine). */
+                    /* Power digit: plain cards and bows alike show
+                     * their real damage here. */
                     if (limited) {
                         digit_tile = (uint8_t)('0' - ' ' + value);
                     }

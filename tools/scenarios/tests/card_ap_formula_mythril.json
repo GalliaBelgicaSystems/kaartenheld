@@ -1,7 +1,7 @@
 {
  "name": "card_ap_formula_mythril",
  "test": true,
- "description": "AP formula mythril floor (docs/card-ap-cost-formula.md §3.4/§4.1): a real deck of five mythril bows (power 9 + mythril premium = 5 AP) dealt through deck_init draws pip tile 122 (AP_TILE_5) on all five hand slots. Pips draw regardless of affordability, so the base-2 pool is fine.",
+ "description": "AP formula mythril floor (docs/card-ap-cost-formula.md \u00a73.4/\u00a74.1): a real deck of five mythril bows (power 7 + mythril premium = 5 AP) dealt through deck_init draws pip tile 122 (AP_TILE_5) on all five hand slots. Pips draw regardless of affordability, so the base-2 pool is fine.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

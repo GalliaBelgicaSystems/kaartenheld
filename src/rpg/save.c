@@ -7,16 +7,16 @@
 const uint16_t g_save_state_capacity =
     (uint16_t)(SAVE_SLOT_STRIDE - SAVE_SRAM_STATE_OFF);
 
-/* Fixed-bank dispatchers for the bank-8 SRAM bodies
- * (src/rpg/save_banked.c), keeping the checksum/copy loops out of the
- * fixed-bank budget.  Results report through g_save_ok (shared WRAM
+/* Fixed-bank dispatchers for the bank-12 SRAM bodies
+ * (src/rpg/save_sram_banked.c), keeping the checksum/copy loops out of
+ * the fixed-bank budget.  Results report through g_save_ok (shared WRAM
  * byte, written by the banked body).  See banked.h for the ABI. */
 
 extern uint8_t g_save_ok;
 
 static bool save_dispatch(uint8_t op, uint8_t slot, const GameState *state)
 {
-    g_bk_call_bank = 8;
+    g_bk_call_bank = 12;
     g_bk_call_target = (uint16_t)&save_op_banked;
     g_bk_ptr_a = (void *)state;
     g_bk_byte_a = slot;
