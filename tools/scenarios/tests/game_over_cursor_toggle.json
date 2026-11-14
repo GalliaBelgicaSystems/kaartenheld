@@ -1,7 +1,7 @@
 {
  "name": "game_over_cursor_toggle",
  "test": true,
- "description": "Game-over cursor moves cleanly: DOWN flips the choice to NO and the YES row loses its '>' in both the semantic buffer and real VRAM (no duplicated cursor, AGENTS.md 52.25 family).",
+ "description": "Game-over cursor moves cleanly: DOWN flips the choice to NO, the YES row loses its '>' in both the semantic buffer and real VRAM (no duplicated cursor, AGENTS.md 52.25 family), and the move plays the battle-cursor blip.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -45,6 +45,10 @@
    "type": "vram_row_not_contains",
    "row": 11,
    "contains": ">"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
   }
  ]
 }

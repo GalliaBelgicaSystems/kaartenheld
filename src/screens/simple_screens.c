@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "telemetry.h"
 #include "ui.h"
+#include "audio.h"
 #include "banked.h"
 
 /* The simple screens' render bodies (strings + text drawing) live in the
@@ -84,6 +85,7 @@ void game_over_screen_update(Game *g)
 
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
         g->game_over_choice = !g->game_over_choice;
+        audio_play_sfx(SFX_CURSOR);
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (g->game_over_choice == 0) {
