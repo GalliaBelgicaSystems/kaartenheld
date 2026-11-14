@@ -786,25 +786,42 @@ def walk_a(planner, checks, sram_out=None):
     deck0 = s.reader.deck_count()
     s.check("deck above the MIN floor", deck0 - 1 >= 5,
             expected="deck0 - 1 >= 5", actual=str(deck0))
-    # Unified grid: DOWN lands the first group (fully decked -- every
-    # row draws now, zero counts included), RIGHT steps to its deck
-    # cell, A sends one copy back to the pile.  No side flips.
+    # Unified grid: DOWN lands the first pile group, or -- when every
+    # owned copy is decked -- the deck side's first row (the FILTER row
+    # never flips sides; loot varies the composition run to run, and
+    # the A-removal below always frees a pile copy again).  Per-side
+    # packing caveat: the pile and deck blocks pack independently
+    # (each skips groups with a zero count on its side), so the same
+    # view-row is NOT the same screen-row when the sides skip
+    # different groups (e.g. a fully-decked group the pile skips but
+    # the deck shows).  Find each caret by scanning the card rows
+    # instead of assuming row 5.
+    def card_carets(rows):
+        pile = [r for r in range(5, 13) if rows[r][0] == ">"]
+        deck = [r for r in range(5, 13)
+                if len(rows[r]) > 10 and rows[r][10] == ">"]
+        return pile, deck
     s.press("down", settle=20)
     rows = s.bg_text()
-    s.check("first row caret", rows[5][0] == ">",
-            expected="> at col 0", actual=rows[5])
-    s.press("right", settle=20)  # pile cell -> deck cell, same row
-    rows = s.bg_text()
-    s.check("deck cell caret", len(rows[5]) > 10 and rows[5][10] == ">",
-            expected="> at col 10", actual=rows[5])
-    s.press("a", settle=30)  # send one copy back to the pile
+    pile_rows, deck_rows = card_carets(rows)
+    s.check("first card caret", len(pile_rows) + len(deck_rows) == 1,
+            expected="one > at col 0 or 10",
+            actual=str(pile_rows + deck_rows))
+    if pile_rows:
+        s.press("right", settle=20)  # pile cell -> deck cell
+        rows = s.bg_text()
+        pile_rows, deck_rows = card_carets(rows)
+        s.check("deck cell caret", len(deck_rows) == 1,
+                expected="one > at col 10", actual=str(deck_rows))
+    s.press("a", settle=30)  # deck cell: send one copy back to the pile
     deck1 = s.reader.deck_count()
     s.check("deck membership removed", deck1 == deck0 - 1,
             expected="deck == %d" % (deck0 - 1), actual=str(deck1))
-    s.press("left", settle=20)  # deck cell -> pile cell, same row
+    s.press("left", settle=20)  # deck cell -> pile cell
     rows = s.bg_text()
-    s.check("owned side caret", rows[5][0] == ">",
-            expected="> at col 0", actual=rows[5])
+    pile_rows, deck_rows = card_carets(rows)
+    s.check("owned side caret", len(pile_rows) == 1,
+            expected="one > at col 0", actual=str(pile_rows))
     s.press("b", settle=20)  # single B jumps back to the FILTER row
     s.check("filter row caret", s.bg_text()[2][0] == ">",
             expected="> at filter row", actual=s.bg_text()[2])

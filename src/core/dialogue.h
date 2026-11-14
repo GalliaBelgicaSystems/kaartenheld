@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MAX_DIALOGUE_LINES 8
+#define MAX_DIALOGUE_LINES 11
 
 /* Dialogue identifiers.  The engine defines only the NONE sentinel and the
  * start of the per-game content range; the game names its dialogues in

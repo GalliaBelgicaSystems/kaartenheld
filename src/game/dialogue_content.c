@@ -235,8 +235,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
-        8,
-        {"Mayor of this town", "in Slime country,", "barely tolerated!", "Oh, how I wish to", "see monsters die!", "Card wielder, slay", "three monsters and", "I'll reward you!"},
+        11,
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!", "Card wielder, slay", "three monsters and", "I'll reward you!"},
         0,
         0
     },
