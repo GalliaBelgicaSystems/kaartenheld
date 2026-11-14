@@ -85,9 +85,10 @@ void game_init(Game *g)
      * by CRT0's .data copy; the debug harness skips CRT0 and jumps straight
      * to main(), so re-assert the sound-on default here (matches the
      * hardware boot state).  Without this, audio_play_music() no-ops under
-     * the harness and music_track assertions report NONE. */
+     * the harness and music_track assertions report NONE.  Boot stays silent
+     * (MUSIC_NONE from audio_init) through SPLASH and NOTICE; notice_screen
+     * starts MUSIC_TITLE when Kaartenheld appears on SCREEN_TITLE. */
     g_sound_enabled = 1;
-    audio_play_music(MUSIC_TITLE);
     game_render(g);
 
 #ifdef DEBUG_BUILD

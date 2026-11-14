@@ -86,10 +86,14 @@ static void commit_write_save(GameState *state, uint8_t slot)
     n = (uint16_t)sizeof(GameState);
     while (n--) *dst++ = *src++;
     DISABLE_RAM;
-    telemetry_ring_emit((uint8_t)EVENT_GAME_SAVED, slot, 0, 0, 0);
+    telemetry_ring_emit((uint8_t)EVENT_GAME_SAVED, (uint8_t)(slot + 1), 0, 0, 0);
     /* Arm the spin indicator (upkeep draws it; ~2 s floor). */
     s_save_spin_ttl = SPIN_TTL;
 }
+
+/* Boot-notice spin primed flag: forces tile 241 to stream on the very
+ * first SCREEN_NOTICE frame regardless of (frame & 7) alignment. */
+static uint8_t s_notice_spin_primed;
 
 /* Save-spin indicator tick: OAM entry 39 (always free) with tile 241
  * (free in both fetch blocks; re-streamed from the font every phase
@@ -108,6 +112,7 @@ static void spin_show(uint8_t phase, uint8_t restream)
         else if (phase == 1) ch = '/';
         else if (phase == 2) ch = '-';
         else ch = '\\';
+        VBK_REG = 0;
         src = (volatile uint8_t *)(0x9000u + ((uint16_t)(ui_font_tile_base + (uint8_t)(ch - 32)) << 4));
         dst = (volatile uint8_t *)(0x8000u + ((uint16_t)SPIN_TILE << 4));
         for (i = 0; i < 16; i++) {
@@ -145,10 +150,13 @@ void save_upkeep_banked(void)
     if (g_game.screen == SCREEN_NOTICE) {
         /* Boot notice: spin continuously off the frame counter so
          * players learn the mark before they ever save. */
-        spin_show((uint8_t)(((uint8_t)g_game.frame >> 3) & 3),
-                  (uint8_t)(((uint8_t)g_game.frame & 7) == 0));
+        uint8_t restream = (uint8_t)(!s_notice_spin_primed ||
+                                     (((uint8_t)g_game.frame & 7) == 0));
+        s_notice_spin_primed = 1;
+        spin_show((uint8_t)(((uint8_t)g_game.frame >> 3) & 3), restream);
         return;
     }
+    s_notice_spin_primed = 0;
     if (s_save_spin_ttl != 0) {
         spin_show((uint8_t)((s_save_spin_ttl >> 3) & 3),
                   (uint8_t)((s_save_spin_ttl & 7) == 0));
@@ -217,23 +225,27 @@ void save_menu_update_banked(void)
                 g->render_cache.valid = false;
                 g_bk_byte_b = 0;
             } else {
+                g->save_slot_message = 0;
                 g->intro_slide = 0;
                 g_bk_byte_b = 1;
             }
         } else {
             /* LOAD: the fixed applier validates the slot itself, so no
              * separate present probe is needed. */
+            g->save_slot_message = 0;
             g_bk_byte_b = 2;
             g_bk_byte_c = idx;
         }
     } else if (edges & (uint8_t)(1u << INPUT_B)) {
         /* B dismisses a NEW-GAME overwrite confirm back to the picker;
-         * anything else leaves to the previous screen. */
+         * anything else clears any stale status message and leaves to
+         * the previous screen. */
         if (g->save_slot_message == 3) {
             g->save_slot_message = 0;
             g->render_cache.valid = false;
             g_bk_byte_b = 0;
         } else {
+            g->save_slot_message = 0;
             g_bk_byte_b = 3;
         }
     } else {

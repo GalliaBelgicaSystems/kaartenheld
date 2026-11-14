@@ -36,6 +36,10 @@
   {
    "type": "event_occurred",
    "event": "SCREEN_CHANGED"
+  },
+  {
+   "type": "music_track",
+   "expected": "NONE"
   }
  ]
 }

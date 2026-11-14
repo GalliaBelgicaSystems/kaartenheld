@@ -10,9 +10,9 @@
  * area is at its size limit (see make memmap), so this file only runs a
  * thin input/transition wrapper around title_content_render().
  *
- * Flow: PRESS START -> NEW GAME / CONTINUE / SOUND.  SOUND toggles
- * g_sound_enabled (ON/OFF).  NEW GAME -> slot picker -> intro.
- * CONTINUE -> SAVE_LOAD (load mode). */
+ * Flow: PRESS START -> CONTINUE / NEW GAME / SOUND.  SOUND toggles
+ * g_sound_enabled (ON/OFF).  CONTINUE -> SAVE_LOAD (load mode).
+ * NEW GAME -> slot picker -> intro. */
 
 void title_screen_render(Game *g)
 {
@@ -95,22 +95,22 @@ void title_screen_update(Game *g)
 
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         switch (g->title_menu_index) {
-        case 0: /* NEW GAME */
+        case 0: /* CONTINUE */
+            audio_play_sfx(SFX_CONFIRM);
+            telemetry_emit(EVENT_GAME_CONTINUED, 0, 0, 0, 0);
+            g->save_slot_mode = 0; /* LOAD */
+            g->save_slot_index = 0;
+            screen_change(g, SCREEN_SAVE_LOAD);
+            break;
+        case 1: /* NEW GAME */
             audio_play_sfx(SFX_CONFIRM);
             telemetry_emit(EVENT_NEW_GAME_STARTED, 0, 0, 0, 0);
             /* Slot pick first (the pick becomes the active autosave
              * slot): the intro starts from the picker, and the fresh
              * state saves to the slot when the last slide ends.
-             * save_slot_index resets to slot 1; the message is always
-             * clear here (every mode-2 exit clears it). */
+             * save_slot_index resets to slot 1; every mode-0 and mode-2
+             * exit clears save_slot_message. */
             g->save_slot_mode = 2; /* NEW-GAME slot pick */
-            g->save_slot_index = 0;
-            screen_change(g, SCREEN_SAVE_LOAD);
-            break;
-        case 1: /* CONTINUE */
-            audio_play_sfx(SFX_CONFIRM);
-            telemetry_emit(EVENT_GAME_CONTINUED, 0, 0, 0, 0);
-            g->save_slot_mode = 0; /* LOAD */
             g->save_slot_index = 0;
             screen_change(g, SCREEN_SAVE_LOAD);
             break;

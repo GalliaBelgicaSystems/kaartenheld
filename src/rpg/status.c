@@ -24,6 +24,9 @@ uint8_t g_status_frozen_mask;
  * Non-static so the bank-3 battle HUD can color names by active status. */
 StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
 
+/* Defend-phase poison grace bitmask (status.h); cleared at battle start. */
+uint8_t g_poison_grace_mask;
+
 /* Ice grey-out (status.h): mask/duration per actor slot.  Battle-scoped
  * runtime state, cleared at battle start; written by status_grey_apply
  * (wrapper + bank-10 pick body), read by battle gating and the bank-3 HUD. */
@@ -39,6 +42,7 @@ void status_reset_battle(void)
         s_grey_dur[i] = 0;
     }
     g_status_frozen_mask = 0;
+    g_poison_grace_mask = 0;
 }
 
 StatusSlots *status_slots(uint8_t actor_slot)

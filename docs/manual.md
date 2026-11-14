@@ -37,8 +37,8 @@ Press **START**, then choose from the menu:
 
 | Menu | What it does |
 |---|---|
-| **NEW GAME** | Start a brand-new adventure. |
 | **CONTINUE** | Load a game you saved earlier. |
+| **NEW GAME** | Start a brand-new adventure. |
 | **SOUND: ON/OFF** | Turn the music on or off. |
 | **TUTORIAL** | A short, friendly how-to-play lesson. |
 

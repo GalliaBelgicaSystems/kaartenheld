@@ -1696,12 +1696,9 @@ def walk_l(checks, saved):
     sram_bytes, exp = saved
     s = Session(checks, "walk-l", boot=False,
                 ram_file=io.BytesIO(sram_bytes))
-    # Title -> menu -> CONTINUE -> LOAD GAME -> slot 1.
+    # Title -> menu -> CONTINUE (index 0) -> LOAD GAME -> slot 1.
     s.check("title menu", s.press_until(
-        "start", lambda: s.text_has("NEW GAME"), label="menu"),
-        expected="NEW GAME", actual="none")
-    s.check("continue entry", s.press_until(
-        "down", lambda: s.text_has("> CONTINUE"), label="continue"),
+        "start", lambda: s.text_has("> CONTINUE"), label="menu"),
         expected="> CONTINUE", actual="none")
     s.press("a", settle=40)
     s.check("load screen", s.press_until(

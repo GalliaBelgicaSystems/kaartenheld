@@ -147,6 +147,11 @@ void status_tick_banked(void)
              * refresh duration and deepen stacks for telemetry. */
             damage += inst->tick;
         }
+        if (inst->id == STATUS_POISON &&
+            (g_poison_grace_mask & (uint8_t)(1u << actor_slot))) {
+            i++;
+            continue;
+        }
         inst->duration--;
         if (inst->duration == 0) {
             if (expired < MAX_STATUSES_PER_COMBATANT) {
@@ -165,6 +170,7 @@ void status_tick_banked(void)
         }
     }
 
+    g_poison_grace_mask &= (uint8_t)~(1u << actor_slot);
     g_status_tick.damage = damage;
     g_status_tick.expired_count = expired;
 }

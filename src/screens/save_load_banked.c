@@ -100,7 +100,7 @@ void save_load_content_render(void)
     }
     sl_draw_text(0, 11, (s_sl_game->save_slot_mode == 2) ? "[A] START " : "[A] LOAD  ", 10);
     sl_draw_text(10, 11, "[B] BACK", 8);
-    if (s_sl_game->save_slot_message != 0) {
+    if (s_sl_game->save_slot_message >= 1 && s_sl_game->save_slot_message <= 3) {
         sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite? A:YES" : "Slot is empty!"), 16);
         if (s_sl_game->save_slot_message == 3) {
             sl_draw_text(2, 14, "B:NO", 4);

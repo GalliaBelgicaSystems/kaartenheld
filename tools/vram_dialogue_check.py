@@ -194,11 +194,20 @@ def main():
     # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
     # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
     # (17,7) from levels/field.json player.spawn.
-    # Title screen: press START to show menu, then START again to select NEW GAME -> intro slides
-    # Intro slides: press A (or START) 3 times to advance through slides, then game_restart() drops to overworld
+    # Title screen: press START to show menu, DOWN from CONTINUE (index 0) to
+    # NEW GAME (index 1), then START to open slot picker -> A/START through intro slides.
     for _ in range(20):
         if pb.memory[game_addr] == 0:
             break
+        if (pb.memory[game_addr] == 9
+                and (pb.tilemap_background.tile_identifier(3, 9) & 0xFF) == 30
+                and (pb.tilemap_background.tile_identifier(5, 9) & 0xFF) == 35):
+            pb.button_press("down")
+            for _ in range(4):
+                pb.tick()
+            pb.button_release("down")
+            for _ in range(16):
+                pb.tick()
         pb.button_press("start")
         for _ in range(4):
             pb.tick()

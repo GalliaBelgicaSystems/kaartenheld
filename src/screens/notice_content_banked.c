@@ -69,6 +69,7 @@ static void notice_ink_cgb(uint8_t v)
 void notice_content_render(void)
 {
     uint8_t i;
+    g_game.notice_frame = 0;
     /* Slot 0: white everywhere, ink white (the fade darkens it). */
     VBK_REG = 0;
     BCPS_REG = (uint8_t)(0x80 | (0 << 3));

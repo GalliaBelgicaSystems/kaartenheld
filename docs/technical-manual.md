@@ -81,8 +81,8 @@ Pressing START opens a menu with four entries (`title_screen.c`,
 
 | Entry | Effect |
 |---|---|
-| `NEW GAME` | Starts a fresh game: intro slides → overworld. |
 | `CONTINUE` | Opens the **LOAD GAME** screen (saves, see §10). |
+| `NEW GAME` | Starts a fresh game: intro slides → overworld. |
 | `SOUND: ON/OFF` | Toggles the soundtrack. |
 | `TUTORIAL` | Plays the 7-slide tutorial (see §2.4). |
 

@@ -65,7 +65,7 @@ typedef struct Game {
                                     3 = overwrite confirm (mode 2),
                                     4 = game-over auto-continue */
     uint8_t title_menu_showing; /* 0 = PRESS START state, 1 = main menu */
-    uint8_t title_menu_index;  /* 0 = NEW GAME, 1 = CONTINUE, 2 = SOUND, 3 = TUTORIAL */
+    uint8_t title_menu_index;  /* 0 = CONTINUE, 1 = NEW GAME, 2 = SOUND, 3 = TUTORIAL */
     uint8_t intro_slide;       /* current ASCII intro slide (0-2) */
     uint8_t tutorial_slide;    /* current tutorial slide (0-5) */
     RenderCache render_cache;

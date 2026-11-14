@@ -30,6 +30,10 @@
   {
    "type": "screen",
    "expected": "TITLE"
+  },
+  {
+   "type": "music_track",
+   "expected": "TITLE"
   }
  ]
 }

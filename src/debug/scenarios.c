@@ -147,10 +147,11 @@ static void scenario_load_state(void)
         audio_play_music(MUSIC_TITLE);
     }
     if (screen == SCREEN_SPLASH) {
-        /* Studio splash boot state (auto-advance / skip scenarios). */
+        /* Studio splash boot state (auto-advance / skip scenarios):
+         * matches hardware boot with silent splash until TITLE appears. */
         g_game.screen = SCREEN_SPLASH;
         g_game.prev_screen = SCREEN_SPLASH;
-        audio_play_music(MUSIC_TITLE);
+        audio_play_music(MUSIC_NONE);
     }
     /* NOTE: no SCREEN_GAMBLE boot branch (fixed budget, 52.18):
      * gamble scenarios reach the table through the real path (walk into

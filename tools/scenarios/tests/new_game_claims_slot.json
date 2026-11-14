@@ -23,6 +23,14 @@
   },
   {
    "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
    "button": "A"
   },
   {
@@ -78,6 +86,12 @@
   {
    "type": "event_occurred",
    "event": "GAME_SAVED"
+  },
+  {
+   "type": "event_arg",
+   "event": "GAME_SAVED",
+   "index": 0,
+   "value": 1
   }
  ]
 }
