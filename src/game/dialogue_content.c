@@ -499,8 +499,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_WIZARD_AUTOSAVE,
         "WIZARD:",
-        6,
-        {"No need for my", "old saving spell.", "Your journey is", "written down as", "you go. Rest", "easy, hero."},
+        5,
+        {"Your progress is", "saved as you play.", "You can also save", "and quit from the", "QUEST menu."},
         0,
         0
     },

@@ -2,11 +2,10 @@
   "id": "wizard_autosave",
   "speaker": "WIZARD:",
   "lines": [
-    "No need for my",
-    "old saving spell.",
-    "Your journey is",
-    "written down as",
-    "you go. Rest",
-    "easy, hero."
+    "Your progress is",
+    "saved as you play.",
+    "You can also save",
+    "and quit from the",
+    "QUEST menu."
   ]
 }
