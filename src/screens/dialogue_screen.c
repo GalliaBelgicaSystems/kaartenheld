@@ -3,6 +3,7 @@
 #include "dialogue.h"
 #include "interaction.h"
 #include "telemetry.h"
+#include "audio.h"
 #include "ui.h"
 #include "banked.h"
 #include "content.h"
@@ -44,6 +45,11 @@ void dialogue_screen_update(Game *g)
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
+    if (g_bk_byte_a != 0) {
+        /* Choice toggle, plain advance, every confirm: the same
+         * cursor blip as the battle hand. */
+        audio_play_sfx(SFX_CURSOR);
+    }
     if (g_bk_byte_a == 5) {
         /* Plain advance outside any live choice. */
     } else {
