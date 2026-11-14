@@ -404,9 +404,11 @@ const EventDefinition g_events[] = {
      * on its intro).  ASK
      * offers "Give Bone to dog?" (YES/NO): YES resolves through
      * choice_nav_banked.c code 10 (remove BONE, grant OLD_KEY, set
-     * DOG_KEY through the real APIs, then the thanks follow-up) and
-     * clears the dog's ? mark; NO closes plainly.  THANKS replays on
-     * later bumps.  Scoped to the quest entity (VILLAGE_DOG): the
+     * DOG_KEY through the real APIs, then the DOG_THANKS follow-up)
+     * and clears the dog's ? mark; NO closes plainly.  BUSY replays
+     * on later bumps once the key is traded ("The dog is busy
+     * gnawing the bone."): the thanks line belongs to the handover
+     * moment only.  Scoped to the quest entity (VILLAGE_DOG): the
      * wild dog and the decor dog keep their greeting/silence. */
     {
         EVENT_ID_DOG_HINT, EVENT_TRIGGER_INTERACT, ENTITY_ID_VILLAGE_DOG, EVENT_MAP_ANY,
@@ -436,7 +438,7 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_COND_FLAG, STORY_FLAG_ID_DOG_KEY, 0, true, false }},
         1,
-        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_THANKS, 0, 0 }}
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_DOG_BUSY, 0, 0 }}
     },
     /* ── Slime-knight armor split ──────────────────────────────────
      * Felling the armor (ACTOR_DEFEATED, all-match: MONSTER_DEFEATED
