@@ -180,7 +180,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_HOUSE_DOOR,
         "",
         3,
-        {"Where do you think", "you are? The full", "game?"},
+        {"Where do you think", "you are? In the", "full game?"},
         0,
         0
     },
@@ -235,8 +235,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
-        8,
-        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
+        11,
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!", "Card wielder, slay", "three monsters and", "I'll reward you!"},
         0,
         0
     },
@@ -316,7 +316,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_SHOPKEYS_FOUND,
         "",
         3,
-        {"FOUND SHOP KEYS!!", "Return to the", "merchant!"},
+        {"FOUND SHOP KEYS!!", "Return them to the", "merchant"},
         0,
         0
     },

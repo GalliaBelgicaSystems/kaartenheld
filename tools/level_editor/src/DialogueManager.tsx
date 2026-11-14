@@ -13,7 +13,7 @@ import {
  *  nothing references a numeric dialogue id persistently, so renaming a
  *  file only renumbers the generated defines. */
 
-const MAX_LINES = 8;
+const MAX_LINES = 11;
 const STAGE_SPEAKER = 15;   // g_dlg_speaker[16] incl NUL
 const RENDER_WIDTH = 18;    // dialogue box text width (staging allows 20)
 

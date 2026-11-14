@@ -9,7 +9,7 @@ defines + GAME_DIALOGUE_COUNT).  Ids assign by sorted filename order
 
 Render contract (see ui_draw_dialogue / dialogue_screen.c): the box draws
 the speaker + one line at a time, 18 chars wide; WRAM staging is
-speaker[12] / lines[8][21].  Violations fail loudly here, never silently
+speaker[16] / lines[11][21].  Violations fail loudly here, never silently
 in ROM.
 
 Usage:
@@ -28,7 +28,7 @@ from dialogue_ids import (
     dialogue_files, load_dialogue_json, dialogue_id_map, load_story_flags,
 )
 
-MAX_LINES = 8
+MAX_LINES = 11
 STAGE_SPEAKER = 15   # g_dlg_speaker[16] incl NUL
 STAGE_LINE = 20      # g_dlg_lines[][21] incl NUL
 RENDER_WIDTH = 18    # dialogue box text width
