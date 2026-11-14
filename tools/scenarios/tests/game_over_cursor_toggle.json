@@ -1,0 +1,50 @@
+{
+ "name": "game_over_cursor_toggle",
+ "test": true,
+ "description": "Game-over cursor moves cleanly: DOWN flips the choice to NO and the YES row loses its '>' in both the semantic buffer and real VRAM (no duplicated cursor, AGENTS.md 52.25 family).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 5003,
+  "screen": "GAME_OVER"
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "GAME_OVER"
+  },
+  {
+   "type": "game_over_choice",
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "> NO"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 11,
+   "contains": ">"
+  },
+  {
+   "type": "vram_row_not_contains",
+   "row": 11,
+   "contains": ">"
+  }
+ ]
+}

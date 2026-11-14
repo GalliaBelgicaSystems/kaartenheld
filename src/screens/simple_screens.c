@@ -109,7 +109,14 @@ void game_over_screen_render(Game *g)
 
     if (!rc->valid || rc->prev_screen != SCREEN_GAME_OVER ||
         g->game_over_choice != rc->prev_game_over_choice) {
-        ui_clear_screen();
+        /* Entry clears (LCD-off through game_render); a toggle repaints
+         * in place (AGENTS.md §36): the LCD-on clear's unsynced writes
+         * can drop into Mode 3, leaving a stale '>' the body skip-opt
+         * then never rewrites (cursor stuck on both rows).  Without the
+         * clear the buffer still holds the old choice, so the banked
+         * body's buffer-checked writes land exactly on the moved
+         * cursor cells. */
+        if (!rc->valid || rc->prev_screen != SCREEN_GAME_OVER) ui_clear_screen();
         g_bk_call_bank = 4;
         g_bk_call_target = (uint16_t)&game_over_content_render;
         g_bk_byte_a = g->game_over_choice;
