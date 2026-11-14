@@ -2586,11 +2586,15 @@ Rules:
 * 8-bit `*` anywhere (including banked bodies) pulls the SDCC mult
   routines (`__mulsuchar` et al.) into fixed `_CODE` (~69 B); use shifts,
   repeated addition, or a running counter for small tile-math instead.
-* The debug build's fixed bank is tight (627 B headroom after the
-  scenario-load move-out, Oct 2026; release has ~4.9 KB): the next fixed-
-  bank addition in a debug build will likely need a move-out first --
-  every `b->field` access costs ~10 B under SDCC's 16-bit struct
-  addressing, so stage through banked bodies and WRAM globals instead.
+* The debug build's fixed bank is essentially full (2 B of `_HOME`
+  headroom as of Nov 2026; release still has ~3.9 KB): any fixed-bank
+  addition in a debug build needs a move-out first -- every `b->field`
+  access costs ~10 B under SDCC's 16-bit struct addressing, so stage
+  through banked bodies and WRAM globals instead.  A new per-frame
+  fixed helper must live in its own tiny frame: inlining one into
+  `game_update`'s huge frame cost ~2x via register spillover and
+  overflowed the bank (see §52.19 family; `game_consume_sfx` is the
+  template).
   Companion pressure: bank 3 is thin in both builds (~40 B debug /
   ~600 B release after the counter forecast), while bank 5 has room
   (~1.1 KB debug / ~0.6 KB release after the scenario-load move) --
@@ -2860,6 +2864,27 @@ Rules:
   the zero boot state). Diagnose with a WRAM state dump across rolls
   (PyBoy `memory[]` reads at the `.sym` addresses), not with more
   scenarios.
+
+## 52.28 Same-frame SFX request mailbox (Nov 2026)
+
+Banked menu-nav bodies cannot call `audio_play_sfx` (a fixed-bank call
+plus MBC5 switches would strand their own bank), so a real cursor move
+stages `(SFX id + 1)` in the WRAM byte `g_bk_sfx_req`
+(`src/core/banked.h`) and `game_consume_sfx()` -- its own tiny frame
+in `src/core/game.c`, called once per frame right after
+`screen_update()` -- plays + clears it the same frame.  Rules:
+
+* Stage ONLY on a measured move (compare index/side before and after;
+  the GEM/QUEST single-item wrap and the shop-list clamp are the
+  no-op cases) -- a no-op press must stay silent.
+* Direct-input screens (game-over toggle, shop tab flips, picker row,
+  dialogue advance/confirms, title/tutorial/battle) call
+  `audio_play_sfx` fixed-side instead; never both paths for one press
+  (a double stage + direct call restarts the blip and double-counts
+  `sfx_count` scenarios).
+* `0` means none (BSS zero, AGENTS.md §52.27); the consumer runs
+  unconditionally every frame, so a request can never go stale --
+  not across screens, saves, loads, or harness teleports.
 
 ---
 
