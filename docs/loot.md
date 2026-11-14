@@ -1836,8 +1836,9 @@ which refuses a loot card whose cost exceeds the pool (`NEED AP n`,
 | R5 ELITE | **steel** | 2 / 8 / 25 / 50 / 15 |
 | R6 BOSS | steel/mythril | 0 / 4 / 20 / 45 / 30 |
 
-The rider chance steps with rank too (25% at R0–R1 up to 50% at R5–R6;
-riders still need bronze+ and a legal weapon).  There is no mythril
+The rider chance steps with rank too (75% at R0–R1 up to 87.5% at
+R5–R6; riders still need bronze+ and a legal weapon -- bows take
+fire/ice, daggers poison, nothing else rolls one).  There is no mythril
 hold-back: a mythril rider costs 6 AP and the equip gate covers it, so
 the generator hands one out early and the collection shows the locked
 goal.  The slime-knight chain rolls twice (R4 for the knight, R1 for the

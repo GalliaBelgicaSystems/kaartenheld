@@ -46,10 +46,14 @@ static const uint8_t s_rank_cut[7][5] = {
     {   0,  11,  63, 178, 255 }    /* R6 BOSS     */
 };
 
-/* Rank-stepped rider gate (docs/enemies_ranking.md §4.3): R0-1 25%,
- * R2 31.25%, R3 37.5%, R4 43.75%, R5-6 50% of bronze+ sword/dagger
- * rolls carry the legal rider. */
-static const uint8_t s_rank_gate[7] = { 64, 64, 80, 96, 112, 128, 128 };
+/* Rank-stepped rider gate (docs/enemies_ranking.md §4.3): R0-1 75%,
+ * R2 78.125%, R3 81.25%, R4 84.375%, R5-6 87.5% of bronze+ bow/dagger
+ * rolls carry the legal rider.  Deliberately very high: the rider is
+ * the bow's whole edge over the sword (bows ride the dagger ladder, a
+ * full band below swords), so a plain bow should be the rare outcome,
+ * not the common one.  Swords/shields/rings never roll riders
+ * regardless of the gate; wood is always plain. */
+static const uint8_t s_rank_gate[7] = { 192, 192, 200, 208, 216, 224, 224 };
 
 /* BattleId -> rank R0-R6 (compiled by battle_compile.py from the
  * enemy_type JSON ranks; same bank, direct read). */
@@ -143,8 +147,9 @@ void game_loot_drop_banked(void)
             material++;
         }
 
-        /* Rider chance steps with rank (s_rank_gate); wood can never
-         * carry one (docs/loot.md §34.1).  No mythril hold-back: the
+        /* Rider chance steps with rank (s_rank_gate, very high by
+         * design: the rider is the bow's edge over the sword); wood can
+         * never carry one (docs/loot.md §34.1).  No mythril hold-back: the
          * equip gate covers unaffordable cards, so the generator hands
          * them out and the collection shows the locked goal.  The
          * fire/ice split scales with the gate (half each,

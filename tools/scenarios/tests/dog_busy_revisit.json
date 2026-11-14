@@ -1,7 +1,7 @@
 {
- "name": "dog_thanks_revisit",
+ "name": "dog_busy_revisit",
  "test": true,
- "description": "Bumping the village dog after the trade replays the thanks with no duplicate key: the handover is one-shot",
+ "description": "Bumping the village dog after the trade shows it is busy gnawing the bone (DOG_BUSY), not the handover thanks: the thanks belongs to the trade moment only, with no duplicate key",
  "actions": [
   {
    "type": "interact",
@@ -29,7 +29,7 @@
    "type": "event_arg",
    "event": "DIALOGUE_STARTED",
    "index": 0,
-   "value": "DOG_THANKS"
+   "value": "DOG_BUSY"
   },
   {
    "type": "inventory",
