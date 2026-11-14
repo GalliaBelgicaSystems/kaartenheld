@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """README GIF captures (host-side, never CI-gated).
 
-Produces four headless PyBoy recordings of the RELEASE ROM, assembled to GIF
+Produces five headless PyBoy recordings of the RELEASE ROM, assembled to GIF
 with Pillow:
 
   screenshots/boot.gif       Gallia Belgica splash -> Kaartenheld title
-  screenshots/battle.gif     kobold trio: combo selection + attack
+  screenshots/battle.gif     forest kobold: combo selection + attack
                              (the hand is whatever battle start deals from
                              the shuffled pile, not a fixed opening hand)
-  screenshots/overworld.gif  Field -> forest gate -> wander to the chest
+  screenshots/heal.gif       kobold hit, then a staged HE5 card + HP pulse
+  screenshots/overworld.gif  Field spawn -> north gate -> wander in Forest
   screenshots/boss.gif       Lord of Slimes: glowing eyes blink in battle
 
 Regenerate with `make gifs`.  The frames are a visual aid only; the semantic
@@ -122,7 +123,7 @@ def stage_energy_pool(s, amount=5):
 
 
 def capture_battle():
-    """Kobold trio: select the combo the dealt hand offers, then attack."""
+    """Kobold: select the combo the dealt hand offers, then attack."""
     checks = []
     planner = Planner()
     s = Session(checks, "gif-battle")
