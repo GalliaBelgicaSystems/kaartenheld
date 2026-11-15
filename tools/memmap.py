@@ -439,6 +439,7 @@ def main():
         "_terrain_stamp_b6_banked": "overflow terrain stamp (bank 6)",
         "_terrain_stamp_b11_banked": "overflow terrain stamp (bank 11)",
         "_terrain_stamp_b9_banked": "overflow terrain stamp (bank 9)",
+        "_terrain_stamp_b12_banked": "overflow terrain stamp (bank 12)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

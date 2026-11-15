@@ -39,7 +39,8 @@ SRCS = $(BANK5_EARLY_SRCS) $(filter-out $(BANK5_EARLY_SRCS),$(ALL_SRCS))
 # see these symbols (same g_scenes/g_actor_tables names).
 TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors_content_test.c
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
-	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c
+	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c \
+	$(SRC_DIR)/game/scenes_terrain_b12.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in

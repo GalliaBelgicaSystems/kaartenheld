@@ -438,15 +438,23 @@ def emit_exits(levels_by_id, registry=None):
 # stamping (SceneDefinition.terrain_bank). Balanced for headroom:
 # desolate (~690 B incl. sentinel) -> 6, village (~950 B incl. stamp body)
 # -> 11 (moved off bank 7 when the re-scored overworld theme needed the
-# room), castle (~270 B, moved here Oct 2026) -> 9.
+# room).  The castle interiors (entry/hall/throne + castle itself) moved
+# to bank 12 (Nov 2026): the plain-floor pass added ~850 B across the
+# four maps, overflowing both bank 5 and the already-tight bank 9.
+# bank 12 is the release spill bank (~10 KB free; debug spill too), and
+# the stamp dispatch is compiled release-only (scene.c #ifndef
+# TEST_LEVELS), so the extra branch costs no debug fixed-bank bytes.
 # Large 22-tall forest (~1450 B) + field (~1325 B) -> 9 (casino bank,
-# ~10 KB free); bank 5 cannot hold them after the WORLD_HEIGHT 32 growth.
+# ~5 KB free); bank 5 cannot hold them after the WORLD_HEIGHT 32 growth.
 # If this map changes, keep Makefile CONTENT_SRCS (the per-bank files),
 # scene.c (stamp dispatch) and decompile.py (split-file parsing) in sync.
 OVERFLOW_TERRAIN_BANK = {
     "desolate_field": 6,
     "village_area": 11,
-    "castle": 9,
+    "castle": 12,
+    "castle_entry": 12,
+    "castle_hall": 12,
+    "throne_room": 12,
     "forest": 9,
     "field": 9,
     # New-bank-5 residents from the enlarged-maps pass (bank 5 overflowed

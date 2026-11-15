@@ -22,6 +22,7 @@ extern const SceneDefinition g_scenes[];
 extern void terrain_stamp_b6_banked(void);
 extern void terrain_stamp_b11_banked(void);
 extern void terrain_stamp_b9_banked(void);
+extern void terrain_stamp_b12_banked(void);
 #endif
 
 static SceneDefinition s_scene_scratch;
@@ -93,6 +94,9 @@ void scene_load_tiles(World *w, MapId map_id)
                 banked_call_run();
             } else if (d->terrain_bank == 9) {
                 g_bk_call_target = (uint16_t)&terrain_stamp_b9_banked;
+                banked_call_run();
+            } else if (d->terrain_bank == 12) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b12_banked;
                 banked_call_run();
             }
             /* Unknown overflow bank: leave prefilled floor. Never a hang;
