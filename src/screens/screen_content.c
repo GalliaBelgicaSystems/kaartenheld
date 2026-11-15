@@ -448,7 +448,10 @@ static uint8_t sc_sell_price(CardId id)
  * g_bk_ptr_a = Game*, g_bk_byte_a = VISIBLE row.  Resolves the row
  * through the active tab's map and stages the verdict:
  * g_bk_byte_b = price (0 = refuse), g_bk_byte_c = card id,
- * g_bk_byte_d = owned-after (SELL only, for CARD_SOLD telemetry).
+ * g_bk_byte_d = owned-after (SELL, for CARD_SOLD telemetry) or the
+ * BUY already-owned flag (1 = identity cap already reached: the fixed
+ * side refuses with "Already owned!" instead of adding a second copy
+ * of a one-copy rare / over-cap rebuy).
  * BUY rows quote the market-scaled catalog price (0 = free basic,
  * always affordable); SELL rows the sc_sell_price value after the
  * decked-backing guard (a fully decked card refuses: selling it would
@@ -495,50 +498,45 @@ void shop_row_quote_banked(void)
         g_bk_byte_b = s_sc_market_quote(d->price, d->price_bias,
                                         s_sc_game->state.economy.market_index);
         g_bk_byte_c = id;
+        /* Identity-wide buy gate (docs/loot.md §34.6): a curated row
+         * and its loot twin are one card, so count copies across
+         * every same-identity row (direct id match plus
+         * sc_row_matches_stock twins) and refuse at the cap --
+         * otherwise buying the shop ring while holding loot id 164
+         * would stack a second copy past max_copies via the merge
+         * remainder row.  Free basics ride the same gate (cap 4), so
+         * rebuys still stop at the cap. */
+        if (d->max_copies > 0) {
+            uint8_t total = 0;
+            for (i = 0; i < g->state.cards.collection.count; i++) {
+                CardId rid = g->state.cards.collection.entries[i].id;
+                if (rid == id) {
+                    total = (uint8_t)(total + g->state.cards.collection.entries[i].count);
+                } else if (sc_row_matches_stock(d, rid)) {
+                    total = (uint8_t)(total + g->state.cards.collection.entries[i].count);
+                }
+                if (total >= d->max_copies) break;
+            }
+            if (total >= d->max_copies) g_bk_byte_d = 1;
+        }
     }
 }
 
-/* Visible-map rebuild: the one-copy stock shows a line only while the
- * player owns no copy (the scan mirrors collection_find in rpg/deck.c
- * since banked bodies cannot call the fixed-bank counter) -- EXCEPT
- * price-0 basics (free starter rebuys: wood sword/shield, bronze fire
- * sword), which are always listed and capped by max_copies at buy
- * time, so the same starter set can be rebought but never infinitely
- * stockpiled.  Selling the last copy of a one-copy card re-opens its
- * row.  Remap runs on every full redraw (entry, purchase), the only
- * moments the list can change, so the cursor never reads a stale
- * map.  Clamps the cursor into the visible list (a purchase can hide
- * the row under it) before painting. */
+/* Visible-map rebuild: the BUY list always shows the full stock, even
+ * when the player already owns a one-copy rare (e.g. an IRON RING loot
+ * twin): hiding the row made players think the shop was empty, while
+ * the card sat unnoticed in the collection.  Duplicates are refused
+ * at buy time instead (identity-wide cap in shop_row_quote_banked,
+ * "Already owned!" + cancel blip).  Remap runs on every full redraw
+ * (entry, purchase); it only clamps the cursor into the visible list. */
 static void sc_shop_remap_buy(void)
 {
     uint8_t i;
-    uint8_t e;
-    uint8_t owned;
     g_shop_vis_count = 0;
     if (!s_sc_game || !s_sc_shop_def) return;
     for (i = 0; i < s_sc_shop_def->count; i++) {
-        const CardDefinition *sdef = sc_card_get_def(s_sc_shop_def->items[i]);
-        owned = 0;
-        for (e = 0; e < s_sc_game->state.cards.collection.count; e++) {
-            if (s_sc_game->state.cards.collection.entries[e].id == s_sc_shop_def->items[i]) {
-                owned = s_sc_game->state.cards.collection.entries[e].count;
-                break;
-            }
-            /* Identity, not row id: a loot twin already owned hides the
-             * one-copy row even though no curated row exists yet to
-             * merge it under (docs/loot.md §34.6). */
-            if (sc_row_matches_stock(sdef, s_sc_game->state.cards.collection.entries[e].id)) {
-                owned = s_sc_game->state.cards.collection.entries[e].count;
-                break;
-            }
-        }
-        /* Free basics (price 0, non-SPECIAL) are always listed; rares
-         * hide once owned. */
-        if (!owned || (sdef && sdef->price == 0 &&
-                       sdef->type != CARD_TYPE_SPECIAL)) {
-            g_shop_vis_map[g_shop_vis_count] = i;
-            g_shop_vis_count++;
-        }
+        g_shop_vis_map[g_shop_vis_count] = i;
+        g_shop_vis_count++;
     }
     if (s_sc_game->item_menu_index >= g_shop_vis_count) {
         s_sc_game->item_menu_index = g_shop_vis_count > 0 ? (uint8_t)(g_shop_vis_count - 1) : 0;
@@ -755,7 +753,7 @@ void shop_content_render(void)
     if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
         sc_draw_text(0, 17, "Not enough!", 12);
     } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
-        sc_draw_text(0, 17, "Too many!", 12);
+        sc_draw_text(0, 17, "Already owned!", 14);
     } else {
         sc_draw_text(0, 17, NULL, 12);
     }

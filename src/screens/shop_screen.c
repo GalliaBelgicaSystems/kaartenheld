@@ -17,9 +17,10 @@
 #define SHOP_MSG_NO_GOLD 2
 #define SHOP_MSG_MAX_COPIES 3
 
-/* BUY/SELL tabs (docs/loot.md §34.6): the BUY list shows the stock --
- * one-copy rares hide once owned, price-0 basics (free starter rebuys)
- * always list, capped by max_copies at buy time.  The SELL list shows
+/* BUY/SELL tabs (docs/loot.md §34.6): the BUY list always shows the
+ * full stock -- owned one-copy rares stay listed and rebuys refuse
+ * with "Already owned!" + cancel blip (identity-wide cap, loot twins
+ * included).  The SELL list shows
  * the player's sellable cards (rarity-cut value for curated stock,
  * full formula value for loot; quest items and free basics never
  * list).  The active tab rides g->item_menu_tab (0 = BUY, 1 = SELL;
@@ -28,8 +29,8 @@
  * visible map is rebuilt by the bank-2 render on every full redraw
  * (entry, purchase) into WRAM (g_shop_vis_map, owned by
  * screen_content.c); this update only reads it, so the fixed bank pays
- * no scan (AGENTS.md §52.11.1).  A purchase hides its own row: the
- * redraw rebuilds + clamps before painting, so no stale row is ever
+ * no scan (AGENTS.md §52.11.1).  Rows never hide on purchase, so the
+ * redraw only repaints before painting, and no stale row is ever
  * addressable. */
 extern uint8_t g_shop_vis_map[];
 extern uint8_t g_shop_vis_count;
@@ -77,8 +78,7 @@ static void shop_menu_step(Game *g, uint8_t down)
  * value (0 refuses with a BACK blip -- fully decked rows and
  * unlistable rows never reach here through the map, so this is a
  * guard, not a path).  The banked quote verified ownership, so the
- * remove always lands.  The last copy of a one-copy card re-opens
- * its BUY row. */
+ * remove always lands. */
 static void shop_sell(Game *g)
 {
     uint8_t sold_id;
@@ -111,13 +111,18 @@ static void shop_sell(Game *g)
 static void shop_confirm(Game *g)
 {
     shop_row_quote(g);
-    if (currency_get(&g->state, CURRENCY_ID_GOLD) < g_bk_byte_b) {
+    if (g_bk_byte_d == 1) {
+        g->shop_message = SHOP_MSG_MAX_COPIES;
+        telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
+        audio_play_sfx(SFX_BACK);
+    } else if (currency_get(&g->state, CURRENCY_ID_GOLD) < g_bk_byte_b) {
         g->shop_message = SHOP_MSG_NO_GOLD;
         telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 1, 0, 0);
     } else {
         if (!deck_collection_add(&g->state.cards, g_bk_byte_c, 1)) {
             g->shop_message = SHOP_MSG_MAX_COPIES;
             telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
+            audio_play_sfx(SFX_BACK);
         } else {
             uint8_t paid_id;
             uint8_t paid_price;
