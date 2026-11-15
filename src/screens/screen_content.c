@@ -15,6 +15,8 @@
 #include "rpg/save.h"
 #include "game_ids.h"
 #include "economy.h"
+#include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* Bank-2 self-contained shop / save-load render bodies (AGENTS.md 52.11.1):
  * the fixed _CODE/_HOME area is at its size limit (see make memmap), so the
@@ -448,15 +450,18 @@ static uint8_t sc_sell_price(CardId id)
  * g_bk_ptr_a = Game*, g_bk_byte_a = VISIBLE row.  Resolves the row
  * through the active tab's map and stages the verdict:
  * g_bk_byte_b = price (0 = refuse), g_bk_byte_c = card id,
- * g_bk_byte_d = owned-after (SELL, for CARD_SOLD telemetry) or the
- * BUY already-owned flag (1 = identity cap already reached: the fixed
- * side refuses with "Already owned!" instead of adding a second copy
- * of a one-copy rare / over-cap rebuy).
- * BUY rows quote the market-scaled catalog price (0 = free basic,
- * always affordable); SELL rows the sc_sell_price value after the
- * decked-backing guard (a fully decked card refuses: selling it would
- * strand the deck).  WRAM-direct scans only (banked bodies must never
- * call fixed-bank functions); the fixed side applies blindly. */
+ * g_bk_byte_d = owned-after (SELL, for CARD_SOLD telemetry) or the BUY
+ * verdict (0 = proceed, 1 = identity cap already reached, 2 = not
+ * enough gold).  Refusal UX lives here, not fixed: the message,
+ * telemetry and cancel blip ride the same dispatch (fixed-bank _CODE
+ * budget, AGENTS.md 52.18; the SFX goes through the mailbox -- a
+ * banked body must never call audio_play_sfx, §52.28 -- and gold
+ * refusals stay silent, as before).  BUY rows quote the market-scaled
+ * catalog price (0 = free basic, always affordable); SELL rows the
+ * sc_sell_price value after the decked-backing guard (a fully decked
+ * card refuses: selling it would strand the deck).  WRAM-direct scans
+ * only (banked bodies must never call fixed-bank functions); the fixed
+ * side applies blindly. */
 void shop_row_quote_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -504,7 +509,7 @@ void shop_row_quote_banked(void)
          * sc_row_matches_stock twins) and refuse at the cap --
          * otherwise buying the shop ring while holding loot id 164
          * would stack a second copy past max_copies via the merge
-         * remainder row.  Free basics ride the same gate (cap 4), so
+         * remainder row.  Free basics ride the same gate (cap 5), so
          * rebuys still stop at the cap. */
         if (d->max_copies > 0) {
             uint8_t total = 0;
@@ -518,6 +523,22 @@ void shop_row_quote_banked(void)
                 if (total >= d->max_copies) break;
             }
             if (total >= d->max_copies) g_bk_byte_d = 1;
+        }
+        /* Refusal UX (message + telemetry + cancel blip): answered
+         * here so the fixed applier pays no branch for it.  Gold is
+         * checked after the cap (an over-cap row reports Already
+         * owned, never Not enough). */
+        if (g_bk_byte_d == 0 &&
+            g->state.currency.amount[CURRENCY_ID_GOLD - 1] < (int16_t)g_bk_byte_b) {
+            g_bk_byte_d = 2;
+        }
+        if (g_bk_byte_d == 1) {
+            s_sc_game->shop_message = SC_SHOP_MSG_MAX_COPIES;
+            telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 2, 0, 0);
+            g_bk_sfx_req = (uint8_t)(SFX_BACK + 1);
+        } else if (g_bk_byte_d == 2) {
+            s_sc_game->shop_message = SC_SHOP_MSG_NO_GOLD;
+            telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 1, 0, 0);
         }
     }
 }

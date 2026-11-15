@@ -104,21 +104,15 @@ static void shop_sell(Game *g)
 
 /* A-handler split out of shop_screen_update (fixed-bank cascade:
  * one 723 B function allocates far worse than three small ones,
- * AGENTS.md §52.18).  Buy verdict/apply + messages; the quote (id +
- * price) arrives banked, so the fixed bank pays no catalog scan.
- * Price 0 = free basic: the gold check always passes, max_copies
- * still caps the rebuy. */
+ * AGENTS.md §52.18).  Buy apply; the banked quote owns the verdict
+ * UX (refusal message + telemetry + cancel blip), so only a clean
+ * verdict reaches the deck here.  Price 0 = free basic: the gold
+ * check already passed in the quote, max_copies still caps the
+ * rebuy. */
 static void shop_confirm(Game *g)
 {
     shop_row_quote(g);
-    if (g_bk_byte_d == 1) {
-        g->shop_message = SHOP_MSG_MAX_COPIES;
-        telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
-        audio_play_sfx(SFX_BACK);
-    } else if (currency_get(&g->state, CURRENCY_ID_GOLD) < g_bk_byte_b) {
-        g->shop_message = SHOP_MSG_NO_GOLD;
-        telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 1, 0, 0);
-    } else {
+    if (g_bk_byte_d == 0) {
         if (!deck_collection_add(&g->state.cards, g_bk_byte_c, 1)) {
             g->shop_message = SHOP_MSG_MAX_COPIES;
             telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);

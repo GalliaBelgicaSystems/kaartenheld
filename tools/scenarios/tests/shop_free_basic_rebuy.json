@@ -1,7 +1,7 @@
 {
  "name": "shop_free_basic_rebuy",
  "test": true,
- "description": "Starter basics are always rebuyable for free, capped by max_copies: with 0 gold the third BRONZE SWORD (cap 3, starter owns 2) buys at price 0 (CARD_PURCHASED(67,0)), while the saturated WOOD SWORD row (cap 4, owns 4) refuses with Too many! + CARD_PURCHASE_FAILED and gold stays 0.",
+ "description": "Starter basics are always rebuyable for free, capped by max_copies: with 0 gold the third BRONZE SWORD (cap 3, starter owns 2) buys at price 0 (CARD_PURCHASED(67,0)), the fifth WOOD SWORD (cap 5, starter owns 4) buys too, while the sixth is refused with Already owned! + CARD_PURCHASE_FAILED and gold stays 0.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -100,6 +100,14 @@
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
  ],
  "assertions": [
@@ -151,7 +159,7 @@
   {
    "type": "inventory",
    "item": "WOOD_SWORD",
-   "expected": 4
+   "expected": 5
   },
   {
    "type": "event_occurred",
@@ -160,7 +168,7 @@
   {
    "type": "screen_row",
    "row": 17,
-   "contains": "Too many!"
+   "contains": "Already owned!"
   },
   {
    "type": "currency",
