@@ -124,7 +124,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
     const SceneDefinition *def;
-    uint8_t sliding;
     uint8_t sx;
     uint8_t sy;
 
@@ -140,7 +139,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     target_y = (uint8_t)(w->player.position.y + dy);
 
     def = scene_definition_for_map(w->map_id);
-    sliding = 0;
 
     /* Invisible point-exit triggers fire regardless of the art painted
      * under them, so the trigger lookup comes first.  It runs banked
@@ -169,6 +167,10 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
         g_bk_byte_b = target_y;
         banked_call_run();
         if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            /* Diagonal-only wall-hug: slide along the free axis at the
+             * same speed. Vertical (N/S priority) first, then
+             * horizontal. Only on wall (gate NONE); actor blocks stay
+             * inert so encounters/bumps are preserved. */
             if (dx == 0 || dy == 0) {
                 return MOVE_RESULT_BLOCKED;
             }
@@ -182,7 +184,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
             if (w->move_outcome != MOVE_OUTCOME_NONE) {
                 target_x = sx;
                 target_y = sy;
-                sliding = 1;
             } else {
                 sx = (uint8_t)(w->player.position.x + dx);
                 sy = w->player.position.y;
@@ -194,7 +195,6 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
                 if (w->move_outcome != MOVE_OUTCOME_NONE) {
                     target_x = sx;
                     target_y = sy;
-                    sliding = 1;
                     if (dx < 0) w->player.facing = DIRECTION_LEFT;
                     else w->player.facing = DIRECTION_RIGHT;
                 } else {
@@ -241,7 +241,7 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     }
 
     w->move_progress = 0;
-    w->move_state = sliding ? MOVE_STATE_HUG : MOVE_STATE_MOVING;
+    w->move_state = MOVE_STATE_MOVING;
     return MOVE_RESULT_MOVED;
 }
 
@@ -249,13 +249,11 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
 {
     uint8_t target_x, target_y;
 
-    uint8_t limit;
     if (!w) return MOVE_RESULT_NONE;
-    if (w->move_state != MOVE_STATE_MOVING && w->move_state != MOVE_STATE_HUG) return MOVE_RESULT_NONE;
+    if (w->move_state != MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
 
-    limit = (w->move_state == MOVE_STATE_HUG) ? MOVE_HUG_FRAMES : MOVE_FRAMES;
     w->move_progress++;
-    if (w->move_progress >= limit) {
+    if (w->move_progress >= MOVE_FRAMES) {
         /* Commit: resolve the move's outcome against the target tile. */
         target_x = w->move_target_x;
         target_y = w->move_target_y;
@@ -324,10 +322,6 @@ static uint8_t px_calc_interp(uint8_t base, uint8_t target, uint8_t progress)
 uint8_t world_player_px(const World *w)
 {
     if (!w) return 0;
-    if (w->move_state == MOVE_STATE_HUG) {
-        return px_calc_interp(w->player.position.x, w->move_target_x,
-                       (uint8_t)(w->move_progress >> 1));
-    }
     return (w->move_state == MOVE_STATE_MOVING) ?
         px_calc_interp(w->player.position.x, w->move_target_x,
                        w->move_progress) :
@@ -337,10 +331,6 @@ uint8_t world_player_px(const World *w)
 uint8_t world_player_py(const World *w)
 {
     if (!w) return 0;
-    if (w->move_state == MOVE_STATE_HUG) {
-        return px_calc_interp(w->player.position.y, w->move_target_y,
-                       (uint8_t)(w->move_progress >> 1));
-    }
     return (w->move_state == MOVE_STATE_MOVING) ?
         px_calc_interp(w->player.position.y, w->move_target_y,
                        w->move_progress) :

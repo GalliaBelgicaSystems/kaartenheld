@@ -6,9 +6,8 @@
 /* Bank-12 overworld scroll (cold-per-frame: once per overworld frame).
  * Moved out of fixed to free _HOME headroom for the diagonal wall-hug
  * slide (AGENTS.md 52.18). Inlines the player-pixel interpolation
- * (tile*8 + walk progress, hug at half speed via >>1, no SDCC mult/div
- * lib in fixed) so it never calls fixed-bank code while bank 12 is
- * mapped (52.11.1). Pure WRAM reads/writes. */
+ * (tile*8 + walk progress) so it never calls fixed-bank code while
+ * bank 12 is mapped (52.11.1). Pure WRAM reads/writes. */
 void world_update_scroll_banked(void)
 {
     World *w = (World *)g_bk_ptr_a;
@@ -19,7 +18,6 @@ void world_update_scroll_banked(void)
     base = w->player.position.x;
     target = w->move_target_x;
     prog = w->move_progress;
-    if (w->move_state == MOVE_STATE_HUG) prog = (uint8_t)(prog >> 1);
     px = (uint8_t)(base << 3);
     if (w->move_state != MOVE_STATE_IDLE) {
         if (target > base) px = (uint8_t)(px + prog);
@@ -29,7 +27,6 @@ void world_update_scroll_banked(void)
     base = w->player.position.y;
     target = w->move_target_y;
     prog = w->move_progress;
-    if (w->move_state == MOVE_STATE_HUG) prog = (uint8_t)(prog >> 1);
     py = (uint8_t)(base << 3);
     if (w->move_state != MOVE_STATE_IDLE) {
         if (target > base) py = (uint8_t)(py + prog);
