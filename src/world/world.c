@@ -31,6 +31,7 @@ void world_gate_check_banked(void);
 /* Bank-11 combined diagonal gate check (src/world/diagonal_banked.c). */
 void diagonal_gate_check_banked(void);
 
+
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
     const SceneDefinition *def;
@@ -73,22 +74,15 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     actor_load_scene(w, map_id, state);
 }
 
+void world_update_scroll_banked(void);
+
 void world_update_scroll(World *w)
 {
-    uint8_t px, py, max_x, max_y;
     if (!w) return;
-    px = world_player_px(w);
-    py = world_player_py(w);
-    px = (px < 80) ? 0 : (uint8_t)(px - 80);
-    py = (py < 72) ? 0 : (uint8_t)(py - 72);
-    max_x = (w->width > WORLD_VIEW_W) ? (uint8_t)((w->width - WORLD_VIEW_W) << 3) : 0;
-    max_y = (w->height > WORLD_VIEW_H) ? (uint8_t)((w->height - WORLD_VIEW_H) << 3) : 0;
-    if (px > max_x) px = max_x;
-    if (py > max_y) py = max_y;
-    w->camera_px_x = px;
-    w->camera_px_y = py;
-    w->scroll_x = (uint8_t)(px >> 3);
-    w->scroll_y = (uint8_t)(py >> 3);
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_update_scroll_banked;
+    g_bk_ptr_a = (void *)w;
+    banked_call_run();
 }
 
 void world_init(World *w, const GameState *state)
@@ -130,8 +124,11 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
     const SceneDefinition *def;
+    uint8_t sliding;
+    uint8_t sx;
+    uint8_t sy;
 
-    if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
+    if (!w || w->move_state != MOVE_STATE_IDLE) return MOVE_RESULT_NONE;
     (void)state;
 
     if (dy < 0) w->player.facing = DIRECTION_UP;
@@ -143,6 +140,7 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     target_y = (uint8_t)(w->player.position.y + dy);
 
     def = scene_definition_for_map(w->map_id);
+    sliding = 0;
 
     /* Invisible point-exit triggers fire regardless of the art painted
      * under them, so the trigger lookup comes first.  It runs banked
@@ -171,7 +169,38 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
         g_bk_byte_b = target_y;
         banked_call_run();
         if (w->move_outcome == MOVE_OUTCOME_NONE) {
-            return MOVE_RESULT_BLOCKED;
+            if (dx == 0 || dy == 0) {
+                return MOVE_RESULT_BLOCKED;
+            }
+            sx = w->player.position.x;
+            sy = (uint8_t)(w->player.position.y + dy);
+            g_bk_call_bank = 2;
+            g_bk_call_target = (uint16_t)&world_gate_check_banked;
+            g_bk_byte_a = sx;
+            g_bk_byte_b = sy;
+            banked_call_run();
+            if (w->move_outcome != MOVE_OUTCOME_NONE) {
+                target_x = sx;
+                target_y = sy;
+                sliding = 1;
+            } else {
+                sx = (uint8_t)(w->player.position.x + dx);
+                sy = w->player.position.y;
+                g_bk_call_bank = 2;
+                g_bk_call_target = (uint16_t)&world_gate_check_banked;
+                g_bk_byte_a = sx;
+                g_bk_byte_b = sy;
+                banked_call_run();
+                if (w->move_outcome != MOVE_OUTCOME_NONE) {
+                    target_x = sx;
+                    target_y = sy;
+                    sliding = 1;
+                    if (dx < 0) w->player.facing = DIRECTION_LEFT;
+                    else w->player.facing = DIRECTION_RIGHT;
+                } else {
+                    return MOVE_RESULT_BLOCKED;
+                }
+            }
         }
     }
 
@@ -212,7 +241,7 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     }
 
     w->move_progress = 0;
-    w->move_state = MOVE_STATE_MOVING;
+    w->move_state = sliding ? MOVE_STATE_HUG : MOVE_STATE_MOVING;
     return MOVE_RESULT_MOVED;
 }
 
@@ -220,11 +249,13 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
 {
     uint8_t target_x, target_y;
 
+    uint8_t limit;
     if (!w) return MOVE_RESULT_NONE;
-    if (w->move_state != MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
+    if (w->move_state != MOVE_STATE_MOVING && w->move_state != MOVE_STATE_HUG) return MOVE_RESULT_NONE;
 
+    limit = (w->move_state == MOVE_STATE_HUG) ? MOVE_HUG_FRAMES : MOVE_FRAMES;
     w->move_progress++;
-    if (w->move_progress >= MOVE_FRAMES) {
+    if (w->move_progress >= limit) {
         /* Commit: resolve the move's outcome against the target tile. */
         target_x = w->move_target_x;
         target_y = w->move_target_y;
@@ -293,6 +324,10 @@ static uint8_t px_calc_interp(uint8_t base, uint8_t target, uint8_t progress)
 uint8_t world_player_px(const World *w)
 {
     if (!w) return 0;
+    if (w->move_state == MOVE_STATE_HUG) {
+        return px_calc_interp(w->player.position.x, w->move_target_x,
+                       (uint8_t)(w->move_progress >> 1));
+    }
     return (w->move_state == MOVE_STATE_MOVING) ?
         px_calc_interp(w->player.position.x, w->move_target_x,
                        w->move_progress) :
@@ -302,6 +337,10 @@ uint8_t world_player_px(const World *w)
 uint8_t world_player_py(const World *w)
 {
     if (!w) return 0;
+    if (w->move_state == MOVE_STATE_HUG) {
+        return px_calc_interp(w->player.position.y, w->move_target_y,
+                       (uint8_t)(w->move_progress >> 1));
+    }
     return (w->move_state == MOVE_STATE_MOVING) ?
         px_calc_interp(w->player.position.y, w->move_target_y,
                        w->move_progress) :
@@ -391,44 +430,18 @@ void world_on_battle_end(Game *g, bool victory)
     }
 }
 
+void world_on_battle_fled_banked(void);
+
 void world_on_battle_fled(Game *g)
 {
-    World *w;
-    WorldActorRuntime *act;
-    uint8_t idx;
-    uint8_t e;
+    /* Thin fixed-bank wrapper: the fled body lives in ROM bank 12
+     * (src/world/fled_banked.c) to keep the fixed-bank budget for the
+     * diagonal wall-hug slide (AGENTS.md 52.18). Single staging slot. */
     if (!g) return;
-    w = &g->world;
-
-    /* The enemy stays on the map at the HP it had when the hero ran:
-     * no reward, defeat, or quest progress.  Inline (not banked): pure
-     * WRAM reads/writes, and the fixed bank has room again. */
-    idx = w->encounter_actor_index;
-    w->encounter_actor_index = NO_ACTOR_INDEX;
-    /* Flee grace (WORLD_FLEE_GRACE_FRAMES): the hero exits next to a live
-     * hostile, so encounters stay suppressed for ~2s while they escape. */
-    w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
-    if (idx == NO_ACTOR_INDEX) return;
-
-    /* Hoisted (AGENTS.md 52.18): one 16-bit indexed address instead of
-     * re-deriving it per field access. */
-    act = &w->actors[idx];
-    if (act->active) {
-        /* Write back the toughest SURVIVOR, not slot 0: a trio shares
-         * one actor, so when the slot-0 member died but its clones
-         * lived, copying enemies[0].hp respawned three corpses -- the
-         * re-engage opened on an all-dead battle and a single attack
-         * won it.  The group recovers to its best surviving member.
-         * Own loop counter (not the reused idx): idx is the actor
-         * slot act was derived from, and reusing it here would
-         * silently repoint any later idx use at an enemy ordinal. */
-        act->hp = 0;
-        for (e = 0; e < g->battle.enemy_count; e++) {
-            if (g->battle.enemies[e].hp > act->hp) {
-                act->hp = g->battle.enemies[e].hp;
-            }
-        }
-    }
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
 }
 
 uint8_t g_patrol_outcome;  /* BSS zero (AGENTS.md 52.27) */

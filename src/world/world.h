@@ -56,6 +56,11 @@ typedef enum {
  * at which point PLAYER_MOVED / exits / encounters are resolved. */
 #define MOVE_FRAMES 8
 
+/* Wall-hug slide: diagonal-only fallback that glides along the free axis
+ * at half speed (LTTP-like).  HUG frames = 16, pixel = progress >> 1
+ * (shift only: no SDCC mult/div lib in fixed _CODE, AGENTS.md 52.18). */
+#define MOVE_HUG_FRAMES 16
+
 /* Post-flee encounter grace, in frames (2 seconds at 60fps).  Fleeing
  * leaves the hero next to a live hostile, so without this the next step
  * (or patrol tick) would restart the same fight instantly. */
@@ -63,7 +68,8 @@ typedef enum {
 
 typedef enum {
     MOVE_STATE_IDLE   = 0,
-    MOVE_STATE_MOVING = 1
+    MOVE_STATE_MOVING = 1,
+    MOVE_STATE_HUG    = 2
 } MoveState;
 
 /* What the commit of a started move must resolve.  Set by world_try_begin_move
@@ -578,13 +584,15 @@ typedef struct {
 
     /* Movement animation state (runtime only, never persistent).  When
      * move_state == MOVE_STATE_MOVING, the player is animating from
-     * player.position toward move_target over MOVE_FRAMES; the tile
-     * position only commits at the end of the walk.  The renderer derives
-     * the sub-tile pixel position from (position, target, progress). */
+     * player.position toward move_target over MOVE_FRAMES; when
+     * MOVE_STATE_HUG (diagonal wall-hug slide), over MOVE_HUG_FRAMES
+     * at half speed (pixel = progress >> 1).  The tile commits at the
+     * end of the walk.  The renderer derives the sub-tile pixel
+     * position from (position, target, progress). */
     uint8_t move_state;      /* MoveState */
     uint8_t move_target_x;   /* target tile committed at the end of the walk */
     uint8_t move_target_y;
-    uint8_t move_progress;   /* 0..MOVE_FRAMES, sub-tile pixel offset */
+    uint8_t move_progress;   /* 0..MOVE_FRAMES (or MOVE_HUG_FRAMES) */
     uint8_t move_outcome;    /* MoveOutcome resolved at commit */
 
     /* Scene tileset kind, copied from the scene definition at load time.
