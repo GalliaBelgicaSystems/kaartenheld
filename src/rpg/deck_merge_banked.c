@@ -37,14 +37,14 @@
  * range, see game_ids.h GAME_CARD_COUNT): type, power, cost, uses,
  * effect, battle type, rider id, rider chance, max_copies. */
 static const uint8_t s_ident_catalog[GAME_CARD_COUNT][9] = {
-    /* CARD_IRON_SWORD    */ { 0, 5, 2, 0, 1, 0, 0, 0, 4 },
-    /* CARD_WOODEN_SHIELD */ { 1, 1, 1, 0, 2, 1, 0, 0, 4 },
+    /* CARD_IRON_SWORD    */ { 0, 5, 2, 0, 1, 0, 0, 0, 5 },
+    /* CARD_WOODEN_SHIELD */ { 1, 1, 1, 0, 2, 1, 0, 0, 5 },
     /* CARD_IRON_RING     */ { 2, 4, 2, 3, 3, 3, 0, 0, 1 },
     /* CARD_BRONZE_SWORD  */ { 0, 3, 1, 0, 1, 0, 0, 0, 3 },
     /* CARD_POISON_DAGGER */ { 0, 2, 2, 0, 1, 4, 1, 208, 3 },
     /* CARD_SHOPKEYS        */ { 5, 0, 0, 0, 0, 0, 0, 0, 1 },
     /* CARD_BOW_9         */ { 0, 7, 5, 2, 1, 2, 0, 0, 1 },
-    /* CARD_WOOD_SWORD    */ { 0, 1, 1, 0, 1, 0, 0, 0, 4 },
+    /* CARD_WOOD_SWORD    */ { 0, 1, 1, 0, 1, 0, 0, 0, 5 },
     /* CARD_STEEL_SHIELD  */ { 1, 6, 3, 0, 2, 1, 0, 0, 2 },
     /* CARD_BONE          */ { 5, 1, 0, 0, 0, 0, 0, 0, 1 },
     /* CARD_OLD_KEY       */ { 5, 2, 0, 0, 0, 0, 0, 0, 1 },

@@ -14,8 +14,8 @@
  * AP costs are derived, never typed (docs/card-ap-cost-formula.md):
  * CARD_AP(power, MAT_x, rider) folds to a constant at compile time. */
 const CardDefinition g_cards[] = {
-    { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  5, CARD_AP(5, MAT_IRON, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, 0, STATUS_NONE,       0,   "I SW" },
-    { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, 0, STATUS_NONE,       0,   "W SH" },
+    { CARD_IRON_SWORD,    CARD_TYPE_ATTACK,  5, CARD_AP(5, MAT_IRON, 0),  0, 5, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,    10, 0, STATUS_NONE,       0,   "I SW" },
+    { CARD_WOODEN_SHIELD, CARD_TYPE_DEFENSE, 1, CARD_AP(1, MAT_WOOD, 0),  0, 5, CARD_EFFECT_BLOCK_DAMAGE,  BATTLE_CARD_TYPE_SHIELD,    0, 0, STATUS_NONE,       0,   "W SH" },
     { CARD_IRON_RING,      CARD_TYPE_HEAL,    4, CARD_AP(4, MAT_IRON, 0),  3, 1, CARD_EFFECT_HEAL_HP,       BATTLE_CARD_TYPE_HEAL,     20, 0, STATUS_NONE,       0,   "I RG" },
     /* Bronze sword (plain, no rider -- swords never ride): the honest
      * mid-tier blade filling the wood->iron gap.  Plain bronze is 1 AP,
@@ -36,7 +36,7 @@ const CardDefinition g_cards[] = {
     { CARD_BOW_9,         CARD_TYPE_ATTACK, 7,  CARD_AP(7, MAT_MYTHRIL, 0),  LOOT_BOW_USES(7, MAT_MYTHRIL, 0), 1,  CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_BOW,      30, 0, STATUS_NONE,       0,   "M BO"  },
     /* Wood sword: the tier-1 starter blade (hero.json).  Plain; wood can
      * never carry a rider. */
-    { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, CARD_AP(1, MAT_WOOD, 0),  0, 4, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "W SW" },
+    { CARD_WOOD_SWORD,    CARD_TYPE_ATTACK,  1, CARD_AP(1, MAT_WOOD, 0),  0, 5, CARD_EFFECT_DAMAGE_TARGET, BATTLE_CARD_TYPE_SWORD,     0, 0, STATUS_NONE,       0,   "W SW" },
     /* Steel shield (power 6, AP 3, 12 g): the merchant-stocked answer to
      * the Lord of Slimes' flat-6 swing (docs/enemies_ranking.md §5.2/§8.4
      * decided) -- blocks it alone, where the old two-SH2 answer leaves 2
