@@ -541,7 +541,7 @@ static const char s_ic_loot_mat[LOOT_NMATERIALS] =
 static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
 static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
-static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
+static const uint8_t s_ic_loot_chance[4] = { 0, 208, 208, 176 };
 
 /* Shared with the bank-2 shop map (screen_content.c, same bank: plain
  * call, no trampoline): identity checks for one-copy rows resolve loot
@@ -793,8 +793,9 @@ static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
  * and counts for harness asserts (material/rider cells stay blank,
  * OAM art).  Display cost/rider/color read the primary (first)
  * member; A tries members in collection order, so display and behavior
- * agree.  Note: same-name variants (e.g. rider vs plain) share one row
- * by design; see docs/deck-management.md.
+ * agree.  Note: same-name variants share one row only when their
+ * on-hit riders match (fire and ice bows are different rows); see
+ * docs/deck-management.md.
  *
  * ic_draw_card_cell paints one cell.  Cells that lose their group are
  * never blanked here: the full redraw clears both planes first, and

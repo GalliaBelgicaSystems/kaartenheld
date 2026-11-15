@@ -9,6 +9,7 @@
 #include "shops.h"
 #include "rpg/loot.h"
 #include "rpg/cards.h"
+#include "rpg/status.h"
 #include "rpg/deck.h"
 #include "game_ids.h"
 
@@ -118,7 +119,12 @@ static void cu_apply(void)
 /* Curated rows, index = CardId - CARD_FIRST_GAME (the catalog order in
  * src/game/game_ids.h): material, weapon, deckable, type, power, cost
  * (the last three drive the FILTER and SORT modes for the view build
- * below -- the catalog itself is bank 2 and off-limits from here). */
+ * below -- the catalog itself is bank 2 and off-limits from here),
+ * plus the on-hit rider status id (STATUS_NONE when the card rides
+ * nothing -- only the poison dagger rides among curated cards).  The
+ * rider is part of the group key below: two rows share a DECK list
+ * row only when the player could not tell their cards apart in
+ * combat. */
 static const uint8_t s_cu_grp_mat[GAME_CARD_COUNT] =
     { 2, 0, 2, 1, 1, 0, 4, 0, 3, 0, 0 };
 static const uint8_t s_cu_grp_wpn[GAME_CARD_COUNT] =
@@ -131,15 +137,33 @@ static const uint8_t s_cu_grp_power[GAME_CARD_COUNT] =
     { 5, 1, 4, 3, 2, 0, 9, 1, 6, 1, 2 };
 static const uint8_t s_cu_grp_cost[GAME_CARD_COUNT] =
     { 2, 1, 2, 2, 2, 0, 5, 1, 3, 0, 0 };
+static const uint8_t s_cu_grp_rider[GAME_CARD_COUNT] =
+    { 0, 0, 0, 0, STATUS_POISON, 0, 0, 0, 0, 0, 0 };
 
-static uint8_t cu_grp_key(CardId id, uint8_t *mat, uint8_t *wpn)
+/* Group key: (MATERIAL, WEAPON, rider status).  Loot riders synthesize
+ * from the id axes with the same bronze-gated legality as
+ * loot_synth_banked and the bank-2 display mirror (poison is
+ * dagger-only, fire/ice bow-only); curated rows read the table above.
+ * Decks, sums, navigation and the A/unequip paths all key through
+ * here, so one row always means one playable card. */
+static uint8_t cu_grp_key(CardId id, uint8_t *mat, uint8_t *wpn,
+                           uint8_t *rider)
 {
     uint8_t k;
     uint8_t w;
+    uint8_t e;
     if (loot_is_loot_id(id)) {
         *mat = loot_id_material(id);
         w = loot_id_weapon(id);
         *wpn = (w <= 4) ? w : 0;
+        e = loot_id_effect(id);
+        if (*mat >= MAT_BRONZE && e != EFF_PLAIN &&
+            (e == EFF_POISON ? (w == WPN_DAGGER) :
+             ((e == EFF_FIRE || e == EFF_ICE) ? (w == WPN_BOW) : 0))) {
+            *rider = e;
+        } else {
+            *rider = STATUS_NONE;
+        }
         return 1;
     }
     if (id < CARD_FIRST_GAME) return 0;
@@ -148,6 +172,7 @@ static uint8_t cu_grp_key(CardId id, uint8_t *mat, uint8_t *wpn)
     if (!s_cu_grp_deckable[k]) return 0;
     *mat = s_cu_grp_mat[k];
     *wpn = s_cu_grp_wpn[k];
+    *rider = s_cu_grp_rider[k];
     return 1;
 }
 
@@ -268,16 +293,16 @@ static void cu_hide_side(uint8_t k, uint8_t side)
 }
 
 /* Owned/decked copies across every deckable collection entry sharing
- * the primary's (MATERIAL, WEAPON) name.  Collection/deck state is
- * staged through narrow locals (AGENTS.md 52.18: every g->field access
- * costs ~10 B under SDCC's 16-bit struct addressing). */
+ * the primary's (MATERIAL, WEAPON, rider) identity.  Collection/deck
+ * state is staged through narrow locals (AGENTS.md 52.18: every
+ * g->field access costs ~10 B under SDCC's 16-bit struct addressing). */
 static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
                         uint8_t *decked)
 {
     CardState *cs;
     uint8_t ccount, dcount;
     uint8_t i, j;
-    uint8_t mat, wpn, m2, w2;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t n;
     CardId id;
     *owned = 0;
@@ -287,11 +312,11 @@ static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
     dcount = cs->deck.count;
     if (primary_coll >= ccount) return;
     if (!cu_grp_key(cs->collection.entries[primary_coll].id,
-                    &mat, &wpn)) return;
+                    &mat, &wpn, &rdr)) return;
     for (i = 0; i < ccount; i++) {
         id = cs->collection.entries[i].id;
-        if (!cu_grp_key(id, &m2, &w2)) continue;
-        if (m2 != mat || w2 != wpn) continue;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
         n = cs->collection.entries[i].count;
         *owned = (uint8_t)(*owned + n);
         if (*owned < n || *owned > 99) *owned = 99;
@@ -308,7 +333,7 @@ void item_view_build_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
     uint8_t i, j, k;
-    uint8_t mat, wpn, m2, w2;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t type, power, cost;
     uint8_t desc;
     uint8_t n;
@@ -328,13 +353,13 @@ void item_view_build_banked(void)
         if (type == 0xFF) continue;
         if (g->item_menu_filter != 0xFF && type != g->item_menu_filter)
             continue;
-        /* Fold into the first row with the same (mat, wpn): that row's
-         * earliest collection entry stays the primary. */
-        if (!cu_grp_key(id, &mat, &wpn)) continue;
+        /* Fold into the first row with the same (mat, wpn, rider):
+         * that row's earliest collection entry stays the primary. */
+        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
         for (k = 0; k < s_view_count; k++) {
             if (!cu_grp_key(g->state.cards.collection.entries[
-                    s_view_indices[k]].id, &m2, &w2)) continue;
-            if (m2 == mat && w2 == wpn) break;
+                    s_view_indices[k]].id, &m2, &w2, &r2)) continue;
+            if (m2 == mat && w2 == wpn && r2 == rdr) break;
         }
         if (k < s_view_count) continue;
         s_view_indices[s_view_count] = i;
@@ -470,7 +495,7 @@ void item_group_query_banked(void)
     uint8_t ordinal = g_bk_byte_b;
     uint8_t mode = g_bk_byte_d;
     uint8_t i, j;
-    uint8_t mat, wpn, m2, w2;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t seen = 0;
     CardId id;
     if (!g || primary >= g->state.cards.collection.count) {
@@ -478,7 +503,7 @@ void item_group_query_banked(void)
         return;
     }
     id = g->state.cards.collection.entries[primary].id;
-    if (!cu_grp_key(id, &mat, &wpn)) {
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
         g_bk_byte_c = 0xFF;
         return;
     }
@@ -488,8 +513,8 @@ void item_group_query_banked(void)
         uint8_t n;
         for (i = 0; i < g->state.cards.collection.count; i++) {
             id = g->state.cards.collection.entries[i].id;
-            if (!cu_grp_key(id, &m2, &w2)) continue;
-            if (m2 != mat || w2 != wpn) continue;
+            if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+            if (m2 != mat || w2 != wpn || r2 != rdr) continue;
             n = g->state.cards.collection.entries[i].count;
             owned = (uint8_t)(owned + n);
             if (owned < n || owned > 99) owned = 99;
@@ -506,8 +531,8 @@ void item_group_query_banked(void)
     }
     for (i = 0; i < g->state.cards.collection.count; i++) {
         id = g->state.cards.collection.entries[i].id;
-        if (!cu_grp_key(id, &m2, &w2)) continue;
-        if (m2 != mat || w2 != wpn) continue;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
         if (seen == ordinal) {
             g_bk_byte_c = i;
             return;
@@ -538,7 +563,7 @@ void item_group_scan_banked(void)
     uint8_t primary = g_bk_byte_a;
     uint8_t pool = g_bk_byte_d;
     CardState *cs;
-    uint8_t mat, wpn, m2, w2;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t i;
     uint8_t r;
     uint8_t full_idx = 0xFF;
@@ -552,15 +577,15 @@ void item_group_scan_banked(void)
     }
     cs = &g->state.cards;
     id = cs->collection.entries[primary].id;
-    if (!cu_grp_key(id, &mat, &wpn)) {
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
         g_bk_byte_c = 3;
         g_bk_byte_b = 0xFF;
         return;
     }
     for (i = 0; i < cs->collection.count; i++) {
         id = cs->collection.entries[i].id;
-        if (!cu_grp_key(id, &m2, &w2)) continue;
-        if (m2 != mat || w2 != wpn) continue;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
         g_bk_ptr_a = (void *)cs;
         g_bk_byte_a = (uint8_t)id;
         g_bk_byte_d = pool;
@@ -804,7 +829,7 @@ void item_group_remove_one_banked(void)
     Game *g = (Game *)g_bk_ptr_a;
     uint8_t primary = g_bk_byte_a;
     CardState *cs;
-    uint8_t mat, wpn, m2, w2;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t i, j;
     CardId id;
     if (!g || primary >= g->state.cards.collection.count) {
@@ -813,14 +838,14 @@ void item_group_remove_one_banked(void)
     }
     cs = &g->state.cards;
     id = cs->collection.entries[primary].id;
-    if (!cu_grp_key(id, &mat, &wpn)) {
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
         g_bk_byte_c = 0xFF;
         return;
     }
     for (i = 0; i < cs->collection.count; i++) {
         id = cs->collection.entries[i].id;
-        if (!cu_grp_key(id, &m2, &w2)) continue;
-        if (m2 != mat || w2 != wpn) continue;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
         for (j = 0; j < cs->deck.count; j++) {
             if (cs->deck.cards[j] != id) continue;
             if (cs->deck.count <= DECK_MIN_CARDS) {
