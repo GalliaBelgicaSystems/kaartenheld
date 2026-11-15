@@ -9,6 +9,7 @@
 #include "telemetry_ring.h"
 
 extern uint8_t ui_font_tile_base;
+extern char g_ui_screen_buf[18][21];
 
 /* ── Save-flow banked bodies (ROM bank 12) ──────────────────────────
  * The SAVE/LOAD screen's fixed update sits hard against 0x8000
@@ -99,7 +100,15 @@ static uint8_t s_notice_spin_primed;
  * (free in both fetch blocks; re-streamed from the font every phase
  * so there is no boot load and no clobber state), hero palette slot
  * (prop 0, always programmed).  A phase redraws the glyph (\ | / -);
- * OAM is rewritten every frame so transition wipes never strand it. */
+ * OAM is rewritten every frame so transition wipes never strand it.
+ * A shade-0 background cell (tile 0, the screen's paper) is stamped
+ * under the sprite at (19,17) every frame the spinner shows: an 8x8
+ * backdrop exactly the sprite's size, self-healing across transitions
+ * like the OAM rewrite, resynced from the semantic buffer on hide
+ * (the buffer is never touched, so it stays authoritative). */
+#define SPIN_BG_X 19
+#define SPIN_BG_Y 17
+
 static void spin_show(uint8_t phase, uint8_t restream)
 {
     uint8_t ch;
@@ -124,6 +133,30 @@ static void spin_show(uint8_t phase, uint8_t restream)
     shadow_OAM[SPIN_OAM_ENTRY].prop = 0;
     shadow_OAM[SPIN_OAM_ENTRY].x = (uint8_t)(SPIN_PX + 8);
     shadow_OAM[SPIN_OAM_ENTRY].y = (uint8_t)(SPIN_PY + 16);
+    /* Paper backdrop under the sprite (same frame, same visibility
+     * lifetime): tile 0 reads the screen's shade 0 through the cell's
+     * own palette, so it stays correct on every screen without owning
+     * a palette slot. */
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)SPIN_BG_Y << 5) +
+                               SPIN_BG_X);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(dst, ui_font_tile_base);
+}
+
+/* Backdrop hide: resync the cell from the semantic buffer (untouched
+ * while the spinner showed, so it names the right tile even if a
+ * transition rebuilt VRAM mid-spin). */
+static void spin_hide(void)
+{
+    volatile uint8_t *dst;
+    char ch;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)SPIN_BG_Y << 5) +
+                               SPIN_BG_X);
+    ch = g_ui_screen_buf[SPIN_BG_Y][SPIN_BG_X];
+    BANKED_VRAM_WRITE(dst,
+        (uint8_t)(ui_font_tile_base + (uint8_t)(ch - 32)));
+    shadow_OAM[SPIN_OAM_ENTRY].y = 0;
 }
 
 /* ── Active-slot commit (intro end + upkeep flush) ──────────────────
@@ -162,7 +195,7 @@ void save_upkeep_banked(void)
                   (uint8_t)((s_save_spin_ttl & 7) == 0));
         s_save_spin_ttl--;
         if (s_save_spin_ttl == 0) {
-            shadow_OAM[SPIN_OAM_ENTRY].y = 0;
+            spin_hide();
         }
     }
 }
