@@ -1,7 +1,7 @@
 {
  "name": "loot_collection_full",
  "test": true,
- "description": "Loot drop when collection is full (docs/loot.md 34.5): when the 50-row card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show YOU FOUND. The filler builds all 50 rows: every plain loot cell except the starter twins and the drop, the legal rider rows, the reserved-weapon hybrids, quest specials, the curated poison dagger, plus twin rows surviving only as capped-fold remainders (96/97) -- excluding seed 5002 drop id 99 so the drop needs a new slot.",
+ "description": "Loot drop when collection is full (docs/loot.md 34.5): when the 50-row card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show YOU FOUND. The filler builds all 50 rows: every plain loot cell except the starter twins and the drop, the legal rider rows, the reserved-weapon hybrids, quest specials, the curated poison dagger, plus twin rows surviving only as capped-fold remainders (96/97, granted twice: at cap 5 the first twin folds away, the second re-opens the remainder) -- excluding seed 5002 drop id 99 so the drop needs a new slot.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -250,6 +250,16 @@
   {
    "type": "collection_add",
    "card_id": 188,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 96,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 97,
    "quantity": 1
   },
   {
