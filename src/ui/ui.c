@@ -725,11 +725,12 @@ void ui_draw_actors_sprites(const World *world)
     s_anim_counter++;
     anim_step = (uint8_t)((s_anim_counter >> 4) & 1);
 
-    /* Hero walk frames 1 & 2 while moving; standing-pose idle frames 1 & 2
-     * while standing still (move_state covers dialogue pauses too: the
-     * hero idles whenever no walk is animating).  Fixed-bank branch (bank
-     * 4 release layout is full); the actor pass below stays banked. */
-    if (world->move_state == MOVE_STATE_MOVING) {
+    /* Hero walk frames 1 & 2 while moving (incl. wall-hug slides);
+     * standing-pose idle frames 1 & 2 while standing still (move_state
+     * covers dialogue pauses too: the hero idles whenever no walk is
+     * animating).  Fixed-bank branch (bank 4 release layout is full);
+     * the actor pass below stays banked. */
+    if (world->move_state != MOVE_STATE_IDLE) {
         shadow_OAM[PLAYER_SPRITE_NUM].tile = (uint8_t)(HERO_DESOLATE_SPRITE_TILE_ID + anim_step);
     } else {
         shadow_OAM[PLAYER_SPRITE_NUM].tile = (uint8_t)(HERO_IDLE_SPRITE_TILE_ID + anim_step);

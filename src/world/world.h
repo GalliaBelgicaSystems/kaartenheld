@@ -579,8 +579,9 @@ typedef struct {
     /* Movement animation state (runtime only, never persistent).  When
      * move_state == MOVE_STATE_MOVING, the player is animating from
      * player.position toward move_target over MOVE_FRAMES; the tile
-     * position only commits at the end of the walk.  The renderer derives
-     * the sub-tile pixel position from (position, target, progress). */
+     * position only commits at the end of the walk.  The renderer
+     * derives the sub-tile pixel position from (position, target,
+     * progress).  Diagonal wall-hug slides run at the same speed. */
     uint8_t move_state;      /* MoveState */
     uint8_t move_target_x;   /* target tile committed at the end of the walk */
     uint8_t move_target_y;
