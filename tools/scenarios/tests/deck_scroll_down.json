@@ -1,0 +1,73 @@
+{
+ "name": "deck_scroll_down",
+ "test": true,
+ "description": "DECK-tab scroll-down indicator: with 10 pile groups (8 curated + 2 loot) only 8 fit the visible window, so row 14 shows the rotated-finger down caret ('v' in the buffer) under the pile material column while the deck side (3 rows, fits) shows none; at the top there is no up caret on row 4.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4471,
+  "inventory": {
+   "IRON_SWORD": 1,
+   "WOODEN_SHIELD": 1,
+   "IRON_RING": 1,
+   "BRONZE_SWORD": 1,
+   "POISON_DAGGER": 1,
+   "BOW_9": 1,
+   "WOOD_SWORD": 1,
+   "STEEL_SHIELD": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "PILE"
+  },
+  {
+   "type": "screen_row_exact",
+   "row": 14,
+   "contains": "    v"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 4,
+   "contains": "^"
+  }
+ ]
+}

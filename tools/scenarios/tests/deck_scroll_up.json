@@ -1,0 +1,148 @@
+{
+ "name": "deck_scroll_up",
+ "test": true,
+ "description": "DECK-tab scroll-up indicator: with 10 pile groups scrolled to the bottom (10 DOWN presses from the FILTER row), row 4 shows the up carets at the material columns (both sides scrolled: pile past its window start, deck past its first rows) while the row-14 down caret is gone (nothing left below the window).",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4472,
+  "inventory": {
+   "IRON_SWORD": 1,
+   "WOODEN_SHIELD": 1,
+   "IRON_RING": 1,
+   "BRONZE_SWORD": 1,
+   "POISON_DAGGER": 1,
+   "BOW_9": 1,
+   "WOOD_SWORD": 1,
+   "STEEL_SHIELD": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row_exact",
+   "row": 4,
+   "contains": "    ^         ^"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 14,
+   "contains": "v"
+  }
+ ]
+}

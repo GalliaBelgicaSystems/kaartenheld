@@ -7,14 +7,14 @@ int16_t currency_get(const GameState *state, CurrencyId currency)
     return state->currency.amount[currency - 1];
 }
 
-/* Thin fixed-bank wrapper: the saturating core lives in the bank-11 body
+/* Thin fixed-bank wrapper: the saturating core lives in the bank-12 body
  * (src/rpg/currency_banked.c) so the fixed bank stays under 0x8000
  * (AGENTS.md §52.18).  Validation lives in the body; this only stages. */
 void currency_add_banked(void);
 
 void currency_add(GameState *state, CurrencyId currency, int16_t amount)
 {
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 12;
     g_bk_call_target = (uint16_t)&currency_add_banked;
     g_bk_ptr_a = (void *)state;
     g_bk_byte_a = (uint8_t)currency;

@@ -31,22 +31,50 @@
 
 #include "gfx/menu_rider_tiles.h"
 
+/* Scroll-down caret tile (streamed as rider slot 4 below):
+ * menu_cursor tile 1 (finger up: rows 30 30 30 3C 7E 7E 3C 3C)
+ * rotated 180 degrees, i.e. reversed row order with each row's bits
+ * mirrored (0x30 <-> 0x0C; 0x3C/0x7E are horizontally symmetric).
+ * Monochrome doubles like the source (lo == hi per row). */
+static const uint8_t s_scroll_down_tile[16] = {
+    0x3C, 0x3C,
+    0x3C, 0x3C,
+    0x7E, 0x7E,
+    0x7E, 0x7E,
+    0x3C, 0x3C,
+    0x0C, 0x0C,
+    0x0C, 0x0C,
+    0x0C, 0x0C
+};
+
+/* Compile-time pin: the caret rides rider slot 4 (UI_TILE_SCROLL_DOWN
+ * == BASE + 4), streamed by the same loop below at zero extra
+ * dispatch cost. */
+typedef char scroll_down_slot_ok[
+    UI_TILE_SCROLL_DOWN == (UI_TILE_MENU_RIDER_BASE + 4) ? 1 : -1];
+
 uint8_t g_menu_riders_loaded;
 
 void ic_menu_riders_load(void)
 {
     uint8_t i, j;
     volatile uint8_t *dst;
+    const uint8_t *src;
 
     if (g_menu_riders_loaded) return;
     g_menu_riders_loaded = 1;
     VBK_REG = 0;
-    for (i = 0; i < UI_TILE_MENU_RIDER_COUNT; i++) {
+    /* Rider icons plus the scroll-down caret (slot 4: the menu
+     * finger-up bitmap rotated 180 degrees, so the down caret is the
+     * same symbol as the '^' up caret, not the font 'v').  One loop,
+     * one LCD-on window, same re-arm contract as the AP pip stream. */
+    for (i = 0; i < UI_TILE_MENU_RIDER_COUNT + 1; i++) {
+        src = (i < UI_TILE_MENU_RIDER_COUNT) ?
+            &menu_rider_tiles[((uint16_t)i << 4)] : s_scroll_down_tile;
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)(UI_TILE_MENU_RIDER_BASE + i) << 4));
         for (j = 0; j < 16; j++) {
-            BANKED_VRAM_WRITE(dst,
-                              menu_rider_tiles[((uint16_t)i << 4) + j]);
+            BANKED_VRAM_WRITE(dst, src[j]);
             dst++;
         }
     }

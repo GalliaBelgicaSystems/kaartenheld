@@ -217,6 +217,13 @@ uint8_t s_row_decked[ROW_SUMS];
 uint8_t s_ic_draw_pos[8];
 uint8_t s_ic_draw_pos_r[8];
 
+/* DECK scroll-overflow flags for the bank-2 row painter (plain WRAM,
+ * bank-independent): bit 0 up-pile, 1 up-deck, 2 down-pile, 3
+ * down-deck.  An empty-windowed side never signals.  Built by the
+ * view build below on every DECK render/repaint, so full and
+ * incremental draws always agree. */
+uint8_t s_ic_scroll_flags;
+
 /* Previous packed maps (snapshot at build entry): the diff-clear at the
  * end of the build erases VRAM/OAM/buffer cells for slots/sides that
  * just lost their row, so the lean bank-2 repaint only ever draws live
@@ -261,28 +268,35 @@ static void cu_hide_side(uint8_t k, uint8_t side)
 }
 
 /* Owned/decked copies across every deckable collection entry sharing
- * the primary's (MATERIAL, WEAPON) name. */
+ * the primary's (MATERIAL, WEAPON) name.  Collection/deck state is
+ * staged through narrow locals (AGENTS.md 52.18: every g->field access
+ * costs ~10 B under SDCC's 16-bit struct addressing). */
 static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
                         uint8_t *decked)
 {
+    CardState *cs;
+    uint8_t ccount, dcount;
     uint8_t i, j;
     uint8_t mat, wpn, m2, w2;
     uint8_t n;
     CardId id;
     *owned = 0;
     *decked = 0;
-    if (primary_coll >= g->state.cards.collection.count) return;
-    if (!cu_grp_key(g->state.cards.collection.entries[primary_coll].id,
+    cs = &g->state.cards;
+    ccount = cs->collection.count;
+    dcount = cs->deck.count;
+    if (primary_coll >= ccount) return;
+    if (!cu_grp_key(cs->collection.entries[primary_coll].id,
                     &mat, &wpn)) return;
-    for (i = 0; i < g->state.cards.collection.count; i++) {
-        id = g->state.cards.collection.entries[i].id;
+    for (i = 0; i < ccount; i++) {
+        id = cs->collection.entries[i].id;
         if (!cu_grp_key(id, &m2, &w2)) continue;
         if (m2 != mat || w2 != wpn) continue;
-        n = g->state.cards.collection.entries[i].count;
+        n = cs->collection.entries[i].count;
         *owned = (uint8_t)(*owned + n);
         if (*owned < n || *owned > 99) *owned = 99;
-        for (j = 0; j < g->state.cards.deck.count; j++) {
-            if (g->state.cards.deck.cards[j] == id) {
+        for (j = 0; j < dcount; j++) {
+            if (cs->deck.cards[j] == id) {
                 *decked = (uint8_t)(*decked + 1);
                 if (*decked == 0) *decked = 255;
             }
@@ -362,16 +376,30 @@ void item_view_build_banked(void)
      * remainder (owned - decked > 0), the right block groups with decked
      * copies -- first 8 of each at/after the scroll position.  A zero
      * count hides that side's cell (an emptied side shows blank rows)
-     * and the cursor never parks on a hidden cell. */
+     * and the cursor never parks on a hidden cell.  The same pass
+     * reports per-side scroll overflow into s_ic_scroll_flags (bit 0
+     * up-pile, 1 up-deck, 2 down-pile, 3 down-deck): positions below
+     * the scroll classify the up bits, and a side already full at a
+     * position's entry classifies the down bits -- scanned in order,
+     * so both are exact with no second pass (bank 11 has no room for
+     * one, AGENTS.md 52.18). */
     {
         uint8_t k = 0;
         uint8_t kr = 0;
         uint8_t start = g->item_menu_scroll;
         uint8_t owned;
         uint8_t decked;
+        s_ic_scroll_flags = 0;
         if (start >= s_view_count && s_view_count > 0) start = 0;
-        for (n = start; n < s_view_count && (k < 8 || kr < 8); n++) {
+        for (n = 0; n < s_view_count && (k < 8 || kr < 8); n++) {
             cu_row_sums(g, s_view_indices[n], &owned, &decked);
+            if (n < start) {
+                if (owned > decked) s_ic_scroll_flags |= 0x01;
+                if (decked > 0) s_ic_scroll_flags |= 0x02;
+                continue;
+            }
+            if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
+            if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
             if (owned > decked && k < 8) {
                 s_ic_draw_pos[k] = n;
                 s_row_owned[k] = owned;
@@ -385,6 +413,13 @@ void item_view_build_banked(void)
                 kr++;
             }
         }
+        /* An empty-windowed side never signals (its rows cannot
+         * scroll): the in-loop down checks only fire past a full
+         * window, but the up bits can land on blank rows.  k/kr still
+         * hold the drawn counts here (the pad loops below overwrite
+         * them), so emptiness is a cheap local test. */
+        if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
+        if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
         for (; k < 8; k++) {
             s_ic_draw_pos[k] = 0xFF;
             s_row_owned[k] = 0;

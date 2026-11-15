@@ -131,6 +131,14 @@ void ic_menu_riders_load(void);
 #define UI_TILE_AP_ICON          114u
 #define UI_TILE_DECK_ICON        116u
 
+/* DECK-list scroll-down caret: the menu finger-up bitmap rotated 180°
+ * so down matches up stroke-for-stroke (same symbol, not the font 'v').
+ * Lives in the free high block-1 window (208-235 belongs to no tileset;
+ * the world tileset writes 128..127+count, max 207), streamed with the
+ * rider icons on DECK-tab entry.  The semantic buffer keeps 'v' for
+ * harness screen_row asserts. */
+#define UI_TILE_SCROLL_DOWN      232u
+
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
  * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
