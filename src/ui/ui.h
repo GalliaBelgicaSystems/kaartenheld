@@ -33,8 +33,8 @@ extern uint8_t g_is_cgb;
  * card (and the enemy-target caret); the dark arrow stays on a card that is
  * already in the combo (no auto-advance after select).  Both replace the
  * '^' font caret on the battle marker / target rows.  BG tile ids 96-103
- * are the only free block-1 slots (font 0-95, atlas 104-116); the BG never
- * referenced them before. */
+ * were the free block-1 slots (font 0-95, atlas 104-116); slot 112 (the
+ * former menu blank, never stamped) now carries the 6-arrows floor glyph. */
 #define UI_TILE_SELECT_ARROW     96u
 #define UI_TILE_SELECT_ARROW_DARK 110u
 /* Battle AP-badge dot (combat_ap_dot, card-frames sheet cell 16): tiny
@@ -49,10 +49,11 @@ extern uint8_t g_is_cgb;
  * (font tile 30) rotated 90 degrees clockwise, loaded at boot by the
  * bank-3 card-tile loader into this free BG slot.  Shown at the far
  * bottom right (col 19, row 17) of the third full-width text row
- * whenever another dialogue page follows; hidden on the last page.  Slot 109 is the only free id in 96-127
- * (96 light arrow, 97-103 bow counters, 104-108 weapons, 110-112 dark
- * arrow + blanks, 113/114/116 HUD, 115 coin, 117/127 bar, 118-126
- * frames): its same-numbered OAM id lives in the 0x8000 sprite block,
+ * whenever another dialogue page follows; hidden on the last page.  Slot 109 was the last free id in 96-127
+ * (96 light arrow, 97-103 bow counters, 104-108 weapons, 110/111 dark
+ * arrow + AP dot, 112 six-arrows counter, 113/114/116 HUD, 115 coin, 117/127
+ * bar, 118-126 frames): its same-numbered OAM id lives in the 0x8000 sprite
+ * block,
  * a different physical address (AGENTS.md 52.22).  The semantic screen
  * buffer keeps 'v' for harness text assertions. */
 #define UI_TILE_DIALOGUE_CONTINUE 109u
@@ -122,11 +123,11 @@ void ic_menu_riders_load(void);
 
 /* Menu DECK-row chrome (all boot-loaded by ui_card_tiles_load_banked,
  * same loader as the weapon icons, so no streaming needed): the AP unit
- * icon (combat_ap_icon, HUD gold) stamped after the cost pip, the true
- * blank sheet cell for the spacer cells, and the deck icon
- * (combat_deck_icon, HUD iron) replacing the DECK text.  The text buffer
- * keeps the DECK letters, so harness screen_row asserts are unchanged. */
-#define UI_TILE_MENU_BLANK       112u
+ * icon (combat_ap_icon, HUD gold) stamped after the cost pip, and the
+ * deck icon (combat_deck_icon, HUD iron) replacing the DECK text.  Spacer
+ * cells are plain font spaces.  The text buffer keeps the DECK letters,
+ * so harness screen_row asserts are unchanged.  (Former UI_TILE_MENU_BLANK
+ * 112 now carries the 6-arrows floor glyph -- do not stamp it as blank.) */
 #define UI_TILE_AP_ICON          114u
 #define UI_TILE_DECK_ICON        116u
 

@@ -714,6 +714,16 @@
       "category": "terrain"
     },
     {
+      "id": "combat_6_arrows_left",
+      "label": "6_arrows_left",
+      "gb_constant": "TILE_COMBAT_6_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c09f6f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_6_arrows_left.png",
+      "category": "terrain"
+    },
+    {
       "id": "combat_3_arrows_left",
       "label": "3_arrows_left",
       "gb_constant": "TILE_COMBAT_3_ARROWS_LEFT",

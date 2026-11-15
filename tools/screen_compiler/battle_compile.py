@@ -1230,15 +1230,16 @@ ICON_TILES = {
     'combat_ap_dot': 111,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
     # Limited-use arrow counters (bow floor row + HEAL rings sharing it):
-    # remaining-uses glyphs 0..5, plus the power-row nine icon.  VRAM ids
+    # remaining-uses glyphs 0..6, plus the power-row nine icon.  VRAM ids
     # must match the tail of s_card_tile_vram_ids
-    # (src/ui/ui_battle_content.c) — free BG fetch slots 97/98-103,
-    # nothing else ever writes them.  5_arrows reuses the trailing blank
-    # slot 103 (same overwrite trick as 4_arrows on 97).
+    # (src/ui/ui_battle_content.c) — free BG fetch slots 97/98-103 plus
+    # the former menu blank 112, nothing else ever writes them.
+    # 5_arrows reuses the trailing blank slot 103 (same overwrite trick
+    # as 4_arrows on 97); 6_arrows takes 112 outright.
     'combat_0_arrows_left': 98, 'combat_1_arrow_left': 99,
     'combat_2_arrows_left': 100, 'combat_3_arrows_left': 101,
     'combat_nine_icon': 102, 'combat_4_arrows_left': 97,
-    'combat_5_arrows_left': 103,
+    'combat_5_arrows_left': 103, 'combat_6_arrows_left': 112,
 }
 SKIN_COLORS = {'none': 0, 'fire': 1, 'iron': 2, 'field': 3, 'poison': 4,
                'wood': 5, 'gold': 6, 'dim': 7}
@@ -1352,9 +1353,9 @@ def build_card_skin_output(skin):
     lines.append("    { %s }," % ", ".join(str(SKIN_COLORS[skin['types'][k]['color']]) for k in SKIN_TYPE_KEYS))
     # Limited-use arrow counters: at most one card type carries them
     # (the bow, shared by HEAL rings); uses_tile is indexed by remaining
-    # uses 0..5, uses_power_tile is the power-row glyph for that type.
+    # uses 0..6, uses_power_tile is the power-row glyph for that type.
     uses_type, uses_tiles, uses_power = skin_uses_icons(skin)
-    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..5, uses_power_tile */")
+    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..6, uses_power_tile */")
     lines.append("    %d," % uses_type)
     lines.append("    { %s }," % ", ".join(uses_tiles))
     lines.append("    %d" % uses_power)
@@ -1366,19 +1367,19 @@ def build_card_skin_output(skin):
 def skin_uses_icons(skin):
     """Resolve the limited-use arrow counters: the (single) card type
     with a uses_icons list -> (BATTLE_CARD_TYPE index, tile list indexed
-    by remaining uses 0..5, power icon tile).  Exactly six icons,
-    ordered uses 5..0; uses_power_icon is the power-row glyph for that
+    by remaining uses 0..6, power icon tile).  Exactly seven icons,
+    ordered uses 6..0; uses_power_icon is the power-row glyph for that
     type."""
     if skin is None:
-        return 0xFF, ["0"] * 6, 0
+        return 0xFF, ["0"] * 7, 0
     for idx, key in enumerate(SKIN_TYPE_KEYS):
         entry = skin['types'][key]
         icons = entry.get('uses_icons')
         if not icons:
             continue
-        if len(icons) != 6:
-            raise ValueError("cards_skin.%s.uses_icons must list exactly 6 "
-                             "icons (uses 5,4,3,2,1,0)" % key)
+        if len(icons) != 7:
+            raise ValueError("cards_skin.%s.uses_icons must list exactly 7 "
+                             "icons (uses 6,5,4,3,2,1,0)" % key)
         for name in icons:
             if name not in ICON_TILES:
                 raise ValueError("cards_skin.%s.uses_icons: unknown icon "
@@ -1389,10 +1390,10 @@ def skin_uses_icons(skin):
             raise ValueError("cards_skin.%s.uses_power_icon: unknown icon "
                              "'%s' (not in the combat tileset slugs)"
                              % (key, power_name))
-        # JSON order is uses 5..0; the ROM indexes by remaining uses.
+        # JSON order is uses 6..0; the ROM indexes by remaining uses.
         tiles = [ICON_TILES[name] for name in reversed(icons)]
         return idx, [str(t) for t in tiles], ICON_TILES[power_name]
-    return 0xFF, ["0"] * 6, 0
+    return 0xFF, ["0"] * 7, 0
 
 
 def load_battle_hud():

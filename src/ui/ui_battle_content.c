@@ -295,14 +295,15 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
     (void)status;
     /* Finite-use cards of the skin's arrow-counter type -- and HEAL-type
      * rings, which share its remaining-uses glyphs -- draw the
-     * remaining-uses glyph (0..5: 5_arrows_left covers mythril rings
-     * and any 5-use bow) on the floor row; unlimited cards keep
-     * the frame center.  Counts above 5 cannot occur (mythril is the
-     * top band) but clamp defensively to the font digit. */
+     * remaining-uses glyph (0..6: 6_arrows_left covers 1-AP wood bows,
+     * 5_arrows_left mythril rings and 5-use bows) on the floor row;
+     * unlimited cards keep the frame center.  Counts above 6 cannot occur
+     * (LOOT_BOW_USES_FROM_AP tops out at 7 - 1) but clamp defensively to
+     * the font digit. */
     limited = (uses != 0xFF && (type == g_card_skin_wram.uses_type ||
                                 type == BATTLE_CARD_TYPE_HEAL));
     if (limited) {
-        digit_tile = (uses > 5) ? (uint8_t)('0' - ' ' + uses)
+        digit_tile = (uses > 6) ? (uint8_t)('0' - ' ' + uses)
                                 : g_card_skin_wram.uses_tile[uses];
     } else {
         digit_tile = (uint8_t)('0' - ' ' + value);
@@ -329,7 +330,7 @@ static void battle_draw_card_at(uint8_t x, uint8_t y, uint8_t type, uint8_t valu
              * glyph and keeps the BL/BR corners. */
             battle_vram_sync_write(&dst[0], (uint8_t)(frame + 6));
             if (limited) {
-                digit_tile = (uses > 5) ? (uint8_t)('0' - ' ' + uses)
+                digit_tile = (uses > 6) ? (uint8_t)('0' - ' ' + uses)
                                          : g_card_skin_wram.uses_tile[uses];
                 battle_vram_sync_write(&dst[1], digit_tile);
             } else {

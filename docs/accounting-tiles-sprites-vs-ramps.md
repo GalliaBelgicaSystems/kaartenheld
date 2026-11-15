@@ -142,6 +142,7 @@ overlay is deleted.
 | (1,9) | combat_nine_icon | 5 → fight2 | ✓ |
 | (0,10) | combat_4_arrows_left | 5 → fight2 | ✓ |
 | (1,10) | combat_5_arrows_left | 5 → fight2 | ✓ |
+| (2,10) | combat_6_arrows_left | 5 → fight2 | ✓ |
 
 Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + uses icons and the power digit use the type's `weapon_color` slot(s) 5 fight2; the box is paper and the DIM grey-out override applies to the icon/digit cells too.
 

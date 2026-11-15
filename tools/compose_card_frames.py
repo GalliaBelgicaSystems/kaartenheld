@@ -42,15 +42,17 @@ LAYOUT = [
     ['combat_sword_icon', 'combat_shield_icon', 'combat_bow_icon'],
     ['combat_dagger_icon', 'combat_ring_icon', 'combat_x_icon'],
     # Limited-use arrow counters (bow floor row, shared by HEAL rings):
-    # remaining-uses glyphs 0-5 plus the power-row nine icon.  VRAM:
-    # floor states at 98-101 (uses 0..3), 97 (uses 4) and 103 (uses 5),
-    # power icon at 102 — free BG fetch slots (see s_card_tile_vram_ids
-    # in src/ui/ui_battle_content.c).  The row-7 blank still maps to 97
-    # first, but the appended 4-arrows cell overwrites it right after
-    # (nothing reads blank-97); same for the row-9 blank at 103.
+    # remaining-uses glyphs 0-6 plus the power-row nine icon.  VRAM:
+    # floor states at 98-101 (uses 0..3), 97 (uses 4), 103 (uses 5)
+    # and 112 (uses 6), power icon at 102 — free BG fetch slots (see
+    # s_card_tile_vram_ids in src/ui/ui_battle_content.c).  The row-9
+    # blank still maps to 103 first, but the appended 5-arrows cell
+    # overwrites it right after (nothing reads blank-103); same for the
+    # row-7 blank at 97.  Slot 112 was the menu blank (UI_TILE_MENU_BLANK,
+    # never stamped at runtime) and now carries the 6-arrows glyph.
     ['combat_0_arrows_left', 'combat_1_arrow_left', 'combat_2_arrows_left'],
     ['combat_3_arrows_left', 'combat_nine_icon', None],
-    ['combat_4_arrows_left', 'combat_5_arrows_left', None],
+    ['combat_4_arrows_left', 'combat_5_arrows_left', 'combat_6_arrows_left'],
 ]
 
 

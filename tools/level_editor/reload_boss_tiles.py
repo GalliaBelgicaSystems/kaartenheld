@@ -131,6 +131,14 @@ ARROW_MAP = [
     (8, 5, "combat_x_icon"),
 ]
 
+# (col, row, combat tile id). The 6-arrows-left floor glyph (row 7,
+# 0-based row 6): 1-AP wood bows hold 6 arrows per battle
+# (LOOT_BOW_USES_FROM_AP = 7 - AP), so the uses ladder runs 0..6 and the
+# font-digit fallback in ui_battle_content.c never fires for bows.
+ARROWS6_MAP = [
+    (0, 6, "combat_6_arrows_left"),
+]
+
 # (col, row, enemies tile id). Town dogs: sheet truth (tan art) refreshes
 # the curated public PNGs the enemy sheet composes.  The ring icon cell
 # (7,4) is DELIBERATELY absent: its sheet art is under artist review
@@ -180,6 +188,9 @@ for _tid in [t for _, _, t in COMBAT_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in ARROW_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in ARROWS6_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in RIDER_MAP]:
@@ -299,6 +310,11 @@ def main():
             "sprites (%d,%d) label %r is not a slime-knight cell" % (col, row, label)
         jobs.append((sprites_img, col, row, tid))
     for col, row, tid in ARROW_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
+    for col, row, tid in ARROWS6_MAP:
         label = combat_csv[row][col].strip()
         assert "combat_" + slugify(label) == tid, \
             "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
