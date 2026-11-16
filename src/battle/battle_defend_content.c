@@ -137,9 +137,11 @@ void battle_defend_resolve_banked(void)
     /* Confused attacker (poison): the single place confusion is decided.
      * The swing turns on the attacker's own side instead of the hero --
      * the hero takes nothing (bytes a/b stay 0, so the wrapper emits
-     * RECEIVED 0) and the victim takes the full telegraphed swing.  Lone
-     * confused attackers harm themselves.  The despair floor holds
-     * exactly like the counter path above.  The organic rider stages
+     * RECEIVED 0) and the victim takes the telegraphed swing.  Lone
+     * confused attackers harm themselves, but self-harm is capped at 5
+     * (an uncapped Lord of Slimes nearly one-shot itself).  The despair
+     * floor holds: the boss subtracts the (possibly capped) swing and
+     * floors at 1 instead of dying.  The organic rider stages
      * for the fixed wrapper like any other swing (victim-slot routing
      * via g_battle_confuse_victim); telemetry here is DAMAGE only,
      * victim slot in d1.  Only poison already present when the defend
@@ -149,9 +151,10 @@ void battle_defend_resolve_banked(void)
         uint8_t vic = confuse_pick_victim(b, atk);
         uint8_t dmg = b->enemy_incoming_dmg;
         g_battle_confuse_victim = vic;
+        if (vic == atk && dmg > 5) dmg = 5;
         if (dmg != 0 && b->enemies[vic].hp != 0) {
             if (vic == g_despair_slot) {
-                b->enemies[vic].hp = 1;
+                b->enemies[vic].hp = (uint8_t)(b->enemies[vic].hp <= dmg ? 1 : (uint8_t)(b->enemies[vic].hp - dmg));
             } else if (dmg >= b->enemies[vic].hp) {
                 b->enemies[vic].hp = 0;
             } else {
