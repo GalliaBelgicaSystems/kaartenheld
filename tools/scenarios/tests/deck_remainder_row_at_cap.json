@@ -1,7 +1,7 @@
 {
  "name": "deck_remainder_row_at_cap",
  "test": true,
- "description": "Capped-fold remainder row + same-name grouping (docs/loot.md 34): the curated IRON_RING (cap 1) is decked and its loot twin (id 164) is owned, so the DECK list shows ONE Iron Ring row (owned 2 / decked 1). The identity is saturated so LEFT A adds nothing (silent no-op); RIGHT flips to the deck side and A sends the 1 decked copy back (MIN-guarded) instead of pinning the row on AT CAP. Pre-grouping this card took two rows.",
+ "description": "Full identity folding + same-name grouping: curated IRON_RING and its loot twin (id 164) fold to ONE row (owned 2 / decked 1). LEFT A on the saturated row is a silent no-op; RIGHT flips to the deck side and A sends the decked copy back (MIN-guarded), never an AT CAP pin.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

@@ -1,7 +1,7 @@
 {
  "name": "merchant_twin_shows_stock",
  "test": true,
- "description": "One-copy shop stock counts ownership by card identity (docs/loot.md \u00a734.6, AGENTS.md \u00a752.19): owning an IRON RING loot twin (derived id 164) before ever visiting the merchant keeps the curated IRON RING row listed (rows never hide), so the player can see what the merchant stocks. Pressing A on it refuses with Already owned! + CARD_PURCHASE_FAILED and gold stays 70. Pre-hide-behavior the shop matched row ids only and kept IRON RING on sale.",
+ "description": "Uncapped ownership: owning an IRON RING loot twin (derived id 164) keeps the curated IRON RING row listed, and buying it succeeds (folds to owned 2 under the curated id) with CARD_PURCHASED and gold charged.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -83,27 +83,17 @@
    "expected": 6
   },
   {
-   "type": "collection_count",
-   "card_id": 164,
-   "expected": 1
-  },
-  {
-   "type": "event_not_occurred",
+   "type": "event_occurred",
    "event": "CARD_PURCHASED"
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "CARD_PURCHASE_FAILED"
   },
   {
-   "type": "screen_row",
-   "row": 17,
-   "contains": "Already owned!"
-  },
-  {
-   "type": "currency",
-   "expected": 70,
-   "currency": "GOLD"
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 2
   }
  ]
 }

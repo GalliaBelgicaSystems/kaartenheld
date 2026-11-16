@@ -19,9 +19,8 @@
 #define SHOP_MSG_BOUGHT_BIT 0x80u
 
 /* BUY/SELL tabs (docs/loot.md §34.6): the BUY list always shows the
- * full stock -- owned one-copy rares stay listed and rebuys refuse
- * with "Already owned!" + cancel blip (identity-wide cap, loot twins
- * included).  The SELL list shows
+ * full stock -- ownership is uncapped, only gold can refuse a buy.
+ * The SELL list shows
  * the player's sellable cards (rarity-cut value for curated stock,
  * full formula value for loot; quest items and free basics never
  * list).  The active tab rides g->item_menu_tab (0 = BUY, 1 = SELL;
@@ -108,8 +107,8 @@ static void shop_sell(Game *g)
  * AGENTS.md §52.18).  Buy apply; the banked quote owns the verdict
  * UX (refusal message + telemetry + cancel blip), so only a clean
  * verdict reaches the deck here.  Price 0 = free basic: the gold
- * check already passed in the quote, max_copies still caps the
- * rebuy. */
+ * check already passed in the quote (ownership is uncapped; the
+ * fallback below only fires when the 50-row shelf is full). */
 static void shop_confirm(Game *g)
 {
     shop_row_quote(g);

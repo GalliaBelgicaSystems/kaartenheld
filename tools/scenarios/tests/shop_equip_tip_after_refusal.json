@@ -1,7 +1,7 @@
 {
  "name": "shop_equip_tip_after_refusal",
  "test": true,
- "description": "Post-shop equip tip survives post-buy refusals: buying a one-copy rare (IRON RING) then pressing A on the still-listed row to trigger 'Already owned!' still opens DIALOGUE_MERCHANT_EQUIP_TIP when leaving the shop.",
+ "description": "Post-shop equip tip fires after purchases (ownership uncapped, no refusal needed): buying the IRON RING twice still opens DIALOGUE_MERCHANT_EQUIP_TIP when leaving the shop.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -60,7 +60,7 @@
    "event": "CARD_PURCHASED"
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "CARD_PURCHASE_FAILED"
   },
   {

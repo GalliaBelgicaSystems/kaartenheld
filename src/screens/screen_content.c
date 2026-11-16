@@ -206,32 +206,6 @@ static const CardDefinition *sc_card_get_def(CardId id)
     return NULL;
 }
 
-/* Same-card test for the one-copy map: identical type/power/cost/uses/
- * effect/battle type/rider (the 8 identity bytes; id, max_copies, price
- * and name are NOT identity -- a curated row and its loot twin differ
- * exactly there).  The stock def is a g_cards ROM pointer (stable across
- * the synth call below, which reuses its scratch); loot rows resolve
- * through the shared bank-2 synth above. */
-static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
-{
-    const CardDefinition *d;
-    if (!s) return 0;
-    if (loot_is_loot_id(row_id)) {
-        d = ic_loot_synth(row_id);
-    } else {
-        d = sc_card_get_def(row_id);
-    }
-    if (!d) return 0;
-    return (uint8_t)(d->type == s->type &&
-                     d->power == s->power &&
-                     d->cost == s->cost &&
-                     d->uses_per_battle == s->uses_per_battle &&
-                     d->effect == s->effect &&
-                     d->battle_type == s->battle_type &&
-                     d->status_id == s->status_id &&
-                     d->status_chance == s->status_chance);
-}
-
 /* ── Full card names (docs/loot.md §34.1 short code -> "<MAT> <WPN>") ──
  * The shop used to print the 3-letter battle code ("RG4"); rows now
  * print the weapon with the OAM material ingot ("IRON RING" reads as
@@ -524,42 +498,16 @@ void shop_row_quote_banked(void)
         g_bk_byte_b = s_sc_market_quote(d->price, d->price_bias,
                                         s_sc_game->state.economy.market_index);
         g_bk_byte_c = id;
-        /* Identity-wide buy gate (docs/loot.md §34.6): a curated row
-         * and its loot twin are one card, so count copies across
-         * every same-identity row (direct id match plus
-         * sc_row_matches_stock twins) and refuse at the cap --
-         * otherwise buying the shop ring while holding loot id 164
-         * would stack a second copy past max_copies via the merge
-         * remainder row.  Free basics ride the same gate (cap 5), so
-         * rebuys still stop at the cap. */
-        if (d->max_copies > 0) {
-            uint8_t total = 0;
-            for (i = 0; i < g->state.cards.collection.count; i++) {
-                CardId rid = g->state.cards.collection.entries[i].id;
-                if (rid == id) {
-                    total = (uint8_t)(total + g->state.cards.collection.entries[i].count);
-                } else if (sc_row_matches_stock(d, rid)) {
-                    total = (uint8_t)(total + g->state.cards.collection.entries[i].count);
-                }
-                if (total >= d->max_copies) break;
-            }
-            if (total >= d->max_copies) g_bk_byte_d = 1;
-        }
+        /* No ownership cap: the collection is uncapped, only the deck
+         * enforces the uniform 5-per-identity limit at equip time. */
         /* Refusal UX (message + telemetry + cancel blip): answered
-         * here so the fixed applier pays no branch for it.  Gold is
-         * checked after the cap (an over-cap row reports Already
-         * owned, never Not enough). */
+         * here so the fixed applier pays no branch for it.  Only gold
+         * can refuse now. */
         if (g_bk_byte_d == 0 &&
             g->state.currency.amount[CURRENCY_ID_GOLD - 1] < (int16_t)g_bk_byte_b) {
             g_bk_byte_d = 2;
         }
-        if (g_bk_byte_d == 1) {
-            s_sc_game->shop_message =
-                (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
-                          SC_SHOP_MSG_MAX_COPIES);
-            telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 2, 0, 0);
-            g_bk_sfx_req = (uint8_t)(SFX_BACK + 1);
-        } else if (g_bk_byte_d == 2) {
+        if (g_bk_byte_d == 2) {
             s_sc_game->shop_message =
                 (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
                           SC_SHOP_MSG_NO_GOLD);
@@ -568,13 +516,9 @@ void shop_row_quote_banked(void)
     }
 }
 
-/* Visible-map rebuild: the BUY list always shows the full stock, even
- * when the player already owns a one-copy rare (e.g. an IRON RING loot
- * twin): hiding the row made players think the shop was empty, while
- * the card sat unnoticed in the collection.  Duplicates are refused
- * at buy time instead (identity-wide cap in shop_row_quote_banked,
- * "Already owned!" + cancel blip).  Remap runs on every full redraw
- * (entry, purchase); it only clamps the cursor into the visible list. */
+/* Visible-map rebuild: the BUY list always shows the full stock.
+ * Remap runs on every full redraw (entry, purchase); it only clamps
+ * the cursor into the visible list. */
 static void sc_shop_remap_buy(void)
 {
     uint8_t i;

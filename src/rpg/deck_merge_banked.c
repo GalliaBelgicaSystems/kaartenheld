@@ -190,14 +190,11 @@ static void deck_retarget_capped(DeckState *d, CardId from, CardId to,
     }
 }
 
-/* Capped twin gate for deck_add_card (same bank, plain call from the
- * fixed-bank wrapper): g_bk_ptr_a = CardState*, g_bk_byte_a = candidate
- * id; g_bk_byte_c = 1 when decking keeps every identity at-or-under its
- * cap, 0 when the candidate's identity is already saturated (tighter of
- * the pair's max_copies; loot twins resolve their curated cap through
- * the catalog) or the id is unknown.  deck_add_card's fixed-side def
- * check already rejects unknown ids; this just never waves garbage
- * through. */
+/* Uniform 5-per-identity deck gate for deck_add_card (same bank,
+ * plain call from the fixed-bank wrapper): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id; g_bk_byte_c = 1 when decking keeps the
+ * identity at-or-under 5, 0 when the identity is already saturated
+ * or the id is unknown. */
 void deck_ident_gate_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -213,9 +210,8 @@ void deck_ident_gate_banked(void)
         uint8_t c = 0;
         if (!deck_ident_cmp(id, cs->deck.cards[i], &c)) continue;
         total++;
-        if (c > 0 && (cap == 0 || c < cap)) cap = c;
     }
-    g_bk_byte_c = (uint8_t)(cap == 0 || total < cap);
+    g_bk_byte_c = (uint8_t)(total < 5);
 }
 
 /* Equip verdict for deck_equip_card (same bank, plain call from the
@@ -234,8 +230,8 @@ void deck_ident_gate_banked(void)
  * read the table above, loot ids synthesize through the same pure
  * macros as loot_synth_banked; SPECIAL rows cost 0 and are refused as
  * quest items before cost ever matters.  Mirrors deck_add_card's fixed
- * checks exactly (ownership, SPECIAL, max_copies, owned count, deck
- * floor, identity cap) so the verdict and the apply cannot disagree --
+ * checks exactly (ownership, SPECIAL, owned count, deck floor,
+ * uniform 5-per-identity limit) so the verdict and the apply cannot disagree --
  * the apply still runs through deck_add_card, so there is one append
  * site.  Moved out of the fixed bank (AGENTS.md §52.11.1/§52.18): the
  * scans do not fit under the 0x8000 ceiling. */
@@ -246,7 +242,6 @@ void deck_equip_verdict_banked(void)
     uint8_t pool = g_bk_byte_d;
     uint8_t is_loot = loot_is_loot_id(id);
     uint8_t cost = 0;
-    uint8_t cap8 = 0;
     uint8_t owned = 0;
     uint8_t in_deck = 0;
     uint8_t cap = 0;
@@ -263,7 +258,6 @@ void deck_equip_verdict_banked(void)
         if (k >= GAME_CARD_COUNT) return;
         if (s_ident_catalog[k][0] == (uint8_t)CARD_TYPE_SPECIAL) return;
         cost = s_ident_catalog[k][2];
-        cap8 = s_ident_catalog[k][8];
     }
     for (i = 0; i < cs->collection.count; i++) {
         if (cs->collection.entries[i].id != id) continue;
@@ -293,25 +287,21 @@ void deck_equip_verdict_banked(void)
         g_bk_byte_c = 3;
         return;
     }
-    if (!is_loot && cap8 > 0 && in_deck >= cap8) return;
     if (!deck_ident_cmp(id, id, &cap)) return;
     for (i = 0; i < cs->deck.count; i++) {
         uint8_t c = 0;
         if (!deck_ident_cmp(id, cs->deck.cards[i], &c)) continue;
         total++;
-        if (c > 0 && (cap == 0 || c < cap)) cap = c;
     }
-    if (cap > 0 && total >= cap) return;
+    if (total >= 5) return;
     g_bk_byte_c = 1;
 }
 
 /* Full-collection absorb (same bank): g_bk_ptr_a = CardState*,
  * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
  * when the candidate folded into an existing same-identity row (atomic:
- * all-or-nothing), 0 when no row matches or a capped fold would need a
- * remainder row that does not fit.  Dispatched by deck_collection_add's
- * full-collection path -- a drop that matches an owned identity must
- * never vanish silently just because the 50-row shelf is full. */
+ * all-or-nothing), 0 when no row matches.  Ownership is uncapped
+ * (99-copy display/storage max), so no remainder row is ever needed. */
 void deck_absorb_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -327,18 +317,12 @@ void deck_absorb_banked(void)
             continue;
         total = (uint8_t)(cs->collection.entries[i].count + qty);
         if (total < cs->collection.entries[i].count) total = 255;
-        /* Same 99 ownership guard as deck_collection_add (see deck.c):
-         * the capped check below already refused capped overflow, so
-         * this only ever trims uncapped stacks; the refused excess
-         * vanishes like any over-cap grant. */
+        /* Ownership display/storage max: 2-wide menu counts stay in
+         * range; excess vanishes instead of wrapping the uint8. */
         if (total > 99) total = 99;
-        /* Capped overflow needs a remainder row: with no free row the
-         * whole grant is refused (the caller keeps collection unchanged
-         * and reports failure) rather than stacking past the cap. */
-        if (cap > 0 && total > cap) return;
         cs->collection.entries[i].count = total;
         deck_retarget_capped(&cs->deck, id,
-                             cs->collection.entries[i].id, cap);
+                             cs->collection.entries[i].id, 0);
         g_bk_byte_c = 1;
         return;
     }
@@ -376,36 +360,6 @@ void deck_ident_total_banked(void)
  * it must not strand the deck below DECK_MIN_CARDS.  Counts via the tiny
  * per-id counter (no identity scan: only the folded pair can be over cap).
  * Silent: the state was never legal, and the repair is idempotent. */
-static void deck_evict_overcap(DeckState *d, CardId keep_id, CardId drop_id,
-                               uint8_t cap)
-{
-    uint8_t have;
-    uint8_t n;
-    if (!d || cap == 0) return;
-    have = (uint8_t)(deck_in_deck(d, keep_id) + deck_in_deck(d, drop_id));
-    while (have > cap && d->count > DECK_MIN_CARDS) {
-        uint8_t victim = 0xFF;
-        for (n = 0; n < d->count; n++) {
-            if (d->cards[n] == drop_id) {
-                victim = n;
-                break;
-            }
-        }
-        if (victim == 0xFF) {
-            for (n = 0; n < d->count; n++) {
-                if (d->cards[n] == keep_id) {
-                    victim = n;
-                    break;
-                }
-            }
-        }
-        if (victim == 0xFF) return;
-        d->count--;
-        d->cards[victim] = d->cards[d->count];
-        have--;
-    }
-}
-
 void deck_merge_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -426,45 +380,27 @@ void deck_merge_banked(void)
                 j++;
                 continue;
             }
-            /* Prefer the capped id as the survivor (loot twins are never
-             * capped, so a nonzero cap with a loot keep_id means the drop
-             * row is the curated twin). */
-            if (cap > 0 && loot_is_loot_id(keep_id) &&
+            /* Uncapped ownership: prefer the curated id as the survivor
+             * (loot twins fold onto it); counts saturate at 255 here
+             * and clamp to the 99 display max below. */
+            if (loot_is_loot_id(keep_id) &&
                 !loot_is_loot_id(drop_id)) {
                 keep_id = drop_id;
                 drop_id = cs->collection.entries[i].id;
                 cs->collection.entries[i].id = keep_id;
             }
             /* Saturating 8-bit add (no 16-bit library needed in this
-             * banked body): counts wrap only past 255 copies of one
-             * card, where saturating keeps the cap comparison sound. */
+             * banked body). */
             total = (uint8_t)(keep_count + drop_count);
             if (total < keep_count) total = 255;
-            if (cap > 0 && total > cap) {
-                /* Capped fold: keep the cap, leave the excess under the
-                 * other id -- nothing lost, nothing over cap.  The
-                 * remainder row must carry the drop id: in the swap path
-                 * entries[j] still names the curated id, and without the
-                 * rename both rows would carry it (loot remainder lost,
-                 * merge never converges). */
-                keep_count = cap;
-                cs->collection.entries[i].count = cap;
-                drop_count = (uint8_t)(total - cap);
-                cs->collection.entries[j].id = drop_id;
-                cs->collection.entries[j].count = drop_count;
-                deck_retarget_capped(&cs->deck, drop_id, keep_id, cap);
-                deck_evict_overcap(&cs->deck, keep_id, drop_id, cap);
-                j++;
-            } else {
-                keep_count = total;
-                cs->collection.entries[i].count = total;
-                deck_retarget_capped(&cs->deck, drop_id, keep_id, cap);
-                cs->collection.count--;
-                cs->collection.entries[j].id =
-                    cs->collection.entries[cs->collection.count].id;
-                cs->collection.entries[j].count =
-                    cs->collection.entries[cs->collection.count].count;
-            }
+            keep_count = total;
+            cs->collection.entries[i].count = total;
+            deck_retarget_capped(&cs->deck, drop_id, keep_id, 0);
+            cs->collection.count--;
+            cs->collection.entries[j].id =
+                cs->collection.entries[cs->collection.count].id;
+            cs->collection.entries[j].count =
+                cs->collection.entries[cs->collection.count].count;
         }
     }
     /* Ownership guard: no row ever holds more than 99 copies, so the

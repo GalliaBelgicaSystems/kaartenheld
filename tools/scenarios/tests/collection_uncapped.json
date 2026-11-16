@@ -1,0 +1,97 @@
+{
+ "name": "collection_uncapped",
+ "test": true,
+ "description": "Ownership is uncapped (only the deck caps at 5 per identity): granting 10 POISON_DAGGER lands all 10 in the collection, and 5 deck while the 6th deck_add is refused by the uniform 5-per-identity gate.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 9101,
+  "variables": {
+   "ENERGY_POOL": 9
+  }
+ },
+ "actions": [
+  {
+   "type": "add_item",
+   "item": "POISON_DAGGER",
+   "quantity": 10
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 10
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_ADDED_TO_DECK",
+   "count": 5
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 68,
+   "expected": 5
+  }
+ ]
+}
