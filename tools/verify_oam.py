@@ -711,6 +711,45 @@ def verify_dialogue_transition(sess):
     check("dialogue exit: @ sprite visible (shadow OAM)",
           (56, 80), shadow_oam(sess))
 
+    # Despair wake transition (SLIME_LORD_DEFEAT -> STRANGE_WAKE on the
+    # wake map while staying in SCREEN_DIALOGUE): game_slime_despair_wake
+    # must reset render_cache.prev_map_id to the new map (screen_change
+    # is a no-op when already on SCREEN_DIALOGUE).  Without that reset,
+    # game_render sees map_id != prev_map_id on every steady wake frame
+    # and runs ui_sprite_begin_transition + ui_lcd_off/on every frame
+    # (60 Hz white-screen flicker, wiped CGB attrs, hidden hero sprite).
+    sess.load_scenario({
+        "scene": "TEST_CASTLE",
+        "player": {"x": 9, "y": 5, "facing": "RIGHT"},
+        "dialogue": "SLIME_LORD_DEFEAT",
+    })
+    sess.step(2)
+    for _ in range(6):
+        if sess.snapshot().get("scene") == "TEST_FOREST":
+            break
+        sess.press("A")
+        sess.step(75)
+    sess.step(10)
+    check("wake dialogue: reached wake map", "TEST_FOREST",
+          sess.snapshot().get("scene"))
+    check("wake dialogue: @ sprite visible after fade-in (shadow OAM)",
+          (96, 104), shadow_oam(sess))
+    reset_hide_count(sess)
+    for _ in range(3):
+        sess.step(1)
+    check("wake dialogue steady: no spurious per-frame re-hide over 3 frames",
+          0, hide_count(sess))
+    check("wake dialogue steady: @ sprite remains visible (shadow OAM)",
+          (96, 104), shadow_oam(sess))
+    check("wake dialogue VRAM read in VBlank", True, wait_vblank(sess))
+    wake_nonzero = 0
+    for y in range(18):
+        for x in range(20):
+            if vram_attr_at(sess, x, y) not in (None, 0):
+                wake_nonzero += 1
+    check("wake dialogue steady: CGB attrs kept (nonzero count)",
+          True, wake_nonzero > 20)
+
 
 def verify_scene_transition(sess):
     print("== Scene transition (town_arrival: FIELD gate -> TOWN) ==")

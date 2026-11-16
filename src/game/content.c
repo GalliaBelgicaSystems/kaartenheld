@@ -169,10 +169,13 @@ void game_slime_despair_wake(void)
     scene_load(&g_game, SCENE_DEMO_END_WAKE_SCENE, 12, 10);
 #endif
     /* scene_load leaves facing untouched, so route it explicitly to the
-     * authored spawn facing (UP) instead of the engage direction. */
+     * authored spawn facing (UP) instead of the engage direction.  Reset
+     * the render cache explicitly (screen_change is a no-op here because
+     * g_game.screen is already SCREEN_DIALOGUE; leaving prev_map_id on
+     * the throne room would trigger an LCD-off full_redraw every frame
+     * on the wake map). */
     g_game.world.player.facing = DIRECTION_UP;
     g_game.prev_screen = SCREEN_BATTLE;
-    g_game.render_cache.valid = false;
     dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
-    screen_change(&g_game, SCREEN_DIALOGUE);
+    game_render_reset(&g_game);
 }
