@@ -1,7 +1,7 @@
 {
  "name": "shop_equip_tip_after_refusal",
  "test": true,
- "description": "Post-shop equip tip fires after purchases (ownership uncapped, no refusal needed): buying the IRON RING twice still opens DIALOGUE_MERCHANT_EQUIP_TIP when leaving the shop.",
+ "description": "Post-shop equip tip survives post-buy refusals: with 25g, buying IRON RING (20g) succeeds and pressing A again fails with 'Not enough!' (5g left), yet leaving the shop still opens DIALOGUE_MERCHANT_EQUIP_TIP.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -14,7 +14,7 @@
    "ARRIVED_TOWN": true
   },
   "currency": {
-   "GOLD": 50
+   "GOLD": 25
   },
   "variables": {
    "MERCHANT_QUEST": 2
@@ -60,7 +60,7 @@
    "event": "CARD_PURCHASED"
   },
   {
-   "type": "event_not_occurred",
+   "type": "event_occurred",
    "event": "CARD_PURCHASE_FAILED"
   },
   {

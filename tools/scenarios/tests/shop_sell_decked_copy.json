@@ -95,6 +95,10 @@
   },
   {
    "type": "event_occurred",
+   "event": "CARD_REMOVED_FROM_DECK"
+  },
+  {
+   "type": "event_occurred",
    "event": "CARD_SOLD"
   },
   {

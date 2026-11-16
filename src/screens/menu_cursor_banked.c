@@ -556,8 +556,9 @@ void item_group_query_banked(void)
  * b = the first member index hit by that verdict (0xFF when no member
  * was tried).  The fixed caller routes FULL/LOCKED through
  * deck_equip_card once so its telemetry (CARD_EQUIP_LOCKED) still
- * fires; a fully-capped group (3) is a silent no-op on the LEFT side
- * (removal happens from the deck side instead of a clear-all). */
+ * fires; a fully-capped group (3) returns the identity-saturated
+ * member so the fixed caller reports AT CAP on the LEFT side (removal
+ * happens from the deck side instead of a clear-all). */
 void deck_equip_verdict_banked(void);
 void item_group_scan_banked(void)
 {

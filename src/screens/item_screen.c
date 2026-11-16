@@ -367,9 +367,9 @@ void item_screen_update(Game *g)
                         /* Single gated apply for the scan's pick: OK
                          * adds (with telemetry+SFX); FULL/LOCKED report
                          * with priority (LOCKED fires CARD_EQUIP_LOCKED
-                         * inside the apply); any other refusal is a
-                         * silent no-op (the row stays for the other
-                         * side's removal path). */
+                         * inside the apply); REJECTED on side 0 when
+                         * DECKed < owned means the 5-per-identity limit
+                         * is reached, reporting AT CAP. */
                         s_grp_id = cs->collection.entries[s_grp_id].id;
                         s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id,
                                                    pool);
@@ -381,8 +381,9 @@ void item_screen_update(Game *g)
                             msg = MSG_DECK_FULL;
                         } else if (s_grp_rm == EQUIP_LOCKED) {
                             msg = MSG_NEED_AP;
+                        } else if (s_grp_rm == EQUIP_REJECTED) {
+                            msg = MSG_DECK_CAPPED;
                         }
-                        /* Any other refusal is a silent no-op. */
                     }
                 }
             } else if (decked == 0) {

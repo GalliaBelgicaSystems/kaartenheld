@@ -93,7 +93,7 @@ void game_new_game(GameState *state)
      * owns the contents: each entry is granted once to the collection and
      * once to the draw pile, preserving exact draw order.  The bank-2
      * table is staged one byte at a time (no large stack or WRAM scratch
-     * needed); deck_add_card/deck_collection_add enforce max_copies. */
+     * needed); deck_add_card enforces the 5-per-identity deck limit. */
     {
         uint8_t n = 0;
         uint8_t i;

@@ -116,7 +116,7 @@ void ui_dialogue_box_banked(void)
 
 /* Despair white fade-out (demo finale): cuts the current palettes to
  * white and holds the white beat.  Dispatched from
- * game_slime_despair_outro() on the DEFEATED result screen (the fade-in
+ * game_slime_despair_wake() right before scene-loading the wake area (the fade-in
  * twin lives below, next to its call site).  Same self-containment
  * contract as the paper body above. */
 static void despair_box_wait(void)

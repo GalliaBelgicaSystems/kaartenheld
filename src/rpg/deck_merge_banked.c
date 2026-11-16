@@ -26,12 +26,11 @@
  * are not identity).
  *
  * One row per card identity: a curated catalog row and its mechanically
- * identical loot twin are the same physical card.  Capped folds keep a
- * remainder row so nothing is ever lost and nothing stacks or decks
- * past max_copies (shop one-copy rows hide once the identity is owned,
- * rebuys refuse, the deck never retargets past the cap); uncapped
- * pairs fold fully into the first row.  Idempotent; runs after every
- * collection add that opens a new row and on save load. */
+ * identical loot twin are the same physical card.  Ownership is uncapped
+ * (clamped only at the 99-copy display/storage max), so pairs fold
+ * fully into the first row while the deck gate enforces a uniform
+ * 5-per-identity limit.  Idempotent; runs after every collection add
+ * that opens a new row and on save load. */
 
 /* Curated identities, index = CardId - CARD_FIRST_GAME (dense catalog
  * range, see game_ids.h GAME_CARD_COUNT): type, power, cost, uses,
@@ -101,46 +100,22 @@ static const uint8_t s_ident_chance[4] = { 0, 208, 208, 176 };
 
 /* Resolve-and-compare identity check.  Returns 1 when a and b are
  * the same physical card (identical type/power/cost/uses/effect/
- * battle type/rider; id, max_copies, price and name are NOT identity),
- * with *cap_out the pair's cap (0 = uncapped).  The cap always rides
- * side A: a curated A row carries its table cap, a loot A resolves its
- * curated twin's cap through the inline catalog scan below (the cap
- * travels with the identity, so loot-vs-loot pairs of a capped card
- * stay capped) -- and any matching B shares the identity, hence the
- * cap, so no second lookup is needed.  Catalog identities must be
- * unique rows for this to hold (tools/card_costs.py --check-identity
- * asserts it).  Synthesis and scan are inline (macros + unrolled
- * loops), never calls: this compare sits on the loot-grant stack chain
- * (AGENTS.md §52.24). */
-static uint8_t deck_ident_cmp(CardId a, CardId b, uint8_t *cap_out)
+ * battle type/rider; id, max_copies, price and name are NOT identity).
+ * Synthesis is inline (macro + unrolled loop), never a call: this
+ * compare sits on the loot-grant stack chain (AGENTS.md §52.24). */
+static uint8_t deck_ident_cmp(CardId a, CardId b)
 {
-    uint8_t ab[9];
+    uint8_t ab[8];
     uint8_t bb[8];
     uint8_t f;
     if (loot_is_loot_id(a)) {
-        uint8_t k;
         DECK_LOOT_IDENT(a, ab);
-        /* The cap travels with the identity, not the row: scan the
-         * curated table for the same 8 bytes (a loot twin of a capped
-         * card is capped even with no curated row in the collection).
-         * Inlined (not a call): this compare sits on the loot-grant
-         * stack chain (AGENTS.md §52.24). */
-        ab[8] = 0;
-        for (k = 0; k < GAME_CARD_COUNT; k++) {
-            for (f = 0; f < 8; f++) {
-                if (s_ident_catalog[k][f] != ab[f]) break;
-            }
-            if (f == 8) {
-                ab[8] = s_ident_catalog[k][8];
-                break;
-            }
-        }
     } else {
         uint8_t k;
         if (a < CARD_FIRST_GAME) return 0;
         k = (uint8_t)(a - CARD_FIRST_GAME);
         if (k >= GAME_CARD_COUNT) return 0;
-        for (f = 0; f < 9; f++) ab[f] = s_ident_catalog[k][f];
+        for (f = 0; f < 8; f++) ab[f] = s_ident_catalog[k][f];
     }
     if (loot_is_loot_id(b)) {
         DECK_LOOT_IDENT(b, bb);
@@ -154,38 +129,18 @@ static uint8_t deck_ident_cmp(CardId a, CardId b, uint8_t *cap_out)
     for (f = 0; f < 8; f++) {
         if (ab[f] != bb[f]) return 0;
     }
-    *cap_out = ab[8];
     return 1;
 }
 
-static uint8_t deck_in_deck(const DeckState *d, CardId id)
+/* Decked copies follow their card id when a loot twin folds onto its
+ * curated survivor row. */
+static void deck_retarget(DeckState *d, CardId from, CardId to)
 {
     uint8_t i;
-    uint8_t n = 0;
-    if (!d) return 0;
-    for (i = 0; i < d->count; i++) {
-        if (d->cards[i] == id) n++;
-    }
-    return n;
-}
-
-/* Decked copies follow their card to the surviving id, capped: at most
- * (cap - already decked) move when cap > 0, so the deck never holds
- * more capped copies than max_copies allows. */
-static void deck_retarget_capped(DeckState *d, CardId from, CardId to,
-                                 uint8_t cap)
-{
-    uint8_t i;
-    uint8_t have = 0;
     if (!d || from == to) return;
-    if (cap > 0) {
-        have = deck_in_deck(d, to);
-        if (have >= cap) return;
-    }
     for (i = 0; i < d->count; i++) {
-        if (d->cards[i] == from && (cap == 0 || have < cap)) {
+        if (d->cards[i] == from) {
             d->cards[i] = to;
-            have++;
         }
     }
 }
@@ -199,16 +154,14 @@ void deck_ident_gate_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
     CardId id = g_bk_byte_a;
-    uint8_t cap = 0;
     uint8_t total = 0;
     uint8_t i;
-    if (!cs || !deck_ident_cmp(id, id, &cap)) {
+    if (!cs || !deck_ident_cmp(id, id)) {
         g_bk_byte_c = 0;
         return;
     }
     for (i = 0; i < cs->deck.count; i++) {
-        uint8_t c = 0;
-        if (!deck_ident_cmp(id, cs->deck.cards[i], &c)) continue;
+        if (!deck_ident_cmp(id, cs->deck.cards[i])) continue;
         total++;
     }
     g_bk_byte_c = (uint8_t)(total < 5);
@@ -244,7 +197,6 @@ void deck_equip_verdict_banked(void)
     uint8_t cost = 0;
     uint8_t owned = 0;
     uint8_t in_deck = 0;
-    uint8_t cap = 0;
     uint8_t total = 0;
     uint8_t i;
     g_bk_byte_c = 4;
@@ -287,10 +239,9 @@ void deck_equip_verdict_banked(void)
         g_bk_byte_c = 3;
         return;
     }
-    if (!deck_ident_cmp(id, id, &cap)) return;
+    if (!deck_ident_cmp(id, id)) return;
     for (i = 0; i < cs->deck.count; i++) {
-        uint8_t c = 0;
-        if (!deck_ident_cmp(id, cs->deck.cards[i], &c)) continue;
+        if (!deck_ident_cmp(id, cs->deck.cards[i])) continue;
         total++;
     }
     if (total >= 5) return;
@@ -300,8 +251,8 @@ void deck_equip_verdict_banked(void)
 /* Full-collection absorb (same bank): g_bk_ptr_a = CardState*,
  * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
  * when the candidate folded into an existing same-identity row (atomic:
- * all-or-nothing), 0 when no row matches.  Ownership is uncapped
- * (99-copy display/storage max), so no remainder row is ever needed. */
+ * all-or-nothing), 0 when no row matches or the matching row is already
+ * at 99 copies. */
 void deck_absorb_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -311,18 +262,17 @@ void deck_absorb_banked(void)
     g_bk_byte_c = 0;
     if (!cs || qty == 0) return;
     for (i = 0; i < cs->collection.count; i++) {
-        uint8_t cap = 0;
         uint8_t total;
-        if (!deck_ident_cmp(cs->collection.entries[i].id, id, &cap))
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id))
             continue;
+        if (cs->collection.entries[i].count >= 99) return;
         total = (uint8_t)(cs->collection.entries[i].count + qty);
         if (total < cs->collection.entries[i].count) total = 255;
         /* Ownership display/storage max: 2-wide menu counts stay in
          * range; excess vanishes instead of wrapping the uint8. */
         if (total > 99) total = 99;
         cs->collection.entries[i].count = total;
-        deck_retarget_capped(&cs->deck, id,
-                             cs->collection.entries[i].id, 0);
+        deck_retarget(&cs->deck, id, cs->collection.entries[i].id);
         g_bk_byte_c = 1;
         return;
     }
@@ -343,8 +293,7 @@ void deck_ident_total_banked(void)
         return;
     }
     for (i = 0; i < cs->collection.count; i++) {
-        uint8_t cap = 0;
-        if (!deck_ident_cmp(cs->collection.entries[i].id, id, &cap))
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id))
             continue;
         total = (uint8_t)(total + cs->collection.entries[i].count);
         if (total < cs->collection.entries[i].count) total = 255;
@@ -352,14 +301,6 @@ void deck_ident_total_banked(void)
     g_bk_byte_b = total;
 }
 
-/* Legacy-deck eviction helper: after a capped fold, the deck may still hold
- * more copies of the folded identity than cap (twins decked before the gate
- * existed, or stacked identically-capped rows).  Unreachable through current
- * gameplay (the gate refuses the over-cap add and the retarget above moves
- * at most up to the cap), so this only fires for pre-fix states -- and then
- * it must not strand the deck below DECK_MIN_CARDS.  Counts via the tiny
- * per-id counter (no identity scan: only the folded pair can be over cap).
- * Silent: the state was never legal, and the repair is idempotent. */
 void deck_merge_banked(void)
 {
     CardState *cs = (CardState *)g_bk_ptr_a;
@@ -374,9 +315,8 @@ void deck_merge_banked(void)
         while (j < cs->collection.count) {
             CardId drop_id = cs->collection.entries[j].id;
             uint8_t drop_count = cs->collection.entries[j].count;
-            uint8_t cap = 0;
             uint8_t total;
-            if (!deck_ident_cmp(keep_id, drop_id, &cap)) {
+            if (!deck_ident_cmp(keep_id, drop_id)) {
                 j++;
                 continue;
             }
@@ -395,7 +335,7 @@ void deck_merge_banked(void)
             if (total < keep_count) total = 255;
             keep_count = total;
             cs->collection.entries[i].count = total;
-            deck_retarget_capped(&cs->deck, drop_id, keep_id, 0);
+            deck_retarget(&cs->deck, drop_id, keep_id);
             cs->collection.count--;
             cs->collection.entries[j].id =
                 cs->collection.entries[cs->collection.count].id;

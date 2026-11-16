@@ -108,7 +108,8 @@ static void shop_sell(Game *g)
  * UX (refusal message + telemetry + cancel blip), so only a clean
  * verdict reaches the deck here.  Price 0 = free basic: the gold
  * check already passed in the quote (ownership is uncapped; the
- * fallback below only fires when the 50-row shelf is full). */
+ * fallback below refuses when the stack reaches 99 or the 50-row
+ * shelf is full). */
 static void shop_confirm(Game *g)
 {
     shop_row_quote(g);

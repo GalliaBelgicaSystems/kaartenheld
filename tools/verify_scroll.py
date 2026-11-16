@@ -154,15 +154,24 @@ def main():
     # Locate the player Entity in WRAM by its boot pattern (robust to
     # struct-layout drift -- the same technique as verify_music.py):
     # TEST_FIELD spawn (17,7) facing LEFT, 15/15 HP, active, id 1.
+    # Wait for the intro-exit transition frame to finish syncing
+    # world.player.hp/max_hp from party state (g_game.screen becomes 0
+    # inside game_restart before game_update finishes the HP sync).
     WRAM_BASE = 0xC000
     WRAM_SIZE = 0x2000
     PLAYER_BOOT = bytes([17, 7, 15, 15, 1, 2, 1])
-    wram = bytes(pb.memory[i]
-                 for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
-    idx = wram.find(PLAYER_BOOT)
+    idx = -1
+    for _ in range(60):
+        wram = bytes(pb.memory[i]
+                     for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+        idx = wram.find(PLAYER_BOOT)
+        if idx >= 0 and (pb.memory[0xFF40] & 0x80):
+            break
+        pb.tick()
     if idx < 0:
         print("error: player boot pattern not found in WRAM",
               file=sys.stderr)
+        pb.stop()
         return 1
     world = WRAM_BASE + idx - 5
     POS_X = world + 5

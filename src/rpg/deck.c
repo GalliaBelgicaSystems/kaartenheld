@@ -32,11 +32,10 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * body must never call (AGENTS.md §52.11.1), so the banked body reads a
  * hand-written identity table (parity-gated by card-costs
  * --check-identity) and synthesizes loot identities with pure macros.
- * Capped folds keep a remainder row and capped deck retargeting, so
- * nothing is ever lost and nothing stacks or decks past max_copies;
- * uncapped pairs fold fully.  It runs after every collection add that
- * opens a new row and on save load (an old save can already hold the
- * duplicate) and is idempotent. */
+ * Ownership is uncapped (only the 5-per-identity deck cap and 99-copy
+ * display clamp apply), so duplicates fold fully into a single row.  It
+ * runs after every collection add that opens a new row and on save load
+ * (an old save can already hold the duplicate) and is idempotent. */
 
 /* Banked merge body (src/rpg/deck_merge_banked.c, ROM bank 11):
  * g_bk_ptr_a = CardState*.  Dispatched by the wrapper below. */
@@ -65,9 +64,12 @@ bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
 
     e = collection_find(&cs->collection, id);
     if (e) {
-        e->count = (uint8_t)(e->count + quantity);
-        /* Stacking onto an existing row can complete a capped pair
-         * (e.g. capped row below cap + remainder row): always re-merge,
+        uint8_t total;
+        if (e->count >= 99) return false;
+        total = (uint8_t)(e->count + quantity);
+        if (total < e->count || total > 99) total = 99;
+        e->count = total;
+        /* Re-merge in case a previously unmerged twin row can now fold;
          * a same-id stack never creates a new row so this cannot fail. */
         deck_collection_merge_duplicates(cs);
         return true;
@@ -90,7 +92,7 @@ bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
     }
     e = &cs->collection.entries[cs->collection.count];
     e->id = id;
-    e->count = quantity;
+    e->count = (quantity > 99) ? 99 : quantity;
     cs->collection.count++;
     /* A curated row and its loot twin are one card to the player.  The
      * merge folds duplicates into a single row (no capped remainder:

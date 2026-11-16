@@ -460,30 +460,35 @@ void shop_row_quote_banked(void)
     s_sc_game->shop_message &= (uint8_t)SC_SHOP_MSG_BOUGHT_BIT;
     if (g->item_menu_tab == SHOP_TAB_SELL) {
         uint8_t e = g_shop_vis_map[row];
+        uint8_t price;
         if (e >= g->state.cards.collection.count) return;
         id = g->state.cards.collection.entries[e].id;
+        price = sc_sell_price(id);
+        if (!price) return;
         owned = g->state.cards.collection.entries[e].count;
+        if (owned == 0) return;
         for (i = 0; i < g->state.cards.deck.count; i++) {
             if (g->state.cards.deck.cards[i] == id) in_deck++;
         }
-        /* Auto-undeck one copy for the sale when every owned copy is
-         * decked but the deck has slack above the MIN floor: the
-         * player asked to sell it, and a silent refusal strands a
-         * legal sale.  Swap-with-last, like deck_remove_card. */
-        if (owned <= in_deck &&
-            g->state.cards.deck.count > DECK_MIN_CARDS) {
+        /* Auto-undeck one copy for the sale only after confirming a
+         * nonzero sell price and that the deck can stay above the
+         * MIN floor (swap-with-last, like deck_remove_card). */
+        if (owned <= in_deck) {
+            if (g->state.cards.deck.count <= DECK_MIN_CARDS || in_deck == 0)
+                return;
             for (i = 0; i < g->state.cards.deck.count; i++) {
                 if (g->state.cards.deck.cards[i] == id) {
                     g->state.cards.deck.cards[i] =
                         g->state.cards.deck.cards[--g->state.cards.deck.count];
                     in_deck--;
+                    telemetry_ring_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                        id, 0, 0, 0);
                     break;
                 }
             }
+            if (owned <= in_deck) return;
         }
-        if (owned <= in_deck) return;
-        g_bk_byte_b = sc_sell_price(id);
-        if (!g_bk_byte_b) return;
+        g_bk_byte_b = price;
         g_bk_byte_c = id;
         g_bk_byte_d = (uint8_t)(owned - 1);
     } else {
