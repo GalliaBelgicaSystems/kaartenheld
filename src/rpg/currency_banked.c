@@ -1,13 +1,16 @@
-#pragma bank 11
+#pragma bank 12
 
 #include "rpg/currency.h"
 #include "banked.h"
 #include "telemetry.h"
 #include "telemetry_ring.h"
 
-/* ── Banked currency core (ROM bank 11) ──────────────────────────────
+/* ── Banked currency core (ROM bank 12) ──────────────────────────────
  * Hosts currency_add's arithmetic out of the fixed bank (which sits ~100 B
- * under 0x8000, AGENTS.md §52.18).  The fixed wrapper (currency.c) only
+ * under 0x8000, AGENTS.md §52.18).  Moved out of bank 11 (Nov 2026):
+ * the grouped-DECK scroll flags grew the bank-11 view build past the
+ * 16 KB ceiling, and this body is the clean mover -- self-contained,
+ * single trampoline caller.  The fixed wrapper (currency.c) only
  * stages and dispatches; this body validates, adds, saturates, and emits.
  * Self-contained per §52.11.1: WRAM globals only, no fixed-bank calls,
  * no di/ei, no * / %.  Telemetry is written to the ring directly (a banked

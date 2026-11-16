@@ -35,6 +35,7 @@ void item_group_remove_one_banked(void);
  * the caller repaints.  Staging: g_bk_ptr_a = Game*, g_bk_byte_a =
  * 0 up / 1 down / 2 side step. */
 void item_deck_nav_banked(void);
+void item_view_rewindow_banked(void);
 /* Post-A reconcile + repaint: item_row_resum_banked (bank 11) rebuilds
  * the view maps and parks a vanished row's cursor; item_card_refresh_
  * banked (bank 2) repaints the list in place.  Staging: g_bk_ptr_a =
@@ -60,14 +61,17 @@ static void menu_cycle(Game *g, uint8_t mode, uint8_t dir)
     banked_call_run();
 }
 
-/* Incremental list repaint (AGENTS.md 36): rebuilds the view maps from
- * the current scroll, then redraws rows, caret and footer in place
+/* Incremental list repaint (AGENTS.md 36): re-windows the draw maps
+ * for the current scroll, then redraws rows, caret and footer in place
  * after nav/A/message-expiry so nothing in the DECK list ever blinks.
- * Never touches the render cache. */
+ * Never rebuilds the view here: nav and message paths change no
+ * counts (the cached per-group sums stay exact), and the A path
+ * pre-rebuilds via item_row_resum_banked.  Never touches the render
+ * cache. */
 static void item_menu_repaint(Game *g)
 {
     g_bk_call_bank = 11;
-    g_bk_call_target = (uint16_t)&item_view_build_banked;
+    g_bk_call_target = (uint16_t)&item_view_rewindow_banked;
     g_bk_ptr_a = (void *)g;
     banked_call_run();
     g_bk_call_bank = 2;
@@ -107,6 +111,17 @@ void item_gem_render_banked(void);
 #define MSG_NEED_AP    4
 #define MSG_DECK_CAPPED 5
 
+/* Held-button auto-repeat for the DECK list UP/DOWN walk: the first
+ * press steps immediately, holding repeats after REP_DELAY frames
+ * every REP_RATE frames (BSS zero = idle).  Reset on release and on
+ * menu open (item_screen_reset); the fixed cost is a few branches
+ * (the walk/repaint bodies stay banked).  Harness 1-frame presses
+ * never engage it. */
+#define REP_DELAY 18
+#define REP_RATE 6
+static uint8_t s_rep_dir; /* 0 = idle, 1 = up, 2 = down */
+static uint8_t s_rep_t;
+
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
 #define SORT_TYPE       1
@@ -141,12 +156,15 @@ void item_screen_reset(Game *g)
     g->item_menu_index = ROW_TOP;
     g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
+    g->item_menu_scroll_deck = 0;
     g->item_menu_side = 0;
     g->item_menu_filter = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
     g->item_menu_mode = MODE_LIST;
     g->item_menu_message = MSG_NONE;
     g->item_menu_msg_ttl = 0;
+    s_rep_dir = 0;
+    s_rep_t = 0;
 }
 
 static void close_menu(Game *g)
@@ -205,6 +223,7 @@ void item_screen_update(Game *g)
                     /* Two-step close: first B jumps to the top row. */
                     g->item_menu_index = ROW_TOP;
                     g->item_menu_scroll = 0;
+                    g->item_menu_scroll_deck = 0;
                 } else {
                     close_menu(g);
                 }
@@ -367,9 +386,9 @@ void item_screen_update(Game *g)
                         /* Single gated apply for the scan's pick: OK
                          * adds (with telemetry+SFX); FULL/LOCKED report
                          * with priority (LOCKED fires CARD_EQUIP_LOCKED
-                         * inside the apply); any other refusal is a
-                         * silent no-op (the row stays for the other
-                         * side's removal path). */
+                         * inside the apply); REJECTED on side 0 when
+                         * DECKed < owned means the 5-per-identity limit
+                         * is reached, reporting AT CAP. */
                         s_grp_id = cs->collection.entries[s_grp_id].id;
                         s_grp_rm = deck_equip_card(cs, (CardId)s_grp_id,
                                                    pool);
@@ -381,8 +400,9 @@ void item_screen_update(Game *g)
                             msg = MSG_DECK_FULL;
                         } else if (s_grp_rm == EQUIP_LOCKED) {
                             msg = MSG_NEED_AP;
+                        } else if (s_grp_rm == EQUIP_REJECTED) {
+                            msg = MSG_DECK_CAPPED;
                         }
-                        /* Any other refusal is a silent no-op. */
                     }
                 }
             } else if (decked == 0) {
@@ -428,12 +448,33 @@ void item_screen_update(Game *g)
     /* UP/DOWN walk the active side's packed list (hidden zero-count
      * rows are skipped), then repaint in place (no blink); LEFT/RIGHT
      * steps between the two cells, the filter row keeps tab
-     * switching. */
-    if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
+     * switching.  Holding UP/DOWN auto-repeats after a short delay
+     * (see s_rep_* above); single presses and harness edges step
+     * exactly once. */
+    {
+        uint8_t dir = 0;
+        if (input_pressed(INPUT_UP)) dir = 1;
+        else if (input_pressed(INPUT_DOWN)) dir = 2;
+        if (dir != 0) {
+            s_rep_dir = dir;
+            s_rep_t = 0;
+        } else if (s_rep_dir == 1 && input_held(INPUT_UP)) {
+            dir = 1;
+            if (++s_rep_t < REP_DELAY) dir = 0;
+            else s_rep_t = (uint8_t)(REP_DELAY - REP_RATE);
+        } else if (s_rep_dir == 2 && input_held(INPUT_DOWN)) {
+            dir = 2;
+            if (++s_rep_t < REP_DELAY) dir = 0;
+            else s_rep_t = (uint8_t)(REP_DELAY - REP_RATE);
+        } else {
+            s_rep_dir = 0;
+            s_rep_t = 0;
+        }
+        if (dir == 0) return;
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&item_deck_nav_banked;
         g_bk_ptr_a = (void *)g;
-        g_bk_byte_a = input_pressed(INPUT_UP) ? 0 : 1;
+        g_bk_byte_a = (uint8_t)(dir - 1);
         banked_call_run();
         item_menu_repaint(g);
         return;

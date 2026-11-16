@@ -28,8 +28,9 @@ static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0
 
 /* Bank-3 movement bodies (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
-/* Bank-11 combined diagonal gate check (src/world/diagonal_banked.c). */
+/* Bank-12 combined diagonal gate check (src/world/diagonal_banked.c). */
 void diagonal_gate_check_banked(void);
+
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -73,22 +74,15 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     actor_load_scene(w, map_id, state);
 }
 
+void world_update_scroll_banked(void);
+
 void world_update_scroll(World *w)
 {
-    uint8_t px, py, max_x, max_y;
     if (!w) return;
-    px = world_player_px(w);
-    py = world_player_py(w);
-    px = (px < 80) ? 0 : (uint8_t)(px - 80);
-    py = (py < 72) ? 0 : (uint8_t)(py - 72);
-    max_x = (w->width > WORLD_VIEW_W) ? (uint8_t)((w->width - WORLD_VIEW_W) << 3) : 0;
-    max_y = (w->height > WORLD_VIEW_H) ? (uint8_t)((w->height - WORLD_VIEW_H) << 3) : 0;
-    if (px > max_x) px = max_x;
-    if (py > max_y) py = max_y;
-    w->camera_px_x = px;
-    w->camera_px_y = py;
-    w->scroll_x = (uint8_t)(px >> 3);
-    w->scroll_y = (uint8_t)(py >> 3);
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_update_scroll_banked;
+    g_bk_ptr_a = (void *)w;
+    banked_call_run();
 }
 
 void world_init(World *w, const GameState *state)
@@ -130,10 +124,13 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
     const SceneDefinition *def;
+    uint8_t sx;
+    Direction old_facing;
 
-    if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
+    if (!w || w->move_state != MOVE_STATE_IDLE) return MOVE_RESULT_NONE;
     (void)state;
 
+    old_facing = w->player.facing;
     if (dy < 0) w->player.facing = DIRECTION_UP;
     else if (dy > 0) w->player.facing = DIRECTION_DOWN;
     else if (dx < 0) w->player.facing = DIRECTION_LEFT;
@@ -145,26 +142,35 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     def = scene_definition_for_map(w->map_id);
 
     /* Invisible point-exit triggers fire regardless of the art painted
-     * under them, so the trigger lookup comes first.  It runs banked
-     * (scene home bank: fixed-bank budget, AGENTS.md 52.18) and stages
-     * the EXIT outcome straight through the World pointer on a hit.
-     * The STEPPED gate tile stays the move target (a normal one-tile
-     * walk); the far destination is staged separately. */
-    if (!scene_exit_check(w, def, target_x, target_y)) {
-        /* Walkability + whole-edge decide run banked (body writes
-         * outcome/param/dir/target straight through the staged World
-         * pointer). Diagonal moves use the bank-11 combined body (wall
-         * orthogonals + actor orthogonals: bank 2 is full, bank 5 is
-         * full in release, fixed is over budget); cardinals keep bank-2. A missing def
-         * stages NULL (no links). Unwalkable ground blocks HERE, so a
-         * hostile/static on solid art stays inert. */
-        if (dx != 0 && dy != 0) {
-            g_bk_call_bank = 11;
-            g_bk_call_target = (uint16_t)&diagonal_gate_check_banked;
-        } else {
-            g_bk_call_bank = 2;
-            g_bk_call_target = (uint16_t)&world_gate_check_banked;
+     * under them (scene home bank).  For diagonals, stage the exit
+     * probe first and let diagonal_gate_check_banked enforce the
+     * thumb-roll guard, orthogonal corner rule, and actor-aware
+     * wall-hug slide cleanly in bank 12. */
+    if (dx != 0 && dy != 0) {
+        sx = scene_exit_check(w, def, target_x, target_y);
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&diagonal_gate_check_banked;
+        g_bk_ptr_a = (void *)w;
+        g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
+        g_bk_byte_a = target_x;
+        g_bk_byte_b = target_y;
+        g_bk_byte_d = sx;
+        banked_call_run();
+        if (g_bk_byte_c == 1) {
+            w->player.facing = old_facing;
+            return MOVE_RESULT_NONE;
         }
+        if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            return MOVE_RESULT_BLOCKED;
+        }
+        target_x = w->move_target_x;
+        target_y = w->move_target_y;
+        if (g_bk_byte_c == 2) {
+            scene_exit_check(w, def, target_x, target_y);
+        }
+    } else if (!scene_exit_check(w, def, target_x, target_y)) {
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&world_gate_check_banked;
         g_bk_ptr_a = (void *)w;
         g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
         g_bk_byte_a = target_x;
@@ -391,44 +397,18 @@ void world_on_battle_end(Game *g, bool victory)
     }
 }
 
+void world_on_battle_fled_banked(void);
+
 void world_on_battle_fled(Game *g)
 {
-    World *w;
-    WorldActorRuntime *act;
-    uint8_t idx;
-    uint8_t e;
+    /* Thin fixed-bank wrapper: the fled body lives in ROM bank 12
+     * (src/world/fled_banked.c) to keep the fixed-bank budget for the
+     * diagonal wall-hug slide (AGENTS.md 52.18). Single staging slot. */
     if (!g) return;
-    w = &g->world;
-
-    /* The enemy stays on the map at the HP it had when the hero ran:
-     * no reward, defeat, or quest progress.  Inline (not banked): pure
-     * WRAM reads/writes, and the fixed bank has room again. */
-    idx = w->encounter_actor_index;
-    w->encounter_actor_index = NO_ACTOR_INDEX;
-    /* Flee grace (WORLD_FLEE_GRACE_FRAMES): the hero exits next to a live
-     * hostile, so encounters stay suppressed for ~2s while they escape. */
-    w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
-    if (idx == NO_ACTOR_INDEX) return;
-
-    /* Hoisted (AGENTS.md 52.18): one 16-bit indexed address instead of
-     * re-deriving it per field access. */
-    act = &w->actors[idx];
-    if (act->active) {
-        /* Write back the toughest SURVIVOR, not slot 0: a trio shares
-         * one actor, so when the slot-0 member died but its clones
-         * lived, copying enemies[0].hp respawned three corpses -- the
-         * re-engage opened on an all-dead battle and a single attack
-         * won it.  The group recovers to its best surviving member.
-         * Own loop counter (not the reused idx): idx is the actor
-         * slot act was derived from, and reusing it here would
-         * silently repoint any later idx use at an enemy ordinal. */
-        act->hp = 0;
-        for (e = 0; e < g->battle.enemy_count; e++) {
-            if (g->battle.enemies[e].hp > act->hp) {
-                act->hp = g->battle.enemies[e].hp;
-            }
-        }
-    }
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
 }
 
 uint8_t g_patrol_outcome;  /* BSS zero (AGENTS.md 52.27) */

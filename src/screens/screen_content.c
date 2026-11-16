@@ -13,8 +13,11 @@
 #include "shops.h"
 #include "menu.h"
 #include "rpg/save.h"
+#include "rpg/deck.h"
 #include "game_ids.h"
 #include "economy.h"
+#include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* Bank-2 self-contained shop / save-load render bodies (AGENTS.md 52.11.1):
  * the fixed _CODE/_HOME area is at its size limit (see make memmap), so the
@@ -64,6 +67,8 @@ extern const uint8_t g_shop_count;
 #define SC_SHOP_MSG_BOUGHT 1
 #define SC_SHOP_MSG_NO_GOLD 2
 #define SC_SHOP_MSG_MAX_COPIES 3
+#define SC_SHOP_MSG_MASK 0x0Fu
+#define SC_SHOP_MSG_BOUGHT_BIT 0x80u
 
 
 static uint8_t s_sc_txt_i;
@@ -199,32 +204,6 @@ static const CardDefinition *sc_card_get_def(CardId id)
         if (g_cards[s_sc_def_i].id == id) return &g_cards[s_sc_def_i];
     }
     return NULL;
-}
-
-/* Same-card test for the one-copy map: identical type/power/cost/uses/
- * effect/battle type/rider (the 8 identity bytes; id, max_copies, price
- * and name are NOT identity -- a curated row and its loot twin differ
- * exactly there).  The stock def is a g_cards ROM pointer (stable across
- * the synth call below, which reuses its scratch); loot rows resolve
- * through the shared bank-2 synth above. */
-static uint8_t sc_row_matches_stock(const CardDefinition *s, CardId row_id)
-{
-    const CardDefinition *d;
-    if (!s) return 0;
-    if (loot_is_loot_id(row_id)) {
-        d = ic_loot_synth(row_id);
-    } else {
-        d = sc_card_get_def(row_id);
-    }
-    if (!d) return 0;
-    return (uint8_t)(d->type == s->type &&
-                     d->power == s->power &&
-                     d->cost == s->cost &&
-                     d->uses_per_battle == s->uses_per_battle &&
-                     d->effect == s->effect &&
-                     d->battle_type == s->battle_type &&
-                     d->status_id == s->status_id &&
-                     d->status_chance == s->status_chance);
 }
 
 /* ── Full card names (docs/loot.md §34.1 short code -> "<MAT> <WPN>") ──
@@ -448,12 +427,18 @@ static uint8_t sc_sell_price(CardId id)
  * g_bk_ptr_a = Game*, g_bk_byte_a = VISIBLE row.  Resolves the row
  * through the active tab's map and stages the verdict:
  * g_bk_byte_b = price (0 = refuse), g_bk_byte_c = card id,
- * g_bk_byte_d = owned-after (SELL only, for CARD_SOLD telemetry).
- * BUY rows quote the market-scaled catalog price (0 = free basic,
- * always affordable); SELL rows the sc_sell_price value after the
- * decked-backing guard (a fully decked card refuses: selling it would
- * strand the deck).  WRAM-direct scans only (banked bodies must never
- * call fixed-bank functions); the fixed side applies blindly. */
+ * g_bk_byte_d = owned-after (SELL, for CARD_SOLD telemetry) or the BUY
+ * verdict (0 = proceed, 1 = identity cap already reached, 2 = not
+ * enough gold).  Refusal UX lives here, not fixed: the message,
+ * telemetry and cancel blip ride the same dispatch (fixed-bank _CODE
+ * budget, AGENTS.md 52.18; the SFX goes through the mailbox -- a
+ * banked body must never call audio_play_sfx, §52.28 -- and gold
+ * refusals stay silent, as before).  BUY rows quote the market-scaled
+ * catalog price (0 = free basic, always affordable); SELL rows the
+ * sc_sell_price value after the decked-backing guard (a fully decked
+ * card refuses: selling it would strand the deck).  WRAM-direct scans
+ * only (banked bodies must never call fixed-bank functions); the fixed
+ * side applies blindly. */
 void shop_row_quote_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -470,17 +455,40 @@ void shop_row_quote_banked(void)
     if (!g) return;
     s_sc_shop_def = sc_shop_active(g);
     if (!s_sc_shop_def || row >= g_shop_vis_count) return;
+    /* Fresh message per A-press (keep the per-visit bought bit): a
+     * stale refusal must not linger over the next attempt. */
+    s_sc_game->shop_message &= (uint8_t)SC_SHOP_MSG_BOUGHT_BIT;
     if (g->item_menu_tab == SHOP_TAB_SELL) {
         uint8_t e = g_shop_vis_map[row];
+        uint8_t price;
         if (e >= g->state.cards.collection.count) return;
         id = g->state.cards.collection.entries[e].id;
+        price = sc_sell_price(id);
+        if (!price) return;
         owned = g->state.cards.collection.entries[e].count;
+        if (owned == 0) return;
         for (i = 0; i < g->state.cards.deck.count; i++) {
             if (g->state.cards.deck.cards[i] == id) in_deck++;
         }
-        if (owned <= in_deck) return;
-        g_bk_byte_b = sc_sell_price(id);
-        if (!g_bk_byte_b) return;
+        /* Auto-undeck one copy for the sale only after confirming a
+         * nonzero sell price and that the deck can stay above the
+         * MIN floor (swap-with-last, like deck_remove_card). */
+        if (owned <= in_deck) {
+            if (g->state.cards.deck.count <= DECK_MIN_CARDS || in_deck == 0)
+                return;
+            for (i = 0; i < g->state.cards.deck.count; i++) {
+                if (g->state.cards.deck.cards[i] == id) {
+                    g->state.cards.deck.cards[i] =
+                        g->state.cards.deck.cards[--g->state.cards.deck.count];
+                    in_deck--;
+                    telemetry_ring_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                        id, 0, 0, 0);
+                    break;
+                }
+            }
+            if (owned <= in_deck) return;
+        }
+        g_bk_byte_b = price;
         g_bk_byte_c = id;
         g_bk_byte_d = (uint8_t)(owned - 1);
     } else {
@@ -495,50 +503,35 @@ void shop_row_quote_banked(void)
         g_bk_byte_b = s_sc_market_quote(d->price, d->price_bias,
                                         s_sc_game->state.economy.market_index);
         g_bk_byte_c = id;
+        /* No ownership cap: the collection is uncapped, only the deck
+         * enforces the uniform 5-per-identity limit at equip time. */
+        /* Refusal UX (message + telemetry + cancel blip): answered
+         * here so the fixed applier pays no branch for it.  Only gold
+         * can refuse now. */
+        if (g_bk_byte_d == 0 &&
+            g->state.currency.amount[CURRENCY_ID_GOLD - 1] < (int16_t)g_bk_byte_b) {
+            g_bk_byte_d = 2;
+        }
+        if (g_bk_byte_d == 2) {
+            s_sc_game->shop_message =
+                (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                          SC_SHOP_MSG_NO_GOLD);
+            telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 1, 0, 0);
+        }
     }
 }
 
-/* Visible-map rebuild: the one-copy stock shows a line only while the
- * player owns no copy (the scan mirrors collection_find in rpg/deck.c
- * since banked bodies cannot call the fixed-bank counter) -- EXCEPT
- * price-0 basics (free starter rebuys: wood sword/shield, bronze fire
- * sword), which are always listed and capped by max_copies at buy
- * time, so the same starter set can be rebought but never infinitely
- * stockpiled.  Selling the last copy of a one-copy card re-opens its
- * row.  Remap runs on every full redraw (entry, purchase), the only
- * moments the list can change, so the cursor never reads a stale
- * map.  Clamps the cursor into the visible list (a purchase can hide
- * the row under it) before painting. */
+/* Visible-map rebuild: the BUY list always shows the full stock.
+ * Remap runs on every full redraw (entry, purchase); it only clamps
+ * the cursor into the visible list. */
 static void sc_shop_remap_buy(void)
 {
     uint8_t i;
-    uint8_t e;
-    uint8_t owned;
     g_shop_vis_count = 0;
     if (!s_sc_game || !s_sc_shop_def) return;
     for (i = 0; i < s_sc_shop_def->count; i++) {
-        const CardDefinition *sdef = sc_card_get_def(s_sc_shop_def->items[i]);
-        owned = 0;
-        for (e = 0; e < s_sc_game->state.cards.collection.count; e++) {
-            if (s_sc_game->state.cards.collection.entries[e].id == s_sc_shop_def->items[i]) {
-                owned = s_sc_game->state.cards.collection.entries[e].count;
-                break;
-            }
-            /* Identity, not row id: a loot twin already owned hides the
-             * one-copy row even though no curated row exists yet to
-             * merge it under (docs/loot.md §34.6). */
-            if (sc_row_matches_stock(sdef, s_sc_game->state.cards.collection.entries[e].id)) {
-                owned = s_sc_game->state.cards.collection.entries[e].count;
-                break;
-            }
-        }
-        /* Free basics (price 0, non-SPECIAL) are always listed; rares
-         * hide once owned. */
-        if (!owned || (sdef && sdef->price == 0 &&
-                       sdef->type != CARD_TYPE_SPECIAL)) {
-            g_shop_vis_map[g_shop_vis_count] = i;
-            g_shop_vis_count++;
-        }
+        g_shop_vis_map[g_shop_vis_count] = i;
+        g_shop_vis_count++;
     }
     if (s_sc_game->item_menu_index >= g_shop_vis_count) {
         s_sc_game->item_menu_index = g_shop_vis_count > 0 ? (uint8_t)(g_shop_vis_count - 1) : 0;
@@ -752,10 +745,10 @@ void shop_content_render(void)
         sc_draw_text(0, 16, "[A]Sell [B]Leave", 16);
     else
         sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
-    if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
+    if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_NO_GOLD) {
         sc_draw_text(0, 17, "Not enough!", 12);
-    } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
-        sc_draw_text(0, 17, "Too many!", 12);
+    } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_MAX_COPIES) {
+        sc_draw_text(0, 17, "Already owned!", 14);
     } else {
         sc_draw_text(0, 17, NULL, 12);
     }

@@ -1,0 +1,99 @@
+{
+ "name": "merchant_twin_shows_stock",
+ "test": true,
+ "description": "Uncapped ownership: owning an IRON RING loot twin (derived id 164) keeps the curated IRON RING row listed, and buying it succeeds (folds to owned 2 under the curated id) with CARD_PURCHASED and gold charged.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 70
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "RING"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 13,
+   "expected": 119
+  },
+  {
+   "type": "oam_attr",
+   "entry": 13,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "BOW"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 14,
+   "expected": 120
+  },
+  {
+   "type": "oam_attr",
+   "entry": 14,
+   "expected": 6
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 2
+  }
+ ]
+}

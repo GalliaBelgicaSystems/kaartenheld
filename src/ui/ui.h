@@ -131,6 +131,14 @@ void ic_menu_riders_load(void);
 #define UI_TILE_AP_ICON          114u
 #define UI_TILE_DECK_ICON        116u
 
+/* DECK-list scroll-down caret: the menu finger-up bitmap rotated 180°
+ * so down matches up stroke-for-stroke (same symbol, not the font 'v').
+ * Lives in the free high block-1 window (208-235 belongs to no tileset;
+ * the world tileset writes 128..127+count, max 207), streamed with the
+ * rider icons on DECK-tab entry.  The semantic buffer keeps 'v' for
+ * harness screen_row asserts. */
+#define UI_TILE_SCROLL_DOWN      232u
+
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
  * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
@@ -165,7 +173,9 @@ void ic_menu_riders_load(void);
  * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
  * no BG writer touches).  The per-phase glyph is re-streamed from the
  * font each phase change, so no boot-time load and no clobber state.
- * prop 0 = OBJ palette slot 0, the hero's ramp (always programmed). */
+ * CGB uses prop 5 (OBJ palette slot 5, sprites7: white box at color 1,
+ * dark brown ink at color 3); DMG uses prop 0x10 (OBP1 = 0xE0: shade 0
+ * white box at color 1, shade 3 black ink at color 3). */
 #define SPIN_OAM_ENTRY           39u
 #define SPIN_TILE                241u
 #define SPIN_TTL                 120u

@@ -1,0 +1,101 @@
+{
+ "name": "deck_rider_detail_ice",
+ "test": true,
+ "description": "The split ice-bow row's detail page names its own rider: five DOWNs from the FILTER row land on the IRON ICE BOW pile row (loot 186, behind three starter groups and the fire bow) and SELECT shows ICE RIDER, matching what combat plays -- not the fire rider of the sibling row.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4474
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 178,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "collection_add",
+   "card_id": 186,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "ICE RIDER"
+  }
+ ]
+}

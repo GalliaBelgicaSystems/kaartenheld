@@ -271,11 +271,24 @@ def main():
         _advance_to_new_game()
         press("a", settle=16)
 
-    # Locate player entity in WRAM once overworld is reached
-    wram = bytes(pb.memory[i] for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
-    idx = wram.find(PLAYER_BOOT)
-    if idx >= 0:
-        pos_addr[0] = WRAM_BASE + idx
+    # Wait for the intro-exit transition frame to finish syncing
+    # world.player.hp/max_hp from party state (game_update runs
+    # screen_update -> save_claim_active -> line ~219 HP sync, which can
+    # span multiple PyBoy ticks after g_game.screen flips to 0), then
+    # locate the player entity in WRAM.  Fail loudly if not found rather
+    # than falling back to a stale g_game offset.
+    idx = -1
+    for _ in range(60):
+        wram = bytes(pb.memory[i] for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+        idx = wram.find(PLAYER_BOOT)
+        if idx >= 0 and (pb.memory[0xFF40] & 0x80):
+            break
+        pb.tick()
+    if idx < 0:
+        print("error: player boot pattern not found in WRAM", file=sys.stderr)
+        pb.stop()
+        return 1
+    pos_addr[0] = WRAM_BASE + idx
 
     samples.clear()
 

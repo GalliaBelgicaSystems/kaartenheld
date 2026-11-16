@@ -114,10 +114,11 @@ void ui_dialogue_box_banked(void)
     }
 }
 
-/* Despair white fade-out (demo finale): whites the current palettes out.
- * Dispatched from game_slime_despair_outro() on the DEFEATED result
- * screen (the fade-in twin lives below, next to its call site).  Same
- * self-containment contract as the paper body above. */
+/* Despair white fade-out (demo finale): cuts the current palettes to
+ * white and holds the white beat.  Dispatched from
+ * game_slime_despair_wake() right before scene-loading the wake area (the fade-in
+ * twin lives below, next to its call site).  Same self-containment
+ * contract as the paper body above. */
 static void despair_box_wait(void)
 {
     uint8_t n = 6;
@@ -132,7 +133,9 @@ static void despair_box_wait(void)
 /* One CRAM byte with the index explicitly selected first: CRAM reads
  * never auto-increment BCPS/OCPS, and a Mode-3 read returns 0xFF, so
  * every byte gets its own index write plus the Mode-3 guard (the same
- * discipline as BANKED_VRAM_WRITE). */
+ * discipline as BANKED_VRAM_WRITE).  Only the LCD-off prepare below
+ * reads CRAM (reads are reliable there); the LCD-on fade-out never
+ * reads, it cuts straight to white. */
 static uint8_t despair_cram_read(uint8_t is_obj, uint8_t pal,
                                  uint8_t col, uint8_t byte_ix)
 {
@@ -151,7 +154,7 @@ static uint8_t despair_cram_read(uint8_t is_obj, uint8_t pal,
 void game_despair_fade_out_banked(void)
 {
     uint8_t slot;
-    uint8_t col;
+    uint8_t n;
 
     if (!g_is_cgb) {
         BGP_REG = 0x50;
@@ -164,58 +167,32 @@ void game_despair_fade_out_banked(void)
         despair_box_wait();
         return;
     }
-    {
-        uint8_t pass = 5;
-        uint8_t lo;
-        uint8_t hi;
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-        while (pass--) {
-            for (slot = 0; slot < 16; slot++) {
-                for (col = 0; col < 4; col++) {
-                    uint8_t is_obj = (uint8_t)(slot >= 8);
-                    uint8_t pal = (uint8_t)(slot & 7);
-                    lo = despair_cram_read(is_obj, pal, col, 0);
-                    hi = despair_cram_read(is_obj, pal, col, 1);
-                    r = (uint8_t)(lo & 31);
-                    g = (uint8_t)(((lo >> 5) | (hi << 3)) & 31);
-                    b = (uint8_t)((hi >> 2) & 31);
-                    r = (uint8_t)(r + ((uint8_t)(31 - r) >> 1));
-                    g = (uint8_t)(g + ((uint8_t)(31 - g) >> 1));
-                    b = (uint8_t)(b + ((uint8_t)(31 - b) >> 1));
-                    lo = (uint8_t)((g << 5) | r);
-                    hi = (uint8_t)((b << 2) | (g >> 3));
-                    if (slot < 8) {
-                        BCPS_REG = (uint8_t)(0x80u | (slot << 3) | (col << 1));
-                        BANKED_VRAM_WRITE(&BCPD_REG, lo);
-                        BANKED_VRAM_WRITE(&BCPD_REG, hi);
-                    } else {
-                        OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3) | (col << 1));
-                        BANKED_VRAM_WRITE(&OCPD_REG, lo);
-                        BANKED_VRAM_WRITE(&OCPD_REG, hi);
-                    }
-                }
-            }
-            despair_box_wait();
+    /* Hard cut to white plus a steady hold.  The old stepped version
+     * did CRAM read-modify-write passes with the LCD on: any read
+     * landing in Mode 3 returns garbage, so the whole screen flashed
+     * and speckled instead of fading (the reported wake-map
+     * flicker).  Mid-frame palette walks cannot fade smoothly --
+     * every pass rewrites live palettes -- so cut once to white and
+     * hold it: no tearing, no flash frames. */
+    for (slot = 0; slot < 16; slot++) {
+        if (slot < 8) {
+            BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+        } else {
+            OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
         }
-        for (slot = 0; slot < 16; slot++) {
+        for (n = 0; n < 4; n++) {
             if (slot < 8) {
-                BCPS_REG = (uint8_t)(0x80u | (slot << 3));
+                BANKED_VRAM_WRITE(&BCPD_REG, 0xFF);
+                BANKED_VRAM_WRITE(&BCPD_REG, 0x7F);
             } else {
-                OCPS_REG = (uint8_t)(0x80u | ((slot - 8) << 3));
-            }
-            for (col = 0; col < 4; col++) {
-                if (slot < 8) {
-                    BANKED_VRAM_WRITE(&BCPD_REG, 0xFF);
-                    BANKED_VRAM_WRITE(&BCPD_REG, 0x7F);
-                } else {
-                    BANKED_VRAM_WRITE(&OCPD_REG, 0xFF);
-                    BANKED_VRAM_WRITE(&OCPD_REG, 0x7F);
-                }
+                BANKED_VRAM_WRITE(&OCPD_REG, 0xFF);
+                BANKED_VRAM_WRITE(&OCPD_REG, 0x7F);
             }
         }
-        despair_box_wait();
+    }
+    {
+        uint8_t hold = 5;
+        while (hold--) despair_box_wait();
     }
 }
 

@@ -32,11 +32,10 @@ static CardCollectionEntry *collection_find(CardCollectionState *col,
  * body must never call (AGENTS.md §52.11.1), so the banked body reads a
  * hand-written identity table (parity-gated by card-costs
  * --check-identity) and synthesizes loot identities with pure macros.
- * Capped folds keep a remainder row and capped deck retargeting, so
- * nothing is ever lost and nothing stacks or decks past max_copies;
- * uncapped pairs fold fully.  It runs after every collection add that
- * opens a new row and on save load (an old save can already hold the
- * duplicate) and is idempotent. */
+ * Ownership is uncapped (only the 5-per-identity deck cap and 99-copy
+ * display clamp apply), so duplicates fold fully into a single row.  It
+ * runs after every collection add that opens a new row and on save load
+ * (an old save can already hold the duplicate) and is idempotent. */
 
 /* Banked merge body (src/rpg/deck_merge_banked.c, ROM bank 11):
  * g_bk_ptr_a = CardState*.  Dispatched by the wrapper below. */
@@ -55,20 +54,22 @@ void deck_collection_merge_duplicates(CardState *cs)
 
 bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
 {
-    const CardDefinition *def;
     CardCollectionEntry *e;
     if (!cs || id == CARD_NONE || quantity == 0) return false;
 
-    def = card_get_def(id);
+    /* Owned collection is uncapped (only the deck enforces the uniform
+     * 5-per-identity limit): any known card stacks.  Unknown ids still
+     * refuse via the def lookup. */
+    if (!card_get_def(id)) return false;
 
     e = collection_find(&cs->collection, id);
     if (e) {
-        if (def && def->max_copies > 0 &&
-            (uint8_t)(e->count + quantity) > def->max_copies)
-            return false;
-        e->count = (uint8_t)(e->count + quantity);
-        /* Stacking onto an existing row can complete a capped pair
-         * (e.g. capped row below cap + remainder row): always re-merge,
+        uint8_t total;
+        if (e->count >= 99) return false;
+        total = (uint8_t)(e->count + quantity);
+        if (total < e->count || total > 99) total = 99;
+        e->count = total;
+        /* Re-merge in case a previously unmerged twin row can now fold;
          * a same-id stack never creates a new row so this cannot fail. */
         deck_collection_merge_duplicates(cs);
         return true;
@@ -89,17 +90,14 @@ bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
             return g_bk_byte_c ? true : false;
         }
     }
-    if (def && def->max_copies > 0 && quantity > def->max_copies) return false;
     e = &cs->collection.entries[cs->collection.count];
     e->id = id;
-    e->count = quantity;
+    e->count = (quantity > 99) ? 99 : quantity;
     cs->collection.count++;
     /* A curated row and its loot twin are one card to the player.  The
-     * merge folds duplicates, keeping a capped remainder row when the
-     * pair would otherwise stack past max_copies -- so the DECK menu
-     * can list the same card twice (curated row + loot twin row), each
-     * row honestly showing its own owned/decked counts, while caps and
-     * the identity-wide deck gate keep every copy legal. */
+     * merge folds duplicates into a single row (no capped remainder:
+     * ownership is uncapped, only the deck enforces the 5-per-identity
+     * limit). */
     deck_collection_merge_duplicates(cs);
     return true;
 }
@@ -164,14 +162,11 @@ bool deck_add_card(CardState *cs, CardId id)
     if (!def) return false;
     if (def->type == CARD_TYPE_SPECIAL) return false;
     in_deck = deck_count_in_deck(&cs->deck, id);
-    if (def->max_copies > 0 && in_deck >= def->max_copies) return false;
     if (in_deck >= owned) return false;
 
-    /* Cross-row cap (docs/loot.md §34): a capped curated row and its
-     * loot twin are one card in two collection rows after a capped
-     * fold, so the per-id checks above cannot see the pair's total.
-     * The banked gate counts decked copies of the same identity and
-     * enforces the tighter cap -- otherwise the twin decks past it. */
+    /* Uniform 5-per-identity deck limit: the banked gate counts decked
+     * copies of the same identity (curated row + loot twin are one
+     * card) and refuses past 5 -- the only per-card deck limit. */
     g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&deck_ident_gate_banked;
     g_bk_ptr_a = (void *)cs;

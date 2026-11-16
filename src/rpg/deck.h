@@ -47,8 +47,9 @@ typedef struct {
 
 /* ── Collection API ─────────────────────────────────────────────── */
 
-/* Add cards to the collection.  Stacks with existing entries.
- * Returns false if the collection is full. */
+/* Add cards to the collection.  Stacks with existing entries up to the
+ * 99-copy display/storage ceiling.  Returns false on invalid input,
+ * full unabsorbable collection, or a stack already at 99. */
 bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity);
 
 /* Remove cards from the collection.  Returns false if the player
@@ -60,8 +61,8 @@ uint8_t deck_collection_count(const CardState *cs, CardId id);
 
 /* Fold collection rows that describe the same card into one (a curated
  * catalog row and its mechanically identical loot twin), retargeting
- * decked copies onto the survivor.  Capped folds keep a remainder row so
- * nothing is lost or stacked past max_copies.  Idempotent;
+ * decked copies onto the survivor.  Ownership is uncapped (up to the
+ * 99 display max), so duplicates fold fully.  Idempotent;
  * deck_collection_add runs it after opening a new row and save load runs
  * it on the restored state. */
 /* Banked duplicate-fold (src/rpg/deck_merge_banked.c, ROM bank 11):

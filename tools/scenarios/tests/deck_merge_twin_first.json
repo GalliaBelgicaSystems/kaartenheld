@@ -1,7 +1,7 @@
 {
  "name": "deck_merge_twin_first",
  "test": true,
- "description": "Capped-fold swap path (docs/loot.md §34): the loot twin (id 164) is owned BEFORE the curated IRON_RING (cap 1), so the merge's keep row starts as the loot id and must swap. The capped fold keeps the cap under the curated id and leaves the excess under the loot id (rows 66:1 + 164:1). Pre-fix the remainder row kept the curated id (rows 66:1 + 66:1): the loot remainder vanished and the merge never converged.",
+ "description": "Full identity folding (uncapped ownership): the loot twin (id 164) owned BEFORE the curated IRON_RING folds onto the curated survivor (row 66:2, twin row gone). No remainder row, nothing lost.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -35,17 +35,17 @@
   {
    "type": "inventory",
    "item": "IRON_RING",
-   "expected": 1
+   "expected": 2
   },
   {
    "type": "collection_count",
    "card_id": 66,
-   "expected": 1
+   "expected": 2
   },
   {
    "type": "collection_count",
    "card_id": 164,
-   "expected": 1
+   "expected": 0
   },
   {
    "type": "screen",

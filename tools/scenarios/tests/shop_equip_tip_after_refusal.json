@@ -1,0 +1,79 @@
+{
+ "name": "shop_equip_tip_after_refusal",
+ "test": true,
+ "description": "Post-shop equip tip survives post-buy refusals: with 25g, buying IRON RING (20g) succeeds and pressing A again fails with 'Not enough!' (5g left), yet leaving the shop still opens DIALOGUE_MERCHANT_EQUIP_TIP.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 25
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "B"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "screen",
+   "expected": "DIALOGUE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_STARTED"
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "MERCHANT_EQUIP_TIP"
+  }
+ ]
+}

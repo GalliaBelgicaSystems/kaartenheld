@@ -1,7 +1,7 @@
 {
- "name": "loot_collection_full",
+ "name": "loot_collection_never_full",
  "test": true,
- "description": "Loot drop when collection is full (docs/loot.md 34.5): when the 50-row card collection is capped, victory loot cannot be added -- no LOOT_CARD_ADDED is emitted and the battle result screen does not show YOU FOUND. The filler builds all 50 rows: every plain loot cell except the starter twins and the drop, the legal rider rows, the reserved-weapon hybrids, quest specials, the curated poison dagger, plus twin rows surviving only as capped-fold remainders (96/97) -- excluding seed 5002 drop id 99 so the drop needs a new slot.",
+ "description": "Ownership is uncapped and identities fold fully, so the 50-row shelf can never fill (only 45 distinct card identities exist game-wide): with 43 distinct identities owned, the victory drop still lands -- LOOT_CARD_ADDED fires and the result screen shows YOU FOUND. No drop is ever silently lost to a full shelf.",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -263,6 +263,16 @@
    "quantity": 1
   },
   {
+   "type": "collection_add",
+   "card_id": 96,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 97,
+   "quantity": 1
+  },
+  {
    "type": "wait",
    "frames": 30
   },
@@ -428,11 +438,11 @@
    "event": "BATTLE_WON"
   },
   {
-   "type": "event_not_occurred",
+   "type": "event_occurred",
    "event": "LOOT_CARD_ADDED"
   },
   {
-   "type": "screen_row_not_contains",
+   "type": "screen_row",
    "row": 10,
    "contains": "YOU FOUND"
   }

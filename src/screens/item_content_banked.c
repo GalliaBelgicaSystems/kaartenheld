@@ -25,14 +25,21 @@
 
 #define ROW_TOP     0
 #define FIRST_CARD  1
-/* Row 3 is the CARD + deck-icon /OWN column header, row 4 a blank paper
- * separator; grouped card rows run 5-12 (VISIBLE_CARDS rows: 8 rows
- * x 4 OAM sprites = 32 entries, inside the 40-entry OAM budget). */
+/* Row 3 is the CARD + deck-icon /OWN column header, row 4 carries the
+ * scroll-up carets (blank when at the top); grouped card rows run
+ * 5-12 (VISIBLE_CARDS rows: 8 rows x 4 OAM sprites = 32 entries,
+ * inside the 40-entry OAM budget); row 13 is a blank gap, row 14 the
+ * scroll-down carets (blank when at the bottom), row 15 a blank gap
+ * before the row-16 message/footer. */
 #define ROW_FILTER  2
 #define ROW_COL_HEAD 3
 #define ROW_SEP 4
 #define ROW_CARDS_TOP 5
 #define VISIBLE_CARDS 8
+#define ROW_SCROLL_UP 4
+#define ROW_GAP_TOP 13
+#define ROW_SCROLL_DOWN 14
+#define ROW_GAP_BOT 15
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -60,6 +67,10 @@ extern uint8_t s_view_count;
  * scroll position, 0xFF past the end. */
 extern uint8_t s_ic_draw_pos[8];
 extern uint8_t s_ic_draw_pos_r[8];
+/* Per-side scroll-overflow flags (same file, built by the view build
+ * on every DECK render/repaint): bit 0 up-pile, 1 up-deck, 2
+ * down-pile, 3 down-deck. */
+extern uint8_t s_ic_scroll_flags;
 
 extern const CardDefinition g_cards[];
 extern const ShopDefinition g_shops[];
@@ -530,7 +541,7 @@ static const char s_ic_loot_mat[LOOT_NMATERIALS] =
 static const char s_ic_loot_sym[17] = "SWSHBODARG??????";
 static const uint8_t s_ic_loot_status[4] =
     { STATUS_NONE, STATUS_POISON, STATUS_BURN, STATUS_FREEZE };
-static const uint8_t s_ic_loot_chance[4] = { 0, 128, 128, 96 };
+static const uint8_t s_ic_loot_chance[4] = { 0, 208, 208, 176 };
 
 /* Shared with the bank-2 shop map (screen_content.c, same bank: plain
  * call, no trampoline): identity checks for one-copy rows resolve loot
@@ -774,14 +785,17 @@ static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
  *   col 6/16: AP icon tile (BG); buffer blank
  *   col 7-8/17-18: side count, 2-wide (" 4"): left = owned - decked,
  *     right = decked
- * Row 3 is the fixed column header (PILE / DECK labels).  Row 4 is a
- * blank paper separator; cards run rows 5-12 (VISIBLE_CARDS rows).
+ * Row 3 is the fixed column header (PILE / DECK labels).  Row 4
+ * carries the scroll-up carets, cards run rows 5-12 (VISIBLE_CARDS
+ * rows), rows 13/15 are blank gaps around the row-14 scroll-down
+ * carets (ic_draw_scroll_rows).
  * VRAM shows the icon tiles; the buffer keeps weapon letters, digits
  * and counts for harness asserts (material/rider cells stay blank,
  * OAM art).  Display cost/rider/color read the primary (first)
  * member; A tries members in collection order, so display and behavior
- * agree.  Note: same-name variants (e.g. rider vs plain) share one row
- * by design; see docs/deck-management.md.
+ * agree.  Note: same-name variants share one row only when their
+ * on-hit riders match (fire and ice bows are different rows); see
+ * docs/deck-management.md.
  *
  * ic_draw_card_cell paints one cell.  Cells that lose their group are
  * never blanked here: the full redraw clears both planes first, and
@@ -886,13 +900,52 @@ static void ic_draw_filter_row(Game *g)
     IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
 }
 
+/* Scroll-down caret cell: VRAM takes UI_TILE_SCROLL_DOWN (the menu
+ * finger rotated 180 degrees, streamed with the rider icons) while
+ * the buffer keeps 'v' for harness screen_row asserts.  VRAM always
+ * writes: the buffer glyph never matches the PPU tile, so the text
+ * skip-guard would stale-hide the caret (same hazard as the AP pips,
+ * AGENTS.md 52.25).  Hiding restores the font space tile through the
+ * same unconditional write. */
+static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = show ? 'v' : ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst,
+        show ? UI_TILE_SCROLL_DOWN : ui_font_tile_base);
+}
+
+/* Scroll-indicator rows, shared by the full list render and the
+ * incremental repaint: row-4 up carets ('^' font art, same bitmap as
+ * the tab caret) and row-14 down carets at the material columns (4
+ * pile / 14 deck), per side, from the bank-11 overflow flags rebuilt
+ * by the view build just before this render.  Rows
+ * 13/15 stay permanent blank gaps above/below the down row.  Only the
+ * caret cells are ever written (a full clear blanks the rows first,
+ * and nothing else addresses them, so no stale glyphs survive). */
+static void ic_draw_scroll_rows(Game *g)
+{
+    uint8_t flags;
+    (void)g;
+    flags = s_ic_scroll_flags;
+    IC_DRAW_TEXT(4, ROW_SCROLL_UP, (flags & 0x01) ? "^" : " ", 1);
+    IC_DRAW_TEXT(14, ROW_SCROLL_UP, (flags & 0x02) ? "^" : " ", 1);
+    ic_stamp_scroll(ROW_SCROLL_DOWN, 4, (uint8_t)(flags & 0x04));
+    ic_stamp_scroll(ROW_SCROLL_DOWN, 14, (uint8_t)(flags & 0x08));
+}
+
 static void ic_draw_cards_list(Game *g)
 {
     /* Fixed column header: PILE over the left (owned) block, DECK over
-     * the right block (cols 0-19): "  PILE       DECK   ".  Row 4 is
-     * a blank paper separator. */
+     * the right block (cols 0-19): "  PILE       DECK   ".  Row 4
+     * carries the scroll-up carets, rows 13/15 are blank gaps around
+     * the row-14 scroll-down carets (see ic_draw_scroll_rows). */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE       DECK   ", 20);
-    IC_DRAW_TEXT(0, ROW_SEP, "                    ", 20);
+    /* Indicator rows (the bank-11 view build just recomputed the
+     * overflow flags immediately before this body ran). */
+    ic_draw_scroll_rows(g);
     s_ic_y = ROW_CARDS_TOP;
     s_ic_end_l = 0;
     s_ic_end_r = 0;
@@ -993,6 +1046,9 @@ void item_card_refresh_banked(void)
     /* FILTER row + caret (only the list uses it; picker/detail draw
      * their own rows). */
     ic_draw_filter_row(g);
+    /* Scroll indicators (rows 4/14): the bank-11 view build already
+     * recomputed the overflow flags for the current state/scroll. */
+    ic_draw_scroll_rows(g);
     /* Lean in-place repaint (AGENTS.md 36): the build (bank 11) already
      * erased slots/sides that lost their row -- unconditionally, so no
      * icon tile survives -- and this loop only draws live slots, one

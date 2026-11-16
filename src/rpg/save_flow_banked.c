@@ -97,9 +97,19 @@ static uint8_t s_notice_spin_primed;
 
 /* Save-spin indicator tick: OAM entry 39 (always free) with tile 241
  * (free in both fetch blocks; re-streamed from the font every phase
- * so there is no boot load and no clobber state), hero palette slot
- * (prop 0, always programmed).  A phase redraws the glyph (\ | / -);
- * OAM is rewritten every frame so transition wipes never strand it. */
+ * so there is no boot load and no clobber state).  A phase redraws the
+ * glyph (\ | / -); OAM is rewritten every frame so transition wipes
+ * never strand it.
+ *
+ * Self-contained white backdrop inside the OAM tile (no BG tilemap or
+ * CRAM hijacking, so camera scroll, world tiles, and same-tileset gate
+ * crossings are never corrupted): the font glyphs are monochrome with
+ * 1 bits at color 3 (both planes set).  Writing lo = 0xFF and hi = b
+ * per row maps glyph ink to OBJ color 3 and surrounding pixels to OBJ
+ * color 1.  On CGB, OBJ palette slot 5 (sprites7) holds pure white at
+ * color 1 and dark brown at color 3; on DMG, OBP1 is programmed to
+ * 0xE0 (shade 0 white at color 1, shade 3 black at color 3) with prop
+ * 0x10 (OBP1 is unused by other OAM sprites). */
 static void spin_show(uint8_t phase, uint8_t restream)
 {
     uint8_t ch;
@@ -115,15 +125,29 @@ static void spin_show(uint8_t phase, uint8_t restream)
         VBK_REG = 0;
         src = (volatile uint8_t *)(0x9000u + ((uint16_t)(ui_font_tile_base + (uint8_t)(ch - 32)) << 4));
         dst = (volatile uint8_t *)(0x8000u + ((uint16_t)SPIN_TILE << 4));
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < 16; i += 2) {
             BANKED_VRAM_READ(b, &src[i]);
-            BANKED_VRAM_WRITE(&dst[i], b);
+            BANKED_VRAM_WRITE(&dst[i], 0xFFu);
+            BANKED_VRAM_WRITE(&dst[(uint8_t)(i + 1u)], b);
         }
     }
     shadow_OAM[SPIN_OAM_ENTRY].tile = SPIN_TILE;
-    shadow_OAM[SPIN_OAM_ENTRY].prop = 0;
+    if (g_is_cgb) {
+        shadow_OAM[SPIN_OAM_ENTRY].prop = 5u;
+    } else {
+        OBP1_REG = 0xE0u;
+        shadow_OAM[SPIN_OAM_ENTRY].prop = 0x10u;
+    }
     shadow_OAM[SPIN_OAM_ENTRY].x = (uint8_t)(SPIN_PX + 8);
     shadow_OAM[SPIN_OAM_ENTRY].y = (uint8_t)(SPIN_PY + 16);
+}
+
+static void spin_hide(void)
+{
+    shadow_OAM[SPIN_OAM_ENTRY].y = 0;
+    if (!g_is_cgb) {
+        OBP1_REG = 0xE4u;
+    }
 }
 
 /* ── Active-slot commit (intro end + upkeep flush) ──────────────────
@@ -156,13 +180,20 @@ void save_upkeep_banked(void)
         spin_show((uint8_t)(((uint8_t)g_game.frame >> 3) & 3), restream);
         return;
     }
-    s_notice_spin_primed = 0;
+    if (s_notice_spin_primed) {
+        s_notice_spin_primed = 0;
+        if (s_save_spin_ttl == 0) {
+            spin_hide();
+        }
+    }
     if (s_save_spin_ttl != 0) {
-        spin_show((uint8_t)((s_save_spin_ttl >> 3) & 3),
-                  (uint8_t)((s_save_spin_ttl & 7) == 0));
         s_save_spin_ttl--;
         if (s_save_spin_ttl == 0) {
-            shadow_OAM[SPIN_OAM_ENTRY].y = 0;
+            spin_hide();
+        } else {
+            uint8_t k = (uint8_t)(SPIN_TTL - 1u - s_save_spin_ttl);
+            spin_show((uint8_t)((k >> 3) & 3u),
+                      (uint8_t)((k & 7u) == 0));
         }
     }
 }

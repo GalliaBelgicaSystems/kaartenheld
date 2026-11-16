@@ -24,6 +24,22 @@ static uint8_t teleg_attacker_confused(const Battle *b, uint8_t atk)
     return 0;
 }
 
+/* Same shape for ice: a banked body must never call across banks, so
+ * the predicate is duplicated here (see above).  An iced attacker
+ * deals halved damage (rounded up): the grey lock may still fizzle
+ * the swing outright, but any swing that goes through lands soft. */
+static uint8_t teleg_attacker_iced(const Battle *b, uint8_t atk)
+{
+    const StatusSlots *slots;
+    uint8_t i;
+    if (atk >= b->enemy_count) return 0;
+    slots = &s_battle_status[(uint8_t)(atk + 1)];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_FREEZE) return 1;
+    }
+    return 0;
+}
+
 /* ── Enemy telegraph card draw (ROM bank 12) ─────────────────────────
  * Hosts battle_update()'s ANIM/SHUFFLE-tail telegraph block out of the
  * fixed bank (which sits hard against 0x8000, AGENTS.md §52.18).  The
@@ -140,6 +156,13 @@ void battle_telegraph_banked(void)
         b->enemy_played_card.status_id = b->enemy_deck.cards[di].status_id;
         b->enemy_played_card.status_chance = b->enemy_deck.cards[di].status_chance;
         b->enemy_incoming_dmg = b->enemy_played_card.value;
+        /* Iced attacker (ice bow): the swing that goes through a
+         * non-greyed draw lands halved (rounded up, min 1).  The card
+         * announcement above keeps the full value; only the damage
+         * softens.  The player-side effect is unchanged (grey-out). */
+        if (teleg_attacker_iced(b, atk)) {
+            b->enemy_incoming_dmg = (uint8_t)((b->enemy_incoming_dmg + 1) >> 1);
+        }
         telemetry_ring_emit(EVENT_ENEMY_CARD_PLAYED,
                        di,
                        b->enemy_played_card.type,
@@ -149,12 +172,17 @@ void battle_telegraph_banked(void)
             b->enemy_deck.draw_idx = 0;
         }
     } else {
-        b->enemy_incoming_dmg = 6;
         /* No enemy card: the fallback flat 6-damage swipe still
          * marks an inbound strike.  Only deckless battlers (the
          * Lord of Slimes) reach this: three SH2 shields (3 x 2 = 6)
          * or one steel shield (power 6, stocked by the merchant)
          * blocks it exactly (docs/enemies_ranking.md §5.2). */
+        b->enemy_incoming_dmg = 6;
+        /* Iced Lord (ice bow): the fallback softens to 3 like any
+         * deck swing (rounded-up halving, same as above). */
+        if (teleg_attacker_iced(b, atk)) {
+            b->enemy_incoming_dmg = (uint8_t)((b->enemy_incoming_dmg + 1) >> 1);
+        }
     }
     /* Confused attacker (poison): the swing will turn on its own side.
      * Stage the first acknowledgement beat (msg 6, "FOE IS CONFUSED!",

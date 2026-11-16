@@ -93,7 +93,7 @@ void game_new_game(GameState *state)
      * owns the contents: each entry is granted once to the collection and
      * once to the draw pile, preserving exact draw order.  The bank-2
      * table is staged one byte at a time (no large stack or WRAM scratch
-     * needed); deck_add_card/deck_collection_add enforce max_copies. */
+     * needed); deck_add_card enforces the 5-per-identity deck limit. */
     {
         uint8_t n = 0;
         uint8_t i;
@@ -169,10 +169,13 @@ void game_slime_despair_wake(void)
     scene_load(&g_game, SCENE_DEMO_END_WAKE_SCENE, 12, 10);
 #endif
     /* scene_load leaves facing untouched, so route it explicitly to the
-     * authored spawn facing (UP) instead of the engage direction. */
+     * authored spawn facing (UP) instead of the engage direction.  Reset
+     * the render cache explicitly (screen_change is a no-op here because
+     * g_game.screen is already SCREEN_DIALOGUE; leaving prev_map_id on
+     * the throne room would trigger an LCD-off full_redraw every frame
+     * on the wake map). */
     g_game.world.player.facing = DIRECTION_UP;
     g_game.prev_screen = SCREEN_BATTLE;
-    g_game.render_cache.valid = false;
     dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
-    screen_change(&g_game, SCREEN_DIALOGUE);
+    game_render_reset(&g_game);
 }

@@ -137,7 +137,7 @@ void overworld_screen_update(Game *g)
     /* Hold-to-move: input_held starts a move whenever the previous one has
      * finished animating; a held button stays active across frames (a fresh
      * press is just the first held frame). */
-    if (g->world.move_state == MOVE_STATE_MOVING) {
+    if (g->world.move_state != MOVE_STATE_IDLE) {
         return;
     }
 

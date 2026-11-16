@@ -130,6 +130,16 @@ void screen_change(Game *g, ScreenId screen)
 
     telemetry_emit(EVENT_SCREEN_CHANGED, (uint8_t)old_screen, (uint8_t)screen, 0, 0);
     game_render_reset(g);
+
+    /* Demo finale entry (both routes: final-boss victory and the wake
+     * dialogue close): switch to the end-credits theme (demo
+     * complete.uge, loops) exactly at the transition -- and only then.
+     * Single hook for every ENDING entry, so the fixed bank pays one
+     * branch instead of one music call per entry path (AGENTS.md
+     * §52.18). */
+    if (screen == SCREEN_ENDING) {
+        audio_play_music(MUSIC_ENDING);
+    }
 }
 
 void screen_update(Game *g)
