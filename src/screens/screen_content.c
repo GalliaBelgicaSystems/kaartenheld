@@ -13,6 +13,7 @@
 #include "shops.h"
 #include "menu.h"
 #include "rpg/save.h"
+#include "rpg/deck.h"
 #include "game_ids.h"
 #include "economy.h"
 #include "telemetry.h"
@@ -480,6 +481,9 @@ void shop_row_quote_banked(void)
     if (!g) return;
     s_sc_shop_def = sc_shop_active(g);
     if (!s_sc_shop_def || row >= g_shop_vis_count) return;
+    /* Fresh message per A-press (keep the per-visit bought bit): a
+     * stale refusal must not linger over the next attempt. */
+    s_sc_game->shop_message &= (uint8_t)SC_SHOP_MSG_BOUGHT_BIT;
     if (g->item_menu_tab == SHOP_TAB_SELL) {
         uint8_t e = g_shop_vis_map[row];
         if (e >= g->state.cards.collection.count) return;
@@ -487,6 +491,21 @@ void shop_row_quote_banked(void)
         owned = g->state.cards.collection.entries[e].count;
         for (i = 0; i < g->state.cards.deck.count; i++) {
             if (g->state.cards.deck.cards[i] == id) in_deck++;
+        }
+        /* Auto-undeck one copy for the sale when every owned copy is
+         * decked but the deck has slack above the MIN floor: the
+         * player asked to sell it, and a silent refusal strands a
+         * legal sale.  Swap-with-last, like deck_remove_card. */
+        if (owned <= in_deck &&
+            g->state.cards.deck.count > DECK_MIN_CARDS) {
+            for (i = 0; i < g->state.cards.deck.count; i++) {
+                if (g->state.cards.deck.cards[i] == id) {
+                    g->state.cards.deck.cards[i] =
+                        g->state.cards.deck.cards[--g->state.cards.deck.count];
+                    in_deck--;
+                    break;
+                }
+            }
         }
         if (owned <= in_deck) return;
         g_bk_byte_b = sc_sell_price(id);

@@ -1,0 +1,116 @@
+{
+ "name": "shop_sell_decked_copy",
+ "test": true,
+ "description": "Selling a fully decked copy auto-undecks it first when the deck has slack: with one owned IRON RING loot twin (id 164) fully decked (10-card starter + ring = 11, above DECK_MIN_CARDS), A on its SELL row removes it from the deck and the collection, pays the loot formula value (8g at neutral market), and emits CARD_SOLD -- no silent blip, no stranded deck.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8513,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2,
+   "ENERGY_POOL": 5
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_SOLD"
+  },
+  {
+   "type": "collection_count",
+   "card_id": 164,
+   "expected": 0
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 164,
+   "expected": 0
+  },
+  {
+   "type": "currency",
+   "expected": 8,
+   "currency": "GOLD"
+  }
+ ]
+}

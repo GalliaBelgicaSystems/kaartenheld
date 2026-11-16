@@ -180,11 +180,14 @@ void shop_screen_update(Game *g)
 {
     if (!g) return;
 
-    /* LEFT/RIGHT flips the BUY/SELL tab (cursor reset, full redraw). */
+    /* LEFT/RIGHT flips the BUY/SELL tab (cursor reset, full redraw).
+     * The footer message belongs to the other tab's last action, so
+     * clear its text (the per-visit bought bit survives for the tip). */
     if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
         g->item_menu_tab = (uint8_t)(g->item_menu_tab == 0 ? 1 : 0);
         g->item_menu_index = 0;
         g->item_menu_scroll = 0;
+        g->shop_message = (uint8_t)(g->shop_message & SHOP_MSG_BOUGHT_BIT);
         g->render_cache.valid = false;
         audio_play_sfx(SFX_CURSOR);
         return;
