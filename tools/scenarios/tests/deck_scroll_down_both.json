@@ -1,0 +1,110 @@
+{
+ "name": "deck_scroll_down_both",
+ "test": true,
+ "description": "DECK-tab scroll-down indicators on both sides: with 9 distinct card groups each having 2 owned and 1 decked copy, both PILE and DECK fill their 8-row windows (k==8 and kr==8 at n==7) and row 8 triggers both down carets ('v' at cols 4 and 14) on row 14.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4473,
+  "variables": {
+   "ENERGY_POOL": 6
+  },
+  "inventory": {
+   "IRON_SWORD": 2,
+   "WOODEN_SHIELD": 2,
+   "BRONZE_SWORD": 2,
+   "POISON_DAGGER": 2,
+   "WOOD_SWORD": 2,
+   "STEEL_SHIELD": 2
+  },
+  "deck": {
+   "IRON_SWORD": 1,
+   "WOODEN_SHIELD": 1,
+   "BRONZE_SWORD": 1,
+   "POISON_DAGGER": 1,
+   "WOOD_SWORD": 1,
+   "STEEL_SHIELD": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 129
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 130,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 130
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 192
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row_exact",
+   "row": 14,
+   "contains": "    v         v"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 4,
+   "contains": "^"
+  }
+ ]
+}

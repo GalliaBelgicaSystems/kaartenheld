@@ -173,7 +173,9 @@ void ic_menu_riders_load(void);
  * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
  * no BG writer touches).  The per-phase glyph is re-streamed from the
  * font each phase change, so no boot-time load and no clobber state.
- * prop 0 = OBJ palette slot 0, the hero's ramp (always programmed). */
+ * CGB uses prop 5 (OBJ palette slot 5, sprites7: white box at color 1,
+ * dark brown ink at color 3); DMG uses prop 0x10 (OBP1 = 0xE0: shade 0
+ * white box at color 1, shade 3 black ink at color 3). */
 #define SPIN_OAM_ENTRY           39u
 #define SPIN_TILE                241u
 #define SPIN_TTL                 120u

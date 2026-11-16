@@ -134,11 +134,19 @@ static const uint8_t s_cu_grp_deckable[GAME_CARD_COUNT] =
 static const uint8_t s_cu_grp_type[GAME_CARD_COUNT] =
     { 0, 1, 2, 0, 0, 5, 0, 0, 1, 5, 5 };
 static const uint8_t s_cu_grp_power[GAME_CARD_COUNT] =
-    { 5, 1, 4, 3, 2, 0, 9, 1, 6, 1, 2 };
+    { 5, 1, 4, 3, 2, 0, 7, 1, 6, 1, 2 };
 static const uint8_t s_cu_grp_cost[GAME_CARD_COUNT] =
-    { 2, 1, 2, 2, 2, 0, 5, 1, 3, 0, 0 };
+    { 2, 1, 2, 1, 2, 0, 5, 1, 3, 0, 0 };
 static const uint8_t s_cu_grp_rider[GAME_CARD_COUNT] =
     { 0, 0, 0, 0, STATUS_POISON, 0, 0, 0, 0, 0, 0 };
+
+static uint8_t cu_loot_has_rider(uint8_t mat, uint8_t w, uint8_t e)
+{
+    if (mat < MAT_BRONZE || e == EFF_PLAIN) return 0;
+    if (e == EFF_POISON) return (w == WPN_DAGGER) ? 1u : 0u;
+    if (e == EFF_FIRE || e == EFF_ICE) return (w == WPN_BOW) ? 1u : 0u;
+    return 0;
+}
 
 /* Group key: (MATERIAL, WEAPON, rider status).  Loot riders synthesize
  * from the id axes with the same bronze-gated legality as
@@ -157,13 +165,7 @@ static uint8_t cu_grp_key(CardId id, uint8_t *mat, uint8_t *wpn,
         w = loot_id_weapon(id);
         *wpn = (w <= 4) ? w : 0;
         e = loot_id_effect(id);
-        if (*mat >= MAT_BRONZE && e != EFF_PLAIN &&
-            (e == EFF_POISON ? (w == WPN_DAGGER) :
-             ((e == EFF_FIRE || e == EFF_ICE) ? (w == WPN_BOW) : 0))) {
-            *rider = e;
-        } else {
-            *rider = STATUS_NONE;
-        }
+        *rider = cu_loot_has_rider(*mat, w, e) ? e : STATUS_NONE;
         return 1;
     }
     if (id < CARD_FIRST_GAME) return 0;
@@ -189,7 +191,7 @@ static uint8_t cu_grp_type(CardId id, uint8_t *power, uint8_t *cost)
         w = loot_id_weapon(id);
         wi = (w <= WPN_RING) ? w : WPN_SWORD;
         *power = LOOT_POWER(m, wi);
-        rider = 0;
+        rider = cu_loot_has_rider(m, w, loot_id_effect(id));
         *cost = (w <= WPN_RING) ? CARD_AP(*power, m, rider) : 0;
         if (w == WPN_SHIELD) return 1;                       /* DEF */
         if (w == WPN_RING || w > WPN_RING) return 2;         /* HEAL */
@@ -416,7 +418,7 @@ void item_view_build_banked(void)
         uint8_t decked;
         s_ic_scroll_flags = 0;
         if (start >= s_view_count && s_view_count > 0) start = 0;
-        for (n = 0; n < s_view_count && (k < 8 || kr < 8); n++) {
+        for (n = 0; n < s_view_count && (s_ic_scroll_flags & 0x0Cu) != 0x0Cu; n++) {
             cu_row_sums(g, s_view_indices[n], &owned, &decked);
             if (n < start) {
                 if (owned > decked) s_ic_scroll_flags |= 0x01;

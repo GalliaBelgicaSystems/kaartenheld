@@ -16,6 +16,7 @@
 #define SHOP_MSG_BOUGHT 1
 #define SHOP_MSG_NO_GOLD 2
 #define SHOP_MSG_MAX_COPIES 3
+#define SHOP_MSG_BOUGHT_BIT 0x80u
 
 /* BUY/SELL tabs (docs/loot.md §34.6): the BUY list always shows the
  * full stock -- owned one-copy rares stay listed and rebuys refuse
@@ -114,7 +115,8 @@ static void shop_confirm(Game *g)
     shop_row_quote(g);
     if (g_bk_byte_d == 0) {
         if (!deck_collection_add(&g->state.cards, g_bk_byte_c, 1)) {
-            g->shop_message = SHOP_MSG_MAX_COPIES;
+            g->shop_message = (uint8_t)((g->shop_message & SHOP_MSG_BOUGHT_BIT) |
+                                        SHOP_MSG_MAX_COPIES);
             telemetry_emit(EVENT_CARD_PURCHASE_FAILED, g_bk_byte_c, 2, 0, 0);
             audio_play_sfx(SFX_BACK);
         } else {
@@ -129,7 +131,7 @@ static void shop_confirm(Game *g)
             /* Shop spend notes gold_out (docs/economy.md §6.1). */
             economy_note_spent(&g->state, paid_price);
             telemetry_emit(EVENT_CARD_PURCHASED, paid_id, paid_price, 0, 0);
-            g->shop_message = SHOP_MSG_BOUGHT;
+            g->shop_message = (uint8_t)(SHOP_MSG_BOUGHT_BIT | SHOP_MSG_BOUGHT);
         }
     }
     g->render_cache.valid = false;
@@ -154,7 +156,7 @@ static void shop_confirm(Game *g)
  * encounter here, unlike Carl's lesson). */
 static void shop_leave(Game *g)
 {
-    if (g->shop_message == SHOP_MSG_BOUGHT)
+    if (g->shop_message & SHOP_MSG_BOUGHT_BIT)
         g_bk_dlg_id = (uint8_t)DIALOGUE_ID_MERCHANT_EQUIP_TIP;
     /* Shop-boundary market update (docs/economy.md §6): runs on every
      * exit; the guards skip zero-counter / zero-battle visits, so

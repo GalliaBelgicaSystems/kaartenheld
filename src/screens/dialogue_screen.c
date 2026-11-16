@@ -180,12 +180,13 @@ void dialogue_screen_update(Game *g)
             return;
         }
         /* Demo outro: the slime-lord wake dialogue ("Where am I?")
-         * routes to the ENDING screen (white document page) -- the run is
-         * over, win or lose; the wake area's track keeps playing
-         * underneath.  Every other dialogue returns to the overworld
-         * (game-over quits show the try-again text).  The despair flag is
-         * cleared here; battle_start clears it for the next fight.
-         * Single screen_change call (fixed-bank budget, AGENTS.md 52.18). */
+         * routes to the ENDING screen (white document page;
+         * screen_change starts MUSIC_ENDING on entry) -- the run is
+         * over, win or lose.  Every other dialogue returns to the
+         * overworld (game-over quits show the try-again text).  The
+         * despair flag is cleared here; battle_start clears it for
+         * the next fight.  Single screen_change call (fixed-bank
+         * budget, AGENTS.md 52.18). */
         screen_change(g, g_slime_despair ? (g_slime_despair = 0, SCREEN_ENDING) : SCREEN_OVERWORLD);
     }
 }

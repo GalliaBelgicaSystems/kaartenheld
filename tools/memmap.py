@@ -328,6 +328,10 @@ def main():
         "_ui_load_cram_banked": "CGB CRAM palette loader (bank 5)",
         "_ui_load_tileset_banked": "tileset VRAM & palette loader (bank 5)",
         "_ui_wipe_black_banked": "transition black wipe (bank 5)",
+        "_currency_add_banked": "currency add/clamp body (bank 12)",
+        "_world_on_battle_fled_banked": "flee knockback / grace step (bank 12)",
+        "_world_update_scroll_banked": "overworld camera scroll update (bank 12)",
+        "_diagonal_gate_check_banked": "diagonal gate + corner/wall-hug check (bank 12)",
     }
     print()
     print("Banked target address validation")

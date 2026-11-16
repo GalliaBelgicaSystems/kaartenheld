@@ -66,6 +66,8 @@ extern const uint8_t g_shop_count;
 #define SC_SHOP_MSG_BOUGHT 1
 #define SC_SHOP_MSG_NO_GOLD 2
 #define SC_SHOP_MSG_MAX_COPIES 3
+#define SC_SHOP_MSG_MASK 0x0Fu
+#define SC_SHOP_MSG_BOUGHT_BIT 0x80u
 
 
 static uint8_t s_sc_txt_i;
@@ -533,11 +535,15 @@ void shop_row_quote_banked(void)
             g_bk_byte_d = 2;
         }
         if (g_bk_byte_d == 1) {
-            s_sc_game->shop_message = SC_SHOP_MSG_MAX_COPIES;
+            s_sc_game->shop_message =
+                (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                          SC_SHOP_MSG_MAX_COPIES);
             telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 2, 0, 0);
             g_bk_sfx_req = (uint8_t)(SFX_BACK + 1);
         } else if (g_bk_byte_d == 2) {
-            s_sc_game->shop_message = SC_SHOP_MSG_NO_GOLD;
+            s_sc_game->shop_message =
+                (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                          SC_SHOP_MSG_NO_GOLD);
             telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 1, 0, 0);
         }
     }
@@ -771,9 +777,9 @@ void shop_content_render(void)
         sc_draw_text(0, 16, "[A]Sell [B]Leave", 16);
     else
         sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
-    if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
+    if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_NO_GOLD) {
         sc_draw_text(0, 17, "Not enough!", 12);
-    } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
+    } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_MAX_COPIES) {
         sc_draw_text(0, 17, "Already owned!", 14);
     } else {
         sc_draw_text(0, 17, NULL, 12);

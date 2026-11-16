@@ -55,8 +55,9 @@ typedef struct Game {
     uint8_t item_menu_pick_row;  /* picker row: 0 = filter, 1 = sort */
     uint8_t item_menu_prev_filter; /* picker cancel restore */
     uint8_t item_menu_prev_sort;   /* picker cancel restore */
-    uint8_t shop_message;      /* 0 = none, 1 = bought, 2 = not enough gold,
-                                  3 = already owned / max copies */
+    uint8_t shop_message;      /* low nibble: 0 = none, 1 = bought, 2 = not
+                                  enough gold, 3 = already owned / max copies;
+                                  bit 7 (0x80) = bought this visit */
     uint8_t shop_id;           /* active shop (set when a shop actor is engaged) */
     uint8_t save_slot_index;   /* active slot (0 = Slot 1, 1 = Slot 2, 2 = Slot 3):
                                     autosaves and save&quit write here */

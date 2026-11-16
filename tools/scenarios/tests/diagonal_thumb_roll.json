@@ -1,0 +1,47 @@
+{
+ "name": "diagonal_thumb_roll",
+ "test": true,
+ "description": "Diagonal thumb-roll suppression in open space: holding RIGHT onto (5,4) then brushing UP+RIGHT on the roll frame (g_inp_prev == RIGHT) suppresses the diagonal start without wall-hug sliding vertically onto (5,3) or flickering facing UP.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "RIGHT"
+  },
+  "seed": 42
+ },
+ "actions": [
+  {
+   "type": "hold",
+   "button": "RIGHT",
+   "frames": 8
+  },
+  {
+   "type": "press_buttons",
+   "buttons": [
+    "UP",
+    "RIGHT"
+   ]
+  },
+  {
+   "type": "wait",
+   "frames": 15
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 5,
+   "expected_y": 4
+  },
+  {
+   "type": "player_facing",
+   "expected": "RIGHT"
+  }
+ ]
+}
