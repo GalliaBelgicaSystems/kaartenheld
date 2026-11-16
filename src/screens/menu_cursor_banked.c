@@ -331,6 +331,27 @@ static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
     }
 }
 
+/* Per-side scroll windows (DECK tab): the pile (left) window rides
+ * item_menu_scroll, the deck (right) window item_menu_scroll_deck
+ * (both in Game; every other screen is single-list and only ever
+ * touches the shared field).  Side-keyed so nav, resume and side-flip
+ * can move one window without dragging the other. */
+static uint8_t cu_scroll_for(Game *g, uint8_t side)
+{
+    if (!g) return 0;
+    if (side) return g->item_menu_scroll_deck;
+    return g->item_menu_scroll;
+}
+
+static void cu_scroll_set(Game *g, uint8_t side, uint8_t v)
+{
+    if (!g) return;
+    if (side)
+        g->item_menu_scroll_deck = v;
+    else
+        g->item_menu_scroll = v;
+}
+
 void item_view_build_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -401,43 +422,53 @@ void item_view_build_banked(void)
     }
     /* Per-side packed lists: the left block packs groups with a pile
      * remainder (owned - decked > 0), the right block groups with decked
-     * copies -- first 8 of each at/after the scroll position.  A zero
-     * count hides that side's cell (an emptied side shows blank rows)
-     * and the cursor never parks on a hidden cell.  The same pass
-     * reports per-side scroll overflow into s_ic_scroll_flags (bit 0
-     * up-pile, 1 up-deck, 2 down-pile, 3 down-deck): positions below
-     * the scroll classify the up bits, and a side already full at a
-     * position's entry classifies the down bits -- scanned in order,
-     * so both are exact with no second pass (bank 11 has no room for
-     * one, AGENTS.md 52.18). */
+     * copies -- first 8 of each at/after that side's OWN scroll position,
+     * so one side's window never moves the other.  A zero count hides
+     * that side's cell (an emptied side shows blank rows) and the cursor
+     * never parks on a hidden cell.  The same pass reports per-side
+     * scroll overflow into s_ic_scroll_flags (bit 0 up-pile, 1 up-deck,
+     * 2 down-pile, 3 down-deck): positions below the side's scroll
+     * classify the up bits, and a side already full at a position's
+     * entry classifies the down bits -- scanned in order, so both are
+     * exact with no second pass (bank 11 has no room for one,
+     * AGENTS.md 52.18). */
+    /* Per-side scroll windows live in the Game (pile: item_menu_scroll,
+     * deck: item_menu_scroll_deck -- see cu_scroll_for/cu_scroll_set
+     * above): each side's window starts at its own offset, so one
+     * side's window never moves the other. */
     {
         uint8_t k = 0;
         uint8_t kr = 0;
-        uint8_t start = g->item_menu_scroll;
+        uint8_t start_l = g->item_menu_scroll;
+        uint8_t start_r = g->item_menu_scroll_deck;
         uint8_t owned;
         uint8_t decked;
         s_ic_scroll_flags = 0;
-        if (start >= s_view_count && s_view_count > 0) start = 0;
+        if (start_l >= s_view_count && s_view_count > 0) start_l = 0;
+        if (start_r >= s_view_count && s_view_count > 0) start_r = 0;
         for (n = 0; n < s_view_count && (s_ic_scroll_flags & 0x0Cu) != 0x0Cu; n++) {
             cu_row_sums(g, s_view_indices[n], &owned, &decked);
-            if (n < start) {
+            if (n < start_l) {
                 if (owned > decked) s_ic_scroll_flags |= 0x01;
+            } else {
+                if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
+                if (owned > decked && k < 8) {
+                    s_ic_draw_pos[k] = n;
+                    s_row_owned[k] = owned;
+                    s_row_decked[k] = decked;
+                    k++;
+                }
+            }
+            if (n < start_r) {
                 if (decked > 0) s_ic_scroll_flags |= 0x02;
-                continue;
-            }
-            if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
-            if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
-            if (owned > decked && k < 8) {
-                s_ic_draw_pos[k] = n;
-                s_row_owned[k] = owned;
-                s_row_decked[k] = decked;
-                k++;
-            }
-            if (decked > 0 && kr < 8) {
-                s_ic_draw_pos_r[kr] = n;
-                s_row_owned[8 + kr] = owned;
-                s_row_decked[8 + kr] = decked;
-                kr++;
+            } else {
+                if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
+                if (decked > 0 && kr < 8) {
+                    s_ic_draw_pos_r[kr] = n;
+                    s_row_owned[8 + kr] = owned;
+                    s_row_decked[8 + kr] = decked;
+                    kr++;
+                }
             }
         }
         /* An empty-windowed side never signals (its rows cannot
@@ -640,15 +671,16 @@ static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
  * visible row above npos, so it costs O(npos - scroll) visibility
  * checks -- not the O(n * 8) of re-ranking at every scroll step.
  * npos itself is assumed visible on the active side (callers land the
- * cursor on visible rows only). */
+ * cursor on visible rows only).  Only the active side's offset moves;
+ * the other side's window is untouched. */
 static void cu_scroll_into_view(Game *g, uint8_t npos)
 {
     uint8_t side = g->item_menu_side;
-    uint8_t lo = g->item_menu_scroll;
+    uint8_t lo = cu_scroll_for(g, side);
     uint8_t s = npos;
     uint8_t c = 0;
     if (lo >= npos) {
-        g->item_menu_scroll = npos;
+        cu_scroll_set(g, side, npos);
         return;
     }
     while (s > lo) {
@@ -658,7 +690,7 @@ static void cu_scroll_into_view(Game *g, uint8_t npos)
         }
         s--;
     }
-    g->item_menu_scroll = s;
+    cu_scroll_set(g, side, s);
 }
 
 /* Post-A reconcile (bank 11, staging: g_bk_ptr_a = Game*): rebuilds the
@@ -691,7 +723,7 @@ void item_row_resum_banked(void)
     }
     g->item_menu_index = ni;
     if (ni == 0)
-        g->item_menu_scroll = 0;
+        cu_scroll_set(g, side, 0);
     else
         cu_scroll_into_view(g, (uint8_t)(ni - CUR_FIRST_CARD));
 }
@@ -760,7 +792,7 @@ void item_deck_nav_banked(void)
                 if (item_row_visible(g, i, newside)) break;
             }
             if (i >= s_view_count) return;
-            g->item_menu_scroll = i;
+            cu_scroll_set(g, newside, i);
         }
         g->item_menu_side = newside;
         g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
@@ -813,7 +845,7 @@ void item_deck_nav_banked(void)
         g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
     }
     if (idx == 0)
-        g->item_menu_scroll = 0;
+        cu_scroll_set(g, g->item_menu_side, 0);
     else
         cu_scroll_into_view(g, (uint8_t)(idx - CUR_FIRST_CARD));
 }
@@ -914,6 +946,7 @@ void item_menu_cycle_banked(void)
         }
         g->item_menu_index = CYC_ROW_TOP;
         g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
         g->item_menu_side = 0;
         g->render_cache.valid = false;
     }

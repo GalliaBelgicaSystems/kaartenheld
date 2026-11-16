@@ -44,7 +44,10 @@ typedef struct Game {
     uint8_t item_menu_index;   /* cursor into the active tab's list (0 =
                                    FILTER/SORT row on the DECK tab) */
     uint8_t item_menu_tab;     /* 0 = DECK, 1 = QUEST, 2 = HERO, 3 = GEM */
-    uint8_t item_menu_scroll;  /* first visible card position of the list */
+    uint8_t item_menu_scroll;  /* first visible card position of the list:
+                                   pile side on the DECK tab, whole list on
+                                   every single-list screen (deck side has
+                                   item_menu_scroll_deck below) */
     uint8_t item_menu_filter;  /* 0xFF = ALL, else a CardType value */
     uint8_t item_menu_sort;    /* 0 = none, 1 = type, 2 = power, 3 = cost,
                                   4 = power desc, 5 = cost desc */
@@ -80,6 +83,13 @@ typedef struct Game {
                                    fade in, hold, fade out, advance. TAIL
                                    FIELD (same no-shift rule as above);
                                    zeroed by game_prepare_new_game. */
+    uint8_t item_menu_scroll_deck; /* DECK-tab right-column window: first
+                                   visible card position of the deck side.
+                                   The pile side (and every single-list
+                                   screen) keeps item_menu_scroll; the two
+                                   windows move independently and each side
+                                   remembers its own.  TAIL FIELD (same
+                                   no-shift rule as above). */
 } Game;
 
 extern Game g_game;

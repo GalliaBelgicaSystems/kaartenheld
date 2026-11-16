@@ -141,6 +141,7 @@ void item_screen_reset(Game *g)
     g->item_menu_index = ROW_TOP;
     g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
+    g->item_menu_scroll_deck = 0;
     g->item_menu_side = 0;
     g->item_menu_filter = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
@@ -205,6 +206,7 @@ void item_screen_update(Game *g)
                     /* Two-step close: first B jumps to the top row. */
                     g->item_menu_index = ROW_TOP;
                     g->item_menu_scroll = 0;
+                    g->item_menu_scroll_deck = 0;
                 } else {
                     close_menu(g);
                 }
