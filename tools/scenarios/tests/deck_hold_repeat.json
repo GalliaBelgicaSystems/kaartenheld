@@ -1,0 +1,135 @@
+{
+ "name": "deck_hold_repeat",
+ "test": true,
+ "description": "Holding DOWN auto-repeats the DECK list walk: a 40-frame hold from the FILTER row advances several rows (caret reaches row 9), not just the single step an edge-triggered press would give. PLACEHOLDER.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4474,
+  "variables": {
+   "ENERGY_POOL": 9
+  },
+  "inventory": {
+   "IRON_SWORD": 2,
+   "WOODEN_SHIELD": 2,
+   "IRON_RING": 2,
+   "BRONZE_SWORD": 2,
+   "POISON_DAGGER": 2,
+   "BOW_9": 2,
+   "WOOD_SWORD": 2,
+   "STEEL_SHIELD": 2
+  },
+  "deck": {
+   "IRON_SWORD": 1,
+   "WOODEN_SHIELD": 1,
+   "IRON_RING": 1,
+   "BRONZE_SWORD": 1,
+   "POISON_DAGGER": 1,
+   "BOW_9": 1,
+   "WOOD_SWORD": 1,
+   "STEEL_SHIELD": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 129
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 130,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 130
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 192
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 193,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 193
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "hold",
+   "button": "DOWN",
+   "frames": 40
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": ">"
+  }
+ ]
+}

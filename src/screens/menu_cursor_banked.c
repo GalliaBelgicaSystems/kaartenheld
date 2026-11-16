@@ -235,6 +235,18 @@ extern uint8_t s_view_count;
 uint8_t s_row_owned[ROW_SUMS];
 uint8_t s_row_decked[ROW_SUMS];
 
+/* Per-group pile/deck sums, indexed by view position (0 ..
+ * s_view_count-1): populated by the full build below, read by the
+ * rewindow pass and the nav walk instead of re-scanning the whole
+ * collection every press (the LY probe showed ~200 scanlines per
+ * step: nav 85 + build ~70 + repaint 50).  Valid from the last full
+ * build until any count mutation; every mutation path (A-press
+ * resum, shop/quest screens, battle loot, debug setup) runs a full
+ * build before the next nav-driven repaint, and opening the menu
+ * always builds. */
+uint8_t s_grp_owned[MAX_CARD_COLLECTION];
+uint8_t s_grp_decked[MAX_CARD_COLLECTION];
+
 /* Per-side packed draw maps: the first 8 view positions visible on
  * that side (left: owned - decked > 0; right: decked > 0) at/after
  * item_menu_scroll, 0xFF past the end.  A zero count hides that side's
@@ -352,6 +364,13 @@ static void cu_scroll_set(Game *g, uint8_t side, uint8_t v)
         g->item_menu_scroll = v;
 }
 
+/* Window + sums passes (defined below the build that dispatches them). */
+static void item_window_build(Game *g);
+static void item_sums_build(Game *g);
+
+/* Window pass shared by the full build and the rewindow entry below. */
+static void item_window_build(Game *g);
+
 void item_view_build_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -359,16 +378,8 @@ void item_view_build_banked(void)
     uint8_t mat, wpn, rdr, m2, w2, r2;
     uint8_t type, power, cost;
     uint8_t desc;
-    uint8_t n;
     CardId id;
     if (!g) return;
-    /* Snapshot the maps before rebuilding: the diff-clear at the end
-     * erases slots/sides that lose their row (BSS zeros read as vpos 0
-     * on the very first build -- harmless, a full draw follows). */
-    for (i = 0; i < 8; i++) {
-        s_cu_prev_pos[i] = s_ic_draw_pos[i];
-        s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
-    }
     s_view_count = 0;
     for (i = 0; i < g->state.cards.collection.count; i++) {
         id = g->state.cards.collection.entries[i].id;
@@ -420,6 +431,7 @@ void item_view_build_banked(void)
                         &s_row_owned[0], &s_row_decked[0]);
         return;
     }
+    item_sums_build(g);
     /* Per-side packed lists: the left block packs groups with a pile
      * remainder (owned - decked > 0), the right block groups with decked
      * copies -- first 8 of each at/after that side's OWN scroll position,
@@ -431,63 +443,107 @@ void item_view_build_banked(void)
      * classify the up bits, and a side already full at a position's
      * entry classifies the down bits -- scanned in order, so both are
      * exact with no second pass (bank 11 has no room for one,
-     * AGENTS.md 52.18). */
-    /* Per-side scroll windows live in the Game (pile: item_menu_scroll,
-     * deck: item_menu_scroll_deck -- see cu_scroll_for/cu_scroll_set
-     * above): each side's window starts at its own offset, so one
-     * side's window never moves the other. */
-    {
-        uint8_t k = 0;
-        uint8_t kr = 0;
-        uint8_t start_l = g->item_menu_scroll;
-        uint8_t start_r = g->item_menu_scroll_deck;
-        uint8_t owned;
-        uint8_t decked;
-        s_ic_scroll_flags = 0;
-        if (start_l >= s_view_count && s_view_count > 0) start_l = 0;
-        if (start_r >= s_view_count && s_view_count > 0) start_r = 0;
-        for (n = 0; n < s_view_count && (s_ic_scroll_flags & 0x0Cu) != 0x0Cu; n++) {
-            cu_row_sums(g, s_view_indices[n], &owned, &decked);
-            if (n < start_l) {
-                if (owned > decked) s_ic_scroll_flags |= 0x01;
-            } else {
-                if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
-                if (owned > decked && k < 8) {
-                    s_ic_draw_pos[k] = n;
-                    s_row_owned[k] = owned;
-                    s_row_decked[k] = decked;
-                    k++;
-                }
+     * AGENTS.md 52.18).
+     *
+     * The per-group sums come from the s_grp_owned/s_grp_decked cache,
+     * refreshed by the full build's populate pass below; the window
+     * itself never scans the collection (the rewindow entry point
+     * relies on this). */
+    item_window_build(g);
+}
+
+/* Full per-group sum pass: runs only in the full build, so the window
+ * loop and every nav walk read cached bytes instead of re-scanning
+ * the collection per press. */
+static void item_sums_build(Game *g)
+{
+    uint8_t n;
+    uint8_t owned;
+    uint8_t decked;
+    if (!g) return;
+    for (n = 0; n < s_view_count; n++) {
+        cu_row_sums(g, s_view_indices[n], &owned, &decked);
+        s_grp_owned[n] = owned;
+        s_grp_decked[n] = decked;
+    }
+}
+
+/* Re-window only (no filter/sort/group/sums recompute): redraws the
+ * draw maps + slot sums + scroll flags from the cached per-group sums
+ * for the current per-side scrolls.  The per-press repaint dispatches
+ * here instead of the full build; counts cannot have changed on that
+ * path, so the cache is exact. */
+void item_view_rewindow_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    if (!g) return;
+    item_window_build(g);
+}
+
+static void item_window_build(Game *g)
+{
+    uint8_t k = 0;
+    uint8_t kr = 0;
+    uint8_t n;
+    uint8_t i;
+    uint8_t start_l = g->item_menu_scroll;
+    uint8_t start_r = g->item_menu_scroll_deck;
+    uint8_t owned;
+    uint8_t decked;
+    /* Snapshot the maps before rebuilding: the diff-clear at the end
+     * erases slots/sides that lose their row (BSS zeros read as vpos 0
+     * on the very first build -- harmless, a full draw follows). */
+    for (i = 0; i < 8; i++) {
+        s_cu_prev_pos[i] = s_ic_draw_pos[i];
+        s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
+    }
+    s_ic_scroll_flags = 0;
+    if (start_l >= s_view_count && s_view_count > 0) start_l = 0;
+    if (start_r >= s_view_count && s_view_count > 0) start_r = 0;
+    for (n = 0; n < s_view_count && (s_ic_scroll_flags & 0x0Cu) != 0x0Cu; n++) {
+        /* Cached sums (refreshed by item_sums_build on full builds);
+         * the window never scans the collection itself. */
+        owned = s_grp_owned[n];
+        decked = s_grp_decked[n];
+        if (n < start_l) {
+            if (owned > decked) s_ic_scroll_flags |= 0x01;
+        } else {
+            if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
+            if (owned > decked && k < 8) {
+                s_ic_draw_pos[k] = n;
+                s_row_owned[k] = owned;
+                s_row_decked[k] = decked;
+                k++;
             }
-            if (n < start_r) {
-                if (decked > 0) s_ic_scroll_flags |= 0x02;
-            } else {
-                if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
-                if (decked > 0 && kr < 8) {
-                    s_ic_draw_pos_r[kr] = n;
-                    s_row_owned[8 + kr] = owned;
-                    s_row_decked[8 + kr] = decked;
-                    kr++;
-                }
+        }
+        if (n < start_r) {
+            if (decked > 0) s_ic_scroll_flags |= 0x02;
+        } else {
+            if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
+            if (decked > 0 && kr < 8) {
+                s_ic_draw_pos_r[kr] = n;
+                s_row_owned[8 + kr] = owned;
+                s_row_decked[8 + kr] = decked;
+                kr++;
             }
         }
-        /* An empty-windowed side never signals (its rows cannot
-         * scroll): the in-loop down checks only fire past a full
-         * window, but the up bits can land on blank rows.  k/kr still
-         * hold the drawn counts here (the pad loops below overwrite
-         * them), so emptiness is a cheap local test. */
-        if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
-        if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
-        for (; k < 8; k++) {
-            s_ic_draw_pos[k] = 0xFF;
-            s_row_owned[k] = 0;
-            s_row_decked[k] = 0;
-        }
-        for (; kr < 8; kr++) {
-            s_ic_draw_pos_r[kr] = 0xFF;
-            s_row_owned[8 + kr] = 0;
-            s_row_decked[8 + kr] = 0;
-        }
+    }
+    /* An empty-windowed side never signals (its rows cannot
+     * scroll): the in-loop down checks only fire past a full
+     * window, but the up bits can land on blank rows.  k/kr still
+     * hold the drawn counts here (the pad loops below overwrite
+     * them), so emptiness is a cheap local test. */
+    if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
+    if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
+    for (; k < 8; k++) {
+        s_ic_draw_pos[k] = 0xFF;
+        s_row_owned[k] = 0;
+        s_row_decked[k] = 0;
+    }
+    for (; kr < 8; kr++) {
+        s_ic_draw_pos_r[kr] = 0xFF;
+        s_row_owned[8 + kr] = 0;
+        s_row_decked[8 + kr] = 0;
     }
     /* Erase what the rebuild just emptied: a slot/side that held a row
      * before and holds none now is blanked unconditionally (VRAM +
@@ -651,17 +707,15 @@ void item_group_scan_banked(void)
     }
 }
 /* Row visibility for the two per-side pile/deck lists: a group row
- * shows on a side only when its count there is nonzero (pile side:
- * owned > decked; deck side: decked > 0).  Shared by the nav, the
- * post-A cursor park and the scroll window below. */
+ * shows on a side when its count there is nonzero (pile side:
+ * owned > decked; deck side: decked > 0).  Reads the cached
+ * per-group sums instead of re-scanning (nav, scroll-into-view and
+ * resume all run between full builds, where counts cannot change). */
 static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
 {
-    uint8_t owned = 0;
-    uint8_t decked = 0;
     if (!g || pos >= s_view_count) return 0;
-    cu_row_sums(g, s_view_indices[pos], &owned, &decked);
-    if (side == 0) return (uint8_t)(owned > decked);
-    return (uint8_t)(decked > 0);
+    if (side == 0) return (uint8_t)(s_grp_owned[pos] > s_grp_decked[pos]);
+    return (uint8_t)(s_grp_decked[pos] > 0);
 }
 
 /* Scroll window for the active side's packed list: the smallest scroll
