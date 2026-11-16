@@ -1,0 +1,161 @@
+{
+ "name": "status_ice_halved",
+ "test": true,
+ "description": "Iced enemies deal halved damage (rounded up): the castle-bat trio rotates attackers, so all three slots are iced -- every fixed-order swing that goes through a non-greyed draw lands soft. The defend-phase forecast for the telegraphed 4-damage sword reads DMG 2, not DMG 4. Grey lock, fizzle messaging and player-side grey-out are unchanged.",
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 11,
+   "y": 7,
+   "facing": "RIGHT"
+  },
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "seed": 616,
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "apply_status",
+   "slot": 1,
+   "status": 3,
+   "duration": 15
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 2,
+   "status": 3,
+   "duration": 15
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 3,
+   "status": 3,
+   "duration": 15
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    },
+    {
+     "type": "SW",
+     "value": 1,
+     "cost": 0,
+     "uses": 255
+    }
+   ]
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "ENEMY_CARD_PLAYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_RECEIVED"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "DMG 2"
+  }
+ ]
+}
