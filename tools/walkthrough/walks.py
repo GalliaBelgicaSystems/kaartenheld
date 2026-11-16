@@ -738,13 +738,13 @@ def walk_a(planner, checks, sram_out=None):
     # material word is gone): match the weapon, then pin the ingot's
     # real-OAM tile + slot (entry 13 = first shop row) per material.
     if "RING" in row5:
-        want, slid, mtile, mslot = CARD_IRON_RING, "BOW", 119, 1
+        want, keep, slid, mtile, mslot = CARD_IRON_RING, "RING", "BOW", 119, 1
     elif "BOW" in row5:
-        want, slid, mtile, mslot = CARD_BOW_9, "SHIELD", 120, 6
+        want, keep, slid, mtile, mslot = CARD_BOW_9, "BOW", "SHIELD", 120, 6
     elif "SHIELD" in row5:
-        want, slid, mtile, mslot = CARD_STEEL_SHIELD, "SWORD", 117, 7
+        want, keep, slid, mtile, mslot = CARD_STEEL_SHIELD, "SHIELD", "SWORD", 117, 7
     else:
-        want, slid, mtile, mslot = None, None, None, None
+        want, keep, slid, mtile, mslot = None, None, None, None, None
     s.check("shop top row recognized", want is not None,
             expected="ring/bow/shield row", actual=row5)
     if want is not None:
@@ -760,8 +760,13 @@ def walk_a(planner, checks, sram_out=None):
     # the one-copy row hides so the next row slides up.
     s.check_eq("bought card in collection",
                s.reader.collection_count(want), before + 1)
-    s.check("next row slides up", slid in s.bg_text()[5],
-            expected="%s at row 5" % slid, actual=s.bg_text()[5])
+    # No-hide rows: the bought row stays put (verify it still names
+    # the bought card), then DOWN reaches the next row below it.
+    s.check("bought row stays", keep in s.bg_text()[5],
+            expected="%s at row 5" % keep, actual=s.bg_text()[5])
+    s.press("down", settle=20)
+    s.check("next row below", slid in s.bg_text()[6],
+            expected="%s at row 6" % slid, actual=s.bg_text()[6])
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("SHOP"), frames=30), label="shop close")
     # Post-purchase the merchant's equip tip opens as a dialogue box on
