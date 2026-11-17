@@ -33,20 +33,18 @@ static void menu_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
     BANKED_VRAM_WRITE(s_ic_dst, tile);
 }
 
-/* Blank the whole screen in place: VRAM font space + buffer space,
- * LCD-on safe.  Same-screen re-renders (tab switch, detail open/close,
- * picker) repaint over the live menu instead of calling the racy
- * ui_clear_screen, so there is no torn clear and rows repaint in one
- * mode-safe pass.  Every drawn cell rewrites VRAM exactly as a clear
- * would have (buffer starts all-spaces, so the text skip-guards always
- * fire on the first paint of each render), which keeps VRAM reads
- * deterministic under the harness (AGENTS.md 52.25): VRAM boot state
- * is never trusted, not even for space cells. */
-static void menu_blank_rows(void)
+/* Blank the content rows 2-17 (VRAM font space + buffer space,
+ * LCD-on safe).  Every full render blanks these first, then repaints
+ * header (rows 0-1, always fully drawn) plus content in the same pass,
+ * so tab switches morph in place instead of flashing the whole screen
+ * blank.  Unconditional VRAM writes keep VRAM reads deterministic
+ * under the harness (AGENTS.md 52.25): the buffer is reset in the
+ * same pass, so skip-guarded paints never trust stale VRAM. */
+static void menu_blank_content(void)
 {
     uint8_t x;
     uint8_t y;
-    for (y = 0; y < 18; y++) {
+    for (y = 2; y < 18; y++) {
         s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
         s_ic_buf = &g_ui_screen_buf[y][0];
         for (x = 0; x < 20; x++) {

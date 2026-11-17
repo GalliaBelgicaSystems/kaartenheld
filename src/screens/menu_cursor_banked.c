@@ -367,6 +367,18 @@ static void item_sums_build(Game *g);
 static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side);
 static void cu_scroll_into_view(Game *g, uint8_t npos);
 
+/* Re-window only (no filter/sort/group/sums recompute): redraws the
+ * draw maps + slot sums + scroll flags from the cached per-group sums
+ * for the current per-side scrolls.  The in-place nav repaint
+ * dispatches here instead of the full build; counts cannot have
+ * changed on that path, so the cache is exact. */
+void item_view_rewindow_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    if (!g) return;
+    item_window_build(g);
+}
+
 void item_view_build_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1079,7 +1091,11 @@ void item_deck_update_banked(void)
             g_bk_ptr_a = (void *)g;
             g_bk_byte_a = 2;
             item_deck_nav_banked();
-            g->render_cache.valid = false;
+            /* Same-bank rewindow + staged paint (no full render, no
+             * wipe): counts cannot change on a nav step, so the cached
+             * sums stay exact. */
+            item_view_rewindow_banked();
+            g_bk_paint_req = 1;
         } else {
             g_bk_ptr_a = (void *)g;
             g_bk_byte_a = 2;
@@ -1209,8 +1225,8 @@ void item_deck_update_banked(void)
     if (total <= 1) return;
 
     /* UP/DOWN walk the active side's packed list (hidden zero-count
-     * rows are skipped), then invalidate (the full render repaints
-     * without wiping); LEFT/RIGHT steps between the two cells, the
+     * rows are skipped), then rewindow + paint in place (no full
+     * render, no wipe); LEFT/RIGHT steps between the two cells, the
      * filter row keeps tab switching.  Holding UP/DOWN auto-repeats
      * after a short delay; single presses and harness edges step
      * exactly once. */
@@ -1237,7 +1253,112 @@ void item_deck_update_banked(void)
         g_bk_ptr_a = (void *)g;
         g_bk_byte_a = (uint8_t)(dir - 1);
         item_deck_nav_banked();
-        g->render_cache.valid = false;
+        item_view_rewindow_banked();
+        g_bk_paint_req = 1;
         return;
     }
+}
+
+/* DECK filter/sort picker render (bank 15, no-arg body): text-only, no
+ * catalog reads, so it lives here with the update that drives it
+ * (keeps bank 2 under 0x8000).  Same in-place protocol as the list
+ * repaint: full blank of the picker rows would flash, so only the
+ * caret rows and footer are redrawn... (full renders blank rows 2-17
+ * first, so all cells are covered either way). */
+extern char g_ui_screen_buf[18][21];
+extern uint8_t ui_font_tile_base;
+extern volatile uint8_t *s_ic_dst;
+extern char *s_ic_buf;
+extern uint8_t s_ic_txt_i;
+
+static void pk_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t len)
+{
+    uint8_t ended = (text == 0);
+    char ch;
+    if (y >= 18) return;
+    if ((uint8_t)(x + len) > 20) len = (uint8_t)(20 - x);
+    VBK_REG = 0;
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    for (s_ic_txt_i = 0; s_ic_txt_i < len; s_ic_txt_i++) {
+        if (!ended) {
+            ch = text[s_ic_txt_i];
+            if (ch == '\0') {
+                ended = 1;
+                ch = ' ';
+            }
+        } else {
+            ch = ' ';
+        }
+        if (*s_ic_buf != ch) {
+            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+            BANKED_VRAM_WRITE(s_ic_dst, tile);
+            *s_ic_buf = ch;
+        }
+        s_ic_dst++;
+        s_ic_buf++;
+    }
+}
+
+static void pk_blank_row(uint8_t y)
+{
+    uint8_t x;
+    if (y >= 18) return;
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
+    s_ic_buf = &g_ui_screen_buf[y][0];
+    for (x = 0; x < 20; x++) {
+        BANKED_VRAM_WRITE(s_ic_dst, ui_font_tile_base);
+        *s_ic_buf = ' ';
+        s_ic_dst++;
+        s_ic_buf++;
+    }
+}
+
+static const char *const s_pk_type_names[6] = {
+    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
+};
+
+static const char *pk_filter_name(uint8_t f)
+{
+    return (f <= 4) ? s_pk_type_names[f] : "ALL";
+}
+
+static const char *pk_sort_name(uint8_t s)
+{
+    switch (s) {
+        case 1: return "TYPE";
+        case 2: return "PWR+";
+        case 3: return "CST+";
+        case 4: return "PWR-";
+        case 5: return "CST-";
+        default: return "OFF";
+    }
+}
+
+void item_picker_render_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t r;
+    uint8_t k;
+    if (!g) return;
+    /* Sweep the list/detail OAM (riders 1-16 + ingots 17-32): the
+     * picker paints text only, so stale card icons would survive
+     * without this (bank-2 body swept for itself before the move). */
+    for (k = 0; k < 8; k++) {
+        cu_hide_side(k, 0);
+        cu_hide_side(k, 1);
+    }
+    for (r = 2; r <= 6; r++)
+        pk_blank_row(r);
+    pk_blank_row(8);
+    for (r = 10; r <= 13; r++)
+        pk_blank_row(r);
+    for (r = 15; r <= 17; r++)
+        pk_blank_row(r);
+    pk_draw_text(0, (uint8_t)(7 + (uint8_t)(g->item_menu_pick_row * 2)), ">", 1);
+    pk_draw_text(2, 7, "FILTER", 6);
+    pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 3);
+    pk_draw_text(2, 9, "SORT", 4);
+    pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 4);
+    pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 19);
 }

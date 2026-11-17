@@ -468,10 +468,9 @@ void item_quest_render_banked(void)
     uint8_t e;
     if (!g) return;
 
-    /* In-place content repaint (no screen wipe): blank the content
-     * rows first so no previous-tab glyph survives outside this
-     * tab's rows. */
-    menu_blank_rows();
+    /* No full-screen wipe here: blank the content rows, then paint
+     * header + content in place. */
+    menu_blank_content();
 
     /* Sweep the card rider entries: the DECK list paints element icons
      * per row (entries 1-12), and the quest tab must leave none behind.

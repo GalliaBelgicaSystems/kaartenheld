@@ -20,12 +20,19 @@
  * s_view_indices/s_view_count (one row per MATERIAL+WEAPON) and the
  * per-side packed draw maps. */
 void item_view_build_banked(void);
+/* Text-only filter/sort picker (bank 15, no catalog reads): dispatched
+ * from fixed when the DECK tab is in picker mode.  Same staging as the
+ * render path. */
+void item_picker_render_banked(void);
 /* Whole-DECK update (bank 15): the entire DECK branch of
  * item_screen_update moved out of the fixed bank (AGENTS.md 52.18).
  * Same-bank helpers are plain calls inside it; WRAM pad edges replace
  * input_pressed; SFX stages through the g_bk_sfx_req mailbox.
  * Staging: g_bk_ptr_a = Game* (no-arg body). */
 void item_deck_update_banked(void);
+/* In-place row painter (bank 2): dispatched from fixed when the moved
+ * banked nav stages g_bk_paint_req.  Same staging as the render path. */
+void item_card_refresh_banked(void);
 
 /* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
  * item_menu_cycle_banked, now bank 15 with the rest of the DECK menu):
@@ -199,11 +206,19 @@ void item_screen_update(Game *g)
      * item_deck_update_banked, bank 15) so the fixed bank stays under
      * 0x8000 (AGENTS.md 52.18).  Same-bank helpers are plain calls
      * inside it; WRAM pad edges replace input_pressed; SFX stages
-     * through the g_bk_sfx_req mailbox. */
+     * through the g_bk_sfx_req mailbox; in-place nav repaints stage
+     * g_bk_paint_req for the bank-2 row painter below. */
     g_bk_call_bank = 15;
     g_bk_call_target = (uint16_t)&item_deck_update_banked;
     g_bk_ptr_a = (void *)g;
     banked_call_run();
+    if (g_bk_paint_req) {
+        g_bk_paint_req = 0;
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&item_card_refresh_banked;
+        g_bk_ptr_a = (void *)g;
+        banked_call_run();
+    }
 }
 
 void item_screen_render_banked(void);
@@ -216,7 +231,7 @@ void item_screen_render(Game *g)
     if (!rc->valid || rc->prev_screen != SCREEN_ITEM) {
         /* No screen wipe and no extra branch: ui_clear_screen() is gone.
          * Each banked body blanks the whole screen itself with a mode-safe
-         * menu_blank_rows (no torn direct writes), then repaints header +
+         * menu_blank_content (no torn direct writes), then repaints header +
          * content in the same pass, so tab switches morph in place instead
          * of flashing blank.  CRAM still resets unconditionally: the first
          * entry from another screen needs the base set, and reprogramming
@@ -242,15 +257,21 @@ void item_screen_render(Game *g)
             banked_call_run();
         }
 
-        /* DECK content renders in bank 2; QUEST, GEM and HERO render in
-         * bank 13 (AGENTS.md 52.11.1: code shares its tables' bank;
-         * bank 2 sits hard against 16 KB while bank 13 is free).  GEM
-         * routes through item_gem_render_banked, which forwards QUEST
-         * and HERO to their renderers in-bank, so this dispatch needs
-         * no extra branch. */
+        /* DECK content renders in bank 2, picker in bank 15 (text-only,
+         * no catalog: keeps bank 2 under 0x8000); QUEST, GEM and HERO
+         * render in bank 13 (AGENTS.md 52.11.1: code shares its tables'
+         * bank; bank 2 sits hard against 16 KB while banks 13/15 are
+         * free).  GEM routes through item_gem_render_banked, which
+         * forwards QUEST and HERO to their renderers in-bank, so this
+         * dispatch needs no extra branch. */
         if (g->item_menu_tab == TAB_DECK) {
-            g_bk_call_bank = 2;
-            g_bk_call_target = (uint16_t)&item_screen_render_banked;
+            if (g->item_menu_mode == MODE_PICKER) {
+                g_bk_call_bank = 15;
+                g_bk_call_target = (uint16_t)&item_picker_render_banked;
+            } else {
+                g_bk_call_bank = 2;
+                g_bk_call_target = (uint16_t)&item_screen_render_banked;
+            }
         } else {
             g_bk_call_bank = 13;
             g_bk_call_target = (uint16_t)&item_gem_render_banked;

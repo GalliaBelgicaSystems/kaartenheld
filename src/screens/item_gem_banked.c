@@ -376,10 +376,10 @@ void item_gem_render_banked(void)
         return;
     }
 
-    /* In-place content repaint (no screen wipe): blank the content
-     * rows first so no previous-tab glyph survives outside this
-     * tab's rows.  (Forwarded tabs blank for themselves.) */
-    menu_blank_rows();
+    /* No full-screen wipe here: blank the content rows, then paint
+     * header + content in place.  (Forwarded tabs blank for
+     * themselves.) */
+    menu_blank_content();
 
     /* Sweep the card rider entries (same as the quest tab, plus the
      * DECK material ingots on entries 12-32). */

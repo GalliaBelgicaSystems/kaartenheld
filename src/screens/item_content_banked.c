@@ -635,27 +635,6 @@ static uint8_t ic_card_deckable(const CardDefinition *def)
 extern uint8_t s_row_owned[16];
 extern uint8_t s_row_decked[16];
 
-static const char *const s_card_type_names[CARD_TYPE_COUNT] = {
-    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
-};
-
-static const char *ic_filter_name(uint8_t f)
-{
-    return (f <= CARD_TYPE_UTILITY) ? s_card_type_names[f] : "ALL";
-}
-
-static const char *ic_sort_name(uint8_t s)
-{
-    switch (s) {
-        case SORT_TYPE:       return "TYPE";
-        case SORT_POWER:      return "PWR+";
-        case SORT_COST:       return "CST+";
-        case SORT_POWER_DESC: return "PWR-";
-        case SORT_COST_DESC:  return "CST-";
-        default:              return "OFF";
-    }
-}
-
 /* Live energy pool for the equip gate (docs/enemies_ranking.md §4.8):
  * an unset variable means the default pool (same normalization as the
  * battle HUD loader), never AP 0. */
@@ -922,6 +901,9 @@ static void ic_draw_scroll_rows(Game *g)
 static void ic_draw_cards_list(Game *g)
 {
     uint8_t x;
+    /* Blank rows 2-17 (header rows 0-1 repaint fully below), then
+     * paint. No full-screen wipe: the tab header never blanks. */
+    menu_blank_content();
     /* Fixed column header: PILE over the left (owned) block, DECK over
      * the right block (cols 0-19): "  PILE       DECK   ".  An
      * inventory type arrow sits directly right of each word (cols 6
@@ -978,9 +960,11 @@ static void ic_draw_cards_list(Game *g)
         menu_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
 
     /* Row 16 (message or side footer) goes through the shared helper
-     * (it blanks stale tails itself). */
+     * (it blanks stale tails itself); row 17's tail is blanked here. */
     ic_draw_row16(g);
     IC_DRAW_TEXT(0, 17, "L/R:SIDE B:BACK", 15);
+    for (x = 15; x < 20; x++)
+        IC_DRAW_TEXT(x, 17, " ", 1);
 }
 
 /* Row-16 message/side-footer draw: short messages blank their tail so
@@ -1027,12 +1011,54 @@ static void ic_draw_row16(Game *g)
         IC_DRAW_TEXT(i, 16, " ", 1);
 }
 
+/* Incremental DECK list repaint (AGENTS.md 36), run after DECK nav:
+ * FILTER row, every live list slot and row 16, without touching the
+ * render cache -- nothing blinks.
+ * Precondition: the bank-15 view build ran for the current
+ * state/scroll (rebuilt maps + emptied slots erased), or the moved
+ * banked nav just re-windowed for the new scroll.
+ * Staging: g_bk_ptr_a = Game*. */
+void item_card_refresh_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t k;
+    uint8_t vL;
+    uint8_t vR;
+    uint8_t y;
+    if (!g) return;
+    /* FILTER row + caret (only the list uses it; picker/detail draw
+     * their own rows). */
+    ic_draw_filter_row(g);
+    /* Scroll indicators (rows 4/14): the view build already recomputed
+     * the overflow flags for the current state/scroll. */
+    ic_draw_scroll_rows(g);
+    /* Lean in-place repaint (AGENTS.md 36): the build (bank 15) already
+     * erased slots/sides that lost their row -- unconditionally, so no
+     * icon tile survives -- and this loop only draws live slots, one
+     * pass each, with no full-area blank (nav never flashes the list).
+     * Skip-based text writes are exact here: cleared cells match the
+     * buffer, and redrawn cells re-stamp their constant icon tiles
+     * (rider cell tile 0, chrome AP icon) over identical VRAM.
+     * Still-dead slots stay blank. */
+    for (k = 0; k < 8; k++) {
+        vL = s_ic_draw_pos[k];
+        vR = s_ic_draw_pos_r[k];
+        y = (uint8_t)(ROW_CARDS_TOP + k);
+        if (vL != 0xFF || vR != 0xFF)
+            ic_draw_card_pair(g, y, vL, vR, k);
+    }
+    ic_draw_row16(g);
+}
+
 static void ic_draw_card_detail_page(Game *g)
 {
     uint8_t detail_uses;
+    uint8_t bx;
     if (g->item_menu_index < FIRST_CARD ||
         (uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
         return;
+    /* Blank rows 2-17 (header rows 0-1 repaint fully below). */
+    menu_blank_content();
     s_ic_id = ic_view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
     s_ic_def = ic_card_get_def(s_ic_id);
     if (!s_ic_def) return;
@@ -1133,12 +1159,11 @@ static void ic_draw_card_detail_page(Game *g)
         IC_DRAW_TEXT(17, 11, "--", 2);
     }
     /* Row 15-16: bottom border + back hint (consistent with QUEST/GEMS). */
-    {
-        uint8_t bx;
-        for (bx = 0; bx < 20; bx++)
-            menu_stamp_chrome(15, bx, UI_TILE_MENUS_BOTTOM_BORDER);
-    }
+    for (bx = 0; bx < 20; bx++)
+        menu_stamp_chrome(15, bx, UI_TILE_MENUS_BOTTOM_BORDER);
     IC_DRAW_TEXT(0, 16, "B:BACK", 6);
+    for (bx = 6; bx < 20; bx++)
+        IC_DRAW_TEXT(bx, 16, " ", 1);
 }
 
 static char s_ic_big_num[6];
@@ -1182,17 +1207,6 @@ static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
     IC_DRAW_TEXT((uint8_t)(end_col - len + 1), y, s_ic_big_num, len);
 }
 
-static void ic_draw_picker(Game *g)
-{
-    IC_DRAW_TEXT(0, (uint8_t)(7 + (uint8_t)(g->item_menu_pick_row * 2)),
-                 ">", 1);
-    IC_DRAW_TEXT(2, 7, "FILTER", 6);
-    IC_DRAW_TEXT(12, 7, ic_filter_name(g->item_menu_filter), 3);
-    IC_DRAW_TEXT(2, 9, "SORT", 4);
-    IC_DRAW_TEXT(12, 9, ic_sort_name(g->item_menu_sort), 4);
-    IC_DRAW_TEXT(0, 14, "LR CYCLE  A:OK B:NO", 19);
-}
-
 void item_screen_render_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1211,12 +1225,10 @@ void item_screen_render_banked(void)
      * (item_view_build_banked, bank 15) immediately before this body ran,
      * so s_view_indices/s_view_count are fresh for everything below. */
 
-    /* In-place content repaint (no screen wipe): the fixed wrapper
-     * only clears on first entry from another screen; tab switches
-     * and mode changes repaint over the live menu.  Blank the content
-     * rows first so no previous-tab glyph survives outside this tab's
-     * rows (rows 0-1 repaint fully below). */
-    menu_blank_rows();
+    /* No full-screen wipe: the list/detail path blanks rows 2-17
+     * (header rows 0-1 repaint fully), so tab switches morph in place
+     * instead of flashing the whole screen blank.  Picker renders in
+     * bank 15 and blanks for itself. */
 
     /* Sweep the OAM entries the menu can inherit (rider leftovers from
      * the old sprite icons at 1-16, material ingots 17-32): picker and
@@ -1244,7 +1256,6 @@ void item_screen_render_banked(void)
 
     switch (g->item_menu_mode) {
         case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;
-        case MODE_PICKER:      ic_draw_picker(g); break;
         default:               ic_draw_cards_list(g); break;
     }
 }
