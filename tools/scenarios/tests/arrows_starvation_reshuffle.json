@@ -1,0 +1,112 @@
+{
+ "name": "arrows_starvation_reshuffle",
+ "test": true,
+ "description": "Arrow starvation never soft-locks (limited-arrows): with 0 arrows and a 6-card deck (4 bows + 2 swords) the opening deal takes only the 2 drawable swords (bows skipped, rest sword-filled covered), and after playing both swords the refill reports dry -- drawable 0 < need 2 with a non-empty discard -- so the caller reshuffles instead of stranding an empty hand. Post-reshuffle the hand holds real swords, never a bow, with 4 pile cards left.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 30
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 30
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 30
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 150
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DECK_RESHUFFLED"
+  },
+  {
+   "type": "event_count",
+   "event": "DECK_RESHUFFLED",
+   "count": 1
+  },
+  {
+   "type": "battle_discard_count",
+   "expected": 0
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 4
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 13,
+   "contains": "BO"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 30,
+    "max_hp": 30
+   }
+  },
+  "seed": 5003,
+  "start_battle": true,
+  "currency": {
+   "ARROWS": 0
+  },
+  "deck": {
+   "BOW_9": 4,
+   "IRON_SWORD": 2
+  },
+  "variables": {
+   "ENERGY_POOL": 8
+  }
+ }
+}

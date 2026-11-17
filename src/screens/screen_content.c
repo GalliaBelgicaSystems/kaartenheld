@@ -511,14 +511,10 @@ void shop_row_quote_banked(void)
             uint16_t go;
             g_bk_byte_b = ARROW_PRICE_GOLD;
             g_bk_byte_c = CARD_NONE;
-            if (gold < (int16_t)ARROW_PRICE_GOLD) {
-                g_bk_byte_d = 2;
-                s_sc_game->shop_message =
-                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
-                              SC_SHOP_MSG_NO_GOLD);
-                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 1, 0, 0);
-                return;
-            }
+            /* Quiver-full first: gold cannot fix it, so it is the more
+             * informative refusal when both apply.  Telemetry d1 is a
+             * new append-only reason (3 = quiver full; 1 = no gold and
+             * 2 = max copies keep their existing meanings). */
             if (arrows < 0) arrows = 0;
             if (arrows >= ARROWS_MAX) {
                 g_bk_byte_d = 4;
@@ -526,6 +522,14 @@ void shop_row_quote_banked(void)
                     (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
                               SC_SHOP_MSG_ARROWS_FULL);
                 telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 3, 0, 0);
+                return;
+            }
+            if (gold < (int16_t)ARROW_PRICE_GOLD) {
+                g_bk_byte_d = 2;
+                s_sc_game->shop_message =
+                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                              SC_SHOP_MSG_NO_GOLD);
+                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 1, 0, 0);
                 return;
             }
             s_sc_game->state.currency.amount[CURRENCY_ID_GOLD - 1] =
@@ -586,8 +590,12 @@ static void sc_shop_remap_buy(void)
         g_shop_vis_map[g_shop_vis_count] = i;
         g_shop_vis_count++;
     }
-    g_shop_vis_map[g_shop_vis_count] = SHOP_ARROW_ROW;
-    g_shop_vis_count++;
+    /* Guarded: g_shop_vis_map holds SHOP_MAX_ITEMS entries, so a full
+     * 50-stock shop drops the arrow row instead of overrunning it. */
+    if (g_shop_vis_count < SHOP_MAX_ITEMS) {
+        g_shop_vis_map[g_shop_vis_count] = SHOP_ARROW_ROW;
+        g_shop_vis_count++;
+    }
     if (s_sc_game->item_menu_index >= g_shop_vis_count) {
         s_sc_game->item_menu_index = g_shop_vis_count > 0 ? (uint8_t)(g_shop_vis_count - 1) : 0;
     }
@@ -728,6 +736,11 @@ void shop_content_render(void)
             sc_put_char(1, s_sc_y, ' ');
             sc_put_char(2, s_sc_y, ' ');
             sc_draw_text(3, s_sc_y, "ARROWS", 6);
+            /* Blank the cells no card row would leave dirty: scrolling
+             * from a "<MAT> <WPN>" name would otherwise strand its
+             * tail in cols 9 and 13-16. */
+            sc_put_char(9, s_sc_y, ' ');
+            sc_draw_text(13, s_sc_y, "    ", 4);
             sc_put_char(10, s_sc_y, 'x');
             if (aq >= 20) {
                 tens = 2;
