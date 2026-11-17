@@ -168,11 +168,13 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 5u)
 #define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 6u)
 /* Sheet (0,7) list scroll arrow: all tabs' scroll indicators (rows
- * 2/4 up, rows 14/15 down, same tile).  Sheet (0,8) quests separator:
- * the rule between quest/gem blocks.  Both stream with the chrome
- * sheet on every BATTLE/ITEM/SHOP entry, so no per-tab streaming is
- * needed.  (Slot 245, the retired rotated-arrow copy, is free again.) */
+ * 2/4 up, rows 14/15 down).  The up caret uses the 180-degree rotated
+ * copy in slot 245 (the sheet art points down); the semantic buffer
+ * keeps '^'/'v'.  Sheet (0,8) quests separator: the rule between
+ * quest/gem blocks.  All stream with the chrome sheet on every
+ * BATTLE/ITEM/SHOP entry, so no per-tab streaming is needed. */
 #define UI_TILE_MENUS_LIST_SCROLL_ARROW (UI_TILE_MENUS_BASE + 7u)
+#define UI_TILE_MENUS_LIST_SCROLL_UP 245u
 #define UI_TILE_MENUS_QUESTS_SEPARATOR (UI_TILE_MENUS_BASE + 8u)
 /* Sheet (0,9) heart / (0,10) star: the STATUS-tab HP/AP icons.
  * Streamed with the chrome sheet, so no per-tab streaming is needed. */

@@ -234,21 +234,21 @@ static void iq_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t
     }
 }
 
-/* Scroll-indicator cell (VRAM list-scroll-arrow tile, same both rows;
- * buffer keeps '^' up / 'v' down for harness asserts).  VRAM always
- * writes: the buffer glyph never matches the PPU tile, so the text
- * skip-guard would stale-hide it (AGENTS.md 52.25).  Hiding restores
- * hide_tile (font space on row 2, the bottom border on row 15 so the
- * rule stays unbroken when nothing sits below the window). */
+/* Scroll-indicator cell (VRAM list-scroll tiles: the 180-degree
+ * rotated copy for the row-2 up caret, the sheet art for the row-15
+ * down caret; buffer keeps '^' up / 'v' down for harness asserts).
+ * VRAM always writes: the buffer glyph never matches the PPU tile, so
+ * the text skip-guard would stale-hide it (AGENTS.md 52.25).  Hiding
+ * restores hide_tile (font space on row 2, the bottom border on row 15
+ * so the rule stays unbroken when nothing sits below the window). */
 static void iq_stamp_scroll(uint8_t y, uint8_t x, uint8_t show, char letter,
-                            uint8_t hide_tile)
+                            uint8_t show_tile, uint8_t hide_tile)
 {
     s_ic_buf = &g_ui_screen_buf[y][x];
     *s_ic_buf = show ? letter : ' ';
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : hide_tile);
+    BANKED_VRAM_WRITE(s_ic_dst, show ? show_tile : hide_tile);
 }
 
 /* Title row for a window slot (shifts/adds only: no multiply, which
@@ -283,10 +283,11 @@ static void iq_draw_quest(Game *g)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
     /* Scroll indicators on the free rows (buffer '^'/'v'). */
     iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
-                    ui_font_tile_base);
+                    UI_TILE_MENUS_LIST_SCROLL_UP, ui_font_tile_base);
     iq_stamp_scroll(15, 19,
         (uint8_t)((uint8_t)(g->item_menu_scroll + QUEST_WINDOW) < total),
-        'v', UI_TILE_MENUS_BOTTOM_BORDER);
+        'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
+        UI_TILE_MENUS_BOTTOM_BORDER);
     /* Only accepted quests are tracked: NOT_STARTED entries stay hidden
      * (an empty quest log shows a placeholder instead of "not started"
      * rows).  item_menu_index addresses the VISIBLE list, so the caret
@@ -351,12 +352,14 @@ static void iq_draw_quest(Game *g)
  *   row 7: where you stand (progress "v/t label", "DONE", or
  *           "ACTIVE" for counter-less quests)
  *   row 8: what the reward was ("GOT <reward>", completed quests only)
- *   row 9: "SEL:BACK" */
+ *   row 15: bottom box border (same as every list tab)
+ *   row 16: "B:BACK" */
 static void iq_draw_quest_detail(Game *g)
 {
     const QuestDefinition *q;
     QuestStatus st;
     uint8_t val;
+    uint8_t i;
     char b[6];
     q = iq_visible_quest(g, g->item_menu_index, 0);
     if (!q) return;
@@ -379,7 +382,11 @@ static void iq_draw_quest_detail(Game *g)
     } else {
         IQ_DRAW_TEXT(2, 7, "ACTIVE", 6);
     }
-    IQ_DRAW_TEXT(0, 9, "SEL:BACK", 8);
+    /* Same bottom as the list tabs: full-width bottom border on row 15
+     * and the back hint on row 16 (B closes the detail everywhere). */
+    for (i = 0; i < 20; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    IQ_DRAW_TEXT(0, 16, "B:BACK", 6);
 }
 
 /* Quest-tab input behind the thin fixed dispatch in item_screen.c.

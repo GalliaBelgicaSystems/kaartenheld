@@ -201,17 +201,21 @@ void item_status_render_banked(void);
  *   row 5: what it unlocks (skill)
  *   rows 6-8: per-gem explainer from the registry (GemDefinition.detail,
  *             so gem #2's text never hard-codes gem #1's rules)
- *   row 9: "SEL:BACK" (B closes via the fixed handler, same as quests) */
+ *   row 15: bottom box border (same as every list tab)
+ *   row 16: "B:BACK" (B closes via the fixed handler, same as quests) */
 static void gem_draw_detail(uint8_t bit)
 {
     uint8_t reg = gem_ptr_bit(bit);
     uint8_t r;
+    uint8_t i;
     GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 12);
     GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 15);
     for (r = 0; r < 3; r++) {
         GEM_DRAW_TEXT(0, (uint8_t)(6 + r), g_gems[reg].detail[r], 20);
     }
-    GEM_DRAW_TEXT(0, 9, "SEL:BACK", 8);
+    for (i = 0; i < 20; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
 }
 
 /* Gem-block window: same geometry as the QUEST tab (AGENTS.md 52.11.1
@@ -233,19 +237,21 @@ static uint8_t gem_slot_row(uint8_t slot)
     return (uint8_t)(GEM_ROW_TOP + (uint8_t)((uint8_t)(slot << 1) + slot));
 }
 
-/* Scroll-indicator cell (VRAM list-scroll-arrow tile, same both rows;
- * buffer keeps '^' up / 'v' down for harness asserts).  Hiding restores
- * hide_tile (font space on row 2, the bottom border on row 15 so the
- * rule stays unbroken when nothing sits below the window). */
+/* Scroll-indicator cell (VRAM list-scroll tiles: the 180-degree
+ * rotated copy for the row-2 up caret, the sheet art for the row-15
+ * down caret; buffer keeps '^' up / 'v' down for harness asserts).
+ * Hiding restores hide_tile (font space on row 2, the bottom border
+ * on row 15 so the rule stays unbroken when nothing sits below the
+ * window). */
 static void gem_stamp_scroll(uint8_t y, uint8_t x, uint8_t show,
-                             char letter, uint8_t hide_tile)
+                             char letter, uint8_t show_tile,
+                             uint8_t hide_tile)
 {
     s_ic_buf = &g_ui_screen_buf[y][x];
     *s_ic_buf = show ? letter : ' ';
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : hide_tile);
+    BANKED_VRAM_WRITE(s_ic_dst, show ? show_tile : hide_tile);
 }
 
 /* GEM-tab input behind the thin fixed dispatch in item_screen.c.
@@ -394,10 +400,11 @@ void item_gem_render_banked(void)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
     /* Scroll indicators on the free rows (buffer '^'/'v'). */
     gem_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
-                     ui_font_tile_base);
+                     UI_TILE_MENUS_LIST_SCROLL_UP, ui_font_tile_base);
     gem_stamp_scroll(15, 19,
         (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
-        'v', UI_TILE_MENUS_BOTTOM_BORDER);
+        'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
+        UI_TILE_MENUS_BOTTOM_BORDER);
 
     if (g->item_menu_mode == GEM_MODE_DETAIL) {
         if (total != 0) {
@@ -427,10 +434,14 @@ void item_gem_render_banked(void)
             vis++;
         }
     }
-    if (g->item_menu_message == GEM_MSG_MAX)
-        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
-    else if (total == 0)
-        GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
-    else
-        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
+    /* List footer (skipped on the detail page: gem_draw_detail paints
+     * its own B:BACK footer above). */
+    if (g->item_menu_mode != GEM_MODE_DETAIL) {
+        if (g->item_menu_message == GEM_MSG_MAX)
+            GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
+        else if (total == 0)
+            GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
+        else
+            GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
+    }
 }

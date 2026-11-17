@@ -890,7 +890,7 @@ static void ic_stamp_scroll_up(uint8_t y, uint8_t x, uint8_t show)
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
+        show ? UI_TILE_MENUS_LIST_SCROLL_UP : ui_font_tile_base);
 }
 
 static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
