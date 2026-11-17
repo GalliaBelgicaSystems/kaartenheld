@@ -1,7 +1,7 @@
 {
  "name": "status_tab",
  "test": true,
- "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold and decked copies; LEFT returns to the QUEST tab",
+ "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold, decked copies and the shared arrow pool; LEFT returns to the QUEST tab",
  "actions": [
   {
    "type": "press",
@@ -77,6 +77,16 @@
    "type": "screen_row",
    "row": 6,
    "contains": "10"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "ARROWS"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "3"
   }
  ],
  "initial_state": {

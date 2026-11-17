@@ -207,7 +207,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
         b->hand[i].type = BATTLE_CARD_TYPE_EMPTY;
     }
     g_bk_byte_d = battle_arrows_now();
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 14;
     g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -688,13 +688,13 @@ static uint8_t battle_defend_counter(Battle *b)
  * pile implies the pile covers every open slot.  The only dry-pile loop
  * entry is the fully-dry case handled by the early return above.
  *
- * Thin fixed-bank wrapper: the decision body lives in ROM bank 4
+ * Thin fixed-bank wrapper: the decision body lives in ROM bank 14
  * (src/battle/battle_turn_draw_banked.c), dispatched via the WRAM
  * trampoline; the boolean result returns in g_bk_byte_c.  Moved out of
  * the fixed bank which sits hard against 0x8000 (AGENTS.md 52.18). */
 static bool battle_turn_draw(Battle *b)
 {
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 14;
     g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
     g_bk_ptr_a = (void *)b;
     g_bk_byte_d = battle_arrows_now();

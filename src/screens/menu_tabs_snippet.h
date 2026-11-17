@@ -33,6 +33,31 @@ static void menu_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
     BANKED_VRAM_WRITE(s_ic_dst, tile);
 }
 
+/* Blank the whole screen in place: VRAM font space + buffer space,
+ * LCD-on safe.  Same-screen re-renders (tab switch, detail open/close,
+ * picker) repaint over the live menu instead of calling the racy
+ * ui_clear_screen, so there is no torn clear and rows repaint in one
+ * mode-safe pass.  Every drawn cell rewrites VRAM exactly as a clear
+ * would have (buffer starts all-spaces, so the text skip-guards always
+ * fire on the first paint of each render), which keeps VRAM reads
+ * deterministic under the harness (AGENTS.md 52.25): VRAM boot state
+ * is never trusted, not even for space cells. */
+static void menu_blank_rows(void)
+{
+    uint8_t x;
+    uint8_t y;
+    for (y = 0; y < 18; y++) {
+        s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
+        s_ic_buf = &g_ui_screen_buf[y][0];
+        for (x = 0; x < 20; x++) {
+            BANKED_VRAM_WRITE(s_ic_dst, ui_font_tile_base);
+            *s_ic_buf = ' ';
+            s_ic_dst++;
+            s_ic_buf++;
+        }
+    }
+}
+
 /* Row 0: the four tabs with category separators in the three gaps
  * (cols 4/10/15).  Row 1: category border everywhere, category corner
  * under each separator, cursor-category tile at cursor_x (never a bare

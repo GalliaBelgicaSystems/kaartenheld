@@ -160,6 +160,11 @@ void item_status_render_banked(void)
     uint8_t hy;
     if (!g) return;
 
+    /* In-place content repaint (no screen wipe): blank the content
+     * rows first so no previous-tab glyph survives outside this
+     * tab's rows. */
+    menu_blank_rows();
+
     /* Hide any card art OAM inherited from the DECK list. */
     for (e = 1; e <= 32; e++) {
         st_actor_hide(e);
@@ -198,6 +203,15 @@ void item_status_render_banked(void)
     ST_DRAW_TEXT(0, 6, "DECK   ", 7);
     st_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
     st_stamp_icon(6, 9, UI_TILE_DECK_ICON);
+    /* Shared bow-ammo pool (limited-arrows currency slot): clamped at
+     * zero for display, like the shop row. */
+    {
+        int16_t arrows =
+            g->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+        ST_DRAW_TEXT(0, 7, "ARROWS ", 7);
+        st_draw_rjust(7, 8,
+            (uint16_t)(arrows < 0 ? 0 : arrows));
+    }
     /* Hero-status portrait ("hero status RC", sheet cols 12-15): 4x4
      * at cols 13-16, rows 3-6, in sheet order. */
     for (hy = 0; hy < 4; hy++) {

@@ -173,6 +173,16 @@ extern uint8_t g_bk_byte_e;
  * screens (game-over toggle, shop tab flips, picker row, dialogue
  * advance/confirms) call audio_play_sfx fixed-side instead. */
 extern uint8_t g_bk_sfx_req;
+/* Same-frame card telemetry request (same pattern as g_bk_sfx_req):
+ * the banked DECK A path cannot call the fixed deck appliers (their
+ * bodies trampoline back to banked verdict/merge code -- a nested
+ * trampoline would corrupt the outer banked call, AGENTS.md 52.18
+ * family), so it verdicts + appends directly and stages
+ * (TelemetryEvent, d0, d1) here for game_update() to emit + clear the
+ * same frame.  0 = none.  BSS zero-init (AGENTS.md 52.27). */
+extern uint8_t g_bk_card_evt;
+extern uint8_t g_bk_card_d0;
+extern uint8_t g_bk_card_d1;
 /* Generic post-tick request: a non-zero value asks game_update() to open
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */

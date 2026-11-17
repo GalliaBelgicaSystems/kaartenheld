@@ -180,7 +180,8 @@ SEL:BACK
 
 HERO is read-only: `HP <hp>/<max>` + heart icon, `AP <pool>` (battle
 energy pool) + star icon, `GOLD <n>G`, `DECK <n>` (decked copies) +
-deck icon, plus the 4x4 hero-status portrait (cols 13-16, rows 3-6).
+deck icon, `ARROWS <n>` (shared bow-ammo pool), plus the 4x4
+hero-status portrait (cols 13-16, rows 3-6).
 
 ## 5b. GEM tab (gems)
 

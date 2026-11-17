@@ -600,7 +600,8 @@ counter-less quests).
 
 **HERO tab** — read-only hero summary: `HP <hp>/<max>` + heart icon,
 `AP <pool>` (battle energy pool) + star icon, `GOLD <n>G`, `DECK <n>`
-(decked copies) + deck icon, plus the 4x4 hero-status portrait.
+(decked copies) + deck icon, `ARROWS <n>` (shared bow-ammo pool), plus
+the 4x4 hero-status portrait.
 
 **GEM tab** — owned gems with the QUEST tab's geometry (3-row blocks:
 name + `ON`/`OFF` equip state, skill line, separator rule; 4-block

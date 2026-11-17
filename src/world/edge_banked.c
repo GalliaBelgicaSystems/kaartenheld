@@ -1,13 +1,11 @@
-#pragma bank 2
+#pragma bank 15
 
 #include "world.h"
 #include "banked.h"
 #include "tile_walk.h"
 
-/* Bank-2 movement body (see world_try_begin_move).
- * Bank 2 has headroom in both builds; bank 3 (release) does not.
- * Pure WRAM/staged arithmetic: no scene-table access (neighbor bytes
- * arrive staged), no fixed-bank calls. */
+/* Bank-15 movement body (src/world/edge_banked.c): pure WRAM/staged
+ * arithmetic, moved out of bank 2 (which sits hard against 16 KB). */
 
 static uint8_t edge_walkable(const World *w, uint8_t x, uint8_t y)
 {

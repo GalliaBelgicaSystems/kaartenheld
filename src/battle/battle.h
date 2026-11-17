@@ -320,7 +320,7 @@ uint8_t battle_confuse_auto(Battle *b);
  * ROM bank 4): g_bk_ptr_a = Battle*, stages hand -> last_combo. */
 void battle_stage_combo_banked(void);
 /* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
- * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
+ * ROM bank 14): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
 /* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
  * ROM bank 12): g_bk_ptr_a = Battle*.  Draws the next enemy card

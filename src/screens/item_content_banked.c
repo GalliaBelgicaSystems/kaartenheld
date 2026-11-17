@@ -66,7 +66,7 @@ extern uint8_t s_view_count;
 extern uint8_t s_ic_draw_pos[8];
 extern uint8_t s_ic_draw_pos_r[8];
 /* Per-side scroll-overflow flags (same file, built by the view build
- * on every DECK render/repaint): bit 0 up-pile, 1 up-deck, 2
+ * on every DECK render): bit 0 up-pile, 1 up-deck, 2
  * down-pile, 3 down-deck. */
 extern uint8_t s_ic_scroll_flags;
 
@@ -628,7 +628,7 @@ static uint8_t ic_card_deckable(const CardDefinition *def)
 }
 
 /* Row sums come from the grouped view build (item_view_build_banked,
- * bank 11): s_row_owned/s_row_decked hold one entry per view row for
+ * bank 15): s_row_owned/s_row_decked hold one entry per view row for
  * the visible window, and slot 0 for the selected row in detail mode.
  * Keeping the scan out of this bank is what paid for the row redesign
  * (bank 2 sits at its ceiling, AGENTS.md 52.18). */
@@ -718,9 +718,8 @@ static void ic_draw_pair2(uint8_t x, uint8_t y, uint8_t v)
 /* Icon cells for a DECK card row: weapon cell `wx` (icon tile in VRAM,
  * weapon letter in the text buffer for harness asserts), rider cell
  * `rx` (menu rider BG tile + element color), and AP unit icon
- * `ap_icon_x` (UI_TILE_AP_ICON in VRAM, buffer blank so
- * item_card_refresh_banked stays idempotent and screen_row sees
- * spaces).  Writes directly via non-negative column offsets off row
+ * `ap_icon_x` (UI_TILE_AP_ICON in VRAM, buffer blank so screen_row
+ * sees spaces).  Writes directly via non-negative column offsets off row
  * base `0x9800 + (y << 5)` (never `wx - rx`, which wrapped under unsigned
  * 16-bit arithmetic when weapon moved ahead of rider). */
 static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
@@ -770,9 +769,8 @@ static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
  * docs/deck-management.md.
  *
  * ic_draw_card_cell paints one cell.  Cells that lose their group are
- * never blanked here: the full redraw clears both planes first, and
- * the incremental repaint relies on the bank-11 view build erasing
- * emptied slots (VRAM + buffer + OAM) before it runs. */
+ * never blanked here: the view build erases
+ * emptied slots (VRAM + buffer + OAM) when it rebuilds. */
 static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, uint8_t slot)
 {
     uint8_t curx = side ? 10 : 0;
@@ -865,9 +863,8 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t vL, uint8_t vR, uint8_
 
 static void ic_draw_row16(Game *g);
 
-/* FILTER/SORT row (row 2) with its caret: shared by the full list
- * render and the incremental repaint.  Skip-based text writes, so the
- * repaint pays only for a changed caret. */
+/* FILTER/SORT row (row 2) with its caret: skip-based text writes keep
+ * the caret exact on every full render. */
 static void ic_draw_filter_row(Game *g)
 {
     IC_DRAW_TEXT(0, ROW_FILTER,
@@ -903,10 +900,9 @@ static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
         show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
 }
 
-/* Scroll-indicator rows, shared by the full list render and the
- * incremental repaint: row-4 up arrows and row-14 down arrows (list
+/* Scroll-indicator rows for the full list render: row-4 up arrows and row-14 down arrows (list
  * scroll arrow) at the material columns (4 pile / 14 deck), per side,
- * from the bank-11 overflow flags rebuilt by the view build just
+ * from the bank-15 overflow flags rebuilt by the view build just
  * before this render.  Row 13 is the inventory-separator column gap
  * (stamped by the list body); row 15 is the full-width bottom box
  * border.  Only the caret cells are ever written (a full clear blanks
@@ -935,15 +931,14 @@ static void ic_draw_cards_list(Game *g)
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE       DECK   ", 20);
     menu_stamp_chrome(ROW_COL_HEAD, 6, UI_TILE_MENUS_INV_ARROW);
     menu_stamp_chrome(ROW_COL_HEAD, 17, UI_TILE_MENUS_INV_ARROW);
-    /* Indicator rows (the bank-11 view build just recomputed the
+    /* Indicator rows (the bank-15 view build just recomputed the
      * overflow flags immediately before this body ran). */
     ic_draw_scroll_rows(g);
     s_ic_y = ROW_CARDS_TOP;
     s_ic_end_l = 0;
     s_ic_end_r = 0;
     /* FILTER/SORT row: fixed chrome at row 2 (cards start at row 5 at
-     * every scroll), drawn unconditionally so the full render and the
-     * incremental repaint (item_card_refresh_banked) always agree. */
+     * every scroll), drawn unconditionally on every full render. */
     ic_draw_filter_row(g);
     for (s_ic_lst_pos = 0; s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
         uint8_t vL = s_ic_draw_pos[s_ic_lst_pos];
@@ -983,15 +978,13 @@ static void ic_draw_cards_list(Game *g)
         menu_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
 
     /* Row 16 (message or side footer) goes through the shared helper
-     * so the incremental post-A refresh paints exactly what the full
-     * render paints (the helper blanks stale tails itself). */
+     * (it blanks stale tails itself). */
     ic_draw_row16(g);
     IC_DRAW_TEXT(0, 17, "L/R:SIDE B:BACK", 15);
 }
 
-/* Row-16 message/side-footer draw, shared by the full list render and
- * the incremental post-A refresh: short messages blank their tail so
- * no stale glyphs survive without a full clear. */
+/* Row-16 message/side-footer draw: short messages blank their tail so
+ * no stale glyphs survive. */
 static void ic_draw_row16(Game *g)
 {
     uint8_t len = 0;
@@ -1033,45 +1026,6 @@ static void ic_draw_row16(Game *g)
     for (i = len; i < 20; i++)
         IC_DRAW_TEXT(i, 16, " ", 1);
 }
-
-/* Incremental DECK list repaint (AGENTS.md 36), run after nav, A and
- * message expiry: FILTER row, every live list slot and row 16,
- * without touching the render cache -- nothing blinks.
- * Precondition: item_view_build_banked (bank 11) ran for the current
- * state/scroll (rebuilt maps + emptied slots erased).
- * Staging: g_bk_ptr_a = Game*. */
-void item_card_refresh_banked(void)
-{
-    Game *g = (Game *)g_bk_ptr_a;
-    uint8_t k;
-    uint8_t vL;
-    uint8_t vR;
-    uint8_t y;
-    if (!g) return;
-    /* FILTER row + caret (only the list uses it; picker/detail draw
-     * their own rows). */
-    ic_draw_filter_row(g);
-    /* Scroll indicators (rows 4/14): the bank-11 view build already
-     * recomputed the overflow flags for the current state/scroll. */
-    ic_draw_scroll_rows(g);
-    /* Lean in-place repaint (AGENTS.md 36): the build (bank 11) already
-     * erased slots/sides that lost their row -- unconditionally, so no
-     * icon tile survives -- and this loop only draws live slots, one
-     * pass each, with no full-area blank (A never flashes the list).
-     * Skip-based text writes are exact here: cleared cells match the
-     * buffer, and redrawn cells re-stamp their constant icon tiles
-     * (rider cell tile 0, chrome AP icon) over identical VRAM.
-     * Still-dead slots stay blank. */
-    for (k = 0; k < 8; k++) {
-        vL = s_ic_draw_pos[k];
-        vR = s_ic_draw_pos_r[k];
-        y = (uint8_t)(ROW_CARDS_TOP + k);
-        if (vL != 0xFF || vR != 0xFF)
-            ic_draw_card_pair(g, y, vL, vR, k);
-    }
-    ic_draw_row16(g);
-}
-
 
 static void ic_draw_card_detail_page(Game *g)
 {
@@ -1254,8 +1208,15 @@ void item_screen_render_banked(void)
     ic_menu_riders_load();
 
     /* The grouped DECK view was just rebuilt by the fixed-bank caller
-     * (item_view_build_banked, bank 11) immediately before this body ran,
+     * (item_view_build_banked, bank 15) immediately before this body ran,
      * so s_view_indices/s_view_count are fresh for everything below. */
+
+    /* In-place content repaint (no screen wipe): the fixed wrapper
+     * only clears on first entry from another screen; tab switches
+     * and mode changes repaint over the live menu.  Blank the content
+     * rows first so no previous-tab glyph survives outside this tab's
+     * rows (rows 0-1 repaint fully below). */
+    menu_blank_rows();
 
     /* Sweep the OAM entries the menu can inherit (rider leftovers from
      * the old sprite icons at 1-16, material ingots 17-32): picker and

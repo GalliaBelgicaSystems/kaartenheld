@@ -1,4 +1,4 @@
-#pragma bank 4
+#pragma bank 14
 #pragma disable_warning 110
 
 #include "battle.h"
@@ -44,7 +44,7 @@ static void turn_fill_default_sword(Battle *b, uint8_t hand_idx)
     b->hand[hand_idx].ring = 0;
 }
 
-/* ── Banked hand-refill body (ROM bank 4) ────────────────────────────
+/* ── Banked hand-refill body (ROM bank 14) ───────────────────────────
  * Hosts battle_turn_draw()'s decision logic out of the fixed bank
  * (which sits hard against 0x8000, AGENTS.md 52.18).  The fixed
  * wrapper in battle.c keeps the signature and stages the Battle*

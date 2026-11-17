@@ -44,7 +44,7 @@ void deck_merge_banked(void);
 void deck_collection_merge_duplicates(CardState *cs)
 {
     if (!cs) return;
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 15;
     g_bk_call_target = (uint16_t)&deck_merge_banked;
     g_bk_ptr_a = (void *)cs;
     banked_call_run();
@@ -81,7 +81,7 @@ bool deck_collection_add(CardState *cs, CardId id, uint8_t quantity)
     if (cs->collection.count >= MAX_CARD_COLLECTION) {
         deck_collection_merge_duplicates(cs);
         if (cs->collection.count >= MAX_CARD_COLLECTION) {
-            g_bk_call_bank = 11;
+            g_bk_call_bank = 15;
             g_bk_call_target = (uint16_t)&deck_absorb_banked;
             g_bk_ptr_a = (void *)cs;
             g_bk_byte_a = id;
@@ -167,7 +167,7 @@ bool deck_add_card(CardState *cs, CardId id)
     /* Uniform 5-per-identity deck limit: the banked gate counts decked
      * copies of the same identity (curated row + loot twin are one
      * card) and refuses past 5 -- the only per-card deck limit. */
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 15;
     g_bk_call_target = (uint16_t)&deck_ident_gate_banked;
     g_bk_ptr_a = (void *)cs;
     g_bk_byte_a = id;
@@ -189,7 +189,7 @@ uint8_t deck_equip_card(CardState *cs, CardId id, uint8_t pool)
      * verdict still applies through deck_add_card, so there is one
      * append site; the verdict and the apply re-check the same pure
      * state, so they cannot disagree. */
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 15;
     g_bk_call_target = (uint16_t)&deck_equip_verdict_banked;
     g_bk_ptr_a = (void *)cs;
     g_bk_byte_a = id;

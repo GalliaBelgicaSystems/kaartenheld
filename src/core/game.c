@@ -64,6 +64,20 @@ static void game_consume_sfx(void)
     }
 }
 
+/* Same-frame card telemetry for the banked DECK A path (BSS zero =
+ * none; see banked.h).  The banked body verdicts + appends directly
+ * and stages the event here instead of calling the fixed deck
+ * appliers (their bodies trampoline back to banked code). */
+static void game_consume_card_evt(void)
+{
+    if (g_bk_card_evt != 0) {
+        telemetry_emit(g_bk_card_evt, g_bk_card_d0, g_bk_card_d1, 0, 0);
+        g_bk_card_evt = 0;
+        g_bk_card_d0 = 0;
+        g_bk_card_d1 = 0;
+    }
+}
+
 /* Start a fresh playthrough at the overworld (ENDING restart, GAME_OVER
  * YES, and the last intro slide's drop into the world). */
 void game_restart(Game *g)
@@ -121,6 +135,7 @@ void game_update(Game *g)
 
     screen_update(g);
     game_consume_sfx();
+    game_consume_card_evt();
     /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
      * overworld HUD marker refresh (quest "?" / pursuer "!") and Carl's
      * leave-the-field offer: two banked round-trips per frame through the
