@@ -1,1 +1,4 @@
-"bottom box border","inventory separator","inventory type arrow","cursor category","category border","category corner","category separator","list scroll arrow","quests separator","health points icon","action point icon","cards icon","huge character"
+"bottom box border","inventory separator","inventory type arrow","cursor category","category border","category corner","category separator","list scroll arrow","quests separator","health points icon","action point icon","cards icon","hero status 00","hero status 01","hero status 02","hero status 03"
+empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,"hero status 10","hero status 11","hero status 12","hero status 13"
+empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,"hero status 20","hero status 21","hero status 22","hero status 23"
+empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,empty,"hero status 30","hero status 31","hero status 32","hero status 33"

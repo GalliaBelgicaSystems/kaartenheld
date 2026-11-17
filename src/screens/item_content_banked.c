@@ -1274,6 +1274,15 @@ static void ic_stamp_icon(uint8_t y, uint8_t x, uint8_t tile)
     BANKED_VRAM_WRITE(s_ic_dst, tile);
 }
 
+/* Hero-status portrait slot table (bank-2 copy of the bank-11 stream
+ * table s_menus_hero_slots: 16 cells, header order row-major from
+ * sheet (12,0).  KEEP IN SYNC -- banked bodies cannot share tables
+ * across banks (AGENTS.md 52.11.1). */
+static const uint8_t s_ic_hero_slots[16] = {
+    220u, 221u, 222u, 223u, 224u, 225u, 226u, 227u,
+    233u, 234u, 235u, 242u, 243u, 244u, 246u, 247u
+};
+
 static void ic_draw_status_page(Game *g)
 {
     uint8_t hx;
@@ -1293,10 +1302,12 @@ static void ic_draw_status_page(Game *g)
     IC_DRAW_TEXT(0, 6, "DECK   ", 7);
     ic_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
     ic_stamp_icon(6, 9, UI_TILE_DECK_ICON);
-    /* Huge-character mosaic (cols 11-18, rows 3-10). */
-    for (hy = 3; hy <= 10; hy++) {
-        for (hx = 11; hx <= 18; hx++)
-            ic_stamp_icon(hy, hx, UI_TILE_MENUS_HUGE_CHAR);
+    /* Hero-status portrait ("hero status RC", sheet cols 12-15): 4x4 at
+     * cols 13-16, rows 3-6, in sheet order. */
+    for (hy = 0; hy < 4; hy++) {
+        for (hx = 0; hx < 4; hx++)
+            ic_stamp_icon((uint8_t)(3 + hy), (uint8_t)(13 + hx),
+                s_ic_hero_slots[(uint8_t)((uint8_t)(hy << 2) + hx)]);
     }
 }
 

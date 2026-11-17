@@ -140,24 +140,24 @@ void ic_menu_riders_load(void);
 #define UI_TILE_SCROLL_DOWN      232u
 
 /* Menu chrome (assets/menus-tile.png): 12 single-cell UI icons (row 0,
- * cols 0-11, CSV order: inventory separator .. huge character) plus the
- * bottom-box frame kit (cols 12-15, rows 0-3 minus the two blank corners
- * (15,0)/(12,3)).  Singles stream to 208-219 in CSV order; the 14 box
- * cells land on 220-227, 233-235, 242-244 (the remaining free block-1
- * slots around riders 228-232, AP pips 236-240 and the spin tile 241).
- * Streamed eagerly on every BATTLE/ITEM/SHOP entry by the bank-11
- * invalidate body (entry is the once-per-stay re-arm, no WRAM flag);
- * the slot table lives with that streamer.
+ * cols 0-11) plus the 4x4 hero-status portrait (cols 12-15, rows 0-3,
+ * "hero status RC" sheet order, blank transparent corners included).
+ * Singles stream to 208-219 in scan order; the 16 hero cells land on
+ * the orphaned box slots (220-227, 233-235, 242-244) plus dice slots
+ * 246-247 (the gamble entry restreams all dice, and every ITEM entry
+ * restreams hero, so the time-share is safe).  Streamed eagerly on
+ * every BATTLE/ITEM/SHOP entry by the bank-11 invalidate body (entry
+ * is the once-per-stay re-arm, no WRAM flag); the slot table lives
+ * with that streamer.
  *
  * Single-cell order is sheet scan order (row 0, cols 0-11 = CSV order:
  * 0 bottom box border, 1 inventory separator, 2 inventory type arrow,
  * 3 cursor category, 4 category border, 5 category corner, 6 category
- * separator, ...).  The slice script reserves CSV[0] for the frame kit,
- * so its TILE_MENUS_* names are shifted by one -- do NOT use them;
- * the defines below follow the artist's scan order. */
+ * separator, ...).  The slice script's TILE_MENUS_* editor names follow
+ * the CSV grid directly; the defines below follow the same order. */
 #define UI_TILE_MENUS_BASE       208u
 #define UI_TILE_MENUS_COUNT      12u
-#define UI_TILE_MENUS_BOX_COUNT  14u
+#define UI_TILE_MENUS_HERO_COUNT 16u
 /* Sheet (0,0) horizontal segment: the row-15 bottom rule.  Named for
  * what it is, not for the slice script's CSV[1] label. */
 #define UI_TILE_MENUS_BOTTOM_BORDER (UI_TILE_MENUS_BASE + 0u)
@@ -177,9 +177,6 @@ void ic_menu_riders_load(void);
  * Streamed with the chrome sheet, so no per-tab streaming is needed. */
 #define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
 #define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
-/* Big-glyph cell (sheet (0,11)): the STATUS-tab huge-character mosaic
- * (one art tile, repeated tile-by-tile into a block). */
-#define UI_TILE_MENUS_HUGE_CHAR (UI_TILE_MENUS_BASE + 11u)
 /* Rotated (180 deg) copy of the inventory type arrow for scroll-up
  * carets (the sheet art points down).  Slot 245 is the last free
  * block-1 id (box ends at 244, dice start at 246).  Streamed by the

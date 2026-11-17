@@ -2,23 +2,23 @@
 """Slice assets/menus-tile.png into editor tiles + tilesets/menus.json.
 
 Source of truth: the artist sheet (assets/menus-tile.png, 128x32 = 16x4
-cells of 8x8) plus the artist label list
-(assets/menu-tile-description.csv, 13 names).
+cells of 8x8) plus the artist label grid
+(assets/menu-tile-description.csv, 4 rows x 16 cols, quoted).
 
-Cell map (positional convention, documented assumption -- the CSV order
-is NOT sheet scan order):
-  CSV[0]  "bottom box border" -> the 4x4 frame kit at cols 12-15, rows 0-3
-                              (14 drawn cells; (15,0) and (12,3) are blank
-                              corners and stay white)
-  CSV[1..12] -> row-0 single cells cols 0-11, in order
-                (inventory separator, inventory type arrow, cursor category,
-                 category border, category corner, category separator,
-                 list scroll arrow, quests separator, health points icon,
-                 action point icon, cards icon, huge character)
+Cell map (positional: CSV row/col == sheet cell):
+  Row 0, cols 0-11: the 12 single-cell UI icons (scan order:
+      bottom box border, inventory separator, inventory type arrow,
+      cursor category, category border, category corner, category
+      separator, list scroll arrow, quests separator, health points
+      icon, action point icon, cards icon).
+  Cols 12-15, rows 0-3: the 4x4 hero-status portrait ("hero status RC":
+      row digit + col digit, sheet order).  Corners (15,0)/(12,3) are
+      blank by design (transparent portrait corners).
+  "empty" cells must stay blank (fail loudly otherwise).
 
 Outputs (committed, deterministic):
-  tools/level_editor/public/tiles/menus/menus_<slug>.png (12 x 8x8 plus
-      menus_bottom_box_border.png, the 32x32 assembled frame)
+  tools/level_editor/public/tiles/menus/menus_<slug>.png
+      (12 singles + 16 hero cells, one 8x8 PNG each)
   tools/level_editor/tilesets/menus.json (flat curated manifest, same entry
       shape as tilesets/combat.json; no vram_block, so world generators
       and tiles-check skip it like the other UI sets)
@@ -48,15 +48,9 @@ JSON_PATH = os.path.join(REPO_ROOT, "tools", "level_editor", "tilesets",
 
 TILE = 8
 EXPECT_W, EXPECT_H = 128, 32
-
-# (col, row) cells of the bottom-box frame kit (bounding cols 12-15,
-# rows 0-3 minus the two blank corners).
-BOX_CELLS = [(12, 0), (13, 0), (14, 0),
-             (12, 1), (13, 1), (14, 1), (15, 1),
-             (12, 2), (13, 2), (14, 2), (15, 2),
-             (13, 3), (14, 3), (15, 3)]
-BOX_BLANK = [(15, 0), (12, 3)]
-BOX_BOUNDS = (12, 0, 16, 4)  # cols 12-15, rows 0-3 (exclusive end)
+SINGLES = [(c, 0) for c in range(12)]
+HERO = [(c, r) for r in range(4) for c in range(12, 16)]
+HERO_BLANK = [(15, 0), (12, 3)]
 
 
 def cell_drawn(img, c, r):
@@ -82,27 +76,34 @@ def main():
             "menus-tile.png is %dx%d, want %dx%d" % (
                 img.size[0], img.size[1], EXPECT_W, EXPECT_H))
     with open(CSV, newline="") as f:
-        rows = [r for r in csv.reader(f) if any(c.strip() for c in r)]
-    if len(rows) != 1 or len(rows[0]) != 13:
+        grid = [[c.strip() for c in row]
+                for row in csv.reader(f) if any(row)]
+    if len(grid) != 4 or any(len(row) != 16 for row in grid):
         raise SystemExit(
-            "menu-tile-description.csv: want 1 row of 13 names, got %r"
-            % ([len(r) for r in rows],))
-    names = [c.strip() for c in rows[0]]
-    if len(set(names)) != 13:
+            "menu-tile-description.csv: want 4 rows of 16 names, got %r"
+            % ([len(row) for row in grid],))
+    names = [n for row in grid for n in row if n != "empty"]
+    if len(names) != len(set(names)):
         raise SystemExit("menu-tile-description.csv: names must be unique")
 
-    singles = [(c, 0) for c in range(12)]
-    for c, r in singles:
+    for (c, r) in SINGLES:
         if not cell_drawn(img, c, r):
             raise SystemExit(
-                "expected drawn single at (%d,%d) for %r" % (c, r, names[c + 1]))
-    for c, r in BOX_CELLS:
-        if not cell_drawn(img, c, r):
-            raise SystemExit("expected drawn box cell at (%d,%d)" % (c, r))
-    for c, r in BOX_BLANK:
-        if cell_drawn(img, c, r):
+                "expected drawn single at (%d,%d) for %r"
+                % (c, r, grid[r][c]))
+    for (c, r) in HERO:
+        want = (c, r) not in HERO_BLANK
+        if cell_drawn(img, c, r) != want:
             raise SystemExit(
-                "expected blank box corner at (%d,%d)" % (c, r))
+                "hero cell (%d,%d) drawn=%s, want drawn=%s"
+                % (c, r, not want, want))
+    for r in range(4):
+        for c in range(12):
+            if (c, r) in SINGLES:
+                continue
+            if cell_drawn(img, c, r):
+                raise SystemExit(
+                    "expected blank empty cell at (%d,%d)" % (c, r))
 
     os.makedirs(PNG_DIR, exist_ok=True)
     tiles = []
@@ -120,20 +121,18 @@ def main():
             "category": "ui",
         })
 
-    for i, (c, r) in enumerate(singles):
-        label = names[i + 1]
+    for (c, r) in SINGLES + HERO:
+        label = grid[r][c]
         tid = "menus_" + slugify(label)
         cell = img.crop((c * TILE, r * TILE, (c + 1) * TILE, (r + 1) * TILE))
         add_tile(tid, label, tid + ".png", cell,
                  mean_color(img, (c * TILE, r * TILE,
                                   (c + 1) * TILE, (r + 1) * TILE)))
 
-    box_label = names[0]
-    box_tid = "menus_" + slugify(box_label)
-    x0, y0, x1, y1 = BOX_BOUNDS
-    box = img.crop((x0 * TILE, y0 * TILE, x1 * TILE, y1 * TILE))
-    add_tile(box_tid, box_label, box_tid + ".png", box,
-             mean_color(img, (x0 * TILE, y0 * TILE, x1 * TILE, y1 * TILE)))
+    # Drop the retired assembled box frame (replaced by hero cells).
+    stale = os.path.join(PNG_DIR, "menus_bottom_box_border.png")
+    if os.path.isfile(stale):
+        os.remove(stale)
 
     manifest = {
         "id": "menus",
