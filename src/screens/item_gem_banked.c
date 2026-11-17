@@ -212,13 +212,50 @@ static void gem_draw_detail(uint8_t bit)
     GEM_DRAW_TEXT(0, 9, "SEL:BACK", 8);
 }
 
+/* Gem-block window: same geometry as the QUEST tab (AGENTS.md 52.11.1
+ * lets both renderers share bank 13, but the row content differs, so
+ * the layout is mirrored, not shared).  Each owned gem takes 3 rows
+ * (name, skill, quests-separator rule), rows 3-14 hold exactly 4
+ * blocks.  Longer pockets scroll via item_menu_scroll (reset on tab
+ * switch).  Rows 2/15 are free for the scroll indicators; row 15 also
+ * carries the bottom box border like every other list tab; row 16
+ * keeps the footer. */
+#define GEM_WINDOW  4
+#define GEM_ROW_TOP 3
+#define GEM_BLOCK   3
+
+/* Title row for a window slot (shifts/adds only: no multiply, which
+ * would pull the SDCC mult lib into fixed _CODE, AGENTS.md 52.18). */
+static uint8_t gem_slot_row(uint8_t slot)
+{
+    return (uint8_t)(GEM_ROW_TOP + (uint8_t)((uint8_t)(slot << 1) + slot));
+}
+
+/* Scroll-indicator cell (VRAM list-scroll-arrow tile, same both rows;
+ * buffer keeps '^' up / 'v' down for harness asserts).  Hiding restores
+ * hide_tile (font space on row 2, the bottom border on row 15 so the
+ * rule stays unbroken when nothing sits below the window). */
+static void gem_stamp_scroll(uint8_t y, uint8_t x, uint8_t show,
+                             char letter, uint8_t hide_tile)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = show ? letter : ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst,
+        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : hide_tile);
+}
+
 /* GEM-tab input behind the thin fixed dispatch in item_screen.c.
  * Pad edges come straight from WRAM (always mapped, like the staged
- * Game*).  UP/DOWN moves an inline caret (no scroll: the owned list is
- * short); A toggles the equip bit manually (never auto-equipped --
- * winning the gem only sets OWNED).  The toggle writes GameState
- * directly (no fixed-bank call, no telemetry event -- same v1 gap as
- * the gamble table's gold) and forces a full redraw so ON/OFF flips. */
+ * Game*).  UP/DOWN moves an inline caret; A toggles the equip bit
+ * manually (never auto-equipped -- winning the gem only sets OWNED).
+ * Longer pockets scroll a 4-block window (item_menu_scroll, reset on
+ * tab switch): the cursor repaint stays inline while the window holds,
+ * and a window move takes the full redraw instead.  The toggle writes
+ * GameState directly (no fixed-bank call, no telemetry event -- same
+ * v1 gap as the gamble table's gold) and forces a full redraw so
+ * ON/OFF flips. */
 void item_gem_nav_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -228,6 +265,7 @@ void item_gem_nav_banked(void)
     int16_t equipped;
     uint8_t old_index;
     uint8_t new_index;
+    uint8_t old_scroll;
     uint8_t old_row;
     uint8_t new_row;
     if (!g) return;
@@ -285,8 +323,20 @@ void item_gem_nav_banked(void)
     if (new_index != old_index) {
         g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
     }
-    old_row = (uint8_t)(3 + (old_index << 1));
-    new_row = (uint8_t)(3 + (new_index << 1));
+    /* Scroll follow: keep the selection inside the 4-block window
+     * (wraps land back at the edges, so no separate wrap case). */
+    old_scroll = g->item_menu_scroll;
+    if (new_index < old_scroll) {
+        g->item_menu_scroll = new_index;
+    } else if (new_index > (uint8_t)(old_scroll + (GEM_WINDOW - 1))) {
+        g->item_menu_scroll = (uint8_t)(new_index - (GEM_WINDOW - 1));
+    }
+    if (g->item_menu_scroll != old_scroll) {
+        g->render_cache.valid = false;
+        return;
+    }
+    old_row = gem_slot_row((uint8_t)(old_index - old_scroll));
+    new_row = gem_slot_row((uint8_t)(new_index - old_scroll));
     if (old_row != new_row) {
         GEM_DRAW_TEXT(0, old_row, " ", 1);
         GEM_DRAW_TEXT(0, new_row, ">", 1);
@@ -299,6 +349,11 @@ void item_gem_render_banked(void)
     uint8_t e;
     uint8_t total = 0;
     uint8_t v;
+    uint8_t vis;
+    uint8_t drawn;
+    uint8_t y;
+    uint8_t i;
+    uint8_t max_scroll;
     uint8_t bit;
     int16_t owned;
     if (!g) return;
@@ -322,6 +377,21 @@ void item_gem_render_banked(void)
     for (v = 0; v < GEM_COUNT; v++) {
         if ((owned & (int16_t)(1 << v)) != 0) total++;
     }
+    max_scroll = (total > GEM_WINDOW) ?
+        (uint8_t)(total - GEM_WINDOW) : 0;
+    if (g->item_menu_scroll > max_scroll)
+        g->item_menu_scroll = max_scroll;
+    /* Bottom box border on row 15, same row as the other list tabs
+     * (the down indicator below overlays col 19 only while more gems
+     * sit below the window). */
+    for (i = 0; i < 20; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    /* Scroll indicators on the free rows (buffer '^'/'v'). */
+    gem_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
+                     ui_font_tile_base);
+    gem_stamp_scroll(15, 19,
+        (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
+        'v', UI_TILE_MENUS_BOTTOM_BORDER);
 
     if (g->item_menu_mode == GEM_MODE_DETAIL) {
         if (total != 0) {
@@ -331,12 +401,24 @@ void item_gem_render_banked(void)
     } else if (total == 0) {
         GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
     } else {
-        v = 0;
+        drawn = 0;
+        vis = 0;
         for (bit = 0; bit < GEM_COUNT; bit++) {
             if ((owned & (int16_t)(1 << bit)) == 0) continue;
-            gem_draw_gem(g, bit, (uint8_t)(3 + (v << 1)),
-                         (g->item_menu_index == v) ? 1 : 0);
-            v++;
+            if (vis < g->item_menu_scroll ||
+                vis >= (uint8_t)(g->item_menu_scroll + GEM_WINDOW)) {
+                vis++;
+                continue;
+            }
+            y = gem_slot_row(drawn);
+            gem_draw_gem(g, bit, y, (g->item_menu_index == vis) ? 1 : 0);
+            /* Separator rule between blocks (cols 2-10, under the
+             * name text): every drawn block ends with one. */
+            for (i = 2; i <= 10; i++)
+                menu_stamp_chrome((uint8_t)(y + 2),
+                                  i, UI_TILE_MENUS_QUESTS_SEPARATOR);
+            drawn++;
+            vis++;
         }
     }
     if (g->item_menu_message == GEM_MSG_MAX)
