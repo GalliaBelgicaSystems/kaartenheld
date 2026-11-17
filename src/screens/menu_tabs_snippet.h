@@ -4,7 +4,7 @@
 /* Shared DECK/QUEST/HERO/GEMS tab chrome -- single source of truth.
  *
  * Included once by each banked tab renderer (item_content_banked.c bank 2,
- * item_quest_banked.c / item_gem_banked.c bank 8): a banked body must share
+ * item_quest_banked.c / item_gem_banked.c / item_status_banked.c bank 13): a banked body must share
  * its tables' bank (AGENTS.md 52.11.1), so one compiled copy cannot serve
  * all tabs -- but the SOURCE is written once here and compiled per bank at
  * zero runtime/fixed-bank cost.  Each includer defines MENU_TAB_DRAW_TEXT

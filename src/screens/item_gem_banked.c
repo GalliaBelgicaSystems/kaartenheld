@@ -389,6 +389,14 @@ void item_gem_render_banked(void)
     for (v = 0; v < GEM_COUNT; v++) {
         if ((owned & (int16_t)(1 << v)) != 0) total++;
     }
+    if (g->item_menu_mode == GEM_MODE_DETAIL) {
+        if (total != 0) {
+            bit = gem_owned_bit(g, g->item_menu_index, &total);
+            gem_draw_detail(bit);
+        }
+        return;
+    }
+
     max_scroll = (total > GEM_WINDOW) ?
         (uint8_t)(total - GEM_WINDOW) : 0;
     if (g->item_menu_scroll > max_scroll)
@@ -406,12 +414,7 @@ void item_gem_render_banked(void)
         'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
         UI_TILE_MENUS_BOTTOM_BORDER);
 
-    if (g->item_menu_mode == GEM_MODE_DETAIL) {
-        if (total != 0) {
-            bit = gem_owned_bit(g, g->item_menu_index, &total);
-            gem_draw_detail(bit);
-        }
-    } else if (total == 0) {
+    if (total == 0) {
         GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
     } else {
         drawn = 0;
@@ -434,14 +437,10 @@ void item_gem_render_banked(void)
             vis++;
         }
     }
-    /* List footer (skipped on the detail page: gem_draw_detail paints
-     * its own B:BACK footer above). */
-    if (g->item_menu_mode != GEM_MODE_DETAIL) {
-        if (g->item_menu_message == GEM_MSG_MAX)
-            GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
-        else if (total == 0)
-            GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
-        else
-            GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
-    }
+    if (g->item_menu_message == GEM_MSG_MAX)
+        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
+    else if (total == 0)
+        GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
+    else
+        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
 }

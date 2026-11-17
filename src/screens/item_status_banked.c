@@ -138,7 +138,7 @@ static void st_stamp_icon(uint8_t y, uint8_t x, uint8_t tile)
  * across banks (AGENTS.md 52.11.1). */
 static const uint8_t s_st_hero_slots[16] = {
     220u, 221u, 222u, 223u, 224u, 225u, 226u, 227u,
-    233u, 234u, 235u, 242u, 243u, 244u, 246u, 247u
+    232u, 233u, 234u, 235u, 242u, 243u, 244u, 246u
 };
 
 /* OAM sweep for the HERO tab (entries 1-32): the DECK list paints
@@ -167,12 +167,27 @@ void item_status_render_banked(void)
 
     menu_draw_tabs(11);
 
-    /* Left block (cols 0-9): HP/AP/GOLD/DECK with icon cells. */
-    ST_DRAW_TEXT(0, 3, "HP  ", 4);
-    st_draw_rjust(3, 5, (uint16_t)g->state.party.members[0].hp);
-    ST_DRAW_TEXT(6, 3, "/", 1);
-    st_draw_rjust(3, 8, (uint16_t)g->state.party.members[0].max_hp);
-    st_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
+    /* Left block (cols 0-9, or 0-10 when HP/max >= 100): HP/AP/GOLD/DECK
+     * with icon cells.  Keep "HP  15/15" + col-9 heart for 2-digit HP,
+     * and shift max_hp/heart right by 1 col for 3-digit HP so it never
+     * overwrites the '/' at col 6. */
+    {
+        uint8_t hp = g->state.party.members[0].hp;
+        uint8_t max_hp = g->state.party.members[0].max_hp;
+        if (hp >= 100 || max_hp >= 100) {
+            ST_DRAW_TEXT(0, 3, "HP ", 3);
+            st_draw_rjust(3, 5, (uint16_t)hp);
+            ST_DRAW_TEXT(6, 3, "/", 1);
+            st_draw_rjust(3, 9, (uint16_t)max_hp);
+            st_stamp_icon(3, 10, UI_TILE_MENUS_HP_ICON);
+        } else {
+            ST_DRAW_TEXT(0, 3, "HP  ", 4);
+            st_draw_rjust(3, 5, (uint16_t)hp);
+            ST_DRAW_TEXT(6, 3, "/", 1);
+            st_draw_rjust(3, 8, (uint16_t)max_hp);
+            st_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
+        }
+    }
     ST_DRAW_TEXT(0, 4, "AP ", 3);
     st_draw_rjust(4, 8,
         (uint16_t)g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1]);
@@ -190,4 +205,8 @@ void item_status_render_banked(void)
             st_stamp_icon((uint8_t)(3 + hy), (uint8_t)(13 + hx),
                 s_st_hero_slots[(uint8_t)((uint8_t)(hy << 2) + hx)]);
     }
+    /* Same bottom chrome as the other tabs: row-15 border + B:BACK. */
+    for (hx = 0; hx < 20; hx++)
+        menu_stamp_chrome(15, hx, UI_TILE_MENUS_BOTTOM_BORDER);
+    ST_DRAW_TEXT(0, 16, "B:BACK", 6);
 }

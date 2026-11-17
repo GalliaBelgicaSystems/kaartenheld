@@ -5,7 +5,7 @@
 #include "ui.h"
 #include "banked.h"
 
-/* BATTLE/ITEM/SHOP entry invalidate + menu chrome stream (bank 5).
+/* BATTLE/ITEM/SHOP entry invalidate + menu chrome stream (bank 11).
  *
  * Moved here from src/game/marks_banked.c (bank 8): the chrome sheet
  * (assets/menus-tile.png) overflowed bank 8 in the debug build, bank 2
@@ -26,22 +26,24 @@ extern uint8_t s_ap_pip_loaded;
 #include "gfx/menus_tile_tiles.h"
 
 /* Hero-status portrait VRAM slots (ui.h): 16 cells in header order
- * (row-major from sheet (12,0)): the 14 orphaned box slots around
- * riders 228-232, AP pips 236-240 and the spin tile 241, plus dice
- * slots 246-247 (the gamble entry restreams all dice, and every
- * BATTLE/ITEM/SHOP entry restreams hero, so the time-share is safe).
- * The bank-2 STATUS renderer carries a copy of this table (it cannot
+ * (row-major from sheet (12,0)): the 15 orphaned box slots around
+ * riders 228-231, AP pips 236-240 and the spin tile 241, plus dice
+ * slot 246 (the gamble entry restreams all dice, and every ITEM entry
+ * restreams hero, so the time-share is safe).
+ * The bank-13 STATUS renderer carries a copy of this table (it cannot
  * read bank-11 data); KEEP IN SYNC. */
 static const uint8_t s_menus_hero_slots[16] = {
     220u, 221u, 222u, 223u, 224u, 225u, 226u, 227u,
-    233u, 234u, 235u, 242u, 243u, 244u, 246u, 247u
+    232u, 233u, 234u, 235u, 242u, 243u, 244u, 246u
 };
 
-/* Compile-time pins: the chrome layout above must match ui.h. */
-typedef char menus_chrome_ok[
-    (UI_TILE_MENUS_BASE == 208u && UI_TILE_MENUS_COUNT == 12u &&
-     UI_TILE_MENUS_HERO_COUNT == 16u &&
-     UI_TILE_MENUS_LIST_SCROLL_UP == 245u) ? 1 : -1];
+/* Compile-time pins: the chrome layout above must match ui.h.
+ * Preprocessor #if/#error (SDCC silently accepts typedef char[-1]). */
+#if !(UI_TILE_MENUS_BASE == 208u && UI_TILE_MENUS_COUNT == 12u && \
+      UI_TILE_MENUS_HERO_COUNT == 16u && \
+      UI_TILE_MENUS_LIST_SCROLL_UP == 245u)
+#error "menu chrome VRAM layout mismatch with ui.h"
+#endif
 
 /* Bit-reverse one byte (horizontal mirror for the 180-degree rotation
  * of the list scroll arrow, whose sheet art points down).  No table

@@ -129,8 +129,8 @@ def main():
                  mean_color(img, (c * TILE, r * TILE,
                                   (c + 1) * TILE, (r + 1) * TILE)))
 
-    # Drop the retired assembled box frame (replaced by hero cells).
-    stale = os.path.join(PNG_DIR, "menus_bottom_box_border.png")
+    # Drop the retired huge-character tile (replaced by 4x4 hero cells).
+    stale = os.path.join(PNG_DIR, "menus_huge_character.png")
     if os.path.isfile(stale):
         os.remove(stale)
 

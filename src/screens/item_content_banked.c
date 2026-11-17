@@ -1178,8 +1178,13 @@ static void ic_draw_card_detail_page(Game *g)
     } else {
         IC_DRAW_TEXT(17, 11, "--", 2);
     }
-    /* Row 13: hints. */
-    IC_DRAW_TEXT(0, 13, "SEL:BACK", 8);
+    /* Row 15-16: bottom border + back hint (consistent with QUEST/GEMS). */
+    {
+        uint8_t bx;
+        for (bx = 0; bx < 20; bx++)
+            menu_stamp_chrome(15, bx, UI_TILE_MENUS_BOTTOM_BORDER);
+    }
+    IC_DRAW_TEXT(0, 16, "B:BACK", 6);
 }
 
 static char s_ic_big_num[6];

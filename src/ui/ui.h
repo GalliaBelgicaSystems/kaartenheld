@@ -97,9 +97,9 @@ void dice_tiles_load_banked(void);
 
 /* Card-menu element rider icons as BG tiles (assets/menu_riders.png, cells
  * 0-3: fire, ice, poison, health).  Streamed on demand by the bank-2
- * menu bodies into the free high block-1 window below the AP pips (the
- * world tileset writes 128..127+count, max 207; 208-235 belongs to no
- * set), and stamped over the card's element cell -- the menu used to
+ * menu bodies into the time-shared high block-1 window below the AP pips
+ * (overworld reloads its own tileset on exit, and menus/battle never render
+ * world tiles), and stamped over the card's element cell -- the menu used to
  * recycle enemy-sprite OAM art for these, whose 8x8 crop was off-center.
  * The cell keeps its element palette slot (fire/ice/poison, health ->
  * UI_COLOR_HEALTH), so one encoding per icon shows the right color.
@@ -115,7 +115,7 @@ void dice_tiles_load_banked(void);
 
 /* Card-menu rider icon streamer (src/screens/menu_riders_banked.c, bank 2
  * with the menu render bodies that call it).  One-shot per menu stay; the
- * flag is re-armed on every ITEM/SHOP entry by the bank-8 time-share
+ * flag is re-armed on every BATTLE/ITEM/SHOP entry by the bank-11 time-share
  * invalidate body (same contract as the AP pip stream). */
 extern uint8_t g_menu_riders_loaded;
 void ic_menu_riders_load(void);
@@ -131,20 +131,12 @@ void ic_menu_riders_load(void);
 #define UI_TILE_AP_ICON          114u
 #define UI_TILE_DECK_ICON        116u
 
-/* DECK-list scroll-down caret: the menu finger-up bitmap rotated 180°
- * so down matches up stroke-for-stroke (same symbol, not the font 'v').
- * Lives in the free high block-1 window (208-235 belongs to no tileset;
- * the world tileset writes 128..127+count, max 207), streamed with the
- * rider icons on DECK-tab entry.  The semantic buffer keeps 'v' for
- * harness screen_row asserts. */
-#define UI_TILE_SCROLL_DOWN      232u
-
 /* Menu chrome (assets/menus-tile.png): 12 single-cell UI icons (row 0,
  * cols 0-11) plus the 4x4 hero-status portrait (cols 12-15, rows 0-3,
  * "hero status RC" sheet order, blank transparent corners included).
  * Singles stream to 208-219 in scan order; the 16 hero cells land on
- * the orphaned box slots (220-227, 233-235, 242-244) plus dice slots
- * 246-247 (the gamble entry restreams all dice, and every ITEM entry
+ * the orphaned box slots (220-227, 232-235, 242-244) plus dice slot
+ * 246 (the gamble entry restreams all dice, and every ITEM entry
  * restreams hero, so the time-share is safe).  Streamed eagerly on
  * every BATTLE/ITEM/SHOP entry by the bank-11 invalidate body (entry
  * is the once-per-stay re-arm, no WRAM flag); the slot table lives

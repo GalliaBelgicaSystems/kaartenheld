@@ -236,8 +236,8 @@ void item_screen_update(Game *g)
 
     /* QUEST, HERO and GEM tabs share the pre-DECK branch (LR switches
      * tabs from LIST mode; HERO is read-only otherwise).  Cursor/
-     * detail input for QUEST lives in bank 8 with the quest registry
-     * and GEM input routes through the bank-8 gem body (which forwards
+     * detail input for QUEST lives in bank 13 with the quest registry
+     * and GEM input routes through the bank-13 gem body (which forwards
      * QUEST back to the quest nav in-bank, so this dispatch needs no
      * tab branch of its own -- fixed-bank headroom: AGENTS.md 52.18). */
     if (g->item_menu_tab != TAB_DECK) {
