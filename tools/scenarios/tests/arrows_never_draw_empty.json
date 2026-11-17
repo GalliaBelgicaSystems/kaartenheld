@@ -1,0 +1,44 @@
+{
+ "name": "arrows_never_draw_empty",
+ "test": true,
+ "description": "With zero arrows the opening deal never draws a bow (limited-arrows): the 5 non-bow cards fill the hand, both bows stay in the pile, and row 13 shows no BO code.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 13,
+   "contains": "BO"
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 2
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7201,
+  "currency": {
+   "ARROWS": 0
+  },
+  "deck": {
+   "BOW_9": 2,
+   "WOOD_SWORD": 3,
+   "WOODEN_SHIELD": 2
+  },
+  "start_battle": true
+ }
+}

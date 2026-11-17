@@ -80,13 +80,19 @@ typedef enum {
  * 45-frame TTL), 4 = loot reveal (result screen, never expires), 5 =
  * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
  * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
- * consumes it; the combo row + banner read it, never row 9), 9 = Carl
+ * consumes it; the combo row + banner read it, never row 9), 8 = NO
+ * ARROWS (limited-arrows bow refusal: the shared arrow pool is empty;
+ * nav rejection, 45-frame TTL like the other rejections), 9 = Carl
  * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
  * (timer expiry with nothing staged) carries no msg_id: the ANIM banner
  * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
  * see battle_update).  An explicit empty SELECT keeps the historic
  * auto-play of the highlighted card (see battle_execute_combo). */
 #define BATTLE_MSG_ICED_FOE 5
+/* Limited-arrows bow refusal (see the msg_id table above): staged by the
+ * banked nav body when a bow is selected with the shared arrow pool
+ * empty.  Id 8 is the first free slot (1-7, 9, 10 are taken). */
+#define BATTLE_MSG_NO_ARROWS 8
 /* Confused attacker (poison), two-beat acknowledgement (bank 12
  * telegraph stages the first): msg 6 is the "FOE IS CONFUSED!" beat
  * that waits for A, msg 7 is the staged outcome the A press reveals

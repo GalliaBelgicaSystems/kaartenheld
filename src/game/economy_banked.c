@@ -4,6 +4,7 @@
 #include "banked.h"
 #include "game.h"
 #include "game_ids.h"
+#include "rpg/loot.h"
 #include "telemetry.h"
 #include "telemetry_ring.h"
 #include "scene_ids_generated.h"
@@ -154,6 +155,28 @@ void economy_grant_banked(void)
 #ifdef DEBUG_BUILD
     telemetry_ring_emit(EVENT_CURRENCY_ADDED, currency, granted, 0, 0);
 #endif
+    /* Limited-arrows victory drop: 1-3 arrows for the shared bow pool,
+     * capped at ARROWS_MAX.  Rewardless fights never reach here (base 0
+     * early-returns above, e.g. Carl's spar).  Rolls the isolated loot
+     * stream (same inline xorshift step the loot bodies use) so the
+     * shared stream driving battles/patrols is untouched. */
+    {
+        uint8_t drop;
+        int16_t cur;
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 7);
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state >> 9);
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 8);
+        drop = (uint8_t)(g_loot_rng_state & 3);
+        if (drop == 0) drop = 1;
+        cur = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
+        if (cur < 0) cur = 0;
+        cur = (int16_t)(cur + drop);
+        if (cur > ARROWS_MAX) cur = ARROWS_MAX;
+        g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1] = cur;
+#ifdef DEBUG_BUILD
+        telemetry_ring_emit(EVENT_CURRENCY_ADDED, CURRENCY_ID_ARROWS, drop, 0, 0);
+#endif
+    }
     g_bk_byte_b = granted;
 }
 

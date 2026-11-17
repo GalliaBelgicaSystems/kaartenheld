@@ -1,0 +1,47 @@
+{
+ "name": "arrows_cheapest_first",
+ "test": true,
+ "description": "With 1 arrow and an all-bow deck the opening deal draws exactly one bow (limited-arrows saturation): pass 2 takes the cheapest pile bow first, the other 4 slots stay empty, and 6 pile cards remain.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 13,
+   "contains": "BO"
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 6
+  },
+  {
+   "type": "currency",
+   "expected": 1,
+   "currency": "ARROWS"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7301,
+  "currency": {
+   "ARROWS": 1
+  },
+  "deck": {
+   "BOW_9": 7
+  },
+  "start_battle": true
+ }
+}
