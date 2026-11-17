@@ -274,6 +274,11 @@ static void iq_draw_quest(Game *g)
         (uint8_t)(total - QUEST_WINDOW) : 0;
     if (g->item_menu_scroll > max_scroll)
         g->item_menu_scroll = max_scroll;
+    /* Bottom box border on row 15, same row as the DECK screen
+     * (full width; the down indicator below overlays col 19 only
+     * while more blocks sit below the window). */
+    for (i = 0; i < 20; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
     /* Scroll indicators on the free rows (buffer '^'/'v'). */
     iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^');
     iq_stamp_scroll(15, 19,
@@ -313,10 +318,11 @@ static void iq_draw_quest(Game *g)
         }
 
         iq_quest_draw_status_line(g, s_iq_q, (uint8_t)(y + 1));
-        /* Quests-separator rule between blocks (full width, buffer
-         * spaces): every drawn block ends with one, so the rule is
-         * scroll-stable and the last block is closed too. */
-        for (i = 0; i < 20; i++)
+        /* Quests-separator rule between blocks (cols 2-10, under the
+         * name text; buffer spaces): every drawn block ends with one,
+         * so the rule is scroll-stable and the last block is closed
+         * too. */
+        for (i = 2; i <= 10; i++)
             menu_stamp_chrome((uint8_t)(y + 2),
                               i, UI_TILE_MENUS_QUESTS_SEPARATOR);
         drawn++;

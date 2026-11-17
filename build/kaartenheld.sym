@@ -23,7 +23,7 @@
 00:020C .wait_vbl_done
 00:703D 0000007D
 00:C940 00001128
-00:D4000 00001642
+00:D4000 00001658
 00:C4000 000025DA
 00:84000 00002ACD
 00:34000 000035C7
@@ -851,9 +851,9 @@
 00:B6F0B _item_men
 00:B6F0B _item_menu_cycle_banked
 00:B6B37 _item_menu_step_banked
-00:D5617 _item_que
-00:D54B5 _item_quest_nav_banked
-00:D5617 _item_quest_render_banked
+00:D562D _item_que
+00:D54CB _item_quest_nav_banked
+00:D562D _item_quest_render_banked
 00:B6AA9 _item_row
 00:B6AA9 _item_row_resum_banked
 00:26BF4 _item_scr
@@ -1871,9 +1871,9 @@
 00:B6F0B item_men
 00:B6F0B item_menu_cycle_banked
 00:B6B37 item_menu_step_banked
-00:D5617 item_que
-00:D54B5 item_quest_nav_banked
-00:D5617 item_quest_render_banked
+00:D562D item_que
+00:D54CB item_quest_nav_banked
+00:D562D item_quest_render_banked
 00:B6AA9 item_row
 00:B6AA9 item_row_resum_banked
 00:26BF4 item_scr
@@ -1894,7 +1894,7 @@
 00:3D32 l__CODE_10
 00:3CE5 l__CODE_11
 00:25DA l__CODE_12
-00:1642 l__CODE_13
+00:1658 l__CODE_13
 00:3F79 l__CODE_2
 00:35C7 l__CODE_3
 00:3DA1 l__CODE_4
