@@ -38,7 +38,22 @@ static const uint8_t s_menus_box_slots[14] = {
 /* Compile-time pins: the chrome layout above must match ui.h. */
 typedef char menus_chrome_ok[
     (UI_TILE_MENUS_BASE == 208u && UI_TILE_MENUS_COUNT == 12u &&
-     UI_TILE_MENUS_BOX_COUNT == 14u) ? 1 : -1];
+     UI_TILE_MENUS_BOX_COUNT == 14u &&
+     UI_TILE_MENUS_INV_ARROW_UP == 245u) ? 1 : -1];
+
+/* Bit-reverse one byte (horizontal mirror for the 180-degree rotation
+ * of the inventory type arrow).  No table (bank 11 has room, WRAM does
+ * not grow). */
+static uint8_t menus_bit_rev(uint8_t b)
+{
+    uint8_t r = 0;
+    uint8_t i;
+    for (i = 0; i < 8; i++) {
+        r = (uint8_t)((r << 1) | (b & 1u));
+        b >>= 1;
+    }
+    return r;
+}
 
 /* Stream the menu chrome sheet (26 cells, 416 bytes) to its VRAM slots.
  * Same LCD-safe pattern as the bank-8 OAM streamers (BANKED_VRAM_WRITE
@@ -64,6 +79,23 @@ static void menus_chrome_stream(void)
                                    ((uint16_t)s_menus_box_slots[k] << 4));
         for (j = 0; j < 16; j++) {
             BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            dst++;
+        }
+    }
+    /* Rotated copy of the inventory type arrow (tile index 1) into slot
+     * 245: 180 degrees = row order reversed + each byte bit-mirrored.
+     * Row pairs are 2 bytes (lo/hi, monochrome doubles). */
+    {
+        uint8_t r;
+        src = &menus_tile_tiles[((uint16_t)1 << 4)];
+        dst = (volatile uint8_t *)(0x8000u +
+                                   ((uint16_t)UI_TILE_MENUS_INV_ARROW_UP << 4));
+        for (r = 0; r < 8; r++) {
+            uint8_t lo = src[((uint16_t)(7 - r) << 1)];
+            uint8_t hi = src[((uint16_t)((7 - r) << 1) + 1)];
+            BANKED_VRAM_WRITE(dst, menus_bit_rev(lo));
+            dst++;
+            BANKED_VRAM_WRITE(dst, menus_bit_rev(hi));
             dst++;
         }
     }

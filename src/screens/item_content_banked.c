@@ -331,17 +331,51 @@ static void ic_color_span_fast(void)
 } while(0)
 
 /* ── Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) ──────
- * Row 0: the three tabs; row 1: the caret under the active tab.
+ * Row 0: the four tabs (GEMS, not GEM); the three single spaces double
+ * as category-separator chrome (VRAM tile, buffer keeps the space so
+ * tab-word asserts are untouched).
+ * Row 1: category border everywhere, category corner under each
+ * separator, cursor-category tile at the active tab (never a bare
+ * border under the cursor).  Buffer keeps '^' at the cursor so the
+ * harness caret asserts are unchanged.
  * No multiply (would pull the SDCC mult lib into fixed _CODE). */
 static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
+
+/* Unconditional chrome stamp (VRAM tile + buffer space): the buffer
+ * glyph never equals the PPU tile, so the text skip-guard would
+ * stale-hide it (AGENTS.md 52.25).  LCD-on safe (BANKED_VRAM_WRITE). */
+static void ic_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, tile);
+}
 
 static void ic_draw_header(Game *g)
 {
     uint8_t cx = 0;
+    uint8_t x;
     if (g->item_menu_tab == TAB_HERO) cx = 11;
     /* QUEST and GEM never reach this body (bank 8 renders them). */
-    IC_DRAW_TEXT(0, 0, "DECK QUEST HERO GEM", 19);
-    IC_DRAW_TEXT(cx, 1, "^", 1);
+    IC_DRAW_TEXT(0, 0, "DECK QUEST HERO GEMS", 20);
+    ic_stamp_chrome(0, 4, UI_TILE_MENUS_CAT_SEPARATOR);
+    ic_stamp_chrome(0, 10, UI_TILE_MENUS_CAT_SEPARATOR);
+    ic_stamp_chrome(0, 15, UI_TILE_MENUS_CAT_SEPARATOR);
+    for (x = 0; x < 20; x++) {
+        if (x == 4 || x == 10 || x == 15) continue;
+        if (x == cx) continue;
+        ic_stamp_chrome(1, x, UI_TILE_MENUS_CAT_BORDER);
+    }
+    ic_stamp_chrome(1, 4, UI_TILE_MENUS_CAT_CORNER);
+    ic_stamp_chrome(1, 10, UI_TILE_MENUS_CAT_CORNER);
+    ic_stamp_chrome(1, 15, UI_TILE_MENUS_CAT_CORNER);
+    s_ic_buf = &g_ui_screen_buf[1][cx];
+    *s_ic_buf = '^';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)1 << 5) + cx);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_MENUS_CURSOR_CAT);
 }
 
 /* ── Full card names (display only; mechanics keep def->name) ──────
@@ -881,11 +915,14 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
 
 /* One grouped row across both pile/deck lists: each side draws its own
  * cell when the group shows there (blank paper otherwise).  lst is
- * the drawn slot (OAM entries + per-side sums are slot-indexed). */
+ * the drawn slot (OAM entries + per-side sums are slot-indexed).  Col 9
+ * carries the inventory-separator chrome between the lists (buffer
+ * space, same in both render paths since both go through here). */
 static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t vL, uint8_t vR, uint8_t lst)
 {
     if (vL != 0xFF) ic_draw_card_cell(g, y, vL, 0, lst);
     if (vR != 0xFF) ic_draw_card_cell(g, y, vR, 1, lst);
+    ic_stamp_chrome(y, 9, UI_TILE_MENUS_INV_SEPARATOR);
 }
 
 static void ic_draw_row16(Game *g);
@@ -900,13 +937,24 @@ static void ic_draw_filter_row(Game *g)
     IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
 }
 
-/* Scroll-down caret cell: VRAM takes UI_TILE_SCROLL_DOWN (the menu
- * finger rotated 180 degrees, streamed with the rider icons) while
- * the buffer keeps 'v' for harness screen_row asserts.  VRAM always
+/* Scroll caret cells: the inventory type arrow (sheet art points down)
+ * for the row-14 down carets, its 180-degree rotated copy (slot 245,
+ * streamed by the bank-11 chrome entry body) for the row-4 up carets.
+ * Buffer keeps '^'/'v' for harness screen_row asserts.  VRAM always
  * writes: the buffer glyph never matches the PPU tile, so the text
  * skip-guard would stale-hide the caret (same hazard as the AP pips,
  * AGENTS.md 52.25).  Hiding restores the font space tile through the
  * same unconditional write. */
+static void ic_stamp_scroll_up(uint8_t y, uint8_t x, uint8_t show)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = show ? '^' : ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst,
+        show ? UI_TILE_MENUS_INV_ARROW_UP : ui_font_tile_base);
+}
+
 static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
 {
     s_ic_buf = &g_ui_screen_buf[y][x];
@@ -914,35 +962,41 @@ static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_SCROLL_DOWN : ui_font_tile_base);
+        show ? UI_TILE_MENUS_INV_ARROW : ui_font_tile_base);
 }
 
 /* Scroll-indicator rows, shared by the full list render and the
- * incremental repaint: row-4 up carets ('^' font art, same bitmap as
- * the tab caret) and row-14 down carets at the material columns (4
- * pile / 14 deck), per side, from the bank-11 overflow flags rebuilt
- * by the view build just before this render.  Rows
- * 13/15 stay permanent blank gaps above/below the down row.  Only the
- * caret cells are ever written (a full clear blanks the rows first,
- * and nothing else addresses them, so no stale glyphs survive). */
+ * incremental repaint: row-4 up arrows (rotated inventory type arrow)
+ * and row-14 down arrows (inventory type arrow) at the material
+ * columns (4 pile / 14 deck), per side, from the bank-11 overflow
+ * flags rebuilt by the view build just before this render.  Row 13 is
+ * the inventory-separator column gap (stamped by the list body); row
+ * 15 is the full-width bottom box border.  Only the caret cells are
+ * ever written (a full clear blanks the rows first, and nothing else
+ * addresses them, so no stale glyphs survive). */
 static void ic_draw_scroll_rows(Game *g)
 {
     uint8_t flags;
     (void)g;
     flags = s_ic_scroll_flags;
-    IC_DRAW_TEXT(4, ROW_SCROLL_UP, (flags & 0x01) ? "^" : " ", 1);
-    IC_DRAW_TEXT(14, ROW_SCROLL_UP, (flags & 0x02) ? "^" : " ", 1);
+    ic_stamp_scroll_up(ROW_SCROLL_UP, 4, (uint8_t)(flags & 0x01));
+    ic_stamp_scroll_up(ROW_SCROLL_UP, 14, (uint8_t)(flags & 0x02));
     ic_stamp_scroll(ROW_SCROLL_DOWN, 4, (uint8_t)(flags & 0x04));
     ic_stamp_scroll(ROW_SCROLL_DOWN, 14, (uint8_t)(flags & 0x08));
 }
 
 static void ic_draw_cards_list(Game *g)
 {
+    uint8_t x;
     /* Fixed column header: PILE over the left (owned) block, DECK over
-     * the right block (cols 0-19): "  PILE       DECK   ".  Row 4
-     * carries the scroll-up carets, rows 13/15 are blank gaps around
-     * the row-14 scroll-down carets (see ic_draw_scroll_rows). */
+     * the right block (cols 0-19): "  PILE       DECK   ".  An
+     * inventory type arrow sits directly right of each word (cols 6
+     * and 17).  Row 4 carries the scroll-up carets, row 13 the middle
+     * separator gap, row 14 the scroll-down carets, row 15 the
+     * full-width bottom box border (see ic_draw_scroll_rows). */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE       DECK   ", 20);
+    ic_stamp_chrome(ROW_COL_HEAD, 6, UI_TILE_MENUS_INV_ARROW);
+    ic_stamp_chrome(ROW_COL_HEAD, 17, UI_TILE_MENUS_INV_ARROW);
     /* Indicator rows (the bank-11 view build just recomputed the
      * overflow flags immediately before this body ran). */
     ic_draw_scroll_rows(g);
@@ -976,6 +1030,15 @@ static void ic_draw_cards_list(Game *g)
         ic_mat_hide((uint8_t)(9 + s_ic_lst_pos));
         ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
     }
+
+    /* Row 13 keeps the middle separator column alive below the last
+     * card row; row 15 is the full-width bottom box border (bottom-edge
+     * kit: 242 at col 0, 243 across, 244 at col 19; buffer spaces). */
+    ic_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
+    ic_stamp_chrome(ROW_GAP_BOT, 0, 242u);
+    for (x = 1; x < 19; x++)
+        ic_stamp_chrome(ROW_GAP_BOT, x, 243u);
+    ic_stamp_chrome(ROW_GAP_BOT, 19, 244u);
 
     /* Row 16 (message or side footer) goes through the shared helper
      * so the incremental post-A refresh paints exactly what the full

@@ -147,10 +147,25 @@ void ic_menu_riders_load(void);
  * slots around riders 228-232, AP pips 236-240 and the spin tile 241).
  * Streamed eagerly on every BATTLE/ITEM/SHOP entry by the bank-11
  * invalidate body (entry is the once-per-stay re-arm, no WRAM flag);
- * the slot table lives with that streamer. */
+ * the slot table lives with that streamer.
+ *
+ * Single-cell order (CSV position = VRAM offset from BASE):
+ * 0 inventory separator, 1 inventory type arrow, 2 cursor category,
+ * 3 category border, 4 category corner, 5 category separator, ... */
 #define UI_TILE_MENUS_BASE       208u
 #define UI_TILE_MENUS_COUNT      12u
 #define UI_TILE_MENUS_BOX_COUNT  14u
+#define UI_TILE_MENUS_INV_SEPARATOR (UI_TILE_MENUS_BASE + 0u)
+#define UI_TILE_MENUS_INV_ARROW     (UI_TILE_MENUS_BASE + 1u)
+#define UI_TILE_MENUS_CURSOR_CAT    (UI_TILE_MENUS_BASE + 2u)
+#define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 3u)
+#define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 4u)
+#define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 5u)
+/* Rotated (180 deg) copy of the inventory type arrow for scroll-up
+ * carets (the sheet art points down).  Slot 245 is the last free
+ * block-1 id (box ends at 244, dice start at 246).  Streamed by the
+ * bank-11 chrome entry body; the semantic buffer keeps '^'. */
+#define UI_TILE_MENUS_INV_ARROW_UP 245u
 
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
