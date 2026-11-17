@@ -238,15 +238,17 @@ static void iq_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t
  * buffer keeps '^' up / 'v' down for harness asserts).  VRAM always
  * writes: the buffer glyph never matches the PPU tile, so the text
  * skip-guard would stale-hide it (AGENTS.md 52.25).  Hiding restores
- * the font space tile through the same unconditional write. */
-static void iq_stamp_scroll(uint8_t y, uint8_t x, uint8_t show, char letter)
+ * hide_tile (font space on row 2, the bottom border on row 15 so the
+ * rule stays unbroken when nothing sits below the window). */
+static void iq_stamp_scroll(uint8_t y, uint8_t x, uint8_t show, char letter,
+                            uint8_t hide_tile)
 {
     s_ic_buf = &g_ui_screen_buf[y][x];
     *s_ic_buf = show ? letter : ' ';
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
+        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : hide_tile);
 }
 
 /* Title row for a window slot (shifts/adds only: no multiply, which
@@ -280,10 +282,11 @@ static void iq_draw_quest(Game *g)
     for (i = 0; i < 20; i++)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
     /* Scroll indicators on the free rows (buffer '^'/'v'). */
-    iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^');
+    iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
+                    ui_font_tile_base);
     iq_stamp_scroll(15, 19,
         (uint8_t)((uint8_t)(g->item_menu_scroll + QUEST_WINDOW) < total),
-        'v');
+        'v', UI_TILE_MENUS_BOTTOM_BORDER);
     /* Only accepted quests are tracked: NOT_STARTED entries stay hidden
      * (an empty quest log shows a placeholder instead of "not started"
      * rows).  item_menu_index addresses the VISIBLE list, so the caret
