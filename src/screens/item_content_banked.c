@@ -1033,11 +1033,11 @@ static void ic_draw_cards_list(Game *g)
 
     /* Row 13 keeps the middle separator column alive below the last
      * card row; row 15 is the full-width bottom box border: the sheet
-     * (0,0) horizontal segment (UI_TILE_MENUS_INV_SEPARATOR) repeated
+     * (0,0) horizontal segment (UI_TILE_MENUS_BOTTOM_BORDER) repeated
      * across all 20 cols (buffer spaces). */
     ic_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
     for (x = 0; x < 20; x++)
-        ic_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_INV_SEPARATOR);
+        ic_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
 
     /* Row 16 (message or side footer) goes through the shared helper
      * so the incremental post-A refresh paints exactly what the full

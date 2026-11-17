@@ -149,18 +149,24 @@ void ic_menu_riders_load(void);
  * invalidate body (entry is the once-per-stay re-arm, no WRAM flag);
  * the slot table lives with that streamer.
  *
- * Single-cell order (CSV position = VRAM offset from BASE):
- * 0 inventory separator, 1 inventory type arrow, 2 cursor category,
- * 3 category border, 4 category corner, 5 category separator, ... */
+ * Single-cell order is sheet scan order (row 0, cols 0-11 = CSV order:
+ * 0 bottom box border, 1 inventory separator, 2 inventory type arrow,
+ * 3 cursor category, 4 category border, 5 category corner, 6 category
+ * separator, ...).  The slice script reserves CSV[0] for the frame kit,
+ * so its TILE_MENUS_* names are shifted by one -- do NOT use them;
+ * the defines below follow the artist's scan order. */
 #define UI_TILE_MENUS_BASE       208u
 #define UI_TILE_MENUS_COUNT      12u
 #define UI_TILE_MENUS_BOX_COUNT  14u
-#define UI_TILE_MENUS_INV_SEPARATOR (UI_TILE_MENUS_BASE + 0u)
-#define UI_TILE_MENUS_INV_ARROW     (UI_TILE_MENUS_BASE + 1u)
-#define UI_TILE_MENUS_CURSOR_CAT    (UI_TILE_MENUS_BASE + 2u)
-#define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 3u)
-#define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 4u)
-#define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 5u)
+/* Sheet (0,0) horizontal segment: the row-15 bottom rule.  Named for
+ * what it is, not for the slice script's CSV[1] label. */
+#define UI_TILE_MENUS_BOTTOM_BORDER (UI_TILE_MENUS_BASE + 0u)
+#define UI_TILE_MENUS_INV_SEPARATOR (UI_TILE_MENUS_BASE + 1u)
+#define UI_TILE_MENUS_INV_ARROW     (UI_TILE_MENUS_BASE + 2u)
+#define UI_TILE_MENUS_CURSOR_CAT    (UI_TILE_MENUS_BASE + 3u)
+#define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 4u)
+#define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 5u)
+#define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 6u)
 /* Rotated (180 deg) copy of the inventory type arrow for scroll-up
  * carets (the sheet art points down).  Slot 245 is the last free
  * block-1 id (box ends at 244, dice start at 246).  Streamed by the

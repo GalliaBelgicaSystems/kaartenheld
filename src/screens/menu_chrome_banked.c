@@ -82,12 +82,13 @@ static void menus_chrome_stream(void)
             dst++;
         }
     }
-    /* Rotated copy of the inventory type arrow (tile index 1) into slot
-     * 245: 180 degrees = row order reversed + each byte bit-mirrored.
-     * Row pairs are 2 bytes (lo/hi, monochrome doubles). */
+    /* Rotated copy of the inventory type arrow (sheet (0,2), header
+     * tile index 2) into slot 245: 180 degrees = row order reversed
+     * + each byte bit-mirrored.  Row pairs are 2 bytes
+     * (lo/hi, monochrome doubles). */
     {
         uint8_t r;
-        src = &menus_tile_tiles[((uint16_t)1 << 4)];
+        src = &menus_tile_tiles[((uint16_t)2 << 4)];
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)UI_TILE_MENUS_INV_ARROW_UP << 4));
         for (r = 0; r < 8; r++) {
