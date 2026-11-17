@@ -1,4 +1,4 @@
-#pragma bank 8
+#pragma bank 13
 #pragma disable_warning 110
 
 #include <gb/gb.h>
@@ -8,17 +8,18 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── Quest-tab content, bank-8 body ────────────────────────────────
+/* ── Quest-tab content, bank-13 body ───────────────────────────────
  * The quest list renderer + input navigator live here (not bank 2 with
  * the cards renderer) for two structural reasons (AGENTS.md 52.18):
  *
  * 1. The quest registry (g_quests[]) is banked content: a banked body
  *    must share its table's bank (AGENTS.md 52.11.1), and the registry
  *    outgrew bank 2 alongside the event table.  quests_content.c carries
- *    `#pragma bank 8` for the same reason.
- * 2. Banks 2 and 5 sit hard against 16 KB; bank 8 is the overflow bank
- *    (AGENTS.md 55.5) with room for the feature to grow (more quests,
- *    per-quest detail).
+ *    `#pragma bank 13` for the same reason.
+ * 2. Banks 2 and 5 sit hard against 16 KB, and bank 8 (the old overflow
+ *    bank, AGENTS.md 55.5) filled up with the separator/scroll chrome;
+ *    bank 13 is free in both builds with room for the feature to grow
+ *    (more quests, per-quest detail).
  *
  * ABI: fixed-bank wrappers in item_screen.c dispatch here (QUEST tab)
  * and to item_content_banked.c (DECK tab) through the WRAM trampoline:
@@ -37,16 +38,14 @@
 
 #define MODE_QUEST_DETAIL 2
 
-#define QUEST_VISIBLE_MAX 5   /* rows 5..13 step 2 (loop bound y < 15) */
-
-/* The quest list draws at most QUEST_VISIBLE_MAX entries: the nav caret
- * math assumes the visible list fits on screen.  NOTE: a typedef
- * negative-size check does NOT fire under this SDCC (it silently
- * accepts char[-1]), so the bound uses #error, which the preprocessor
- * enforces.  Extend the #if if the registry grows. */
-#if GAME_QUEST_COUNT > QUEST_VISIBLE_MAX
-#error "quest registry outgrew the quest-tab layout"
-#endif
+/* Quest-block window: each tracked quest takes 3 rows (title, tracker,
+ * quests-separator rule), rows 3-14 hold exactly 4 blocks.  Longer logs
+ * scroll (item_menu_scroll = first visible quest position, reset on tab
+ * switch like the DECK scrolls).  Rows 2/15 are free for the scroll
+ * indicators; row 16 keeps the footer. */
+#define QUEST_WINDOW  4
+#define QUEST_ROW_TOP 3
+#define QUEST_BLOCK   3
 
 extern const QuestDefinition g_quests[];
 extern char g_ui_screen_buf[18][21];
@@ -235,44 +234,96 @@ static void iq_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t
     }
 }
 
+/* Scroll-indicator cell (VRAM list-scroll-arrow tile, same both rows;
+ * buffer keeps '^' up / 'v' down for harness asserts).  VRAM always
+ * writes: the buffer glyph never matches the PPU tile, so the text
+ * skip-guard would stale-hide it (AGENTS.md 52.25).  Hiding restores
+ * the font space tile through the same unconditional write. */
+static void iq_stamp_scroll(uint8_t y, uint8_t x, uint8_t show, char letter)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = show ? letter : ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst,
+        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
+}
+
+/* Title row for a window slot (shifts/adds only: no multiply, which
+ * would pull the SDCC mult lib into fixed _CODE, AGENTS.md 52.18). */
+static uint8_t iq_slot_row(uint8_t slot)
+{
+    return (uint8_t)(QUEST_ROW_TOP + (uint8_t)((uint8_t)(slot << 1) + slot));
+}
+
 static void iq_draw_quest(Game *g)
 {
+    uint8_t total = 0;
+    uint8_t max_scroll;
     uint8_t vis;
+    uint8_t drawn;
+    uint8_t y;
+    uint8_t i;
+    /* Count tracked quests first: the window clamp needs the total. */
+    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT; s_iq_qst_pos++) {
+        if (iq_quest_status(&g->state, &g_quests[s_iq_qst_pos]) !=
+            QUEST_STATUS_NOT_STARTED)
+            total++;
+    }
+    max_scroll = (total > QUEST_WINDOW) ?
+        (uint8_t)(total - QUEST_WINDOW) : 0;
+    if (g->item_menu_scroll > max_scroll)
+        g->item_menu_scroll = max_scroll;
+    /* Scroll indicators on the free rows (buffer '^'/'v'). */
+    iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^');
+    iq_stamp_scroll(15, 19,
+        (uint8_t)((uint8_t)(g->item_menu_scroll + QUEST_WINDOW) < total),
+        'v');
     /* Only accepted quests are tracked: NOT_STARTED entries stay hidden
-     * (an empty quest log shows a placeholder instead of two
-     * "not started" rows).  item_menu_index addresses the VISIBLE list,
-     * so the caret compares against the visible position, not the table
-     * position. */
-    s_ic_y = 3;
+     * (an empty quest log shows a placeholder instead of "not started"
+     * rows).  item_menu_index addresses the VISIBLE list, so the caret
+     * compares against the visible position, not the table position. */
+    drawn = 0;
     vis = 0;
-    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT && s_ic_y < 15; s_iq_qst_pos++) {
+    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT; s_iq_qst_pos++) {
         s_iq_q = &g_quests[s_iq_qst_pos];
         if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_NOT_STARTED)
             continue;
-        if (g->item_menu_index == vis) IQ_DRAW_TEXT(0, s_ic_y, ">", 1);
-        else IQ_DRAW_TEXT(0, s_ic_y, " ", 1);
-        IQ_DRAW_TEXT(2, s_ic_y, s_iq_q->name, 18);
+        if (vis < g->item_menu_scroll ||
+            vis >= (uint8_t)(g->item_menu_scroll + QUEST_WINDOW)) {
+            vis++;
+            continue;
+        }
+        y = iq_slot_row(drawn);
+        if (g->item_menu_index == vis) IQ_DRAW_TEXT(0, y, ">", 1);
+        else IQ_DRAW_TEXT(0, y, " ", 1);
+        IQ_DRAW_TEXT(2, y, s_iq_q->name, 18);
 
-        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_ic_y << 5) + 1);
+        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
         VBK_REG = 0;
         /* Quest marker as a font glyph ('!' active, '*' complete): the
          * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
          * loader now overwrites tile 116 with the combat deck art). */
         if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_COMPLETE) {
             BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' ')));
-            IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_GOLD);
+            IQ_COLOR_SPAN(1, y, 1, UI_COLOR_GOLD);
         } else {
             BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' ')));
-            IQ_COLOR_SPAN(1, s_ic_y, 1, UI_COLOR_WOOD);
+            IQ_COLOR_SPAN(1, y, 1, UI_COLOR_WOOD);
         }
 
-        s_ic_y++;
-        iq_quest_draw_status_line(g, s_iq_q, s_ic_y);
-        s_ic_y++;
+        iq_quest_draw_status_line(g, s_iq_q, (uint8_t)(y + 1));
+        /* Quests-separator rule between blocks (full width, buffer
+         * spaces): every drawn block ends with one, so the rule is
+         * scroll-stable and the last block is closed too. */
+        for (i = 0; i < 20; i++)
+            menu_stamp_chrome((uint8_t)(y + 2),
+                              i, UI_TILE_MENUS_QUESTS_SEPARATOR);
+        drawn++;
         vis++;
     }
     if (vis == 0) {
-        IQ_DRAW_TEXT(2, s_ic_y, "no quests yet", 13);
+        IQ_DRAW_TEXT(2, QUEST_ROW_TOP, "no quests yet", 13);
     }
     /* Quit hint: A anywhere on this tab opens the save & quit
      * confirm (overworld only, where quitting cannot strand a
@@ -324,9 +375,10 @@ static void iq_draw_quest_detail(Game *g)
 
 /* Quest-tab input behind the thin fixed dispatch in item_screen.c.
  * Pad edges are read directly from WRAM (always mapped, like the
- * staged Game*).  LR-before-SELECT, like the DECK tab.  The cursor
- * repaint is inline (two buffer-checked cells -- the quest list never
- * scrolls), so there is no cross-file banked call. */
+ * staged Game*).  LR-before-SELECT, like the DECK tab.  Longer logs
+ * scroll a 4-block window (item_menu_scroll, reset on tab switch):
+ * the cursor repaint stays inline while the window holds, and a window
+ * move takes the full redraw instead. */
 void item_quest_nav_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -335,6 +387,7 @@ void item_quest_nav_banked(void)
     uint8_t i;
     uint8_t old_index;
     uint8_t new_index;
+    uint8_t old_scroll;
     uint8_t old_row;
     uint8_t new_row;
     if (!g) return;
@@ -373,8 +426,20 @@ void item_quest_nav_banked(void)
     if (new_index != old_index) {
         g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
     }
-    old_row = (uint8_t)(3 + (old_index << 1));
-    new_row = (uint8_t)(3 + (new_index << 1));
+    /* Scroll follow: keep the selection inside the 4-block window
+     * (wraps land back at the edges, so no separate wrap case). */
+    old_scroll = g->item_menu_scroll;
+    if (new_index < old_scroll) {
+        g->item_menu_scroll = new_index;
+    } else if (new_index > (uint8_t)(old_scroll + (QUEST_WINDOW - 1))) {
+        g->item_menu_scroll = (uint8_t)(new_index - (QUEST_WINDOW - 1));
+    }
+    if (g->item_menu_scroll != old_scroll) {
+        g->render_cache.valid = false;
+        return;
+    }
+    old_row = iq_slot_row((uint8_t)(old_index - old_scroll));
+    new_row = iq_slot_row((uint8_t)(new_index - old_scroll));
     if (old_row != new_row) {
         IQ_DRAW_TEXT(0, old_row, " ", 1);
         IQ_DRAW_TEXT(0, new_row, ">", 1);

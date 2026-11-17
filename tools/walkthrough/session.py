@@ -104,7 +104,22 @@ class Session:
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
     def quick_open(self):
-        return self.text_has("DECK QUEST")
+        # Header row 0 reads DECK?QUEST?HERO?GEMS in bg_text (the gaps
+        # are category-separator chrome tiles): GEMS is the unique font
+        # marker for the open quick screen.
+        return self.text_has("GEMS")
+
+    def menu_cursor_col(self):
+        """Row-1 tab cursor column: the cursor-category tile (211,
+        UI_TILE_MENUS_CURSOR_CAT) sits at the active tab (0 DECK,
+        5 QUEST, 11 HERO, 16 GEMS); -1 when the menu is closed."""
+        scx = self.pb.memory[0xFF43]
+        scy = self.pb.memory[0xFF42]
+        for c in (0, 5, 11, 16):
+            if self.pb.memory[0x9800 + ((scy // 8 + 1) % 32) * 32
+                               + (scx // 8 + c) % 32] == 211:
+                return c
+        return -1
 
     def on_overworld(self):
         return (not self.quick_open()) and not self.on_title_or_intro()

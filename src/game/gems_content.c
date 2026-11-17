@@ -1,4 +1,4 @@
-#pragma bank 8
+#pragma bank 13
 
 #include "gems.h"
 #include "game_ids.h"

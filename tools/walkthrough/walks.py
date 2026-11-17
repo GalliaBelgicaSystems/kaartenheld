@@ -785,9 +785,9 @@ def walk_a(planner, checks, sram_out=None):
     # fully-decked row (left N == 0, right N > 0): RIGHT flips to the
     # deck side and A sends one copy back to the pile, so the deck
     # count must drop by exactly one (MIN-guarded).
-    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+    s.press_until("start", lambda: s.text_has("GEMS"),
                   label="quick screen")
-    s.shoot("06-cards-menu", need="DECK QUEST")
+    s.shoot("06-cards-menu", need="GEMS")
     deck0 = s.reader.deck_count()
     s.check("deck above the MIN floor", deck0 - 1 >= 5,
             expected="deck0 - 1 >= 5", actual=str(deck0))
@@ -839,17 +839,17 @@ def walk_a(planner, checks, sram_out=None):
             expected="closed", actual="open")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][5] == "^":
+        if s.menu_cursor_col() == 5:
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 5",
-            actual=s.bg_text()[1])
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.shoot("08-quests-tab")
     s.press_until("b", lambda: s.stable(
-        lambda: not s.text_has("DECK QUEST"), frames=30),
+        lambda: not s.text_has("GEMS"), frames=30),
         label="quick close")
-    s.check("quick screen closed", not s.text_has("DECK QUEST"),
+    s.check("quick screen closed", not s.text_has("GEMS"),
             expected="closed", actual="open")
 
     # Save & quit (QUEST tab): A opens the quit confirm, YES writes
@@ -858,16 +858,16 @@ def walk_a(planner, checks, sram_out=None):
     # Snapshot SRAM for walk-l wherever we stand (no town trip needed:
     # quitting works from any overworld).
     ungod_mode(s)
-    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+    s.press_until("start", lambda: s.text_has("GEMS"),
                   label="quick screen")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][5] == "^":
+        if s.menu_cursor_col() == 5:
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 5",
-            actual=s.bg_text()[1])
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.press("a", settle=30)
     s.check("quit confirm", s.wait_for(lambda: s.text_has("SAVE AND QUIT"),
                                        ticks=120),

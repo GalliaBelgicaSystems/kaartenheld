@@ -1,4 +1,4 @@
-#pragma bank 8
+#pragma bank 13
 #pragma disable_warning 110
 
 #include <gb/gb.h>
@@ -8,17 +8,17 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── GEM-tab content, bank-8 body ──────────────────────────────────
+/* ── GEM-tab content, bank-13 body ─────────────────────────────────
  * The gem list renderer + equip navigator live here (not bank 2 with the
  * cards renderer) for the same structural reason as the quest tab
  * (item_quest_banked.c): the registry (g_gems[] in gems_content.c) is
  * banked content, and a banked body must share its tables' bank
- * (AGENTS.md 52.11.1).  Bank 8 is the overflow bank (AGENTS.md 55.5)
- * with room for the feature to grow (more gems, per-gem detail).
+ * (AGENTS.md 52.11.1).  Bank 13 is free in both builds (bank 8 filled
+ * up) with room for the feature to grow (more gems, per-gem detail).
  *
  * ABI: the fixed dispatch in item_screen.c sends the GEM tab here and
  * the QUEST tab to item_quest_nav_banked (same bank); the GEM page
- * renders here in bank 8 with its registry (never bank 2).  Reads only
+ * renders here in bank 13 with its registry (never bank 2).  Reads only
  * this bank's data, the staged Game*, and always-mapped WRAM; calls no
  * fixed-bank functions (variable writes go straight to GameState --
  * same v1 gap as the gamble table's gold moves, no VARIABLE_SET event;

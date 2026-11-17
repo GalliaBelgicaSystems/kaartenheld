@@ -167,6 +167,12 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 4u)
 #define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 5u)
 #define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 6u)
+/* Sheet (0,7) list scroll arrow: quest-tab scroll indicators (row 2 up,
+ * row 15 down, same tile both).  Sheet (0,8) quests separator: the rule
+ * between quest blocks.  Both stream with the chrome sheet on every
+ * BATTLE/ITEM/SHOP entry, so no per-tab streaming is needed. */
+#define UI_TILE_MENUS_LIST_SCROLL_ARROW (UI_TILE_MENUS_BASE + 7u)
+#define UI_TILE_MENUS_QUESTS_SEPARATOR (UI_TILE_MENUS_BASE + 8u)
 /* Rotated (180 deg) copy of the inventory type arrow for scroll-up
  * carets (the sheet art points down).  Slot 245 is the last free
  * block-1 id (box ends at 244, dice start at 246).  Streamed by the
