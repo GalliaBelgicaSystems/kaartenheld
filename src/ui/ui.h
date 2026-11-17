@@ -167,21 +167,17 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 4u)
 #define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 5u)
 #define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 6u)
-/* Sheet (0,7) list scroll arrow: quest-tab scroll indicators (row 2 up,
- * row 15 down, same tile both).  Sheet (0,8) quests separator: the rule
- * between quest blocks.  Both stream with the chrome sheet on every
- * BATTLE/ITEM/SHOP entry, so no per-tab streaming is needed. */
+/* Sheet (0,7) list scroll arrow: all tabs' scroll indicators (rows
+ * 2/4 up, rows 14/15 down, same tile).  Sheet (0,8) quests separator:
+ * the rule between quest/gem blocks.  Both stream with the chrome
+ * sheet on every BATTLE/ITEM/SHOP entry, so no per-tab streaming is
+ * needed.  (Slot 245, the retired rotated-arrow copy, is free again.) */
 #define UI_TILE_MENUS_LIST_SCROLL_ARROW (UI_TILE_MENUS_BASE + 7u)
 #define UI_TILE_MENUS_QUESTS_SEPARATOR (UI_TILE_MENUS_BASE + 8u)
 /* Sheet (0,9) heart / (0,10) star: the STATUS-tab HP/AP icons.
  * Streamed with the chrome sheet, so no per-tab streaming is needed. */
 #define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
 #define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
-/* Rotated (180 deg) copy of the inventory type arrow for scroll-up
- * carets (the sheet art points down).  Slot 245 is the last free
- * block-1 id (box ends at 244, dice start at 246).  Streamed by the
- * bank-11 chrome entry body; the semantic buffer keeps '^'. */
-#define UI_TILE_MENUS_INV_ARROW_UP 245u
 
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
@@ -213,7 +209,7 @@ void ic_menu_riders_load(void);
 
 /* Save-spin indicator: OAM entry 39 (actor slots use 0-37, markers
  * 30-37, so 39 is always free) with tile 241.  Tile 241 is free in
- * both fetch blocks (BG ids 241-245 sit between the AP-pip stream
+ * both fetch blocks (BG ids 241-244 sit between the AP-pip stream
  * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
  * no BG writer touches).  The per-phase glyph is re-streamed from the
  * font each phase change, so no boot-time load and no clobber state.

@@ -875,9 +875,9 @@ static void ic_draw_filter_row(Game *g)
     IC_DRAW_TEXT(2, ROW_FILTER, "* FILTER/SORT *", 15);
 }
 
-/* Scroll caret cells: the inventory type arrow (sheet art points down)
- * for the row-14 down carets, its 180-degree rotated copy (slot 245,
- * streamed by the bank-11 chrome entry body) for the row-4 up carets.
+/* Scroll caret cells: the list scroll arrow (sheet (0,7)) for both
+ * the row-4 up carets and the row-14 down carets, same as the QUEST
+ * and GEMS tabs.
  * Buffer keeps '^'/'v' for harness screen_row asserts.  VRAM always
  * writes: the buffer glyph never matches the PPU tile, so the text
  * skip-guard would stale-hide the caret (same hazard as the AP pips,
@@ -890,7 +890,7 @@ static void ic_stamp_scroll_up(uint8_t y, uint8_t x, uint8_t show)
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_INV_ARROW_UP : ui_font_tile_base);
+        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
 }
 
 static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
@@ -900,18 +900,18 @@ static void ic_stamp_scroll(uint8_t y, uint8_t x, uint8_t show)
     s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
     VBK_REG = 0;
     BANKED_VRAM_WRITE(s_ic_dst,
-        show ? UI_TILE_MENUS_INV_ARROW : ui_font_tile_base);
+        show ? UI_TILE_MENUS_LIST_SCROLL_ARROW : ui_font_tile_base);
 }
 
 /* Scroll-indicator rows, shared by the full list render and the
- * incremental repaint: row-4 up arrows (rotated inventory type arrow)
- * and row-14 down arrows (inventory type arrow) at the material
- * columns (4 pile / 14 deck), per side, from the bank-11 overflow
- * flags rebuilt by the view build just before this render.  Row 13 is
- * the inventory-separator column gap (stamped by the list body); row
- * 15 is the full-width bottom box border.  Only the caret cells are
- * ever written (a full clear blanks the rows first, and nothing else
- * addresses them, so no stale glyphs survive). */
+ * incremental repaint: row-4 up arrows and row-14 down arrows (list
+ * scroll arrow) at the material columns (4 pile / 14 deck), per side,
+ * from the bank-11 overflow flags rebuilt by the view build just
+ * before this render.  Row 13 is the inventory-separator column gap
+ * (stamped by the list body); row 15 is the full-width bottom box
+ * border.  Only the caret cells are ever written (a full clear blanks
+ * the rows first, and nothing else addresses them, so no stale glyphs
+ * survive). */
 static void ic_draw_scroll_rows(Game *g)
 {
     uint8_t flags;
