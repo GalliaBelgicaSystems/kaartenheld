@@ -1,7 +1,7 @@
 {
  "name": "status_tab",
  "test": true,
- "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold and total owned cards; LEFT returns to the QUEST tab",
+ "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold and decked copies; LEFT returns to the QUEST tab",
  "actions": [
   {
    "type": "press",
@@ -51,7 +51,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "HP 15/15"
+   "contains": "HP  15/15"
   },
   {
    "type": "screen_row",
@@ -71,7 +71,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "CARDS"
+   "contains": "DECK"
   },
   {
    "type": "screen_row",

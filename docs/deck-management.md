@@ -178,8 +178,9 @@ GOT +1 AP               <- what the reward was (completed quests only;
 SEL:BACK
 ```
 
-HERO is read-only: `HP <hp>/<max>`, `AP <pool>` (battle energy pool),
-`GOLD <n>`, `CARDS <n>` (total owned copies).
+HERO is read-only: `HP <hp>/<max>` + heart icon, `AP <pool>` (battle
+energy pool) + star icon, `GOLD <n>G`, `DECK <n>` (decked copies) +
+deck icon, plus the 4x4 hero-status portrait (cols 13-16, rows 3-6).
 
 ## 5b. GEM tab (gems)
 

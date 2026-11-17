@@ -180,7 +180,8 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
  * TAB_HERO 2, TAB_GEM 3.  KEEP IN SYNC -- the router branches below and
  * the fixed dispatch both depend on them. */
 #define GEM_TAB_QUEST 1
-#define GEM_TAB_GEM 3
+#define GEM_TAB_HERO  2
+#define GEM_TAB_GEM   3
 
 /* Detail mode shares the fixed-bank MODE_QUEST_DETAIL value (2): the
  * fixed dispatch early-returns for it (no LR interference) and the fixed
@@ -188,11 +189,12 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
  * fixed bank nothing (AGENTS.md 52.18). */
 #define GEM_MODE_DETAIL 2
 
-/* QUEST-tab bodies (same bank: direct call, no trampoline).  The fixed
- * dispatch routes both side tabs here; GEM handles its own tab and
- * forwards QUEST back, so the fixed bank pays no extra branch. */
+/* QUEST/HERO bodies (same bank: direct call, no trampoline).  The fixed
+ * dispatch routes every non-DECK tab here; GEM handles its own tab and
+ * forwards QUEST and HERO, so the fixed bank pays no extra branch. */
 void item_quest_nav_banked(void);
 void item_quest_render_banked(void);
+void item_status_render_banked(void);
 
 /* ── Gem detail (SELECT on a gem row) ─────────────────────────────
  *   row 3: gem name
@@ -358,7 +360,11 @@ void item_gem_render_banked(void)
     int16_t owned;
     if (!g) return;
 
-    /* The other side tab (QUEST) belongs to the quest renderer. */
+    /* The other side tabs belong to their own renderers (same bank). */
+    if (g->item_menu_tab == GEM_TAB_HERO) {
+        item_status_render_banked();
+        return;
+    }
     if (g->item_menu_tab != GEM_TAB_GEM) {
         item_quest_render_banked();
         return;

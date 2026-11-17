@@ -18,8 +18,6 @@
 #include "menu_palette_generated.h"
 
 #define TAB_DECK 0
-#define TAB_QUEST 1
-#define TAB_HERO 2
 #define TAB_GEM 3
 #define NUM_TABS  4
 
@@ -85,8 +83,8 @@ extern uint8_t g_is_cgb;
 #include "material_tiles_generated.h"
 #include "gfx/material_tiles.h"
 
-/* Shared draw scratch, also used by the bank-8 quest body
- * (item_quest_banked.c): the trampoline is non-reentrant and only one
+/* Shared draw scratch, also used by the bank-13 QUEST/GEMS/HERO bodies
+ * (item_quest_banked.c / item_gem_banked.c / item_status_banked.c): the trampoline is non-reentrant and only one
  * tab renders at a time, so one copy serves both (AGENTS.md 52.18:
  * no duplicate WRAM for bank-split mirrors). */
 uint8_t s_ic_txt_i;
@@ -106,8 +104,7 @@ static CardId s_ic_id;
 static const CardDefinition *s_ic_def;
 volatile uint8_t *s_ic_dst;
 char *s_ic_buf;
-static char s_ic_code[3];
-static char s_ic_num_buf[4];
+static char s_ic_code[3]; /* 2-wide count cells + NUL (ic_draw_pair2). */
 
 /* Card-menu element rider icon (BG tile over the card's elem cell).  The
  * menu carries dedicated 8x8 menu art now (assets/menu_riders.png,
@@ -227,7 +224,6 @@ void ic_mat_stream(void)
 uint8_t s_ic_arg_x;
 uint8_t s_ic_arg_y;
 uint8_t s_ic_arg_len;
-static uint8_t s_ic_arg_val;
 uint8_t s_ic_arg_palette;
 const char *s_ic_arg_text;
 
@@ -272,30 +268,6 @@ static void ic_draw_text_fast(void)
     ic_draw_text_fast(); \
 } while(0)
 
-static void ic_draw_num2_fast(void)
-{
-    uint8_t tens = 0;
-    uint8_t ones = s_ic_arg_val;
-    while (ones >= 10) {
-        ones -= 10;
-        tens++;
-    }
-    if (tens > 0) {
-        s_ic_num_buf[0] = (char)('0' + tens);
-        s_ic_num_buf[1] = (char)('0' + ones);
-    } else {
-        s_ic_num_buf[0] = ' ';
-        s_ic_num_buf[1] = (char)('0' + ones);
-    }
-    s_ic_num_buf[2] = '\0';
-    IC_DRAW_TEXT(s_ic_arg_x, s_ic_arg_y, s_ic_num_buf, 2);
-}
-
-#define IC_DRAW_NUM2(x, y, val) do { \
-    s_ic_arg_x = (x); s_ic_arg_y = (y); s_ic_arg_val = (val); \
-    ic_draw_num2_fast(); \
-} while(0)
-
 /* WRAM attribute mirror (ui.c): the harness asserts CGB palette
  * bytes via tilemap_attr.  ic_color_span_fast keeps it in sync
  * (DEBUG only, like the battle/gamble spans). */
@@ -332,18 +304,16 @@ static void ic_color_span_fast(void)
 
 /* ── Tab header: single source of truth is menu_tabs_snippet.h ──────
  * (compiled per bank: banked bodies cannot call across banks,
- * AGENTS.md 52.11.1).  DECK cursor col 0, HERO col 11; QUEST and GEM
- * never reach this body (bank 8 renders them). */
+ * AGENTS.md 52.11.1).  DECK-only body (cursor col 0); QUEST, GEM and
+ * HERO render in bank 13. */
 #define MENU_TAB_DRAW_TEXT IC_DRAW_TEXT
 #include "menu_tabs_snippet.h"
 
 static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
 
-static void ic_draw_header(Game *g)
+static void ic_draw_header(void)
 {
-    uint8_t cx = 0;
-    if (g->item_menu_tab == TAB_HERO) cx = 11;
-    menu_draw_tabs(cx);
+    menu_draw_tabs(0);
 }
 
 /* ── Full card names (display only; mechanics keep def->name) ──────
@@ -1242,15 +1212,6 @@ static void ic_format_uint(uint16_t uval, char *out)
     *out = '\0';
 }
 
-/* ── HERO tab: hero + wallet summary + huge-character mosaic ──
- * Left block (cols 0-9):
- *   HP <hp>/<max> + HP icon      (party slot 0, the hero)
- *   AP <pool> + AP icon          (battle energy pool variable)
- *   GOLD <n>G                    (currency slot 0)
- *   DECK <n> + deck icon         (decked copies; replaces the old
- *                                 owned-total CARDS row)
- * Right block (cols 11-18, rows 3-10): the huge-character tile
- * (sheet (0,11)) repeated tile-by-tile into an 8x8 mosaic. */
 /* Draw an unsigned value right-aligned ending at col end_col
  * (labels sit at col 0; all detail numbers share the right edge). */
 static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
@@ -1260,55 +1221,6 @@ static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
     while (s_ic_big_num[len] != (char)0) len++;
     if (len == 0) len = 1;
     IC_DRAW_TEXT((uint8_t)(end_col - len + 1), y, s_ic_big_num, len);
-}
-
-/* Icon cell stamp (VRAM tile + buffer space, LCD-on safe): the buffer
- * glyph never equals the PPU tile, so the text skip-guard would
- * stale-hide it (AGENTS.md 52.25). */
-static void ic_stamp_icon(uint8_t y, uint8_t x, uint8_t tile)
-{
-    s_ic_buf = &g_ui_screen_buf[y][x];
-    *s_ic_buf = ' ';
-    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, tile);
-}
-
-/* Hero-status portrait slot table (bank-2 copy of the bank-11 stream
- * table s_menus_hero_slots: 16 cells, header order row-major from
- * sheet (12,0).  KEEP IN SYNC -- banked bodies cannot share tables
- * across banks (AGENTS.md 52.11.1). */
-static const uint8_t s_ic_hero_slots[16] = {
-    220u, 221u, 222u, 223u, 224u, 225u, 226u, 227u,
-    233u, 234u, 235u, 242u, 243u, 244u, 246u, 247u
-};
-
-static void ic_draw_status_page(Game *g)
-{
-    uint8_t hx;
-    uint8_t hy;
-    IC_DRAW_TEXT(0, 3, "HP  ", 4);
-    IC_DRAW_NUM2(4, 3, g->state.party.members[0].hp);
-    IC_DRAW_TEXT(6, 3, "/", 1);
-    IC_DRAW_NUM2(7, 3, g->state.party.members[0].max_hp);
-    ic_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
-    IC_DRAW_TEXT(0, 4, "AP ", 3);
-    IC_DRAW_NUM2(7, 4,
-        (uint8_t)g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1]);
-    ic_stamp_icon(4, 9, UI_TILE_MENUS_AP_ICON);
-    IC_DRAW_TEXT(0, 5, "GOLD   ", 7);
-    ic_draw_rjust(5, 8, (uint16_t)g->state.currency.amount[0]);
-    IC_DRAW_TEXT(9, 5, "G", 1);
-    IC_DRAW_TEXT(0, 6, "DECK   ", 7);
-    ic_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
-    ic_stamp_icon(6, 9, UI_TILE_DECK_ICON);
-    /* Hero-status portrait ("hero status RC", sheet cols 12-15): 4x4 at
-     * cols 13-16, rows 3-6, in sheet order. */
-    for (hy = 0; hy < 4; hy++) {
-        for (hx = 0; hx < 4; hx++)
-            ic_stamp_icon((uint8_t)(3 + hy), (uint8_t)(13 + hx),
-                s_ic_hero_slots[(uint8_t)((uint8_t)(hy << 2) + hx)]);
-    }
 }
 
 static void ic_draw_picker(Game *g)
@@ -1344,8 +1256,8 @@ void item_screen_render_banked(void)
      * the old sprite icons at 1-16, material ingots 17-32): picker and
      * emptied rows leave nothing behind, and list/detail set exactly
      * what they show below.  Riders are BG tiles now, so their entries
-     * simply stay hidden.  (The QUEST tab dispatches to the bank-8 quest
-     * body, which sweeps for itself on entry.) */
+     * simply stay hidden.  (The QUEST/GEMS/HERO tabs dispatch to the
+     * bank-13 bodies, which sweep for themselves on entry.) */
     for (e = 1; e <= 32; e++) {
         ic_mat_hide(e);
     }
@@ -1362,12 +1274,7 @@ void item_screen_render_banked(void)
         ic_mat_stream();
     }
 
-    ic_draw_header(g);
-
-    if (g->item_menu_tab == TAB_HERO) {
-        ic_draw_status_page(g);
-        return;
-    }
+    ic_draw_header();
 
     switch (g->item_menu_mode) {
         case MODE_CARD_DETAIL: ic_draw_card_detail_page(g); break;

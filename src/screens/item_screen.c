@@ -514,18 +514,18 @@ void item_screen_render(Game *g)
             banked_call_run();
         }
 
-        /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
-         * both render in bank 13 with their registries (AGENTS.md
-         * 52.11.1: code shares its tables' bank; bank 13 is free while
-         * bank 8 sits hard against 16 KB).  GEM routes through
-         * item_gem_render_banked, which forwards QUEST to the quest
-         * renderer in-bank, so this dispatch needs no extra branch. */
-        if (g->item_menu_tab == TAB_QUEST || g->item_menu_tab == TAB_GEM) {
-            g_bk_call_bank = 13;
-            g_bk_call_target = (uint16_t)&item_gem_render_banked;
-        } else {
+        /* DECK content renders in bank 2; QUEST, GEM and HERO render in
+         * bank 13 (AGENTS.md 52.11.1: code shares its tables' bank;
+         * bank 2 sits hard against 16 KB while bank 13 is free).  GEM
+         * routes through item_gem_render_banked, which forwards QUEST
+         * and HERO to their renderers in-bank, so this dispatch needs
+         * no extra branch. */
+        if (g->item_menu_tab == TAB_DECK) {
             g_bk_call_bank = 2;
             g_bk_call_target = (uint16_t)&item_screen_render_banked;
+        } else {
+            g_bk_call_bank = 13;
+            g_bk_call_target = (uint16_t)&item_gem_render_banked;
         }
         g_bk_ptr_a = (void *)g;
         banked_call_run();
