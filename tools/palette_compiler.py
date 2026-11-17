@@ -59,6 +59,7 @@ SHEETS = {
     "ap_pips": ("ap_pips_bg.png", "base"),
     "menu_riders": ("menu_riders.png", "base"),
     "menu_cursor": ("menu_cursor.png", "base"),
+    "menus_tile": ("menus-tile.png", "base"),
     "materials": ("material_tiles.png", "obj"),
     "title": ("title-red.png", "title"),
 }
@@ -684,6 +685,23 @@ def main():
                    (3, 0): "fighthealth"},
                   require_slot=False)
     compile_sheet("menu_cursor", {(0, 0): "fight3", (1, 0): "fight3"},
+                  require_slot=False)
+    # Menu chrome (menus-tile.png, 16x4: 12 single-cell UI icons on row 0,
+    # cols 0-11, plus the bottom-box frame kit at cols 12-15, rows 0-3).
+    # Cell map mirrors tools/level_editor/slice_menus_tile.py: CSV[0] is
+    # the box (14 drawn cells; the (15,0)/(12,3) corners are blank), CSV[1..]
+    # are the row-0 singles in order.  Everything encodes with the card
+    # chrome ramp (fight1: brown ink on white paper, base slot 0), the same
+    # family as card_frames.  The sheet brown (#b59263) sits 5 red-digits
+    # off the ramp brown (#b09266), so every drawn cell lands in
+    # ramp_mismatches.json (allowlisted; artist repaint follow-up).
+    compile_sheet("menus_tile",
+                  {(x, 0): "fight1" for x in range(12)} |
+                  {(x, y): "fight1" for (x, y) in
+                   [(12, 0), (13, 0), (14, 0),
+                    (12, 1), (13, 1), (14, 1), (15, 1),
+                    (12, 2), (13, 2), (14, 2), (15, 2),
+                    (13, 3), (14, 3), (15, 3)]},
                   require_slot=False)
     # Card-menu material OAM icons (material_tiles.png, 5x1 cells: steel,
     # bronze, iron, mythril icon art in that order, then the wood icon):

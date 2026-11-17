@@ -35,6 +35,7 @@ generated/tiles/shades/*.json --png2gb--> src/gfx/*.inc/.h --> ROM banks
 | Overworld sprites | `public/tiles/enemies|hero/` → `enemy_sprites.png` / `hero_sprites.png`, `screens/enemy_types/*.json` + `hero.json` | per-enemy `"palette"` | that ramp |
 | NPC overlay | `public/tiles/actors/` → `npc_tiles.png` | overlay display slot | slot's ramp |
 | Card frames + icons | `public/tiles/combat/` → `card_frames.png`, `screens/cards_skin.json` + `battle_hud.json` | skin display slot | slot's ramp |
+| Menu chrome | `assets/menus-tile.png`, sliced by `slice_menus_tile.py` → `public/tiles/menus/` + `tilesets/menus.json` | fight1 | that ramp |
 | Title logo | `assets/title-red.png` | `title_logo` | that ramp |
 | Font | `assets/intrepid.png` | fixed grayscale | strict exact |
 | Splash | `assets/gallia_belgica_systems.png` | fixed table | strict exact |

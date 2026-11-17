@@ -24,7 +24,7 @@
  *
  * Streaming runs with the LCD on (a menu full redraw), so every byte goes
  * through BANKED_VRAM_WRITE.  One-shot per menu stay: the flag is cleared
- * on every ITEM/SHOP entry by marks_battle_tiles_invalidate_banked
+ * on every ITEM/SHOP entry by menus_entry_invalidate_banked
  * (bank 8, WRAM write) -- the same re-arm contract as the AP pip stream,
  * which also keeps the harness (CRT0-skipping, uninitialized BSS) from
  * ever trusting a stale flag value it never set. */

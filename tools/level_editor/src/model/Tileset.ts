@@ -6,6 +6,7 @@ import forestJson from '../../tilesets/forest.json';
 import desolateLandscapeJson from '../../tilesets/desolate_landscape.json';
 import heroJson from '../../tilesets/hero.json';
 import intrepidJson from '../../tilesets/intrepid.json';
+import menusJson from '../../tilesets/menus.json';
 import villageJson from '../../tilesets/village.json';
 import undergroundJson from '../../tilesets/underground.json';
 
@@ -66,6 +67,7 @@ export const BUILTIN_TILESETS: Record<string, TilesetDefinition> = {
   desolate_landscape: parseTilesetJson(desolateLandscapeJson),
   hero: parseTilesetJson(heroJson),
   intrepid: parseTilesetJson(intrepidJson),
+  menus: parseTilesetJson(menusJson),
   village: parseTilesetJson(villageJson),
   underground: parseTilesetJson(undergroundJson),
 };
@@ -78,6 +80,7 @@ export const TILESET_HERO = BUILTIN_TILESETS.hero;
 export const TILESET_FOREST = BUILTIN_TILESETS.forest;
 export const TILESET_DESOLATE_LANDSCAPE = BUILTIN_TILESETS.desolate_landscape;
 export const TILESET_INTREPID = BUILTIN_TILESETS.intrepid;
+export const TILESET_MENUS = BUILTIN_TILESETS.menus;
 export const TILESET_VILLAGE = BUILTIN_TILESETS.village;
 export const TILESET_UNDERGROUND = BUILTIN_TILESETS.underground;
 

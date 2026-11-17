@@ -158,6 +158,32 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | enemy_ow | [1, 10] | sprites7 | #000000 |
 | enemy_ow | [3, 5] | sprites7 | #b6b6b6 |
 | menu_riders | [1, 0] | fight6 | #b6b6b6 |
+| menus_tile | [0, 0] | fight1 | #b59263 |
+| menus_tile | [1, 0] | fight1 | #b59263 |
+| menus_tile | [2, 0] | fight1 | #b59263 |
+| menus_tile | [3, 0] | fight1 | #b59263 |
+| menus_tile | [4, 0] | fight1 | #b59263 |
+| menus_tile | [5, 0] | fight1 | #b59263 |
+| menus_tile | [6, 0] | fight1 | #b59263 |
+| menus_tile | [7, 0] | fight1 | #b59263 |
+| menus_tile | [8, 0] | fight1 | #b59263 |
+| menus_tile | [9, 0] | fight1 | #b59263 |
+| menus_tile | [10, 0] | fight1 | #b59263 |
+| menus_tile | [11, 0] | fight1 | #b59263 |
+| menus_tile | [12, 0] | fight1 | #b59263 |
+| menus_tile | [12, 1] | fight1 | #b59263 |
+| menus_tile | [12, 2] | fight1 | #b59263 |
+| menus_tile | [13, 0] | fight1 | #b59263 |
+| menus_tile | [13, 1] | fight1 | #b59263 |
+| menus_tile | [13, 2] | fight1 | #b59263 |
+| menus_tile | [13, 3] | fight1 | #b59263 |
+| menus_tile | [14, 0] | fight1 | #b59263 |
+| menus_tile | [14, 1] | fight1 | #b59263 |
+| menus_tile | [14, 2] | fight1 | #b59263 |
+| menus_tile | [14, 3] | fight1 | #b59263 |
+| menus_tile | [15, 1] | fight1 | #b59263 |
+| menus_tile | [15, 2] | fight1 | #b59263 |
+| menus_tile | [15, 3] | fight1 | #b59263 |
 | materials | [0, 0] | inventory5 | #967139, #b09266 |
 | materials | [1, 0] | inventory1 | #b09266 |
 | materials | [2, 0] | inventory2 | #967139, #b09266 |

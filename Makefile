@@ -304,6 +304,17 @@ gfx: manifest
 	# overworld entry); OBJ slots come from the generated header.
 	@python3 tools/png2gb.py assets/material_tiles.png --name material_tiles \
 		--shade-map generated/tiles/shades/materials.json -o $(GFX_OUT_DIR)/material_tiles.h
+	# ── Menu chrome (assets/menus-tile.png, 16 cols × 4 rows) ──
+	# 12 single-cell UI icons (row 0, cols 0-11, CSV order) plus the
+	# bottom-box frame kit (cols 12-15, rows 0-3 minus the two blank
+	# corners (15,0)/(12,3)).  Sliced for the editor by
+	# slice_menus_tile.py (public/tiles/menus/, tilesets/menus.json);
+	# encoded with the card chrome ramp (fight1: brown ink on white).
+	# Streamed with the rider icons (same one-shot flag) to 208-219
+	# (singles, CSV order) + the box slots below.
+	@python3 tools/png2gb.py assets/menus-tile.png --name menus_tile_tiles \
+		--shade-map generated/tiles/shades/menus_tile.json \
+		--tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 12,1 13,1 14,1 15,1 12,2 13,2 14,2 15,2 13,3 14,3 15,3" -o $(GFX_OUT_DIR)/menus_tile_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
 	# Regenerated every build from the live battle sources (never
 	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
@@ -621,6 +632,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
 $(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
+$(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path

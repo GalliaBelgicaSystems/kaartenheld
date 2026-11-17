@@ -139,6 +139,19 @@ void ic_menu_riders_load(void);
  * harness screen_row asserts. */
 #define UI_TILE_SCROLL_DOWN      232u
 
+/* Menu chrome (assets/menus-tile.png): 12 single-cell UI icons (row 0,
+ * cols 0-11, CSV order: inventory separator .. huge character) plus the
+ * bottom-box frame kit (cols 12-15, rows 0-3 minus the two blank corners
+ * (15,0)/(12,3)).  Singles stream to 208-219 in CSV order; the 14 box
+ * cells land on 220-227, 233-235, 242-244 (the remaining free block-1
+ * slots around riders 228-232, AP pips 236-240 and the spin tile 241).
+ * Streamed eagerly on every BATTLE/ITEM/SHOP entry by the bank-11
+ * invalidate body (entry is the once-per-stay re-arm, no WRAM flag);
+ * the slot table lives with that streamer. */
+#define UI_TILE_MENUS_BASE       208u
+#define UI_TILE_MENUS_COUNT      12u
+#define UI_TILE_MENUS_BOX_COUNT  14u
+
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
  * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
