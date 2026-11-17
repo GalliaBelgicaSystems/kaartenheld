@@ -37,9 +37,11 @@
  *                        grew 9..24 -> 9..40 for the 9th variable, Nov 2026:
  *                        the builder always copied 16 vars while the layout
  *                        only reserved 8, so vars 9+ aliased the currency
- *                        section and read back currency bytes)
- *   byte  41           : currency count
- *   bytes 42..53       : up to 4 currency x {id, amt_lo, amt_hi}
+ *                        section and read back currency bytes) *   byte  41           : currency count
+ *   bytes 42..53         : up to 4 currency x {id, amt_lo, amt_hi}
+ *                        (fixed 4-entry headroom, NOT derived from
+ *                        MAX_CURRENCIES: gold + arrows (2) fit with room
+ *                        to spare; a third currency needs no offset change)
  *   byte  54           : party count
  *   bytes 55..66       : up to 4 party members x {id, hp, max_hp}
  *   byte  67           : inventory count

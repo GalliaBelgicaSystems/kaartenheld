@@ -4,6 +4,7 @@
 #include "banked.h"
 #include "game.h"
 #include "game_ids.h"
+#include "rpg/loot.h"
 #include "telemetry.h"
 #include "telemetry_ring.h"
 #include "scene_ids_generated.h"
@@ -154,6 +155,32 @@ void economy_grant_banked(void)
 #ifdef DEBUG_BUILD
     telemetry_ring_emit(EVENT_CURRENCY_ADDED, currency, granted, 0, 0);
 #endif
+    /* Limited-arrows victory drop: 1-3 arrows for the shared bow pool,
+     * capped at ARROWS_MAX.  Rewardless fights never reach here (base 0
+     * early-returns above, e.g. Carl's spar).  Rolls the isolated loot
+     * stream (LOOT_RNG_STEP, seeded non-zero by rng_set_seed) so the
+     * shared stream driving battles/patrols is untouched.  Thirds split
+     * (85/85/86 of 256, no division: a % would pull the div library
+     * into fixed _CODE, AGENTS.md 52.18).  Telemetry reports the actual
+     * delta, so a capped drop reports +0, not +3. */
+    {
+        uint8_t raw;
+        uint8_t drop;
+        int16_t old;
+        int16_t cur;
+        LOOT_RNG_STEP();
+        raw = (uint8_t)g_loot_rng_state;
+        drop = (uint8_t)(1 + (raw >= 85) + (raw >= 170));
+        old = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
+        if (old < 0) old = 0;
+        cur = (int16_t)(old + drop);
+        if (cur > ARROWS_MAX) cur = ARROWS_MAX;
+        g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1] = cur;
+#ifdef DEBUG_BUILD
+        telemetry_ring_emit(EVENT_CURRENCY_ADDED, CURRENCY_ID_ARROWS,
+                            (uint8_t)(cur - old), 0, 0);
+#endif
+    }
     g_bk_byte_b = granted;
 }
 

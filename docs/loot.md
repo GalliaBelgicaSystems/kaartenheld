@@ -1750,19 +1750,16 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   glyph on the floor counter (VRAM 103, same overwrite trick as 4_arrows
   on 97) while the semantic row still reads the digit (HE5).
   IMPLEMENTED.
-* Bow arrows per battle are AP-derived (`LOOT_BOW_USES` = 7 - CARD_AP,
-  docs/card-ap-cost-formula.md): inverse to power, so wood 6, bronze 6,
-  iron 5, steel 4, mythril 2, floored at 2 (a mythril rider bow would
-  otherwise hold a single arrow).  No new weights -- a future AP retune
-  moves the arrows with it, and the curated mythril shop bow (2 uses)
-  is the same macro, not a coincident literal.  Runtime sites read the
-  staged AP cost (`LOOT_BOW_USES_FROM_AP`) instead of re-expanding the
-  formula, keeping bank 2 small.  The 6-count shows the 6_arrows_left
-  glyph (VRAM 112, former menu blank); cheaper bows no longer fall back
-  to the font damage digit.  Fire/ice now ride bows
-  (swords never do), so the rider term is live.  Unlimited bows showed
-  `USES INF` on the detail page; every loot bow now shows a finite
-  count.
+* Bow arrows are a SHARED persistent pool (limited-arrows), not per-card
+  uses: every bow play spends 1 arrow (`CURRENCY_ID_ARROWS`, cap 30);
+  victory drops 1-3 and the shop sells 1 arrow for 1 gold.  Battle bows
+  carry unlimited uses (`0xFF`, never deplete/exile) and gate on the
+  pool instead: selection with an empty pool flashes "NO ARROWS!"
+  (battle msg id 8), and the draw only takes bows while backing lasts
+  (arrows minus bows in hand), cheapest AP first, never drawing an
+  empty bow.  The legacy `LOOT_BOW_USES` ladder (7 - CARD_AP) survives
+  only as the curated/shop display count.  Fire/ice ride bows
+  (swords never do), so the rider term is live.
   IMPLEMENTED.
 * Future: HEAL ALL on high-tier rings; rings cure POISON (deferred).
 

@@ -1,0 +1,153 @@
+{
+ "name": "arrows_play_spends_one",
+ "test": true,
+ "description": "Playing one bow spends exactly 1 arrow from the shared pool (limited-arrows): staged ARROWS 2 drops to 1, CARD_PLAYED fires, and the bow still deals its damage.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {"type": "BO", "value": 3, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
+   ]
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PLAYED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "event_arg",
+   "event": "CURRENCY_SPENT",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "currency",
+   "expected": 1,
+   "currency": "ARROWS"
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 27
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 3000,
+  "flags": {
+   "FIELD_CHEST": true
+  },
+  "currency": {
+   "ARROWS": 2
+  }
+ }
+}

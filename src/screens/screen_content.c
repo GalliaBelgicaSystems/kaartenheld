@@ -67,8 +67,14 @@ extern const uint8_t g_shop_count;
 #define SC_SHOP_MSG_BOUGHT 1
 #define SC_SHOP_MSG_NO_GOLD 2
 #define SC_SHOP_MSG_MAX_COPIES 3
+#define SC_SHOP_MSG_ARROWS_FULL 4
 #define SC_SHOP_MSG_MASK 0x0Fu
 #define SC_SHOP_MSG_BOUGHT_BIT 0x80u
+
+/* Limited-arrows virtual BUY row: appended last by sc_shop_remap_buy,
+ * never part of ShopDefinition stock (check_economy.py never sees it).
+ * 0xFE cannot collide with a stock index (SHOP_MAX_ITEMS is 50). */
+#define SHOP_ARROW_ROW 0xFE
 
 
 static uint8_t s_sc_txt_i;
@@ -493,6 +499,57 @@ void shop_row_quote_banked(void)
         g_bk_byte_d = (uint8_t)(owned - 1);
     } else {
         uint8_t s = g_shop_vis_map[row];
+        if (s == SHOP_ARROW_ROW) {
+            /* Limited-arrows purchase: 1 gold -> 1 arrow, capped at
+             * ARROWS_MAX.  Fully applied here (gold check + spend +
+             * grant + message + telemetry) so the fixed applier only
+             * needs its `byte_d != 0` skip -- no fixed-bank growth.
+             * Silent on gold refusal (like card rows); the quiver-full
+             * case reports through the row-17 message. */
+            int16_t gold = s_sc_game->state.currency.amount[CURRENCY_ID_GOLD - 1];
+            int16_t arrows = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+            uint16_t go;
+            g_bk_byte_b = ARROW_PRICE_GOLD;
+            g_bk_byte_c = CARD_NONE;
+            /* Quiver-full first: gold cannot fix it, so it is the more
+             * informative refusal when both apply.  Telemetry d1 is a
+             * new append-only reason (3 = quiver full; 1 = no gold and
+             * 2 = max copies keep their existing meanings). */
+            if (arrows < 0) arrows = 0;
+            if (arrows >= ARROWS_MAX) {
+                g_bk_byte_d = 4;
+                s_sc_game->shop_message =
+                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                              SC_SHOP_MSG_ARROWS_FULL);
+                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 3, 0, 0);
+                return;
+            }
+            if (gold < (int16_t)ARROW_PRICE_GOLD) {
+                g_bk_byte_d = 2;
+                s_sc_game->shop_message =
+                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                              SC_SHOP_MSG_NO_GOLD);
+                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 1, 0, 0);
+                return;
+            }
+            s_sc_game->state.currency.amount[CURRENCY_ID_GOLD - 1] =
+                (int16_t)(gold - (int16_t)ARROW_PRICE_GOLD);
+            /* Shop-spend note (mirrors economy_note_spent, which this
+             * banked body must not call): the market update prices
+             * arrow gold like any other till gold. */
+            go = (uint16_t)(s_sc_game->state.economy.gold_out + (uint16_t)ARROW_PRICE_GOLD);
+            if (go < s_sc_game->state.economy.gold_out) go = 0xFFFF;
+            s_sc_game->state.economy.gold_out = go;
+            s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1] =
+                (int16_t)(arrows + 1);
+            telemetry_ring_emit(EVENT_CURRENCY_SPENT, CURRENCY_ID_GOLD,
+                                (uint8_t)ARROW_PRICE_GOLD, 0, 0);
+            telemetry_ring_emit(EVENT_CURRENCY_ADDED, CURRENCY_ID_ARROWS, 1, 0, 0);
+            g_bk_byte_d = 3;
+            s_sc_game->shop_message =
+                (uint8_t)(SC_SHOP_MSG_BOUGHT_BIT | SC_SHOP_MSG_BOUGHT);
+            return;
+        }
         if (s >= s_sc_shop_def->count) return;
         id = s_sc_shop_def->items[s];
         d = sc_card_get_def(id);
@@ -521,9 +578,9 @@ void shop_row_quote_banked(void)
     }
 }
 
-/* Visible-map rebuild: the BUY list always shows the full stock.
- * Remap runs on every full redraw (entry, purchase); it only clamps
- * the cursor into the visible list. */
+/* Visible-map rebuild: the BUY list always shows the full stock plus
+ * the limited-arrows ARROWS row last.  Remap runs on every full redraw
+ * (entry, purchase); it only clamps the cursor into the visible list. */
 static void sc_shop_remap_buy(void)
 {
     uint8_t i;
@@ -531,6 +588,12 @@ static void sc_shop_remap_buy(void)
     if (!s_sc_game || !s_sc_shop_def) return;
     for (i = 0; i < s_sc_shop_def->count; i++) {
         g_shop_vis_map[g_shop_vis_count] = i;
+        g_shop_vis_count++;
+    }
+    /* Guarded: g_shop_vis_map holds SHOP_MAX_ITEMS entries, so a full
+     * 50-stock shop drops the arrow row instead of overrunning it. */
+    if (g_shop_vis_count < SHOP_MAX_ITEMS) {
+        g_shop_vis_map[g_shop_vis_count] = SHOP_ARROW_ROW;
         g_shop_vis_count++;
     }
     if (s_sc_game->item_menu_index >= g_shop_vis_count) {
@@ -657,6 +720,46 @@ void shop_content_render(void)
         }
         s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
+        /* Limited-arrows virtual row (BUY only; the SELL remap never
+         * emits the sentinel): owned-count readout with a flat 1G
+         * price, no card icons. */
+        if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
+            s_sc_stock_pos == SHOP_ARROW_ROW) {
+            uint8_t aq;
+            uint8_t tens;
+            int16_t raw;
+            raw = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+            if (raw < 0) raw = 0;
+            if (raw > ARROWS_MAX) raw = ARROWS_MAX;
+            aq = (uint8_t)raw;
+            tens = 0;
+            sc_put_char(1, s_sc_y, ' ');
+            sc_put_char(2, s_sc_y, ' ');
+            sc_draw_text(3, s_sc_y, "ARROWS", 6);
+            /* Blank the cells no card row would leave dirty: scrolling
+             * from a "<MAT> <WPN>" name would otherwise strand its
+             * tail in cols 9 and 13-16. */
+            sc_put_char(9, s_sc_y, ' ');
+            sc_draw_text(13, s_sc_y, "    ", 4);
+            sc_put_char(10, s_sc_y, 'x');
+            if (aq >= 20) {
+                tens = 2;
+                aq = (uint8_t)(aq - 20);
+            } else if (aq >= 10) {
+                tens = 1;
+                aq = (uint8_t)(aq - 10);
+            }
+            if (tens != 0) {
+                sc_put_char(11, s_sc_y, (uint8_t)('0' + tens));
+            } else {
+                sc_put_char(11, s_sc_y, ' ');
+            }
+            sc_put_char(12, s_sc_y, (uint8_t)('0' + aq));
+            sc_put_char(17, s_sc_y, ' ');
+            sc_put_char(18, s_sc_y, '1');
+            sc_put_char(19, s_sc_y, 'G');
+            continue;
+        }
         if (s_sc_card_def) {
             /* Icon tiles mirror the battle hand (screens/cards_skin.json):
              * weapon icon plus the card-menu element rider icon (BG art,
@@ -747,6 +850,8 @@ void shop_content_render(void)
         sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
     if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_NO_GOLD) {
         sc_draw_text(0, 17, "Not enough!", 12);
+    } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_ARROWS_FULL) {
+        sc_draw_text(0, 17, "Quiver full!", 12);
     } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_MAX_COPIES) {
         sc_draw_text(0, 17, "Already owned!", 14);
     } else {

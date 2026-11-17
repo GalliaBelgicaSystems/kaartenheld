@@ -118,6 +118,18 @@ enum {
 extern uint8_t g_loot_id;
 extern uint16_t g_loot_rng_state;
 
+/* Shared isolated-loot xorshift step.  Banked bodies must inline the
+ * step (never a fixed-bank call, AGENTS.md 52.11.1); one spelling here
+ * so the loot drop, the arrow victory drop and future rollers cannot
+ * drift apart.  Statement macro (do/while) so it stays a single step
+ * anywhere it is used. */
+#define LOOT_RNG_STEP() \
+    do { \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 7); \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state >> 9); \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 8); \
+    } while (0)
+
 /* Sell value: synthesized loot defs carry it in CardDefinition.price
  * (set by loot_synth_banked -- the centralized formula,
  * docs/loot.md §16/§34.6); read via card_get_def() like any price.

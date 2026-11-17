@@ -1703,7 +1703,8 @@ void ui_update_battle_banked(void)
                 battle_draw_text_line(0, 9,
                     (battle->msg_id == 1) ? "NO ENERGY!" :
                     (battle->msg_id == 2) ? "OUT OF USES!" :
-                    (battle->msg_id == 3) ? "ONE RING!" : NULL, 20);
+                    (battle->msg_id == 3) ? "ONE RING!" :
+                    (battle->msg_id == BATTLE_MSG_NO_ARROWS) ? "NO ARROWS!" : NULL, 20);
                 battle_color_span(0, 9, 20, UI_COLOR_FIELD);
             }
         }

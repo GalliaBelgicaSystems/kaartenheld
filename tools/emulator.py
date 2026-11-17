@@ -278,7 +278,7 @@ FILTER_TYPE_MAP = {"ALL": 0xFF, "ATTACK": 0, "DEFENSE": 1, "HEAL": 2,
 SORT_MODE_MAP = {"OFF": 0, "TYPE": 1, "POWER": 2, "COST": 3,
                  "POWER_DESC": 4, "COST_DESC": 5}
 DIALOGUE_NAME_TO_ID = {v: k for k, v in DIALOGUE_ID_MAP.items()}
-CURRENCY_ID_MAP = {"GOLD": 1}
+CURRENCY_ID_MAP = {"GOLD": 1, "ARROWS": 2}
 
 # Progression target names -> (target_type, target_id).  The engine never
 # branches on the type; the type only tags the owner of the progression.

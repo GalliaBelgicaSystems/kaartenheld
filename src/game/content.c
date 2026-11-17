@@ -83,6 +83,7 @@ void game_new_game(GameState *state)
      * and the debugger never disagree about what a fight will stage. */
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
+    state->currency.amount[CURRENCY_ID_ARROWS - 1] = HERO_START_ARROWS;
     /* Neutral market at boot (game_state_zero leaves 0, which is outside
      * the valid 24-48 band; readers treat out-of-band as neutral, but a
      * new game states it explicitly). */
