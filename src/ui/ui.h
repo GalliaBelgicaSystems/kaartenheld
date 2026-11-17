@@ -173,6 +173,13 @@ void ic_menu_riders_load(void);
  * BATTLE/ITEM/SHOP entry, so no per-tab streaming is needed. */
 #define UI_TILE_MENUS_LIST_SCROLL_ARROW (UI_TILE_MENUS_BASE + 7u)
 #define UI_TILE_MENUS_QUESTS_SEPARATOR (UI_TILE_MENUS_BASE + 8u)
+/* Sheet (0,9) heart / (0,10) star: the STATUS-tab HP/AP icons.
+ * Streamed with the chrome sheet, so no per-tab streaming is needed. */
+#define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
+#define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
+/* Big-glyph cell (sheet (0,11)): the STATUS-tab huge-character mosaic
+ * (one art tile, repeated tile-by-tile into a block). */
+#define UI_TILE_MENUS_HUGE_CHAR (UI_TILE_MENUS_BASE + 11u)
 /* Rotated (180 deg) copy of the inventory type arrow for scroll-up
  * carets (the sheet art points down).  Slot 245 is the last free
  * block-1 id (box ends at 244, dice start at 246).  Streamed by the

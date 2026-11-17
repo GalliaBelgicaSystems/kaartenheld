@@ -1242,11 +1242,15 @@ static void ic_format_uint(uint16_t uval, char *out)
     *out = '\0';
 }
 
-/* ── HERO tab: hero + wallet summary ───────────────────────────
- *   HP <hp>/<max>   (party slot 0, the hero)
- *   AP <pool>        (battle energy pool variable)
- *   GOLD <n>         (currency slot 0)
- *   CARDS <n>        (total owned copies) */
+/* ── HERO tab: hero + wallet summary + huge-character mosaic ──
+ * Left block (cols 0-9):
+ *   HP <hp>/<max> + HP icon      (party slot 0, the hero)
+ *   AP <pool> + AP icon          (battle energy pool variable)
+ *   GOLD <n>G                    (currency slot 0)
+ *   DECK <n> + deck icon         (decked copies; replaces the old
+ *                                 owned-total CARDS row)
+ * Right block (cols 11-18, rows 3-10): the huge-character tile
+ * (sheet (0,11)) repeated tile-by-tile into an 8x8 mosaic. */
 /* Draw an unsigned value right-aligned ending at col end_col
  * (labels sit at col 0; all detail numbers share the right edge). */
 static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
@@ -1258,25 +1262,42 @@ static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
     IC_DRAW_TEXT((uint8_t)(end_col - len + 1), y, s_ic_big_num, len);
 }
 
+/* Icon cell stamp (VRAM tile + buffer space, LCD-on safe): the buffer
+ * glyph never equals the PPU tile, so the text skip-guard would
+ * stale-hide it (AGENTS.md 52.25). */
+static void ic_stamp_icon(uint8_t y, uint8_t x, uint8_t tile)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, tile);
+}
+
 static void ic_draw_status_page(Game *g)
 {
-    uint8_t i;
-    uint8_t total = 0;
-    for (i = 0; i < g->state.cards.collection.count; i++)
-        total = (uint8_t)(total + g->state.cards.collection.entries[i].count);
-    IC_DRAW_TEXT(0, 3, "HP ", 3);
-    IC_DRAW_NUM2(3, 3, g->state.party.members[0].hp);
-    IC_DRAW_TEXT(5, 3, "/", 1);
-    IC_DRAW_NUM2(6, 3, g->state.party.members[0].max_hp);
+    uint8_t hx;
+    uint8_t hy;
+    IC_DRAW_TEXT(0, 3, "HP  ", 4);
+    IC_DRAW_NUM2(4, 3, g->state.party.members[0].hp);
+    IC_DRAW_TEXT(6, 3, "/", 1);
+    IC_DRAW_NUM2(7, 3, g->state.party.members[0].max_hp);
+    ic_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
     IC_DRAW_TEXT(0, 4, "AP ", 3);
-    IC_DRAW_NUM2(3, 4,
+    IC_DRAW_NUM2(7, 4,
         (uint8_t)g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1]);
-    IC_DRAW_TEXT(0, 5, "GOLD ", 5);
-    ic_format_uint((uint16_t)g->state.currency.amount[0], s_ic_big_num);
-    IC_DRAW_TEXT(5, 5, s_ic_big_num, 5);
-    IC_DRAW_TEXT(0, 6, "CARDS ", 6);
-    ic_format_uint(total, s_ic_big_num);
-    IC_DRAW_TEXT(6, 6, s_ic_big_num, 5);
+    ic_stamp_icon(4, 9, UI_TILE_MENUS_AP_ICON);
+    IC_DRAW_TEXT(0, 5, "GOLD   ", 7);
+    ic_draw_rjust(5, 8, (uint16_t)g->state.currency.amount[0]);
+    IC_DRAW_TEXT(9, 5, "G", 1);
+    IC_DRAW_TEXT(0, 6, "DECK   ", 7);
+    ic_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
+    ic_stamp_icon(6, 9, UI_TILE_DECK_ICON);
+    /* Huge-character mosaic (cols 11-18, rows 3-10). */
+    for (hy = 3; hy <= 10; hy++) {
+        for (hx = 11; hx <= 18; hx++)
+            ic_stamp_icon(hy, hx, UI_TILE_MENUS_HUGE_CHAR);
+    }
 }
 
 static void ic_draw_picker(Game *g)

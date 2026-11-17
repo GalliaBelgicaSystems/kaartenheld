@@ -846,6 +846,11 @@ def walk_a(planner, checks, sram_out=None):
     s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
             actual="col %d" % s.menu_cursor_col())
     s.shoot("08-quests-tab")
+    s.press("right", settle=30)  # QUEST -> HERO
+    s.check("hero tab caret", s.menu_cursor_col() == 11,
+            expected="cursor tile at col 11",
+            actual="col %d" % s.menu_cursor_col())
+    s.shoot("08-hero-tab")
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("GEMS"), frames=30),
         label="quick close")
