@@ -1031,11 +1031,16 @@ static void ic_draw_cards_list(Game *g)
         ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
     }
 
-    /* Row 13 keeps the middle separator column alive below the last
-     * card row; row 15 is the full-width bottom box border: the sheet
-     * (0,0) horizontal segment (UI_TILE_MENUS_BOTTOM_BORDER) repeated
-     * across all 20 cols (buffer spaces). */
+    /* Middle separator column (col 9): static chrome for every card
+     * row 5-12 plus the gap/scroll rows 13-14, independent of how many
+     * groups are listed (the pair loop above breaks at the first
+     * empty slot, which left rows 8+ blank on short lists).  Row 15
+     * is covered by the full-width bottom border below. */
+    for (x = 0; x < VISIBLE_CARDS; x++)
+        ic_stamp_chrome((uint8_t)(ROW_CARDS_TOP + x), 9,
+                        UI_TILE_MENUS_INV_SEPARATOR);
     ic_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
+    ic_stamp_chrome(ROW_SCROLL_DOWN, 9, UI_TILE_MENUS_INV_SEPARATOR);
     for (x = 0; x < 20; x++)
         ic_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
 
