@@ -136,39 +136,15 @@ static void iq_color_span_fast(void)
     iq_color_span_fast(); \
 } while(0)
 
-/* Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) --
- * same rows as the bank-2 DECK/HERO header: row 0 tabs (GEMS, not
- * GEM), row 1 category border + corner chrome with the cursor-category
- * tile under QUEST (col 5). */
-static void iq_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
-{
-    s_ic_buf = &g_ui_screen_buf[y][x];
-    *s_ic_buf = ' ';
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, tile);
-}
+/* Tab header: single source of truth is menu_tabs_snippet.h ──────────
+ * (compiled per bank: banked bodies cannot call across banks,
+ * AGENTS.md 52.11.1).  QUEST cursor col 5. */
+#define MENU_TAB_DRAW_TEXT IQ_DRAW_TEXT
+#include "menu_tabs_snippet.h"
 
 static void iq_draw_header(void)
 {
-    uint8_t x;
-    IQ_DRAW_TEXT(0, 0, "DECK QUEST HERO GEMS", 20);
-    iq_stamp_chrome(0, 4, UI_TILE_MENUS_CAT_SEPARATOR);
-    iq_stamp_chrome(0, 10, UI_TILE_MENUS_CAT_SEPARATOR);
-    iq_stamp_chrome(0, 15, UI_TILE_MENUS_CAT_SEPARATOR);
-    for (x = 0; x < 20; x++) {
-        if (x == 4 || x == 10 || x == 15) continue;
-        if (x == 5) continue;
-        iq_stamp_chrome(1, x, UI_TILE_MENUS_CAT_BORDER);
-    }
-    iq_stamp_chrome(1, 4, UI_TILE_MENUS_CAT_CORNER);
-    iq_stamp_chrome(1, 10, UI_TILE_MENUS_CAT_CORNER);
-    iq_stamp_chrome(1, 15, UI_TILE_MENUS_CAT_CORNER);
-    s_ic_buf = &g_ui_screen_buf[1][5];
-    *s_ic_buf = '^';
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)1 << 5) + 5);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_MENUS_CURSOR_CAT);
+    menu_draw_tabs(5);
 }
 
 /* Visible-to-table index map: item_menu_index addresses the VISIBLE

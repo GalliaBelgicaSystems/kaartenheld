@@ -330,52 +330,20 @@ static void ic_color_span_fast(void)
     ic_color_span_fast(); \
 } while(0)
 
-/* ── Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) ──────
- * Row 0: the four tabs (GEMS, not GEM); the three single spaces double
- * as category-separator chrome (VRAM tile, buffer keeps the space so
- * tab-word asserts are untouched).
- * Row 1: category border everywhere, category corner under each
- * separator, cursor-category tile at the active tab (never a bare
- * border under the cursor).  Buffer keeps '^' at the cursor so the
- * harness caret asserts are unchanged.
- * No multiply (would pull the SDCC mult lib into fixed _CODE). */
-static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
+/* ── Tab header: single source of truth is menu_tabs_snippet.h ──────
+ * (compiled per bank: banked bodies cannot call across banks,
+ * AGENTS.md 52.11.1).  DECK cursor col 0, HERO col 11; QUEST and GEM
+ * never reach this body (bank 8 renders them). */
+#define MENU_TAB_DRAW_TEXT IC_DRAW_TEXT
+#include "menu_tabs_snippet.h"
 
-/* Unconditional chrome stamp (VRAM tile + buffer space): the buffer
- * glyph never equals the PPU tile, so the text skip-guard would
- * stale-hide it (AGENTS.md 52.25).  LCD-on safe (BANKED_VRAM_WRITE). */
-static void ic_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
-{
-    s_ic_buf = &g_ui_screen_buf[y][x];
-    *s_ic_buf = ' ';
-    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, tile);
-}
+static void ic_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v);
 
 static void ic_draw_header(Game *g)
 {
     uint8_t cx = 0;
-    uint8_t x;
     if (g->item_menu_tab == TAB_HERO) cx = 11;
-    /* QUEST and GEM never reach this body (bank 8 renders them). */
-    IC_DRAW_TEXT(0, 0, "DECK QUEST HERO GEMS", 20);
-    ic_stamp_chrome(0, 4, UI_TILE_MENUS_CAT_SEPARATOR);
-    ic_stamp_chrome(0, 10, UI_TILE_MENUS_CAT_SEPARATOR);
-    ic_stamp_chrome(0, 15, UI_TILE_MENUS_CAT_SEPARATOR);
-    for (x = 0; x < 20; x++) {
-        if (x == 4 || x == 10 || x == 15) continue;
-        if (x == cx) continue;
-        ic_stamp_chrome(1, x, UI_TILE_MENUS_CAT_BORDER);
-    }
-    ic_stamp_chrome(1, 4, UI_TILE_MENUS_CAT_CORNER);
-    ic_stamp_chrome(1, 10, UI_TILE_MENUS_CAT_CORNER);
-    ic_stamp_chrome(1, 15, UI_TILE_MENUS_CAT_CORNER);
-    s_ic_buf = &g_ui_screen_buf[1][cx];
-    *s_ic_buf = '^';
-    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)1 << 5) + cx);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_MENUS_CURSOR_CAT);
+    menu_draw_tabs(cx);
 }
 
 /* ── Full card names (display only; mechanics keep def->name) ──────
@@ -922,7 +890,7 @@ static void ic_draw_card_pair(Game *g, uint8_t y, uint8_t vL, uint8_t vR, uint8_
 {
     if (vL != 0xFF) ic_draw_card_cell(g, y, vL, 0, lst);
     if (vR != 0xFF) ic_draw_card_cell(g, y, vR, 1, lst);
-    ic_stamp_chrome(y, 9, UI_TILE_MENUS_INV_SEPARATOR);
+    menu_stamp_chrome(y, 9, UI_TILE_MENUS_INV_SEPARATOR);
 }
 
 static void ic_draw_row16(Game *g);
@@ -995,8 +963,8 @@ static void ic_draw_cards_list(Game *g)
      * separator gap, row 14 the scroll-down carets, row 15 the
      * full-width bottom box border (see ic_draw_scroll_rows). */
     IC_DRAW_TEXT(0, ROW_COL_HEAD, "  PILE       DECK   ", 20);
-    ic_stamp_chrome(ROW_COL_HEAD, 6, UI_TILE_MENUS_INV_ARROW);
-    ic_stamp_chrome(ROW_COL_HEAD, 17, UI_TILE_MENUS_INV_ARROW);
+    menu_stamp_chrome(ROW_COL_HEAD, 6, UI_TILE_MENUS_INV_ARROW);
+    menu_stamp_chrome(ROW_COL_HEAD, 17, UI_TILE_MENUS_INV_ARROW);
     /* Indicator rows (the bank-11 view build just recomputed the
      * overflow flags immediately before this body ran). */
     ic_draw_scroll_rows(g);
@@ -1037,12 +1005,12 @@ static void ic_draw_cards_list(Game *g)
      * empty slot, which left rows 8+ blank on short lists).  Row 15
      * is covered by the full-width bottom border below. */
     for (x = 0; x < VISIBLE_CARDS; x++)
-        ic_stamp_chrome((uint8_t)(ROW_CARDS_TOP + x), 9,
+        menu_stamp_chrome((uint8_t)(ROW_CARDS_TOP + x), 9,
                         UI_TILE_MENUS_INV_SEPARATOR);
-    ic_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
-    ic_stamp_chrome(ROW_SCROLL_DOWN, 9, UI_TILE_MENUS_INV_SEPARATOR);
+    menu_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
+    menu_stamp_chrome(ROW_SCROLL_DOWN, 9, UI_TILE_MENUS_INV_SEPARATOR);
     for (x = 0; x < 20; x++)
-        ic_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
+        menu_stamp_chrome(ROW_GAP_BOT, x, UI_TILE_MENUS_BOTTOM_BORDER);
 
     /* Row 16 (message or side footer) goes through the shared helper
      * so the incremental post-A refresh paints exactly what the full

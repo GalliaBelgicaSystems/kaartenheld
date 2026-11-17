@@ -96,39 +96,15 @@ static void gem_draw_text_fast(void)
     gem_draw_text_fast(); \
 } while(0)
 
-/* Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) --
- * same row as the other tabs: row 0 labels (GEMS, not GEM), row 1
- * category border + corner chrome with the cursor-category tile under
- * GEMS (col 16). */
-static void gem_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
-{
-    s_ic_buf = &g_ui_screen_buf[y][x];
-    *s_ic_buf = ' ';
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, tile);
-}
+/* Tab header: single source of truth is menu_tabs_snippet.h ──────────
+ * (compiled per bank: banked bodies cannot call across banks,
+ * AGENTS.md 52.11.1).  GEMS cursor col 16. */
+#define MENU_TAB_DRAW_TEXT GEM_DRAW_TEXT
+#include "menu_tabs_snippet.h"
 
 static void gem_draw_header(void)
 {
-    uint8_t x;
-    GEM_DRAW_TEXT(0, 0, "DECK QUEST HERO GEMS", 20);
-    gem_stamp_chrome(0, 4, UI_TILE_MENUS_CAT_SEPARATOR);
-    gem_stamp_chrome(0, 10, UI_TILE_MENUS_CAT_SEPARATOR);
-    gem_stamp_chrome(0, 15, UI_TILE_MENUS_CAT_SEPARATOR);
-    for (x = 0; x < 20; x++) {
-        if (x == 4 || x == 10 || x == 15) continue;
-        if (x == 16) continue;
-        gem_stamp_chrome(1, x, UI_TILE_MENUS_CAT_BORDER);
-    }
-    gem_stamp_chrome(1, 4, UI_TILE_MENUS_CAT_CORNER);
-    gem_stamp_chrome(1, 10, UI_TILE_MENUS_CAT_CORNER);
-    gem_stamp_chrome(1, 15, UI_TILE_MENUS_CAT_CORNER);
-    s_ic_buf = &g_ui_screen_buf[1][16];
-    *s_ic_buf = '^';
-    s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)1 << 5) + 16);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE(s_ic_dst, UI_TILE_MENUS_CURSOR_CAT);
+    menu_draw_tabs(16);
 }
 
 /* Rider OAM sweep for the GEM tab (entries 1-12): the CARDS list paints
