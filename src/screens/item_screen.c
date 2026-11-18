@@ -230,10 +230,11 @@ void item_screen_render(Game *g)
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_ITEM) {
         /* No screen wipe and no extra branch: ui_clear_screen() is gone.
-         * Each banked body blanks the whole screen itself with a mode-safe
-         * menu_blank_content (no torn direct writes), then repaints header +
-         * content in the same pass, so tab switches morph in place instead
-         * of flashing blank.  CRAM still resets unconditionally: the first
+         * Each banked body paints its rows directly in one pass (no
+         * wholesale blank: the 320-cell blank spanned LCD-on frames
+         * and flashed).  Every row covers its full width, so tab
+         * switches morph cell-by-cell with no blank intermediate.
+         * CRAM still resets unconditionally: the first
          * entry from another screen needs the base set, and reprogramming
          * identical values mid-stay is invisible.  (Fixed-bank _HOME is
          * nearly full, AGENTS.md 52.18: the bodies carry the cost in

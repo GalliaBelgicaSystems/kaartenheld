@@ -564,7 +564,7 @@ static void item_window_build(Game *g)
                     cu_hide_side(k, 0);
                 }
                 if (oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
-                    cu_blank_span(y, 10, 9);
+                    cu_blank_span(y, 10, 10);
                     cu_hide_side(k, 1);
                 }
             }
@@ -1290,7 +1290,10 @@ static void pk_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t len)
         } else {
             ch = ' ';
         }
-        if (*s_ic_buf != ch) {
+        /* Unconditional VRAM write (no skip guard): icon/chrome tiles
+         * carry space buffers, so a guarded paint would leave stale
+         * art in VRAM while the buffer looks correct. */
+        {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
             BANKED_VRAM_WRITE(s_ic_dst, tile);
             *s_ic_buf = ch;
@@ -1356,9 +1359,25 @@ void item_picker_render_banked(void)
     for (r = 15; r <= 17; r++)
         pk_blank_row(r);
     pk_draw_text(0, (uint8_t)(7 + (uint8_t)(g->item_menu_pick_row * 2)), ">", 1);
+    pk_draw_text(1, 7, " ", 1);
     pk_draw_text(2, 7, "FILTER", 6);
+    pk_draw_text(8, 7, "    ", 4);
     pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 3);
+    pk_draw_text(15, 7, "     ", 5);
+    pk_draw_text(1, 9, " ", 1);
     pk_draw_text(2, 9, "SORT", 4);
+    pk_draw_text(6, 9, "      ", 6);
     pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 4);
+    pk_draw_text(16, 9, "    ", 4);
     pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 19);
+    pk_draw_text(19, 14, " ", 1);
+    /* Clear the non-selected caret row (DECK card text would survive
+     * in the gap columns). */
+    if (g->item_menu_pick_row == 0) {
+        pk_draw_text(0, 9, " ", 1);
+        pk_draw_text(1, 9, " ", 1);
+    } else {
+        pk_draw_text(0, 7, " ", 1);
+        pk_draw_text(1, 7, " ", 1);
+    }
 }

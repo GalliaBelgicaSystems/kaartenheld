@@ -33,28 +33,11 @@ static void menu_stamp_chrome(uint8_t y, uint8_t x, uint8_t tile)
     BANKED_VRAM_WRITE(s_ic_dst, tile);
 }
 
-/* Blank the content rows 2-17 (VRAM font space + buffer space,
- * LCD-on safe).  Every full render blanks these first, then repaints
- * header (rows 0-1, always fully drawn) plus content in the same pass,
- * so tab switches morph in place instead of flashing the whole screen
- * blank.  Unconditional VRAM writes keep VRAM reads deterministic
- * under the harness (AGENTS.md 52.25): the buffer is reset in the
- * same pass, so skip-guarded paints never trust stale VRAM. */
-static void menu_blank_content(void)
-{
-    uint8_t x;
-    uint8_t y;
-    for (y = 2; y < 18; y++) {
-        s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
-        s_ic_buf = &g_ui_screen_buf[y][0];
-        for (x = 0; x < 20; x++) {
-            BANKED_VRAM_WRITE(s_ic_dst, ui_font_tile_base);
-            *s_ic_buf = ' ';
-            s_ic_dst++;
-            s_ic_buf++;
-        }
-    }
-}
+/* Row-by-row direct paint (AGENTS.md 36): every menu body covers each
+ * of its rows fully in one pass -- no wholesale pre-blank.  The old
+ * 320-cell blank spanned LCD-on frames and flashed on every tab
+ * switch; targeted tail/middle/gap blanks inside each row painter keep
+ * every cell written at most once per render. */
 
 /* Row 0: the four tabs with category separators in the three gaps
  * (cols 4/10/15).  Row 1: category border everywhere, category corner

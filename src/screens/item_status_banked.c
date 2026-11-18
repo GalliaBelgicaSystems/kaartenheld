@@ -61,7 +61,11 @@ static void st_draw_text_fast(void)
         } else {
             ch = ' ';
         }
-        if (*s_ic_buf != ch) {
+        /* Unconditional VRAM write (no skip guard): icon/chrome tiles
+         * carry space buffers, so a guarded paint would leave stale
+         * art in VRAM while the buffer looks correct.  Row-local
+         * blank+paint never shows a full-screen wipe (AGENTS.md 36). */
+        {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
             BANKED_VRAM_WRITE(s_ic_dst, tile);
             *s_ic_buf = ch;
@@ -160,9 +164,16 @@ void item_status_render_banked(void)
     uint8_t hy;
     if (!g) return;
 
-    /* No full-screen wipe here: blank the content rows, then paint
-     * header + content in place. */
-    menu_blank_content();
+    /* Direct paint, no pre-blank: unpainted rows blanked below, each
+     * painted row covers its full width in one pass, so tab switches
+     * never show an all-blank intermediate. */
+    ST_DRAW_TEXT(0, 2, "                    ", 20);
+    {
+        uint8_t by;
+        for (by = 8; by <= 14; by++)
+            ST_DRAW_TEXT(0, by, "                    ", 20);
+    }
+    ST_DRAW_TEXT(0, 17, "                    ", 20);
 
     /* Hide any card art OAM inherited from the DECK list. */
     for (e = 1; e <= 32; e++) {
@@ -184,32 +195,44 @@ void item_status_render_banked(void)
             ST_DRAW_TEXT(6, 3, "/", 1);
             st_draw_rjust(3, 9, (uint16_t)max_hp);
             st_stamp_icon(3, 10, UI_TILE_MENUS_HP_ICON);
+            ST_DRAW_TEXT(11, 3, "  ", 2);
         } else {
             ST_DRAW_TEXT(0, 3, "HP  ", 4);
             st_draw_rjust(3, 5, (uint16_t)hp);
             ST_DRAW_TEXT(6, 3, "/", 1);
             st_draw_rjust(3, 8, (uint16_t)max_hp);
             st_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
+            ST_DRAW_TEXT(10, 3, "   ", 3);
         }
+        /* Right of the HP block (card rows run full width). */
+        ST_DRAW_TEXT(17, 3, "   ", 3);
     }
     ST_DRAW_TEXT(0, 4, "AP ", 3);
+    ST_DRAW_TEXT(3, 4, "     ", 5);
+    ST_DRAW_TEXT(10, 4, "   ", 3);
+    ST_DRAW_TEXT(17, 4, "   ", 3);
     st_draw_rjust(4, 8,
         (uint16_t)g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1]);
     st_stamp_icon(4, 9, UI_TILE_MENUS_AP_ICON);
     ST_DRAW_TEXT(0, 5, "GOLD   ", 7);
+    ST_DRAW_TEXT(10, 5, "   ", 3);
+    ST_DRAW_TEXT(17, 5, "   ", 3);
     st_draw_rjust(5, 8, (uint16_t)g->state.currency.amount[0]);
     ST_DRAW_TEXT(9, 5, "G", 1);
     ST_DRAW_TEXT(0, 6, "DECK   ", 7);
+    ST_DRAW_TEXT(10, 6, "   ", 3);
+    ST_DRAW_TEXT(17, 6, "   ", 3);
     st_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
     st_stamp_icon(6, 9, UI_TILE_DECK_ICON);
     /* Shared bow-ammo pool (limited-arrows currency slot): clamped at
-     * zero for display, like the shop row. */
+     * zero for display, like the shop row.  Tail to full width. */
     {
         int16_t arrows =
             g->state.currency.amount[CURRENCY_ID_ARROWS - 1];
         ST_DRAW_TEXT(0, 7, "ARROWS ", 7);
         st_draw_rjust(7, 8,
             (uint16_t)(arrows < 0 ? 0 : arrows));
+        ST_DRAW_TEXT(9, 7, "           ", 11);
     }
     /* Hero-status portrait ("hero status RC", sheet cols 12-15): 4x4
      * at cols 13-16, rows 3-6, in sheet order. */
@@ -222,4 +245,5 @@ void item_status_render_banked(void)
     for (hx = 0; hx < 20; hx++)
         menu_stamp_chrome(15, hx, UI_TILE_MENUS_BOTTOM_BORDER);
     ST_DRAW_TEXT(0, 16, "B:BACK", 6);
+    ST_DRAW_TEXT(6, 16, "              ", 14);
 }
