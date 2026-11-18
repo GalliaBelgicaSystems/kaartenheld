@@ -10,7 +10,7 @@
  * VARIABLE_ID_GEM_OWNED / VARIABLE_ID_GEM_EQUIPPED (bit i = gem bit i),
  * so snapshots, descriptors, saves and the roundtrip cover gems with no
  * transport churn.  The table lives in src/game/gems_content.c (ROM
- * bank 8, shared with the bank-8 GEM-tab renderer in
+ * bank 13, shared with the bank-13 GEM-tab renderer in
  * src/screens/item_gem_banked.c); a banked body must share its tables'
  * bank (AGENTS.md 52.11.1). */
 

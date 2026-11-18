@@ -104,7 +104,38 @@ class Session:
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
     def quick_open(self):
-        return self.text_has("DECK QUEST")
+        # Header row 0 reads DECK?QUEST?HERO?GEMS in bg_text (the gaps
+        # are category-separator chrome tiles): GEMS is the unique font
+        # marker for the open quick screen.
+        return self.text_has("GEMS")
+
+    def battle_hud_up(self):
+        # Battle screen with the hero row painted: g_game.screen is
+        # SCREEN_BATTLE (2) and the row-7 col-0 cell holds the hero
+        # sprite tile (dynamic VRAM id >= 96; the old "DECK:" text
+        # marker moved off the HUD in the icon-row rework).
+        # Reader-based, so icon tiles and mid-redraw torn text reads
+        # cannot fool it (same class as verify_oam's frame-halt hazard,
+        # AGENTS.md 52.26).
+        if self.pb.memory[self.reader.g_game] != 2:
+            return False
+        scx = self.pb.memory[0xFF43]
+        scy = self.pb.memory[0xFF42]
+        t = self.pb.memory[0x9800 + ((scy // 8 + 7) % 32) * 32
+                           + (scx // 8 + 0) % 32]
+        return t >= 96
+
+    def menu_cursor_col(self):
+        """Row-1 tab cursor column: the cursor-category tile (211,
+        UI_TILE_MENUS_CURSOR_CAT) sits at the active tab (0 DECK,
+        5 QUEST, 11 HERO, 16 GEMS); -1 when the menu is closed."""
+        scx = self.pb.memory[0xFF43]
+        scy = self.pb.memory[0xFF42]
+        for c in (0, 5, 11, 16):
+            if self.pb.memory[0x9800 + ((scy // 8 + 1) % 32) * 32
+                               + (scx // 8 + c) % 32] == 211:
+                return c
+        return -1
 
     def on_overworld(self):
         return (not self.quick_open()) and not self.on_title_or_intro()
@@ -244,12 +275,13 @@ class Session:
         """Discrete one-tile presses until goal() holds; a press that
         produced no movement is retried, so the route converges
         regardless of host timing (same mechanics as the old walk()).
-        Bails immediately on DECK: (ambush started) instead of burning
-        all 600 presses (~16,800 frames) into the battle screen."""
+        Bails immediately on battle entry (ambush started) instead of
+        burning all 600 presses (~16,800 frames) into the battle
+        screen."""
         for _ in range(budget):
             if goal():
                 return True
-            if self.text_has("DECK:"):
+            if self.battle_hud_up():
                 return False
             x0, y0 = self.pos()
             self.pb.button_press(btn)
@@ -259,7 +291,7 @@ class Session:
                 self.tick()
                 if self.pos() != (x0, y0):
                     break
-                if self.text_has("DECK:"):
+                if self.battle_hud_up():
                     break
         return bool(goal())
 
@@ -268,8 +300,8 @@ class Session:
         press leaves us unmoved -- only an actual scene change counts:
         the LCD-off gate redraw writes final tiles straight through, so
         VRAM never blanks and wipe-watching cannot see the crossing.
-        An ambush overrides the crossing (DECK: appears instead of the
-        new scene); the caller fights and retries."""
+        An ambush overrides the crossing (battle HUD appears instead
+        of the new scene); the caller fights and retries."""
         for _ in range(tries):
             self.press(btn, settle=12)
             for _ in range(90):

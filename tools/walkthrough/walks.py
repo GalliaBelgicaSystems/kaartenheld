@@ -123,20 +123,20 @@ def poke_hand_99(s):
 
 
 def transit_fight(s):
-    """Win an unexpected transit ambush (DECK: open) with single
+    """Win an unexpected transit ambush (battle HUD open) with single
     99-attack cards, then return to the overworld. True on VICTORY.
     Loops for multi-enemy packs (single-target kills one per round).
     Single-card so energy 1 suffices; intentional fights (walk-b)
     never call this so base damage/rounds stay asserted."""
     for _round in range(5):
-        # The DECK: row redraws over several frames after a phase change
+        # The hero row redraws over several frames after a phase change
         # (full battle redraws span multiple emulator ticks); a tick-halt
-        # can land mid-redraw with TARGET already up but the deck row not
-        # yet repainted.  Wait briefly for the deck row instead of
+        # can land mid-redraw with TARGET already up but the hero row not
+        # yet repainted.  Wait briefly for the HUD instead of
         # breaking on the first torn read, or a redraw-phase check
         # abandons a healthy fight (same class as verify_oam's
         # frame-halt hazard, AGENTS.md 52.26).
-        if not s.wait_for(lambda: s.text_has("DECK:"), ticks=30):
+        if not s.wait_for(lambda: s.battle_hud_up(), ticks=30):
             break
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
@@ -191,7 +191,7 @@ def transit_fight(s):
         # loop also stops for an open KNIGHT: box (never press into
         # it); route followers drain aftermath dialogues themselves.
         for _ in range(6):
-            if ((not s.text_has("DECK:") and not s.text_has("VICTORY"))
+            if ((not s.battle_hud_up() and not s.text_has("VICTORY"))
                     or s.text_has("KNIGHT:")):
                 break
             s.press("a", settle=30)
@@ -252,7 +252,7 @@ def _walk_path(s, path):
             ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
             if ok:
                 break
-            if not s.text_has("DECK:"):
+            if not s.battle_hud_up():
                 if _drain_skip_offer(s):
                     continue
                 break
@@ -283,12 +283,12 @@ def _walk_path(s, path):
         # failure, so the "route move" check stays quiet for the ambush.
         if not ok and handled:
             continue
-        banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
+        banner = (s.bg_text()[0].strip() if s.battle_hud_up() else "")
         s.check("route move %s" % btn, ok,
                 expected="tile commit",
                 actual="pos %s scene %d deck=%s banner=%r" % (
                     s.pos(), s.reader.scene_state()["scene_id"],
-                    s.text_has("DECK:"), banner))
+                    s.battle_hud_up(), banner))
 
 
 def follow(s, planner, from_scene, start, to_scene, goal,
@@ -333,7 +333,7 @@ def follow(s, planner, from_scene, start, to_scene, goal,
                         planner.scenes[e["target_scene"]].scene_id)
                     if res:
                         break
-                    if not s.text_has("DECK:"):
+                    if not s.battle_hud_up():
                         # Carl's leave-the-field offer (fresh game):
                         # answer LEAVE (the skip) and retry -- LEAVE
                         # sets the one-shot skip so the retry exits
@@ -519,20 +519,20 @@ def _carl_topup(s):
 
 def engage_hostile(s, planner, scene_name, hostile_xy):
     """Reach a patrol-box edge, then sweep until the battle engages
-    (DECK: on the BG tilemap)."""
+    (hero-row sprite tile on the BG tilemap)."""
     edge = planner.edge_of(scene_name, s.pos(), hostile_xy)
     if edge is not None:
         path = planner.path(scene_name, s.pos(), edge)
         if path:
             _walk_path(s, path)
-    if s.text_has("DECK:"):
+    if s.battle_hud_up():
         return True
     hx = hostile_xy[0]
     for _ in range(60):
-        if s.text_has("DECK:"):
+        if s.battle_hud_up():
             return True
         s.press("left" if s.pos()[0] > hx else "right", settle=24)
-    return s.text_has("DECK:")
+    return s.battle_hud_up()
 
 
 # ── Walk A: town — dialogue, mayor, shop purchase, quick screen, save ──
@@ -785,9 +785,9 @@ def walk_a(planner, checks, sram_out=None):
     # fully-decked row (left N == 0, right N > 0): RIGHT flips to the
     # deck side and A sends one copy back to the pile, so the deck
     # count must drop by exactly one (MIN-guarded).
-    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+    s.press_until("start", lambda: s.text_has("GEMS"),
                   label="quick screen")
-    s.shoot("06-cards-menu", need="DECK QUEST")
+    s.shoot("06-cards-menu", need="GEMS")
     deck0 = s.reader.deck_count()
     s.check("deck above the MIN floor", deck0 - 1 >= 5,
             expected="deck0 - 1 >= 5", actual=str(deck0))
@@ -839,17 +839,27 @@ def walk_a(planner, checks, sram_out=None):
             expected="closed", actual="open")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][5] == "^":
+        if s.menu_cursor_col() == 5:
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 5",
-            actual=s.bg_text()[1])
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.shoot("08-quests-tab")
+    s.press("right", settle=30)  # QUEST -> HERO
+    s.check("hero tab caret", s.menu_cursor_col() == 11,
+            expected="cursor tile at col 11",
+            actual="col %d" % s.menu_cursor_col())
+    s.shoot("08-hero-tab")
+    s.press("right", settle=30)  # HERO -> GEMS
+    s.check("gems tab caret", s.menu_cursor_col() == 16,
+            expected="cursor tile at col 16",
+            actual="col %d" % s.menu_cursor_col())
+    s.shoot("08-gems-tab")
     s.press_until("b", lambda: s.stable(
-        lambda: not s.text_has("DECK QUEST"), frames=30),
+        lambda: not s.text_has("GEMS"), frames=30),
         label="quick close")
-    s.check("quick screen closed", not s.text_has("DECK QUEST"),
+    s.check("quick screen closed", not s.text_has("GEMS"),
             expected="closed", actual="open")
 
     # Save & quit (QUEST tab): A opens the quit confirm, YES writes
@@ -858,16 +868,16 @@ def walk_a(planner, checks, sram_out=None):
     # Snapshot SRAM for walk-l wherever we stand (no town trip needed:
     # quitting works from any overworld).
     ungod_mode(s)
-    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+    s.press_until("start", lambda: s.text_has("GEMS"),
                   label="quick screen")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][5] == "^":
+        if s.menu_cursor_col() == 5:
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 5",
-            actual=s.bg_text()[1])
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.press("a", settle=30)
     s.check("quit confirm", s.wait_for(lambda: s.text_has("SAVE AND QUIT"),
                                        ticks=120),
@@ -1062,13 +1072,15 @@ def walk_b(planner, checks):
             expected="PICK CARDS WITH A!", actual="none")
     # Closing by battle-open (not by CARL: gone): the two-page attack
     # box closes into the SELECT phase, and press_until self-heals
-    # dropped presses, stopping at the first DECK: sighting.
+    # dropped presses, stopping at the first battle-HUD sighting.
     s.check("attack lesson closed",
-            s.press_until("a", lambda: s.text_has("DECK:"),
-                          tries=8, settle=30, label="DECK:"),
-            expected="DECK:", actual="none")
+            s.press_until("a", lambda: s.battle_hud_up(),
+                          tries=8, settle=30, label="battle HUD"),
+            expected="battle HUD", actual="none")
     s.tick(40)
-    s.shoot("09-battle", need="DECK:")
+    s.check("battle HUD up", s.battle_hud_up(),
+            expected="hero sprite row", actual=s.bg_text()[7])
+    s.shoot("09-battle")
     s.check_eq("hero hp at battle start", s.reader.battle_player_hp(),
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
@@ -1303,7 +1315,7 @@ def walk_c(planner, checks):
                       ticks=90):
             _crossed = True
             break
-        if s.text_has("DECK:"):
+        if s.battle_hud_up():
             _win = transit_fight(s)
             s.check("transit fight victory", _win,
                     expected="VICTORY", actual="defeat")
@@ -1340,7 +1352,7 @@ def walk_c(planner, checks):
                       ticks=90):
             _crossed = True
             break
-        if s.text_has("DECK:"):
+        if s.battle_hud_up():
             _win = transit_fight(s)
             s.check("transit fight victory", _win,
                     expected="VICTORY", actual="defeat")
@@ -1487,7 +1499,7 @@ def walk_e(planner, checks):
     knight_xy = (knight["position"]["x"], knight["position"]["y"])
     s.check("knight engaged",
             engage_hostile(s, planner, "castle", knight_xy),
-            expected="DECK:", actual="none")
+            expected="battle HUD", actual="none")
     # Settle for the select banner, then branch on WHO engaged: armor
     # (knight intact) or slimes (trio already spawned by an en-route
     # ambush).  Never fight blind: an unrecognized banner fails loudly.
@@ -1515,7 +1527,7 @@ def walk_e(planner, checks):
         # sweep finds it wherever the knight fell.
         s.check("trio tile engaged",
                 engage_hostile(s, planner, "castle", knight_xy),
-                expected="DECK:", actual="none")
+                expected="battle HUD", actual="none")
         s.check("trio banner readable",
                 s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
                 expected="TARGET banner", actual=s.bg_text()[0].strip())
@@ -1529,7 +1541,7 @@ def walk_e(planner, checks):
             transit_fight(s),
             expected="VICTORY", actual="defeat")
     s.check("no second briefing",
-            s.press_until("a", lambda: not s.text_has("DECK:"),
+            s.press_until("a", lambda: not s.battle_hud_up(),
                           tries=4, label="battle exit"),
             expected="closed", actual="open")
     s.check("no briefing repeat", not s.text_has("KNIGHT:"),
@@ -1538,8 +1550,8 @@ def walk_e(planner, checks):
                               extra_avoid={mimic_xy}) or [])
     s.check("mimic engaged",
             bump_actor(s, planner, "castle", adj[0], adj[1],
-                       "DECK:", extra_avoid={mimic_xy}),
-            expected="DECK:", actual="none")
+                       "TARGET MIMIC", extra_avoid={mimic_xy}),
+            expected="battle", actual="none")
     s.check("mimic banner", s.text_has("TARGET MIMIC"),
             expected="MIMIC", actual=s.bg_text()[0].strip())
     s.tick(40)

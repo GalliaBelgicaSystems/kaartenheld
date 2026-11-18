@@ -6,7 +6,7 @@
 #include "ui.h"
 #include "banked.h"
 
-void marks_battle_tiles_invalidate_banked(void);
+void menus_entry_invalidate_banked(void);
 
 /* Sync Game.scene with the world's current map after a runtime map
  * change (walking through a gate).  Emits SCENE_CHANGED when it differs. */
@@ -123,8 +123,8 @@ void screen_change(Game *g, ScreenId screen)
      * before the tick, which runs before the render. */
     if (screen == SCREEN_BATTLE || screen == SCREEN_ITEM ||
         screen == SCREEN_SHOP) {
-        g_bk_call_bank = 8;
-        g_bk_call_target = (uint16_t)&marks_battle_tiles_invalidate_banked;
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&menus_entry_invalidate_banked;
         banked_call_run();
     }
 

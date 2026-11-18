@@ -74,9 +74,7 @@ void game_loot_drop_banked(void)
      * stream is still stepped once here so the weapon/material/effect
      * rolls below keep their historical positions for a given seed.
      * Drops must never consume or shift the shared game RNG (§26/§34.5). */
-    g_loot_rng_state ^= g_loot_rng_state << 7;
-    g_loot_rng_state ^= g_loot_rng_state >> 9;
-    g_loot_rng_state ^= g_loot_rng_state << 8;
+    LOOT_RNG_STEP();
 
     /* Archetype weapon from the enemy family's profile bias (§17).
      * Bats lean ranged; everything else drops the melee set.  Rider bows
@@ -85,9 +83,7 @@ void game_loot_drop_banked(void)
     if (battle_type == BATTLE_BAT) {
         weapon = WPN_BOW;
     } else {
-        g_loot_rng_state ^= g_loot_rng_state << 7;
-        g_loot_rng_state ^= g_loot_rng_state >> 9;
-        g_loot_rng_state ^= g_loot_rng_state << 8;
+        LOOT_RNG_STEP();
         /* Profile sizes are powers of two: mask, never % (52.11.1). */
         switch ((uint8_t)g_loot_rng_state & 3) {
             case 0:  weapon = WPN_SWORD;  break;
@@ -102,9 +98,7 @@ void game_loot_drop_banked(void)
      * burn or chill, swords stay plain; everything else stays plain).
      * Rings follow the same material roll -- healing uses the same
      * material bands as attack and defense. */
-    g_loot_rng_state ^= g_loot_rng_state << 7;
-    g_loot_rng_state ^= g_loot_rng_state >> 9;
-    g_loot_rng_state ^= g_loot_rng_state << 8;
+    LOOT_RNG_STEP();
     {
         uint8_t mat_roll = (uint8_t)g_loot_rng_state;
         uint8_t eff_roll = (uint8_t)(g_loot_rng_state >> 8);

@@ -63,8 +63,14 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "0 /"
+   "row": 7,
+   "contains": "@"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 8,
+   "expected": 250
   },
   {
    "type": "battle_energy",

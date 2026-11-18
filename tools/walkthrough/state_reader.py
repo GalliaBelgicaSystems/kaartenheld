@@ -33,8 +33,8 @@ OFF_CARDS_COLLECTION = OFF_CARDS         # entries[50]x(id,count)=100 + count
 OFF_CARDS_DECK = OFF_CARDS + 101         # cards[20] + count = 21
 OFF_FLAGS = OFF_CARDS + 122              # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
-OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
-OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
+OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 2 (gold + arrows) = 4
+OFF_WORLD = OFF_CURRENCY + 4             # GameState.world: count + actors[16]x3 = 49
 OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
 OFF_ECONOMY = OFF_PROGRESSION + 13       # EconomyState: index + gold_in + gold_out + battles = 6
 STATE_SIZE = OFF_ECONOMY + 6             # == sizeof(GameState); locates World/Battle
@@ -184,6 +184,8 @@ VARIABLE_ID_ENERGY_POOL = 6
 
 # Currency (src/game/game_ids.h) — dense slots indexed by id-1.
 CURRENCY_ID_GOLD = 1
+CURRENCY_ID_ARROWS = 2
+ARROWS_MAX = 30
 
 # Cards (src/rpg/cards.h + src/game/game_ids.h)
 CARD_FIRST_GAME = 0x40
@@ -200,6 +202,7 @@ CARD_OLD_KEY = CARD_FIRST_GAME + 10
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
+HERO_START_ARROWS = 3
 HERO_START_HP = 15
 # Spawn-facing bytes (Direction enum, src/world/entity.h: UP=0, DOWN=1,
 # LEFT=2, RIGHT=3).  Keyed by the level JSON player.spawn facing string;
@@ -307,6 +310,11 @@ class StateReader:
 
     def gold(self):
         slot = CURRENCY_ID_GOLD - 1
+        raw = self.rd(self.state + OFF_CURRENCY + 2 * slot, 2)
+        return int.from_bytes(raw, "little", signed=True)
+
+    def arrows(self):
+        slot = CURRENCY_ID_ARROWS - 1
         raw = self.rd(self.state + OFF_CURRENCY + 2 * slot, 2)
         return int.from_bytes(raw, "little", signed=True)
 
@@ -488,6 +496,8 @@ class StateReader:
                             % (h["hp"], h["max_hp"], HERO_START_HP))
         if self.gold() != HERO_START_GOLD:
             problems.append("gold=%d != %d" % (self.gold(), HERO_START_GOLD))
+        if self.arrows() != HERO_START_ARROWS:
+            problems.append("arrows=%d != %d" % (self.arrows(), HERO_START_ARROWS))
         if self.flag(STORY_FLAG_ID_ARRIVED_TOWN):
             problems.append("ARRIVED_TOWN set at boot")
         # World mirror: the player Entity must sit exactly at

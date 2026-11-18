@@ -138,10 +138,20 @@ typedef enum {
     VARIABLE_ID_DOG_QUEST          = 9    /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
 } VariableIdNamed;
 
-/* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[]. */
+/* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[].
+ * ARROWS is the shared bow-ammo pool (limited-arrows): every bow play
+ * spends 1, victory grants 1-3 (capped at ARROWS_MAX), the shop sells
+ * 1 arrow for 1 gold.  Cards never leave the deck for lack of arrows;
+ * they are just unplayable (NO ARROWS) and never drawn empty. */
 typedef enum {
-    CURRENCY_ID_GOLD = 1
+    CURRENCY_ID_GOLD = 1,
+    CURRENCY_ID_ARROWS = 2
 } CurrencyIdNamed;
+
+/* Shared arrow pool tuning (limited-arrows). */
+#define ARROWS_MAX         30
+#define ARROW_PRICE_GOLD   1
+#define HERO_START_ARROWS  3
 
 /* ── Gems (quick-screen GEM tab, docs/short-straight.md) ──────────
  * Passive skills: owning a gem does nothing; equipping it (manual, A on

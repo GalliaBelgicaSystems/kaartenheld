@@ -26,7 +26,7 @@
  * actor-free orthogonal (vertical first, then horizontal). Pure
  * WRAM/banked-table reads, no fixed calls. */
 
-/* Mirrors edge_walkable in src/world/edge_banked.c (bank 2), which
+/* Mirrors edge_walkable in src/world/edge_banked.c (bank 15), which
  * inlines the same generated table. A tile class added to one and not
  * the other makes cardinal and diagonal movement silently disagree --
  * keep them in sync. */

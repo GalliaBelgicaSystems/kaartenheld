@@ -26,7 +26,7 @@ void game_loot_rank_banked(void);
  * in input.c). */
 static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0];
 
-/* Bank-3 movement bodies (src/world/edge_banked.c). */
+/* Bank-15 movement body (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
 /* Bank-12 combined diagonal gate check (src/world/diagonal_banked.c). */
 void diagonal_gate_check_banked(void);
@@ -169,7 +169,7 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
             scene_exit_check(w, def, target_x, target_y);
         }
     } else if (!scene_exit_check(w, def, target_x, target_y)) {
-        g_bk_call_bank = 2;
+        g_bk_call_bank = 15;
         g_bk_call_target = (uint16_t)&world_gate_check_banked;
         g_bk_ptr_a = (void *)w;
         g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
@@ -380,7 +380,7 @@ void world_on_battle_end(Game *g, bool victory)
                      * folds move copies onto curated ids, so the loot
                      * row's own count would go stale -- e.g. always 1 on
                      * a fold into a non-empty curated row). */
-                    g_bk_call_bank = 11;
+                    g_bk_call_bank = 15;
                     g_bk_call_target = (uint16_t)&deck_ident_total_banked;
                     g_bk_ptr_a = (void *)&g->state.cards;
                     g_bk_byte_a = g_loot_id;

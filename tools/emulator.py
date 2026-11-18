@@ -278,7 +278,7 @@ FILTER_TYPE_MAP = {"ALL": 0xFF, "ATTACK": 0, "DEFENSE": 1, "HEAL": 2,
 SORT_MODE_MAP = {"OFF": 0, "TYPE": 1, "POWER": 2, "COST": 3,
                  "POWER_DESC": 4, "COST_DESC": 5}
 DIALOGUE_NAME_TO_ID = {v: k for k, v in DIALOGUE_ID_MAP.items()}
-CURRENCY_ID_MAP = {"GOLD": 1}
+CURRENCY_ID_MAP = {"GOLD": 1, "ARROWS": 2}
 
 # Progression target names -> (target_type, target_id).  The engine never
 # branches on the type; the type only tags the owner of the progression.
@@ -360,16 +360,18 @@ def serialize_initial_state(initial_state):
     buf[STATE_LOAD_DESC_INVENTORY_COUNT_OFF] = len(items)
     for i, (name, qty) in enumerate(items):
         off = STATE_LOAD_DESC_INVENTORY_ENTRY_OFF + i * STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE
-        buf[off] = ITEM_ID_MAP[name]
+        buf[off] = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
         buf[off + 1] = qty
 
     if "deck" in initial_state:
         # Explicit deck construction: replaces the starter deck entirely.
         # An empty dict is meaningful (empty deck -> battle fallback path).
-        # {name: copies} expands to COUNT sequential card ids.
+        # {name: copies} expands to COUNT sequential card ids (name may be
+        # a curated ITEM_ID_MAP symbol or a numeric loot CardId).
         flat = []
         for name, qty in ((initial_state.get("deck") or {}).items()):
-            flat.extend([ITEM_ID_MAP[name]] * int(qty))
+            cid = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
+            flat.extend([cid] * int(qty))
         if len(flat) > MAX_DESC_DECK_CARDS:
             raise ValueError(
                 f"deck expands to {len(flat)} cards; max is {MAX_DESC_DECK_CARDS}")

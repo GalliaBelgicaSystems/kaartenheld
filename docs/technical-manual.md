@@ -583,10 +583,12 @@ rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
 * Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
 * Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
 
-**QUEST tab** — the tracked-quest list (entries from row 3). Only accepted
+**QUEST tab** — the tracked-quest list (first block from row 3). Only accepted
 quests appear: entries with status `not started` stay hidden, so the tab
 starts empty (`no quests yet`) and fills as quests are accepted.  Each tracked
-entry shows the quest name and a status line:
+entry takes 3 rows (name, status line, quests-separator rule); 4 blocks fit
+on screen and longer logs scroll (indicators on rows 2/15, bottom border
+on row 15 like every list tab).  The status line shows:
 
 * `status var: X/T` while active (e.g. `monsters: 2/3`)
 * `complete - SWORD` when done.
@@ -596,11 +598,14 @@ entry shows the quest name and a status line:
 you stand (e.g. `3/3 monsters`, `DONE +1 AP` when complete, `ACTIVE` for
 counter-less quests).
 
-**HERO tab** — read-only hero summary: `HP <hp>/<max>`, `AP <pool>`
-(battle energy pool), `GOLD <n>`, `CARDS <n>` (total owned copies).
+**HERO tab** — read-only hero summary: `HP <hp>/<max>` + heart icon,
+`AP <pool>` (battle energy pool) + star icon, `GOLD <n>G`, `DECK <n>`
+(decked copies) + deck icon, `ARROWS <n>` (shared bow-ammo pool), plus
+the 4x4 hero-status portrait.
 
-**GEM tab** — owned gems, one row per gem with `ON`/`OFF` equip state and
-the skill line below (`STRAIGHT GEM` → `SHORT STRAIGHT`).  Starts empty
+**GEM tab** — owned gems with the QUEST tab's geometry (3-row blocks:
+name + `ON`/`OFF` equip state, skill line, separator rule; 4-block
+window with scroll, bottom border on row 15).  Starts empty
 (`NO GEMS YET` / `STAKE 50 AT NIS`).  `A` toggles equip manually (at most
 3 equipped at once); owning alone does nothing.  Gem 0 is won at Nis's
 chuck-a-luck table by staking 50 in one sitting

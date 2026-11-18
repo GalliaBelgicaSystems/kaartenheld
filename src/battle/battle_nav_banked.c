@@ -47,12 +47,28 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
  * reserved by the pending combo (deck.md Phase 10).  Greyed hand cards (bit
  * set in s_grey_mask[0]) are unplayable for the grey-out duration -- the
  * cursor skips them, selection rejects them, and the auto-play fallback in
- * battle_execute_combo ignores them. */
+ * battle_execute_combo ignores them.
+ * Limited-arrows: a BOW also needs a staged bow in the pending combo to
+ * stay under the shared arrow pool (g_bk_byte_d, staged by the fixed
+ * wrapper; the engine body stays game-id-free).  uses_remaining == 0
+ * still rejects first, so debug-forced depleted bows keep the old
+ * OUT OF USES path. */
+static uint8_t nav_staged_bows(const Battle *b)
+{
+    uint8_t i, n = 0;
+    for (i = 0; i < b->combo_count; i++) {
+        if (b->hand[b->selected_indices[i]].type == BATTLE_CARD_TYPE_BOW) n++;
+    }
+    return n;
+}
+
 static bool nav_hand_playable(const Battle *b, uint8_t hand_idx)
 {
     uint8_t available;
     if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_EMPTY) return false;
     if (b->hand[hand_idx].uses_remaining == 0) return false;
+    if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_BOW &&
+        nav_staged_bows(b) >= g_bk_byte_d) return false;
     if ((s_grey_mask[0] & (uint8_t)(1u << hand_idx)) != 0) return false;
     available = b->energy - nav_combo_reserved_cost(b);
     return b->hand[hand_idx].cost <= available;
@@ -70,8 +86,10 @@ static bool nav_is_card_selected(const Battle *b, uint8_t hand_idx)
 }
 
 /* Transient HUD message (row 12): id 1 = NO ENERGY, 2 = OUT OF USES,
- * 3 = ONE RING (docs/loot.md §34.3).  Field writes only (the fixed-bank
- * static helper is unreachable while the content bank is mapped). */
+ * 3 = ONE RING (docs/loot.md §34.3), 8 = NO ARROWS (limited-arrows:
+ * bow selected with the shared pool empty).  Field writes only (the
+ * fixed-bank static helper is unreachable while the content bank is
+ * mapped). */
 static void nav_msg(Battle *b, uint8_t id)
 {
     b->msg_id = id;
@@ -130,8 +148,18 @@ static void nav_card_select(Battle *b)
     }
 
     if (!nav_hand_playable(b, b->cursor_pos)) {
-        nav_msg(b,
-                (b->hand[b->cursor_pos].uses_remaining == 0) ? 2 : 1);
+        /* Depleted (uses == 0) keeps OUT OF USES; a bow that fails on
+         * the arrows condition itself (staged bows at/over the pool)
+         * flashes NO ARROWS; everything else (energy, grey mask) says
+         * NO ENERGY. */
+        if (b->hand[b->cursor_pos].uses_remaining == 0) {
+            nav_msg(b, 2);
+        } else if (b->hand[b->cursor_pos].type == BATTLE_CARD_TYPE_BOW &&
+                   nav_staged_bows(b) >= g_bk_byte_d) {
+            nav_msg(b, BATTLE_MSG_NO_ARROWS);
+        } else {
+            nav_msg(b, 1);
+        }
         return;
     }
 

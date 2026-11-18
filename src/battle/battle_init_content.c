@@ -34,8 +34,12 @@ void battle_init_deck_banked(void)
         if (def) {
             b->deck.cards[i].type = def->battle_type;
             b->deck.cards[i].value = def->power;
+            /* Limited-arrows: bows never deplete per card (0xFF) -- play
+             * gating is the shared arrow pool (nav + draw), and bow
+             * cards stay in combat circulation across the fight. */
             b->deck.cards[i].uses_remaining =
-                (def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
+                (def->battle_type == BATTLE_CARD_TYPE_BOW ||
+                 def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
             b->deck.cards[i].cost = def->cost;
             b->deck.cards[i].effect = def->effect;
             b->deck.cards[i].status_id = def->status_id;
@@ -61,8 +65,9 @@ void battle_init_deck_banked(void)
 
             b->deck.cards[i].value = LOOT_POWER(mat, wi);
             /* Rings deplete per the material band (LOOT_RING_USES);
-             * every other loot card is unlimited-use (bows restaged
-             * below, after the rider is final). */
+             * every other loot card is unlimited-use -- limited-arrows
+             * bows gate on the shared pool instead of per-card uses,
+             * so no bow restage follows the rider anymore. */
             b->deck.cards[i].uses_remaining =
                 (wpn == WPN_RING) ? LOOT_RING_USES(mat) : 0xFF;
             b->deck.cards[i].status_id = STATUS_NONE;
@@ -116,13 +121,6 @@ void battle_init_deck_banked(void)
             b->deck.cards[i].cost = (wpn <= WPN_RING)
                 ? CARD_AP(b->deck.cards[i].value, mat,
                           b->deck.cards[i].status_id != STATUS_NONE) : 0;
-            /* Bow arrows per battle (docs/loot.md §34.6): AP-derived,
-             * inverse to power (wood 6 .. mythril 2, floored at 2).
-             * Staged after the rider above so the uses track CARD_AP
-             * with no second ladder. */
-            if (wpn == WPN_BOW)
-                b->deck.cards[i].uses_remaining =
-                    LOOT_BOW_USES_FROM_AP(b->deck.cards[i].cost);
         } else {
             /* Unknown id: safety-net sword, mirroring the phantom draw. */
             b->deck.cards[i].type = BATTLE_CARD_TYPE_SWORD;

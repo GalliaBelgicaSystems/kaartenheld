@@ -97,9 +97,9 @@ void dice_tiles_load_banked(void);
 
 /* Card-menu element rider icons as BG tiles (assets/menu_riders.png, cells
  * 0-3: fire, ice, poison, health).  Streamed on demand by the bank-2
- * menu bodies into the free high block-1 window below the AP pips (the
- * world tileset writes 128..127+count, max 207; 208-235 belongs to no
- * set), and stamped over the card's element cell -- the menu used to
+ * menu bodies into the time-shared high block-1 window below the AP pips
+ * (overworld reloads its own tileset on exit, and menus/battle never render
+ * world tiles), and stamped over the card's element cell -- the menu used to
  * recycle enemy-sprite OAM art for these, whose 8x8 crop was off-center.
  * The cell keeps its element palette slot (fire/ice/poison, health ->
  * UI_COLOR_HEALTH), so one encoding per icon shows the right color.
@@ -115,7 +115,7 @@ void dice_tiles_load_banked(void);
 
 /* Card-menu rider icon streamer (src/screens/menu_riders_banked.c, bank 2
  * with the menu render bodies that call it).  One-shot per menu stay; the
- * flag is re-armed on every ITEM/SHOP entry by the bank-8 time-share
+ * flag is re-armed on every BATTLE/ITEM/SHOP entry by the bank-11 time-share
  * invalidate body (same contract as the AP pip stream). */
 extern uint8_t g_menu_riders_loaded;
 void ic_menu_riders_load(void);
@@ -131,13 +131,56 @@ void ic_menu_riders_load(void);
 #define UI_TILE_AP_ICON          114u
 #define UI_TILE_DECK_ICON        116u
 
-/* DECK-list scroll-down caret: the menu finger-up bitmap rotated 180°
- * so down matches up stroke-for-stroke (same symbol, not the font 'v').
- * Lives in the free high block-1 window (208-235 belongs to no tileset;
- * the world tileset writes 128..127+count, max 207), streamed with the
- * rider icons on DECK-tab entry.  The semantic buffer keeps 'v' for
- * harness screen_row asserts. */
-#define UI_TILE_SCROLL_DOWN      232u
+/* Menu chrome (assets/menus-tile.png): 12 single-cell UI icons (row 0,
+ * cols 0-11) plus the 4x4 hero-status portrait (cols 12-15, rows 0-3,
+ * "hero status RC" sheet order, blank transparent corners included).
+ * Singles stream to 208-219 in scan order; the 16 hero cells land on
+ * the orphaned box slots (220-227, 232-235, 242-244) plus dice slot
+ * 246 (the gamble entry restreams all dice, and every ITEM entry
+ * restreams hero, so the time-share is safe).  Streamed eagerly on
+ * every BATTLE/ITEM/SHOP entry by the bank-11 invalidate body (entry
+ * is the once-per-stay re-arm, no WRAM flag); the slot table lives
+ * with that streamer.
+ *
+ * Single-cell order is sheet scan order (row 0, cols 0-11 = CSV order:
+ * 0 bottom box border, 1 inventory separator, 2 inventory type arrow,
+ * 3 cursor category, 4 category border, 5 category corner, 6 category
+ * separator, ...).  The slice script's TILE_MENUS_* editor names follow
+ * the CSV grid directly; the defines below follow the same order. */
+#define UI_TILE_MENUS_BASE       208u
+#define UI_TILE_MENUS_COUNT      12u
+#define UI_TILE_MENUS_HERO_COUNT 16u
+#define UI_TILE_MENUS_STATUS_COUNT 4u
+/* Status-bar icon slots (VRAM 248-251, header indices 28-31): full
+ * heart, half heart, AP and arrow from sheet row 1, cols 0-3.  Streamed
+ * with the chrome sheet on every BATTLE/ITEM/SHOP entry. */
+#define UI_TILE_MENUS_STATUS_BASE (248u)
+#define UI_TILE_MENUS_STATUS_HEART (UI_TILE_MENUS_STATUS_BASE + 0u)
+#define UI_TILE_MENUS_STATUS_HALF  (UI_TILE_MENUS_STATUS_BASE + 1u)
+#define UI_TILE_MENUS_STATUS_AP    (UI_TILE_MENUS_STATUS_BASE + 2u)
+#define UI_TILE_MENUS_STATUS_ARROW (UI_TILE_MENUS_STATUS_BASE + 3u)
+/* Sheet (0,0) horizontal segment: the row-15 bottom rule.  Named for
+ * what it is, not for the slice script's CSV[1] label. */
+#define UI_TILE_MENUS_BOTTOM_BORDER (UI_TILE_MENUS_BASE + 0u)
+#define UI_TILE_MENUS_INV_SEPARATOR (UI_TILE_MENUS_BASE + 1u)
+#define UI_TILE_MENUS_INV_ARROW     (UI_TILE_MENUS_BASE + 2u)
+#define UI_TILE_MENUS_CURSOR_CAT    (UI_TILE_MENUS_BASE + 3u)
+#define UI_TILE_MENUS_CAT_BORDER    (UI_TILE_MENUS_BASE + 4u)
+#define UI_TILE_MENUS_CAT_CORNER    (UI_TILE_MENUS_BASE + 5u)
+#define UI_TILE_MENUS_CAT_SEPARATOR (UI_TILE_MENUS_BASE + 6u)
+/* Sheet (0,7) list scroll arrow: all tabs' scroll indicators (rows
+ * 2/4 up, rows 14/15 down).  The up caret uses the 180-degree rotated
+ * copy in slot 245 (the sheet art points down); the semantic buffer
+ * keeps '^'/'v'.  Sheet (0,8) quests separator: the rule between
+ * quest/gem blocks.  All stream with the chrome sheet on every
+ * BATTLE/ITEM/SHOP entry, so no per-tab streaming is needed. */
+#define UI_TILE_MENUS_LIST_SCROLL_ARROW (UI_TILE_MENUS_BASE + 7u)
+#define UI_TILE_MENUS_LIST_SCROLL_UP 245u
+#define UI_TILE_MENUS_QUESTS_SEPARATOR (UI_TILE_MENUS_BASE + 8u)
+/* Sheet (0,9) heart / (0,10) star: the STATUS-tab HP/AP icons.
+ * Streamed with the chrome sheet, so no per-tab streaming is needed. */
+#define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
+#define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
 
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
@@ -169,7 +212,7 @@ void ic_menu_riders_load(void);
 
 /* Save-spin indicator: OAM entry 39 (actor slots use 0-37, markers
  * 30-37, so 39 is always free) with tile 241.  Tile 241 is free in
- * both fetch blocks (BG ids 241-245 sit between the AP-pip stream
+ * both fetch blocks (BG ids 241-244 sit between the AP-pip stream
  * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
  * no BG writer touches).  The per-phase glyph is re-streamed from the
  * font each phase change, so no boot-time load and no clobber state.

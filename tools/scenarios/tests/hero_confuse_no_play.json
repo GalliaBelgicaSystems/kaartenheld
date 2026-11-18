@@ -1,7 +1,7 @@
 {
  "name": "hero_confuse_no_play",
  "test": true,
- "description": "Confused hero with no playable hand: all cards cost more than the pool, so the auto-stage stages nothing and the fixed hook runs the no-play path at once instead of idling on the hold forever (the hold-beat bug: an unconditional hold-beat would re-stage nothing every frame and never execute). No CARD_PLAYED fires, the battle continues, and the poison still ticks down (STATUS_EXPIRED proves rounds advance).",
+ "description": "Confused hero with no playable hand: all cards cost more than the pool, so the auto-stage stages nothing and the fixed hook runs the no-play path at once instead of idling on the hold forever (the hold-beat bug: an unconditional hold-beat would re-stage nothing every frame and never execute). No CARD_PLAYED fires, the battle continues, and the poison still ticks down (STATUS_EXPIRED proves rounds advance). The 5 staged arrows back the full bow draw so never-draw-empty leaves no fallback swords.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -18,6 +18,9 @@
   "seed": 8408,
   "deck": {
    "BOW_9": 5
+  },
+  "currency": {
+   "ARROWS": 5
   },
   "start_battle": true
  },

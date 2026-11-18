@@ -2,7 +2,9 @@
 #include "telemetry.h"
 #include "audio.h"
 #include "banked.h"
+#include "game.h"
 #include "rpg/cards.h"
+#include "rpg/currency.h"
 #include "rpg/deck.h"
 #include "rpg/effects.h"
 #include "rpg/loot.h"
@@ -12,6 +14,20 @@
 #include "content.h"
 #include "battle_data.h"
 #include <string.h>
+
+/* Limited-arrows shared pool: live arrow count for the banked nav/draw
+ * bodies, staged through g_bk_byte_d so those engine bodies stay
+ * game-id-free (AGENTS.md 55.1).  Clamped: debug pokes can drive the
+ * slot negative, and the staging byte is 8-bit. */
+static uint8_t battle_arrows_now(void)
+{
+    int16_t a = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
+    if (a < 0) return 0;
+    if (a > 255) return 255;
+    return (uint8_t)a;
+}
+
+static bool battle_turn_draw(Battle *b);
 
 /* Per-enemy battle art (see battle.h): uninitialized WRAM arrays (bss, so
  * no _INITIALIZER cost); written by the bank-4 battle art loader at every
@@ -28,6 +44,10 @@ uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+uint8_t g_battle_hero_tile;
 /* Live pool max staged for the bank-3 HUD badge (see battle.h). */
 uint8_t g_battle_pool_max;
 
@@ -185,9 +205,14 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     } else {
         deck_init_default(&b->deck);
     }
+    /* Filtered opening deal (limited-arrows never-draw-empty): empty the
+     * hand and run the same banked refill the turn start uses, so bows
+     * enter only with arrow backing (cheapest first).  Cheaper fixed
+     * than the old per-card deck_draw loop. */
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
-        deck_draw(&b->deck, &b->hand[i]);
+        b->hand[i].type = BATTLE_CARD_TYPE_EMPTY;
     }
+    (void)battle_turn_draw(b);
 
     /* Stage the active screen's layout (rows/cols/positions) into WRAM
      * for the bank-3 renderer.  Game layer picks the screen by battle
@@ -258,6 +283,7 @@ static void battle_nav(Battle *b, uint8_t op, uint8_t arg)
     g_bk_ptr_a = (void *)b;
     g_bk_byte_a = op;
     g_bk_byte_b = arg;
+    g_bk_byte_d = battle_arrows_now();
     banked_call_run();
 }
 
@@ -479,6 +505,12 @@ static void battle_resolve_hand_discard(Battle *b)
     for (i = 0; i < b->combo_count; i++) {
         idx = b->selected_indices[i];
         cost += b->hand[idx].cost;
+        /* Limited-arrows: every played bow spends 1 from the shared pool
+         * (never restored; victory drops + shop buys refill it).  The
+         * card itself stays in combat circulation (bows never exile). */
+        if (b->hand[idx].type == BATTLE_CARD_TYPE_BOW) {
+            currency_add(&g_game.state, CURRENCY_ID_ARROWS, -1);
+        }
         if (b->hand[idx].uses_remaining != 0xFF && b->hand[idx].uses_remaining > 0) {
             b->hand[idx].uses_remaining--;
         }
@@ -658,15 +690,16 @@ static uint8_t battle_defend_counter(Battle *b)
  * pile implies the pile covers every open slot.  The only dry-pile loop
  * entry is the fully-dry case handled by the early return above.
  *
- * Thin fixed-bank wrapper: the decision body lives in ROM bank 4
+ * Thin fixed-bank wrapper: the decision body lives in ROM bank 14
  * (src/battle/battle_turn_draw_banked.c), dispatched via the WRAM
  * trampoline; the boolean result returns in g_bk_byte_c.  Moved out of
  * the fixed bank which sits hard against 0x8000 (AGENTS.md 52.18). */
 static bool battle_turn_draw(Battle *b)
 {
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 14;
     g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
     g_bk_ptr_a = (void *)b;
+    g_bk_byte_d = battle_arrows_now();
     banked_call_run();
     return g_bk_byte_c != 0;
 }

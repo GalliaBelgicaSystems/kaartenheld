@@ -52,12 +52,47 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "HERO"
+   "contains": "@"
   },
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "15/15"
+   "contains": "15"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": " 1 "
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 3,
+   "expected": 248
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 8,
+   "expected": 250
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 12,
+   "expected": 116
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 16,
+   "expected": 251
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 0,
+   "expected": 0
   },
   {
    "type": "screen_row_not_contains",

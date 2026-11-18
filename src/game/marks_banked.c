@@ -68,9 +68,12 @@ static const uint8_t s_ap_vram_ids[7] = { AP_TILE_1, AP_TILE_2, AP_TILE_3, AP_TI
 /* Fixed OAM ids for the battle rider icons (must match RIDER_TILE_*:
  * time-share blob-tail ids 123-125, restored on overworld entry). */
 static const uint8_t s_rider_vram_ids[3] = { RIDER_TILE_BURN, RIDER_TILE_FREEZE, RIDER_TILE_POISON };
-static uint8_t s_mark_tiles_loaded;
-static uint8_t s_battle_tiles_loaded;
-static uint8_t s_ap_pip_loaded;
+/* Entry re-arm flags (WRAM).  Non-static: the BATTLE/ITEM/SHOP entry
+ * invalidate body lives in the bank-5 menu chrome file (bank 8
+ * overflowed with the chrome sheet), and clears these cross-bank. */
+uint8_t s_mark_tiles_loaded;
+uint8_t s_battle_tiles_loaded;
+uint8_t s_ap_pip_loaded;
 
 /* Program one OBJ palette slot from 8 CRAM bytes, LCD-safely (same
  * bounded Mode-wait pattern as the tile streamer above; the timer ISR
@@ -200,34 +203,6 @@ static void marks_load_battle_tiles(void)
     for (i = 0; i < 3; i++) {
         ow_oam_stream_cell(s_rider_vram_ids[i], rider_tiles + ((uint16_t)i << 4));
     }
-}
-
-/* Re-arm the battle tile stream after overworld entry restores the
- * time-shared OAM ids (AP pips 1-4 over hero idle/walk at 96-99, pip 5
- * plus riders over the blob tail at 122-125, material icons over blob
- * offsets 17-21 at 117-121).
- * No-arg trampoline target for the fixed-bank overworld-entry path. */
-void marks_battle_tiles_invalidate_banked(void)
-{
-    /* Re-arm both streams: AP pips/riders time-share OAM ids with
-     * overworld art (96-99 hero, 122-125 blob tail), and the !/? marks
-     * (126-127) are streamed once per boot.  The material icons (streamed
-     * by the bank-2 menu render, restored with the rider tail below)
-     * need no flag: renders always precede their stamps.  screen_change()
-     * calls this on every BATTLE/ITEM/SHOP entry so the next tick
-     * restreams before the first render -- even if the flag powered up
-     * set (harness skips CRT0, so BSS is not cleared) or VRAM was
-     * clobbered by a path that did not clear the flag, the pips would
-     * otherwise show hero pixels with correct OAM ids (all id-only
-     * asserts green). */
-    s_battle_tiles_loaded = 0;
-    s_mark_tiles_loaded = 0;
-    s_ap_pip_loaded = 0;
-    /* Card-menu rider icons (bank-2 streamer, plain WRAM flag): restream on
-     * every ITEM/SHOP entry for the same reason as the pips -- the flag
-     * may be boot garbage under the harness, and the menu must never stamp
-     * an icon id whose VRAM holds something else. */
-    g_menu_riders_loaded = 0;
 }
 
 /* Overworld-entry OAM restore (same bank: direct reads; LCD-safe writes).

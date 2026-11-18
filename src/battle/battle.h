@@ -80,13 +80,19 @@ typedef enum {
  * 45-frame TTL), 4 = loot reveal (result screen, never expires), 5 =
  * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
  * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
- * consumes it; the combo row + banner read it, never row 9), 9 = Carl
+ * consumes it; the combo row + banner read it, never row 9), 8 = NO
+ * ARROWS (limited-arrows bow refusal: the shared arrow pool is empty;
+ * nav rejection, 45-frame TTL like the other rejections), 9 = Carl
  * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
  * (timer expiry with nothing staged) carries no msg_id: the ANIM banner
  * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
  * see battle_update).  An explicit empty SELECT keeps the historic
  * auto-play of the highlighted card (see battle_execute_combo). */
 #define BATTLE_MSG_ICED_FOE 5
+/* Limited-arrows bow refusal (see the msg_id table above): staged by the
+ * banked nav body when a bow is selected with the shared arrow pool
+ * empty.  Id 8 is the first free slot (1-7, 9, 10 are taken). */
+#define BATTLE_MSG_NO_ARROWS 8
 /* Confused attacker (poison), two-beat acknowledgement (bank 12
  * telegraph stages the first): msg 6 is the "FOE IS CONFUSED!" beat
  * that waits for A, msg 7 is the staged outcome the A press reveals
@@ -143,6 +149,10 @@ extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
  * Staged by the loader from g_battle_art_obj; read by the stamper. */
 extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+extern uint8_t g_battle_hero_tile;
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
  * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays
@@ -314,7 +324,7 @@ uint8_t battle_confuse_auto(Battle *b);
  * ROM bank 4): g_bk_ptr_a = Battle*, stages hand -> last_combo. */
 void battle_stage_combo_banked(void);
 /* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
- * ROM bank 4): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
+ * ROM bank 14): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
 void battle_turn_draw_banked(void);
 /* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
  * ROM bank 12): g_bk_ptr_a = Battle*.  Draws the next enemy card

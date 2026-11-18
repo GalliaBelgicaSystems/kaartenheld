@@ -126,9 +126,10 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 8,
-   "contains": "DECK"
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 12,
+   "expected": 116
   },
   {
    "type": "event_occurred",

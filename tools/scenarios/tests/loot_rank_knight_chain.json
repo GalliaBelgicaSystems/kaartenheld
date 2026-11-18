@@ -344,7 +344,7 @@
    "type": "event_arg",
    "event": "LOOT_CARD_ADDED",
    "index": 0,
-   "value": 96
+   "value": 100
   },
   {
    "type": "event_arg",
@@ -364,7 +364,7 @@
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "R  3"
+   "contains": "R  1"
   }
  ]
 }

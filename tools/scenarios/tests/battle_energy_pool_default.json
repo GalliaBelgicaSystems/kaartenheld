@@ -96,20 +96,8 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
-   "contains": "0 /1"
-  },
-  {
-   "type": "tilemap_cell",
-   "col": 16,
-   "row": 8,
-   "expected": 111
-  },
-  {
-   "type": "tilemap_cell",
-   "col": 19,
-   "row": 8,
-   "expected": 111
+   "row": 7,
+   "contains": "@"
   },
   {
    "type": "battle_energy",

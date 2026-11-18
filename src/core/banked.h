@@ -173,6 +173,13 @@ extern uint8_t g_bk_byte_e;
  * screens (game-over toggle, shop tab flips, picker row, dialogue
  * advance/confirms) call audio_play_sfx fixed-side instead. */
 extern uint8_t g_bk_sfx_req;
+/* Same-frame in-place repaint request for DECK nav (AGENTS.md 36):
+ * the moved banked nav re-windows the draw maps itself but cannot
+ * call the bank-2 row painter (cross-bank call from a banked body),
+ * so it stages 1 here and the fixed update dispatches the bank-2
+ * repaint after the trampoline returns.  0 = none.  BSS zero-init
+ * (AGENTS.md 52.27). */
+extern uint8_t g_bk_paint_req;
 /* Generic post-tick request: a non-zero value asks game_update() to open
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */

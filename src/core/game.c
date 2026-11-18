@@ -287,7 +287,8 @@ void game_render(Game *g)
      * tileset), so no stale tiles either way. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
-          (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
+          (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD) ||
+          (rc->prev_screen == SCREEN_ITEM && g->screen == SCREEN_ITEM))) {
         /* A full redraw hides the sprite in real OAM first: the redraw
          * runs synchronously inside this frame, and the sprite must not
          * float over it at a stale position.  The frame-boundary commit

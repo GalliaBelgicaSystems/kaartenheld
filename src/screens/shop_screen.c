@@ -65,7 +65,7 @@ void item_menu_step_banked(void);
  * No fixed-side cell math, no render-cache touch. */
 static void shop_menu_step(Game *g, uint8_t down)
 {
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 15;
     g_bk_call_target = (uint16_t)&item_menu_step_banked;
     g_bk_ptr_a = (void *)g;
     g_bk_byte_a = g->item_menu_index;
