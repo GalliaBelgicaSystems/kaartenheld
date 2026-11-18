@@ -17,9 +17,9 @@
  * room in both builds:
  *
  *   col: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
- *   row17:" _ H H H _ _ A n n _ _ > n n _ d d d G _ "
- *          margin hearts  AP iconic  arrows  gold digits  spin
- *                        value      value   + G suffix   cell (white)
+ *   row17:" _ H H H _ _ A n n _ > n n _ d d d G _ _ "
+ *          margin hearts  AP iconic arrows gold digits  spin
+ *                        value    value  +G suffix   cells (white)
  *
  * - 3 hearts, 1 heart = 5 HP.  Remainder 3-4 rounds UP to a full
  *   heart once at least one heart is complete (8-10 -> 2 full,
@@ -29,10 +29,10 @@
  *   under one full heart shows a half, never empty (0-3 -> half).
  *   Shown HP caps at 3 hearts; level-up overflow stays 3 full.
  * - AP icon (menus-tile status cell) + ENERGY_POOL, 2-wide
- *   right-aligned (pool is uncapped by design; clamps at 99).
+ *   zero-padded (pool is uncapped by design; clamps at 99).
  * - Arrows icon (menus-tile status cell) + ARROWS currency, 2-wide
- *   right-aligned (quiver max 30).
- * - Gold 3-wide right-aligned (font digits) + bronze "G" suffix
+ *   zero-padded (quiver max 30).
+ * - Gold 3-wide zero-padded (font digits) + bronze "G" suffix
  *   (font tile on the paper ramp: the same brown as battle numbers).
  * - Icons stream to VRAM 208-211 on every overworld full redraw
  *   (bank-11 status body from ui_world_tail, time-shared with the
@@ -139,7 +139,7 @@ void ui_ow_hud_banked(void)
     }
     line[4] = ' ';
     line[5] = ' ';
-    /* AP: icon + 2-wide right-aligned value (no div/mod: the SDCC
+    /* AP: icon + 2-wide zero-padded value (no div/mod: the SDCC
      * div library would land in fixed _CODE, AGENTS.md 52.18). */
     line[6] = 'A';
     tens = 0;
@@ -149,12 +149,11 @@ void ui_ow_hud_banked(void)
         tens++;
     }
     ones = tmp;
-    line[7] = (tens == 0) ? ' ' : (char)('0' + tens);
+    line[7] = (char)('0' + tens);
     line[8] = (char)('0' + ones);
     line[9] = ' ';
-    line[10] = ' ';
-    /* Arrows: icon + 2-wide right-aligned value. */
-    line[11] = '>';
+    /* Arrows: icon + 2-wide zero-padded value. */
+    line[10] = '>';
     tens = 0;
     tmp = (uint8_t)arrows;
     while (tmp >= 10) {
@@ -162,10 +161,10 @@ void ui_ow_hud_banked(void)
         tens++;
     }
     ones = tmp;
-    line[12] = (tens == 0) ? ' ' : (char)('0' + tens);
-    line[13] = (char)('0' + ones);
-    line[14] = ' ';
-    /* Gold: 3-wide right-aligned + 'G' (int16 range: subtraction
+    line[11] = (char)('0' + tens);
+    line[12] = (char)('0' + ones);
+    line[13] = ' ';
+    /* Gold: 3-wide zero-padded + 'G' (int16 range: subtraction
      * loops on the clamped value, still no div/mod). */
     hundreds = 0;
     while (gold >= 100) {
@@ -178,12 +177,13 @@ void ui_ow_hud_banked(void)
         tens++;
     }
     ones = (uint8_t)gold;
-    line[15] = (hundreds == 0) ? ' ' : (char)('0' + hundreds);
-    line[16] = (hundreds == 0 && tens == 0) ? ' ' : (char)('0' + tens);
-    line[17] = (char)('0' + ones);
-    line[18] = 'G';
-    /* Spinner cell: hard white background, no content (the OAM spinner
-     * draws over it when an autosave flushes). */
+    line[14] = (char)('0' + hundreds);
+    line[15] = (char)('0' + tens);
+    line[16] = (char)('0' + ones);
+    line[17] = 'G';
+    /* Spinner cells: hard white background, no content (the OAM spinner
+     * draws over col 19 when an autosave flushes). */
+    line[18] = ' ';
     line[19] = ' ';
 
     ring_row = (uint8_t)((w->scroll_y + OW_HUD_ROW) & 31);
