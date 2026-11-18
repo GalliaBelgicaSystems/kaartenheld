@@ -827,6 +827,14 @@ void ui_draw_world_map(const World *world)
 static void ui_world_tail(const World *world)
 {
     uint8_t y;
+    /* Overworld status-bar icons + paper ramp (bank 11, same-bank tile
+     * data): the icon slots time-share with the menu chrome, so every
+     * full redraw restores them first (gate crossings run LCD-on --
+     * the body is mode-gated).  The per-frame HUD repaint later in the
+     * frame only writes tilemap ids + attrs. */
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&menus_status_stream_banked;
+    banked_call_run();
     /* Re-record animation-frame ring cells (fire/water) for the bank-7
      * swap pass: the ring is static until the next full redraw, so one
      * scan here replaces every per-frame scan.  No staging: the body

@@ -21,29 +21,31 @@
  *          hearts  AP iconic  arrows   gold digits  spin
  *                  value      value    + G suffix    cell
  *
- * - 3 hearts, 1 heart = 5 HP (full 'H', 1-4 remainder 'h' half,
+ * - 3 hearts, 1 heart = 5 HP (full icon, 1-4 remainder half icon,
  *   empty = nothing, just the white background). Shown HP caps at 3
  *   hearts (15); level-up overflow stays 3 full.
- * - AP icon 'A' (font placeholder) + ENERGY_POOL, 2-wide right-aligned
- *   (pool is uncapped by design; clamps at 99 for display).
- * - Arrows icon '>' (font placeholder) + ARROWS currency, 2-wide
+ * - AP icon (menus-tile status cell) + ENERGY_POOL, 2-wide
+ *   right-aligned (pool is uncapped by design; clamps at 99).
+ * - Arrows icon (menus-tile status cell) + ARROWS currency, 2-wide
  *   right-aligned (quiver max 30).
- * - Gold 3-wide right-aligned + 'G' suffix (clamps at 999).
+ * - Gold 3-wide right-aligned + 'G' suffix (clamps at 999, font
+ *   digits on the paper ramp).
+ * - Icons stream to VRAM 208-211 on every overworld full redraw
+ *   (bank-11 status body from ui_world_tail, time-shared with the
+ *   menu chrome singles); digits/spaces are font tiles.  Every HUD
+ *   cell carries the paper attr (slot 4 = paper-white ramp, programmed
+ *   by the same stream): opaque white bar on every tileset, DMG-safe.
  * - Col 19 is NEVER written (tile, attr, mirror, or buffer): the
  *   autosave spinner OAM (entry 39 at 152,136) owns that cell.
- * - White background = space tiles + palette-0 attrs (blank tiles are
- *   white on every tileset; no CRAM changes, slot 4 stays black).
- * - Font glyphs double as the semantic buffer, so harness screen_row
- *   and vram_row asserts read the HUD directly, and ui_refill_semantic
- *   (harness per-frame refill) round-trips it. The menus-tile sheet
- *   already carries the real art (row 0: full heart, half heart, AP,
- *   arrow); swapping the three icon chars for those tiles is a later
- *   art pass that keeps the buffer (and every assert) unchanged.
+ * - The semantic buffer keeps plain letters ('H'/'h'/'A'/digits/
+ *   '>'/'G'), so harness screen_row asserts are stable across art
+ *   changes; VRAM holds the real tiles (vram_row decodes icons as
+ *   '.', same as all art tiles).
  *
  * Unconditional repaint (no skip-optimization, no scroll cache): the
  * bar is screen-anchored but lives in the scrolling 32x32 ring, so a
  * camera move changes every cell's ring address even when the content
- * is identical. 38 bounded mode-gated writes/frame is ~1k T-states
+ * is identical.  ~46 bounded mode-gated writes/frame is ~1k T-states
  * typical and needs no extra WRAM (stack-gap budget, AGENTS.md 52.24).
  *
  * Self-contained (AGENTS.md §52.11.1): WRAM game state + same-bank code
@@ -164,16 +166,31 @@ void ui_ow_hud_banked(void)
     for (col = 0; col < OW_HUD_COLS; col++) {
         uint8_t ring_col = (uint8_t)((sx + col) & 31);
         uint16_t idx = (uint16_t)((uint16_t)(ring_row << 5) + ring_col);
-        uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(line[col] - ' '));
+        char ch = line[col];
+        uint8_t tile;
+        /* Icon cells stamp the streamed status tiles (VRAM 208-211);
+         * everything else is a font tile.  The buffer always keeps the
+         * letter, so harness asserts never see tile ids. */
+        if (ch == 'H') {
+            tile = UI_TILE_STATUS_HEART_FULL;
+        } else if (ch == 'h') {
+            tile = UI_TILE_STATUS_HEART_HALF;
+        } else if (ch == 'A') {
+            tile = UI_TILE_STATUS_AP;
+        } else if (ch == '>') {
+            tile = UI_TILE_STATUS_ARROWS;
+        } else {
+            tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+        }
         VBK_REG = 0;
         BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
         VBK_REG = 1;
-        BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), 0);
+        BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), UI_COLOR_PAPER);
         VBK_REG = 0;
 #ifdef DEBUG_BUILD
         g_tilemap_mirror[idx] = tile;
-        g_tilemap_attr_mirror[idx] = 0;
+        g_tilemap_attr_mirror[idx] = UI_COLOR_PAPER;
 #endif
-        g_ui_screen_buf[OW_HUD_ROW][col] = line[col];
+        g_ui_screen_buf[OW_HUD_ROW][col] = ch;
     }
 }

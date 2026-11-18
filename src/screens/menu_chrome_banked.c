@@ -44,6 +44,24 @@ static const uint8_t s_menus_hero_slots[16] = {
       UI_TILE_MENUS_LIST_SCROLL_UP == 245u)
 #error "menu chrome VRAM layout mismatch with ui.h"
 #endif
+#if !(UI_TILE_STATUS_HEART_FULL == 208u && UI_TILE_STATUS_ARROWS == 211u)
+#error "status icon VRAM layout mismatch with ui.h"
+#endif
+
+/* Status icon header base (gfx rule --tile-coords order: 12 row-0
+ * singles + 16 hero cells, then the 4 row-1 status icons appended).
+ * Appended-last so the chrome indices above never move. */
+#define MENUS_STATUS_CELL_BASE 28u
+
+/* Paper-white document ramp (CRAM slot 4): pure white box, black ink in
+ * every tileset.  Same bytes as the dialogue paper (ui_dialogue_box_
+ * banked.c); slot 4 is free in every world tileset. */
+static const uint8_t s_status_paper[8] = {
+    0xFF, 0x7F, /* RGB8(255,255,255) */
+    0x39, 0x67, /* RGB8(200,200,200) */
+    0x4A, 0x29, /* RGB8(85,85,85) */
+    0x00, 0x00  /* RGB8(0,0,0) */
+};
 
 /* Bit-reverse one byte (horizontal mirror for the 180-degree rotation
  * of the list scroll arrow, whose sheet art points down).  No table
@@ -102,6 +120,40 @@ static void menus_chrome_stream(void)
             dst++;
             BANKED_VRAM_WRITE(dst, menus_bit_rev(hi));
             dst++;
+        }
+    }
+}
+
+/* Overworld status-bar stream (bank 11): restreams the 4 status
+ * icons (header cells 28-31: full heart, half heart, AP, arrows) to
+ * VRAM 208-211 and programs the paper-white ramp into CGB slot 4.
+ * Dispatched from ui_world_tail() on every overworld full redraw.
+ * Gate crossings run the tail LCD-on (curtain wipe), so every store
+ * is mode-gated like the chrome stream above.  The slots time-share
+ * with the menu chrome singles (each entry restores its own); the 4
+ * icon bytes survive every overworld stay (world tilesets end at 207,
+ * battle art stays below, nothing else writes 208+), and the next
+ * full redraw restores whatever a menu/battle entry clobbered.
+ * DMG-safe: BCPS/BCPD are unmapped no-ops there (AGENTS.md 38.1). */
+void menus_status_stream_banked(void)
+{
+    uint8_t i, j;
+    const uint8_t *src;
+    volatile uint8_t *dst;
+
+    for (i = 0; i < 4; i++) {
+        src = &menus_tile_tiles[((uint16_t)(MENUS_STATUS_CELL_BASE + i) << 4)];
+        dst = (volatile uint8_t *)(0x8000u +
+                                   ((uint16_t)(UI_TILE_STATUS_HEART_FULL + i) << 4));
+        for (j = 0; j < 16; j++) {
+            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            dst++;
+        }
+    }
+    if (g_is_cgb) {
+        BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
+        for (i = 0; i < 8; i++) {
+            BANKED_VRAM_WRITE(&BCPD_REG, s_status_paper[i]);
         }
     }
 }

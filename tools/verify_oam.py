@@ -826,10 +826,13 @@ def verify_scene_transition(sess):
           lcd_off_frames)
 
     # 4. Palette integrity across the LCD-on load: TOWN CRAM after the
-    #    gate crossing must equal a fresh TOWN boot on every slot except
-    #    4 (held black by the wipe; free in every world tileset), proving
-    #    zero Mode-3 palette drops.  VBlank-gated: mid-scanout CRAM reads
-    #    back 0xFF and pass vacuously.
+    #    gate crossing must equal a fresh TOWN boot on every slot,
+    #    proving zero Mode-3 palette drops.  Slot 4 is the HUD-owned
+    #    paper ramp (opaque white status bar; programmed by the bank-11
+    #    status stream in ui_world_tail, free in every world tileset):
+    #    both sides carry it, so equality proves no drops there too.
+    #    VBlank-gated: mid-scanout CRAM reads back 0xFF and pass
+    #    vacuously.
     check("town CRAM read in VBlank", True, wait_vblank(sess))
     sess.load_scenario(load_scenario(sess, "town_boot.json"))
     sess.step(2)
@@ -840,11 +843,11 @@ def verify_scene_transition(sess):
     sess.hold("RIGHT", 14)
     check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
     arr_cram = bg_cram(sess)
-    check("gate crossing: slot 4 held black",
-          [0, 0, 0, 0], arr_cram[4])
+    check("gate crossing: slot 4 holds the HUD paper ramp",
+          [0x7FFF, 0x6739, 0x294A, 0x0000], arr_cram[4])
     same = all(ref_cram[p] == arr_cram[p]
-               for p in (0, 1, 2, 3, 5, 6, 7))
-    check("gate crossing: TOWN CRAM matches fresh boot (slots 0-3,5-7)",
+               for p in (0, 1, 2, 3, 4, 5, 6, 7))
+    check("gate crossing: TOWN CRAM matches fresh boot (all slots)",
           True, same)
 
 

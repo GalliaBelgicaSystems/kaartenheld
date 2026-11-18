@@ -173,6 +173,21 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
 #define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
 
+/* Overworld status-bar icons (menus-tile.png row 1, cols 0-3: full
+ * heart, half heart, AP, arrows; header indices 28-31, appended after
+ * the chrome singles + hero portrait so those indices never move).
+ * Streamed to VRAM 208-211 by the bank-11 status body on every
+ * overworld full redraw (ui_world_tail): the slots time-share with
+ * the menu chrome singles (same ids) -- each entry restores its own,
+ * same pattern as the OAM time-shares (AP pips vs hero art).  Painted
+ * with UI_COLOR_PAPER attrs (slot 4 = paper ramp, programmed by the
+ * same body): opaque white bar on every tileset.  DMG-safe (BGP 0xE4:
+ * white bg, dark ink). */
+#define UI_TILE_STATUS_HEART_FULL 208u
+#define UI_TILE_STATUS_HEART_HALF 209u
+#define UI_TILE_STATUS_AP         210u
+#define UI_TILE_STATUS_ARROWS      211u
+
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
  * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
@@ -273,11 +288,14 @@ void ui_wipe_black_banked(void);
 #define UI_COLOR_ICE    2
 #define UI_COLOR_FIELD  3
 #define UI_COLOR_POISON 4
-/* Paper: CRAM slot 4 re-programmed to a white/black document ramp while a
- * dialogue box is open (no world tileset assigns slot 4 to any tile, and
- * the quick screen -- its only other consumer -- cannot be open during a
- * dialogue).  Every screen transition re-programs CRAM, which restores
- * the set's own slot-4 ramp. */
+/* Paper: CRAM slot 4 re-programmed to a white/black document ramp.
+ * Owned persistently by the overworld status-bar HUD (opaque white
+ * bottom row; the bank-11 status stream programs it in ui_world_tail
+ * on every full redraw) and transiently by dialogue boxes (no world
+ * tileset assigns slot 4 to any tile, and the quick screen -- its only
+ * other consumer -- cannot be open during a dialogue or the HUD).
+ * Every screen transition re-programs CRAM (tileset load, then the
+ * HUD stream), so stale paper can never scroll into view. */
 #define UI_COLOR_PAPER  4
 #define UI_COLOR_WOOD   5
 #define UI_COLOR_GOLD   6
@@ -445,6 +463,12 @@ void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
  * from live party/AP/arrow/gold state every overworld frame. */
 void ui_ow_hud_banked(void);
 void ui_draw_ow_hud(const World *world);
+
+/* Bank-11 no-arg body behind the overworld status-bar icon stream:
+ * restreams the 4 status icons to VRAM 208-211 and programs the
+ * paper-white CGB ramp into slot 4.  Dispatched from ui_world_tail()
+ * on every overworld full redraw (gate crossings run LCD-on). */
+void menus_status_stream_banked(void);
 
 void ui_draw_battle_full(const Battle *battle);
 void ui_update_battle(const Battle *battle);
