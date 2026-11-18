@@ -1079,6 +1079,71 @@ def verify_shop_rider_vram(sess):
           sess.snapshot().get("game_state"))
 
 
+def verify_menu_tab_switches(sess):
+    """Intra-menu tab and mode switches (SCREEN_ITEM -> SCREEN_ITEM) must
+    NEVER run the full-screen LCD-off transition (ui_sprite_begin_transition
+    / ui_lcd_off), must keep LCDC.7 enabled on every frame, must move only
+    the row-1 tab caret while preserving the row-0 category separators
+    (tile 214 at cols 4, 10, 15), and must clear CGB BG attributes on
+    content rows 3..12 so TAB_DECK's right-column card palettes do not leak
+    onto TAB_HERO's portrait cells (15..16, 4..5)."""
+    print("== Menu tab/mode switches: no LCD-off full redraw, clean attrs ==")
+    sess.load_scenario(load_scenario(sess, "first_encounter.json"))
+    sess.step(2)
+    reset_hide_count(sess)
+
+    # Open SCREEN_ITEM from OVERWORLD: screen_change calls ui_sprite_hide()
+    # and game_render calls ui_sprite_begin_transition() (2 increments).
+    sess.press("START")
+    sess.step(2)
+    check("menu open reaches ITEM screen", "ITEM",
+          sess.snapshot().get("screen"))
+    check("menu open from overworld runs transition hide",
+          2, hide_count(sess))
+
+    # Reset hide counter, then switch DECK -> QUEST -> HERO and check
+    # VRAM header tiles + CGB attributes on HERO.
+    reset_hide_count(sess)
+    lcd_off_frames = 0
+    for btn in ("RIGHT", "RIGHT"):
+        sess.press(btn)
+        for _ in range(3):
+            sess.step(1)
+            if not (sess._memread(0xFF40) & 0x80):
+                lcd_off_frames += 1
+
+    check("menu HERO tab VRAM read in VBlank", True, wait_vblank(sess))
+    sess._memwrite(0xFF4F, 0)
+    seps = [sess._memread(0x9800 + col) for col in (4, 10, 15)]
+    check("menu row 0 category separators intact (tile 214 at cols 4,10,15)",
+          [214, 214, 214], seps)
+    row1_carets = [sess._memread(0x9800 + 32 + col) for col in (0, 5, 11, 16)]
+    check("menu HERO tab row 1 caret at col 11 (211) and border (212) elsewhere",
+          [212, 212, 211, 212], row1_carets)
+    hero_attrs = [vram_attr_at(sess, x, y)
+                  for y in (4, 5) for x in (15, 16)]
+    check("menu HERO portrait cells (15..16, 4..5) have clean CGB attrs (0)",
+          [0, 0, 0, 0], hero_attrs)
+
+    # Re-sync after VBlank reads (AGENTS.md 52.26), then cycle HERO -> GEMS
+    # -> DECK, open/close MODE_PICKER (A/B on row 0), and open/close
+    # MODE_DETAIL (DOWN, SELECT, B).
+    sess.step(1)
+    for btn in ("RIGHT", "RIGHT", "A", "B", "DOWN", "SELECT", "B"):
+        sess.press(btn)
+        for _ in range(3):
+            sess.step(1)
+            if not (sess._memread(0xFF40) & 0x80):
+                lcd_off_frames += 1
+
+    check("menu stays on ITEM screen after tab/mode cycle", "ITEM",
+          sess.snapshot().get("screen"))
+    check("intra-menu tab/mode switches never run transition hide",
+          0, hide_count(sess))
+    check("intra-menu tab/mode switches never turn LCD off",
+          0, lcd_off_frames)
+
+
 def main():
     # Each section uses its own session so debugger state (the game_render
     # frame-sync breakpoint, watchpoints) never contaminates another
@@ -1097,7 +1162,8 @@ def main():
                        ("battle spider", verify_battle_spider_oam),
                        ("boss glow overlay", verify_boss_glow_overlay),
                        ("exit art", verify_exit_art),
-                       ("shop rider VRAM", verify_shop_rider_vram)):
+                       ("shop rider VRAM", verify_shop_rider_vram),
+                       ("menu tab switches", verify_menu_tab_switches)):
         sess = EmulatorSession(rom_path=ROM)
         try:
             sess.connect()

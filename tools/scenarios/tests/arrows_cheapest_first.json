@@ -1,7 +1,7 @@
 {
  "name": "arrows_cheapest_first",
  "test": true,
- "description": "With 1 arrow and an all-bow deck the opening deal draws exactly one bow (limited-arrows saturation): pass 2 takes the cheapest pile bow first, the other 4 slots stay empty, and 6 pile cards remain.",
+ "description": "With 1 arrow and an all-bow deck (6x 5-AP mythril BOW_9 + 1x 1-AP wood bow id 98) the opening deal draws only the cheapest bow (BO1), the other 4 slots stay empty, and 6 pile cards remain.",
  "actions": [
   {
    "type": "wait",
@@ -14,9 +14,9 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
+   "type": "screen_row_exact",
    "row": 13,
-   "contains": "BO"
+   "expected": "BO1"
   },
   {
    "type": "battle_draw_remaining",
@@ -40,7 +40,8 @@
    "ARROWS": 1
   },
   "deck": {
-   "BOW_9": 7
+   "BOW_9": 6,
+   "98": 1
   },
   "start_battle": true
  }

@@ -150,6 +150,15 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_BASE       208u
 #define UI_TILE_MENUS_COUNT      12u
 #define UI_TILE_MENUS_HERO_COUNT 16u
+#define UI_TILE_MENUS_STATUS_COUNT 4u
+/* Status-bar icon slots (VRAM 248-251, header indices 28-31): full
+ * heart, half heart, AP and arrow from sheet row 1, cols 0-3.  Streamed
+ * with the chrome sheet on every BATTLE/ITEM/SHOP entry. */
+#define UI_TILE_MENUS_STATUS_BASE (248u)
+#define UI_TILE_MENUS_STATUS_HEART (UI_TILE_MENUS_STATUS_BASE + 0u)
+#define UI_TILE_MENUS_STATUS_HALF  (UI_TILE_MENUS_STATUS_BASE + 1u)
+#define UI_TILE_MENUS_STATUS_AP    (UI_TILE_MENUS_STATUS_BASE + 2u)
+#define UI_TILE_MENUS_STATUS_ARROW (UI_TILE_MENUS_STATUS_BASE + 3u)
 /* Sheet (0,0) horizontal segment: the row-15 bottom rule.  Named for
  * what it is, not for the slice script's CSV[1] label. */
 #define UI_TILE_MENUS_BOTTOM_BORDER (UI_TILE_MENUS_BASE + 0u)

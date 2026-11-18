@@ -209,10 +209,10 @@ def validate_scenario(data, filepath):
             if _mkey not in ("index", "gold_in", "gold_out", "battles"):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown market key '{_mkey}' in initial_state. Valid keys: index, gold_in, gold_out, battles")
         for iname, iqty in (init.get("inventory") or {}).items():
-            if iname not in VALID_ITEM_NAMES:
+            if iname not in VALID_ITEM_NAMES and not (iname.isdigit() and 96 <= int(iname) <= 255):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown item '{iname}' in initial_state. Valid items: {sorted(list(VALID_ITEM_NAMES))}")
         for dname, dqty in (init.get("deck") or {}).items():
-            if dname not in VALID_ITEM_NAMES:
+            if dname not in VALID_ITEM_NAMES and not (dname.isdigit() and 96 <= int(dname) <= 255):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown card '{dname}' in initial_state deck. Valid cards: {sorted(list(VALID_ITEM_NAMES))}")
         for aname, aval in (init.get("world") or {}).items():
             if aname not in VALID_ACTOR_NAMES:
@@ -526,7 +526,7 @@ def run_scenario(scenario):
                             a.get("addr", 0), 16)
 
         # Check if any assertion needs logical screen buffer
-        has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
+        has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains", "screen_row_exact") for a in scenario.get("assertions", []))
         screen_lines = []
         if has_screen_assert:
             screen_buf = session.get_screen_buf()

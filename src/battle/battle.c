@@ -27,6 +27,8 @@ static uint8_t battle_arrows_now(void)
     return (uint8_t)a;
 }
 
+static bool battle_turn_draw(Battle *b);
+
 /* Per-enemy battle art (see battle.h): uninitialized WRAM arrays (bss, so
  * no _INITIALIZER cost); written by the bank-4 battle art loader at every
  * battle entry, read by the bank-3 stamper. */
@@ -42,6 +44,10 @@ uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+uint8_t g_battle_hero_tile;
 /* Live pool max staged for the bank-3 HUD badge (see battle.h). */
 uint8_t g_battle_pool_max;
 
@@ -206,11 +212,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
         b->hand[i].type = BATTLE_CARD_TYPE_EMPTY;
     }
-    g_bk_byte_d = battle_arrows_now();
-    g_bk_call_bank = 14;
-    g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
-    g_bk_ptr_a = (void *)b;
-    banked_call_run();
+    (void)battle_turn_draw(b);
 
     /* Stage the active screen's layout (rows/cols/positions) into WRAM
      * for the bank-3 renderer.  Game layer picks the screen by battle

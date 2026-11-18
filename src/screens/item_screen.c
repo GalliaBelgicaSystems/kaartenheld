@@ -132,7 +132,10 @@ void item_screen_update(Game *g)
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            g->render_cache.valid = false;
+            if (g->item_menu_tab == TAB_DECK && g->item_menu_mode == MODE_LIST)
+                g_bk_paint_req = 1;
+            else
+                g->render_cache.valid = false;
         }
     }
 
@@ -242,10 +245,13 @@ void item_screen_render(Game *g)
         /* UI-mode CRAM (base set): card icons are encoded with the battle
          * display ramps (card_display_slots.json); the world tileset's
          * CRAM would show wrong colors.  Overworld/battle full redraws
-         * restore their own CRAM on exit.  No-op when opened from battle
-         * (already base).  The bank-2 render body then programs slot 7
-         * with the heal-rider green (UI_COLOR_HEALTH). */
-        ui_set_cram_palette(0);
+         * restore their own CRAM on exit.  Only programmed on first entry
+         * from another screen (rc->prev_screen != SCREEN_ITEM): same-screen
+         * tab/mode switches keep the live menu CRAM (including slot 7's
+         * heal-rider green) without 64 redundant STAT-waited writes. */
+        if (rc->prev_screen != SCREEN_ITEM) {
+            ui_set_cram_palette(0);
+        }
 
         /* Rebuild the grouped view first, then dispatch the render (two
          * sequential banked calls, same frame): the open frame can run

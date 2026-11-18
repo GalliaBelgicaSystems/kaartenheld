@@ -360,16 +360,18 @@ def serialize_initial_state(initial_state):
     buf[STATE_LOAD_DESC_INVENTORY_COUNT_OFF] = len(items)
     for i, (name, qty) in enumerate(items):
         off = STATE_LOAD_DESC_INVENTORY_ENTRY_OFF + i * STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE
-        buf[off] = ITEM_ID_MAP[name]
+        buf[off] = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
         buf[off + 1] = qty
 
     if "deck" in initial_state:
         # Explicit deck construction: replaces the starter deck entirely.
         # An empty dict is meaningful (empty deck -> battle fallback path).
-        # {name: copies} expands to COUNT sequential card ids.
+        # {name: copies} expands to COUNT sequential card ids (name may be
+        # a curated ITEM_ID_MAP symbol or a numeric loot CardId).
         flat = []
         for name, qty in ((initial_state.get("deck") or {}).items()):
-            flat.extend([ITEM_ID_MAP[name]] * int(qty))
+            cid = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
+            flat.extend([cid] * int(qty))
         if len(flat) > MAX_DESC_DECK_CARDS:
             raise ValueError(
                 f"deck expands to {len(flat)} cards; max is {MAX_DESC_DECK_CARDS}")

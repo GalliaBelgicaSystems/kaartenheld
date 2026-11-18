@@ -1,7 +1,7 @@
 {
  "name": "arrows_starvation_reshuffle",
  "test": true,
- "description": "Arrow starvation never soft-locks (limited-arrows): with 0 arrows and a 6-card deck (4 bows + 2 swords) the opening deal takes only the 2 drawable swords (bows skipped, rest sword-filled covered), and after playing both swords the refill reports dry -- drawable 0 < need 2 with a non-empty discard -- so the caller reshuffles instead of stranding an empty hand. Post-reshuffle the hand holds real swords, never a bow, with 4 pile cards left.",
+ "description": "Arrow starvation never soft-locks (limited-arrows): with 0 arrows and a 6-card deck (4 bows + 2 swords) the opening deal takes only the 2 drawable swords (bows skipped, other 3 slots empty), and after playing both swords the refill reports dry -- drawable 0 < need 5 with a non-empty discard -- so the caller reshuffles instead of stranding an empty hand. Post-reshuffle the hand holds the 2 real swords (SW5 SW5), never a bow or phantom sword, with 4 pile cards left.",
  "actions": [
   {
    "type": "wait",
@@ -81,6 +81,11 @@
    "type": "screen_row_not_contains",
    "row": 13,
    "contains": "BO"
+  },
+  {
+   "type": "screen_row_exact",
+   "row": 13,
+   "expected": "SW5 SW5"
   }
  ],
  "initial_state": {

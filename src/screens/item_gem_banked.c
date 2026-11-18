@@ -103,6 +103,7 @@ static void gem_draw_text_fast(void)
 /* Tab header: single source of truth is menu_tabs_snippet.h ──────────
  * (compiled per bank: banked bodies cannot call across banks,
  * AGENTS.md 52.11.1).  GEMS cursor col 16. */
+#define MENU_NEED_ATTR_CLEAR
 #define MENU_TAB_DRAW_TEXT GEM_DRAW_TEXT
 #include "menu_tabs_snippet.h"
 
@@ -169,21 +170,11 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
     uint8_t reg = gem_ptr_bit(bit);
     int16_t equipped;
     equipped = g->state.variables.values[VARIABLE_ID_GEM_EQUIPPED - 1];
-    if (selected) GEM_DRAW_TEXT(0, y, ">", 1);
-    else GEM_DRAW_TEXT(0, y, " ", 1);
-    GEM_DRAW_TEXT(1, y, " ", 1);
-    GEM_DRAW_TEXT(2, y, g_gems[reg].name, 12);
-    GEM_DRAW_TEXT(14, y, " ", 1);
-    if ((equipped & (int16_t)(1 << bit)) != 0) {
-        GEM_DRAW_TEXT(15, y, "ON", 2);
-        GEM_DRAW_TEXT(17, y, "   ", 3);
-    } else {
-        GEM_DRAW_TEXT(15, y, "OFF", 3);
-        GEM_DRAW_TEXT(18, y, "  ", 2);
-    }
-    GEM_DRAW_TEXT(0, (uint8_t)(y + 1), "  ", 2);
-    GEM_DRAW_TEXT(2, (uint8_t)(y + 1), g_gems[reg].skill, 15);
-    GEM_DRAW_TEXT(17, (uint8_t)(y + 1), "   ", 3);
+    GEM_DRAW_TEXT(0, y, selected ? ">" : " ", 2);
+    GEM_DRAW_TEXT(2, y, g_gems[reg].name, 13);
+    GEM_DRAW_TEXT(15, y, ((equipped & (int16_t)(1 << bit)) != 0) ? "ON" : "OFF", 5);
+    GEM_DRAW_TEXT(0, (uint8_t)(y + 1), NULL, 2);
+    GEM_DRAW_TEXT(2, (uint8_t)(y + 1), g_gems[reg].skill, 18);
 }
 
 /* Tab ids mirror item_screen.c (fixed bank): TAB_DECK 0, TAB_QUEST 1,
@@ -218,23 +209,19 @@ static void gem_draw_detail(uint8_t bit)
     uint8_t reg = gem_ptr_bit(bit);
     uint8_t r;
     uint8_t i;
-    /* Unpainted rows first (DECK card rows run full width here). */
-    GEM_DRAW_TEXT(0, 2, "                    ", 20);
-    GEM_DRAW_TEXT(0, 4, "                    ", 20);
-    for (r = 9; r <= 14; r++)
-        GEM_DRAW_TEXT(0, r, "                    ", 20);
-    GEM_DRAW_TEXT(0, 17, "                    ", 20);
-    GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 12);
-    GEM_DRAW_TEXT(12, 3, "        ", 8);
-    GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 15);
-    GEM_DRAW_TEXT(15, 5, "     ", 5);
+    GEM_DRAW_TEXT(0, 2, NULL, 20);
+    GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 20);
+    GEM_DRAW_TEXT(0, 4, NULL, 20);
+    GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 20);
     for (r = 0; r < 3; r++) {
         GEM_DRAW_TEXT(0, (uint8_t)(6 + r), g_gems[reg].detail[r], 20);
     }
+    for (r = 9; r <= 14; r++)
+        GEM_DRAW_TEXT(0, r, NULL, 20);
     for (i = 0; i < 20; i++)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
-    GEM_DRAW_TEXT(6, 16, "              ", 14);
+    GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
+    GEM_DRAW_TEXT(0, 17, NULL, 20);
 }
 
 /* Gem-block window: same geometry as the QUEST tab (AGENTS.md 52.11.1
@@ -399,6 +386,8 @@ void item_gem_render_banked(void)
      * DECK list), so tab switches never show an all-blank
      * intermediate.  (Forwarded tabs cover for themselves.) */
 
+    menu_clear_content_attrs();
+
     /* Sweep the card rider entries (same as the quest tab, plus the
      * DECK material ingots on entries 12-32). */
     for (e = 1; e <= 32; e++) {
@@ -424,27 +413,15 @@ void item_gem_render_banked(void)
         (uint8_t)(total - GEM_WINDOW) : 0;
     if (g->item_menu_scroll > max_scroll)
         g->item_menu_scroll = max_scroll;
-    /* Bottom box border on row 15, same row as the other list tabs
-     * (the down indicator below overlays col 19 only while more gems
-     * sit below the window). */
-    for (i = 0; i < 20; i++)
-        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    /* Scroll indicators on the free rows (buffer '^'/'v'). */
-    GEM_DRAW_TEXT(0, 2, "                   ", 19);
+    /* Row 2: spaces + up caret at col 19 (strict top-to-bottom order). */
+    GEM_DRAW_TEXT(0, 2, NULL, 19);
     gem_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
                      UI_TILE_MENUS_LIST_SCROLL_UP, ui_font_tile_base);
-    gem_stamp_scroll(15, 19,
-        (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
-        'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
-        UI_TILE_MENUS_BOTTOM_BORDER);
 
     if (total == 0) {
-        GEM_DRAW_TEXT(0, 3, "  ", 2);
-        GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
-        GEM_DRAW_TEXT(13, 3, "       ", 7);
-        /* No blocks: card rows would survive below the placeholder. */
+        GEM_DRAW_TEXT(0, 3, "  NO GEMS YET", 20);
         for (i = 4; i <= 14; i++)
-            GEM_DRAW_TEXT(0, i, "                    ", 20);
+            GEM_DRAW_TEXT(0, i, NULL, 20);
     } else {
         drawn = 0;
         vis = 0;
@@ -457,37 +434,32 @@ void item_gem_render_banked(void)
             }
             y = gem_slot_row(drawn);
             gem_draw_gem(g, bit, y, (g->item_menu_index == vis) ? 1 : 0);
-            /* Separator rule between blocks (cols 2-10, under the
-             * name text): every drawn block ends with one; clear the
-             * non-rule cells first (card rows run full width). */
-            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), "  ", 2);
-            GEM_DRAW_TEXT(11, (uint8_t)(y + 2), "         ", 9);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 2);
             for (i = 2; i <= 10; i++)
                 menu_stamp_chrome((uint8_t)(y + 2),
                                   i, UI_TILE_MENUS_QUESTS_SEPARATOR);
+            GEM_DRAW_TEXT(11, (uint8_t)(y + 2), NULL, 9);
             drawn++;
             vis++;
         }
-        /* Blank empty slots (short pockets). */
         for (; drawn < GEM_WINDOW; drawn++) {
             y = gem_slot_row(drawn);
-            GEM_DRAW_TEXT(0, y, "                    ", 20);
-            GEM_DRAW_TEXT(0, (uint8_t)(y + 1), "                    ", 20);
-            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), "                    ", 20);
+            GEM_DRAW_TEXT(0, y, NULL, 20);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 1), NULL, 20);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 20);
         }
     }
+    for (i = 0; i < 19; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    gem_stamp_scroll(15, 19,
+        (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
+        'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
+        UI_TILE_MENUS_BOTTOM_BORDER);
     if (g->item_menu_message == GEM_MSG_MAX)
-        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
+        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 20);
     else if (total == 0)
-        GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
+        GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
     else
-        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
-    /* Footer tails + row 17 (DECK-footer territory). */
-    if (g->item_menu_message == GEM_MSG_MAX)
-        GEM_DRAW_TEXT(10, 16, "          ", 10);
-    else if (total == 0)
-        GEM_DRAW_TEXT(6, 16, "              ", 14);
-    else
-        GEM_DRAW_TEXT(16, 16, "    ", 4);
-    GEM_DRAW_TEXT(0, 17, "                    ", 20);
+        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 20);
+    GEM_DRAW_TEXT(0, 17, NULL, 20);
 }

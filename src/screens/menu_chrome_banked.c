@@ -21,8 +21,9 @@ extern uint8_t s_battle_tiles_loaded;
 extern uint8_t s_ap_pip_loaded;
 
 /* Menu chrome bytes (menus-tile.png, gfx rule --tile-coords order: 12
- * row-0 singles then the 16 hero-status portrait cells, row-major from
- * sheet (12,0), blank transparent corners included).  Same-bank data. */
+ * row-0 singles, then the 16 hero-status portrait cells, row-major from
+ * sheet (12,0), blank transparent corners included, then the 4
+ * status-bar icons from sheet row 1, cols 0-3.  Same-bank data. */
 #include "gfx/menus_tile_tiles.h"
 
 /* Hero-status portrait VRAM slots (ui.h): 16 cells in header order
@@ -41,6 +42,8 @@ static const uint8_t s_menus_hero_slots[16] = {
  * Preprocessor #if/#error (SDCC silently accepts typedef char[-1]). */
 #if !(UI_TILE_MENUS_BASE == 208u && UI_TILE_MENUS_COUNT == 12u && \
       UI_TILE_MENUS_HERO_COUNT == 16u && \
+      UI_TILE_MENUS_STATUS_COUNT == 4u && \
+      UI_TILE_MENUS_STATUS_BASE == 248u && \
       UI_TILE_MENUS_LIST_SCROLL_UP == 245u)
 #error "menu chrome VRAM layout mismatch with ui.h"
 #endif
@@ -82,9 +85,10 @@ static uint8_t menus_bit_rev(uint8_t b)
     return r;
 }
 
-/* Stream the menu chrome sheet (28 cells, 448 bytes) to its VRAM slots.
- * Same LCD-safe pattern as the bank-8 OAM streamers (BANKED_VRAM_WRITE
- * per byte: the entry transition repaints with the LCD on). */
+/* Stream the menu chrome sheet (28 + 4 cells, 512 bytes) to its VRAM
+ * slots.  Same LCD-safe pattern as the bank-8 OAM streamers
+ * (BANKED_VRAM_WRITE per byte: the entry transition repaints with the
+ * LCD on). */
 static void menus_chrome_stream(void)
 {
     uint8_t i, j, k;
@@ -95,6 +99,15 @@ static void menus_chrome_stream(void)
         src = &menus_tile_tiles[((uint16_t)i << 4)];
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)(UI_TILE_MENUS_BASE + i) << 4));
+        for (j = 0; j < 16; j++) {
+            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            dst++;
+        }
+    }
+    for (k = 0; k < UI_TILE_MENUS_STATUS_COUNT; k++) {
+        src = &menus_tile_tiles[((uint16_t)(UI_TILE_MENUS_COUNT + UI_TILE_MENUS_HERO_COUNT + k) << 4)];
+        dst = (volatile uint8_t *)(0x8000u +
+                                   ((uint16_t)(UI_TILE_MENUS_STATUS_BASE + k) << 4));
         for (j = 0; j < 16; j++) {
             BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
             dst++;
@@ -146,12 +159,16 @@ void menus_status_stream_banked(void)
     const uint8_t *src;
     volatile uint8_t *dst;
 
+    /* Stream the 4 icons: hearts (0-1) drop bitplane 0 so shade 3
+     * (battle fight4 red) maps onto shade 2 (fight3 paper red) here
+     * while AP/arrows (2-3) keep shade 3 (fight3 paper bronze). */
     for (i = 0; i < 4; i++) {
         src = &menus_tile_tiles[((uint16_t)(MENUS_STATUS_CELL_BASE + i) << 4)];
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)(UI_TILE_STATUS_HEART_FULL + i) << 4));
         for (j = 0; j < 16; j++) {
-            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            uint8_t b = (i < 2 && !(j & 1)) ? 0u : (uint8_t)src[j];
+            BANKED_VRAM_WRITE(dst, b);
             dst++;
         }
     }

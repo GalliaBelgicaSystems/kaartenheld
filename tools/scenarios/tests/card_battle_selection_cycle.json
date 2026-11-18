@@ -114,20 +114,20 @@
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 13,
-   "expected": 113
+   "col": 3,
+   "expected": 248
   },
   {
    "type": "tilemap_cell",
-   "row": 8,
-   "col": 0,
+   "row": 7,
+   "col": 8,
+   "expected": 250
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 12,
    "expected": 116
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 8,
-   "col": 13,
-   "expected": 114
   },
   {
    "type": "screen_row",

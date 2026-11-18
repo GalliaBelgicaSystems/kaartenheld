@@ -19,27 +19,6 @@ void enemy_deck_setup(void)
     banked_call_run();
 }
 
-void deck_draw(Deck *d, Card *out_card)
-{
-    if (!out_card) return;
-    if (!d || d->draw_idx >= d->count) {
-        /* Dry pile.  Reshuffling is now an explicit battle-level event (the
-         * reshuffle turn), so a draw from a dry pile yields the phantom card
-         * safety net instead of silently cycling the discard pile. */
-        out_card->type = BATTLE_CARD_TYPE_SWORD;
-        out_card->value = 2;
-        out_card->uses_remaining = 0xFF;
-        out_card->cost = 1;
-        out_card->effect = CARD_EFFECT_DAMAGE_TARGET;
-        out_card->status_id = STATUS_NONE;
-        out_card->status_chance = 0;
-        out_card->ring = 0;
-        return;
-    }
-
-    *out_card = d->cards[d->draw_idx++];
-}
-
 /* Banked dispatch: the Fisher-Yates body lives in ROM bank 8
  * (src/battle/deck_shuffle_banked.c) to keep the fixed-bank _CODE budget
  * small.  Bank 8 has room in both builds; banks 2, 3 and 7 do not fit

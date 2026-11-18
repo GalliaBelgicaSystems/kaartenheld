@@ -307,7 +307,9 @@ gfx: manifest
 	# ── Menu chrome (assets/menus-tile.png, 16 cols × 4 rows) ──
 	# 12 single-cell UI icons (row 0, cols 0-11, CSV order) plus the 4x4
 	# hero-status portrait (cols 12-15, rows 0-3, "hero status RC" sheet
-	# order, blank transparent corners included).  Sliced for the editor
+	# order, blank transparent corners included) plus the 4 status-bar
+	# icons (row 1, cols 0-3: full heart, half heart, AP, arrow).
+	# Sliced for the editor
 	# by slice_menus_tile.py (public/tiles/menus/, tilesets/menus.json);
 	# encoded with the card chrome ramp (fight1: brown ink on white).
 	# Streamed with the rider icons (same one-shot flag) to 208-219

@@ -651,9 +651,11 @@ void shop_content_render(void)
      * rider sprites (now BG art, so they simply stay hidden) and 13-22
      * the row ingots -- tab flips and emptied rows must not keep a
      * stale icon. */
-    ic_menu_cram();
-    ic_menu_riders_load();
-    ic_mat_stream();
+    if (!g_menu_riders_loaded) {
+        ic_menu_cram();
+        ic_menu_riders_load();
+        ic_mat_stream();
+    }
     for (e = 1; e <= 22; e++) {
         ic_mat_hide(e);
     }
@@ -706,6 +708,28 @@ void shop_content_render(void)
          s_sc_shop_pos < (uint8_t)(s_sc_shop_scroll + SHOP_VISIBLE);
          s_sc_shop_pos++) {
         s_sc_stock_pos = g_shop_vis_map[s_sc_shop_pos];
+        s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
+        sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
+        /* Limited-arrows virtual row (BUY only; the SELL remap never
+         * emits the sentinel): owned-count readout with a flat 1G
+         * price, no card icons.  Checked BEFORE indexing s_sc_shop_def->items
+         * so the 0xFE sentinel never reads past the 50-item stock array. */
+        if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
+            s_sc_stock_pos == SHOP_ARROW_ROW) {
+            int16_t raw = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+            if (raw < 0) raw = 0;
+            if (raw > ARROWS_MAX) raw = ARROWS_MAX;
+            sc_draw_text(1, s_sc_y, "  ARROWS x", 10);
+            sc_format_uint((uint16_t)raw, s_sc_str);
+            if (raw < 10) {
+                sc_put_char(11, s_sc_y, ' ');
+                sc_put_char(12, s_sc_y, s_sc_str[0]);
+            } else {
+                sc_draw_text(11, s_sc_y, s_sc_str, 2);
+            }
+            sc_draw_text(13, s_sc_y, "     1G", 7);
+            continue;
+        }
         /* SELL rows resolve through the owned collection (loot ids
          * synthesize through the shared bank-2 synth); BUY rows
          * through the stock list. */
@@ -717,48 +741,6 @@ void shop_content_render(void)
         } else {
             s_sc_card_def = sc_card_get_def(
                 s_sc_shop_def->items[s_sc_stock_pos]);
-        }
-        s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
-        sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
-        /* Limited-arrows virtual row (BUY only; the SELL remap never
-         * emits the sentinel): owned-count readout with a flat 1G
-         * price, no card icons. */
-        if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
-            s_sc_stock_pos == SHOP_ARROW_ROW) {
-            uint8_t aq;
-            uint8_t tens;
-            int16_t raw;
-            raw = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
-            if (raw < 0) raw = 0;
-            if (raw > ARROWS_MAX) raw = ARROWS_MAX;
-            aq = (uint8_t)raw;
-            tens = 0;
-            sc_put_char(1, s_sc_y, ' ');
-            sc_put_char(2, s_sc_y, ' ');
-            sc_draw_text(3, s_sc_y, "ARROWS", 6);
-            /* Blank the cells no card row would leave dirty: scrolling
-             * from a "<MAT> <WPN>" name would otherwise strand its
-             * tail in cols 9 and 13-16. */
-            sc_put_char(9, s_sc_y, ' ');
-            sc_draw_text(13, s_sc_y, "    ", 4);
-            sc_put_char(10, s_sc_y, 'x');
-            if (aq >= 20) {
-                tens = 2;
-                aq = (uint8_t)(aq - 20);
-            } else if (aq >= 10) {
-                tens = 1;
-                aq = (uint8_t)(aq - 10);
-            }
-            if (tens != 0) {
-                sc_put_char(11, s_sc_y, (uint8_t)('0' + tens));
-            } else {
-                sc_put_char(11, s_sc_y, ' ');
-            }
-            sc_put_char(12, s_sc_y, (uint8_t)('0' + aq));
-            sc_put_char(17, s_sc_y, ' ');
-            sc_put_char(18, s_sc_y, '1');
-            sc_put_char(19, s_sc_y, 'G');
-            continue;
         }
         if (s_sc_card_def) {
             /* Icon tiles mirror the battle hand (screens/cards_skin.json):

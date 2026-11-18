@@ -50,10 +50,6 @@ uint8_t g_bk_byte_e;
 uint8_t g_bk_sfx_req;
 /* In-place repaint request mailbox (BSS zero = none).  See banked.h. */
 uint8_t g_bk_paint_req;
-/* Card telemetry request mailbox (BSS zero = none).  See banked.h. */
-uint8_t g_bk_card_evt;
-uint8_t g_bk_card_d0;
-uint8_t g_bk_card_d1;
 
 extern void banked_copy_run(void);
 

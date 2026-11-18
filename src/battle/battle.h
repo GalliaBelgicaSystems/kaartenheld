@@ -149,6 +149,10 @@ extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
  * Staged by the loader from g_battle_art_obj; read by the stamper. */
 extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+extern uint8_t g_battle_hero_tile;
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
  * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays
